@@ -20,7 +20,7 @@ local Config = {
 		Springy = { bounce = 0.64, kick = 11, reach = 3.5 },
 	},
 	Tiers = {
-		{ radius = 0.72, color = Palette.Primary, mark = "I" },
+		{ radius = 0.72, color = Palette.JellyBlue, mark = "I" },
 		{ radius = 1.04, color = Palette.Ember, mark = "II" },
 		{ radius = 1.43, color = Palette.Lime, mark = "III" },
 	},

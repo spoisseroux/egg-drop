@@ -7,15 +7,15 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
+local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local Audio = require(script.BoardAudio)
-local Music = require(script.BoardMusic)
+local DeckPicker = require(script.DeckPicker)
 local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
 local audio = Audio.new()
-local music = Music.new()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
@@ -53,7 +53,7 @@ local shell = make("Frame", "CartridgeShell", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0,
 }, backdrop)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
-make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
+local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
 	BackgroundColor3 = Palette.Tray, BorderSizePixel = 0,
@@ -135,25 +135,26 @@ local targetRing = make("Frame", "MatchHint", {
 }, overlay)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
 make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
-local musicButton = label("TextButton", "Music", "Music on", backdrop, Palette.Panel)
+local customizeButton = label("TextButton", "Customize", "Customize", backdrop, Palette.Primary)
 local roomButton = label("TextButton", "VisitRoom", "Lounge", backdrop, Palette.Panel)
-local reset = label("TextButton", "Reset", "Retry", backdrop, Palette.Amber)
-for _, button in ipairs({ musicButton, roomButton, reset }) do
+local reset = label("TextButton", "Reset", "Retry", backdrop, Palette.Panel)
+for _, button in ipairs({ customizeButton, roomButton, reset }) do
 	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 8) }, button)
 end
-local roomView
-local function toggleMusic()
-	local muted = music:toggle()
-	musicButton.Text = if muted then "Music off" else "Music on"
-	roomView:setMusicLabel(muted)
-	audio:play("menu")
+local openPicker
+local picker
+local function isPickerOpen()
+	return picker.shade.Visible
 end
-roomView = RoomView.new(gui, backdrop, audio, function()
+local roomView = RoomView.new(gui, backdrop, audio, function()
 	request:FireServer("mode", "Board")
-end, toggleMusic)
-musicButton.Activated:Connect(toggleMusic)
+end, function()
+	openPicker()
+end, isPickerOpen)
 roomButton.Activated:Connect(function()
-	request:FireServer("mode", "Room")
+	if not isPickerOpen() then
+		request:FireServer("mode", "Room")
+	end
 end)
 local modal = make("Frame", "RoundCard", {
 	Active = true, Visible = false, BackgroundColor3 = Palette.Paper, BorderSizePixel = 0, ZIndex = 10,
@@ -218,6 +219,46 @@ local drag
 local eggViews = {}
 local viewsById = {}
 
+local function equippedTheme()
+	return board:GetAttribute("DeckThemeId") or Themes.Default
+end
+
+local function paintDeck(id)
+	local theme = Themes.ById[id]
+	shell.BackgroundColor3 = theme.shell
+	rim.Color = theme.trim
+	customizeButton.BackgroundColor3 = theme.buttons
+end
+
+local function canAim()
+	return board:GetAttribute("Mode") == "Board" and not modal.Visible
+end
+
+picker = DeckPicker.new(gui, make, label, paintDeck, function()
+	paintDeck(equippedTheme())
+	rail.Interactable = canAim()
+end, function(id)
+	request:FireServer("theme", id)
+	audio:play("menu")
+end)
+
+openPicker = function()
+	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
+		return
+	end
+	drag = nil
+	rail.Interactable = false
+	picker:open(equippedTheme())
+	audio:play("menu")
+end
+customizeButton.Activated:Connect(openPicker)
+board:GetAttributeChangedSignal("DeckThemeId"):Connect(function()
+	if not isPickerOpen() then
+		paintDeck(equippedTheme())
+	end
+end)
+paintDeck(equippedTheme())
+
 local function nextTier()
 	return board:GetAttribute("NextTier") or 1
 end
@@ -265,9 +306,11 @@ local function updateHud()
 	meterText.Text = if hatched then "Pip hatched" else string.format("Hatch   %d / %d", charge, Config.HatchTarget)
 	local over = board:GetAttribute("RoundOver")
 	local mode = board:GetAttribute("Mode")
-	music:setState(mode, over and mode == "Board")
 	local showHatch = hatched == true and not dismissedHatch and mode == "Board"
 	modal.Visible = mode == "Board" and (over == true or showHatch)
+	if modal.Visible then
+		picker:close()
+	end
 	pet.Visible = showHatch == true and not over
 	modalNote.Visible = over == true
 	modalNote.Text = "Try to keep the eggs below the amber line."
@@ -276,7 +319,7 @@ local function updateHud()
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
-	rail.Interactable = mode == "Board" and not modal.Visible
+	rail.Interactable = canAim() and not isPickerOpen()
 	local unlocked = board:GetAttribute("RoomUnlocked") == true
 	roomButton.Interactable = unlocked
 	roomButton.BackgroundColor3 = if unlocked then Palette.Primary else Palette.Panel
@@ -285,7 +328,6 @@ local function updateHud()
 	local resetId = board:GetAttribute("ResetId")
 	if showHatch and not over and revealedRound ~= resetId then
 		revealedRound = resetId
-		music:duck()
 		reveal:start(function()
 			return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
 				and not board:GetAttribute("RoundOver") and not dismissedHatch
@@ -324,7 +366,7 @@ local function layout()
 	status.TextSize = 14
 	meter.Position = UDim2.fromOffset(controlX, controlY + 35)
 	meter.Size = UDim2.fromOffset(panelWidth, 19)
-	for index, button in ipairs({ musicButton, roomButton, reset }) do
+	for index, button in ipairs({ customizeButton, roomButton, reset }) do
 		local buttonWidth = if lateral then panelWidth else (panelWidth - 12) / 3
 		button.Position = if lateral then UDim2.fromOffset(controlX, controlY + 60 + (index - 1) * 50)
 			else UDim2.fromOffset(controlX + (index - 1) * (buttonWidth + 6), controlY + 60)
@@ -371,7 +413,9 @@ UserInputService.WindowFocusReleased:Connect(function()
 	drag = nil
 end)
 reset.Activated:Connect(function()
-	request:FireServer("reset")
+	if not isPickerOpen() then
+		request:FireServer("reset")
+	end
 end)
 modalAction.Activated:Connect(function()
 	if board:GetAttribute("RoundOver") then
@@ -563,6 +607,7 @@ board.AttributeChanged:Connect(function()
 end)
 board:GetAttributeChangedSignal("Mode"):Connect(function()
 	drag = nil
+	picker:close()
 	local mode = board:GetAttribute("Mode")
 	if mode == "Room" then
 		dismissedHatch = true

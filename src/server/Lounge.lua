@@ -1,6 +1,7 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
+local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 
 local Lounge = {}
 
@@ -79,7 +80,22 @@ local function attach(model, torso, name, size, offset, color)
 	return piece
 end
 
-function Lounge.setMode(character, userId, mode)
+local function paintDevice(device, themeId)
+	local theme = Themes.ById[themeId] or Themes.ById[Themes.Default]
+	device.Shell.Color = theme.shell
+	device.Bezel.Color = theme.trim
+	device.Confirm.Color = theme.buttons
+	device.Action.Color = theme.buttons
+end
+
+function Lounge.setTheme(character, themeId)
+	local device = character and character:FindFirstChild("PocketDeck")
+	if device then
+		paintDevice(device, themeId)
+	end
+end
+
+function Lounge.setMode(character, userId, mode, themeId)
 	if not character then
 		return
 	end
@@ -115,6 +131,8 @@ function Lounge.setMode(character, userId, mode)
 	device:SetAttribute("BoardUserId", userId)
 	local mount = CFrame.new(0, -0.42, -1.05) * CFrame.Angles(math.rad(37), 0, 0)
 	local shell = attach(device, torso, "Shell", Vector3.new(1.12, 1.45, 0.21), mount, Palette.Shell)
+	attach(device, torso, "Bezel", Vector3.new(0.91, 0.94, 0.04),
+		mount * CFrame.new(0, 0.2, -0.109), Palette.Rim)
 	local screen = attach(device, torso, "Screen", Vector3.new(0.84, 0.87, 0.08),
 		mount * CFrame.new(0, 0.2, -0.12), Palette.Tray)
 	attach(device, torso, "DPad", Vector3.new(0.26, 0.08, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Palette.Ink)
@@ -122,6 +140,7 @@ function Lounge.setMode(character, userId, mode)
 	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), Palette.Primary)
 	attach(device, torso, "Action", Vector3.new(0.12, 0.12, 0.07), mount * CFrame.new(0.12, -0.5, -0.12),
 		Palette.Amber)
+	paintDevice(device, themeId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
 	badge.Adornee = screen
@@ -160,7 +179,7 @@ function Lounge.setMode(character, userId, mode)
 	end
 end
 
-function Lounge.spawn(character, slot, player, mode)
+function Lounge.spawn(character, slot, player, deckState)
 	local root = character:WaitForChild("HumanoidRootPart", 5)
 	local humanoid = character:WaitForChild("Humanoid", 5)
 	if not root or not humanoid then
@@ -185,7 +204,8 @@ function Lounge.spawn(character, slot, player, mode)
 		height += leg.Size.Y
 	end
 	character:PivotTo(CFrame.new(x, height, z) * CFrame.Angles(0, math.pi, 0))
-	Lounge.setMode(character, player.UserId, mode())
+	local mode, themeId = deckState()
+	Lounge.setMode(character, player.UserId, mode, themeId)
 end
 
 return Lounge

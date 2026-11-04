@@ -49,7 +49,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Room.new(gui, board, audio, onReturn, onMusic)
+function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
 	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
@@ -71,8 +71,8 @@ function Room.new(gui, board, audio, onReturn, onMusic)
 	greet.Size = UDim2.new(0.29, 0, 0, 44)
 	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Palette.Primary)
 	leave.Size = UDim2.new(0.33, 0, 0, 44)
-	local music = button(controls, "Music", "Music on", UDim2.new(0.685, 0, 0, 51), Palette.Panel)
-	music.Size = UDim2.new(0.29, 0, 0, 44)
+	local customize = button(controls, "Customize", "Customize", UDim2.new(0.685, 0, 0, 51), Palette.Panel)
+	customize.Size = UDim2.new(0.29, 0, 0, 44)
 
 	local top = frame(gui, "ShutterTop", UDim2.fromScale(1, 0), UDim2.fromScale(0, 0), Palette.Backdrop, 50)
 	local bottom = frame(gui, "ShutterBottom", UDim2.fromScale(1, 0), UDim2.fromScale(0, 1), Palette.Backdrop, 50)
@@ -90,10 +90,9 @@ function Room.new(gui, board, audio, onReturn, onMusic)
 		audio = audio,
 		mode = "Board",
 		target = "Board",
-		music = music,
 	}, Room)
 	greet.Activated:Connect(function()
-		if self.busy or not self.pip then
+		if self.busy or isPickerOpen() or not self.pip then
 			return
 		end
 		self.pip:greet()
@@ -113,11 +112,15 @@ function Room.new(gui, board, audio, onReturn, onMusic)
 		end
 	end)
 	leave.Activated:Connect(function()
-		if not self.busy then
+		if not self.busy and not isPickerOpen() then
 			onReturn()
 		end
 	end)
-	music.Activated:Connect(onMusic)
+	customize.Activated:Connect(function()
+		if not self.busy then
+			onCustomize()
+		end
+	end)
 	Players.LocalPlayer.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid", 5)
 		if self.mode == "Room" and humanoid then
@@ -137,10 +140,6 @@ function Room.new(gui, board, audio, onReturn, onMusic)
 		end
 	end)
 	return self
-end
-
-function Room:setMusicLabel(muted)
-	self.music.Text = if muted then "Music off" else "Music on"
 end
 
 function Room:show(mode)

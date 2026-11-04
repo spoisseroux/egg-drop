@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
+local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
 local Lounge = require(script.Lounge)
@@ -101,16 +102,18 @@ local function addPlayer(player)
 		lastDrop = -math.huge,
 		lastReset = -math.huge,
 		lastModeChange = -math.huge,
+		lastThemeChange = -math.huge,
 		mode = "Board",
 		roomUnlocked = false,
 	}
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
 	folder:SetAttribute("Mode", board.mode)
+	folder:SetAttribute("DeckThemeId", Themes.Default)
 	folder.Parent = trays
 	local function spawn(character)
 		Lounge.spawn(character, slot, player, function()
-			return board.mode
+			return board.mode, folder:GetAttribute("DeckThemeId")
 		end)
 	end
 	board.characterConnection = player.CharacterAdded:Connect(spawn)
@@ -138,6 +141,15 @@ request.OnServerEvent:Connect(function(player, action, value)
 		return
 	end
 	local now = os.clock()
+	if action == "theme" then
+		if typeof(value) == "string" and Themes.ById[value] and value ~= board.folder:GetAttribute("DeckThemeId")
+			and now - board.lastThemeChange >= 0.25 then
+			board.lastThemeChange = now
+			board.folder:SetAttribute("DeckThemeId", value)
+			Lounge.setTheme(player.Character, value)
+		end
+		return
+	end
 	if action == "mode" then
 		if now - board.lastModeChange < 0.45 or value == board.mode
 			or (value ~= "Board" and (value ~= "Room" or not board.roomUnlocked)) then
@@ -145,7 +157,7 @@ request.OnServerEvent:Connect(function(player, action, value)
 		end
 		board.lastModeChange = now
 		board.mode = value
-		Lounge.setMode(player.Character, player.UserId, value)
+		Lounge.setMode(player.Character, player.UserId, value, board.folder:GetAttribute("DeckThemeId"))
 		board.folder:SetAttribute("Mode", value)
 		return
 	end

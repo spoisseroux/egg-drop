@@ -5,6 +5,7 @@ port. In Play mode, drag across the rail and release to drop an egg.
 Merges charge the hatch meter. The first hatch reveals Pip and unlocks the
 lounge. Meet Pip and select **Open deck** to resume the same tray.
 Other players in the lounge can see your handheld's live display.
+Use **Customize** in either view to preview and equip a shell for the session.
 Sustained overflow ends the round with a retry button. See
 [the prototype rundown](PROTOTYPE.md) for the full flow and pet concepts.
 
