@@ -6,6 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
+local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Jelly = require(script.JellyVisual)
@@ -146,7 +147,7 @@ local picker
 local function isPickerOpen()
 	return picker.shade.Visible
 end
-local roomView = RoomView.new(gui, backdrop, audio, function()
+local roomView = RoomView.new(gui, backdrop, board, audio, function()
 	request:FireServer("mode", "Board")
 end, function()
 	openPicker()
@@ -178,6 +179,7 @@ pet.ZIndex = 14
 pet.AutoButtonColor = false
 make("UICorner", "Shell", { CornerRadius = UDim.new(0.45, 0) }, pet)
 make("UIStroke", "Outline", { Color = Palette.Rim, Thickness = 2 }, pet)
+local pipLeaves = {}
 for _, side in ipairs({ -1, 1 }) do
 	local leaf = make("Frame", "Leaf", {
 		BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
@@ -185,12 +187,19 @@ for _, side in ipairs({ -1, 1 }) do
 		Size = UDim2.fromOffset(17, 9), Rotation = -side * 32, ZIndex = 15,
 	}, pet)
 	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, leaf)
+	table.insert(pipLeaves, leaf)
 end
 local shellHem = make("Frame", "ShellHem", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0, Position = UDim2.fromScale(0.10, 0.77),
 	Size = UDim2.fromScale(0.80, 0.22), ZIndex = 15,
 }, pet)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, shellHem)
+local puddleTail = make("Frame", "DropletTail", {
+	BackgroundColor3 = Palette.JellyBlue, BorderSizePixel = 0,
+	Position = UDim2.new(1, -10, 0, -6), Size = UDim2.fromOffset(17, 26), Rotation = 28,
+	Visible = false, ZIndex = 15,
+}, pet)
+make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, puddleTail)
 local reveal = HatchReveal.new(modal, pet, audio)
 local modalNote = label("TextLabel", "Detail", "", modal)
 modalNote.Position = UDim2.new(0.06, 0, 0, 57)
@@ -209,9 +218,8 @@ keepPlaying.ZIndex = 11
 for _, button in ipairs({ modalAction, keepPlaying }) do
 	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 9) }, button)
 end
-local dismissedHatch = false
-local tutorialDone = false
-local revealedRound
+local dismissedHatch
+local revealedPet
 local lastPlop = -math.huge
 
 local aim = 0.5
@@ -291,10 +299,14 @@ local function updateHud()
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
 	local charge = board:GetAttribute("HatchCharge") or 0
-	fill.Size = UDim2.fromScale(charge / Config.HatchTarget, 1)
-	local hatched = board:GetAttribute("Hatched")
-	tutorialDone = tutorialDone or hatched == true
-	if tutorialDone then
+	local owned = board:GetAttribute("OwnedPets") or 0
+	local nextPet = Pets[owned + 1]
+	local hatchName = board:GetAttribute("HatchedPet")
+	local hatchPet = Pets[owned]
+	fill.Size = UDim2.fromScale(if nextPet then charge / nextPet.charge else 1, 1)
+	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
+		status.Text = "Save could not load. Playing a fresh tray."
+	elseif owned > 0 then
 		status.Text = string.format("%d merges   ·   Chain ×%d", merges, chain)
 	elseif drops == 0 then
 		status.Text = "Slide, then let go to drop."
@@ -303,10 +315,11 @@ local function updateHud()
 	else
 		status.Text = "Keep matching to hatch Pip!"
 	end
-	meterText.Text = if hatched then "Pip hatched" else string.format("Hatch   %d / %d", charge, Config.HatchTarget)
-	local over = board:GetAttribute("RoundOver")
+	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
+		else string.format("Collection   %d / %d", owned, #Pets)
 	local mode = board:GetAttribute("Mode")
-	local showHatch = hatched == true and not dismissedHatch and mode == "Board"
+	local showHatch = hatchPet ~= nil and hatchName == hatchPet.name and hatchName ~= dismissedHatch and mode == "Board"
+	local over = board:GetAttribute("RoundOver") and not showHatch
 	modal.Visible = mode == "Board" and (over == true or showHatch)
 	if modal.Visible then
 		picker:close()
@@ -314,24 +327,34 @@ local function updateHud()
 	pet.Visible = showHatch == true and not over
 	modalNote.Visible = over == true
 	modalNote.Text = "Try to keep the eggs below the amber line."
-	modalTitle.Text = if over then "Tray full" else "You hatched " .. Config.StarterPet .. "!"
-	modalAction.Text = if over then "Try again" else "Meet Pip"
+	modalTitle.Text = if over then "Tray full" else "You hatched " .. (hatchName or "") .. "!"
+	modalAction.Text = if over then "Try again" else "Meet " .. (hatchName or "")
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
 	rail.Interactable = canAim() and not isPickerOpen()
-	local unlocked = board:GetAttribute("RoomUnlocked") == true
+	local unlocked = owned > 0
 	roomButton.Interactable = unlocked
 	roomButton.BackgroundColor3 = if unlocked then Palette.Primary else Palette.Panel
 	roomButton.TextTransparency = if unlocked then 0 else 0.28
 	drawAim()
-	local resetId = board:GetAttribute("ResetId")
-	if showHatch and not over and revealedRound ~= resetId then
-		revealedRound = resetId
+	if showHatch and not over and revealedPet ~= hatchName then
+		revealedPet = hatchName
+		local puddle = hatchName == "Puddle"
+		pet.BackgroundColor3 = if puddle then Palette.JellyBlue else Color3.fromRGB(255, 224, 170)
+		pet.Size = if puddle then UDim2.fromOffset(84, 50) else UDim2.fromOffset(72, 67)
+		pet.Position = UDim2.new(0.5, 0, 0, if puddle then 75 else 63)
+		puddleTail.Visible = puddle
+		shellHem.Visible = not puddle
+		for _, leaf in ipairs(pipLeaves) do
+			leaf.Visible = not puddle
+		end
+		local resetId = board:GetAttribute("ResetId")
 		reveal:start(function()
 			return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
-				and not board:GetAttribute("RoundOver") and not dismissedHatch
-		end)
+				and dismissedHatch ~= hatchName
+				and board:GetAttribute("HatchedPet") == hatchName
+		end, hatchPet.cue, if puddle then Palette.JellyBlue else Palette.Amber)
 	end
 end
 
@@ -418,20 +441,24 @@ reset.Activated:Connect(function()
 	end
 end)
 modalAction.Activated:Connect(function()
-	if board:GetAttribute("RoundOver") then
+	if modalNote.Visible then
 		request:FireServer("reset")
 	else
+		roomView:choosePet(board:GetAttribute("HatchedPet"))
 		request:FireServer("mode", "Room")
 	end
 end)
 keepPlaying.Activated:Connect(function()
-	dismissedHatch = true
+	dismissedHatch = board:GetAttribute("HatchedPet")
 	reveal:cancel()
 	audio:play("menu")
 	updateHud()
 end)
 pet.Activated:Connect(function()
-	audio:play("pet")
+	local hatchPet = Pets[board:GetAttribute("OwnedPets") or 0]
+	if hatchPet then
+		audio:play(hatchPet.cue)
+	end
 	pet.Rotation = -9
 	TweenService:Create(pet, TweenInfo.new(0.24, Enum.EasingStyle.Back), { Rotation = 0 }):Play()
 end)
@@ -610,7 +637,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	picker:close()
 	local mode = board:GetAttribute("Mode")
 	if mode == "Room" then
-		dismissedHatch = true
+		dismissedHatch = board:GetAttribute("HatchedPet")
 		reveal:cancel()
 		effects:ClearAllChildren()
 	end
@@ -621,7 +648,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	effects:ClearAllChildren()
 	audio:stop()
 	audio:play("retry")
-	dismissedHatch = false
+	dismissedHatch = nil
 	lastPlop = -math.huge
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
@@ -631,13 +658,12 @@ board:GetAttributeChangedSignal("Drops"):Connect(function()
 end)
 board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 	local charge = board:GetAttribute("HatchCharge")
-	if charge > 0 and charge < Config.HatchTarget then
+	if charge > 0 then
 		audio:play("charge", 1 + charge * 0.03, 0.35)
 	end
 end)
 board:GetAttributeChangedSignal("RoundOver"):Connect(function()
 	if board:GetAttribute("RoundOver") then
-		reveal:cancel()
 		audio:play("overflow")
 	end
 end)
@@ -648,7 +674,7 @@ RunService.RenderStepped:Connect(function(dt)
 	local closest
 	local distance = math.huge
 	local tier = nextTier()
-	local guide = not tutorialDone and not modal.Visible and not drag
+	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and not modal.Visible and not drag
 	local aimX = Config.aimX(aim, tier)
 	for source, view in pairs(eggViews) do
 		local position = view.gel:render(source.Position, dt, now, project)

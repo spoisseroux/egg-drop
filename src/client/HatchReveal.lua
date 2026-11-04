@@ -49,7 +49,7 @@ function Reveal:playTween(node, seconds, properties, style)
 	tween:Play()
 end
 
-function Reveal:start(valid)
+function Reveal:start(valid, cue, color)
 	self:cancel()
 	local epoch = self.epoch
 	local function after(seconds, action)
@@ -60,7 +60,7 @@ function Reveal:start(valid)
 		end)
 	end
 	local center = UDim2.new(0.5, 0, 0, 96)
-	local egg = shape(self.layer, "HatchEgg", Palette.Amber, center, UDim2.fromOffset(58, 68), 13)
+	local egg = shape(self.layer, "HatchEgg", color, center, UDim2.fromOffset(58, 68), 13)
 	local outline = Instance.new("UIStroke")
 	outline.Color, outline.Thickness = Palette.Ink, 2
 	outline.Parent = egg
@@ -84,7 +84,7 @@ function Reveal:start(valid)
 		self:playTween(ring, 0.48, { Size = UDim2.fromOffset(146, 96) })
 		self:playTween(glow, 0.48, { Transparency = 1 })
 		for _, side in ipairs({ -1, 1 }) do
-			local shard = shape(self.layer, "ShellHalf", Palette.Amber, center + UDim2.fromOffset(side * 10, 4),
+			local shard = shape(self.layer, "ShellHalf", color, center + UDim2.fromOffset(side * 10, 4),
 				UDim2.fromOffset(26, 35), 13)
 			self:playTween(shard, 0.44, {
 				Position = center + UDim2.fromOffset(side * 78, 24), Rotation = side * 65, BackgroundTransparency = 1,
@@ -101,7 +101,7 @@ function Reveal:start(valid)
 		end
 	end)
 	after(0.65, function()
-		self.audio:play("pet", 1, 0.53)
+		self.audio:play(cue, 1, 0.53)
 	end)
 	after(0.94, function()
 		self:cancel()

@@ -7,18 +7,18 @@ the eggs move on its miniature display. Each player controls their own tray.
 
 Start a new session on the board so the first action can be a drop. The
 lounge unlocks after Pip hatches. During the session, the player chooses
-when to move between the two views. Once persistent progress exists, a
-returning player can be offered their last location and a resume button.
-The prototype starts each new connection with a fresh tray.
+when to move between the two views. A returning player starts with a fresh
+tray and keeps their unlocked pets and equipped shell in a published game.
 
 ## How to play
 
 Drag the rail and release to place the next egg. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
-Merges fill six points of hatch charge. The guaranteed starter reveal
-awards Pip for the round. Choose **Meet Pip** to close the deck, or
-**Keep playing** to stay on the board. **Greet Pip** plays a bounce, wave,
-and two-note cry. **Open deck** returns to the same tray. First-session
+Merges fill six points of hatch charge for Pip, then twelve for Puddle.
+Choose **Meet Pip** or **Meet Puddle** to visit that pet, or **Keep playing**
+to stay on the board. **Say hi** plays a greeting and the pet's synth cue.
+Once both hatch, switch between them in the lounge. **Open deck** returns
+to the same tray. First-session
 hints appear in the footer and advance after an accepted drop and a merge.
 
 | State | What the player sees | What the game does |
@@ -28,12 +28,12 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Drop | The released egg falls and can bounce off a bank | Server validates aim, cadence, capacity, and spawn space. |
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
-| Starter hatch | Egg winds up and cracks, shell flakes fly, and Pip hops in with a chirp in under a second | Unlocks the lounge for the rest of the session. Both choices are available during the reveal. |
-| Entering the lounge | Deck shutters close and Pip chirps | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
-| Lounge | 3D Pip, other avatars, their decks, and a return button | Pip greets locally. Nearby miniature screens project each owner's current egg positions. The server ignores board requests from room mode. |
+| Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge and Puddle completes the prototype collection. |
+| Entering the lounge | Deck shutters close and the selected pet chirps | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
+| Lounge | Pip or Puddle, other avatars, their decks, and a return button | Pets greet locally. Nearby miniature screens show each owner's current egg positions. |
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Tray full card and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
-| Retry | Four starter eggs and an empty meter | Resets the round. A room unlocked earlier in the session stays available. |
+| Retry | Four starter eggs and a fresh meter for the next pet | Resets the round while preserving the collection and equipped shell. |
 | Customize | Four shell presets with a handheld preview | Equip updates the board and the device other players see. Cancel restores the equipped look. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |
 
@@ -42,27 +42,31 @@ hints appear in the footer and advance after an accepted drop and a merge.
 The board and lounge use original synthesized sound effects. Replacement
 music is being auditioned separately. Studio plays the checked-in WAVs
 from its local content folder. Published playback needs asset IDs in
-`BoardAudio.lua`.
+`BoardAudio.lua`. Three score auditions and their synth scripts live under
+[`assets/concepts/music`](assets/concepts/music). The earlier audition has
+Window Seat at 0:00 and Paper Moon at 0:55. Pocket Apricot is a separate draft.
 
 ## Deck customization
 
 Choose Stone, Ice, Brick, or Moss from Customize on the board or in the
 lounge. The picker previews the front of the handheld. On the board you
 can also see its frame change before you equip. The equipped theme carries
-through retry, respawn, and room transitions in the current session.
+through retry, respawn, and room transitions. Published servers save it in
+the player profile. Studio uses session memory.
 
 Next, let players mix unlocked shells, button caps, screen trim, and one
 backplate decal. The board surface, egg colors and marks, hints, and action
-contrast stay consistent across all presets. Save catalog IDs in the player
-profile when cross-session saves are available. Add earned cosmetics after
-pet progression is in place.
+contrast stay consistent across all presets. Add earned cosmetics after
+the two-pet loop is tested.
 
 ## Pets
 
-**Pip** is the playable starter and the only 3D pet in this build. Astra
+**Pip** is the playable starter. Astra
 made it as a cream egg in a broken dark shell with green feet, squared
 eyes, blush, and a tilted two-leaf sprig. It breathes, blinks, hops, and
-waves. The lineup below is the concept roster. Variant names and colors
+waves. **Puddle** is a low blue gel pet with a droplet tail. It squashes,
+hops, waves its tail, and sends out a ripple when greeted. The lineup
+below is the concept roster. Variant names and colors
 are working art directions. [View the 36 pet concepts](assets/concepts/pet-lineup.svg).
 
 | Family | Seed shape and three variants |
@@ -79,10 +83,6 @@ are working art directions. [View the 36 pet concepts](assets/concepts/pet-lineu
 | Reef | Jelly with a branching crown. Twig has a split sprig, Fan has three prongs, and Coral Crown has the broadest branches. |
 | Dune | Sand-colored egg with a sail. Drift has one curve, Ridge has a flat crest, and Twin Crest has two peaks. |
 | Orbit | Jelly with a tilted ring. Crescent has an open arc, Ring has a full blue loop, and Eclipse has a segmented lilac loop. |
-
-Puddle and Wick are the next two 3D art targets for Astra. Check that the
-trio reads at 32 px and from lounge distance before extending the roster.
-Keep the body rig reusable and give each family a distinct original synth cry.
 
 ## Verification
 
@@ -103,5 +103,7 @@ player's live screen change from four eggs to five on the drop and three
 after its chain. A repeated-drop run reached overflow, and clicking retry returned
 to four eggs with zero charge and the lounge still unlocked.
 
-The room is a small shared prototype. The final pet art, longer progression,
-save behavior, and phone playtest are separate milestones.
+Studio verified both hatches, meeting Puddle, switching back to Pip,
+and reloading the earned collection from the in-memory profile. A private
+published build is needed to verify a leave and rejoin in the Roblox
+client, uploaded synth playback, and touch on a phone.

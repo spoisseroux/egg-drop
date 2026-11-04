@@ -4,9 +4,11 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
+local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
 local Lounge = require(script.Lounge)
+local Progress = require(script.PlayerProgress)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -21,6 +23,7 @@ local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
+local loading = {}
 local nextSlot = 0
 Lounge.create()
 
@@ -31,9 +34,9 @@ local function publishState(board)
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
 	board.folder:SetAttribute("HatchCharge", board.round.charge)
-	board.folder:SetAttribute("Hatched", board.round.hatched)
+	board.folder:SetAttribute("OwnedPets", math.min(board.profile.rank, #Pets))
+	board.folder:SetAttribute("HatchedPet", board.hatchedPet)
 	board.folder:SetAttribute("RoundOver", board.round.over)
-	board.folder:SetAttribute("RoomUnlocked", board.roomUnlocked)
 end
 
 local function syncVisuals(board)
@@ -78,6 +81,7 @@ local function reset(board, preset)
 	table.clear(board.parts)
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial)
 	board.round = Round.new()
+	board.hatchedPet = nil
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
 	board.chain = 0
@@ -88,7 +92,13 @@ local function reset(board, preset)
 end
 
 local function addPlayer(player)
-	if boards[player] then
+	if boards[player] or loading[player] then
+		return
+	end
+	loading[player] = true
+	local profile = Progress.load(player.UserId)
+	loading[player] = nil
+	if player.Parent ~= Players then
 		return
 	end
 	local folder = Instance.new("Folder")
@@ -104,12 +114,13 @@ local function addPlayer(player)
 		lastModeChange = -math.huge,
 		lastThemeChange = -math.huge,
 		mode = "Board",
-		roomUnlocked = false,
+		profile = profile,
 	}
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
 	folder:SetAttribute("Mode", board.mode)
-	folder:SetAttribute("DeckThemeId", Themes.Default)
+	folder:SetAttribute("DeckThemeId", profile.theme)
+	folder:SetAttribute("ProfileLoadFailed", profile.loadFailed)
 	folder.Parent = trays
 	local function spawn(character)
 		Lounge.spawn(character, slot, player, function()
@@ -129,10 +140,11 @@ Players.PlayerRemoving:Connect(function(player)
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		boards[player] = nil
+		Progress.release(board.profile)
 	end
 end)
 for _, player in ipairs(Players:GetPlayers()) do
-	addPlayer(player)
+	task.spawn(addPlayer, player)
 end
 
 request.OnServerEvent:Connect(function(player, action, value)
@@ -145,6 +157,7 @@ request.OnServerEvent:Connect(function(player, action, value)
 		if typeof(value) == "string" and Themes.ById[value] and value ~= board.folder:GetAttribute("DeckThemeId")
 			and now - board.lastThemeChange >= 0.25 then
 			board.lastThemeChange = now
+			Progress.equip(board.profile, value)
 			board.folder:SetAttribute("DeckThemeId", value)
 			Lounge.setTheme(player.Character, value)
 		end
@@ -152,7 +165,7 @@ request.OnServerEvent:Connect(function(player, action, value)
 	end
 	if action == "mode" then
 		if now - board.lastModeChange < 0.45 or value == board.mode
-			or (value ~= "Board" and (value ~= "Room" or not board.roomUnlocked)) then
+			or (value ~= "Board" and (value ~= "Room" or board.profile.rank < 1)) then
 			return
 		end
 		board.lastModeChange = now
@@ -208,8 +221,11 @@ RunService.Heartbeat:Connect(function(dt)
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.lastMerge = board.playTime
 				board.merges += 1
-				board.round:merge(egg.tier)
-				board.roomUnlocked = board.roomUnlocked or board.round.hatched
+				local nextPet = Pets[board.profile.rank + 1]
+				if nextPet and board.round:merge(egg.tier, nextPet.charge) then
+					board.hatchedPet = nextPet.name
+					Progress.earn(board.profile)
+				end
 				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other)
 			end
 			if #merged > 0 or board.round.over then

@@ -9,7 +9,7 @@ Audio.__index = Audio
 local assetIds = {}
 local cues = {
 	"aim", "drop", "land", "bank", "merge", "chain",
-	"charge", "hatch_rise", "hatch", "pet", "overflow", "retry", "menu",
+	"charge", "hatch_rise", "hatch", "pet", "puddle", "overflow", "retry", "menu",
 }
 
 function Audio.uri(cue)

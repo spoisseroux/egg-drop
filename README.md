@@ -2,10 +2,13 @@
 
 Run `rojo serve --port 34873` and connect the Rojo Studio plugin to that
 port. In Play mode, drag across the rail and release to drop an egg.
-Merges charge the hatch meter. The first hatch reveals Pip and unlocks the
-lounge. Meet Pip and select **Open deck** to resume the same tray.
+Merges charge the hatch meter. Hatch Pip at 6 points to unlock the lounge,
+then hatch Puddle at 12 points. Meet either pet and select **Open deck** to
+resume the same tray.
 Other players in the lounge can see your handheld's live display.
-Use **Customize** in either view to preview and equip a shell for the session.
+Use **Customize** in either view to preview and equip a shell.
+Published servers save pet ownership and shell choice per player. Studio
+uses an in-memory profile for each play session.
 Sustained overflow ends the round with a retry button. See
 [the prototype rundown](PROTOTYPE.md) for the full flow and pet concepts.
 

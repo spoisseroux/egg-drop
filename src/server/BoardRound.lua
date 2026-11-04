@@ -4,15 +4,16 @@ local Round = {}
 Round.__index = Round
 
 function Round.new()
-	return setmetatable({ charge = 0, hatched = false, over = false, overflowTime = 0 }, Round)
+	return setmetatable({ charge = 0, over = false, overflowTime = 0 }, Round)
 end
 
-function Round:merge(tier)
-	if self.hatched then
-		return
+function Round:merge(tier, target)
+	self.charge += tier
+	if self.charge >= target then
+		self.charge = 0
+		return true
 	end
-	self.charge = math.min(Config.HatchTarget, self.charge + tier)
-	self.hatched = self.charge >= Config.HatchTarget
+	return false
 end
 
 function Round:step(eggs, dt)

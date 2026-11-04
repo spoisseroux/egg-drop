@@ -4,13 +4,16 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local PipVisual = require(script.Parent.PipVisual)
+local PuddleVisual = require(script.Parent.PuddleVisual)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
+local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 
 local Room = {}
 Room.__index = Room
 
 local roomCamera = CFrame.lookAt(Vector3.new(11, 13, 17), Vector3.new(0, 6, -2))
 local greetingCamera = CFrame.lookAt(Vector3.new(4, 8.2, 3.8), Vector3.new(0, 5.8, -5))
+local visuals = { PipVisual, PuddleVisual }
 
 local function frame(parent, name, size, position, color, z)
 	local node = Instance.new("Frame")
@@ -49,7 +52,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
+function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOpen)
 	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
@@ -58,8 +61,8 @@ function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
 	max.Parent = controls
 	local heading = Instance.new("TextLabel")
 	heading.Name = "Heading"
-	heading.Size = UDim2.new(1, -12, 0, 29)
-	heading.Position = UDim2.fromOffset(6, 5)
+	heading.Size = UDim2.new(0.56, 0, 0, 44)
+	heading.Position = UDim2.fromScale(0.025, 0)
 	heading.BackgroundTransparency = 1
 	heading.Text = "Pip’s lounge"
 	heading.TextColor3 = Palette.Paper
@@ -67,7 +70,9 @@ function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
 	heading.Font = Enum.Font.GothamBold
 	heading.ZIndex = 9
 	heading.Parent = controls
-	local greet = button(controls, "GreetPip", "Greet Pip", UDim2.new(0.025, 0, 0, 51), Palette.Panel)
+	local switch = button(controls, "SwitchPet", "", UDim2.new(0.60, 0, 0, 2), Palette.Panel)
+	switch.Size = UDim2.new(0.375, 0, 0, 44)
+	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Palette.Panel)
 	greet.Size = UDim2.new(0.29, 0, 0, 44)
 	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Palette.Primary)
 	leave.Size = UDim2.new(0.33, 0, 0, 44)
@@ -84,19 +89,30 @@ function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
 
 	local self = setmetatable({
 		board = board,
+		progress = progress,
 		controls = controls,
+		heading = heading,
+		switch = switch,
 		top = top,
 		bottom = bottom,
 		audio = audio,
 		mode = "Board",
 		target = "Board",
+		petIndex = 1,
 	}, Room)
+	switch.Activated:Connect(function()
+		local owned = progress:GetAttribute("OwnedPets") or 0
+		if self.mode == "Room" and not self.busy and not isPickerOpen() and owned > 1 then
+			self:showPet(self.petIndex % owned + 1)
+			audio:play(Pets[self.petIndex].cue)
+		end
+	end)
 	greet.Activated:Connect(function()
-		if self.busy or isPickerOpen() or not self.pip then
+		if self.busy or isPickerOpen() or not self.pet then
 			return
 		end
-		self.pip:greet()
-		audio:play("pet")
+		self.pet:greet()
+		audio:play(Pets[self.petIndex].cue)
 		local camera = workspace.CurrentCamera
 		if camera then
 			if self.cameraTween then
@@ -135,11 +151,34 @@ function Room.new(gui, board, audio, onReturn, onCustomize, isPickerOpen)
 		end
 	end)
 	RunService.RenderStepped:Connect(function(dt)
-		if self.pip then
-			self.pip:update(dt)
+		if self.pet then
+			self.pet:update(dt)
 		end
 	end)
 	return self
+end
+
+function Room:choosePet(name)
+	local owned = self.progress:GetAttribute("OwnedPets") or 0
+	for index = 1, owned do
+		if Pets[index].name == name then
+			self.petIndex = index
+			return
+		end
+	end
+end
+
+function Room:showPet(index)
+	local owned = math.max(1, self.progress:GetAttribute("OwnedPets") or 0)
+	self.petIndex = math.clamp(index, 1, owned)
+	if self.pet then
+		self.pet:destroy()
+	end
+	self.pet = visuals[self.petIndex].new(workspace, Vector3.new(0, 4.23, -5))
+	self.pet:greet()
+	self.heading.Text = string.format("%s  ·  %d/%d", Pets[self.petIndex].name, owned, #Pets)
+	self.switch.Visible = owned > 1
+	self.switch.Text = "View " .. Pets[self.petIndex % owned + 1].name
 end
 
 function Room:show(mode)
@@ -149,18 +188,17 @@ function Room:show(mode)
 		self.cameraTween = nil
 	end
 	if mode == "Room" then
-		self.pip = PipVisual.new(workspace, Vector3.new(0, 4.23, -5))
+		self:showPet(self.petIndex)
 		if camera then
 			self.savedCamera = { type = camera.CameraType, transform = camera.CFrame, fov = camera.FieldOfView }
 			camera.CameraType = Enum.CameraType.Scriptable
 			camera.CFrame = roomCamera
 			camera.FieldOfView = 53
 		end
-		self.pip:greet()
 	else
-		if self.pip then
-			self.pip:destroy()
-			self.pip = nil
+		if self.pet then
+			self.pet:destroy()
+			self.pet = nil
 		end
 		if camera and self.savedCamera then
 			camera.CFrame = self.savedCamera.transform
@@ -186,7 +224,7 @@ function Room:setMode(mode)
 			tween(self.top, 0.23, { Size = UDim2.fromScale(1, 0.51) }).Completed:Wait()
 			self.mode = self.target
 			self:show(self.mode)
-			self.audio:play(if self.mode == "Room" then "pet" else "menu")
+			self.audio:play(if self.mode == "Room" then Pets[self.petIndex].cue else "menu")
 			tween(self.bottom, 0.25, { Size = UDim2.fromScale(1, 0) })
 			tween(self.top, 0.25, { Size = UDim2.fromScale(1, 0) }).Completed:Wait()
 			self.top.Visible, self.bottom.Visible = false, false
