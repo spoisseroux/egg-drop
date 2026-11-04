@@ -61,8 +61,12 @@ end
 local gui = make("ScreenGui", "EggDrop", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets, DisplayOrder = 10,
 }, player:WaitForChild("PlayerGui"))
+local bleed = make("ScreenGui", "EggDropBleed", {
+	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 9,
+}, gui.Parent)
+local backing = Art.frame(bleed, "BoardBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 1)
 local backdrop = make("Frame", "Backdrop", {
-	BackgroundColor3 = Palette.Backdrop, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
 }, gui)
 local shell = make("Frame", "CartridgeShell", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0,
@@ -72,7 +76,17 @@ local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 },
 local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Art.Ink, BorderSizePixel = 0 }, backdrop)
 make("UICorner", "LensCurve", { CornerRadius = UDim.new(0, 12) }, bezel)
 local bezelRim = make("UIStroke", "InsetTrim", { Color = Palette.Rim, Thickness = 2 }, bezel)
-Art.deck(backdrop, shell, bezel)
+Art.deck(backing, shell, bezel)
+do
+	local trim = Art.frame(shell, "MicroTrim", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1))
+	trim.BackgroundTransparency = 1
+	for _, side in ipairs({ 0, 1 }) do
+		local shoulder = Art.frame(trim, "ShoulderTrim", Art.Silver,
+			UDim2.new(side, if side == 0 then 47 else -113, 0, 2), UDim2.fromOffset(66, 2))
+		shoulder.BackgroundTransparency = 0.64
+		Art.corner(shoulder, 1)
+	end
+end
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
 	BackgroundColor3 = Color3.fromHex("#192735"), BorderSizePixel = 0,
@@ -305,6 +319,21 @@ end, function()
 end, function()
 	return isPickerOpen() or journal.shade.Visible
 end, reduceEffects)
+do
+	local handoff = gui.DeckHandoff
+	local curtain = Art.frame(bleed, "HandoffBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 2)
+	local function updateBacking()
+		bleed.Enabled = gui.Enabled
+		backing.Visible = backdrop.Visible
+		curtain.Visible = handoff.Visible and not backdrop.Visible
+		curtain.BackgroundTransparency = handoff.BackgroundTransparency
+	end
+	gui:GetPropertyChangedSignal("Enabled"):Connect(updateBacking)
+	backdrop:GetPropertyChangedSignal("Visible"):Connect(updateBacking)
+	handoff:GetPropertyChangedSignal("Visible"):Connect(updateBacking)
+	handoff:GetPropertyChangedSignal("BackgroundTransparency"):Connect(updateBacking)
+	updateBacking()
+end
 journal = PetJournal.new(gui, make, label, function(index)
 	roomView:showPet(index)
 	request:FireServer("companion", Pets[index].id)
@@ -644,35 +673,38 @@ end
 
 local function layout()
 	local screen = backdrop.AbsoluteSize
-	local lateral = screen.Y < 530 and screen.X > screen.Y * 1.25
+	local lateral = screen.X >= 350 and screen.X >= screen.Y * 1.2
+	shell.MicroTrim.Visible = lateral
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local reserved = if lateral then 122 else 268
-	local grip = 132
-	local widthBudget = screen.X - (if lateral then grip * 2 + 56 else 48)
-	local width = math.max(1, math.min(415, widthBudget, (screen.Y - reserved) * ratio))
+	local microHeight = math.min(454, screen.Y - 16)
+	local width = if lateral then math.max(1, math.min(screen.X - 232, (microHeight - 139) * ratio))
+		else math.max(1, math.min(415, screen.X - 48, (screen.Y - 268) * ratio))
 	local height = width / ratio
-	local totalWidth = if lateral then width + grip * 2 + 24 else math.min(screen.X - 32, math.max(width + 40, 284))
+	local totalWidth = if lateral then math.min(screen.X - 32, math.max(width + 208, microHeight * 1.85))
+		else math.min(screen.X - 32, math.max(width + 40, 284))
+	local grip = (totalWidth - width) / 2
 	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then math.max(236, height + 104) else height + 254
+	local shellHeight = if lateral then microHeight else height + 254
 	local top = math.max(5, (screen.Y - shellHeight) / 2)
 	local screenX = (screen.X - width) / 2
-	local trayY = top + 70
+	local trayY = top + (if lateral then 66 else 70)
 	local trayBottom = trayY + height
 	shell.Position = UDim2.fromOffset(left - 8, top)
 	shell.Size = UDim2.fromOffset(totalWidth + 16, shellHeight)
-	bezel.Position = UDim2.fromOffset(screenX - 5, top + 24)
-	bezel.Size = UDim2.fromOffset(width + 10, height + (if lateral then 75 else 94))
+	local bezelGutter = if lateral then 10 else 5
+	bezel.Position = UDim2.fromOffset(screenX - bezelGutter, trayY - 46)
+	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2, height + (if lateral then 72 else 94))
 	viewport.Position = UDim2.fromOffset(screenX, trayY)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
-	modal.Position = UDim2.fromScale(0.5, 0.49)
+	modal.Position = UDim2.fromScale(0.5, 0.5)
 	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 236)
 	title.Position = UDim2.fromOffset(left, top + 1)
 	title.Size = UDim2.fromOffset(totalWidth, 23)
-	deckSticker.Position = UDim2.fromOffset(left + (if lateral then 52 else totalWidth * 0.47 - 12),
-		if lateral then top + 154 else trayBottom + 78)
-	rail.Position = UDim2.fromOffset(screenX, top + 26)
+	deckSticker.Position = UDim2.fromOffset(left + (if lateral then grip * 0.5 - 12 else totalWidth * 0.47 - 12),
+		if lateral then top + math.max(shellHeight * 0.69, shellHeight * 0.43 + 50) else trayBottom + 78)
+	rail.Position = UDim2.fromOffset(screenX, trayY - 44)
 	rail.Size = UDim2.fromOffset(width, 44)
 	local compact = width < 175
 	mascot.Visible = not compact
@@ -689,24 +721,26 @@ local function layout()
 	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
 	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
 	nextReadout.TextSize = if compact then 10 else 12
-	status.Position = UDim2.fromOffset(left, if lateral then top + 37 else trayBottom + 5)
-	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral then 38 else 22)
+	status.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.21 else trayBottom + 5)
+	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral and shellHeight >= 220 then 38 else 22)
 	status.TextSize = 13
 	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 3 else 26))
 	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
-	hardware.Position = UDim2.fromOffset(left, if lateral then top + 12 else trayBottom + 59)
-	hardware.Size = UDim2.fromOffset(totalWidth, 64)
-	dpad.Position = UDim2.fromOffset(if lateral then 20 else 0, if lateral then 77 else 0)
-	action.Position = UDim2.fromOffset(totalWidth - 48, 0)
-	dropCaption.Position = UDim2.fromOffset(totalWidth - 48, 49)
-	vents.Position = UDim2.fromOffset(49, 174)
-	vents.Visible = lateral
+	hardware.Position = UDim2.fromOffset(left, if lateral then top else trayBottom + 59)
+	hardware.Size = UDim2.fromOffset(totalWidth, if lateral then shellHeight else 64)
+	local dropX = if lateral then totalWidth - grip * 0.5 - 24 else totalWidth - 48
+	local dropY = if lateral then shellHeight * 0.43 else 0
+	dpad.Position = UDim2.fromOffset(if lateral then grip * 0.5 - 47 else 0, if lateral then dropY - 6 else 0)
+	action.Position = UDim2.fromOffset(dropX, dropY)
+	hardware.DropWell.Position = UDim2.fromOffset(dropX - 3, dropY + 1)
+	dropCaption.Position = UDim2.fromOffset(dropX, dropY + 49)
+	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 15, shellHeight * 0.78)
+	vents.Visible = lateral and shellHeight >= 220
 	for index, button in ipairs({ customizeButton, roomButton }) do
-		local buttonWidth = if lateral then grip else 100
-		local buttonX = if lateral then left + totalWidth - grip
-			else left + totalWidth * 0.5 + (if index == 1 then -111 else 11)
-		local buttonY = if lateral then top + 87 + (index - 1) * 50 else trayBottom + 130
+		local buttonWidth = 100
+		local buttonX = left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
+		local buttonY = if lateral then top + shellHeight - 44 else trayBottom + 130
 		button.Position = UDim2.fromOffset(buttonX, buttonY)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
 	end

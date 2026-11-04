@@ -34,7 +34,7 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
 | Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge. The other three hatch in order. |
 | Entering Sprout Hollow | The deck LCD closes to a cyan scanline, then the camera pulls back from a mossy nest under the hatchery tree | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
-| Sprout Hollow | A garden clearing with a canvas workbench, wooden field journal, creek, and footbridge | Nearby players can see the live tray on each player's vertical handheld and see companions around the clearing. |
+| Sprout Hollow | A garden clearing with a canvas workbench, wooden field journal, creek, and footbridge | Nearby players can see the live tray on each player's horizontal handheld and see companions around the clearing. |
 | Return | The room fades and the scanline opens back into the LCD | Restores the prior camera and deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
 | Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |
@@ -92,11 +92,12 @@ see changes on the full deck before you equip. The shell and sticker carry
 through retry, respawn, and room transitions. Published servers save the
 pair in the player profile. Studio uses session memory.
 
-Astra's design uses a recessed display with the same tall tray proportions
-in portrait and landscape. Landscape puts the D-pad and action buttons on
-side grips. In portrait, Customize and Lounge are recessed into the
-case below the left, right, and A buttons. Additional sticker slots, backplate art, and earned pet
-stickers are possible next steps.
+The landscape Pocket Deck has a wide faceplate with a centered LCD,
+an aim rocker on the left, an A button on the right, and Customize and
+Lounge along the lower edge. The avatar's held deck uses the same layout.
+Portrait screens move the main controls below the LCD. Both orientations
+use the same tall tray proportions. The backdrop covers the full viewport,
+while the controls sit inside the Roblox safe area.
 
 ## Pixel display and jelly
 

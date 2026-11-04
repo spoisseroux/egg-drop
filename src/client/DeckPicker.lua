@@ -49,26 +49,25 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply, onSetting)
 
 	local display = tile(card, "Display", UDim2.fromOffset(9, 56), UDim2.new(1, -18, 0, 94), Art.Ink)
 	Art.stroke(display, Art.Line)
-	local shell = tile(display, "Preview", UDim2.new(0.5, -34, 0, 4), UDim2.fromOffset(68, 86), Palette.Shell)
+	local shell = tile(display, "Preview", UDim2.new(0.5, -51, 0, 15), UDim2.fromOffset(102, 63), Palette.Shell)
 	Art.shade(shell, 1, 0.75)
 	Art.stroke(shell, Art.Muted, 0.45)
 	local previewName = Art.text(display, "PreviewName", "", UDim2.fromOffset(9, 68),
-		UDim2.new(0.5, -49, 0, 16), Art.Muted, 11)
+		UDim2.new(0.5, -64, 0, 16), Art.Muted, 11)
 	previewName.TextXAlignment = Enum.TextXAlignment.Left
-	local deckId = Art.text(display, "Model", "PD·01", UDim2.new(0.5, 41, 0, 68),
-		UDim2.new(0.5, -51, 0, 16), Art.Muted, 11)
+	local deckId = Art.text(display, "Model", "PD·01", UDim2.new(0.5, 57, 0, 68),
+		UDim2.new(0.5, -67, 0, 16), Art.Muted, 11)
 	deckId.TextXAlignment = Enum.TextXAlignment.Right
-	local bezel = tile(shell, "Bezel", UDim2.fromOffset(7, 7), UDim2.fromOffset(54, 49), Palette.Rim)
-	local screen = tile(bezel, "Screen", UDim2.fromOffset(3, 3), UDim2.fromOffset(48, 43), Palette.Tray)
-	tile(screen, "SmallEgg", UDim2.fromOffset(12, 31), UDim2.fromOffset(8, 8), Palette.JellyBlue)
-	tile(screen, "BigEgg", UDim2.fromOffset(24, 26), UDim2.fromOffset(13, 13), Palette.Ember)
-	tile(shell, "Left", UDim2.fromOffset(9, 65), UDim2.fromOffset(7, 7), Palette.Ink)
-	tile(shell, "Right", UDim2.fromOffset(18, 65), UDim2.fromOffset(7, 7), Palette.Ink)
-	local buttonA = tile(shell, "A", UDim2.fromOffset(48, 63), UDim2.fromOffset(9, 9), Palette.Primary)
-	tile(shell, "Customize", UDim2.fromOffset(23, 77), UDim2.fromOffset(10, 4), Palette.Ink)
-	tile(shell, "Lounge", UDim2.fromOffset(36, 77), UDim2.fromOffset(10, 4), Palette.Ink)
+	local bezel = tile(shell, "Bezel", UDim2.fromOffset(29, 5), UDim2.fromOffset(44, 53), Palette.Rim)
+	local screen = tile(bezel, "Screen", UDim2.fromOffset(4, 3), UDim2.fromOffset(36, 47), Palette.Tray)
+	tile(screen, "SmallEgg", UDim2.fromOffset(6, 34), UDim2.fromOffset(8, 8), Palette.JellyBlue)
+	tile(screen, "BigEgg", UDim2.fromOffset(17, 29), UDim2.fromOffset(13, 13), Palette.Ember)
+	tile(shell, "AimRocker", UDim2.fromOffset(7, 25), UDim2.fromOffset(16, 7), Palette.Ink)
+	local buttonA = tile(shell, "A", UDim2.fromOffset(80, 23), UDim2.fromOffset(13, 13), Palette.Primary)
+	tile(shell, "Customize", UDim2.fromOffset(17, 53), UDim2.fromOffset(9, 3), Palette.Ink)
+	tile(shell, "Lounge", UDim2.fromOffset(77, 53), UDim2.fromOffset(9, 3), Palette.Ink)
 	local sticker = label("TextLabel", "Sticker", "", shell, Palette.Primary)
-	sticker.Position = UDim2.fromOffset(26, 62)
+	sticker.Position = UDim2.fromOffset(10, 37)
 	sticker.Size = UDim2.fromOffset(13, 13)
 	sticker.TextSize = 12
 	sticker.Rotation = -11

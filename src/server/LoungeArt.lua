@@ -357,9 +357,10 @@ function Art.build(room, part)
 	for _, side in ipairs({ -1, 1 }) do
 		box("FieldGuidePage", 11 + side * 0.39, 5.69, -6.15, 0.76, 0.07, 0.85, Color3.fromHex("#FFF0C8"))
 	end
-	box("DisplayDeck", -11.2, 5.91, -6.0, 0.55, 0.86, 0.15, Color3.fromHex("#303B49"))
-	box("DisplayLCD", -11.2, 6.04, -5.91, 0.37, 0.46, 0.04, Color3.fromHex("#71CAD6"))
-	box("DisplayA", -11.06, 5.54, -5.91, 0.095, 0.09, 0.045, Color3.fromHex("#F0B850"))
+	box("DisplayDeck", -11.2, 5.77, -6.0, 1.02, 0.47, 0.15, Color3.fromHex("#303B49"))
+	box("DisplayLCD", -11.2, 5.77, -5.91, 0.28, 0.39, 0.04, Color3.fromHex("#71CAD6"))
+	box("DisplayRocker", -11.53, 5.77, -5.91, 0.15, 0.07, 0.04, bark)
+	box("DisplayA", -10.87, 5.77, -5.91, 0.095, 0.09, 0.045, Color3.fromHex("#F0B850"))
 	for _, side in ipairs({ -1, 1 }) do
 		box("GardenBench", side * 11.8, 4.66, 12.6, 5.3, 0.22, 1.48, wood, true)
 		for _, x in ipairs({ 10.0, 13.6 }) do

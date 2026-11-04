@@ -94,21 +94,21 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	device.Name = "PocketDeck"
 	device:SetAttribute("BoardUserId", userId)
 	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(22), 0, 0)
-	local shell = attach(device, torso, "Shell", Vector3.new(1.05, 1.65, 0.21), mount, Palette.Shell)
-	attach(device, torso, "FrontPlate", Vector3.new(1.00, 1.60, 0.025),
-		mount * CFrame.new(0, 0, -0.104), Palette.Shell)
+	local shell = attach(device, torso, "Shell", Vector3.new(1.84, 0.87, 0.17), mount, Palette.Shell)
+	attach(device, torso, "FrontPlate", Vector3.new(1.78, 0.81, 0.025),
+		mount * CFrame.new(0, 0, -0.085), Palette.Shell)
 	local stickerFace = Instance.new("SurfaceGui")
 	stickerFace.Name = "StickerFace"
 	stickerFace.Face = Enum.NormalId.Front
 	stickerFace.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	stickerFace.CanvasSize = Vector2.new(105, 165)
+	stickerFace.CanvasSize = Vector2.new(178, 81)
 	stickerFace.LightInfluence = 0
 	stickerFace.MaxDistance = 34
 	stickerFace.Parent = shell
 	local decal = Instance.new("TextLabel")
 	decal.Name = "Decal"
-	decal.Position = UDim2.fromOffset(45, 112)
-	decal.Size = UDim2.fromOffset(15, 15)
+	decal.Position = UDim2.fromOffset(26, 55)
+	decal.Size = UDim2.fromOffset(14, 14)
 	decal.Rotation = -11
 	decal.TextSize = 12
 	decal.Font = Enum.Font.GothamBold
@@ -120,25 +120,25 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	-- Mount the decal on the face plate so the new layered shell cannot cover it.
 	stickerFace.Adornee = device.FrontPlate
 	stickerFace.ZOffset = 1
-	attach(device, torso, "Bezel", Vector3.new(0.91, 0.93, 0.04),
-		mount * CFrame.new(0, 0.275, -0.132), Palette.Rim)
-	local screen = attach(device, torso, "Screen", Vector3.new(0.63, 0.855, 0.035),
-		mount * CFrame.new(0, 0.275, -0.159), Color3.fromHex("#182C39"))
+	attach(device, torso, "Bezel", Vector3.new(0.69, 0.74, 0.026),
+		mount * CFrame.new(0, 0.022, -0.109), Palette.Rim)
+	local screen = attach(device, torso, "Screen", Vector3.new(0.49, 0.665, 0.029),
+		mount * CFrame.new(0, 0.022, -0.131), Color3.fromHex("#182C39"))
 	local power = attach(device, torso, "Power", Vector3.new(0.055, 0.055, 0.027),
-		mount * CFrame.new(0.391, 0.66, -0.153), Color3.fromHex("#54D9F3"))
+		mount * CFrame.new(-0.75, 0.25, -0.102), Color3.fromHex("#54D9F3"))
 	power.Material = Enum.Material.Neon
 	attach(device, torso, "AimRocker", Vector3.new(0.27, 0.13, 0.06),
-		mount * CFrame.new(0.24, -0.32, -0.135), Palette.Ink)
+		mount * CFrame.new(0.59, 0.041, -0.112), Color3.fromHex("#283744"))
 	attach(device, torso, "AimDivider", Vector3.new(0.018, 0.105, 0.012),
-		mount * CFrame.new(0.24, -0.32, -0.168), Palette.Rim)
+		mount * CFrame.new(0.59, 0.041, -0.146), Palette.Rim)
 	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
-		mount * CFrame.new(-0.24, -0.32, -0.145) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
+		mount * CFrame.new(-0.60, 0.041, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
 	buttonA.Shape = Enum.PartType.Cylinder
-	attach(device, torso, "Customize", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(-0.13, -0.60, -0.128), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(0.05, -0.60, -0.128), Palette.Ink)
+	attach(device, torso, "Customize", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(0.49, -0.31, -0.107), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(-0.49, -0.31, -0.107), Palette.Ink)
 	for index = 0, 2 do
 		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
-			mount * CFrame.new(-0.25 - index * 0.052, -0.66, -0.124) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
+			mount * CFrame.new(-0.65 - index * 0.044, -0.22, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
 	end
 	paintDevice(device, themeId, stickerId)
 	local badge = Instance.new("BillboardGui")
@@ -166,7 +166,7 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 		if humanoid and arm and hand then
 			local target = Instance.new("Attachment")
 			target.Name = side .. "Grip"
-			target.Position = Vector3.new(if side == "Left" then -0.54 else 0.54, -0.62, 0.075)
+			target.Position = Vector3.new(if side == "Left" then -0.88 else 0.88, -0.27, 0.10)
 			target.Parent = shell
 			local grip = Instance.new("IKControl")
 			grip.Name = "Deck" .. side
