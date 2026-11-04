@@ -28,7 +28,8 @@ function Screens.start(trays, config)
 					local surface = Instance.new("SurfaceGui")
 					surface.Name = "LiveTray"
 					surface.Face = Enum.NormalId.Front
-					surface.CanvasSize = Vector2.new(84, 87)
+					surface.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+					surface.CanvasSize = Vector2.new(84, 114)
 					surface.LightInfluence = 0
 					surface.MaxDistance = 34
 					surface.Active = false

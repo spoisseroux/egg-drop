@@ -33,8 +33,8 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
 | Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge. The other three hatch in order. |
-| Entering the lounge | The deck LCD closes to a cyan scanline, then the camera pulls back from the hatchery | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
-| Lounge | An enclosed graphite arcade with a cyan workbench, amber pet journal, and lit hatchery stage | Nearby miniature screens show each owner's tray. The player's companion is also visible to nearby lounge visitors. |
+| Entering Sprout Hollow | The deck LCD closes to a cyan scanline, then the camera pulls back from a mossy nest under the hatchery tree | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
+| Sprout Hollow | A garden clearing with a canvas workbench, wooden field journal, creek, and footbridge | Nearby players can see the live tray on each player's vertical handheld and see companions around the clearing. |
 | Return | The room fades and the scanline opens back into the LCD | Restores the prior camera and deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
 | Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |

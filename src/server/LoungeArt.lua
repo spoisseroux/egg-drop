@@ -1,178 +1,237 @@
+local Lighting = game:GetService("Lighting")
+
 local Art = {}
+local grass = Color3.fromHex("#87A951")
+local moss = Color3.fromHex("#6C9047")
+local bark = Color3.fromHex("#795035")
+local wood = Color3.fromHex("#AE7951")
+local stone = Color3.fromHex("#C9BC9A")
+local leaf = { Color3.fromHex("#658D43"), Color3.fromHex("#7FA64C"), Color3.fromHex("#97B75B") }
 
-local ink = Color3.fromHex("#111A23")
-local graphite = Color3.fromHex("#263644")
-local blue = Color3.fromHex("#223E55")
-local steel = Color3.fromHex("#536A7D")
-local silver = Color3.fromHex("#AFC4CE")
-local cyan = Color3.fromHex("#54D9F3")
-local amber = Color3.fromHex("#FFC75A")
-
-local function sign(parent, words, tint, subtitle)
-	local screen = Instance.new("SurfaceGui")
-	screen.Face = Enum.NormalId.Back
-	screen.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	screen.CanvasSize = Vector2.new(640, 120)
-	screen.LightInfluence = 0
-	screen.Parent = parent
-
-	local function line(name, value, y, height, color, font)
-		local text = Instance.new("TextLabel")
-		text.Name = name
-		text.BackgroundTransparency = 1
-		text.Size = UDim2.fromScale(0.9, height)
-		text.Position = UDim2.fromScale(0.05, y)
-		text.Text = value
-		text.TextColor3 = color
-		text.TextScaled = true
-		text.Font = font
-		text.Parent = screen
-	end
-
-	line("Heading", words, if subtitle then 0.07 else 0.15, if subtitle then 0.54 else 0.7, tint, Enum.Font.GothamBold)
-	if subtitle then
-		line("Index", subtitle, 0.66, 0.21, silver, Enum.Font.Code)
-	end
-end
-
-local function lamp(part, color, range, brightness)
-	local light = Instance.new("PointLight")
-	light.Color = color
-	light.Range = range
-	light.Brightness = brightness
-	light.Parent = part
+local function sign(parent, title)
+	local surface = Instance.new("SurfaceGui")
+	surface.Face = Enum.NormalId.Back
+	surface.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+	surface.CanvasSize = Vector2.new(520, 100)
+	surface.LightInfluence = 0.15
+	surface.Parent = parent
+	local text = Instance.new("TextLabel")
+	text.BackgroundTransparency = 1
+	text.Position = UDim2.fromScale(0.06, 0.1)
+	text.Size = UDim2.fromScale(0.88, 0.8)
+	text.Text = title
+	text.TextScaled = true
+	text.Font = Enum.Font.GothamBold
+	text.TextColor3 = Color3.fromHex("#FFF0C8")
+	text.Parent = surface
 end
 
 function Art.build(room, part)
-	local function box(name, x, y, z, w, h, d, color, collides, material)
-		local item = part(room, name, Vector3.new(w, h, d), CFrame.new(x, y, z), color, collides)
-		item.CanTouch = false
-		item.CanQuery = collides == true
-		item.Material = material or Enum.Material.SmoothPlastic
-		return item
+	local random = Random.new(1702)
+	local function box(name, x, y, z, w, h, d, tint, collide)
+		local piece = part(room, name, Vector3.new(w, h, d), CFrame.new(x, y, z), tint, collide)
+		piece.CanTouch = false
+		piece.CanQuery = collide == true
+		return piece
 	end
-	local function rail(name, x, y, z, w, h, d, color)
-		return box(name, x, y, z, w, h, d, color, false, Enum.Material.Neon)
+	local function oval(name, x, y, z, w, h, d, tint)
+		local piece = box(name, x, y, z, w, h, d, tint)
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = piece
+		return piece
 	end
-	local function disk(name, x, y, z, diameter, height, color, material)
-		local item = box(name, x, y, z, height, diameter, diameter, color, false, material)
-		item.Shape = Enum.PartType.Cylinder
-		item.CFrame *= CFrame.Angles(0, 0, math.pi / 2)
-		return item
+	local function limb(name, a, b, width, tint)
+		local center = (a + b) / 2
+		local piece = box(name, center.X, center.Y, center.Z, (a - b).Magnitude + width * 0.45, width, width, tint)
+		piece.Shape = Enum.PartType.Cylinder
+		local up = if math.abs((b - a).Unit.Y) > 0.98 then Vector3.zAxis else Vector3.yAxis
+		piece.CFrame = CFrame.lookAt(center, b, up) * CFrame.Angles(0, math.pi / 2, 0)
+		return piece
 	end
-
-	box("Floor", 0, 3.5, 0, 40, 1, 32, graphite, true)
-	box("BackWall", 0, 10, -15.5, 40, 13, 1, ink, true)
-	box("RearCrown", 0, 15.75, -14.7, 40, 1.35, 2.4, graphite, false, Enum.Material.Metal)
-	box("Ceiling", 0, 16.8, 0, 40, 0.65, 32, graphite)
-	box("CeilingInlay", 0, 16.43, 0, 23.4, 0.12, 29.3, ink)
-	box("FrontRail", 0, 5, 15.6, 40, 2, 0.7, graphite, true)
-	box("FrontWall", 0, 10.4, 16.25, 40, 13.3, 0.55, graphite, true)
-	box("RearInset", 0, 9.1, -14.87, 35.5, 10.4, 0.22, graphite)
-	box("DisplayBezel", 0, 10.15, -14.66, 22.6, 8, 0.30, steel, false, Enum.Material.Metal)
-	box("DisplayGlass", 0, 10.15, -14.46, 22, 7.48, 0.2, blue)
-	rail("DisplayScanEdge", 0, 13.62, -14.30, 20.9, 0.055, 0.05, cyan)
-	for _, side in ipairs({ -1, 1 }) do
-		box("SideWall", side * 19.5, 6.5, 0, 1, 5, 32, graphite, true)
-		box("RimCap", side * 19.5, 9.05, 0, 1.12, 0.16, 31.6, steel)
-		box("UpperWall", side * 19.5, 12.75, 0, 1, 7.5, 32, blue, true)
-		for z = -12, 12, 6 do
-			box("WallRib", side * 18.92, 12.72, z, 0.14, 7.25, 0.13, steel)
-		end
-		local ceilingPanel = rail("CeilingPanel", side * 6.2, 16.32, -1.7, 0.18, 0.09, 17.4, silver)
-		local softLight = Instance.new("SurfaceLight")
-		softLight.Face = Enum.NormalId.Bottom
-		softLight.Angle = 140
-		softLight.Brightness = 0.95
-		softLight.Range = 24
-		softLight.Color = Color3.fromHex("#CEE9FF")
-		softLight.Parent = ceilingPanel
-		box("RearTower", side * 17.2, 9.6, -14.45, 2.5, 11, 0.95, graphite, false, Enum.Material.Metal)
-		box("TowerInset", side * 17.2, 9.55, -13.92, 1.75, 8.8, 0.18, ink)
-		local towerLight = rail("TowerLamp", side * 17.2, 10.15, -13.77, 0.12, 5.2, 0.10, cyan)
-		lamp(towerLight, cyan, 14, 0.55)
-		for i = 1, 4 do
-			box("RearVent", side * (12 + i * 0.55), 6.25, -14.67, 0.22, 3, 0.12, steel)
-		end
-		for _, x in ipairs({ 11.7, 14.3 }) do
-			box("BenchFoot", side * x, 4.32, 6.5, 0.32, 0.64, 1.98, steel)
-		end
-		box("Bench", side * 13, 4.69, 6.5, 7, 0.64, 2.8, ink, true)
-		box("BenchBack", side * 13, 5.30, 5.31, 7, 1.22, 0.42, graphite, true)
+	local function plant(x, y, z, size)
 		for index = -1, 1 do
-			box("BenchCushion", side * 13 + index * 2.14, 5.08, 6.61, 2.03, 0.25, 2.12, Color3.fromHex("#385976"))
+			local frond = oval("Fern", x + index * size * 0.22, y + size * 0.35, z, size * 0.23, size, size * 0.22,
+				leaf[index + 2])
+			frond.CFrame *= CFrame.Angles(0, 0, -index * 0.56)
 		end
-		rail("BenchTrim", side * 13, 4.58, 7.92, 6.5, 0.045, 0.05, cyan)
-		rail("AisleTrace", side * 3.8, 4.035, 3.0, 0.065, 0.025, 13.0, cyan)
-		rail("BranchTrace", side * 7.35, 4.035, -1.25, 7.05, 0.025, 0.065, cyan)
+	end
+	local function flower(x, z, size, tint)
+		local y = 4 + size * 0.55
+		limb("FlowerStem", Vector3.new(x, 4, z), Vector3.new(x, y, z + 0.035), size * 0.08, moss)
+		for i = 1, 5 do
+			local theta = i * math.pi * 2 / 5
+			oval("Petal", x + math.cos(theta) * size * 0.21, y, z + math.sin(theta) * size * 0.21,
+				size * 0.29, size * 0.13, size * 0.29, tint)
+		end
+		oval("FlowerHeart", x, y + 0.035, z, size * 0.26, size * 0.17, size * 0.26, Color3.fromHex("#E8AB53"))
 	end
 
-	-- Pixel artwork inset in the rear display. The steps echo the deck's LCD.
-	local silhouette = { 0.6, 0.85, 0.7, 1.3, 1.05, 0.8, 1.6, 1.2, 0.72, 1.0, 0.64, 0.87 }
-	for i, height in ipairs(silhouette) do
-		for _, side in ipairs({ -1, 1 }) do
-			box("CircuitSilhouette", side * (2.85 + i * 0.63), 6.62 + height / 2, -14.30,
-				0.57, height, 0.04, graphite)
-		end
-	end
-	local marquee = box("Marquee", 0, 11.4, -14.21, 15.1, 1.87, 0.12, ink)
-	sign(marquee, "POCKET CLUB", silver, "EGG DROP   /   SOCIAL ARCADE")
-	rail("MarqueePin", 0, 10.42, -14.13, 13.6, 0.055, 0.055, cyan)
-	for row, pixels in ipairs({ "..X..", ".....", "..X..", ".....", "..X..", ".X.X.", "X...X", "X..XX", ".XXX." }) do
-		for column = 1, #pixels do
-			if pixels:sub(column, column) == "X" then
-				box("EggInsignia", (column - 3) * 0.18, 10.05 - row * 0.18, -14.29, 0.17, 0.17, 0.045, cyan)
-			end
-		end
-	end
+	Lighting.ClockTime = 15.1
+	Lighting.Brightness = 2
+	Lighting.Ambient = Color3.fromHex("#817F71")
+	Lighting.OutdoorAmbient = Color3.fromHex("#A3A795")
 
-	for i = 1, 9 do
-		box("AisleTile", 0, 4.013, 9.85 - i * 1.41, 7.42, 0.025, 1.34,
-			if i % 2 == 0 then graphite else blue)
-	end
-	disk("HatchBase", 0, 4.09, -5, 7.5, 0.18, ink, Enum.Material.Metal)
-	disk("HatchRing", 0, 4.165, -5, 7.03, 0.075, amber, Enum.Material.Neon)
-	local hatchTop = disk("HatchTop", 0, 4.19, -5, 6.82, 0.08, graphite, Enum.Material.Slate)
-	hatchTop.CanCollide, hatchTop.CanQuery = true, true
-	local display = box("HatchDisplay", 0, 8.06, -9.55, 6.65, 1.12, 0.3, ink)
-	sign(display, "HATCHERY", amber)
+	box("Floor", 0, 3.5, 0, 44, 1, 35, grass, true)
+	box("MeadowGround", 0, 2.85, -24, 400, 0.85, 280, grass)
 	for _, side in ipairs({ -1, 1 }) do
-		box("HatchColumn", side * 3.0, 6.06, -9.55, 0.31, 4.24, 0.42, steel)
-		rail("HatchTrim", side * 3.02, 6.13, -9.31, 0.07, 3.6, 0.06, amber)
+		box("GardenBoundary", side * 21.6, 9, 0, 0.6, 10, 35, grass, true).Transparency = 1
+		box("GardenBoundary", 0, 9, side * 17.2, 44, 10, 0.6, grass, true).Transparency = 1
 	end
-	local stageLight = box("StageLamp", 0, 7.3, -3.1, 0.1, 0.1, 0.1, amber)
-	stageLight.Transparency = 1
-	lamp(stageLight, Color3.fromHex("#FFE7B6"), 12, 0.65)
+	for _, hill in ipairs({
+		{ -32, -21, 35, 11, 28 }, { -16, -31, 31, 14, 25 }, { 11, -34, 34, 12, 26 },
+		{ 33, -29, 38, 19, 32 }, { 19, -53, 66, 22, 33 }, { -39, -49, 45, 23, 38 },
+		{ 33, 2, 29, 12, 33 }, { -31, 0, 29, 8, 31 },
+		{ -69, -62, 74, 27, 49 }, { -32, -87, 65, 25, 44 }, { 29, -90, 69, 29, 54 }, { 75, -64, 67, 26, 50 },
+	}) do
+		oval("MeadowHill", hill[1], 1.5, hill[2], hill[3], hill[4], hill[5],
+			if hill[2] < -40 then Color3.fromHex("#7B9E88") else Color3.fromHex("#8DA867"))
+	end
+	for index = 1, 13 do
+		local x = -36 + (index - 1) * 6
+		local z = -25 - index % 3 * 4.1
+		local y = if math.abs(x) > 22 then 6 else 5
+		limb("DistantTrunk", Vector3.new(x, y - 1, z), Vector3.new(x, y + 4, z), 0.72, bark)
+		oval("DistantCrown", x, y + 4.2, z, 5.6, 4.6, 4.5, leaf[index % #leaf + 1])
+	end
+
+	-- A curved route links the player entrance, nest, and field stations.
+	for index, tile in ipairs({
+		{ 2.5, 13.3 }, { 1.1, 11.5 }, { -0.4, 9.7 }, { -1.1, 7.8 }, { -0.8, 5.8 },
+		{ 0.1, 3.7 }, { 0.7, 1.7 }, { 0.5, -0.5 }, { -0.2, -2.2 },
+		{ -3.2, -1.2 }, { -5.7, -2.5 }, { -8.0, -3.5 }, { 3.9, -1.6 },
+		{ 6.3, -2.8 }, { 8.8, -3.5 }, { 12.0, -7.5 }, { 13.9, -8.9 }, { 15.3, -9.5 },
+	}) do
+		local p = oval("SteppingStone", tile[1], 4.026, tile[2], 2.0 + index % 3 * 0.24, 0.13, 1.45, stone)
+		p.CFrame *= CFrame.Angles(0, index * 0.67, 0)
+	end
+
+	-- The branching tree frames Pip without blocking the hatchery camera.
+	local root = Vector3.new(-3.4, 4.05, -10.9)
+	local fork = Vector3.new(-3.8, 9.0, -11.0)
+	local crown = Vector3.new(-4.1, 13.1, -11.5)
+	local trunk = limb("HatchTreeTrunk", root, fork, 2.6, bark)
+	trunk.CanCollide, trunk.CanQuery = true, true
+	limb("HatchTreeTrunk", fork, crown, 1.95, bark)
+	for index, offset in ipairs({ Vector3.new(-2.2, 0, 0.7), Vector3.new(1.9, 0, 1.35), Vector3.new(0.65, 0, -2.3) }) do
+		limb("TreeRoot", root + Vector3.new(0, 0.68, 0), root + offset, 0.63, bark)
+		oval("RootMoss", root.X + offset.X, 4.16, root.Z + offset.Z, 1.8, 0.33, 1.2, leaf[index])
+	end
+	for index, branch in ipairs({
+		{ -8.2, 12.4, -11.6 }, { 0.5, 12.7, -9.8 }, { 3.8, 13.2, -11.1 },
+		{ -6.6, 14.5, -13.6 }, { -1.4, 15.1, -13.8 }, { -3.3, 15.7, -9.4 },
+	}) do
+		local tip = Vector3.new(branch[1], branch[2], branch[3])
+		limb("HatchTreeBranch", if index > 3 then crown else fork, tip, if index == 3 then 0.9 else 1.2, bark)
+		oval("Canopy", tip.X, tip.Y + 0.6, tip.Z, 6.9, 3.45, 5.8, leaf[index % #leaf + 1])
+		oval("Canopy", tip.X - 0.5, tip.Y + 1.55, tip.Z + 0.65, 4.1, 2.6, 3.95, leaf[(index + 1) % #leaf + 1])
+	end
+	limb("LanternCord", Vector3.new(0.82, 12.2, -9.6), Vector3.new(0.82, 8.7, -9.6), 0.085, bark)
+	box("LanternCap", 0.82, 8.8, -9.6, 0.61, 0.12, 0.61, bark)
+	local lantern = box("LanternGlass", 0.82, 8.47, -9.6, 0.47, 0.54, 0.47, Color3.fromHex("#FFC874"))
+	lantern.Material = Enum.Material.Neon
+	box("LanternBase", 0.82, 8.17, -9.6, 0.60, 0.11, 0.60, bark)
+
+	local nest = box("HatchTop", 0, 4.115, -5, 5.8, 0.23, 4.6, stone, true)
+	nest.Transparency = 1
+	oval("MossNest", 0, 4.06, -5, 6.2, 0.34, 4.95, moss)
+	for index = 1, 12 do
+		local theta = index * math.pi / 6
+		oval("NestStone", math.cos(theta) * 2.82, 4.15, -5 + math.sin(theta) * 2.11,
+			1.05, 0.36, 0.9, stone:Lerp(grass, index % 3 * 0.10))
+	end
+	for _, x in ipairs({ -1.85, 1.87 }) do
+		oval("HatcheryEgg", x, 4.63, -6.06, 0.65, 0.95, 0.59, Color3.fromHex("#EEE0AE"))
+	end
+
+	-- Water follows the far edge of the walkable clearing, with a real bridge deck.
+	local water = oval("Creek", 18.2, 4.03, -1.5, 7.7, 0.13, 33, Color3.fromHex("#68B6C6"))
+	water.Material = Enum.Material.Glass
+	water.Transparency = 0.16
+	for index = 1, 10 do
+		local z = -15.5 + index * 2.65
+		local ripple = oval("WaterRipple", 17.8 + math.sin(index * 2.2) * 1.4, 4.105, z, 1.1, 0.012, 0.13,
+			Color3.fromHex("#B7E5DA"))
+		ripple.Transparency = 0.37
+		oval("CreekStone", 15.02 + math.sin(index) * 0.58, 4.18, z, 1.05, 0.5, 0.76, stone)
+		if index % 2 == 0 then
+			plant(14.45, 4, z + 0.6, 0.85)
+		end
+	end
+	for index = 0, 10 do
+		local x = 14.3 + index * 0.64
+		box("BridgePlank", x, 4.25, -9.4, 0.62, 0.21, 2.4, if index % 2 == 0 then wood else bark, true)
+	end
+	for _, z in ipairs({ -10.53, -8.27 }) do
+		for _, x in ipairs({ 14.4, 17.6, 20.7 }) do
+			box("BridgePost", x, 4.76, z, 0.20, 1.18, 0.20, bark)
+		end
+		box("BridgeRail", 17.6, 5.13, z, 6.45, 0.13, 0.13, wood)
+	end
 
 	for _, station in ipairs({
-		{ x = -11, id = "Customize", label = "DECK WORKBENCH", tint = cyan, index = "01" },
-		{ x = 11, id = "Journal", label = "PET JOURNAL", tint = amber, index = "02" },
+		{ x = -11, id = "Customize", title = "Deck workbench", action = "Customize" },
+		{ x = 11, id = "Journal", title = "Field journal", action = "Open journal" },
 	}) do
-		local x, id, tint = station.x, station.id, station.tint
-		box(id .. "Counter", x, 4.68, -6.3, 6.8, 1.35, 2.4, graphite, true, Enum.Material.Metal)
-		box(id .. "Kickplate", x, 4.28, -5.07, 6.3, 0.24, 0.08, ink)
-		rail(id .. "Edge", x, 5.10, -5.06, 6.3, 0.058, 0.07, tint)
-		local top = box(id .. "Top", x, 5.45, -6.3, 7.1, 0.23, 2.62, steel, true)
-		box(id .. "ScreenFrame", x, 6.63, -7.44, 6.82, 1.32, 0.29, steel)
-		sign(box(id .. "Sign", x, 6.63, -7.25, 6.52, 1.05, 0.12, ink), station.label, tint, station.index)
-		for i = -1, 1 do
-			local itemX = x + i * 1.72
-			box(id .. "DisplayTile", itemX, 5.62, -6.22, 1.18, 0.11, 0.83, ink)
-			if id == "Customize" then
-				local chip = box("SampleDeck", itemX, 5.78, -6.23, 0.76, 0.20, 0.57, blue:Lerp(tint, (i + 2) * 0.22))
-				chip.CFrame *= CFrame.Angles(0, i * 0.24, 0)
-			else
-				local specimen = box("Specimen", itemX, 5.91, -6.23, 0.6, 0.53, 0.52, tint:Lerp(cyan, (i + 1) * 0.38))
-				specimen.Shape = Enum.PartType.Ball
-			end
+		local x, id = station.x, station.id
+		for _, side in ipairs({ -1, 1 }) do
+			box("TableLeg", x + side * 2.05, 4.66, -6.3, 0.34, 1.32, 1.62, bark, true)
 		end
+		local top = box(id .. "Top", x, 5.41, -6.3, 5.15, 0.24, 2.25, wood, true)
+		sign(box(id .. "Sign", x, 6.2, -7.2, 4.65, 0.68, 0.18, bark), station.title)
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ActionText = if id == "Customize" then "Customize" else "Open journal"
-		prompt.ObjectText = if id == "Customize" then "Deck workbench" else "Pet journal"
+		prompt.ActionText = station.action
+		prompt.ObjectText = station.title
 		prompt.RequiresLineOfSight = false
 		prompt.MaxActivationDistance = 7
 		prompt:SetAttribute("PocketClubStation", id)
 		prompt.Parent = top
+	end
+
+	for _, x in ipairs({ -13.5, -8.5 }) do
+		box("AwningPost", x, 5.8, -7.75, 0.22, 3.6, 0.22, bark)
+	end
+	local awning = box("CanvasAwning", -11, 7.55, -6.9, 5.65, 0.12, 2.35, Color3.fromHex("#EBDAAC"))
+	awning.CFrame *= CFrame.Angles(math.rad(-9), 0, 0)
+	box("FieldGuideCover", 11, 5.59, -6.15, 1.65, 0.16, 0.94, bark)
+	for _, side in ipairs({ -1, 1 }) do
+		box("FieldGuidePage", 11 + side * 0.39, 5.69, -6.15, 0.76, 0.07, 0.85, Color3.fromHex("#FFF0C8"))
+	end
+	box("DisplayDeck", -11.2, 5.91, -6.0, 0.55, 0.86, 0.15, Color3.fromHex("#303B49"))
+	box("DisplayLCD", -11.2, 6.04, -5.91, 0.37, 0.46, 0.04, Color3.fromHex("#71CAD6"))
+	box("DisplayA", -11.06, 5.54, -5.91, 0.095, 0.09, 0.045, Color3.fromHex("#F0B850"))
+	for _, side in ipairs({ -1, 1 }) do
+		box("GardenBench", side * 11.8, 4.66, 12.6, 5.3, 0.22, 1.48, wood, true)
+		for _, x in ipairs({ 10.0, 13.6 }) do
+			box("BenchLeg", side * x, 4.26, 12.6, 0.28, 0.52, 1.24, bark)
+		end
+	end
+
+	for index = 1, 29 do
+		local x = random:NextNumber(-19, 13)
+		local z = random:NextNumber(-15.7, 13)
+		if math.abs(x) > 5 or z < -7 then
+			plant(x, 4, z, random:NextNumber(0.45, 0.92))
+			if index % 3 == 0 then
+				flower(x + 0.53, z, random:NextNumber(0.42, 0.58), Color3.fromHex("#FFF1CD"))
+			end
+		end
+	end
+	for _, position in ipairs({
+		Vector2.new(-3.5, -3.6), Vector2.new(3.8, -5.2), Vector2.new(-8.4, -5.1),
+		Vector2.new(13.5, -6.5), Vector2.new(2.8, 6.9), Vector2.new(-3.2, 8.7), Vector2.new(5.4, 10.1),
+	}) do
+		for index = 1, 3 do
+			flower(position.X + index * 0.23, position.Y + math.sin(index) * 0.3, 0.43, Color3.fromHex("#FFF1CD"))
+		end
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		for i = 1, 4 do
+			local x = side * (17.9 + i * 0.44)
+			local z = 12.1 + math.sin(i * 1.5) * 1.4
+			oval("EntryRock", x, 4.17, z, 1.7, 0.75, 1.3, stone:Lerp(moss, 0.17))
+			plant(x - side * 0.53, 4, z + 0.64, 1.13)
+		end
 	end
 end
 

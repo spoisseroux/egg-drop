@@ -46,6 +46,7 @@ end
 local function paintDevice(device, themeId, stickerId)
 	local theme = Themes.ById[themeId] or Themes.ById[Themes.Default]
 	device.Shell.Color = theme.shell
+	device.FrontPlate.Color = theme.shell:Lerp(theme.trim, 0.18)
 	device.Bezel.Color = theme.trim
 	device.Confirm.Color = theme.buttons
 	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)
@@ -92,37 +93,53 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	device = Instance.new("Model")
 	device.Name = "PocketDeck"
 	device:SetAttribute("BoardUserId", userId)
-	local mount = CFrame.new(0, -0.42, -1.05) * CFrame.Angles(math.rad(37), 0, 0)
-	local shell = attach(device, torso, "Shell", Vector3.new(1.12, 1.45, 0.21), mount, Palette.Shell)
+	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(22), 0, 0)
+	local shell = attach(device, torso, "Shell", Vector3.new(1.05, 1.65, 0.21), mount, Palette.Shell)
+	attach(device, torso, "FrontPlate", Vector3.new(1.00, 1.60, 0.025),
+		mount * CFrame.new(0, 0, -0.104), Palette.Shell)
 	local stickerFace = Instance.new("SurfaceGui")
 	stickerFace.Name = "StickerFace"
 	stickerFace.Face = Enum.NormalId.Front
 	stickerFace.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	stickerFace.CanvasSize = Vector2.new(112, 145)
+	stickerFace.CanvasSize = Vector2.new(105, 165)
 	stickerFace.LightInfluence = 0
 	stickerFace.MaxDistance = 34
 	stickerFace.Parent = shell
 	local decal = Instance.new("TextLabel")
 	decal.Name = "Decal"
-	decal.Position = UDim2.fromOffset(44, 103)
-	decal.Size = UDim2.fromOffset(19, 19)
+	decal.Position = UDim2.fromOffset(45, 112)
+	decal.Size = UDim2.fromOffset(15, 15)
 	decal.Rotation = -11
-	decal.TextSize = 16
+	decal.TextSize = 12
 	decal.Font = Enum.Font.GothamBold
 	decal.BorderSizePixel = 0
 	decal.Parent = stickerFace
 	local rounded = Instance.new("UICorner")
 	rounded.CornerRadius = UDim.new(0, 4)
 	rounded.Parent = decal
-	attach(device, torso, "Bezel", Vector3.new(0.91, 0.94, 0.04),
-		mount * CFrame.new(0, 0.2, -0.109), Palette.Rim)
-	local screen = attach(device, torso, "Screen", Vector3.new(0.84, 0.87, 0.08),
-		mount * CFrame.new(0, 0.2, -0.12), Palette.Tray)
-	attach(device, torso, "Left", Vector3.new(0.105, 0.10, 0.07), mount * CFrame.new(-0.34, -0.43, -0.12), Palette.Ink)
-	attach(device, torso, "Right", Vector3.new(0.105, 0.10, 0.07), mount * CFrame.new(-0.20, -0.43, -0.12), Palette.Ink)
-	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), Palette.Primary)
-	attach(device, torso, "Customize", Vector3.new(0.15, 0.05, 0.04), mount * CFrame.new(-0.12, -0.58, -0.12), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.15, 0.05, 0.04), mount * CFrame.new(0.12, -0.58, -0.12), Palette.Ink)
+	-- Mount the decal on the face plate so the new layered shell cannot cover it.
+	stickerFace.Adornee = device.FrontPlate
+	stickerFace.ZOffset = 1
+	attach(device, torso, "Bezel", Vector3.new(0.91, 0.93, 0.04),
+		mount * CFrame.new(0, 0.275, -0.132), Palette.Rim)
+	local screen = attach(device, torso, "Screen", Vector3.new(0.63, 0.855, 0.035),
+		mount * CFrame.new(0, 0.275, -0.159), Color3.fromHex("#182C39"))
+	local power = attach(device, torso, "Power", Vector3.new(0.055, 0.055, 0.027),
+		mount * CFrame.new(0.391, 0.66, -0.153), Color3.fromHex("#54D9F3"))
+	power.Material = Enum.Material.Neon
+	attach(device, torso, "AimRocker", Vector3.new(0.27, 0.13, 0.06),
+		mount * CFrame.new(0.24, -0.32, -0.135), Palette.Ink)
+	attach(device, torso, "AimDivider", Vector3.new(0.018, 0.105, 0.012),
+		mount * CFrame.new(0.24, -0.32, -0.168), Palette.Rim)
+	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
+		mount * CFrame.new(-0.24, -0.32, -0.145) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
+	buttonA.Shape = Enum.PartType.Cylinder
+	attach(device, torso, "Customize", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(-0.13, -0.60, -0.128), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(0.05, -0.60, -0.128), Palette.Ink)
+	for index = 0, 2 do
+		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
+			mount * CFrame.new(-0.25 - index * 0.052, -0.66, -0.124) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
+	end
 	paintDevice(device, themeId, stickerId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
@@ -149,7 +166,7 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 		if humanoid and arm and hand then
 			local target = Instance.new("Attachment")
 			target.Name = side .. "Grip"
-			target.Position = Vector3.new(if side == "Left" then -0.55 else 0.55, -0.34, 0.02)
+			target.Position = Vector3.new(if side == "Left" then -0.54 else 0.54, -0.62, 0.075)
 			target.Parent = shell
 			local grip = Instance.new("IKControl")
 			grip.Name = "Deck" .. side

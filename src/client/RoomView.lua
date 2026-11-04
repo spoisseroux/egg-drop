@@ -25,10 +25,10 @@ local function pose(camera, close)
 	local viewport = camera.ViewportSize
 	local aspect = math.max(0.3, viewport.X / math.max(1, viewport.Y))
 	local portrait = aspect < 1
-	local target = if close then Vector3.new(0, 6.0, -5) else Vector3.new(0, 7.4, -4.5)
+	local target = if close then Vector3.new(0, 6.0, -5) else Vector3.new(0, 8.2, -6.4)
 	local side = math.min(1, aspect)
 	local offset = if close then Vector3.new(2.8 * side, 3.5, if portrait then 14.5 else 12)
-		else Vector3.new(8 * side, 5.3, 19.7)
+		else Vector3.new(4.6 * side, 5.3, 22.5)
 	return {
 		CFrame = CFrame.lookAt(target + offset, target),
 		Focus = CFrame.new(target),
