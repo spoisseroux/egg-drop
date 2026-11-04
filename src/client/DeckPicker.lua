@@ -66,8 +66,11 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 		local catalog = if tab == "Shell" then Themes else Stickers
 		for slot, id in ipairs(catalog.Order) do
 			local option = catalog.ById[id]
-			local swatch = button(id, option.name, UDim2.new((slot - 1) / 4, 9, 0, 138),
-				UDim2.new(0.25, -12, 0, 44), option.buttons or option.color or Palette.Panel)
+			local width = 1 / #catalog.Order
+			local swatch = button(id, option.name, UDim2.new((slot - 1) * width, 5, 0, 138),
+				UDim2.new(width, -9, 0, 44), option.buttons or option.color or Palette.Panel)
+			swatch.TextSize = 12
+			swatch.TextWrapped = true
 			self.choices[tab][id] = make("UIStroke", "Selection", {
 				Color = Palette.Ink, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Enabled = false,
 			}, swatch)
@@ -119,7 +122,16 @@ function Picker:select(themeId, stickerId)
 	self.onPreview(themeId, stickerId)
 end
 
-function Picker:open(themeId, stickerId)
+function Picker:open(themeId, stickerId, owned)
+	for id, stroke in pairs(self.choices.Sticker) do
+		local available = Stickers.canEquip(id, owned)
+		local swatch = stroke.Parent
+		local sticker = Stickers.ById[id]
+		swatch.Interactable = available
+		swatch.Selectable = available
+		swatch.Text = if available then sticker.name else "Hatch " .. sticker.name
+		swatch.BackgroundColor3 = if available then sticker.color or Palette.Panel else Palette.Panel
+	end
 	self.shade.Visible = true
 	self:showTab("Shell")
 	self:select(themeId, stickerId)

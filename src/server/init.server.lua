@@ -34,9 +34,12 @@ local function publishState(board)
 	board.folder:SetAttribute("NextTier", Simulation.nextTier(board.sim))
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
-	board.folder:SetAttribute("HatchCharge", board.round.charge)
+	board.folder:SetAttribute("Score", board.round.score)
+	board.folder:SetAttribute("BestScore", board.profile.bestScore)
+	board.folder:SetAttribute("NewBest", board.round.score > board.startBest)
+	board.folder:SetAttribute("HatchCharge", board.profile.charge)
 	board.folder:SetAttribute("OwnedPets", math.min(board.profile.rank, #Pets))
-	board.folder:SetAttribute("HatchedPet", board.hatchedPet)
+	board.folder:SetAttribute("CompanionId", board.profile.companionId)
 	board.folder:SetAttribute("RoundOver", board.round.over)
 end
 
@@ -82,7 +85,7 @@ local function reset(board, preset)
 	table.clear(board.parts)
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial)
 	board.round = Round.new()
-	board.hatchedPet = nil
+	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
 	board.chain = 0
@@ -114,6 +117,7 @@ local function addPlayer(player)
 		lastReset = -math.huge,
 		lastModeChange = -math.huge,
 		lastAppearanceChange = -math.huge,
+		lastCompanionChange = -math.huge,
 		mode = "Board",
 		profile = profile,
 	}
@@ -156,13 +160,24 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	local now = os.clock()
 	if action == "appearance" then
-		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string" and Stickers.ById[sticker]
+		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string"
+			and Stickers.canEquip(sticker, board.profile.rank)
 			and (value ~= board.profile.theme or sticker ~= board.profile.sticker) and now - board.lastAppearanceChange >= 0.25 then
 			board.lastAppearanceChange = now
 			Progress.equip(board.profile, value, sticker)
 			board.folder:SetAttribute("DeckThemeId", value)
 			board.folder:SetAttribute("DeckStickerId", sticker)
 			Lounge.setAppearance(player.Character, value, sticker)
+		end
+		return
+	end
+	if action == "companion" then
+		local pet = if typeof(value) == "string" then Pets.byId[value] else nil
+		if board.mode == "Room" and pet and pet.index <= board.profile.rank
+			and value ~= board.profile.companionId and now - board.lastCompanionChange >= 0.35 then
+			board.lastCompanionChange = now
+			Progress.equipCompanion(board.profile, pet)
+			board.folder:SetAttribute("CompanionId", pet.id)
 		end
 		return
 	end
@@ -193,6 +208,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if now - board.lastReset < Config.ResetInterval then
 			return
 		end
+		if (action == "reset" and not board.round.over) or (action == "preset" and not RunService:IsStudio()) then
+			return
+		end
 		local preset = board.sim.preset
 		if action == "preset" then
 			if typeof(value) ~= "string" or not Config.Presets[value] then
@@ -220,16 +238,13 @@ RunService.Heartbeat:Connect(function(dt)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
 			board.round:step(board.sim.eggs, Config.FixedStep)
 			for _, merge in ipairs(merged) do
-				local egg = merge.egg
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.lastMerge = board.playTime
 				board.merges += 1
-				local nextPet = Pets[board.profile.rank + 1]
-				if nextPet and board.round:merge(egg.tier, nextPet.charge) then
-					board.hatchedPet = nextPet.name
-					Progress.earn(board.profile)
-				end
-				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other, egg.id)
+				board.round.score += 10 * (merge.tier + math.min(board.chain - 1, 9)) + (if merge.cleared then 100 else 0)
+				Progress.recordScore(board.profile, board.round.score)
+				Progress.chargeHatch(board.profile, merge.tier)
+				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared)
 			end
 			if #merged > 0 or board.round.over then
 				publishState(board)

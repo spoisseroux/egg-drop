@@ -7,6 +7,8 @@ local UserInputService = game:GetService("UserInputService")
 
 local PipVisual = require(script.Parent.PipVisual)
 local PuddleVisual = require(script.Parent.PuddleVisual)
+local BonusPetVisual = require(script.Parent.BonusPetVisual)
+local RoomCompanions = require(script.Parent.RoomCompanions)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 
@@ -15,7 +17,12 @@ Room.__index = Room
 
 local roomCamera = CFrame.lookAt(Vector3.new(11, 13, 17), Vector3.new(0, 6, -2))
 local greetingCamera = CFrame.lookAt(Vector3.new(4, 8.2, 3.8), Vector3.new(0, 5.8, -5))
-local visuals = { PipVisual, PuddleVisual }
+local visuals = { Pip = PipVisual, Puddle = PuddleVisual }
+
+local function createPet(parent, origin, pet)
+	local visual = visuals[pet.name] or BonusPetVisual
+	return visual.new(parent, origin, pet)
+end
 
 local function frame(parent, name, size, position, color, z)
 	local node = Instance.new("Frame")
@@ -54,7 +61,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOpen)
+function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen)
 	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
@@ -72,8 +79,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOp
 	heading.Font = Enum.Font.GothamBold
 	heading.ZIndex = 9
 	heading.Parent = controls
-	local switch = button(controls, "SwitchPet", "", UDim2.new(0.60, 0, 0, 2), Palette.Panel)
-	switch.Size = UDim2.new(0.375, 0, 0, 44)
+	local collection = button(controls, "Collection", "Pet journal", UDim2.new(0.60, 0, 0, 2), Palette.Panel)
+	collection.Size = UDim2.new(0.375, 0, 0, 44)
 	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Palette.Panel)
 	greet.Size = UDim2.new(0.29, 0, 0, 44)
 	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Palette.Primary)
@@ -94,23 +101,21 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOp
 		progress = progress,
 		controls = controls,
 		heading = heading,
-		switch = switch,
 		top = top,
 		bottom = bottom,
 		audio = audio,
 		mode = "Board",
 		target = "Board",
 		petIndex = 1,
+		companions = RoomCompanions.new(progress.Parent, createPet),
 	}, Room)
-	switch.Activated:Connect(function()
-		local owned = progress:GetAttribute("OwnedPets") or 0
-		if self.mode == "Room" and not self.busy and not isPickerOpen() and owned > 1 then
-			self:showPet(self.petIndex % owned + 1)
-			audio:play(Pets[self.petIndex].cue)
+	collection.Activated:Connect(function()
+		if self.mode == "Room" and not self.busy and not overlayOpen() then
+			onCollection()
 		end
 	end)
 	greet.Activated:Connect(function()
-		if self.busy or isPickerOpen() or not self.pet then
+		if self.busy or overlayOpen() or not self.pet then
 			return
 		end
 		self.pet:greet()
@@ -130,12 +135,12 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOp
 		end
 	end)
 	leave.Activated:Connect(function()
-		if not self.busy and not isPickerOpen() then
+		if not self.busy and not overlayOpen() then
 			onReturn()
 		end
 	end)
 	customize.Activated:Connect(function()
-		if not self.busy then
+		if not self.busy and not overlayOpen() then
 			onCustomize()
 		end
 	end)
@@ -155,6 +160,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, isPickerOp
 	RunService.RenderStepped:Connect(function(dt)
 		if self.pet then
 			self.pet:update(dt)
+			self.companions:update(dt)
 		end
 	end)
 	return self
@@ -164,7 +170,7 @@ function Room:choosePet(name)
 	local owned = self.progress:GetAttribute("OwnedPets") or 0
 	for index = 1, owned do
 		if Pets[index].name == name then
-			self.petIndex = index
+			self.requestedPet = index
 			return
 		end
 	end
@@ -176,11 +182,10 @@ function Room:showPet(index)
 	if self.pet then
 		self.pet:destroy()
 	end
-	self.pet = visuals[self.petIndex].new(workspace, Vector3.new(0, 4.23, -5))
+	local pet = Pets[self.petIndex]
+	self.pet = createPet(workspace, Vector3.new(0, 4.23, -5), pet)
 	self.pet:greet()
 	self.heading.Text = string.format("%s  ·  %d/%d", Pets[self.petIndex].name, owned, #Pets)
-	self.switch.Visible = owned > 1
-	self.switch.Text = "View " .. Pets[self.petIndex % owned + 1].name
 end
 
 function Room:show(mode)
@@ -190,7 +195,9 @@ function Room:show(mode)
 		self.cameraTween = nil
 	end
 	if mode == "Room" then
-		self:showPet(self.petIndex)
+		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
+		self:showPet(self.requestedPet or (equipped and equipped.index) or 1)
+		self.requestedPet = nil
 		if camera then
 			self.savedCamera = { type = camera.CameraType, transform = camera.CFrame, fov = camera.FieldOfView }
 			camera.CameraType = Enum.CameraType.Scriptable
@@ -198,6 +205,7 @@ function Room:show(mode)
 			camera.FieldOfView = 53
 		end
 	else
+		self.companions:clear()
 		if self.pet then
 			self.pet:destroy()
 			self.pet = nil

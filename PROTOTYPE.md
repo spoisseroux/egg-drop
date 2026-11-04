@@ -8,7 +8,8 @@ the eggs move on its miniature display. Each player controls their own tray.
 Start a new session on the board so the first action can be a drop. The
 lounge unlocks after Pip hatches. During the session, the player chooses
 when to move between the two views. A returning player starts with a fresh
-tray and keeps their unlocked pets and equipped shell in a published game.
+tray and keeps their unlocked pets, hatch charge, personal best, companion,
+and equipped deck appearance in a published game.
 
 ## How to play
 
@@ -16,10 +17,10 @@ Aim with the left and right buttons and press A to drop, or drag across the
 display bar and release. On a keyboard, arrows or A/D aim and Space
 drops. Controller D-pad and A use the same controls. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
-Merges fill six points of hatch charge for Pip, then twelve for Puddle.
-Choose **Meet Pip** or **Meet Puddle** to visit that pet, or **Keep playing**
-to stay on the board. **Say hi** plays a greeting and the pet's synth cue.
-Once both hatch, switch between them in the lounge. **Open deck** returns
+Merges earn points and fill hatch charge for Pip, Puddle, Wick, and Orbit.
+Choose **Meet** to visit the new pet, or **Keep playing** to stay on the
+board. **Say hi** plays a greeting and the pet's synth cue. Use **Pet
+journal** to choose an owned companion. **Open deck** returns
 to the same tray. First-session
 hints appear in the footer and advance after an accepted drop and a merge.
 
@@ -30,12 +31,12 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Drop | The released egg falls and can bounce off a bank | Server validates aim, cadence, capacity, and spawn space. |
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
-| Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge and Puddle completes the prototype collection. |
+| Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge. The other three hatch in order. |
 | Entering the lounge | Deck shutters close and the selected pet chirps | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
-| Lounge | Pip or Puddle, other avatars, their decks, and a return button | Pets greet locally. Nearby miniature screens show each owner's current egg positions. |
+| Lounge | The Pocket Club, pet journal, deck workbench, and other avatars | Nearby miniature screens show each owner's tray. The player's companion is also visible to nearby lounge visitors. |
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
-| Overflow | Tray full card and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
-| Try again | Four starter eggs and a fresh meter for the next pet | The button appears at overflow. It resets the tray and charge while preserving the pet collection and equipped appearance. |
+| Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
+| Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |
 | Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Cancel restores the equipped look. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |
 
@@ -52,6 +53,7 @@ Window Seat at 0:00 and Paper Moon at 0:55. Pocket Apricot is a separate draft.
 
 Choose Stone, Ice, Brick, or Moss from Customize on the board or in the
 lounge. Pick Star, Glitch, Seed, or Blank for the front sticker slot.
+Hatching Wick unlocks a flame sticker.
 The picker previews the front of the handheld. On the board you can also
 see changes on the full deck before you equip. The shell and sticker carry
 through retry, respawn, and room transitions. Published servers save the
@@ -88,7 +90,8 @@ scratch, drawing on the different sound textures described by
 made it as a cream egg in a broken dark shell with green feet, squared
 eyes, blush, and a tilted two-leaf sprig. It breathes, blinks, hops, and
 waves. **Puddle** is a low blue gel pet with a droplet tail. It squashes,
-hops, waves its tail, and sends out a ripple when greeted. The lineup
+hops, waves its tail, and sends out a ripple when greeted. **Wick** is a
+pocket flame and **Orbit** is a small moon with a tilted ring. The lineup
 below is the concept roster. Variant names and colors
 are working art directions. [View the 36 pet concepts](assets/concepts/pet-lineup.svg).
 

@@ -41,13 +41,26 @@ function Lounge.create()
 	local room = Instance.new("Model")
 	room.Name = "EggDropLounge"
 	local floor = part(room, "Floor", Vector3.new(40, 1, 32), CFrame.new(0, 3.5, 0),
-		Palette.Tray, true)
+		Color3.fromHex("#303B3A"), true)
 	floor.Material = Enum.Material.Slate
 	part(room, "BackWall", Vector3.new(40, 13, 1), CFrame.new(0, 10, -15.5), Palette.Ink, true)
+	part(room, "RearCladding", Vector3.new(38, 6, 0.24), CFrame.new(0, 7, -14.88),
+		Color3.fromHex("#3E514B"), false)
+	part(room, "RearCrown", Vector3.new(40, 1.25, 1.6), CFrame.new(0, 15.8, -14.8),
+		Color3.fromHex("#897553"), false)
+	local lightRail = part(room, "MarqueeRail", Vector3.new(34, 0.12, 0.17), CFrame.new(0, 10.15, -14.68),
+		Color3.fromHex("#E2AC62"), false)
+	lightRail.Material = Enum.Material.Neon
+	for x = -18, 18, 4 do
+		part(room, "WallRib", Vector3.new(0.18, 5.75, 0.13), CFrame.new(x, 7, -14.68),
+			Color3.fromHex("#55665B"), false)
+	end
 	for _, side in ipairs({ -1, 1 }) do
 		part(room, "SideWall", Vector3.new(1, 5, 32), CFrame.new(side * 19.5, 6.5, 0),
 			Palette.Shell, true)
-		part(room, "Bench", Vector3.new(8, 1.1, 2.8), CFrame.new(side * 12, 4.55, -8), Palette.Rim, true)
+		part(room, "Bench", Vector3.new(7, 1.1, 2.8), CFrame.new(side * 13, 4.55, 6.5), Palette.Rim, true)
+		part(room, "BenchCushion", Vector3.new(6.6, 0.25, 2.45), CFrame.new(side * 13, 5.2, 6.5),
+			Color3.fromHex("#557B73"), false)
 		local lamp = part(room, "Lamp", Vector3.new(0.7, 4.4, 0.7), CFrame.new(side * 8, 8.3, -14.75), Palette.Primary, false)
 		lamp.Material = Enum.Material.Neon
 		local light = Instance.new("PointLight")
@@ -59,12 +72,50 @@ function Lounge.create()
 	part(room, "FrontRail", Vector3.new(40, 2, 0.7), CFrame.new(0, 5, 15.6),
 		Palette.Shell, true)
 	part(room, "PipMat", Vector3.new(8, 0.2, 6), CFrame.new(0, 4.1, -5), Palette.Shell, true)
+	for _, side in ipairs({ -1, 1 }) do
+		local border = part(room, "StageEdge", Vector3.new(0.11, 0.05, 5.9), CFrame.new(side * 3.88, 4.23, -5),
+			Color3.fromHex("#A0BC8A"), false)
+		border.Material = Enum.Material.Neon
+	end
 	for x = -3, 3, 2 do
 		part(room, "MatStripe", Vector3.new(0.08, 0.02, 5.8), CFrame.new(x, 4.21, -5), Palette.Amber, false)
 	end
 	local marquee = part(room, "Marquee", Vector3.new(13, 2.1, 0.26), CFrame.new(0, 11.5, -14.9),
 		Palette.Backdrop, false)
-	sign(marquee, "EGG DROP   /   LOUNGE", Palette.Primary)
+	sign(marquee, "THE POCKET CLUB", Palette.Primary)
+	local petStage = part(room, "StageSign", Vector3.new(7, 0.72, 0.16), CFrame.new(0, 8.0, -13.8),
+		Palette.Backdrop, false)
+	sign(petStage, "HATCHERY", Palette.Amber)
+	for _, station in ipairs({
+		{ x = -11, id = "Customize", name = "DECK WORKBENCH", tint = Color3.fromHex("#83B3A0") },
+		{ x = 11, id = "Journal", name = "PET JOURNAL", tint = Color3.fromHex("#E2AE78") },
+	}) do
+		part(room, station.id .. "Counter", Vector3.new(6.8, 1.35, 2.4),
+			CFrame.new(station.x, 4.68, -6.3), Palette.Shell, true)
+		local top = part(room, station.id .. "Top", Vector3.new(7.1, 0.23, 2.62),
+			CFrame.new(station.x, 5.45, -6.3), station.tint, true)
+		local signboard = part(room, station.id .. "Sign", Vector3.new(6.8, 1.05, 0.25),
+			CFrame.new(station.x, 6.55, -7.35), Palette.Ink, false)
+		sign(signboard, station.name, station.tint)
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ActionText = if station.id == "Customize" then "Customize" else "Open journal"
+		prompt.ObjectText = if station.id == "Customize" then "Deck workbench" else "Hatchery"
+		prompt.RequiresLineOfSight = false
+		prompt.MaxActivationDistance = 7
+		prompt:SetAttribute("PocketClubStation", station.id)
+		prompt.Parent = top
+		for index = -1, 1 do
+			part(room, "DisplayTile", Vector3.new(1.15, 0.16, 0.86),
+				CFrame.new(station.x + index * 1.8, 5.65, -6.3), Palette.Backdrop, false)
+			part(room, "DisplayToken", Vector3.new(0.65, 0.36, 0.58),
+				CFrame.new(station.x + index * 1.8, 5.91, -6.3) * CFrame.Angles(0, index * 0.24, 0),
+				station.tint:Lerp(Palette.Amber, (index + 1) * 0.2), false)
+		end
+	end
+	for index = -4, 4 do
+		part(room, "WalkwayTile", Vector3.new(1.9, 0.04, 2.35), CFrame.new(index * 2, 4.025, 1.4),
+			if index % 2 == 0 then Color3.fromHex("#526961") else Color3.fromHex("#465A54"), false)
+	end
 	room.Parent = workspace
 end
 

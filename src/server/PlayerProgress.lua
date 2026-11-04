@@ -2,6 +2,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
 local Themes = require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 local Stickers = require(game:GetService("ReplicatedStorage").Shared.DeckStickers)
+local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 
 local Progress = {}
 local pending = {}
@@ -12,6 +13,18 @@ local writer = game.JobId
 local function rankOf(record)
 	local rank = record.rank
 	return if type(rank) == "number" and rank >= 0 and rank < math.huge then math.floor(rank) else 0
+end
+
+local function bestOf(record)
+	local best = record.bestScore
+	return if type(best) == "number" and best >= 0 and best < math.huge then math.floor(best) else 0
+end
+
+local function chargeOf(record, rank)
+	local nextPet = Pets[rank + 1]
+	local charge = record.hatchCharge
+	return if nextPet and type(charge) == "number" and charge >= 0
+		then math.floor(math.min(charge, nextPet.charge - 1)) else 0
 end
 
 function Progress.load(userId)
@@ -25,11 +38,16 @@ function Progress.load(userId)
 		end
 	end
 	record = if type(record) == "table" then record else {}
+	local rank = rankOf(record)
+	local companion = Pets.byId[record.companionId]
 	return {
 		key = key,
-		rank = rankOf(record),
+		rank = rank,
+		charge = chargeOf(record, rank),
+		bestScore = bestOf(record),
+		companionId = if companion and companion.index <= rank then companion.id elseif rank > 0 then Pets[1].id else nil,
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
-		sticker = if type(record.sticker) == "string" and Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
+		sticker = if type(record.sticker) == "string" and Stickers.canEquip(record.sticker, rank) then record.sticker else Stickers.Default,
 		loadFailed = not success,
 	}
 end
@@ -39,16 +57,28 @@ local function flush(profile)
 		return
 	end
 	profile.saving = true
-	local rank, theme, sticker, themeAt = profile.earnedRank, profile.theme, profile.sticker, profile.themeAt
+	local rank, charge, best = profile.earnedRank, profile.earnedCharge, profile.earnedBest
+	local theme, sticker, themeAt = profile.theme, profile.sticker, profile.themeAt
+	local companionId, companionAt = profile.companionId, profile.companionAt
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
-		if rank then
-			record.rank = math.max(rank, rankOf(record))
+		local previousRank = rankOf(record)
+		if rank and (rank > previousRank or (rank == previousRank and charge > chargeOf(record, previousRank))) then
+			record.rank, record.hatchCharge = rank, charge
+		end
+		if best then
+			record.bestScore = math.max(best, bestOf(record))
 		end
 		local previousTime = if type(record.themeAt) == "number" then record.themeAt else 0
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
 		if themeAt and (themeAt > previousTime or (themeAt == previousTime and writer >= previousWriter)) then
 			record.theme, record.sticker, record.themeAt, record.themeWriter = theme, sticker, themeAt, writer
+		end
+		local previousCompanionTime = if type(record.companionAt) == "number" then record.companionAt else 0
+		local previousCompanionWriter = if type(record.companionWriter) == "string" then record.companionWriter else ""
+		if companionAt and (companionAt > previousCompanionTime
+			or (companionAt == previousCompanionTime and writer >= previousCompanionWriter)) then
+			record.companionId, record.companionAt, record.companionWriter = companionId, companionAt, writer
 		end
 		return record
 	end
@@ -65,14 +95,35 @@ local function flush(profile)
 		warn("Egg Drop could not save the player profile:", result)
 		return
 	end
-	if rank == profile.earnedRank then
+	if rank == profile.earnedRank and charge == profile.earnedCharge then
 		profile.earnedRank = nil
+		profile.earnedCharge = nil
+	end
+	if best == profile.earnedBest then
+		profile.earnedBest = nil
 	end
 	if themeAt == profile.themeAt then
 		profile.themeAt = nil
 	end
-	if not profile.earnedRank and not profile.themeAt then
+	if companionAt == profile.companionAt then
+		profile.companionAt = nil
+	end
+	if not profile.earnedRank and not profile.earnedBest and not profile.themeAt and not profile.companionAt then
 		pending[profile] = nil
+	end
+end
+
+function Progress.equipCompanion(profile, pet)
+	profile.companionId = pet.id
+	profile.companionAt = DateTime.now().UnixTimestampMillis
+	pending[profile] = true
+end
+
+function Progress.recordScore(profile, score)
+	if score > profile.bestScore then
+		profile.bestScore = score
+		profile.earnedBest = score
+		pending[profile] = true
 	end
 end
 
@@ -83,11 +134,26 @@ function Progress.equip(profile, theme, sticker)
 	pending[profile] = true
 end
 
-function Progress.earn(profile)
-	profile.rank += 1
+function Progress.chargeHatch(profile, amount)
+	local pet = Pets[profile.rank + 1]
+	if not pet then
+		return nil
+	end
+	profile.charge += amount
+	local hatched = profile.charge >= pet.charge
+	if hatched then
+		profile.rank += 1
+		profile.charge = if Pets[profile.rank + 1] then profile.charge - pet.charge else 0
+		if not profile.companionId then
+			profile.companionId = pet.id
+		end
+	end
 	profile.earnedRank = profile.rank
+	profile.earnedCharge = profile.charge
 	pending[profile] = true
-	task.defer(flush, profile)
+	if hatched then
+		task.defer(flush, profile)
+	end
 end
 
 function Progress.release(profile)

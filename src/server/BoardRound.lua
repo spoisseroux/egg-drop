@@ -4,16 +4,7 @@ local Round = {}
 Round.__index = Round
 
 function Round.new()
-	return setmetatable({ charge = 0, over = false, overflowTime = 0 }, Round)
-end
-
-function Round:merge(tier, target)
-	self.charge += tier
-	if self.charge >= target then
-		self.charge = 0
-		return true
-	end
-	return false
+	return setmetatable({ score = 0, over = false, overflowTime = 0 }, Round)
 end
 
 function Round:step(eggs, dt)

@@ -82,19 +82,28 @@ local function merge(board, firstIndex, secondIndex, preset)
 	local velocity = (first.velocity + second.velocity) * 0.38 + Vector2.new(0, 2)
 	table.remove(board.eggs, secondIndex)
 	table.remove(board.eggs, firstIndex)
-	local result = addEgg(board, position, first.tier + 1, velocity)
-	collideWithTray(result, 0)
+	local cleared = first.tier == #Config.Tiers
+	local result
+	if not cleared then
+		result = addEgg(board, position, first.tier + 1, velocity)
+		collideWithTray(result, 0)
+		position = result.position
+	end
 
 	for _, egg in ipairs(board.eggs) do
 		if egg ~= result then
-			local delta = egg.position - result.position
+			local delta = egg.position - position
 			local distance = delta.Magnitude
 			if distance > 0 and distance < preset.reach then
 				egg.velocity += delta.Unit * preset.kick * (1 - distance / preset.reach)
 			end
 		end
 	end
-	return result
+	return {
+		position = position, tier = if result then result.tier else first.tier,
+		from = first.position, other = second.position, id = if result then result.id else nil,
+		cleared = cleared,
+	}
 end
 
 local function resolvePairs(board, preset, merged, impacts)
@@ -109,9 +118,8 @@ local function resolvePairs(board, preset, merged, impacts)
 			if overlap > 0 then
 				local normal = if distance > 0 then delta / distance else Vector2.xAxis
 				local speed = (second.velocity - first.velocity):Dot(normal)
-				if first.tier == second.tier and first.tier < #Config.Tiers then
-					local egg = merge(board, firstIndex, secondIndex, preset)
-					table.insert(merged, { egg = egg, from = first.position, other = second.position })
+				if first.tier == second.tier then
+					table.insert(merged, merge(board, firstIndex, secondIndex, preset))
 					return true
 				end
 				first.position -= normal * (overlap / 2)

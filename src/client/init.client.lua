@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ContextActionService = game:GetService("ContextActionService")
 local GuiService = game:GetService("GuiService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -17,6 +18,7 @@ local Sprite = require(script.JellySprite)
 local JellyLCD = require(script.JellyLCD)
 local Audio = require(script.BoardAudio)
 local DeckPicker = require(script.DeckPicker)
+local PetJournal = require(script.PetJournal)
 local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
@@ -134,6 +136,11 @@ make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
 readout.Font = Enum.Font.Code
 readout.TextXAlignment = Enum.TextXAlignment.Left
+local bestReadout = label("TextLabel", "BestReadout", "", rail)
+bestReadout.Font = Enum.Font.Code
+bestReadout.TextXAlignment = Enum.TextXAlignment.Left
+bestReadout.TextColor3 = Color3.fromHex("#CBD3B0")
+bestReadout.TextTruncate = Enum.TextTruncate.AtEnd
 local nextReadout = label("TextLabel", "NextReadout", "", rail)
 nextReadout.Font = Enum.Font.Code
 nextReadout.TextXAlignment = Enum.TextXAlignment.Right
@@ -171,7 +178,7 @@ local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
 }, backdrop)
 local segments = {}
-local maxCharge = Pets[#Pets].charge
+local maxCharge = 12
 for index = 1, maxCharge do
 	segments[index] = make("Frame", "Cell", {
 		Position = UDim2.new((index - 1) / maxCharge, 1, 1, -6),
@@ -251,7 +258,9 @@ for index = 0, 3 do
 	make("UICorner", "Round", { CornerRadius = UDim.new(1, 0) }, slot)
 end
 local openPicker
+local openJournal
 local picker
+local journal
 local function isPickerOpen()
 	return picker.shade.Visible
 end
@@ -259,7 +268,16 @@ local roomView = RoomView.new(gui, backdrop, board, audio, function()
 	request:FireServer("mode", "Board")
 end, function()
 	openPicker()
-end, isPickerOpen)
+end, function()
+	openJournal()
+end, function()
+	return isPickerOpen() or journal.shade.Visible
+end)
+journal = PetJournal.new(gui, make, label, function(index)
+	roomView:showPet(index)
+	request:FireServer("companion", Pets[index].id)
+	audio:play(Pets[index].cue)
+end)
 roomButton.Activated:Connect(function()
 	if not isPickerOpen() then
 		request:FireServer("mode", "Room")
@@ -301,6 +319,19 @@ local shellHem = make("Frame", "ShellHem", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0, Position = UDim2.fromScale(0.10, 0.77),
 	Size = UDim2.fromScale(0.80, 0.22), ZIndex = 15,
 }, pet)
+local crest = make("Frame", "Crest", {
+	AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 2, 0, 2),
+	Size = UDim2.fromOffset(20, 30), Rotation = 24, BackgroundColor3 = Palette.Amber,
+	BorderSizePixel = 0, ZIndex = 15, Visible = false,
+}, pet)
+make("UICorner", "Curve", { CornerRadius = UDim.new(0, 8) }, crest)
+local orbitRing = make("Frame", "OrbitRing", {
+	AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.76),
+	Size = UDim2.new(1, 17, 0, 15), Rotation = -13, BackgroundTransparency = 1,
+	Visible = false, ZIndex = 15,
+}, pet)
+make("UICorner", "Curve", { CornerRadius = UDim.new(1, 0) }, orbitRing)
+make("UIStroke", "Orbit", { Color = Color3.fromHex("#806BBA"), Thickness = 3 }, orbitRing)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, shellHem)
 local puddleTail = make("Frame", "DropletTail", {
 	BackgroundColor3 = Palette.JellyBlue, BorderSizePixel = 0,
@@ -326,7 +357,8 @@ keepPlaying.ZIndex = 11
 for _, button in ipairs({ modalAction, keepPlaying }) do
 	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 9) }, button)
 end
-local dismissedHatch
+local knownPets = board:GetAttribute("OwnedPets") or 0
+local hatchQueue = {}
 local revealedPet
 local lastPlop = -math.huge
 local lastMerge = -math.huge
@@ -388,12 +420,42 @@ openPicker = function()
 	end
 	clearPlayInputs()
 	rail.Interactable = false
-	picker:open(equippedAppearance())
+	local themeId, stickerId = equippedAppearance()
+	picker:open(themeId, stickerId, board:GetAttribute("OwnedPets") or 0)
 	if isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs.Shell
 	end
 	audio:play("menu")
 end
+openJournal = function()
+	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("CompanionId"),
+		isGamepad(UserInputService:GetLastInputType()))
+	audio:play("menu")
+end
+ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)
+	if playerWhoTriggered ~= player or board:GetAttribute("Mode") ~= "Room" or roomView.busy
+		or isPickerOpen() or journal.shade.Visible then
+		return
+	end
+	local station = prompt:GetAttribute("PocketClubStation")
+	if station == "Customize" then
+		openPicker()
+	elseif station == "Journal" then
+		openJournal()
+	end
+end)
+task.spawn(function()
+	local lounge = workspace:WaitForChild("EggDropLounge")
+	local function updatePrompts()
+		for _, object in ipairs(lounge:GetDescendants()) do
+			if object:IsA("ProximityPrompt") and object:GetAttribute("PocketClubStation") then
+				object.Enabled = board:GetAttribute("Mode") == "Room"
+			end
+		end
+	end
+	board:GetAttributeChangedSignal("Mode"):Connect(updatePrompts)
+	updatePrompts()
+end)
 customizeButton.Activated:Connect(openPicker)
 local function repaintEquipped()
 	task.defer(function()
@@ -438,25 +500,32 @@ local function updateHud()
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
+	local score = board:GetAttribute("Score") or 0
+	local best = board:GetAttribute("BestScore") or 0
 	local charge = board:GetAttribute("HatchCharge") or 0
 	local owned = board:GetAttribute("OwnedPets") or 0
 	local nextPet = Pets[owned + 1]
-	local hatchName = board:GetAttribute("HatchedPet")
-	local hatchPet = Pets[owned]
+	for index = knownPets + 1, owned do
+		table.insert(hatchQueue, Pets[index])
+	end
+	knownPets = owned
+	local hatchPet = hatchQueue[1]
+	local hatchName = if hatchPet then hatchPet.name else nil
 	local target = if nextPet then nextPet.charge else #Pets
 	local filled = if nextPet then charge else owned
+	local cells = math.min(maxCharge, target)
 	for index, cell in ipairs(segments) do
-		cell.Visible = index <= target
+		cell.Visible = index <= cells
 		if cell.Visible then
-			cell.Position = UDim2.new((index - 1) / target, 1, 1, -6)
-			cell.Size = UDim2.new(1 / target, -2, 0, 4)
-			cell.BackgroundColor3 = if index <= filled then Palette.Amber else Palette.Rim
+			cell.Position = UDim2.new((index - 1) / cells, 1, 1, -6)
+			cell.Size = UDim2.new(1 / cells, -2, 0, 4)
+			cell.BackgroundColor3 = if index <= math.floor(filled * cells / target) then Palette.Amber else Palette.Rim
 		end
 	end
 	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
 		status.Text = "Save could not load. Playing a fresh tray."
 	elseif owned > 0 then
-		status.Text = string.format("%d merges   ·   Chain ×%d", merges, chain)
+		status.Text = string.format("%d pts   ·   Chain ×%d", score, chain)
 	elseif drops == 0 then
 		status.Text = "Aim with ◀ ▶ or drag the screen bar."
 	elseif merges == 0 then
@@ -467,7 +536,7 @@ local function updateHud()
 	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
 		else string.format("Collection   %d / %d", owned, #Pets)
 	local mode = board:GetAttribute("Mode")
-	local showHatch = hatchPet ~= nil and hatchName == hatchPet.name and hatchName ~= dismissedHatch and mode == "Board"
+	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = board:GetAttribute("RoundOver") and not showHatch
 	local wasVisible = modal.Visible
 	modal.Visible = mode == "Board" and (over == true or showHatch)
@@ -477,8 +546,11 @@ local function updateHud()
 	end
 	pet.Visible = showHatch == true and not over
 	modalNote.Visible = over == true
-	modalNote.Text = "Try to keep the eggs below the amber line."
-	modalTitle.Text = if over then "Tray full" else "You hatched " .. (hatchName or "") .. "!"
+	modalNote.Text = string.format("Round score   %d\nPersonal best   %d", score, best)
+	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
+		else "You hatched " .. (hatchName or "") .. "!"
+	readout.Text = if score > 0 then "SCORE " .. score else "EGG DROP"
+	bestReadout.Text = "BEST " .. best
 	modalAction.Text = if over then "Try again" else "Meet " .. (hatchName or "")
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
@@ -490,27 +562,29 @@ local function updateHud()
 	end
 	rail.Interactable = canAim() and not isPickerOpen()
 	local unlocked = owned > 0
-	roomButton.Interactable = unlocked
+	roomButton.Interactable = unlocked and not modal.Visible
 	roomLip.Color = if unlocked then Palette.Primary else Palette.Rim
 	roomCaption.TextTransparency = if unlocked then 0 else 0.35
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
 		revealedPet = hatchName
 		local puddle = hatchName == "Puddle"
-		pet.BackgroundColor3 = if puddle then Palette.JellyBlue else Color3.fromRGB(255, 224, 170)
+		local pip = hatchName == "Pip"
+		pet.BackgroundColor3 = hatchPet.color
 		pet.Size = if puddle then UDim2.fromOffset(84, 50) else UDim2.fromOffset(72, 67)
 		pet.Position = UDim2.new(0.5, 0, 0, if puddle then 75 else 63)
 		puddleTail.Visible = puddle
-		shellHem.Visible = not puddle
+		shellHem.Visible = pip
+		crest.Visible = hatchName == "Wick"
+		orbitRing.Visible = hatchName == "Orbit"
 		for _, leaf in ipairs(pipLeaves) do
-			leaf.Visible = not puddle
+			leaf.Visible = pip
 		end
 		local resetId = board:GetAttribute("ResetId")
 		reveal:start(function()
 			return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
-				and dismissedHatch ~= hatchName
-				and board:GetAttribute("HatchedPet") == hatchName
-		end, hatchPet.cue, if puddle then Palette.JellyBlue else Palette.Amber)
+				and hatchQueue[1] == hatchPet
+		end, hatchPet.cue, hatchPet.color)
 	end
 end
 
@@ -548,9 +622,15 @@ local function layout()
 	rail.Size = UDim2.fromOffset(width, 44)
 	local compact = width < 175
 	mascot.Visible = not compact
-	readout.Position = UDim2.fromOffset(if compact then 5 else 37, 0)
-	readout.Size = UDim2.new(0, 80, 1, 0)
+	local readoutLeft = if compact then 5 else 37
+	local readoutInset = if compact then -53 else -117
+	readout.Position = UDim2.fromOffset(readoutLeft, 3)
+	readout.Size = UDim2.new(1, readoutInset, 0, 21)
 	readout.TextSize = if compact then 10 else 14
+	readout.TextTruncate = Enum.TextTruncate.AtEnd
+	bestReadout.Position = UDim2.fromOffset(readoutLeft, 23)
+	bestReadout.Size = UDim2.new(1, readoutInset, 0, 16)
+	bestReadout.TextSize = if compact then 9 else 11
 	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
 	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
 	nextReadout.TextSize = if compact then 10 else 12
@@ -659,6 +739,12 @@ ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, 
 ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
+	if journal.shade.Visible then
+		if state == Enum.UserInputState.Begin then
+			journal:close()
+		end
+		return Enum.ContextActionResult.Sink
+	end
 	if isPickerOpen() then
 		if state == Enum.UserInputState.Begin then
 			picker:close()
@@ -707,19 +793,19 @@ GuiService.MenuOpened:Connect(clearPlayInputs)
 modalAction.Activated:Connect(function()
 	if modalNote.Visible then
 		request:FireServer("reset")
-	else
-		roomView:choosePet(board:GetAttribute("HatchedPet"))
+	elseif hatchQueue[1] then
+		roomView:choosePet(hatchQueue[1].name)
 		request:FireServer("mode", "Room")
 	end
 end)
 keepPlaying.Activated:Connect(function()
-	dismissedHatch = board:GetAttribute("HatchedPet")
+	table.remove(hatchQueue, 1)
 	reveal:cancel()
 	audio:play("menu")
 	updateHud()
 end)
 pet.Activated:Connect(function()
-	local hatchPet = Pets[board:GetAttribute("OwnedPets") or 0]
+	local hatchPet = hatchQueue[1]
 	if hatchPet then
 		audio:play(hatchPet.cue)
 	end
@@ -809,7 +895,7 @@ local function gelDrop(from, to, diameter, color, duration, outward)
 	tween:Play()
 end
 
-feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id)
+feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id, cleared)
 	if board:GetAttribute("Mode") ~= "Board" then
 		return
 	end
@@ -818,11 +904,11 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 	lastMerge = now
 	local pitch = 0.98 + (id or 0) % 5 * 0.01
 	audio:play(if tier == 2 then "merge_bubble" else "merge_jelly", pitch, 0.56 * 0.68 ^ mergeBurst)
-	if chain > 1 and now - lastChainAccent >= 0.18 then
+	if (chain > 1 or cleared) and now - lastChainAccent >= 0.18 then
 		lastChainAccent = now
 		audio:play("merge_chain", 1 + math.min(chain - 2, 4) * 0.035, 0.34)
 	end
-	local pixelMerge = lcdEnabled()
+	local pixelMerge = lcdEnabled() and not cleared
 	if pixelMerge then
 		if #pixelMerges >= 6 then
 			table.remove(pixelMerges, 1)
@@ -886,7 +972,7 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 		local tint = if i % 3 == 0 then Palette.Paper else color
 		gelDrop(point, point + burst, math.max(4, scale * (0.21 + i % 3 * 0.08)), tint, 0.26 + i % 3 * 0.07, true)
 	end
-	local pop = label("TextLabel", "MergePop", if chain > 1 then "CHAIN x" .. chain else "POP!", effects)
+	local pop = label("TextLabel", "MergePop", if cleared then "MAX CLEAR +100" elseif chain > 1 then "CHAIN x" .. chain else "POP!", effects)
 	pop.TextColor3 = color
 	pop.TextStrokeColor3 = Palette.Ink
 	pop.TextStrokeTransparency = 0.05
@@ -921,9 +1007,12 @@ end)
 board:GetAttributeChangedSignal("Mode"):Connect(function()
 	clearPlayInputs()
 	picker:close()
+	journal:close()
 	local mode = board:GetAttribute("Mode")
 	if mode == "Room" then
-		dismissedHatch = board:GetAttribute("HatchedPet")
+		if hatchQueue[1] then
+			table.remove(hatchQueue, 1)
+		end
 		reveal:cancel()
 		effects:ClearAllChildren()
 		table.clear(pixelMerges)
@@ -937,7 +1026,6 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	table.clear(pixelMerges)
 	audio:stop()
 	audio:play("retry")
-	dismissedHatch = nil
 	lastPlop = -math.huge
 	lastMerge = -math.huge
 	lastChainAccent = -math.huge

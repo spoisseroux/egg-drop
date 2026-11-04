@@ -21,6 +21,8 @@ local Config = {
 		{ radius = 0.72, color = Palette.JellyBlue, mark = "I" },
 		{ radius = 1.04, color = Palette.Ember, mark = "II" },
 		{ radius = 1.43, color = Palette.Lime, mark = "III" },
+		{ radius = 1.88, color = Color3.fromHex("#E7A0C3"), mark = "IV" },
+		{ radius = 2.35, color = Color3.fromHex("#C5ABFF"), mark = "V" },
 	},
 	Starter = {
 		{ x = 0, tier = 1 },
