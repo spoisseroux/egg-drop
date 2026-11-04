@@ -4,6 +4,20 @@ A merge-physics pet collection game. Players drop eggs into a board; matching
 eggs merge and build a combo. Clearing a combo awards coins and a chance at a
 pet egg hatch. Pets, coins, and rebirths carry all long-term progression.
 
+## Reference games (visual, physics, and feel inspiration)
+
+Two PICO-8 games set the target feel for the board:
+
+1. **Marble Merger** (2darray) — https://www.lexaloffle.com/bbs/?pid=139127
+   Merging marble physics. Take its color palette and merge feedback.
+2. **Combo Pool** (NuSan) — https://www.lexaloffle.com/bbs/?pid=21515
+   Cue-ball physics with color-merge mechanics. Take its physics feel
+   (rebound-heavy, satisfying roll and collision response), rolling-ball
+   shading detail, and satisfying sound design.
+
+Codex should study both for: ball physics tuning (restitution, friction,
+   chain-reaction pacing), color identity per egg tier, and merge SFX.
+
 ## World structure: lobby + private board
 
 Two modes:
@@ -134,6 +148,30 @@ Rules for purchase prompts:
 - All gamepass benefits are permanent and clearly described on the store UI
 - Odds are always visible on any product with randomized contents
 - Prices use fixed Robux tiers, no countdown on the starter pack
+
+## First-time flow (FTUE)
+
+- Player spawns on their board, not the lobby (first session). A single
+  finger-arrow prompt sequence teaches drop zone -> merge -> combo ->
+  hatch meter in under 60 seconds of play. No modal tutorials.
+- First merge triggers a one-time coin award celebration.
+- Lobby is entered only after the first hatch, so the social space feels
+  populated by achievement, not as an empty front door.
+
+## UI screens (v1)
+
+- HUD: coins, gems-free (coins only), combo meter, hatch meter, board
+  button, shop button, pets button
+- Shop (Robux products + coin powerups), Egg selection, Pets/collection
+  index with equip, Daily streak panel, Offline earnings modal,
+  Rebirth panel, Hatch result overlay, Leaderboard podia UI
+
+## Audio
+
+- Reference Combo Pool's satisfying, minimal SFX design (hits, rolls,
+  merges). Tier-graded merge chimes that rise in pitch with tier;
+  full-combo chord; rarity-graded fanfare on hatch (longer/bigger for
+  Legendary/Mythic).
 
 ## Non-negotiables
 
