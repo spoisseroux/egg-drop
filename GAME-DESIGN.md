@@ -4,6 +4,18 @@ A merge-physics pet collection game. Players drop eggs into a board; matching
 eggs merge and build a combo. Clearing a combo awards coins and a chance at a
 pet egg hatch. Pets, coins, and rebirths carry all long-term progression.
 
+## World structure: lobby + private board
+
+Two modes:
+
+- **Lobby island (3D social space):** all players spawn here. Equipped pets
+  follow each player; the player's best 3 pets float overhead with name
+  tags. Rare-hatch announcements (see below) fire here. Contains podia
+  displaying the weekly leaderboard top 3, a showcase plaza, and portals.
+- **Private board (Suica-style physics, camera-locked):** the merge board.
+  Drop zone, combo meter, hatching UI. Board is instanced per player; other
+  players' boards can be spectated from the lobby.
+
 ## Core loop
 
 1. Enter board (Suica-style drop zone, physics-driven)
@@ -13,6 +25,7 @@ pet egg hatch. Pets, coins, and rebirths carry all long-term progression.
 4. Full hatch meter rolls a pet egg
 5. Pets multiply coin income; coins buy board powerups and more eggs
 6. Rebirth resets tiers/coins for permanent multipliers
+7. Return to lobby to display pets, check leaderboards, see other players
 
 ## Progression & economy
 
@@ -67,6 +80,29 @@ Pets are permanent multipliers with rarity tiers.
 - Rare hatch produces a board-wide particle burst visible to all players.
 - Hatch meter fills fastest right before completion; a "nearly there" state
   shows glowing progress bar.
+
+**Pet display (lobby)**
+
+- Equipped pets follow their owner with rarity-graded visual effects:
+  particle quality, trail color, and pet size all scale with rarity, so a
+  Mythic is recognizable at lobby-glance distance without reading any text.
+- Top 3 equipped pets float above the player's head with name tags.
+- Podia in the showcase plaza display each weekly leaderboard's top 3
+  players as statues holding their best pet.
+- Pet index UI ("collection") shows completion percentage and animated
+  silhouettes for unowned pets.
+
+**Leaderboards (lobby)**
+
+- Weekly: total hatches, biggest pet (by rarity then level), rebirth count.
+- Reset every Monday 2pm EST; winners get a lobby-wide announcement plus an
+  exclusive cosmetic pet aura valid while they hold the title.
+
+**Pet cosmetics**
+
+- Pet auras (coin purchases), pet colors, and name tags. One aura slot
+  standard, two additional slots unlockable. Cosmetics are coin sinks
+  to protect the Robux products.
 
 **Sessions**
 
