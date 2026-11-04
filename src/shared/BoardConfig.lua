@@ -10,8 +10,8 @@ local Config = {
 	FixedStep = 1 / 120,
 	DefaultPreset = "Springy",
 	Presets = {
-		Gentle = { bounce = 0.22, kick = 2.5 },
-		Springy = { bounce = 0.64, kick = 6.5 },
+		Gentle = { bounce = 0.22, kick = 2.5, reach = 4 },
+		Springy = { bounce = 0.64, kick = 11, reach = 3.5 },
 	},
 	Tiers = {
 		{ radius = 0.72, color = Color3.fromRGB(147, 209, 238), mark = "I" },

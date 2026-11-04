@@ -15,6 +15,7 @@ end
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = child("RemoteEvent", "BoardRequest", remotes)
 local feedback = child("RemoteEvent", "BoardMerge", remotes)
+local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
 
@@ -44,6 +45,7 @@ local function syncVisuals(board)
 			part.CanQuery = false
 			part.CastShadow = false
 			part:SetAttribute("Tier", egg.tier)
+			part:SetAttribute("EggId", egg.id)
 			board.parts[egg.id] = part
 		end
 		local position = Vector3.new(egg.position.X, egg.position.Y, 0)
@@ -65,7 +67,8 @@ end
 local function reset(board, preset)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
-	board.sim = Simulation.new(preset)
+	board.sim = Simulation.new(preset, board.sim and board.sim.serial)
+	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
 	board.chain = 0
 	board.lastMerge = -math.huge
@@ -82,6 +85,7 @@ local function addPlayer(player)
 	local board = {
 		folder = folder,
 		parts = {},
+		impacts = {},
 		lastDrop = -math.huge,
 		lastReset = -math.huge,
 	}
@@ -141,20 +145,33 @@ RunService.Heartbeat:Connect(function(dt)
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
 			table.clear(merged)
-			Simulation.step(board.sim, Config.FixedStep, merged)
-			for _, egg in ipairs(merged) do
+			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
+			for _, merge in ipairs(merged) do
+				local egg = merge.egg
 				local now = os.clock()
 				board.chain = if now - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.lastMerge = now
 				board.merges += 1
-				feedback:FireClient(player, egg.position, egg.tier, board.chain)
+				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other)
 			end
 			if #merged > 0 then
 				publishState(board)
 			end
 		end
 	end
-	for _, board in pairs(boards) do
+	local now = os.clock()
+	for player, board in pairs(boards) do
 		syncVisuals(board)
+		local batch = {}
+		for id, impact in pairs(board.impacts) do
+			if board.parts[id] and now - (impact.egg.lastImpact or -math.huge) >= 0.12 then
+				impact.egg.lastImpact = now
+				table.insert(batch, { id, impact.normal, impact.speed })
+			end
+		end
+		if #batch > 0 then
+			impactsRemote:FireClient(player, batch)
+		end
+		table.clear(board.impacts)
 	end
 end)

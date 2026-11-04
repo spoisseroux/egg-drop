@@ -7,9 +7,11 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
+local Jelly = require(script.JellyVisual)
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
+local impacts = remotes:WaitForChild("BoardImpact")
 local board = ReplicatedStorage:WaitForChild("EggDropBoards"):WaitForChild(tostring(player.UserId))
 
 local ink = Color3.fromRGB(255, 241, 207)
@@ -56,6 +58,9 @@ viewport.CurrentCamera = trayCamera
 local overlay = make("Frame", "TrayOverlay", {
 	BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 2,
 }, backdrop)
+local effects = make("Frame", "MergeEffects", {
+	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
+}, overlay)
 
 local function surface(name, size, transform, color)
 	return make("Part", name, {
@@ -94,13 +99,22 @@ hint.TextSize = 13
 local gentle = label("TextButton", "Gentle", "Gentle", backdrop, panel)
 local springy = label("TextButton", "Springy", "Springy", backdrop, panel)
 local reset = label("TextButton", "Reset", "Reset", backdrop, panel)
-local chime = make("Sound", "EggDropChime", {
-	SoundId = "rbxasset://sounds/volume_slider.ogg", Volume = 0.45,
+local plop = make("Sound", "EggDropPlop", {
+	SoundId = "rbxasset://sounds/impact_water.mp3", Volume = 0.25,
 }, SoundService)
+local chimes = {}
+for i = 1, 3 do
+	chimes[i] = make("Sound", "EggDropChime" .. i, {
+		SoundId = "rbxasset://sounds/volume_slider.ogg", Volume = 0.37,
+	}, SoundService)
+end
+local chimeIndex = 0
+local lastPlop = -math.huge
 
 local aim = 0.5
 local drag
 local eggViews = {}
+local viewsById = {}
 
 local function nextTier()
 	return board:GetAttribute("NextTier") or 1
@@ -123,7 +137,7 @@ local function drawAim()
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
 	ghost.BackgroundColor3 = Config.Tiers[tier].color
-	rail.Text = "AIM   |   NEXT " .. Config.Tiers[tier].mark
+	rail.Text = "DRAG TO AIM   ·   NEXT " .. Config.Tiers[tier].mark
 end
 
 local function updateHud()
@@ -210,28 +224,27 @@ end)
 
 local function addView(source)
 	local tier = source:GetAttribute("Tier")
-	if not tier then
+	local id = source:GetAttribute("EggId")
+	if not tier or not id then
 		return
 	end
-	local part = source:Clone()
-	part.Parent = scene
+	local gel = Jelly.new(scene, source)
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
 	mark.TextColor3 = navy
 	mark.Size = UDim2.fromOffset(30, 22)
 	mark.ZIndex = 4
-	eggViews[source] = { part = part, mark = mark }
-	local size = part.Size
-	part.Size = Vector3.new(size.X * 1.12, size.Y * 0.8, size.Z)
-	TweenService:Create(part, TweenInfo.new(0.15, Enum.EasingStyle.Back), { Size = size }):Play()
+	eggViews[source] = { gel = gel, mark = mark, id = id }
+	viewsById[id] = gel
 end
 
 board.ChildAdded:Connect(addView)
 board.ChildRemoved:Connect(function(source)
 	local view = eggViews[source]
 	if view then
-		view.part:Destroy()
+		view.gel:destroy()
 		view.mark:Destroy()
+		viewsById[view.id] = nil
 		eggViews[source] = nil
 	end
 end)
@@ -239,12 +252,62 @@ for _, source in ipairs(board:GetChildren()) do
 	addView(source)
 end
 
-feedback.OnClientEvent:Connect(function(position, tier, chain)
+impacts.OnClientEvent:Connect(function(batch)
+	local strongest = 0
+	for _, impact in ipairs(batch) do
+		local gel = viewsById[impact[1]]
+		if gel then
+			gel:impact(impact[2], impact[3])
+			strongest = math.max(strongest, impact[3])
+		end
+	end
+	local now = os.clock()
+	if strongest >= 9 and now - lastPlop >= 0.13 then
+		lastPlop = now
+		plop.PlaybackSpeed = math.clamp(0.82 + strongest / 100, 0.9, 1.2)
+		plop.Volume = math.clamp(strongest / 90, 0.13, 0.35)
+		plop.TimePosition = 0
+		plop:Play()
+	end
+end)
+
+local function gelDrop(from, to, diameter, color, duration, outward)
+	local dot = make("Frame", "GelDrop", {
+		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = color, BorderSizePixel = 0,
+		BackgroundTransparency = 0.18, ZIndex = 3,
+		Position = UDim2.fromOffset(from.X, from.Y),
+		Size = UDim2.fromOffset(diameter, diameter),
+	}, effects)
+	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, dot)
+	local tween = TweenService:Create(dot, TweenInfo.new(duration, Enum.EasingStyle.Quad), {
+		Position = UDim2.fromOffset(to.X, to.Y),
+		Size = UDim2.fromOffset(diameter * 0.5, diameter * 0.5),
+		BackgroundTransparency = if outward then 1 else 0.65,
+	})
+	tween.Completed:Once(function()
+		dot:Destroy()
+	end)
+	tween:Play()
+end
+
+feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 	local point = project(position)
-	local pop = label("TextLabel", "MergePop", if chain > 1 then "CHAIN x" .. chain else "POP!", overlay)
-	pop.TextColor3 = Config.Tiers[tier].color
-	pop.TextStrokeTransparency = 0.35
-	pop.TextSize = 20
+	local color = Config.Tiers[tier].color
+	local scale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
+	local firstPoint, secondPoint = project(first), project(second)
+	local diameter = scale * Config.Tiers[tier - 1].radius
+	gelDrop(firstPoint, point, diameter, color, 0.12, false)
+	gelDrop(secondPoint, point, diameter, color, 0.12, false)
+	for i = 1, 5 do
+		local angle = i * math.pi * 2 / 5 + chain * 0.5
+		local delta = Vector2.new(math.cos(angle), math.sin(angle)) * scale * 2
+		gelDrop(point, point + delta, math.max(3, scale * 0.27), color, 0.3, true)
+	end
+	local pop = label("TextLabel", "MergePop", if chain > 1 then "CHAIN x" .. chain else "POP!", effects)
+	pop.TextColor3 = color
+	pop.TextStrokeColor3 = navy
+	pop.TextStrokeTransparency = 0.05
+	pop.TextSize = if chain > 1 then 23 else 18
 	pop.AnchorPoint = Vector2.new(0.5, 0.5)
 	pop.Size = UDim2.fromOffset(120, 27)
 	pop.Position = UDim2.fromOffset(point.X, point.Y)
@@ -253,25 +316,35 @@ feedback.OnClientEvent:Connect(function(position, tier, chain)
 		point -= Vector2.new(0, 21)
 		pop.Position = UDim2.fromOffset(point.X, point.Y)
 	end
-	local tween = TweenService:Create(pop, TweenInfo.new(0.55), {
-		Position = UDim2.fromOffset(point.X, point.Y - 36), TextTransparency = 1, TextStrokeTransparency = 1,
+	local tween = TweenService:Create(pop, TweenInfo.new(0.62, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Position = UDim2.fromOffset(point.X, point.Y - 44), TextTransparency = 1, TextStrokeTransparency = 1,
 	})
 	tween.Completed:Once(function()
 		pop:Destroy()
 	end)
 	tween:Play()
+	chimeIndex = chimeIndex % #chimes + 1
+	local chime = chimes[chimeIndex]
 	chime.PlaybackSpeed = 1 + (tier - 1) * 0.18 + math.min(chain, 5) * 0.05
 	chime.TimePosition = 0
 	chime:Play()
 end)
 
 board.AttributeChanged:Connect(updateHud)
+board:GetAttributeChangedSignal("ResetId"):Connect(function()
+	effects:ClearAllChildren()
+	plop:Stop()
+	for _, chime in ipairs(chimes) do
+		chime:Stop()
+	end
+	lastPlop = -math.huge
+end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(dt)
+	local now = os.clock()
 	for source, view in pairs(eggViews) do
-		local position = source.Position
-		view.part.Position = position
+		local position = view.gel:render(source.Position, dt, now)
 		local point = project(Vector2.new(position.X, position.Y))
 		view.mark.Position = UDim2.fromOffset(point.X, point.Y)
 	end
