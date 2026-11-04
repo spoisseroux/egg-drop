@@ -1,7 +1,9 @@
 local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local PipVisual = require(script.Parent.PipVisual)
 local PuddleVisual = require(script.Parent.PuddleVisual)
@@ -209,6 +211,11 @@ function Room:show(mode)
 	end
 	self.controls.Visible = mode == "Room"
 	self.board.Visible = mode == "Board"
+	if mode == "Room" and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
+		GuiService.SelectedObject = self.controls.OpenHandheld
+	elseif mode == "Board" and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.controls) then
+		GuiService.SelectedObject = nil
+	end
 end
 
 function Room:setMode(mode)

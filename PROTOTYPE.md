@@ -12,7 +12,9 @@ tray and keeps their unlocked pets and equipped shell in a published game.
 
 ## How to play
 
-Drag the rail and release to place the next egg. Matching tiers merge.
+Aim with the D-pad and press A to drop, or drag across the display bar and
+release. B centers the aim. On a keyboard, arrows or A/D aim and Space
+drops. Controller D-pad and A use the same controls. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
 Merges fill six points of hatch charge for Pip, then twelve for Puddle.
 Choose **Meet Pip** or **Meet Puddle** to visit that pet, or **Keep playing**
@@ -34,7 +36,7 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Tray full card and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
 | Retry | Four starter eggs and a fresh meter for the next pet | Resets the round while preserving the collection and equipped shell. |
-| Customize | Four shell presets with a handheld preview | Equip updates the board and the device other players see. Cancel restores the equipped look. |
+| Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Cancel restores the equipped look. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |
 
 ## Audio
@@ -49,15 +51,16 @@ Window Seat at 0:00 and Paper Moon at 0:55. Pocket Apricot is a separate draft.
 ## Deck customization
 
 Choose Stone, Ice, Brick, or Moss from Customize on the board or in the
-lounge. The picker previews the front of the handheld. On the board you
-can also see its frame change before you equip. The equipped theme carries
-through retry, respawn, and room transitions. Published servers save it in
-the player profile. Studio uses session memory.
+lounge. Pick Star, Glitch, Seed, or Blank for the front sticker slot.
+The picker previews the front of the handheld. On the board you can also
+see changes on the full deck before you equip. The shell and sticker carry
+through retry, respawn, and room transitions. Published servers save the
+pair in the player profile. Studio uses session memory.
 
-Next, let players mix unlocked shells, button caps, screen trim, and one
-backplate decal. The board surface, egg colors and marks, hints, and action
-contrast stay consistent across all presets. Add earned cosmetics after
-the two-pet loop is tested.
+Astra's design uses a recessed display with the same tall tray proportions
+in portrait and landscape. Landscape puts the D-pad and action buttons on
+side grips. Additional sticker slots, backplate art, and earned pet
+stickers are possible next steps.
 
 ## Pets
 

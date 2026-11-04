@@ -1,13 +1,16 @@
 # Egg Drop
 
 Run `rojo serve --port 34873` and connect the Rojo Studio plugin to that
-port. In Play mode, drag across the rail and release to drop an egg.
+port. In Play mode, aim with the Pocket Deck's D-pad and press A to drop.
+Press B to center, or drag across the screen bar and release to drop.
+On a keyboard, aim with the arrows or A/D and drop with Space.
+A controller uses D-pad left/right and A.
 Merges charge the hatch meter. Hatch Pip at 6 points to unlock the lounge,
 then hatch Puddle at 12 points. Meet either pet and select **Open deck** to
 resume the same tray.
 Other players in the lounge can see your handheld's live display.
-Use **Customize** in either view to preview and equip a shell.
-Published servers save pet ownership and shell choice per player. Studio
+Use **Customize** in either view to preview and equip a shell and sticker.
+Published servers save pet ownership and the deck's appearance. Studio
 uses an in-memory profile for each play session.
 Sustained overflow ends the round with a retry button. See
 [the prototype rundown](PROTOTYPE.md) for the full flow and pet concepts.

@@ -1,4 +1,6 @@
 local Players = game:GetService("Players")
+local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -9,6 +11,7 @@ local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
+local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local Audio = require(script.BoardAudio)
@@ -55,9 +58,12 @@ local shell = make("Frame", "CartridgeShell", {
 }, backdrop)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
 local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
+local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Palette.Ink, BorderSizePixel = 0 }, backdrop)
+make("UICorner", "LensCurve", { CornerRadius = UDim.new(0, 12) }, bezel)
+local bezelRim = make("UIStroke", "InsetTrim", { Color = Palette.Rim, Thickness = 2 }, bezel)
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
-	BackgroundColor3 = Palette.Tray, BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromHex("#222A24"), BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
 }, backdrop)
@@ -93,16 +99,23 @@ for _, sign in ipairs({ -1, 1 }) do
 			* CFrame.Angles(0, 0, sign * math.pi / 4), Palette.Rim)
 end
 
-local title = label("TextLabel", "Title", "Egg Drop", backdrop)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 22
+local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
+title.Font = Enum.Font.Code
+title.TextSize = 20
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
 	BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
 }, shell)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, power)
-local rail = label("TextButton", "AimRail", "", backdrop, Palette.Primary)
+local deckSticker = label("TextLabel", "DeckSticker", "", backdrop, Palette.Primary)
+deckSticker.Size = UDim2.fromOffset(24, 24)
+deckSticker.Rotation = -11
+make("UICorner", "StickerCurve", { CornerRadius = UDim.new(0, 5) }, deckSticker)
+local rail = label("TextButton", "AimRail", "", backdrop, Palette.Ink)
 rail.AutoButtonColor = false
+rail.Font = Enum.Font.Code
+rail.TextColor3 = Palette.Paper
+rail.Selectable = false
 make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 local track = make("Frame", "Guide", {
 	BackgroundColor3 = Palette.Primary, BackgroundTransparency = 0.45, BorderSizePixel = 0,
@@ -122,6 +135,7 @@ local fill = make("Frame", "Charge", {
 	BackgroundColor3 = Palette.Amber, BorderSizePixel = 0,
 }, meter)
 local meterText = label("TextLabel", "MeterText", "", meter)
+meterText.Font = Enum.Font.Code
 meterText.Size = UDim2.fromScale(1, 1)
 meterText.TextSize = 13
 meterText.TextColor3 = Palette.Paper
@@ -141,6 +155,44 @@ local roomButton = label("TextButton", "VisitRoom", "Lounge", backdrop, Palette.
 local reset = label("TextButton", "Reset", "Retry", backdrop, Palette.Panel)
 for _, button in ipairs({ customizeButton, roomButton, reset }) do
 	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 8) }, button)
+end
+local hardware = make("Frame", "DeckControls", { BackgroundTransparency = 1 }, backdrop)
+local function hardwareButton(name, text, parent, color, width)
+	local button = label("TextButton", name, text, parent, color)
+	button.Size = UDim2.fromOffset(width, width)
+	button.Font = Enum.Font.Code
+	button.TextSize = 24
+	make("UICorner", "Cap", { CornerRadius = UDim.new(0, if width == 44 then 7 else 24) }, button)
+	return button
+end
+local dpad = make("Frame", "DPad", {
+	Size = UDim2.fromOffset(88, 62), BackgroundTransparency = 1,
+}, hardware)
+local stem = make("Frame", "Stem", {
+	Size = UDim2.fromOffset(30, 60), Position = UDim2.fromOffset(29, 0),
+	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
+}, dpad)
+make("UICorner", "StemCurve", { CornerRadius = UDim.new(0, 6) }, stem)
+local leftAim = hardwareButton("Left", "‹", dpad, Palette.Ink, 44)
+local rightAim = hardwareButton("Right", "›", dpad, Palette.Ink, 44)
+leftAim.Position, rightAim.Position = UDim2.fromOffset(0, 8), UDim2.fromOffset(44, 8)
+leftAim.TextColor3, rightAim.TextColor3 = Palette.Paper, Palette.Paper
+local action = hardwareButton("Drop", "A", hardware, Palette.Primary, 48)
+local centerAim = hardwareButton("Center", "B", hardware, Palette.Primary, 48)
+local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
+local centerCaption = label("TextLabel", "CenterCaption", "CENTER", hardware)
+for _, caption in ipairs({ dropCaption, centerCaption }) do
+	caption.Size = UDim2.fromOffset(48, 16)
+	caption.Font = Enum.Font.Code
+	caption.TextSize = 11
+end
+local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(31, 26), BackgroundTransparency = 1 }, hardware)
+for index = 0, 3 do
+	local slot = make("Frame", "Vent", {
+		Size = UDim2.fromOffset(4, 23), Position = UDim2.fromOffset(index * 8, 2),
+		Rotation = 16, BorderSizePixel = 0, BackgroundColor3 = Palette.Ink,
+	}, vents)
+	make("UICorner", "Round", { CornerRadius = UDim.new(1, 0) }, slot)
 end
 local openPicker
 local picker
@@ -224,29 +276,50 @@ local lastPlop = -math.huge
 
 local aim = 0.5
 local drag
+local heldAim = {}
 local eggViews = {}
 local viewsById = {}
 
-local function equippedTheme()
-	return board:GetAttribute("DeckThemeId") or Themes.Default
+local function clearPlayInputs()
+	drag = nil
+	table.clear(heldAim)
 end
 
-local function paintDeck(id)
+local function equippedAppearance()
+	return board:GetAttribute("DeckThemeId") or Themes.Default,
+		board:GetAttribute("DeckStickerId") or Stickers.Default
+end
+
+local function paintDeck(id, stickerId)
 	local theme = Themes.ById[id]
 	shell.BackgroundColor3 = theme.shell
 	rim.Color = theme.trim
+	bezelRim.Color = theme.trim
 	customizeButton.BackgroundColor3 = theme.buttons
+	action.BackgroundColor3 = theme.buttons
+	centerAim.BackgroundColor3 = theme.buttons
+	Stickers.paint(deckSticker, stickerId)
 end
 
 local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible
 end
 
+local function isGamepad(inputType)
+	return string.match(inputType.Name, "^Gamepad") ~= nil
+end
+
 picker = DeckPicker.new(gui, make, label, paintDeck, function()
-	paintDeck(equippedTheme())
+	local selected = GuiService.SelectedObject
+	if selected and selected:IsDescendantOf(picker.shade) then
+		local controls = gui.LoungeControls
+		GuiService.SelectedObject = if board:GetAttribute("Mode") == "Room" and controls.Visible
+			then controls.OpenHandheld else nil
+	end
+	paintDeck(equippedAppearance())
 	rail.Interactable = canAim()
-end, function(id)
-	request:FireServer("theme", id)
+end, function(themeId, stickerId)
+	request:FireServer("appearance", themeId, stickerId)
 	audio:play("menu")
 end)
 
@@ -254,18 +327,25 @@ openPicker = function()
 	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
 	end
-	drag = nil
+	clearPlayInputs()
 	rail.Interactable = false
-	picker:open(equippedTheme())
+	picker:open(equippedAppearance())
+	if isGamepad(UserInputService:GetLastInputType()) then
+		GuiService.SelectedObject = picker.tabs.Shell
+	end
 	audio:play("menu")
 end
 customizeButton.Activated:Connect(openPicker)
-board:GetAttributeChangedSignal("DeckThemeId"):Connect(function()
-	if not isPickerOpen() then
-		paintDeck(equippedTheme())
-	end
-end)
-paintDeck(equippedTheme())
+local function repaintEquipped()
+	task.defer(function()
+		if not isPickerOpen() then
+			paintDeck(equippedAppearance())
+		end
+	end)
+end
+board:GetAttributeChangedSignal("DeckThemeId"):Connect(repaintEquipped)
+board:GetAttributeChangedSignal("DeckStickerId"):Connect(repaintEquipped)
+paintDeck(equippedAppearance())
 
 local function nextTier()
 	return board:GetAttribute("NextTier") or 1
@@ -288,7 +368,7 @@ local function drawAim()
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
 	ghost.BackgroundColor3 = Config.Tiers[tier].color
-	rail.Text = "Slide to aim   ·   " .. Config.Tiers[tier].mark
+	rail.Text = "EGG DROP  ·  " .. Config.Tiers[tier].mark
 	local overflow = project(Vector2.new(0, Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
@@ -309,7 +389,7 @@ local function updateHud()
 	elseif owned > 0 then
 		status.Text = string.format("%d merges   ·   Chain ×%d", merges, chain)
 	elseif drops == 0 then
-		status.Text = "Slide, then let go to drop."
+		status.Text = "Aim with ◀ ▶ or drag the screen bar."
 	elseif merges == 0 then
 		status.Text = "Match eggs with the same mark."
 	else
@@ -320,8 +400,10 @@ local function updateHud()
 	local mode = board:GetAttribute("Mode")
 	local showHatch = hatchPet ~= nil and hatchName == hatchPet.name and hatchName ~= dismissedHatch and mode == "Board"
 	local over = board:GetAttribute("RoundOver") and not showHatch
+	local wasVisible = modal.Visible
 	modal.Visible = mode == "Board" and (over == true or showHatch)
 	if modal.Visible then
+		clearPlayInputs()
 		picker:close()
 	end
 	pet.Visible = showHatch == true and not over
@@ -332,6 +414,11 @@ local function updateHud()
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
+	if modal.Visible and not wasVisible and isGamepad(UserInputService:GetLastInputType()) then
+		GuiService.SelectedObject = modalAction
+	elseif not modal.Visible and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(modal) then
+		GuiService.SelectedObject = nil
+	end
 	rail.Interactable = canAim() and not isPickerOpen()
 	local unlocked = owned > 0
 	roomButton.Interactable = unlocked
@@ -362,39 +449,58 @@ local function layout()
 	local screen = backdrop.AbsoluteSize
 	local lateral = screen.Y < 530 and screen.X > screen.Y * 1.25
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local reserved = if lateral then 114 else 229
-	local width = math.max(1, math.min(460, screen.X - 32, (screen.Y - reserved) * ratio))
+	local reserved = if lateral then 122 else 256
+	local grip = 132
+	local widthBudget = screen.X - (if lateral then grip * 2 + 56 else 48)
+	local width = math.max(1, math.min(415, widthBudget, (screen.Y - reserved) * ratio))
 	local height = width / ratio
-	local panelWidth = if lateral then math.min(260, screen.X - width - 52) else width
-	local totalWidth = if lateral then width + 20 + panelWidth else width
+	local totalWidth = if lateral then width + grip * 2 + 24 else math.min(screen.X - 32, math.max(width + 14, 228))
 	local left = (screen.X - totalWidth) / 2
-	local top = if lateral then 47 else math.max(52, (screen.Y - height - 112) / 2)
-	shell.Position = UDim2.fromOffset(left - 10, top - 34)
-	shell.Size = UDim2.fromOffset(totalWidth + 20, height + (if lateral then 98 else 198))
-	viewport.Position = UDim2.fromOffset(left, top + 54)
+	local shellHeight = if lateral then math.max(236, height + 104) else height + 240
+	local top = math.max(5, (screen.Y - shellHeight) / 2)
+	local screenX = (screen.X - width) / 2
+	local trayY = top + 70
+	local trayBottom = trayY + height
+	shell.Position = UDim2.fromOffset(left - 8, top)
+	shell.Size = UDim2.fromOffset(totalWidth + 16, shellHeight)
+	bezel.Position = UDim2.fromOffset(screenX - 5, top + 24)
+	bezel.Size = UDim2.fromOffset(width + 10, height + (if lateral then 75 else 94))
+	viewport.Position = UDim2.fromOffset(screenX, trayY)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
 	modal.Position = UDim2.fromScale(0.5, 0.49)
 	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 209)
-	title.Position = UDim2.fromOffset(left, top - 30)
-	title.Size = UDim2.fromOffset(width, 24)
-	rail.Position = UDim2.fromOffset(left, top)
-	rail.Size = UDim2.fromOffset(width, 48)
-	rail.TextSize = 14
-	local controlX = if lateral then left + width + 20 else left
-	local controlY = if lateral then math.max(44, (screen.Y - 213) / 2) else top + 54 + height + 3
-	status.Position = UDim2.fromOffset(controlX, controlY)
-	status.Size = UDim2.fromOffset(panelWidth, 32)
-	status.TextSize = 14
-	meter.Position = UDim2.fromOffset(controlX, controlY + 35)
-	meter.Size = UDim2.fromOffset(panelWidth, 19)
+	title.Position = UDim2.fromOffset(left, top + 1)
+	title.Size = UDim2.fromOffset(totalWidth, 23)
+	deckSticker.Position = UDim2.fromOffset(left + (if lateral then 52 else totalWidth * 0.47 - 12),
+		if lateral then top + 154 else trayBottom + 67)
+	rail.Position = UDim2.fromOffset(screenX, top + 26)
+	rail.Size = UDim2.fromOffset(width, 44)
+	rail.TextSize = if width < 160 then 11 else 14
+	local menuX = if lateral then left + grip + width + 24 else left
+	local menuY = if lateral then top + 84 else trayBottom + 120
+	status.Position = UDim2.fromOffset(left, if lateral then top + 37 else trayBottom + 5)
+	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral then 38 else 22)
+	status.TextSize = 13
+	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 5 else 29))
+	meter.Size = UDim2.fromOffset(width, 18)
+	meterText.TextSize = if width < 135 then 11 else 13
+	hardware.Position = UDim2.fromOffset(left, if lateral then top + 12 else trayBottom + 49)
+	hardware.Size = UDim2.fromOffset(totalWidth, 64)
+	dpad.Position = UDim2.fromOffset(if lateral then 20 else 0, if lateral then 77 else 0)
+	action.Position = UDim2.fromOffset(totalWidth - 48, 0)
+	centerAim.Position = UDim2.fromOffset(totalWidth - 103, 6)
+	dropCaption.Position = UDim2.fromOffset(totalWidth - 48, 49)
+	centerCaption.Position = UDim2.fromOffset(totalWidth - 103, 53)
+	vents.Position = UDim2.fromOffset(if lateral then 49 else totalWidth * 0.47 + 25, if lateral then 174 else 15)
+	vents.Visible = lateral or totalWidth >= 310
 	for index, button in ipairs({ customizeButton, roomButton, reset }) do
-		local buttonWidth = if lateral then panelWidth else (panelWidth - 12) / 3
-		button.Position = if lateral then UDim2.fromOffset(controlX, controlY + 60 + (index - 1) * 50)
-			else UDim2.fromOffset(controlX + (index - 1) * (buttonWidth + 6), controlY + 60)
+		local buttonWidth = if lateral then grip else (totalWidth - 12) / 3
+		button.Position = if lateral then UDim2.fromOffset(menuX, menuY + (index - 1) * 47)
+			else UDim2.fromOffset(menuX + (index - 1) * (buttonWidth + 6), menuY)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
-		button.TextSize = 14
+		button.TextSize = 13
 	end
 	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
 	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
@@ -407,10 +513,100 @@ local function aimFromScreen(x)
 	drawAim()
 end
 
-rail.InputBegan:Connect(function(input)
+local function canPlay()
+	return canAim() and not isPickerOpen() and not roomView.busy and not GuiService.MenuIsOpen
+end
+
+local function dropEgg()
+	if canPlay() and not drag then
+		request:FireServer("drop", aim)
+	end
+end
+
+local function moveAim(delta)
+	aim = math.clamp(aim + delta, 0, 1)
+	drawAim()
+end
+
+local function center()
+	if canPlay() and not drag then
+		aim = 0.5
+		drawAim()
+		audio:play("aim")
+	end
+end
+
+local function startAim(key, direction)
+	if canPlay() and not drag and not heldAim[key] then
+		heldAim[key] = direction
+		moveAim(direction * 0.045)
+		audio:play("aim")
+	end
+end
+
+local function isPointer(input)
 	local kind = input.UserInputType
-	if not drag and not roomView.busy and rail.Interactable
-		and (kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch) then
+	return kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch
+end
+
+for button, direction in pairs({ [leftAim] = -1, [rightAim] = 1 }) do
+	button.InputBegan:Connect(function(input)
+		if isPointer(input) then
+			startAim(input, direction)
+		end
+	end)
+	button.Activated:Connect(function(input)
+		if input and not isPointer(input) and canPlay() and not drag then
+			moveAim(direction * 0.08)
+		end
+	end)
+end
+action.Activated:Connect(dropEgg)
+centerAim.Activated:Connect(center)
+
+local function handleControl(name, state, input)
+	local key = input.KeyCode
+	if state == Enum.UserInputState.Cancel then
+		table.clear(heldAim)
+	elseif state == Enum.UserInputState.End then
+		heldAim[key] = nil
+	end
+	local gamepad = isGamepad(input.UserInputType)
+	if name == "EggDropCenter" and isPickerOpen() and gamepad and state == Enum.UserInputState.Begin then
+		picker:close()
+		return Enum.ContextActionResult.Sink
+	end
+	if not canPlay() or UserInputService:GetFocusedTextBox() or (gamepad and GuiService.SelectedObject) then
+		return Enum.ContextActionResult.Pass
+	end
+	if state == Enum.UserInputState.Begin then
+		if name == "EggDropDrop" then
+			dropEgg()
+		elseif name == "EggDropCustomize" then
+			openPicker()
+		elseif name == "EggDropCenter" then
+			center()
+		else
+			startAim(key, if name == "EggDropLeft" then -1 else 1)
+		end
+	end
+	return Enum.ContextActionResult.Sink
+end
+
+local priority = Enum.ContextActionPriority.High.Value
+ContextActionService:BindActionAtPriority("EggDropLeft", handleControl, false, priority,
+	Enum.KeyCode.Left, Enum.KeyCode.A, Enum.KeyCode.DPadLeft)
+ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, priority,
+	Enum.KeyCode.Right, Enum.KeyCode.D, Enum.KeyCode.DPadRight)
+ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
+	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
+ContextActionService:BindActionAtPriority("EggDropCenter", handleControl, false, priority, Enum.KeyCode.ButtonB)
+ContextActionService:BindActionAtPriority("EggDropCustomize", handleControl, false, priority,
+	Enum.KeyCode.M, Enum.KeyCode.ButtonY)
+
+rail.InputBegan:Connect(function(input)
+	if not drag and canPlay() and isPointer(input) then
+		table.clear(heldAim)
 		drag = input
 		aimFromScreen(input.Position.X)
 		audio:play("aim")
@@ -423,18 +619,25 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 UserInputService.InputEnded:Connect(function(input)
+	heldAim[input] = nil
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		for key in pairs(heldAim) do
+			if typeof(key) == "Instance" and key.UserInputType == Enum.UserInputType.MouseButton1 then
+				heldAim[key] = nil
+			end
+		end
+	end
 	if drag and (input == drag or (drag.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseButton1)) then
 		drag = nil
-		if input.UserInputState == Enum.UserInputState.End and rail.Interactable then
+		if input.UserInputState == Enum.UserInputState.End and canPlay() then
 			aimFromScreen(input.Position.X)
-			request:FireServer("drop", aim)
+			dropEgg()
 		end
 	end
 end)
-UserInputService.WindowFocusReleased:Connect(function()
-	drag = nil
-end)
+UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
+GuiService.MenuOpened:Connect(clearPlayInputs)
 reset.Activated:Connect(function()
 	if not isPickerOpen() then
 		request:FireServer("reset")
@@ -633,7 +836,7 @@ board.AttributeChanged:Connect(function()
 	end
 end)
 board:GetAttributeChangedSignal("Mode"):Connect(function()
-	drag = nil
+	clearPlayInputs()
 	picker:close()
 	local mode = board:GetAttribute("Mode")
 	if mode == "Room" then
@@ -644,6 +847,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	roomView:setMode(mode)
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
+	clearPlayInputs()
 	reveal:cancel()
 	effects:ClearAllChildren()
 	audio:stop()
@@ -670,6 +874,17 @@ end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
+	if canPlay() and not drag and not UserInputService:GetFocusedTextBox() then
+		local direction = 0
+		for _, value in pairs(heldAim) do
+			direction += value
+		end
+		if direction ~= 0 then
+			moveAim(math.sign(direction) * 0.62 * dt)
+		end
+	else
+		table.clear(heldAim)
+	end
 	local now = os.clock()
 	local closest
 	local distance = math.huge
@@ -700,7 +915,7 @@ updateHud()
 task.delay(1.5, function()
 	if (board:GetAttribute("Drops") or 0) == 0 then
 		TweenService:Create(rail, TweenInfo.new(0.38, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 1, true),
-			{ BackgroundColor3 = Palette.Paper }):Play()
+			{ BackgroundColor3 = Palette.Shell }):Play()
 	end
 end)
 roomView:setMode(board:GetAttribute("Mode"))

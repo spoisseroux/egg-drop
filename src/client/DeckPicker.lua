@@ -1,6 +1,7 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Palette = require(Shared.DeckPalette)
 local Themes = require(Shared.DeckThemes)
+local Stickers = require(Shared.DeckStickers)
 
 local Picker = {}
 Picker.__index = Picker
@@ -16,13 +17,6 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 	}, shade)
 	make("UISizeConstraint", "Width", { MaxSize = Vector2.new(354, 244) }, card)
 	make("UICorner", "Curve", { CornerRadius = UDim.new(0, 15) }, card)
-	local heading = label("TextLabel", "Heading", "Customize your deck", card)
-	heading.Position = UDim2.fromOffset(0, 6)
-	heading.Size = UDim2.new(1, 0, 0, 30)
-	heading.TextColor3 = Palette.Ink
-	heading.Font = Enum.Font.GothamBold
-	heading.TextSize = 18
-	heading.ZIndex = 22
 
 	local function tile(parent, name, position, size, color)
 		local part = make("Frame", name, {
@@ -32,7 +26,7 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 		return part
 	end
 
-	local shell = tile(card, "Preview", UDim2.new(0.5, -34, 0, 40), UDim2.fromOffset(68, 86), Palette.Shell)
+	local shell = tile(card, "Preview", UDim2.new(0.5, -34, 0, 49), UDim2.fromOffset(68, 86), Palette.Shell)
 	local bezel = tile(shell, "Bezel", UDim2.fromOffset(7, 7), UDim2.fromOffset(54, 49), Palette.Rim)
 	local screen = tile(bezel, "Screen", UDim2.fromOffset(3, 3), UDim2.fromOffset(48, 43), Palette.Tray)
 	tile(screen, "SmallEgg", UDim2.fromOffset(12, 31), UDim2.fromOffset(8, 8), Palette.JellyBlue)
@@ -41,6 +35,13 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 	tile(shell, "DPadStem", UDim2.fromOffset(15, 62), UDim2.fromOffset(5, 15), Palette.Ink)
 	local buttonA = tile(shell, "A", UDim2.fromOffset(48, 63), UDim2.fromOffset(9, 9), Palette.Primary)
 	local buttonB = tile(shell, "B", UDim2.fromOffset(37, 70), UDim2.fromOffset(8, 8), Palette.Primary)
+	local sticker = label("TextLabel", "Sticker", "", shell, Palette.Primary)
+	sticker.Position = UDim2.fromOffset(26, 62)
+	sticker.Size = UDim2.fromOffset(13, 13)
+	sticker.TextSize = 12
+	sticker.Rotation = -11
+	sticker.ZIndex = 23
+	make("UICorner", "Curve", { CornerRadius = UDim.new(0, 3) }, sticker)
 
 	local function button(name, title, position, size, color)
 		local control = label("TextButton", name, title, card, color)
@@ -51,18 +52,32 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 	end
 	local self = setmetatable({
 		shade = shade, shell = shell, bezel = bezel, buttonA = buttonA, buttonB = buttonB,
-		choices = {}, onPreview = onPreview, onClose = onClose,
+		sticker = sticker, choices = { Shell = {}, Sticker = {} }, tabs = {},
+		onPreview = onPreview, onClose = onClose,
 	}, Picker)
-	for index, id in ipairs(Themes.Order) do
-		local theme = Themes.ById[id]
-		local swatch = button(id, theme.name, UDim2.new((index - 1) / 4, 9, 0, 136),
-			UDim2.new(0.25, -12, 0, 44), theme.buttons)
-		self.choices[id] = make("UIStroke", "Selection", {
-			Color = Palette.Ink, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Enabled = false,
-		}, swatch)
-		swatch.Activated:Connect(function()
-			self:select(id)
+	for index, tab in ipairs({ "Shell", "Sticker" }) do
+		local control = button(tab .. "Tab", tab, UDim2.new((index - 1) / 2, 9, 0, 4),
+			UDim2.new(0.5, -13, 0, 44), Palette.Panel)
+		self.tabs[tab] = control
+		control.Activated:Connect(function()
+			self:showTab(tab)
 		end)
+		local catalog = if tab == "Shell" then Themes else Stickers
+		for slot, id in ipairs(catalog.Order) do
+			local option = catalog.ById[id]
+			local swatch = button(id, option.name, UDim2.new((slot - 1) / 4, 9, 0, 138),
+				UDim2.new(0.25, -12, 0, 44), option.buttons or option.color or Palette.Panel)
+			self.choices[tab][id] = make("UIStroke", "Selection", {
+				Color = Palette.Ink, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Enabled = false,
+			}, swatch)
+			swatch.Activated:Connect(function()
+				if tab == "Shell" then
+					self:select(id, self.stickerId)
+				else
+					self:select(self.themeId, id)
+				end
+			end)
+		end
 	end
 	local cancel = button("Cancel", "Cancel", UDim2.new(0, 9, 0, 189), UDim2.new(0.5, -13, 0, 44), Palette.Panel)
 	local apply = button("Apply", "Equip", UDim2.new(0.5, 4, 0, 189), UDim2.new(0.5, -13, 0, 44), Palette.Primary)
@@ -70,29 +85,44 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 		self:close()
 	end)
 	apply.Activated:Connect(function()
-		local id = self.selected
+		local themeId, stickerId = self.themeId, self.stickerId
 		self:close()
-		onApply(id)
+		onApply(themeId, stickerId)
 	end)
 	return self
 end
 
-function Picker:select(id)
-	self.selected = id
-	local theme = Themes.ById[id]
+function Picker:showTab(active)
+	for tab, choices in pairs(self.choices) do
+		local visible = tab == active
+		self.tabs[tab].BackgroundColor3 = if visible then Palette.Primary else Palette.Panel
+		for _, stroke in pairs(choices) do
+			stroke.Parent.Visible = visible
+		end
+	end
+end
+
+function Picker:select(themeId, stickerId)
+	self.themeId, self.stickerId = themeId, stickerId
+	local theme = Themes.ById[themeId]
 	self.shell.BackgroundColor3 = theme.shell
 	self.bezel.BackgroundColor3 = theme.trim
 	self.buttonA.BackgroundColor3 = theme.buttons
 	self.buttonB.BackgroundColor3 = theme.buttons
-	for choice, stroke in pairs(self.choices) do
-		stroke.Enabled = choice == id
+	Stickers.paint(self.sticker, stickerId)
+	for choice, stroke in pairs(self.choices.Shell) do
+		stroke.Enabled = choice == themeId
 	end
-	self.onPreview(id)
+	for choice, stroke in pairs(self.choices.Sticker) do
+		stroke.Enabled = choice == stickerId
+	end
+	self.onPreview(themeId, stickerId)
 end
 
-function Picker:open(id)
+function Picker:open(themeId, stickerId)
 	self.shade.Visible = true
-	self:select(id)
+	self:showTab("Shell")
+	self:select(themeId, stickerId)
 end
 
 function Picker:close()

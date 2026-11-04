@@ -2,6 +2,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
+local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 
 local Lounge = {}
 
@@ -80,22 +81,23 @@ local function attach(model, torso, name, size, offset, color)
 	return piece
 end
 
-local function paintDevice(device, themeId)
+local function paintDevice(device, themeId, stickerId)
 	local theme = Themes.ById[themeId] or Themes.ById[Themes.Default]
 	device.Shell.Color = theme.shell
 	device.Bezel.Color = theme.trim
 	device.Confirm.Color = theme.buttons
 	device.Action.Color = theme.buttons
+	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)
 end
 
-function Lounge.setTheme(character, themeId)
+function Lounge.setAppearance(character, themeId, stickerId)
 	local device = character and character:FindFirstChild("PocketDeck")
 	if device then
-		paintDevice(device, themeId)
+		paintDevice(device, themeId, stickerId)
 	end
 end
 
-function Lounge.setMode(character, userId, mode, themeId)
+function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	if not character then
 		return
 	end
@@ -131,6 +133,26 @@ function Lounge.setMode(character, userId, mode, themeId)
 	device:SetAttribute("BoardUserId", userId)
 	local mount = CFrame.new(0, -0.42, -1.05) * CFrame.Angles(math.rad(37), 0, 0)
 	local shell = attach(device, torso, "Shell", Vector3.new(1.12, 1.45, 0.21), mount, Palette.Shell)
+	local stickerFace = Instance.new("SurfaceGui")
+	stickerFace.Name = "StickerFace"
+	stickerFace.Face = Enum.NormalId.Front
+	stickerFace.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+	stickerFace.CanvasSize = Vector2.new(112, 145)
+	stickerFace.LightInfluence = 0
+	stickerFace.MaxDistance = 34
+	stickerFace.Parent = shell
+	local decal = Instance.new("TextLabel")
+	decal.Name = "Decal"
+	decal.Position = UDim2.fromOffset(44, 103)
+	decal.Size = UDim2.fromOffset(19, 19)
+	decal.Rotation = -11
+	decal.TextSize = 16
+	decal.Font = Enum.Font.GothamBold
+	decal.BorderSizePixel = 0
+	decal.Parent = stickerFace
+	local rounded = Instance.new("UICorner")
+	rounded.CornerRadius = UDim.new(0, 4)
+	rounded.Parent = decal
 	attach(device, torso, "Bezel", Vector3.new(0.91, 0.94, 0.04),
 		mount * CFrame.new(0, 0.2, -0.109), Palette.Rim)
 	local screen = attach(device, torso, "Screen", Vector3.new(0.84, 0.87, 0.08),
@@ -140,7 +162,7 @@ function Lounge.setMode(character, userId, mode, themeId)
 	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), Palette.Primary)
 	attach(device, torso, "Action", Vector3.new(0.12, 0.12, 0.07), mount * CFrame.new(0.12, -0.5, -0.12),
 		Palette.Amber)
-	paintDevice(device, themeId)
+	paintDevice(device, themeId, stickerId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
 	badge.Adornee = screen
@@ -204,8 +226,8 @@ function Lounge.spawn(character, slot, player, deckState)
 		height += leg.Size.Y
 	end
 	character:PivotTo(CFrame.new(x, height, z) * CFrame.Angles(0, math.pi, 0))
-	local mode, themeId = deckState()
-	Lounge.setMode(character, player.UserId, mode, themeId)
+	local mode, themeId, stickerId = deckState()
+	Lounge.setMode(character, player.UserId, mode, themeId, stickerId)
 end
 
 return Lounge

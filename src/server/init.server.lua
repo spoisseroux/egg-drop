@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
+local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
@@ -112,7 +113,7 @@ local function addPlayer(player)
 		lastDrop = -math.huge,
 		lastReset = -math.huge,
 		lastModeChange = -math.huge,
-		lastThemeChange = -math.huge,
+		lastAppearanceChange = -math.huge,
 		mode = "Board",
 		profile = profile,
 	}
@@ -120,11 +121,12 @@ local function addPlayer(player)
 	reset(board, Config.DefaultPreset)
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
+	folder:SetAttribute("DeckStickerId", profile.sticker)
 	folder:SetAttribute("ProfileLoadFailed", profile.loadFailed)
 	folder.Parent = trays
 	local function spawn(character)
 		Lounge.spawn(character, slot, player, function()
-			return board.mode, folder:GetAttribute("DeckThemeId")
+			return board.mode, profile.theme, profile.sticker
 		end)
 	end
 	board.characterConnection = player.CharacterAdded:Connect(spawn)
@@ -147,19 +149,20 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(addPlayer, player)
 end
 
-request.OnServerEvent:Connect(function(player, action, value)
+request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
 	if not board then
 		return
 	end
 	local now = os.clock()
-	if action == "theme" then
-		if typeof(value) == "string" and Themes.ById[value] and value ~= board.folder:GetAttribute("DeckThemeId")
-			and now - board.lastThemeChange >= 0.25 then
-			board.lastThemeChange = now
-			Progress.equip(board.profile, value)
+	if action == "appearance" then
+		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string" and Stickers.ById[sticker]
+			and (value ~= board.profile.theme or sticker ~= board.profile.sticker) and now - board.lastAppearanceChange >= 0.25 then
+			board.lastAppearanceChange = now
+			Progress.equip(board.profile, value, sticker)
 			board.folder:SetAttribute("DeckThemeId", value)
-			Lounge.setTheme(player.Character, value)
+			board.folder:SetAttribute("DeckStickerId", sticker)
+			Lounge.setAppearance(player.Character, value, sticker)
 		end
 		return
 	end
@@ -170,7 +173,7 @@ request.OnServerEvent:Connect(function(player, action, value)
 		end
 		board.lastModeChange = now
 		board.mode = value
-		Lounge.setMode(player.Character, player.UserId, value, board.folder:GetAttribute("DeckThemeId"))
+		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
 		board.folder:SetAttribute("Mode", value)
 		return
 	end

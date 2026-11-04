@@ -1,6 +1,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
 local Themes = require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
+local Stickers = require(game:GetService("ReplicatedStorage").Shared.DeckStickers)
 
 local Progress = {}
 local pending = {}
@@ -28,6 +29,7 @@ function Progress.load(userId)
 		key = key,
 		rank = rankOf(record),
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
+		sticker = if type(record.sticker) == "string" and Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
 		loadFailed = not success,
 	}
 end
@@ -37,7 +39,7 @@ local function flush(profile)
 		return
 	end
 	profile.saving = true
-	local rank, theme, themeAt = profile.earnedRank, profile.theme, profile.themeAt
+	local rank, theme, sticker, themeAt = profile.earnedRank, profile.theme, profile.sticker, profile.themeAt
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
 		if rank then
@@ -46,7 +48,7 @@ local function flush(profile)
 		local previousTime = if type(record.themeAt) == "number" then record.themeAt else 0
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
 		if themeAt and (themeAt > previousTime or (themeAt == previousTime and writer >= previousWriter)) then
-			record.theme, record.themeAt, record.themeWriter = theme, themeAt, writer
+			record.theme, record.sticker, record.themeAt, record.themeWriter = theme, sticker, themeAt, writer
 		end
 		return record
 	end
@@ -74,8 +76,9 @@ local function flush(profile)
 	end
 end
 
-function Progress.equip(profile, theme)
+function Progress.equip(profile, theme, sticker)
 	profile.theme = theme
+	profile.sticker = sticker
 	profile.themeAt = DateTime.now().UnixTimestampMillis
 	pending[profile] = true
 end
