@@ -23,6 +23,7 @@
         "$className": "StarterPlayerScripts",
         "Client": {
           "$path": "src/client"
+        }
       }
     },
     "Workspace": {
