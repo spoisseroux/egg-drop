@@ -1,7 +1,9 @@
 return {
-	Default = "stone",
-	Order = { "stone", "ice", "brick", "moss" },
+	Default = "sherbet",
+	Order = { "sherbet", "stone", "ice", "brick", "moss" },
 	ById = {
+		sherbet = { name = "Sherbet", shell = Color3.fromHex("#CE684E"), face = Color3.fromHex("#FFF0CB"),
+			trim = Color3.fromHex("#B84E3C"), buttons = Color3.fromHex("#FFCB40"), rocker = Color3.fromHex("#75D8B4") },
 		stone = { name = "Stone", shell = Color3.fromHex("#303B49"), trim = Color3.fromHex("#65768A"),
 			buttons = Color3.fromHex("#FFCA47") },
 		ice = { name = "Ice", shell = Color3.fromHex("#334652"), trim = Color3.fromHex("#81A5B4"),

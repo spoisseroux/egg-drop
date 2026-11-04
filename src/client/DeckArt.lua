@@ -108,7 +108,7 @@ end
 function Art.deck(backdrop, shell, bezel)
 	backdrop.BackgroundColor3 = Art.Backdrop
 	Art.shade(backdrop, 1, 0.58)
-	Art.shade(shell, 1, 0.67)
+	Art.shade(shell, 1, 0.78)
 	Art.shade(bezel, 1, 0.77)
 	local seam = Art.frame(shell, "MoldSeam", Art.Ink, UDim2.fromOffset(5, 5), UDim2.new(1, -10, 1, -10))
 	seam.BackgroundTransparency = 1

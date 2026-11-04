@@ -64,10 +64,10 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply, onSetting)
 	tile(screen, "BigEgg", UDim2.fromOffset(17, 29), UDim2.fromOffset(13, 13), Palette.Ember)
 	tile(shell, "AimRocker", UDim2.fromOffset(7, 25), UDim2.fromOffset(16, 7), Palette.Ink)
 	local buttonA = tile(shell, "A", UDim2.fromOffset(80, 23), UDim2.fromOffset(13, 13), Palette.Primary)
-	tile(shell, "Customize", UDim2.fromOffset(17, 53), UDim2.fromOffset(9, 3), Palette.Ink)
-	tile(shell, "Lounge", UDim2.fromOffset(77, 53), UDim2.fromOffset(9, 3), Palette.Ink)
+	tile(shell, "Customize", UDim2.fromOffset(8, 38), UDim2.fromOffset(14, 4), Palette.Ink)
+	tile(shell, "Lounge", UDim2.fromOffset(8, 47), UDim2.fromOffset(14, 4), Palette.Ink)
 	local sticker = label("TextLabel", "Sticker", "", shell, Palette.Primary)
-	sticker.Position = UDim2.fromOffset(10, 37)
+	sticker.Position = UDim2.fromOffset(80, 40)
 	sticker.Size = UDim2.fromOffset(13, 13)
 	sticker.TextSize = 12
 	sticker.Rotation = -11
@@ -203,7 +203,8 @@ function Picker:select(themeId, stickerId)
 	self.themeId, self.stickerId = themeId, stickerId
 	local theme = Themes.ById[themeId]
 	self.previewName.Text = theme.name:upper()
-	self.shell.BackgroundColor3 = theme.shell
+	self.shell.BackgroundColor3 = theme.face or theme.shell
+	self.shell.AimRocker.BackgroundColor3 = theme.rocker or Palette.Ink
 	self.bezel.BackgroundColor3 = theme.trim
 	self.buttonA.BackgroundColor3 = theme.buttons
 	Stickers.paint(self.sticker, stickerId)

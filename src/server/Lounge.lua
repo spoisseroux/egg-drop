@@ -46,8 +46,9 @@ end
 local function paintDevice(device, themeId, stickerId)
 	local theme = Themes.ById[themeId] or Themes.ById[Themes.Default]
 	device.Shell.Color = theme.shell
-	device.FrontPlate.Color = theme.shell:Lerp(theme.trim, 0.18)
+	device.FrontPlate.Color = theme.face or theme.shell:Lerp(theme.trim, 0.27)
 	device.Bezel.Color = theme.trim
+	device.AimRocker.Color = theme.rocker or Color3.fromHex("#283744")
 	device.Confirm.Color = theme.buttons
 	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)
 end
@@ -107,7 +108,7 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	stickerFace.Parent = shell
 	local decal = Instance.new("TextLabel")
 	decal.Name = "Decal"
-	decal.Position = UDim2.fromOffset(26, 55)
+	decal.Position = UDim2.fromOffset(133, 9)
 	decal.Size = UDim2.fromOffset(14, 14)
 	decal.Rotation = -11
 	decal.TextSize = 12
@@ -134,8 +135,8 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
 		mount * CFrame.new(-0.60, 0.041, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
 	buttonA.Shape = Enum.PartType.Cylinder
-	attach(device, torso, "Customize", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(0.49, -0.31, -0.107), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.13, 0.044, 0.04), mount * CFrame.new(-0.49, -0.31, -0.107), Palette.Ink)
+	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.11, -0.107), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.21, -0.107), Palette.Ink)
 	for index = 0, 2 do
 		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
 			mount * CFrame.new(-0.65 - index * 0.044, -0.22, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)

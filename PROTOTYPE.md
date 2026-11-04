@@ -1,8 +1,8 @@
 # Egg Drop prototype
 
-Pocket Deck is the in-world handheld. Stone is the default shell, with
-graphite plastic, a cold silver rim, a cyan power light, and an amber drop
-button. A player who opens the deck
+Pocket Deck is the in-world handheld. Sherbet is the default, with an
+ivory faceplate, coral shell, mint rocker, and yolk-yellow drop button.
+A player who opens the deck
 stays in the lounge as an avatar holding the deck. Nearby players can see
 the eggs move on its miniature display. Each player controls their own tray.
 
@@ -92,12 +92,11 @@ see changes on the full deck before you equip. The shell and sticker carry
 through retry, respawn, and room transitions. Published servers save the
 pair in the player profile. Studio uses session memory.
 
-The landscape Pocket Deck has a wide faceplate with a centered LCD,
-an aim rocker on the left, an A button on the right, and Customize and
-Lounge along the lower edge. The avatar's held deck uses the same layout.
-Portrait screens move the main controls below the LCD. Both orientations
-use the same tall tray proportions. The backdrop covers the full viewport,
-while the controls sit inside the Roblox safe area.
+The landscape Pocket Deck has a wide faceplate with a centered LCD, an
+aim rocker and utility keys on the left, and A on the right. The avatar's
+held deck uses the same layout. On standard portrait screens, Customize
+and Lounge stay on the left while A moves below the LCD. The backdrop
+covers the full viewport while controls sit inside the Roblox safe area.
 
 ## Pixel display and jelly
 

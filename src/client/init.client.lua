@@ -72,7 +72,30 @@ local shell = make("Frame", "CartridgeShell", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0,
 }, backdrop)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
-local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
+local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 3 }, shell)
+do
+	local plate = Art.frame(shell, "Faceplate", Palette.Shell, UDim2.fromOffset(5, 4), UDim2.new(1, -10, 1, -14))
+	Art.corner(plate, 15)
+	Art.stroke(plate, Art.Ink, 0.6)
+	Art.shade(plate, 1, 0.84)
+	local bevel = Art.frame(plate, "UpperBevel", Art.Silver, UDim2.fromOffset(20, 3), UDim2.new(1, -40, 0, 2))
+	bevel.BackgroundTransparency = 0.38
+	Art.corner(bevel, 1)
+	for _, name in ipairs({ "AimSeat", "ActionSeat" }) do
+		local seat = Art.frame(plate, name, Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(0, 0))
+		seat.BackgroundTransparency = 0.89
+		Art.corner(seat, 22)
+		Art.stroke(seat, Art.Ink, 0.9)
+	end
+	local bands = Art.frame(plate, "AccentBands", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(82, 26))
+	bands.BackgroundTransparency = 1
+	for index, tint in ipairs({ Color3.fromHex("#E88764"), Color3.fromHex("#F3B83E"), Color3.fromHex("#61A992") }) do
+		local band = Art.frame(bands, "Band", tint, UDim2.fromOffset((index - 1) * 18 + 7, 3),
+			UDim2.fromOffset(9, 22))
+		band.Rotation = 27
+		Art.corner(band, 2)
+	end
+end
 local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Art.Ink, BorderSizePixel = 0 }, backdrop)
 make("UICorner", "LensCurve", { CornerRadius = UDim.new(0, 12) }, bezel)
 local bezelRim = make("UIStroke", "InsetTrim", { Color = Palette.Rim, Thickness = 2 }, bezel)
@@ -140,7 +163,7 @@ end
 
 local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 15
+title.TextSize = 17
 title.TextColor3 = Art.Silver
 Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Muted, 10)
 local power = make("Frame", "PowerLight", {
@@ -237,18 +260,20 @@ make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
 make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
 local function utilityButton(name, titleText)
 	local button = label("TextButton", name, "", backdrop)
+	local well = Art.frame(button, "KeyWell", Art.Ink, UDim2.fromOffset(4, 5), UDim2.new(1, -8, 1, -7))
+	Art.corner(well, 12)
 	local cap = make("Frame", "Cap", {
 		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 3),
-		Size = UDim2.fromOffset(50, 14), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
+		Size = UDim2.new(1, -10, 1, -10), BackgroundColor3 = Art.Raised, BorderSizePixel = 0,
 	}, button)
-	make("UICorner", "CapCurve", { CornerRadius = UDim.new(1, 0) }, cap)
+	Art.corner(cap, 11)
 	local edge = make("UIStroke", "Lip", { Color = Palette.Rim, Thickness = 1 }, cap)
 	Art.shade(cap, 1, 0.6)
 	local inlay = Art.frame(cap, "Inlay", Art.Line, UDim2.fromOffset(9, 4), UDim2.new(1, -18, 0, 2))
 	Art.corner(inlay, 1)
-	local caption = label("TextLabel", "Caption", titleText, button)
-	caption.Position = UDim2.fromOffset(0, 20)
-	caption.Size = UDim2.new(1, 0, 0, 18)
+	local caption = label("TextLabel", "Caption", titleText, cap)
+	caption.Position = UDim2.fromOffset(0, 3)
+	caption.Size = UDim2.new(1, 0, 1, -3)
 	caption.Font = Enum.Font.Code
 	caption.TextSize = 12
 	caption.TextColor3 = Art.Silver
@@ -286,8 +311,9 @@ leftAim.TextColor3, rightAim.TextColor3 = Art.Silver, Art.Silver
 leftAim.TextSize, rightAim.TextSize = 16, 16
 Art.corner(Art.frame(hardware, "DropWell", Art.Ink, UDim2.new(1, -51, 0, 1), UDim2.fromOffset(54, 53)), 27)
 local action = hardwareButton("Drop", "A", hardware, Art.Amber, 48)
+action:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
 Art.stroke(action, Art.Ink, 0.14, 3)
-local aGlint = Art.frame(action, "Glint", Art.Silver, UDim2.fromOffset(14, 6), UDim2.fromOffset(20, 2))
+local aGlint = Art.frame(action, "Glint", Art.Silver, UDim2.fromScale(0.3, 0.16), UDim2.new(0.4, 0, 0, 3))
 aGlint.BackgroundTransparency = 0.50
 Art.corner(aGlint, 1)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
@@ -295,14 +321,16 @@ dropCaption.Size = UDim2.fromOffset(48, 16)
 dropCaption.Font = Enum.Font.Code
 dropCaption.TextColor3 = Art.Silver
 dropCaption.TextSize = 11
-local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(31, 26), BackgroundTransparency = 1 }, hardware)
-for index = 0, 3 do
-	local slot = make("Frame", "Vent", {
-		Size = UDim2.fromOffset(4, 23), Position = UDim2.fromOffset(index * 8, 2),
-		Rotation = 16, BorderSizePixel = 0, BackgroundColor3 = Art.Ink,
-	}, vents)
-	make("UICorner", "Round", { CornerRadius = UDim.new(1, 0) }, slot)
+local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(57, 28), BackgroundTransparency = 1 }, hardware)
+for row = 0, 2 do
+	for column = 0, 5 do
+		local hole = Art.frame(vents, "Vent", Art.Ink,
+			UDim2.fromOffset(2 + column * 9, 2 + row * 8), UDim2.fromOffset(4, 4))
+		Art.corner(hole, 2)
+	end
 end
+Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
+hardware.MakerMark.Font = Enum.Font.GothamBold
 local openPicker
 local openJournal
 local picker
@@ -429,10 +457,19 @@ end
 local function paintDeck(id, stickerId)
 	local theme = Themes.ById[id]
 	shell.BackgroundColor3 = theme.shell
+	shell.Faceplate.BackgroundColor3 = theme.face or theme.shell:Lerp(theme.trim, 0.27)
 	rim.Color = theme.trim
 	bezelRim.Color = theme.trim
 	customizeLip.Color = theme.buttons
 	action.BackgroundColor3 = theme.buttons
+	leftAim.BackgroundColor3 = theme.rocker or Art.Raised
+	rightAim.BackgroundColor3 = leftAim.BackgroundColor3
+	leftAim.TextColor3 = if theme.rocker then Art.Ink else Art.Silver
+	rightAim.TextColor3 = leftAim.TextColor3
+	title.TextColor3 = if theme.face then Art.Ink else Art.Silver
+	status.TextColor3 = title.TextColor3
+	dropCaption.TextColor3 = title.TextColor3
+	hardware.MakerMark.TextColor3 = title.TextColor3
 	Stickers.paint(deckSticker, stickerId)
 end
 
@@ -674,36 +711,45 @@ end
 local function layout()
 	local screen = backdrop.AbsoluteSize
 	local lateral = screen.X >= 350 and screen.X >= screen.Y * 1.2
+	local portraitRail = not lateral and screen.X >= 300 and screen.Y >= 360
 	shell.MicroTrim.Visible = lateral
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local microHeight = math.min(454, screen.Y - 16)
-	local width = if lateral then math.max(1, math.min(screen.X - 232, (microHeight - 139) * ratio))
-		else math.max(1, math.min(415, screen.X - 48, (screen.Y - 268) * ratio))
+	local microHeight = math.min(620, screen.Y - 18)
+	local width = if lateral then math.max(1, math.min(screen.X - 230, (microHeight - 101) * ratio))
+		else math.max(1, math.min(415, screen.X - (if portraitRail then 134 else 36),
+			(screen.Y - (if portraitRail then 188 else 254)) * ratio))
 	local height = width / ratio
-	local totalWidth = if lateral then math.min(screen.X - 32, math.max(width + 208, microHeight * 1.85))
-		else math.min(screen.X - 32, math.max(width + 40, 284))
-	local grip = (totalWidth - width) / 2
+	local totalWidth = if lateral then math.min(1150, screen.X - 28, math.max(width + 216, microHeight * 1.85))
+		elseif portraitRail then width + 110 else math.min(screen.X - 26, math.max(width + 34, 284))
+	local grip = if portraitRail then 98 else (totalWidth - width) / 2
 	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then microHeight else height + 254
+	local shellHeight = if lateral then microHeight elseif portraitRail then height + 174 else height + 240
 	local top = math.max(5, (screen.Y - shellHeight) / 2)
-	local screenX = (screen.X - width) / 2
-	local trayY = top + (if lateral then 66 else 70)
+	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
+	local trayY = top + (if lateral then 62 else 70)
 	local trayBottom = trayY + height
 	shell.Position = UDim2.fromOffset(left - 8, top)
 	shell.Size = UDim2.fromOffset(totalWidth + 16, shellHeight)
+	local radius = if lateral then math.clamp(math.floor(shellHeight * 0.085), 18, 36) else 23
+	shell.ShellCurve.CornerRadius = UDim.new(0, radius)
+	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 4)
 	local bezelGutter = if lateral then 10 else 5
 	bezel.Position = UDim2.fromOffset(screenX - bezelGutter, trayY - 46)
-	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2, height + (if lateral then 72 else 94))
+	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2, height + (if lateral or portraitRail then 72 else 94))
 	viewport.Position = UDim2.fromOffset(screenX, trayY)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
 	modal.Position = UDim2.fromScale(0.5, 0.5)
 	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 236)
-	title.Position = UDim2.fromOffset(left, top + 1)
-	title.Size = UDim2.fromOffset(totalWidth, 23)
-	deckSticker.Position = UDim2.fromOffset(left + (if lateral then grip * 0.5 - 12 else totalWidth * 0.47 - 12),
-		if lateral then top + math.max(shellHeight * 0.69, shellHeight * 0.43 + 50) else trayBottom + 78)
+	title.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.063 else top + 1)
+	title.Size = UDim2.fromOffset(if lateral then grip else totalWidth, 23)
+	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
+	deckSticker.Position = UDim2.fromOffset(left + (if lateral then totalWidth - grip * 0.5 - 12 else totalWidth * 0.47 - 12),
+		if lateral then top + shellHeight * 0.22 else trayBottom + 78)
+	if portraitRail then
+		deckSticker.Position = UDim2.fromOffset(left + 34, top + shellHeight - 48)
+	end
 	rail.Position = UDim2.fromOffset(screenX, trayY - 44)
 	rail.Size = UDim2.fromOffset(width, 44)
 	local compact = width < 175
@@ -721,26 +767,62 @@ local function layout()
 	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
 	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
 	nextReadout.TextSize = if compact then 10 else 12
-	status.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.21 else trayBottom + 5)
-	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral and shellHeight >= 220 then 38 else 22)
+	status.Position = UDim2.fromOffset(left + (if lateral or portraitRail then 4 else 0),
+		if lateral then top + shellHeight * 0.17 elseif portraitRail then top + 40 else trayBottom + 5)
+	status.Size = UDim2.fromOffset(if lateral or portraitRail then grip - 8 else totalWidth,
+		if portraitRail then 43 elseif lateral and shellHeight >= 220 then 38 else 22)
 	status.TextSize = 13
-	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 3 else 26))
+	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral or portraitRail then 3 else 26))
 	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
-	hardware.Position = UDim2.fromOffset(left, if lateral then top else trayBottom + 59)
-	hardware.Size = UDim2.fromOffset(totalWidth, if lateral then shellHeight else 64)
-	local dropX = if lateral then totalWidth - grip * 0.5 - 24 else totalWidth - 48
-	local dropY = if lateral then shellHeight * 0.43 else 0
-	dpad.Position = UDim2.fromOffset(if lateral then grip * 0.5 - 47 else 0, if lateral then dropY - 6 else 0)
+	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 59)
+	hardware.Size = UDim2.fromOffset(totalWidth, if lateral or portraitRail then shellHeight else 64)
+	local dropSize = if lateral then math.clamp(math.floor(shellHeight * 0.18), 54, 100) else 48
+	local aimSize = if lateral then math.clamp(math.floor(shellHeight * 0.14), 44,
+		math.clamp(math.floor((grip - 14) / 2), 44, 70)) else 44
+	local aimWidth = aimSize * 2 + 6
+	local aimY = if lateral then math.max(55, math.floor(shellHeight * 0.36)) elseif portraitRail then 95 else 0
+	local dropX = if lateral then totalWidth - grip * 0.5 - dropSize * 0.5 else totalWidth - dropSize
+	local dropY = if lateral then aimY elseif portraitRail then trayBottom - top + 34 else 0
+	dpad.Position = UDim2.fromOffset(if lateral or portraitRail then (grip - aimWidth) * 0.5 else 0, aimY)
+	dpad.Size = UDim2.fromOffset(aimWidth, aimSize + 12)
+	dpad.RockerWell.Size = UDim2.fromOffset(aimWidth + 6, aimSize + 7)
+	leftAim.Size, rightAim.Size = UDim2.fromOffset(aimSize, aimSize), UDim2.fromOffset(aimSize, aimSize)
+	rightAim.Position = UDim2.fromOffset(aimSize + 6, 8)
+	action.Size = UDim2.fromOffset(dropSize, dropSize)
+	action.TextSize = math.floor(dropSize * 0.50)
 	action.Position = UDim2.fromOffset(dropX, dropY)
 	hardware.DropWell.Position = UDim2.fromOffset(dropX - 3, dropY + 1)
-	dropCaption.Position = UDim2.fromOffset(dropX, dropY + 49)
-	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 15, shellHeight * 0.78)
+	hardware.DropWell.Size = UDim2.fromOffset(dropSize + 6, dropSize + 5)
+	hardware.DropWell:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
+	dropCaption.Size = UDim2.fromOffset(dropSize, 16)
+	dropCaption.Position = UDim2.fromOffset(dropX, dropY + dropSize + 6)
+	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 28, shellHeight * 0.76)
 	vents.Visible = lateral and shellHeight >= 220
+	hardware.MakerMark.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 48, shellHeight * 0.89)
+	hardware.MakerMark.Visible = lateral and shellHeight >= 285
+	local sideBySide = lateral and shellHeight < 230
+	do
+		local plate = shell.Faceplate
+		local detail = lateral and shellHeight >= 280
+		plate.AimSeat.Visible, plate.ActionSeat.Visible, plate.AccentBands.Visible = detail, detail, detail
+		local seatWidth = math.min(aimWidth + 34, grip - 18)
+		plate.AimSeat.Size = UDim2.fromOffset(seatWidth, aimSize + 107)
+		plate.AimSeat.Position = UDim2.fromOffset(3 + (grip - seatWidth) * 0.5, aimY - 6)
+		plate.ActionSeat.Size = UDim2.fromOffset(dropSize + 32, dropSize + 47)
+		plate.ActionSeat.Position = UDim2.fromOffset(dropX - 13, dropY - 17)
+		plate.AccentBands.Position = UDim2.fromOffset(grip * 0.5 - 29, shellHeight * 0.83)
+	end
 	for index, button in ipairs({ customizeButton, roomButton }) do
-		local buttonWidth = 100
-		local buttonX = left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
-		local buttonY = if lateral then top + shellHeight - 44 else trayBottom + 130
+		local buttonWidth = if sideBySide then math.floor((grip - 24) / 2)
+			elseif lateral or portraitRail then math.min(146, grip - 22) else 100
+		local buttonX = if sideBySide then left + 4 + (index - 1) * (buttonWidth + 2)
+			elseif lateral or portraitRail then left + (grip - buttonWidth) / 2
+			else left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
+		local buttonY = if lateral or portraitRail then top + aimY + aimSize + 14 + (if sideBySide then 0 else (index - 1) * 45)
+			else trayBottom + 130
+		button.Cap.Caption.Text = if index == 1 then (if sideBySide then "STYLE" else "CUSTOMIZE") else "LOUNGE"
+		button.Cap.Caption.TextSize = if sideBySide then 10 else 12
 		button.Position = UDim2.fromOffset(buttonX, buttonY)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
 	end
