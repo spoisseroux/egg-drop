@@ -1,16 +1,14 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local PipVisual = require(script.Parent.PipVisual)
+local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 
 local Room = {}
 Room.__index = Room
 
-local ink = Color3.fromRGB(255, 241, 207)
-local mint = Color3.fromRGB(168, 239, 181)
-local dark = Color3.fromRGB(31, 24, 53)
-local violet = Color3.fromRGB(93, 71, 141)
 local roomCamera = CFrame.lookAt(Vector3.new(11, 13, 17), Vector3.new(0, 6, -2))
 local greetingCamera = CFrame.lookAt(Vector3.new(4, 8.2, 3.8), Vector3.new(0, 5.8, -5))
 
@@ -34,10 +32,13 @@ local function button(parent, name, title, position, tint)
 	node.BackgroundColor3 = tint
 	node.BorderSizePixel = 0
 	node.Text = title
-	node.TextColor3 = ink
-	node.Font = Enum.Font.Code
-	node.TextSize = 16
+	node.TextColor3 = Palette.Ink
+	node.Font = Enum.Font.GothamMedium
+	node.TextSize = 14
 	node.ZIndex = 9
+	local round = Instance.new("UICorner")
+	round.CornerRadius = UDim.new(0, 9)
+	round.Parent = node
 	node.Parent = parent
 	return node
 end
@@ -49,36 +50,36 @@ local function tween(object, seconds, properties)
 end
 
 function Room.new(gui, board, audio, onReturn, onMusic)
-	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 102), UDim2.new(0.5, 0, 1, -16), dark, 8)
+	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
 	local max = Instance.new("UISizeConstraint")
-	max.MaxSize = Vector2.new(410, 102)
+	max.MaxSize = Vector2.new(430, 110)
 	max.Parent = controls
 	local heading = Instance.new("TextLabel")
 	heading.Name = "Heading"
 	heading.Size = UDim2.new(1, -12, 0, 29)
 	heading.Position = UDim2.fromOffset(6, 5)
 	heading.BackgroundTransparency = 1
-	heading.Text = "LOUNGE  /  PIP"
-	heading.TextColor3 = mint
+	heading.Text = "Pip’s lounge"
+	heading.TextColor3 = Palette.Paper
 	heading.TextSize = 17
-	heading.Font = Enum.Font.Code
+	heading.Font = Enum.Font.GothamBold
 	heading.ZIndex = 9
 	heading.Parent = controls
-	local greet = button(controls, "GreetPip", "Greet Pip", UDim2.fromOffset(3, 37), violet)
-	local leave = button(controls, "OpenHandheld", "Open handheld", UDim2.new(0.5, 1, 0, 37), violet)
-	local music = button(controls, "Music", "Music on", UDim2.new(0.5, 0, 0, 78), dark)
-	music.AnchorPoint = Vector2.new(0.5, 0)
-	music.Size = UDim2.fromOffset(132, 24)
-	music.TextSize = 13
+	local greet = button(controls, "GreetPip", "Greet Pip", UDim2.new(0.025, 0, 0, 51), Palette.Panel)
+	greet.Size = UDim2.new(0.29, 0, 0, 44)
+	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Palette.Primary)
+	leave.Size = UDim2.new(0.33, 0, 0, 44)
+	local music = button(controls, "Music", "Music on", UDim2.new(0.685, 0, 0, 51), Palette.Panel)
+	music.Size = UDim2.new(0.29, 0, 0, 44)
 
-	local top = frame(gui, "ShutterTop", UDim2.fromScale(1, 0), UDim2.fromScale(0, 0), dark, 50)
-	local bottom = frame(gui, "ShutterBottom", UDim2.fromScale(1, 0), UDim2.fromScale(0, 1), dark, 50)
+	local top = frame(gui, "ShutterTop", UDim2.fromScale(1, 0), UDim2.fromScale(0, 0), Palette.Backdrop, 50)
+	local bottom = frame(gui, "ShutterBottom", UDim2.fromScale(1, 0), UDim2.fromScale(0, 1), Palette.Backdrop, 50)
 	bottom.AnchorPoint = Vector2.new(0, 1)
 	top.Visible, bottom.Visible = false, false
 	top.Active, bottom.Active = true, true
-	local strip = frame(top, "Scanline", UDim2.new(1, 0, 0, 2), UDim2.fromScale(0, 1), mint, 51)
+	local strip = frame(top, "Scanline", UDim2.new(1, 0, 0, 2), UDim2.fromScale(0, 1), Palette.Primary, 51)
 	strip.AnchorPoint = Vector2.new(0, 1)
 
 	local self = setmetatable({

@@ -6,12 +6,14 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
+local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local Audio = require(script.BoardAudio)
 local Music = require(script.BoardMusic)
 local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
+local HatchReveal = require(script.HatchReveal)
 local audio = Audio.new()
 local music = Music.new()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -21,12 +23,6 @@ local impacts = remotes:WaitForChild("BoardImpact")
 local trays = ReplicatedStorage:WaitForChild("EggDropBoards")
 local board = trays:WaitForChild(tostring(player.UserId))
 HandheldScreens.start(trays, Config)
-
-local ink = Color3.fromRGB(255, 241, 207)
-local navy = Color3.fromRGB(25, 23, 46)
-local panel = Color3.fromRGB(48, 39, 69)
-local mint = Color3.fromRGB(168, 239, 181)
-local rim = Color3.fromRGB(112, 83, 122)
 
 local function make(class, name, properties, parent)
 	local instance = Instance.new(class)
@@ -40,26 +36,27 @@ end
 
 local function label(class, name, content, parent, background)
 	return make(class, name, {
-		Text = content, Font = Enum.Font.Code, TextSize = 15, TextColor3 = ink,
-		BackgroundColor3 = background or panel, BackgroundTransparency = background and 0 or 1,
+		Text = content, Font = Enum.Font.GothamMedium, TextSize = 15,
+		TextColor3 = if background then Palette.Ink else Palette.Paper,
+		BackgroundColor3 = background or Palette.Panel, BackgroundTransparency = background and 0 or 1,
 		BorderSizePixel = 0,
 	}, parent)
 end
 
 local gui = make("ScreenGui", "EggDrop", {
-	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, DisplayOrder = 10,
+	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets, DisplayOrder = 10,
 }, player:WaitForChild("PlayerGui"))
 local backdrop = make("Frame", "Backdrop", {
-	BackgroundColor3 = navy, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Palette.Backdrop, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
 }, gui)
 local shell = make("Frame", "CartridgeShell", {
-	BackgroundColor3 = Color3.fromRGB(81, 61, 124), BorderSizePixel = 0,
+	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0,
 }, backdrop)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
-make("UIStroke", "ShellRim", { Color = Color3.fromRGB(131, 107, 175), Thickness = 2 }, shell)
+make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
-	BackgroundColor3 = Color3.fromRGB(40, 50, 67), BorderSizePixel = 0,
+	BackgroundColor3 = Palette.Tray, BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
 }, backdrop)
@@ -72,7 +69,7 @@ local overlay = make("Frame", "TrayOverlay", {
 	BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 2,
 }, backdrop)
 local effects = make("Frame", "MergeEffects", {
-	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
+	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4,
 }, overlay)
 local sprites = make("Frame", "Sprites", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
@@ -86,49 +83,61 @@ end
 
 local halfWidth = Config.Width / 2
 local railDepth = 0.65
-surface("Floor", Vector3.new(Config.Width + 0.5, 0.32, railDepth), CFrame.new(0, -0.16, 0), rim)
+surface("Floor", Vector3.new(Config.Width + 0.5, 0.32, railDepth), CFrame.new(0, -0.16, 0), Palette.Rim)
 for _, sign in ipairs({ -1, 1 }) do
 	surface("Wall", Vector3.new(0.32, Config.Height, railDepth),
-		CFrame.new(sign * (halfWidth + 0.16), Config.Height / 2, 0), rim)
+		CFrame.new(sign * (halfWidth + 0.16), Config.Height / 2, 0), Palette.Rim)
 	surface("Bank", Vector3.new(Config.Bank * math.sqrt(2), 0.31, railDepth),
 		CFrame.new(sign * (halfWidth - Config.Bank / 2), Config.Bank / 2, 0)
-			* CFrame.Angles(0, 0, sign * math.pi / 4), rim)
+			* CFrame.Angles(0, 0, sign * math.pi / 4), Palette.Rim)
 end
 
-local title = label("TextLabel", "Title", "POCKET DECK   /   EGG DROP", backdrop)
-title.TextSize = 18
-local rail = label("TextButton", "AimRail", "", backdrop, Color3.fromRGB(60, 64, 90))
+local title = label("TextLabel", "Title", "Egg Drop", backdrop)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+local power = make("Frame", "PowerLight", {
+	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
+	BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
+}, shell)
+make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, power)
+local rail = label("TextButton", "AimRail", "", backdrop, Palette.Primary)
 rail.AutoButtonColor = false
+make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 local track = make("Frame", "Guide", {
-	BackgroundColor3 = mint, BackgroundTransparency = 0.4, BorderSizePixel = 0,
+	BackgroundColor3 = Palette.Primary, BackgroundTransparency = 0.45, BorderSizePixel = 0,
 	Size = UDim2.new(0, 2, 1, 0), ZIndex = 3,
 }, overlay)
-local ghost = label("TextLabel", "NextEgg", "", overlay, mint)
+local ghost = label("TextLabel", "NextEgg", "", overlay, Palette.Primary)
 ghost.AnchorPoint = Vector2.new(0.5, 0.5)
-ghost.TextColor3 = navy
 ghost.ZIndex = 4
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 
 local status = label("TextLabel", "Status", "", backdrop)
+status.TextWrapped = true
 local meter = make("Frame", "HatchTrack", {
-	BackgroundColor3 = panel, BorderSizePixel = 0,
+	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
 }, backdrop)
 local fill = make("Frame", "Charge", {
-	BackgroundColor3 = mint, BorderSizePixel = 0,
+	BackgroundColor3 = Palette.Amber, BorderSizePixel = 0,
 }, meter)
 local meterText = label("TextLabel", "MeterText", "", meter)
 meterText.Size = UDim2.fromScale(1, 1)
 meterText.TextSize = 13
-meterText.TextColor3 = ink
-meterText.TextStrokeColor3 = navy
-meterText.TextStrokeTransparency = 0.05
+meterText.TextColor3 = Palette.Paper
+meterText.TextStrokeColor3 = Palette.Ink
+meterText.TextStrokeTransparency = 0
 local overflowLine = make("Frame", "OverflowLine", {
-	BackgroundColor3 = Color3.fromRGB(248, 170, 132), BackgroundTransparency = 0.45,
+	BackgroundColor3 = Palette.Amber, BackgroundTransparency = 0.45,
 	BorderSizePixel = 0, ZIndex = 2,
 }, overlay)
-local musicButton = label("TextButton", "Music", "Music on", backdrop, panel)
-local roomButton = label("TextButton", "VisitRoom", "Room locked", backdrop, panel)
-local reset = label("TextButton", "Reset", "Retry", backdrop, Color3.fromRGB(109, 55, 94))
+local targetRing = make("Frame", "MatchHint", {
+	AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, ZIndex = 4,
+}, overlay)
+make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
+make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
+local musicButton = label("TextButton", "Music", "Music on", backdrop, Palette.Panel)
+local roomButton = label("TextButton", "VisitRoom", "Lounge", backdrop, Palette.Panel)
+local reset = label("TextButton", "Reset", "Retry", backdrop, Palette.Amber)
 for _, button in ipairs({ musicButton, roomButton, reset }) do
 	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 8) }, button)
 end
@@ -147,34 +156,61 @@ roomButton.Activated:Connect(function()
 	request:FireServer("mode", "Room")
 end)
 local modal = make("Frame", "RoundCard", {
-	Active = true, Visible = false, BackgroundColor3 = navy, BorderSizePixel = 0, ZIndex = 10,
+	Active = true, Visible = false, BackgroundColor3 = Palette.Paper, BorderSizePixel = 0, ZIndex = 10,
 	AnchorPoint = Vector2.new(0.5, 0.5),
 }, backdrop)
+make("UICorner", "CardCurve", { CornerRadius = UDim.new(0, 18) }, modal)
+make("UIStroke", "CardRim", { Color = Palette.Primary, Thickness = 3 }, modal)
 local modalTitle = label("TextLabel", "Heading", "", modal)
-modalTitle.Size = UDim2.new(1, 0, 0, 32)
+modalTitle.Position = UDim2.fromOffset(0, 6)
+modalTitle.Size = UDim2.new(1, 0, 0, 35)
+modalTitle.Font = Enum.Font.GothamBold
+modalTitle.TextSize = 20
+modalTitle.TextColor3 = Palette.Ink
 modalTitle.ZIndex = 11
-local pet = label("TextButton", "Pet", "• ᴗ •", modal, mint)
+local pet = label("TextButton", "Pet", "▪ ᴗ ▪", modal, Color3.fromRGB(255, 224, 170))
 pet.AnchorPoint = Vector2.new(0.5, 0)
-pet.Position = UDim2.new(0.5, 0, 0, 42)
-pet.Size = UDim2.fromOffset(60, 56)
-pet.TextColor3 = navy
+pet.Position = UDim2.new(0.5, 0, 0, 63)
+pet.Size = UDim2.fromOffset(72, 67)
 pet.TextSize = 18
-pet.ZIndex = 11
+pet.ZIndex = 14
+pet.AutoButtonColor = false
 make("UICorner", "Shell", { CornerRadius = UDim.new(0.45, 0) }, pet)
-make("Frame", "Sprig", {
-	BackgroundColor3 = Color3.fromRGB(119, 204, 120), BorderSizePixel = 0,
-	Position = UDim2.fromOffset(28, -8), Size = UDim2.fromOffset(15, 10), Rotation = -24,
-	ZIndex = 12,
+make("UIStroke", "Outline", { Color = Palette.Rim, Thickness = 2 }, pet)
+for _, side in ipairs({ -1, 1 }) do
+	local leaf = make("Frame", "Leaf", {
+		BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
+		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, side * 7, 0, -1),
+		Size = UDim2.fromOffset(17, 9), Rotation = -side * 32, ZIndex = 15,
+	}, pet)
+	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, leaf)
+end
+local shellHem = make("Frame", "ShellHem", {
+	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0, Position = UDim2.fromScale(0.10, 0.77),
+	Size = UDim2.fromScale(0.80, 0.22), ZIndex = 15,
 }, pet)
-local modalAction = label("TextButton", "Continue", "", modal, panel)
+make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, shellHem)
+local reveal = HatchReveal.new(modal, pet, audio)
+local modalNote = label("TextLabel", "Detail", "", modal)
+modalNote.Position = UDim2.new(0.06, 0, 0, 57)
+modalNote.Size = UDim2.new(0.88, 0, 0, 66)
+modalNote.TextWrapped = true
+modalNote.TextColor3 = Palette.Ink
+modalNote.ZIndex = 11
+local modalAction = label("TextButton", "Continue", "", modal, Palette.Primary)
 modalAction.Position = UDim2.new(0.09, 0, 1, -55)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
 modalAction.ZIndex = 11
-local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, panel)
+local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, Palette.Panel)
 keepPlaying.Position = UDim2.new(0.52, 0, 1, -55)
 keepPlaying.Size = UDim2.new(0.43, 0, 0, 44)
 keepPlaying.ZIndex = 11
+for _, button in ipairs({ modalAction, keepPlaying }) do
+	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 9) }, button)
+end
 local dismissedHatch = false
+local tutorialDone = false
+local revealedRound
 local lastPlop = -math.huge
 
 local aim = 0.5
@@ -203,70 +239,97 @@ local function drawAim()
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
 	ghost.BackgroundColor3 = Config.Tiers[tier].color
-	rail.Text = "DRAG TO AIM   ·   NEXT " .. Config.Tiers[tier].mark
+	rail.Text = "Slide to aim   ·   " .. Config.Tiers[tier].mark
 	local overflow = project(Vector2.new(0, Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
 end
 
 local function updateHud()
+	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
-	status.Text = string.format("MERGES %d     LAST CHAIN x%d", merges, chain)
 	local charge = board:GetAttribute("HatchCharge") or 0
 	fill.Size = UDim2.fromScale(charge / Config.HatchTarget, 1)
-	meterText.Text = if board:GetAttribute("Hatched") then "PIP HATCHED" else string.format("HATCH   %d / %d", charge, Config.HatchTarget)
+	local hatched = board:GetAttribute("Hatched")
+	tutorialDone = tutorialDone or hatched == true
+	if tutorialDone then
+		status.Text = string.format("%d merges   ·   Chain ×%d", merges, chain)
+	elseif drops == 0 then
+		status.Text = "Slide, then let go to drop."
+	elseif merges == 0 then
+		status.Text = "Match eggs with the same mark."
+	else
+		status.Text = "Keep matching to hatch Pip!"
+	end
+	meterText.Text = if hatched then "Pip hatched" else string.format("Hatch   %d / %d", charge, Config.HatchTarget)
 	local over = board:GetAttribute("RoundOver")
 	local mode = board:GetAttribute("Mode")
 	music:setState(mode, over and mode == "Board")
-	local showHatch = board:GetAttribute("Hatched") and not dismissedHatch
-	modal.Visible = over == true or showHatch == true
+	local showHatch = hatched == true and not dismissedHatch and mode == "Board"
+	modal.Visible = mode == "Board" and (over == true or showHatch)
 	pet.Visible = showHatch == true and not over
-	modalTitle.Text = if over then "TRAY FULL" else "STARTER HATCH  /  " .. Config.StarterPet:upper()
-	modalAction.Text = if over then "Try again" else "Visit Pip"
+	modalNote.Visible = over == true
+	modalNote.Text = "Try to keep the eggs below the amber line."
+	modalTitle.Text = if over then "Tray full" else "You hatched " .. Config.StarterPet .. "!"
+	modalAction.Text = if over then "Try again" else "Meet Pip"
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
 	rail.Interactable = mode == "Board" and not modal.Visible
 	local unlocked = board:GetAttribute("RoomUnlocked") == true
-	roomButton.Text = if unlocked then "Visit room" else "Room locked"
 	roomButton.Interactable = unlocked
-	roomButton.BackgroundColor3 = if unlocked then mint else panel
-	roomButton.TextColor3 = if unlocked then navy else ink
+	roomButton.BackgroundColor3 = if unlocked then Palette.Primary else Palette.Panel
+	roomButton.TextTransparency = if unlocked then 0 else 0.28
 	drawAim()
+	local resetId = board:GetAttribute("ResetId")
+	if showHatch and not over and revealedRound ~= resetId then
+		revealedRound = resetId
+		music:duck()
+		reveal:start(function()
+			return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
+				and not board:GetAttribute("RoundOver") and not dismissedHatch
+		end)
+	end
 end
 
 local function layout()
 	local screen = backdrop.AbsoluteSize
-	local width = math.max(1, math.min(380, screen.X - 24, (screen.Y - 211) * (Config.Width + 0.8) / (Config.Height + 0.8)))
-	local height = width * (Config.Height + 0.8) / (Config.Width + 0.8)
-	local left = (screen.X - width) / 2
-	local top = math.max(54, (screen.Y - height - 90) / 2)
+	local lateral = screen.Y < 530 and screen.X > screen.Y * 1.25
+	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
+	local reserved = if lateral then 114 else 229
+	local width = math.max(1, math.min(460, screen.X - 32, (screen.Y - reserved) * ratio))
+	local height = width / ratio
+	local panelWidth = if lateral then math.min(260, screen.X - width - 52) else width
+	local totalWidth = if lateral then width + 20 + panelWidth else width
+	local left = (screen.X - totalWidth) / 2
+	local top = if lateral then 47 else math.max(52, (screen.Y - height - 112) / 2)
 	shell.Position = UDim2.fromOffset(left - 10, top - 34)
-	shell.Size = UDim2.fromOffset(width + 20, height + 186)
-	viewport.Position = UDim2.fromOffset(left, top + 50)
+	shell.Size = UDim2.fromOffset(totalWidth + 20, height + (if lateral then 98 else 198))
+	viewport.Position = UDim2.fromOffset(left, top + 54)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
-	modal.Position = UDim2.fromOffset(screen.X / 2, top + 50 + height / 2)
-	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.88, 220), screen.X - 24), 164)
-	title.Position = UDim2.fromOffset(left, top - 27)
+	modal.Position = UDim2.fromScale(0.5, 0.49)
+	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 209)
+	title.Position = UDim2.fromOffset(left, top - 30)
 	title.Size = UDim2.fromOffset(width, 24)
-	title.TextSize = math.clamp(math.floor(width / 15), 9, 18)
 	rail.Position = UDim2.fromOffset(left, top)
-	rail.Size = UDim2.fromOffset(width, 46)
-	rail.TextSize = math.clamp(math.floor(width / 15), 9, 15)
-	local foot = top + 50 + height
-	status.Position = UDim2.fromOffset(left, foot + 3)
-	status.Size = UDim2.fromOffset(width, 21)
-	status.TextSize = math.clamp(math.floor(width / 18), 9, 15)
-	meter.Position = UDim2.fromOffset(left, foot + 26)
-	meter.Size = UDim2.fromOffset(width, 19)
+	rail.Size = UDim2.fromOffset(width, 48)
+	rail.TextSize = 14
+	local controlX = if lateral then left + width + 20 else left
+	local controlY = if lateral then math.max(44, (screen.Y - 213) / 2) else top + 54 + height + 3
+	status.Position = UDim2.fromOffset(controlX, controlY)
+	status.Size = UDim2.fromOffset(panelWidth, 32)
+	status.TextSize = 14
+	meter.Position = UDim2.fromOffset(controlX, controlY + 35)
+	meter.Size = UDim2.fromOffset(panelWidth, 19)
 	for index, button in ipairs({ musicButton, roomButton, reset }) do
-		local buttonWidth = (width - 12) / 3
-		button.Position = UDim2.fromOffset(left + (index - 1) * (buttonWidth + 6), foot + 51)
+		local buttonWidth = if lateral then panelWidth else (panelWidth - 12) / 3
+		button.Position = if lateral then UDim2.fromOffset(controlX, controlY + 60 + (index - 1) * 50)
+			else UDim2.fromOffset(controlX + (index - 1) * (buttonWidth + 6), controlY + 60)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
-		button.TextSize = math.clamp(math.floor((buttonWidth - 4) / 6), 8, 15)
+		button.TextSize = 14
 	end
 	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
 	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
@@ -319,6 +382,7 @@ modalAction.Activated:Connect(function()
 end)
 keepPlaying.Activated:Connect(function()
 	dismissedHatch = true
+	reveal:cancel()
 	audio:play("menu")
 	updateHud()
 end)
@@ -338,7 +402,7 @@ local function addView(source)
 		then Jelly.new(scene, source) else Sprite.new(sprites, source)
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
-	mark.TextColor3 = navy
+	mark.TextColor3 = Palette.Ink
 	mark.Size = UDim2.fromOffset(30, 22)
 	mark.ZIndex = 4
 	eggViews[source] = { gel = gel, mark = mark, id = id }
@@ -390,17 +454,19 @@ impacts.OnClientEvent:Connect(function(batch)
 end)
 
 local function gelDrop(from, to, diameter, color, duration, outward)
+	local movement = to - from
 	local dot = make("Frame", "GelDrop", {
 		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = color, BorderSizePixel = 0,
-		BackgroundTransparency = 0.18, ZIndex = 3,
+		BackgroundTransparency = if outward then 0.05 else 0.14, ZIndex = 3,
 		Position = UDim2.fromOffset(from.X, from.Y),
-		Size = UDim2.fromOffset(diameter, diameter),
+		Size = UDim2.fromOffset(diameter * 1.3, diameter * 0.8),
+		Rotation = math.deg(math.atan2(movement.Y, movement.X)),
 	}, effects)
 	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, dot)
 	local tween = TweenService:Create(dot, TweenInfo.new(duration, Enum.EasingStyle.Quad), {
 		Position = UDim2.fromOffset(to.X, to.Y),
 		Size = UDim2.fromOffset(diameter * 0.5, diameter * 0.5),
-		BackgroundTransparency = if outward then 1 else 0.65,
+		BackgroundTransparency = 1,
 	})
 	tween.Completed:Once(function()
 		dot:Destroy()
@@ -409,35 +475,63 @@ local function gelDrop(from, to, diameter, color, duration, outward)
 end
 
 feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
+	if board:GetAttribute("Mode") ~= "Board" then
+		return
+	end
+	audio:play(if chain > 1 then "chain" else "merge", 1 + (tier - 2) * 0.07 + math.min(chain - 1, 5) * 0.04)
+	local previous = effects:FindFirstChild("MergePop")
+	if previous then
+		previous:Destroy()
+	end
+	local count = #effects:GetChildren()
+	local limit = if UserInputService.TouchEnabled then 24 else 48
+	if count + 5 > limit then
+		return
+	end
 	local point = project(position)
 	local color = Config.Tiers[tier].color
 	local scale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
 	local firstPoint, secondPoint = project(first), project(second)
-	local diameter = scale * Config.Tiers[tier - 1].radius
-	gelDrop(firstPoint, point, diameter, color, 0.12, false)
-	gelDrop(secondPoint, point, diameter, color, 0.12, false)
+	local diameter = scale * Config.Tiers[tier - 1].radius * 1.55
+	gelDrop(firstPoint, point, diameter, color, 0.18, false)
+	gelDrop(secondPoint, point, diameter, color, 0.18, false)
 	local delta = secondPoint - firstPoint
 	local bridge = make("Frame", "GelBridge", {
 		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
 		BackgroundColor3 = color, BackgroundTransparency = 0.1,
 		Position = UDim2.fromOffset(point.X, point.Y),
-		Size = UDim2.fromOffset(delta.Magnitude + diameter, diameter * 0.65),
+		Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
 		Rotation = math.deg(math.atan2(delta.Y, delta.X)),
 	}, effects)
 	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
-	local retract = TweenService:Create(bridge, TweenInfo.new(0.16), {
-		Size = UDim2.fromOffset(diameter * 0.7, diameter), BackgroundTransparency = 1,
+	local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
+		Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
 	})
 	retract.Completed:Once(function() bridge:Destroy() end)
 	retract:Play()
-	for i = 1, 5 do
-		local angle = i * math.pi * 2 / 5 + chain * 0.5
-		local delta = Vector2.new(math.cos(angle), math.sin(angle)) * scale * 2
-		gelDrop(point, point + delta, math.max(3, scale * 0.27), color, 0.3, true)
+	local ring = make("Frame", "MergeRing", {
+		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
+		BackgroundTransparency = 1, Position = UDim2.fromOffset(point.X, point.Y),
+		Size = UDim2.fromOffset(diameter, diameter),
+	}, effects)
+	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ring)
+	local stroke = make("UIStroke", "Glow", { Color = color, Thickness = 2, Transparency = 0.25 }, ring)
+	local wave = TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {
+		Size = UDim2.fromOffset(diameter * 3.8, diameter * 3.8),
+	})
+	wave.Completed:Once(function() ring:Destroy() end)
+	wave:Play()
+	TweenService:Create(stroke, TweenInfo.new(0.32), { Transparency = 1 }):Play()
+	local beads = math.min(if UserInputService.TouchEnabled then 4 else 8 + math.min(chain - 1, 4), limit - count - 5)
+	for i = 1, beads do
+		local angle = i * math.pi * 2 / beads + chain * 0.5
+		local burst = Vector2.new(math.cos(angle), math.sin(angle)) * scale * (1.6 + i % 3 * 0.52)
+		local tint = if i % 3 == 0 then Palette.Paper else color
+		gelDrop(point, point + burst, math.max(4, scale * (0.21 + i % 3 * 0.08)), tint, 0.26 + i % 3 * 0.07, true)
 	end
 	local pop = label("TextLabel", "MergePop", if chain > 1 then "CHAIN x" .. chain else "POP!", effects)
 	pop.TextColor3 = color
-	pop.TextStrokeColor3 = navy
+	pop.TextStrokeColor3 = Palette.Ink
 	pop.TextStrokeTransparency = 0.05
 	pop.TextSize = if chain > 1 then 23 else 18
 	pop.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -448,33 +542,42 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 		point -= Vector2.new(0, 21)
 		pop.Position = UDim2.fromOffset(point.X, point.Y)
 	end
-	local tween = TweenService:Create(pop, TweenInfo.new(0.62, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+	local tween = TweenService:Create(pop, TweenInfo.new(0.58, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 		Position = UDim2.fromOffset(point.X, point.Y - 44), TextTransparency = 1, TextStrokeTransparency = 1,
 	})
 	tween.Completed:Once(function()
 		pop:Destroy()
 	end)
 	tween:Play()
-	audio:play(if chain > 1 then "chain" else "merge", 1 + (tier - 2) * 0.07 + math.min(chain - 1, 5) * 0.04)
 end)
 
-board.AttributeChanged:Connect(updateHud)
+local hudQueued = false
+board.AttributeChanged:Connect(function()
+	if not hudQueued then
+		hudQueued = true
+		task.defer(function()
+			hudQueued = false
+			updateHud()
+		end)
+	end
+end)
 board:GetAttributeChangedSignal("Mode"):Connect(function()
 	drag = nil
 	local mode = board:GetAttribute("Mode")
 	if mode == "Room" then
 		dismissedHatch = true
-		updateHud()
+		reveal:cancel()
+		effects:ClearAllChildren()
 	end
 	roomView:setMode(mode)
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
+	reveal:cancel()
 	effects:ClearAllChildren()
 	audio:stop()
 	audio:play("retry")
 	dismissedHatch = false
 	lastPlop = -math.huge
-	updateHud()
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
 	if board:GetAttribute("Drops") > 0 then
@@ -487,14 +590,9 @@ board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 		audio:play("charge", 1 + charge * 0.03, 0.35)
 	end
 end)
-board:GetAttributeChangedSignal("Hatched"):Connect(function()
-	if board:GetAttribute("Hatched") then
-		music:duck()
-		audio:play("hatch")
-	end
-end)
 board:GetAttributeChangedSignal("RoundOver"):Connect(function()
 	if board:GetAttribute("RoundOver") then
+		reveal:cancel()
 		audio:play("overflow")
 	end
 end)
@@ -502,12 +600,36 @@ backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
 	local now = os.clock()
+	local closest
+	local distance = math.huge
+	local tier = nextTier()
+	local guide = not tutorialDone and not modal.Visible and not drag
+	local aimX = Config.aimX(aim, tier)
 	for source, view in pairs(eggViews) do
 		local position = view.gel:render(source.Position, dt, now, project)
 		local point = project(Vector2.new(position.X, position.Y))
 		view.mark.Position = UDim2.fromOffset(point.X, point.Y)
+		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
+			local delta = math.abs(position.X - aimX)
+			if delta < distance then
+				distance = delta
+				closest = point
+			end
+		end
+	end
+	targetRing.Visible = closest ~= nil
+	if closest then
+		local diameter = Config.Tiers[tier].radius * 2 * viewport.AbsoluteSize.X / (Config.Width + 0.8) + 7
+		targetRing.Position = UDim2.fromOffset(closest.X, closest.Y)
+		targetRing.Size = UDim2.fromOffset(diameter, diameter)
 	end
 end)
 layout()
 updateHud()
+task.delay(1.5, function()
+	if (board:GetAttribute("Drops") or 0) == 0 then
+		TweenService:Create(rail, TweenInfo.new(0.38, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 1, true),
+			{ BackgroundColor3 = Palette.Paper }):Play()
+	end
+end)
 roomView:setMode(board:GetAttribute("Mode"))

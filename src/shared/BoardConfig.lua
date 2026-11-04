@@ -1,3 +1,5 @@
+local Palette = require(script.Parent.DeckPalette)
+
 local Config = {
 	Width = 14,
 	Height = 19,
@@ -18,9 +20,9 @@ local Config = {
 		Springy = { bounce = 0.64, kick = 11, reach = 3.5 },
 	},
 	Tiers = {
-		{ radius = 0.72, color = Color3.fromRGB(147, 209, 238), mark = "I" },
-		{ radius = 1.04, color = Color3.fromRGB(248, 170, 132), mark = "II" },
-		{ radius = 1.43, color = Color3.fromRGB(168, 239, 181), mark = "III" },
+		{ radius = 0.72, color = Palette.Primary, mark = "I" },
+		{ radius = 1.04, color = Palette.Ember, mark = "II" },
+		{ radius = 1.43, color = Palette.Lime, mark = "III" },
 	},
 	Starter = {
 		{ x = 0, tier = 1 },

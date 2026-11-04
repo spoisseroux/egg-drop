@@ -1,9 +1,9 @@
 # Egg Drop prototype
 
-Pocket Deck is the in-world handheld. The same violet shell frames the
-full-screen merge game. A player who opens it stays in the lounge as an
-avatar holding the deck. Other clients nearby can see the eggs move on its
-miniature display. Each player controls their own tray.
+Pocket Deck is the in-world handheld. A graphite shell with electric blue
+and amber accents frames the full-screen merge game. A player who opens it
+stays in the lounge as an avatar holding the deck. Nearby players can see
+the eggs move on its miniature display. Each player controls their own tray.
 
 Start a new session on the board so the first action can be a drop. The
 lounge unlocks after Pip hatches. During the session, the player chooses
@@ -16,9 +16,10 @@ The prototype starts each new connection with a fresh tray.
 Drag the rail and release to place the next egg. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
 Merges fill six points of hatch charge. The guaranteed starter reveal
-awards Pip for the round. Choose **Visit Pip** to close the deck, or
+awards Pip for the round. Choose **Meet Pip** to close the deck, or
 **Keep playing** to stay on the board. **Greet Pip** plays a bounce, wave,
-and two-note cry. **Open handheld** returns to the same tray.
+and two-note cry. **Open deck** returns to the same tray. First-session
+hints appear in the footer and advance after an accepted drop and a merge.
 
 | State | What the player sees | What the game does |
 |---|---|---|
@@ -27,7 +28,7 @@ and two-note cry. **Open handheld** returns to the same tray.
 | Drop | The released egg falls and can bounce off a bank | Server validates aim, cadence, capacity, and spawn space. |
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
-| Starter hatch | Pip card, hatch chord, and visit or continue choices | Unlocks the lounge for the rest of the session. The board layer still owns its round. |
+| Starter hatch | Egg winds up and cracks, shell flakes fly, and Pip hops in with a chirp in under a second | Unlocks the lounge for the rest of the session. Both choices are available during the reveal. |
 | Entering the lounge | Deck shutters close and the music moves into the room arrangement | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
 | Lounge | 3D Pip, other avatars, their decks, and a return button | Pip greets locally. Nearby miniature screens project each owner's current egg positions. The server ignores board requests from room mode. |
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
@@ -39,11 +40,26 @@ and two-note cry. **Open handheld** returns to the same tray.
 ## Music
 
 Both original synth arrangements run on the same eight-bar, 84 BPM
-progression. The board uses a light upper pluck. The lounge uses a sparse
-soft counterline. Both loops run together so their crossfade follows the
+progression. The board uses a short triangle-wave melody with a quiet pulse
+echo and rests between phrases. The lounge uses a sparser version of the
+motif. Both loops run together so their crossfade follows the
 same beat. The score ducks during the hatch and stays quieter at overflow.
 This local Studio setup uses the checked-in WAVs in its content folder.
 Published Roblox playback needs the uploaded asset IDs in BoardAudio.lua.
+
+## Deck customization
+
+Start with four curated presets: Graphite Circuit, Glacier, Lava Relay, and
+Forest Expedition. In the lounge, a Customize Deck panel can preview the
+front of the handheld and its full-screen frame before applying a preset.
+The choice carries across both views, including the device other players
+see in your avatar's hands.
+
+Next, let players mix unlocked shells, button caps, screen trim, and one
+backplate decal. The board surface, egg colors and marks, hints, and action
+contrast stay consistent across all presets. Save catalog IDs in the player
+profile and let the server validate what the player owns and equips. Start
+with free presets and add earned cosmetics after pet progression is in place.
 
 ## Pets
 
@@ -74,16 +90,19 @@ Keep the body rig reusable and give each family a distinct original synth cry.
 
 ## Verification
 
-The Studio solo run hatched Pip from two aimed drops and three merges.
-It visited and greeted Pip, then returned with the same round identity,
-drop count, and merge count. Forged drop and retry requests in the lounge
+The arcade polish was played in Studio using the on-screen controls.
+Two drops and three merges hatched Pip. The hint advanced after the first
+drop and merge, and the hatch effect cleared before returning to the same
+tray from the lounge. The music toggle kept its setting across both views.
+Layout checks covered 320 × 568 and 390 × 844 portrait sizes plus two
+landscape sizes, accounting for the Studio top inset.
+
+In an earlier multiplayer pass, forged drop and retry requests in the lounge
 left the frozen egg positions alone. The two-client Studio run saw another
 player's live screen change from four eggs to five on the drop and three
 after its chain. The two loop assets loaded and switched volume with the
 view. A repeated-drop run reached overflow, and clicking retry returned
-to four eggs with zero charge and the lounge still unlocked. The board
-layout was checked at 320 × 568 and in a small Studio viewport. The
-capture uses the original WAVs mixed against recorded Studio cue times.
+to four eggs with zero charge and the lounge still unlocked.
 
 The room is a small shared prototype. The final pet art, longer progression,
 save behavior, and phone playtest are separate milestones.

@@ -31,12 +31,14 @@ CUES = {
               (0.052, note(783.99, 0.14, voice="pulse", volume=0.24)),
               (0.109, note(1046.5, 0.15, volume=0.32))],
     "charge": [(0, note(880, 0.08, end=990, voice="pulse", volume=0.22))],
-    "hatch": [(0, note(261.63, 0.36, volume=0.29)),
-              (0.09, note(523.25, 0.22, voice="pulse", volume=0.26)),
-              (0.17, note(659.25, 0.25, voice="pulse", volume=0.24)),
-              (0.25, note(783.99, 0.26, volume=0.28)),
-              (0.34, note(1046.5, 0.33, volume=0.3)),
-              (0.37, note(659.25, 0.28, volume=0.19))],
+    "hatch_rise": [(0, note(300, 0.18, end=510, volume=0.24)),
+                   (0.14, note(520, 0.21, end=770, volume=0.21))],
+    "hatch": [(0, note(240, 0.13, end=96, volume=0.48)),
+              (0, note(180, 0.052, voice="noise", volume=0.2)),
+              (0.035, note(523.25, 0.25, volume=0.32)),
+              (0.09, note(659.25, 0.28, voice="pulse", volume=0.22)),
+              (0.145, note(783.99, 0.34, volume=0.27)),
+              (0.20, note(1046.50, 0.32, volume=0.22))],
     "pet": [(0, note(660, 0.14, end=910, volume=0.43)),
             (0.12, note(845, 0.17, end=710, volume=0.35))],
     "overflow": [(0, note(523.25, 0.16, voice="pulse", volume=0.23)),
@@ -86,17 +88,28 @@ def music(room):
         (87.31, 130.81, 220.00, 329.63),
         (98.00, 146.83, 196.00, 293.66),
     ]
+    melodies = {
+        0: [(0.5, 523.25), (1.25, 659.25), (2, 783.99), (3, 880.00)],
+        1: [(0, 783.99), (1, 659.25), (2.25, 587.33)],
+        3: [(1, 587.33), (2.5, 392.00)],
+        4: [(0.5, 523.25), (1.25, 659.25), (2.75, 783.99)],
+        6: [(1, 880.00), (2.5, 659.25)],
+        7: [(0.5, 587.33), (2, 392.00)],
+    }
     beds, details = [], []
     for bar, chord in enumerate(chords):
         at = 4 * bar * beat
         for index, pitch in enumerate(chord):
             beds.append((at, note(pitch, 3.98 * beat, volume=0.11 if index == 0 else 0.058)))
         if room:
-            if bar % 2 == 0:
-                details.append((at + beat, note(chord[3], 2.4 * beat, volume=0.075)))
+            if bar in (0, 2, 4, 6):
+                pitch = melodies[bar][0][1] / 2 if bar in melodies else chord[3]
+                details.append((at + beat, note(pitch, 2.4 * beat, volume=0.092)))
         else:
-            for offset, index in [(0.5, 1), (1.75, 2), (2.5, 3), (3.25, 2)]:
-                details.append((at + offset * beat, note(chord[index] * 2, 0.56 * beat, volume=0.066)))
+            for offset, pitch in melodies.get(bar, ()):
+                details.append((at + offset * beat, note(pitch, 0.62 * beat, volume=0.13)))
+                details.append((at + (offset + 0.13) * beat,
+                                note(pitch * 2, 0.31 * beat, voice="pulse", volume=0.022)))
     size = round(32 * beat * RATE)
     samples = [0.0] * size
     for layer in (synth(beds, attack_seconds=0.18, decay=0.9), synth(details, attack_seconds=0.045)):

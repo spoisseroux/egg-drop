@@ -9,7 +9,7 @@ Audio.__index = Audio
 local assetIds = {}
 local cues = {
 	"aim", "drop", "land", "bank", "merge", "chain",
-	"charge", "hatch", "pet", "overflow", "retry", "menu",
+	"charge", "hatch_rise", "hatch", "pet", "overflow", "retry", "menu",
 }
 
 function Audio.uri(cue)
@@ -17,7 +17,7 @@ function Audio.uri(cue)
 	if id then
 		return "rbxassetid://" .. id
 	elseif RunService:IsStudio() and game.PlaceId == 0 then
-		return "rbxasset://sounds/egg-drop/egg_drop_" .. cue .. ".wav"
+		return "rbxasset://sounds/egg-drop-polish/egg_drop_" .. cue .. ".wav"
 	end
 	return nil
 end

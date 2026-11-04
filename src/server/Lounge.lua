@@ -1,9 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 
 local Lounge = {}
-
-local violet = Color3.fromRGB(117, 92, 164)
-local mint = Color3.fromRGB(162, 234, 179)
 
 local function part(parent, name, size, transform, color, collides)
 	local piece = Instance.new("Part")
@@ -40,30 +39,30 @@ function Lounge.create()
 	local room = Instance.new("Model")
 	room.Name = "EggDropLounge"
 	local floor = part(room, "Floor", Vector3.new(40, 1, 32), CFrame.new(0, 3.5, 0),
-		Color3.fromRGB(57, 46, 80), true)
+		Palette.Tray, true)
 	floor.Material = Enum.Material.Slate
-	part(room, "BackWall", Vector3.new(40, 13, 1), CFrame.new(0, 10, -15.5), Color3.fromRGB(43, 34, 68), true)
+	part(room, "BackWall", Vector3.new(40, 13, 1), CFrame.new(0, 10, -15.5), Palette.Ink, true)
 	for _, side in ipairs({ -1, 1 }) do
 		part(room, "SideWall", Vector3.new(1, 5, 32), CFrame.new(side * 19.5, 6.5, 0),
-			Color3.fromRGB(66, 52, 93), true)
-		part(room, "Bench", Vector3.new(8, 1.1, 2.8), CFrame.new(side * 12, 4.55, -8), violet, true)
-		local lamp = part(room, "Lamp", Vector3.new(0.7, 4.4, 0.7), CFrame.new(side * 8, 8.3, -14.75), mint, false)
+			Palette.Shell, true)
+		part(room, "Bench", Vector3.new(8, 1.1, 2.8), CFrame.new(side * 12, 4.55, -8), Palette.Rim, true)
+		local lamp = part(room, "Lamp", Vector3.new(0.7, 4.4, 0.7), CFrame.new(side * 8, 8.3, -14.75), Palette.Primary, false)
 		lamp.Material = Enum.Material.Neon
 		local light = Instance.new("PointLight")
-		light.Color = mint
+		light.Color = Palette.Primary
 		light.Range = 18
 		light.Brightness = 1.1
 		light.Parent = lamp
 	end
 	part(room, "FrontRail", Vector3.new(40, 2, 0.7), CFrame.new(0, 5, 15.6),
-		Color3.fromRGB(66, 52, 93), true)
-	part(room, "PipMat", Vector3.new(8, 0.2, 6), CFrame.new(0, 4.1, -5), violet, true)
+		Palette.Shell, true)
+	part(room, "PipMat", Vector3.new(8, 0.2, 6), CFrame.new(0, 4.1, -5), Palette.Shell, true)
 	for x = -3, 3, 2 do
-		part(room, "MatStripe", Vector3.new(0.08, 0.02, 5.8), CFrame.new(x, 4.21, -5), mint, false)
+		part(room, "MatStripe", Vector3.new(0.08, 0.02, 5.8), CFrame.new(x, 4.21, -5), Palette.Amber, false)
 	end
 	local marquee = part(room, "Marquee", Vector3.new(13, 2.1, 0.26), CFrame.new(0, 11.5, -14.9),
-		Color3.fromRGB(29, 22, 51), false)
-	sign(marquee, "EGG DROP   /   LOUNGE", mint)
+		Palette.Backdrop, false)
+	sign(marquee, "EGG DROP   /   LOUNGE", Palette.Primary)
 	room.Parent = workspace
 end
 
@@ -115,14 +114,14 @@ function Lounge.setMode(character, userId, mode)
 	device.Name = "PocketDeck"
 	device:SetAttribute("BoardUserId", userId)
 	local mount = CFrame.new(0, -0.42, -1.05) * CFrame.Angles(math.rad(37), 0, 0)
-	local shell = attach(device, torso, "Shell", Vector3.new(1.12, 1.45, 0.21), mount, violet)
+	local shell = attach(device, torso, "Shell", Vector3.new(1.12, 1.45, 0.21), mount, Palette.Shell)
 	local screen = attach(device, torso, "Screen", Vector3.new(0.84, 0.87, 0.08),
-		mount * CFrame.new(0, 0.2, -0.12), Color3.fromRGB(31, 46, 58))
-	attach(device, torso, "DPad", Vector3.new(0.26, 0.08, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Color3.fromRGB(44, 32, 65))
-	attach(device, torso, "DPadStem", Vector3.new(0.08, 0.24, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Color3.fromRGB(44, 32, 65))
-	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), mint)
+		mount * CFrame.new(0, 0.2, -0.12), Palette.Tray)
+	attach(device, torso, "DPad", Vector3.new(0.26, 0.08, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Palette.Ink)
+	attach(device, torso, "DPadStem", Vector3.new(0.08, 0.24, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Palette.Ink)
+	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), Palette.Primary)
 	attach(device, torso, "Action", Vector3.new(0.12, 0.12, 0.07), mount * CFrame.new(0.12, -0.5, -0.12),
-		Color3.fromRGB(241, 151, 146))
+		Palette.Amber)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
 	badge.Adornee = screen
@@ -132,11 +131,11 @@ function Lounge.setMode(character, userId, mode)
 	badge.Parent = screen
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.fromScale(1, 1)
-	text.BackgroundColor3 = Color3.fromRGB(32, 27, 52)
+	text.BackgroundColor3 = Palette.Ink
 	text.BackgroundTransparency = 0.18
 	text.BorderSizePixel = 0
 	text.Text = "PLAYING EGG DROP"
-	text.TextColor3 = mint
+	text.TextColor3 = Palette.Primary
 	text.Font = Enum.Font.Code
 	text.TextSize = 12
 	text.Parent = badge
