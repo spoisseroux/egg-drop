@@ -16,7 +16,36 @@ Two PICO-8 games set the target feel for the board:
    shading detail, and satisfying sound design.
 
 Codex should study both for: ball physics tuning (restitution, friction,
-   chain-reaction pacing), color identity per egg tier, and merge SFX.
+chain-reaction pacing), color identity per egg tier, and merge SFX.
+
+## Art direction: "pocket console" (the differentiator)
+
+Every Roblox pet sim looks like glossy Sims-style chibi or stock mesh
+packs. We own the unclaimed lane: **PICO-8 but 3D**.
+
+- **Look:** low-poly 3D meshes wearing chunky, dithered 16-32px pixel-art
+  textures. PICO-8 palette discipline (16 colors, hard dithering) but
+  rendered in 3D with real lighting. Think a virtual-console cartridge
+  world.
+- **Why it wins:** instantly recognizable thumbnail on the discovery
+  page (CTR drives everything); cheap to produce (small textures,
+  simple shaders, one palette rule unifies 36 pets); PICO-8 synth SFX
+  feel cohesive instead of mismatched.
+- **Rarity via palette graduation:** pastel commons, saturated rares,
+  dithered-iridescent Mythics. Never add visual noise; graduate within
+  the one palette.
+- **Motion sells the merge:** eggs crack progressively with tier, pop
+  with 2-frame squash on merge, wobble in idle. Effects render chunky
+  at ~60% pixel scale. Never smooth, never glossy.
+
+## Gameplay feel standouts
+
+- **Chain reactions are the emotional core.** Physics tuned for long,
+  satisfying Combo Pool-style rebounds, NOT static Suica stacking.
+  Merges should visibly bounce the board. Combo chains that rattle
+  6+ merges are the clip that gets shared.
+- **Tactility everywhere:** every egg has a tiny idle wobble;
+  highest-tier pets get 2-3 frame idle animations. Click = wave.
 
 ## World structure: lobby + private board
 
