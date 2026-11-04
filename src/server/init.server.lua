@@ -229,7 +229,7 @@ RunService.Heartbeat:Connect(function(dt)
 					board.hatchedPet = nextPet.name
 					Progress.earn(board.profile)
 				end
-				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other)
+				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other, egg.id)
 			end
 			if #merged > 0 or board.round.over then
 				publishState(board)

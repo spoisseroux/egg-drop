@@ -14,6 +14,7 @@ local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
+local JellyLCD = require(script.JellyLCD)
 local Audio = require(script.BoardAudio)
 local DeckPicker = require(script.DeckPicker)
 local RoomView = require(script.RoomView)
@@ -81,6 +82,19 @@ local effects = make("Frame", "MergeEffects", {
 local sprites = make("Frame", "Sprites", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
 }, overlay)
+local lcd = JellyLCD.new(overlay)
+local lcdStep = 1 / 30
+local lcdElapsed = lcdStep
+local pixelMerges = {}
+
+local function lcdEnabled()
+	return lcd ~= nil and gui:GetAttribute("PixelLCD") ~= false and not gui:GetAttribute("MeshPreview")
+end
+
+local function pixelPoint(position)
+	return Vector2.new(JellyLCD.Width * (0.5 + position.X / (Config.Width + 0.8)),
+		JellyLCD.Height * (0.5 - (position.Y - Config.Height / 2) / (Config.Height + 0.8)))
+end
 
 local function surface(name, size, transform, color)
 	return make("Part", name, {
@@ -449,15 +463,17 @@ local function layout()
 	local screen = backdrop.AbsoluteSize
 	local lateral = screen.Y < 530 and screen.X > screen.Y * 1.25
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local reserved = if lateral then 122 else 256
+	local reserved = if lateral then 122 else 268
 	local grip = 132
 	local widthBudget = screen.X - (if lateral then grip * 2 + 56 else 48)
 	local width = math.max(1, math.min(415, widthBudget, (screen.Y - reserved) * ratio))
 	local height = width / ratio
-	local totalWidth = if lateral then width + grip * 2 + 24 else math.min(screen.X - 32, math.max(width + 14, 228))
+	local totalWidth = if lateral then width + grip * 2 + 24 else math.min(screen.X - 32, math.max(width + 40, 284))
 	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then math.max(236, height + 104) else height + 240
-	local top = math.max(5, (screen.Y - shellHeight) / 2)
+	local shellHeight = if lateral then math.max(236, height + 104) else height + 208
+	local menuHeight = if lateral then 0 else 52
+	local groupTop = math.max(5, (screen.Y - shellHeight - menuHeight) / 2)
+	local top = groupTop + menuHeight
 	local screenX = (screen.X - width) / 2
 	local trayY = top + 70
 	local trayBottom = trayY + height
@@ -474,27 +490,27 @@ local function layout()
 	title.Position = UDim2.fromOffset(left, top + 1)
 	title.Size = UDim2.fromOffset(totalWidth, 23)
 	deckSticker.Position = UDim2.fromOffset(left + (if lateral then 52 else totalWidth * 0.47 - 12),
-		if lateral then top + 154 else trayBottom + 67)
+		if lateral then top + 154 else trayBottom + 78)
 	rail.Position = UDim2.fromOffset(screenX, top + 26)
 	rail.Size = UDim2.fromOffset(width, 44)
 	rail.TextSize = if width < 160 then 11 else 14
 	local menuX = if lateral then left + grip + width + 24 else left
-	local menuY = if lateral then top + 84 else trayBottom + 120
+	local menuY = if lateral then top + 84 else groupTop
 	status.Position = UDim2.fromOffset(left, if lateral then top + 37 else trayBottom + 5)
 	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral then 38 else 22)
 	status.TextSize = 13
 	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 5 else 29))
 	meter.Size = UDim2.fromOffset(width, 18)
 	meterText.TextSize = if width < 135 then 11 else 13
-	hardware.Position = UDim2.fromOffset(left, if lateral then top + 12 else trayBottom + 49)
+	hardware.Position = UDim2.fromOffset(left, if lateral then top + 12 else trayBottom + 59)
 	hardware.Size = UDim2.fromOffset(totalWidth, 64)
 	dpad.Position = UDim2.fromOffset(if lateral then 20 else 0, if lateral then 77 else 0)
 	action.Position = UDim2.fromOffset(totalWidth - 48, 0)
-	centerAim.Position = UDim2.fromOffset(totalWidth - 103, 6)
+	centerAim.Position = UDim2.fromOffset(totalWidth - 110, 6)
 	dropCaption.Position = UDim2.fromOffset(totalWidth - 48, 49)
-	centerCaption.Position = UDim2.fromOffset(totalWidth - 103, 53)
-	vents.Position = UDim2.fromOffset(if lateral then 49 else totalWidth * 0.47 + 25, if lateral then 174 else 15)
-	vents.Visible = lateral or totalWidth >= 310
+	centerCaption.Position = UDim2.fromOffset(totalWidth - 110, 53)
+	vents.Position = UDim2.fromOffset(49, 174)
+	vents.Visible = lateral
 	for index, button in ipairs({ customizeButton, roomButton, reset }) do
 		local buttonWidth = if lateral then grip else (totalWidth - 12) / 3
 		button.Position = if lateral then UDim2.fromOffset(menuX, menuY + (index - 1) * 47)
@@ -748,11 +764,23 @@ local function gelDrop(from, to, diameter, color, duration, outward)
 	tween:Play()
 end
 
-feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
+feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id)
 	if board:GetAttribute("Mode") ~= "Board" then
 		return
 	end
 	audio:play(if chain > 1 then "chain" else "merge", 1 + (tier - 2) * 0.07 + math.min(chain - 1, 5) * 0.04)
+	local pixelMerge = lcdEnabled()
+	if pixelMerge then
+		if #pixelMerges >= 6 then
+			table.remove(pixelMerges, 1)
+		end
+		table.insert(pixelMerges, {
+			first = pixelPoint(first), second = pixelPoint(second), point = pixelPoint(position),
+			radius = Config.Tiers[tier - 1].radius * JellyLCD.Width / (Config.Width + 0.8),
+			resultRadius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8),
+			color = Config.Tiers[tier].color, start = os.clock(), id = id,
+		})
+	end
 	local previous = effects:FindFirstChild("MergePop")
 	if previous then
 		previous:Destroy()
@@ -767,22 +795,24 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 	local scale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
 	local firstPoint, secondPoint = project(first), project(second)
 	local diameter = scale * Config.Tiers[tier - 1].radius * 1.55
-	gelDrop(firstPoint, point, diameter, color, 0.18, false)
-	gelDrop(secondPoint, point, diameter, color, 0.18, false)
-	local delta = secondPoint - firstPoint
-	local bridge = make("Frame", "GelBridge", {
-		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
-		BackgroundColor3 = color, BackgroundTransparency = 0.1,
-		Position = UDim2.fromOffset(point.X, point.Y),
-		Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
-		Rotation = math.deg(math.atan2(delta.Y, delta.X)),
-	}, effects)
-	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
-	local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
-		Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
-	})
-	retract.Completed:Once(function() bridge:Destroy() end)
-	retract:Play()
+	if not pixelMerge then
+		gelDrop(firstPoint, point, diameter, color, 0.18, false)
+		gelDrop(secondPoint, point, diameter, color, 0.18, false)
+		local delta = secondPoint - firstPoint
+		local bridge = make("Frame", "GelBridge", {
+			AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
+			BackgroundColor3 = color, BackgroundTransparency = 0.1,
+			Position = UDim2.fromOffset(point.X, point.Y),
+			Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
+			Rotation = math.deg(math.atan2(delta.Y, delta.X)),
+		}, effects)
+		make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
+		local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
+			Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
+		})
+		retract.Completed:Once(function() bridge:Destroy() end)
+		retract:Play()
+	end
 	local ring = make("Frame", "MergeRing", {
 		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
 		BackgroundTransparency = 1, Position = UDim2.fromOffset(point.X, point.Y),
@@ -843,6 +873,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 		dismissedHatch = board:GetAttribute("HatchedPet")
 		reveal:cancel()
 		effects:ClearAllChildren()
+		table.clear(pixelMerges)
 	end
 	roomView:setMode(mode)
 end)
@@ -850,6 +881,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	clearPlayInputs()
 	reveal:cancel()
 	effects:ClearAllChildren()
+	table.clear(pixelMerges)
 	audio:stop()
 	audio:play("retry")
 	dismissedHatch = nil
@@ -885,16 +917,58 @@ RunService.RenderStepped:Connect(function(dt)
 	else
 		table.clear(heldAim)
 	end
+	if not backdrop.Visible then
+		return
+	end
 	local now = os.clock()
 	local closest
 	local distance = math.huge
 	local tier = nextTier()
 	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and not modal.Visible and not drag
 	local aimX = Config.aimX(aim, tier)
+	local drawLCD = false
+	local useLCD = lcdEnabled() and viewport.AbsoluteSize.X > 1
+	if useLCD then
+		lcdElapsed += dt
+		drawLCD = lcdElapsed >= lcdStep
+		if drawLCD then
+			lcdElapsed %= lcdStep
+			lcd:beginFrame()
+			for index = #pixelMerges, 1, -1 do
+				if now - pixelMerges[index].start >= JellyLCD.MergeDuration then
+					table.remove(pixelMerges, index)
+				end
+			end
+			local radius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8)
+			local color = Config.Tiers[tier].color:Lerp(Palette.Tray, 0.2)
+			local center = pixelPoint(Vector2.new(aimX, Config.SpawnY))
+			lcd:drawGuide(center)
+			lcd:draw(center, radius, radius, 0, color, 0)
+		end
+	elseif lcd then
+		lcd.label.Visible = false
+		lcdElapsed = lcdStep
+	end
 	for source, view in pairs(eggViews) do
-		local position = view.gel:render(source.Position, dt, now, project)
+		local position, widthScale, heightScale, angle, ripple = view.gel:render(source.Position, dt, now, project, not useLCD)
 		local point = project(Vector2.new(position.X, position.Y))
-		view.mark.Position = UDim2.fromOffset(point.X, point.Y)
+		if drawLCD or not useLCD then
+			view.mark.Position = UDim2.fromOffset(point.X, point.Y)
+		end
+		if drawLCD and widthScale then
+			local center = pixelPoint(position)
+			local inMerge = false
+			for _, merge in ipairs(pixelMerges) do
+				if merge.id == view.id then
+					merge.point = center
+					inMerge = true
+				end
+			end
+			if not inMerge then
+				local radius = source.Size.X / 2 * JellyLCD.Width / (Config.Width + 0.8)
+				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple)
+			end
+		end
 		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
 			local delta = math.abs(position.X - aimX)
 			if delta < distance then
@@ -903,6 +977,23 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 	end
+	if drawLCD then
+		for _, merge in ipairs(pixelMerges) do
+			lcd:merge(merge.first, merge.second, merge.point, merge.radius, merge.resultRadius,
+				merge.color, now - merge.start)
+		end
+		if lcd:finishFrame() then
+			lcd.label.Visible = true
+		else
+			lcd:destroy()
+			lcd = nil
+		end
+	end
+	local pixelVisible = lcd ~= nil and lcd.label.Visible
+	sprites.Visible = not pixelVisible
+	track.Visible = not pixelVisible
+	overflowLine.Visible = not pixelVisible
+	ghost.BackgroundTransparency = if pixelVisible then 1 else 0
 	targetRing.Visible = closest ~= nil
 	if closest then
 		local diameter = Config.Tiers[tier].radius * 2 * viewport.AbsoluteSize.X / (Config.Width + 0.8) + 7

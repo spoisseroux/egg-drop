@@ -51,28 +51,34 @@ end
 
 function Sprite:impact(normal, speed)
 	self.axis = normal
-	self.strength = math.clamp(speed / 35, 0.16, 0.56)
+	self.strength = math.clamp(speed / 34, 0.16, 0.48)
 	self.age = 0
 end
 
-function Sprite:render(position, dt, now, project)
+function Sprite:render(position, dt, now, project, drawSprite)
 	self.age += dt
 	local delta = position - self.position
 	self.position = self.position:Lerp(position, 1 - math.exp(-34 * dt))
 	local stretch = math.clamp(-delta.Y / self.radius * 0.22, 0, 0.15)
-	local squeeze = self.strength * math.exp(-5.2 * self.age) * math.cos(self.age * 20) - stretch
+	local wave = self.strength * math.exp(-4.7 * self.age)
+	local floorSqueeze = if self.axis.Y > 0.85
+		then 0.09 * math.clamp(1 - (position.Y - self.radius) / 0.15, 0, 1)
+		else 0
+	local squeeze = wave * math.cos(self.age * 17) + floorSqueeze - stretch
 	local breathe = math.sin(now * 2.4 + self.phase) * 0.017
 	local offset = self.axis * self.radius * squeeze * 0.82
 	local center = self.position - Vector3.new(offset.X, offset.Y, 0)
-	local point, pixels = project(Vector2.new(center.X, center.Y))
-	local diameter = self.radius * pixels * 2
-	self.body.Position = UDim2.fromOffset(point.X, point.Y)
-	self.body.Size = UDim2.fromOffset(diameter * (1 + squeeze * 0.72 - breathe),
-		diameter * (1 - squeeze + breathe))
-	self.body.Rotation = math.deg(math.atan2(self.axis.X, self.axis.Y))
-		+ math.sin(self.age * 22) * math.exp(-5 * self.age) * self.strength * 33
-	self.glint.Position = UDim2.fromScale(0.2 - squeeze * 0.12, 0.16 + squeeze * 0.09)
-	return center
+	local height = math.clamp(1 - squeeze + breathe, 0.56, 1.48)
+	local angle = math.atan2(self.axis.X, self.axis.Y) + math.sin(self.age * 19) * wave * 0.44
+	if drawSprite then
+		local point, pixels = project(Vector2.new(center.X, center.Y))
+		local diameter = self.radius * pixels * 2
+		self.body.Position = UDim2.fromOffset(point.X, point.Y)
+		self.body.Size = UDim2.fromOffset(diameter / height, diameter * height)
+		self.body.Rotation = math.deg(angle)
+		self.glint.Position = UDim2.fromScale(0.2 - squeeze * 0.12, 0.16 + squeeze * 0.09)
+	end
+	return center, 1 / height, height, angle, math.sin(self.age * 20) * wave * 2
 end
 
 function Sprite:destroy()

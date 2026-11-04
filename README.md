@@ -23,4 +23,6 @@ For published play, import the WAVs and map their Roblox asset IDs in
 
 In Studio Play mode, set the `MeshPreview` attribute on the local
 `PlayerGui.EggDrop` ScreenGui to compare the mesh render with the default
-2D jelly render. Both use the same simulation.
+84 × 112 pixel display. Set `PixelLCD` to false to compare the smooth
+sprites. Published games need **Allow Mesh / Image APIs** for the pixel
+display. The smooth sprites load if the image API is unavailable.

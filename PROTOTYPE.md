@@ -59,8 +59,19 @@ pair in the player profile. Studio uses session memory.
 
 Astra's design uses a recessed display with the same tall tray proportions
 in portrait and landscape. Landscape puts the D-pad and action buttons on
-side grips. Additional sticker slots, backplate art, and earned pet
+side grips. Portrait puts the utility buttons above the display and
+leaves the lower shell for play controls. Additional sticker slots, backplate art, and earned pet
 stickers are possible next steps.
+
+## Pixel display and jelly
+
+The LCD draws the tray, guides, eggs, and merge shapes on an 84 × 112
+grid. An impact squashes the silhouette and sends a ripple around it.
+At a merge, two lobes draw together and settle into the larger egg.
+The server currently collides circles. Shape-aware squeezing would need
+its own physics prototype. Sobosuba's developer describes using a ring
+of rigid bodies, skin tension, and pressure to preserve the blob's volume.
+[Developer notes](https://www.reddit.com/r/godot/comments/1vlxww3/my_softbody_physics_merging_game/).
 
 ## Pets
 
