@@ -33,9 +33,9 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
 | Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge. The other three hatch in order. |
-| Entering the lounge | Deck shutters close and the selected pet chirps | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
-| Lounge | The Pocket Club, pet journal, deck workbench, and other avatars | Nearby miniature screens show each owner's tray. The player's companion is also visible to nearby lounge visitors. |
-| Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
+| Entering the lounge | The deck LCD closes to a cyan scanline, then the camera pulls back from the hatchery | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
+| Lounge | An enclosed graphite arcade with a cyan workbench, amber pet journal, and lit hatchery stage | Nearby miniature screens show each owner's tray. The player's companion is also visible to nearby lounge visitors. |
+| Return | The room fades and the scanline opens back into the LCD | Restores the prior camera and deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
 | Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |
 | Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Close restores the equipped look. |
@@ -53,7 +53,7 @@ Window Seat at 0:00 and Paper Moon at 0:55. Pocket Apricot is a separate draft.
 
 In **Customize → Club**, cycle SFX between Full, Quiet, and Off. Motion Low
 removes decorative jelly wobble, moving merge bursts, hatch animation,
-shutters, and the lounge greeting camera. Roblox's Reduce Motion setting
+the animated lounge handoff, and the lounge greeting camera. Roblox's Reduce Motion setting
 also enables this mode. Egg movement, marks, and scoring stay visible.
 
 ## Pocket Trials

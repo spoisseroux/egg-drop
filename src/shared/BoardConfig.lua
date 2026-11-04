@@ -10,6 +10,7 @@ local Config = {
 	OverflowY = 14.6,
 	OverflowGrace = 1.1,
 	DropInterval = 0.35,
+	ModeSwitchInterval = 0.45,
 	ResetInterval = 0.5,
 	FixedStep = 1 / 120,
 	DefaultPreset = "Springy",

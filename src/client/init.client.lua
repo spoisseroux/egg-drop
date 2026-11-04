@@ -312,7 +312,11 @@ journal = PetJournal.new(gui, make, label, function(index)
 end)
 roomButton.Activated:Connect(function()
 	if not isPickerOpen() then
-		request:FireServer("mode", "Room")
+		roomView:requestSwitch(function()
+			if not isPickerOpen() then
+				request:FireServer("mode", "Room")
+			end
+		end)
 	end
 end)
 local modal = make("Frame", "RoundCard", {
@@ -842,20 +846,33 @@ end)
 UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
 GuiService.MenuOpened:Connect(clearPlayInputs)
 modalAction.Activated:Connect(function()
+	if roomView.busy then
+		return
+	end
 	if modalNote.Visible then
 		request:FireServer("reset")
 	elseif hatchQueue[1] then
-		roomView:choosePet(hatchQueue[1].name)
-		request:FireServer("mode", "Room")
+		roomView:requestSwitch(function()
+			if hatchQueue[1] then
+				roomView:choosePet(hatchQueue[1].name)
+				request:FireServer("mode", "Room")
+			end
+		end)
 	end
 end)
 keepPlaying.Activated:Connect(function()
+	if roomView.busy then
+		return
+	end
 	table.remove(hatchQueue, 1)
 	reveal:cancel()
 	audio:play("menu")
 	updateHud()
 end)
 pet.Activated:Connect(function()
+	if roomView.busy then
+		return
+	end
 	local hatchPet = hatchQueue[1]
 	if hatchPet then
 		audio:play(hatchPet.cue)

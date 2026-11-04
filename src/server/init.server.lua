@@ -203,7 +203,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "mode" then
-		if now - board.lastModeChange < 0.45 or value == board.mode
+		if now - board.lastModeChange < Config.ModeSwitchInterval or value == board.mode
 			or (value ~= "Board" and (value ~= "Room" or board.profile.rank < 1)) then
 			return
 		end
