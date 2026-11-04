@@ -23,7 +23,10 @@ function Audio.uri(cue)
 end
 
 function Audio.new()
-	local self = setmetatable({ voices = {}, indices = {} }, Audio)
+	local group = Instance.new("SoundGroup")
+	group.Name = "EggDropSFX"
+	group.Parent = SoundService
+	local self = setmetatable({ voices = {}, indices = {}, group = group }, Audio)
 	local warmup = {}
 	for _, cue in ipairs(cues) do
 		local uri = Audio.uri(cue)
@@ -34,6 +37,7 @@ function Audio.new()
 				local voice = Instance.new("Sound")
 				voice.Name = "EggDrop_" .. cue
 				voice.SoundId = uri
+				voice.SoundGroup = group
 				voice.Parent = SoundService
 				voices[index] = voice
 			end
@@ -51,7 +55,7 @@ end
 
 function Audio:play(name, speed, volume)
 	local voices = self.voices[name]
-	if not voices then
+	if not voices or self.group.Volume == 0 then
 		return
 	end
 	local index = (self.indices[name] or 0) % #voices + 1
@@ -61,6 +65,13 @@ function Audio:play(name, speed, volume)
 	voice.Volume = volume or 0.72
 	voice.TimePosition = 0
 	voice:Play()
+end
+
+function Audio:setVolume(volume)
+	self.group.Volume = volume
+	if volume == 0 then
+		self:stop()
+	end
 end
 
 function Audio:stop()

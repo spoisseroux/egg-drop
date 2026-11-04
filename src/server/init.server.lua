@@ -6,6 +6,7 @@ local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
+local Settings = require(ReplicatedStorage.Shared.DeckSettings)
 local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
 local Lounge = require(script.Lounge)
@@ -34,6 +35,8 @@ local function publishState(board)
 	board.folder:SetAttribute("NextTier", Simulation.nextTier(board.sim))
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
+	board.folder:SetAttribute("PeakChain", board.peakChain)
+	board.folder:SetAttribute("TrialMask", board.profile.trials)
 	board.folder:SetAttribute("Score", board.round.score)
 	board.folder:SetAttribute("BestScore", board.profile.bestScore)
 	board.folder:SetAttribute("NewBest", board.round.score > board.startBest)
@@ -89,6 +92,7 @@ local function reset(board, preset)
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
 	board.chain = 0
+	board.peakChain = 0
 	board.lastMerge = -math.huge
 	board.playTime = 0
 	publishState(board)
@@ -126,6 +130,8 @@ local function addPlayer(player)
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
+	folder:SetAttribute("SoundLevel", profile.sound)
+	folder:SetAttribute("ReducedEffects", profile.reduced)
 	folder:SetAttribute("ProfileLoadFailed", profile.loadFailed)
 	folder.Parent = trays
 	local function spawn(character)
@@ -161,13 +167,28 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local now = os.clock()
 	if action == "appearance" then
 		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string"
-			and Stickers.canEquip(sticker, board.profile.rank)
+			and Stickers.canEquip(sticker, board.profile.rank, board.profile.trials)
 			and (value ~= board.profile.theme or sticker ~= board.profile.sticker) and now - board.lastAppearanceChange >= 0.25 then
 			board.lastAppearanceChange = now
 			Progress.equip(board.profile, value, sticker)
 			board.folder:SetAttribute("DeckThemeId", value)
 			board.folder:SetAttribute("DeckStickerId", sticker)
 			Lounge.setAppearance(player.Character, value, sticker)
+		end
+		return
+	end
+	if action == "sound" or action == "motion" then
+		if value ~= nil then
+			return
+		end
+		if action == "sound" then
+			local nextSound = Settings.NextSound[board.profile.sound]
+			Progress.setSetting(board.profile, "sound", nextSound)
+			board.folder:SetAttribute("SoundLevel", nextSound)
+		else
+			local reduced = not board.profile.reduced
+			Progress.setSetting(board.profile, "reduced", reduced)
+			board.folder:SetAttribute("ReducedEffects", reduced)
 		end
 		return
 	end
@@ -239,10 +260,12 @@ RunService.Heartbeat:Connect(function(dt)
 			board.round:step(board.sim.eggs, Config.FixedStep)
 			for _, merge in ipairs(merged) do
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
+				board.peakChain = math.max(board.peakChain, board.chain)
 				board.lastMerge = board.playTime
 				board.merges += 1
 				board.round.score += 10 * (merge.tier + math.min(board.chain - 1, 9)) + (if merge.cleared then 100 else 0)
 				Progress.recordScore(board.profile, board.round.score)
+				Progress.recordTrials(board.profile, board.chain, board.round.score, merge.cleared)
 				Progress.chargeHatch(board.profile, merge.tier)
 				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared)
 			end

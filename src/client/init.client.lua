@@ -13,6 +13,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
+local Trials = require(ReplicatedStorage.Shared.PocketTrials)
+local Settings = require(ReplicatedStorage.Shared.DeckSettings)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local JellyLCD = require(script.JellyLCD)
@@ -30,6 +32,10 @@ local impacts = remotes:WaitForChild("BoardImpact")
 local trays = ReplicatedStorage:WaitForChild("EggDropBoards")
 local board = trays:WaitForChild(tostring(player.UserId))
 HandheldScreens.start(trays, Config)
+
+local function reduceEffects()
+	return GuiService.ReducedMotionEnabled or board:GetAttribute("ReducedEffects") == true
+end
 
 local function make(class, name, properties, parent)
 	local instance = Instance.new(class)
@@ -272,7 +278,7 @@ end, function()
 	openJournal()
 end, function()
 	return isPickerOpen() or journal.shade.Visible
-end)
+end, reduceEffects)
 journal = PetJournal.new(gui, make, label, function(index)
 	roomView:showPet(index)
 	request:FireServer("companion", Pets[index].id)
@@ -412,7 +418,16 @@ picker = DeckPicker.new(gui, make, label, paintDeck, function()
 end, function(themeId, stickerId)
 	request:FireServer("appearance", themeId, stickerId)
 	audio:play("menu")
+end, function(actionName)
+	request:FireServer(actionName)
 end)
+
+local function updateClub()
+	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
+	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
+		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
+		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled)
+end
 
 openPicker = function()
 	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
@@ -421,7 +436,8 @@ openPicker = function()
 	clearPlayInputs()
 	rail.Interactable = false
 	local themeId, stickerId = equippedAppearance()
-	picker:open(themeId, stickerId, board:GetAttribute("OwnedPets") or 0)
+	updateClub()
+	picker:open(themeId, stickerId)
 	if isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs.Shell
 	end
@@ -496,6 +512,9 @@ local function drawAim()
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
 end
 
+local lastTrialMask = board:GetAttribute("TrialMask") or 0
+local trialNotice, trialNoticeUntil
+
 local function updateHud()
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
@@ -504,6 +523,29 @@ local function updateHud()
 	local best = board:GetAttribute("BestScore") or 0
 	local charge = board:GetAttribute("HatchCharge") or 0
 	local owned = board:GetAttribute("OwnedPets") or 0
+	local mask = board:GetAttribute("TrialMask") or 0
+	if mask ~= lastTrialMask then
+		local unlocked = bit32.band(mask, bit32.bnot(lastTrialMask))
+		lastTrialMask = mask
+		if unlocked ~= 0 then
+			trialNotice = "Trial complete! Check the Club tab."
+			if mask == Trials.All then
+				trialNotice = "Club sticker earned!"
+			else
+				for _, goal in ipairs(Trials.Goals) do
+					if bit32.band(unlocked, goal.bit) ~= 0 then
+						trialNotice = goal.name .. " trial complete!"
+						break
+					end
+				end
+			end
+			trialNoticeUntil = os.clock() + 4
+			task.delay(4, updateHud)
+		end
+	end
+	if isPickerOpen() then
+		updateClub()
+	end
 	local nextPet = Pets[owned + 1]
 	for index = knownPets + 1, owned do
 		table.insert(hatchQueue, Pets[index])
@@ -524,10 +566,12 @@ local function updateHud()
 	end
 	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
 		status.Text = "Save could not load. Playing a fresh tray."
+	elseif trialNoticeUntil and os.clock() < trialNoticeUntil then
+		status.Text = trialNotice
 	elseif owned > 0 then
 		status.Text = string.format("%d pts   ·   Chain ×%d", score, chain)
 	elseif drops == 0 then
-		status.Text = "Aim with ◀ ▶ or drag the screen bar."
+		status.Text = "Drag the bar. Release to drop."
 	elseif merges == 0 then
 		status.Text = "Match eggs with the same mark."
 	else
@@ -581,10 +625,15 @@ local function updateHud()
 			leaf.Visible = pip
 		end
 		local resetId = board:GetAttribute("ResetId")
-		reveal:start(function()
-			return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
-				and hatchQueue[1] == hatchPet
-		end, hatchPet.cue, hatchPet.color)
+		if reduceEffects() then
+			reveal:cancel()
+			audio:play("hatch")
+		else
+			reveal:start(function()
+				return board:GetAttribute("ResetId") == resetId and board:GetAttribute("Mode") == "Board"
+					and hatchQueue[1] == hatchPet
+			end, hatchPet.cue, hatchPet.color)
+		end
 	end
 end
 
@@ -809,8 +858,10 @@ pet.Activated:Connect(function()
 	if hatchPet then
 		audio:play(hatchPet.cue)
 	end
-	pet.Rotation = -9
-	TweenService:Create(pet, TweenInfo.new(0.24, Enum.EasingStyle.Back), { Rotation = 0 }):Play()
+	if not reduceEffects() then
+		pet.Rotation = -9
+		TweenService:Create(pet, TweenInfo.new(0.24, Enum.EasingStyle.Back), { Rotation = 0 }):Play()
+	end
 end)
 
 local function addView(source)
@@ -859,7 +910,9 @@ impacts.OnClientEvent:Connect(function(batch)
 	for _, impact in ipairs(batch) do
 		local gel = viewsById[impact[1]]
 		if gel then
-			gel:impact(impact[2], impact[3])
+			if not reduceEffects() then
+				gel:impact(impact[2], impact[3])
+			end
 			if impact[3] > strongest then
 				strongest = impact[3]
 				bankHit = impact[2].Y < 0.78
@@ -908,7 +961,8 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 		lastChainAccent = now
 		audio:play("merge_chain", 1 + math.min(chain - 2, 4) * 0.035, 0.34)
 	end
-	local pixelMerge = lcdEnabled() and not cleared
+	local reduced = reduceEffects()
+	local pixelMerge = lcdEnabled() and not cleared and not reduced
 	if pixelMerge then
 		if #pixelMerges >= 6 then
 			table.remove(pixelMerges, 1)
@@ -934,43 +988,45 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 	local scale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
 	local firstPoint, secondPoint = project(first), project(second)
 	local diameter = scale * Config.Tiers[tier - 1].radius * 1.55
-	if not pixelMerge then
-		gelDrop(firstPoint, point, diameter, color, 0.18, false)
-		gelDrop(secondPoint, point, diameter, color, 0.18, false)
-		local delta = secondPoint - firstPoint
-		local bridge = make("Frame", "GelBridge", {
+	if not reduced then
+		if not pixelMerge then
+			gelDrop(firstPoint, point, diameter, color, 0.18, false)
+			gelDrop(secondPoint, point, diameter, color, 0.18, false)
+			local delta = secondPoint - firstPoint
+			local bridge = make("Frame", "GelBridge", {
+				AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
+				BackgroundColor3 = color, BackgroundTransparency = 0.1,
+				Position = UDim2.fromOffset(point.X, point.Y),
+				Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
+				Rotation = math.deg(math.atan2(delta.Y, delta.X)),
+			}, effects)
+			make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
+			local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
+				Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
+			})
+			retract.Completed:Once(function() bridge:Destroy() end)
+			retract:Play()
+		end
+		local ring = make("Frame", "MergeRing", {
 			AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
-			BackgroundColor3 = color, BackgroundTransparency = 0.1,
-			Position = UDim2.fromOffset(point.X, point.Y),
-			Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
-			Rotation = math.deg(math.atan2(delta.Y, delta.X)),
+			BackgroundTransparency = 1, Position = UDim2.fromOffset(point.X, point.Y),
+			Size = UDim2.fromOffset(diameter, diameter),
 		}, effects)
-		make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
-		local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
-			Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
+		make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ring)
+		local stroke = make("UIStroke", "Glow", { Color = color, Thickness = 2, Transparency = 0.25 }, ring)
+		local wave = TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {
+			Size = UDim2.fromOffset(diameter * 3.8, diameter * 3.8),
 		})
-		retract.Completed:Once(function() bridge:Destroy() end)
-		retract:Play()
-	end
-	local ring = make("Frame", "MergeRing", {
-		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
-		BackgroundTransparency = 1, Position = UDim2.fromOffset(point.X, point.Y),
-		Size = UDim2.fromOffset(diameter, diameter),
-	}, effects)
-	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ring)
-	local stroke = make("UIStroke", "Glow", { Color = color, Thickness = 2, Transparency = 0.25 }, ring)
-	local wave = TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {
-		Size = UDim2.fromOffset(diameter * 3.8, diameter * 3.8),
-	})
-	wave.Completed:Once(function() ring:Destroy() end)
-	wave:Play()
-	TweenService:Create(stroke, TweenInfo.new(0.32), { Transparency = 1 }):Play()
-	local beads = math.min(if UserInputService.TouchEnabled then 4 else 8 + math.min(chain - 1, 4), limit - count - 5)
-	for i = 1, beads do
-		local angle = i * math.pi * 2 / beads + chain * 0.5
-		local burst = Vector2.new(math.cos(angle), math.sin(angle)) * scale * (1.6 + i % 3 * 0.52)
-		local tint = if i % 3 == 0 then Palette.Paper else color
-		gelDrop(point, point + burst, math.max(4, scale * (0.21 + i % 3 * 0.08)), tint, 0.26 + i % 3 * 0.07, true)
+		wave.Completed:Once(function() ring:Destroy() end)
+		wave:Play()
+		TweenService:Create(stroke, TweenInfo.new(0.32), { Transparency = 1 }):Play()
+		local beads = math.min(if UserInputService.TouchEnabled then 4 else 8 + math.min(chain - 1, 4), limit - count - 5)
+		for i = 1, beads do
+			local angle = i * math.pi * 2 / beads + chain * 0.5
+			local burst = Vector2.new(math.cos(angle), math.sin(angle)) * scale * (1.6 + i % 3 * 0.52)
+			local tint = if i % 3 == 0 then Palette.Paper else color
+			gelDrop(point, point + burst, math.max(4, scale * (0.21 + i % 3 * 0.08)), tint, 0.26 + i % 3 * 0.07, true)
+		end
 	end
 	local pop = label("TextLabel", "MergePop", if cleared then "MAX CLEAR +100" elseif chain > 1 then "CHAIN x" .. chain else "POP!", effects)
 	pop.TextColor3 = color
@@ -981,6 +1037,12 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 	pop.Size = UDim2.fromOffset(120, 27)
 	pop.Position = UDim2.fromOffset(point.X, point.Y)
 	pop.ZIndex = 5
+	if reduced then
+		task.delay(0.55, function()
+			pop:Destroy()
+		end)
+		return
+	end
 	if chain > 1 then
 		point -= Vector2.new(0, 21)
 		pop.Position = UDim2.fromOffset(point.X, point.Y)
@@ -993,6 +1055,28 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 	end)
 	tween:Play()
 end)
+
+local function applySound(preview)
+	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
+	audio:setVolume(Settings.Sound[sound])
+	if preview and isPickerOpen() then
+		audio:play("menu")
+	end
+end
+applySound(false)
+board:GetAttributeChangedSignal("SoundLevel"):Connect(function() applySound(true) end)
+local function refreshMotion()
+	if reduceEffects() then
+		reveal:cancel()
+		effects:ClearAllChildren()
+		table.clear(pixelMerges)
+	end
+	if isPickerOpen() then
+		updateClub()
+	end
+end
+board:GetAttributeChangedSignal("ReducedEffects"):Connect(refreshMotion)
+GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(refreshMotion)
 
 local hudQueued = false
 board.AttributeChanged:Connect(function()
@@ -1064,7 +1148,8 @@ RunService.RenderStepped:Connect(function(dt)
 		return
 	end
 	local now = os.clock()
-	local mood = if now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
+	local reduced = reduceEffects()
+	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
 		mascotMood = mood
 		for _, eye in ipairs(mascotEyes) do
@@ -1101,7 +1186,7 @@ RunService.RenderStepped:Connect(function(dt)
 		lcdElapsed = lcdStep
 	end
 	for source, view in pairs(eggViews) do
-		local position, widthScale, heightScale, angle, ripple = view.gel:render(source.Position, dt, now, project, not useLCD)
+		local position, widthScale, heightScale, angle, ripple = view.gel:render(source.Position, dt, now, project, not useLCD, reduced)
 		local point = project(Vector2.new(position.X, position.Y))
 		if drawLCD or not useLCD then
 			view.mark.Position = UDim2.fromOffset(point.X, point.Y)
@@ -1155,7 +1240,7 @@ end)
 layout()
 updateHud()
 task.delay(1.5, function()
-	if (board:GetAttribute("Drops") or 0) == 0 then
+	if not reduceEffects() and (board:GetAttribute("Drops") or 0) == 0 then
 		TweenService:Create(rail, TweenInfo.new(0.38, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 1, true),
 			{ BackgroundColor3 = Palette.Shell }):Play()
 	end

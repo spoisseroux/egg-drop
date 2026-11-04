@@ -50,16 +50,16 @@ local function pose(layerPart, transform, scale)
 	layerPart.mesh.Scale = scale
 end
 
-function Jelly:render(position, dt, now)
+function Jelly:render(position, dt, now, _, _, reduced)
 	self.age += dt
-	local squeeze = self.strength * math.exp(-5.7 * self.age) * math.cos(self.age * 19)
-	local breathe = math.sin(now * 2.1 + self.phase) * 0.014
+	local squeeze = if reduced then 0 else self.strength * math.exp(-5.7 * self.age) * math.cos(self.age * 19)
+	local breathe = if reduced then 0 else math.sin(now * 2.1 + self.phase) * 0.014
 	local width, height = 1 + squeeze * 0.55 - breathe, 1 - squeeze + breathe
 	local r = self.radius
 	local axis = Vector3.new(self.axis.X, self.axis.Y, 0)
 	local center = position - axis * (r * squeeze * 0.7)
-	local turn = math.atan2(-self.axis.X, self.axis.Y)
-	local tilt = math.sin(self.age * 24) * math.exp(-6 * self.age) * self.strength * 0.4
+	local turn = if reduced then 0 else math.atan2(-self.axis.X, self.axis.Y)
+	local tilt = if reduced then 0 else math.sin(self.age * 24) * math.exp(-6 * self.age) * self.strength * 0.4
 	local transform = CFrame.new(center) * CFrame.Angles(0, 0, turn + tilt)
 	local diameter = r * 2
 	pose(self.rim, transform, Vector3.new(width, height, 0.74) * diameter)

@@ -10,8 +10,10 @@ work toward Puddle, Wick, and Orbit. Use the pet journal to choose a
 companion and **Open deck** to resume the same tray.
 Other players in the lounge can see your handheld's live display.
 Use **Customize** in either view to preview and equip a shell and sticker.
+Open **Customize → Club** for Pocket Trials, SFX volume, and reduced motion.
+Finish all three trials during regular play to earn the Club sticker.
 Published servers save pet ownership, hatch charge, personal best,
-companion, and the deck's appearance. Studio
+companion, trial completion, settings, and the deck's appearance. Studio
 uses an in-memory profile for each play session.
 Sustained overflow ends the round. **Try again** starts a fresh tray and
 score. Hatch charge and collection progress carry over. See the

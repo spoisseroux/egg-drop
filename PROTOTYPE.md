@@ -9,7 +9,7 @@ Start a new session on the board so the first action can be a drop. The
 lounge unlocks after Pip hatches. During the session, the player chooses
 when to move between the two views. A returning player starts with a fresh
 tray and keeps their unlocked pets, hatch charge, personal best, companion,
-and equipped deck appearance in a published game.
+trial completion, settings, and equipped deck appearance in a published game.
 
 ## How to play
 
@@ -37,7 +37,8 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
 | Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |
-| Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Cancel restores the equipped look. |
+| Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Close restores the equipped look. |
+| Club | Three replay trials, SFX volume, and motion settings | Regular board play earns trial completions. The server unlocks the Club sticker after all three. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |
 
 ## Audio
@@ -48,6 +49,28 @@ from its local content folder. Published playback needs asset IDs in
 `BoardAudio.lua`. Three score auditions and their synth scripts live under
 [`assets/concepts/music`](assets/concepts/music). The earlier audition has
 Window Seat at 0:00 and Paper Moon at 0:55. Pocket Apricot is a separate draft.
+
+In **Customize → Club**, cycle SFX between Full, Quiet, and Off. Motion Low
+removes decorative jelly wobble, moving merge bursts, hatch animation,
+shutters, and the lounge greeting camera. Roblox's Reduce Motion setting
+also enables this mode. Egg movement, marks, and scoring stay visible.
+
+## Pocket Trials
+
+Chain three merges, score 250 in a round, and merge two tier V jellies.
+Each goal can be earned in a different round. The Club tab shows your best
+chain in the current round and its score until those goals are earned.
+Completed goals survive retries. The reward appears in the Sticker tab.
+
+Studio verification covered a two-drop triple chain and Pip hatch with
+both motion settings, all three trials and all four pets through ordinary
+drops, the locked and earned sticker paths, and the trip to the lounge
+and back. A sustained overflow fixture verified that retry resets the
+round while preserving the best score, collection, and settings. A
+profile fixture checked reload and concurrent updates using Studio's
+in-memory store. The Club panel kept 44 px controls in a shortened
+landscape viewport. Published saves and physical phone controls remain
+to be tested.
 
 ## Deck customization
 

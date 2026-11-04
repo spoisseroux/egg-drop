@@ -55,7 +55,7 @@ function Sprite:impact(normal, speed)
 	self.age = 0
 end
 
-function Sprite:render(position, dt, now, project, drawSprite)
+function Sprite:render(position, dt, now, project, drawSprite, reduced)
 	self.age += dt
 	local delta = position - self.position
 	self.position = self.position:Lerp(position, 1 - math.exp(-34 * dt))
@@ -66,10 +66,13 @@ function Sprite:render(position, dt, now, project, drawSprite)
 		else 0
 	local squeeze = wave * math.cos(self.age * 17) + floorSqueeze - stretch
 	local breathe = math.sin(now * 2.4 + self.phase) * 0.017
+	if reduced then
+		wave, squeeze, breathe = 0, 0, 0
+	end
 	local offset = self.axis * self.radius * squeeze * 0.82
 	local center = self.position - Vector3.new(offset.X, offset.Y, 0)
 	local height = math.clamp(1 - squeeze + breathe, 0.56, 1.48)
-	local angle = math.atan2(self.axis.X, self.axis.Y) + math.sin(self.age * 19) * wave * 0.44
+	local angle = if reduced then 0 else math.atan2(self.axis.X, self.axis.Y) + math.sin(self.age * 19) * wave * 0.44
 	if drawSprite then
 		local point, pixels = project(Vector2.new(center.X, center.Y))
 		local diameter = self.radius * pixels * 2

@@ -3,6 +3,8 @@ local RunService = game:GetService("RunService")
 local Themes = require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 local Stickers = require(game:GetService("ReplicatedStorage").Shared.DeckStickers)
 local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
+local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 
 local Progress = {}
 local pending = {}
@@ -39,6 +41,7 @@ function Progress.load(userId)
 	end
 	record = if type(record) == "table" then record else {}
 	local rank = rankOf(record)
+	local trials = Trials.mask(record.trials)
 	local companion = Pets.byId[record.companionId]
 	return {
 		key = key,
@@ -47,7 +50,10 @@ function Progress.load(userId)
 		bestScore = bestOf(record),
 		companionId = if companion and companion.index <= rank then companion.id elseif rank > 0 then Pets[1].id else nil,
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
-		sticker = if type(record.sticker) == "string" and Stickers.canEquip(record.sticker, rank) then record.sticker else Stickers.Default,
+		sticker = if type(record.sticker) == "string" and Stickers.canEquip(record.sticker, rank, trials) then record.sticker else Stickers.Default,
+		trials = trials,
+		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
+		reduced = record.reduced == true,
 		loadFailed = not success,
 	}
 end
@@ -60,6 +66,8 @@ local function flush(profile)
 	local rank, charge, best = profile.earnedRank, profile.earnedCharge, profile.earnedBest
 	local theme, sticker, themeAt = profile.theme, profile.sticker, profile.themeAt
 	local companionId, companionAt = profile.companionId, profile.companionAt
+	local earnedTrials = profile.earnedTrials
+	local soundChange, motionChange = profile.soundChange, profile.motionChange
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
 		local previousRank = rankOf(record)
@@ -69,6 +77,22 @@ local function flush(profile)
 		if best then
 			record.bestScore = math.max(best, bestOf(record))
 		end
+		if earnedTrials then
+			record.trials = bit32.bor(Trials.mask(record.trials), earnedTrials)
+		end
+		local function mergeSetting(key, change)
+			if not change then
+				return
+			end
+			local at, source = key .. "At", key .. "Writer"
+			local previousAt = if type(record[at]) == "number" then record[at] else 0
+			local previousWriter = if type(record[source]) == "string" then record[source] else ""
+			if change.at > previousAt or (change.at == previousAt and writer >= previousWriter) then
+				record[key], record[at], record[source] = change.value, change.at, writer
+			end
+		end
+		mergeSetting("sound", soundChange)
+		mergeSetting("reduced", motionChange)
 		local previousTime = if type(record.themeAt) == "number" then record.themeAt else 0
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
 		if themeAt and (themeAt > previousTime or (themeAt == previousTime and writer >= previousWriter)) then
@@ -108,9 +132,36 @@ local function flush(profile)
 	if companionAt == profile.companionAt then
 		profile.companionAt = nil
 	end
-	if not profile.earnedRank and not profile.earnedBest and not profile.themeAt and not profile.companionAt then
+	if earnedTrials == profile.earnedTrials then
+		profile.earnedTrials = nil
+	end
+	if soundChange == profile.soundChange then
+		profile.soundChange = nil
+	end
+	if motionChange == profile.motionChange then
+		profile.motionChange = nil
+	end
+	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt
+		or profile.earnedTrials or profile.soundChange or profile.motionChange) then
 		pending[profile] = nil
 	end
+end
+
+function Progress.recordTrials(profile, chain, score, cleared)
+	local earned = Trials.earned(profile.trials, chain, score, cleared)
+	if earned == profile.trials then
+		return
+	end
+	profile.trials = earned
+	profile.earnedTrials = earned
+	pending[profile] = true
+end
+
+function Progress.setSetting(profile, key, value)
+	local changeKey = if key == "sound" then "soundChange" else "motionChange"
+	profile[key] = value
+	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }
+	pending[profile] = true
 end
 
 function Progress.equipCompanion(profile, pet)

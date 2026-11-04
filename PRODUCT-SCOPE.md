@@ -67,8 +67,8 @@ Astra's code and design review, and the Roblox platform references below.
 | Stage | Scope |
 |---|---|
 | Replayable build | Scored rounds, five tiers with a max-tier clear, persistent personal best and hatch progress, four pets, journal, companion display, earned Wick sticker, and Pocket Club stations. |
-| Collection alpha | Finish each family's hatch and idle polish. Add a few authored board challenges and pet milestones. Test the soft-body wedge. Make the journal and deck unlocks easier to discover. |
-| Private release candidate | Add audio asset IDs and accessible settings. Check the published save path, replica load, input focus, orientation, and physical phones. Instrument the first-session funnel and replay milestones. |
+| Collection alpha | Pocket Trials, the Club sticker, and SFX and motion settings are playable in Studio. Finish pet animation polish, test the soft-body wedge, and make unlocks easier to discover. |
+| Private release candidate | Add audio asset IDs. Check the published save path, replica load, input focus, orientation, and physical phones. Instrument the first-session funnel and replay milestones. |
 | Public release | Validate the first session with fresh players, then choose a sustainable cadence of pet and board content. Use the existing roster concepts as a production backlog. |
 | Expansion | Consider additional cosmetic slots, family variants, friend challenges, and events. Evaluate an economy, trading, or global boards separately when they solve a demonstrated player need. |
 

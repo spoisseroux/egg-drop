@@ -61,7 +61,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen)
+function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects)
 	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
@@ -109,6 +109,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		petIndex = 1,
 		companions = RoomCompanions.new(progress.Parent, createPet),
 	}, Room)
+	self.reduceEffects = reduceEffects
 	collection.Activated:Connect(function()
 		if self.mode == "Room" and not self.busy and not overlayOpen() then
 			onCollection()
@@ -118,9 +119,12 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.busy or overlayOpen() or not self.pet then
 			return
 		end
-		self.pet:greet()
 		audio:play(Pets[self.petIndex].cue)
+		if reduceEffects() then
+			return
+		end
 		local camera = workspace.CurrentCamera
+		self.pet:greet()
 		if camera then
 			if self.cameraTween then
 				self.cameraTween:Cancel()
@@ -184,7 +188,9 @@ function Room:showPet(index)
 	end
 	local pet = Pets[self.petIndex]
 	self.pet = createPet(workspace, Vector3.new(0, 4.23, -5), pet)
-	self.pet:greet()
+	if not self.reduceEffects() then
+		self.pet:greet()
+	end
 	self.heading.Text = string.format("%s  ·  %d/%d", Pets[self.petIndex].name, owned, #Pets)
 end
 
@@ -234,14 +240,19 @@ function Room:setMode(mode)
 	self.busy = true
 	task.spawn(function()
 		while self.mode ~= self.target do
-			self.top.Visible, self.bottom.Visible = true, true
-			tween(self.bottom, 0.23, { Size = UDim2.fromScale(1, 0.51) })
-			tween(self.top, 0.23, { Size = UDim2.fromScale(1, 0.51) }).Completed:Wait()
+			local animate = not self.reduceEffects()
+			if animate then
+				self.top.Visible, self.bottom.Visible = true, true
+				tween(self.bottom, 0.23, { Size = UDim2.fromScale(1, 0.51) })
+				tween(self.top, 0.23, { Size = UDim2.fromScale(1, 0.51) }).Completed:Wait()
+			end
 			self.mode = self.target
 			self:show(self.mode)
 			self.audio:play(if self.mode == "Room" then Pets[self.petIndex].cue else "menu")
-			tween(self.bottom, 0.25, { Size = UDim2.fromScale(1, 0) })
-			tween(self.top, 0.25, { Size = UDim2.fromScale(1, 0) }).Completed:Wait()
+			if animate then
+				tween(self.bottom, 0.25, { Size = UDim2.fromScale(1, 0) })
+				tween(self.top, 0.25, { Size = UDim2.fromScale(1, 0) }).Completed:Wait()
+			end
 			self.top.Visible, self.bottom.Visible = false, false
 		end
 		self.busy = false
