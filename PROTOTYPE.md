@@ -1,7 +1,8 @@
 # Egg Drop prototype
 
 Pocket Deck is the in-world handheld. Stone is the default shell, with
-warm gray trim and cream buttons. A player who opens the deck
+graphite plastic, a cold silver rim, a cyan power light, and an amber drop
+button. A player who opens the deck
 stays in the lounge as an avatar holding the deck. Nearby players can see
 the eggs move on its miniature display. Each player controls their own tray.
 
@@ -73,6 +74,15 @@ landscape viewport. Published saves and physical phone controls remain
 to be tested.
 
 ## Deck customization
+
+Astra's art direction uses hardware shapes on the deck, sparse blue LCD
+pixels in the tray, and dark panels with cyan status and amber rewards.
+The original pixel egg mark ties the case and the Club reward together.
+Trial goals use graphic badges, progress bars, and written completion.
+Each pet has a distinct pixel portrait shared by the journal and hatchery.
+The reveal adds a stepped crack, shell chips, and rays. Reduced motion
+keeps the same finished composition visible immediately. These graphics
+are built into the UI and load without uploaded images.
 
 Choose Stone, Ice, Brick, or Moss from Customize on the board or in the
 lounge. Pick Star, Glitch, Seed, or Blank for the front sticker slot.

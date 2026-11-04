@@ -1,10 +1,9 @@
-local Palette = require(script.Parent.DeckPalette)
-
 return {
 	Default = "stone",
 	Order = { "stone", "ice", "brick", "moss" },
 	ById = {
-		stone = { name = "Stone", shell = Palette.Shell, trim = Palette.Rim, buttons = Palette.Primary },
+		stone = { name = "Stone", shell = Color3.fromHex("#303B49"), trim = Color3.fromHex("#65768A"),
+			buttons = Color3.fromHex("#FFCA47") },
 		ice = { name = "Ice", shell = Color3.fromHex("#334652"), trim = Color3.fromHex("#81A5B4"),
 			buttons = Color3.fromHex("#B8D9E0") },
 		brick = { name = "Brick", shell = Color3.fromHex("#603A32"), trim = Color3.fromHex("#C57C64"),

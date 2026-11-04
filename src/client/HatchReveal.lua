@@ -1,5 +1,6 @@
 local TweenService = game:GetService("TweenService")
 local Palette = require(game:GetService("ReplicatedStorage").Shared.DeckPalette)
+local Art = require(script.Parent.DeckArt)
 
 local Reveal = {}
 Reveal.__index = Reveal
@@ -59,17 +60,21 @@ function Reveal:start(valid, cue, color)
 			end
 		end)
 	end
-	local center = UDim2.new(0.5, 0, 0, 96)
+	local center = UDim2.new(0.5, 0, 0, 108)
 	local egg = shape(self.layer, "HatchEgg", color, center, UDim2.fromOffset(58, 68), 13)
 	local outline = Instance.new("UIStroke")
-	outline.Color, outline.Thickness = Palette.Ink, 2
+	outline.Color, outline.Thickness = Art.Silver, 2
 	outline.Parent = egg
 	shape(egg, "Glint", Palette.Paper, UDim2.fromScale(0.31, 0.25), UDim2.fromOffset(18, 7), 14).Rotation = -24
+	local crack = Art.pixels(egg, "Crack", { "..XX", ".XX.", ".X..", "XX..", ".XX.", "..X." },
+		{ X = Art.Ink }, 3, UDim2.new(0.5, -6, 0.45, 0), 15)
+	crack.Visible = false
 	self.scale.Scale = 0.05
 	self.pet.Interactable = false
 	self.audio:play("hatch_rise")
 	self:playTween(egg, 0.17, { Size = UDim2.fromOffset(69, 54), Rotation = -11 })
 	after(0.17, function()
+		crack.Visible = true
 		self:playTween(egg, 0.18, { Size = UDim2.fromOffset(55, 72), Rotation = 9 })
 	end)
 	after(0.36, function()
@@ -79,24 +84,31 @@ function Reveal:start(valid, cue, color)
 		local ring = shape(self.layer, "HatchRing", Palette.Amber, center, UDim2.fromOffset(45, 45), 12)
 		ring.BackgroundTransparency = 1
 		local glow = Instance.new("UIStroke")
-		glow.Color, glow.Thickness = Palette.Primary, 3
+		glow.Color, glow.Thickness = Art.Amber, 2
 		glow.Parent = ring
-		self:playTween(ring, 0.48, { Size = UDim2.fromOffset(146, 96) })
+		self:playTween(ring, 0.48, { Size = UDim2.fromOffset(176, 94) })
 		self:playTween(glow, 0.48, { Transparency = 1 })
-		for _, side in ipairs({ -1, 1 }) do
-			local shard = shape(self.layer, "ShellHalf", color, center + UDim2.fromOffset(side * 10, 4),
-				UDim2.fromOffset(26, 35), 13)
+		for index = 1, 6 do
+			local angle = index * math.pi / 3
+			local x, y = math.cos(angle), math.sin(angle)
+			local shard = Art.frame(self.layer, "ShellChip", color, center + UDim2.fromOffset(x * 13, y * 13),
+				UDim2.fromOffset(8 + index % 3 * 3, 8), 13)
+			shard.AnchorPoint = Vector2.new(0.5, 0.5)
+			shard.Rotation = math.deg(angle)
 			self:playTween(shard, 0.44, {
-				Position = center + UDim2.fromOffset(side * 78, 24), Rotation = side * 65, BackgroundTransparency = 1,
+				Position = center + UDim2.fromOffset(x * 83, y * 39), Rotation = math.deg(angle) + 65,
+				BackgroundTransparency = 1,
 			})
 		end
 		for i = 1, 8 do
 			local angle = i * math.pi / 4
-			local color = ({ Palette.Ember, Palette.Primary, Palette.Amber, Palette.Lime })[i % 4 + 1]
-			local fleck = shape(self.layer, "SugarFleck", color, center, UDim2.fromOffset(9, 9), 12)
+			local tint = if i % 2 == 0 then Art.Amber else Art.Cyan
+			local fleck = Art.frame(self.layer, "PixelRay", tint, center, UDim2.fromOffset(9, 3), 12)
+			fleck.AnchorPoint = Vector2.new(0.5, 0.5)
+			fleck.Rotation = math.deg(angle)
 			self:playTween(fleck, 0.52, {
 				Position = center + UDim2.fromOffset(math.cos(angle) * 83, math.sin(angle) * 44),
-				Size = UDim2.fromOffset(3, 3), BackgroundTransparency = 1, Rotation = 110,
+				Size = UDim2.fromOffset(15, 2), BackgroundTransparency = 1,
 			})
 		end
 	end)

@@ -24,6 +24,8 @@ local PetJournal = require(script.PetJournal)
 local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
+local Art = require(script.DeckArt)
+local Portrait = require(script.PetPortrait)
 local audio = Audio.new()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
@@ -67,12 +69,13 @@ local shell = make("Frame", "CartridgeShell", {
 }, backdrop)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
 local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 2 }, shell)
-local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Palette.Ink, BorderSizePixel = 0 }, backdrop)
+local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Art.Ink, BorderSizePixel = 0 }, backdrop)
 make("UICorner", "LensCurve", { CornerRadius = UDim.new(0, 12) }, bezel)
 local bezelRim = make("UIStroke", "InsetTrim", { Color = Palette.Rim, Thickness = 2 }, bezel)
+Art.deck(backdrop, shell, bezel)
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
-	BackgroundColor3 = Color3.fromHex("#222A24"), BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromHex("#192735"), BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
 }, backdrop)
@@ -122,30 +125,37 @@ for _, sign in ipairs({ -1, 1 }) do
 end
 
 local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
-title.Font = Enum.Font.Code
-title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.TextSize = 15
+title.TextColor3 = Art.Silver
+Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Muted, 10)
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
-	BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
+	BackgroundColor3 = Art.Cyan, BorderSizePixel = 0,
 }, shell)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, power)
+Art.stroke(power, Art.Cyan, 0.65, 3)
 local deckSticker = label("TextLabel", "DeckSticker", "", backdrop, Palette.Primary)
 deckSticker.Size = UDim2.fromOffset(24, 24)
 deckSticker.Rotation = -11
 make("UICorner", "StickerCurve", { CornerRadius = UDim.new(0, 5) }, deckSticker)
-local rail = label("TextButton", "AimRail", "", backdrop, Palette.Ink)
+local rail = label("TextButton", "AimRail", "", backdrop, Art.Ink)
 rail.AutoButtonColor = false
 rail.Font = Enum.Font.Code
 rail.TextColor3 = Palette.Paper
 rail.Selectable = false
 make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
+Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
 readout.Font = Enum.Font.Code
+readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
+local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
+	UDim2.fromOffset(40, 12), Art.Muted, 10)
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
 bestReadout.Font = Enum.Font.Code
 bestReadout.TextXAlignment = Enum.TextXAlignment.Left
-bestReadout.TextColor3 = Color3.fromHex("#CBD3B0")
+bestReadout.TextColor3 = Art.Muted
 bestReadout.TextTruncate = Enum.TextTruncate.AtEnd
 local nextReadout = label("TextLabel", "NextReadout", "", rail)
 nextReadout.Font = Enum.Font.Code
@@ -154,14 +164,14 @@ local mascot = make("Frame", "PixelPip", {
 	Position = UDim2.new(0, 10, 0.5, -10), Size = UDim2.fromOffset(21, 21), BackgroundTransparency = 1,
 }, rail)
 local mascotEyes = {}
-local mascotInk = Color3.fromHex("#CDD8A3")
+local mascotInk = Art.Cyan
 for row, pixels in ipairs({ "..+.+..", "...+...", "..###..", ".#####.", ".#o#o#.", ".#####.", "..###.." }) do
 	for column = 1, #pixels do
 		local symbol = pixels:sub(column, column)
 		if symbol ~= "." then
 			local pixel = make("Frame", "Pixel", {
 				Position = UDim2.fromOffset((column - 1) * 3, (row - 1) * 3), Size = UDim2.fromOffset(3, 3),
-				BorderSizePixel = 0, BackgroundColor3 = if symbol == "+" then Palette.Lime else mascotInk,
+				BorderSizePixel = 0, BackgroundColor3 = if symbol == "+" then Art.Silver else mascotInk,
 			}, mascot)
 			if symbol == "o" then
 				table.insert(mascotEyes, pixel)
@@ -180,16 +190,19 @@ make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 
 local status = label("TextLabel", "Status", "", backdrop)
 status.TextWrapped = true
+status.TextColor3 = Art.Silver
 local meter = make("Frame", "HatchTrack", {
-	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
+	BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 }, backdrop)
+Art.corner(meter, 3)
+Art.stroke(meter, Art.Line)
 local segments = {}
 local maxCharge = 12
 for index = 1, maxCharge do
 	segments[index] = make("Frame", "Cell", {
 		Position = UDim2.new((index - 1) / maxCharge, 1, 1, -6),
 		Size = UDim2.new(1 / maxCharge, -2, 0, 4),
-		BackgroundColor3 = Palette.Rim, BorderSizePixel = 0,
+		BackgroundColor3 = Art.Line, BorderSizePixel = 0,
 	}, meter)
 end
 local meterText = label("TextLabel", "MeterText", "", meter)
@@ -212,15 +225,19 @@ local function utilityButton(name, titleText)
 	local button = label("TextButton", name, "", backdrop)
 	local cap = make("Frame", "Cap", {
 		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 3),
-		Size = UDim2.fromOffset(48, 13), BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
+		Size = UDim2.fromOffset(50, 14), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 	}, button)
 	make("UICorner", "CapCurve", { CornerRadius = UDim.new(1, 0) }, cap)
 	local edge = make("UIStroke", "Lip", { Color = Palette.Rim, Thickness = 1 }, cap)
+	Art.shade(cap, 1, 0.6)
+	local inlay = Art.frame(cap, "Inlay", Art.Line, UDim2.fromOffset(9, 4), UDim2.new(1, -18, 0, 2))
+	Art.corner(inlay, 1)
 	local caption = label("TextLabel", "Caption", titleText, button)
 	caption.Position = UDim2.fromOffset(0, 20)
 	caption.Size = UDim2.new(1, 0, 0, 18)
 	caption.Font = Enum.Font.Code
 	caption.TextSize = 12
+	caption.TextColor3 = Art.Silver
 	button.MouseButton1Down:Connect(function()
 		cap.Position = UDim2.new(0.5, 0, 0, 5)
 	end)
@@ -240,26 +257,35 @@ local function hardwareButton(name, text, parent, color, width)
 	button.Size = UDim2.fromOffset(width, width)
 	button.Font = Enum.Font.Code
 	button.TextSize = 24
-	make("UICorner", "Cap", { CornerRadius = UDim.new(0, if width == 44 then 7 else 24) }, button)
+	button.ZIndex = 3
+	Art.button(button, if width == 44 then 7 else 24)
 	return button
 end
 local dpad = make("Frame", "DPad", {
 	Size = UDim2.fromOffset(94, 56), BackgroundTransparency = 1,
 }, hardware)
-local leftAim = hardwareButton("Left", "‹", dpad, Palette.Ink, 44)
-local rightAim = hardwareButton("Right", "›", dpad, Palette.Ink, 44)
+Art.corner(Art.frame(dpad, "RockerWell", Art.Ink, UDim2.fromOffset(-3, 5), UDim2.fromOffset(100, 51)), 9)
+local leftAim = hardwareButton("Left", "◀", dpad, Art.Raised, 44)
+local rightAim = hardwareButton("Right", "▶", dpad, Art.Raised, 44)
 leftAim.Position, rightAim.Position = UDim2.fromOffset(0, 8), UDim2.fromOffset(50, 8)
-leftAim.TextColor3, rightAim.TextColor3 = Palette.Paper, Palette.Paper
-local action = hardwareButton("Drop", "A", hardware, Palette.Primary, 48)
+leftAim.TextColor3, rightAim.TextColor3 = Art.Silver, Art.Silver
+leftAim.TextSize, rightAim.TextSize = 16, 16
+Art.corner(Art.frame(hardware, "DropWell", Art.Ink, UDim2.new(1, -51, 0, 1), UDim2.fromOffset(54, 53)), 27)
+local action = hardwareButton("Drop", "A", hardware, Art.Amber, 48)
+Art.stroke(action, Art.Ink, 0.14, 3)
+local aGlint = Art.frame(action, "Glint", Art.Silver, UDim2.fromOffset(14, 6), UDim2.fromOffset(20, 2))
+aGlint.BackgroundTransparency = 0.50
+Art.corner(aGlint, 1)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
 dropCaption.Size = UDim2.fromOffset(48, 16)
 dropCaption.Font = Enum.Font.Code
+dropCaption.TextColor3 = Art.Silver
 dropCaption.TextSize = 11
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(31, 26), BackgroundTransparency = 1 }, hardware)
 for index = 0, 3 do
 	local slot = make("Frame", "Vent", {
 		Size = UDim2.fromOffset(4, 23), Position = UDim2.fromOffset(index * 8, 2),
-		Rotation = 16, BorderSizePixel = 0, BackgroundColor3 = Palette.Ink,
+		Rotation = 16, BorderSizePixel = 0, BackgroundColor3 = Art.Ink,
 	}, vents)
 	make("UICorner", "Round", { CornerRadius = UDim.new(1, 0) }, slot)
 end
@@ -290,78 +316,57 @@ roomButton.Activated:Connect(function()
 	end
 end)
 local modal = make("Frame", "RoundCard", {
-	Active = true, Visible = false, BackgroundColor3 = Palette.Paper, BorderSizePixel = 0, ZIndex = 10,
+	Active = true, Visible = false, BorderSizePixel = 0, ZIndex = 10,
 	AnchorPoint = Vector2.new(0.5, 0.5),
 }, backdrop)
-make("UICorner", "CardCurve", { CornerRadius = UDim.new(0, 18) }, modal)
-make("UIStroke", "CardRim", { Color = Palette.Primary, Thickness = 3 }, modal)
+Art.panel(modal, 12, Art.Amber)
+local modalTag = Art.text(modal, "Channel", "", UDim2.fromOffset(12, 5),
+	UDim2.new(1, -24, 0, 16), Art.Amber, 11)
 local modalTitle = label("TextLabel", "Heading", "", modal)
-modalTitle.Position = UDim2.fromOffset(0, 6)
+modalTitle.Position = UDim2.fromOffset(0, 18)
 modalTitle.Size = UDim2.new(1, 0, 0, 35)
 modalTitle.Font = Enum.Font.GothamBold
 modalTitle.TextSize = 20
-modalTitle.TextColor3 = Palette.Ink
+modalTitle.TextColor3 = Art.Silver
 modalTitle.ZIndex = 11
-local pet = label("TextButton", "Pet", "▪ ᴗ ▪", modal, Color3.fromRGB(255, 224, 170))
-pet.AnchorPoint = Vector2.new(0.5, 0)
-pet.Position = UDim2.new(0.5, 0, 0, 63)
-pet.Size = UDim2.fromOffset(72, 67)
-pet.TextSize = 18
+local hatchStage = Art.frame(modal, "HatchStage", Art.Ink, UDim2.fromOffset(12, 55), UDim2.new(1, -24, 0, 108), 11)
+Art.corner(hatchStage, 7)
+Art.stroke(hatchStage, Art.Line)
+for _, side in ipairs({ -1, 1 }) do
+	for index = 1, 3 do
+		local spark = Art.frame(hatchStage, "StarTick", Art.Cyan,
+			UDim2.new(0.5, side * (48 + index * 9), 0, 24 + index * 14), UDim2.fromOffset(3 + index % 2, 2))
+		spark.BackgroundTransparency = 0.46
+	end
+end
+local pedestal = Art.frame(hatchStage, "Shadow", Art.Raised, UDim2.new(0.5, -34, 1, -15), UDim2.fromOffset(68, 6))
+Art.corner(pedestal, 3)
+local hatchIndex = Art.text(modal, "CollectionIndex", "", UDim2.fromOffset(12, 164),
+	UDim2.new(1, -24, 0, 18), Art.Muted, 11)
+local pet = label("TextButton", "Pet", "", modal)
+pet.AnchorPoint = Vector2.new(0.5, 0.5)
+pet.Position = UDim2.new(0.5, 0, 0, 108)
+pet.Size = UDim2.fromOffset(88, 88)
 pet.ZIndex = 14
 pet.AutoButtonColor = false
-make("UICorner", "Shell", { CornerRadius = UDim.new(0.45, 0) }, pet)
-make("UIStroke", "Outline", { Color = Palette.Rim, Thickness = 2 }, pet)
-local pipLeaves = {}
-for _, side in ipairs({ -1, 1 }) do
-	local leaf = make("Frame", "Leaf", {
-		BackgroundColor3 = Palette.Lime, BorderSizePixel = 0,
-		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, side * 7, 0, -1),
-		Size = UDim2.fromOffset(17, 9), Rotation = -side * 32, ZIndex = 15,
-	}, pet)
-	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, leaf)
-	table.insert(pipLeaves, leaf)
-end
-local shellHem = make("Frame", "ShellHem", {
-	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0, Position = UDim2.fromScale(0.10, 0.77),
-	Size = UDim2.fromScale(0.80, 0.22), ZIndex = 15,
-}, pet)
-local crest = make("Frame", "Crest", {
-	AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 2, 0, 2),
-	Size = UDim2.fromOffset(20, 30), Rotation = 24, BackgroundColor3 = Palette.Amber,
-	BorderSizePixel = 0, ZIndex = 15, Visible = false,
-}, pet)
-make("UICorner", "Curve", { CornerRadius = UDim.new(0, 8) }, crest)
-local orbitRing = make("Frame", "OrbitRing", {
-	AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.76),
-	Size = UDim2.new(1, 17, 0, 15), Rotation = -13, BackgroundTransparency = 1,
-	Visible = false, ZIndex = 15,
-}, pet)
-make("UICorner", "Curve", { CornerRadius = UDim.new(1, 0) }, orbitRing)
-make("UIStroke", "Orbit", { Color = Color3.fromHex("#806BBA"), Thickness = 3 }, orbitRing)
-make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, shellHem)
-local puddleTail = make("Frame", "DropletTail", {
-	BackgroundColor3 = Palette.JellyBlue, BorderSizePixel = 0,
-	Position = UDim2.new(1, -10, 0, -6), Size = UDim2.fromOffset(17, 26), Rotation = 28,
-	Visible = false, ZIndex = 15,
-}, pet)
-make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, puddleTail)
 local reveal = HatchReveal.new(modal, pet, audio)
 local modalNote = label("TextLabel", "Detail", "", modal)
 modalNote.Position = UDim2.new(0.06, 0, 0, 57)
 modalNote.Size = UDim2.new(0.88, 0, 0, 66)
 modalNote.TextWrapped = true
-modalNote.TextColor3 = Palette.Ink
+modalNote.TextColor3 = Art.Muted
 modalNote.ZIndex = 11
-local modalAction = label("TextButton", "Continue", "", modal, Palette.Primary)
-modalAction.Position = UDim2.new(0.09, 0, 1, -55)
+local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
+modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
 modalAction.ZIndex = 11
-local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, Palette.Panel)
-keepPlaying.Position = UDim2.new(0.52, 0, 1, -55)
+local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, Art.Raised)
+keepPlaying.Position = UDim2.new(0.52, 0, 1, -52)
 keepPlaying.Size = UDim2.new(0.43, 0, 0, 44)
 keepPlaying.ZIndex = 11
+keepPlaying.TextColor3 = Art.Silver
 for _, button in ipairs({ modalAction, keepPlaying }) do
-	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 9) }, button)
+	Art.button(button, 7)
 end
 local knownPets = board:GetAttribute("OwnedPets") or 0
 local hatchQueue = {}
@@ -561,7 +566,7 @@ local function updateHud()
 		if cell.Visible then
 			cell.Position = UDim2.new((index - 1) / cells, 1, 1, -6)
 			cell.Size = UDim2.new(1 / cells, -2, 0, 4)
-			cell.BackgroundColor3 = if index <= math.floor(filled * cells / target) then Palette.Amber else Palette.Rim
+			cell.BackgroundColor3 = if index <= math.floor(filled * cells / target) then Art.Amber else Art.Line
 		end
 	end
 	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
@@ -589,14 +594,16 @@ local function updateHud()
 		picker:close()
 	end
 	pet.Visible = showHatch == true and not over
+	hatchStage.Visible, hatchIndex.Visible = pet.Visible, pet.Visible
+	modalTag.Text = if over then "ROUND REPORT" else "POCKET HATCHERY"
 	modalNote.Visible = over == true
 	modalNote.Text = string.format("Round score   %d\nPersonal best   %d", score, best)
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
 		else "You hatched " .. (hatchName or "") .. "!"
-	readout.Text = if score > 0 then "SCORE " .. score else "EGG DROP"
+	readout.Text = tostring(score)
 	bestReadout.Text = "BEST " .. best
 	modalAction.Text = if over then "Try again" else "Meet " .. (hatchName or "")
-	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
+	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -52)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
 	if modal.Visible and not wasVisible and isGamepad(UserInputService:GetLastInputType()) then
@@ -612,18 +619,12 @@ local function updateHud()
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
 		revealedPet = hatchName
-		local puddle = hatchName == "Puddle"
-		local pip = hatchName == "Pip"
-		pet.BackgroundColor3 = hatchPet.color
-		pet.Size = if puddle then UDim2.fromOffset(84, 50) else UDim2.fromOffset(72, 67)
-		pet.Position = UDim2.new(0.5, 0, 0, if puddle then 75 else 63)
-		puddleTail.Visible = puddle
-		shellHem.Visible = pip
-		crest.Visible = hatchName == "Wick"
-		orbitRing.Visible = hatchName == "Orbit"
-		for _, leaf in ipairs(pipLeaves) do
-			leaf.Visible = pip
+		local oldPortrait = pet:FindFirstChild("Portrait")
+		if oldPortrait then
+			oldPortrait:Destroy()
 		end
+		Portrait.create(pet, hatchPet, 7, UDim2.fromScale(0.5, 0.5), 15)
+		hatchIndex.Text = string.format("PET %02d / %02d", hatchPet.index, #Pets)
 		local resetId = board:GetAttribute("ResetId")
 		if reduceEffects() then
 			reveal:cancel()
@@ -662,7 +663,7 @@ local function layout()
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
 	modal.Position = UDim2.fromScale(0.5, 0.49)
-	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 209)
+	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 236)
 	title.Position = UDim2.fromOffset(left, top + 1)
 	title.Size = UDim2.fromOffset(totalWidth, 23)
 	deckSticker.Position = UDim2.fromOffset(left + (if lateral then 52 else totalWidth * 0.47 - 12),
@@ -671,11 +672,12 @@ local function layout()
 	rail.Size = UDim2.fromOffset(width, 44)
 	local compact = width < 175
 	mascot.Visible = not compact
+	scoreCaption.Visible = width >= 290
 	local readoutLeft = if compact then 5 else 37
 	local readoutInset = if compact then -53 else -117
 	readout.Position = UDim2.fromOffset(readoutLeft, 3)
 	readout.Size = UDim2.new(1, readoutInset, 0, 21)
-	readout.TextSize = if compact then 10 else 14
+	readout.TextSize = if compact then 14 else 19
 	readout.TextTruncate = Enum.TextTruncate.AtEnd
 	bestReadout.Position = UDim2.fromOffset(readoutLeft, 23)
 	bestReadout.Size = UDim2.new(1, readoutInset, 0, 16)
@@ -1154,7 +1156,7 @@ RunService.RenderStepped:Connect(function(dt)
 		mascotMood = mood
 		for _, eye in ipairs(mascotEyes) do
 			eye.BackgroundColor3 = if mood == "blink" then mascotInk
-				elseif mood == "happy" then Palette.Amber else Palette.Ink
+				elseif mood == "happy" then Art.Amber else Art.Ink
 		end
 	end
 	local closest

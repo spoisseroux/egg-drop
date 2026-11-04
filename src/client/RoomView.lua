@@ -9,7 +9,7 @@ local PipVisual = require(script.Parent.PipVisual)
 local PuddleVisual = require(script.Parent.PuddleVisual)
 local BonusPetVisual = require(script.Parent.BonusPetVisual)
 local RoomCompanions = require(script.Parent.RoomCompanions)
-local Palette = require(ReplicatedStorage.Shared.DeckPalette)
+local Art = require(script.Parent.DeckArt)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 
 local Room = {}
@@ -44,14 +44,12 @@ local function button(parent, name, title, position, tint)
 	node.BackgroundColor3 = tint
 	node.BorderSizePixel = 0
 	node.Text = title
-	node.TextColor3 = Palette.Ink
+	node.TextColor3 = if tint == Art.Cyan then Art.Ink else Art.Silver
 	node.Font = Enum.Font.GothamMedium
 	node.TextSize = 14
 	node.ZIndex = 9
-	local round = Instance.new("UICorner")
-	round.CornerRadius = UDim.new(0, 9)
-	round.Parent = node
 	node.Parent = parent
+	Art.button(node, 6)
 	return node
 end
 
@@ -62,38 +60,40 @@ local function tween(object, seconds, properties)
 end
 
 function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects)
-	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Palette.Ink, 8)
+	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Art.Surface, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 1)
 	controls.Visible = false
+	Art.panel(controls, 10)
 	local max = Instance.new("UISizeConstraint")
 	max.MaxSize = Vector2.new(430, 110)
 	max.Parent = controls
 	local heading = Instance.new("TextLabel")
 	heading.Name = "Heading"
 	heading.Size = UDim2.new(0.56, 0, 0, 44)
-	heading.Position = UDim2.fromScale(0.025, 0)
+	heading.Position = UDim2.fromScale(0.045, 0)
 	heading.BackgroundTransparency = 1
 	heading.Text = "Pip’s lounge"
-	heading.TextColor3 = Palette.Paper
+	heading.TextColor3 = Art.Silver
+	heading.TextXAlignment = Enum.TextXAlignment.Left
 	heading.TextSize = 17
 	heading.Font = Enum.Font.GothamBold
 	heading.ZIndex = 9
 	heading.Parent = controls
-	local collection = button(controls, "Collection", "Pet journal", UDim2.new(0.60, 0, 0, 2), Palette.Panel)
+	local collection = button(controls, "Collection", "Pet journal", UDim2.new(0.60, 0, 0, 3), Art.Raised)
 	collection.Size = UDim2.new(0.375, 0, 0, 44)
-	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Palette.Panel)
+	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Art.Raised)
 	greet.Size = UDim2.new(0.29, 0, 0, 44)
-	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Palette.Primary)
+	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Art.Cyan)
 	leave.Size = UDim2.new(0.33, 0, 0, 44)
-	local customize = button(controls, "Customize", "Customize", UDim2.new(0.685, 0, 0, 51), Palette.Panel)
+	local customize = button(controls, "Customize", "Customize", UDim2.new(0.685, 0, 0, 51), Art.Raised)
 	customize.Size = UDim2.new(0.29, 0, 0, 44)
 
-	local top = frame(gui, "ShutterTop", UDim2.fromScale(1, 0), UDim2.fromScale(0, 0), Palette.Backdrop, 50)
-	local bottom = frame(gui, "ShutterBottom", UDim2.fromScale(1, 0), UDim2.fromScale(0, 1), Palette.Backdrop, 50)
+	local top = frame(gui, "ShutterTop", UDim2.fromScale(1, 0), UDim2.fromScale(0, 0), Art.Backdrop, 50)
+	local bottom = frame(gui, "ShutterBottom", UDim2.fromScale(1, 0), UDim2.fromScale(0, 1), Art.Backdrop, 50)
 	bottom.AnchorPoint = Vector2.new(0, 1)
 	top.Visible, bottom.Visible = false, false
 	top.Active, bottom.Active = true, true
-	local strip = frame(top, "Scanline", UDim2.new(1, 0, 0, 2), UDim2.fromScale(0, 1), Palette.Primary, 51)
+	local strip = frame(top, "Scanline", UDim2.new(1, 0, 0, 2), UDim2.fromScale(0, 1), Art.Cyan, 51)
 	strip.AnchorPoint = Vector2.new(0, 1)
 
 	local self = setmetatable({
