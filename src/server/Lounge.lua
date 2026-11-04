@@ -86,7 +86,6 @@ local function paintDevice(device, themeId, stickerId)
 	device.Shell.Color = theme.shell
 	device.Bezel.Color = theme.trim
 	device.Confirm.Color = theme.buttons
-	device.Action.Color = theme.buttons
 	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)
 end
 
@@ -157,11 +156,11 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 		mount * CFrame.new(0, 0.2, -0.109), Palette.Rim)
 	local screen = attach(device, torso, "Screen", Vector3.new(0.84, 0.87, 0.08),
 		mount * CFrame.new(0, 0.2, -0.12), Palette.Tray)
-	attach(device, torso, "DPad", Vector3.new(0.26, 0.08, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Palette.Ink)
-	attach(device, torso, "DPadStem", Vector3.new(0.08, 0.24, 0.07), mount * CFrame.new(-0.26, -0.43, -0.12), Palette.Ink)
+	attach(device, torso, "Left", Vector3.new(0.105, 0.10, 0.07), mount * CFrame.new(-0.34, -0.43, -0.12), Palette.Ink)
+	attach(device, torso, "Right", Vector3.new(0.105, 0.10, 0.07), mount * CFrame.new(-0.20, -0.43, -0.12), Palette.Ink)
 	attach(device, torso, "Confirm", Vector3.new(0.13, 0.13, 0.07), mount * CFrame.new(0.29, -0.39, -0.12), Palette.Primary)
-	attach(device, torso, "Action", Vector3.new(0.12, 0.12, 0.07), mount * CFrame.new(0.12, -0.5, -0.12),
-		Palette.Amber)
+	attach(device, torso, "Customize", Vector3.new(0.15, 0.05, 0.04), mount * CFrame.new(-0.12, -0.58, -0.12), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.15, 0.05, 0.04), mount * CFrame.new(0.12, -0.58, -0.12), Palette.Ink)
 	paintDevice(device, themeId, stickerId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"

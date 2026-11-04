@@ -2,7 +2,7 @@
 
 Run `rojo serve --port 34873` and connect the Rojo Studio plugin to that
 port. In Play mode, aim with the Pocket Deck's D-pad and press A to drop.
-Press B to center, or drag across the screen bar and release to drop.
+You can also drag across the screen bar and release to drop.
 On a keyboard, aim with the arrows or A/D and drop with Space.
 A controller uses D-pad left/right and A.
 Merges charge the hatch meter. Hatch Pip at 6 points to unlock the lounge,
@@ -12,7 +12,9 @@ Other players in the lounge can see your handheld's live display.
 Use **Customize** in either view to preview and equip a shell and sticker.
 Published servers save pet ownership and the deck's appearance. Studio
 uses an in-memory profile for each play session.
-Sustained overflow ends the round with a retry button. See
+Sustained overflow ends the round. **Try again** starts a fresh tray and
+clears the current hatch charge while keeping earned pets and the deck's
+appearance. See
 [the prototype rundown](PROTOTYPE.md) for the full flow and pet concepts.
 
 Generate the original sound bank with `python scripts/synth_egg_drop.py`.

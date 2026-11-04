@@ -12,8 +12,8 @@ tray and keeps their unlocked pets and equipped shell in a published game.
 
 ## How to play
 
-Aim with the D-pad and press A to drop, or drag across the display bar and
-release. B centers the aim. On a keyboard, arrows or A/D aim and Space
+Aim with the left and right buttons and press A to drop, or drag across the
+display bar and release. On a keyboard, arrows or A/D aim and Space
 drops. Controller D-pad and A use the same controls. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
 Merges fill six points of hatch charge for Pip, then twelve for Puddle.
@@ -35,7 +35,7 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Lounge | Pip or Puddle, other avatars, their decks, and a return button | Pets greet locally. Nearby miniature screens show each owner's current egg positions. |
 | Return | Shutters reopen onto the previous tray | Restores the deck pose and resumes the same eggs, charge, and round. |
 | Overflow | Tray full card and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
-| Retry | Four starter eggs and a fresh meter for the next pet | Resets the round while preserving the collection and equipped shell. |
+| Try again | Four starter eggs and a fresh meter for the next pet | The button appears at overflow. It resets the tray and charge while preserving the pet collection and equipped appearance. |
 | Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Cancel restores the equipped look. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |
 
@@ -59,19 +59,28 @@ pair in the player profile. Studio uses session memory.
 
 Astra's design uses a recessed display with the same tall tray proportions
 in portrait and landscape. Landscape puts the D-pad and action buttons on
-side grips. Portrait puts the utility buttons above the display and
-leaves the lower shell for play controls. Additional sticker slots, backplate art, and earned pet
+side grips. In portrait, Customize and Lounge are recessed into the
+case below the left, right, and A buttons. Additional sticker slots, backplate art, and earned pet
 stickers are possible next steps.
 
 ## Pixel display and jelly
 
 The LCD draws the tray, guides, eggs, and merge shapes on an 84 × 112
-grid. An impact squashes the silhouette and sends a ripple around it.
+grid. A pixel Pip blinks and reacts to merges next to the next-egg
+readout. Hatch charge lights up in separate cells. An impact squashes
+the silhouette and sends a ripple around it.
 At a merge, two lobes draw together and settle into the larger egg.
 The server currently collides circles. Shape-aware squeezing would need
 its own physics prototype. Sobosuba's developer describes using a ring
 of rigid bodies, skin tension, and pressure to preserve the blob's volume.
 [Developer notes](https://www.reddit.com/r/godot/comments/1vlxww3/my_softbody_physics_merging_game/).
+
+Small merges use a quick bubble pop and large merges use a lower squish
+with a short crackle. Chains add a quieter rising accent while the
+size-specific merge cue still plays. The sounds are synthesized from
+scratch, drawing on the different sound textures described by
+[PeachyBbies](https://peachybbies.com/pages/pb25-quiz) and
+[Snoopslimes](https://snoopslimes.co/blogs/news/snoops-fall-slime-texture-guide-blog).
 
 ## Pets
 

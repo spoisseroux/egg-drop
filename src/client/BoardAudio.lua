@@ -8,7 +8,7 @@ Audio.__index = Audio
 -- Only IDs for the original WAVs in assets/audio belong here.
 local assetIds = {}
 local cues = {
-	"aim", "drop", "land", "bank", "merge", "chain",
+	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
 	"charge", "hatch_rise", "hatch", "pet", "puddle", "overflow", "retry", "menu",
 }
 
@@ -28,7 +28,7 @@ function Audio.new()
 	for _, cue in ipairs(cues) do
 		local uri = Audio.uri(cue)
 		if uri then
-			local count = if cue == "merge" or cue == "chain" then 3 else 1
+			local count = if cue == "merge_bubble" or cue == "merge_jelly" then 3 else 1
 			local voices = {}
 			for index = 1, count do
 				local voice = Instance.new("Sound")

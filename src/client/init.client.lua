@@ -131,6 +131,31 @@ rail.Font = Enum.Font.Code
 rail.TextColor3 = Palette.Paper
 rail.Selectable = false
 make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
+local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
+readout.Font = Enum.Font.Code
+readout.TextXAlignment = Enum.TextXAlignment.Left
+local nextReadout = label("TextLabel", "NextReadout", "", rail)
+nextReadout.Font = Enum.Font.Code
+nextReadout.TextXAlignment = Enum.TextXAlignment.Right
+local mascot = make("Frame", "PixelPip", {
+	Position = UDim2.new(0, 10, 0.5, -10), Size = UDim2.fromOffset(21, 21), BackgroundTransparency = 1,
+}, rail)
+local mascotEyes = {}
+local mascotInk = Color3.fromHex("#CDD8A3")
+for row, pixels in ipairs({ "..+.+..", "...+...", "..###..", ".#####.", ".#o#o#.", ".#####.", "..###.." }) do
+	for column = 1, #pixels do
+		local symbol = pixels:sub(column, column)
+		if symbol ~= "." then
+			local pixel = make("Frame", "Pixel", {
+				Position = UDim2.fromOffset((column - 1) * 3, (row - 1) * 3), Size = UDim2.fromOffset(3, 3),
+				BorderSizePixel = 0, BackgroundColor3 = if symbol == "+" then Palette.Lime else mascotInk,
+			}, mascot)
+			if symbol == "o" then
+				table.insert(mascotEyes, pixel)
+			end
+		end
+	end
+end
 local track = make("Frame", "Guide", {
 	BackgroundColor3 = Palette.Primary, BackgroundTransparency = 0.45, BorderSizePixel = 0,
 	Size = UDim2.new(0, 2, 1, 0), ZIndex = 3,
@@ -145,12 +170,18 @@ status.TextWrapped = true
 local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
 }, backdrop)
-local fill = make("Frame", "Charge", {
-	BackgroundColor3 = Palette.Amber, BorderSizePixel = 0,
-}, meter)
+local segments = {}
+local maxCharge = Pets[#Pets].charge
+for index = 1, maxCharge do
+	segments[index] = make("Frame", "Cell", {
+		Position = UDim2.new((index - 1) / maxCharge, 1, 1, -6),
+		Size = UDim2.new(1 / maxCharge, -2, 0, 4),
+		BackgroundColor3 = Palette.Rim, BorderSizePixel = 0,
+	}, meter)
+end
 local meterText = label("TextLabel", "MeterText", "", meter)
 meterText.Font = Enum.Font.Code
-meterText.Size = UDim2.fromScale(1, 1)
+meterText.Size = UDim2.new(1, 0, 1, -6)
 meterText.TextSize = 13
 meterText.TextColor3 = Palette.Paper
 meterText.TextStrokeColor3 = Palette.Ink
@@ -164,12 +195,32 @@ local targetRing = make("Frame", "MatchHint", {
 }, overlay)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
 make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
-local customizeButton = label("TextButton", "Customize", "Customize", backdrop, Palette.Primary)
-local roomButton = label("TextButton", "VisitRoom", "Lounge", backdrop, Palette.Panel)
-local reset = label("TextButton", "Reset", "Retry", backdrop, Palette.Panel)
-for _, button in ipairs({ customizeButton, roomButton, reset }) do
-	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 8) }, button)
+local function utilityButton(name, titleText)
+	local button = label("TextButton", name, "", backdrop)
+	local cap = make("Frame", "Cap", {
+		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 3),
+		Size = UDim2.fromOffset(48, 13), BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
+	}, button)
+	make("UICorner", "CapCurve", { CornerRadius = UDim.new(1, 0) }, cap)
+	local edge = make("UIStroke", "Lip", { Color = Palette.Rim, Thickness = 1 }, cap)
+	local caption = label("TextLabel", "Caption", titleText, button)
+	caption.Position = UDim2.fromOffset(0, 20)
+	caption.Size = UDim2.new(1, 0, 0, 18)
+	caption.Font = Enum.Font.Code
+	caption.TextSize = 12
+	button.MouseButton1Down:Connect(function()
+		cap.Position = UDim2.new(0.5, 0, 0, 5)
+	end)
+	button.MouseButton1Up:Connect(function()
+		cap.Position = UDim2.new(0.5, 0, 0, 3)
+	end)
+	button.MouseLeave:Connect(function()
+		cap.Position = UDim2.new(0.5, 0, 0, 3)
+	end)
+	return button, edge, caption
 end
+local customizeButton, customizeLip = utilityButton("Customize", "CUSTOMIZE")
+local roomButton, roomLip, roomCaption = utilityButton("VisitRoom", "LOUNGE")
 local hardware = make("Frame", "DeckControls", { BackgroundTransparency = 1 }, backdrop)
 local function hardwareButton(name, text, parent, color, width)
 	local button = label("TextButton", name, text, parent, color)
@@ -180,26 +231,17 @@ local function hardwareButton(name, text, parent, color, width)
 	return button
 end
 local dpad = make("Frame", "DPad", {
-	Size = UDim2.fromOffset(88, 62), BackgroundTransparency = 1,
+	Size = UDim2.fromOffset(94, 56), BackgroundTransparency = 1,
 }, hardware)
-local stem = make("Frame", "Stem", {
-	Size = UDim2.fromOffset(30, 60), Position = UDim2.fromOffset(29, 0),
-	BackgroundColor3 = Palette.Ink, BorderSizePixel = 0,
-}, dpad)
-make("UICorner", "StemCurve", { CornerRadius = UDim.new(0, 6) }, stem)
 local leftAim = hardwareButton("Left", "‹", dpad, Palette.Ink, 44)
 local rightAim = hardwareButton("Right", "›", dpad, Palette.Ink, 44)
-leftAim.Position, rightAim.Position = UDim2.fromOffset(0, 8), UDim2.fromOffset(44, 8)
+leftAim.Position, rightAim.Position = UDim2.fromOffset(0, 8), UDim2.fromOffset(50, 8)
 leftAim.TextColor3, rightAim.TextColor3 = Palette.Paper, Palette.Paper
 local action = hardwareButton("Drop", "A", hardware, Palette.Primary, 48)
-local centerAim = hardwareButton("Center", "B", hardware, Palette.Primary, 48)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
-local centerCaption = label("TextLabel", "CenterCaption", "CENTER", hardware)
-for _, caption in ipairs({ dropCaption, centerCaption }) do
-	caption.Size = UDim2.fromOffset(48, 16)
-	caption.Font = Enum.Font.Code
-	caption.TextSize = 11
-end
+dropCaption.Size = UDim2.fromOffset(48, 16)
+dropCaption.Font = Enum.Font.Code
+dropCaption.TextSize = 11
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(31, 26), BackgroundTransparency = 1 }, hardware)
 for index = 0, 3 do
 	local slot = make("Frame", "Vent", {
@@ -287,6 +329,10 @@ end
 local dismissedHatch
 local revealedPet
 local lastPlop = -math.huge
+local lastMerge = -math.huge
+local mergeBurst = 0
+local lastChainAccent = -math.huge
+local mascotMood
 
 local aim = 0.5
 local drag
@@ -309,9 +355,8 @@ local function paintDeck(id, stickerId)
 	shell.BackgroundColor3 = theme.shell
 	rim.Color = theme.trim
 	bezelRim.Color = theme.trim
-	customizeButton.BackgroundColor3 = theme.buttons
+	customizeLip.Color = theme.buttons
 	action.BackgroundColor3 = theme.buttons
-	centerAim.BackgroundColor3 = theme.buttons
 	Stickers.paint(deckSticker, stickerId)
 end
 
@@ -382,7 +427,8 @@ local function drawAim()
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
 	ghost.BackgroundColor3 = Config.Tiers[tier].color
-	rail.Text = "EGG DROP  ·  " .. Config.Tiers[tier].mark
+	nextReadout.Text = "NEXT " .. Config.Tiers[tier].mark
+	nextReadout.TextColor3 = Config.Tiers[tier].color
 	local overflow = project(Vector2.new(0, Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
@@ -397,7 +443,16 @@ local function updateHud()
 	local nextPet = Pets[owned + 1]
 	local hatchName = board:GetAttribute("HatchedPet")
 	local hatchPet = Pets[owned]
-	fill.Size = UDim2.fromScale(if nextPet then charge / nextPet.charge else 1, 1)
+	local target = if nextPet then nextPet.charge else #Pets
+	local filled = if nextPet then charge else owned
+	for index, cell in ipairs(segments) do
+		cell.Visible = index <= target
+		if cell.Visible then
+			cell.Position = UDim2.new((index - 1) / target, 1, 1, -6)
+			cell.Size = UDim2.new(1 / target, -2, 0, 4)
+			cell.BackgroundColor3 = if index <= filled then Palette.Amber else Palette.Rim
+		end
+	end
 	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
 		status.Text = "Save could not load. Playing a fresh tray."
 	elseif owned > 0 then
@@ -436,8 +491,8 @@ local function updateHud()
 	rail.Interactable = canAim() and not isPickerOpen()
 	local unlocked = owned > 0
 	roomButton.Interactable = unlocked
-	roomButton.BackgroundColor3 = if unlocked then Palette.Primary else Palette.Panel
-	roomButton.TextTransparency = if unlocked then 0 else 0.28
+	roomLip.Color = if unlocked then Palette.Primary else Palette.Rim
+	roomCaption.TextTransparency = if unlocked then 0 else 0.35
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
 		revealedPet = hatchName
@@ -470,10 +525,8 @@ local function layout()
 	local height = width / ratio
 	local totalWidth = if lateral then width + grip * 2 + 24 else math.min(screen.X - 32, math.max(width + 40, 284))
 	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then math.max(236, height + 104) else height + 208
-	local menuHeight = if lateral then 0 else 52
-	local groupTop = math.max(5, (screen.Y - shellHeight - menuHeight) / 2)
-	local top = groupTop + menuHeight
+	local shellHeight = if lateral then math.max(236, height + 104) else height + 254
+	local top = math.max(5, (screen.Y - shellHeight) / 2)
 	local screenX = (screen.X - width) / 2
 	local trayY = top + 70
 	local trayBottom = trayY + height
@@ -493,30 +546,34 @@ local function layout()
 		if lateral then top + 154 else trayBottom + 78)
 	rail.Position = UDim2.fromOffset(screenX, top + 26)
 	rail.Size = UDim2.fromOffset(width, 44)
-	rail.TextSize = if width < 160 then 11 else 14
-	local menuX = if lateral then left + grip + width + 24 else left
-	local menuY = if lateral then top + 84 else groupTop
+	local compact = width < 175
+	mascot.Visible = not compact
+	readout.Position = UDim2.fromOffset(if compact then 5 else 37, 0)
+	readout.Size = UDim2.new(0, 80, 1, 0)
+	readout.TextSize = if compact then 10 else 14
+	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
+	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
+	nextReadout.TextSize = if compact then 10 else 12
 	status.Position = UDim2.fromOffset(left, if lateral then top + 37 else trayBottom + 5)
 	status.Size = UDim2.fromOffset(if lateral then grip - 8 else totalWidth, if lateral then 38 else 22)
 	status.TextSize = 13
-	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 5 else 29))
-	meter.Size = UDim2.fromOffset(width, 18)
+	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral then 3 else 26))
+	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
 	hardware.Position = UDim2.fromOffset(left, if lateral then top + 12 else trayBottom + 59)
 	hardware.Size = UDim2.fromOffset(totalWidth, 64)
 	dpad.Position = UDim2.fromOffset(if lateral then 20 else 0, if lateral then 77 else 0)
 	action.Position = UDim2.fromOffset(totalWidth - 48, 0)
-	centerAim.Position = UDim2.fromOffset(totalWidth - 110, 6)
 	dropCaption.Position = UDim2.fromOffset(totalWidth - 48, 49)
-	centerCaption.Position = UDim2.fromOffset(totalWidth - 110, 53)
 	vents.Position = UDim2.fromOffset(49, 174)
 	vents.Visible = lateral
-	for index, button in ipairs({ customizeButton, roomButton, reset }) do
-		local buttonWidth = if lateral then grip else (totalWidth - 12) / 3
-		button.Position = if lateral then UDim2.fromOffset(menuX, menuY + (index - 1) * 47)
-			else UDim2.fromOffset(menuX + (index - 1) * (buttonWidth + 6), menuY)
+	for index, button in ipairs({ customizeButton, roomButton }) do
+		local buttonWidth = if lateral then grip else 100
+		local buttonX = if lateral then left + totalWidth - grip
+			else left + totalWidth * 0.5 + (if index == 1 then -111 else 11)
+		local buttonY = if lateral then top + 87 + (index - 1) * 50 else trayBottom + 130
+		button.Position = UDim2.fromOffset(buttonX, buttonY)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
-		button.TextSize = 13
 	end
 	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
 	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
@@ -542,14 +599,6 @@ end
 local function moveAim(delta)
 	aim = math.clamp(aim + delta, 0, 1)
 	drawAim()
-end
-
-local function center()
-	if canPlay() and not drag then
-		aim = 0.5
-		drawAim()
-		audio:play("aim")
-	end
 end
 
 local function startAim(key, direction)
@@ -578,7 +627,6 @@ for button, direction in pairs({ [leftAim] = -1, [rightAim] = 1 }) do
 	end)
 end
 action.Activated:Connect(dropEgg)
-centerAim.Activated:Connect(center)
 
 local function handleControl(name, state, input)
 	local key = input.KeyCode
@@ -588,10 +636,6 @@ local function handleControl(name, state, input)
 		heldAim[key] = nil
 	end
 	local gamepad = isGamepad(input.UserInputType)
-	if name == "EggDropCenter" and isPickerOpen() and gamepad and state == Enum.UserInputState.Begin then
-		picker:close()
-		return Enum.ContextActionResult.Sink
-	end
 	if not canPlay() or UserInputService:GetFocusedTextBox() or (gamepad and GuiService.SelectedObject) then
 		return Enum.ContextActionResult.Pass
 	end
@@ -600,8 +644,6 @@ local function handleControl(name, state, input)
 			dropEgg()
 		elseif name == "EggDropCustomize" then
 			openPicker()
-		elseif name == "EggDropCenter" then
-			center()
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
 		end
@@ -616,7 +658,15 @@ ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, 
 	Enum.KeyCode.Right, Enum.KeyCode.D, Enum.KeyCode.DPadRight)
 ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
-ContextActionService:BindActionAtPriority("EggDropCenter", handleControl, false, priority, Enum.KeyCode.ButtonB)
+ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
+	if isPickerOpen() then
+		if state == Enum.UserInputState.Begin then
+			picker:close()
+		end
+		return Enum.ContextActionResult.Sink
+	end
+	return Enum.ContextActionResult.Pass
+end, false, priority, Enum.KeyCode.ButtonB)
 ContextActionService:BindActionAtPriority("EggDropCustomize", handleControl, false, priority,
 	Enum.KeyCode.M, Enum.KeyCode.ButtonY)
 
@@ -654,11 +704,6 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
 GuiService.MenuOpened:Connect(clearPlayInputs)
-reset.Activated:Connect(function()
-	if not isPickerOpen() then
-		request:FireServer("reset")
-	end
-end)
 modalAction.Activated:Connect(function()
 	if modalNote.Visible then
 		request:FireServer("reset")
@@ -768,7 +813,15 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 	if board:GetAttribute("Mode") ~= "Board" then
 		return
 	end
-	audio:play(if chain > 1 then "chain" else "merge", 1 + (tier - 2) * 0.07 + math.min(chain - 1, 5) * 0.04)
+	local now = os.clock()
+	mergeBurst = if now - lastMerge < 0.08 then math.min(mergeBurst + 1, 2) else 0
+	lastMerge = now
+	local pitch = 0.98 + (id or 0) % 5 * 0.01
+	audio:play(if tier == 2 then "merge_bubble" else "merge_jelly", pitch, 0.56 * 0.68 ^ mergeBurst)
+	if chain > 1 and now - lastChainAccent >= 0.18 then
+		lastChainAccent = now
+		audio:play("merge_chain", 1 + math.min(chain - 2, 4) * 0.035, 0.34)
+	end
 	local pixelMerge = lcdEnabled()
 	if pixelMerge then
 		if #pixelMerges >= 6 then
@@ -778,7 +831,7 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 			first = pixelPoint(first), second = pixelPoint(second), point = pixelPoint(position),
 			radius = Config.Tiers[tier - 1].radius * JellyLCD.Width / (Config.Width + 0.8),
 			resultRadius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8),
-			color = Config.Tiers[tier].color, start = os.clock(), id = id,
+			color = Config.Tiers[tier].color, start = now, id = id,
 		})
 	end
 	local previous = effects:FindFirstChild("MergePop")
@@ -886,6 +939,8 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	audio:play("retry")
 	dismissedHatch = nil
 	lastPlop = -math.huge
+	lastMerge = -math.huge
+	lastChainAccent = -math.huge
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
 	if board:GetAttribute("Drops") > 0 then
@@ -921,6 +976,14 @@ RunService.RenderStepped:Connect(function(dt)
 		return
 	end
 	local now = os.clock()
+	local mood = if now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
+	if mood ~= mascotMood then
+		mascotMood = mood
+		for _, eye in ipairs(mascotEyes) do
+			eye.BackgroundColor3 = if mood == "blink" then mascotInk
+				elseif mood == "happy" then Palette.Amber else Palette.Ink
+		end
+	end
 	local closest
 	local distance = math.huge
 	local tier = nextTier()

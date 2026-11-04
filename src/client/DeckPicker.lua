@@ -31,10 +31,11 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 	local screen = tile(bezel, "Screen", UDim2.fromOffset(3, 3), UDim2.fromOffset(48, 43), Palette.Tray)
 	tile(screen, "SmallEgg", UDim2.fromOffset(12, 31), UDim2.fromOffset(8, 8), Palette.JellyBlue)
 	tile(screen, "BigEgg", UDim2.fromOffset(24, 26), UDim2.fromOffset(13, 13), Palette.Ember)
-	tile(shell, "DPad", UDim2.fromOffset(10, 67), UDim2.fromOffset(16, 5), Palette.Ink)
-	tile(shell, "DPadStem", UDim2.fromOffset(15, 62), UDim2.fromOffset(5, 15), Palette.Ink)
+	tile(shell, "Left", UDim2.fromOffset(9, 65), UDim2.fromOffset(7, 7), Palette.Ink)
+	tile(shell, "Right", UDim2.fromOffset(18, 65), UDim2.fromOffset(7, 7), Palette.Ink)
 	local buttonA = tile(shell, "A", UDim2.fromOffset(48, 63), UDim2.fromOffset(9, 9), Palette.Primary)
-	local buttonB = tile(shell, "B", UDim2.fromOffset(37, 70), UDim2.fromOffset(8, 8), Palette.Primary)
+	tile(shell, "Customize", UDim2.fromOffset(23, 77), UDim2.fromOffset(10, 4), Palette.Ink)
+	tile(shell, "Lounge", UDim2.fromOffset(36, 77), UDim2.fromOffset(10, 4), Palette.Ink)
 	local sticker = label("TextLabel", "Sticker", "", shell, Palette.Primary)
 	sticker.Position = UDim2.fromOffset(26, 62)
 	sticker.Size = UDim2.fromOffset(13, 13)
@@ -51,7 +52,7 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply)
 		return control
 	end
 	local self = setmetatable({
-		shade = shade, shell = shell, bezel = bezel, buttonA = buttonA, buttonB = buttonB,
+		shade = shade, shell = shell, bezel = bezel, buttonA = buttonA,
 		sticker = sticker, choices = { Shell = {}, Sticker = {} }, tabs = {},
 		onPreview = onPreview, onClose = onClose,
 	}, Picker)
@@ -108,7 +109,6 @@ function Picker:select(themeId, stickerId)
 	self.shell.BackgroundColor3 = theme.shell
 	self.bezel.BackgroundColor3 = theme.trim
 	self.buttonA.BackgroundColor3 = theme.buttons
-	self.buttonB.BackgroundColor3 = theme.buttons
 	Stickers.paint(self.sticker, stickerId)
 	for choice, stroke in pairs(self.choices.Shell) do
 		stroke.Enabled = choice == themeId

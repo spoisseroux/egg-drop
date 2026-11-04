@@ -24,12 +24,20 @@ CUES = {
              (0, note(95, 0.048, voice="noise", volume=0.11))],
     "bank": [(0, note(310, 0.11, end=158, volume=0.47)),
              (0.022, note(570, 0.08, end=370, voice="pulse", volume=0.16))],
-    "merge": [(0, note(278, 0.13, end=107, volume=0.39)),
-              (0.022, note(523.25, 0.11, voice="pulse", volume=0.26)),
-              (0.078, note(659.25, 0.13, volume=0.36))],
-    "chain": [(0, note(659.25, 0.11, voice="pulse", volume=0.27)),
-              (0.052, note(783.99, 0.14, voice="pulse", volume=0.24)),
-              (0.109, note(1046.5, 0.15, volume=0.32))],
+    "merge_bubble": [(0, note(660, 0.045, end=310, voice="sine", volume=0.24)),
+                     (0, note(250, 0.095, end=140, voice="sine", volume=0.45)),
+                     (0.025, note(980, 0.043, end=510, voice="sine", volume=0.18)),
+                     (0.054, note(610, 0.086, end=432, volume=0.19)),
+                     (0.087, note(485, 0.052, end=315, voice="sine", volume=0.12))],
+    "merge_jelly": [(0, note(191, 0.153, end=85, voice="sine", volume=0.55)),
+                    (0.012, note(335, 0.1, end=160, voice="sine", volume=0.24)),
+                    (0.034, note(220, 0.078, voice="noise", volume=0.15)),
+                    (0.062, note(590, 0.038, end=320, voice="sine", volume=0.16)),
+                    (0.096, note(476, 0.057, end=263, voice="sine", volume=0.17)),
+                    (0.128, note(330, 0.115, end=204, volume=0.17))],
+    "merge_chain": [(0.028, note(430, 0.11, end=570, voice="sine", volume=0.18)),
+                    (0.073, note(580, 0.13, end=740, voice="sine", volume=0.19)),
+                    (0.125, note(720, 0.084, end=620, voice="sine", volume=0.11))],
     "charge": [(0, note(880, 0.08, end=990, voice="pulse", volume=0.22))],
     "hatch_rise": [(0, note(300, 0.18, end=510, volume=0.24)),
                    (0.14, note(520, 0.21, end=770, volume=0.21))],
@@ -69,6 +77,8 @@ def synth(events, attack_seconds=0.006, decay=1.45):
                 raw = (0.66 if phase < 0.34 else -0.34) * 0.75 + triangle * 0.25
             elif voice == "noise":
                 raw = noise.uniform(-1, 1)
+            elif voice == "sine":
+                raw = math.sin(phase * math.tau)
             else:
                 raw = triangle
             filtered += (raw - filtered) * (0.23 if voice == "noise" else 0.62)
