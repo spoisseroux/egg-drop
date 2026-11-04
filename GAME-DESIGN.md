@@ -215,6 +215,48 @@ Rules:
 - 12 pet families x 3 variants each; families share the base mesh
 - Idle = slow bob; walk = happy bounce; click = wave reaction
 
+### Pet production scope
+
+The board uses pixel jelly. Pets carry that rounded shape, dark rim, and
+stepped highlights into the hatch card and eventually the lobby. Start
+with an egg-shaped body, a small face rig, and reusable attach points for
+the crown, back, and feet. The outline should identify the family at
+32 pixels tall. Each variant changes one outline detail and its palette.
+
+Use [Slime Rancher](https://monomipark.com/about/) for simple rounded
+bodies, [Pikmin](https://pikmin.nintendo.com/en/piklopedia/) for clear
+appendage silhouettes, and [Monster Sanctuary](https://monster-sanctuary.com/)
+for readable pixel-scale hatch rewards. Temtem and early Palworld are
+references for mixing familiar and odd shapes. The Roblox pet shops are
+references for preview and equip readability. [Marble Merger](https://www.lexaloffle.com/bbs/?pid=139127)
+and [Combo Pool](https://www.lexaloffle.com/bbs/?pid=21515) guide the board feel.
+
+| Family | Shape at a glance | Variant direction |
+|---|---|---|
+| Pip | Tilted sprig and split eggshell hem | Seed, bud, bloom |
+| Puddle | Low jelly dome and droplet tail | Droplet, ribbon, crest |
+| Wick | Flat base and curled candle top | Ember, flare, crown |
+| Pebble | Squat body with a split stone cap | Chip, crystal, geode |
+| Flutter | Two wide scalloped fins | Moth, kite, fan |
+| Bristle | Off-center swept tuft | Brush, quill, brushfire |
+| Puff | Wide cloud cap on tiny feet | Wisp, cloud, thunderhead |
+| Bell | Hanging shell with a swinging clapper | Chime, gong, lantern |
+| Spool | Stacked rings and a loose tail | Thread, ribbon, coil |
+| Reef | Branching crown and broad foot | Twig, fan, coral crown |
+| Dune | Tapered dune with a sail | Drift, ridge, twin crest |
+| Orbit | Tilted body with a broken satellite ring | Crescent, ring, eclipse |
+
+Build Pip first, then use Puddle and Wick to test how far the same rig can
+stretch. Give each a two- or three-note cry from the same synth bank.
+Pip rises and dips, Puddle bends down, and Wick makes two quick upward hops.
+Test the trio in monochrome, in a 32 px card, and in a small lobby preview.
+Reuse the rig for idle, greeting, and follow motion. Give each family a
+distinct greeting beat.
+
+The prototype awards Pip as a guaranteed starter hatch for the current
+round. Tapping Pip plays its greeting. Persistent ownership, equip slots,
+and random hatch pools belong to the progression milestone.
+
 ## Audio
 
 PICO-8-inspired synth aesthetic across the whole soundscape. Reference
@@ -223,9 +265,9 @@ Tier-graded merge chimes that rise in pitch with tier; full-combo chord;
 rarity-graded fanfare on hatch (longer/bigger for Legendary/Mythic).
 Every pet gets a unique synth cry (short 2-3 note chirp; higher-pitched
 and longer for rarer pets, like a creature-collector signature call).
-UI sounds: soft clicks, coin chimes, hatch-meter fill tick. All audio
-must be Roblox-licensed or original (no copyrighted SFX); generate with
-a chiptune toolchain if needed.
+UI sounds include soft clicks, coin chimes, and a hatch-meter fill tick.
+All game cues use original synthesis. Keep the short WAVs and their
+generator in the repo so we can tune pitch, duration, and envelope.
 
 ## Juice / polish spec (build in from day one)
 

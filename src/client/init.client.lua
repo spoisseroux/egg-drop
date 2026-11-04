@@ -1,13 +1,15 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Jelly = require(script.JellyVisual)
+local Sprite = require(script.JellySprite)
+local Audio = require(script.BoardAudio)
+local audio = Audio.new()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
@@ -61,6 +63,9 @@ local overlay = make("Frame", "TrayOverlay", {
 local effects = make("Frame", "MergeEffects", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
 }, overlay)
+local sprites = make("Frame", "Sprites", {
+	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
+}, overlay)
 
 local function surface(name, size, transform, color)
 	return make("Part", name, {
@@ -94,21 +99,50 @@ ghost.ZIndex = 4
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 
 local status = label("TextLabel", "Status", "", backdrop)
-local hint = label("TextLabel", "Hint", "Drag the rail and release to drop", backdrop)
-hint.TextSize = 13
+local meter = make("Frame", "HatchTrack", {
+	BackgroundColor3 = panel, BorderSizePixel = 0,
+}, backdrop)
+local fill = make("Frame", "Charge", {
+	BackgroundColor3 = mint, BorderSizePixel = 0,
+}, meter)
+local meterText = label("TextLabel", "MeterText", "", meter)
+meterText.Size = UDim2.fromScale(1, 1)
+meterText.TextSize = 13
+meterText.TextColor3 = ink
+meterText.TextStrokeColor3 = navy
+meterText.TextStrokeTransparency = 0.05
+local overflowLine = make("Frame", "OverflowLine", {
+	BackgroundColor3 = Color3.fromRGB(248, 170, 132), BackgroundTransparency = 0.45,
+	BorderSizePixel = 0, ZIndex = 2,
+}, overlay)
 local gentle = label("TextButton", "Gentle", "Gentle", backdrop, panel)
 local springy = label("TextButton", "Springy", "Springy", backdrop, panel)
 local reset = label("TextButton", "Reset", "Reset", backdrop, panel)
-local plop = make("Sound", "EggDropPlop", {
-	SoundId = "rbxasset://sounds/impact_water.mp3", Volume = 0.25,
-}, SoundService)
-local chimes = {}
-for i = 1, 3 do
-	chimes[i] = make("Sound", "EggDropChime" .. i, {
-		SoundId = "rbxasset://sounds/volume_slider.ogg", Volume = 0.37,
-	}, SoundService)
-end
-local chimeIndex = 0
+local modal = make("Frame", "RoundCard", {
+	Active = true, Visible = false, BackgroundColor3 = navy, BorderSizePixel = 0, ZIndex = 10,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+}, backdrop)
+local modalTitle = label("TextLabel", "Heading", "", modal)
+modalTitle.Size = UDim2.new(1, 0, 0, 32)
+modalTitle.ZIndex = 11
+local pet = label("TextButton", "Pet", "• ᴗ •", modal, mint)
+pet.AnchorPoint = Vector2.new(0.5, 0)
+pet.Position = UDim2.new(0.5, 0, 0, 42)
+pet.Size = UDim2.fromOffset(60, 56)
+pet.TextColor3 = navy
+pet.TextSize = 18
+pet.ZIndex = 11
+make("UICorner", "Shell", { CornerRadius = UDim.new(0.45, 0) }, pet)
+make("Frame", "Sprig", {
+	BackgroundColor3 = Color3.fromRGB(119, 204, 120), BorderSizePixel = 0,
+	Position = UDim2.fromOffset(28, -8), Size = UDim2.fromOffset(15, 10), Rotation = -24,
+	ZIndex = 12,
+}, pet)
+local modalAction = label("TextButton", "Continue", "", modal, panel)
+modalAction.Position = UDim2.new(0.09, 0, 1, -55)
+modalAction.Size = UDim2.new(0.82, 0, 0, 44)
+modalAction.ZIndex = 11
+local dismissedHatch = false
 local lastPlop = -math.huge
 
 local aim = 0.5
@@ -138,12 +172,25 @@ local function drawAim()
 	ghost.Text = Config.Tiers[tier].mark
 	ghost.BackgroundColor3 = Config.Tiers[tier].color
 	rail.Text = "DRAG TO AIM   ·   NEXT " .. Config.Tiers[tier].mark
+	local overflow = project(Vector2.new(0, Config.OverflowY))
+	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
+	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
 end
 
 local function updateHud()
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
 	status.Text = string.format("MERGES %d     LAST CHAIN x%d", merges, chain)
+	local charge = board:GetAttribute("HatchCharge") or 0
+	fill.Size = UDim2.fromScale(charge / Config.HatchTarget, 1)
+	meterText.Text = if board:GetAttribute("Hatched") then "PIP HATCHED" else string.format("HATCH   %d / %d", charge, Config.HatchTarget)
+	local over = board:GetAttribute("RoundOver")
+	local showHatch = board:GetAttribute("Hatched") and not dismissedHatch
+	modal.Visible = over == true or showHatch == true
+	pet.Visible = showHatch == true and not over
+	modalTitle.Text = if over then "TRAY FULL" else "STARTER HATCH  /  " .. Config.StarterPet:upper()
+	modalAction.Text = if over then "Try again" else "Back to tray"
+	rail.Interactable = not modal.Visible
 	for _, button in ipairs({ gentle, springy }) do
 		local selected = board:GetAttribute("Preset") == button.Name
 		button.BackgroundColor3 = if selected then mint else panel
@@ -162,6 +209,8 @@ local function layout()
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
+	modal.Position = UDim2.fromOffset(screen.X / 2, top + 50 + height / 2)
+	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.88, 220), screen.X - 24), 164)
 	title.Position = UDim2.fromOffset(left, top - 27)
 	title.Size = UDim2.fromOffset(width, 24)
 	rail.Position = UDim2.fromOffset(left, top)
@@ -169,8 +218,8 @@ local function layout()
 	local foot = top + 50 + height
 	status.Position = UDim2.fromOffset(left, foot + 3)
 	status.Size = UDim2.fromOffset(width, 21)
-	hint.Position = UDim2.fromOffset(left, foot + 26)
-	hint.Size = UDim2.fromOffset(width, 20)
+	meter.Position = UDim2.fromOffset(left, foot + 26)
+	meter.Size = UDim2.fromOffset(width, 19)
 	for index, button in ipairs({ gentle, springy, reset }) do
 		local buttonWidth = (width - 12) / 3
 		button.Position = UDim2.fromOffset(left + (index - 1) * (buttonWidth + 6), foot + 51)
@@ -189,9 +238,10 @@ end
 
 rail.InputBegan:Connect(function(input)
 	local kind = input.UserInputType
-	if not drag and (kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch) then
+	if not drag and not modal.Visible and (kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch) then
 		drag = input
 		aimFromScreen(input.Position.X)
+		audio:play("aim")
 	end
 end)
 UserInputService.InputChanged:Connect(function(input)
@@ -204,7 +254,7 @@ UserInputService.InputEnded:Connect(function(input)
 	if drag and (input == drag or (drag.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseButton1)) then
 		drag = nil
-		if input.UserInputState == Enum.UserInputState.End then
+		if input.UserInputState == Enum.UserInputState.End and not modal.Visible then
 			aimFromScreen(input.Position.X)
 			request:FireServer("drop", aim)
 		end
@@ -221,6 +271,20 @@ end
 reset.Activated:Connect(function()
 	request:FireServer("reset")
 end)
+modalAction.Activated:Connect(function()
+	if board:GetAttribute("RoundOver") then
+		request:FireServer("reset")
+	else
+		dismissedHatch = true
+		audio:play("menu")
+		updateHud()
+	end
+end)
+pet.Activated:Connect(function()
+	audio:play("pet")
+	pet.Rotation = -9
+	TweenService:Create(pet, TweenInfo.new(0.24, Enum.EasingStyle.Back), { Rotation = 0 }):Play()
+end)
 
 local function addView(source)
 	local tier = source:GetAttribute("Tier")
@@ -228,7 +292,8 @@ local function addView(source)
 	if not tier or not id then
 		return
 	end
-	local gel = Jelly.new(scene, source)
+	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
+		then Jelly.new(scene, source) else Sprite.new(sprites, source)
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
 	mark.TextColor3 = navy
@@ -238,8 +303,7 @@ local function addView(source)
 	viewsById[id] = gel
 end
 
-board.ChildAdded:Connect(addView)
-board.ChildRemoved:Connect(function(source)
+local function removeView(source)
 	local view = eggViews[source]
 	if view then
 		view.gel:destroy()
@@ -247,27 +311,39 @@ board.ChildRemoved:Connect(function(source)
 		viewsById[view.id] = nil
 		eggViews[source] = nil
 	end
-end)
+end
+board.ChildAdded:Connect(addView)
+board.ChildRemoved:Connect(removeView)
+if RunService:IsStudio() then
+	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
+		for _, source in ipairs(board:GetChildren()) do
+			removeView(source)
+			addView(source)
+		end
+	end)
+end
 for _, source in ipairs(board:GetChildren()) do
 	addView(source)
 end
 
 impacts.OnClientEvent:Connect(function(batch)
 	local strongest = 0
+	local bankHit = false
 	for _, impact in ipairs(batch) do
 		local gel = viewsById[impact[1]]
 		if gel then
 			gel:impact(impact[2], impact[3])
-			strongest = math.max(strongest, impact[3])
+			if impact[3] > strongest then
+				strongest = impact[3]
+				bankHit = impact[2].Y < 0.78
+			end
 		end
 	end
 	local now = os.clock()
 	if strongest >= 9 and now - lastPlop >= 0.13 then
 		lastPlop = now
-		plop.PlaybackSpeed = math.clamp(0.82 + strongest / 100, 0.9, 1.2)
-		plop.Volume = math.clamp(strongest / 90, 0.13, 0.35)
-		plop.TimePosition = 0
-		plop:Play()
+		audio:play(if bankHit then "bank" else "land", math.clamp(0.82 + strongest / 100, 0.9, 1.2),
+			math.clamp(strongest / 70, 0.24, 0.55))
 	end
 end)
 
@@ -298,6 +374,20 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 	local diameter = scale * Config.Tiers[tier - 1].radius
 	gelDrop(firstPoint, point, diameter, color, 0.12, false)
 	gelDrop(secondPoint, point, diameter, color, 0.12, false)
+	local delta = secondPoint - firstPoint
+	local bridge = make("Frame", "GelBridge", {
+		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
+		BackgroundColor3 = color, BackgroundTransparency = 0.1,
+		Position = UDim2.fromOffset(point.X, point.Y),
+		Size = UDim2.fromOffset(delta.Magnitude + diameter, diameter * 0.65),
+		Rotation = math.deg(math.atan2(delta.Y, delta.X)),
+	}, effects)
+	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
+	local retract = TweenService:Create(bridge, TweenInfo.new(0.16), {
+		Size = UDim2.fromOffset(diameter * 0.7, diameter), BackgroundTransparency = 1,
+	})
+	retract.Completed:Once(function() bridge:Destroy() end)
+	retract:Play()
 	for i = 1, 5 do
 		local angle = i * math.pi * 2 / 5 + chain * 0.5
 		local delta = Vector2.new(math.cos(angle), math.sin(angle)) * scale * 2
@@ -323,28 +413,45 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 		pop:Destroy()
 	end)
 	tween:Play()
-	chimeIndex = chimeIndex % #chimes + 1
-	local chime = chimes[chimeIndex]
-	chime.PlaybackSpeed = 1 + (tier - 1) * 0.18 + math.min(chain, 5) * 0.05
-	chime.TimePosition = 0
-	chime:Play()
+	audio:play(if chain > 1 then "chain" else "merge", 1 + (tier - 2) * 0.07 + math.min(chain - 1, 5) * 0.04)
 end)
 
 board.AttributeChanged:Connect(updateHud)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	effects:ClearAllChildren()
-	plop:Stop()
-	for _, chime in ipairs(chimes) do
-		chime:Stop()
-	end
+	audio:stop()
+	audio:play("retry")
+	dismissedHatch = false
 	lastPlop = -math.huge
+	updateHud()
+end)
+board:GetAttributeChangedSignal("Drops"):Connect(function()
+	if board:GetAttribute("Drops") > 0 then
+		audio:play("drop")
+	end
+end)
+board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
+	local charge = board:GetAttribute("HatchCharge")
+	if charge > 0 and charge < Config.HatchTarget then
+		audio:play("charge", 1 + charge * 0.03, 0.35)
+	end
+end)
+board:GetAttributeChangedSignal("Hatched"):Connect(function()
+	if board:GetAttribute("Hatched") then
+		audio:play("hatch")
+	end
+end)
+board:GetAttributeChangedSignal("RoundOver"):Connect(function()
+	if board:GetAttribute("RoundOver") then
+		audio:play("overflow")
+	end
 end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
 	local now = os.clock()
 	for source, view in pairs(eggViews) do
-		local position = view.gel:render(source.Position, dt, now)
+		local position = view.gel:render(source.Position, dt, now, project)
 		local point = project(Vector2.new(position.X, position.Y))
 		view.mark.Position = UDim2.fromOffset(point.X, point.Y)
 	end

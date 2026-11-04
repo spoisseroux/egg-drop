@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Simulation = require(script.BoardSimulation)
+local Round = require(script.BoardRound)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -25,6 +26,9 @@ local function publishState(board)
 	board.folder:SetAttribute("NextTier", Simulation.nextTier(board.sim))
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
+	board.folder:SetAttribute("HatchCharge", board.round.charge)
+	board.folder:SetAttribute("Hatched", board.round.hatched)
+	board.folder:SetAttribute("RoundOver", board.round.over)
 end
 
 local function syncVisuals(board)
@@ -68,6 +72,7 @@ local function reset(board, preset)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial)
+	board.round = Round.new()
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
 	board.chain = 0
@@ -113,7 +118,7 @@ request.OnServerEvent:Connect(function(player, action, value)
 	end
 	local now = os.clock()
 	if action == "drop" then
-		if typeof(value) ~= "number" or not (value >= 0 and value <= 1)
+		if board.round.over or typeof(value) ~= "number" or not (value >= 0 and value <= 1)
 			or now - board.lastDrop < Config.DropInterval then
 			return
 		end
@@ -144,17 +149,22 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
+			if board.round.over then
+				continue
+			end
 			table.clear(merged)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
+			board.round:step(board.sim.eggs, Config.FixedStep)
 			for _, merge in ipairs(merged) do
 				local egg = merge.egg
 				local now = os.clock()
 				board.chain = if now - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.lastMerge = now
 				board.merges += 1
+				board.round:merge(egg.tier)
 				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other)
 			end
-			if #merged > 0 then
+			if #merged > 0 or board.round.over then
 				publishState(board)
 			end
 		end
