@@ -227,6 +227,58 @@ UI sounds: soft clicks, coin chimes, hatch-meter fill tick. All audio
 must be Roblox-licensed or original (no copyrighted SFX); generate with
 a chiptune toolchain if needed.
 
+## Juice / polish spec (build in from day one)
+
+Every rule below is a requirement, not a nice-to-have. Juice is cheap on
+day 1 and expensive on day 100; nothing ships un-juiced.
+
+**Physics and board**
+- No merge without reaction: squash (2-frame), pop, pitch-graded chime
+  per tier, and a 1-2 neighbor ripple push. Every merge must move the
+  whole board slightly.
+- Chain reactions: each consecutive merge within a window speeds up
+  the chime pitch, brightens the merge flash, and shakes the combo
+  meter slightly. The 6+ chain is the dopamine peak.
+- Egg drop lands with a micro thud + 1-frame board wobble. Idle eggs
+  breathe (tiny scale pulse, staggered so the board feels alive).
+- Combo meter: rubber-bands on increment, glows at 2.5x, pops a burst
+  on multiplier tier-up.
+- Hatch meter "nearly there" state: escalating egg shake + crack audio
+  so the last fill before hatch is unbearable in the good way.
+
+**Hatch moment (the game's money shot)**
+- Egg cracks open in 3 beats, screen flash, burst of pixel confetti,
+  pet pops with squash-and-stretch, unique synth cry, rarity banner
+  slides in. Whole sequence ~1.5s, skippable after first playthrough,
+  never skippable on Legendary/Mythic.
+- Legendary/Mythic: brief slow-mo + letterbox + palette desaturation
+  before the pop. Server-wide announcement pairs with this.
+
+**Lobby**
+- Pets bob and follow with trailing sway; they "notice" when clicked
+  (wave + cry). Other players' rare pets sparkle noticeably.
+- Ambient life: butterflies, drifting pixel clouds, gentle SFX.
+  Podia statues hold current leaderboard winners.
+
+**UI**
+- Every button press: instant audio click + 1-frame scale punch. No
+  dead buttons anywhere, ever.
+- Coin counters roll up (tween), never snap. Hatched pet cards animate
+  in with a stamp. Screen transitions are 0.15-0.25s slides/fades,
+  never hard cuts.
+- Negative space discipline: HUD minimal, screens never more than 1
+  tap from the board, UI sounds quiet and non-annoying.
+
+**Performance**
+- All juice is cheap: 2-frame animations, tweened transforms, particle
+  sprites. Target 60fps on mobile; no effect should cost real GPU. If
+  an effect drops mobile frames, simplify the effect, never remove
+  the reaction.
+**Testing gate**
+
+- Before any milestone is "done", play 30 seconds without touching
+  anything. If the board doesn't look alive, it isn't done.
+
 ## Roblox-specific systems (design constraints, read before building)
 
 These are platform mechanics that shape the game. Codex must design
