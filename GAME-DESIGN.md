@@ -166,14 +166,81 @@ Rules for purchase prompts:
   index with equip, Daily streak panel, Offline earnings modal,
   Rebirth panel, Hatch result overlay, Leaderboard podia UI
 
+## Creature / pet design (v1 art direction)
+
+One egg-body family: round, chibi proportions, huge head-to-body ratio.
+A single base mesh produces every pet via color, accessory, and
+proportion swaps. Big eyes, tiny bodies, bobbing idle animation, and a
+"wave back" reaction when clicked. Cuteness IS the retention layer.
+
+Design references to study (cute weird-pet rosters, not huge IPs):
+Slime Rancher (round silhouettes, color+accessory differentiation at
+scale), Pikmin (silhouette-first, color-coded rarity readable without
+text), Temtem, Monster Sanctuary, Palworld early common-tier designs,
+Roblox pet shops like Gexperia / Dragibar (3D chibi at production speed).
+
+Rules:
+- Rarity readable at lobby-glance distance, no text needed: pastel
+  commons, saturated rares, glowing/particle Mythics
+- Silhouette test: every pet identifiable as a black outline
+- 12 pet families x 3 variants each; families share the base mesh
+- Idle = slow bob; walk = happy bounce; click = wave reaction
+
 ## Audio
 
-- Reference Combo Pool's satisfying, minimal SFX design (hits, rolls,
-  merges). Tier-graded merge chimes that rise in pitch with tier;
-  full-combo chord; rarity-graded fanfare on hatch (longer/bigger for
-  Legendary/Mythic).
+PICO-8-inspired synth aesthetic across the whole soundscape. Reference
+Combo Pool's satisfying, minimal SFX design (hits, rolls, merges).
+Tier-graded merge chimes that rise in pitch with tier; full-combo chord;
+rarity-graded fanfare on hatch (longer/bigger for Legendary/Mythic).
+Every pet gets a unique synth cry (short 2-3 note chirp; higher-pitched
+and longer for rarer pets, like a creature-collector signature call).
+UI sounds: soft clicks, coin chimes, hatch-meter fill tick. All audio
+must be Roblox-licensed or original (no copyrighted SFX); generate with
+a chiptune toolchain if needed.
 
-## Non-negotiables
+## Roblox-specific systems (design constraints, read before building)
+
+These are platform mechanics that shape the game. Codex must design
+around them, not fight them:
+
+- **Discovery is algorithmic.** Home-page impressions are driven by
+  icon/thumbnail CTR, first-session retention (D0), session length, and
+  like/dislike ratio. Art and the sub-60-second FTUE are the traffic
+  engine, not marketing. Plan icon/thumbnail A/B testing from day one.
+- **Age rating gates.** To monetize kids' full demographic, avoid
+  "13+ restricted" elements. No gambling-style mechanics that fail
+  compliance review: always show odds (already in non-negotiables),
+  disclose paid-random-item rates, no countdown pressure on purchases
+  under 13, no pay-to-win paywall walls that break paid-access rules.
+- **Robux flow (the economy).** Roblox takes ~30% of Robux spent.
+  Dev product receipts must be processed via
+  MarketplaceService.ProcessReceipt with idempotent receipt GUIDs
+  (already non-negotiable). Refunds/disputes are handled by Roblox,
+  not us.
+- **DataStoreService limits.** Strict per-server request budgets.
+  Throttle all autosaves, batch on player leave, and use a
+  ProfileService-style session-lock pattern (already in Tech). Expect
+  occasional datastore downtime; game must degrade gracefully to
+  in-memory-only play rather than booting players.
+- **Server limits.** Each server is a Roblox instance with a player cap
+  (set by us, ~12-20 for a lobby game). Lobby chat, announcements, and
+  leaderboards must scale to multi-server via MemoryStoreService
+  (cross-server queues) and OrderedDataStore (global leaderboards),
+  NOT per-server state.
+- **Reserves are aggressive.** Game must tolerate a 5-30 second server
+  join. Never block on a datastore read for the full FTUE; show the
+  board immediately, sync data in the background.
+- **Client-server boundary.** Exploiters control the client. All
+  physics-affecting inputs are validated server-side; merge and hatch
+  logic server-authoritative only (already non-negotiable). Never trust
+  a client-reported number (coins, combo, tier, pet inventory).
+- **Moderation.** Player-visible content must survive Roblox content
+  filters. Pet names use pre-vetted word banks or no custom naming
+  in v1 (custom naming deferred to v2, like trading, for scam/filter
+  reasons).
+- **Analytics from day one.** No third-party SDK needed; use
+  AnalyticsService custom events for D0/D1/D7 retention, session
+  length, and monetization funnel tracking from the first build.
 
 - Server-authoritative: coin, pet, and merge calculations run on the server
   only
