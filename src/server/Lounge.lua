@@ -135,8 +135,8 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
 		mount * CFrame.new(-0.60, 0.041, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
 	buttonA.Shape = Enum.PartType.Cylinder
-	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.11, -0.107), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.21, -0.107), Palette.Ink)
+	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.24, -0.107), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.34, -0.107), Palette.Ink)
 	for index = 0, 2 do
 		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
 			mount * CFrame.new(-0.65 - index * 0.044, -0.22, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)

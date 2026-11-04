@@ -748,7 +748,7 @@ local function layout()
 	deckSticker.Position = UDim2.fromOffset(left + (if lateral then totalWidth - grip * 0.5 - 12 else totalWidth * 0.47 - 12),
 		if lateral then top + shellHeight * 0.22 else trayBottom + 78)
 	if portraitRail then
-		deckSticker.Position = UDim2.fromOffset(left + 34, top + shellHeight - 48)
+		deckSticker.Position = UDim2.fromOffset(left + 34, top + shellHeight - 146)
 	end
 	rail.Position = UDim2.fromOffset(screenX, trayY - 44)
 	rail.Size = UDim2.fromOffset(width, 44)
@@ -781,9 +781,12 @@ local function layout()
 	local aimSize = if lateral then math.clamp(math.floor(shellHeight * 0.14), 44,
 		math.clamp(math.floor((grip - 14) / 2), 44, 70)) else 44
 	local aimWidth = aimSize * 2 + 6
-	local aimY = if lateral then math.max(55, math.floor(shellHeight * 0.36)) elseif portraitRail then 95 else 0
+	local sideBySide = lateral and shellHeight < 276
+	local utilityY = shellHeight - 14 - (if sideBySide then 44 else 94)
+	local dropRow = math.max(55, math.floor(shellHeight * 0.36))
+	local aimY = if lateral then math.min(dropRow, utilityY - aimSize - 32) elseif portraitRail then 95 else 0
 	local dropX = if lateral then totalWidth - grip * 0.5 - dropSize * 0.5 else totalWidth - dropSize
-	local dropY = if lateral then aimY elseif portraitRail then trayBottom - top + 34 else 0
+	local dropY = if lateral then dropRow elseif portraitRail then trayBottom - top + 34 else 0
 	dpad.Position = UDim2.fromOffset(if lateral or portraitRail then (grip - aimWidth) * 0.5 else 0, aimY)
 	dpad.Size = UDim2.fromOffset(aimWidth, aimSize + 12)
 	dpad.RockerWell.Size = UDim2.fromOffset(aimWidth + 6, aimSize + 7)
@@ -801,25 +804,25 @@ local function layout()
 	vents.Visible = lateral and shellHeight >= 220
 	hardware.MakerMark.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 48, shellHeight * 0.89)
 	hardware.MakerMark.Visible = lateral and shellHeight >= 285
-	local sideBySide = lateral and shellHeight < 230
 	do
 		local plate = shell.Faceplate
 		local detail = lateral and shellHeight >= 280
-		plate.AimSeat.Visible, plate.ActionSeat.Visible, plate.AccentBands.Visible = detail, detail, detail
+		plate.AimSeat.Visible, plate.ActionSeat.Visible = detail, detail
+		plate.AccentBands.Visible = lateral and shellHeight >= 330
 		local seatWidth = math.min(aimWidth + 34, grip - 18)
-		plate.AimSeat.Size = UDim2.fromOffset(seatWidth, aimSize + 107)
+		plate.AimSeat.Size = UDim2.fromOffset(seatWidth, aimSize + 28)
 		plate.AimSeat.Position = UDim2.fromOffset(3 + (grip - seatWidth) * 0.5, aimY - 6)
 		plate.ActionSeat.Size = UDim2.fromOffset(dropSize + 32, dropSize + 47)
 		plate.ActionSeat.Position = UDim2.fromOffset(dropX - 13, dropY - 17)
-		plate.AccentBands.Position = UDim2.fromOffset(grip * 0.5 - 29, shellHeight * 0.83)
+		plate.AccentBands.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 29, shellHeight * 0.10)
 	end
 	for index, button in ipairs({ customizeButton, roomButton }) do
-		local buttonWidth = if sideBySide then math.floor((grip - 24) / 2)
+		local buttonWidth = if sideBySide then math.floor((grip - 13) / 2)
 			elseif lateral or portraitRail then math.min(146, grip - 22) else 100
-		local buttonX = if sideBySide then left + 4 + (index - 1) * (buttonWidth + 2)
+		local buttonX = if sideBySide then left + 1 + (index - 1) * (buttonWidth + 2)
 			elseif lateral or portraitRail then left + (grip - buttonWidth) / 2
 			else left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
-		local buttonY = if lateral or portraitRail then top + aimY + aimSize + 14 + (if sideBySide then 0 else (index - 1) * 45)
+		local buttonY = if lateral or portraitRail then top + utilityY + (if sideBySide then 0 else (index - 1) * 50)
 			else trayBottom + 130
 		button.Cap.Caption.Text = if index == 1 then (if sideBySide then "STYLE" else "CUSTOMIZE") else "LOUNGE"
 		button.Cap.Caption.TextSize = if sideBySide then 10 else 12
