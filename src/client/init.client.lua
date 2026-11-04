@@ -9,12 +9,18 @@ local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local Audio = require(script.BoardAudio)
+local Music = require(script.BoardMusic)
+local RoomView = require(script.RoomView)
+local HandheldScreens = require(script.HandheldScreens)
 local audio = Audio.new()
+local music = Music.new()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
 local impacts = remotes:WaitForChild("BoardImpact")
-local board = ReplicatedStorage:WaitForChild("EggDropBoards"):WaitForChild(tostring(player.UserId))
+local trays = ReplicatedStorage:WaitForChild("EggDropBoards")
+local board = trays:WaitForChild(tostring(player.UserId))
+HandheldScreens.start(trays, Config)
 
 local ink = Color3.fromRGB(255, 241, 207)
 local navy = Color3.fromRGB(25, 23, 46)
@@ -46,6 +52,11 @@ local gui = make("ScreenGui", "EggDrop", {
 local backdrop = make("Frame", "Backdrop", {
 	BackgroundColor3 = navy, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
 }, gui)
+local shell = make("Frame", "CartridgeShell", {
+	BackgroundColor3 = Color3.fromRGB(81, 61, 124), BorderSizePixel = 0,
+}, backdrop)
+make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
+make("UIStroke", "ShellRim", { Color = Color3.fromRGB(131, 107, 175), Thickness = 2 }, shell)
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
 	BackgroundColor3 = Color3.fromRGB(40, 50, 67), BorderSizePixel = 0,
@@ -84,7 +95,7 @@ for _, sign in ipairs({ -1, 1 }) do
 			* CFrame.Angles(0, 0, sign * math.pi / 4), rim)
 end
 
-local title = label("TextLabel", "Title", "EGG DROP / BOARD LAB", backdrop)
+local title = label("TextLabel", "Title", "POCKET DECK   /   EGG DROP", backdrop)
 title.TextSize = 18
 local rail = label("TextButton", "AimRail", "", backdrop, Color3.fromRGB(60, 64, 90))
 rail.AutoButtonColor = false
@@ -115,9 +126,26 @@ local overflowLine = make("Frame", "OverflowLine", {
 	BackgroundColor3 = Color3.fromRGB(248, 170, 132), BackgroundTransparency = 0.45,
 	BorderSizePixel = 0, ZIndex = 2,
 }, overlay)
-local gentle = label("TextButton", "Gentle", "Gentle", backdrop, panel)
-local springy = label("TextButton", "Springy", "Springy", backdrop, panel)
-local reset = label("TextButton", "Reset", "Reset", backdrop, panel)
+local musicButton = label("TextButton", "Music", "Music on", backdrop, panel)
+local roomButton = label("TextButton", "VisitRoom", "Room locked", backdrop, panel)
+local reset = label("TextButton", "Reset", "Retry", backdrop, Color3.fromRGB(109, 55, 94))
+for _, button in ipairs({ musicButton, roomButton, reset }) do
+	make("UICorner", "ButtonCurve", { CornerRadius = UDim.new(0, 8) }, button)
+end
+local roomView
+local function toggleMusic()
+	local muted = music:toggle()
+	musicButton.Text = if muted then "Music off" else "Music on"
+	roomView:setMusicLabel(muted)
+	audio:play("menu")
+end
+roomView = RoomView.new(gui, backdrop, audio, function()
+	request:FireServer("mode", "Board")
+end, toggleMusic)
+musicButton.Activated:Connect(toggleMusic)
+roomButton.Activated:Connect(function()
+	request:FireServer("mode", "Room")
+end)
 local modal = make("Frame", "RoundCard", {
 	Active = true, Visible = false, BackgroundColor3 = navy, BorderSizePixel = 0, ZIndex = 10,
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -142,6 +170,10 @@ local modalAction = label("TextButton", "Continue", "", modal, panel)
 modalAction.Position = UDim2.new(0.09, 0, 1, -55)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
 modalAction.ZIndex = 11
+local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, panel)
+keepPlaying.Position = UDim2.new(0.52, 0, 1, -55)
+keepPlaying.Size = UDim2.new(0.43, 0, 0, 44)
+keepPlaying.ZIndex = 11
 local dismissedHatch = false
 local lastPlop = -math.huge
 
@@ -185,17 +217,22 @@ local function updateHud()
 	fill.Size = UDim2.fromScale(charge / Config.HatchTarget, 1)
 	meterText.Text = if board:GetAttribute("Hatched") then "PIP HATCHED" else string.format("HATCH   %d / %d", charge, Config.HatchTarget)
 	local over = board:GetAttribute("RoundOver")
+	local mode = board:GetAttribute("Mode")
+	music:setState(mode, over and mode == "Board")
 	local showHatch = board:GetAttribute("Hatched") and not dismissedHatch
 	modal.Visible = over == true or showHatch == true
 	pet.Visible = showHatch == true and not over
 	modalTitle.Text = if over then "TRAY FULL" else "STARTER HATCH  /  " .. Config.StarterPet:upper()
-	modalAction.Text = if over then "Try again" else "Back to tray"
-	rail.Interactable = not modal.Visible
-	for _, button in ipairs({ gentle, springy }) do
-		local selected = board:GetAttribute("Preset") == button.Name
-		button.BackgroundColor3 = if selected then mint else panel
-		button.TextColor3 = if selected then navy else ink
-	end
+	modalAction.Text = if over then "Try again" else "Visit Pip"
+	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -55)
+	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
+	keepPlaying.Visible = not over
+	rail.Interactable = mode == "Board" and not modal.Visible
+	local unlocked = board:GetAttribute("RoomUnlocked") == true
+	roomButton.Text = if unlocked then "Visit room" else "Room locked"
+	roomButton.Interactable = unlocked
+	roomButton.BackgroundColor3 = if unlocked then mint else panel
+	roomButton.TextColor3 = if unlocked then navy else ink
 	drawAim()
 end
 
@@ -205,6 +242,8 @@ local function layout()
 	local height = width * (Config.Height + 0.8) / (Config.Width + 0.8)
 	local left = (screen.X - width) / 2
 	local top = math.max(54, (screen.Y - height - 90) / 2)
+	shell.Position = UDim2.fromOffset(left - 10, top - 34)
+	shell.Size = UDim2.fromOffset(width + 20, height + 186)
 	viewport.Position = UDim2.fromOffset(left, top + 50)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
@@ -213,17 +252,21 @@ local function layout()
 	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.88, 220), screen.X - 24), 164)
 	title.Position = UDim2.fromOffset(left, top - 27)
 	title.Size = UDim2.fromOffset(width, 24)
+	title.TextSize = math.clamp(math.floor(width / 15), 9, 18)
 	rail.Position = UDim2.fromOffset(left, top)
 	rail.Size = UDim2.fromOffset(width, 46)
+	rail.TextSize = math.clamp(math.floor(width / 15), 9, 15)
 	local foot = top + 50 + height
 	status.Position = UDim2.fromOffset(left, foot + 3)
 	status.Size = UDim2.fromOffset(width, 21)
+	status.TextSize = math.clamp(math.floor(width / 18), 9, 15)
 	meter.Position = UDim2.fromOffset(left, foot + 26)
 	meter.Size = UDim2.fromOffset(width, 19)
-	for index, button in ipairs({ gentle, springy, reset }) do
+	for index, button in ipairs({ musicButton, roomButton, reset }) do
 		local buttonWidth = (width - 12) / 3
 		button.Position = UDim2.fromOffset(left + (index - 1) * (buttonWidth + 6), foot + 51)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
+		button.TextSize = math.clamp(math.floor((buttonWidth - 4) / 6), 8, 15)
 	end
 	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
 	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
@@ -238,7 +281,8 @@ end
 
 rail.InputBegan:Connect(function(input)
 	local kind = input.UserInputType
-	if not drag and not modal.Visible and (kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch) then
+	if not drag and not roomView.busy and rail.Interactable
+		and (kind == Enum.UserInputType.MouseButton1 or kind == Enum.UserInputType.Touch) then
 		drag = input
 		aimFromScreen(input.Position.X)
 		audio:play("aim")
@@ -254,7 +298,7 @@ UserInputService.InputEnded:Connect(function(input)
 	if drag and (input == drag or (drag.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseButton1)) then
 		drag = nil
-		if input.UserInputState == Enum.UserInputState.End and not modal.Visible then
+		if input.UserInputState == Enum.UserInputState.End and rail.Interactable then
 			aimFromScreen(input.Position.X)
 			request:FireServer("drop", aim)
 		end
@@ -263,11 +307,6 @@ end)
 UserInputService.WindowFocusReleased:Connect(function()
 	drag = nil
 end)
-for _, button in ipairs({ gentle, springy }) do
-	button.Activated:Connect(function()
-		request:FireServer("preset", button.Name)
-	end)
-end
 reset.Activated:Connect(function()
 	request:FireServer("reset")
 end)
@@ -275,10 +314,13 @@ modalAction.Activated:Connect(function()
 	if board:GetAttribute("RoundOver") then
 		request:FireServer("reset")
 	else
-		dismissedHatch = true
-		audio:play("menu")
-		updateHud()
+		request:FireServer("mode", "Room")
 	end
+end)
+keepPlaying.Activated:Connect(function()
+	dismissedHatch = true
+	audio:play("menu")
+	updateHud()
 end)
 pet.Activated:Connect(function()
 	audio:play("pet")
@@ -417,6 +459,15 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second)
 end)
 
 board.AttributeChanged:Connect(updateHud)
+board:GetAttributeChangedSignal("Mode"):Connect(function()
+	drag = nil
+	local mode = board:GetAttribute("Mode")
+	if mode == "Room" then
+		dismissedHatch = true
+		updateHud()
+	end
+	roomView:setMode(mode)
+end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	effects:ClearAllChildren()
 	audio:stop()
@@ -438,6 +489,7 @@ board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 end)
 board:GetAttributeChangedSignal("Hatched"):Connect(function()
 	if board:GetAttribute("Hatched") then
+		music:duck()
 		audio:play("hatch")
 	end
 end)
@@ -458,3 +510,4 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 layout()
 updateHud()
+roomView:setMode(board:GetAttribute("Mode"))

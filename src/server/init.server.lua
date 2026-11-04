@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
+local Lounge = require(script.Lounge)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -19,6 +20,8 @@ local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
+local nextSlot = 0
+Lounge.create()
 
 local function publishState(board)
 	board.folder:SetAttribute("Preset", board.sim.preset)
@@ -29,6 +32,7 @@ local function publishState(board)
 	board.folder:SetAttribute("HatchCharge", board.round.charge)
 	board.folder:SetAttribute("Hatched", board.round.hatched)
 	board.folder:SetAttribute("RoundOver", board.round.over)
+	board.folder:SetAttribute("RoomUnlocked", board.roomUnlocked)
 end
 
 local function syncVisuals(board)
@@ -77,6 +81,7 @@ local function reset(board, preset)
 	board.merges = 0
 	board.chain = 0
 	board.lastMerge = -math.huge
+	board.playTime = 0
 	publishState(board)
 	syncVisuals(board)
 end
@@ -87,22 +92,38 @@ local function addPlayer(player)
 	end
 	local folder = Instance.new("Folder")
 	folder.Name = tostring(player.UserId)
+	nextSlot += 1
+	local slot = nextSlot
 	local board = {
 		folder = folder,
 		parts = {},
 		impacts = {},
 		lastDrop = -math.huge,
 		lastReset = -math.huge,
+		lastModeChange = -math.huge,
+		mode = "Board",
+		roomUnlocked = false,
 	}
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
+	folder:SetAttribute("Mode", board.mode)
 	folder.Parent = trays
+	local function spawn(character)
+		Lounge.spawn(character, slot, player, function()
+			return board.mode
+		end)
+	end
+	board.characterConnection = player.CharacterAdded:Connect(spawn)
+	if player.Character then
+		task.spawn(spawn, player.Character)
+	end
 end
 
 Players.PlayerAdded:Connect(addPlayer)
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
 	if board then
+		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		boards[player] = nil
 	end
@@ -117,6 +138,20 @@ request.OnServerEvent:Connect(function(player, action, value)
 		return
 	end
 	local now = os.clock()
+	if action == "mode" then
+		if now - board.lastModeChange < 0.45 or value == board.mode
+			or (value ~= "Board" and (value ~= "Room" or not board.roomUnlocked)) then
+			return
+		end
+		board.lastModeChange = now
+		board.mode = value
+		Lounge.setMode(player.Character, player.UserId, value)
+		board.folder:SetAttribute("Mode", value)
+		return
+	end
+	if board.mode ~= "Board" then
+		return
+	end
 	if action == "drop" then
 		if board.round.over or typeof(value) ~= "number" or not (value >= 0 and value <= 1)
 			or now - board.lastDrop < Config.DropInterval then
@@ -149,19 +184,20 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
-			if board.round.over then
+			if board.mode ~= "Board" or board.round.over then
 				continue
 			end
+			board.playTime += Config.FixedStep
 			table.clear(merged)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
 			board.round:step(board.sim.eggs, Config.FixedStep)
 			for _, merge in ipairs(merged) do
 				local egg = merge.egg
-				local now = os.clock()
-				board.chain = if now - board.lastMerge <= 1.25 then board.chain + 1 else 1
-				board.lastMerge = now
+				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
+				board.lastMerge = board.playTime
 				board.merges += 1
 				board.round:merge(egg.tier)
+				board.roomUnlocked = board.roomUnlocked or board.round.hatched
 				feedback:FireClient(player, egg.position, egg.tier, board.chain, merge.from, merge.other)
 			end
 			if #merged > 0 or board.round.over then

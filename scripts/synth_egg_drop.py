@@ -48,7 +48,7 @@ CUES = {
 }
 
 
-def synth(events):
+def synth(events, attack_seconds=0.006, decay=1.45):
     size = math.ceil(max(at + event[2] for at, event in events) * RATE)
     samples = [0.0] * size
     noise = random.Random(742)
@@ -67,10 +67,41 @@ def synth(events):
             else:
                 raw = triangle
             filtered += (raw - filtered) * (0.23 if voice == "noise" else 0.62)
-            attack = min(1, index / (0.006 * RATE))
+            attack = min(1, index / (attack_seconds * RATE))
             tail = min(1, (count - index - 1) / (0.014 * RATE))
-            envelope = attack * tail * (1 - t) ** 1.45
+            envelope = attack * tail * (1 - t) ** decay
             samples[offset + index] += filtered * envelope * volume
+    return samples
+
+
+def music(room):
+    beat = 60 / 84
+    chords = [
+        (130.81, 196.00, 261.63, 329.63),
+        (110.00, 164.81, 261.63, 329.63),
+        (87.31, 130.81, 220.00, 261.63),
+        (98.00, 146.83, 220.00, 293.66),
+        (130.81, 196.00, 293.66, 329.63),
+        (110.00, 164.81, 261.63, 392.00),
+        (87.31, 130.81, 220.00, 329.63),
+        (98.00, 146.83, 196.00, 293.66),
+    ]
+    beds, details = [], []
+    for bar, chord in enumerate(chords):
+        at = 4 * bar * beat
+        for index, pitch in enumerate(chord):
+            beds.append((at, note(pitch, 3.98 * beat, volume=0.11 if index == 0 else 0.058)))
+        if room:
+            if bar % 2 == 0:
+                details.append((at + beat, note(chord[3], 2.4 * beat, volume=0.075)))
+        else:
+            for offset, index in [(0.5, 1), (1.75, 2), (2.5, 3), (3.25, 2)]:
+                details.append((at + offset * beat, note(chord[index] * 2, 0.56 * beat, volume=0.066)))
+    size = round(32 * beat * RATE)
+    samples = [0.0] * size
+    for layer in (synth(beds, attack_seconds=0.18, decay=0.9), synth(details, attack_seconds=0.045)):
+        for index, sample in enumerate(layer[:size]):
+            samples[index] += sample
     return samples
 
 
@@ -93,6 +124,8 @@ def main():
         if args.preview:
             preview.extend(samples)
             preview.extend([0.0] * round(RATE * 0.36))
+    write_wav(ROOT / "egg_drop_music_board.wav", music(room=False))
+    write_wav(ROOT / "egg_drop_music_room.wav", music(room=True))
     if args.preview:
         write_wav(args.preview, preview)
 

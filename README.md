@@ -2,8 +2,11 @@
 
 Run `rojo serve --port 34873` and connect the Rojo Studio plugin to that
 port. In Play mode, drag across the rail and release to drop an egg.
-Merges charge the hatch meter. The first hatch reveals Pip, and sustained
-overflow ends the round with a retry button.
+Merges charge the hatch meter. The first hatch reveals Pip and unlocks the
+lounge. Visit Pip and select **Open handheld** to resume the same tray.
+Other players in the lounge can see your handheld's live display.
+Sustained overflow ends the round with a retry button. See
+[the prototype rundown](PROTOTYPE.md) for the full flow and pet concepts.
 
 Generate the original sound bank with `python scripts/synth_egg_drop.py`.
 To preview it in a local Studio place, copy the WAVs from `assets/audio`

@@ -1,0 +1,355 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1010" width="1200" height="1010">
+  <rect width="1200" height="1010" fill="#1b1830"/>
+  <style>text{font-family:Consolas,monospace}.name{font-size:22px;fill:#fff1cf}.variant{font-size:14px;fill:#dac9ea}</style>
+  <text x="40" y="59" fill="#fff1cf" font-size="35">EGG DROP   /   PET LINEUP</text>
+  <text x="42" y="91" fill="#a8efb5" font-size="17">36 CONCEPTS   •   PIP IS PLAYABLE IN THE PROTOTYPE</text>
+  <g transform="translate(40,120)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">PIP</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M36 23L38 12L49 6L50 16L43 22L41 26Z" fill="#a8efb5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#a8efb5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52l7 3 5-4 6 4 6-4 7 2-7 6H30Z" fill="#514464"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Seed</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M38 23L36 12L26 7L27 16L36 22L38 15L48 8L53 10L51 18L42 23Z" fill="#c0da79" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#c0da79" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52l7 3 5-4 6 4 6-4 7 2-7 6H30Z" fill="#514464"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Bud</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M39 24L38 14L31 15L28 9L32 4L38 6L42 2L48 5L48 11L43 15L42 24Z" fill="#eab8c9" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#eab8c9" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52l7 3 5-4 6 4 6-4 7 2-7 6H30Z" fill="#514464"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Bloom</text>
+  </g>
+  <g transform="translate(420,120)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">PUDDLE</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M52 45Q69 31 70 43Q70 54 55 54Z" fill="#93d1ee" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#93d1ee" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Droplet</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M52 45Q62 35 69 41Q75 47 68 54L61 50Q66 45 55 52Z" fill="#87c6d8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#87c6d8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Ribbon</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M52 47Q60 41 63 32L66 37L71 34L72 44L68 53L54 55Z" fill="#a9b2ef" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#a9b2ef" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Crest</text>
+  </g>
+  <g transform="translate(800,120)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">WICK</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M32 23Q27 17 34 11L38 5Q39 11 45 13Q49 19 43 25Z" fill="#f8aa84" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#f8aa84" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Ember</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M30 24Q27 15 37 6L44 3Q40 9 48 13Q52 21 44 25Z" fill="#ffce75" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#ffce75" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Flare</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M30 25L27 13L34 17L39 5L45 14L51 8L52 20L46 25Z" fill="#f392a9" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#f392a9" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Crown</text>
+  </g>
+  <g transform="translate(40,336)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">PEBBLE</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M22 31L26 18L43 14L55 21L58 33L43 28L36 32L30 28Z" fill="#afa2c2" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#afa2c2" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Chip</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M23 30L29 17L35 22L40 9L48 15L51 24L56 29L46 34L37 30Z" fill="#a2c8da" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#a2c8da" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Crystal</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M22 31L24 18L36 13L49 14L58 24L56 34L48 30L40 33L35 28Z" fill="#c591da" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#c591da" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Geode</text>
+  </g>
+  <g transform="translate(420,336)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">FLUTTER</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M24 32Q13 18 8 27Q7 37 20 42M55 33Q66 18 72 27Q73 37 59 42" fill="#e5bdd8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#e5bdd8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Moth</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M23 30L9 18L11 34L21 43M56 30L71 18L68 35L59 43" fill="#a2c7eb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#a2c7eb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Kite</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M22 30Q11 17 8 27Q2 33 9 36Q9 42 20 44M58 30Q69 17 72 27Q78 33 71 36Q71 42 60 44" fill="#edb5a1" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#edb5a1" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Fan</text>
+  </g>
+  <g transform="translate(800,336)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">BRISTLE</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M28 26L28 13L34 17L39 9L45 14L53 10L51 26Z" fill="#c6d988" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#c6d988" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Brush</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M29 26L31 12L38 16L48 3L50 17L56 14L53 26Z" fill="#b1a8d7" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#b1a8d7" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Quill</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M27 26L26 16L34 13L35 6L40 11L48 4L47 14L57 12L53 26Z" fill="#ef9b7e" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#ef9b7e" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Brushfire</text>
+  </g>
+  <g transform="translate(40,552)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">PUFF</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M22 31Q16 21 25 19Q29 12 36 18Q44 11 48 19Q59 16 59 30Z" fill="#dbd4eb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#dbd4eb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Wisp</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M18 32Q14 25 22 20Q23 13 34 16Q40 8 49 15Q61 14 63 27L60 32Z" fill="#acc9e5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#acc9e5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Cloud</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M17 32Q16 23 22 20Q22 11 34 16Q40 6 50 14Q64 13 64 28L59 32Z" fill="#9d9ccf" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M18 49L19 40L25 31L33 27L47 27L57 31L62 39L63 50L57 57L47 59L29 59Z" fill="#9d9ccf" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Thunderhead</text>
+  </g>
+  <g transform="translate(420,552)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">BELL</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M34 21V12Q40 6 46 12V21M37 55V64H43V55" fill="#f0cd85" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#f0cd85" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52H58L52 56H29Z" fill="#b77955"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Chime</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M32 21V10H48V21M35 55V64H45V55" fill="#e3a471" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#e3a471" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52H58L52 56H29Z" fill="#b77955"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Gong</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M32 20V11L36 7H44L48 11V20M37 54V64H43V54" fill="#ffe7a5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#ffe7a5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M24 52H58L52 56H29Z" fill="#b77955"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Lantern</text>
+  </g>
+  <g transform="translate(800,552)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">SPOOL</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M26 22H54V28H26ZM54 50Q73 48 68 57Q63 62 61 57" fill="#e7a7ba" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#e7a7ba" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M22 38H58v3H22zm0 15H57v2H22z" fill="#503d65" opacity=".58"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Thread</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M23 22H57V28H23ZM54 50Q72 47 73 55L67 55L66 61L58 55Z" fill="#b0b5ec" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#b0b5ec" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M22 38H58v3H22zm0 15H57v2H22z" fill="#503d65" opacity=".58"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Ribbon</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M26 21H54V28H26ZM56 49Q74 43 73 55Q70 66 62 61Q56 58 63 54L66 58" fill="#92ddc8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#92ddc8" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M22 38H58v3H22zm0 15H57v2H22z" fill="#503d65" opacity=".58"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Coil</text>
+  </g>
+  <g transform="translate(40,768)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">REEF</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M30 25L30 18L24 12L29 9L35 16L36 8L42 8L41 25Z" fill="#f09c9d" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#f09c9d" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Twig</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M28 25L24 16L28 9L34 15L39 7L45 14L50 8L55 16L50 25Z" fill="#ffb887" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#ffb887" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Fan</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M24 26L19 17L23 12L30 18L32 8L38 5L41 16L46 11L47 4L53 7L54 18L60 14L61 20L55 26Z" fill="#d1addb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#d1addb" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Coral crown</text>
+  </g>
+  <g transform="translate(420,768)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">DUNE</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M29 25L38 7Q51 12 56 30L46 25Z" fill="#e7bb91" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#e7bb91" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Drift</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M27 29L36 10L52 6L58 30L48 24Z" fill="#f1d29b" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#f1d29b" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Ridge</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M24 28L32 9L43 16L48 5L58 27L51 29Z" fill="#cba8ba" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M24 55L21 47L24 36L30 25L42 22L53 26L60 36L61 48L56 56L46 60L32 60Z" fill="#cba8ba" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Twin crest</text>
+  </g>
+  <g transform="translate(800,768)">
+    <rect width="360" height="196" rx="12" fill="#2e2748" stroke="#53436a"/>
+    <text class="name" x="18" y="33">ORBIT</text>
+    <g transform="translate(23,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M13 47Q26 24 61 23Q72 25 65 32M13 47Q10 53 23 53" fill="none" stroke="#b7b1e5" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#b7b1e5" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M14 48Q19 53 30 53Q43 53 57 47" fill="none" stroke="#fff1cf" stroke-width="2.8"/>
+    </g>
+    <text class="variant" x="69" y="163" text-anchor="middle">Crescent</text>
+    <g transform="translate(138,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M11 44Q27 25 64 24Q73 25 68 35Q58 49 26 53Q12 56 11 44" fill="none" stroke="#8ec5e6" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#8ec5e6" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M14 48Q19 53 30 53Q43 53 57 47" fill="none" stroke="#fff1cf" stroke-width="2.8"/>
+    </g>
+    <text class="variant" x="184" y="163" text-anchor="middle">Ring</text>
+    <g transform="translate(253,50) scale(1.16)">
+      <ellipse cx="40" cy="64" rx="23" ry="4" fill="#1c172c"/>
+      <path d="M10 43Q21 29 43 26M50 24Q71 19 72 29Q73 38 55 45M47 48Q19 58 10 51Q7 49 10 43" fill="none" stroke="#d4a5d6" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 50L22 39L27 31L34 24L44 22L52 26L58 35L60 47L57 54L49 59L30 59Z" fill="#d4a5d6" stroke="#1c172c" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M27 36h5v-4h9v3h-6v4h-8z" fill="#fff4dc" opacity=".72"/>
+      <path d="M31 43h4v5h-4zm15 0h4v5h-4zM37 50h7v2h-7z" fill="#29223b"/>
+      <path d="M14 48Q19 53 30 53Q43 53 57 47" fill="none" stroke="#fff1cf" stroke-width="2.8"/>
+    </g>
+    <text class="variant" x="299" y="163" text-anchor="middle">Eclipse</text>
+  </g>
+</svg>

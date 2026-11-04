@@ -12,17 +12,21 @@ local cues = {
 	"charge", "hatch", "pet", "overflow", "retry", "menu",
 }
 
+function Audio.uri(cue)
+	local id = assetIds[cue]
+	if id then
+		return "rbxassetid://" .. id
+	elseif RunService:IsStudio() and game.PlaceId == 0 then
+		return "rbxasset://sounds/egg-drop/egg_drop_" .. cue .. ".wav"
+	end
+	return nil
+end
+
 function Audio.new()
 	local self = setmetatable({ voices = {}, indices = {} }, Audio)
 	local warmup = {}
 	for _, cue in ipairs(cues) do
-		local id = assetIds[cue]
-		local uri
-		if id then
-			uri = "rbxassetid://" .. id
-		elseif RunService:IsStudio() and game.PlaceId == 0 then
-			uri = "rbxasset://sounds/egg-drop/egg_drop_" .. cue .. ".wav"
-		end
+		local uri = Audio.uri(cue)
 		if uri then
 			local count = if cue == "merge" or cue == "chain" then 3 else 1
 			local voices = {}
