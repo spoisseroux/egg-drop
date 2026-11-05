@@ -60,7 +60,7 @@ function Reveal:start(valid, cue, color)
 			end
 		end)
 	end
-	local center = UDim2.new(0.5, 0, 0, 108)
+	local center = self.pet.Position
 	local egg = shape(self.layer, "HatchEgg", color, center, UDim2.fromOffset(58, 68), 13)
 	local outline = Instance.new("UIStroke")
 	outline.Color, outline.Thickness = Art.Silver, 2

@@ -15,7 +15,7 @@ function Recap.new(parent)
 	local frame = Art.frame(parent, "Recap", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), 11)
 	frame.BackgroundTransparency = 1
 	frame.Visible = false
-	local stats = Art.frame(frame, "Stats", Art.Ink, UDim2.fromOffset(12, 49), UDim2.new(1, -24, 1, -149))
+	local stats = Art.frame(frame, "Stats", Art.Ink, UDim2.fromOffset(12, 46), UDim2.new(1, -24, 1, -136))
 	stats.BackgroundTransparency = 1
 	local values = {}
 	for index, caption in ipairs({ "SCORE", "BEST CHAIN", "TIER V CLEARS" }) do
@@ -29,12 +29,12 @@ function Recap.new(parent)
 		fitText(value, 26)
 		values[index] = value
 	end
-	local goal = Art.frame(frame, "Goal", Art.Raised, UDim2.new(0, 12, 1, -94), UDim2.new(1, -24, 0, 36))
+	local goal = Art.frame(frame, "Goal", Art.Raised, UDim2.new(0, 12, 1, -88), UDim2.new(1, -24, 0, 30))
 	Art.corner(goal, 5)
-	local title = Art.text(goal, "Heading", "", UDim2.fromOffset(6, 1), UDim2.new(1, -12, 0, 16),
+	local title = Art.text(goal, "Heading", "", UDim2.fromOffset(6, 1), UDim2.new(1, -12, 0, 14),
 		Art.Cyan, 13, Enum.Font.GothamBold)
 	fitText(title, 13)
-	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 17), UDim2.new(1, -12, 0, 14), Art.Silver, 12)
+	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), Art.Silver, 12)
 	fitText(detail, 12)
 	local track = Art.frame(goal, "Track", Art.Ink, UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
 	local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))

@@ -10,8 +10,8 @@ LCD.MergeDuration = 0.32
 
 local WIDTH, HEIGHT = LCD.Width, LCD.Height
 local SIZE = Vector2.new(WIDTH, HEIGHT)
-local WHITE = Color3.fromHex("#E8F7FF")
-local INK = Color3.fromRGB(19, 30, 38)
+local WHITE = Color3.fromHex("#F4F8E9")
+local INK = Color3.fromHex("#142D20")
 local leftWall = WIDTH * 0.4 / (Config.Width + 0.8)
 local rightWall = WIDTH - leftWall
 local ceiling = HEIGHT * 0.4 / (Config.Height + 0.8)
@@ -32,12 +32,12 @@ end
 
 local function boardPixels()
 	local pixels = buffer.create(WIDTH * HEIGHT * 4)
-	local outside = rgba(Color3.fromHex("#111B26"))
-	local background = rgba(Color3.fromHex("#192735"))
-	local dither = rgba(Color3.fromHex("#223244"))
-	local rail = rgba(Color3.fromHex("#557289"))
-	local rim = rgba(Color3.fromHex("#314A5F"))
-	local warning = rgba(Color3.fromHex("#B79B55"))
+	local outside = rgba(Color3.fromHex("#2C4D30"))
+	local background = rgba(Color3.fromHex("#C6DFA0"))
+	local dither = rgba(Color3.fromHex("#BBD395"))
+	local rail = rgba(Color3.fromHex("#749154"))
+	local rim = rgba(Color3.fromHex("#385632"))
+	local warning = rgba(Color3.fromHex("#8B652D"))
 	local warningY = math.floor(floor - Config.OverflowY * HEIGHT / (Config.Height + 0.8))
 	for y = 0, HEIGHT - 1 do
 		local inset = math.max(0, bank - (floor - (y + 0.5)))
@@ -56,7 +56,7 @@ local function boardPixels()
 	return pixels
 end
 
-local guide = rgba(Color3.fromHex("#5A8D9F"))
+local guide = rgba(Color3.fromHex("#54783E"))
 
 -- Sampling is clipped before entering the loops: work never exceeds 84x112.
 local function raster(self, minX, minY, maxX, maxY, colors, sample)

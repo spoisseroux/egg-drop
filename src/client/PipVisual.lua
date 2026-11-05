@@ -154,7 +154,7 @@ function PipVisual:update(dt)
 	local breathe = math.sin(t * 2.2) * 0.012
 	local scale = Vector3.new(1 + squash * 0.48 - breathe, 1 - squash + breathe, 1 + squash * 0.30)
 	local root = CFrame.new(self.origin + Vector3.new(0, bounce, 0))
-		* CFrame.Angles(0, math.sin(t * 1.1) * 0.035, math.sin(t * 1.8) * 0.025)
+		* CFrame.Angles(0, (self.yaw or 0) + math.sin(t * 1.1) * 0.035, math.sin(t * 1.8) * 0.025)
 	local blink = (t % 4.8 > 4.62) or (g > 0.30 and g < 0.61)
 	for _, entry in ipairs(self.pieces) do
 		local rest = entry.frame

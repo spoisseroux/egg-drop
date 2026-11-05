@@ -1,7 +1,7 @@
 # Egg Drop prototype
 
-Pocket Deck is the in-world handheld. Sherbet is the default, with an
-ivory faceplate, coral shell, mint rocker, and yolk-yellow drop button.
+Pocket Deck is the in-world handheld. Scout is the default, with a
+leaf-green shell, orange controls and a pale green LCD.
 A player who opens the deck
 stays in the lounge as an avatar holding the deck. Nearby players can see
 the eggs move on its miniature display. Each player controls their own tray.
@@ -191,3 +191,41 @@ Studio verified both hatches, meeting Puddle, switching back to Pip,
 and reloading the earned collection from the in-memory profile. A private
 published build is needed to verify a leave and rejoin in the Roblox
 client, uploaded synth playback, and touch on a phone.
+# Phone feedback pass — November 5, 2026
+
+The phone playtest exposed fast collection completion through repeated A presses.
+The current seven-pet roster and thresholds are prototype values, not a validated
+retention or monetization design. See [the gameplay review brief](GAMEPLAY-HANDOFF.md).
+No daily drop gate or payment system has been added.
+
+Scout replaces Sherbet's colors while keeping its saved ID. The interface now
+uses botanical forest panels, leaf-green hardware, orange controls and a pale
+green LCD. The smooth renderer shares that LCD background when image APIs are
+unavailable. Full-screen artwork and modal dimming are separate from safely
+inset content. Landscape utility buttons sit above the lower thumb controls.
+Hatch text scales within padded bounds. Short screens shrink the pet stage,
+keeping 44px buttons. The journal scrolls entries with Close always visible.
+
+Sprout Hollow defaults to a following Roblox camera and a companion beside the
+player. Say hi briefly presents the pet closer, then restores free roaming.
+Moving, switching modes, respawning or replacing the camera cancels focus.
+The compact lounge HUD sits at the top, leaving walking and jumping clear.
+The lounge still needs activities beyond greeting and its two menu stations.
+
+The sky follows a real 24-hour clock, shared by clients using server time.
+Hollow time is **UTC−5 fixed year-round**, configured by
+`HollowClock.TimeZoneOffsetHours`. It is not each player's local timezone and
+does not implement daylight saving. Night keeps ambient fill and strengthens
+lantern light. Native bloom is subtle. These are supported Roblox lighting and
+GUI effects; there is no arbitrary custom GPU shader implementation.
+
+Verification: Rojo build and Luau compilation; real Studio GUI drops, hatch,
+Meet, timed camera return, movement with camera/companion follow, and interrupted
+greeting-to-deck transition. Layout fixtures exercised 844×300, 667×285,
+568×198 and 390×740 safe content areas. Landscape bottom margins measured
+30/30/16px, utility-to-arrow gaps 36/26/16px and hatch footer buttons stayed
+44px. Foxfire Wick's full title and button text fit at the smallest size.
+Journal Close stayed visible at each size and at simulated cutout offsets.
+Full-screen dimming covered the complete viewport and safe content origins
+matched. Clock samples checked midnight, dawn, noon and evening.
+These are Studio checks; fresh physical-phone and live multiplayer tests remain.

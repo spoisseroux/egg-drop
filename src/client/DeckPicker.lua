@@ -17,7 +17,7 @@ local trialIcons = {
 function Picker.new(gui, make, label, onPreview, onClose, onApply, onSetting)
 	local shade = make("Frame", "DeckPicker", {
 		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink,
-		BackgroundTransparency = 0.26, BorderSizePixel = 0, Active = true, Visible = false, ZIndex = 20,
+		BackgroundTransparency = 1, BorderSizePixel = 0, Active = true, Visible = false, ZIndex = 20,
 	}, gui)
 	local scroll = make("ScrollingFrame", "Scroll", {
 		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 20,
@@ -29,10 +29,10 @@ function Picker.new(gui, make, label, onPreview, onClose, onApply, onSetting)
 	}, scroll)
 	local function layout()
 		local size = scroll.AbsoluteSize
-		local height = math.max(size.Y, CARD_HEIGHT + 12)
+		local height = math.max(size.Y, CARD_HEIGHT + 40)
 		scroll.CanvasSize = UDim2.fromOffset(size.X, height)
 		scroll.ScrollingEnabled = height > size.Y
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 24, 1, 354), CARD_HEIGHT)
+		card.Size = UDim2.fromOffset(math.clamp(size.X - 40, 1, 354), CARD_HEIGHT)
 		card.Position = UDim2.fromOffset(size.X / 2, (height - CARD_HEIGHT) / 2)
 	end
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)

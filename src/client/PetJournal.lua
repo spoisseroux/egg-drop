@@ -6,30 +6,30 @@ local Portrait = require(script.Parent.PetPortrait)
 
 local Journal = {}
 Journal.__index = Journal
-local CARD_HEIGHT = 244 + (#Pets.rares - 1) * 51
+local CARD_HEIGHT = 378
+local LIST_HEIGHT = (math.ceil(#Pets / 2) + #Pets.rares) * 55
 
 function Journal.new(gui, make, label, onVisit, onTrack)
 	local shade = make("Frame", "PetJournal", {
 		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
-		BackgroundTransparency = 0.30, Active = true, Visible = false, ZIndex = 20,
+		BackgroundTransparency = 1, Active = true, Visible = false, ZIndex = 20,
 	}, gui)
+	local card = make("Frame", "Card", {
+		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 21,
+		Position = UDim2.fromScale(0.5, 0.5),
+	}, shade)
 	local scroll = make("ScrollingFrame", "Scroll", {
-		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 20,
+		Size = UDim2.new(1, -16, 1, -103), Position = UDim2.fromOffset(8, 43),
+		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 22,
 		ScrollingDirection = Enum.ScrollingDirection.Y, ScrollBarThickness = 4,
 		ScrollBarImageColor3 = Art.Cyan, ElasticBehavior = Enum.ElasticBehavior.Never,
-	}, shade)
-	local card = make("Frame", "Card", {
-		AnchorPoint = Vector2.new(0.5, 0), BorderSizePixel = 0, ZIndex = 21,
-	}, scroll)
+		CanvasSize = UDim2.fromOffset(0, LIST_HEIGHT),
+	}, card)
 	local function layout()
-		local size = scroll.AbsoluteSize
-		local height = math.max(size.Y, CARD_HEIGHT + 12)
-		scroll.CanvasSize = UDim2.fromOffset(size.X, height)
-		scroll.ScrollingEnabled = height > size.Y
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 24, 1, 384), CARD_HEIGHT)
-		card.Position = UDim2.fromOffset(size.X / 2, (height - CARD_HEIGHT) / 2)
+		local size = shade.AbsoluteSize
+		card.Size = UDim2.fromOffset(math.clamp(size.X - 40, 1, 400), math.clamp(size.Y - 40, 1, CARD_HEIGHT))
 	end
-	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
+	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 	layout()
 	Art.panel(card, 12)
 	local title = label("TextLabel", "Title", "", card)
@@ -38,13 +38,14 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 	title.Font = Enum.Font.Code
 	title.TextSize = 16
 	title.ZIndex = 22
+	Art.fitText(title, 16, 11, 12)
 	local self = setmetatable({ shade = shade, scroll = scroll, title = title, cards = {}, portraits = {} }, Journal)
 	for index, pet in ipairs(Pets.collection) do
-		local entry = label("TextButton", pet.name, "", card, Art.Raised)
+		local entry = label("TextButton", pet.name, "", scroll, Art.Raised)
 		local column = if pet.trial then 0 else (index - 1) % 2 * 0.5
 		local row = if pet.trial then math.ceil(#Pets / 2) + index - #Pets - 1 else math.floor((index - 1) / 2)
-		entry.Position = UDim2.new(column, 7, 0, 36 + row * 51)
-		entry.Size = UDim2.new(if pet.trial then 1 else 0.5, -14, 0, 46)
+		entry.Position = UDim2.new(column, 3, 0, 2 + row * 55)
+		entry.Size = UDim2.new(if pet.trial then 1 else 0.5, -10, 0, 50)
 		entry.ZIndex = 22
 		Art.button(entry, 6)
 		local well = Art.frame(entry, "PortraitWell", Art.Ink, UDim2.fromOffset(5, 5), UDim2.fromOffset(36, 36))
@@ -54,6 +55,7 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 			Art.Silver, 15, Enum.Font.GothamBold)
 		name.TextXAlignment = Enum.TextXAlignment.Left
 		name.TextTruncate = Enum.TextTruncate.AtEnd
+		Art.fitText(name, 15, 10, 0)
 		local status = Art.text(entry, "Status", "", UDim2.fromOffset(47, 23), UDim2.new(1, -51, 0, 17),
 			Art.Muted, 11, Enum.Font.GothamMedium)
 		status.TextXAlignment = Enum.TextXAlignment.Left
@@ -84,6 +86,7 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 	close.ZIndex = 22
 	close.TextColor3 = Art.Silver
 	Art.button(close, 6)
+	Art.fitText(close, 15, 12, 8)
 	close.Activated:Connect(function()
 		self:close()
 	end)

@@ -97,7 +97,7 @@ function Visual:update(dt)
 		end
 	end
 	local pivot = CFrame.new(self.origin + Vector3.new(0, hop + 0.045 * (1 + math.sin(self.time * 4)), 0))
-		* CFrame.Angles(0, math.sin(self.time * 2.4) * 0.08, math.sin(self.time * 3) * (0.03 + hop * 0.19))
+		* CFrame.Angles(0, (self.yaw or 0) + math.sin(self.time * 2.4) * 0.08, math.sin(self.time * 3) * (0.03 + hop * 0.19))
 	for _, item in ipairs(self.pieces) do
 		item.part.CFrame = pivot * (if item.animated then flourish * item.offset else item.offset)
 	end

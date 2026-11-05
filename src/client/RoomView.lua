@@ -17,24 +17,7 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Room = {}
 Room.__index = Room
 
-local greetingTarget = Vector3.new(0, 5.8, -5)
-local greetingCamera = CFrame.lookAt(Vector3.new(4, 8.2, 3.8), greetingTarget)
 local visuals = { pip = PipVisual, puddle = PuddleVisual }
-
-local function pose(camera, close)
-	local viewport = camera.ViewportSize
-	local aspect = math.max(0.3, viewport.X / math.max(1, viewport.Y))
-	local portrait = aspect < 1
-	local target = if close then Vector3.new(0, 6.0, -5) else Vector3.new(0, 7.9, -6.4)
-	local side = math.min(1, aspect)
-	local offset = if close then Vector3.new(2.8 * side, 3.5, if portrait then 14.5 else 12)
-		else Vector3.new(4.6 * side, 3.1, if portrait then 22.5 else 21.2)
-	return {
-		CFrame = CFrame.lookAt(target + offset, target),
-		Focus = CFrame.new(target),
-		FieldOfView = if portrait then 63 else 55,
-	}
-end
 
 local function createPet(parent, origin, pet)
 	local visual = visuals[pet.family or pet.id] or BonusPetVisual
@@ -67,6 +50,7 @@ local function button(parent, name, title, position, tint)
 	node.ZIndex = 9
 	node.Parent = parent
 	Art.button(node, 6)
+	Art.fitText(node, 14, 10, 5)
 	return node
 end
 
@@ -77,16 +61,16 @@ local function tween(object, seconds, properties)
 end
 
 function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects)
-	local controls = frame(gui, "LoungeControls", UDim2.new(0.9, 0, 0, 110), UDim2.new(0.5, 0, 1, -16), Art.Surface, 8)
-	controls.AnchorPoint = Vector2.new(0.5, 1)
+	local controls = frame(gui, "LoungeControls", UDim2.new(1, -32, 0, 78), UDim2.new(0.5, 0, 0, 10), Art.Surface, 8)
+	controls.AnchorPoint = Vector2.new(0.5, 0)
 	controls.Visible = false
 	Art.panel(controls, 10)
 	local max = Instance.new("UISizeConstraint")
-	max.MaxSize = Vector2.new(430, 110)
+	max.MaxSize = Vector2.new(440, 78)
 	max.Parent = controls
 	local heading = Instance.new("TextLabel")
 	heading.Name = "Heading"
-	heading.Size = UDim2.new(0.56, 0, 0, 44)
+	heading.Size = UDim2.new(0.94, 0, 0, 25)
 	heading.Position = UDim2.fromScale(0.045, 0)
 	heading.BackgroundTransparency = 1
 	heading.Text = "Pip’s lounge"
@@ -97,18 +81,18 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	heading.TextTruncate = Enum.TextTruncate.AtEnd
 	heading.ZIndex = 9
 	heading.Parent = controls
+	Art.fitText(heading, 15, 10, 0)
 	local welcome = Art.text(controls, "FirstVisit", "Say hi to Pip!", UDim2.new(0.045, 0, 0, 26),
 		UDim2.new(0.54, 0, 0, 16), Art.Muted, 11, Enum.Font.GothamMedium)
 	welcome.TextXAlignment = Enum.TextXAlignment.Left
 	welcome.Visible = false
-	local collection = button(controls, "Collection", "Pet journal", UDim2.new(0.60, 0, 0, 3), Art.Raised)
-	collection.Size = UDim2.new(0.375, 0, 0, 44)
-	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Art.Raised)
-	greet.Size = UDim2.new(0.29, 0, 0, 44)
-	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.335, 0, 0, 51), Art.Cyan)
-	leave.Size = UDim2.new(0.33, 0, 0, 44)
-	local customize = button(controls, "Customize", "Customize", UDim2.new(0.685, 0, 0, 51), Art.Raised)
-	customize.Size = UDim2.new(0.29, 0, 0, 44)
+	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0, 8, 0, 27), Art.Raised)
+	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.25, 4, 0, 27), Art.Cyan)
+	local customize = button(controls, "Customize", "Style", UDim2.new(0.50, 0, 0, 27), Art.Raised)
+	local collection = button(controls, "Collection", "Pets", UDim2.new(0.75, -4, 0, 27), Art.Raised)
+	for _, control in ipairs({ greet, leave, customize, collection }) do
+		control.Size = UDim2.new(0.25, -12, 0, 44)
+	end
 
 	local self = setmetatable({
 		board = board,
@@ -116,6 +100,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		controls = controls,
 		heading = heading,
 		welcome = welcome,
+		greetButton = greet,
 		transition = DeckTransition.new(gui, board.Tray),
 		audio = audio,
 		mode = "Board",
@@ -134,23 +119,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.busy or overlayOpen() or not self.pet then
 			return
 		end
-		audio:play(self.shownPet.cue)
-		if reduceEffects() then
-			return
-		end
-		local camera = workspace.CurrentCamera
-		self.pet:greet()
-		if camera then
-			self:cancelCameraTween()
-			self.cameraTween = tween(camera, 0.58, { CFrame = greetingCamera, Focus = CFrame.new(greetingTarget) })
-			local closeup = self.cameraTween
-			task.delay(2.7, function()
-				if self.mode == "Room" and not self.busy and self.cameraTween == closeup
-					and workspace.CurrentCamera == camera then
-					self.cameraTween = tween(camera, 0.75, pose(camera, false))
-				end
-			end)
-		end
+		if self.focusing then self:useRoomCamera(false) else self:focusPet() end
 	end)
 	leave.Activated:Connect(function()
 		if not self.busy and not overlayOpen() then
@@ -179,6 +148,28 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	end)
 	RunService.RenderStepped:Connect(function(dt)
 		if self.pet then
+			local character = Players.LocalPlayer.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+			if self.focusing and humanoid and humanoid.MoveDirection.Magnitude > 0.05 then
+				self:useRoomCamera(false)
+			end
+			if root and not self.focusing then
+				self.followIn = (self.followIn or 0) - dt
+				if self.followIn <= 0 then
+					self.followIn = 0.10
+					local desired = root.Position - root.CFrame.LookVector * 2.4 + root.CFrame.RightVector * 2.4
+					local params = RaycastParams.new()
+					params.FilterDescendantsInstances = { character, self.pet.model }
+					params.RespectCanCollide = true
+					local ground = workspace:Raycast(desired + Vector3.new(0, 5, 0), Vector3.new(0, -50, 0), params)
+					self.followTarget = Vector3.new(desired.X, if ground then ground.Position.Y + 0.02 else 4.02, desired.Z)
+				end
+				if self.followTarget then
+					self.pet.origin = self.pet.origin:Lerp(self.followTarget,
+						if (self.pet.origin - self.followTarget).Magnitude > 24 then 1 else 1 - math.exp(-7 * dt))
+				end
+			end
 			self.pet:update(dt)
 			self.companions:update(dt)
 		end
@@ -222,12 +213,15 @@ function Room:showPet(pet)
 	if self.pet then
 		self.pet:destroy()
 	end
-	self.pet = createPet(workspace, Vector3.new(0, 4.23, -5), pet)
+	local character = Players.LocalPlayer.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local position = if root then root.Position + root.CFrame.RightVector * 2.4 else Vector3.new(0, 4.02, -5)
+	self.pet = createPet(workspace, Vector3.new(position.X, 4.02, position.Z), pet)
+	self.followIn, self.followTarget = 0, nil
 	if not self.reduceEffects() then
 		self.pet:greet()
 	end
-	self.heading.Text = if self.welcome.Visible then "Sprout Hollow"
-		else string.format("%s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
+	self.heading.Text = string.format("Sprout Hollow  ·  %s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
 end
 
 function Room:cancelCameraTween()
@@ -239,6 +233,8 @@ end
 
 function Room:restoreCamera()
 	self:cancelCameraTween()
+	self.focusing = false
+	self.greetButton.Text = "Say hi"
 	if self.viewportChanged then
 		self.viewportChanged:Disconnect()
 		self.viewportChanged = nil
@@ -264,31 +260,72 @@ function Room:useRoomCamera(animate)
 			camera = camera, type = camera.CameraType, transform = camera.CFrame,
 			focus = camera.Focus, fov = camera.FieldOfView,
 		}
-		self.viewportChanged = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-			if self.mode == "Room" and workspace.CurrentCamera == camera then
-				self:useRoomCamera(false)
-			end
-		end)
 	else
 		self:cancelCameraTween()
 	end
-	camera.CameraType = Enum.CameraType.Scriptable
-	local start = pose(camera, animate)
-	camera.CFrame, camera.Focus, camera.FieldOfView = start.CFrame, start.Focus, start.FieldOfView
-	if animate then
-		self.cameraTween = tween(camera, 0.46, pose(camera, false))
+	self.focusing = false
+	self.greetButton.Text = "Say hi"
+	local character = Players.LocalPlayer.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if humanoid then
+		camera.CameraSubject = humanoid
 	end
+	camera.FieldOfView = 65
+	if root and not self.roamed then
+		local target = root.Position + Vector3.new(0, 1, 0)
+		camera.CFrame = CFrame.lookAt(target + Vector3.new(5, 6, 12), target)
+	end
+	self.roamed = true
+	camera.CameraType = Enum.CameraType.Custom
+end
+
+function Room:focusPet()
+	local camera = workspace.CurrentCamera
+	if not camera or not self.pet or self.mode ~= "Room" then return end
+	self:cancelCameraTween()
+	self.focusing = true
+	self.greetButton.Text = "Roam"
+	self.audio:play(self.shownPet.cue)
+	if not self.reduceEffects() then self.pet:greet() end
+	-- Present the pet in front of the avatar, clear of the avatar's silhouette.
+	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	local side = if root and root.Position.Z > 9 then -1 else 1
+	if root then
+		self.pet.origin = Vector3.new(root.Position.X, 4.02, root.Position.Z + 4.5 * side)
+	end
+	self.pet.yaw = if side == 1 then 0 else math.pi
+	local target = self.pet.origin + Vector3.new(0, 1.25, 0)
+	local portrait = camera.ViewportSize.X < camera.ViewportSize.Y
+	local destination = CFrame.lookAt(target + Vector3.new(1.2, 1.6, side * (if portrait then 9 else 7.4)), target)
+	camera.CameraType = Enum.CameraType.Scriptable
+	local epoch = (self.focusEpoch or 0) + 1
+	self.focusEpoch = epoch
+	if self.reduceEffects() then
+		camera.CFrame, camera.Focus, camera.FieldOfView = destination, CFrame.new(target), 43
+	else
+		self.cameraTween = tween(camera, 0.45, { CFrame = destination, Focus = CFrame.new(target), FieldOfView = 43 })
+	end
+	task.delay(2.8, function()
+		if self.mode == "Room" and not self.busy and self.focusing and self.focusEpoch == epoch
+			and workspace.CurrentCamera == camera then self:useRoomCamera(false) end
+	end)
 end
 
 function Room:show(mode, animate)
-	self.welcome.Visible = mode == "Room" and self.welcomeNext == true
-	self.heading.Size = UDim2.new(0.56, 0, 0, if self.welcome.Visible then 26 else 44)
+	self.welcome.Visible = false
 	if mode == "Room" then
+		local meet = self.requestedPet ~= nil
 		self.welcomeNext = nil
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
 		self:showPet(self.requestedPet or equipped)
 		self.requestedPet = nil
 		self:useRoomCamera(animate)
+		if meet then
+			task.delay(0.35, function()
+				if self.mode == "Room" and self.pet then self:focusPet() end
+			end)
+		end
 	else
 		self.companions:clear()
 		if self.pet then

@@ -27,8 +27,10 @@ local HatchReveal = require(script.HatchReveal)
 local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
+local HollowClock = require(script.HollowClock)
 local Portrait = require(script.PetPortrait)
 local audio = Audio.new()
+HollowClock.start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
@@ -87,6 +89,15 @@ local bleed = make("ScreenGui", "EggDropBleed", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 9,
 }, gui.Parent)
 local backing = Art.frame(bleed, "BoardBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 1)
+-- Full-screen visuals and safe interactive content need separate coordinate spaces.
+local overlayGui = make("ScreenGui", "EggDropOverlays", {
+	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 11,
+}, gui.Parent)
+local modalShade = Art.frame(overlayGui, "ModalShade", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 1)
+modalShade.BackgroundTransparency = 0.18
+modalShade.Active, modalShade.Visible = true, false
+local safeOverlays = Art.frame(overlayGui, "SafeContent", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), 2)
+safeOverlays.BackgroundTransparency = 1
 local backdrop = make("Frame", "Backdrop", {
 	BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
 }, gui)
@@ -111,7 +122,7 @@ do
 	end
 	local bands = Art.frame(plate, "AccentBands", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(82, 26))
 	bands.BackgroundTransparency = 1
-	for index, tint in ipairs({ Color3.fromHex("#E88764"), Color3.fromHex("#F3B83E"), Color3.fromHex("#61A992") }) do
+	for index, tint in ipairs({ Art.Leaf, Art.Orange, Art.Ink }) do
 		local band = Art.frame(bands, "Band", tint, UDim2.fromOffset((index - 1) * 18 + 7, 3),
 			UDim2.fromOffset(9, 22))
 		band.Rotation = 27
@@ -134,7 +145,7 @@ do
 end
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
-	BackgroundColor3 = Color3.fromHex("#192735"), BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromHex("#C6DFA0"), BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
 }, backdrop)
@@ -187,7 +198,7 @@ local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 17
 title.TextColor3 = Art.Silver
-Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Muted, 10)
+Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10)
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
 	BackgroundColor3 = Art.Cyan, BorderSizePixel = 0,
@@ -384,9 +395,11 @@ end, function()
 end, reduceEffects)
 do
 	local handoff = gui.DeckHandoff
+	handoff.Parent = safeOverlays
 	local curtain = Art.frame(bleed, "HandoffBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 2)
 	local function updateBacking()
 		bleed.Enabled = gui.Enabled
+		overlayGui.Enabled = gui.Enabled
 		backing.Visible = backdrop.Visible
 		curtain.Visible = handoff.Visible and not backdrop.Visible
 		curtain.BackgroundTransparency = handoff.BackgroundTransparency
@@ -397,7 +410,7 @@ do
 	handoff:GetPropertyChangedSignal("BackgroundTransparency"):Connect(updateBacking)
 	updateBacking()
 end
-journal = PetJournal.new(gui, make, label, function(pet)
+journal = PetJournal.new(safeOverlays, make, label, function(pet)
 	if board:GetAttribute("CompanionId") == pet.id then
 		roomView:showPet(pet)
 		audio:play(pet.cue)
@@ -432,7 +445,7 @@ end)
 local modal = make("Frame", "RoundCard", {
 	Active = true, Visible = false, BorderSizePixel = 0, ZIndex = 10,
 	AnchorPoint = Vector2.new(0.5, 0.5),
-}, backdrop)
+}, safeOverlays)
 Art.panel(modal, 12, Art.Amber)
 local modalTag = Art.text(modal, "Channel", "", UDim2.fromOffset(12, 5),
 	UDim2.new(1, -24, 0, 16), Art.Amber, 11)
@@ -443,6 +456,7 @@ modalTitle.Font = Enum.Font.GothamBold
 modalTitle.TextSize = 20
 modalTitle.TextColor3 = Art.Silver
 modalTitle.ZIndex = 11
+Art.fitText(modalTitle, 20, 12, 12)
 local hatchStage = Art.frame(modal, "HatchStage", Art.Ink, UDim2.fromOffset(12, 55), UDim2.new(1, -24, 0, 108), 11)
 Art.corner(hatchStage, 7)
 Art.stroke(hatchStage, Art.Line)
@@ -476,6 +490,8 @@ keepPlaying.ZIndex = 11
 keepPlaying.TextColor3 = Art.Silver
 for _, button in ipairs({ modalAction, keepPlaying }) do
 	Art.button(button, 7)
+	Art.fitText(button, 15, 10, 9)
+	button.TextWrapped = true
 end
 local knownPets = board:GetAttribute("OwnedPets") or 0
 local hatchQueue = {}
@@ -514,7 +530,7 @@ local function paintDeck(id, stickerId)
 	rightAim.BackgroundColor3 = leftAim.BackgroundColor3
 	leftAim.TextColor3 = if theme.rocker then Art.Ink else Art.Silver
 	rightAim.TextColor3 = leftAim.TextColor3
-	title.TextColor3 = if theme.face then Art.Ink else Art.Silver
+	title.TextColor3 = if id == "moss" then Art.Silver else Art.Ink
 	status.TextColor3 = if status.BackgroundTransparency < 1 then Art.Silver else title.TextColor3
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
@@ -533,7 +549,7 @@ local function canPlay()
 	return canAim() and not isPickerOpen() and not roomView.busy and not GuiService.MenuIsOpen
 end
 
-picker = DeckPicker.new(gui, make, label, paintDeck, function()
+picker = DeckPicker.new(safeOverlays, make, label, paintDeck, function()
 	local selected = GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(picker.shade) then
 		local controls = gui.LoungeControls
@@ -548,6 +564,28 @@ end, function(themeId, stickerId)
 end, function(actionName)
 	request:FireServer(actionName)
 end)
+
+do
+	local handoff = safeOverlays.DeckHandoff
+	local function alignSafeContent()
+		local origin = backdrop.AbsolutePosition - overlayGui.AbsolutePosition
+		safeOverlays.Position = UDim2.fromOffset(origin.X, origin.Y)
+		safeOverlays.Size = UDim2.fromOffset(backdrop.AbsoluteSize.X, backdrop.AbsoluteSize.Y)
+	end
+	local function updateShade()
+		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible
+	end
+	for _, node in ipairs({ modal, picker.shade, journal.shade }) do
+		node:GetPropertyChangedSignal("Visible"):Connect(updateShade)
+	end
+	-- Handoff must cover overlays as well as the board during a mode switch.
+	handoff.ZIndex = 50
+	backdrop:GetPropertyChangedSignal("AbsolutePosition"):Connect(alignSafeContent)
+	backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(alignSafeContent)
+	overlayGui:GetPropertyChangedSignal("AbsolutePosition"):Connect(alignSafeContent)
+	alignSafeContent()
+	updateShade()
+end
 
 local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
@@ -739,12 +777,12 @@ local function updateHud()
 	status.Text = if lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
 		then trialNotice else string.format("%d pts   ·   Chain ×%d", score, chain)
 	pet.Visible = showHatch == true and not over
-	hatchStage.Visible, hatchIndex.Visible = pet.Visible, pet.Visible
+	hatchStage.Visible = pet.Visible
+	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
 	modalTag.Text = if over then "ROUND RECAP  ·  BEST " .. best
 		elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	recap.frame.Visible = over
 	if wasRecap ~= over then
-		modal.Size = UDim2.new(modal.Size.X, UDim.new(0, recap:height(backdrop.AbsoluteSize.Y)))
 		modalTitle.Size = UDim2.new(1, 0, 0, if over then 28 else 35)
 	end
 	if over then
@@ -775,12 +813,13 @@ local function updateHud()
 		if oldPortrait then
 			oldPortrait:Destroy()
 		end
-		Portrait.create(pet, hatchPet, 7, UDim2.fromScale(0.5, 0.5), 15)
+		local portrait = Portrait.create(pet, hatchPet, 7, UDim2.fromScale(0.5, 0.5), 15)
+		make("UIScale", "StageFit", { Scale = math.min(1, pet.Size.Y.Offset / 91) }, portrait)
 		hatchIndex.Text = if hatchPet.trial then hatchPet.trial.name .. " complete"
 			elseif hatchPet == Pets[1] then "Sprout Hollow is open!"
 			else string.format("PET %02d / %02d", hatchPet.index, #Pets)
 		local resetId = board:GetAttribute("ResetId")
-		if reduceEffects() then
+		if reduceEffects() or pet.Size.Y.Offset < 70 then
 			reveal:cancel()
 			audio:play("hatch")
 		else
@@ -798,7 +837,7 @@ local function layout()
 	local portraitRail = not lateral and screen.X >= 300 and screen.Y >= 360
 	shell.MicroTrim.Visible = lateral
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local microHeight = math.min(620, screen.Y - 18)
+	local microHeight = math.min(620, screen.Y - (if screen.Y < 280 then 32 else 52))
 	local sideGoal = lateral and math.min(screen.X - 230, (microHeight - 129) * ratio) < 126
 	local width = if lateral then math.max(1, math.min(screen.X - 230, (microHeight - (if sideGoal then 101 else 129)) * ratio))
 		else math.max(1, math.min(415, screen.X - (if portraitRail then 134 else 36),
@@ -810,7 +849,7 @@ local function layout()
 	local left = (screen.X - totalWidth) / 2
 	local shellHeight = if lateral then microHeight elseif portraitRail then height + 198 else height + 264
 	local shortDeck = lateral and shellHeight < 205
-	local top = math.max(5, (screen.Y - shellHeight) / 2)
+	local top = math.max(16, (screen.Y - shellHeight) / 2 - 4)
 	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
 	local trayY = top + (if lateral then 62 else 70)
 	local trayBottom = trayY + height
@@ -819,6 +858,7 @@ local function layout()
 	local radius = if lateral then math.clamp(math.floor(shellHeight * 0.085), 18, 36) else 23
 	shell.ShellCurve.CornerRadius = UDim.new(0, radius)
 	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 4)
+	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 5)
 	local bezelGutter = if lateral then 10 else 5
 	bezel.Position = UDim2.fromOffset(screenX - bezelGutter, trayY - 46)
 	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2,
@@ -828,7 +868,18 @@ local function layout()
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
 	modal.Position = UDim2.fromScale(0.5, 0.5)
-	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), recap:height(screen.Y))
+	local dialogHeight = math.min(236, math.max(1, screen.Y - 32))
+	local compactDialog = dialogHeight < 220
+	modal:SetAttribute("CompactDialog", compactDialog)
+	modal.Size = UDim2.fromOffset(math.min(360, screen.X - 32), dialogHeight)
+	local stageHeight = math.max(24, dialogHeight - 55 - 55 - (if compactDialog then 0 else 18))
+	hatchStage.Size = UDim2.new(1, -24, 0, stageHeight)
+	hatchIndex.Position = UDim2.fromOffset(12, 55 + stageHeight)
+	hatchIndex.Visible = pet.Visible and not compactDialog
+	pet.Position = UDim2.new(0.5, 0, 0, 55 + stageHeight / 2)
+	pet.Size = UDim2.fromOffset(math.min(88, stageHeight - 4), math.min(88, stageHeight - 4))
+	local portrait = pet:FindFirstChild("Portrait")
+	if portrait then portrait.StageFit.Scale = math.min(1, pet.Size.Y.Offset / 91) end
 	title.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.063 else top + 1)
 	title.Size = UDim2.fromOffset(if lateral then grip else totalWidth, 23)
 	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
@@ -878,11 +929,13 @@ local function layout()
 		math.clamp(math.floor((grip - 14) / 2), 44, 70)) else 44
 	local aimWidth = aimSize * 2 + 6
 	local sideBySide = lateral and shellHeight < 276
-	local utilityY = shellHeight - 14 - (if sideBySide then 44 else 94)
-	local dropRow = math.max(55, math.floor(shellHeight * 0.36))
-	local aimY = if lateral then math.min(dropRow, utilityY - aimSize - 32) elseif portraitRail then 95 else 0
+	local utilityY = if lateral then (if shellHeight < 230 then 27 else math.max(48, math.floor(shellHeight * 0.32))) else shellHeight - 108
+	local dropRow = shellHeight - dropSize - 40
+	local aimY = if lateral then math.max(utilityY + (if sideBySide then 44 else 94) + 8,
+		dropRow + (dropSize - aimSize) / 2 - 8) elseif portraitRail then 95 else 0
 	local dropX = if lateral then totalWidth - grip * 0.5 - dropSize * 0.5 else totalWidth - dropSize
-	local dropY = if lateral then dropRow elseif portraitRail then trayBottom - top + 58 else 0
+	local dropY = if lateral then math.max(dropRow, aimY + 8 + (aimSize - dropSize) / 2)
+		elseif portraitRail then trayBottom - top + 58 else 0
 	dpad.Position = UDim2.fromOffset(if lateral or portraitRail then (grip - aimWidth) * 0.5 else 0, aimY)
 	dpad.Size = UDim2.fromOffset(aimWidth, aimSize + 12)
 	dpad.RockerWell.Size = UDim2.fromOffset(aimWidth + 6, aimSize + 7)
@@ -896,9 +949,9 @@ local function layout()
 	hardware.DropWell:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
 	dropCaption.Size = UDim2.fromOffset(dropSize, 16)
 	dropCaption.Position = UDim2.fromOffset(dropX, dropY + dropSize + 6)
-	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 28, shellHeight * 0.76)
+	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 28, shellHeight * 0.40)
 	vents.Visible = lateral and shellHeight >= 220
-	hardware.MakerMark.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 48, shellHeight * 0.89)
+	hardware.MakerMark.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 48, shellHeight * 0.56)
 	hardware.MakerMark.Visible = lateral and shellHeight >= 285
 	do
 		local plate = shell.Faceplate

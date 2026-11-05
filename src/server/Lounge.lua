@@ -124,22 +124,22 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	attach(device, torso, "Bezel", Vector3.new(0.69, 0.74, 0.026),
 		mount * CFrame.new(0, 0.022, -0.109), Palette.Rim)
 	local screen = attach(device, torso, "Screen", Vector3.new(0.49, 0.665, 0.029),
-		mount * CFrame.new(0, 0.022, -0.131), Color3.fromHex("#182C39"))
+		mount * CFrame.new(0, 0.022, -0.131), Color3.fromHex("#C6DFA0"))
 	local power = attach(device, torso, "Power", Vector3.new(0.055, 0.055, 0.027),
-		mount * CFrame.new(-0.75, 0.25, -0.102), Color3.fromHex("#54D9F3"))
+		mount * CFrame.new(-0.75, 0.25, -0.102), Color3.fromHex("#C2EC74"))
 	power.Material = Enum.Material.Neon
 	attach(device, torso, "AimRocker", Vector3.new(0.27, 0.13, 0.06),
-		mount * CFrame.new(0.59, 0.041, -0.112), Color3.fromHex("#283744"))
+		mount * CFrame.new(0.59, -0.24, -0.112), Palette.Ink)
 	attach(device, torso, "AimDivider", Vector3.new(0.018, 0.105, 0.012),
-		mount * CFrame.new(0.59, 0.041, -0.146), Palette.Rim)
+		mount * CFrame.new(0.59, -0.24, -0.146), Palette.Rim)
 	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
-		mount * CFrame.new(-0.60, 0.041, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
+		mount * CFrame.new(-0.60, -0.24, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
 	buttonA.Shape = Enum.PartType.Cylinder
-	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.24, -0.107), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, -0.34, -0.107), Palette.Ink)
+	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, 0.10, -0.107), Palette.Ink)
+	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, 0.0, -0.107), Palette.Ink)
 	for index = 0, 2 do
 		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
-			mount * CFrame.new(-0.65 - index * 0.044, -0.22, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
+			mount * CFrame.new(-0.65 - index * 0.044, 0.12, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
 	end
 	paintDevice(device, themeId, stickerId)
 	local badge = Instance.new("BillboardGui")

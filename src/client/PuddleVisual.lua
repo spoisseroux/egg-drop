@@ -139,7 +139,7 @@ function PuddleVisual:update(dt)
 	local breathe = math.sin(t * 2.1) * 0.018
 	local scale = Vector3.new(1 + squash * 0.55 - breathe * 0.4, 1 - squash + breathe, 1 + squash * 0.30)
 	local root = CFrame.new(self.origin + Vector3.new(0, bounce, 0))
-		* CFrame.Angles(0, math.sin(t * 0.9) * 0.025, 0)
+		* CFrame.Angles(0, (self.yaw or 0) + math.sin(t * 0.9) * 0.025, 0)
 	local blink = t % 5.1 > 4.93
 	local tailBase = CFrame.new(Vector3.new(0.90, 0.49, -0.25) * scale)
 	for _, entry in ipairs(self.pieces) do
