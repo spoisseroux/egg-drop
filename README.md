@@ -15,8 +15,9 @@ Finish all three trials during regular play to earn the Club sticker.
 Published servers save pet ownership, hatch charge, personal best,
 companion, trial completion, settings, and the deck's appearance. Studio
 uses an in-memory profile for each play session.
-Sustained overflow ends the round. **Try again** starts a fresh tray and
-score. Hatch charge and collection progress carry over. See the
+Sustained overflow ends the round. The recap shows score, best chain,
+tier V clears, and the next hatch. Choose **Try again** or press Enter
+to start a fresh tray. Hatch charge and collection progress carry over. See the
 [prototype rundown](PROTOTYPE.md) and [product scope](PRODUCT-SCOPE.md).
 
 Generate the original sound bank with `python scripts/synth_egg_drop.py`.

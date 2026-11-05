@@ -45,8 +45,8 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Entering Sprout Hollow | The deck LCD closes to a cyan scanline, then the camera pulls back from a mossy nest under the hatchery tree | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
 | Sprout Hollow | A garden clearing with a canvas workbench, wooden field journal, creek, and footbridge | Nearby players can see the live tray on each player's horizontal handheld and see companions around the clearing. |
 | Return | The room fades and the scanline opens back into the LCD | Restores the prior camera and deck pose and resumes the same eggs, charge, and round. |
-| Overflow | Round score, personal best, and retry | Sustained occupancy above the line or the egg cap ends the round. Fresh drops get grace. |
-| Try again | Four starter eggs and a fresh round score | Hatch charge, pet collection, best score, and equipment carry over. |
+| Overflow | Score, personal best, best chain, tier V clears, and progress toward the next hatch | Sustained occupancy above the line or the egg cap ends the round. Any hatches earned on the final move appear before the recap. |
+| Try again | One button or Enter to start a fresh tray and drop immediately | Hatch charge, pet collection, best score, and equipment carry over. Rare challenge progress for the finished round starts fresh. |
 | Customize | Shell and Sticker tabs with a handheld preview | Equip updates both the board and the held device. Close restores the equipped look. |
 | Club | Three replay trials, SFX volume, and motion settings | Regular board play earns trial completions. The server unlocks the Club sticker after all three. |
 | Leave | Avatar and deck disappear | Cleans up the session tray. |

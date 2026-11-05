@@ -95,6 +95,7 @@ local function reset(board, preset)
 	board.chain = 0
 	board.peakChain = 0
 	board.lastMerge = -math.huge
+	board.lastDrop = -math.huge
 	board.playTime = 0
 	publishState(board)
 	syncVisuals(board)

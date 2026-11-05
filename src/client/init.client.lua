@@ -24,6 +24,7 @@ local PetJournal = require(script.PetJournal)
 local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
+local RoundRecap = require(script.RoundRecap)
 local Art = require(script.DeckArt)
 local Portrait = require(script.PetPortrait)
 local audio = Audio.new()
@@ -428,12 +429,7 @@ pet.Size = UDim2.fromOffset(88, 88)
 pet.ZIndex = 14
 pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
-local modalNote = label("TextLabel", "Detail", "", modal)
-modalNote.Position = UDim2.new(0.06, 0, 0, 57)
-modalNote.Size = UDim2.new(0.88, 0, 0, 66)
-modalNote.TextWrapped = true
-modalNote.TextColor3 = Art.Muted
-modalNote.ZIndex = 11
+local recap = RoundRecap.new(modal)
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
 modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
@@ -611,6 +607,8 @@ local function updateHud()
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
+	local peakChain = board:GetAttribute("PeakChain") or 0
+	local maxClears = board:GetAttribute("MaxClears") or 0
 	local score = board:GetAttribute("Score") or 0
 	local best = board:GetAttribute("BestScore") or 0
 	local charge = board:GetAttribute("HatchCharge") or 0
@@ -681,29 +679,37 @@ local function updateHud()
 	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
 		else string.format("Collection   %d / %d", Pets.ownedCount(owned, mask), #Pets.collection)
 	rareGoal.Visible = owned > 0
+	local rareProgress = 0
 	if nextRare then
 		local goal = nextRare.trial
-		local current = if goal == Trials.HighRoller then score
-			elseif goal == Trials.Fivefold then board:GetAttribute("PeakChain") or 0
-			else board:GetAttribute("MaxClears") or 0
-		rareGoal.Text = string.format("%s\n%s %d/%d", nextRare.name, goal.readout, math.min(current, goal.target), goal.target)
+		rareProgress = math.min(if goal == Trials.HighRoller then score
+			elseif goal == Trials.Fivefold then peakChain else maxClears, goal.target)
+		rareGoal.Text = string.format("%s\n%s %d/%d", nextRare.name, goal.readout, rareProgress, goal.target)
 	else
 		rareGoal.Text = "Rare collection complete"
 	end
 	local mode = board:GetAttribute("Mode")
 	local showHatch = hatchPet ~= nil and mode == "Board"
-	local over = board:GetAttribute("RoundOver") and not showHatch
+	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
-	modal.Visible = mode == "Board" and (over == true or showHatch)
+	local wasRecap = recap.frame.Visible
+	modal.Visible = over or showHatch
 	if modal.Visible then
 		clearPlayInputs()
 		picker:close()
 	end
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible, hatchIndex.Visible = pet.Visible, pet.Visible
-	modalTag.Text = if over then "ROUND REPORT" elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
-	modalNote.Visible = over == true
-	modalNote.Text = string.format("Round score   %d\nPersonal best   %d", score, best)
+	modalTag.Text = if over then "ROUND RECAP  ·  BEST " .. best
+		elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
+	recap.frame.Visible = over
+	if wasRecap ~= over then
+		modal.Size = UDim2.new(modal.Size.X, UDim.new(0, recap:height(backdrop.AbsoluteSize.Y)))
+		modalTitle.Size = UDim2.new(1, 0, 0, if over then 28 else 35)
+	end
+	if over then
+		recap:update(score, peakChain, maxClears, nextPet, charge, nextRare, rareProgress)
+	end
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
 		else "You hatched " .. (hatchName or "") .. "!"
 	readout.Text = tostring(score)
@@ -712,7 +718,7 @@ local function updateHud()
 	modalAction.Position = UDim2.new(if over then 0.09 else 0.05, 0, 1, -52)
 	modalAction.Size = UDim2.new(if over then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over
-	if modal.Visible and not wasVisible and isGamepad(UserInputService:GetLastInputType()) then
+	if modal.Visible and (not wasVisible or (over and not wasRecap)) and isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = modalAction
 	elseif not modal.Visible and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(modal) then
 		GuiService.SelectedObject = nil
@@ -780,7 +786,7 @@ local function layout()
 	overlay.Position = viewport.Position
 	overlay.Size = viewport.Size
 	modal.Position = UDim2.fromScale(0.5, 0.5)
-	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), 236)
+	modal.Size = UDim2.fromOffset(math.min(math.max(width * 0.9, 246), screen.X - 24), recap:height(screen.Y))
 	title.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.063 else top + 1)
 	title.Size = UDim2.fromOffset(if lateral then grip else totalWidth, 23)
 	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
@@ -927,6 +933,13 @@ for button, direction in pairs({ [leftAim] = -1, [rightAim] = 1 }) do
 end
 action.Activated:Connect(dropEgg)
 
+local function requestRetry()
+	if modal.Visible and recap.frame.Visible and not roomView.busy and not GuiService.MenuIsOpen
+		and not UserInputService:GetFocusedTextBox() then
+		request:FireServer("reset")
+	end
+end
+
 local function handleControl(name, state, input)
 	local key = input.KeyCode
 	if state == Enum.UserInputState.Cancel then
@@ -935,6 +948,12 @@ local function handleControl(name, state, input)
 		heldAim[key] = nil
 	end
 	local gamepad = isGamepad(input.UserInputType)
+	if key == Enum.KeyCode.ButtonA and recap.frame.Visible and not GuiService.MenuIsOpen then
+		if state == Enum.UserInputState.Begin then
+			requestRetry()
+		end
+		return Enum.ContextActionResult.Sink
+	end
 	if not canPlay() or UserInputService:GetFocusedTextBox() or (gamepad and GuiService.SelectedObject) then
 		return Enum.ContextActionResult.Pass
 	end
@@ -1009,12 +1028,17 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
 GuiService.MenuOpened:Connect(clearPlayInputs)
+UserInputService.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == Enum.KeyCode.Return then
+		requestRetry()
+	end
+end)
 modalAction.Activated:Connect(function()
 	if roomView.busy then
 		return
 	end
-	if modalNote.Visible then
-		request:FireServer("reset")
+	if recap.frame.Visible then
+		requestRetry()
 	elseif hatchQueue[1] then
 		roomView:requestSwitch(function()
 			if hatchQueue[1] then
