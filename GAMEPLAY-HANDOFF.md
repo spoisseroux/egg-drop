@@ -1,5 +1,10 @@
 # Egg Drop gameplay review brief
 
+The subsequent Astra review and proposed build sequence are in
+[Nursery loop — overnight plan](OVERNIGHT-NURSERY-LOOP.md). It incorporates the
+request for earned resources and uncertain egg outcomes, and distinguishes the
+next playable hypothesis from currently shipped mechanics.
+
 Review https://github.com/spoisseroux/egg-drop on `feat/egg-drop-arcade-polish`.
 Use the current code, PROTOTYPE.md and PRODUCT-SCOPE.md as evidence. GAME-DESIGN.md
 contains earlier ambitions; do not describe those as implemented features.
