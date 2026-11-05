@@ -19,7 +19,7 @@ Room.__index = Room
 
 local greetingTarget = Vector3.new(0, 5.8, -5)
 local greetingCamera = CFrame.lookAt(Vector3.new(4, 8.2, 3.8), greetingTarget)
-local visuals = { Pip = PipVisual, Puddle = PuddleVisual }
+local visuals = { pip = PipVisual, puddle = PuddleVisual }
 
 local function pose(camera, close)
 	local viewport = camera.ViewportSize
@@ -37,7 +37,7 @@ local function pose(camera, close)
 end
 
 local function createPet(parent, origin, pet)
-	local visual = visuals[pet.name] or BonusPetVisual
+	local visual = visuals[pet.family or pet.id] or BonusPetVisual
 	return visual.new(parent, origin, pet)
 end
 
@@ -115,7 +115,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		mode = "Board",
 		target = "Board",
 		lastSwitchAt = -math.huge,
-		petIndex = 1,
+		shownPet = Pets[1],
 		companions = RoomCompanions.new(progress.Parent, createPet),
 	}, Room)
 	self.reduceEffects = reduceEffects
@@ -128,7 +128,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.busy or overlayOpen() or not self.pet then
 			return
 		end
-		audio:play(Pets[self.petIndex].cue)
+		audio:play(self.shownPet.cue)
 		if reduceEffects() then
 			return
 		end
@@ -199,28 +199,25 @@ function Room:requestSwitch(callback)
 	end)
 end
 
-function Room:choosePet(name)
-	local owned = self.progress:GetAttribute("OwnedPets") or 0
-	for index = 1, owned do
-		if Pets[index].name == name then
-			self.requestedPet = index
-			return
-		end
-	end
+function Room:choosePet(pet)
+	self.requestedPet = pet
 end
 
-function Room:showPet(index)
-	local owned = math.max(1, self.progress:GetAttribute("OwnedPets") or 0)
-	self.petIndex = math.clamp(index, 1, owned)
+function Room:showPet(pet)
+	local owned = self.progress:GetAttribute("OwnedPets") or 0
+	local trials = self.progress:GetAttribute("TrialMask") or 0
+	if not pet or not Pets.isUnlocked(pet, owned, trials) then
+		pet = Pets[1]
+	end
+	self.shownPet = pet
 	if self.pet then
 		self.pet:destroy()
 	end
-	local pet = Pets[self.petIndex]
 	self.pet = createPet(workspace, Vector3.new(0, 4.23, -5), pet)
 	if not self.reduceEffects() then
 		self.pet:greet()
 	end
-	self.heading.Text = string.format("%s  ·  %d/%d", Pets[self.petIndex].name, owned, #Pets)
+	self.heading.Text = string.format("%s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
 end
 
 function Room:cancelCameraTween()
@@ -276,7 +273,7 @@ end
 function Room:show(mode, animate)
 	if mode == "Room" then
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
-		self:showPet(self.requestedPet or (equipped and equipped.index) or 1)
+		self:showPet(self.requestedPet or equipped)
 		self.requestedPet = nil
 		self:useRoomCamera(animate)
 	else
@@ -318,7 +315,7 @@ function Room:setMode(mode)
 			if self.mode ~= self.target then
 				self.mode = self.target
 				self:show(self.mode, animate)
-				self.audio:play(if self.mode == "Room" then Pets[self.petIndex].cue else "menu")
+				self.audio:play(if self.mode == "Room" then self.shownPet.cue else "menu")
 			end
 			if animate then
 				self.transition:reveal(self.mode == "Board")

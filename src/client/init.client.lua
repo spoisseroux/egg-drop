@@ -362,10 +362,20 @@ do
 	handoff:GetPropertyChangedSignal("BackgroundTransparency"):Connect(updateBacking)
 	updateBacking()
 end
-journal = PetJournal.new(gui, make, label, function(index)
-	roomView:showPet(index)
-	request:FireServer("companion", Pets[index].id)
-	audio:play(Pets[index].cue)
+journal = PetJournal.new(gui, make, label, function(pet)
+	if board:GetAttribute("CompanionId") == pet.id then
+		roomView:showPet(pet)
+		audio:play(pet.cue)
+	else
+		request:FireServer("companion", pet.id)
+	end
+end)
+board:GetAttributeChangedSignal("CompanionId"):Connect(function()
+	local pet = Pets.byId[board:GetAttribute("CompanionId")]
+	if pet and roomView.controls.Visible and board:GetAttribute("Mode") == "Room" then
+		roomView:showPet(pet)
+		audio:play(pet.cue)
+	end
 end)
 roomButton.Activated:Connect(function()
 	if not isPickerOpen() then
@@ -519,7 +529,7 @@ openPicker = function()
 	audio:play("menu")
 end
 openJournal = function()
-	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("CompanionId"),
+	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
 		isGamepad(UserInputService:GetLastInputType()))
 	audio:play("menu")
 end
@@ -599,16 +609,16 @@ local function updateHud()
 	local charge = board:GetAttribute("HatchCharge") or 0
 	local owned = board:GetAttribute("OwnedPets") or 0
 	local mask = board:GetAttribute("TrialMask") or 0
+	local newlyEarned = bit32.band(mask, bit32.bnot(lastTrialMask))
 	if mask ~= lastTrialMask then
-		local unlocked = bit32.band(mask, bit32.bnot(lastTrialMask))
 		lastTrialMask = mask
-		if unlocked ~= 0 then
+		if newlyEarned ~= 0 then
 			trialNotice = "Trial complete! Check the Club tab."
 			if mask == Trials.All then
 				trialNotice = "Club sticker earned!"
 			else
 				for _, goal in ipairs(Trials.Goals) do
-					if bit32.band(unlocked, goal.bit) ~= 0 then
+					if bit32.band(newlyEarned, goal.bit) ~= 0 then
 						trialNotice = goal.name .. " trial complete!"
 						break
 					end
@@ -626,6 +636,9 @@ local function updateHud()
 		table.insert(hatchQueue, Pets[index])
 	end
 	knownPets = owned
+	if bit32.band(newlyEarned, Pets.bloom.trial.bit) ~= 0 then
+		table.insert(hatchQueue, Pets.bloom)
+	end
 	local hatchPet = hatchQueue[1]
 	local hatchName = if hatchPet then hatchPet.name else nil
 	local target = if nextPet then nextPet.charge else #Pets
@@ -653,7 +666,8 @@ local function updateHud()
 		status.Text = "Keep matching to hatch Pip!"
 	end
 	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
-		else string.format("Collection   %d / %d", owned, #Pets)
+		elseif Pets.isUnlocked(Pets.bloom, owned, mask) then string.format("Collection   %d / %d", #Pets.collection, #Pets.collection)
+		else string.format("Bloom Pip   ·   %d pts", Pets.bloom.trial.target)
 	local mode = board:GetAttribute("Mode")
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = board:GetAttribute("RoundOver") and not showHatch
@@ -665,7 +679,7 @@ local function updateHud()
 	end
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible, hatchIndex.Visible = pet.Visible, pet.Visible
-	modalTag.Text = if over then "ROUND REPORT" else "POCKET HATCHERY"
+	modalTag.Text = if over then "ROUND REPORT" elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	modalNote.Visible = over == true
 	modalNote.Text = string.format("Round score   %d\nPersonal best   %d", score, best)
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
@@ -694,7 +708,8 @@ local function updateHud()
 			oldPortrait:Destroy()
 		end
 		Portrait.create(pet, hatchPet, 7, UDim2.fromScale(0.5, 0.5), 15)
-		hatchIndex.Text = string.format("PET %02d / %02d", hatchPet.index, #Pets)
+		hatchIndex.Text = if hatchPet.trial then hatchPet.trial.name .. " complete"
+			else string.format("PET %02d / %02d", hatchPet.index, #Pets)
 		local resetId = board:GetAttribute("ResetId")
 		if reduceEffects() then
 			reveal:cancel()
@@ -973,7 +988,7 @@ modalAction.Activated:Connect(function()
 	elseif hatchQueue[1] then
 		roomView:requestSwitch(function()
 			if hatchQueue[1] then
-				roomView:choosePet(hatchQueue[1].name)
+				roomView:choosePet(hatchQueue[1])
 				request:FireServer("mode", "Room")
 			end
 		end)

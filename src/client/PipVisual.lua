@@ -37,9 +37,11 @@ local function piece(self, name, size, frame, color, rounded, role)
 	return part
 end
 
-function PipVisual.new(parent, origin)
+function PipVisual.new(parent, origin, pet)
+	local isBloom = pet and pet.id == "bloom_pip"
+	local bodyColor = if isBloom then pet.color else COLORS.cream
 	local model = Instance.new("Model")
-	model.Name = "Pip"
+	model.Name = if isBloom then pet.name else "Pip"
 	model:SetAttribute("PetFamily", "Pip")
 	local self = setmetatable({
 		model = model,
@@ -56,7 +58,7 @@ function PipVisual.new(parent, origin)
 			CFrame.new(side * 0.49, 0.14, 0.20), COLORS.leafDark, true)
 	end
 	local body = piece(self, "Body", Vector3.new(1.83, 2.06, 1.56),
-		CFrame.new(0, 1.43, 0), COLORS.cream, true)
+		CFrame.new(0, 1.43, 0), bodyColor, true)
 	model.PrimaryPart = body
 	-- A dark lower rim gives the broken shell a readable pixel-scale outline.
 	piece(self, "ShellRim", Vector3.new(2.01, 0.98, 1.73),
@@ -73,7 +75,7 @@ function PipVisual.new(parent, origin)
 	for _, side in ipairs({ -1, 1 }) do
 		piece(self, "Flipper", Vector3.new(0.30, 0.64, 0.40),
 			CFrame.new(side * 0.91, 1.19, 0.06) * CFrame.Angles(0, 0, side * 0.22),
-			COLORS.cream, true, if side == -1 then "wave" else nil)
+			bodyColor, true, if side == -1 then "wave" else nil)
 		piece(self, "Eye", Vector3.new(0.23, 0.34, 0.09),
 			CFrame.new(side * 0.35, 1.66, 0.745), COLORS.ink, false, "eye")
 		piece(self, "EyeSpark", Vector3.new(0.065, 0.075, 0.035),
@@ -100,6 +102,16 @@ function PipVisual.new(parent, origin)
 	piece(self, "LeafPixel", Vector3.new(0.22, 0.055, 0.16),
 		crown * CFrame.new(-0.26, 0.60, 0.09) * CFrame.Angles(0, 0, -0.30),
 		COLORS.leafLight, false, "sprig")
+	if isBloom then
+		local bloom = crown * CFrame.new(0.03, 0.86, 0.09)
+		for index = 0, 4 do
+			local angle = index * math.pi * 2 / 5
+			piece(self, "Petal", Vector3.new(0.28, 0.40, 0.18),
+				bloom * CFrame.Angles(0, 0, angle) * CFrame.new(0, 0.20, 0), bodyColor, true, "sprig")
+		end
+		piece(self, "Pollen", Vector3.new(0.22, 0.22, 0.18),
+			bloom * CFrame.new(0, 0, 0.10), COLORS.cream, true, "sprig")
+	end
 	model.Parent = parent
 	self:update(0)
 	return self

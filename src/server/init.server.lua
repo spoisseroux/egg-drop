@@ -194,7 +194,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	if action == "companion" then
 		local pet = if typeof(value) == "string" then Pets.byId[value] else nil
-		if board.mode == "Room" and pet and pet.index <= board.profile.rank
+		if board.mode == "Room" and pet and Pets.isUnlocked(pet, board.profile.rank, board.profile.trials)
 			and value ~= board.profile.companionId and now - board.lastCompanionChange >= 0.35 then
 			board.lastCompanionChange = now
 			Progress.equipCompanion(board.profile, pet)

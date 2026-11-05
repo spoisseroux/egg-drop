@@ -7,6 +7,11 @@ local sprites = {
 		"...BHHMMMB...", "..BHMMMMMMB..", "..BMFMMMFMB..", "..BMMMFMMMB..", "..BDMMMMMDB..",
 		"...BDDDDDB...", "....BBBBB....", ".............",
 	},
+	bloom_pip = {
+		"......o......", ".....oOo.....", "...l..o..l...", "....lllLl....", "....BBBBB....",
+		"...BHHMMMB...", "..BHMMMMMMB..", "..BMFMMMFMB..", "..BMMMFMMMB..", "..BDMMMMMDB..",
+		"...BDDDDDB...", "....BBBBB....", ".............",
+	},
 	puddle = {
 		".............", ".........BB..", "........BHMB.", "........BDMB.", ".....BBBBMB..",
 		"...BBHMMMMB..", "..BHMMMMMMMB.", ".BHMFMMMFMMB.", ".BMMMMFMMMMB.", ".BDMMMMMMMDB.",
@@ -31,6 +36,7 @@ function Portrait.create(parent, pet, unit, position, z, locked)
 	local sprite = Art.pixels(parent, "Portrait", sprites[pet.id], {
 		B = Art.Ink, F = Art.Ink, M = color, H = color:Lerp(Art.Silver, 0.7),
 		D = color:Lerp(Art.Ink, 0.38), L = accent:Lerp(Art.Ink, 0.25), l = accent,
+		o = color, O = if locked then Art.Line else Art.Amber,
 	}, unit, position, z)
 	sprite.AnchorPoint = Vector2.new(0.5, 0.5)
 	return sprite

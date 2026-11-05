@@ -1,5 +1,8 @@
 # Egg Drop
 
+This is the original design draft. [The prototype guide](PROTOTYPE.md)
+covers the rules and unlocks in the current build.
+
 A merge-physics pet collection game. Players drop eggs into a board; matching
 eggs merge and build a combo. Clearing a combo awards coins and a chance at a
 pet egg hatch. Pets, coins, and rebirths carry all long-term progression.

@@ -19,6 +19,9 @@ display bar and release. On a keyboard, arrows or A/D aim and Space
 drops. Controller D-pad and A use the same controls. Matching tiers merge.
 The merge nudges nearby eggs and a quick sequence counts as a chain.
 Merges earn points and fill hatch charge for Pip, Puddle, Wick, and Orbit.
+Score **250 points in one round** to hatch **Bloom Pip**, a rare flower-crowned
+Pip. The Pet Journal and Pocket Trials show the target. Players with a saved
+High Roller completion can equip Bloom Pip from the journal.
 Choose **Meet** to visit the new pet, or **Keep playing** to stay on the
 board. **Say hi** plays a greeting and the pet's synth cue. Use **Pet
 journal** to choose an owned companion. **Open deck** returns
@@ -32,7 +35,7 @@ hints appear in the footer and advance after an accepted drop and a merge.
 | Drop | The released egg falls and can bounce off a bank | Server validates aim, cadence, capacity, and spawn space. |
 | Impact and merge | Jelly squash, sticky bridge, droplets, synth ticks and pops | Server resolves each pair once. Clients render the feedback. |
 | Chain and charge | Rising cue, chain count, and hatch meter | A short window in board time groups consecutive merges. |
-| Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The server records the pet. Pip opens the lounge. The other three hatch in order. |
+| Hatch | Egg cracks, shell flakes fly, and the new pet hops in | The four charge pets hatch in order. Pip opens the lounge. Bloom Pip hatches the first time you complete High Roller. |
 | Entering Sprout Hollow | The deck LCD closes to a cyan scanline, then the camera pulls back from a mossy nest under the hatchery tree | Server accepts the visit, freezes tray physics and timers, and frees the avatar to move. |
 | Sprout Hollow | A garden clearing with a canvas workbench, wooden field journal, creek, and footbridge | Nearby players can see the live tray on each player's horizontal handheld and see companions around the clearing. |
 | Return | The room fades and the scanline opens back into the LCD | Restores the prior camera and deck pose and resumes the same eggs, charge, and round. |
@@ -61,7 +64,8 @@ also enables this mode. Egg movement, marks, and scoring stay visible.
 Chain three merges, score 250 in a round, and merge two tier V jellies.
 Each goal can be earned in a different round. The Club tab shows your best
 chain in the current round and its score until those goals are earned.
-Completed goals survive retries. The reward appears in the Sticker tab.
+Completed goals survive retries. High Roller unlocks Bloom Pip in the
+Pet Journal. Completing all three adds the Club sticker to the Sticker tab.
 
 Studio verification covered a two-drop triple chain and Pip hatch with
 both motion settings, all three trials and all four pets through ordinary
@@ -69,7 +73,10 @@ drops, the locked and earned sticker paths, and the trip to the lounge
 and back. A sustained overflow fixture verified that retry resets the
 round while preserving the best score, collection, and settings. A
 profile fixture checked reload and concurrent updates using Studio's
-in-memory store. The Club panel kept 44 px controls in a shortened
+in-memory store. Bloom Pip was verified through regular drops, from a
+locked journal entry to its rare hatch and equipped lounge model. A
+Studio tray reset preserved the unlock without replaying the reveal.
+The Club panel kept 44 px controls in a shortened
 landscape viewport. Published saves and physical phone controls remain
 to be tested.
 
