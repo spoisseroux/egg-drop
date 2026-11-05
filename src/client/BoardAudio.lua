@@ -6,7 +6,25 @@ local Audio = {}
 Audio.__index = Audio
 
 -- Only IDs for the original WAVs in assets/audio belong here.
-local assetIds = {}
+local assetIds = {
+	aim = 78319039170839,
+	drop = 125552140473053,
+	land = 114394270790206,
+	bank = 137957843347780,
+	merge_bubble = 132946666827827,
+	merge_jelly = 100118672776397,
+	merge_chain = 72145493661024,
+	charge = 101582196091552,
+	hatch_rise = 108923415809497,
+	hatch = 124797289860370,
+	pet = 104178433438245,
+	puddle = 79464813520035,
+	wick = 73790979677763,
+	orbit = 105659319683342,
+	overflow = 101342613025976,
+	retry = 80753325038930,
+	menu = 74679010378287,
+}
 local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
 	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "overflow", "retry", "menu",
