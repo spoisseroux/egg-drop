@@ -134,7 +134,12 @@ local function addPlayer(player)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
 	folder:SetAttribute("SoundLevel", profile.sound)
 	folder:SetAttribute("ReducedEffects", profile.reduced)
-	folder:SetAttribute("ProfileLoadFailed", profile.loadFailed)
+	folder:SetAttribute("SaveStatus", if profile.loadFailed then "Temporary" else nil)
+	profile.onSaveFailed = function(failed)
+		if boards[player] == board and folder.Parent then
+			folder:SetAttribute("SaveStatus", if failed then "Retrying" else nil)
+		end
+	end
 	folder.Parent = trays
 	local function spawn(character)
 		Lounge.spawn(character, slot, player, function()
@@ -151,6 +156,7 @@ Players.PlayerAdded:Connect(addPlayer)
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
 	if board then
+		board.profile.onSaveFailed = nil
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		boards[player] = nil

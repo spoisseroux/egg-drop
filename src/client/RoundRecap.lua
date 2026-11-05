@@ -45,7 +45,7 @@ function Recap:height(available)
 	return if self.frame.Visible then math.clamp(available - 10, 178, 236) else 236
 end
 
-function Recap:update(score, peakChain, clears, nextPet, charge, nextRare, rareProgress)
+function Recap:update(score, peakChain, clears, nextPet, charge, nextRare, rareProgress, best)
 	self.values[1].Text = tostring(score)
 	self.values[2].Text = "×" .. peakChain
 	self.values[3].Text = tostring(clears)
@@ -62,8 +62,9 @@ function Recap:update(score, peakChain, clears, nextPet, charge, nextRare, rareP
 		progress = rareProgress / trial.target
 	else
 		self.title.Text = "Collection complete"
-		self.detail.Text = "Every pet hatched"
+		self.detail.Text = string.format("Next run · beat %d points", best)
 	end
+	self.fill.Parent.Visible = nextPet ~= nil or nextRare ~= nil
 	self.fill.Size = UDim2.fromScale(math.clamp(progress, 0, 1), 1)
 end
 

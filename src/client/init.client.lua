@@ -25,6 +25,7 @@ local RoomView = require(script.RoomView)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
 local RoundRecap = require(script.RoundRecap)
+local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local Portrait = require(script.PetPortrait)
 local audio = Audio.new()
@@ -62,6 +63,26 @@ end
 local gui = make("ScreenGui", "EggDrop", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets, DisplayOrder = 10,
 }, player:WaitForChild("PlayerGui"))
+do
+	local notice = label("TextLabel", "SaveNotice", "", gui, Art.Ink)
+	notice.AnchorPoint = Vector2.new(0.5, 1)
+	notice.Position = UDim2.new(0.5, 0, 1, -2)
+	notice.Size = UDim2.new(1, -16, 0, 21)
+	notice.TextColor3 = Art.Amber
+	notice.TextScaled = true
+	notice.ZIndex = 21
+	Art.corner(notice, 5)
+	make("UISizeConstraint", "BannerSize", { MaxSize = Vector2.new(386, 21) }, notice)
+	make("UITextSizeConstraint", "BannerText", { MinTextSize = 9, MaxTextSize = 12 }, notice)
+	local function showSaveStatus()
+		local state = board:GetAttribute("SaveStatus")
+		notice.Visible = state == "Temporary" or state == "Retrying"
+		notice.Text = if state == "Temporary" then "Save unavailable · progress won't carry over"
+			elseif state == "Retrying" then "Progress hasn't saved yet · retrying" else ""
+	end
+	board:GetAttributeChangedSignal("SaveStatus"):Connect(showSaveStatus)
+	showSaveStatus()
+end
 local bleed = make("ScreenGui", "EggDropBleed", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 9,
 }, gui.Parent)
@@ -229,6 +250,10 @@ make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 local status = label("TextLabel", "Status", "", backdrop)
 status.TextWrapped = true
 status.TextColor3 = Art.Silver
+status.TextScaled = true
+status.BackgroundColor3 = Art.Ink
+Art.corner(status, 6)
+make("UITextSizeConstraint", "ReadoutSize", { MinTextSize = 9, MaxTextSize = 16 }, status)
 local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 }, backdrop)
@@ -339,10 +364,12 @@ for row = 0, 2 do
 end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Enum.Font.GothamBold
+local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter)
 local openPicker
 local openJournal
 local picker
 local journal
+local trackedRare
 local function isPickerOpen()
 	return picker.shade.Visible
 end
@@ -377,6 +404,14 @@ journal = PetJournal.new(gui, make, label, function(pet)
 	else
 		request:FireServer("companion", pet.id)
 	end
+end, function(pet)
+	roomView:requestSwitch(function()
+		local trials = board:GetAttribute("TrialMask") or 0
+		if board:GetAttribute("Mode") == "Room" and not Pets.isUnlocked(pet, 0, trials) then
+			trackedRare = pet
+			request:FireServer("mode", "Board")
+		end
+	end)
 end)
 board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 	local pet = Pets.byId[board:GetAttribute("CompanionId")]
@@ -480,7 +515,7 @@ local function paintDeck(id, stickerId)
 	leftAim.TextColor3 = if theme.rocker then Art.Ink else Art.Silver
 	rightAim.TextColor3 = leftAim.TextColor3
 	title.TextColor3 = if theme.face then Art.Ink else Art.Silver
-	status.TextColor3 = title.TextColor3
+	status.TextColor3 = if status.BackgroundTransparency < 1 then Art.Silver else title.TextColor3
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
 	Stickers.paint(deckSticker, stickerId)
@@ -492,6 +527,10 @@ end
 
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
+end
+
+local function canPlay()
+	return canAim() and not isPickerOpen() and not roomView.busy and not GuiService.MenuIsOpen
 end
 
 picker = DeckPicker.new(gui, make, label, paintDeck, function()
@@ -533,7 +572,7 @@ openPicker = function()
 end
 openJournal = function()
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
-		isGamepad(UserInputService:GetLastInputType()))
+		isGamepad(UserInputService:GetLastInputType()), trackedRare)
 	audio:play("menu")
 end
 ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)
@@ -640,9 +679,15 @@ local function updateHud()
 	local nextPet = Pets[owned + 1]
 	for index = knownPets + 1, owned do
 		table.insert(hatchQueue, Pets[index])
+		if index == 1 then
+			roomView.welcomeNext = true
+		end
 	end
 	knownPets = owned
-	local nextRare
+	if trackedRare and Pets.isUnlocked(trackedRare, owned, mask) then
+		trackedRare = nil
+	end
+	local nextRare = trackedRare
 	for _, rare in ipairs(Pets.rares) do
 		if bit32.band(newlyEarned, rare.trial.bit) ~= 0 then
 			table.insert(hatchQueue, rare)
@@ -663,19 +708,6 @@ local function updateHud()
 			cell.BackgroundColor3 = if index <= math.floor(filled * cells / target) then Art.Amber else Art.Line
 		end
 	end
-	if drops == 0 and board:GetAttribute("ProfileLoadFailed") then
-		status.Text = "Save could not load. Playing a fresh tray."
-	elseif trialNoticeUntil and os.clock() < trialNoticeUntil then
-		status.Text = trialNotice
-	elseif owned > 0 then
-		status.Text = string.format("%d pts   ·   Chain ×%d", score, chain)
-	elseif drops == 0 then
-		status.Text = "Drag the bar. Release to drop."
-	elseif merges == 0 then
-		status.Text = "Match eggs with the same mark."
-	else
-		status.Text = "Keep matching to hatch Pip!"
-	end
 	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
 		else string.format("Collection   %d / %d", Pets.ownedCount(owned, mask), #Pets.collection)
 	rareGoal.Visible = owned > 0
@@ -684,9 +716,10 @@ local function updateHud()
 		local goal = nextRare.trial
 		rareProgress = math.min(if goal == Trials.HighRoller then score
 			elseif goal == Trials.Fivefold then peakChain else maxClears, goal.target)
-		rareGoal.Text = string.format("%s\n%s %d/%d", nextRare.name, goal.readout, rareProgress, goal.target)
+		rareGoal.Text = string.format("%s%s\n%s %d/%d", if trackedRare then "★ " else "",
+			nextRare.name, goal.readout, rareProgress, goal.target)
 	else
-		rareGoal.Text = "Rare collection complete"
+		rareGoal.Text = string.format("Beat your best\n%d pts", best)
 	end
 	local mode = board:GetAttribute("Mode")
 	local showHatch = hatchPet ~= nil and mode == "Board"
@@ -698,6 +731,13 @@ local function updateHud()
 		clearPlayInputs()
 		picker:close()
 	end
+	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
+		Config.Tiers[nextTier()].mark, canPlay())
+	status.BackgroundTransparency = if lesson then 0.08 else 1
+	status.TextColor3 = if lesson then Art.Silver else title.TextColor3
+	status.ReadoutSize.MaxTextSize = if lesson then 16 else 13
+	status.Text = if lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
+		then trialNotice else string.format("%d pts   ·   Chain ×%d", score, chain)
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible, hatchIndex.Visible = pet.Visible, pet.Visible
 	modalTag.Text = if over then "ROUND RECAP  ·  BEST " .. best
@@ -708,7 +748,7 @@ local function updateHud()
 		modalTitle.Size = UDim2.new(1, 0, 0, if over then 28 else 35)
 	end
 	if over then
-		recap:update(score, peakChain, maxClears, nextPet, charge, nextRare, rareProgress)
+		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
 	end
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
 		else "You hatched " .. (hatchName or "") .. "!"
@@ -737,6 +777,7 @@ local function updateHud()
 		end
 		Portrait.create(pet, hatchPet, 7, UDim2.fromScale(0.5, 0.5), 15)
 		hatchIndex.Text = if hatchPet.trial then hatchPet.trial.name .. " complete"
+			elseif hatchPet == Pets[1] then "Sprout Hollow is open!"
 			else string.format("PET %02d / %02d", hatchPet.index, #Pets)
 		local resetId = board:GetAttribute("ResetId")
 		if reduceEffects() then
@@ -768,6 +809,7 @@ local function layout()
 	local grip = if portraitRail then 98 else (totalWidth - width) / 2
 	local left = (screen.X - totalWidth) / 2
 	local shellHeight = if lateral then microHeight elseif portraitRail then height + 198 else height + 264
+	local shortDeck = lateral and shellHeight < 205
 	local top = math.max(5, (screen.Y - shellHeight) / 2)
 	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
 	local trayY = top + (if lateral then 62 else 70)
@@ -790,6 +832,7 @@ local function layout()
 	title.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.063 else top + 1)
 	title.Size = UDim2.fromOffset(if lateral then grip else totalWidth, 23)
 	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
+	title.Visible = not shortDeck
 	deckSticker.Position = UDim2.fromOffset(left + (if lateral then totalWidth - grip * 0.5 - 12 else totalWidth * 0.47 - 12),
 		if lateral then top + shellHeight * 0.22 else trayBottom + 78)
 	if sideGoal then
@@ -814,11 +857,13 @@ local function layout()
 	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
 	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
 	nextReadout.TextSize = if compact then 10 else 12
-	status.Position = UDim2.fromOffset(left + (if lateral or portraitRail then 4 else 0),
-		if lateral then top + shellHeight * 0.17 elseif portraitRail then top + 40 else trayBottom + 5)
-	status.Size = UDim2.fromOffset(if lateral or portraitRail then grip - 8 else totalWidth,
-		if portraitRail then 43 elseif lateral and shellHeight >= 220 then 38 else 22)
-	status.TextSize = 13
+	local statusSpan = if lateral or portraitRail then grip else totalWidth
+	local statusWidth = math.min(statusSpan - 8, 218)
+	status.Position = UDim2.fromOffset(left + (statusSpan - statusWidth) / 2,
+		if shortDeck then top + (if shellHeight < 160 then 0 else 6) elseif lateral then top + shellHeight * 0.17
+		elseif portraitRail then top + 40 else trayBottom + 5)
+	status.Size = UDim2.fromOffset(statusWidth,
+		if portraitRail then 43 elseif lateral and shellHeight >= 220 then 38 elseif shortDeck and shellHeight < 160 then 20 else 22)
 	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral or portraitRail then 3 else 26))
 	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
@@ -889,10 +934,6 @@ local function aimFromScreen(x)
 	local span = viewport.AbsoluteSize.X * (Config.Width / 2 - Config.Tiers[nextTier()].radius) / (Config.Width + 0.8)
 	aim = math.clamp(0.5 + (x - center) / math.max(1, 2 * span), 0, 1)
 	drawAim()
-end
-
-local function canPlay()
-	return canAim() and not isPickerOpen() and not roomView.busy and not GuiService.MenuIsOpen
 end
 
 local function dropEgg()
@@ -1028,6 +1069,16 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
 GuiService.MenuOpened:Connect(clearPlayInputs)
+GuiService.MenuOpened:Connect(updateHud)
+GuiService.MenuClosed:Connect(updateHud)
+picker.shade:GetPropertyChangedSignal("Visible"):Connect(function()
+	task.defer(updateHud)
+end)
+UserInputService.LastInputTypeChanged:Connect(function()
+	if (board:GetAttribute("OwnedPets") or 0) == 0 then
+		updateHud()
+	end
+end)
 UserInputService.InputBegan:Connect(function(input, processed)
 	if not processed and input.KeyCode == Enum.KeyCode.Return then
 		requestRetry()
@@ -1367,7 +1418,7 @@ RunService.RenderStepped:Connect(function(dt)
 	local closest
 	local distance = math.huge
 	local tier = nextTier()
-	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and not modal.Visible and not drag
+	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and canPlay()
 	local aimX = Config.aimX(aim, tier)
 	local drawLCD = false
 	local useLCD = lcdEnabled() and viewport.AbsoluteSize.X > 1
@@ -1446,10 +1497,4 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 layout()
 updateHud()
-task.delay(1.5, function()
-	if not reduceEffects() and (board:GetAttribute("Drops") or 0) == 0 then
-		TweenService:Create(rail, TweenInfo.new(0.38, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 1, true),
-			{ BackgroundColor3 = Palette.Shell }):Play()
-	end
-end)
 roomView:setMode(board:GetAttribute("Mode"))

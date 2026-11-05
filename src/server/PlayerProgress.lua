@@ -12,6 +12,21 @@ local memory = {}
 local store = if RunService:IsStudio() then nil else DataStoreService:GetDataStore("EggDropProgressV1")
 local writer = game.JobId
 
+local function markDirty(profile)
+	if not profile.loadFailed then
+		pending[profile] = true
+	end
+end
+
+local function setSaveFailed(profile, failed)
+	if profile.saveFailed ~= failed then
+		profile.saveFailed = failed
+		if profile.onSaveFailed then
+			profile.onSaveFailed(failed)
+		end
+	end
+end
+
 local function rankOf(record)
 	local rank = record.rank
 	return if type(rank) == "number" and rank >= 0 and rank < math.huge then math.floor(rank) else 0
@@ -39,9 +54,18 @@ function Progress.load(userId)
 	local record = memory[key]
 	local success = true
 	if store then
-		success, record = pcall(store.GetAsync, store, key)
+		for attempt = 1, 3 do
+			success, record = pcall(store.GetAsync, store, key)
+			if success then
+				break
+			end
+			if attempt < 3 then
+				task.wait(attempt * 0.6)
+			end
+		end
 		if not success then
 			warn("Egg Drop could not load the player profile:", record)
+			record = nil
 		end
 	end
 	record = if type(record) == "table" then record else {}
@@ -61,11 +85,12 @@ function Progress.load(userId)
 		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
 		reduced = record.reduced == true,
 		loadFailed = not success,
+		saveFailed = false,
 	}
 end
 
 local function flush(profile)
-	if profile.saving or not pending[profile] then
+	if profile.loadFailed or profile.saving or not pending[profile] then
 		return
 	end
 	profile.saving = true
@@ -124,9 +149,11 @@ local function flush(profile)
 	end
 	profile.saving = false
 	if not success then
+		setSaveFailed(profile, true)
 		warn("Egg Drop could not save the player profile:", result)
 		return
 	end
+	setSaveFailed(profile, false)
 	if rank == profile.earnedRank and charge == profile.earnedCharge then
 		profile.earnedRank = nil
 		profile.earnedCharge = nil
@@ -162,27 +189,27 @@ function Progress.recordTrials(profile, chain, score, clears)
 	end
 	profile.trials = earned
 	profile.earnedTrials = earned
-	pending[profile] = true
+	markDirty(profile)
 end
 
 function Progress.setSetting(profile, key, value)
 	local changeKey = if key == "sound" then "soundChange" else "motionChange"
 	profile[key] = value
 	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }
-	pending[profile] = true
+	markDirty(profile)
 end
 
 function Progress.equipCompanion(profile, pet)
 	profile.companionId = pet.id
 	profile.companionAt = DateTime.now().UnixTimestampMillis
-	pending[profile] = true
+	markDirty(profile)
 end
 
 function Progress.recordScore(profile, score)
 	if score > profile.bestScore then
 		profile.bestScore = score
 		profile.earnedBest = score
-		pending[profile] = true
+		markDirty(profile)
 	end
 end
 
@@ -190,7 +217,7 @@ function Progress.equip(profile, theme, sticker)
 	profile.theme = theme
 	profile.sticker = sticker
 	profile.themeAt = DateTime.now().UnixTimestampMillis
-	pending[profile] = true
+	markDirty(profile)
 end
 
 function Progress.chargeHatch(profile, amount)
@@ -209,7 +236,7 @@ function Progress.chargeHatch(profile, amount)
 	end
 	profile.earnedRank = profile.rank
 	profile.earnedCharge = profile.charge
-	pending[profile] = true
+	markDirty(profile)
 	if hatched then
 		task.defer(flush, profile)
 	end

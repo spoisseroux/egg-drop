@@ -67,10 +67,10 @@ Astra's code and design review, and the Roblox platform references below.
 | Stage | Scope |
 |---|---|
 | Replayable build | Scored rounds, five tiers with a max-tier clear, persistent personal best and hatch progress, four pets, journal, companion display, earned Wick sticker, and Pocket Club stations. |
-| Collection alpha | Pocket Trials, the Club sticker, and SFX and motion settings are playable in Studio. Finish pet animation polish, test the soft-body wedge, and make unlocks easier to discover. |
-| Private release candidate | Add audio asset IDs. Check the published save path, replica load, input focus, orientation, and physical phones. Instrument the first-session funnel and replay milestones. |
+| Collection alpha | Guided first hatch, seven pets, trackable rare challenges, round recaps, Pocket Trials, the Club sticker, and SFX and motion settings are playable in Studio. |
+| Private release candidate | Import the original SFX and add their audio asset IDs. Verify a published save and rejoin, a shared server with visible handhelds and companions, and controls on a physical phone. Instrument first drop, merge, hatch, lounge visit, and replay. |
 | Public release | Validate the first session with fresh players, then choose a sustainable cadence of pet and board content. Use the existing roster concepts as a production backlog. |
-| Expansion | Consider additional cosmetic slots, family variants, friend challenges, and events. Evaluate an economy, trading, or global boards separately when they solve a demonstrated player need. |
+| Expansion | Consider additional cosmetic slots, family variants, friend challenges, events, and a separate soft-body physics test. Evaluate an economy, trading, or global boards separately when they solve a demonstrated player need. |
 
 Before a larger lounge or spectator mode, measure the cost of sending board
 parts to every client. If needed, give the owner high-rate state and send

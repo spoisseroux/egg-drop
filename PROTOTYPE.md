@@ -22,6 +22,9 @@ Merges earn points and fill hatch charge for Pip, Puddle, Wick, and Orbit.
 After Pip hatches, the LCD shows the next unearned rare pet and your
 progress in this round, below the regular hatch meter. Any rare can be
 earned as soon as its challenge is met. The Pet Journal lists all three.
+Choose **Track & play** on a locked rare to pin it to the LCD and recap
+and return to the same tray. The pin stays through retries for the
+session and clears when you hatch that pet.
 
 | Rare pet | Challenge |
 |---|---|
@@ -31,8 +34,15 @@ earned as soon as its challenge is met. The Pet Journal lists all three.
 Choose **Meet** to visit the new pet, or **Keep playing** to stay on the
 board. **Say hi** plays a greeting and the pet's synth cue. Use **Pet
 journal** to choose an owned companion. **Open deck** returns
-to the same tray. First-session
-hints appear in the footer and advance after an accepted drop and a merge.
+to the same tray. On the way to Pip, the deck points out the controls
+for your input, highlights a matching egg, and shows where merges fill
+hatch charge. The guide advances from accepted drops and merges. Pip's
+first visit opens with a greeting prompt in Sprout Hollow.
+
+If the save cannot load after retrying, you can play a temporary session.
+The notice stays visible while you play, and that session cannot write
+to your save. If a write fails after a successful load, the game keeps
+retrying and clears the notice when a write succeeds.
 
 | State | What the player sees | What the game does |
 |---|---|---|
@@ -137,8 +147,9 @@ scratch, drawing on the different sound textures described by
 made it as a cream egg in a broken dark shell with green feet, squared
 eyes, blush, and a tilted two-leaf sprig. It breathes, blinks, hops, and
 waves. **Puddle** is a low blue gel pet with a droplet tail. It squashes,
-hops, waves its tail, and sends out a ripple when greeted. **Wick** is a
-pocket flame and **Orbit** is a small moon with a tilted ring. The lineup
+hops, waves its tail, and sends out a ripple when greeted. **Wick** and
+**Foxfire Wick** greet with two hops and a flick of flame. **Orbit** and
+**Eclipse Orbit** float up while their moons sweep around their bodies. The lineup
 below is the concept roster. Variant names and colors
 are working art directions. [View the 36 pet concepts](assets/concepts/pet-lineup.svg).
 

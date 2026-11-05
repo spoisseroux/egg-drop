@@ -8,7 +8,7 @@ local Journal = {}
 Journal.__index = Journal
 local CARD_HEIGHT = 244 + (#Pets.rares - 1) * 51
 
-function Journal.new(gui, make, label, onVisit)
+function Journal.new(gui, make, label, onVisit, onTrack)
 	local shade = make("Frame", "PetJournal", {
 		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 		BackgroundTransparency = 0.30, Active = true, Visible = false, ZIndex = 20,
@@ -53,15 +53,28 @@ function Journal.new(gui, make, label, onVisit)
 			UDim2.fromOffset(47, 4), UDim2.new(1, -51, 0, 20),
 			Art.Silver, 15, Enum.Font.GothamBold)
 		name.TextXAlignment = Enum.TextXAlignment.Left
+		name.TextTruncate = Enum.TextTruncate.AtEnd
 		local status = Art.text(entry, "Status", "", UDim2.fromOffset(47, 23), UDim2.new(1, -51, 0, 17),
 			Art.Muted, 11, Enum.Font.GothamMedium)
 		status.TextXAlignment = Enum.TextXAlignment.Left
 		status.TextTruncate = Enum.TextTruncate.AtEnd
+		if pet.trial then
+			local track = Art.text(entry, "Track", "TRACK & PLAY", UDim2.new(1, -91, 0, 5),
+				UDim2.fromOffset(87, 16), Art.Cyan, 10, Enum.Font.GothamBold)
+			track.TextXAlignment = Enum.TextXAlignment.Right
+			track.Visible = false
+			status.TextScaled = true
+			make("UITextSizeConstraint", "HintSize", { MinTextSize = 9, MaxTextSize = 11 }, status)
+		end
 		self.cards[index] = entry
 		entry.Activated:Connect(function()
 			if self.shade.Visible and entry.Interactable then
 				self:close()
-				onVisit(pet)
+				if entry:FindFirstChild("Track") and entry.Track.Visible then
+					onTrack(pet)
+				else
+					onVisit(pet)
+				end
 			end
 		end)
 	end
@@ -78,14 +91,21 @@ function Journal.new(gui, make, label, onVisit)
 	return self
 end
 
-function Journal:open(owned, trials, companionId, selected)
+function Journal:open(owned, trials, companionId, selected, tracked)
 	self.title.Text = string.format("PET JOURNAL  ·  %02d/%02d", Pets.ownedCount(owned, trials), #Pets.collection)
 	for index, entry in ipairs(self.cards) do
 		local pet = Pets.collection[index]
 		local unlocked = Pets.isUnlocked(pet, owned, trials)
 		local equipped = pet.id == companionId
+		local trackable = pet.trial ~= nil and not unlocked
 		entry.Status.Text = if equipped then "Equipped" elseif unlocked then "Equip"
-			elseif pet.trial then pet.trial.hint else "Hatch at " .. pet.charge
+			elseif pet.trial then pet.trial.hint else pet.charge .. " charge to hatch"
+		if pet.trial then
+			entry.Track.Visible = trackable
+			entry.Track.Text = if tracked == pet then "TRACKED · PLAY" else "TRACK & PLAY"
+			entry.Species.Text = if trackable then pet.name else pet.name .. "  ·  Rare"
+			entry.Species.Size = UDim2.new(1, if trackable then -140 else -51, 0, 20)
+		end
 		entry.Status.TextColor3 = if equipped then Art.Cyan else Art.Muted
 		entry.Species.TextColor3 = if pet.trial then Art.Amber elseif unlocked then Art.Silver else Art.Muted
 		if not self.portraits[index] or self.portraits[index].unlocked ~= unlocked then
@@ -97,8 +117,8 @@ function Journal:open(owned, trials, companionId, selected)
 				sprite = Portrait.create(entry.PortraitWell, pet, 2, UDim2.fromScale(0.5, 0.5), 23, not unlocked),
 			}
 		end
-		entry.Interactable = unlocked
-		entry.Selectable = unlocked
+		entry.Interactable = unlocked or trackable
+		entry.Selectable = entry.Interactable
 	end
 	self.shade.Visible = true
 	self.scroll.CanvasPosition = Vector2.zero

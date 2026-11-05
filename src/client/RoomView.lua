@@ -94,8 +94,13 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	heading.TextXAlignment = Enum.TextXAlignment.Left
 	heading.TextSize = 17
 	heading.Font = Enum.Font.GothamBold
+	heading.TextTruncate = Enum.TextTruncate.AtEnd
 	heading.ZIndex = 9
 	heading.Parent = controls
+	local welcome = Art.text(controls, "FirstVisit", "Say hi to Pip!", UDim2.new(0.045, 0, 0, 26),
+		UDim2.new(0.54, 0, 0, 16), Art.Muted, 11, Enum.Font.GothamMedium)
+	welcome.TextXAlignment = Enum.TextXAlignment.Left
+	welcome.Visible = false
 	local collection = button(controls, "Collection", "Pet journal", UDim2.new(0.60, 0, 0, 3), Art.Raised)
 	collection.Size = UDim2.new(0.375, 0, 0, 44)
 	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0.025, 0, 0, 51), Art.Raised)
@@ -110,6 +115,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		progress = progress,
 		controls = controls,
 		heading = heading,
+		welcome = welcome,
 		transition = DeckTransition.new(gui, board.Tray),
 		audio = audio,
 		mode = "Board",
@@ -210,6 +216,9 @@ function Room:showPet(pet)
 		pet = Pets[1]
 	end
 	self.shownPet = pet
+	if self.welcome.Visible then
+		self.welcome.Text = "Say hi to " .. pet.name .. "!"
+	end
 	if self.pet then
 		self.pet:destroy()
 	end
@@ -217,7 +226,8 @@ function Room:showPet(pet)
 	if not self.reduceEffects() then
 		self.pet:greet()
 	end
-	self.heading.Text = string.format("%s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
+	self.heading.Text = if self.welcome.Visible then "Sprout Hollow"
+		else string.format("%s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
 end
 
 function Room:cancelCameraTween()
@@ -271,7 +281,10 @@ function Room:useRoomCamera(animate)
 end
 
 function Room:show(mode, animate)
+	self.welcome.Visible = mode == "Room" and self.welcomeNext == true
+	self.heading.Size = UDim2.new(0.56, 0, 0, if self.welcome.Visible then 26 else 44)
 	if mode == "Room" then
+		self.welcomeNext = nil
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
 		self:showPet(self.requestedPet or equipped)
 		self.requestedPet = nil
