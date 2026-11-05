@@ -1,4 +1,8 @@
-# Egg Drop prototype
+# Egg Drop prototype archive
+
+**Current gameplay:** [nectar, field runs and egg hatches](HATCH-LOOP.md).
+The descriptions below record earlier prototype iterations, including the
+superseded automatic four-pet charge ladder and rare achievement grants.
 
 Pocket Deck is the in-world handheld. Scout is the default, with a
 leaf-green shell, orange controls and a pale green LCD.

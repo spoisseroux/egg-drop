@@ -25,14 +25,24 @@ for index, pet in ipairs(Pets.collection) do
 	Pets.byId[pet.id] = pet
 end
 
-function Pets.isUnlocked(pet, rank, trials)
+function Pets.isUnlocked(pet, rank, trials, inventoryMask)
+	if inventoryMask ~= nil then
+		return bit32.band(inventoryMask, bit32.lshift(1, pet.index - 1)) ~= 0
+	end
 	if pet.trial then
 		return bit32.band(trials, pet.trial.bit) ~= 0
 	end
 	return pet.index <= rank
 end
 
-function Pets.ownedCount(rank, trials)
+function Pets.ownedCount(rank, trials, inventoryMask)
+	if inventoryMask ~= nil then
+		local count = 0
+		for _, pet in ipairs(Pets.collection) do
+			if Pets.isUnlocked(pet, rank, trials, inventoryMask) then count += 1 end
+		end
+		return count
+	end
 	local count = math.min(rank, #Pets)
 	for _, pet in ipairs(Pets.rares) do
 		if Pets.isUnlocked(pet, rank, trials) then

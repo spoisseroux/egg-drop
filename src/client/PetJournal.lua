@@ -94,14 +94,15 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 	return self
 end
 
-function Journal:open(owned, trials, companionId, selected, tracked)
-	self.title.Text = string.format("PET JOURNAL  ·  %02d/%02d", Pets.ownedCount(owned, trials), #Pets.collection)
+function Journal:open(owned, trials, companionId, selected, tracked, inventoryMask)
+	self.title.Text = string.format("PET JOURNAL  ·  %02d/%02d", Pets.ownedCount(owned, trials, inventoryMask), #Pets.collection)
 	for index, entry in ipairs(self.cards) do
 		local pet = Pets.collection[index]
-		local unlocked = Pets.isUnlocked(pet, owned, trials)
+		local unlocked = Pets.isUnlocked(pet, owned, trials, inventoryMask)
 		local equipped = pet.id == companionId
-		local trackable = pet.trial ~= nil and not unlocked
+		local trackable = inventoryMask == nil and pet.trial ~= nil and not unlocked
 		entry.Status.Text = if equipped then "Equipped" elseif unlocked then "Equip"
+			elseif inventoryMask ~= nil then "Hatch from eggs"
 			elseif pet.trial then pet.trial.hint else pet.charge .. " charge to hatch"
 		if pet.trial then
 			entry.Track.Visible = trackable

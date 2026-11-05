@@ -5,20 +5,23 @@ port. In Play mode, aim with the Pocket Deck's D-pad and press A to drop.
 You can also drag across the screen bar and release to drop.
 On a keyboard, aim with the arrows or A/D and drop with Space.
 A controller uses D-pad left/right and A.
-Merges earn score and hatch charge. Hatch Pip to unlock the lounge, then
-work toward Puddle, Wick, and Orbit. Use the pet journal to choose a
-companion and **Open deck** to resume the same tray.
+Hatch guaranteed Pip to unlock the lounge, then play 24-drop field runs:
+make tier III+ merges in the left bank patch, then the right. Successful runs
+earn nectar for random egg hatches. Open **Eggs** to compare exact odds and
+choose a recipe. Use the pet journal to choose a companion and **Deck** to play.
 Other players in the lounge can see your handheld's live display.
 Use **Customize** in either view to preview and equip a shell and sticker.
 Open **Customize → Club** for Pocket Trials, SFX volume, and reduced motion.
 Finish all three trials during regular play to earn the Club sticker.
-Published servers save pet ownership, hatch charge, personal best,
+Published servers save pet inventory, nectar, pending hatch results, personal best,
 companion, trial completion, settings, and the deck's appearance. Studio
 uses an in-memory profile for each play session.
-Sustained overflow ends the round. The recap shows score, best chain,
-tier V clears, and the next hatch. Choose **Try again** or press Enter
-to start a fresh tray. Hatch charge and collection progress carry over. See the
-[prototype rundown](PROTOTYPE.md) and [product scope](PRODUCT-SCOPE.md).
+Overflow or the drop budget ends a round, with time for final cascades. The recap
+shows score, best chain, tier V clears and earned nectar. Choose **Try again**,
+press Enter, or open **Hatch eggs**. Collection and balance carry over.
+See the current [hatch-loop rundown](HATCH-LOOP.md). The
+[prototype archive](PROTOTYPE.md) and [product scope](PRODUCT-SCOPE.md)
+record earlier iterations and future direction.
 
 Generate the original sound bank with `python scripts/synth_egg_drop.py`.
 To preview it in a local Studio place, copy the WAVs from `assets/audio`

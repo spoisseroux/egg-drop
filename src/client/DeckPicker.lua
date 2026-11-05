@@ -217,7 +217,7 @@ function Picker:select(themeId, stickerId)
 	self.onPreview(themeId, stickerId)
 end
 
-function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduced)
+function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduced, inventoryMask)
 	self.sound.Text = "SFX: " .. sound
 	self.motion.Text = if systemReduced then "Motion: Roblox" elseif reduced then "Motion: Low" else "Motion: Full"
 	self.motion.Interactable = not systemReduced
@@ -240,7 +240,7 @@ function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduc
 	self.reward.Text = if clubComplete then "Club sticker ready in the Sticker tab" else "Finish all three to earn the Club sticker"
 	self.reward.TextColor3 = if clubComplete then Art.Amber else Art.Muted
 	for id, stroke in pairs(self.choices.Sticker) do
-		local available = Stickers.canEquip(id, owned, mask)
+		local available = Stickers.canEquip(id, owned, mask, inventoryMask)
 		local swatch = stroke.Parent
 		local sticker = Stickers.ById[id]
 		swatch.Interactable = available

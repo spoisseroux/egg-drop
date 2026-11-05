@@ -77,10 +77,11 @@ function Progress.load(userId)
 		rank = rank,
 		charge = chargeOf(record, rank),
 		bestScore = bestOf(record),
-		companionId = if companion and Pets.isUnlocked(companion, rank, trials) then companion.id
+		-- The caller validates against the migrated nursery inventory after loading it.
+		companionId = if companion then companion.id
 			elseif rank > 0 then Pets[1].id else nil,
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
-		sticker = if type(record.sticker) == "string" and Stickers.canEquip(record.sticker, rank, trials) then record.sticker else Stickers.Default,
+		sticker = if type(record.sticker) == "string" and Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
 		trials = trials,
 		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
 		reduced = record.reduced == true,

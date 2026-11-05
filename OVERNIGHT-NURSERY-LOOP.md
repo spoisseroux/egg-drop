@@ -1,4 +1,9 @@
-# Egg Drop — proposed overnight nursery loop
+# Egg Drop — deferred nursery expansion proposal
+
+The physical nursery and staged care were deferred at Spencer's request.
+The active smaller loop is documented in [HATCH-LOOP.md](HATCH-LOOP.md).
+Draft nursery code is preserved under `assets/concepts/nursery/` outside Rojo.
+The proposal below is saved for a later scope, not shipped behavior.
 
 Status: proposed work, not shipped functionality. Astra reviewed the external
 gameplay response and code at `3b2a109`, then revised the recommendation around

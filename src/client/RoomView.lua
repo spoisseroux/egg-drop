@@ -19,9 +19,18 @@ Room.__index = Room
 
 local visuals = { pip = PipVisual, puddle = PuddleVisual }
 
-local function createPet(parent, origin, pet)
+local function createPet(parent, origin, pet, masteryMask)
 	local visual = visuals[pet.family or pet.id] or BonusPetVisual
-	return visual.new(parent, origin, pet)
+	local result = visual.new(parent, origin, pet)
+	local family = pet.family or pet.id
+	local index = table.find({ "pip", "puddle", "wick", "orbit" }, family)
+	if index and masteryMask and bit32.band(masteryMask, bit32.lshift(1, index - 1)) ~= 0 then
+		local sparkles = Instance.new("Sparkles")
+		sparkles.Name, sparkles.SparkleColor = "FamilyMastery", pet.accent or pet.color
+		sparkles.Parent = result.model.PrimaryPart
+		result.masterySparkles = sparkles
+	end
+	return result
 end
 
 local function frame(parent, name, size, position, color, z)
@@ -60,7 +69,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects)
+function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects, onEggs)
 	local controls = frame(gui, "LoungeControls", UDim2.new(1, -32, 0, 78), UDim2.new(0.5, 0, 0, 10), Art.Surface, 8)
 	controls.AnchorPoint = Vector2.new(0.5, 0)
 	controls.Visible = false
@@ -90,9 +99,14 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.25, 4, 0, 27), Art.Cyan)
 	local customize = button(controls, "Customize", "Style", UDim2.new(0.50, 0, 0, 27), Art.Raised)
 	local collection = button(controls, "Collection", "Pets", UDim2.new(0.75, -4, 0, 27), Art.Raised)
-	for _, control in ipairs({ greet, leave, customize, collection }) do
-		control.Size = UDim2.new(0.25, -12, 0, 44)
+	local eggs = button(controls, "Eggs", "Eggs", UDim2.fromOffset(0, 27), Art.Amber)
+	eggs.TextColor3 = Art.Ink
+	leave.Text, greet.Text = "Deck", "Hi"
+	for i, control in ipairs({ greet, leave, eggs, customize, collection }) do
+		control.Position = UDim2.new((i - 1) / 5, 8 - (i - 1) * 3, 0, 27)
+		control.Size = UDim2.new(0.2, -10, 0, 44)
 	end
+	eggs.Activated:Connect(function() if not overlayOpen() and onEggs then onEggs() end end)
 
 	local self = setmetatable({
 		board = board,
@@ -107,7 +121,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		target = "Board",
 		lastSwitchAt = -math.huge,
 		shownPet = Pets[1],
-		companions = RoomCompanions.new(progress.Parent, createPet),
+		companions = RoomCompanions.new(progress.Parent, createPet, reduceEffects),
 	}, Room)
 	self.reduceEffects = reduceEffects
 	collection.Activated:Connect(function()
@@ -171,6 +185,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				end
 			end
 			self.pet:update(dt)
+			if self.pet.masterySparkles then self.pet.masterySparkles.Enabled = not self.reduceEffects() end
 			self.companions:update(dt)
 		end
 	end)
@@ -203,7 +218,7 @@ end
 function Room:showPet(pet)
 	local owned = self.progress:GetAttribute("OwnedPets") or 0
 	local trials = self.progress:GetAttribute("TrialMask") or 0
-	if not pet or not Pets.isUnlocked(pet, owned, trials) then
+	if not pet or not Pets.isUnlocked(pet, owned, trials, self.progress:GetAttribute("InventoryMask")) then
 		pet = Pets[1]
 	end
 	self.shownPet = pet
@@ -216,12 +231,13 @@ function Room:showPet(pet)
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local position = if root then root.Position + root.CFrame.RightVector * 2.4 else Vector3.new(0, 4.02, -5)
-	self.pet = createPet(workspace, Vector3.new(position.X, 4.02, position.Z), pet)
+	self.pet = createPet(workspace, Vector3.new(position.X, 4.02, position.Z), pet, self.progress:GetAttribute("MasteryMask"))
 	self.followIn, self.followTarget = 0, nil
 	if not self.reduceEffects() then
 		self.pet:greet()
 	end
-	self.heading.Text = string.format("Sprout Hollow  ·  %s  ·  %d/%d", pet.name, Pets.ownedCount(owned, trials), #Pets.collection)
+	self.heading.Text = string.format("Sprout Hollow  ·  %s  ·  %d/%d", pet.name,
+		Pets.ownedCount(owned, trials, self.progress:GetAttribute("InventoryMask")), #Pets.collection)
 end
 
 function Room:cancelCameraTween()

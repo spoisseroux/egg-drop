@@ -5,8 +5,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Companions = {}
 Companions.__index = Companions
 
-function Companions.new(boards, createPet)
-	return setmetatable({ boards = boards, createPet = createPet, active = {}, refreshIn = 0 }, Companions)
+function Companions.new(boards, createPet, reduceEffects)
+	return setmetatable({ boards = boards, createPet = createPet, reduceEffects = reduceEffects, active = {}, refreshIn = 0 }, Companions)
 end
 
 function Companions:clear()
@@ -32,7 +32,8 @@ function Companions:update(dt)
 				local board = self.boards:FindFirstChild(tostring(player.UserId))
 				local pet = board and Pets.byId[board:GetAttribute("CompanionId")]
 				if root and pet and (root.Position - ownRoot.Position).Magnitude <= 48 then
-					table.insert(near, { player = player, root = root, pet = pet, distance = (root.Position - ownRoot.Position).Magnitude })
+					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0,
+						distance = (root.Position - ownRoot.Position).Magnitude })
 				end
 			end
 		end
@@ -41,15 +42,15 @@ function Companions:update(dt)
 		for index = 1, math.min(6, #near) do
 			local item = near[index]
 			local entry = self.active[item.player]
-			if entry and entry.pet ~= item.pet then
+			if entry and (entry.pet ~= item.pet or entry.masteryMask ~= item.masteryMask) then
 				entry.visual:destroy()
 				entry = nil
 			end
 			if not entry then
 				local position = item.root.Position + item.root.CFrame.RightVector * 2.2
-				local visual = self.createPet(workspace, Vector3.new(position.X, 4.02, position.Z), item.pet)
+				local visual = self.createPet(workspace, Vector3.new(position.X, 4.02, position.Z), item.pet, item.masteryMask)
 				visual.model:SetAttribute("CompanionOwnerId", item.player.UserId)
-				entry = { visual = visual, pet = item.pet }
+				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask }
 				self.active[item.player] = entry
 			end
 			entry.root = item.root
@@ -66,6 +67,7 @@ function Companions:update(dt)
 		local position = entry.root.Position + entry.root.CFrame.RightVector * 2.2
 		entry.visual.origin = entry.visual.origin:Lerp(Vector3.new(position.X, 4.02, position.Z), 1 - math.exp(-7 * dt))
 		entry.visual:update(dt)
+		if entry.visual.masterySparkles then entry.visual.masterySparkles.Enabled = not self.reduceEffects() end
 	end
 end
 

@@ -18,20 +18,50 @@ local function addEgg(board, position, tier, velocity)
 	return egg
 end
 
-function Simulation.new(preset, serial)
+function Simulation.new(preset, serial, options)
+	options = options or {}
 	local board = { eggs = {}, preset = preset, serial = serial or 0, drops = 0 }
-	for _, seed in ipairs(Config.Starter) do
+	board.contactGate = options.contactGate == true
+	board.dropAge = 0
+	if options.seed ~= nil then
+		local random = Random.new(options.seed)
+		board.queue = {}
+		for _ = 1, 4 do
+			local bag = { 1, 1, 1, 1, 2, 2 }
+			for index = #bag, 2, -1 do
+				local other = random:NextInteger(1, index)
+				bag[index], bag[other] = bag[other], bag[index]
+			end
+			for _, tier in ipairs(bag) do table.insert(board.queue, tier) end
+		end
+		board.seed = options.seed
+	end
+	if options.kick ~= nil then
+		board.physics = table.clone(Config.Presets[preset])
+		board.physics.kick = options.kick
+	end
+	for _, seed in ipairs(options.starter or Config.Starter) do
 		addEgg(board, Vector2.new(seed.x, Config.Tiers[seed.tier].radius), seed.tier)
 	end
 	return board
 end
 
-function Simulation.nextTier(board)
-	return Config.Queue[board.drops % #Config.Queue + 1]
+function Simulation.nextTier(board, lookahead)
+	local queue = board.queue or Config.Queue
+	return queue[(board.drops + (lookahead or 0)) % #queue + 1]
+end
+
+function Simulation.canDrop(board)
+	if not board.contactGate or not board.fallingId or board.dropAge >= 1.8 then return true end
+	for _, egg in ipairs(board.eggs) do
+		if egg.id == board.fallingId then return egg.hasContact == true end
+	end
+	-- A merge consumed the falling piece.
+	return true
 end
 
 function Simulation.drop(board, aim)
-	if #board.eggs >= Config.MaxEggs then
+	if #board.eggs >= Config.MaxEggs or not Simulation.canDrop(board) then
 		return false
 	end
 	local tier = Simulation.nextTier(board)
@@ -41,7 +71,8 @@ function Simulation.drop(board, aim)
 			return false
 		end
 	end
-	addEgg(board, position, tier)
+	local dropped = addEgg(board, position, tier)
+	board.fallingId, board.dropAge = dropped.id, 0
 	board.drops += 1
 	return true
 end
@@ -52,11 +83,12 @@ local function recordImpact(impacts, egg, normal, speed)
 	end
 end
 
-local function keepInside(egg, normal, distance, bounce, impacts)
+local function keepInside(egg, normal, distance, bounce, impacts, contact)
 	local overlap = egg.radius - distance
 	if overlap <= 0 then
 		return
 	end
+	if contact then egg.hasContact = true end
 	egg.position += normal * overlap
 	local speed = egg.velocity:Dot(normal)
 	if speed < 0 then
@@ -68,12 +100,12 @@ end
 local function collideWithTray(egg, bounce, impacts)
 	keepInside(egg, Vector2.xAxis, egg.position.X + halfWidth, bounce, impacts)
 	keepInside(egg, -Vector2.xAxis, halfWidth - egg.position.X, bounce, impacts)
-	keepInside(egg, Vector2.yAxis, egg.position.Y, bounce, impacts)
+	keepInside(egg, Vector2.yAxis, egg.position.Y, bounce, impacts, true)
 	keepInside(egg, -Vector2.yAxis, Config.Height - egg.position.Y, bounce, impacts)
 	keepInside(egg, Vector2.new(diagonal, diagonal),
-		(egg.position.X + halfWidth + egg.position.Y - Config.Bank) * diagonal, bounce, impacts)
+		(egg.position.X + halfWidth + egg.position.Y - Config.Bank) * diagonal, bounce, impacts, true)
 	keepInside(egg, Vector2.new(-diagonal, diagonal),
-		(halfWidth - egg.position.X + egg.position.Y - Config.Bank) * diagonal, bounce, impacts)
+		(halfWidth - egg.position.X + egg.position.Y - Config.Bank) * diagonal, bounce, impacts, true)
 end
 
 local function merge(board, firstIndex, secondIndex, preset)
@@ -116,6 +148,7 @@ local function resolvePairs(board, preset, merged, impacts)
 			local distance = delta.Magnitude
 			local overlap = first.radius + second.radius - distance
 			if overlap > 0 then
+				first.hasContact, second.hasContact = true, true
 				local normal = if distance > 0 then delta / distance else Vector2.xAxis
 				local speed = (second.velocity - first.velocity):Dot(normal)
 				if first.tier == second.tier then
@@ -139,7 +172,8 @@ local function resolvePairs(board, preset, merged, impacts)
 end
 
 function Simulation.step(board, dt, merged, impacts)
-	local preset = Config.Presets[board.preset]
+	local preset = board.physics or Config.Presets[board.preset]
+	board.dropAge = (board.dropAge or 0) + dt
 	for _, egg in ipairs(board.eggs) do
 		local velocity = egg.velocity + Vector2.new(0, -Config.Gravity * dt)
 		if velocity.Magnitude > maxSpeed then

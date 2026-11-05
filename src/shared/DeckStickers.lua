@@ -13,9 +13,11 @@ local Stickers = {
 	},
 }
 
-function Stickers.canEquip(id, rank, trials)
+function Stickers.canEquip(id, rank, trials, inventoryMask)
 	local sticker = Stickers.ById[id]
-	return sticker ~= nil and (sticker.rank or 0) <= rank and (not sticker.trials or Trials.clubComplete(trials))
+	local rankAllowed = sticker and (sticker.rank or 0) <= rank
+	if id == "wick" and inventoryMask ~= nil then rankAllowed = bit32.band(inventoryMask, 4) ~= 0 end
+	return sticker ~= nil and rankAllowed and (not sticker.trials or Trials.clubComplete(trials))
 end
 
 function Stickers.paint(label, id)
