@@ -249,6 +249,13 @@ meterText.TextSize = 13
 meterText.TextColor3 = Palette.Paper
 meterText.TextStrokeColor3 = Palette.Ink
 meterText.TextStrokeTransparency = 0
+local rareGoal = Art.text(backdrop, "RareGoal", "", UDim2.fromOffset(0, 0),
+	UDim2.fromOffset(0, 0), Art.Cyan, 12, Enum.Font.GothamMedium)
+rareGoal.TextScaled = true
+rareGoal.TextWrapped = true
+rareGoal.BackgroundColor3 = Art.Ink
+Art.corner(rareGoal, 5)
+make("UITextSizeConstraint", "ReadoutSize", { MinTextSize = 8, MaxTextSize = 12 }, rareGoal)
 local overflowLine = make("Frame", "OverflowLine", {
 	BackgroundColor3 = Palette.Amber, BackgroundTransparency = 0.45,
 	BorderSizePixel = 0, ZIndex = 2,
@@ -611,10 +618,11 @@ local function updateHud()
 	local mask = board:GetAttribute("TrialMask") or 0
 	local newlyEarned = bit32.band(mask, bit32.bnot(lastTrialMask))
 	if mask ~= lastTrialMask then
+		local earnedClub = Trials.clubComplete(mask) and not Trials.clubComplete(lastTrialMask)
 		lastTrialMask = mask
-		if newlyEarned ~= 0 then
+		if bit32.band(newlyEarned, Trials.ClubMask) ~= 0 then
 			trialNotice = "Trial complete! Check the Club tab."
-			if mask == Trials.All then
+			if earnedClub then
 				trialNotice = "Club sticker earned!"
 			else
 				for _, goal in ipairs(Trials.Goals) do
@@ -636,8 +644,13 @@ local function updateHud()
 		table.insert(hatchQueue, Pets[index])
 	end
 	knownPets = owned
-	if bit32.band(newlyEarned, Pets.bloom.trial.bit) ~= 0 then
-		table.insert(hatchQueue, Pets.bloom)
+	local nextRare
+	for _, rare in ipairs(Pets.rares) do
+		if bit32.band(newlyEarned, rare.trial.bit) ~= 0 then
+			table.insert(hatchQueue, rare)
+		elseif not nextRare and not Pets.isUnlocked(rare, owned, mask) then
+			nextRare = rare
+		end
 	end
 	local hatchPet = hatchQueue[1]
 	local hatchName = if hatchPet then hatchPet.name else nil
@@ -666,8 +679,17 @@ local function updateHud()
 		status.Text = "Keep matching to hatch Pip!"
 	end
 	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
-		elseif Pets.isUnlocked(Pets.bloom, owned, mask) then string.format("Collection   %d / %d", #Pets.collection, #Pets.collection)
-		else string.format("Bloom Pip   ·   %d pts", Pets.bloom.trial.target)
+		else string.format("Collection   %d / %d", Pets.ownedCount(owned, mask), #Pets.collection)
+	rareGoal.Visible = owned > 0
+	if nextRare then
+		local goal = nextRare.trial
+		local current = if goal == Trials.HighRoller then score
+			elseif goal == Trials.Fivefold then board:GetAttribute("PeakChain") or 0
+			else board:GetAttribute("MaxClears") or 0
+		rareGoal.Text = string.format("%s\n%s %d/%d", nextRare.name, goal.readout, math.min(current, goal.target), goal.target)
+	else
+		rareGoal.Text = "Rare collection complete"
+	end
 	local mode = board:GetAttribute("Mode")
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = board:GetAttribute("RoundOver") and not showHatch
@@ -730,15 +752,16 @@ local function layout()
 	shell.MicroTrim.Visible = lateral
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
 	local microHeight = math.min(620, screen.Y - 18)
-	local width = if lateral then math.max(1, math.min(screen.X - 230, (microHeight - 101) * ratio))
+	local sideGoal = lateral and math.min(screen.X - 230, (microHeight - 129) * ratio) < 126
+	local width = if lateral then math.max(1, math.min(screen.X - 230, (microHeight - (if sideGoal then 101 else 129)) * ratio))
 		else math.max(1, math.min(415, screen.X - (if portraitRail then 134 else 36),
-			(screen.Y - (if portraitRail then 188 else 254)) * ratio))
+			(screen.Y - (if portraitRail then 212 else 278)) * ratio))
 	local height = width / ratio
 	local totalWidth = if lateral then math.min(1150, screen.X - 28, math.max(width + 216, microHeight * 1.85))
 		elseif portraitRail then width + 110 else math.min(screen.X - 26, math.max(width + 34, 284))
 	local grip = if portraitRail then 98 else (totalWidth - width) / 2
 	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then microHeight elseif portraitRail then height + 174 else height + 240
+	local shellHeight = if lateral then microHeight elseif portraitRail then height + 198 else height + 264
 	local top = math.max(5, (screen.Y - shellHeight) / 2)
 	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
 	local trayY = top + (if lateral then 62 else 70)
@@ -750,7 +773,8 @@ local function layout()
 	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 4)
 	local bezelGutter = if lateral then 10 else 5
 	bezel.Position = UDim2.fromOffset(screenX - bezelGutter, trayY - 46)
-	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2, height + (if lateral or portraitRail then 72 else 94))
+	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2,
+		height + (if sideGoal then 72 elseif lateral or portraitRail then 100 else 123))
 	viewport.Position = UDim2.fromOffset(screenX, trayY)
 	viewport.Size = UDim2.fromOffset(width, height)
 	overlay.Position = viewport.Position
@@ -762,7 +786,9 @@ local function layout()
 	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
 	deckSticker.Position = UDim2.fromOffset(left + (if lateral then totalWidth - grip * 0.5 - 12 else totalWidth * 0.47 - 12),
 		if lateral then top + shellHeight * 0.22 else trayBottom + 78)
-	if portraitRail then
+	if sideGoal then
+		deckSticker.Position = UDim2.fromOffset(left + totalWidth - 26, top + 14)
+	elseif portraitRail then
 		deckSticker.Position = UDim2.fromOffset(left + 34, top + shellHeight - 146)
 	end
 	rail.Position = UDim2.fromOffset(screenX, trayY - 44)
@@ -790,7 +816,11 @@ local function layout()
 	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral or portraitRail then 3 else 26))
 	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
-	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 59)
+	rareGoal.BackgroundTransparency = if sideGoal then 0.1 else 1
+	rareGoal.Position = if sideGoal then UDim2.fromOffset(left + totalWidth - grip + 6, top + 12)
+		else meter.Position + UDim2.fromOffset(0, 24)
+	rareGoal.Size = UDim2.fromOffset(if sideGoal then grip - 38 else width, 26)
+	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 83)
 	hardware.Size = UDim2.fromOffset(totalWidth, if lateral or portraitRail then shellHeight else 64)
 	local dropSize = if lateral then math.clamp(math.floor(shellHeight * 0.18), 54, 100) else 48
 	local aimSize = if lateral then math.clamp(math.floor(shellHeight * 0.14), 44,
@@ -801,7 +831,7 @@ local function layout()
 	local dropRow = math.max(55, math.floor(shellHeight * 0.36))
 	local aimY = if lateral then math.min(dropRow, utilityY - aimSize - 32) elseif portraitRail then 95 else 0
 	local dropX = if lateral then totalWidth - grip * 0.5 - dropSize * 0.5 else totalWidth - dropSize
-	local dropY = if lateral then dropRow elseif portraitRail then trayBottom - top + 34 else 0
+	local dropY = if lateral then dropRow elseif portraitRail then trayBottom - top + 58 else 0
 	dpad.Position = UDim2.fromOffset(if lateral or portraitRail then (grip - aimWidth) * 0.5 else 0, aimY)
 	dpad.Size = UDim2.fromOffset(aimWidth, aimSize + 12)
 	dpad.RockerWell.Size = UDim2.fromOffset(aimWidth + 6, aimSize + 7)
@@ -838,7 +868,7 @@ local function layout()
 			elseif lateral or portraitRail then left + (grip - buttonWidth) / 2
 			else left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
 		local buttonY = if lateral or portraitRail then top + utilityY + (if sideBySide then 0 else (index - 1) * 50)
-			else trayBottom + 130
+			else trayBottom + 154
 		button.Cap.Caption.Text = if index == 1 then (if sideBySide then "STYLE" else "CUSTOMIZE") else "LOUNGE"
 		button.Cap.Caption.TextSize = if sideBySide then 10 else 12
 		button.Position = UDim2.fromOffset(buttonX, buttonY)

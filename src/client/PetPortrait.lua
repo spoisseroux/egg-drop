@@ -22,9 +22,19 @@ local sprites = {
 		"...BlllLLB...", "..BHHMMMMMB..", "..BHMMMMMMB..", "..BMFMMMFMB..", "..BDMMFMMDB..",
 		"...BDDDDDB...", "....BBBBB....", ".............",
 	},
+	foxfire_wick = {
+		"...l.....l...", "...lL...Ll...", "...llL.Lll...", "....lHLHl....", "....lllll....",
+		"...BLLLLLB...", "..BHHMMMMMB..", "..BHMMMMMMB..", "..BMFMMMFMB..", "..BDMMFMMDB..",
+		"...BDDDDDB...", "....BBBBB....", ".............",
+	},
 	orbit = {
 		"..........H..", ".........HLH.", "....BBBBB.H..", "...BHHMMMB...", "..BHMMMMMMB..",
 		"..BMFMMMFMB..", "..BMMMFMMMB..", ".LBMMMMMMMBl.", "LHBMMMMMDlL..", ".LlLllLlLB...",
+		"...BDDDDDB...", "....BBBBB....", ".............",
+	},
+	eclipse_orbit = {
+		".........ll..", "........lBB..", "....BBBBBlB..", "...BHHMMMB...", "..BHMMMMMMB..",
+		"..BMFMMMFMB..", "l.BMMMFMMMB.l", "llBMMMMMMMBlL", ".llMMMMMDlll.", "...lllllll...",
 		"...BDDDDDB...", "....BBBBB....", ".............",
 	},
 }
@@ -32,7 +42,7 @@ local sprites = {
 function Portrait.create(parent, pet, unit, position, z, locked)
 	local color = if locked then Art.Line else pet.color
 	local accent = if locked then Art.Muted elseif pet.id == "pip" then Color3.fromHex("#A9E34B")
-		elseif pet.id == "wick" then Art.Amber else Art.Cyan
+		elseif pet.accent then pet.accent elseif pet.id == "wick" then Art.Amber else Art.Cyan
 	local sprite = Art.pixels(parent, "Portrait", sprites[pet.id], {
 		B = Art.Ink, F = Art.Ink, M = color, H = color:Lerp(Art.Silver, 0.7),
 		D = color:Lerp(Art.Ink, 0.38), L = accent:Lerp(Art.Ink, 0.25), l = accent,

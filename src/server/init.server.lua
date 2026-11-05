@@ -36,6 +36,7 @@ local function publishState(board)
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
 	board.folder:SetAttribute("PeakChain", board.peakChain)
+	board.folder:SetAttribute("MaxClears", board.round.maxClears)
 	board.folder:SetAttribute("TrialMask", board.profile.trials)
 	board.folder:SetAttribute("Score", board.round.score)
 	board.folder:SetAttribute("BestScore", board.profile.bestScore)
@@ -263,9 +264,12 @@ RunService.Heartbeat:Connect(function(dt)
 				board.peakChain = math.max(board.peakChain, board.chain)
 				board.lastMerge = board.playTime
 				board.merges += 1
+				if merge.cleared then
+					board.round.maxClears += 1
+				end
 				board.round.score += 10 * (merge.tier + math.min(board.chain - 1, 9)) + (if merge.cleared then 100 else 0)
 				Progress.recordScore(board.profile, board.round.score)
-				Progress.recordTrials(board.profile, board.chain, board.round.score, merge.cleared)
+				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
 				Progress.chargeHatch(board.profile, merge.tier)
 				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared)
 			end

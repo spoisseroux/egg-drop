@@ -7,12 +7,18 @@ local Pets = {
 	{ id = "orbit", name = "Orbit", charge = 36, cue = "orbit", color = Color3.fromHex("#C7AEF3") },
 }
 
-Pets.bloom = {
-	id = "bloom_pip", name = "Bloom Pip", family = "pip", trial = Trials.HighRoller,
-	cue = "pet", color = Color3.fromHex("#F6A786"),
+Pets.rares = {
+	{ id = "bloom_pip", name = "Bloom Pip", family = "pip", trial = Trials.HighRoller,
+		cue = "pet", color = Color3.fromHex("#F6A786") },
+	{ id = "foxfire_wick", name = "Foxfire Wick", family = "wick", trial = Trials.Fivefold,
+		cue = "wick", color = Color3.fromHex("#8EAEFF"), accent = Color3.fromHex("#54EDDC") },
+	{ id = "eclipse_orbit", name = "Eclipse Orbit", family = "orbit", trial = Trials.DoubleSweep,
+		cue = "orbit", color = Color3.fromHex("#7162C8"), accent = Color3.fromHex("#FFD07E") },
 }
 Pets.collection = table.clone(Pets)
-table.insert(Pets.collection, Pets.bloom)
+for _, pet in ipairs(Pets.rares) do
+	table.insert(Pets.collection, pet)
+end
 Pets.byId = {}
 for index, pet in ipairs(Pets.collection) do
 	pet.index = index
@@ -27,7 +33,13 @@ function Pets.isUnlocked(pet, rank, trials)
 end
 
 function Pets.ownedCount(rank, trials)
-	return math.min(rank, #Pets) + (if Pets.isUnlocked(Pets.bloom, rank, trials) then 1 else 0)
+	local count = math.min(rank, #Pets)
+	for _, pet in ipairs(Pets.rares) do
+		if Pets.isUnlocked(pet, rank, trials) then
+			count += 1
+		end
+	end
+	return count
 end
 
 return Pets

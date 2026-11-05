@@ -4,7 +4,7 @@ local Round = {}
 Round.__index = Round
 
 function Round.new()
-	return setmetatable({ score = 0, over = false, overflowTime = 0 }, Round)
+	return setmetatable({ score = 0, maxClears = 0, over = false, overflowTime = 0 }, Round)
 end
 
 function Round:step(eggs, dt)

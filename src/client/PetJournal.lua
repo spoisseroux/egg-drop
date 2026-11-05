@@ -6,7 +6,7 @@ local Portrait = require(script.Parent.PetPortrait)
 
 local Journal = {}
 Journal.__index = Journal
-local CARD_HEIGHT = 244
+local CARD_HEIGHT = 244 + (#Pets.rares - 1) * 51
 
 function Journal.new(gui, make, label, onVisit)
 	local shade = make("Frame", "PetJournal", {
@@ -41,7 +41,9 @@ function Journal.new(gui, make, label, onVisit)
 	local self = setmetatable({ shade = shade, scroll = scroll, title = title, cards = {}, portraits = {} }, Journal)
 	for index, pet in ipairs(Pets.collection) do
 		local entry = label("TextButton", pet.name, "", card, Art.Raised)
-		entry.Position = UDim2.new((index - 1) % 2 * 0.5, 7, 0, 36 + math.floor((index - 1) / 2) * 51)
+		local column = if pet.trial then 0 else (index - 1) % 2 * 0.5
+		local row = if pet.trial then math.ceil(#Pets / 2) + index - #Pets - 1 else math.floor((index - 1) / 2)
+		entry.Position = UDim2.new(column, 7, 0, 36 + row * 51)
 		entry.Size = UDim2.new(if pet.trial then 1 else 0.5, -14, 0, 46)
 		entry.ZIndex = 22
 		Art.button(entry, 6)

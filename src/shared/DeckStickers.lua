@@ -15,7 +15,7 @@ local Stickers = {
 
 function Stickers.canEquip(id, rank, trials)
 	local sticker = Stickers.ById[id]
-	return sticker ~= nil and (sticker.rank or 0) <= rank and (not sticker.trials or trials == Trials.All)
+	return sticker ~= nil and (sticker.rank or 0) <= rank and (not sticker.trials or Trials.clubComplete(trials))
 end
 
 function Stickers.paint(label, id)

@@ -29,6 +29,11 @@ local function chargeOf(record, rank)
 		then math.floor(math.min(charge, nextPet.charge - 1)) else 0
 end
 
+local function trialsOf(record)
+	return bit32.bor(bit32.band(Trials.mask(record.trials), Trials.ClubMask),
+		bit32.band(Trials.mask(record.rareTrials), Trials.RareMask))
+end
+
 function Progress.load(userId)
 	local key = "player_" .. userId
 	local record = memory[key]
@@ -41,7 +46,7 @@ function Progress.load(userId)
 	end
 	record = if type(record) == "table" then record else {}
 	local rank = rankOf(record)
-	local trials = Trials.mask(record.trials)
+	local trials = trialsOf(record)
 	local companion = Pets.byId[record.companionId]
 	return {
 		key = key,
@@ -79,7 +84,9 @@ local function flush(profile)
 			record.bestScore = math.max(best, bestOf(record))
 		end
 		if earnedTrials then
-			record.trials = bit32.bor(Trials.mask(record.trials), earnedTrials)
+			local completed = bit32.bor(trialsOf(record), earnedTrials)
+			record.trials = bit32.band(completed, Trials.ClubMask)
+			record.rareTrials = bit32.band(completed, Trials.RareMask)
 		end
 		local function mergeSetting(key, change)
 			if not change then
@@ -148,8 +155,8 @@ local function flush(profile)
 	end
 end
 
-function Progress.recordTrials(profile, chain, score, cleared)
-	local earned = Trials.earned(profile.trials, chain, score, cleared)
+function Progress.recordTrials(profile, chain, score, clears)
+	local earned = Trials.earned(profile.trials, chain, score, clears)
 	if earned == profile.trials then
 		return
 	end

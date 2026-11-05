@@ -236,8 +236,9 @@ function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduc
 		count += if done then 1 else 0
 	end
 	self.clubHeader.Text = string.format("POCKET TRIALS   %d/%d", count, #Trials.Goals)
-	self.reward.Text = if mask == Trials.All then "Club sticker ready in the Sticker tab" else "Finish all three to earn the Club sticker"
-	self.reward.TextColor3 = if mask == Trials.All then Art.Amber else Art.Muted
+	local clubComplete = Trials.clubComplete(mask)
+	self.reward.Text = if clubComplete then "Club sticker ready in the Sticker tab" else "Finish all three to earn the Club sticker"
+	self.reward.TextColor3 = if clubComplete then Art.Amber else Art.Muted
 	for id, stroke in pairs(self.choices.Sticker) do
 		local available = Stickers.canEquip(id, owned, mask)
 		local swatch = stroke.Parent

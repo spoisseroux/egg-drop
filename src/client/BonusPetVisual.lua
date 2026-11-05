@@ -24,10 +24,10 @@ end
 function Visual.new(parent, origin, pet)
 	local model = Instance.new("Model")
 	model.Name = pet.name
-	model:SetAttribute("PetFamily", pet.name)
+	model:SetAttribute("PetFamily", if pet.family == "wick" then "Wick" elseif pet.family == "orbit" then "Orbit" else pet.name)
 	local self = setmetatable({ model = model, origin = origin, pieces = {}, time = 0, greeting = 0, lastFrame = -1 }, Visual)
 	local ink = Color3.fromHex("#392846")
-	local wick = pet.name == "Wick"
+	local wick = pet.id == "wick" or pet.family == "wick"
 	model.PrimaryPart = piece(self, "Body", Vector3.new(1.9, 1.8, 1.55), CFrame.new(0, 1.2, 0), pet.color, true)
 	for _, side in ipairs({ -1, 1 }) do
 		piece(self, "Foot", Vector3.new(0.53, 0.24, 0.64), CFrame.new(side * 0.52, 0.18, 0.25), pet.color, true)
@@ -36,7 +36,14 @@ function Visual.new(parent, origin, pet)
 			if wick then Color3.fromHex("#FFD0A2") else Color3.fromHex("#F4D2F5"), true)
 	end
 	piece(self, "Mouth", Vector3.new(0.15, 0.07, 0.07), CFrame.new(0, 1.13, 0.77), ink)
-	if wick then
+	if pet.id == "foxfire_wick" then
+		for _, side in ipairs({ -1, 1 }) do
+			local tip = CFrame.new(side * 0.36, 2.15, -0.04) * CFrame.Angles(0, 0, -side * 0.48)
+			piece(self, "Foxfire", Vector3.new(0.55, 1.18, 0.52), tip, pet.accent, true)
+			piece(self, "FoxfireCore", Vector3.new(0.28, 0.68, 0.32), tip * CFrame.new(0, -0.18, 0.17),
+				Color3.fromHex("#E5FFF9"), true)
+		end
+	elseif wick then
 		piece(self, "Flame", Vector3.new(0.78, 1.19, 0.7), CFrame.new(0.17, 2.12, -0.08)
 			* CFrame.Angles(0, 0, math.rad(-24)), Color3.fromHex("#F6C557"), true)
 		piece(self, "FlameCore", Vector3.new(0.35, 0.54, 0.36), CFrame.new(0.19, 2.03, 0.23),
@@ -47,10 +54,13 @@ function Visual.new(parent, origin, pet)
 			local x, z = math.cos(angle) * 1.12, math.sin(angle) * 0.91
 			piece(self, "OrbitRing", Vector3.new(0.49, 0.12, 0.31),
 				CFrame.new(x, 0.93 + x * 0.26, z) * CFrame.Angles(0, -angle + math.pi / 2, 0),
-				Color3.fromHex("#806BBA"), true)
+				pet.accent or Color3.fromHex("#806BBA"), true)
 		end
 		piece(self, "Moon", Vector3.new(0.37, 0.37, 0.37), CFrame.new(1.1, 1.47, 0.47),
-			Color3.fromHex("#FFF0AF"), true)
+			if pet.accent then Color3.fromHex("#292249") else Color3.fromHex("#FFF0AF"), true)
+		if pet.id == "eclipse_orbit" then
+			piece(self, "MoonHalo", Vector3.new(0.46, 0.46, 0.24), CFrame.new(1.03, 1.51, 0.40), pet.accent, true)
+		end
 	end
 	self:update(0)
 	model.Parent = parent
