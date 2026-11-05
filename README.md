@@ -23,8 +23,17 @@ to start a fresh tray. Hatch charge and collection progress carry over. See the
 Generate the original sound bank with `python scripts/synth_egg_drop.py`.
 To preview it in a local Studio place, copy the WAVs from `assets/audio`
 into `content/sounds/egg-drop-polish` under the active Studio installation.
-For published play, import the WAVs and map their Roblox asset IDs in
-`src/client/BoardAudio.lua`.
+For the private Roblox build, import the 17 WAVs through Studio's Asset
+Manager under the experience owner. Map the approved IDs by cue name in
+`src/client/BoardAudio.lua` and confirm each asset can load in the private
+place. The client logs missing IDs and failed audio loads.
+
+Roblox Analytics records the onboarding funnel from board ready through
+first drop, first merge, and Pip's hatch. The first lounge visit and round
+retry are separate counters because they can occur in either order. The
+tracker starts when a player loads a save without Pip. The two counters
+record once per tracked connection. Studio uses local gameplay checks
+since Roblox accepts analytics events only from published servers.
 
 In Studio Play mode, set the `MeshPreview` attribute on the local
 `PlayerGui.EggDrop` ScreenGui to compare the mesh render with the default

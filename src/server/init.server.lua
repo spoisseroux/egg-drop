@@ -11,6 +11,7 @@ local Simulation = require(script.BoardSimulation)
 local Round = require(script.BoardRound)
 local Lounge = require(script.Lounge)
 local Progress = require(script.PlayerProgress)
+local FirstSession = require(script.FirstSession)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -126,6 +127,7 @@ local function addPlayer(player)
 		lastCompanionChange = -math.huge,
 		mode = "Board",
 		profile = profile,
+		firstSession = FirstSession.new(player, profile),
 	}
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
@@ -141,6 +143,9 @@ local function addPlayer(player)
 		end
 	end
 	folder.Parent = trays
+	if board.firstSession then
+		board.firstSession:advance(1)
+	end
 	local function spawn(character)
 		Lounge.spawn(character, slot, player, function()
 			return board.mode, profile.theme, profile.sticker
@@ -219,6 +224,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.mode = value
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
 		board.folder:SetAttribute("Mode", value)
+		if value == "Room" and board.firstSession then
+			board.firstSession:record("FirstSessionLoungeVisit")
+		end
 		return
 	end
 	if board.mode ~= "Board" then
@@ -232,6 +240,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.lastDrop = now
 		if Simulation.drop(board.sim, value) then
 			publishState(board)
+			if board.firstSession then
+				board.firstSession:advance(2)
+			end
 		end
 	elseif action == "reset" or action == "preset" then
 		if now - board.lastReset < Config.ResetInterval then
@@ -249,6 +260,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		end
 		board.lastReset = now
 		reset(board, preset)
+		if action == "reset" and board.firstSession then
+			board.firstSession:record("FirstSessionRoundRetry")
+		end
 	end
 end)
 
@@ -278,6 +292,12 @@ RunService.Heartbeat:Connect(function(dt)
 				Progress.recordScore(board.profile, board.round.score)
 				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
 				Progress.chargeHatch(board.profile, merge.tier)
+				if board.firstSession then
+					board.firstSession:advance(3)
+					if board.profile.rank > 0 then
+						board.firstSession:advance(4)
+					end
+				end
 				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared)
 			end
 			if #merged > 0 or board.round.over then

@@ -28,6 +28,7 @@ function Audio.new()
 	group.Parent = SoundService
 	local self = setmetatable({ voices = {}, indices = {}, group = group }, Audio)
 	local warmup = {}
+	local missing = {}
 	for _, cue in ipairs(cues) do
 		local uri = Audio.uri(cue)
 		if uri then
@@ -43,11 +44,24 @@ function Audio.new()
 			end
 			self.voices[cue] = voices
 			table.insert(warmup, voices[1])
+		else
+			table.insert(missing, cue)
 		end
+	end
+	if #missing > 0 then
+		warn("Egg Drop has no audio asset IDs for " .. table.concat(missing, ", "))
 	end
 	if #warmup > 0 then
 		task.spawn(function()
-			ContentProvider:PreloadAsync(warmup)
+			local failed = {}
+			ContentProvider:PreloadAsync(warmup, function(id, status)
+				if status ~= Enum.AssetFetchStatus.Success then
+					table.insert(failed, id)
+				end
+			end)
+			if #failed > 0 then
+				warn("Egg Drop could not load audio " .. table.concat(failed, ", "))
+			end
 		end)
 	end
 	return self
