@@ -165,6 +165,8 @@ local function reset(board, preset)
 	board.payoutPending = false
 	board.earnedPayout = nil
 	board.folder:SetAttribute("FieldSuccess", false)
+	board.folder:SetAttribute("FieldReason", "")
+	board.folder:SetAttribute("FieldFinalStage", 0)
 	board.folder:SetAttribute("NectarAward", 0)
 	board.folder:SetAttribute("DailyAward", 0)
 	board.folder:SetAttribute("MasteryAward", 0)
@@ -411,6 +413,8 @@ local function settleReward(player, board)
 	if board.payoutRunning then return end
 	local amount = board.field.outcome.reward
 	board.folder:SetAttribute("FieldSuccess", board.field.outcome.success)
+	board.folder:SetAttribute("FieldReason", board.field.outcome.reason)
+	board.folder:SetAttribute("FieldFinalStage", board.field.outcome.rootStage)
 	local summary = { family = board.runFamily, day = board.runDay, success = board.field.outcome.success,
 		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
 		clears = board.round.maxClears, drops = board.sim.drops }

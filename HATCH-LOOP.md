@@ -211,3 +211,10 @@ Fresh physical-phone feel, live DataStore rejoin, shared live multiplayer, and h
 
 - Additional client-request integration run (separate from the UI input checks) completed both quest regions in 24 drops, credited eight base nectar and two Pip marks, recorded all three family challenge flags, and advanced the two-win daily contract to 1/2. Balance rose from 12 to 20.
 - The same Studio session purchased Meadow through the actual hatch UI at 20 nectar: balance became two, inventory became Pip + Puddle, and a persistent Puddle reveal appeared. Rank I/II/III visual fixtures verified badge/outline/burst layering and reduced-effects cleanup without granting profile progress.
+
+
+## First-session coaching, 2026-11-06 overnight
+
+After Pip, the first field run uses a compact matching diagram labeled LEFT, then RIGHT. It disappears after the first successful quest and does not block controls. Starter Pip's reveal shows the selected egg recipe and real balance. The recap identifies the missed side or overflow, separates quest/daily nectar, shows score against best, and calculates the next egg's cost from the committed balance. A save delay remains a pending reward until a Saved receipt arrives. Compact recaps prioritize readable progress over score tiles.
+
+Seven native Studio presentation regression cases passed. A developer-authored keyboard/UI walkthrough reached its first paid Meadow hatch (Wick) in 178.43 seconds, including operator inspection time; this is not a human usability study. It completed both goals, earned base6 + daily6 and one Pip mark, paid18 once, and returned to a usable board with the first-field coaching retired. See `scripts/OnboardingWalkthrough-results.json` for details.

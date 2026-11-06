@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-06",
+  "runtime": "Roblox Studio native Client and Server",
+  "kind": "Developer-authored scripted keyboard and UI walkthrough",
+  "notHumanUsabilityEvidence": true,
+  "profile": "Fresh per-session Studio memory profile; no live DataStore inventory modified",
+  "steps": [
+    {
+      "value": 1,
+      "seconds": 4.383971000090241,
+      "event": "Pip owned"
+    },
+    {
+      "value": 1,
+      "seconds": 69.36439409991726,
+      "event": "Field stage"
+    },
+    {
+      "value": 2,
+      "seconds": 95.9140017000027,
+      "event": "Field stage"
+    },
+    {
+      "event": "First recap",
+      "seconds": 141.0124181001447
+    },
+    {
+      "balance": 0,
+      "seconds": 178.42754560010508,
+      "event": "First paid hatch",
+      "pet": "wick"
+    },
+    {
+      "value": 0,
+      "seconds": 179.14299369999208,
+      "event": "Field stage"
+    }
+  ],
+  "firstRecap": {
+    "success": true,
+    "drops": 24,
+    "score": 680,
+    "peakChain": 4,
+    "baseNectar": 6,
+    "dailyNectar": 6,
+    "totalNectar": 12,
+    "postAwardBalance": 18,
+    "familyMarks": 1
+  },
+  "firstPaidHatch": {
+    "recipe": "Mixed Meadow",
+    "cost": 18,
+    "pet": "wick",
+    "balance": 0
+  },
+  "nextRun": {
+    "drops": 0,
+    "phase": "Playing",
+    "coachVisible": false,
+    "aInteractable": true
+  },
+  "regression": {
+    "transactionCases": 21,
+    "closingCases": 2,
+    "onboardingPresentationCases": 7
+  },
+  "limitations": [
+    "Includes operator/tool inspection time; not a human completion-rate study.",
+    "No physical-phone, live DataStore rejoin or shared multiplayer verification."
+  ]
+}

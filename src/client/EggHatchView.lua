@@ -246,7 +246,14 @@ function View:update(state)
 			self.revealHost.Visible = true
 			if self.playingId ~= result.id then
 				self.playingId, self.ackReady = result.id, false
-				self.cinematic:play(result, function()
+				local presentation = table.clone(result)
+				if result.starter then
+					local recipe = Catalog.ById[self.selected]
+					local balance = self.state.nectar or 0
+					presentation.starterGoal = if balance >= recipe.cost then recipe.name .. " ready · choose it in Menu"
+						else string.format("%s · %d/%d nectar · win quests", recipe.name, balance, recipe.cost)
+				end
+				self.cinematic:play(presentation, function()
 					if self.shade.Visible and self.state.lastHatch and self.state.lastHatch.id == result.id then
 						self.ackReady = true
 						self:refreshFooter()

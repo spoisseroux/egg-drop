@@ -184,6 +184,7 @@ function Cinematic:drawResult(result, animate)
 	local family = (result.family or pet.family or pet.id):gsub("^%l", string.upper)
 	local detail = if result.duplicate
 		then string.format("%s family  +1 mark  ·  %d total", family, result.mastery or 0)
+		elseif result.starter and result.starterGoal then result.starterGoal
 		else "A new friend for Sprout Hollow"
 	if result.duplicate and (result.promotedTo or 0) > 0 then detail = family .. " family rank " .. ({ "I", "II", "III" })[result.promotedTo] .. " unlocked!" end
 

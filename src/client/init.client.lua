@@ -417,7 +417,7 @@ for row = 0, 2 do
 end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Enum.Font.GothamBold
-local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter)
+local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
 local openPicker
 local openJournal
 local picker
@@ -815,6 +815,11 @@ end
 local lastTrialMask = board:GetAttribute("TrialMask") or 0
 local trialNotice, trialNoticeUntil
 
+local function shouldCoachField()
+	return nurseryState and nurseryState.status == "Ready" and (board:GetAttribute("OwnedPets") or 0) > 0
+		and board:GetAttribute("FieldPhase") == "Playing" and canAim() and not isPickerOpen() and not roomView.busy
+end
+
 local function updateHud()
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
@@ -924,10 +929,11 @@ local function updateHud()
 	end
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
 		Config.Tiers[nextTier()].mark, canPlay())
-	status.BackgroundTransparency = if lesson then 0.08 else 1
-	status.TextColor3 = if lesson then Art.Silver else title.TextColor3
+	local fieldCoaching = firstHatchGuide:fieldStep(board:GetAttribute("FieldStage") or 0, nurseryState and nurseryState.totalWins or -1, shouldCoachField())
+	status.BackgroundTransparency = if lesson or fieldCoaching then 0.08 else 1
+	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
 	status.ReadoutSize.MaxTextSize = if lesson then 16 else 13
-	status.Text = if lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
+	status.Text = if fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
 		then trialNotice else "Win quest +6 nectar\nLow pile +2 bonus"
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
@@ -940,19 +946,18 @@ local function updateHud()
 	end
 	if over then
 		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
-		if nurseryActive then
-			local award = board:GetAttribute("NectarAward") or 0
-			local rewardStatus = board:GetAttribute("RewardStatus")
-			recap.title.Text = if award > 0 then "+" .. award .. " nectar earned" else "Quest unfinished · try again"
-				recap.detail.Text = if rewardStatus == "Saving" then "Saving your nectar…" elseif award > 0 then string.format("Quest +%d · daily +%d · mastery +%d", math.max(0, award - (board:GetAttribute("DailyAward") or 0)), board:GetAttribute("DailyAward") or 0, board:GetAttribute("MasteryAward") or 0)
-				else "Merge matching jellies to III+ at ← then →"
-			recap.fill.Parent.Visible = false
+		if nurseryActive and owned > 0 then
+			recap:updateField({ success = board:GetAttribute("FieldSuccess"), reason = board:GetAttribute("FieldReason"),
+				stage = board:GetAttribute("FieldFinalStage") or 0, status = board:GetAttribute("RewardStatus"),
+				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
+				balance = nurseryState and nurseryState.nectar or 0,
+				recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow })
 		end
 	end
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
 		else "You hatched " .. (hatchName or "") .. "!"
-	if over and nurseryActive then
-		modalTitle.Text = if board:GetAttribute("FieldSuccess") then "Quest complete!" else "Quest unfinished"
+	if over and nurseryActive and owned > 0 then
+		modalTitle.Text = recap.fieldHeading or "Quest unfinished"
 		local reward = nurseryState and nurseryState.lastRunReward
 		if reward and (reward.promotedTo or 0) > 0 and (board:GetAttribute("MasteryAward") or 0) > 0 then
 			modalTag.Text = "FAMILY PROMOTION · " .. ({ "I", "II", "III" })[reward.promotedTo]
@@ -963,7 +968,10 @@ local function updateHud()
 	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
 	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
 	if gameMenu then gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
-	modalAction.Text = if over then "Try again" else "Meet " .. (hatchName or "")
+	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
+	modalAction.Text = if rewardPending then "Saving…" elseif over then "Try again" else "Meet " .. (hatchName or "")
+	modalAction.Interactable = not rewardPending
+	keepPlaying.Interactable = not rewardPending
 	local showEggChoice = over and nurseryActive and owned > 0
 	modalAction.Position = UDim2.new(if over and not showEggChoice then 0.09 else 0.05, 0, 1, -52)
 	modalAction.Size = UDim2.new(if over and not showEggChoice then 0.82 else 0.43, 0, 0, 44)
@@ -1055,6 +1063,7 @@ local function layout()
 	local compactDialog = dialogHeight < 220
 	modal:SetAttribute("CompactDialog", compactDialog)
 	modal.Size = UDim2.fromOffset(math.min(360, screen.X - 32), dialogHeight)
+	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0) > 0 then recap:layoutField(dialogHeight) end
 	local stageHeight = math.max(24, dialogHeight - 55 - 55 - (if compactDialog then 0 else 18))
 	hatchStage.Size = UDim2.new(1, -24, 0, stageHeight)
 	hatchIndex.Position = UDim2.fromOffset(12, 55 + stageHeight)
@@ -1652,6 +1661,7 @@ RunService.RenderStepped:Connect(function(dt)
 	-- Transition completion changes local busy state without a replicated attribute.
 	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
 	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")
+	firstHatchGuide:fieldStep(board:GetAttribute("FieldStage") or 0, nurseryState and nurseryState.totalWins or -1, shouldCoachField())
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
 	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
 	eggGoalText.Text = string.format("%s\n%d/%d nectar", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
