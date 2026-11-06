@@ -246,6 +246,7 @@ make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
 readout.Font = Enum.Font.Code
+make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 }, readout)
 readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
@@ -307,6 +308,16 @@ for index = 1, maxCharge do
 		BackgroundColor3 = Art.Line, BorderSizePixel = 0,
 	}, meter)
 end
+local function layoutDropMeter()
+	local usable = math.max(0,meter.AbsoluteSize.X-66)
+	local gap = if usable>=maxCharge*3 then 2 elseif usable>=maxCharge*2 then 1 else 0
+	local width = math.max(1,(usable-gap*(maxCharge-1))/maxCharge)
+	for index,cell in ipairs(segments)do
+		cell.Position=UDim2.new(0,(index-1)*(width+gap),.5,-3)
+		cell.Size=UDim2.fromOffset(width,6)
+	end
+end
+meter:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutDropMeter)
 local meterText = label("TextLabel", "MeterText", "", meter)
 meterText.Font = Enum.Font.Code
 meterText.Size = UDim2.new(0, 62, 1, 0)
@@ -604,6 +615,7 @@ local function paintDeck(id, stickerId)
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
 	Stickers.paint(deckSticker, stickerId)
+	if backdrop:GetAttribute("CompactLandscape") then deckSticker.Visible=false end
 end
 
 local function canAim()
@@ -718,8 +730,18 @@ refreshNursery()
 gameMenu = DeckMenu.new(safeOverlays, {
 	close = function() closeMenu() end,
 	eggs = function() closeMenu(); visitEggs() end,
-	pets = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then openJournal() else
-		request:FireServer("mode", "Room"); task.delay(.9, function() if board:GetAttribute("Mode") == "Room" then openJournal() end end) end end,
+	pets = function()
+		closeMenu(); cancelHatchNavigation()
+		local generation = hatchNavigation.generation
+		if board:GetAttribute("Mode") == "Room" and not roomView.busy then openJournal(); return end
+		request:FireServer("mode", "Room")
+		task.spawn(function()
+			local deadline=os.clock()+5
+			repeat task.wait(.1) until hatchNavigation.generation~=generation
+				or (board:GetAttribute("Mode")=="Room" and not roomView.busy) or os.clock()>deadline
+			if hatchNavigation.generation==generation and board:GetAttribute("Mode")=="Room" and not roomView.busy then openJournal() end
+		end)
+	end,
 	style = function() closeMenu(); openPicker() end,
 	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
 	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
@@ -930,13 +952,9 @@ local function updateHud()
 		cell.Size = UDim2.new(1 / budget, -2, 0, 6)
 		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
-	-- Reserve the right end for the numeric skee-ball-style counter.
-	for _, cell in ipairs(segments) do
-		cell.Position = UDim2.new(cell.Position.X.Scale * (1 - 66 / math.max(80, meter.AbsoluteSize.X)), 2, .5, -3)
-		cell.Size = UDim2.new(cell.Size.X.Scale * (1 - 66 / math.max(80, meter.AbsoluteSize.X)), -2, 0, 6)
-	end
+	layoutDropMeter()
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
-	eggGoal.Visible = owned > 0 and shell.AbsoluteSize.Y >= 260
+	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
 	eggGoalText.Text = string.format("MEADOW EGG\n%d/18 nectar", nurseryState and nurseryState.nectar or 0)
 	rareGoal.Visible = owned > 0
 	local rareProgress = 0
@@ -1067,26 +1085,33 @@ local function updateHud()
 end
 
 local function layout()
+	-- Geometry changes revoke a held gesture; its old release cannot spend a drop.
+	clearPlayInputs()
 	local screen = backdrop.AbsoluteSize
 	local lateral = screen.X >= 350 and screen.X >= screen.Y * 1.2
+	local shortLandscape = lateral and screen.Y < 280
+	backdrop:SetAttribute("CompactLandscape", shortLandscape)
 	local portraitRail = not lateral and screen.X >= 300 and screen.Y >= 360
 	shell.MicroTrim.Visible = lateral
 	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local microHeight = math.min(620, screen.Y - (if screen.Y < 280 then 32 else 52))
+	local microHeight = math.min(620, screen.Y - (if shortLandscape then 16 else 52))
 	local sideGoal = lateral and math.min(screen.X - 230, (microHeight - 129) * ratio) < 126
-	local width = if lateral then math.max(1, math.min(screen.X - 230, (microHeight - (if sideGoal then 101 else 129)) * ratio))
+	backdrop:SetAttribute("SideGoalLayout",sideGoal)
+	local width = if shortLandscape then math.max(1, math.min(screen.X - 256, (microHeight - 16) * ratio))
+		elseif lateral then math.max(1, math.min(screen.X - 230, (microHeight - (if sideGoal then 101 else 129)) * ratio))
 		else math.max(1, math.min(415, screen.X - (if portraitRail then 134 else 36),
 			(screen.Y - (if portraitRail then 212 else 278)) * ratio))
 	local height = width / ratio
-	local totalWidth = if lateral then math.min(1150, screen.X - 28, math.max(width + 216, microHeight * 1.85))
+	local totalWidth = if shortLandscape then screen.X - 28 elseif lateral then math.min(1150, screen.X - 28, math.max(width + 216, microHeight * 1.85))
 		elseif portraitRail then width + 110 else math.min(screen.X - 26, math.max(width + 34, 284))
 	local grip = if portraitRail then 98 else (totalWidth - width) / 2
 	local left = (screen.X - totalWidth) / 2
 	local shellHeight = if lateral then microHeight elseif portraitRail then height + 198 else height + 264
 	local shortDeck = lateral and shellHeight < 205
-	local top = math.max(16, (screen.Y - shellHeight) / 2 - 4)
+	Stickers.paint(deckSticker, board:GetAttribute("DeckStickerId") or Stickers.Default)
+	local top = if shortLandscape then 8 else math.max(16, (screen.Y - shellHeight) / 2 - 4)
 	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
-	local trayY = top + (if lateral then 62 else 70)
+	local trayY = top + (if shortLandscape then 8 elseif lateral then 62 else 70)
 	local trayBottom = trayY + height
 	shell.Position = UDim2.fromOffset(left - 8, top)
 	shell.Size = UDim2.fromOffset(totalWidth + 16, shellHeight)
@@ -1137,11 +1162,13 @@ local function layout()
 	local compact = width < 175
 	mascot.Visible = not compact
 	scoreCaption.Visible = false
+	scoreCaption.Position,scoreCaption.Size=UDim2.new(.5,-22,0,7),UDim2.fromOffset(40,12)
 	local readoutLeft = if compact then 5 else 9
 	mascot.Visible = false
 	local readoutInset = if compact then -53 else -90
 	readout.Position = UDim2.fromOffset(readoutLeft, 3)
 	readout.Size = UDim2.new(1, readoutInset, 0, 21)
+	readout.TextScaled = shortLandscape or width < 135
 	readout.TextSize = if compact then 14 else 19
 	readout.TextTruncate = Enum.TextTruncate.AtEnd
 	bestReadout.Position = UDim2.fromOffset(readoutLeft, 23)
@@ -1160,13 +1187,16 @@ local function layout()
 	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral or portraitRail then 3 else 26))
 	meter.Size = UDim2.fromOffset(width, 22)
 	meterText.TextSize = if width < 135 then 11 else 13
+	if sideGoal and not shortLandscape then
+		meter.Position,meter.Size=UDim2.fromOffset(left+totalWidth-grip+6,top+46),UDim2.fromOffset(grip-20,22)
+	end
 	rareGoal.BackgroundTransparency = if sideGoal then 0.1 else 1
 	rareGoal.Position = if sideGoal then UDim2.fromOffset(left + totalWidth - grip + 6, top + 12)
 		else meter.Position + UDim2.fromOffset(0, 24)
 	rareGoal.Size = UDim2.fromOffset(if sideGoal then grip - 20 else width, 26)
 	eggGoal.Position = if portraitRail then UDim2.fromOffset(left + 6, top + 190) else UDim2.fromOffset(left + totalWidth - grip + 12, top + shellHeight * .18)
 	eggGoal.Size = UDim2.fromOffset(math.max(64, grip - 24), 54)
-	eggGoal.Visible = (lateral or portraitRail) and shellHeight >= 260 and (board:GetAttribute("OwnedPets") or 0) > 0
+	eggGoal.Visible = not shortLandscape and not sideGoal and (lateral or portraitRail) and shellHeight >= 260 and (board:GetAttribute("OwnedPets") or 0) > 0
 	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 83)
 	hardware.Size = UDim2.fromOffset(totalWidth, if lateral or portraitRail then shellHeight else 64)
 	local dropSize = if lateral then math.clamp(math.floor(shellHeight * 0.18), 54, 100) else 48
@@ -1228,6 +1258,41 @@ local function layout()
 	eggButton.Position = UDim2.fromOffset(left + totalWidth - grip * .5 - eggButton.Size.X.Offset / 2,
 		top + shellHeight * .25)
 	if lateral then deckSticker.Position = UDim2.fromOffset(left + totalWidth - 44, top + 32) end
+	-- Short landscape keeps the complete board in the middle and places existing
+	-- readouts on the grips. The only aim hit area is the transparent tray overlay.
+	rail.BackgroundTransparency = if shortLandscape then 1 else 0
+	rail.ReadoutDivider.Visible = not shortLandscape
+	bestReadout.Visible = not shortLandscape
+	for _,node in ipairs({readout,scoreCaption,nextReadout})do
+		node.BackgroundColor3 = Art.Ink
+		node.BackgroundTransparency = if shortLandscape then .08 else 1
+	end
+	if shortLandscape then
+		bezel.Position,bezel.Size = UDim2.fromOffset(screenX-6,trayY-4),UDim2.fromOffset(width+12,height+8)
+		rail.Position,rail.Size = viewport.Position,viewport.Size
+		scoreCaption.Visible = true
+		scoreCaption.Position,scoreCaption.Size = UDim2.fromOffset(-grip+12,-4),UDim2.fromOffset(48,20)
+		readout.Position,readout.Size = UDim2.fromOffset(-grip+64,-4),UDim2.fromOffset(math.max(1,grip-76),20)
+		readout.TextSize = 16
+		nextReadout.Position,nextReadout.Size = UDim2.fromOffset(width+12,-4),UDim2.fromOffset(grip-24,20)
+		nextReadout.TextSize = 12
+		status.Position,status.Size = UDim2.fromOffset(left+12,top+25),UDim2.fromOffset(grip-24,22)
+		rareGoal.Position,rareGoal.Size = UDim2.fromOffset(screenX+width+12,top+25),UDim2.fromOffset(grip-24,26)
+		rareGoal.BackgroundTransparency = .08
+		meter.Position,meter.Size = UDim2.fromOffset(screenX+width+12,top+54),UDim2.fromOffset(grip-24,22)
+		meterText.TextSize = 13
+		local controlY = shellHeight-aimSize-12
+		dpad.Position = UDim2.fromOffset((grip-aimWidth)*.5,controlY)
+		local actionY = shellHeight-dropSize-8
+		action.Position = UDim2.fromOffset(dropX,actionY)
+		hardware.DropWell.Position = UDim2.fromOffset(dropX-3,actionY+1)
+		dropCaption.Position,dropCaption.Size = if grip<160 then UDim2.fromOffset(totalWidth-grip+12,actionY-22) else UDim2.fromOffset(dropX+dropSize+6,actionY+18),UDim2.fromOffset(if grip<160 then grip-24 else 60,18)
+		for index,button in ipairs({customizeButton,roomButton})do
+			local buttonWidth=math.floor((grip-26)/2)
+			button.Position,button.Size=UDim2.fromOffset(left+12+(index-1)*(buttonWidth+2),top+48),UDim2.fromOffset(buttonWidth,44)
+		end
+		deckSticker.Visible=false
+	end
 	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
 	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
 end

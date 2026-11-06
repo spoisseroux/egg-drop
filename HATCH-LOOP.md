@@ -248,3 +248,9 @@ Native35 geometry/lifetime and3 interaction cases passed alongside transaction/c
 Outgoing profile settings/companion writes finish before the hatch lease is released. A reconnect waiting on that lease restores its companion and settings from the successful acquire snapshot. Temporary load failures pause progression and retry without saving defaults; recovery clears the loading banner and restores room mode. Studio's two writers now share one memory row, matching the live storage topology. A close timeout keeps its lease fenced until expiry.
 
 Native11 new recovery/default-store fixtures and existing transaction/close/UI regressions passed (86 total in this slice); actual field→nectar→Meadow→Wick→Meet passed. These establish simulated recovery and Studio controls, not a live Roblox account reconnect. Evidence: `scripts/SessionRecovery-results.json`.
+
+## Compact-screen controls, 2026-11-06 overnight
+
+Short landscape allocates the full central height to the board and puts nectar/quest/drop count on the grips. Both egg recipes fit in one44px row, with the selected recipe and exact price/shortfall pinned in the action. Resize cancels an unfinished drag; repeated HUD updates retain all24 drop-strip cells. Compact errors remain visible, and rotating/reopening preserves the selected egg.
+
+Native10 deck/8 shop cases and related UI/transaction/close regressions passed (85 total), including350px-wide and160px-high safe content. Actual resized-component mouse checks verified both aim directions, A, no stale release, Sprout selection/reopen and same-run return. Physical phone/touch/controller comfort remains a separate playtest. Evidence: `scripts/CompactControls-results.json`.

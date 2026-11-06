@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-06",
+  "review": "Astra architecture and final implementation GO; actual wheel skip and native narrow-text failures fixed before commit",
+  "runtime": "Native Roblox Studio Client/Server",
+  "regressions": {"compactActualDeck": 10, "compactEggShop": 8, "hatchActions": 17, "onboarding": 7, "hatchNavigation": 10, "rewardPresentation": 10, "hatchTransactions": 21, "closeDrain": 2, "total": 85},
+  "build": {"allSourcesCompile": 55, "productionSources": 53, "changedSourceMatches": 3, "rojo": "pass", "editFixturesAbsent": true},
+  "layoutFixtures": {
+    "safeSizes": [[568,160],[568,198],[350,279],[568,279],[568,280],[667,285],[844,300],[844,330],[844,390],[390,740]],
+    "trayAt568x160": {"before": [16,27], "after": [76,128]},
+    "aimInput": "Transparent overlay covers only the full tray; grip readouts do not drop",
+    "controls": "All checked Menu/Lounge/arrows/A bounds retain minimum44px size and safe margins",
+    "meter": "24 cells remain positive, outside numeric counter and unchanged through six repeated HUD refreshes per size",
+    "ownedPetPass": "Repeated the ten actual-component fixtures with Pip owned to test egg-goal visibility under HUD refresh",
+    "shopAt568x160": {"bodyHeight": 44, "recipeButtons": [[247,44],[247,44]], "arrangement": "Both recipes share the first row; no exact scroll offset required"},
+    "shopChecks": "Names/costs at350x279, pinned actual recipe cost/shortfall, selected row, errors/retry, daily and all odds/protection, rotate/reopen and result actions"
+  },
+  "actualControls": {
+    "method": "Actual Studio mouse/keyboard inputs against components resized to safe-content fixtures, not physical phone or a device-emulator session",
+    "drag": "Left and right tray releases accepted one drop each; A accepted another in the same field",
+    "readout": "Clicking a side count left drops unchanged at2",
+    "resizeDuringDrag": "Held drag, changed568x160 to568x198, released at old coordinates: drops remained2",
+    "shop": "Menu→Eggs, tap Sprout: pinned Play for Sprout Focused · need18 nectar; both247x44 recipes visible, balance6 unchanged",
+    "reopenAndReturn": "Close/Menu/Eggs retained explicit Sprout; Earn returned to Boardsequence2/drops2; next A produced drop3, balance6 unchanged"
+  },
+  "otherFixes": ["Pets menu route uses navigation generation and waits for the actual room handoff", "Pocket Trial high-score copy no longer claims it directly unlocks Bloom Pip"],
+  "limitations": ["Physical phone, touch gestures, hardware controller, live rejoin and shared live multiplayer remain unverified", "44px scroll viewport is a minimum fallback, not evidence of comfortable browsing", "Existing EditableImage and external asset203785492 warnings remain; expected backend fault-injection warnings are separate", "No fun, retention, monetization or production-readiness claim"]
+}

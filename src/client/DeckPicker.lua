@@ -227,7 +227,7 @@ function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduc
 		local done = bit32.band(mask, goal.bit) ~= 0
 		local current = if index == 1 then peak elseif index == 2 then score else 0
 		local row = self.rows[index]
-		row.title.Text = if goal == Trials.HighRoller then (if done then "Bloom Pip unlocked" else "Bloom Pip · Score " .. goal.target)
+		row.title.Text = if goal == Trials.HighRoller then (if done then "High score trial complete" else "High score · Score " .. goal.target)
 			elseif done then goal.name else goal.hint
 		row.status.Text = if done then "✓ DONE" elseif index == 3 then "0/1" else string.format("%d/%d", current, goal.target)
 		row.status.TextColor3 = if done then Color3.fromHex("#A9E34B") else Art.Muted

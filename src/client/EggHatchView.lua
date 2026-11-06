@@ -112,16 +112,58 @@ end
 function View:layout()
 	local size = self.shade.AbsoluteSize
 	local result = self.state.lastHatch ~= nil
+	local compactShop = not result and size.Y < 280
+	self.compactShop = compactShop
 	-- Keep the two 44px action rows separate even in a short landscape safe area.
-	local verticalMargin = if result and size.Y < 200 then 16 else 32
+	local verticalMargin = if compactShop or (result and size.Y < 200) then 16 else 32
 	self.card.Size = UDim2.fromOffset(math.clamp(size.X - 32, 1, 560), math.clamp(size.Y - verticalMargin, 1, 580))
 	self.closeButton.Position = if result then UDim2.new(1, -56, 0, 6) else UDim2.new(0, 12, 1, -56)
 	self.closeButton.Size = if result then UDim2.fromOffset(44, 44) else UDim2.new(0.30, -18, 0, 44)
 	self.action.Position = if result then UDim2.new(0.50, 6, 1, -56) else UDim2.new(0.30, 2, 1, -56)
 	self.action.Size = if result then UDim2.new(0.50, -18, 0, 44) else UDim2.new(0.70, -14, 0, 44)
+	self.heading.Position, self.heading.Size = UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24)
+	self.nectar.Position, self.nectar.Size = UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23)
+	self.body.Position, self.body.Size = UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
+	if compactShop then
+		self.closeButton.Position, self.closeButton.Size = UDim2.new(1, -56, 0, 4), UDim2.fromOffset(44, 44)
+		self.action.Position, self.action.Size = UDim2.new(0, 8, 1, -48), UDim2.new(1, -16, 0, 44)
+		self.heading.Position, self.heading.Size = UDim2.fromOffset(12, 2), UDim2.new(1, -80, 0, 20)
+		self.nectar.Position, self.nectar.Size = UDim2.fromOffset(12, 22), UDim2.new(1, -80, 0, 20)
+		self.body.Size = UDim2.new(1, -24, 1, -100)
+	end
 	self.meetButton.Visible = result
-	self.heading.Visible, self.nectar.Visible, self.note.Visible, self.body.Visible = not result, not result, not result, not result
+	self.heading.Visible, self.nectar.Visible, self.note.Visible, self.body.Visible = not result, not result, not result and not compactShop, not result
+	self:refreshShopHeader()
 	if self.shade.Visible then self:renderBody() end
+end
+
+function View:refreshShopHeader()
+	self.heading.Text = "EGG DROP • HATCH"
+	self.nectar.Text = string.format("%d nectar", self.state.nectar or 0)
+	-- Rotation must reconstruct the normal notice from its source state rather
+	-- than expose a caption left over from an earlier unavailable/save snapshot.
+	self.note.Visible = self.state.lastHatch == nil and not self.compactShop
+	self.note.Text = self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
+	if not self.errorMessage and self.state.status and self.state.status ~= "Ready" and self.state.status ~= "Busy" then
+		self.note.Text = "Egg save unavailable · try again shortly"
+	end
+	if not self.compactShop then return end
+	local status, message = self.state.status, self.errorMessage
+	if self.pending or status == "Busy" or status == "Retrying" or status == "Pending" then
+		self.heading.Text = "Saving…"
+		self.nectar.Text = if status == "Retrying" then "Saving · retrying automatically" else "Finishing your last action…"
+	elseif status and status ~= "Ready" then
+		self.heading.Text = "Save unavailable"
+		self.nectar.Text = if status == "Locked" then "Previous session is closing"
+			elseif status == "SessionLost" then "Session moved · rejoin to continue" else "Rejoin before spending nectar"
+	elseif message then
+		self.heading.Text = "Try again"
+		self.nectar.Text = if message == "One moment…" then "One moment · try again"
+			elseif message == "Your hatch progress updated. Try again." or message == "RevisionChanged" then "Progress updated · try again"
+			elseif message == "Earn more nectar in a field run." then "Need more nectar · play a run"
+			elseif message == "Finishing your last save…" or message == "Finishing your last hatch action…" then "Finishing your last save…"
+			else "Action unavailable · try again"
+	end
 end
 
 function View:revokeIntent()
@@ -175,8 +217,8 @@ function View:refreshFooter()
 	else
 		local recipe = Catalog.ById[self.selected]
 		local missing = math.max(0, recipe.cost - (state.nectar or 0))
-		textValue = if missing > 0 then string.format("Play a run · need %d nectar", missing)
-			else string.format("Hatch · %d nectar", recipe.cost)
+		textValue = if missing > 0 then string.format("Play for %s · need %d nectar", recipe.name, missing)
+			else string.format("Hatch %s · %d nectar", recipe.name, recipe.cost)
 		canAct = true
 	end
 	self.action.Text = if self.pending then "Saving…" else textValue
@@ -184,41 +226,47 @@ function View:refreshFooter()
 	self.action.TextTransparency = if self.action.Interactable then 0 else 0.40
 	self.meetButton.Interactable = state.lastHatch ~= nil and self.action.Interactable
 	self.meetButton.TextTransparency = if self.meetButton.Interactable then 0 else 0.40
+	self:refreshShopHeader()
 end
 
 function View:renderBody()
-	if self.state.lastHatch then return end
+	if self.state.lastHatch or self.renderingBody then return end
+	self.renderingBody = true
+	local canvasPosition = self.body.CanvasPosition
 	self.revealHost.Visible = false
 	self.body:ClearAllChildren()
 	local size = self.body.AbsoluteSize
-	local split = size.X >= 470
+	local compact = self.compactShop == true
+	local split = not compact and size.X >= 470
 	local columnWidth = if split then (size.X - 18) / 2 else math.max(1, size.X - 6)
 	local left = frame(self.body, "EggColumn", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(columnWidth, 0))
 	left.BackgroundTransparency = 1
 	local state = self.state
 	local recipe = Catalog.ById[self.selected]
+	local recipeStep = if compact then 52 else 91
+	local narrowRecipe = compact and columnWidth * 0.5 - 6 < 180
+	local compactTextX = if narrowRecipe then 6 else 38
 	for index, id in ipairs(Catalog.Order) do
 		local option = Catalog.ById[id]
-		local y = (index - 1) * 91 + 3
-		local choice = button(left, "Recipe_" .. id, "", UDim2.fromOffset(2, y), UDim2.new(1, -7, 0, 83),
+		local y = (if compact then math.floor((index - 1) / 2) else index - 1) * recipeStep + (if compact then 0 else 3)
+		local position = if compact then UDim2.new((index - 1) % 2 * 0.5, 2, 0, y) else UDim2.fromOffset(2, y)
+		local choice = button(left, "Recipe_" .. id, "", position, UDim2.new(if compact then 0.5 else 1, if compact then -6 else -7, 0, if compact then 44 else 83),
 			if self.selected == id then Art.Raised else Art.Surface)
 		if self.selected == id then Art.stroke(choice, Art.Amber, 0, 2) end
-		local egg = frame(choice, "Egg", (option.color or Art.Leaf):Lerp(Art.Silver, 0.65), UDim2.fromOffset(13, 14), UDim2.fromOffset(37, 49))
+		local egg = frame(choice, "Egg", (option.color or Art.Leaf):Lerp(Art.Silver, 0.65),
+			if compact then UDim2.fromOffset(7, 7) else UDim2.fromOffset(13, 14),
+			if compact then UDim2.fromOffset(22, 30) else UDim2.fromOffset(37, 49))
 		Art.corner(egg, 1000)
 		Art.stroke(egg, option.color or Art.Leaf, 0.12, 2)
-		label(choice, "RecipeName", option.name, UDim2.fromOffset(59, 7), UDim2.new(1, -65, 0, 33), Art.Silver, 16)
-		label(choice, "Cost", string.format("%d nectar per hatch", option.cost), UDim2.fromOffset(59, 41),
-			UDim2.new(1, -65, 0, 26), Art.Amber, 12)
-		choice.Activated:Connect(function()
-			if self.pending or self.state.lastHatch then return end
-			self.selected = id
-			self.body.CanvasPosition = Vector2.zero
-			self:renderBody()
-			self:refreshFooter()
-			self.audio:play("aim", 1, 0.4)
-		end)
+		egg.Visible = not narrowRecipe
+		label(choice, "RecipeName", option.name, if compact then UDim2.fromOffset(compactTextX, 2) else UDim2.fromOffset(59, 7),
+			if compact then UDim2.new(1, -compactTextX - 6, 0, 20) else UDim2.new(1, -65, 0, 33), Art.Silver, if compact then 14 else 16)
+		label(choice, "Cost", string.format(if compact then "%d nectar" else "%d nectar per hatch", option.cost),
+			if compact then UDim2.fromOffset(compactTextX, 22) else UDim2.fromOffset(59, 41),
+			if compact then UDim2.new(1, -compactTextX - 6, 0, 18) else UDim2.new(1, -65, 0, 26), Art.Amber, 12)
+		choice.Activated:Connect(function() self:selectRecipe(id) end)
 	end
-	local y = #Catalog.Order * 91 + 8
+	local y = if compact then math.ceil(#Catalog.Order / 2) * recipeStep else #Catalog.Order * recipeStep + 8
 	label(left, "NectarProgress", string.format("%d / %d nectar", state.nectar or 0, recipe.cost),
 		UDim2.fromOffset(3, y), UDim2.new(1, -9, 0, 21), Art.Leaf, 13)
 	local track = frame(left, "NectarTrack", Art.Ink, UDim2.fromOffset(7, y + 24), UDim2.new(1, -18, 0, 6))
@@ -268,6 +316,24 @@ function View:renderBody()
 	local canvasHeight = if split then math.max(leftHeight, rightHeight) else rightY + rightHeight
 	self.body.CanvasSize = UDim2.fromOffset(0, canvasHeight + 6)
 	self.body.ScrollingEnabled = canvasHeight + 6 > size.Y
+	self.body.CanvasPosition = Vector2.new(0, math.clamp(canvasPosition.Y, 0, math.max(0, canvasHeight + 6 - size.Y)))
+	self.renderingBody = false
+end
+
+function View:selectRecipe(id)
+	if self.pending or self.state.lastHatch or not Catalog.ById[id] then return false end
+	self.selected = id
+	self:renderBody()
+	local row = self.body.EggColumn:FindFirstChild("Recipe_" .. id)
+	if row then
+		local top, height = row.Position.Y.Offset, self.body.AbsoluteSize.Y
+		local current = self.body.CanvasPosition.Y
+		local wanted = if top < current then top elseif top + row.Size.Y.Offset > current + height then top + row.Size.Y.Offset - height else current
+		self.body.CanvasPosition = Vector2.new(0, math.clamp(wanted, 0, math.max(0, self.body.CanvasSize.Y.Offset - height)))
+	end
+	self:refreshFooter()
+	self.audio:play("aim", 1, 0.4)
+	return true
 end
 
 function View:update(state)
