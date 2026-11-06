@@ -182,3 +182,8 @@ Astra final GO. Native10 actual-deck layout cases and8 shop cases pass, plus17 h
 All55 source containers compile (53 production plus2 legacy), three changed sources match checkout, Rojo builds, Edit is fixture-free. Final evidence: `scripts/CompactControls-results.json`. Expected backend fault-injection warnings remain separate from existing image/asset warnings. Minimum44px scroll browsing, touch comfort, hardware controller, live rejoin/multiplayer and human replay remain unverified. Start no further systems; prepare the morning rundown and at09:00 stop new changes/pause the automation.
 
 Compact checkpoint: implementationf021041 pushed; private place96451847774961 shows **version41 Published**, verified in native Version History. Studio is Edit, Rojo egg-drop/localhost34873 remains connected, and the publish tree is fixture-free. The self-contained `MORNING-RUNDOWN.md` records the shipped loop, all pets/rewards, evidence, private link and exact next playtest. No new implementation slice remains before the09:00 cutoff; the final wake should confirm the checkpoint and pause the existing automation.
+
+
+## Post-playtest UI pass, 2026-11-06
+
+The new user request after the overnight checkpoint adds persistent petting, original handheld boot, non-overlapping grips, clearer bank/queue/drops UI, receipt animation, illustrated eggs, compact daily cards and themed backgrounds. See `UI-EXPERIENCE-PASS.md` for Astra review fixes and exact Studio evidence; `UI-EDITING.md` explains durable position tweaks. Overnight automation remains paused. Economy and nursery scope are unchanged.

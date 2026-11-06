@@ -1,0 +1,239 @@
+local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
+local UserInputService = game:GetService("UserInputService")
+local Art = require(script.Parent.DeckArt)
+
+local Focus = {}
+Focus.__index = Focus
+local serial = 0
+
+-- Keep character settings separate from camera state so either can be restored
+-- after a replacement camera, a reset, or a mode change. Release is idempotent.
+function Focus.lockHumanoid(humanoid)
+	if not humanoid then return function() end end
+	local saved = {
+		WalkSpeed = humanoid.WalkSpeed, JumpPower = humanoid.JumpPower,
+		JumpHeight = humanoid.JumpHeight, AutoRotate = humanoid.AutoRotate,
+		jumping = humanoid:GetStateEnabled(Enum.HumanoidStateType.Jumping),
+	}
+	humanoid.WalkSpeed, humanoid.JumpPower, humanoid.JumpHeight, humanoid.AutoRotate = 0, 0, 0, false
+	humanoid.Jump = false
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+	humanoid:Move(Vector3.zero)
+	local released = false
+	return function()
+		if released then return end
+		released = true
+		-- A destroyed humanoid no longer needs restoration, but reset can leave
+		-- the old character parented briefly. Restore that object, never its replacement.
+		if not humanoid.Parent then return end
+		humanoid.WalkSpeed, humanoid.JumpPower = saved.WalkSpeed, saved.JumpPower
+		humanoid.JumpHeight, humanoid.AutoRotate = saved.JumpHeight, saved.AutoRotate
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, saved.jumping)
+	end
+end
+
+function Focus.projectBounds(camera, model, root)
+	if not camera or not model or not model.Parent or root.AbsoluteSize.X <= 0 or root.AbsoluteSize.Y <= 0 then return nil end
+	local box, size = model:GetBoundingBox()
+	local low, high = Vector2.new(math.huge, math.huge), Vector2.new(-math.huge, -math.huge)
+	for x = -1, 1, 2 do for y = -1, 1, 2 do for z = -1, 1, 2 do
+		-- WorldToScreenPoint and AbsolutePosition both use core-safe GUI coordinates.
+		local point = camera:WorldToScreenPoint(box:PointToWorldSpace(size * Vector3.new(x, y, z) * 0.5))
+		if point.Z <= 0 then return nil end
+		local p = Vector2.new(point.X, point.Y) - root.AbsolutePosition
+		low = Vector2.new(math.min(low.X, p.X), math.min(low.Y, p.Y))
+		high = Vector2.new(math.max(high.X, p.X), math.max(high.Y, p.Y))
+	end end end
+	local left = math.clamp(low.X - 10, 0, root.AbsoluteSize.X)
+	local top = math.clamp(low.Y - 10, 0, root.AbsoluteSize.Y)
+	local right = math.clamp(high.X + 10, 0, root.AbsoluteSize.X)
+	local bottom = math.clamp(high.Y + 10, 0, root.AbsoluteSize.Y)
+	if right - left < 8 or bottom - top < 8 then return nil end
+	return Vector2.new(left, top), Vector2.new(right - left, bottom - top)
+end
+
+local function frame(parent, name, position, size, color, z)
+	local node = Instance.new("Frame")
+	node.Name, node.Position, node.Size = name, position, size
+	node.BorderSizePixel, node.BackgroundColor3, node.ZIndex, node.Parent = 0, color, z or 1, parent
+	return node
+end
+
+local function button(parent, name, text, anchor, position, tint)
+	local node = Instance.new("TextButton")
+	node.Name, node.Text, node.Font, node.TextSize = name, text, Enum.Font.GothamBold, 14
+	node.AnchorPoint, node.Position, node.Size = anchor, position, UDim2.fromOffset(108, 44)
+	node.BackgroundColor3, node.TextColor3, node.BorderSizePixel = tint, Art.Silver, 0
+	node.ZIndex, node.Parent = 10, parent
+	Art.corner(node, 10)
+	Art.stroke(node, Art.Line, 0.3, 1)
+	return node
+end
+
+local function pointer(input)
+	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+end
+
+function Focus.new(parentGui, callbacks)
+	serial += 1
+	local gui = Instance.new("ScreenGui")
+	gui.Name, gui.ResetOnSpawn, gui.ScreenInsets = "EggDropPetFocus", false, Enum.ScreenInsets.CoreUISafeInsets
+	gui.DisplayOrder, gui.ZIndexBehavior, gui.Parent = 9, Enum.ZIndexBehavior.Sibling, parentGui.Parent
+	local root = frame(gui, "SafeContent", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Art.Ink)
+	root.BackgroundTransparency = 1
+	local panel = frame(root, "FocusControls", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Art.Ink, 2)
+	panel.BackgroundTransparency, panel.Visible = 1, false
+	local back = button(panel, "Back", "Back", Vector2.zero, UDim2.fromOffset(12, 12), Art.Surface)
+	local greet = button(panel, "Greet", "Greet", Vector2.new(1, 0), UDim2.new(1, -12, 0, 12), Art.Canopy)
+	local helper = Instance.new("TextLabel")
+	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
+	helper.AnchorPoint, helper.Position, helper.Size = Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -14), UDim2.fromOffset(230, 26)
+	helper.BackgroundColor3, helper.BackgroundTransparency, helper.TextColor3 = Art.Surface, 0.15, Art.Silver
+	helper.BorderSizePixel, helper.ZIndex, helper.Parent = 0, 8, panel
+	Art.corner(helper, 10)
+	local hint = helper:Clone()
+	hint.Name, hint.AnchorPoint, hint.Position = "RoamPetHint", Vector2.new(1, 0), UDim2.new(1, -12, 0, 64)
+	hint.Size, hint.TextSize, hint.Text, hint.Visible, hint.Parent = UDim2.fromOffset(180, 22), 11, "Tap your pet to say hi", false, root
+	local hit = Instance.new("TextButton")
+	hit.Name, hit.Text, hit.BackgroundTransparency, hit.BorderSizePixel = "PettingArea", "", 1, 0
+	hit.AutoButtonColor, hit.Selectable, hit.ZIndex, hit.Parent = false, false, 2, panel
+	local glove = frame(panel, "PettingGlove", UDim2.fromOffset(0, 0), UDim2.fromOffset(26, 32), Art.Ink, 5)
+	glove.BackgroundTransparency, glove.Visible, glove.AnchorPoint = 1, false, Vector2.new(0.45, 0.35)
+	local cream = Color3.fromHex("#FFF0CD")
+	local palm = frame(glove, "Palm", UDim2.fromOffset(5, 11), UDim2.fromOffset(19, 18), cream, 6)
+	Art.corner(palm, 0.5)
+	for index = 0, 3 do
+		local finger = frame(glove, "Finger" .. index, UDim2.fromOffset(5 + index * 5, 2 + math.abs(index - 1) * 2), UDim2.fromOffset(4, 18), cream, 6)
+		Art.corner(finger, 0.5)
+	end
+	local thumb = frame(glove, "Thumb", UDim2.fromOffset(0, 13), UDim2.fromOffset(7, 13), cream, 6)
+	thumb.Rotation = -38
+	Art.corner(thumb, 0.5)
+	Art.corner(frame(glove, "Cuff", UDim2.fromOffset(7, 27), UDim2.fromOffset(16, 5), Art.Leaf, 7), 0.3)
+	local self = setmetatable({ gui = gui, root = root, panel = panel, back = back, greet = greet,
+		hit = hit, glove = glove, helper = helper, hint = hint, callbacks = callbacks, connections = {},
+		actionPrefix = "EggDropPetFocus" .. serial, active = false }, Focus)
+	table.insert(self.connections, back.Activated:Connect(function() callbacks.back() end))
+	table.insert(self.connections, greet.Activated:Connect(function() if callbacks.canReact() then callbacks.greet() end end))
+	table.insert(self.connections, hit.InputBegan:Connect(function(input)
+		if self.active and callbacks.canReact() and pointer(input) and not self.pointer then
+			self.pointer, self.previousPoint, self.strokeDistance = input, nil, 0
+			self:movePointer(input, true)
+		end
+	end))
+	table.insert(self.connections, UserInputService.InputChanged:Connect(function(input)
+		if self.pointer and (input == self.pointer or (self.pointer.UserInputType == Enum.UserInputType.MouseButton1
+			and input.UserInputType == Enum.UserInputType.MouseMovement)) then self:movePointer(input, false) end
+	end))
+	table.insert(self.connections, UserInputService.InputEnded:Connect(function(input)
+		if input == self.pointer or (self.pointer and self.pointer.UserInputType == Enum.UserInputType.MouseButton1
+			and input.UserInputType == Enum.UserInputType.MouseButton1) then self:cancelPointer() end
+	end))
+	table.insert(self.connections, UserInputService.WindowFocusReleased:Connect(function() self:cancelPointer() end))
+	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
+	return self
+end
+
+function Focus:cancelPointer()
+	self.pointer, self.previousPoint, self.strokeDistance = nil, nil, 0
+	self.glove.Visible = false
+end
+
+function Focus:movePointer(input, began)
+	if not self.active or not self:canOwnInput() or not self.callbacks.canReact() then self:cancelPointer(); return end
+	local point = Vector2.new(input.Position.X, input.Position.Y) - self.root.AbsolutePosition
+	self.glove.Position = UDim2.fromOffset(point.X, point.Y)
+	self.glove.Visible = true
+	self.glove.Rotation = if self.previousPoint then math.clamp((point.X - self.previousPoint.X) * 0.7, -16, 16) else 0
+	if self.previousPoint then self.strokeDistance += (point - self.previousPoint).Magnitude end
+	self.previousPoint = point
+	local at, size = self.hit.Position, self.hit.Size
+	local inside = point.X >= at.X.Offset and point.Y >= at.Y.Offset
+		and point.X <= at.X.Offset + size.X.Offset and point.Y <= at.Y.Offset + size.Y.Offset
+	if inside and (began or self.strokeDistance >= 9) and os.clock() - (self.lastReactAt or -math.huge) >= 0.28 then
+		self.lastReactAt, self.strokeDistance = os.clock(), 0
+		self.callbacks.pet()
+	end
+end
+
+function Focus:setActive(active)
+	active = active == true
+	if self.destroyed or self.active == active then return end
+	self.active, self.panel.Visible = active, active and self:canOwnInput()
+	-- A transparent fullscreen frame still participates in GUI hit testing.
+	-- Only raise this surface above game navigation while focus owns input.
+	self.gui.DisplayOrder = if self.panel.Visible then 40 else 9
+	self:cancelPointer()
+	local prefix = self.actionPrefix
+	if active then
+		local priority = Enum.ContextActionPriority.High.Value + 200
+		ContextActionService:BindActionAtPriority(prefix .. "Back", function(_, state)
+			return self:handleBack(state)
+		end, false, priority + 1, Enum.KeyCode.ButtonB)
+		ContextActionService:BindActionAtPriority(prefix .. "Greet", function(_, state)
+			return self:handleGreet(state)
+		end, false, priority, Enum.KeyCode.E, Enum.KeyCode.ButtonX)
+		ContextActionService:BindActionAtPriority(prefix .. "Move", function() return self:handleMove() end,
+			false, priority, Enum.PlayerActions.CharacterForward, Enum.PlayerActions.CharacterBackward,
+			Enum.PlayerActions.CharacterLeft, Enum.PlayerActions.CharacterRight, Enum.PlayerActions.CharacterJump,
+			Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.KeyCode.Up, Enum.KeyCode.Down,
+			Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.Space, Enum.KeyCode.Thumbstick1, Enum.KeyCode.ButtonA)
+		if string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then GuiService.SelectedObject = self.greet end
+	else
+		for _, suffix in ipairs({ "Back", "Greet", "Move" }) do ContextActionService:UnbindAction(prefix .. suffix) end
+		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
+	end
+end
+
+function Focus:update(camera, pet, roamHint)
+	if self.destroyed then return end
+	local ownsInput = self:canOwnInput()
+	self.panel.Visible = self.active and ownsInput
+	self.gui.DisplayOrder = if self.panel.Visible then 40 else 9
+	self.hint.Visible = not self.active and ownsInput and roamHint == true
+	local kind = UserInputService:GetLastInputType()
+	self.hint.Text = if string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
+		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
+	if not self.active then return end
+	self.helper.Text = if string.match(kind.Name, "^Gamepad") then "X  Greet    B  Back" else "Hold and rub to pet"
+	local canReact = ownsInput and self.callbacks.canReact()
+	self.greet.Interactable = canReact
+	local position, size = Focus.projectBounds(camera, pet and pet.model, self.root)
+	self.hit.Visible, self.hit.Interactable = position ~= nil and canReact, canReact
+	if position then self.hit.Position, self.hit.Size = UDim2.fromOffset(position.X, position.Y), UDim2.fromOffset(size.X, size.Y) end
+	if not canReact or not position then self:cancelPointer() end
+	if not ownsInput and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
+end
+
+function Focus:canOwnInput()
+	return not GuiService.MenuIsOpen and UserInputService:GetFocusedTextBox() == nil
+		and (not self.callbacks.canOwnInput or self.callbacks.canOwnInput())
+end
+
+function Focus:handleBack(state)
+	if not self.active or not self:canOwnInput() then return Enum.ContextActionResult.Pass end
+	if state == Enum.UserInputState.Begin then self.callbacks.back() end
+	return Enum.ContextActionResult.Sink
+end
+
+function Focus:handleGreet(state)
+	if not self.active or not self:canOwnInput() then return Enum.ContextActionResult.Pass end
+	if state == Enum.UserInputState.Begin and self.callbacks.canReact() then self.callbacks.greet() end
+	return Enum.ContextActionResult.Sink
+end
+
+function Focus:handleMove()
+	return if self.active and self:canOwnInput() then Enum.ContextActionResult.Sink else Enum.ContextActionResult.Pass
+end
+
+function Focus:destroy()
+	if self.destroyed then return end
+	self:setActive(false)
+	self.destroyed = true
+	for _, connection in ipairs(self.connections) do connection:Disconnect() end
+	table.clear(self.connections)
+	self.gui:Destroy()
+end
+
+return Focus

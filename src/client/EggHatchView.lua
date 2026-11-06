@@ -6,6 +6,7 @@ local Portrait = require(script.Parent.PetPortrait)
 local HatchCinematic = require(script.Parent.HatchCinematic)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
+local EggArt = require(script.Parent.EggArt)
 
 local View = {}
 View.__index = View
@@ -33,7 +34,7 @@ local function button(parent, name, content, position, size, color, z)
 	return node
 end
 
-local function eggGraphic(parent, color, y)
+local function eggGraphic(parent, recipeId, color, y)
 	local scene = frame(parent, "EggStand", Art.Ink, UDim2.fromOffset(0, y), UDim2.new(1, -5, 0, 112))
 	Art.corner(scene, 14)
 	Art.shade(scene, 1.1, 0.82)
@@ -48,13 +49,7 @@ local function eggGraphic(parent, color, y)
 		Art.leaf(scene, "Leaf", UDim2.new(0.5, side * 35 - 8, 0.5, 9),
 			UDim2.fromOffset(14, 31), Art.Leaf, side * 48)
 	end
-	local egg = frame(scene, "Egg", color:Lerp(Art.Silver, 0.68), UDim2.new(0.5, -25, 0.5, -35), UDim2.fromOffset(50, 65))
-	Art.corner(egg, 1000)
-	Art.shade(egg, 1, 0.78)
-	Art.stroke(egg, color, 0.12, 2)
-	local glint = frame(egg, "Glint", Art.Silver, UDim2.fromScale(0.22, 0.18), UDim2.fromOffset(12, 5))
-	glint.Rotation = -26
-	Art.corner(glint, 3)
+	EggArt.create(scene, recipeId, UDim2.new(0.5, -32, 0.5, -44), UDim2.fromOffset(64, 82), scene.ZIndex + 2)
 end
 
 function View.new(parent, audio, reduceEffects, sendCommand)
@@ -66,6 +61,10 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), Art.Silver, 20)
 	heading.Font = Enum.Font.GothamBold
 	local nectar = label(card, "Nectar", "0 nectar", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
+	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
+	Art.corner(wallet, 10)
+	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), 23)
+	nectar.ZIndex = 25
 	local note = label(card, "Notice", "Earn nectar. Choose an egg. Meet a new friend.", UDim2.fromOffset(12, 29),
 		UDim2.new(1, -24, 0, 16), Art.Muted, 11)
 	local body = Instance.new("ScrollingFrame")
@@ -83,7 +82,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
 		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
-		closeButton = close, action = action, meetButton = meet, revealHost = revealHost, audio = audio,
+		closeButton = close, action = action, meetButton = meet, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
 		intentToken = 0,
 	}, View)
@@ -123,14 +122,20 @@ function View:layout()
 	self.action.Size = if result then UDim2.new(0.50, -18, 0, 44) else UDim2.new(0.70, -14, 0, 44)
 	self.heading.Position, self.heading.Size = UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24)
 	self.nectar.Position, self.nectar.Size = UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23)
+	self.wallet.Position, self.wallet.Size = UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29)
 	self.body.Position, self.body.Size = UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
 	if compactShop then
 		self.closeButton.Position, self.closeButton.Size = UDim2.new(1, -56, 0, 4), UDim2.fromOffset(44, 44)
 		self.action.Position, self.action.Size = UDim2.new(0, 8, 1, -48), UDim2.new(1, -16, 0, 44)
 		self.heading.Position, self.heading.Size = UDim2.fromOffset(12, 2), UDim2.new(1, -80, 0, 20)
-		self.nectar.Position, self.nectar.Size = UDim2.fromOffset(12, 22), UDim2.new(1, -80, 0, 20)
+		self.nectar.Position, self.nectar.Size = UDim2.fromOffset(34, 22), UDim2.new(1, -102, 0, 20)
+		self.wallet.Position, self.wallet.Size = UDim2.fromOffset(10, 22), UDim2.new(1, -76, 0, 22)
+		self.walletDrop.Position, self.walletDrop.Size = UDim2.fromOffset(3, 1), UDim2.fromOffset(19, 20)
 		self.body.Size = UDim2.new(1, -24, 1, -100)
+	else
+		self.walletDrop.Position, self.walletDrop.Size = UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20)
 	end
+	self.wallet.Visible = not result
 	self.meetButton.Visible = result
 	self.heading.Visible, self.nectar.Visible, self.note.Visible, self.body.Visible = not result, not result, not result and not compactShop, not result
 	self:refreshShopHeader()
@@ -244,8 +249,7 @@ function View:renderBody()
 	local state = self.state
 	local recipe = Catalog.ById[self.selected]
 	local recipeStep = if compact then 52 else 91
-	local narrowRecipe = compact and columnWidth * 0.5 - 6 < 180
-	local compactTextX = if narrowRecipe then 6 else 38
+	local compactTextX = 36
 	for index, id in ipairs(Catalog.Order) do
 		local option = Catalog.ById[id]
 		local y = (if compact then math.floor((index - 1) / 2) else index - 1) * recipeStep + (if compact then 0 else 3)
@@ -253,17 +257,22 @@ function View:renderBody()
 		local choice = button(left, "Recipe_" .. id, "", position, UDim2.new(if compact then 0.5 else 1, if compact then -6 else -7, 0, if compact then 44 else 83),
 			if self.selected == id then Art.Raised else Art.Surface)
 		if self.selected == id then Art.stroke(choice, Art.Amber, 0, 2) end
-		local egg = frame(choice, "Egg", (option.color or Art.Leaf):Lerp(Art.Silver, 0.65),
-			if compact then UDim2.fromOffset(7, 7) else UDim2.fromOffset(13, 14),
-			if compact then UDim2.fromOffset(22, 30) else UDim2.fromOffset(37, 49))
-		Art.corner(egg, 1000)
-		Art.stroke(egg, option.color or Art.Leaf, 0.12, 2)
-		egg.Visible = not narrowRecipe
-		label(choice, "RecipeName", option.name, if compact then UDim2.fromOffset(compactTextX, 2) else UDim2.fromOffset(59, 7),
-			if compact then UDim2.new(1, -compactTextX - 6, 0, 20) else UDim2.new(1, -65, 0, 33), Art.Silver, if compact then 14 else 16)
-		label(choice, "Cost", string.format(if compact then "%d nectar" else "%d nectar per hatch", option.cost),
-			if compact then UDim2.fromOffset(compactTextX, 22) else UDim2.fromOffset(59, 41),
-			if compact then UDim2.new(1, -compactTextX - 6, 0, 18) else UDim2.new(1, -65, 0, 26), Art.Amber, 12)
+		EggArt.create(choice, id, if compact then UDim2.fromOffset(6, 6) else UDim2.fromOffset(12, 8),
+			if compact then UDim2.fromOffset(24, 32) else UDim2.fromOffset(52, 66), choice.ZIndex + 2)
+		local recipeName = label(choice, "RecipeName", option.name,
+			if compact then UDim2.fromOffset(compactTextX, 1) else UDim2.fromOffset(76, 9),
+			if compact then UDim2.new(1, -compactTextX - 5, 0, 25) else UDim2.new(1, -82, 0, 32), Art.Silver, if compact then 14 else 16)
+		local costLabel = label(choice, "Cost", string.format(if compact then "%d nectar" else "%d nectar per hatch", option.cost),
+			if compact then UDim2.fromOffset(compactTextX, 28) else UDim2.fromOffset(76, 45),
+			if compact then UDim2.new(1, -compactTextX - 5, 0, 14) else UDim2.new(1, -82, 0, 26), Art.Amber, 12)
+		if compact then
+			Art.fitText(recipeName, 14, 9, 0, true)
+			Art.fitText(costLabel, 12, 9, 0, false)
+			for _, node in ipairs({ recipeName, costLabel }) do
+				local inset = node:FindFirstChildOfClass("UIPadding")
+				inset.PaddingTop, inset.PaddingBottom = UDim.new(0, 0), UDim.new(0, 0)
+			end
+		end
 		choice.Activated:Connect(function() self:selectRecipe(id) end)
 	end
 	local y = if compact then math.ceil(#Catalog.Order / 2) * recipeStep else #Catalog.Order * recipeStep + 8
@@ -283,7 +292,7 @@ function View:renderBody()
 	daily.Activated:Connect(function()
 		if daily.Interactable and self.shade.Visible then self:send("daily", self.state.dailyDay) end
 	end)
-	eggGraphic(left, recipe.color or Art.Leaf, y + 97)
+	eggGraphic(left, self.selected, recipe.color or Art.Leaf, y + 97)
 	local leftHeight = y + 215
 	left.Size = UDim2.fromOffset(columnWidth, leftHeight)
 	local rightY = if split then 0 else leftHeight + 10

@@ -106,7 +106,17 @@ function Audio:setVolume(volume)
 	end
 end
 
+function Audio:boot()
+	self.bootEpoch=(self.bootEpoch or 0)+1
+	local token=self.bootEpoch
+	for index,pitch in ipairs({.88,1.10,1.32})do
+		task.delay((index-1)*.09,function()
+			if self.bootEpoch==token and self.group.Parent then self:play("charge",pitch,.20)end
+		end)
+	end
+end
 function Audio:stop()
+	self.bootEpoch=(self.bootEpoch or 0)+1
 	for _, voices in pairs(self.voices) do
 		for _, voice in ipairs(voices) do
 			voice:Stop()

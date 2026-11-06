@@ -10,7 +10,7 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
-function Transition.new(gui, tray)
+function Transition.new(gui, tray, audio, reduceEffects)
 	local shade = Instance.new("Frame")
 	shade.Name = "DeckHandoff"
 	shade.Size = UDim2.fromScale(1, 1)
@@ -41,7 +41,16 @@ function Transition.new(gui, tray)
 	shade:GetPropertyChangedSignal("AbsolutePosition"):Connect(align)
 	align()
 
-	return setmetatable({ shade = shade, aperture = aperture, top = top, bottom = bottom, scan = scan }, Transition)
+	local logo=Art.frame(aperture,"BootLogo",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),54)
+	logo.BackgroundTransparency=1;logo.Visible=false
+	local mark=Art.text(logo,"Name","POCKET\nDECK",UDim2.new(0,2,.5,0),UDim2.new(1,-4,0,34),Art.Silver,14)
+	Art.fitText(mark,14,8,0,true)
+	local dots={}
+	for index=1,7 do
+		local dot=Art.frame(logo,"SeedDot",Art.Leaf,UDim2.new(.5,(index%3-1)*5-2,.5,-28+math.floor(index/3)*5),UDim2.fromOffset(4,4),55)
+		Art.corner(dot,2);dots[index]=dot
+	end
+	return setmetatable({ shade=shade,aperture=aperture,top=top,bottom=bottom,scan=scan,logo=logo,mark=mark,dots=dots,audio=audio,reduce=reduceEffects,epoch=0,boots=0 },Transition)
 end
 
 function Transition:cover(fromDeck)
@@ -59,11 +68,22 @@ function Transition:cover(fromDeck)
 end
 
 function Transition:reveal(toDeck)
+	self.epoch+=1;local epoch=self.epoch
 	if toDeck then
+		self.boots+=1;self.shade:SetAttribute("Boots",self.boots)
+		self.logo.Visible=true;self.mark.TextTransparency=1
+		for index,dot in ipairs(self.dots)do dot.BackgroundTransparency=1;task.delay(index*.025,function()
+			if self.epoch==epoch and self.logo.Visible then dot.BackgroundTransparency=0 end
+		end)end
+		if self.audio and self.audio.boot then self.audio:boot()end
 		self.top.Size, self.bottom.Size = UDim2.fromScale(1, 0.5), UDim2.fromScale(1, 0.5)
 		self.aperture.Visible, self.scan.Visible = true, true
 		tween(self.shade, 0.10, { BackgroundTransparency = 1 }).Completed:Wait()
 		self.scan.Visible = false
+		tween(self.mark,.12,{TextTransparency=0})
+		task.wait(.32)
+		if self.epoch~=epoch then return end
+		self.logo.Visible=false
 		tween(self.bottom, 0.16, { Size = UDim2.fromScale(1, 0) })
 		tween(self.top, 0.16, { Size = UDim2.fromScale(1, 0) }).Completed:Wait()
 	else
@@ -73,6 +93,8 @@ function Transition:reveal(toDeck)
 end
 
 function Transition:hide()
+	self.epoch+=1
+	self.logo.Visible=false
 	self.shade.Visible = false
 	self.aperture.Visible, self.scan.Visible = false, false
 end

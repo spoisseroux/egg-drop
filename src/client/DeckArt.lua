@@ -201,4 +201,15 @@ function Art.deck(backdrop, shell, bezel)
 	glint.BackgroundTransparency = 0.65
 end
 
+function Art.tintBackdrop(parent,theme)
+	parent.BackgroundColor3=theme.backdrop or Art.Backdrop
+	local art=parent:FindFirstChild("CanopyArt")
+	if not art then return end
+	for _,node in ipairs(art:GetChildren())do
+		if node:IsA("Frame")then
+			if node.Name:find("Canopy")then node.BackgroundColor3=theme.band or Art.Canopy
+			else node.BackgroundColor3=theme.trim or Art.Leaf end
+		end
+	end
+end
 return Art

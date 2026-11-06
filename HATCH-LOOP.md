@@ -254,3 +254,8 @@ Native11 new recovery/default-store fixtures and existing transaction/close/UI r
 Short landscape allocates the full central height to the board and puts nectar/quest/drop count on the grips. Both egg recipes fit in one44px row, with the selected recipe and exact price/shortfall pinned in the action. Resize cancels an unfinished drag; repeated HUD updates retain all24 drop-strip cells. Compact errors remain visible, and rotating/reopening preserves the selected egg.
 
 Native10 deck/8 shop cases and related UI/transaction/close regressions passed (85 total), including350px-wide and160px-high safe content. Actual resized-component mouse checks verified both aim directions, A, no stale release, Sprout selection/reopen and same-run return. Physical phone/touch/controller comfort remains a separate playtest. Evidence: `scripts/CompactControls-results.json`.
+
+
+## Post-playtest UI pass, 2026-11-06
+
+The new user request after the overnight checkpoint adds persistent petting, original handheld boot, non-overlapping grips, clearer bank/queue/drops UI, receipt animation, illustrated eggs, compact daily cards and themed backgrounds. See `UI-EXPERIENCE-PASS.md` for Astra review fixes and exact Studio evidence; `UI-EDITING.md` explains durable position tweaks. Overnight automation remains paused. Economy and nursery scope are unchanged.

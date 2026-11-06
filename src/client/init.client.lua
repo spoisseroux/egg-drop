@@ -29,6 +29,9 @@ local HatchReveal = require(script.HatchReveal)
 local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
+local DeckLayout = require(script.DeckLayout)
+local DropDispenser = require(script.DropDispenser)
+local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
 local NurseryView = require(script.EggHatchView)
 local HatchNavigation = require(script.HatchNavigation)
@@ -180,17 +183,23 @@ local sprites = make("Frame", "Sprites", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
 }, overlay)
 local fieldZones = {}
-for index, side in ipairs({ -1, 1 }) do
-	local zone = Art.frame(overlay, if side == -1 then "LeftRootPatch" else "RightRootPatch", Art.Leaf,
-		UDim2.fromScale(0, .68), UDim2.fromScale(.2, .31), 3)
-	zone.BackgroundTransparency = .90
-	Art.corner(zone, 4)
-	local edge = Art.stroke(zone, Art.Leaf, .35, 1)
-	local caption = Art.text(zone, "Target", if side == -1 then "1 · III+" else "2 · III+",
-		UDim2.fromOffset(0, 2), UDim2.new(1, 0, 0, 15), Art.Ink, 10)
-	Art.fitText(caption, 10, 8, 1)
-	fieldZones[index] = { node = zone, edge = edge, side = side }
+local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),6)
+zoneLayer.BackgroundTransparency=1;zoneLayer.ClipsDescendants=true
+for index,side in ipairs({-1,1})do
+	local tint=if side==-1 then Color3.fromHex("#3069A5")else Color3.fromHex("#A84F3F")
+	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),6)
+	zone.BackgroundTransparency=.94
+	local edge=Art.stroke(zone,tint,.1,2)
+	local caption=Art.text(zone,"Target",if side==-1 then "LEFT"else"RIGHT",UDim2.fromOffset(0,2),UDim2.new(1,0,0,14),Art.Silver,10)
+	caption.BackgroundColor3,caption.BackgroundTransparency=Art.Ink,.1
+	Art.fitText(caption,10,7,0)
+	for stripe=1,8 do
+		local dash=Art.frame(zone,"Hatch",Art.Ink,UDim2.new(if side==-1 then 1 else 0,if side==-1 then -3 else 0,stripe/9,0),UDim2.fromOffset(3,9),7)
+		dash.BackgroundTransparency=.25
+	end
+	fieldZones[index]={node=zone,edge=edge,side=side}
 end
+
 local lcd = JellyLCD.new(overlay)
 local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
@@ -249,6 +258,17 @@ readout.Font = Enum.Font.Code
 make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 }, readout)
 readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
+local queueHost=Art.frame(backdrop,"PieceQueue",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,64),4)
+queueHost.ClipsDescendants=true;Art.corner(queueHost,9)
+local queuePieces={}
+for index,name in ipairs({"Dropping","Next"})do
+	local slot=Art.frame(queueHost,name,Art.Ink,UDim2.fromScale((index-1)*.5,0),UDim2.fromScale(.5,1),5)
+	local caption=Art.text(slot,"Caption",name,UDim2.fromOffset(2,0),UDim2.new(1,-4,0,14),Art.Muted,11);Art.fitText(caption,12,8,0)
+	local ball=Art.frame(slot,"Piece",Config.Tiers[1].color,UDim2.new(.5,-14,0,19),UDim2.fromOffset(28,28),6)
+	Art.corner(ball,30);Art.shade(ball,1,.7)
+	local mark=Art.text(ball,"Mark","I",UDim2.fromScale(0,0),UDim2.fromScale(1,1),Art.Ink,12);Art.fitText(mark,12,8,0)
+	queuePieces[index]=ball
+end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
 	UDim2.fromOffset(40, 12), Art.Muted, 10)
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
@@ -376,13 +396,13 @@ local function utilityButton(name, titleText)
 	caption.TextSize = 12
 	caption.TextColor3 = Art.Silver
 	button.MouseButton1Down:Connect(function()
-		cap.Position = UDim2.new(0.5, 0, 0, 5)
+		cap.Position = UDim2.new(0.5, 0, 0, 9)
 	end)
 	button.MouseButton1Up:Connect(function()
-		cap.Position = UDim2.new(0.5, 0, 0, 3)
+		cap.Position = UDim2.new(0.5, 0, 0, 7)
 	end)
 	button.MouseLeave:Connect(function()
-		cap.Position = UDim2.new(0.5, 0, 0, 3)
+		cap.Position = UDim2.new(0.5, 0, 0, 7)
 	end)
 	return button, edge, caption
 end
@@ -431,6 +451,8 @@ end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Enum.Font.GothamBold
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
+local questHUD = BoardQuestHUD.new(status)
+local dispenser = DropDispenser.new(meter, reduceEffects)
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -558,7 +580,7 @@ pet.Size = UDim2.fromOffset(88, 88)
 pet.ZIndex = 14
 pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
-local recap = RoundRecap.new(modal)
+local recap = RoundRecap.new(modal, audio, reduceEffects)
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
 modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
@@ -598,7 +620,9 @@ local function equippedAppearance()
 		board:GetAttribute("DeckStickerId") or Stickers.Default
 end
 
+local previewStickerId=Stickers.Default
 local function paintDeck(id, stickerId)
+	previewStickerId=stickerId
 	local theme = Themes.ById[id]
 	shell.BackgroundColor3 = theme.shell
 	shell.Faceplate.BackgroundColor3 = theme.face or theme.shell:Lerp(theme.trim, 0.27)
@@ -614,8 +638,10 @@ local function paintDeck(id, stickerId)
 	status.TextColor3 = if status.BackgroundTransparency < 1 then Art.Silver else title.TextColor3
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
+	Art.tintBackdrop(backing,theme)
+	modalShade.BackgroundColor3=theme.backdrop or Art.Backdrop
 	Stickers.paint(deckSticker, stickerId)
-	if backdrop:GetAttribute("CompactLandscape") then deckSticker.Visible=false end
+	if backdrop:GetAttribute("StickerSlot")~=true then deckSticker.Visible=false end
 end
 
 local function canAim()
@@ -763,8 +789,9 @@ do
 	local handoff = safeOverlays.DeckHandoff
 	local function alignSafeContent()
 		local origin = backdrop.AbsolutePosition - overlayGui.AbsolutePosition
-		safeOverlays.Position = UDim2.fromOffset(origin.X, origin.Y)
-		safeOverlays.Size = UDim2.fromOffset(backdrop.AbsoluteSize.X, backdrop.AbsoluteSize.Y)
+		local margin=if backdrop.AbsoluteSize.Y<280 then 0 else 8
+		safeOverlays.Position = UDim2.fromOffset(origin.X+margin,origin.Y+margin)
+		safeOverlays.Size = UDim2.fromOffset(math.max(1,backdrop.AbsoluteSize.X-margin*2),math.max(1,backdrop.AbsoluteSize.Y-margin*2))
 	end
 	local function updateShade()
 		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible
@@ -875,6 +902,9 @@ local function drawAim()
 	nextReadout.Text = Config.Tiers[tier].mark .. " · " .. Config.Tiers[board:GetAttribute("PreviewTier1") or 1].mark
 		.. " · " .. Config.Tiers[board:GetAttribute("PreviewTier2") or 1].mark
 	nextReadout.TextColor3 = Config.Tiers[tier].color
+	if queuePieces then
+		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);piece.BackgroundColor3=Config.Tiers[t].color;piece.Mark.Text=Config.Tiers[t].mark end
+	end
 	local overflow = project(Vector2.new(0, board:GetAttribute("DangerY") or Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
@@ -953,10 +983,13 @@ local function updateHud()
 		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
 	layoutDropMeter()
+	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board")
+	for _,cell in ipairs(segments)do cell.Visible=false end
+	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
 	eggGoalText.Text = string.format("MEADOW EGG\n%d/18 nectar", nurseryState and nurseryState.nectar or 0)
-	rareGoal.Visible = owned > 0
+	rareGoal.Visible = false
 	local rareProgress = 0
 	if nextRare then
 		local goal = nextRare.trial
@@ -979,7 +1012,8 @@ local function updateHud()
 	for index, item in ipairs(fieldZones) do
 		local stage = board:GetAttribute("FieldStage") or 0
 		item.node.Visible = nurseryActive and owned > 0
-		item.node.BackgroundTransparency = if stage == index - 1 then .76 else .95
+		item.node.BackgroundTransparency = if stage == index - 1 then .88 else .97
+		item.node.Target.Text = if stage>=index then "✓" elseif item.side==-1 then "LEFT" else "RIGHT"
 		item.edge.Transparency = if stage == index - 1 then .1 else .7
 	end
 	local showHatch = hatchPet ~= nil and mode == "Board"
@@ -993,11 +1027,15 @@ local function updateHud()
 	end
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
 		Config.Tiers[nextTier()].mark, canPlay())
-	local fieldCoaching = firstHatchGuide:fieldStep(board:GetAttribute("FieldStage") or 0, nurseryState and nurseryState.totalWins or -1, shouldCoachField())
+	local fieldCoaching = false
+	firstHatchGuide:fieldStep(0, 1, false)
+	local fieldActive = nurseryActive and owned > 0
+	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive)
+	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
 	status.ReadoutSize.MaxTextSize = if lesson then 16 else 13
-	status.Text = if fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
+	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
 		then trialNotice else "Win quest +6 nectar\nLow pile +2 bonus"
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
@@ -1012,7 +1050,7 @@ local function updateHud()
 	if over then
 		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
 		if nurseryActive and owned > 0 then
-			recap:updateField({ success = board:GetAttribute("FieldSuccess"), reason = board:GetAttribute("FieldReason"),
+			recap:updateField({ sequence = board:GetAttribute("RunSequence"), success = board:GetAttribute("FieldSuccess"), reason = board:GetAttribute("FieldReason"),
 				stage = board:GetAttribute("FieldFinalStage") or 0, status = board:GetAttribute("RewardStatus"),
 				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
 				balance = nurseryState and nurseryState.nectar or 0,
@@ -1085,216 +1123,86 @@ local function updateHud()
 end
 
 local function layout()
-	-- Geometry changes revoke a held gesture; its old release cannot spend a drop.
 	clearPlayInputs()
-	local screen = backdrop.AbsoluteSize
-	local lateral = screen.X >= 350 and screen.X >= screen.Y * 1.2
-	local shortLandscape = lateral and screen.Y < 280
-	backdrop:SetAttribute("CompactLandscape", shortLandscape)
-	local portraitRail = not lateral and screen.X >= 300 and screen.Y >= 360
-	shell.MicroTrim.Visible = lateral
-	local ratio = (Config.Width + 0.8) / (Config.Height + 0.8)
-	local microHeight = math.min(620, screen.Y - (if shortLandscape then 16 else 52))
-	local sideGoal = lateral and math.min(screen.X - 230, (microHeight - 129) * ratio) < 126
-	backdrop:SetAttribute("SideGoalLayout",sideGoal)
-	local width = if shortLandscape then math.max(1, math.min(screen.X - 256, (microHeight - 16) * ratio))
-		elseif lateral then math.max(1, math.min(screen.X - 230, (microHeight - (if sideGoal then 101 else 129)) * ratio))
-		else math.max(1, math.min(415, screen.X - (if portraitRail then 134 else 36),
-			(screen.Y - (if portraitRail then 212 else 278)) * ratio))
-	local height = width / ratio
-	local totalWidth = if shortLandscape then screen.X - 28 elseif lateral then math.min(1150, screen.X - 28, math.max(width + 216, microHeight * 1.85))
-		elseif portraitRail then width + 110 else math.min(screen.X - 26, math.max(width + 34, 284))
-	local grip = if portraitRail then 98 else (totalWidth - width) / 2
-	local left = (screen.X - totalWidth) / 2
-	local shellHeight = if lateral then microHeight elseif portraitRail then height + 198 else height + 264
-	local shortDeck = lateral and shellHeight < 205
-	Stickers.paint(deckSticker, board:GetAttribute("DeckStickerId") or Stickers.Default)
-	local top = if shortLandscape then 8 else math.max(16, (screen.Y - shellHeight) / 2 - 4)
-	local screenX = if portraitRail then left + grip else (screen.X - width) / 2
-	local trayY = top + (if shortLandscape then 8 elseif lateral then 62 else 70)
-	local trayBottom = trayY + height
-	shell.Position = UDim2.fromOffset(left - 8, top)
-	shell.Size = UDim2.fromOffset(totalWidth + 16, shellHeight)
-	local radius = if lateral then math.clamp(math.floor(shellHeight * 0.085), 18, 36) else 23
-	shell.ShellCurve.CornerRadius = UDim.new(0, radius)
-	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 4)
-	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, radius - 5)
-	local bezelGutter = if lateral then 10 else 5
-	bezel.Position = UDim2.fromOffset(screenX - bezelGutter, trayY - 46)
-	bezel.Size = UDim2.fromOffset(width + bezelGutter * 2,
-		height + (if sideGoal then 72 elseif lateral or portraitRail then 100 else 123))
-	viewport.Position = UDim2.fromOffset(screenX, trayY)
-	viewport.Size = UDim2.fromOffset(width, height)
-	overlay.Position = viewport.Position
-	overlay.Size = viewport.Size
-	local zoneWidth = math.max(0, (Config.Width / 2 - (board:GetAttribute("FieldZoneBound") or 3.8)) / (Config.Width + .8))
-	for _, item in ipairs(fieldZones) do
-		item.node.Position = UDim2.fromScale(if item.side == -1 then .027 else 1 - .027 - zoneWidth, .68)
-		item.node.Size = UDim2.fromScale(zoneWidth, .31)
+	local screen=backdrop.AbsoluteSize
+	local ratio=(Config.Width+.8)/(Config.Height+.8)
+	local l=DeckLayout.resolve(screen,ratio)
+	backdrop:SetAttribute("CompactLandscape",l.short)
+	backdrop:SetAttribute("SideGoalLayout",true)
+	local function place(node,r)node.Position,node.Size=UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h)end
+	place(shell,l.shell);place(bezel,l.bezel);place(viewport,l.tray);overlay.Position,overlay.Size=viewport.Position,viewport.Size
+	shell.MicroTrim.Visible=l.lateral
+	local radius=if l.lateral then math.clamp(math.floor(l.shell.h*.075),18,32)else 23
+	shell.ShellCurve.CornerRadius=UDim.new(0,radius)
+	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-4)
+	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-5)
+	place(rail,l.tray);rail.BackgroundTransparency=1;rail.ReadoutDivider.Visible=false
+	bestReadout.Visible,nextReadout.Visible,mascot.Visible=false,false,false
+	scoreCaption.Visible=true;scoreCaption.Position=UDim2.fromOffset(l.wallet.x-l.tray.x,l.wallet.y-l.tray.y)
+	scoreCaption.Size=UDim2.fromOffset(math.min(64,l.wallet.w*.48),l.wallet.h)
+	scoreCaption.BackgroundColor3,scoreCaption.BackgroundTransparency=Art.Ink,.05
+	readout.Position=scoreCaption.Position+UDim2.fromOffset(scoreCaption.Size.X.Offset,0)
+	readout.Size=UDim2.fromOffset(l.wallet.w-scoreCaption.Size.X.Offset,l.wallet.h)
+	readout.BackgroundColor3,readout.BackgroundTransparency=Art.Ink,.05
+	readout.TextScaled=true;readout.TextTruncate=Enum.TextTruncate.None
+	place(queueHost,l.queue)
+	for _,piece in ipairs(queuePieces)do
+		local d=math.min(32,math.max(12,l.queue.h-22))
+		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,if l.queue.h<35 then 12 else 19),UDim2.fromOffset(d,d)
+		piece.Parent.Caption.Size=UDim2.new(1,-4,0,if l.queue.h<35 then 10 else 14)
 	end
-	modal.Position = UDim2.fromScale(0.5, 0.5)
-	local dialogHeight = math.min(236, math.max(1, screen.Y - 32))
-	local compactDialog = dialogHeight < 220
-	modal:SetAttribute("CompactDialog", compactDialog)
-	modal.Size = UDim2.fromOffset(math.min(360, screen.X - 32), dialogHeight)
-	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0) > 0 then recap:layoutField(dialogHeight) end
-	local stageHeight = math.max(24, dialogHeight - 55 - 55 - (if compactDialog then 0 else 18))
-	hatchStage.Size = UDim2.new(1, -24, 0, stageHeight)
-	hatchIndex.Position = UDim2.fromOffset(12, 55 + stageHeight)
-	hatchIndex.Visible = pet.Visible and not compactDialog
-	pet.Position = UDim2.new(0.5, 0, 0, 55 + stageHeight / 2)
-	pet.Size = UDim2.fromOffset(math.min(88, stageHeight - 4), math.min(88, stageHeight - 4))
-	local portrait = pet:FindFirstChild("Portrait")
-	if portrait then portrait.StageFit.Scale = math.min(1, pet.Size.Y.Offset / 91) end
-	title.Position = UDim2.fromOffset(left, if lateral then top + shellHeight * 0.063 else top + 1)
-	title.Size = UDim2.fromOffset(if lateral then grip else totalWidth, 23)
-	title.TextSize = if lateral then math.clamp(math.floor(grip * 0.095), 11, 23) else 17
-	title.Visible = not shortDeck
-	deckSticker.Position = UDim2.fromOffset(left + (if lateral then totalWidth - grip * 0.5 - 12 else totalWidth * 0.47 - 12),
-		if lateral then top + shellHeight * 0.22 else trayBottom + 78)
-	if sideGoal then
-		deckSticker.Position = UDim2.fromOffset(left + totalWidth - 26, top + 14)
-	elseif portraitRail then
-		deckSticker.Position = UDim2.fromOffset(left + 34, top + shellHeight - 146)
+	place(status,l.quest);status.ClipsDescendants=true
+	place(meter,l.meter);rareGoal.Visible,eggGoal.Visible=false,false
+	meterText.Position,meterText.Size=UDim2.fromOffset(2,0),UDim2.new(1,-4,1,0)
+	place(hardware,l.shell)
+	dpad.Position,dpad.Size=UDim2.fromOffset(l.dpad.x-l.shell.x,l.dpad.y-l.shell.y),UDim2.fromOffset(l.dpad.w,l.dpad.h)
+	dpad.RockerWell.Size=UDim2.fromOffset(l.dpad.w+6,l.aimSize+7)
+	leftAim.Size,rightAim.Size=UDim2.fromOffset(l.aimSize,l.aimSize),UDim2.fromOffset(l.aimSize,l.aimSize)
+	rightAim.Position=UDim2.fromOffset(l.aimSize+6,8)
+	action.Position,action.Size=UDim2.fromOffset(l.drop.x-l.shell.x,l.drop.y-l.shell.y),UDim2.fromOffset(l.dropSize,l.dropSize)
+	action.TextSize=math.floor(l.dropSize*.5)
+	hardware.DropWell.Position,hardware.DropWell.Size=action.Position+UDim2.fromOffset(-3,1),UDim2.fromOffset(l.dropSize+6,l.dropSize+5)
+	dropCaption.Visible=not l.short
+	dropCaption.Position,dropCaption.Size=action.Position+UDim2.fromOffset(-10,-20),UDim2.fromOffset(l.dropSize+20,16)
+	for index,button in ipairs({customizeButton,roomButton})do
+		place(button,if index==1 then l.menu else l.lounge)
+		button.KeyWell.Visible=false
+		button.Cap.Position,button.Cap.Size=UDim2.new(.5,0,0,7),UDim2.new(1,-6,0,DeckLayout.Settings.UtilityCapHeight)
+		button.Cap.Caption.Text=if index==1 then "MENU"else"LOUNGE"
+		button.Cap.Caption.TextSize=11
 	end
-	rail.Position = UDim2.fromOffset(screenX, trayY - 44)
-	rail.Size = UDim2.fromOffset(width, 44)
-	local compact = width < 175
-	mascot.Visible = not compact
-	scoreCaption.Visible = false
-	scoreCaption.Position,scoreCaption.Size=UDim2.new(.5,-22,0,7),UDim2.fromOffset(40,12)
-	local readoutLeft = if compact then 5 else 9
-	mascot.Visible = false
-	local readoutInset = if compact then -53 else -90
-	readout.Position = UDim2.fromOffset(readoutLeft, 3)
-	readout.Size = UDim2.new(1, readoutInset, 0, 21)
-	readout.TextScaled = shortLandscape or width < 135
-	readout.TextSize = if compact then 14 else 19
-	readout.TextTruncate = Enum.TextTruncate.AtEnd
-	bestReadout.Position = UDim2.fromOffset(readoutLeft, 23)
-	bestReadout.Size = UDim2.new(1, readoutInset, 0, 16)
-	bestReadout.TextSize = if compact then 9 else 11
-	nextReadout.Position = UDim2.new(1, if compact then -47 else -75, 0, 0)
-	nextReadout.Size = UDim2.new(0, if compact then 43 else 64, 1, 0)
-	nextReadout.TextSize = if compact then 10 else 12
-	local statusSpan = if lateral or portraitRail then grip else totalWidth
-	local statusWidth = math.min(statusSpan - 8, 218)
-	status.Position = UDim2.fromOffset(left + (statusSpan - statusWidth) / 2,
-		if shortDeck then top + (if shellHeight < 160 then 0 else 6) elseif lateral then top + shellHeight * 0.17
-		elseif portraitRail then top + 40 else trayBottom + 5)
-	status.Size = UDim2.fromOffset(statusWidth,
-		if portraitRail then 43 elseif lateral and shellHeight >= 220 then 38 elseif shortDeck and shellHeight < 160 then 20 else 22)
-	meter.Position = UDim2.fromOffset(screenX, trayBottom + (if lateral or portraitRail then 3 else 26))
-	meter.Size = UDim2.fromOffset(width, 22)
-	meterText.TextSize = if width < 135 then 11 else 13
-	if sideGoal and not shortLandscape then
-		meter.Position,meter.Size=UDim2.fromOffset(left+totalWidth-grip+6,top+46),UDim2.fromOffset(grip-20,22)
+	eggButton.Visible=false
+	title.Visible=l.lateral and l.shell.h>=280
+	title.Position,title.Size=UDim2.fromOffset(l.left.x,l.shell.y+6),UDim2.fromOffset(l.left.w,20)
+	title.TextSize=math.min(20,math.max(12,math.floor(l.left.w*.09)))
+	local free=l.drop.y-(l.meter.y+l.meter.h)
+	vents.Visible=l.lateral and free>80
+	vents.Position=UDim2.fromOffset(l.right.x-l.shell.x+(l.right.w-57)/2,l.meter.y+l.meter.h-l.shell.y+18)
+	hardware.MakerMark.Visible=false
+	shell.Faceplate.AimSeat.Visible,shell.Faceplate.ActionSeat.Visible=false,false
+	shell.Faceplate.AccentBands.Visible=false
+	local stickerRoom=l.lateral and l.menu.y-(l.quest.y+l.quest.h)>=34
+	backdrop:SetAttribute("StickerSlot",stickerRoom)
+	deckSticker.Position,deckSticker.Size=UDim2.fromOffset(l.left.x+l.left.w/2-12,l.quest.y+l.quest.h+6),UDim2.fromOffset(24,24)
+	Stickers.paint(deckSticker,previewStickerId)
+	deckSticker.Visible=deckSticker.Visible and stickerRoom
+	local zoneWidth=math.max(0,(Config.Width/2-(board:GetAttribute("FieldZoneBound") or 2.6))/(Config.Width+.8))
+	for _,item in ipairs(fieldZones)do
+		item.node.Position=UDim2.fromScale(if item.side==-1 then .027 else 1-.027-zoneWidth,.025)
+		item.node.Size=UDim2.fromScale(zoneWidth,.95)
 	end
-	rareGoal.BackgroundTransparency = if sideGoal then 0.1 else 1
-	rareGoal.Position = if sideGoal then UDim2.fromOffset(left + totalWidth - grip + 6, top + 12)
-		else meter.Position + UDim2.fromOffset(0, 24)
-	rareGoal.Size = UDim2.fromOffset(if sideGoal then grip - 20 else width, 26)
-	eggGoal.Position = if portraitRail then UDim2.fromOffset(left + 6, top + 190) else UDim2.fromOffset(left + totalWidth - grip + 12, top + shellHeight * .18)
-	eggGoal.Size = UDim2.fromOffset(math.max(64, grip - 24), 54)
-	eggGoal.Visible = not shortLandscape and not sideGoal and (lateral or portraitRail) and shellHeight >= 260 and (board:GetAttribute("OwnedPets") or 0) > 0
-	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 83)
-	hardware.Size = UDim2.fromOffset(totalWidth, if lateral or portraitRail then shellHeight else 64)
-	local dropSize = if lateral then math.clamp(math.floor(shellHeight * 0.18), 54, 100) else 48
-	local aimSize = if lateral then math.clamp(math.floor(shellHeight * 0.14), 44,
-		math.clamp(math.floor((grip - 14) / 2), 44, 70)) else 44
-	local aimWidth = aimSize * 2 + 6
-	local sideBySide = lateral and shellHeight < 276
-	local utilityY = if lateral then (if shellHeight < 230 then 27 else math.max(48, math.floor(shellHeight * 0.32))) else shellHeight - 108
-	local dropRow = shellHeight - dropSize - 40
-	local aimY = if lateral then math.max(utilityY + (if sideBySide then 44 else 94) + 8,
-		dropRow + (dropSize - aimSize) / 2 - 8) elseif portraitRail then 95 else 0
-	local dropX = if lateral then totalWidth - grip * 0.5 - dropSize * 0.5 else totalWidth - dropSize
-	local dropY = if lateral then math.max(dropRow, aimY + 8 + (aimSize - dropSize) / 2)
-		elseif portraitRail then trayBottom - top + 58 else 0
-	dpad.Position = UDim2.fromOffset(if lateral or portraitRail then (grip - aimWidth) * 0.5 else 0, aimY)
-	dpad.Size = UDim2.fromOffset(aimWidth, aimSize + 12)
-	dpad.RockerWell.Size = UDim2.fromOffset(aimWidth + 6, aimSize + 7)
-	leftAim.Size, rightAim.Size = UDim2.fromOffset(aimSize, aimSize), UDim2.fromOffset(aimSize, aimSize)
-	rightAim.Position = UDim2.fromOffset(aimSize + 6, 8)
-	action.Size = UDim2.fromOffset(dropSize, dropSize)
-	action.TextSize = math.floor(dropSize * 0.50)
-	action.Position = UDim2.fromOffset(dropX, dropY)
-	hardware.DropWell.Position = UDim2.fromOffset(dropX - 3, dropY + 1)
-	hardware.DropWell.Size = UDim2.fromOffset(dropSize + 6, dropSize + 5)
-	hardware.DropWell:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
-	dropCaption.Size = UDim2.fromOffset(dropSize, 16)
-	dropCaption.Position = UDim2.fromOffset(dropX, dropY + dropSize + 6)
-	vents.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 28, shellHeight * 0.40)
-	vents.Visible = lateral and shellHeight >= 220
-	hardware.MakerMark.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 48, shellHeight * 0.56)
-	hardware.MakerMark.Visible = lateral and shellHeight >= 285
-	do
-		local plate = shell.Faceplate
-		local detail = lateral and shellHeight >= 280
-		plate.AimSeat.Visible, plate.ActionSeat.Visible = detail, detail
-		plate.AccentBands.Visible = lateral and shellHeight >= 330
-		local seatWidth = math.min(aimWidth + 34, grip - 18)
-		plate.AimSeat.Size = UDim2.fromOffset(seatWidth, aimSize + 28)
-		plate.AimSeat.Position = UDim2.fromOffset(3 + (grip - seatWidth) * 0.5, aimY - 6)
-		plate.ActionSeat.Size = UDim2.fromOffset(dropSize + 32, dropSize + 47)
-		plate.ActionSeat.Position = UDim2.fromOffset(dropX - 13, dropY - 17)
-		plate.AccentBands.Position = UDim2.fromOffset(totalWidth - grip * 0.5 - 29, shellHeight * 0.10)
-	end
-	for index, button in ipairs({ customizeButton, roomButton }) do
-		local buttonWidth = if sideBySide then math.floor((grip - 13) / 2)
-			elseif lateral or portraitRail then math.min(146, grip - 22) else 100
-		local buttonX = if sideBySide then left + 1 + (index - 1) * (buttonWidth + 2)
-			elseif lateral or portraitRail then left + (grip - buttonWidth) / 2
-			else left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
-		local buttonY = if lateral or portraitRail then top + utilityY + (if sideBySide then 0 else (index - 1) * 50)
-			else trayBottom + 154
-		button.Cap.Caption.Text = if index == 1 then "MENU" else "LOUNGE"
-		button.Cap.Caption.TextSize = if sideBySide then 10 else 12
-		button.Position = UDim2.fromOffset(buttonX, buttonY)
-		button.Size = UDim2.fromOffset(buttonWidth, 44)
-	end
-	eggButton.Visible = false
-	eggButton.Size = UDim2.fromOffset(math.min(132, grip - 22), 44)
-	eggButton.Position = UDim2.fromOffset(left + totalWidth - grip * .5 - eggButton.Size.X.Offset / 2,
-		top + shellHeight * .25)
-	if lateral then deckSticker.Position = UDim2.fromOffset(left + totalWidth - 44, top + 32) end
-	-- Short landscape keeps the complete board in the middle and places existing
-	-- readouts on the grips. The only aim hit area is the transparent tray overlay.
-	rail.BackgroundTransparency = if shortLandscape then 1 else 0
-	rail.ReadoutDivider.Visible = not shortLandscape
-	bestReadout.Visible = not shortLandscape
-	for _,node in ipairs({readout,scoreCaption,nextReadout})do
-		node.BackgroundColor3 = Art.Ink
-		node.BackgroundTransparency = if shortLandscape then .08 else 1
-	end
-	if shortLandscape then
-		bezel.Position,bezel.Size = UDim2.fromOffset(screenX-6,trayY-4),UDim2.fromOffset(width+12,height+8)
-		rail.Position,rail.Size = viewport.Position,viewport.Size
-		scoreCaption.Visible = true
-		scoreCaption.Position,scoreCaption.Size = UDim2.fromOffset(-grip+12,-4),UDim2.fromOffset(48,20)
-		readout.Position,readout.Size = UDim2.fromOffset(-grip+64,-4),UDim2.fromOffset(math.max(1,grip-76),20)
-		readout.TextSize = 16
-		nextReadout.Position,nextReadout.Size = UDim2.fromOffset(width+12,-4),UDim2.fromOffset(grip-24,20)
-		nextReadout.TextSize = 12
-		status.Position,status.Size = UDim2.fromOffset(left+12,top+25),UDim2.fromOffset(grip-24,22)
-		rareGoal.Position,rareGoal.Size = UDim2.fromOffset(screenX+width+12,top+25),UDim2.fromOffset(grip-24,26)
-		rareGoal.BackgroundTransparency = .08
-		meter.Position,meter.Size = UDim2.fromOffset(screenX+width+12,top+54),UDim2.fromOffset(grip-24,22)
-		meterText.TextSize = 13
-		local controlY = shellHeight-aimSize-12
-		dpad.Position = UDim2.fromOffset((grip-aimWidth)*.5,controlY)
-		local actionY = shellHeight-dropSize-8
-		action.Position = UDim2.fromOffset(dropX,actionY)
-		hardware.DropWell.Position = UDim2.fromOffset(dropX-3,actionY+1)
-		dropCaption.Position,dropCaption.Size = if grip<160 then UDim2.fromOffset(totalWidth-grip+12,actionY-22) else UDim2.fromOffset(dropX+dropSize+6,actionY+18),UDim2.fromOffset(if grip<160 then grip-24 else 60,18)
-		for index,button in ipairs({customizeButton,roomButton})do
-			local buttonWidth=math.floor((grip-26)/2)
-			button.Position,button.Size=UDim2.fromOffset(left+12+(index-1)*(buttonWidth+2),top+48),UDim2.fromOffset(buttonWidth,44)
-		end
-		deckSticker.Visible=false
-	end
-	local distance = (Config.Height + 0.8) / (2 * math.tan(math.rad(trayCamera.FieldOfView / 2)))
-	trayCamera.CFrame = CFrame.lookAt(Vector3.new(0, Config.Height / 2, distance), Vector3.new(0, Config.Height / 2, 0))
+	modal.Position=UDim2.fromScale(.5,.5)
+	local dialogHeight=math.min(300,math.max(1,screen.Y-32))
+	modal:SetAttribute("CompactDialog",dialogHeight<220)
+	modal.Size=UDim2.fromOffset(math.min(440,screen.X-32),dialogHeight)
+	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0 then recap:layoutField(dialogHeight)end
+	local stageHeight=math.max(24,dialogHeight-110-(if dialogHeight<220 then 0 else 18))
+	hatchStage.Size=UDim2.new(1,-24,0,stageHeight);hatchIndex.Position=UDim2.fromOffset(12,55+stageHeight)
+	hatchIndex.Visible=pet.Visible and dialogHeight>=220
+	pet.Position=UDim2.new(.5,0,0,55+stageHeight/2);pet.Size=UDim2.fromOffset(math.min(88,stageHeight-4),math.min(88,stageHeight-4))
+	local portrait=pet:FindFirstChild("Portrait");if portrait then portrait.StageFit.Scale=math.min(1,pet.Size.Y.Offset/91)end
+	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
+	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
 end
 
 local function aimFromScreen(x)
@@ -1760,6 +1668,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	roomView:setMode(mode)
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
+	if recap.feedback then recap.feedback:cancel() end
 	clearPlayInputs()
 	reveal:cancel()
 	effects:ClearAllChildren()
@@ -1796,7 +1705,7 @@ RunService.RenderStepped:Connect(function(dt)
 	-- Transition completion changes local busy state without a replicated attribute.
 	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
 	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")
-	firstHatchGuide:fieldStep(board:GetAttribute("FieldStage") or 0, nurseryState and nurseryState.totalWins or -1, shouldCoachField())
+	firstHatchGuide:fieldStep(0, 1, false)
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
 	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
 	eggGoalText.Text = string.format("%s\n%d/%d nectar", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
@@ -1911,4 +1820,15 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 layout()
 updateHud()
-roomView:setMode(board:GetAttribute("Mode"))
+if board:GetAttribute("Mode")=="Board" and not reduceEffects() then
+	roomView.busy=true
+	task.spawn(function()
+		local ok,problem=pcall(function()
+			roomView.transition:cover(false)
+			if board:GetAttribute("Mode")=="Board"then roomView.transition:reveal(true)else roomView.transition:hide()end
+		end)
+		roomView.transition:hide();roomView.busy=false
+		if not ok then warn("Pocket Deck startup:",problem)end
+		roomView:setMode(board:GetAttribute("Mode"))
+	end)
+else roomView:setMode(board:GetAttribute("Mode"))end

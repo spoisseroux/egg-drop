@@ -72,7 +72,7 @@ function Guide:step(drops, merges, charge, owned, inputType, mark, active)
 	self.drop.Visible = active and not touch and (step == 1 or step == 2)
 	self.meter.Visible = active and step == 3
 	if step == 1 then
-		return "1/3  AIM & DROP\n" .. (if touch then "Drag bar, release" elseif controller then "D-pad then A" else "←/→ then Space")
+		return "1/3  AIM & DROP\n" .. (if touch then "Drag tray, release" elseif controller then "D-pad then A" else "←/→ then Space")
 	elseif step == 2 then
 		return string.format("2/3  MATCH MARKS\nDrop %s onto %s", mark, mark)
 	elseif step == 3 then
