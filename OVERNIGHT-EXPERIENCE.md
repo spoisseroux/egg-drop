@@ -129,3 +129,22 @@ Astra reviewed plan and implementation, catching the new callback's local-helper
 Next coherent slice: lounge arrival/greeting camera framing and companion reveal polish, then final complete-loop/save recovery verification. Keep the nursery deferred and rewards/physics fixed.
 
 Journal/crest checkpoint: implementation850beb9 pushed; private place96451847774961 shows **version28 Published**, verified in native Version History. Studio is Edit, egg-drop/localhost34873 remains connected and Edit fixtures are absent.
+
+
+## 06:07 slice plan — greeting shots without camera cross-through
+
+Astra architecture GO: validate a complete bounded greeting shot before changing pet/camera/audio/UI. Use actual model bounds plus greeting motion padding and both vertical/horizontal43-degree frustum constraints. Prefer avatar forward, choose an inward clear alternative near floor edges; reject missing floor, excessive table/tree-top ground height or blocked candidates. Stage pet and camera atomically, retain pet greeting animation and only a small FOV settle in normal effects. Keep one per-greeting roam snapshot separate from the existing room-entry camera snapshot. Movement/timeout restores its landmark direction, translated for avatar motion; stale camera/root/character/epoch never restores. Camera/reduced-effects changes cancel pending work.
+
+Native fixtures will cover seven models/aspects, edge/corner/blocked positions, restore translation and stale lifetimes; actual Meet/E frames and movement/replay remain required. No new UI, profile/economy/physics, shader or nursery feature. Decorative nonquery foliage is not guaranteed clear by collision raycasts; inspect tree/journal views and report limits.
+
+## 06:07 wake — clear companion greetings and reliable roam return completed
+
+Greetings now validate a complete supported shot before changing camera, pet, UI or audio. Seven models fit landscape, portrait and very wide views with greeting-motion padding. The pet and lens stage together, avoiding a camera flight through its body/avatar; normal effects settle only FOV, reduced effects change it immediately. Movement or timeout restores the pre-greeting roam direction/FOV translated with the avatar. Camera, character, root and epoch guards prevent old callbacks restoring into a replacement lifetime. Room-entry and greeting snapshots remain separate.
+
+Actual world screenshots exposed two blockers missed by a center ray: the nonquery JournalSign and the GardenBench hiding Pip's feet. Astra reviewed the targeted fix: seven center/top/side/low-foot probes test nearby visible oriented boxes independently of physics flags, plus physical rays. The final spawn and journal views show the whole pet; blocked directions select a clear alternative, and all-blocked fixtures safely leave roam usable. Planner samples after prefilter were1.529ms/116boxes/2candidates at spawn,0.881ms/162boxes/2 at the journal pose,2.861ms/165boxes/3 away from the station. These are individual desktop samples, not worst-case or phone timings.
+
+Native verification:35 geometry/lifetime cases,72 projection checks across7 actual models,3 interaction-lifecycle cases,21 transaction and2 close-drain regressions passed. Actual Meet, direct pet click, E, movement cancellation and Deck/Lounge/Deck preserved runsequence2/drops2; the next A produced drop3 with nectar6 unchanged. Earlier same-slice checks observed169 Scriptable frames with0 clipped corners, automatic/movement view restoration, reduced-effects behavior, overlapping-greeting epoch protection, Studio respawn and async camera replacement. Some world positions were fixtures; those do not count as walking or live multiplayer/rejoin evidence.
+
+All53 source containers compile (51 production plus2 legacy inert containers); both changed production sources match checkout, Rojo builds and Edit has no test fixtures. Evidence: `scripts/GreetingCamera-results.json`. Existing external asset/EditableImage warnings remain; deliberate backend lost-write fixture warnings are expected. No ordinary-play Luau error was observed in the final run. Some fallback directions expose bright existing sun bloom; lighting/art tuning remains. Seven probes are conservative authored-scene protection, not proof for all future scenery. Physical phone/controller, live DataStore/rejoin, shared live multiplayer and human replay appeal remain unverified.
+
+Next slice: final integrated first-session/save-recovery audit, fix only concrete blockers, keep economy/physics/nursery scope fixed.

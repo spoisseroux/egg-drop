@@ -239,3 +239,9 @@ Native fixtures passed8 goal/receipt and10 presentation cases plus transaction/c
 Walk to the raised Field journal, press E/X or its prompt, equip an owned companion or open Family goals to choose mastery through the existing menu. The goals route itself changes no selection, inventory or currency. Station shortcuts take priority over a nearby companion; walk away or click the pet directly to greet. Returning to the deck preserves the active run.
 
 Menu and earned companion badges share static family motifs and distinct rankI/II/IIIseal/frame/bloom shapes. Rank0pets have no earned badge. Compact journal layouts and sparse rare-family inheritance passed native fixtures, as did an actual walk/journal/goals/greet/resume sequence. Evidence and remaining device/live-test limits: `scripts/JournalCrests-results.json`.
+
+## Companion greeting shots, 2026-11-06 overnight
+
+Meet or interact stages a framed companion shot after checking supported ground and visibility. The whole pet fits landscape/portrait; low foot probes avoid the lounge bench and visual box checks include nonquery signs. Movement or timeout restores the player's previous roam view and FOV. Missing/blocked scenery leaves roaming available. Reduced effects skip the FOV settle. Stale character/camera/greeting callbacks cannot restore an old view.
+
+Native35 geometry/lifetime and3 interaction cases passed alongside transaction/close regressions. Actual Meet, journal-area pet click, E/movement and same-run board return passed; some position/lifetime setups were Studio fixtures. Evidence: `scripts/GreetingCamera-results.json`. Live persistence, shared multiplayer, physical phone and enjoyment remain unproven.

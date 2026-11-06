@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-06",
+  "runtime": "Roblox Studio native Client/Server",
+  "kind": "Actual mouse/keyboard greetings plus isolated geometry, lifecycle and world-pose fixtures",
+  "review": "Astra architecture and final implementation GO; sign and bench occlusion findings fixed before publish",
+  "regressions": {"geometry": 35, "projectionChecks": 72, "petModels": 7, "interactionLifecycle": 3, "hatchTransactions": 21, "closeDrain": 2},
+  "build": {"rojo": "pass", "allSourcesCompile": 53, "productionSources": 51, "changedSourceMatches": 2, "editFixturesAbsent": true},
+  "actualControls": {
+    "starterMeet": "Actual A clicks earned Pip, Meet equipped and staged a greeting with the full body visible",
+    "spawnOcclusion": {"blocker": "GardenBench", "accepted": true, "candidateChecks": 2, "groundQueries": 2, "eligibleBoxes": 116, "plannerMsAfterPrefilter": 1.528899883851409},
+    "journalPose": {"fixtureRoot": [11.3936, 7, -2.3827], "fixtureForward": [0, 0, -1], "activation": "actual pet mouse click", "blocker": "JournalSign", "accepted": true, "candidateChecks": 2, "groundQueries": 2, "eligibleBoxes": 162, "plannerMsAfterPrefilter": 0.8809999562799931, "visual": "Full head, body and both feet visible; sign outside pet silhouette"},
+    "awayFromStation": {"fixtureRoot": [5, 7, 8], "activation": "actual E", "candidateChecks": 3, "groundQueries": 3, "eligibleBoxes": 165, "plannerMsAfterPrefilter": 2.860700013116002, "movementRelease": "actual W150ms restored Custom and FOV65"},
+    "boardResume": {"sequence": 2, "dropsBefore": 2, "dropsAfter": 3, "nectarBeforeAndAfter": 6, "result": "Actual Deck/Lounge/Deck preserved run; A accepted one further drop"}
+  },
+  "earlierSameSliceChecks": {
+    "perFrameObserver": {"scriptableFrames": 169, "clippedFrames": 0, "minimumViewportMargin": 0.1792124, "minimumPetAvatarHorizontalDistance": 3.96875},
+    "roamRestore": "Automatic timeout restored FOV65 and view-direction dot1.00000012; actual movement and repeat greeting epoch passed",
+    "reducedEffects": "Actual Menu/Style/Club/MotionLow used immediate43 and returned to65; mid-greet attribute fixture cancelled tween",
+    "respawnFixture": "Studio server Humanoid death restored Custom with new Humanoid subject, Pip ownership and nectar6 preserved",
+    "replacementCameraFixture": "Async replacement remained Custom65; stale old camera was not restored"
+  },
+  "limits": [
+    "Single desktop planner samples exclude prefilter and are not phone or worst-case frame timings",
+    "Seven visual probes and conservative boxes improve authored scenes but do not prove all future scenery or streaming situations unobstructed",
+    "Some fallback directions show bright existing sun bloom; lighting was not changed",
+    "MCP execute_luau yields can restore stale CameraType; lifetime checks used async callbacks and external input waits to avoid that inspection artifact",
+    "Existing EditableImage fallback and external asset203785492 warnings persist; expected transaction-fixture lost-write warnings are separate",
+    "No physical phone/controller, live persistence/rejoin, shared live multiplayer or human enjoyment evidence"
+  ]
+}

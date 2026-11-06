@@ -10,6 +10,7 @@ local PuddleVisual = require(script.Parent.PuddleVisual)
 local BonusPetVisual = require(script.Parent.BonusPetVisual)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
+local PetGreetingShot = require(script.Parent.PetGreetingShot)
 local PetPrestige = require(script.Parent.PetPrestige)
 local JournalPromptPriority = require(script.Parent.JournalPromptPriority)
 local Art = require(script.Parent.DeckArt)
@@ -103,9 +104,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	end)
 	Players.LocalPlayer.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid", 5)
-		if self.mode == "Room" and humanoid then
+		if self.mode == "Room" and humanoid and Players.LocalPlayer.Character == character then
 			self.followState = nil
-			task.defer(function() if self.mode == "Room" then self:useRoomCamera(false) end end)
+			task.defer(function()
+				if self.mode == "Room" and Players.LocalPlayer.Character == character then self:useRoomCamera(false) end
+			end)
 		end
 	end)
 	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
@@ -119,14 +122,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 			if self.focusing and humanoid and humanoid.MoveDirection.Magnitude > 0.05 then self:useRoomCamera(false) end
 			if root and not self.focusing then self.followState = PetFollow.step(self.pet, root, dt, self.followState) end
-			if self.focusing and self.focusMotion then
-				local motion = self.focusMotion
-				motion.time += dt
-				local alpha = math.clamp(motion.time / 0.45, 0, 1)
-				alpha = alpha * alpha * (3 - 2 * alpha)
-				self.pet.origin = motion.from:Lerp(motion.to, alpha)
-				self.pet.yaw = motion.yawFrom + motion.yawDelta * alpha
-				if motion.time >= 0.45 then self.focusMotion = nil end
+			if self.focusing and self.reduceEffects() and self.cameraTween then
+				self:cancelCameraTween()
+				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
 			end
 			self.pet:update(dt)
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
@@ -183,8 +181,8 @@ function Room:interactPet()
 	if self.mode ~= "Room" or self.busy or self.focusing or self.overlayOpen() or self.menuOpen or not self.pet then return false end
 	local now = os.clock()
 	if now - (self.lastPetAt or -math.huge) < 0.45 then return false end
+	if not self:focusPet() then return false end
 	self.lastPetAt = now
-	self:focusPet()
 	return true
 end
 
@@ -256,6 +254,7 @@ end
 
 function Room:restoreCamera()
 	self:cancelCameraTween()
+	self.greetingCamera = nil
 	self.focusing = false
 	self.focusMotion, self.followState = nil, nil
 	self.focusEpoch = (self.focusEpoch or 0) + 1
@@ -267,7 +266,7 @@ function Room:restoreCamera()
 	end
 	local saved = self.savedCamera
 	self.savedCamera = nil
-	if saved and saved.camera.Parent then
+	if saved and saved.camera == workspace.CurrentCamera and saved.camera.Parent then
 		saved.camera.CFrame = saved.transform
 		saved.camera.Focus = saved.focus
 		saved.camera.FieldOfView = saved.fov
@@ -280,6 +279,7 @@ function Room:useRoomCamera(animate)
 	if not camera then
 		return
 	end
+	local greeting = self.greetingCamera
 	if not self.savedCamera or self.savedCamera.camera ~= camera then
 		self:restoreCamera()
 		self.savedCamera = {
@@ -289,6 +289,7 @@ function Room:useRoomCamera(animate)
 	else
 		self:cancelCameraTween()
 	end
+	self.greetingCamera = nil
 	self.focusing = false
 	self.focusMotion, self.followState = nil, nil
 	self.focusEpoch = (self.focusEpoch or 0) + 1
@@ -300,8 +301,22 @@ function Room:useRoomCamera(animate)
 	if humanoid then
 		camera.CameraSubject = humanoid
 	end
-	camera.FieldOfView = 65
-	if root and not self.roamed then
+	local restored = PetGreetingShot.restore(greeting, camera, root)
+	if greeting and self.pet and root then
+		local origin
+		if restored and greeting.pet == self.pet then
+			origin = greeting.petOrigin + root.Position - greeting.position
+			self.pet.yaw = greeting.petYaw
+		else
+			origin = root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6
+			self.pet.yaw = math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z)
+		end
+		self.pet.origin = Vector3.new(origin.X, PetFollow.ground(origin, self.pet, origin.Y), origin.Z)
+		self.pet.lastFrame = -1
+		self.pet:update(0)
+	end
+	if not restored then camera.FieldOfView = 65 end
+	if root and not self.roamed and not restored then
 		local target = root.Position + Vector3.new(0, 1, 0)
 		camera.CFrame = CFrame.lookAt(target + Vector3.new(5, 6, 12), target)
 	end
@@ -311,47 +326,78 @@ end
 
 function Room:focusPet()
 	local camera = workspace.CurrentCamera
-	if not camera or not self.pet or self.mode ~= "Room" then return end
-	self:cancelCameraTween()
-	self.focusing = true
-	self.greetButton.Text = "Roam"
-	self.audio:play(self.shownPet.cue)
-	if not self.reduceEffects() then self.pet:greet() end
-	self.menuOpen = false
-	self:updateControls()
-	-- Stage the pet ahead of the player, with the camera BETWEEN them. The
-	-- avatar then stays behind the camera instead of blocking the pet's face.
-	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	local forward = if root then Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z) else Vector3.new(0, 0, -1)
-	if forward.Magnitude < 0.01 then forward = Vector3.new(0, 0, -1) else forward = forward.Unit end
-	local right = Vector3.new(-forward.Z, 0, forward.X)
-	local _, size = self.pet.model:GetBoundingBox()
-	local portrait = camera.ViewportSize.X < camera.ViewportSize.Y
-	local distance = math.max(if portrait then 5.1 else 4.6, size.Y * 1.55)
-	local destinationOrigin = if root then root.Position + forward * (distance + 2.8) else self.pet.origin
-	destinationOrigin = Vector3.new(destinationOrigin.X, PetFollow.ground(destinationOrigin, self.pet, self.pet.origin.Y), destinationOrigin.Z)
-	local target = destinationOrigin + Vector3.new(0, math.max(1.35, size.Y * 0.52), 0)
-	local cameraPosition = target - forward * distance + right * 0.55 + Vector3.new(0, 0.65, 0)
-	local destination = CFrame.lookAt(cameraPosition, target)
-	local facing = cameraPosition - destinationOrigin
-	local wantedYaw = math.atan2(facing.X, facing.Z)
-	local currentYaw = self.pet.yaw or wantedYaw
-	self.focusMotion = { from = self.pet.origin, to = destinationOrigin, time = 0,
-		yawFrom = currentYaw, yawDelta = math.atan2(math.sin(wantedYaw - currentYaw), math.cos(wantedYaw - currentYaw)) }
-	camera.CameraType = Enum.CameraType.Scriptable
-	local epoch = (self.focusEpoch or 0) + 1
-	self.focusEpoch = epoch
-	if self.reduceEffects() then
-		self.pet.origin, self.pet.yaw, self.focusMotion = destinationOrigin, wantedYaw, nil
-		self.pet:update(0)
-		camera.CFrame, camera.Focus, camera.FieldOfView = destination, CFrame.new(target), 43
-	else
-		self.cameraTween = tween(camera, 0.45, { CFrame = destination, Focus = CFrame.new(target), FieldOfView = 43 })
+	local character = Players.LocalPlayer.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local lounge = workspace:FindFirstChild("EggDropLounge")
+	local floor = lounge and lounge:FindFirstChild("Floor")
+	if not camera or not self.pet or self.mode ~= "Room" or self.focusing or not root or not floor then return false end
+	local bounds, size = self.pet.model:GetBoundingBox()
+	local exclude = {self.pet.model}
+	for _, player in ipairs(Players:GetPlayers()) do if player.Character then table.insert(exclude,player.Character) end end
+	local params=RaycastParams.new()
+	params.FilterDescendantsInstances,params.RespectCanCollide=exclude,true
+	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)
+	local reach=PetGreetingShot.maximumReach(size,aspect)
+	local visualBlocks={}
+	for _, part in ipairs(lounge:GetChildren()) do
+		if part:IsA("BasePart") and part~=floor and part.Transparency<.9
+			and (part.Size.Magnitude>=2 or part.Name:find("Sign") or part.Name:find("FieldGuide"))
+			and (part.Position-root.Position).Magnitude<=reach+part.Size.Magnitude*.5 then table.insert(visualBlocks,part) end
 	end
-	task.delay(2.8, function()
-		if self.mode == "Room" and not self.busy and self.focusing and self.focusEpoch == epoch
-			and workspace.CurrentCamera == camera then self:useRoomCamera(false) end
+	local started, groundQueries, candidates = os.clock(), 0, 0
+	local plan=PetGreetingShot.plan({
+		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,
+		centerOffset=CFrame.Angles(0,self.pet.yaw or 0,0):VectorToObjectSpace(bounds.Position-self.pet.origin),
+		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},
+		ground=function(position)
+			groundQueries += 1
+			local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+			return hit and hit.Position.Y+.025 or nil
+		end,
+		clear=function(position,target,origin)
+			candidates += 1
+			if workspace:Raycast(position,target-position,params)
+				or workspace:Raycast(root.Position,origin+Vector3.new(0,1,0)-root.Position,params) then return false end
+			local right=CFrame.lookAt(position,target).RightVector*math.max(size.X,size.Z)*.5
+			for _,point in ipairs({target,origin+Vector3.new(0,.25,0),target+Vector3.new(0,size.Y*.5,0),target-right,target+right,origin+Vector3.new(0,.12,0)-right,origin+Vector3.new(0,.12,0)+right})do
+				if workspace:Raycast(position,point-position,params)
+					or PetGreetingShot.segmentBlocked(position,point,visualBlocks) then return false end
+			end
+			return true
+		end,
+	})
+	-- Local visual diagnostics are read-only presentation evidence, never rewards.
+	self.pet.model:SetAttribute("GreetingPlanMs", (os.clock() - started) * 1000)
+	self.pet.model:SetAttribute("GreetingCandidates", candidates)
+	self.pet.model:SetAttribute("GreetingGroundQueries", groundQueries)
+	self.pet.model:SetAttribute("GreetingVisualBlockers", #visualBlocks)
+	self.pet.model:SetAttribute("GreetingAccepted", plan ~= nil)
+	-- Missing/blocked/streamed scenery leaves roaming and interaction usable.
+	if not plan then return false end
+	self:cancelCameraTween()
+	self.greetingCamera=PetGreetingShot.capture(camera,root)
+	self.greetingCamera.pet,self.greetingCamera.petOrigin,self.greetingCamera.petYaw=self.pet,self.pet.origin,self.pet.yaw
+	self.focusing,self.menuOpen=true,false
+	self.focusMotion,self.followState=nil,nil
+	self.greetButton.Text="Roam"
+	self.focusEpoch=(self.focusEpoch or 0)+1
+	local epoch=self.focusEpoch
+	-- Stage both in one callback. Only FOV settles; no lens path crosses the pet.
+	self.pet.origin,self.pet.yaw=plan.origin,plan.yaw
+	if not self.reduceEffects() then self.pet:greet() end
+	self.pet.lastFrame = -1
+	self.pet:update(0)
+	camera.CameraType=Enum.CameraType.Scriptable
+	camera.CFrame,camera.Focus=plan.camera,CFrame.new(plan.target)
+	camera.FieldOfView=if self.reduceEffects() then plan.fov else 48
+	self:updateControls()
+	self.audio:play(self.shownPet.cue)
+	if not self.reduceEffects() then self.cameraTween=tween(camera,.20,{FieldOfView=plan.fov}) end
+	task.delay(2.8,function()
+		if self.mode=="Room" and not self.busy and self.focusing and self.focusEpoch==epoch
+			and workspace.CurrentCamera==camera and Players.LocalPlayer.Character==character then self:useRoomCamera(false) end
 	end)
+	return true
 end
 
 function Room:show(mode, animate)
