@@ -150,6 +150,7 @@ local function reset(board, preset)
 	board.selectedFamily = board.runFamily
 	board.runDay = Nursery.public(board.nursery).dailyDay
 	board.runSequence = board.nursery.nextRunSeq
+	board.folder:SetAttribute("RunSequence", board.runSequence)
 	board.nursery.nextRunSeq += 1
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial,
 		if field then FieldRun.simulationOptions(Random.new():NextInteger(1, 2147483646)) else nil)

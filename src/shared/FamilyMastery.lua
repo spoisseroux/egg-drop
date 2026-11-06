@@ -26,14 +26,29 @@ end
 
 function Mastery.describe(points, challenges)
 	local rank = Mastery.rank(points, challenges)
-	local done = 0
-	for _, bit in pairs(Mastery.ChallengeBits) do
-		if bit32.band(challenges, bit) ~= 0 then done += 1 end
+	local missing, done = {}, 0
+	for _, condition in ipairs({
+		{ bit = Mastery.ChallengeBits.clean, title = "Clean win" },
+		{ bit = Mastery.ChallengeBits.chain, title = "Win with a chain of 3" },
+		{ bit = Mastery.ChallengeBits.score, title = "Win with 500 points" },
+	}) do
+		if bit32.band(challenges, condition.bit) ~= 0 then done += 1
+		else table.insert(missing, condition.title) end
 	end
+	local nextRank = if rank < 3 then rank + 1 else nil
+	local nextPoints = Mastery.Thresholds[math.min(rank + 1, 3)]
+	local marksRemaining = if nextRank then math.max(0, nextPoints - points) else 0
+	local nextGoal = if not nextRank then "Family mastered"
+		elseif marksRemaining > 0 then string.format("%d %s to rank %s", marksRemaining,
+			if marksRemaining == 1 then "mark" else "marks", ({ "I", "II", "III" })[nextRank])
+		else missing[1] or "Family mastered"
 	return { rank = rank, name = Mastery.Names[rank] or "Unranked", points = points,
-		nextPoints = Mastery.Thresholds[math.min(rank + 1, 3)], challenges = done, challengeGoal = 3,
+		nextPoints = nextPoints, challenges = done, challengeGoal = 3,
 		hint = if rank < 2 then "Win rounds or hatch duplicates"
-			elseif rank < 3 then "25 marks + clean win, chain 3 and score 500" else "Family mastered" }
+			elseif rank < 3 then "25 marks + clean win, chain 3 and score 500" else "Family mastered",
+		nextRank = nextRank, marksRemaining = marksRemaining, missingChallenges = missing, nextGoal = nextGoal,
+		rewardHint = if rank == 0 then "Next: family badge" elseif rank == 1 then "Next: outlined family crest"
+			elseif rank == 2 then "Next: blooming family effect" else "Bloom family effect unlocked" }
 end
 
 function Mastery.challengeMask(summary)

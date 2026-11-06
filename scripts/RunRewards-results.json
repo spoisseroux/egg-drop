@@ -1,0 +1,117 @@
+{
+  "date": "2026-11-06",
+  "runtime": "Roblox Studio native Client/Server",
+  "kind": "Developer-authored UI walkthroughs, presentation fixtures and input emulation",
+  "livePersistenceVerified": false,
+  "physicalPhoneVerified": false,
+  "physicalControllerVerified": false,
+  "physicalTouchVerified": false,
+  "liveMultiplayerVerified": false,
+  "regressions": {
+    "transaction": 21,
+    "closeDrain": 2,
+    "onboardingPresentation": 7,
+    "hatchActions": 17,
+    "runGoalsAndReceiptFence": 8,
+    "rewardPresentation": 10
+  },
+  "build": {
+    "rojo": "pass",
+    "compiledSources": 48,
+    "sourceMatches": 6,
+    "temporaryEditFixtures": 0
+  },
+  "actualUIRounds": [
+    {
+      "drops": 24,
+      "success": true,
+      "clean": true,
+      "score": 670,
+      "chain": 5,
+      "base": 8,
+      "dailyContracts": 6,
+      "total": 14,
+      "balanceBefore": 6,
+      "balanceAfter": 20,
+      "family": "pip",
+      "familyMarks": 2,
+      "nextGoal": "1 mark to rank I",
+      "earnedContracts": [
+        "chain",
+        "score"
+      ],
+      "subsequentPurchase": {
+        "recipe": "meadow",
+        "cost": 18,
+        "balanceAfter": 2,
+        "pet": "foxfire_wick",
+        "inventoryMask": 33,
+        "meetConfirmedCompanion": "foxfire_wick",
+        "pendingRevealAfterMeet": false
+      }
+    },
+    {
+      "drops": 24,
+      "success": true,
+      "clean": false,
+      "score": 640,
+      "chain": 3,
+      "base": 6,
+      "dailyContracts": 6,
+      "total": 12,
+      "balanceBefore": 6,
+      "balanceAfter": 18,
+      "family": "pip",
+      "familyMarks": 1,
+      "earnedContracts": [
+        "chain",
+        "score"
+      ],
+      "inputChecks": {
+        "DPadRightSelected": "KeepPlaying",
+        "DPadLeftSelected": "Continue",
+        "DPadDownReached": 140,
+        "DPadUpReached": 0,
+        "receiptScrollMaximum": 140
+      },
+      "replay": {
+        "sequence": 3,
+        "priorReceiptSequence": 2,
+        "recapVisible": false,
+        "acceptedDrops": 2,
+        "balanceUnchanged": 18
+      }
+    }
+  ],
+  "inputEvidence": [
+    "Actual Studio mouse A, hatch/meet/menu/Daily/Mastery and recap buttons",
+    "Mouse wheel moved actual receipt from bottom140 to top0",
+    "Studio MCP D-pad key injections scroll and explicitly select both footer actions; injected events report Keyboard type, not physical-controller hardware"
+  ],
+  "compactActualComponentFixture": {
+    "safeContent": [
+      568,
+      160
+    ],
+    "dialogHeight": 128,
+    "rowHeight": 14,
+    "scrollViewport": 14,
+    "footerHeights": [
+      44,
+      44
+    ],
+    "headingBottomEqualsReceiptPanelTop": true,
+    "allRowsTextFit": true,
+    "lastRowBottomEqualsViewportBottom": true,
+    "maximumScroll": 112,
+    "notPhysicalPhoneEvidence": true
+  },
+  "review": "Astra architecture and final code GO; compact title overlap, ZIndex, post-bank overflow guidance and explicit footer navigation fixed",
+  "limits": [
+    "No simulation/economy/storage/pity changes; previous solver benchmark not rerun",
+    "128px dialog uses one 14px single-line receipt viewport; physical thumb comfort/readability unverified",
+    "Pip family glyph rendered as a square in native menu screenshot; vector crest polish remains",
+    "EditableImage fallback and existing asset203785492 mismatch warnings remain; final play had no runtime Luau errors",
+    "Fun, retention and human comprehension not proven"
+  ]
+}

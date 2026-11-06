@@ -32,6 +32,7 @@ local Art = require(script.DeckArt)
 local HollowClock = require(script.HollowClock)
 local NurseryView = require(script.EggHatchView)
 local HatchNavigation = require(script.HatchNavigation)
+local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
@@ -979,8 +980,9 @@ local function updateHud()
 		elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	recap.frame.Visible = over
 	if wasRecap ~= over then
-		modalTitle.Size = UDim2.new(1, 0, 0, if over then 28 else 35)
+		modalTitle.Size = UDim2.new(1, 0, 0, if over then 22 else 35)
 	end
+	local runReceipt = RunReceipt.select(nurseryState, board:GetAttribute("RunSequence"), board:GetAttribute("RewardStatus"), over)
 	if over then
 		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
 		if nurseryActive and owned > 0 then
@@ -988,6 +990,8 @@ local function updateHud()
 				stage = board:GetAttribute("FieldFinalStage") or 0, status = board:GetAttribute("RewardStatus"),
 				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
 				balance = nurseryState and nurseryState.nectar or 0,
+				reward = runReceipt, receiptPending = board:GetAttribute("RewardStatus") == "Saved" and not runReceipt,
+				mastery = runReceipt and nurseryState.masteryDetails and nurseryState.masteryDetails[runReceipt.family],
 				recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow })
 		end
 	end
@@ -995,7 +999,7 @@ local function updateHud()
 		else "You hatched " .. (hatchName or "") .. "!"
 	if over and nurseryActive and owned > 0 then
 		modalTitle.Text = recap.fieldHeading or "Quest unfinished"
-		local reward = nurseryState and nurseryState.lastRunReward
+		local reward = runReceipt
 		if reward and (reward.promotedTo or 0) > 0 and (board:GetAttribute("MasteryAward") or 0) > 0 then
 			modalTag.Text = "FAMILY PROMOTION · " .. ({ "I", "II", "III" })[reward.promotedTo]
 			modalTitle.Text = (reward.family or "Pet") .. " · " .. ({ "Sprout", "Grove", "Bloom" })[reward.promotedTo]
@@ -1305,6 +1309,22 @@ local function handleControl(name, state, input)
 end
 
 local priority = Enum.ContextActionPriority.High.Value
+-- Keep footer navigation explicit while up/down reads a long saved receipt.
+ContextActionService:BindActionAtPriority("EggDropReceiptScroll", function(_, state, input)
+	if not modal.Visible or not recap.frame.Visible or not recap.hasReceipt or GuiService.MenuIsOpen
+		or UserInputService:GetFocusedTextBox() then return Enum.ContextActionResult.Pass end
+	if state == Enum.UserInputState.Begin then
+		local key = input.KeyCode
+		if key == Enum.KeyCode.DPadLeft or key == Enum.KeyCode.DPadRight then
+			GuiService.SelectedObject = if key == Enum.KeyCode.DPadRight and keepPlaying.Visible and keepPlaying.Interactable
+				then keepPlaying else modalAction
+		else
+			recap:scrollReceipt(if key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.PageUp then -1 else 1)
+		end
+	end
+	return Enum.ContextActionResult.Sink
+end, false, priority, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown, Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight,
+	Enum.KeyCode.PageUp, Enum.KeyCode.PageDown)
 ContextActionService:BindActionAtPriority("EggDropLeft", handleControl, false, priority,
 	Enum.KeyCode.Left, Enum.KeyCode.A, Enum.KeyCode.DPadLeft)
 ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, priority,

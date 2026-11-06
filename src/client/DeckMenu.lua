@@ -56,18 +56,18 @@ function Menu.new(parent, callbacks)
 	local familyNote = text(body, "FamilyNote", "Pick a family for your NEXT round. Wins +1, clean wins +2; duplicates +1.", 502, 36, Art.Muted, 12)
 	local families, familyText, familyHints = {}, {}, {}
 	for index, family in ipairs(Catalog.Families) do
-		local y = 545 + (index - 1) * 88
+		local y = 545 + (index - 1) * 132
 		families[family] = button(body, "Family_" .. family, symbols[family] .. " " .. names[family], 0, y, .44, function() callbacks.family(family) end)
 		familyText[family] = text(body, "Progress_" .. family, "Not discovered", y, 44, Art.Silver, 12)
 		familyText[family].Position, familyText[family].Size = UDim2.new(.44, 4, 0, y), UDim2.new(.56, -12, 0, 44)
-		familyHints[family] = text(body, "Reward_" .. family, "I badge · II finish · III family effect", y + 47, 30, Art.Muted, 11)
+		familyHints[family] = text(body, "Reward_" .. family, "I badge · II finish · III family effect", y + 47, 78, Art.Muted, 11)
 	end
 	text(body, "ScoreExplanation", "Score and chains measure your run and complete contracts. Nectar buys eggs. Prestige shows family mastery.", 905, 48, Art.Muted, 12)
 	text(body, "QuestExplanation", "QUEST: II + II makes III. Merge on the glowing LEFT side, then RIGHT. Larger matching pairs count too.", 961, 56, Art.Leaf, 12)
 	body.CanvasSize = UDim2.fromOffset(0, 1028)
 	-- Pinned page tabs keep daily contracts and mastery reachable on short phones.
 	local pages, tabs = {}, {}
-	for index, entry in ipairs({ { "play", "Play", 360 }, { "daily", "Daily", 220 }, { "mastery", "Mastery", 430 } }) do
+	for index, entry in ipairs({ { "play", "Play", 360 }, { "daily", "Daily", 220 }, { "mastery", "Mastery", 608 } }) do
 		local page = Art.frame(body, entry[1], Art.Ink, UDim2.fromOffset(0, 0), UDim2.new(1, -5, 0, entry[3]), 31)
 		page.BackgroundTransparency, page.Visible = 1, entry[1] == "play"
 		pages[entry[1]] = page
@@ -138,14 +138,22 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 			if (pet.family or pet.id) == family and Catalog.isOwned(state.inventoryMask, pet.id) then owned = true end
 		end
 		local points = state.mastery and state.mastery[family] or 0
-		local rank = state.masteryRanks and state.masteryRanks[family] or 0
 		local detail = state.masteryDetails and state.masteryDetails[family]
-		self.familyHints[family].Text = if detail and rank >= 2 then string.format("III needs: clean win, chain 3, score 500 · %d/3 done", detail.challenges or 0) else "I badge · II finish · III family effect"
+		local rank = if detail then detail.rank else (state.masteryRanks and state.masteryRanks[family] or 0)
+		local nextGoal = if detail then detail.nextGoal else nil
+		local missing = if detail then detail.missingChallenges else nil
+		self.familyHints[family].Text = if not owned then "Hatch a member of this family to begin mastery."
+			elseif rank >= 3 then "Family mastered\nBloom family effect unlocked"
+			elseif nextGoal then "Next: " .. nextGoal
+				.. (if rank == 2 and missing and #missing > 0 then "\nStill needed: " .. table.concat(missing, " · ") else "")
+				.. (if detail.rewardHint then "\n" .. detail.rewardHint else "")
+			else "I badge · II finish · III family effect"
 		b.Interactable, b.BackgroundColor3 = owned and state.status == "Ready", if selected == family then Art.Canopy else Art.Raised
 		b.Text = symbols[family] .. " " .. names[family] .. (if selected == family then " ✓" else "")
-		self.familyText[family].Text = if not owned then "Discover a family member in eggs" else
+		self.familyText[family].Text = if not owned then "Discover a family member in eggs"
+			elseif rank >= 3 then string.format("Rank III · mastered\n%d total marks", points) else
 			string.format("Rank %s · %d/%d marks%s", ({[0]="—", "I", "II", "III"})[rank] or "III", points,
-				if rank == 0 then 3 elseif rank == 1 then 10 else 25, if points >= 25 and rank < 3 then " · complete 3 challenges" else "")
+				if rank == 0 then 3 elseif rank == 1 then 10 else 25, "")
 	end
 	self.familyNote.Text = "Next: " .. (names[selected] or "Pip") .. " · This round: " .. (names[runFamily] or "Pip") .. ". Wins +1, clean +2; duplicates +1."
 	self.card:SetAttribute("RunScore", score or 0); self.card:SetAttribute("RunChain", chain or 0); self.card:SetAttribute("PersonalBest", best or 0)
@@ -155,7 +163,7 @@ function Menu:setPage(key)
 	for name, page in pairs(self.pages) do page.Visible = name == key end
 	for name, tab in pairs(self.tabs) do tab.BackgroundColor3 = if name == key then Art.Canopy else Art.Raised end
 	self.body.CanvasPosition = Vector2.zero
-	self.body.CanvasSize = UDim2.fromOffset(0, ({ play = 360, daily = 220, mastery = 430 })[key] or 360)
+	self.body.CanvasSize = UDim2.fromOffset(0, ({ play = 360, daily = 220, mastery = 608 })[key] or 360)
 end
 
 function Menu:open()

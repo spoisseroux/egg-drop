@@ -225,3 +225,10 @@ Seven native Studio presentation regression cases passed. A developer-authored k
 After the committed cinematic, choose Meet [pet] or Play again. Both acknowledge that exact result once; Meet waits for server-confirmed equip before greeting, while Play returns to the board. Close preserves the result for later and cancels delayed routing. Duplicates show +1 family mark and next-rank progress, preserving promotion announcements. Pre-dispatch save/throttle locks retry only the captured acknowledgment, at most three automatic retries; purchases are never resent by this UI.
 
 Native Studio passed17 new hatch-action and10 navigation race cases, plus existing21 transaction/2 close/7 onboarding cases. Actual mouse checks covered Meet Pip, replay with A0→2 accepted drops, and mid-crack Close/reopen with the same hatch ID and unchanged6 nectar. Evidence/limits: `scripts/HatchActions-results.json`. Live persistence/phone/multiplayer remain unverified.
+
+
+## Understand the earned reward, 2026-11-06 overnight
+
+The recap now pins nectar earned and egg-bank progress, then itemizes quest nectar, each completed daily contract, family marks and the played family's next mastery goal. Only a Saved receipt matching the current run sequence can announce a reward or promotion. A delayed display snapshot cannot lock replay. Menu mastery names the actual missing win condition at rankII and marks rankIII mastered. D-pad up/down or PageUp/PageDown scroll the receipt; D-pad left/right selects Try again/Hatch eggs. Mouse wheel scrolls normally.
+
+Native fixtures passed8 goal/receipt and10 presentation cases plus transaction/close/onboarding/hatch regressions. Actual UI completed clean8+daily6 and ordinary6+daily6 rounds; the former bought Meadow, hatched Foxfire Wick and equipped it through Meet. Emulated D-pad/wheel and actual compact-component layout passed; physical phone/controller/touch, live persistence, multiplayer and human retention remain unproven. Evidence: `scripts/RunRewards-results.json`.

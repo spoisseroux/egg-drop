@@ -85,3 +85,23 @@ Limits: 128px safe-height fixtures prove controls fit, not full cinematic readab
 Implementation `9446370` is pushed. Next coherent slice: show the next specific mastery requirement and itemized daily-contract recap receipts using authoritative progress. Keep physics/prices fixed.
 
 Hatch destination checkpoint: private place96451847774961 now shows **version20 Published** in native Version History after the tested publish. Studio is Edit, Rojo egg-drop/localhost34873 remains connected, and no temporary test modules are present in the Edit publish tree. Implementation9446370 and evidence5038952 are pushed.
+
+
+## 04:05 slice plan — explain rewards and the next family goal
+
+Astra architecture GO: expose current RunSequence and gate every recap receipt/promotion on Saved + matching lastRunReward.sequence + completed field. Derive named contract awards from canonical definitions (including previous-day receipts), and use the run's locked family for next mastery progress. If Saved arrives before its display snapshot, show Loading receipt while keeping replay available. Extend FamilyMastery.describe with the actual next missing marks/challenges and completed-rank text. Keep existing describe keys for hatches. Daily skill contracts can reward full-length losses; mastery challenges explicitly require wins. Preserve prices, payouts, storage, pity, simulation and nursery deferral.
+
+Verify all rank/flag combinations, rankII25marks missing only chain, stale equal-value receipt, late Saved snapshot, daily-only failure, allthree contracts, another family selected, completedrankIII, compact128–236px recaps and scroll reachability. Test native transactions/close regression, actual UI controls and console. Finish review/build/tests before commit/push/private publish.
+
+
+## 04:05 wake — named round rewards and specific mastery goals completed
+
+Recaps now use the matching Saved run receipt for every total, named daily-contract component, family mark and promotion. RunSequence fences equal-value receipts from previous rounds. Saved arriving before its display snapshot shows Loading receipt without blocking replay. The total and committed egg bank stay pinned; quest/daily components appear first, with a scrollable breakdown and the played family's next goal. Early ranks name remaining marks; rankII lists only missing WIN conditions. RankIII says mastered rather than an overfull25-mark progress fraction. The Menu preserves next-run versus current-family selection.
+
+Astra plan/final implementation review passed after fixing compact title overlap, receipt draw order, guidance after overflow with both banks completed, and explicit D-pad footer navigation. Native results:21 transaction,2 close-drain,7 onboarding,17 hatch-action,8 goals/receipt-fence and10 reward-presentation cases passed. All48 production sources compile and six changed production sources match the checkout; Rojo builds. No temporary fixtures remain in Edit.
+
+Two actual mouse/keyboard Studio rounds used24 drops and completed both sides. First: score670/chain5, base8 + contracts6 =14 nectar, balance6→20, two Pip marks. Actual Meadow purchase spent18 once, hatched rare Foxfire Wick, left2 nectar and Meet equipped that exact pet. Second on the final UI: score640/chain3, base6 + contracts6 =12, balance6→18, one Pip mark. Daily showed chain/score earned and the two-win goal1/2; Mastery showed Pip's exact next mark and the newly discovered Wick family. Replay advanced sequence2→3 while retaining receipt2, hid recap and accepted two A drops without changing nectar.
+
+Actual receipt mouse wheel and Studio-injected D-pad keys reached top/bottom and selected both44px footer actions. MCP's injected D-pad reports Keyboard input, so this is emulated navigation, not hardware-controller evidence. A runtime layout fixture resized the actual component to568×160 safe content: dialog128, complete14px row/viewport, title ends exactly before receipt, both44px footers, every row TextFits, final row reaches viewport bottom. Physical phone/touch/controller comfort remains unverified. Raw details: `scripts/RunRewards-results.json`. Previous solver data was not rerun because physics/rewards are unchanged. Existing EditableImage/asset203785492 warnings persist without final-play Luau errors; Pip's symbol still renders as a square and is a future vector-crest polish item.
+
+Next coherent slice: useful lounge destination/journal interaction and recognizable family crests, with no new room or currency. Keep nursery deferred; live save/rejoin and live multiplayer remain unverified.
