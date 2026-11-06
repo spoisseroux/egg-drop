@@ -16,6 +16,7 @@ local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 local Trials = require(ReplicatedStorage.Shared.PocketTrials)
 local Settings = require(ReplicatedStorage.Shared.DeckSettings)
+local EggCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local Jelly = require(script.JellyVisual)
 local Sprite = require(script.JellySprite)
 local JellyLCD = require(script.JellyLCD)
@@ -31,6 +32,7 @@ local Art = require(script.DeckArt)
 local HollowClock = require(script.HollowClock)
 local NurseryView = require(script.EggHatchView)
 local Portrait = require(script.PetPortrait)
+local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
 HollowClock.start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -82,11 +84,19 @@ do
 	make("UITextSizeConstraint", "BannerText", { MinTextSize = 9, MaxTextSize = 12 }, notice)
 	local function showSaveStatus()
 		local state = board:GetAttribute("SaveStatus")
-		notice.Visible = state == "Temporary" or state == "Retrying"
+		local encoded = board:GetAttribute("HatchState")
+		if type(encoded) == "string" then
+			local ok, value = pcall(HttpService.JSONDecode, HttpService, encoded)
+			if ok and value.status ~= "Ready" and value.status ~= "Busy" then state = value.status end
+		end
+		notice.Visible = state ~= nil and state ~= "Ready" and state ~= "Busy"
 		notice.Text = if state == "Temporary" then "Save unavailable · progress won't carry over"
-			elseif state == "Retrying" then "Progress hasn't saved yet · retrying" else ""
+			elseif state == "Retrying" then "Saving progress · retrying, please wait"
+			elseif state == "Locked" then "Waiting for previous session to close…"
+			elseif state then "Hatch save unavailable · rejoin to continue" else ""
 	end
 	board:GetAttributeChangedSignal("SaveStatus"):Connect(showSaveStatus)
+	board:GetAttributeChangedSignal("HatchState"):Connect(showSaveStatus)
 	showSaveStatus()
 end
 local bleed = make("ScreenGui", "EggDropBleed", {
@@ -287,7 +297,7 @@ local meter = make("Frame", "HatchTrack", {
 Art.corner(meter, 3)
 Art.stroke(meter, Art.Line)
 local segments = {}
-local maxCharge = 12
+local maxCharge = 24
 for index = 1, maxCharge do
 	segments[index] = make("Frame", "Cell", {
 		Position = UDim2.new((index - 1) / maxCharge, 1, 1, -6),
@@ -297,8 +307,9 @@ for index = 1, maxCharge do
 end
 local meterText = label("TextLabel", "MeterText", "", meter)
 meterText.Font = Enum.Font.Code
-meterText.Size = UDim2.new(1, 0, 1, -6)
-meterText.TextSize = 13
+meterText.Size = UDim2.new(0, 62, 1, 0)
+meterText.Position = UDim2.new(1, -64, 0, 0)
+meterText.TextSize = 12
 meterText.TextColor3 = Palette.Paper
 meterText.TextStrokeColor3 = Palette.Ink
 meterText.TextStrokeTransparency = 0
@@ -306,13 +317,27 @@ local rareGoal = Art.text(backdrop, "RareGoal", "", UDim2.fromOffset(0, 0),
 	UDim2.fromOffset(0, 0), Art.Cyan, 12, Enum.Font.GothamMedium)
 rareGoal.TextScaled = true
 rareGoal.TextWrapped = true
+rareGoal.ClipsDescendants = true
 rareGoal.BackgroundColor3 = Art.Ink
 Art.corner(rareGoal, 5)
 make("UITextSizeConstraint", "ReadoutSize", { MinTextSize = 8, MaxTextSize = 12 }, rareGoal)
+local eggGoal = Art.frame(backdrop, "EggGoal", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(120, 70), 2)
+eggGoal.BackgroundTransparency = 1
+local goalEgg = Art.frame(eggGoal, "Egg", Art.Leaf, UDim2.fromOffset(8, 6), UDim2.fromOffset(25, 34), 2)
+Art.corner(goalEgg, 20); Art.stroke(goalEgg, Art.Silver, .3)
+local eggGoalText = Art.text(eggGoal, "Caption", "MEADOW EGG", UDim2.fromOffset(40, 3), UDim2.new(1, -42, 0, 42), Art.Ink, 12)
+eggGoalText.TextXAlignment = Enum.TextXAlignment.Left
+Art.fitText(eggGoalText, 13, 9, 0, true)
 local overflowLine = make("Frame", "OverflowLine", {
 	BackgroundColor3 = Palette.Amber, BackgroundTransparency = 0.45,
 	BorderSizePixel = 0, ZIndex = 2,
 }, overlay)
+local pressureTrack = Art.frame(overlay, "DangerTrack", Art.Ink, UDim2.new(1, -7, 0, 4), UDim2.new(0, 4, .22, 0), 7)
+local pressureFill = Art.frame(pressureTrack, "Fill", Art.Amber, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
+pressureFill.AnchorPoint = Vector2.new(0, 1)
+pressureTrack.Visible = false
+local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Art.Amber, 11)
+pressureText.Visible = false
 local targetRing = make("Frame", "MatchHint", {
 	AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, ZIndex = 4,
 }, overlay)
@@ -401,6 +426,9 @@ local nurseryView
 local nurseryState
 local openNursery
 local trackedRare
+local gameMenu
+local openMenu
+local closeMenu
 local function isPickerOpen()
 	return picker.shade.Visible
 end
@@ -411,7 +439,7 @@ end, function()
 end, function()
 	openJournal()
 end, function()
-	return isPickerOpen() or journal.shade.Visible or (nurseryView and nurseryView:isOpen())
+	return isPickerOpen() or journal.shade.Visible or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
 do
 	local handoff = gui.DeckHandoff
@@ -448,13 +476,14 @@ end, function(pet)
 end)
 board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 	local pet = Pets.byId[board:GetAttribute("CompanionId")]
-	if pet and roomView.controls.Visible and board:GetAttribute("Mode") == "Room" then
+	if pet and board:GetAttribute("Mode") == "Room" then
 		roomView:showPet(pet)
 		audio:play(pet.cue)
 	end
 end)
 roomButton.Activated:Connect(function()
 	if not isPickerOpen() then
+		roomView:collapseControls()
 		roomView:requestSwitch(function()
 			if not isPickerOpen() then
 				request:FireServer("mode", "Room")
@@ -559,7 +588,9 @@ end
 
 local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible
+		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 		and not (nurseryView and nurseryView:isOpen()) and board:GetAttribute("FieldPhase") ~= "Settling"
+		and not board:GetAttribute("RoundOver")
 end
 
 local function isGamepad(inputType)
@@ -615,7 +646,7 @@ local function visitEggs()
 		openNursery()
 	end)
 end
-eggButton.Activated:Connect(function() if not modal.Visible then visitEggs() end end)
+eggButton.Visible = false
 local shownNurseryHatch
 local function refreshNursery()
 	local encoded = board:GetAttribute("HatchState")
@@ -642,6 +673,27 @@ nurseryFeedback.OnClientEvent:Connect(function(kind, message)
 end)
 refreshNursery()
 
+gameMenu = DeckMenu.new(safeOverlays, {
+	close = function() closeMenu() end,
+	eggs = function() closeMenu(); visitEggs() end,
+	pets = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then openJournal() else
+		request:FireServer("mode", "Room"); task.delay(.9, function() if board:GetAttribute("Mode") == "Room" then openJournal() end end) end end,
+	style = function() closeMenu(); openPicker() end,
+	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
+	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
+	family = function(family) request:FireServer("family", family) end,
+})
+closeMenu = function()
+	gameMenu:close(); roomView:setMenuOpen(false)
+	end
+openMenu = function()
+	if roomView.busy or modal.Visible or nurseryView:isOpen() then return end
+	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
+	gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
+	gameMenu:open(); audio:play("menu")
+end
+roomView.onOpenMenu = openMenu
+
 do
 	local handoff = safeOverlays.DeckHandoff
 	local function alignSafeContent()
@@ -650,9 +702,10 @@ do
 		safeOverlays.Size = UDim2.fromOffset(backdrop.AbsoluteSize.X, backdrop.AbsoluteSize.Y)
 	end
 	local function updateShade()
-		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen()
+		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible
+		request:FireServer("pause", modalShade.Visible)
 	end
-	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade }) do
+	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade }) do
 		node:GetPropertyChangedSignal("Visible"):Connect(updateShade)
 	end
 	-- Handoff must cover overlays as well as the board during a mode switch.
@@ -692,7 +745,7 @@ openJournal = function()
 end
 ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)
 	if playerWhoTriggered ~= player or board:GetAttribute("Mode") ~= "Room" or roomView.busy
-		or isPickerOpen() or journal.shade.Visible then
+		or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible or roomView.focusing then
 		return
 	end
 	local station = prompt:GetAttribute("PocketClubStation")
@@ -707,14 +760,18 @@ task.spawn(function()
 	local function updatePrompts()
 		for _, object in ipairs(lounge:GetDescendants()) do
 			if object:IsA("ProximityPrompt") and object:GetAttribute("PocketClubStation") then
-				object.Enabled = board:GetAttribute("Mode") == "Room"
+				object.Enabled = board:GetAttribute("Mode") == "Room" and not roomView.busy and not roomView.focusing
+					and not modal.Visible and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
 			end
 		end
 	end
 	board:GetAttributeChangedSignal("Mode"):Connect(updatePrompts)
+	for _, overlay in ipairs({ picker.shade, journal.shade, nurseryView.shade, gameMenu.shade, roomView.controls }) do
+		overlay:GetPropertyChangedSignal("Visible"):Connect(updatePrompts)
+	end
 	updatePrompts()
 end)
-customizeButton.Activated:Connect(openPicker)
+customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
 local function repaintEquipped()
 	task.defer(function()
 		if not isPickerOpen() then
@@ -750,7 +807,7 @@ local function drawAim()
 	nextReadout.Text = Config.Tiers[tier].mark .. " · " .. Config.Tiers[board:GetAttribute("PreviewTier1") or 1].mark
 		.. " · " .. Config.Tiers[board:GetAttribute("PreviewTier2") or 1].mark
 	nextReadout.TextColor3 = Config.Tiers[tier].color
-	local overflow = project(Vector2.new(0, Config.OverflowY))
+	local overflow = project(Vector2.new(0, board:GetAttribute("DangerY") or Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
 	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
 end
@@ -814,20 +871,22 @@ local function updateHud()
 	end
 	local hatchPet = hatchQueue[1]
 	local hatchName = if hatchPet then hatchPet.name else nil
-	local target = if nextPet then nextPet.charge else #Pets
-	local filled = if nextPet then charge else owned
-	local cells = math.min(maxCharge, target)
+	local budget = board:GetAttribute("FieldBudget") or 24
+	local remaining = math.max(0, budget - drops)
 	for index, cell in ipairs(segments) do
-		cell.Visible = index <= cells
-		if cell.Visible then
-			cell.Position = UDim2.new((index - 1) / cells, 1, 1, -6)
-			cell.Size = UDim2.new(1 / cells, -2, 0, 4)
-			cell.BackgroundColor3 = if index <= math.floor(filled * cells / target) then Art.Amber else Art.Line
-		end
+		cell.Visible = owned > 0 and index <= budget
+		cell.Position = UDim2.new((index - 1) / budget, 1, .5, -3)
+		cell.Size = UDim2.new(1 / budget, -2, 0, 6)
+		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
-	meterText.Text = if nextPet then string.format("%s   %d / %d", nextPet.name, charge, nextPet.charge)
-		elseif nurseryActive then string.format("Nectar  %d", if nurseryState then nurseryState.nectar or 0 else 0)
-		else string.format("Collection   %d / %d", Pets.ownedCount(owned, mask, board:GetAttribute("InventoryMask")), #Pets.collection)
+	-- Reserve the right end for the numeric skee-ball-style counter.
+	for _, cell in ipairs(segments) do
+		cell.Position = UDim2.new(cell.Position.X.Scale * (1 - 66 / math.max(80, meter.AbsoluteSize.X)), 2, .5, -3)
+		cell.Size = UDim2.new(cell.Size.X.Scale * (1 - 66 / math.max(80, meter.AbsoluteSize.X)), -2, 0, 6)
+	end
+	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
+	eggGoal.Visible = owned > 0 and shell.AbsoluteSize.Y >= 260
+	eggGoalText.Text = string.format("MEADOW EGG\n%d/18 nectar", nurseryState and nurseryState.nectar or 0)
 	rareGoal.Visible = owned > 0
 	local rareProgress = 0
 	if nextRare then
@@ -842,9 +901,10 @@ local function updateHud()
 	if nurseryActive and owned > 0 then
 		local stage = board:GetAttribute("FieldStage") or 0
 		local phase = board:GetAttribute("FieldPhase")
-		rareGoal.Text = if phase == "Settling" then "Let the jellies settle…"
-			else string.format("%s\n%d / 24 drops", if stage == 0 then "Merge III+ in LEFT patch"
-				elseif stage == 1 then "Now merge III+ in RIGHT" else "Roots complete · keep it low", drops)
+		rareGoal.Text = if phase == "Settling" then "QUEST · settling…"
+			elseif stage == 0 then "QUEST 1/2\nII + II on LEFT"
+			elseif stage == 1 then "QUEST 2/2\nII + II on RIGHT"
+			else "QUEST ✓\nKeep pile low"
 	end
 	local mode = board:GetAttribute("Mode")
 	for index, item in ipairs(fieldZones) do
@@ -868,7 +928,7 @@ local function updateHud()
 	status.TextColor3 = if lesson then Art.Silver else title.TextColor3
 	status.ReadoutSize.MaxTextSize = if lesson then 16 else 13
 	status.Text = if lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
-		then trialNotice else string.format("%d pts   ·   Chain ×%d", score, chain)
+		then trialNotice else "Win quest +6 nectar\nLow pile +2 bonus"
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
 	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
@@ -883,19 +943,26 @@ local function updateHud()
 		if nurseryActive then
 			local award = board:GetAttribute("NectarAward") or 0
 			local rewardStatus = board:GetAttribute("RewardStatus")
-			recap.title.Text = if board:GetAttribute("FieldSuccess") then "Roots restored · +" .. award .. " nectar" else "Field run · try another route"
-				recap.detail.Text = if rewardStatus == "Saving" then "Saving your nectar…" elseif award > 0 then "Choose an egg with your earned nectar"
-				else "Make III+ merges in left, then right patch"
+			recap.title.Text = if award > 0 then "+" .. award .. " nectar earned" else "Quest unfinished · try again"
+				recap.detail.Text = if rewardStatus == "Saving" then "Saving your nectar…" elseif award > 0 then string.format("Quest +%d · daily +%d · mastery +%d", math.max(0, award - (board:GetAttribute("DailyAward") or 0)), board:GetAttribute("DailyAward") or 0, board:GetAttribute("MasteryAward") or 0)
+				else "Merge matching jellies to III+ at ← then →"
 			recap.fill.Parent.Visible = false
 		end
 	end
 	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
 		else "You hatched " .. (hatchName or "") .. "!"
 	if over and nurseryActive then
-		modalTitle.Text = if board:GetAttribute("FieldSuccess") then "Field run complete!" else "Route unfinished"
+		modalTitle.Text = if board:GetAttribute("FieldSuccess") then "Quest complete!" else "Quest unfinished"
+		local reward = nurseryState and nurseryState.lastRunReward
+		if reward and (reward.promotedTo or 0) > 0 and (board:GetAttribute("MasteryAward") or 0) > 0 then
+			modalTag.Text = "FAMILY PROMOTION · " .. ({ "I", "II", "III" })[reward.promotedTo]
+			modalTitle.Text = (reward.family or "Pet") .. " · " .. ({ "Sprout", "Grove", "Bloom" })[reward.promotedTo]
+		end
 	end
-	readout.Text = tostring(score)
-	bestReadout.Text = "BEST " .. best
+	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
+	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
+	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
+	if gameMenu then gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
 	modalAction.Text = if over then "Try again" else "Meet " .. (hatchName or "")
 	local showEggChoice = over and nurseryActive and owned > 0
 	modalAction.Position = UDim2.new(if over and not showEggChoice then 0.09 else 0.05, 0, 1, -52)
@@ -910,6 +977,7 @@ local function updateHud()
 	rail.Interactable = canAim() and not isPickerOpen()
 	action.Interactable = canPlay()
 	dropCaption.Text = if board:GetAttribute("FieldPhase") == "Settling" then "SETTLE"
+		elseif nurseryState and nurseryState.status ~= "Ready" then "SAVE WAIT"
 		elseif board:GetAttribute("FieldReady") == false then "FALLING" else "DROP"
 	local unlocked = owned > 0
 	roomButton.Interactable = unlocked and not modal.Visible
@@ -1010,9 +1078,10 @@ local function layout()
 	rail.Size = UDim2.fromOffset(width, 44)
 	local compact = width < 175
 	mascot.Visible = not compact
-	scoreCaption.Visible = width >= 290
-	local readoutLeft = if compact then 5 else 37
-	local readoutInset = if compact then -53 else -117
+	scoreCaption.Visible = false
+	local readoutLeft = if compact then 5 else 9
+	mascot.Visible = false
+	local readoutInset = if compact then -53 else -90
 	readout.Position = UDim2.fromOffset(readoutLeft, 3)
 	readout.Size = UDim2.new(1, readoutInset, 0, 21)
 	readout.TextSize = if compact then 14 else 19
@@ -1036,7 +1105,10 @@ local function layout()
 	rareGoal.BackgroundTransparency = if sideGoal then 0.1 else 1
 	rareGoal.Position = if sideGoal then UDim2.fromOffset(left + totalWidth - grip + 6, top + 12)
 		else meter.Position + UDim2.fromOffset(0, 24)
-	rareGoal.Size = UDim2.fromOffset(if sideGoal then grip - 38 else width, 26)
+	rareGoal.Size = UDim2.fromOffset(if sideGoal then grip - 20 else width, 26)
+	eggGoal.Position = if portraitRail then UDim2.fromOffset(left + 6, top + 190) else UDim2.fromOffset(left + totalWidth - grip + 12, top + shellHeight * .18)
+	eggGoal.Size = UDim2.fromOffset(math.max(64, grip - 24), 54)
+	eggGoal.Visible = (lateral or portraitRail) and shellHeight >= 260 and (board:GetAttribute("OwnedPets") or 0) > 0
 	hardware.Position = UDim2.fromOffset(left, if lateral or portraitRail then top else trayBottom + 83)
 	hardware.Size = UDim2.fromOffset(totalWidth, if lateral or portraitRail then shellHeight else 64)
 	local dropSize = if lateral then math.clamp(math.floor(shellHeight * 0.18), 54, 100) else 48
@@ -1088,12 +1160,12 @@ local function layout()
 			else left + totalWidth * 0.5 + (if index == 1 then -105 else 5)
 		local buttonY = if lateral or portraitRail then top + utilityY + (if sideBySide then 0 else (index - 1) * 50)
 			else trayBottom + 154
-		button.Cap.Caption.Text = if index == 1 then (if sideBySide then "STYLE" else "CUSTOMIZE") else "LOUNGE"
+		button.Cap.Caption.Text = if index == 1 then "MENU" else "LOUNGE"
 		button.Cap.Caption.TextSize = if sideBySide then 10 else 12
 		button.Position = UDim2.fromOffset(buttonX, buttonY)
 		button.Size = UDim2.fromOffset(buttonWidth, 44)
 	end
-	eggButton.Visible = lateral and shellHeight >= 276
+	eggButton.Visible = false
 	eggButton.Size = UDim2.fromOffset(math.min(132, grip - 22), 44)
 	eggButton.Position = UDim2.fromOffset(left + totalWidth - grip * .5 - eggButton.Size.X.Offset / 2,
 		top + shellHeight * .25)
@@ -1163,6 +1235,7 @@ local function handleControl(name, state, input)
 	end
 	local gamepad = isGamepad(input.UserInputType)
 	if key == Enum.KeyCode.ButtonA and recap.frame.Visible and not GuiService.MenuIsOpen then
+		if GuiService.SelectedObject and GuiService.SelectedObject.Visible and GuiService.SelectedObject:IsDescendantOf(modal) then return Enum.ContextActionResult.Pass end
 		if state == Enum.UserInputState.Begin then
 			requestRetry()
 		end
@@ -1176,7 +1249,7 @@ local function handleControl(name, state, input)
 		if name == "EggDropDrop" then
 			dropEgg()
 		elseif name == "EggDropCustomize" then
-			openPicker()
+			openMenu()
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
 		end
@@ -1192,6 +1265,10 @@ ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, 
 ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
+	if gameMenu and gameMenu.shade.Visible then
+		if state == Enum.UserInputState.Begin then closeMenu() end
+		return Enum.ContextActionResult.Sink
+	end
 	if nurseryView:isOpen() then
 		if state == Enum.UserInputState.Begin then nurseryView:close() end
 		return Enum.ContextActionResult.Sink
@@ -1531,6 +1608,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	journal:close()
 	local mode = board:GetAttribute("Mode")
 	if nurseryView then nurseryView:close() end
+	if closeMenu then closeMenu() end
 	if mode == "Room" then
 		if hatchQueue[1] then
 			table.remove(hatchQueue, 1)
@@ -1565,12 +1643,18 @@ board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 end)
 board:GetAttributeChangedSignal("RoundOver"):Connect(function()
 	if board:GetAttribute("RoundOver") then
-		audio:play("overflow")
+		audio:play(if board:GetAttribute("FieldSuccess") then "charge" else "overflow")
 	end
 end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
+	-- Transition completion changes local busy state without a replicated attribute.
+	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
+	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")
+	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
+	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
+	eggGoalText.Text = string.format("%s\n%d/%d nectar", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
 	if canAim() and not isPickerOpen() and not drag and not UserInputService:GetFocusedTextBox() then
 		local direction = 0
 		for _, value in pairs(heldAim) do
@@ -1586,6 +1670,11 @@ RunService.RenderStepped:Connect(function(dt)
 		return
 	end
 	local now = os.clock()
+	local pressure = board:GetAttribute("OverflowPressure") or 0
+	pressureTrack.Visible = pressure > 0
+	pressureText.Visible = pressure > 0
+	pressureFill.Size = UDim2.fromScale(1, math.clamp(pressure, 0, 1))
+	overflowLine.BackgroundTransparency = if pressure > 0 then .05 else .55
 	local reduced = reduceEffects()
 	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
@@ -1666,7 +1755,7 @@ RunService.RenderStepped:Connect(function(dt)
 	local pixelVisible = lcd ~= nil and lcd.label.Visible
 	sprites.Visible = not pixelVisible
 	track.Visible = not pixelVisible
-	overflowLine.Visible = not pixelVisible
+	overflowLine.Visible = true
 	ghost.BackgroundTransparency = if pixelVisible then 1 else 0
 	targetRing.Visible = closest ~= nil
 	if closest then

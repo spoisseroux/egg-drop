@@ -268,5 +268,137 @@ return function(Hatching, Catalog)
 		assert(h.state.lastHatch.petId == "bloom_pip" and h.state.lastHatch.rare and h.state.misses == 0)
 	end)
 
+	local function runSummary(h, overrides)
+		local summary = { family = "pip", day = Hatching.public(h).dailyDay, success = true,
+			clean = true, score = 600, chain = 3, clears = 0, drops = 24 }
+		for key, value in pairs(overrides or {}) do summary[key] = value end
+		return summary
+	end
+
+	test("v2 mastery upgrade preserves marks, sparkles and all legacy fields", function()
+		local db, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.release(h))
+		local old = db.player_1.hatching
+		old.version, old.mastery.pip, old.mastery.wick = 2, 3, 2
+		old.masteryChallenges, old.masteryLegacyMask, old.contracts, old.totalWins = nil, nil, nil, nil
+		db.player_1.keep, old.nectar = "untouched", 47
+		h = Hatching.load(1, {}, adapter("b"))
+		assert(h.status == "Ready" and h.state.version == 3 and h.state.nectar == 47)
+		local public = Hatching.public(h)
+		assert(public.mastery.pip == 3 and public.mastery.wick == 2 and public.masteryLegacyMask == 1)
+		assert(public.masteryRanks.pip == 1 and public.masteryRanks.wick == 0)
+		assert(public.masteryChallenges.pip == 0 and public.totalWins == 0 and db.player_1.keep == "untouched")
+		assert(Hatching.release(h))
+		h = Hatching.load(1, {}, adapter("c"))
+		assert(h.state.nectar == 47 and h.state.masteryLegacyMask == 1)
+	end)
+
+	test("mastery ranks need permanent points and three distinct successful challenges", function()
+		local db, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.award(h, 1, 8, runSummary(h)))
+		assert(h.state.mastery.pip == 2 and h.state.masteryChallenges.pip == 7 and Hatching.public(h).masteryRanks.pip == 0)
+		assert(Hatching.award(h, 2, 6, runSummary(h, { clean = false })))
+		assert(h.state.mastery.pip == 3 and Hatching.public(h).masteryRanks.pip == 1)
+		db.player_1.hatching.mastery.pip, db.player_1.hatching.masteryChallenges.pip = 24, 6
+		assert(Hatching.renew(h))
+		assert(Hatching.public(h).masteryRanks.pip == 2)
+		assert(Hatching.award(h, 3, 6, runSummary(h, { clean = false, chain = 1, score = 1 })))
+		assert(h.state.mastery.pip == 25 and Hatching.public(h).masteryRanks.pip == 2)
+		assert(Hatching.award(h, 4, 8, runSummary(h, { chain = 1, score = 1 })))
+		assert(h.state.masteryChallenges.pip == 7 and Hatching.public(h).masteryRanks.pip == 3)
+		assert(h.state.lastRunReward.promotedTo == 3)
+	end)
+
+	test("daily contracts and mastery pay atomically once per run and day", function()
+		local _, c, adapter = fixture()
+		c.replay = true
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.award(h, 1, 8, runSummary(h)))
+		assert(h.state.nectar == 20 and h.state.lastRunReward.daily == 6 and h.state.lastRunReward.total == 14)
+		assert(h.state.mastery.pip == 2 and h.state.totalWins == 1)
+		assert(Hatching.award(h, 2, 8, runSummary(h)))
+		assert(h.state.nectar == 32 and h.state.lastRunReward.daily == 4 and h.state.contracts.claimedMask == 7)
+		assert(Hatching.award(h, 3, 8, runSummary(h)))
+		assert(h.state.nectar == 40 and h.state.lastRunReward.daily == 0)
+		assert(Hatching.award(h, 1, 8, runSummary(h)))
+		assert(h.state.nectar == 40 and h.state.mastery.pip == 6 and h.state.totalWins == 3)
+		local public = Hatching.public(h)
+		assert(#public.contracts == 3 and public.contracts[1].claimed and public.contracts[1].progress == 2)
+		public.contracts[1].progress, public.masteryDetails.pip.points = 0, 0
+		assert(h.state.contracts.progress.runs == 2 and h.state.mastery.pip == 6)
+	end)
+
+	test("completed-budget failures can earn skill contracts but not mastery or free wins", function()
+		local _, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.award(h, 1, 0, runSummary(h, { success = false, clean = false, drops = 3 })))
+		assert(h.state.nectar == 6 and h.state.mastery.pip == 0 and h.state.contracts.claimedMask == 0)
+		assert(Hatching.award(h, 2, 0, runSummary(h, { success = false, clean = false })))
+		assert(h.state.nectar == 12 and h.state.mastery.pip == 0 and h.state.totalWins == 0)
+		assert(h.state.contracts.progress.runs == 0 and h.state.contracts.claimedMask == 6)
+	end)
+
+	test("run start-day lock, daily rollover and rollback cannot reassign a contract", function()
+		local _, c, adapter = fixture()
+		c.now = 18000 + 86400 * 20 + 86390
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local oldRun = runSummary(h)
+		c.now += 15
+		assert(Hatching.award(h, 1, 8, oldRun))
+		assert(h.state.nectar == 14 and h.state.contracts.claimedMask == 0)
+		assert(Hatching.award(h, 2, 8, runSummary(h)))
+		assert(h.state.nectar == 28 and h.state.contracts.day == "21")
+		c.now -= 15
+		assert(Hatching.award(h, 3, 8, runSummary(h)))
+		assert(h.state.nectar == 36 and h.state.contracts.day == "21" and h.state.contracts.progress.runs == 1)
+	end)
+
+	test("compound award retries immutable stats and original day before or after commit", function()
+		for _, failure in ipairs({ "failBeforeCommit", "failAfterCommit" }) do
+			local db, c, adapter = fixture()
+			c.now = 18000 + 86400 * 20 + 86390
+			local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+			local summary = runSummary(h)
+			c[failure] = true
+			assert(not Hatching.award(h, 1, 8, summary))
+			assert(db.player_1.hatching.nectar == (if failure == "failAfterCommit" then 20 else 6))
+			summary.family, summary.score = "orbit", 0
+			c.now += 15
+			assert(Hatching.retry(h))
+			assert(h.state.nectar == 20 and h.state.mastery.pip == 2 and h.state.mastery.orbit == 0)
+			assert(h.state.contracts.day == "20" and h.state.contracts.claimedMask == 6 and h.state.totalWins == 1)
+		end
+	end)
+
+	test("unowned family, malformed stats and mismatched payouts cannot alter a profile", function()
+		local _, c, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local writes = c.updateCalls
+		assert(not Hatching.award(h, 1, 8, runSummary(h, { family = "orbit" })))
+		assert(not Hatching.award(h, 1, 8, runSummary(h, { drops = 23 })))
+		assert(not Hatching.award(h, 1, 8, runSummary(h, { score = 0 / 0 })))
+		assert(not Hatching.award(h, 1, 6, runSummary(h)))
+		assert(c.updateCalls == writes and h.state.nectar == 6 and h.state.mastery.pip == 0)
+	end)
+
+	test("rare-only ownership trains its base family and duplicate marks continue beyond three", function()
+		local db, c, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		db.player_1.hatching.inventoryMask = Catalog.bit("bloom_pip")
+		assert(Hatching.renew(h))
+		assert(Hatching.award(h, 1, 8, runSummary(h)))
+		assert(h.state.mastery.pip == 2 and h.state.mastery.wick == 0)
+		-- Restore Pip solely to test a duplicate result; no rank-based ownership is used.
+		db.player_1.hatching.inventoryMask = bit32.bor(h.state.inventoryMask, Catalog.bit("pip"))
+		db.player_1.hatching.mastery.pip = 3
+		assert(Hatching.renew(h))
+		c.sample = 0
+		command(h, "hatch", "meadow")
+		assert(h.state.lastHatch.duplicate and h.state.mastery.pip == 4)
+		assert(h.state.masteryLegacyMask == 0 and Hatching.public(h).masteryRanks.pip == 1)
+	end)
+
 	return { passed = #passed, cases = passed }
 end

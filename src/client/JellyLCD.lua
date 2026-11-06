@@ -37,16 +37,13 @@ local function boardPixels()
 	local dither = rgba(Color3.fromHex("#BBD395"))
 	local rail = rgba(Color3.fromHex("#749154"))
 	local rim = rgba(Color3.fromHex("#385632"))
-	local warning = rgba(Color3.fromHex("#8B652D"))
-	local warningY = math.floor(floor - Config.OverflowY * HEIGHT / (Config.Height + 0.8))
 	for y = 0, HEIGHT - 1 do
 		local inset = math.max(0, bank - (floor - (y + 0.5)))
 		for x = 0, WIDTH - 1 do
 			local edge = math.min(x + 0.5 - leftWall - inset, rightWall - inset - x - 0.5, floor - y - 0.5)
 			local color = outside
 			if edge > 0 then
-				color = if y == warningY and x % 5 < 3 then warning
-					elseif y % 7 == 0 and x % 7 == (math.floor(y / 7) % 2) * 3 then dither else background
+				color = if y % 7 == 0 and x % 7 == (math.floor(y / 7) % 2) * 3 then dither else background
 			elseif edge > -1.8 then
 				color = if edge > -0.8 then rail else rim
 			end

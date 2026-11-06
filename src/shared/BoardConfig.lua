@@ -1,7 +1,7 @@
 local Palette = require(script.Parent.DeckPalette)
 
 local Config = {
-	Width = 14,
+	Width = 11,
 	Height = 19,
 	SpawnY = 17.8,
 	Gravity = 32,

@@ -110,11 +110,13 @@ function Art.build(room, part)
 	grade.Saturation = -0.035
 	grade.TintColor = Color3.fromHex("#FFF5E5")
 
-	box("Floor", 0, 3.5, 0, 44, 1, 35, grass, true)
+	local ground = box("Floor", 0, 3.5, 0, 112, 1, 96, grass, true)
+	ground:SetAttribute("PlayableWidth", 112)
+	ground:SetAttribute("PlayableDepth", 96)
 	box("MeadowGround", 0, 2.85, -24, 400, 0.85, 280, grass)
 	for _, side in ipairs({ -1, 1 }) do
-		box("GardenBoundary", side * 21.6, 9, 0, 0.6, 10, 35, grass, true).Transparency = 1
-		box("GardenBoundary", 0, 9, side * 17.2, 44, 10, 0.6, grass, true).Transparency = 1
+		box("GardenBoundary", side * 55.6, 12, 0, 0.8, 16, 96, grass, true).Transparency = 1
+		box("GardenBoundary", 0, 12, side * 47.6, 112, 16, 0.8, grass, true).Transparency = 1
 	end
 	for _, hill in ipairs({
 		{ -32, -21, 35, 11, 28 }, { -16, -31, 31, 14, 25 }, { 11, -34, 34, 12, 26 },
@@ -122,13 +124,13 @@ function Art.build(room, part)
 		{ 33, 2, 29, 12, 33 }, { -31, 0, 29, 8, 31 },
 		{ -69, -62, 74, 27, 49 }, { -32, -87, 65, 25, 44 }, { 29, -90, 69, 29, 54 }, { 75, -64, 67, 26, 50 },
 	}) do
-		local slope = oval("MeadowHill", hill[1], 1.5, hill[2], hill[3], hill[4], hill[5],
+		local slope = oval("MeadowHill", hill[1] * 2.5, 1.5, hill[2] * 2.5, hill[3], hill[4], hill[5],
 			if hill[2] < -40 then Color3.fromHex("#799C9D") else Color3.fromHex("#8BA562"))
 		slope.Material = Enum.Material.Grass
 	end
 	for index = 1, 13 do
-		local x = -36 + (index - 1) * 6
-		local z = -25 - index % 3 * 4.1
+		local x = -58 + (index - 1) * 9.5
+		local z = -53 - index % 3 * 4.1
 		local y = if math.abs(x) > 22 then 6 else 5
 		limb("DistantTrunk", Vector3.new(x, y - 1, z), Vector3.new(x, y + 4, z), 0.72, bark)
 		local distant = oval("DistantCrown", x, y + 4.2, z, 5.6, 4.6, 4.5, leaf[index % #leaf + 1])
@@ -327,6 +329,86 @@ function Art.build(room, part)
 			box("BridgePost", x, 4.76, z, 0.20, 1.18, 0.20, bark)
 		end
 		box("BridgeRail", 17.6, 5.13, z, 6.45, 0.13, 0.13, wood)
+	end
+
+	-- New walkable wings keep the original tree grove at its natural scale.
+	-- Broad routes lead to a quiet orchard, picnic clearing and creek outlook.
+	local function trail(a, b, count)
+		for i = 1, count do
+			local t = i / count
+			local p = a:Lerp(b, t)
+			local wobble = math.sin(t * math.pi * 2) * 1.1
+			local tile = oval("MeadowTrail", p.X + wobble, 4.027, p.Y, 2.6, 0.12, 1.7, stone)
+			tile.CFrame *= CFrame.Angles(0, i * 0.53, 0)
+		end
+	end
+	trail(Vector2.new(-5, 2), Vector2.new(-35, -22), 16)
+	trail(Vector2.new(-5, 4), Vector2.new(-35, 23), 16)
+	trail(Vector2.new(5, 5), Vector2.new(37, 24), 16)
+	trail(Vector2.new(20, -9.4), Vector2.new(41, -28), 12)
+	trail(Vector2.new(3, 13), Vector2.new(0, 39), 13)
+	for _, patch in ipairs({
+		{ -34, -22, 14, 12 }, { -33, 24, 15, 12 }, { 37, 24, 15, 12 }, { 40, -28, 12, 10 },
+	}) do
+		local x, z, w, d = table.unpack(patch)
+		oval("ClearingMoss", x, 4.015, z, w, 0.03, d, grass:Lerp(leaf[3], 0.14)).CastShadow = false
+		for i = 0, 6 do
+			local angle = i * math.pi * 2 / 7
+			shrub(x + math.cos(angle) * w * 0.54, z + math.sin(angle) * d * 0.54, 1.2 + i % 3 * 0.22)
+			if i % 2 == 0 then
+				flower(x + math.cos(angle) * w * 0.46, z + math.sin(angle) * d * 0.46, 0.8, Color3.fromHex("#FFF1CD"))
+			end
+		end
+	end
+	for _, position in ipairs({ { -38, -29 }, { -28, -27 }, { -43, 13 }, { -38, 31 }, { 44, -34 }, { 48, 29 }, { -14, 36 } }) do
+		local x, z = position[1], position[2]
+		local height = random:NextNumber(5.2, 7.4)
+		local trunk = limb("OrchardTrunk", Vector3.new(x, 4, z), Vector3.new(x + 0.3, 4 + height, z), 0.85, bark)
+		trunk.Material, trunk.CanCollide, trunk.CanQuery = Enum.Material.Wood, true, true
+		for j = 1, 3 do
+			local theta = j * math.pi * 2 / 3
+			oval("OrchardCrown", x + math.cos(theta) * 1.1, 4 + height + j * 0.28, z + math.sin(theta) * 1.1,
+				5.4, 3.6, 4.8, leaf[j]).Material = Enum.Material.Grass
+		end
+	end
+	for _, picnic in ipairs({ { -34, 24 }, { 38, -28 } }) do
+		local x, z = picnic[1], picnic[2]
+		box("PicnicTop", x, 5.3, z, 5.2, 0.25, 2.4, wood, true)
+		for _, side in ipairs({ -1, 1 }) do
+			box("PicnicSeat", x, 4.75, z + side * 2.1, 5.8, 0.22, 0.9, wood, true)
+			for _, edge in ipairs({ -1, 1 }) do
+				box("PicnicSupport", x + edge * 1.9, 4.63, z + side * 0.7, 0.3, 1.2, 0.3, bark)
+			end
+		end
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		for i = 1, 4 do
+			local z = side * (17 + i * 6.4)
+			local x = 17.5 + math.sin(i * 0.6) * 2.7
+			waterShape("MeadowCreek", x, 4.038, z, 6.4, 9.2, side * 8, waterEdge)
+			waterShape("MeadowCreekDepth", x + 0.15, 4.069, z, 5.0, 8.9, side * 8, waterDeep)
+			for bank = -1, 1, 2 do
+				plant(x + bank * 3.1, 4, z, 1.2)
+				oval("MeadowCreekStone", x + bank * 3.05, 4.16, z + 1.1, 1.0, 0.45, 0.85, stone)
+			end
+		end
+	end
+	waterShape("OutlookPond", 28, 4.038, 29, 17, 13, -15, waterEdge)
+	waterShape("OutlookPondDepth", 28, 4.069, 29, 14.5, 10.8, -15, waterDeep)
+	for i = 0, 12 do
+		local x = 17.0 + i * 0.58
+		box("MeadowBridgePlank", x, 4.25, 22.0, 0.56, 0.21, 2.8, if i % 2 == 0 then wood else bark, true)
+	end
+	for _, z in ipairs({ 20.7, 23.3 }) do
+		box("MeadowBridgeRail", 20.5, 5.13, z, 7.4, 0.15, 0.15, wood)
+		for _, x in ipairs({ 17.1, 20.5, 23.9 }) do box("MeadowBridgePost", x, 4.7, z, 0.2, 1.2, 0.2, bark) end
+	end
+	for i = 0, 11 do
+		local angle = i * math.pi * 2 / 12
+		local x, z = math.cos(angle) * 51, math.sin(angle) * 43
+		shrub(x, z, 2.3)
+		plant(x - 1.2, 4, z + 0.9, 2.1)
+		oval("BoundaryStone", x + 0.6, 4.4, z - 0.5, 2.5, 1.1, 1.7, stone:Lerp(moss, 0.2))
 	end
 
 	for _, station in ipairs({

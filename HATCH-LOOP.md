@@ -1,6 +1,6 @@
 # Egg Drop — nectar and egg loop
 
-The active prototype now uses field runs and random egg hatches. The physical
+The active prototype now uses field runs and random egg hatches. The 2026-11-06 arcade pass adds family ranks, daily contracts, fair overflow pressure, and the unified menu described below. The physical
 nursery and staged care proposal is deferred in `assets/concepts/nursery/` and
 `OVERNIGHT-NURSERY-LOOP.md`; it is not included in the runtime Rojo tree.
 
@@ -15,9 +15,8 @@ nursery and staged care proposal is deferred in `assets/concepts/nursery/` and
    prevents a stuck ready state. The minimum 0.35-second request cadence remains.
 4. After the final accepted drop, a four-second settlement window lets cascades
    finish. Completing the route without overflow earns six nectar, plus two for
-   finishing below Y=10.5. Failed runs keep prior progress and can retry quickly.
-5. Choose **Hatch eggs** on the recap, **EGGS** on the landscape handheld, or
-   **Eggs** in the lounge. Spend nectar on one of two egg recipes.
+   finishing below Y=7.5. Failed runs keep prior progress and can retry quickly. Their base payout is zero, but completed-budget failures can still finish daily skill contracts.
+5. Choose **Hatch eggs** on the recap, or **Menu → Hatch eggs** from the handheld or lounge. Spend nectar on one of two egg recipes.
 6. Watch the shell swell, crack, split and release its 3D pet with original synth
    cues. The server commits the outcome before the reveal. Closing/reopening or
    reconnecting cannot reroll or charge twice. **Try another run** acknowledges
@@ -43,9 +42,7 @@ Meadow then shows Bloom Pip 50%, Foxfire Wick 30%, Eclipse Orbit 20%; focused
 shows Bloom Pip 100%. A rare resets the counter. This does not guarantee a
 missing common or a full collection. The UI displays the actual applicable pool.
 
-Duplicate hatches add a family mastery mark, capped at three. At three, that
-family's equipped companion has a colored sparkle finish in the lounge. Rare
-variants count toward their base family. Reduced effects disables the sparkles.
+Duplicate hatches add one permanent family mastery mark. Successful runs train the family selected before that run: one mark, or two total for a clean win. Ranks I/II/III require 3/10/25 marks; III also requires a clean win, chain 3, and score 500 in successful runs. Rank I displays an original family crest; II adds an accent outline; III adds bounded bursts. Rare variants count toward their base family. Existing three-duplicate sparkle entitlements are preserved separately. Reduced effects keeps the static badge and disables bursts.
 
 An optional daily claim gives six nectar once per Hollow day (UTC−5). The
 migration day already receives the welcome credit, so it cannot also claim that
@@ -54,7 +51,7 @@ paid egg, or luck product in this prototype.
 
 ## Data and authority
 
-`HatchProgress` uses a versioned `hatching` subrecord inside the existing
+`HatchProgress` uses a version-3 `hatching` subrecord inside the existing
 `EggDropProgressV1` profile. It preserves legacy fields and snapshots ownership
 into an explicit seven-bit inventory. Sparse ownership such as Pip + Orbit does
 not grant Puddle or Wick. Equip, journal, counts and Wick's sticker use actual
@@ -167,3 +164,50 @@ first paid hatch for a new player who understands the controls. Do not present
 that as a measured rate. If failures feel wasted, evaluate a small one-bank
 reward with replay protection before raising general payouts or adding caps.
 Daily nectar stays a six-nectar bonus, not a play limit or missed-day penalty.
+
+## Arcade pass decision, 2026-11-06
+
+**GO for implementation with the following limits.** These proposed rules take precedence over the earlier prestige sketch for this pass.
+
+### Play a run
+
+- Give the A button one unobstructed hit target. Mouse, touch, controller A and drag-release each submit one drop. While falling or settling, show why A is waiting. Verify center and edge taps on the smallest landscape layout.
+- Show “Make a 3 or higher on the LEFT” with two matching 2s pointing to a 3. Outline and label the actual target region. On success switch to RIGHT, then “Both done · keep the pile low.” Place a horizontal 24-light strip with “8/24” at its right. Advance only on server-accepted drops.
+- Draw the overflow line before danger. Show a filling warning while the server counts sustained overflow and clear it immediately on recovery. Exempt newly falling pieces during entry. Test an isolated high bounce, a rescued pile and a sustained jam. Tune height/grace against seeded runs before changing rewards.
+- Keep standard wins at six nectar, clean wins at eight and failures at zero. Show balance and next recipe together, e.g. “6/18 nectar · Meadow egg.” Recap shows amount earned, remaining cost, score versus personal best and peak chain. Start with Meadow selected. Recipe selection previews a purchase. The reveal identifies the new companion or duplicate family mark, then offers equip/visit or replay.
+
+### Roam and collect
+
+- Put Menu and Lounge on the left grip. Eggs, pets and style live inside Menu. Every lounge entry and greeting collapses it. Tap the companion or use its nearby controller/keyboard prompt to greet. Movement releases camera focus. Enlarge the walkable floor and move boundaries, scenery and collision together.
+- Recompute planar follow targets every rendered frame. Throttle ground probes separately. Smooth position and shortest-angle heading using elapsed time. Face travel while moving and the player when greeting. Check a turn, stop and greeting at 20 and 60 FPS.
+
+### Give repeat runs a purpose
+
+- Snapshot the equipped family at run start. A win earns one mark, a clean win two total, and a duplicate hatch one. Ranks I/II/III at 3/10/25 marks earn a family seal, framed crest and blooming silhouette. Use original seed, ripple, flame and orbit motifs. Keep existing three-mark sparkles. Use a brief promotion burst and static reduced-effects art.
+- Rotate one optional daily contract on the existing Hollow day, e.g. win with a two-merge chain, win with 150 points, or finish clean. Show today's exact goal before play. Its first completion adds one family mark. Keep the daily six-nectar claim independent. After the first standard win offer the harder left/right 3 then left/right 4 route for mastery practice. Keep standard runs selectable.
+- Extend the existing fenced run award with server-observed results. Freeze route, family and contract day for retries. Commit all rewards and completion flags together. Migrate v2 marks, pending reveals and existing entitlements before enforcing new rank limits. Test duplicate retries, rollover and legacy profiles.
+- Keep two recipes and their published odds. Scope future family eggs as catalog additions after inventory expansion; evaluate earned, capped, pre-hatch rate items only after defining exact odds, pity interaction and atomic consumption. Paid luck, ranks IV/V and the archived nursery stay outside this pass.
+
+## Shipped arcade pass, 2026-11-06
+
+This section supersedes scope-only proposals above. The nursery remains deferred.
+
+- Unified Menu has pinned Play / Daily / Mastery tabs and a Back control. Handheld controls are Menu and Lounge. Lounge enters free roaming with only a small Menu/Deck pill; pet greetings hide it. A and drag input recover after transitions and overlays. Save-related input locks show SAVE WAIT plus a specific notice instead of FALLING.
+- QUEST says II + II on LEFT, then RIGHT. Matching larger pairs also count. The target regions glow. The horizontal 24-light strip shows **remaining** drops, e.g. 23/24. Nectar is the main header value; a visible egg and selected recipe cost connect the currency to hatching. Choosing an egg only previews it; purchasing spends nectar. Another hatch always requires another purchase.
+- Tray width is 11, target boundaries are ±2.6. Standard runs remain 24 drops. Field pressure arms after drop 12, uses a line at Y=8.6, and requires a continuous 2.4 seconds over it. Fresh airborne drops are exempt during entry; recovery below the line clears the timer. An early sustained spawn jam can end a run before drop 12. The welcome board retains its original grace/line. Clean bonus height is 7.5.
+- Three daily contracts auto-credit once per Hollow day: finish two quests (+4 nectar), chain three merges in a completed-budget round (+3), score 500 in a completed-budget round (+3). A failed quest can earn those last two skill contracts after using all 24 drops. Base round reward remains 6/8/0. The daily gift remains six. The server locks family and day at run start, commits compound rewards atomically, and drains retained writes/earned payouts before releasing a session on leave/shutdown.
+- Rank I is a family badge, II a restrained outline finish, III a bounded five-particle flourish. Bodies stay shaded SmoothPlastic; these are Roblox effects rather than custom shader programs. Promotion recaps identify the new family rank. Marks and family challenges persist; no reset or paid luck.
+- The playable lounge floor is now 112×96 (previously 44×35), with paths, orchard, clearings, picnic spots, extended creek, and a second bridge. Pet follow position/heading updates every rendered frame; ground probes run at 10Hz. Click a pet or use E/ButtonX/touch prompt to greet. The greeting stages the pet and camera clear of the avatar.
+
+### Current evidence
+
+- All runtime sources compile in Studio; Rojo builds. Native Studio passes 21 transaction regression cases, two closing-save cases, and field readiness/grace/rescue/spawn-jam checks.
+- Native production-solver benchmark, seeds 64001–64030: deliberate 29/30 successful rounds, fast random 16/30, random 15/30, center 0/30. Deliberate base nectar rate is 1.86× fast random. Every strategy encountered warning pressure; deliberate had zero overflows, random and fast random one each, center 28/30. Raw data: `scripts/FieldPressureBenchmark-native.json`. Portable calibration/rejected candidates are separately labeled in `FieldPressureBenchmark-results.json`.
+- Actual native clicks on simulated iPhone 17 Pro accepted welcome and field A drops; field counter changed 24/24 to 23/24. The native pet E greeting hid the UI and framed the whole pet without the avatar arm.
+- Menu fixtures at 844×300, 667×285, 568×198, 568×160, and 390×740 retain a 44px Back control and enough scroll viewport to display a complete 44px action. Pinned tabs expose contracts/mastery without scrolling past the play page.
+- An actual drag/release run finished its 24 drops without its quest, earned chain/score daily contracts, and atomically credited six nectar with zero mastery. This verifies failure/skill-contract integration rather than claiming a quest win.
+
+Fresh physical-phone feel, live DataStore rejoin, shared live multiplayer, and human replay/retention remain unproven. The optional harder route, rank IV/V, additional egg pools, rate-changing items, and nursery are future scope. Current score and chains support contracts, mastery challenges, and personal bests; nectar alone buys eggs.
+
+- Additional client-request integration run (separate from the UI input checks) completed both quest regions in 24 drops, credited eight base nectar and two Pip marks, recorded all three family challenge flags, and advanced the two-win daily contract to 1/2. Balance rose from 12 to 20.
+- The same Studio session purchased Meadow through the actual hatch UI at 20 nectar: balance became two, inventory became Pip + Puddle, and a persistent Puddle reveal appeared. Rank I/II/III visual fixtures verified badge/outline/burst layering and reduced-effects cleanup without granting profile progress.

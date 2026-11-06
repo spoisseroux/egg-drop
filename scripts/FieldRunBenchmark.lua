@@ -49,7 +49,7 @@ local function rolloutAim(sim, field, Simulation, Round, FieldRun, Config, horiz
 		if not Simulation.drop(copy, aim) then continue end
 		local run = FieldRun.new({ minTier = field.minTier, targets = field.targets })
 		run.rootStage = field.rootStage
-		local round = Round.new()
+		local round = Round.new(FieldRun.roundOptions())
 		local merged, merges = {}, 0
 		for _ = 1, math.ceil(horizon / Config.FixedStep) do
 			table.clear(merged)
@@ -58,7 +58,7 @@ local function rolloutAim(sim, field, Simulation, Round, FieldRun, Config, horiz
 				merges += merge.tier
 				run:observe(merge)
 			end
-			round:step(copy.eggs, Config.FixedStep)
+			round:step(copy.eggs, Config.FixedStep, copy.drops)
 			if round.over then break end
 		end
 		local maximum, squares = 0, 0
@@ -82,23 +82,25 @@ function Benchmark.run(dependencies, options)
 	local cadence = options.cadence or 1.25
 	local resetSeconds = options.resetSeconds or Config.ResetInterval
 	local contactGate = options.contactGate ~= false
-	local strategies = { "center", "random", "heuristic", "fastCenter", "fastRandom" }
+	local strategies = options.strategies or { "center", "random", "heuristic", "fastCenter", "fastRandom" }
 	local results = { seeds = count, firstSeed = firstSeed, cadence = cadence, resetSeconds = resetSeconds,
 		kick = options.kick or 6, contactGate = contactGate, zoneBound = FieldRun.ZoneBound,
+		trayWidth = Config.Width, cleanHeight = FieldRun.BonusHeight, roundOptions = options.roundOptions or FieldRun.roundOptions(),
 		targets = options.targets or (if options.mastery then FieldRun.MasteryTargets else {
 			{ side = -1, tier = options.minTier or FieldRun.MinTier }, { side = 1, tier = options.minTier or FieldRun.MinTier },
 		}), rows = {}, samples = {} }
 	for _, strategy in ipairs(strategies) do
-		local row = { strategy = strategy, wins = 0, nectar = 0, seconds = 0, score = 0, overflows = 0, drops = 0, maxHeight = 0, attempts = 0 }
+		local row = { strategy = strategy, wins = 0, nectar = 0, seconds = 0, score = 0, overflows = 0, drops = 0, maxHeight = 0, attempts = 0, threatenedRuns = 0, warningSeconds = 0 }
 		for index = 0, count - 1 do
 			local seed = firstSeed + index
 			local sim = Simulation.new("Springy", 0, { seed = seed, starter = options.starter or {}, kick = options.kick or 6,
 				contactGate = contactGate })
-			local round, field = Round.new(), FieldRun.new({ minTier = options.minTier,
+			local round, field = Round.new(options.roundOptions or FieldRun.roundOptions()), FieldRun.new({ minTier = options.minTier,
 				targets = options.targets or (if options.mastery then FieldRun.MasteryTargets else nil) })
 			local random = Random.new(seed + 71831)
 			local merged = {}
 			local now, nextDrop, lastMerge, chain, attempts = 0, 0, -math.huge, 0, 0
+			local maxDanger, warningSeconds = 0, 0
 			local interval = if strategy == "fastCenter" or strategy == "fastRandom" then Config.DropInterval else cadence
 			local deadline = 180
 			while not field.outcome and now < deadline do
@@ -117,7 +119,9 @@ function Benchmark.run(dependencies, options)
 					round.score += 10 * (merge.tier + math.min(chain - 1, 9)) + (if merge.cleared then 100 else 0)
 					field:observe(merge)
 				end
-				round:step(sim.eggs, Config.FixedStep)
+				round:step(sim.eggs, Config.FixedStep, sim.drops)
+				maxDanger = math.max(maxDanger, round.danger)
+				if round.danger >= 0.1 then warningSeconds += Config.FixedStep end
 				field:step(sim.eggs, Config.FixedStep, sim.drops, round.over)
 				now += Config.FixedStep
 			end
@@ -128,12 +132,15 @@ function Benchmark.run(dependencies, options)
 			row.seconds += now + resetSeconds
 			row.score += round.score
 			row.overflows += if round.over then 1 else 0
+			row.threatenedRuns += if maxDanger >= 0.5 then 1 else 0
+			row.warningSeconds += warningSeconds
 			row.drops += sim.drops
 			row.attempts += attempts
 			row.maxHeight += outcome.maxHeight
 			table.insert(results.samples, { seed = seed, strategy = strategy, success = outcome.success,
 				reward = outcome.reward, seconds = now + resetSeconds, score = round.score,
-					drops = sim.drops, attempts = attempts, height = outcome.maxHeight, rootStage = outcome.rootStage, overflow = round.over })
+					drops = sim.drops, attempts = attempts, height = outcome.maxHeight, rootStage = outcome.rootStage, overflow = round.over,
+					maxDanger = maxDanger, warningSeconds = warningSeconds })
 			if options.yieldEach ~= false then task.wait() end
 		end
 		row.completionRate = row.wins / count
@@ -200,7 +207,31 @@ function Benchmark.spec(dependencies)
 	local legacy = Simulation.new("Springy", 0, { starter = {} })
 	Simulation.drop(legacy, 0.5)
 	assert(Simulation.canDrop(legacy), "Legacy drop behavior changed")
-	return "FieldRun bags, ordered roots, settlement, terminal idempotence and physical drop readiness passed"
+	local Round = dependencies.Round
+	local pressure = Round.new(FieldRun.roundOptions())
+	local line = pressure.overflowY
+	local piece = { position = Vector2.new(0, line + 0.5), radius = 0.7 }
+	pressure:step({piece}, 0.5, 12)
+	assert(pressure.overflowTime == 0 and not pressure.over, "Fresh airborne drop starts danger")
+	piece.roundAge = 2
+	pressure:step({piece}, 1, 12)
+	assert(not pressure.over and pressure.danger > 0, "Warning grace missing")
+	piece.position = Vector2.new(0, line - 1)
+	pressure:step({piece}, 0.1, 12)
+	assert(pressure.overflowTime == 0 and not pressure.over, "Rescue merge cannot cancel danger")
+	piece.position = Vector2.new(0, line + 0.5)
+	pressure:step({piece}, pressure.grace - 0.01, 12)
+	assert(not pressure.over, "Overflow grace shortened")
+	pressure:step({piece}, 0.02, 12)
+	assert(pressure.over, "Persistent pile cannot overflow")
+	local early = Round.new(FieldRun.roundOptions())
+	local jam = { position = Vector2.new(0, dependencies.Config.SpawnY), radius = 0.7, roundAge = 2 }
+	early:step({jam}, early.grace + 0.01, 4)
+	assert(early.over, "Early spawn blockage can deadlock a run")
+	local legacyRound = Round.new()
+	assert(legacyRound.overflowY == dependencies.Config.OverflowY and legacyRound.grace == dependencies.Config.OverflowGrace,
+		"Field pressure changed the welcome board")
+	return "FieldRun bags, ordered roots, settlement, readiness, overflow rescue/grace and early spawn-jam recovery passed"
 end
 
 return Benchmark

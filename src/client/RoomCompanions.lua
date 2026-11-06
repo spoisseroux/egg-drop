@@ -1,6 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
+local PetFollow = require(script.Parent.PetFollow)
+local PetPrestige = require(script.Parent.PetPrestige)
 
 local Companions = {}
 Companions.__index = Companions
@@ -31,8 +33,9 @@ function Companions:update(dt)
 				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 				local board = self.boards:FindFirstChild(tostring(player.UserId))
 				local pet = board and Pets.byId[board:GetAttribute("CompanionId")]
-				if root and pet and (root.Position - ownRoot.Position).Magnitude <= 48 then
-					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0,
+				if root and pet and board:GetAttribute("Mode") == "Room" and (root.Position - ownRoot.Position).Magnitude <= 72 then
+					local rank, legacy = PetPrestige.read(board, pet)
+					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0, rank = rank, legacy = legacy,
 						distance = (root.Position - ownRoot.Position).Magnitude })
 				end
 			end
@@ -42,15 +45,16 @@ function Companions:update(dt)
 		for index = 1, math.min(6, #near) do
 			local item = near[index]
 			local entry = self.active[item.player]
-			if entry and (entry.pet ~= item.pet or entry.masteryMask ~= item.masteryMask) then
+			if entry and (entry.pet ~= item.pet or entry.masteryMask ~= item.masteryMask or entry.rank ~= item.rank or entry.legacy ~= item.legacy) then
 				entry.visual:destroy()
 				entry = nil
 			end
 			if not entry then
 				local position = item.root.Position + item.root.CFrame.RightVector * 2.2
-				local visual = self.createPet(workspace, Vector3.new(position.X, 4.02, position.Z), item.pet, item.masteryMask)
+				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy)
+				visual.origin = Vector3.new(position.X, PetFollow.ground(position, visual), position.Z)
 				visual.model:SetAttribute("CompanionOwnerId", item.player.UserId)
-				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask }
+				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask, rank = item.rank, legacy = item.legacy }
 				self.active[item.player] = entry
 			end
 			entry.root = item.root
@@ -64,10 +68,10 @@ function Companions:update(dt)
 		end
 	end
 	for _, entry in pairs(self.active) do
-		local position = entry.root.Position + entry.root.CFrame.RightVector * 2.2
-		entry.visual.origin = entry.visual.origin:Lerp(Vector3.new(position.X, 4.02, position.Z), 1 - math.exp(-7 * dt))
+		if not entry.root.Parent then continue end
+		entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState)
 		entry.visual:update(dt)
-		if entry.visual.masterySparkles then entry.visual.masterySparkles.Enabled = not self.reduceEffects() end
+		PetPrestige.update(entry.visual, dt, self.reduceEffects())
 	end
 end
 

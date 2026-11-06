@@ -3,13 +3,17 @@ local FieldRun = {}
 FieldRun.__index = FieldRun
 FieldRun.Budget = 24
 FieldRun.SettleSeconds = 4
-FieldRun.ZoneBound = 3.8
+FieldRun.ZoneBound = 2.6
 FieldRun.MinTier = 3
-FieldRun.BonusHeight = 10.5
+FieldRun.BonusHeight = 7.5
 FieldRun.MasteryTargets = { { side = -1, tier = 3 }, { side = 1, tier = 3 }, { side = -1, tier = 4 }, { side = 1, tier = 4 } }
 
 function FieldRun.simulationOptions(seed)
 	return { seed = seed, starter = {}, kick = 6, contactGate = true }
+end
+
+function FieldRun.roundOptions()
+	return { overflowY = 8.6, grace = 2.4, armAfterDrops = 12, warningMargin = 2 }
 end
 
 function FieldRun.new(options)

@@ -4,6 +4,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
+local Mastery = require(ReplicatedStorage.Shared.FamilyMastery)
+local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = if RunService:IsStudio() then nil else DataStoreService:GetDataStore("EggDropProgressV1")
@@ -48,7 +50,7 @@ local function legacyRecord(profile)
 end
 
 local function dayOf(now)
-	return tostring(math.floor((now + Catalog.DayOffsetSeconds) / 86400))
+	return Daily.dayOf(now)
 end
 
 local function migrate(record, now)
@@ -63,11 +65,13 @@ local function migrate(record, now)
 	local nextPet = Pets[rank + 1]
 	local charge = if nextPet and integer(record.hatchCharge, 1000000)
 		then math.min(record.hatchCharge, nextPet.charge - 1) else 0
-	local mastery = {}
-	for _, family in ipairs(Catalog.Families) do mastery[family] = 0 end
+	local mastery, challenges = {}, {}
+	for _, family in ipairs(Catalog.Families) do mastery[family], challenges[family] = 0, 0 end
 	return {
-		version = 2, migrated = true, welcomeCredited = true,
+		version = 3, migrated = true, welcomeCredited = true,
 		nectar = charge + 6, inventoryMask = mask, mastery = mastery, misses = 0,
+		masteryChallenges = challenges, masteryLegacyMask = 0, totalWins = 0,
+		contracts = Daily.empty(dayOf(now)),
 		revision = 0, epoch = 0, operationSeq = 0, lastAwardSeq = 0,
 		dailyClaimDay = dayOf(now),
 		lease = { token = "", expiresAt = 0 },
@@ -75,26 +79,53 @@ local function migrate(record, now)
 end
 
 local function valid(state)
-	if type(state) ~= "table" or state.version ~= 2 or state.migrated ~= true
+	if type(state) ~= "table" or state.version ~= 3 or state.migrated ~= true
 		or state.welcomeCredited ~= true or not integer(state.nectar)
 		or not integer(state.inventoryMask, 127) or not integer(state.misses, 7)
 		or not integer(state.revision) or not integer(state.epoch)
 		or not integer(state.operationSeq) or not integer(state.lastAwardSeq)
 		or type(state.dailyClaimDay) ~= "string"
-		or type(state.mastery) ~= "table" or type(state.lease) ~= "table"
+		or type(state.mastery) ~= "table" or type(state.masteryChallenges) ~= "table"
+		or not integer(state.masteryLegacyMask, 15) or not integer(state.totalWins)
+		or type(state.contracts) ~= "table" or type(state.contracts.progress) ~= "table"
+		or type(state.contracts.day) ~= "string" or not integer(state.contracts.claimedMask, 7)
+		or type(state.lease) ~= "table"
 		or type(state.lease.token) ~= "string" or type(state.lease.expiresAt) ~= "number" then
 		return false
 	end
 	local claimDay = tonumber(state.dailyClaimDay)
 	if not claimDay or claimDay ~= math.floor(claimDay) or math.abs(claimDay) > 1000000000 then return false end
 	for _, family in ipairs(Catalog.Families) do
-		if not integer(state.mastery[family], 3) then return false end
+		if not integer(state.mastery[family], Mastery.MaxPoints)
+			or not integer(state.masteryChallenges[family], 7) then return false end
+	end
+	local contractDay = tonumber(state.contracts.day)
+	if not contractDay or contractDay ~= math.floor(contractDay) or math.abs(contractDay) > 1000000000 then return false end
+	for _, item in ipairs(Daily.Definitions) do
+		if not integer(state.contracts.progress[item.id], item.target) then return false end
 	end
 	if state.lastHatch ~= nil then
 		if type(state.lastHatch) ~= "table" or type(state.lastHatch.id) ~= "string"
 			or not Pets.byId[state.lastHatch.petId] then return false end
 	end
 	return true
+end
+
+-- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
+-- duplicate marks and already-earned sparkle finishes survive without new credits.
+local function upgrade(state, now)
+	if type(state) ~= "table" or state.version ~= 2 then return state end
+	local nextState = clone(state)
+	if type(nextState.mastery) ~= "table" then return state end
+	local challenges, legacy = {}, 0
+	for index, family in ipairs(Catalog.Families) do
+		if not integer(nextState.mastery[family], 3) then return state end
+		challenges[family] = 0
+		if nextState.mastery[family] == 3 then legacy = bit32.bor(legacy, bit32.lshift(1, index - 1)) end
+	end
+	nextState.version, nextState.masteryChallenges, nextState.masteryLegacyMask = 3, challenges, legacy
+	nextState.totalWins, nextState.contracts = 0, Daily.empty(dayOf(now))
+	return nextState
 end
 
 local function accept(handle, record)
@@ -120,7 +151,7 @@ function Hatching.load(userId, profile, adapter)
 	local function acquire(previous)
 		local root = if type(previous) == "table" then clone(previous) else legacyRecord(profile)
 		local state = root.hatching
-		if state == nil then state = migrate(root, adapter.now()) end
+		if state == nil then state = migrate(root, adapter.now()) else state = upgrade(state, adapter.now()) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -159,8 +190,16 @@ end
 function Hatching.public(handle)
 	local state = handle.state
 	if not state then return { status = handle.status, revision = 0 } end
+	local ranks, details = {}, {}
+	for _, family in ipairs(Catalog.Families) do
+		ranks[family] = Mastery.rank(state.mastery[family], state.masteryChallenges[family])
+		details[family] = Mastery.describe(state.mastery[family], state.masteryChallenges[family])
+	end
 	return {
 		status = handle.status, revision = state.revision, nectar = state.nectar,
+		masteryRanks = ranks, masteryDetails = details, masteryChallenges = clone(state.masteryChallenges),
+		masteryLegacyMask = state.masteryLegacyMask, totalWins = state.totalWins,
+		contracts = Daily.public(state.contracts, dayOf(handle.adapter.now())), lastRunReward = clone(state.lastRunReward),
 		misses = state.misses, inventoryMask = state.inventoryMask, mastery = clone(state.mastery),
 		lastHatch = clone(state.lastHatch),
 		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
@@ -277,12 +316,16 @@ function Hatching.command(handle, action, value, expectedRevision)
 			local pet = Pets.byId[petId]
 			local family = Catalog.family(petId)
 			local duplicate = Catalog.isOwned(state.inventoryMask, petId)
+			local previousRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family])
 			state.nectar -= recipe.cost
-			if duplicate then state.mastery[family] = math.min(3, state.mastery[family] + 1) end
+			if duplicate then state.mastery[family] = math.min(Mastery.MaxPoints, state.mastery[family] + 1) end
 			state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(petId))
 			state.misses = if pet.trial then 0 else math.min(7, state.misses + 1)
 			state.lastHatch = { id = choice.id, petId = petId, duplicate = duplicate,
-				family = family, mastery = state.mastery[family], rare = pet.trial ~= nil, recipe = value }
+				family = family, mastery = state.mastery[family], rare = pet.trial ~= nil, recipe = value,
+				masteryRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family]),
+				promotedTo = if Mastery.rank(state.mastery[family], state.masteryChallenges[family]) > previousRank
+					then Mastery.rank(state.mastery[family], state.masteryChallenges[family]) else 0 }
 			return true
 		end
 		return false, "UnknownAction"
@@ -301,18 +344,54 @@ function Hatching.grantStarter(handle)
 	end, { id = handle.adapter.guid() })
 end
 
-function Hatching.award(handle, runSequence, amount)
+function Hatching.award(handle, runSequence, amount, summary)
 	if not integer(runSequence) or runSequence < 1 or (amount ~= 0 and amount ~= 6 and amount ~= 8) then
 		return false, "InvalidReward"
 	end
 	if runSequence <= handle.state.lastAwardSeq then return true, "AlreadyAwarded" end
-	return transact(handle, "award:" .. runSequence .. ":" .. amount, handle.state.revision, function(state)
+	if summary ~= nil then
+		if type(summary) ~= "table" or type(summary.family) ~= "string"
+			or not Mastery.ownsFamily(handle.state.inventoryMask, summary.family)
+			or type(summary.day) ~= "string" or not tonumber(summary.day)
+			or tonumber(summary.day) ~= math.floor(tonumber(summary.day))
+			or math.abs(tonumber(summary.day)) > 1000000000
+			or type(summary.success) ~= "boolean" or type(summary.clean) ~= "boolean"
+			or not integer(summary.score) or not integer(summary.chain, 10000)
+			or not integer(summary.clears, 10000) or not integer(summary.drops, 24)
+			or (summary.success and summary.drops ~= 24)
+			or (summary.clean and not summary.success)
+			or amount ~= (if summary.success then (if summary.clean then 8 else 6) else 0) then
+			return false, "InvalidSummary"
+		end
+	end
+	-- Copy once: the host's mutable board and day clock must never alter a
+	-- pending transaction when DataStore invokes its callback again later.
+	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()) }
+	local signature = "award:" .. runSequence .. ":" .. amount
+	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
-		if state.nectar + amount > 1000000000 then return false, "BalanceLimit" end
-		state.nectar += amount
+		local run = captured.summary
+		local extra, completed, marks, promoted = 0, {}, 0, 0
+		if run then
+			if not Mastery.ownsFamily(state.inventoryMask, run.family) then return false, "FamilyChanged" end
+			if run.success then
+				local before = Mastery.rank(state.mastery[run.family], state.masteryChallenges[run.family])
+				marks = if run.clean then 2 else 1
+				state.mastery[run.family] = math.min(Mastery.MaxPoints, state.mastery[run.family] + marks)
+				state.masteryChallenges[run.family] = bit32.bor(state.masteryChallenges[run.family], Mastery.challengeMask(run))
+				local after = Mastery.rank(state.mastery[run.family], state.masteryChallenges[run.family])
+				promoted = if after > before then after else 0
+				state.totalWins += 1
+			end
+			state.contracts, extra, completed = Daily.apply(state.contracts, run, captured.day)
+		end
+		if state.nectar + amount + extra > 1000000000 then return false, "BalanceLimit" end
+		state.nectar += amount + extra
 		state.lastAwardSeq = runSequence
+		state.lastRunReward = { sequence = runSequence, base = amount, daily = extra, total = amount + extra,
+			masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted, contracts = completed }
 		return true
-	end)
+	end, candidate)
 end
 
 local function maintain(handle, releasing)

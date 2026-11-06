@@ -7,11 +7,15 @@ On a keyboard, aim with the arrows or A/D and drop with Space.
 A controller uses D-pad left/right and A.
 Hatch guaranteed Pip to unlock the lounge, then play 24-drop field runs:
 make tier III+ merges in the left bank patch, then the right. Successful runs
-earn nectar for random egg hatches. Open **Eggs** to compare exact odds and
+earn nectar for random egg hatches. Open **Menu → Hatch eggs** to compare exact odds and
 choose a recipe. Use the pet journal to choose a companion and **Deck** to play.
 Other players in the lounge can see your handheld's live display.
-Use **Customize** in either view to preview and equip a shell and sticker.
-Open **Customize → Club** for Pocket Trials, SFX volume, and reduced motion.
+Menu also shows three daily contracts and four family mastery tracks. Wins and
+duplicates earn marks; ranks I–III unlock companion badges and effects.
+In the enlarged lounge, click a pet or use its E/controller/touch prompt to greet;
+the small roaming menu hides during the close-up.
+Use **Menu → Style & sound** to preview and equip a shell and sticker.
+Open **Menu → Style & sound → Club** for Pocket Trials, SFX volume, and reduced motion.
 Finish all three trials during regular play to earn the Club sticker.
 Published servers save pet inventory, nectar, pending hatch results, personal best,
 companion, trial completion, settings, and the deck's appearance. Studio

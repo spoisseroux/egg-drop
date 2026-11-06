@@ -9,6 +9,8 @@ local PipVisual = require(script.Parent.PipVisual)
 local PuddleVisual = require(script.Parent.PuddleVisual)
 local BonusPetVisual = require(script.Parent.BonusPetVisual)
 local RoomCompanions = require(script.Parent.RoomCompanions)
+local PetFollow = require(script.Parent.PetFollow)
+local PetPrestige = require(script.Parent.PetPrestige)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -19,17 +21,14 @@ Room.__index = Room
 
 local visuals = { pip = PipVisual, puddle = PuddleVisual }
 
-local function createPet(parent, origin, pet, masteryMask)
+local function createPet(parent, origin, pet, masteryMask, rank, legacy)
 	local visual = visuals[pet.family or pet.id] or BonusPetVisual
 	local result = visual.new(parent, origin, pet)
-	local family = pet.family or pet.id
-	local index = table.find({ "pip", "puddle", "wick", "orbit" }, family)
-	if index and masteryMask and bit32.band(masteryMask, bit32.lshift(1, index - 1)) ~= 0 then
-		local sparkles = Instance.new("Sparkles")
-		sparkles.Name, sparkles.SparkleColor = "FamilyMastery", pet.accent or pet.color
-		sparkles.Parent = result.model.PrimaryPart
-		result.masterySparkles = sparkles
+	if legacy == nil then
+		local index = table.find({ "pip", "puddle", "wick", "orbit" }, pet.family or pet.id)
+		legacy = index and bit32.band(masteryMask or 0, bit32.lshift(1, index - 1)) ~= 0
 	end
+	PetPrestige.attach(result, pet, rank or 0, legacy)
 	return result
 end
 
@@ -70,126 +69,101 @@ local function tween(object, seconds, properties)
 end
 
 function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects, onEggs)
-	local controls = frame(gui, "LoungeControls", UDim2.new(1, -32, 0, 78), UDim2.new(0.5, 0, 0, 10), Art.Surface, 8)
-	controls.AnchorPoint = Vector2.new(0.5, 0)
+	-- A small roaming pill replaces the always-open five-button panel.
+	local controls = frame(gui, "LoungeControls", UDim2.fromOffset(180, 48), UDim2.new(1, -12, 0, 12), Art.Surface, 8)
+	controls.AnchorPoint = Vector2.new(1, 0)
 	controls.Visible = false
 	Art.panel(controls, 10)
-	local max = Instance.new("UISizeConstraint")
-	max.MaxSize = Vector2.new(440, 78)
-	max.Parent = controls
-	local heading = Instance.new("TextLabel")
-	heading.Name = "Heading"
-	heading.Size = UDim2.new(0.94, 0, 0, 25)
-	heading.Position = UDim2.fromScale(0.045, 0)
-	heading.BackgroundTransparency = 1
-	heading.Text = "Pip’s lounge"
-	heading.TextColor3 = Art.Silver
-	heading.TextXAlignment = Enum.TextXAlignment.Left
-	heading.TextSize = 17
-	heading.Font = Enum.Font.GothamBold
-	heading.TextTruncate = Enum.TextTruncate.AtEnd
-	heading.ZIndex = 9
-	heading.Parent = controls
-	Art.fitText(heading, 15, 10, 0)
-	local welcome = Art.text(controls, "FirstVisit", "Say hi to Pip!", UDim2.new(0.045, 0, 0, 26),
-		UDim2.new(0.54, 0, 0, 16), Art.Muted, 11, Enum.Font.GothamMedium)
-	welcome.TextXAlignment = Enum.TextXAlignment.Left
-	welcome.Visible = false
-	local greet = button(controls, "GreetPet", "Say hi", UDim2.new(0, 8, 0, 27), Art.Raised)
-	local leave = button(controls, "OpenHandheld", "Open deck", UDim2.new(0.25, 4, 0, 27), Art.Cyan)
-	local customize = button(controls, "Customize", "Style", UDim2.new(0.50, 0, 0, 27), Art.Raised)
-	local collection = button(controls, "Collection", "Pets", UDim2.new(0.75, -4, 0, 27), Art.Raised)
-	local eggs = button(controls, "Eggs", "Eggs", UDim2.fromOffset(0, 27), Art.Amber)
-	eggs.TextColor3 = Art.Ink
-	leave.Text, greet.Text = "Deck", "Hi"
-	for i, control in ipairs({ greet, leave, eggs, customize, collection }) do
-		control.Position = UDim2.new((i - 1) / 5, 8 - (i - 1) * 3, 0, 27)
-		control.Size = UDim2.new(0.2, -10, 0, 44)
-	end
-	eggs.Activated:Connect(function() if not overlayOpen() and onEggs then onEggs() end end)
-
+	local menu = button(controls, "Menu", "Menu", UDim2.fromOffset(4, 2), Art.Raised)
+	local leave = button(controls, "OpenHandheld", "Deck", UDim2.fromOffset(92, 2), Art.Cyan)
+	menu.Size, leave.Size = UDim2.fromOffset(84, 44), UDim2.fromOffset(84, 44)
+	-- Retain these handles for the welcome guide and old controller restoration.
+	local heading = Art.text(controls, "Heading", "Sprout Hollow", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), Art.Silver, 12)
+	local welcome = Art.text(controls, "FirstVisit", "", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), Art.Muted, 11)
+	local greet = button(controls, "GreetPet", "Say hi", UDim2.fromOffset(0, 0), Art.Raised)
+	heading.Visible, welcome.Visible, greet.Visible = false, false, false
 	local self = setmetatable({
-		board = board,
-		progress = progress,
-		controls = controls,
-		heading = heading,
-		welcome = welcome,
-		greetButton = greet,
-		transition = DeckTransition.new(gui, board.Tray),
-		audio = audio,
-		mode = "Board",
-		target = "Board",
-		lastSwitchAt = -math.huge,
-		shownPet = Pets[1],
+		board = board, progress = progress, controls = controls, heading = heading,
+		welcome = welcome, greetButton = greet, menuButton = menu,
+		transition = DeckTransition.new(gui, board.Tray), audio = audio,
+		mode = "Board", target = "Board", lastSwitchAt = -math.huge,
+		shownPet = Pets[1], menuOpen = false, overlayOpen = overlayOpen,
 		companions = RoomCompanions.new(progress.Parent, createPet, reduceEffects),
+		reduceEffects = reduceEffects,
 	}, Room)
-	self.reduceEffects = reduceEffects
-	collection.Activated:Connect(function()
-		if self.mode == "Room" and not self.busy and not overlayOpen() then
-			onCollection()
+	menu.Activated:Connect(function()
+		if self.mode == "Room" and not self.busy and not self.focusing and not overlayOpen() then
+			if self.onOpenMenu then self.onOpenMenu() else onCollection() end
 		end
 	end)
-	greet.Activated:Connect(function()
-		if self.busy or overlayOpen() or not self.pet then
-			return
-		end
-		if self.focusing then self:useRoomCamera(false) else self:focusPet() end
-	end)
+	greet.Activated:Connect(function() self:interactPet() end)
 	leave.Activated:Connect(function()
-		if not self.busy and not overlayOpen() then
-			self:requestSwitch(onReturn)
-		end
-	end)
-	customize.Activated:Connect(function()
-		if not self.busy and not overlayOpen() then
-			onCustomize()
-		end
+		if not self.busy and not overlayOpen() then self:requestSwitch(onReturn) end
 	end)
 	Players.LocalPlayer.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid", 5)
 		if self.mode == "Room" and humanoid then
-			task.defer(function()
-				if self.mode == "Room" then
-					self:useRoomCamera(false)
-				end
-			end)
+			self.followState = nil
+			task.defer(function() if self.mode == "Room" then self:useRoomCamera(false) end end)
 		end
 	end)
 	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-		if self.mode == "Room" then
-			self:useRoomCamera(false)
-		end
+		if self.mode == "Room" then self:useRoomCamera(false) end
 	end)
 	RunService.RenderStepped:Connect(function(dt)
+		self:updateControls()
 		if self.pet then
 			local character = Players.LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-			if self.focusing and humanoid and humanoid.MoveDirection.Magnitude > 0.05 then
-				self:useRoomCamera(false)
-			end
-			if root and not self.focusing then
-				self.followIn = (self.followIn or 0) - dt
-				if self.followIn <= 0 then
-					self.followIn = 0.10
-					local desired = root.Position - root.CFrame.LookVector * 2.4 + root.CFrame.RightVector * 2.4
-					local params = RaycastParams.new()
-					params.FilterDescendantsInstances = { character, self.pet.model }
-					params.RespectCanCollide = true
-					local ground = workspace:Raycast(desired + Vector3.new(0, 5, 0), Vector3.new(0, -50, 0), params)
-					self.followTarget = Vector3.new(desired.X, if ground then ground.Position.Y + 0.02 else 4.02, desired.Z)
-				end
-				if self.followTarget then
-					self.pet.origin = self.pet.origin:Lerp(self.followTarget,
-						if (self.pet.origin - self.followTarget).Magnitude > 24 then 1 else 1 - math.exp(-7 * dt))
-				end
+			if self.focusing and humanoid and humanoid.MoveDirection.Magnitude > 0.05 then self:useRoomCamera(false) end
+			if root and not self.focusing then self.followState = PetFollow.step(self.pet, root, dt, self.followState) end
+			if self.focusing and self.focusMotion then
+				local motion = self.focusMotion
+				motion.time += dt
+				local alpha = math.clamp(motion.time / 0.45, 0, 1)
+				alpha = alpha * alpha * (3 - 2 * alpha)
+				self.pet.origin = motion.from:Lerp(motion.to, alpha)
+				self.pet.yaw = motion.yawFrom + motion.yawDelta * alpha
+				if motion.time >= 0.45 then self.focusMotion = nil end
 			end
 			self.pet:update(dt)
-			if self.pet.masterySparkles then self.pet.masterySparkles.Enabled = not self.reduceEffects() end
+			PetPrestige.update(self.pet, dt, self.reduceEffects())
 			self.companions:update(dt)
 		end
 	end)
+	for _, attribute in ipairs({ "MasteryRanks", "MasteryMask" }) do
+		progress:GetAttributeChangedSignal(attribute):Connect(function()
+			if self.mode == "Room" and self.pet then self:showPet(self.shownPet) end
+		end)
+	end
 	return self
+end
+
+function Room:updateControls()
+	local unobscured = self.mode == "Room" and not self.focusing and not self.busy
+		and not self.menuOpen and not self.overlayOpen()
+	self.controls.Visible = unobscured
+	if self.petPrompt then self.petPrompt.Enabled = unobscured end
+	if self.petClick then self.petClick.MaxActivationDistance = if unobscured then 9 else 0 end
+end
+
+function Room:setMenuOpen(open)
+	self.menuOpen = open == true
+	self:updateControls()
+end
+
+function Room:collapseControls()
+	self:setMenuOpen(false)
+end
+
+function Room:interactPet()
+	if self.mode ~= "Room" or self.busy or self.focusing or self.overlayOpen() or self.menuOpen or not self.pet then return false end
+	local now = os.clock()
+	if now - (self.lastPetAt or -math.huge) < 0.45 then return false end
+	self.lastPetAt = now
+	self:focusPet()
+	return true
 end
 
 function Room:requestSwitch(callback)
@@ -218,26 +192,37 @@ end
 function Room:showPet(pet)
 	local owned = self.progress:GetAttribute("OwnedPets") or 0
 	local trials = self.progress:GetAttribute("TrialMask") or 0
-	if not pet or not Pets.isUnlocked(pet, owned, trials, self.progress:GetAttribute("InventoryMask")) then
-		pet = Pets[1]
-	end
+	if not pet or not Pets.isUnlocked(pet, owned, trials, self.progress:GetAttribute("InventoryMask")) then pet = Pets[1] end
 	self.shownPet = pet
-	if self.welcome.Visible then
-		self.welcome.Text = "Say hi to " .. pet.name .. "!"
-	end
-	if self.pet then
-		self.pet:destroy()
-	end
+	local oldOrigin = self.pet and self.pet.origin
+	local oldYaw = self.pet and self.pet.yaw
+	if self.pet then self.pet:destroy() end
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
-	local position = if root then root.Position + root.CFrame.RightVector * 2.4 else Vector3.new(0, 4.02, -5)
-	self.pet = createPet(workspace, Vector3.new(position.X, 4.02, position.Z), pet, self.progress:GetAttribute("MasteryMask"))
-	self.followIn, self.followTarget = 0, nil
-	if not self.reduceEffects() then
-		self.pet:greet()
-	end
-	self.heading.Text = string.format("Sprout Hollow  ·  %s  ·  %d/%d", pet.name,
+	local position = oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
+	local rank, legacy = PetPrestige.read(self.progress, pet)
+	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy)
+	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
+	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)
+	self.pet.model:SetAttribute("LocalCompanion", true)
+	self.pet.yaw = if self.focusing and oldYaw then oldYaw elseif root then math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z) else 0
+	self.followState = nil
+	local body = self.pet.model.PrimaryPart
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name, prompt.ActionText, prompt.ObjectText = "PetInteraction", "Say hi", pet.name
+	prompt.KeyboardKeyCode, prompt.GamepadKeyCode = Enum.KeyCode.E, Enum.KeyCode.ButtonX
+	prompt.ClickablePrompt, prompt.RequiresLineOfSight, prompt.HoldDuration = true, false, 0
+	prompt.MaxActivationDistance, prompt.UIOffset = 9, Vector2.new(0, 22)
+	prompt.Enabled, prompt.Parent = false, body
+	prompt.Triggered:Connect(function(who) if who == nil or who == Players.LocalPlayer then self:interactPet() end end)
+	local click = Instance.new("ClickDetector")
+	click.MaxActivationDistance, click.Parent = 9, body
+	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then self:interactPet() end end)
+	self.petPrompt, self.petClick = prompt, click
+	if not self.reduceEffects() then self.pet:greet() end
+	self.heading.Text = string.format("Sprout Hollow · %s · %d/%d", pet.name,
 		Pets.ownedCount(owned, trials, self.progress:GetAttribute("InventoryMask")), #Pets.collection)
+	self:updateControls()
 end
 
 function Room:cancelCameraTween()
@@ -250,7 +235,10 @@ end
 function Room:restoreCamera()
 	self:cancelCameraTween()
 	self.focusing = false
+	self.focusMotion, self.followState = nil, nil
+	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self.greetButton.Text = "Say hi"
+	self:updateControls()
 	if self.viewportChanged then
 		self.viewportChanged:Disconnect()
 		self.viewportChanged = nil
@@ -280,7 +268,10 @@ function Room:useRoomCamera(animate)
 		self:cancelCameraTween()
 	end
 	self.focusing = false
+	self.focusMotion, self.followState = nil, nil
+	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self.greetButton.Text = "Say hi"
+	self:updateControls()
 	local character = Players.LocalPlayer.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -304,20 +295,33 @@ function Room:focusPet()
 	self.greetButton.Text = "Roam"
 	self.audio:play(self.shownPet.cue)
 	if not self.reduceEffects() then self.pet:greet() end
-	-- Present the pet in front of the avatar, clear of the avatar's silhouette.
+	self.menuOpen = false
+	self:updateControls()
+	-- Stage the pet ahead of the player, with the camera BETWEEN them. The
+	-- avatar then stays behind the camera instead of blocking the pet's face.
 	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	local side = if root and root.Position.Z > 9 then -1 else 1
-	if root then
-		self.pet.origin = Vector3.new(root.Position.X, 4.02, root.Position.Z + 4.5 * side)
-	end
-	self.pet.yaw = if side == 1 then 0 else math.pi
-	local target = self.pet.origin + Vector3.new(0, 1.25, 0)
+	local forward = if root then Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z) else Vector3.new(0, 0, -1)
+	if forward.Magnitude < 0.01 then forward = Vector3.new(0, 0, -1) else forward = forward.Unit end
+	local right = Vector3.new(-forward.Z, 0, forward.X)
+	local _, size = self.pet.model:GetBoundingBox()
 	local portrait = camera.ViewportSize.X < camera.ViewportSize.Y
-	local destination = CFrame.lookAt(target + Vector3.new(1.2, 1.6, side * (if portrait then 9 else 7.4)), target)
+	local distance = math.max(if portrait then 5.1 else 4.6, size.Y * 1.55)
+	local destinationOrigin = if root then root.Position + forward * (distance + 2.8) else self.pet.origin
+	destinationOrigin = Vector3.new(destinationOrigin.X, PetFollow.ground(destinationOrigin, self.pet, self.pet.origin.Y), destinationOrigin.Z)
+	local target = destinationOrigin + Vector3.new(0, math.max(1.35, size.Y * 0.52), 0)
+	local cameraPosition = target - forward * distance + right * 0.55 + Vector3.new(0, 0.65, 0)
+	local destination = CFrame.lookAt(cameraPosition, target)
+	local facing = cameraPosition - destinationOrigin
+	local wantedYaw = math.atan2(facing.X, facing.Z)
+	local currentYaw = self.pet.yaw or wantedYaw
+	self.focusMotion = { from = self.pet.origin, to = destinationOrigin, time = 0,
+		yawFrom = currentYaw, yawDelta = math.atan2(math.sin(wantedYaw - currentYaw), math.cos(wantedYaw - currentYaw)) }
 	camera.CameraType = Enum.CameraType.Scriptable
 	local epoch = (self.focusEpoch or 0) + 1
 	self.focusEpoch = epoch
 	if self.reduceEffects() then
+		self.pet.origin, self.pet.yaw, self.focusMotion = destinationOrigin, wantedYaw, nil
+		self.pet:update(0)
 		camera.CFrame, camera.Focus, camera.FieldOfView = destination, CFrame.new(target), 43
 	else
 		self.cameraTween = tween(camera, 0.45, { CFrame = destination, Focus = CFrame.new(target), FieldOfView = 43 })
@@ -348,9 +352,11 @@ function Room:show(mode, animate)
 			self.pet:destroy()
 			self.pet = nil
 		end
+		self.petPrompt, self.petClick, self.focusMotion = nil, nil, nil
 		self:restoreCamera()
 	end
-	self.controls.Visible = mode == "Room"
+	self.menuOpen = false
+	self:updateControls()
 	self.board.Visible = mode == "Board"
 	if mode == "Room" and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
 		GuiService.SelectedObject = self.controls.OpenHandheld

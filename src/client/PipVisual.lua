@@ -132,12 +132,8 @@ function PipVisual:update(dt)
 	end
 	self.time += dt
 	self.greeting += dt
-	local frame = math.floor(self.time * 12)
-	if frame == self.lastFrame then
-		return
-	end
-	self.lastFrame = frame
-	local t = frame / 12
+	-- Position, heading and pose update every render frame while following.
+	local t = self.time
 	local g = self.greeting
 	local bounce, squash, wave = 0, 0, 0
 	if g < 0.18 then

@@ -10,7 +10,7 @@ local function piece(self, name, size, offset, color, ball, animated)
 	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
-	part.CanQuery = false
+	part.CanQuery = name == "Body"
 	part.Color = color
 	part.Material = Enum.Material.SmoothPlastic
 	if ball then
@@ -75,13 +75,10 @@ function Visual:greet()
 end
 
 function Visual:update(dt)
+	if dt ~= dt or dt == math.huge or dt < 0 then dt = 0 end
 	self.time += dt
 	self.greeting = math.max(0, self.greeting - dt)
-	local frame = math.floor(self.time * 24)
-	if frame == self.lastFrame then
-		return
-	end
-	self.lastFrame = frame
+	-- Position, heading and pose update every render frame while following.
 	local hop = 0
 	local flourish = CFrame.identity
 	if self.greeting > 0 then

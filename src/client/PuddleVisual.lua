@@ -116,12 +116,8 @@ function PuddleVisual:update(dt)
 	end
 	self.time += dt
 	self.greeting += dt
-	local frame = math.floor(self.time * 12)
-	if frame == self.lastFrame then
-		return
-	end
-	self.lastFrame = frame
-	local t, g = frame / 12, self.greeting
+	-- Position, heading and pose update every render frame while following.
+	local t, g = self.time, self.greeting
 	local squash, bounce, wave = 0, 0, 0
 	if g < 0.20 then
 		squash = 0.18 * math.sin(g / 0.20 * math.pi / 2)

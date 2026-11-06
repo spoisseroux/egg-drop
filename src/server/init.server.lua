@@ -16,6 +16,8 @@ local FirstSession = require(script.FirstSession)
 local FieldRun = require(script.FieldRun)
 local Nursery = require(script.HatchProgress)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
+local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
+local CloseProgress = require(script.CloseProgress)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -33,6 +35,7 @@ local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
 local loading = {}
+local closing = {}
 local nextSlot = 0
 Lounge.create()
 
@@ -57,10 +60,9 @@ local function publishNursery(board)
 	board.folder:SetAttribute("HatchState", HttpService:JSONEncode(state))
 	board.folder:SetAttribute("InventoryMask", state.inventoryMask)
 	board.folder:SetAttribute("HatchActive", true)
-	local masteryMask = 0
-	for i, family in ipairs({ "pip", "puddle", "wick", "orbit" }) do
-		if state.mastery and (state.mastery[family] or 0) >= 3 then masteryMask = bit32.bor(masteryMask, bit32.lshift(1, i - 1)) end
-	end
+	local masteryMask = state.masteryLegacyMask or 0
+	board.folder:SetAttribute("MasteryRanks", HttpService:JSONEncode(state.masteryRanks or {}))
+
 	board.folder:SetAttribute("MasteryMask", masteryMask)
 end
 
@@ -89,6 +91,10 @@ local function publishState(board)
 	board.folder:SetAttribute("InventoryMask", inventory(board))
 	board.folder:SetAttribute("CompanionId", board.profile.companionId)
 	board.folder:SetAttribute("RoundOver", board.round.over)
+	board.folder:SetAttribute("RunFamily", board.runFamily or "pip")
+	board.folder:SetAttribute("SelectedFamily", board.selectedFamily or "pip")
+	board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
+	board.folder:SetAttribute("OverflowPressure", board.round.danger or 0)
 	board.folder:SetAttribute("FieldPhase", board.field and board.field.phase or "Welcome")
 	board.folder:SetAttribute("FieldStage", board.field and board.field.rootStage or 0)
 	board.folder:SetAttribute("FieldBudget", board.field and board.field.budget or nil)
@@ -139,11 +145,15 @@ local function reset(board, preset)
 	table.clear(board.parts)
 	local field = hasPip(board) and board.nursery.status == "Ready"
 	board.field = if field then FieldRun.new() else nil
+	local selected = board.selectedFamily or NurseryCatalog.family(board.profile.companionId) or "pip"
+	board.runFamily = if FamilyMastery.ownsFamily(inventory(board), selected) then selected else "pip"
+	board.selectedFamily = board.runFamily
+	board.runDay = Nursery.public(board.nursery).dailyDay
 	board.runSequence = board.nursery.nextRunSeq
 	board.nursery.nextRunSeq += 1
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial,
 		if field then FieldRun.simulationOptions(Random.new():NextInteger(1, 2147483646)) else nil)
-	board.round = Round.new()
+	board.round = Round.new(if field then FieldRun.roundOptions() else nil)
 	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
@@ -153,8 +163,11 @@ local function reset(board, preset)
 	board.lastDrop = -math.huge
 	board.playTime = 0
 	board.payoutPending = false
+	board.earnedPayout = nil
 	board.folder:SetAttribute("FieldSuccess", false)
 	board.folder:SetAttribute("NectarAward", 0)
+	board.folder:SetAttribute("DailyAward", 0)
+	board.folder:SetAttribute("MasteryAward", 0)
 	board.folder:SetAttribute("RewardStatus", "")
 	publishState(board)
 	syncVisuals(board)
@@ -225,6 +238,16 @@ local function addPlayer(player)
 	end
 end
 
+local function closeBoard(board)
+	if closing[board] then return end
+	closing[board] = true
+	board.closing = true
+	task.spawn(function()
+		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout)
+		if not ok then warn("Egg Drop close save did not finish:", reason) end
+		closing[board] = nil
+	end)
+end
 Players.PlayerAdded:Connect(addPlayer)
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
@@ -234,20 +257,17 @@ Players.PlayerRemoving:Connect(function(player)
 		board.folder:Destroy()
 		boards[player] = nil
 		Progress.release(board.profile)
-		task.spawn(function()
-			local deadline = os.clock() + 6
-			while board.nursery.busy and os.clock() < deadline do task.wait(.1) end
-			Nursery.release(board.nursery)
-		end)
+		closeBoard(board)
 	end
 end)
+
 for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(addPlayer, player)
 end
 
 request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
-	if not board then
+	if not board or board.closing then
 		return
 	end
 	local now = os.clock()
@@ -278,6 +298,17 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		end
 		return
 	end
+	if action == "pause" then
+		if typeof(value) == "boolean" then board.menuPaused = value end
+		return
+	end
+	if action == "family" then
+		if typeof(value) == "string" and FamilyMastery.ownsFamily(inventory(board), value) then
+			board.selectedFamily = value
+			board.folder:SetAttribute("SelectedFamily", value)
+		end
+		return
+	end
 	if action == "companion" then
 		local pet = if typeof(value) == "string" then Pets.byId[value] else nil
 		if board.mode == "Room" and pet and NurseryCatalog.isOwned(inventory(board), pet.id)
@@ -296,6 +327,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.lastModeChange = now
 		if value == "Board" and hasPip(board) and not board.field then reset(board, board.sim.preset) end
 		board.mode = value
+		board.menuPaused = false
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
 		board.folder:SetAttribute("Mode", value)
 		if value == "Room" and board.firstSession then
@@ -307,7 +339,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "drop" then
-		if board.round.over or (hasPip(board) and board.nursery.status ~= "Ready")
+		if board.menuPaused or board.round.over or (hasPip(board) and board.nursery.status ~= "Ready")
 			or (board.field and (not board.field:canDrop(board.sim.drops) or not Simulation.canDrop(board.sim)))
 			or typeof(value) ~= "number" or not (value >= 0 and value <= 1)
 			or now - board.lastDrop < Config.DropInterval then
@@ -354,7 +386,7 @@ local messages = {
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
-	if not board or typeof(action) ~= "string" then return end
+	if not board or board.closing or typeof(action) ~= "string" then return end
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" then return end
 	if os.clock() - (board.lastHatchRequest or -math.huge) < .3 then
 		nurseryFeedback:FireClient(player, "error", "One moment…")
@@ -379,21 +411,25 @@ local function settleReward(player, board)
 	if board.payoutRunning then return end
 	local amount = board.field.outcome.reward
 	board.folder:SetAttribute("FieldSuccess", board.field.outcome.success)
-	if amount == 0 then
-		board.folder:SetAttribute("RewardStatus", "No reward")
-		return
-	end
+	local summary = { family = board.runFamily, day = board.runDay, success = board.field.outcome.success,
+		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
+		clears = board.round.maxClears, drops = board.sim.drops }
+	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false }
 	board.payoutPending, board.payoutRunning = true, true
 	board.folder:SetAttribute("RewardStatus", "Saving")
 	task.spawn(function()
-		while boards[player] == board and board.payoutPending do
-			if not board.nurseryBusy and not board.nursery.busy then
-				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount)
+		while boards[player] == board and not board.closing and board.payoutPending do
+			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
+				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary)
 				if boards[player] ~= board then break end
 				publishNursery(board)
 				if ok then
 					board.payoutPending = false
-					board.folder:SetAttribute("NectarAward", amount)
+					board.earnedPayout.saved = true
+					local saved = Nursery.public(board.nursery).lastRunReward
+					board.folder:SetAttribute("NectarAward", saved and saved.sequence == board.runSequence and saved.total or amount)
+					board.folder:SetAttribute("MasteryAward", saved and saved.sequence == board.runSequence and saved.masteryPoints or 0)
+					board.folder:SetAttribute("DailyAward", saved and saved.sequence == board.runSequence and saved.daily or 0)
 					board.folder:SetAttribute("RewardStatus", "Saved")
 					break
 				end
@@ -409,8 +445,8 @@ local function grantWelcome(player, board)
 	if board.starterRunning or hasPip(board) then return end
 	board.starterRunning = true
 	task.spawn(function()
-		while boards[player] == board and not hasPip(board) do
-			if not board.nurseryBusy and not board.nursery.busy then
+		while boards[player] == board and not board.closing and not hasPip(board) do
+			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
 				local ok = Nursery.grantStarter(board.nursery)
 				if boards[player] ~= board then break end
 				publishNursery(board)
@@ -435,14 +471,14 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
-			if board.mode ~= "Board" or board.round.over then
+			if board.closing or board.mode ~= "Board" or board.round.over or board.menuPaused then
 				continue
 			end
 			board.playTime += Config.FixedStep
 			local wasReady = Simulation.canDrop(board.sim)
 			table.clear(merged)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
-			board.round:step(board.sim.eggs, Config.FixedStep)
+			board.round:step(board.sim.eggs, Config.FixedStep, board.sim.drops)
 			for _, merge in ipairs(merged) do
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.peakChain = math.max(board.peakChain, board.chain)
@@ -483,6 +519,11 @@ RunService.Heartbeat:Connect(function(dt)
 	local now = os.clock()
 	for player, board in pairs(boards) do
 		syncVisuals(board)
+		if now - (board.lastPressurePublish or 0) >= .1 then
+			board.lastPressurePublish = now
+			board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
+			board.folder:SetAttribute("OverflowPressure", board.round.danger or 0)
+		end
 		local batch = {}
 		for id, impact in pairs(board.impacts) do
 			if board.parts[id] and now - (impact.egg.lastImpact or -math.huge) >= 0.12 then
@@ -501,7 +542,7 @@ task.spawn(function()
 	while true do
 		task.wait(2)
 		for player, board in pairs(boards) do
-			if board.nursery.status == "Retrying" and board.nursery.pending
+			if not board.closing and board.nursery.status == "Retrying" and board.nursery.pending
 				and not board.nurseryBusy and not board.nursery.busy then
 				task.spawn(function()
 					Nursery.retry(board.nursery)
@@ -516,12 +557,12 @@ task.spawn(function()
 	while true do
 		task.wait(Nursery.RenewSeconds)
 		for player, board in pairs(boards) do
-			if not board.nurseryBusy and not board.nursery.busy then
+			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
 				task.spawn(function()
 					if board.nursery.status == "Locked" or board.nursery.status == "Unavailable" then
 						board.nurseryBusy = true
 						local replacement = Nursery.load(player.UserId, board.profile)
-						if boards[player] ~= board then Nursery.release(replacement); return end
+						if boards[player] ~= board or board.closing then Nursery.release(replacement); return end
 						board.nursery = replacement
 						board.nurseryBusy = false
 						if replacement.status == "Ready" and hasPip(board) then reset(board, board.sim.preset) end
@@ -536,16 +577,7 @@ task.spawn(function()
 end)
 
 game:BindToClose(function()
-	local pending = 0
-	for _, board in pairs(boards) do
-		pending += 1
-		task.spawn(function()
-			local deadline = os.clock() + 8
-			while board.nursery.busy and os.clock() < deadline do task.wait(.1) end
-			Nursery.release(board.nursery)
-			pending -= 1
-		end)
-	end
-	local deadline = os.clock() + 10
-	while pending > 0 and os.clock() < deadline do task.wait(.1) end
+	for _, board in pairs(boards) do closeBoard(board) end
+	local deadline = os.clock() + 25
+	while next(closing) and os.clock() < deadline do task.wait(.1) end
 end)
