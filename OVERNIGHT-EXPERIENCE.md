@@ -57,3 +57,5 @@ Leave the nursery archived. A harder route needs its own review, a clearly selec
 ## Scheduled continuation
 
 Hourly heartbeat `egg-drop-overnight-build-through-9-am` continues this chat until a final wake after 09:00 America/New_York on 2026-11-06 (schedule expires 09:15). At or after 09:00, start no new changes, checkpoint, write the morning rundown, and pause this automation. The desktop app and machine must remain running and awake.
+
+Baseline checkpoint: arcade implementation commit `6b7e987` is pushed. Private place `96451847774961` published version **15** at 01:10 Eastern on November 6, verified in native Version History. Egg Drop Studio is in Edit mode and its Rojo panel is now explicitly connected to **egg-drop / localhost:34873**; the unrelated suica 34872 connection was disconnected. All runtime fixtures were removed before publishing.
