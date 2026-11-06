@@ -31,6 +31,7 @@ local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local HollowClock = require(script.HollowClock)
 local NurseryView = require(script.EggHatchView)
+local HatchNavigation = require(script.HatchNavigation)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
@@ -429,10 +430,15 @@ local trackedRare
 local gameMenu
 local openMenu
 local closeMenu
+local hatchNavigation
+local function cancelHatchNavigation()
+	if hatchNavigation then hatchNavigation:cancel() end
+end
 local function isPickerOpen()
 	return picker.shade.Visible
 end
 local roomView = RoomView.new(gui, backdrop, board, audio, function()
+	cancelHatchNavigation()
 	request:FireServer("mode", "Board")
 end, function()
 	openPicker()
@@ -459,6 +465,7 @@ do
 	updateBacking()
 end
 journal = PetJournal.new(safeOverlays, make, label, function(pet)
+	cancelHatchNavigation()
 	if board:GetAttribute("CompanionId") == pet.id then
 		roomView:showPet(pet)
 		audio:play(pet.cue)
@@ -482,6 +489,7 @@ board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 	end
 end)
 roomButton.Activated:Connect(function()
+	cancelHatchNavigation()
 	if not isPickerOpen() then
 		roomView:collapseControls()
 		roomView:requestSwitch(function()
@@ -627,23 +635,42 @@ openNursery = function()
 	journal:close()
 	if nurseryState then nurseryView:open(nurseryState) end
 end
-nurseryView.onClosed = function(reason)
-	if reason == "earn" or reason == "afterHatch" then
-		request:FireServer("mode", "Board")
-		task.spawn(function()
-			local deadline = os.clock() + 3
-			repeat task.wait(.1) until board:GetAttribute("Mode") == "Board" or os.clock() > deadline
-			if board:GetAttribute("Mode") == "Board" and board:GetAttribute("RoundOver") then request:FireServer("reset") end
-		end)
+hatchNavigation = HatchNavigation.new({
+	get = function(name) return board:GetAttribute(name) end,
+	send = function(actionName, value) request:FireServer(actionName, value) end,
+	ready = function() return not roomView.busy end,
+	blocked = function()
+		return isPickerOpen() or journal.shade.Visible or nurseryView:isOpen()
+			or (gameMenu and gameMenu.shade.Visible) or GuiService.MenuIsOpen
+	end,
+	present = function(petId)
+		local pet = Pets.byId[petId]
+		if not pet or not EggCatalog.isOwned(board:GetAttribute("InventoryMask") or 0, petId) then return end
+		if not roomView.pet or roomView.shownPet.id ~= petId then roomView:showPet(pet) end
+		roomView:collapseControls()
+		roomView:focusPet()
+	end,
+	failure = function()
+		if board:GetAttribute("Mode") == "Room" then openJournal() end
+	end,
+})
+nurseryView.onClosed = function(reason, choice)
+	cancelHatchNavigation()
+	if reason == "meet" and choice and EggCatalog.isOwned(board:GetAttribute("InventoryMask") or 0, choice.petId) then
+		hatchNavigation:meet(choice.petId)
+	elseif reason == "earn" or reason == "afterHatch" then
+		hatchNavigation:play()
 	end
 end
 local function visitEggs()
+	cancelHatchNavigation()
+	local generation = hatchNavigation.generation
 	if roomView.busy or not (board:GetAttribute("OwnedPets") > 0) then return end
 	request:FireServer("mode", "Room")
 	task.spawn(function()
 		local deadline = os.clock() + 4
 		repeat task.wait(.1) until (board:GetAttribute("Mode") == "Room" and not roomView.busy) or os.clock() > deadline
-		openNursery()
+		if hatchNavigation.generation == generation then openNursery() end
 	end)
 end
 eggButton.Visible = false
@@ -657,12 +684,19 @@ local function refreshNursery()
 	nurseryView:update(state)
 	local result = state.lastHatch
 	if result and result.id ~= shownNurseryHatch then
+		cancelHatchNavigation()
 		shownNurseryHatch = result.id
+		-- Purchase already shows the committed result in the current view. Do not
+		-- schedule a second open that could undo an immediate Close.
+		if nurseryView:isOpen() then return end
+		local generation = hatchNavigation.generation
 		task.spawn(function()
+			if hatchNavigation.generation ~= generation then return end
 			if board:GetAttribute("Mode") ~= "Room" then request:FireServer("mode", "Room") end
 			local deadline = os.clock() + 5
 			repeat task.wait(.1) until (board:GetAttribute("Mode") == "Room" and not roomView.busy) or os.clock() > deadline
-			if nurseryState and nurseryState.lastHatch and nurseryState.lastHatch.id == result.id then openNursery() end
+			if hatchNavigation.generation == generation and nurseryState and nurseryState.lastHatch
+				and nurseryState.lastHatch.id == result.id then openNursery() end
 		end)
 	end
 end
@@ -687,6 +721,7 @@ closeMenu = function()
 	gameMenu:close(); roomView:setMenuOpen(false)
 	end
 openMenu = function()
+	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() then return end
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
 	gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
@@ -725,6 +760,7 @@ local function updateClub()
 end
 
 openPicker = function()
+	cancelHatchNavigation()
 	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
 	end
@@ -739,6 +775,7 @@ openPicker = function()
 	audio:play("menu")
 end
 openJournal = function()
+	cancelHatchNavigation()
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
 		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"))
 	audio:play("menu")
@@ -1229,6 +1266,7 @@ end
 action.Activated:Connect(dropEgg)
 
 local function requestRetry()
+	cancelHatchNavigation()
 	if modal.Visible and recap.frame.Visible and not roomView.busy and not GuiService.MenuIsOpen
 		and not UserInputService:GetFocusedTextBox() then
 		request:FireServer("reset")
@@ -1658,6 +1696,10 @@ end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
+	if hatchNavigation and hatchNavigation.active then
+		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.MoveDirection.Magnitude > .05 then cancelHatchNavigation() end
+	end
 	-- Transition completion changes local busy state without a replicated attribute.
 	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
 	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")

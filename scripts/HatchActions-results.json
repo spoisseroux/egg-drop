@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-06",
+  "runtime": "Roblox Studio native Client and Server",
+  "kind": "Developer-authored fixtures and actual mouse UI checks",
+  "livePersistenceVerified": false,
+  "physicalPhoneVerified": false,
+  "liveMultiplayerVerified": false,
+  "regressions": {
+    "hatchTransactions": 21,
+    "closeDrain": 2,
+    "onboardingPresentation": 7,
+    "hatchActions": 17,
+    "postAckNavigation": 10
+  },
+  "build": {
+    "rojo": "pass",
+    "changedSourceMatches": 4,
+    "compiledProductionSources": 47,
+    "compileFailures": 0
+  },
+  "actualControls": [
+    {
+      "flow": "Starter Meet Pip",
+      "ackRevisionBefore": 2,
+      "ackRevisionAfter": 3,
+      "nectarBefore": 6,
+      "nectarAfter": 6,
+      "inventoryMask": 1,
+      "companionId": "pip",
+      "mode": "Room",
+      "revealClosed": true,
+      "camera": "Scriptable during greeting; Custom after release",
+      "note": "Settled E greeting showed whole pet; initial transition can briefly pass close to the pet"
+    },
+    {
+      "flow": "Starter Play again",
+      "ackRevisionBefore": 2,
+      "ackRevisionAfter": 3,
+      "nectar": 6,
+      "mode": "Board",
+      "dropsAfterReplay": 0,
+      "aInteractable": true,
+      "dropsAfterTwoActualAPresses": 2
+    },
+    {
+      "flow": "Close mid-crack, reopen through Menu > Hatch eggs, replay",
+      "sameResultId": "114d1c1c-aa27-493b-bd95-fd556113838c",
+      "revisionAfterClose": 2,
+      "revealStayedClosedAfter2Seconds": true,
+      "revisionAfterReopen": 2,
+      "revisionAfterReplay": 3,
+      "nectarThroughout": 6,
+      "inventoryMaskThroughout": 1,
+      "dropsAfterReplay": 0,
+      "aInteractable": true
+    }
+  ],
+  "fixtureCoverage": [
+    "exact ID and advanced Ready acknowledgment",
+    "synchronous and delayed confirmation fires once",
+    "Busy/Retrying/Pending preserves choice",
+    "pre-dispatch throttle and lock retries retain immutable ID/revision and are bounded",
+    "Busy at retry timer resumes on Ready",
+    "another pending transaction advancing revision allows explicit reselection",
+    "Close/new result cancels retry and late navigation",
+    "sparse rare-only result",
+    "duplicate mark progress and promotion precedence",
+    "44px result actions and long names at128/166/198/580px safe heights",
+    "server-confirmed equip before camera focus",
+    "mode/handoff wait, supersession and manual cancellation",
+    "replay only resets finished board"
+  ],
+  "limits": [
+    "128px safe-height fixture verifies result action layout only; cinematic hero and caption remain cramped at that extreme",
+    "Hatch rarity/guarantee and transaction recovery use synthetic storage adapters; no new live profile was granted or mutated for fixtures",
+    "Muted presentation fixture stubs audio; physical audio quality and controller hardware feel were not measured",
+    "No gameplay physics or economy changes in this slice; previous solver results were not rerun"
+  ],
+  "console": [
+    "No runtime Luau errors on final ordinary play",
+    "Existing EditableImage accessibility warning uses fallback; no settings changed",
+    "Existing rbxassetid203785492 asset type mismatch warnings remain"
+  ],
+  "review": "Astra plan and implementation; ack Busy/Pending recovery, delayed reveal Close fence, duplicate promotion precedence fixed before verification"
+}

@@ -76,33 +76,30 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	body.Parent = card
 	local close = button(card, "Close", "Close", UDim2.new(0, 12, 1, -56), UDim2.new(0.30, -18, 0, 44), Art.Raised, 60)
 	local action = button(card, "Action", "Hatch", UDim2.new(0.30, 2, 1, -56), UDim2.new(0.70, -14, 0, 44), Art.Amber, 60)
+	local meet = button(card, "Meet", "Meet friend", UDim2.new(0, 12, 1, -56), UDim2.new(0.50, -18, 0, 44), Art.Leaf, 60)
+	meet.Visible = false
 	local revealHost = frame(card, "RevealHost", Art.Surface, UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
 	revealHost.Visible = false
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
 		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
-		closeButton = close, action = action, revealHost = revealHost, audio = audio,
+		closeButton = close, action = action, meetButton = meet, revealHost = revealHost, audio = audio,
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
+		intentToken = 0,
 	}, View)
 	self.cinematic = HatchCinematic.new(revealHost, audio, reduceEffects)
-	local function layout()
-		local size = shade.AbsoluteSize
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 32, 1, 560), math.clamp(size.Y - 32, 1, 580))
-		if shade.Visible then self:renderBody() end
-	end
-	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
+	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:layout() end)
 	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if shade.Visible then self:renderBody() end
 	end)
-	layout()
+	self:layout()
 	close.Activated:Connect(function() self:close("close") end)
+	meet.Activated:Connect(function() self:chooseResult("meet") end)
 	action.Activated:Connect(function()
 		if not shade.Visible or self.pending or not action.Interactable then return end
 		local current = self.state
 		if current.lastHatch then
-			if not self.ackReady then return end
-			self.ackRequested = current.lastHatch.id
-			self:send("ack", current.lastHatch.id)
+			self:chooseResult("play")
 		elseif (current.nectar or 0) < Catalog.ById[self.selected].cost then
 			self:close("earn")
 		else
@@ -110,6 +107,48 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 		end
 	end)
 	return self
+end
+
+function View:layout()
+	local size = self.shade.AbsoluteSize
+	local result = self.state.lastHatch ~= nil
+	-- Keep the two 44px action rows separate even in a short landscape safe area.
+	local verticalMargin = if result and size.Y < 200 then 16 else 32
+	self.card.Size = UDim2.fromOffset(math.clamp(size.X - 32, 1, 560), math.clamp(size.Y - verticalMargin, 1, 580))
+	self.closeButton.Position = if result then UDim2.new(1, -56, 0, 6) else UDim2.new(0, 12, 1, -56)
+	self.closeButton.Size = if result then UDim2.fromOffset(44, 44) else UDim2.new(0.30, -18, 0, 44)
+	self.action.Position = if result then UDim2.new(0.50, 6, 1, -56) else UDim2.new(0.30, 2, 1, -56)
+	self.action.Size = if result then UDim2.new(0.50, -18, 0, 44) else UDim2.new(0.70, -14, 0, 44)
+	self.meetButton.Visible = result
+	self.heading.Visible, self.nectar.Visible, self.note.Visible, self.body.Visible = not result, not result, not result, not result
+	if self.shade.Visible then self:renderBody() end
+end
+
+function View:revokeIntent()
+	self.intentToken += 1
+	self.ackIntent = nil
+	self.ackRetryScheduledToken = nil
+	self.ackRetryNeededToken = nil
+end
+
+function View:chooseResult(intent)
+	local result = self.state.lastHatch
+	if (intent ~= "meet" and intent ~= "play") or not self.shade.Visible or not result
+		or not self.ackReady or self.pending or self.ackIntent
+		or (self.state.status ~= nil and self.state.status ~= "Ready") then return end
+	self.intentToken += 1
+	self.ackRetryCount, self.retryAvailable = 0, false
+	-- Install this before send: a local transport can synchronously deliver Ready.
+	self.ackIntent = table.freeze({ id = result.id, petId = result.petId, intent = intent,
+		sourceRevision = self.state.revision or 0, token = self.intentToken })
+	self:send("ack", result.id)
+end
+
+function View:selectResultAction()
+	if not string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then return end
+	local selected = GuiService.SelectedObject
+	if selected == self.closeButton then return end
+	GuiService.SelectedObject = if self.meetButton.Interactable then self.meetButton else nil
 end
 
 function View:send(command, value)
@@ -130,7 +169,9 @@ function View:refreshFooter()
 	local ready = state.status == nil or state.status == "Ready"
 	local textValue, canAct
 	if state.lastHatch then
-		textValue, canAct = if self.ackReady then "Try another run" else "Hatching…", self.ackReady
+		textValue, canAct = if self.ackReady then (if self.retryAvailable then "Try again" else "Play again") else "Hatching…", self.ackReady
+		local pet = Pets.byId[state.lastHatch.petId]
+		self.meetButton.Text = if self.pending then "Saving…" else "Meet " .. (if pet then pet.name else "friend")
 	else
 		local recipe = Catalog.ById[self.selected]
 		local missing = math.max(0, recipe.cost - (state.nectar or 0))
@@ -141,6 +182,8 @@ function View:refreshFooter()
 	self.action.Text = if self.pending then "Saving…" else textValue
 	self.action.Interactable = ready and not self.pending and canAct == true
 	self.action.TextTransparency = if self.action.Interactable then 0 else 0.40
+	self.meetButton.Interactable = state.lastHatch ~= nil and self.action.Interactable
+	self.meetButton.TextTransparency = if self.meetButton.Interactable then 0 else 0.40
 end
 
 function View:renderBody()
@@ -229,24 +272,43 @@ end
 
 function View:update(state)
 	self.state = state or {}
-	self.pending = self.state.status == "Busy"
+	local intent = self.ackIntent
+	local result = self.state.lastHatch
+	if intent and result and result.id ~= intent.id then
+		self:revokeIntent()
+		intent = nil
+	end
+	if intent and self.shade.Visible and self.state.status == "Ready" and not result
+		and (self.state.revision or 0) > intent.sourceRevision and intent.token == self.intentToken then
+		-- Dequeue before callbacks, which can synchronously reopen/update this view.
+		self:revokeIntent()
+		self.pending = false
+		self:close(if intent.intent == "meet" then "meet" else "afterHatch", intent)
+		return
+	end
+	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
 	self.nectar.Text = string.format("%d nectar", self.state.nectar or 0)
 	self.note.Text = self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
 	if self.state.status and self.state.status ~= "Ready" and self.state.status ~= "Busy" then
 		self.note.Text = "Egg save unavailable · try again shortly"
 	end
-	if self.ackRequested and not self.state.lastHatch then
-		self.ackRequested = nil
-		self:close("afterHatch")
-		return
-	end
+	self:layout()
 	if self.shade.Visible then
-		local result = self.state.lastHatch
 		if result then
 			self.revealHost.Visible = true
 			if self.playingId ~= result.id then
 				self.playingId, self.ackReady = result.id, false
 				local presentation = table.clone(result)
+				local pet = Pets.byId[result.petId]
+				local family = result.family or (pet and (pet.family or pet.id))
+				local mastery = self.state.masteryDetails and self.state.masteryDetails[family]
+				if result.duplicate and mastery then
+					presentation.masteryHint = if mastery.rank >= 3 then "+1 mark · family mastered"
+						elseif mastery.rank == 2 then string.format("+1 mark · %d/%d marks · %d/%d challenges for III",
+							mastery.points, mastery.nextPoints, mastery.challenges, mastery.challengeGoal)
+						else string.format("+1 mark · %d/%d marks for rank %s", mastery.points, mastery.nextPoints,
+							({ "I", "II", "III" })[mastery.rank + 1])
+				end
 				if result.starter then
 					local recipe = Catalog.ById[self.selected]
 					local balance = self.state.nectar or 0
@@ -257,6 +319,7 @@ function View:update(state)
 					if self.shade.Visible and self.state.lastHatch and self.state.lastHatch.id == result.id then
 						self.ackReady = true
 						self:refreshFooter()
+						self:selectResultAction()
 					end
 				end)
 			end
@@ -267,14 +330,50 @@ function View:update(state)
 		end
 	end
 	self:refreshFooter()
+	if self.ackRetryNeededToken then self:retryAcknowledgement() end
 end
 
 function View:setError(message)
-	self.pending = false
-	if self.state.status ~= "Retrying" then self.ackRequested = nil end
+	local status = self.state.status
+	-- Feedback can precede its public snapshot. Only explicit acknowledgement
+	-- rejection releases the choice; throttle, locks and unknown save/network
+	-- failures cannot prove that this session's operation did not commit.
+	local rejected = message == "HatchChanged" or message == "InvalidCommand" or message == "UnknownAction"
+		or message == "RevisionChanged" or message == "Your hatch progress updated. Try again."
+	if rejected then self:revokeIntent() end
+	self.pending = self.ackIntent ~= nil or status == "Busy"
 	self.errorMessage = message
 	self.note.Text = message or "Earn nectar. Choose an egg. Meet a new friend."
+	if message == "One moment…" or message == "Finishing your last save…"
+		or message == "Finishing your last hatch action…"
+		or message == "Retry the previous action while it saves." then self:retryAcknowledgement() end
 	self:refreshFooter()
+end
+
+function View:retryAcknowledgement()
+	local intent = self.ackIntent
+	local status = self.state.status
+	if not intent or not self.shade.Visible then return end
+	self.ackRetryNeededToken = intent.token
+	if (status ~= nil and status ~= "Ready") or self.ackRetryScheduledToken == intent.token then return end
+	if self.ackRetryCount >= 3 then
+		self:revokeIntent()
+		self.pending, self.retryAvailable = false, true
+		return
+	end
+	self.ackRetryScheduledToken = intent.token
+	task.delay(0.6, function()
+		if self.ackRetryScheduledToken ~= intent.token then return end
+		self.ackRetryScheduledToken = nil
+		local result, currentStatus = self.state.lastHatch, self.state.status
+		if not self.shade.Visible or self.ackIntent ~= intent or self.intentToken ~= intent.token
+			or not result or result.id ~= intent.id or (currentStatus ~= nil and currentStatus ~= "Ready") then return end
+		self.ackRetryCount += 1
+		self.ackRetryNeededToken = nil
+		-- Only explicit pre-dispatch throttle/lock feedback reaches this path.
+		-- Reuse the captured ID/revision; never replay a purchase or roll an egg.
+		self.sendCommand("ack", intent.id, intent.sourceRevision)
+	end)
 end
 
 function View:open(state)
@@ -286,20 +385,21 @@ function View:open(state)
 	self.shade.Visible = true
 	self:update(state or self.state)
 	if self.shade.Visible and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
-		GuiService.SelectedObject = if self.state.lastHatch then self.closeButton else self.action
+		GuiService.SelectedObject = if self.state.lastHatch then (if self.ackReady then self.meetButton else nil) else self.action
 	end
 end
 
-function View:close(reason)
+function View:close(reason, choice)
 	if not self.shade.Visible then return end
+	self:revokeIntent()
 	self.shade.Visible = false
 	self.cinematic:cancel()
 	self.revealHost.Visible = false
-	self.playingId, self.ackReady, self.ackRequested = nil, false, nil
+	self.playingId, self.ackReady, self.pending, self.retryAvailable = nil, false, false, false
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then
 		GuiService.SelectedObject = self.previousSelection
 	end
-	if self.onClosed then self.onClosed(reason or "close") end
+	if self.onClosed then self.onClosed(reason or "close", choice) end
 end
 
 return View

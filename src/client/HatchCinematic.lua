@@ -186,7 +186,11 @@ function Cinematic:drawResult(result, animate)
 		then string.format("%s family  +1 mark  ·  %d total", family, result.mastery or 0)
 		elseif result.starter and result.starterGoal then result.starterGoal
 		else "A new friend for Sprout Hollow"
-	if result.duplicate and (result.promotedTo or 0) > 0 then detail = family .. " family rank " .. ({ "I", "II", "III" })[result.promotedTo] .. " unlocked!" end
+	if result.duplicate and (result.promotedTo or 0) > 0 then
+		detail = "+1 mark · " .. family .. " rank " .. ({ "I", "II", "III" })[result.promotedTo] .. " unlocked!"
+	elseif result.duplicate and result.masteryHint then
+		detail = result.masteryHint
+	end
 
 	local caption = text(root, "Mastery", detail, UDim2.new(0, 8, 1, -21), UDim2.new(1, -16, 0, 19),
 		if result.duplicate then Art.Leaf else Art.Muted, 12)
