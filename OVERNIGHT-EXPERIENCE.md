@@ -70,3 +70,16 @@ Native Studio: 21 transaction and two close-drain cases passed; seven new presen
 Next slice: implement the exact-ID hatch acknowledgment → Meet [pet] / Play again choice described at 1:55–2:45 above. Keep the economy and physics fixed. Live persistence and shared multiplayer remain unverified.
 
 Onboarding checkpoint: implementation `655d2dd` is pushed; private **version 17** is Published, verified in native Version History. Studio remains Edit with egg-drop Rojo 34873 connected and no runtime fixtures in the publish tree.
+
+
+## 03:03 wake — hatch to companion completed
+
+A committed reveal now offers **Meet [pet]** and **Play again** with 44px actions. Meet acknowledges the exact result ID, waits for an advanced Ready snapshot, equips through the existing server action, then greets that pet. Play again acknowledges once and returns to a usable board. Close cancels delayed navigation; reopening resumes the same committed result. Duplicates show +1 family mark and next-rank progress; promotions retain their explicit announcement.
+
+Astra reviewed the plan and implementation. Its findings were fixed: Busy/Pending pre-dispatch ack rejections retain a bounded same-ID/source-revision retry until Ready; Close/new results cancel queued retries; an already open purchased reveal cannot schedule a delayed reopen after Close. No purchase rerolls, economy/schema changes or local ownership/equip writes were added.
+
+Native Studio: **21 transaction, 2 close-drain, 7 onboarding presentation, 17 hatch action and 10 post-ack navigation cases passed**. All47 production sources compile; the four changed production sources match the checkout after newline normalization. Rojo builds. Actual mouse checks confirmed Starter Meet Pip (revision2→3, nectar6 unchanged, equipped and greeted), Play again (zero drops, A usable, two presses produce two drops), and Close mid-crack → Menu/Hatch eggs → same result ID → one ack and usable board. Raw details: `scripts/HatchActions-results.json`. An initial fixture attempt used a stale Play snapshot; restarting Studio loaded final sources and all final cases passed.
+
+Limits: 128px safe-height fixtures prove controls fit, not full cinematic readability; hero/caption remain cramped there. Camera can briefly pass close to a pet while entering greeting, then settles on the whole pet. Existing EditableImage fallback and external asset203785492 warnings remain; no final ordinary-play Luau errors were observed. Live DataStore/rejoin, physical phone feel, multiplayer and human enjoyment remain unverified. Fixtures do not grant real profiles.
+
+Implementation `9446370` is pushed. Next coherent slice: show the next specific mastery requirement and itemized daily-contract recap receipts using authoritative progress. Keep physics/prices fixed.

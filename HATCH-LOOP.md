@@ -218,3 +218,10 @@ Fresh physical-phone feel, live DataStore rejoin, shared live multiplayer, and h
 After Pip, the first field run uses a compact matching diagram labeled LEFT, then RIGHT. It disappears after the first successful quest and does not block controls. Starter Pip's reveal shows the selected egg recipe and real balance. The recap identifies the missed side or overflow, separates quest/daily nectar, shows score against best, and calculates the next egg's cost from the committed balance. A save delay remains a pending reward until a Saved receipt arrives. Compact recaps prioritize readable progress over score tiles.
 
 Seven native Studio presentation regression cases passed. A developer-authored keyboard/UI walkthrough reached its first paid Meadow hatch (Wick) in 178.43 seconds, including operator inspection time; this is not a human usability study. It completed both goals, earned base6 + daily6 and one Pip mark, paid18 once, and returned to a usable board with the first-field coaching retired. See `scripts/OnboardingWalkthrough-results.json` for details.
+
+
+## Hatch destination, 2026-11-06 overnight
+
+After the committed cinematic, choose Meet [pet] or Play again. Both acknowledge that exact result once; Meet waits for server-confirmed equip before greeting, while Play returns to the board. Close preserves the result for later and cancels delayed routing. Duplicates show +1 family mark and next-rank progress, preserving promotion announcements. Pre-dispatch save/throttle locks retry only the captured acknowledgment, at most three automatic retries; purchases are never resent by this UI.
+
+Native Studio passed17 new hatch-action and10 navigation race cases, plus existing21 transaction/2 close/7 onboarding cases. Actual mouse checks covered Meet Pip, replay with A0→2 accepted drops, and mid-crack Close/reopen with the same hatch ID and unchanged6 nectar. Evidence/limits: `scripts/HatchActions-results.json`. Live persistence/phone/multiplayer remain unverified.
