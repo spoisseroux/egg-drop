@@ -83,3 +83,5 @@ Native Studio: **21 transaction, 2 close-drain, 7 onboarding presentation, 17 ha
 Limits: 128px safe-height fixtures prove controls fit, not full cinematic readability; hero/caption remain cramped there. Camera can briefly pass close to a pet while entering greeting, then settles on the whole pet. Existing EditableImage fallback and external asset203785492 warnings remain; no final ordinary-play Luau errors were observed. Live DataStore/rejoin, physical phone feel, multiplayer and human enjoyment remain unverified. Fixtures do not grant real profiles.
 
 Implementation `9446370` is pushed. Next coherent slice: show the next specific mastery requirement and itemized daily-contract recap receipts using authoritative progress. Keep physics/prices fixed.
+
+Hatch destination checkpoint: private place96451847774961 now shows **version20 Published** in native Version History after the tested publish. Studio is Edit, Rojo egg-drop/localhost34873 remains connected, and no temporary test modules are present in the Edit publish tree. Implementation9446370 and evidence5038952 are pushed.
