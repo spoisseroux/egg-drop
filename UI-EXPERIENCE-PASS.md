@@ -37,3 +37,10 @@ Actual controls and screenshots are recorded below after integration verificatio
 ### Remaining validation
 
 Physical phone thumb comfort, tactile rubbing, audio preference, live multiplayer, live DataStore rejoin, performance on low-end devices and voluntary replay remain player tests. Assets remain code-drawn UI graphics; this pass does not implement arbitrary Roblox UI shaders. The content pool and long-term economy remain prototype scope.
+
+
+## Delivery checkpoint
+
+Implementation commit `6c73611` is pushed on `feat/egg-drop-arcade-polish`. Final native rerun of all 45 new cases passed after the last review fixes. Rojo build, whitespace validation and compilation of all 59 runtime source containers passed. Studio is stopped in Edit with no temporary Play fixtures persisted.
+
+Private place96451847774961, version48, was saved with the title **Pocket Deck feedback and petting - 6c73611** and verified as **Published** in Studio Version History. Play link: https://www.roblox.com/games/96451847774961/Egg-Drop . Join a new server to receive the current private build. This publication check is separate from live-client/phone playtesting.
