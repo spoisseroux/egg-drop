@@ -420,6 +420,10 @@ end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Enum.Font.GothamBold
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
+local function isGamepad(inputType)
+	return string.match(inputType.Name, "^Gamepad") ~= nil
+end
+
 local openPicker
 local openJournal
 local picker
@@ -481,6 +485,13 @@ end, function(pet)
 			request:FireServer("mode", "Board")
 		end
 	end)
+end, function()
+	-- This route only opens the existing goal picker. Selecting/equipping stays explicit.
+	openMenu()
+	if gameMenu.shade.Visible then
+		gameMenu:setPage("mastery")
+		if isGamepad(UserInputService:GetLastInputType()) then GuiService.SelectedObject = gameMenu.tabs.mastery end
+	end
 end)
 board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 	local pet = Pets.byId[board:GetAttribute("CompanionId")]
@@ -600,10 +611,6 @@ local function canAim()
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 		and not (nurseryView and nurseryView:isOpen()) and board:GetAttribute("FieldPhase") ~= "Settling"
 		and not board:GetAttribute("RoundOver")
-end
-
-local function isGamepad(inputType)
-	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
 
 local function canPlay()
@@ -778,7 +785,8 @@ end
 openJournal = function()
 	cancelHatchNavigation()
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
-		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"))
+		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"),
+		nurseryState and nurseryState.masteryRanks)
 	audio:play("menu")
 end
 ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)

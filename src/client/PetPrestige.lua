@@ -1,4 +1,5 @@
 local HttpService = game:GetService("HttpService")
+local FamilyCrest = require(script.Parent.FamilyCrest)
 local Prestige = {}
 local families = { "pip", "puddle", "wick", "orbit" }
 local roman = { "I", "II", "III" }
@@ -52,23 +53,11 @@ function Prestige.attach(visual, pet, rank, legacy)
 		local plate = shape(badge, "Crest", UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), Color3.fromHex("#314738"), 0.24)
 		local stroke = Instance.new("UIStroke")
 		stroke.Color, stroke.Thickness, stroke.Parent = tint, if rank == 3 then 2 else 1, plate
-		local family = pet.family or pet.id
-		if family == "pip" then
-			shape(plate, "Leaf", UDim2.fromOffset(7, 5), UDim2.fromOffset(10, 16), tint, 0.5, 35)
-		elseif family == "puddle" then
-			shape(plate, "Droplet", UDim2.fromOffset(6, 8), UDim2.fromOffset(13, 13), tint, 0.5)
-			shape(plate, "DropTip", UDim2.fromOffset(9, 5), UDim2.fromOffset(7, 7), tint, 0.1, 45)
-		elseif family == "wick" then
-			shape(plate, "Flame", UDim2.fromOffset(7, 5), UDim2.fromOffset(11, 16), tint, 0.3, 12)
-			shape(plate, "FlameCore", UDim2.fromOffset(10, 11), UDim2.fromOffset(5, 8), Color3.fromHex("#FFF0C1"), 0.4)
-		else
-			local orbit = shape(plate, "Orbit", UDim2.fromOffset(5, 8), UDim2.fromOffset(16, 10), tint, 0.5, -25)
-			shape(orbit, "Hole", UDim2.fromOffset(2, 2), UDim2.new(1, -4, 1, -4), plate.BackgroundColor3, 0.5)
-			shape(plate, "Moon", UDim2.fromOffset(11, 4), UDim2.fromOffset(7, 7), Color3.fromHex("#FFF0C1"), 0.5)
-		end
+		FamilyCrest.create(plate, pet.family or pet.id, rank, UDim2.fromOffset(1, 1), UDim2.fromOffset(24, 24), 2)
+
 		local text = Instance.new("TextLabel")
 		text.Name, text.BackgroundTransparency = "Rank", 1
-		text.Position, text.Size = UDim2.fromOffset(23, 0), UDim2.new(1, -24, 1, 0)
+		text.Position, text.Size = UDim2.fromOffset(26, 0), UDim2.new(1, -27, 1, 0)
 		text.Text, text.Font, text.TextSize, text.TextColor3 = roman[rank], Enum.Font.GothamBold, 12, Color3.fromHex("#FFF0C1")
 		text.Parent = plate
 	end

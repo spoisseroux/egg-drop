@@ -107,3 +107,23 @@ Actual receipt mouse wheel and Studio-injected D-pad keys reached top/bottom and
 Next coherent slice: useful lounge destination/journal interaction and recognizable family crests, with no new room or currency. Keep nursery deferred; live save/rejoin and live multiplayer remain unverified.
 
 Reward explanation checkpoint: implementation66630c5 is pushed. Private place96451847774961 shows **version25 Published** in native Version History. Studio is Edit with egg-drop/localhost34873 connected; Edit tree is fixture-free.
+
+
+## 05:04 slice plan — make the field journal a useful lounge destination
+
+Astra architecture GO: reuse the existing journal station/book. Add one explicit Family goals route from journal to Menu/Mastery, with zero automatic equip/family writes; Back returns to roaming. Owned cards show inherited family rank, including sparse rare-only inventory. Preserve centered Close for older callers. Journal compact layout must retain a full50px card plus44px footers in160px safe height. Replace unsupported family glyphs with a static vector crest shared by Menu and existing earned pet badges: family motif, rankIseal/IIframe/IIIbloom silhouette. Build only when family/rank changes, preserve unranked/no-badge and legacy/reduced-effects behavior. Improve the existing book/sign without adding stations or rewards.
+
+Verify card names/statuses/scroll end/footers on160/198px landscape and portrait; allfamily/rank silhouettes at24px and grayscale; repeated HUD updates retain crest instances; local/remote pet recreation removes badges. Walk to the actual station with a companion nearby, activate E/X, open goals, choose a family through existing server action, close, greet away from station and resume the same board. Distinguish actual controls, UI/visual fixtures and unavailable live multiplayer/physical devices. Economy/storage/physics/nursery unchanged.
+
+
+## 05:04 wake — field journal destination and family crests completed
+
+The existing lounge journal now offers Family goals, opening Menu directly on Mastery. Opening that route sends no equip/family selection: actual HatchState bytes, selected family and companion stayed unchanged. Journal cards show owned variants' inherited family rank; locked cards still direct players to eggs. Compact160px safe content preserves a complete50px card in52px scroll viewport and separate44px footers. The existing book has a raised cover/pages, colored seals/ribbon and a small wayfinder; no station, room, currency or reward was added.
+
+A static asset-free FamilyCrest replaces unsupported Menu glyphs and supplies existing earned companion badges: leaf, droplet/ripple, flame and orbit motifs, round rankIseal, double-frameII and a six-petalIIIbloom. Artwork stays the same instance through repeated unchanged HUD updates. Rank0 pets still receive no earned badge; rankII outlines and rankIII/legacy reduced-effects behavior retain their prior gates. A native32px color/24px grayscale sheet exposed overly smallIIIpetals, which were enlarged and visually rechecked.
+
+Actual keyboard approach from spawn(-11,4) to about(7.23,-6.73) initially exposed E choosing the nearby following pet rather than Journal. The fix gives an enabled reachable station priority for E/X while leaving explicit pet clicks available. Station cache updates on added/removed/reparented descendants. Retest: E opened journal; Family goals opened Mastery; Back then Waway/E greeted Pip with hidden pill; a two-drop field returned from lounge/journal/goals with the same runsequence2, same drops2 and A enabled. Only Pip was owned in this walk, so another owned family's server switch was not claimed.
+
+Astra reviewed plan and implementation, catching the new callback's local-helper scope and button padding/crest overlap before final verification. Native results:4 crest lifecycle,4 journal layout/ownership,5 prompt/cache,10 reward presentation,21 transaction and2 close-drain cases pass. All50 production sources compile, eight changed sources match checkout, Rojo builds, no Edit fixtures remain. Raw evidence: `scripts/JournalCrests-results.json`. Expected backend lost-write fixture warnings are separate from ordinary play; existing EditableImage/asset203785492 warnings persist. Physical phone/controller, live persistence/multiplayer and human enjoyment remain unverified.
+
+Next coherent slice: lounge arrival/greeting camera framing and companion reveal polish, then final complete-loop/save recovery verification. Keep the nursery deferred and rewards/physics fixed.

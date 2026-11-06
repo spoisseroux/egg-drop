@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-06",
+  "runtime": "Roblox Studio native Client/Server",
+  "kind": "Developer-authored actual keyboard/mouse walk plus visual/layout/lifecycle fixtures",
+  "livePersistenceVerified": false,
+  "physicalPhoneVerified": false,
+  "physicalControllerVerified": false,
+  "liveMultiplayerVerified": false,
+  "regressions": {
+    "familyCrest": 4,
+    "journalPurpose": 4,
+    "journalPromptPriority": 5,
+    "rewardPresentation": 10,
+    "hatchTransactions": 21,
+    "closeDrain": 2
+  },
+  "build": {
+    "rojo": "pass",
+    "compiledSources": 50,
+    "changedSourceMatches": 8,
+    "temporaryEditFixtures": 0
+  },
+  "actualControls": [
+    {
+      "step": "Walk from spawn to journal",
+      "keys": "A1.2seconds then S0.55seconds",
+      "positionBefore": [
+        -11,
+        7,
+        4
+      ],
+      "positionAfter": [
+        7.23,
+        7,
+        -6.73
+      ],
+      "stationRange": 7,
+      "beforeFix": "E greeted the following Pip instead of opening the journal",
+      "afterFix": "E opened journal; competing pet prompt disabled while in station range"
+    },
+    {
+      "step": "Family goals",
+      "journalClosed": true,
+      "masteryMenuOpened": true,
+      "hatchStateByteIdentical": true,
+      "selectedFamilyUnchanged": true,
+      "equippedCompanionUnchanged": true
+    },
+    {
+      "step": "Return to roam and greet",
+      "keys": "Close menu, W1second away, E",
+      "position": [
+        8.82,
+        7,
+        8.09
+      ],
+      "journalClosed": true,
+      "camera": "Scriptable for greeting",
+      "roamingPillHiddenDuringGreeting": true
+    },
+    {
+      "step": "Resume board after journal and goals",
+      "initialRunSequence": 2,
+      "initialDrops": 2,
+      "afterLoungeSequence": 2,
+      "afterLoungeDrops": 2,
+      "aInteractable": true,
+      "selectedFamily": "pip",
+      "runFamily": "pip"
+    }
+  ],
+  "visualFixtures": {
+    "families": [
+      "pip",
+      "puddle",
+      "wick",
+      "orbit"
+    ],
+    "ranks": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "colorSize": 32,
+    "grayscaleSize": 24,
+    "rankSilhouettes": [
+      "unranked motif",
+      "round seal",
+      "double frame",
+      "six-petal bloom"
+    ],
+    "rankIIIBloomExpandedAfterFirstVisualReview": true,
+    "menuGlyphSquareRemoved": true,
+    "nativeRenderedInspection": true
+  },
+  "journalLayoutFixtures": {
+    "safeHeights": [
+      160,
+      198,
+      600
+    ],
+    "width": 360,
+    "minimumCardHeight": 152,
+    "minimumListViewport": 52,
+    "entryHeight": 50,
+    "footerHeight": 44,
+    "longRareNamesAndStatusTextFit": true,
+    "lastRareEntryReachable": true,
+    "rareOnlyFoxfireInheritsWickRankWithoutUnlockingWick": true
+  },
+  "stationDecor": {
+    "journalNamedDecorParts": 17,
+    "collidingOrQueryable": 0,
+    "newStations": 0,
+    "existingAction": "Open journal"
+  },
+  "review": "Astra architecture and final code GO; fixed local isGamepad scope, crest/padding overlap, live station-cache invalidation and observed E-key competition",
+  "limits": [
+    "Journal family selection used the owned Pip family in actual play; another owned family and shared live multiplayer remain unverified",
+    "Native grayscale fixture verifies static artwork; no color-vision study or physical mobile/controller comfort claim",
+    "Initial lounge camera can face away from journal landmarks; arrival framing and greeting camera polish remain next slice",
+    "Backend fixture warnings deliberately simulate lost writes; existing EditableImage fallback and asset203785492 warnings remain",
+    "No economy, storage, simulation, badge entitlements or reduced-effects semantics changed; no new shader or asset permission"
+  ]
+}

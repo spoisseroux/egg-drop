@@ -2,11 +2,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local Art = require(script.Parent.DeckArt)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
+local FamilyCrest = require(script.Parent.FamilyCrest)
 local Menu = {}
 Menu.__index = Menu
 
 local names = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
-local symbols = { pip = "✦", puddle = "◆", wick = "▲", orbit = "◉" }
 local function text(parent, name, content, y, height, color, size)
 	local node = Art.text(parent, name, content, UDim2.fromOffset(8, y), UDim2.new(1, -16, 0, height), color or Art.Silver, size or 13)
 	node.TextXAlignment = Enum.TextXAlignment.Left
@@ -57,7 +57,14 @@ function Menu.new(parent, callbacks)
 	local families, familyText, familyHints = {}, {}, {}
 	for index, family in ipairs(Catalog.Families) do
 		local y = 545 + (index - 1) * 132
-		families[family] = button(body, "Family_" .. family, symbols[family] .. " " .. names[family], 0, y, .44, function() callbacks.family(family) end)
+		families[family] = button(body, "Family_" .. family, names[family], 0, y, .44, function() callbacks.family(family) end)
+		FamilyCrest.create(families[family], family, 0, UDim2.fromOffset(6, 10), UDim2.fromOffset(24, 24), 34, true)
+		families[family]:FindFirstChildOfClass("UIPadding"):Destroy()
+		families[family].TextTransparency = 1
+		local caption = Art.text(families[family], "FamilyName", names[family], UDim2.fromOffset(36, 0),
+			UDim2.new(1, -42, 1, 0), Art.Silver, 14, Enum.Font.GothamBold)
+		caption.TextXAlignment = Enum.TextXAlignment.Left
+		Art.fitText(caption, 14, 10, 0, false)
 		familyText[family] = text(body, "Progress_" .. family, "Not discovered", y, 44, Art.Silver, 12)
 		familyText[family].Position, familyText[family].Size = UDim2.new(.44, 4, 0, y), UDim2.new(.56, -12, 0, 44)
 		familyHints[family] = text(body, "Reward_" .. family, "I badge · II finish · III family effect", y + 47, 78, Art.Muted, 11)
@@ -149,7 +156,9 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 				.. (if detail.rewardHint then "\n" .. detail.rewardHint else "")
 			else "I badge · II finish · III family effect"
 		b.Interactable, b.BackgroundColor3 = owned and state.status == "Ready", if selected == family then Art.Canopy else Art.Raised
-		b.Text = symbols[family] .. " " .. names[family] .. (if selected == family then " ✓" else "")
+		FamilyCrest.update(b.FamilyCrest, family, rank, not owned)
+		b.Text = names[family] .. (if selected == family then " ✓" else "")
+		b.FamilyName.Text = b.Text
 		self.familyText[family].Text = if not owned then "Discover a family member in eggs"
 			elseif rank >= 3 then string.format("Rank III · mastered\n%d total marks", points) else
 			string.format("Rank %s · %d/%d marks%s", ({[0]="—", "I", "II", "III"})[rank] or "III", points,

@@ -232,3 +232,10 @@ Native Studio passed17 new hatch-action and10 navigation race cases, plus existi
 The recap now pins nectar earned and egg-bank progress, then itemizes quest nectar, each completed daily contract, family marks and the played family's next mastery goal. Only a Saved receipt matching the current run sequence can announce a reward or promotion. A delayed display snapshot cannot lock replay. Menu mastery names the actual missing win condition at rankII and marks rankIII mastered. D-pad up/down or PageUp/PageDown scroll the receipt; D-pad left/right selects Try again/Hatch eggs. Mouse wheel scrolls normally.
 
 Native fixtures passed8 goal/receipt and10 presentation cases plus transaction/close/onboarding/hatch regressions. Actual UI completed clean8+daily6 and ordinary6+daily6 rounds; the former bought Meadow, hatched Foxfire Wick and equipped it through Meet. Emulated D-pad/wheel and actual compact-component layout passed; physical phone/controller/touch, live persistence, multiplayer and human retention remain unproven. Evidence: `scripts/RunRewards-results.json`.
+
+
+## Journal destination and family identity, 2026-11-06 overnight
+
+Walk to the raised Field journal, press E/X or its prompt, equip an owned companion or open Family goals to choose mastery through the existing menu. The goals route itself changes no selection, inventory or currency. Station shortcuts take priority over a nearby companion; walk away or click the pet directly to greet. Returning to the deck preserves the active run.
+
+Menu and earned companion badges share static family motifs and distinct rankI/II/IIIseal/frame/bloom shapes. Rank0pets have no earned badge. Compact journal layouts and sparse rare-family inheritance passed native fixtures, as did an actual walk/journal/goals/greet/resume sequence. Evidence and remaining device/live-test limits: `scripts/JournalCrests-results.json`.

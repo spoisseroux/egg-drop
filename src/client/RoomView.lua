@@ -11,6 +11,7 @@ local BonusPetVisual = require(script.Parent.BonusPetVisual)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetPrestige = require(script.Parent.PetPrestige)
+local JournalPromptPriority = require(script.Parent.JournalPromptPriority)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -140,11 +141,32 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	return self
 end
 
+function Room:stationInReach()
+	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	local lounge = workspace:FindFirstChild("EggDropLounge")
+	if not root or not lounge then return false end
+	if self.promptLounge ~= lounge then
+		if self.stationAdded then self.stationAdded:Disconnect() end
+		if self.stationRemoved then self.stationRemoved:Disconnect() end
+		self.promptLounge, self.stationPrompts = lounge, {}
+		local function add(object)
+			if object:IsA("ProximityPrompt") and object:GetAttribute("PocketClubStation") then table.insert(self.stationPrompts, object) end
+		end
+		self.stationAdded = lounge.DescendantAdded:Connect(add)
+		self.stationRemoved = lounge.DescendantRemoving:Connect(function(object)
+			local index = table.find(self.stationPrompts, object)
+			if index then table.remove(self.stationPrompts, index) end
+		end)
+		for _, object in ipairs(lounge:GetDescendants()) do add(object) end
+	end
+	return JournalPromptPriority.stationInReach(root.Position, self.stationPrompts)
+end
+
 function Room:updateControls()
 	local unobscured = self.mode == "Room" and not self.focusing and not self.busy
 		and not self.menuOpen and not self.overlayOpen()
 	self.controls.Visible = unobscured
-	if self.petPrompt then self.petPrompt.Enabled = unobscured end
+	if self.petPrompt then self.petPrompt.Enabled = unobscured and not self:stationInReach() end
 	if self.petClick then self.petClick.MaxActivationDistance = if unobscured then 9 else 0 end
 end
 

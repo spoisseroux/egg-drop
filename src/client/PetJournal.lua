@@ -7,9 +7,11 @@ local Portrait = require(script.Parent.PetPortrait)
 local Journal = {}
 Journal.__index = Journal
 local CARD_HEIGHT = 378
-local LIST_HEIGHT = (math.ceil(#Pets / 2) + #Pets.rares) * 55
+local LIST_HEIGHT = (math.ceil(#Pets / 2) + #Pets.rares) * 55 - 3
+local familyNames = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
+local rankNames = { [0] = "Unranked", "I", "II", "III" }
 
-function Journal.new(gui, make, label, onVisit, onTrack)
+function Journal.new(gui, make, label, onVisit, onTrack, onGoals)
 	local shade = make("Frame", "PetJournal", {
 		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 		BackgroundTransparency = 1, Active = true, Visible = false, ZIndex = 20,
@@ -19,7 +21,7 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 		Position = UDim2.fromScale(0.5, 0.5),
 	}, shade)
 	local scroll = make("ScrollingFrame", "Scroll", {
-		Size = UDim2.new(1, -16, 1, -103), Position = UDim2.fromOffset(8, 43),
+		Size = UDim2.new(1, -16, 1, -100), Position = UDim2.fromOffset(8, 40),
 		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 22,
 		ScrollingDirection = Enum.ScrollingDirection.Y, ScrollBarThickness = 4,
 		ScrollBarImageColor3 = Art.Cyan, ElasticBehavior = Enum.ElasticBehavior.Never,
@@ -27,7 +29,8 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 	}, card)
 	local function layout()
 		local size = shade.AbsoluteSize
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 40, 1, 400), math.clamp(size.Y - 40, 1, CARD_HEIGHT))
+		card.Size = UDim2.fromOffset(math.clamp(size.X - 24, 1, 400),
+			math.clamp(size.Y - (if size.Y < 220 then 8 else 40), 1, CARD_HEIGHT))
 	end
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 	layout()
@@ -39,7 +42,7 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 	title.TextSize = 16
 	title.ZIndex = 22
 	Art.fitText(title, 16, 11, 12)
-	local self = setmetatable({ shade = shade, scroll = scroll, title = title, cards = {}, portraits = {} }, Journal)
+	local self = setmetatable({ shade = shade, card = card, scroll = scroll, title = title, cards = {}, portraits = {}, onGoals = onGoals }, Journal)
 	for index, pet in ipairs(Pets.collection) do
 		local entry = label("TextButton", pet.name, "", scroll, Art.Raised)
 		local column = if pet.trial then 0 else (index - 1) % 2 * 0.5
@@ -56,17 +59,17 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 		name.TextXAlignment = Enum.TextXAlignment.Left
 		name.TextTruncate = Enum.TextTruncate.AtEnd
 		Art.fitText(name, 15, 10, 0)
-		local status = Art.text(entry, "Status", "", UDim2.fromOffset(47, 23), UDim2.new(1, -51, 0, 17),
+		local status = Art.text(entry, "Status", "", UDim2.fromOffset(47, 22), UDim2.new(1, -51, 0, 25),
 			Art.Muted, 11, Enum.Font.GothamMedium)
 		status.TextXAlignment = Enum.TextXAlignment.Left
-		status.TextTruncate = Enum.TextTruncate.AtEnd
+		Art.fitText(status, 11, 9, 0, true)
+		local statusInset = status:FindFirstChildOfClass("UIPadding")
+		statusInset.PaddingTop, statusInset.PaddingBottom = UDim.new(0, 0), UDim.new(0, 0)
 		if pet.trial then
 			local track = Art.text(entry, "Track", "TRACK & PLAY", UDim2.new(1, -91, 0, 5),
 				UDim2.fromOffset(87, 16), Art.Cyan, 10, Enum.Font.GothamBold)
 			track.TextXAlignment = Enum.TextXAlignment.Right
 			track.Visible = false
-			status.TextScaled = true
-			make("UITextSizeConstraint", "HintSize", { MinTextSize = 9, MaxTextSize = 11 }, status)
 		end
 		self.cards[index] = entry
 		entry.Activated:Connect(function()
@@ -91,17 +94,36 @@ function Journal.new(gui, make, label, onVisit, onTrack)
 		self:close()
 	end)
 	self.closeButton = close
+	if onGoals then
+		close.Position, close.Size = UDim2.new(0, 8, 1, -52), UDim2.new(0.5, -12, 0, 44)
+		local goals = label("TextButton", "FamilyGoals", "Family goals", card, Art.Canopy)
+		goals.Position, goals.Size = UDim2.new(0.5, 4, 1, -52), UDim2.new(0.5, -12, 0, 44)
+		goals.ZIndex, goals.TextColor3 = 22, Art.Silver
+		Art.button(goals, 6)
+		Art.fitText(goals, 15, 10, 8, true)
+		goals.Activated:Connect(function() self:openFamilyGoals() end)
+		self.goalsButton = goals
+	end
 	return self
 end
 
-function Journal:open(owned, trials, companionId, selected, tracked, inventoryMask)
+function Journal:openFamilyGoals()
+	if not self.shade.Visible or not self.onGoals then return end
+	self:close()
+	self.onGoals()
+end
+
+function Journal:open(owned, trials, companionId, selected, tracked, inventoryMask, masteryRanks)
 	self.title.Text = string.format("PET JOURNAL  ·  %02d/%02d", Pets.ownedCount(owned, trials, inventoryMask), #Pets.collection)
 	for index, entry in ipairs(self.cards) do
 		local pet = Pets.collection[index]
 		local unlocked = Pets.isUnlocked(pet, owned, trials, inventoryMask)
-		local equipped = pet.id == companionId
+		local equipped = unlocked and pet.id == companionId
 		local trackable = inventoryMask == nil and pet.trial ~= nil and not unlocked
-		entry.Status.Text = if equipped then "Equipped" elseif unlocked then "Equip"
+		local family = pet.family or pet.id
+		local rank = math.clamp(math.floor(tonumber(masteryRanks and masteryRanks[family]) or 0), 0, 3)
+		entry.Status.Text = if unlocked then (if equipped then "Equipped" else "Equip") .. "\n"
+			.. (familyNames[family] or family) .. " · " .. rankNames[rank]
 			elseif inventoryMask ~= nil then "Hatch from eggs"
 			elseif pet.trial then pet.trial.hint else pet.charge .. " charge to hatch"
 		if pet.trial then

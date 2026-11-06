@@ -435,10 +435,36 @@ function Art.build(room, part)
 	end
 	local awning = box("CanvasAwning", -11, 7.55, -6.9, 5.65, 0.12, 2.35, Color3.fromHex("#EBDAAC"))
 	awning.CFrame *= CFrame.Angles(math.rad(-9), 0, 0)
-	box("FieldGuideCover", 11, 5.59, -6.15, 1.65, 0.16, 0.94, bark)
+	-- One readable journal station: a raised field guide and painted family seals.
+	-- These small decorations leave the existing table/prompt and paths intact.
 	for _, side in ipairs({ -1, 1 }) do
-		box("FieldGuidePage", 11 + side * 0.39, 5.69, -6.15, 0.76, 0.07, 0.85, Color3.fromHex("#FFF0C8"))
+		box("FieldGuideStand", 11 + side * 0.78, 5.67, -6.45, 0.24, 0.28, 0.62, bark)
 	end
+	local guide = box("FieldGuideCover", 11, 5.83, -6.15, 2.32, 0.16, 1.42, Color3.fromHex("#38694A"))
+	guide.CFrame *= CFrame.Angles(math.rad(18), 0, 0)
+	local function bookDetail(name, offset, size, color)
+		local piece = box(name, 0, 0, 0, size.X, size.Y, size.Z, color)
+		piece.CFrame = guide.CFrame * CFrame.new(offset)
+		piece.CastShadow = false
+		return piece
+	end
+	bookDetail("FieldGuideSpine", Vector3.new(0, 0.12, 0), Vector3.new(0.11, 0.11, 1.37), Color3.fromHex("#CFB56D"))
+	for _, side in ipairs({ -1, 1 }) do
+		bookDetail("FieldGuidePage", Vector3.new(side * 0.55, 0.12, 0), Vector3.new(1.02, 0.07, 1.26), Color3.fromHex("#FFF0C8"))
+		for row = 0, 1 do
+			local seal = bookDetail("FieldGuideFamilySeal", Vector3.new(side * 0.55, 0.17, -0.34 + row * 0.52),
+				Vector3.new(0.22, 0.035, 0.22), ({ Color3.fromHex("#77AC59"), Color3.fromHex("#ECA65B"),
+					Color3.fromHex("#6EBDCC"), Color3.fromHex("#9D8DC9") })[(if side < 0 then 1 else 3) + row])
+			local mesh = Instance.new("SpecialMesh")
+			mesh.MeshType, mesh.Parent = Enum.MeshType.Sphere, seal
+			bookDetail("FieldGuideInk", Vector3.new(side * 0.55, 0.17, -0.12 + row * 0.52),
+				Vector3.new(0.56, 0.018, 0.025), Color3.fromHex("#859171"))
+		end
+	end
+	bookDetail("FieldGuideRibbon", Vector3.new(0.32, 0.10, 0.78), Vector3.new(0.15, 0.035, 0.48), Color3.fromHex("#CFB56D"))
+	box("JournalWayfinderPost", 5.8, 4.9, 3.8, 0.16, 1.8, 0.16, bark)
+	local wayfinder = box("JournalWayfinder", 5.8, 5.65, 3.8, 2.7, 0.64, 0.13, Color3.fromHex("#38694A"))
+	sign(wayfinder, "Journal  →")
 	box("DisplayDeck", -11.2, 5.77, -6.0, 1.02, 0.47, 0.15, Color3.fromHex("#303B49"))
 	box("DisplayLCD", -11.2, 5.77, -5.91, 0.28, 0.39, 0.04, Color3.fromHex("#71CAD6"))
 	box("DisplayRocker", -11.53, 5.77, -5.91, 0.15, 0.07, 0.04, bark)
