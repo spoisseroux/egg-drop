@@ -1,5 +1,3 @@
-local DataStoreService = game:GetService("DataStoreService")
-local RunService = game:GetService("RunService")
 local Themes = require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 local Stickers = require(game:GetService("ReplicatedStorage").Shared.DeckStickers)
 local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
@@ -8,8 +6,7 @@ local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSetting
 
 local Progress = {}
 local pending = {}
-local memory = {}
-local store = if RunService:IsStudio() then nil else DataStoreService:GetDataStore("EggDropProgressV1")
+local store = require(script.Parent.ProgressStore)
 local writer = game.JobId
 
 local function markDirty(profile)
@@ -49,25 +46,7 @@ local function trialsOf(record)
 		bit32.band(Trials.mask(record.rareTrials), Trials.RareMask))
 end
 
-function Progress.load(userId)
-	local key = "player_" .. userId
-	local record = memory[key]
-	local success = true
-	if store then
-		for attempt = 1, 3 do
-			success, record = pcall(store.GetAsync, store, key)
-			if success then
-				break
-			end
-			if attempt < 3 then
-				task.wait(attempt * 0.6)
-			end
-		end
-		if not success then
-			warn("Egg Drop could not load the player profile:", record)
-			record = nil
-		end
-	end
+local function decode(key, record, success)
 	record = if type(record) == "table" then record else {}
 	local rank = rankOf(record)
 	local trials = trialsOf(record)
@@ -90,10 +69,35 @@ function Progress.load(userId)
 	}
 end
 
-local function flush(profile)
-	if profile.loadFailed or profile.saving or not pending[profile] then
-		return
+function Progress.fromRecord(userId, record, success)
+	return decode("player_" .. userId, record, success ~= false)
+end
+
+function Progress.load(userId)
+	local key = "player_" .. userId
+	local success, record
+	for attempt = 1, 3 do
+		success, record = pcall(store.GetAsync, store, key)
+		if success then break end
+		if attempt < 3 then task.wait(attempt * .6) end
 	end
+	if not success then warn("Egg Drop could not load the player profile:", record); record = nil end
+	return decode(key, record, success)
+end
+
+-- Only an acquired authoritative snapshot may replace the provisional read.
+function Progress.hydrate(profile, record)
+	if profile.saving or pending[profile] then return false end
+	local fresh = decode(profile.key, record, true)
+	for key, value in pairs(fresh) do profile[key] = value end
+	profile.companionId = fresh.companionId
+	return true
+end
+
+local function flush(profile)
+	if not pending[profile] then return true end
+	if profile.saving then return false, "Busy" end
+	if profile.loadFailed then return false, "Temporary" end
 	profile.saving = true
 	local rank, charge, best = profile.earnedRank, profile.earnedCharge, profile.earnedBest
 	local theme, sticker, themeAt = profile.theme, profile.sticker, profile.themeAt
@@ -141,18 +145,12 @@ local function flush(profile)
 		return record
 	end
 
-	local success, result
-	if store then
-		success, result = pcall(store.UpdateAsync, store, profile.key, merge)
-	else
-		success = true
-		memory[profile.key] = merge(memory[profile.key])
-	end
+	local success, result = pcall(store.UpdateAsync, store, profile.key, merge)
 	profile.saving = false
 	if not success then
 		setSaveFailed(profile, true)
 		warn("Egg Drop could not save the player profile:", result)
-		return
+		return false, "Retrying"
 	end
 	setSaveFailed(profile, false)
 	if rank == profile.earnedRank and charge == profile.earnedCharge then
@@ -181,7 +179,10 @@ local function flush(profile)
 		or profile.earnedTrials or profile.soundChange or profile.motionChange) then
 		pending[profile] = nil
 	end
+	return pending[profile] == nil
 end
+
+Progress.flushOnce = flush
 
 function Progress.recordTrials(profile, chain, score, clears)
 	local earned = Trials.earned(profile.trials, chain, score, clears)
@@ -260,7 +261,7 @@ task.spawn(function()
 	end
 end)
 
-if store then
+if store.persistent then
 	game:BindToClose(function()
 		local deadline = os.clock() + 24
 		while next(pending) and os.clock() < deadline do

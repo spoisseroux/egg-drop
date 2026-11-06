@@ -4,6 +4,7 @@ function Close.drain(hatching, handle, payout, options)
 	options = options or {}
 	local now, wait = options.now or os.clock, options.wait or task.wait
 	local deadline = now() + (options.timeout or 20)
+	local backoff = .5
 	while now() < deadline do
 		if handle.busy then
 			wait(.1)
@@ -14,6 +15,18 @@ function Close.drain(hatching, handle, payout, options)
 			local ok = hatching.award(handle, payout.sequence, payout.amount, payout.summary)
 			if ok then payout.saved = true else wait(.25) end
 		else
+			if options.profileFlush then
+				local ok, reason = options.profileFlush()
+				if not ok then
+					wait(if reason == "Busy" then .1 else backoff)
+					if reason ~= "Busy" then backoff = math.min(2, backoff * 2) end
+					continue
+				end
+			end
+			if now() >= deadline then break end
+			if handle.status and handle.status ~= "Ready" and handle.status ~= "Retrying" then
+				return true, "NoAcquiredLease"
+			end
 			return hatching.release(handle)
 		end
 	end

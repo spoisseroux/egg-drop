@@ -18,6 +18,7 @@ local Nursery = require(script.HatchProgress)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local CloseProgress = require(script.CloseProgress)
+local SessionProfile = require(script.SessionProfile)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -47,9 +48,13 @@ local function hasPip(board)
 	return NurseryCatalog.isOwned(inventory(board), "pip")
 end
 
+local function canProgress(board)
+	return board.profileReady and SessionProfile.ready(board.nursery, board.nurseryBusy)
+end
+
 local function publishNursery(board)
 	local state = Nursery.public(board.nursery)
-	if NurseryCatalog.isOwned(state.inventoryMask, "pip") then
+	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
 		if not NurseryCatalog.isOwned(state.inventoryMask, board.profile.companionId) then
 			Progress.equipCompanion(board.profile, Pets.byId.pip)
 			board.folder:SetAttribute("CompanionId", "pip")
@@ -99,7 +104,7 @@ local function publishState(board)
 	board.folder:SetAttribute("FieldStage", board.field and board.field.rootStage or 0)
 	board.folder:SetAttribute("FieldBudget", board.field and board.field.budget or nil)
 	board.folder:SetAttribute("FieldZoneBound", FieldRun.ZoneBound)
-	board.folder:SetAttribute("FieldReady", (not hasPip(board) or board.nursery.status == "Ready")
+	board.folder:SetAttribute("FieldReady", canProgress(board)
 		and (not board.field or (board.field:canDrop(board.sim.drops) and Simulation.canDrop(board.sim))))
 end
 
@@ -204,13 +209,10 @@ local function addPlayer(player)
 		mode = "Board",
 		profile = profile,
 		nursery = nursery,
-		firstSession = FirstSession.new(player, profile),
+		firstSession = nil,
 	}
-	if nursery.companionId then profile.companionId = nursery.companionId end
-	if not NurseryCatalog.isOwned(nursery.state.inventoryMask, profile.companionId) then
-		profile.companionId = if NurseryCatalog.isOwned(nursery.state.inventoryMask, "pip") then "pip" else nil
-	end
-	if not Stickers.canEquip(profile.sticker, profile.rank, profile.trials, nursery.state.inventoryMask) then profile.sticker = Stickers.Default end
+	board.profileReady = SessionProfile.hydrate(profile, nursery)
+	if board.profileReady then board.firstSession = FirstSession.new(player, profile) end
 	board.mode = if NurseryCatalog.isOwned(nursery.state.inventoryMask, "pip") then "Room" else "Board"
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
@@ -242,11 +244,13 @@ local function addPlayer(player)
 end
 
 local function closeBoard(board)
-	if closing[board] then return end
+	if board.closing then return end
 	closing[board] = true
 	board.closing = true
 	task.spawn(function()
-		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout)
+		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
+			profileFlush = function() return Progress.flushOnce(board.profile) end,
+		})
 		if not ok then warn("Egg Drop close save did not finish:", reason) end
 		closing[board] = nil
 	end)
@@ -259,7 +263,6 @@ Players.PlayerRemoving:Connect(function(player)
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		boards[player] = nil
-		Progress.release(board.profile)
 		closeBoard(board)
 	end
 end)
@@ -274,6 +277,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	local now = os.clock()
+	if (action == "appearance" or action == "sound" or action == "motion" or action == "companion"
+		or action == "family" or action == "drop" or action == "reset" or action == "preset")
+		and not canProgress(board) then return end
 	if action == "appearance" then
 		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string"
 			and Stickers.canEquip(sticker, board.profile.rank, board.profile.trials, inventory(board))
@@ -384,12 +390,12 @@ local messages = {
 	Retrying = "Saving is delayed. Your result will stay the same when retried.",
 	SessionLost = "This hatch session moved to another server. Rejoin to continue.",
 	Locked = "Your previous session is closing. Please wait a moment.",
-	Temporary = "Hatch saving is unavailable. Rejoin before spending nectar.",
+	Temporary = "Loading your save. Please wait before spending nectar.",
 }
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
-	if not board or board.closing or typeof(action) ~= "string" then return end
+	if not board or board.closing or not board.profileReady or typeof(action) ~= "string" then return end
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" then return end
 	if os.clock() - (board.lastHatchRequest or -math.huge) < .3 then
 		nurseryFeedback:FireClient(player, "error", "One moment…")
@@ -476,7 +482,8 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
-			if board.closing or board.mode ~= "Board" or board.round.over or board.menuPaused then
+			if board.closing or board.mode ~= "Board" or board.round.over or board.menuPaused
+				or not canProgress(board) then
 				continue
 			end
 			board.playTime += Config.FixedStep
@@ -564,13 +571,34 @@ task.spawn(function()
 		for player, board in pairs(boards) do
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
 				task.spawn(function()
-					if board.nursery.status == "Locked" or board.nursery.status == "Unavailable" then
+					if board.nursery.status == "Locked" or board.nursery.status == "Unavailable" or board.nursery.status == "Temporary" then
 						board.nurseryBusy = true
-						local replacement = Nursery.load(player.UserId, board.profile)
+						local candidateProfile = board.profile
+						if candidateProfile.loadFailed then candidateProfile = Progress.load(player.UserId) end
+						local replacement = Nursery.load(player.UserId, candidateProfile)
 						if boards[player] ~= board or board.closing then Nursery.release(replacement); return end
 						board.nursery = replacement
 						board.nurseryBusy = false
-						if replacement.status == "Ready" and hasPip(board) then reset(board, board.sim.preset) end
+						board.profileReady = SessionProfile.hydrate(board.profile, replacement)
+						if board.profileReady then
+							board.folder:SetAttribute("SaveStatus", nil)
+							board.firstSession = FirstSession.new(player, board.profile)
+							board.selectedFamily = NurseryCatalog.family(board.profile.companionId) or "pip"
+							board.mode = if hasPip(board) then "Room" else "Board"
+							reset(board, board.sim.preset)
+							board.folder:SetAttribute("Mode", board.mode)
+							board.folder:SetAttribute("DeckThemeId", board.profile.theme)
+							board.folder:SetAttribute("DeckStickerId", board.profile.sticker)
+							board.folder:SetAttribute("SoundLevel", board.profile.sound)
+							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)
+							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme, board.profile.sticker)
+							Lounge.setAppearance(player.Character, board.profile.theme, board.profile.sticker)
+							if board.firstSession then board.firstSession:advance(1) end
+						elseif replacement.status == "Ready" then
+							-- Never enable play over a dirty/unhydrated provisional profile.
+							Nursery.release(replacement)
+							replacement.status = "Unavailable"
+						end
 					else
 						Nursery.renew(board.nursery)
 					end

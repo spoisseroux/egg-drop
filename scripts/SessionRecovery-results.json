@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-06",
+  "review": "Astra architecture and final implementation GO",
+  "runtime": "Roblox Studio native Server/Client",
+  "regressions": {"sharedStoreRecovery": 8, "serverEntryRecovery": 2, "actualDefaultStudioStore": 1, "hatchTransactions": 21, "closeDrain": 2, "onboarding": 7, "hatchActions": 17, "hatchNavigation": 10, "runGoalsAndReceipts": 8, "rewardPresentation": 10, "total": 86},
+  "build": {"allSourcesCompile": 55, "productionSources": 53, "changedSourceMatches": 7, "rojo": "pass", "editFixturesAbsent": true},
+  "simulatedRecovery": {
+    "sharedRoot": "Actual PlayerProgress and HatchProgress transforms against one isolated backing; stale GetAsync, delayed/in-flight profile writes, exact rare/settings/reveal, immutable rewards, ack/reload and timeout lease fencing",
+    "host": "Actual server entry source with isolated services/remotes, controlled task maintenance and profile I/O: Temporary and Locked block mutations and simulation, reacquire hydrates all attributes, field drop accepted, shutdown plus removal releases once",
+    "studioDefault": "Actual default Studio store adapters use a synthetic GUID key, preserve settings plus the exact pending Pip reveal across release/reacquire, then acknowledge; discarded when Play stops",
+    "persistentDataStoreWrites": false
+  },
+  "actualUiWalk": {
+    "kind": "Developer-authored adaptive mouse drag/release walkthrough, not human usability testing",
+    "firstPet": "Actual welcome A clicks and Meet Pip",
+    "field": {"drops": 24, "goals": 2, "score": 630, "peakChain": 4, "baseNectar": 8, "dailyNectar": 6, "bankBefore": 6, "bankAfter": 20, "pipMarks": 2, "challengeFlags": 7, "rewardStatus": "Saved"},
+    "hatch": {"recipe": "meadow", "cost": 18, "pet": "wick", "bankAfter": 2, "inventoryMask": 5, "resultId": "ee35fa39-a07a-443c-a8cf-ef274794727a", "meet": "Server-confirmed Wick companion, Room mode, pending reveal acknowledged"},
+    "finalRestart": "Final source snapshot: actual welcome/Meet/Deck/A accepted first 24-budget field drop; status Ready, Pip equipped, save banner hidden",
+    "bannerFixture": {"kind": "Client-only attribute injection, restored immediately", "text": "Loading saved progress · retrying safely", "visible": true, "textFits": true}
+  },
+  "limitations": [
+    "No real private-server disconnect/rejoin, Roblox live DataStore latency or shared live multiplayer was tested",
+    "No physical phone/controller/touch comfort or voluntary replay evidence",
+    "A save outage pauses progression and retries safely; the close deadline can expire and retain its lease until natural expiry",
+    "Final ordinary-play console contained existing EditableImage fallback and external asset203785492 warnings; failure-injection fixtures separately emit expected save/load warnings",
+    "Seven pets and mastery ranks I–III remain finite prototype content; no production readiness, retention or revenue claim"
+  ]
+}

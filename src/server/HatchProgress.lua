@@ -1,15 +1,12 @@
-local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Mastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
-local store = if RunService:IsStudio() then nil else DataStoreService:GetDataStore("EggDropProgressV1")
-local memory = {}
+local store = require(script.Parent.ProgressStore)
 local random = Random.new()
 
 local function clone(value)
@@ -31,10 +28,7 @@ local function defaultAdapter()
 		random = function() return random:NextNumber() end,
 		wait = task.wait,
 		update = function(key, transform)
-			if store then return store:UpdateAsync(key, transform) end
-			local nextRecord = transform(clone(memory[key]))
-			if nextRecord ~= nil then memory[key] = clone(nextRecord) end
-			return clone(nextRecord)
+			return store:UpdateAsync(key, transform)
 		end,
 	}
 end
@@ -128,7 +122,13 @@ local function upgrade(state, now)
 	return nextState
 end
 
-local function accept(handle, record)
+local function accept(handle, record, acquiring)
+	if acquiring then
+		handle.profileRecord = {}
+		for key, value in pairs(record) do
+			if key ~= "hatching" then handle.profileRecord[key] = clone(value) end
+		end
+	end
 	handle.state = clone(record.hatching)
 	handle.companionId = if Catalog.isOwned(handle.state.inventoryMask, record.companionId)
 		then record.companionId else nil
@@ -175,7 +175,7 @@ function Hatching.load(userId, profile, adapter)
 		if attempt < 3 and adapter.wait then adapter.wait(attempt * 0.5) end
 	end
 	if ok and record and record.hatching and record.hatching.lease.token == handle.token then
-		accept(handle, record)
+		accept(handle, record, true)
 		handle.epoch = handle.state.epoch
 		handle.status = "Ready"
 	else

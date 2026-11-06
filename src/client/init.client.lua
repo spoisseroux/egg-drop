@@ -92,7 +92,7 @@ do
 			if ok and value.status ~= "Ready" and value.status ~= "Busy" then state = value.status end
 		end
 		notice.Visible = state ~= nil and state ~= "Ready" and state ~= "Busy"
-		notice.Text = if state == "Temporary" then "Save unavailable · progress won't carry over"
+		notice.Text = if state == "Temporary" then "Loading saved progress · retrying safely"
 			elseif state == "Retrying" then "Saving progress · retrying, please wait"
 			elseif state == "Locked" then "Waiting for previous session to close…"
 			elseif state then "Hatch save unavailable · rejoin to continue" else ""

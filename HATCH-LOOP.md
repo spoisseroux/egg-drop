@@ -19,8 +19,8 @@ nursery and staged care proposal is deferred in `assets/concepts/nursery/` and
 5. Choose **Hatch eggs** on the recap, or **Menu → Hatch eggs** from the handheld or lounge. Spend nectar on one of two egg recipes.
 6. Watch the shell swell, crack, split and release its 3D pet with original synth
    cues. The server commits the outcome before the reveal. Closing/reopening or
-   reconnecting cannot reroll or charge twice. **Try another run** acknowledges
-   the result and returns to play.
+   reconnecting cannot reroll or charge twice. **Meet [pet]** acknowledges and
+   equips that companion; **Play again** acknowledges and returns to play.
 
 Returning players start in the lounge. Leaving for the lounge pauses a current
 board; returning resumes it. An unfinished field run restarts on reconnect.
@@ -68,19 +68,15 @@ runs every twenty seconds. Failed loads cannot spend or overwrite a profile.
 ## Verification performed
 
 - Rojo build and Studio Luau compilation of all runtime scripts.
-- Thirteen transaction regression cases, including all advertised outcomes,
+- Twenty-one transaction regression cases, including all advertised outcomes,
   rare protection, seven-pet migration, credits, sparse inventory, stale writers,
   daily boundaries, callback retries, pre-commit errors and ambiguous commits.
-- Actual-solver held-out comparisons stored in
-  `scripts/FieldRunBenchmark-results.json`, including rejected tuning candidates.
-  The final setup uses empty field trays, seeded four-I/two-II bags, kick six,
-  first-contact readiness, and bank boundaries at X=−3.8/+3.8.
-- Thirty fresh seeds: deliberate heuristic 30/30 completions, uniform random
-  8/30, minimum-cooldown random 3/30, center-only zero. Nectar rates were
-  14.43, 3.85 and 1.38 per active minute respectively.
-- Another thirty seeds modeling 2.5-second deliberate decisions yielded a
-  1.885× nectar-rate advantage over fast random. These are automated models,
-  not evidence that human players find the loop fun or comfortable.
+- Current native solver comparisons are in `scripts/FieldPressureBenchmark-native.json`:
+  deliberate29/30 wins, fast random16/30, random15/30, center0/30; deliberate
+  nectar/minute1.86× fast random. Current boundaries are±2.6, width11,
+  overflow8.6 with2.4seconds grace after drop12 and an early spawn-jam guard.
+  Historical pre-pressure calibration remains in `scripts/FieldRunBenchmark-results.json`.
+  Solver strategies are automated models, not human enjoyment/retention evidence.
 - Real Studio drag-and-release runs earned nectar. At 22 nectar, an actual
   Meadow purchase deducted eighteen and hatched Orbit, leaving four and an
   inventory of Pip + Orbit. Reopening retained its result ID and balance.
@@ -105,8 +101,9 @@ balance, ownership and any pending reveal; decide whether to play another run.
 
 Spencer wants family mastery with the recognizable evolving emblems and social
 status of prestige badges, expressed in Sprout Hollow's own plant/creature art.
-This section is a proposal, not shipped behavior. Current mastery remains
-three duplicate marks unlocking sparkles.
+This historical proposal is superseded by the shipped ranks I–III described
+above and in the arcade section below. Legacy duplicate sparkles remain a
+separate entitlement; this proposal is retained as design history.
 
 ### Progress and identity
 
@@ -245,3 +242,9 @@ Menu and earned companion badges share static family motifs and distinct rankI/I
 Meet or interact stages a framed companion shot after checking supported ground and visibility. The whole pet fits landscape/portrait; low foot probes avoid the lounge bench and visual box checks include nonquery signs. Movement or timeout restores the player's previous roam view and FOV. Missing/blocked scenery leaves roaming available. Reduced effects skip the FOV settle. Stale character/camera/greeting callbacks cannot restore an old view.
 
 Native35 geometry/lifetime and3 interaction cases passed alongside transaction/close regressions. Actual Meet, journal-area pet click, E/movement and same-run board return passed; some position/lifetime setups were Studio fixtures. Evidence: `scripts/GreetingCamera-results.json`. Live persistence, shared multiplayer, physical phone and enjoyment remain unproven.
+
+## Save and rejoin recovery, 2026-11-06 overnight
+
+Outgoing profile settings/companion writes finish before the hatch lease is released. A reconnect waiting on that lease restores its companion and settings from the successful acquire snapshot. Temporary load failures pause progression and retry without saving defaults; recovery clears the loading banner and restores room mode. Studio's two writers now share one memory row, matching the live storage topology. A close timeout keeps its lease fenced until expiry.
+
+Native11 new recovery/default-store fixtures and existing transaction/close/UI regressions passed (86 total in this slice); actual field→nectar→Meadow→Wick→Meet passed. These establish simulated recovery and Studio controls, not a live Roblox account reconnect. Evidence: `scripts/SessionRecovery-results.json`.
