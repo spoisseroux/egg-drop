@@ -103,3 +103,67 @@ The seven-species pool and capped mastery finishes are finite prototype content.
 Five-minute playtest: explain the two bank goals; finish or retry a field run;
 read an egg's odds and cost; hatch; select the companion; leave/rejoin; verify
 balance, ownership and any pending reveal; decide whether to play another run.
+
+## Proposed family prestige — scope only, 2026-11-06
+
+Spencer wants family mastery with the recognizable evolving emblems and social
+status of prestige badges, expressed in Sprout Hollow's own plant/creature art.
+This section is a proposal, not shipped behavior. Current mastery remains
+three duplicate marks unlocking sparkles.
+
+### Progress and identity
+
+Use one permanent track per family: Pip (seed/leaf crest), Puddle (droplet and
+ripple crest), Wick (lantern/flame crest), Orbit (moon/ring crest). Base and rare
+variants share the family track. Players select a family contract before a run;
+contract wins earn a mark and a clean win earns one extra (maximum two per run).
+Duplicate hatches also earn one mark. Ordinary play must advance prestige
+without requiring lucky duplicates. Contract conditions must preserve the
+left/right aiming decisions, validate on the server, and stay readable in one
+sentence. Family contract rules and balance need a separate implementation pass.
+
+Provisional cumulative thresholds: I=3, II=10, III=25, IV=50, V=100 marks.
+These are tuning candidates, not approved time-to-completion targets. Rank III
+also needs three distinct family challenges; rank V needs a final mastery trial.
+Show each requirement and current progress before the player starts a run.
+Keep pets and progress permanently; no reset or extra hatch luck on promotion.
+
+| Rank | Emblem evolution | Cosmetic reward |
+|---|---|---|
+| I: Sprout | Small family crest | Deck sticker and journal seal |
+| II: Grove | Crest with leaf border | Family accent finish and greeting pose |
+| III: Bloom | Distinct blooming silhouette | Short family movement effect |
+| IV: Guardian | Larger framed crest | Animated deck emblem and special idle |
+| V: Hollow Legend | Unique sculpted family crest | Equipped title and brief arrival flourish |
+
+Each promotion gets a short badge-forging animation and original synth motif.
+Family effect vocabulary: drifting leaves; small landing ripples; warm motes;
+a short orbiting arc. Effects are bounded bursts, player-toggleable, and reduce
+to static finishes in reduced-effects mode. Display the equipped crest on the
+handheld, next to the companion's name, and in an inspectable lounge profile.
+Earned high-rank badges stay identifiable by silhouette at small mobile sizes;
+color and particle quantity alone must not carry rank. Avoid continuous loud
+loops, screen-obscuring auras, and copying Call of Duty artwork.
+
+### Data migration and implementation order
+
+Preserve existing duplicate marks as initial points, keep all existing cosmetics
+unlocked, and retain a versioned progression record with challenge flags and
+idempotent per-run grants. Replace the three-mark-only network mask with rank
+information while supporting old data. Rank and cosmetic equip remain server
+validated. Build I–III first, including journal progress, recap next-unlock,
+profile display, and reduced-effects behavior; add IV–V when challenge variety
+and completion times justify their longer goals. No nursery dependency.
+
+### Nectar difficulty and playtest gate
+
+Current pricing means 18 nectar takes three basic wins or three clean wins
+(with six nectar left over); 24 takes four basic wins or three clean wins.
+With the one-time six-nectar credit, a Meadow hatch needs two wins. Failed runs
+currently pay zero, so human failure rate matters more than the solver's rate.
+Measure completion rate, time to first paid hatch, repeated-failure exits, and
+whether bank goals are understood. Proposed target: roughly 2–4 minutes to the
+first paid hatch for a new player who understands the controls. Do not present
+that as a measured rate. If failures feel wasted, evaluate a small one-bank
+reward with replay protection before raising general payouts or adding caps.
+Daily nectar stays a six-nectar bonus, not a play limit or missed-day penalty.
