@@ -1,0 +1,658 @@
+{
+  "slice": "handheld instruments",
+  "date": "2026-11-07",
+  "baseline": "24751c2 / private v93",
+  "client": {
+    "Medium": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HardwareInstruments",
+        "result": {
+          "preference": "Medium",
+          "passed": 7,
+          "cases": [
+            "1649, 971 field pack keeps control seats and complete instruction",
+            "733, 307 field pack keeps control seats and complete instruction",
+            "568, 160 field pack keeps control seats and complete instruction",
+            "385, 703 field pack keeps control seats and complete instruction",
+            "inset face is clipped passive depth with no action underline or focus stroke",
+            "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+            "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HardwareDeck",
+        "result": {
+          "localPresentationOnly": true,
+          "passed": 6,
+          "cases": [
+            "1649, 971 exact wallets inset queue count and targets fit",
+            "733, 307 exact wallets inset queue count and targets fit",
+            "568, 160 exact wallets inset queue count and targets fit",
+            "385, 703 exact wallets inset queue count and targets fit",
+            "350, 279 exact wallets inset queue count and targets fit",
+            "qualified bank regions use only faint phase-owned fill; score refresh preserves pulses"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "WelcomeCoaching",
+        "result": {
+          "preference": "Medium",
+          "passed": 6,
+          "cases": [
+            "1649, 971 all phases and keyboard controller touch controls fit",
+            "733, 307 all phases and keyboard controller touch controls fit",
+            "568, 160 all phases and keyboard controller touch controls fit",
+            "385, 703 all phases and keyboard controller touch controls fit",
+            "observed 179x104 desktop well measures true padding before optional headings",
+            "phase mark input resize and Ready restoration retain current semantic instruction"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "Onboarding",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "daily-only failed quest remains a failure with committed balance",
+            "right target and overflow explanations use terminal state",
+            "transient save error never displays old balance as a receipt",
+            "selected recipe uses saved balance without adding the payout twice",
+            "compact pending recap keeps readable status out of pinned footer",
+            "shallow welcome coaching preserves each input and semantic phase",
+            "first field coaching responds to stage, overlays, first win and compact height",
+            "starter reveal receives a copy with the correct egg goal"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HandheldTextLayout",
+        "result": {
+          "preference": "Medium",
+          "passed": 5,
+          "cases": [
+            "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompactDeck",
+        "result": {
+          "persistentWrites": false,
+          "passed": 12,
+          "cases": [
+            "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+            "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+            "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+            "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+            "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+            "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "DropCaption",
+        "result": {
+          "persistentWrites": false,
+          "passed": 4,
+          "cases": [
+            "568, 160 drop states stay readable and restore objective without moving controls",
+            "480, 160 drop states stay readable and restore objective without moving controls",
+            "385, 703 drop states stay readable and restore objective without moving controls",
+            "resizing while falling transfers status ownership and restores readiness"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "DeckExperience",
+        "result": {
+          "passed": 23,
+          "cases": [
+            "568, 160 distinct screen, grips and controls",
+            "568, 198 distinct screen, grips and controls",
+            "350, 279 distinct screen, grips and controls",
+            "640, 530 distinct screen, grips and controls",
+            "844, 330 distinct screen, grips and controls",
+            "844, 390 distinct screen, grips and controls",
+            "390, 740 distinct screen, grips and controls",
+            "1650, 972 distinct screen, grips and controls",
+            "1649, 971 tray-first desktop mass and bounded equal rails",
+            "1280, 720 tray-first desktop mass and bounded equal rails",
+            "1024, 768 tray-first desktop mass and bounded equal rails",
+            "568, 160 measured Large utility requirements select a safe fallback",
+            "350, 160 measured Large utility requirements select a safe fallback",
+            "350, 279 measured Large utility requirements select a safe fallback",
+            "568, 280 measured Large utility requirements select a safe fallback",
+            "1649, 971 measured Large utility requirements select a safe fallback",
+            "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+            "480px Largest shallow root uses narrow ledger without target overlap",
+            "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+            "rolling copy leaves the occupied slot on wide grips and the final drop",
+            "reset, restore and lowered drops seed static counts",
+            "reduced effects, hide and cancel retain the authoritative count",
+            "eight decorative balls retain channel padding at128px rail width"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "SaveNoticeOwnership",
+        "result": {
+          "clientLocalOnly": true,
+          "passed": 2,
+          "cases": [
+            "profile retry survives every neutral hatch status in the actual current owner",
+            "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+          ]
+        }
+      }
+    ],
+    "Largest": [
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "HardwareInstruments",
+        "result": {
+          "preference": "Largest",
+          "passed": 7,
+          "cases": [
+            "1649, 971 field pack keeps control seats and complete instruction",
+            "733, 307 field pack keeps control seats and complete instruction",
+            "568, 160 field pack keeps control seats and complete instruction",
+            "385, 703 field pack keeps control seats and complete instruction",
+            "inset face is clipped passive depth with no action underline or focus stroke",
+            "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+            "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "HardwareDeck",
+        "result": {
+          "localPresentationOnly": true,
+          "passed": 6,
+          "cases": [
+            "1649, 971 exact wallets inset queue count and targets fit",
+            "733, 307 exact wallets inset queue count and targets fit",
+            "568, 160 exact wallets inset queue count and targets fit",
+            "385, 703 exact wallets inset queue count and targets fit",
+            "350, 279 exact wallets inset queue count and targets fit",
+            "qualified bank regions use only faint phase-owned fill; score refresh preserves pulses"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "WelcomeCoaching",
+        "result": {
+          "preference": "Largest",
+          "passed": 6,
+          "cases": [
+            "1649, 971 all phases and keyboard controller touch controls fit",
+            "733, 307 all phases and keyboard controller touch controls fit",
+            "568, 160 all phases and keyboard controller touch controls fit",
+            "385, 703 all phases and keyboard controller touch controls fit",
+            "observed 179x104 desktop well measures true padding before optional headings",
+            "phase mark input resize and Ready restoration retain current semantic instruction"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "Onboarding",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "daily-only failed quest remains a failure with committed balance",
+            "right target and overflow explanations use terminal state",
+            "transient save error never displays old balance as a receipt",
+            "selected recipe uses saved balance without adding the payout twice",
+            "compact pending recap keeps readable status out of pinned footer",
+            "shallow welcome coaching preserves each input and semantic phase",
+            "first field coaching responds to stage, overlays, first win and compact height",
+            "starter reveal receives a copy with the correct egg goal"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "HandheldTextLayout",
+        "result": {
+          "preference": "Largest",
+          "passed": 5,
+          "cases": [
+            "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "CompactDeck",
+        "result": {
+          "persistentWrites": false,
+          "passed": 12,
+          "cases": [
+            "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+            "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+            "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+            "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+            "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+            "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "DeckExperience",
+        "result": {
+          "passed": 23,
+          "cases": [
+            "568, 160 distinct screen, grips and controls",
+            "568, 198 distinct screen, grips and controls",
+            "350, 279 distinct screen, grips and controls",
+            "640, 530 distinct screen, grips and controls",
+            "844, 330 distinct screen, grips and controls",
+            "844, 390 distinct screen, grips and controls",
+            "390, 740 distinct screen, grips and controls",
+            "1650, 972 distinct screen, grips and controls",
+            "1649, 971 tray-first desktop mass and bounded equal rails",
+            "1280, 720 tray-first desktop mass and bounded equal rails",
+            "1024, 768 tray-first desktop mass and bounded equal rails",
+            "568, 160 measured Large utility requirements select a safe fallback",
+            "350, 160 measured Large utility requirements select a safe fallback",
+            "350, 279 measured Large utility requirements select a safe fallback",
+            "568, 280 measured Large utility requirements select a safe fallback",
+            "1649, 971 measured Large utility requirements select a safe fallback",
+            "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+            "480px Largest shallow root uses narrow ledger without target overlap",
+            "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+            "rolling copy leaves the occupied slot on wide grips and the final drop",
+            "reset, restore and lowered drops seed static counts",
+            "reduced effects, hide and cancel retain the authoritative count",
+            "eight decorative balls retain channel padding at128px rail width"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNoticeOwnership",
+        "result": {
+          "clientLocalOnly": true,
+          "passed": 2,
+          "cases": [
+            "profile retry survives every neutral hatch status in the actual current owner",
+            "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "DropCaption",
+        "result": {
+          "persistentWrites": false,
+          "passed": 4,
+          "cases": [
+            "568, 160 drop states stay readable and restore objective without moving controls",
+            "480, 160 drop states stay readable and restore objective without moving controls",
+            "385, 703 drop states stay readable and restore objective without moving controls",
+            "resizing while falling transfers status ownership and restores readiness"
+          ]
+        }
+      }
+    ]
+  },
+  "server": [
+    {
+      "ok": true,
+      "name": "HatchProgress",
+      "result": {
+        "passed": 21,
+        "cases": {
+          "1": "all catalog outcomes and rare protection",
+          "2": "legacy seven-pet migration and one-time credits",
+          "3": "starter grant, persistent reveal, exact acknowledgement",
+          "4": "ambiguous session acquire resumes the same lease",
+          "5": "direct full-cost spending, stale commands and callback retries",
+          "6": "ambiguous committed hatch cannot reroll or duplicate",
+          "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+          "8": "monotonic payouts reject replay beyond receipt history",
+          "9": "lease takeover fences stale commands and renewals",
+          "10": "local overlap, sparse inventory and public isolation",
+          "11": "failed legacy load cannot spend or overwrite",
+          "12": "daily reward is once per Hollow day and survives callback retry",
+          "13": "every advertised result grants once and rare protection resets",
+          "14": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+          "15": "mastery ranks need permanent points and three distinct successful challenges",
+          "16": "daily contracts and mastery pay atomically once per run and day",
+          "17": "completed-budget failures can earn skill contracts but not mastery or free wins",
+          "18": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+          "19": "compound award retries immutable stats and original day before or after commit",
+          "20": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+          "21": "rare-only ownership trains its base family and duplicate marks continue beyond three"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "CloseProgress",
+      "result": {
+        "passed": 2,
+        "cases": {
+          "1": "drain pending and earned payout before release",
+          "2": "failed drain keeps lease fenced"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "SessionRecovery",
+      "result": {
+        "persistentWrites": false,
+        "passed": 8,
+        "cases": {
+          "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+          "2": "profile save failure times out without releasing the lease and later recovers",
+          "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+          "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+          "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+          "6": "a setting changed during an in-flight autosave drains before lease release",
+          "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+          "8": "the actual Studio store keeps both writers in one isolated cloned root"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "SessionHost",
+      "result": {
+        "persistentWrites": false,
+        "passed": 2,
+        "cases": {
+          "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+          "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "StudioStore",
+      "result": {
+        "persistentWrites": false,
+        "passed": 1,
+        "cases": {
+          "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+        }
+      }
+    }
+  ],
+  "source": {
+    "place": 96451847774961,
+    "compileErrors": [],
+    "checked": 63,
+    "mismatches": []
+  },
+  "actualControls": {
+    "starter": {
+      "drops": 4,
+      "method": "three actual pointer A presses, then read-only tier selection plus actual tray drag/release",
+      "result": "Pip, Meet, Back, Open deck"
+    },
+    "field": {
+      "method": "read-only current pieces chose actual drag/release inputs; not a human comprehension or solver-only test",
+      "log": [
+        {
+          "score": 0,
+          "drops": 1,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 0,
+          "drops": 2,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 0,
+          "drops": 3,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 0,
+          "drops": 4,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 60,
+          "drops": 5,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 60,
+          "drops": 6,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 80,
+          "drops": 7,
+          "stage": 0,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 160,
+          "drops": 8,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 160,
+          "drops": 9,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 220,
+          "drops": 10,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 220,
+          "drops": 11,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 220,
+          "drops": 12,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 340,
+          "drops": 13,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 340,
+          "drops": 14,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 390,
+          "drops": 15,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 450,
+          "drops": 16,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 450,
+          "drops": 17,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 450,
+          "drops": 18,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 570,
+          "drops": 19,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 570,
+          "drops": 20,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 570,
+          "drops": 21,
+          "stage": 1,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 630,
+          "drops": 22,
+          "stage": 2,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 630,
+          "drops": 23,
+          "stage": 2,
+          "over": false,
+          "ready": true
+        },
+        {
+          "score": 630,
+          "drops": 24,
+          "stage": 2,
+          "over": false,
+          "ready": false
+        }
+      ],
+      "final": {
+        "score": 630,
+        "drops": 24,
+        "leftAt": 8,
+        "rightAt": 22,
+        "success": true,
+        "questNectar": 6,
+        "dailyNectar": 6,
+        "balanceBefore": 6,
+        "balanceAfter": 18
+      },
+      "retry": "actual Continue restored drops0 and counter24/24",
+      "mobile": "native Studio iPhone17Pro A accepted exactly one drop,23/24,pulses24→25; MCP instance click under wrapper did not accept"
+    }
+  },
+  "audio": {
+    "music": {
+      "id": "98540058987296",
+      "seconds": 53.333333333333336,
+      "loaded": true,
+      "status": "Success"
+    },
+    "purr": {
+      "id": "80835586668229",
+      "seconds": 2,
+      "loaded": true,
+      "status": "Success"
+    },
+    "runtimeWired": false,
+    "heard": false
+  },
+  "limitations": [
+    "No physical handset/controller, live DataStore rejoin or multiplayer evidence",
+    "Native phone viewport749×381 and measured safe backdrop749×323 on this Studio run;733×307 also tested as layout fixture",
+    "Portrait385×703 is a layout fixture; experience remains landscape-sensor",
+    "Console: known EditableImage-disabled/203785492 warnings; expected isolated transaction fault injection; one corrected root diagnostic named missing DispenserWell, no ordinary-play exception",
+    "Hardware render reviewed by Astra; renderer, shared sheets, companions, stations and music runtime remain next slices",
+    "Not yet published; existing private v93 unchanged"
+  ]
+}

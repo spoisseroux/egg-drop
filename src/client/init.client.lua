@@ -166,15 +166,7 @@ for index,side in ipairs({-1,1})do
 	local tint=if side==-1 then Color3.fromHex("#3069A5")else Color3.fromHex("#A84F3F")
 	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),6)
 	zone.BackgroundTransparency=.94
-	local edge=Art.stroke(zone,tint,.1,2)
-	local caption=Art.text(zone,"Target",if side==-1 then "LEFT"else"RIGHT",UDim2.fromOffset(0,2),UDim2.new(1,0,0,14),Art.Silver,10)
-	caption.BackgroundColor3,caption.BackgroundTransparency=Art.Ink,.1
-	Art.type(caption,"Supporting",true);caption.TextWrapped=false;caption.Size=UDim2.new(1,0,0,18)
-	for stripe=1,8 do
-		local dash=Art.frame(zone,"Hatch",Art.Ink,UDim2.new(if side==-1 then 1 else 0,if side==-1 then -3 else 0,stripe/9,0),UDim2.fromOffset(3,9),7)
-		dash.BackgroundTransparency=.25
-	end
-	fieldZones[index]={node=zone,edge=edge,side=side}
+	fieldZones[index]={node=zone,side=side}
 end
 
 local lcd = JellyLCD.new(overlay)
@@ -229,6 +221,8 @@ rail.Font = Enum.Font.Code
 rail.TextColor3 = Palette.Paper
 rail.Selectable = false
 make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
+-- An early passive child of the transparent rail draws above casing, below its data.
+local walletFace=Art.instrument(Art.frame(rail,"WalletInstrument",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,32),rail.ZIndex))
 Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
 readout.Font = Enum.Font.Code
@@ -236,10 +230,11 @@ make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 },
 readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
 local queueHost=Art.frame(backdrop,"PieceQueue",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,64),4)
-queueHost.ClipsDescendants=true;Art.corner(queueHost,9)
+Art.instrument(queueHost)
 local queuePieces={}
 for index,name in ipairs({"Dropping","Next"})do
 	local slot=Art.frame(queueHost,name,Art.Ink,UDim2.fromScale((index-1)*.5,0),UDim2.fromScale(.5,1),5)
+	slot.BackgroundTransparency=1
 	local caption=Art.text(slot,"Caption",name,UDim2.fromOffset(2,0),UDim2.new(1,-4,0,14),Art.Muted,11);Art.fitText(caption,12,8,0)
 	local ball=Art.frame(slot,"Piece",Config.Tiers[1].color,UDim2.new(.5,-14,0,19),UDim2.fromOffset(28,28),6)
 	Art.corner(ball,30);Art.shade(ball,1,.7)
@@ -249,6 +244,45 @@ end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
 	UDim2.fromOffset(40, 12), Art.Muted, 10)
 local walletDrop=require(script.EggArt).nectar(backdrop,UDim2.fromOffset(0,0),UDim2.fromOffset(18,20),4)
+readout.ZIndex,scoreCaption.ZIndex=4,4
+local instrumentLayout,walletLayoutKey,walletCaptionKey,walletCaptionWidth,walletGeometry
+local function layoutWallet(l)
+	if not l then return end
+	local r=l.wallet;local nectar=(board:GetAttribute("OwnedPets")or 0)>0
+	local captionKey=scoreCaption.Text..scoreCaption.TextSize..scoreCaption.Font.Name..GuiService.PreferredTextSize.Name
+	if walletCaptionKey~=captionKey then walletCaptionKey=captionKey;walletCaptionWidth=Art.textWidth(scoreCaption)end
+	local key=table.concat({readout.Text,r.x,r.y,r.w,r.h,tostring(nectar),tostring(l.short),tostring(l.dense),tostring(l.lateral),GuiService.PreferredTextSize.Name},"|")
+	if walletLayoutKey~=key then
+		local pad=if l.short or l.dense then 3 else 7
+		local glyphW=if nectar then 20 else math.min(r.w*.55,walletCaptionWidth)
+		local gap,faceW=3,r.w
+		Art.type(readout,if l.short or l.dense or not l.lateral then "Supporting"else "Action",l.short or l.dense or not l.lateral)
+		local function digitsWidth()return math.ceil(TextService:GetTextSize(readout.Text,readout.TextSize,readout.Font,Vector2.new(10000,10000)).X)+2 end
+		local digits=digitsWidth()
+		if digits>faceW-pad*2-glyphW-gap then Art.type(readout,"Supporting",true);digits=digitsWidth()end
+		if digits>faceW-pad*2-glyphW-gap then
+			pad,glyphW,gap=2,if nectar then 10 else 0,if nectar then 2 else 0
+			local maximum=if l.dense then l.drop.x-r.x-2 elseif l.lateral then l.bezel.x-r.x-2 else l.queue.x-r.x-4
+			faceW=math.max(r.w,math.min(maximum,digits+glyphW+gap+pad*2))
+			if digits>faceW-pad*2-glyphW-gap then glyphW,gap=0,0 end
+		end
+		walletGeometry={pad=pad,glyphW=glyphW,gap=gap,w=faceW}
+		readout.TextWrapped=false;walletLayoutKey=key
+	end
+	local g=walletGeometry
+	walletFace.Position,walletFace.Size=UDim2.fromOffset(r.x-l.tray.x,r.y-l.tray.y),UDim2.fromOffset(g.w,r.h)
+	local visual=l.walletVisual or {};visual.x,visual.y,visual.w,visual.h=r.x,r.y,g.w,r.h;l.walletVisual=visual
+	local iconW=if g.glyphW>=20 then 17 else g.glyphW
+	local iconH=if g.glyphW>=20 then 20 else 12
+	walletDrop.Visible=nectar and iconW>0
+	walletDrop.Position,walletDrop.Size=UDim2.fromOffset(r.x+g.pad,r.y+(r.h-iconH)/2),UDim2.fromOffset(iconW,iconH)
+	scoreCaption.Visible=not nectar and g.glyphW>0
+	scoreCaption.Position,scoreCaption.Size=UDim2.fromOffset(r.x-l.tray.x+g.pad,r.y-l.tray.y),UDim2.fromOffset(g.glyphW,r.h)
+	scoreCaption.BackgroundTransparency=1
+	readout.Position,readout.Size=UDim2.fromOffset(r.x-l.tray.x+g.pad+g.glyphW+g.gap,r.y-l.tray.y),UDim2.fromOffset(math.max(1,g.w-g.pad*2-g.glyphW-g.gap),r.h)
+	readout.BackgroundTransparency=1;readout.TextXAlignment=Enum.TextXAlignment.Right;readout.TextTruncate=Enum.TextTruncate.None
+	readout:SetAttribute("AccessibleLabel",readout.Text..(if nectar then " nectar"else " score"))
+end
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
 bestReadout.Font = Enum.Font.Code
 bestReadout.TextXAlignment = Enum.TextXAlignment.Left
@@ -290,12 +324,11 @@ status.TextWrapped = true
 status.TextColor3 = Art.Silver
 status.TextScaled = false
 status.BackgroundColor3 = Art.Ink
-Art.corner(status, 6)
+Art.instrument(status)
 local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 }, backdrop)
-Art.corner(meter, 3)
-Art.stroke(meter, Art.Line)
+Art.instrument(meter)
 local segments = {}
 local maxCharge = 24
 for index = 1, maxCharge do
@@ -427,7 +460,7 @@ local function layoutDropCaption(l)
 	local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
 	local function free(y)
 		if y<l.shell.y+8 or y+height>l.shell.y+l.shell.h-8 then return false end
-		for _,r in ipairs({l.queue,l.meter,l.menu,l.lounge,l.dpad,l.drop,l.bezel,l.wallet,l.quest,l.tray})do
+		for _,r in ipairs({l.queue,l.meter,l.menu,l.lounge,l.dpad,l.drop,l.bezel,l.walletVisual or l.wallet,l.quest,l.tray})do
 			if x<r.x+r.w and x+width>r.x and y<r.y+r.h and y+height>r.y then return false end
 		end
 		return true
@@ -462,6 +495,7 @@ end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Enum.Font.GothamBold
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
+firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),UDim2.new(1,-2,1,-2)
 local questHUD = BoardQuestHUD.new(status)
 local dispenser = DropDispenser.new(meter, reduceEffects)
 local function isGamepad(inputType)
@@ -700,6 +734,7 @@ local function paintDeck(id, stickerId)
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
 	Art.tintBackdrop(backing,theme)
+	for _,instrument in ipairs({walletFace,queueHost,status,meter})do instrument.InsetLip.BackgroundColor3=theme.trim end
 	modalShade.BackgroundColor3=Art.Ink
 	Stickers.paint(deckSticker, stickerId)
 	if backdrop:GetAttribute("StickerSlot")~=true then deckSticker.Visible=false end
@@ -1089,6 +1124,7 @@ updateHud = function()
 			roomView.welcomeNext = true
 		end
 	end
+	if knownPets~=owned and layout then task.defer(layout)end
 	knownPets = owned
 	if trackedRare and Pets.isUnlocked(trackedRare, owned, mask) then
 		trackedRare = nil
@@ -1141,10 +1177,8 @@ updateHud = function()
 	for index, item in ipairs(fieldZones) do
 		local stage = board:GetAttribute("FieldStage") or 0
 		item.node.Visible = nurseryActive and owned > 0
-		item.node.BackgroundTransparency = if stage == index - 1 then .88 else .97
-		item.node.Target.Text = if stage>=index then "✓" elseif item.side==-1 then "LEFT" else "RIGHT"
-		item.node.Target.Visible=item.node.AbsoluteSize.X>=36 or stage>=index
-		item.edge.Transparency = if stage == index - 1 then .1 else .7
+		item.node.BackgroundTransparency = if stage == index - 1 then .90 else .97
+
 	end
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
@@ -1165,7 +1199,7 @@ updateHud = function()
 	local fieldActive = nurseryActive and owned > 0
 	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true)
 	status.ClipsDescendants = true
-	status.BackgroundTransparency = if lesson or fieldCoaching then 0.08 else 1
+	status.BackgroundTransparency = if lesson or fieldCoaching or fieldActive then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
 	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
 		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 nectar" else "Win quest +6 nectar\nLow pile +2 bonus")
@@ -1205,6 +1239,7 @@ updateHud = function()
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
 	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
+	layoutWallet(instrumentLayout)
 	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
 	if gameMenu then gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
 	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
@@ -1295,10 +1330,18 @@ layout = function()
 	local markBounds=TextService:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100))
 	local markD=math.max(18,math.ceil(math.max(markBounds.X,markBounds.Y))+6)
 	local lineH=queueCaptionH+4
+	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",14,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
 	local walletH=math.ceil(TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y)+4
-	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max(lineH+markD+2,lineH*2+4),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+	local instructionCompact=l.short or l.dense or l.quest.h<60
+	if (board:GetAttribute("OwnedPets")or 0)>0 then
+		-- Field content only; welcome retains the exact pre-existing coaching band.
+		if l.lateral and not l.dense and not l.short then l.quest.y=l.wallet.y+l.wallet.h+6 end
+		DeckLayout.fitFieldQuest(l,questHUD:preferredHeight(l.quest.w,l.quest.h,instructionCompact))
+	end
+	instrumentLayout=l
 	backdrop:SetAttribute("CompactLandscape",l.short)
-	backdrop:SetAttribute("CompactInstruction",l.short or l.dense or l.quest.h<60)
+	backdrop:SetAttribute("CompactInstruction",instructionCompact)
 	backdrop:SetAttribute("SideGoalLayout",true)
 	local function place(node,r)node.Position,node.Size=UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h)end
 	place(shell,l.shell);place(bezel,l.bezel);place(viewport,l.tray);overlay.Position,overlay.Size=viewport.Position,viewport.Size
@@ -1314,19 +1357,8 @@ layout = function()
 	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-5)
 	place(rail,l.tray);rail.BackgroundTransparency=1;rail.ReadoutDivider.Visible=false
 	bestReadout.Visible,nextReadout.Visible,mascot.Visible=false,false,false
-	local nectarWallet=(board:GetAttribute("OwnedPets") or 0)>0
 	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral)
-	local captionW=if nectarWallet then 26 else math.min(l.wallet.w*.6,Art.textWidth(scoreCaption))
-	scoreCaption.Visible=not nectarWallet
-	scoreCaption.Position=UDim2.fromOffset(l.wallet.x-l.tray.x,l.wallet.y-l.tray.y)
-	scoreCaption.Size=UDim2.fromOffset(captionW,l.wallet.h)
-	scoreCaption.BackgroundColor3,scoreCaption.BackgroundTransparency=Art.Ink,.05
-	walletDrop.Visible=nectarWallet;place(walletDrop,{x=l.wallet.x+3,y=l.wallet.y+1,w=17,h=math.min(22,l.wallet.h-2)})
-	readout.Position=scoreCaption.Position+UDim2.fromOffset(captionW,0)
-	readout.Size=UDim2.fromOffset(l.wallet.w-captionW,l.wallet.h)
-	readout.BackgroundColor3,readout.BackgroundTransparency=Art.Ink,.05
-	Art.type(readout,if l.short or l.dense or not l.lateral then "Supporting" else "Action",l.short or l.dense or not l.lateral)
-	readout.TextTruncate=Enum.TextTruncate.None
+	layoutWallet(l)
 	place(queueHost,l.queue)
 	local nextWidth=TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+8
 	local verticalQueue=l.lateral and not l.inlineQueue and l.queue.w/2-4<nextWidth
@@ -1349,10 +1381,10 @@ layout = function()
 		Art.type(piece.Mark,"Supporting",true);piece.Mark.Font=Enum.Font.GothamBold
 		local markInset=piece.Mark:FindFirstChildOfClass("UIPadding");if markInset then markInset:Destroy() end
 		local d=markD
-		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,captionH+2),UDim2.fromOffset(d,d)
+		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,captionH+6),UDim2.fromOffset(d,d)
+		caption.Position=UDim2.fromOffset(2,if inlineQueue then 0 else 4)
 		caption.Size=UDim2.new(1,-4,0,captionH)
-		local droppingWidth=TextService:GetTextSize("Dropping",caption.TextSize,caption.Font,Vector2.new(1000,100)).X
-		local word=if index==1 then (if l.queue.w/2-8<droppingWidth then "Now" else "Dropping") else "Next"
+		local word=if index==1 then "Now"else "Next"
 		caption:SetAttribute("QueueWord",word)
 		caption.Text=if inlineQueue then (if index==1 then "Now " else "Next ")..piece.Mark.Text else word
 		caption.TextColor3=if inlineQueue then piece.BackgroundColor3 else Art.Muted
@@ -2057,16 +2089,16 @@ RunService.RenderStepped:Connect(function(dt)
 	else
 		table.clear(heldAim)
 	end
+	local now,reduced=os.clock(),reduceEffects()
+	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible,reduced)
 	if not backdrop.Visible then
 		return
 	end
-	local now = os.clock()
 	local pressure = board:GetAttribute("OverflowPressure") or 0
 	pressureTrack.Visible = pressure > 0
 	pressureText.Visible = pressure > 0
 	pressureFill.Size = UDim2.fromScale(1, math.clamp(pressure, 0, 1))
 	overflowLine.BackgroundTransparency = if pressure > 0 then .05 else .55
-	local reduced = reduceEffects()
 	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
 		mascotMood = mood

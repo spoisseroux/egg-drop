@@ -25,21 +25,30 @@ function Dispenser:cancel()
 	self.rolling.Visible=false
 end
 function Dispenser:layout()
-	local h=self.host.AbsoluteSize.Y
+	local w,h=self.host.AbsoluteSize.X,self.host.AbsoluteSize.Y
+	local key=table.concat({w,h,self.remaining or 0,self.budget or 24,game:GetService("GuiService").PreferredTextSize.Name},"|")
+	if self.layoutKey==key then return end
+	self.layoutKey=key
 	Art.type(self.label,"Supporting",h<50)
-	local inset=self.label:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy() end
-	local diameter=math.max(5,math.min(18,math.floor((self.host.AbsoluteSize.X-23)/8)))
-	local cy=if h<42 then 0 else 3
-	self.channel.Position,self.channel.Size=UDim2.fromOffset(0,cy),UDim2.new(1,-4,0,diameter+8)
-	if Art.textWidth(self.label)>self.host.AbsoluteSize.X-2 then
-		self.label.Text=string.format("%d/%d",self.remaining or 0,self.budget or 24)
-	end
-	local needed=Art.textHeight(self.label,self.host.AbsoluteSize.X-2,12)
-	local showChannel=needed+diameter+cy+8<=h
+	local inset=self.label:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy()end
+	self.label.Text=string.format("Drops left %d/%d",self.remaining or 0,self.budget or 24)
+	if Art.textWidth(self.label)>w-8 then self.label.Text=string.format("%d/%d",self.remaining or 0,self.budget or 24)end
+	local needed=Art.textHeight(self.label,w-8,12)
+	local channelW=math.max(1,w-8)
+	local diameter=math.max(1,math.min(18,math.floor((channelW-19)/8)))
+	local channelH=diameter+8
+	local showChannel=needed+channelH+6<=h
 	self.channel.Visible=showChannel
-	self.label.Position,self.label.Size=if showChannel then UDim2.fromOffset(0,cy+diameter+8) else UDim2.fromOffset(0,0),UDim2.new(1,-2,0,if showChannel then math.max(12,h-diameter-cy-8) else h)
+	local packH=channelH+2+needed
+	local cy=if showChannel then math.max(2,math.floor((h-packH)/2))else 0
+	self.channel.Position,self.channel.Size=UDim2.fromOffset(4,cy),UDim2.fromOffset(channelW,channelH)
+	local labelY=if showChannel then cy+channelH+2 else math.max(0,math.floor((h-needed)/2))
+	self.label.Position,self.label.Size=UDim2.fromOffset(4,labelY),UDim2.fromOffset(math.max(1,w-8),if showChannel then needed else math.max(1,h-labelY))
+	-- Center the complete eight-slot capacity, rather than the shrinking remainder.
+	local trainW=diameter*8+7
+	local start=(channelW-trainW)/2
 	for i,ball in ipairs(self.balls)do
-		ball.Position=UDim2.fromOffset(6+(i-1)*(diameter+1),4)
+		ball.Position=UDim2.fromOffset(start+(i-1)*(diameter+1),4)
 		ball.Size=UDim2.fromOffset(diameter,diameter)
 		ball.Visible=i<=math.min(8,self.remaining or 0)
 	end
@@ -49,10 +58,11 @@ function Dispenser:update(reset,drops,budget,active)
 	local accepted=self.reset==reset and self.drops~=nil and drops>self.drops
 	if self.reset~=reset or (self.drops and drops<self.drops)then self:cancel()end
 	local previousVisible=math.min(8,self.remaining or 0)
+	local previousSlot=self.balls[math.max(1,previousVisible)]
+	local rollingOrigin=if accepted and self.channel.Visible then self.channel.Position+previousSlot.Position else nil
 	self.reset,self.drops,self.remaining=reset,drops,math.max(0,budget-drops)
 	self.budget=budget
 	self.host.Visible=active==true
-	self.label.Text=string.format("Drops left %d/%d",self.remaining,budget)
 	self:layout()
 	if not active then self:cancel();return end
 	if accepted then
@@ -60,7 +70,7 @@ function Dispenser:update(reset,drops,budget,active)
 		self:cancel()
 		if self.reduce() or not self.channel.Visible then return end
 		local ball=self.rolling;ball.Size=self.balls[1].Size;local slot=self.balls[math.max(1,previousVisible)]
-		ball.Position=self.channel.Position+slot.Position
+		ball.Position=rollingOrigin or self.channel.Position+slot.Position
 		ball.Rotation,ball.BackgroundTransparency,ball.Visible=0,0,true
 		self.motion=TweenService:Create(ball,TweenInfo.new(.44,Enum.EasingStyle.Quad,Enum.EasingDirection.In),{
 			Position=ball.Position+UDim2.fromOffset(25,math.max(30,self.host.AbsoluteSize.Y)),Rotation=240,BackgroundTransparency=1})

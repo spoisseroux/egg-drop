@@ -50,6 +50,21 @@ function Art.frame(parent, name, color, position, size, z)
 	})
 end
 
+-- Passive glass instruments share one recessed face; their children remain data,
+-- never action seats or focus targets. All depth stays inside the solved rectangle.
+function Art.instrument(parent)
+	parent.BackgroundColor3=Color3.fromHex("#2B352D")
+	parent.ClipsDescendants=true
+	Art.corner(parent,8);Art.shade(parent,.78,1)
+	if not parent:FindFirstChild("InsetShadow")then
+		local top=Art.frame(parent,"InsetShadow",Art.Ink,UDim2.fromOffset(3,1),UDim2.new(1,-6,0,2),parent.ZIndex+1)
+		top.BackgroundTransparency=.18;Art.corner(top,1)
+		local lip=Art.frame(parent,"InsetLip",Art.Line,UDim2.new(0,4,1,-2),UDim2.new(1,-8,0,1),parent.ZIndex+1)
+		lip.BackgroundTransparency=.65
+	end
+	return parent
+end
+
 function Art.text(parent, name, content, position, size, color, textSize, font)
 	return node("TextLabel", parent, {
 		Name = name, Text = content, Position = position, Size = size, TextColor3 = color,
@@ -139,6 +154,8 @@ function Art.leaf(parent, name, position, size, tint, rotation, z)
 	return leaf
 end
 
+local backdropMotion=setmetatable({},{__mode="k"})
+Art.BackdropPeriod=12
 function Art.backdrop(parent)
 	parent.BackgroundColor3 = Art.Backdrop
 	parent.ClipsDescendants = true
@@ -146,6 +163,8 @@ function Art.backdrop(parent)
 	if parent:FindFirstChild("CanopyArt") then return end
 	local art = Art.frame(parent, "CanopyArt", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1))
 	art.BackgroundTransparency = 1
+	local motion={entries={},resting=true,elapsed=0};backdropMotion[parent]=motion
+	parent.Destroying:Connect(function()backdropMotion[parent]=nil end)
 	-- Broad silhouettes read as an outdoor setting, even around a small phone deck.
 	for index, data in ipairs({
 		{ -0.18, -0.38, 0.65, 0.78, Art.Canopy },
@@ -162,11 +181,35 @@ function Art.backdrop(parent)
 		local leaf = Art.leaf(art, "Leaf" .. index, UDim2.fromScale(data[1], data[2]),
 			UDim2.fromOffset(18, 36), Art.Line, data[3])
 		leaf.BackgroundTransparency = 0.5
+		table.insert(motion.entries,{node=leaf,position=leaf.Position,rotation=leaf.Rotation,phase=index*math.pi/2,x=3,y=4})
 	end
 	for index, data in ipairs({{0.03, 0.18}, {0.19, 0.92}, {0.95, 0.83}, {0.78, 0.06}}) do
 		local seed = Art.frame(art, "Seed" .. index, Art.Leaf, UDim2.fromScale(data[1], data[2]), UDim2.fromOffset(4, 4))
 		Art.corner(seed, 2)
 		seed.BackgroundTransparency = 0.35
+		table.insert(motion.entries,{node=seed,position=seed.Position,rotation=seed.Rotation,phase=index*math.pi/2+.4,x=4,y=3})
+	end
+end
+
+-- The existing board render clock calls this once. No new connection, GUI walk,
+-- tween, or allocation runs per frame; hidden/reduced presentation rests at base.
+function Art.updateBackdrop(parent,now,visible,reduced)
+	local motion=backdropMotion[parent]
+	if not motion then return end
+	if not visible or reduced then
+		if not motion.resting then
+			for _,entry in ipairs(motion.entries)do entry.node.Position=entry.position;entry.node.Rotation=entry.rotation end
+			motion.resting=true
+		end
+		motion.lastTime=nil
+		return
+	end
+	motion.elapsed=(motion.elapsed+(if motion.lastTime then math.max(0,now-motion.lastTime)else 0))%Art.BackdropPeriod
+	motion.lastTime=now;motion.resting=false
+	local phase=motion.elapsed/Art.BackdropPeriod*math.pi*2
+	for _,entry in ipairs(motion.entries)do
+		entry.node.Position=entry.position+UDim2.fromOffset(math.sin(phase+entry.phase)*entry.x,math.sin(phase*2+entry.phase)*entry.y)
+		entry.node.Rotation=entry.rotation+math.sin(phase+entry.phase)*2
 	end
 end
 

@@ -68,10 +68,10 @@ function Layout.resolve(size,ratio,needs)
 		out.menu=inside(rect(ux+s.MenuOffsetX,uy+s.MenuOffsetY,buttonW,44),out.left)
 		out.lounge=inside(rect((if stack then ux else ux+buttonW+s.UtilityGap)+s.LoungeOffsetX,uy+(if stack then 52 else 0)+s.LoungeOffsetY,buttonW,44),out.left)
 		out.quest=rect(out.left.x,qy,rail,if out.short then minimumQuest else math.max(minimumQuest,math.min(s.QuestHeight,uy-qy-8)))
-		local queueH=if out.short then math.max(27,needs.queueHeight or 27) else math.max(76,needs.queueHeight or 76)
+		local queueH=if out.short then math.max(27,needs.queueHeight or 27) else math.max(27,needs.queueHeight or 44)
 		out.queue=rect(out.right.x,y+8,rail,queueH)
-		local meterY=out.queue.y+queueH+8
-		out.meter=rect(out.right.x,meterY,rail,math.max(34,math.min(64,out.drop.y-meterY-8)))
+		local meterY=out.queue.y+queueH+6
+		out.meter=rect(out.right.x,meterY,rail,math.max(34,math.min(72,out.drop.y-meterY-8)))
 		if dense then
 			local line=needs.lineHeight
 			out.quest=rect(out.left.x,y+4,rail,line)
@@ -109,5 +109,11 @@ function Layout.resolve(size,ratio,needs)
 	end
 	local t=out.tray;out.bezel=rect(t.x-6,t.y-6,t.w+12,t.h+12)
 	return out
+end
+-- Content can consume less than the legacy well without moving any input seat.
+-- The caller supplies native measured text heights; this module stays pure.
+function Layout.fitFieldQuest(layout,measuredHeight)
+	layout.quest.h=math.max(1,math.min(layout.quest.h,measuredHeight))
+	return layout
 end
 return Layout
