@@ -55,3 +55,8 @@ Physical phone comfort, live shared multiplayer, live-account DataStore rejoin, 
 - [ ] Astra code and screenshot review; resolve blockers.
 - [ ] Native and actual-control acceptance; honest before/after gallery.
 - [ ] Commit/push, verify existing private publication, morning rundown.
+
+
+## Added user steering: physical destinations
+
+Research Roblox world-space shops/services and important platform interaction conventions, then fold a justified small physical-route slice into overnight work AFTER the current UI slice is finished and verified. Astra research owns `WORLD-INTERACTIONS.md`. Existing world already contains a hatch-tree stand, Deck workbench and Field journal; audit their function/discovery before adding duplicate services. Prefer a legible hatch counter, journal/mastery destination and customization bench that open the exact same interfaces and server transactions. Keep convenient menu shortcuts. Entering/approaching never spends currency. Respect station vs pet prompt priority, CoreGui, mobile/gamepad reach, camera/movement restore and fast replay. Do not turn this into a new nursery, housing, economy, shop catalog or public release.
