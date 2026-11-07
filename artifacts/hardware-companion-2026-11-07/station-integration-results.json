@@ -1,0 +1,2743 @@
+{
+  "date": "2026-11-07",
+  "place": 96451847774961,
+  "review": "Astra station architecture/exactsource/nativewindow/render GO; Sol implementation; root native controls",
+  "source": {
+    "place": 96451847774961,
+    "compileErrors": [],
+    "checked": 65,
+    "mismatches": []
+  },
+  "initial24": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "StationProportions",
+      "result": {
+        "passed": 9,
+        "cases": [
+          "playable floor and boundaries retain original route/collision dimensions",
+          "both service surfaces rise1.10 to6.63 while centers and solid dimensions stay fixed",
+          "four table supports extend upward from their originalY4 floor anchors",
+          "station signs keep their mounted labels and lift with their tabletops",
+          "book cover and every detail share one lift without doubled local offsets",
+          "workbench awning lifts coherently with planted supports and no new collision",
+          "display deck and its physical controls remain seated on the lifted workbench",
+          "three short native prompts keep originalE/X/touch routes and reach",
+          "nest bridges and stepping route remain at original physical seats"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "LoungeStations",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "rare-only inventory is browsable while an explicit empty mask overrides legacy rank",
+          "missing mask rejects legacy prefix and trials until the loaded mask arrives",
+          "committed pending ID recovery is separate from Ready-only browsing",
+          "all presentation owners reject free roam without changing focus controls",
+          "UI lifetime rejects detached destroyed disabled and missing presentation nodes",
+          "new and late-tagged streamed prompts inherit the current overlay owner",
+          "overlapping nest and journal radii expose only the nearest shared-key station",
+          "dispatch rechecks local player enabled state distance and current ownership",
+          "detached reinserted and invalid-parent prompts share the single cache",
+          "destroy disconnects trigger stream and owner listeners and disables owned prompts"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "JournalPromptPriority",
+      "result": {
+        "passed": 5,
+        "cases": [
+          "reachable enabled journal suppresses ambiguous pet shortcut",
+          "moving away releases the pet shortcut",
+          "hidden or transition-disabled stations do not claim input",
+          "removed station and empty list release input",
+          "overlap ownership is nearest with a stable tie independent of enumeration"
+        ]
+      }
+    }
+  ],
+  "final113": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "StationProportions",
+      "result": {
+        "passed": 9,
+        "cases": [
+          "playable floor and boundaries retain original route/collision dimensions",
+          "both service surfaces rise1.10 to6.63 while centers and solid dimensions stay fixed",
+          "four table supports extend upward from their originalY4 floor anchors",
+          "station signs keep their mounted labels and lift with their tabletops",
+          "book cover and every detail share one lift without doubled local offsets",
+          "workbench awning lifts coherently with planted supports and no new collision",
+          "display deck and its physical controls remain seated on the lifted workbench",
+          "three short native prompts keep originalE/X/touch routes and reach",
+          "nest bridges and stepping route remain at original physical seats"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "LoungeStations",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "rare-only inventory is browsable while an explicit empty mask overrides legacy rank",
+          "missing mask rejects legacy prefix and trials until the loaded mask arrives",
+          "committed pending ID recovery is separate from Ready-only browsing",
+          "all presentation owners reject free roam without changing focus controls",
+          "UI lifetime rejects detached destroyed disabled and missing presentation nodes",
+          "new and late-tagged streamed prompts inherit the current overlay owner",
+          "overlapping nest and journal radii expose only the nearest shared-key station",
+          "dispatch rechecks local player enabled state distance and current ownership",
+          "detached reinserted and invalid-parent prompts share the single cache",
+          "destroy disconnects trigger stream and owner listeners and disables owned prompts"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "JournalPromptPriority",
+      "result": {
+        "passed": 5,
+        "cases": [
+          "reachable enabled journal suppresses ambiguous pet shortcut",
+          "moving away releases the pet shortcut",
+          "hidden or transition-disabled stations do not claim input",
+          "removed station and empty list release input",
+          "overlap ownership is nearest with a stable tie independent of enumeration"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "HatchActions",
+      "result": {
+        "passed": 18,
+        "cases": [
+          "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "Replay never purchases and synchronous confirmation fires once",
+          "Retry and same-ID updates retain immutable choice",
+          "Pending feedback preserves choice before state catches up",
+          "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "Close cancels a scheduled pre-dispatch retry",
+          "Busy feedback queues a retry until Ready for the same result",
+          "A retry timer encountering Busy retains its work until Ready",
+          "Another pending transaction releases the captured ack on Ready",
+          "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "A changed result revokes old navigation",
+          "Close during retry cancels navigation without a second acknowledgement",
+          "Definitive rejection permits changing the action",
+          "Actions remain locked during an unfinished cinematic",
+          "Duplicate caption uses copied mastery progress and retains both choices",
+          "corner X dismisses and reopens the same committed result without acknowledgment",
+          "44px result actions fit short landscape safe areas and long names"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "HatchNavigation",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "already equipped pet focuses without duplicate equip",
+          "rare-only companion waits for server equip acknowledgment",
+          "mode and local handoff must both finish before equip",
+          "manual cancellation prevents late equip and focus",
+          "overlay interruption cancels pending focus",
+          "unconfirmed equip never substitutes a local pet",
+          "replay resets finished board once after handoff",
+          "replay preserves an unfinished board",
+          "cancelled replay cannot reset a later round",
+          "newer navigation wins over a stale mode wait"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "EggBrowseNavigation",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "settled rare-only Room opens immediately without same-mode request",
+          "Menu and tree recovery reopen the same committed ID without purchase or acknowledgment",
+          "unloaded or explicitly empty inventory cannot start a browse route",
+          "board origin waits for both server mode and settled local presentation",
+          "a newer navigation generation cancels the old board waiter",
+          "character and camera replacement cancel delayed presentation",
+          "native menu text capture and death interrupt waiting before late open",
+          "UI teardown stops the Board waiter immediately even with unchanged character and camera",
+          "empty inventory or another sheet at arrival cannot reopen the shop",
+          "blocked board route has no mode request and timeout never opens stale state"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "RewardPresentation",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "all three contracts use canonical names and component rewards",
+          "daily-only failed quest grants no family marks",
+          "played family owns the next goal even after another family is selected",
+          "committed promotion is announced with its next goal",
+          "overflow after both goals explains survival without asking to redo goals",
+          "loading a matching receipt hides previous balances and promotions",
+          "an unresolved save cannot present an old receipt",
+          "compact center retains exact cost and complete readable receipt rows",
+          "receipt navigation reaches both bounds without moving footer selection",
+          "menu names missing win conditions and clamps completed rank III"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "DeckExperience",
+      "result": {
+        "passed": 23,
+        "cases": [
+          "568, 160 distinct screen, grips and controls",
+          "568, 198 distinct screen, grips and controls",
+          "350, 279 distinct screen, grips and controls",
+          "640, 530 distinct screen, grips and controls",
+          "844, 330 distinct screen, grips and controls",
+          "844, 390 distinct screen, grips and controls",
+          "390, 740 distinct screen, grips and controls",
+          "1650, 972 distinct screen, grips and controls",
+          "1649, 971 tray-first desktop mass and bounded equal rails",
+          "1280, 720 tray-first desktop mass and bounded equal rails",
+          "1024, 768 tray-first desktop mass and bounded equal rails",
+          "568, 160 measured Large utility requirements select a safe fallback",
+          "350, 160 measured Large utility requirements select a safe fallback",
+          "350, 279 measured Large utility requirements select a safe fallback",
+          "568, 280 measured Large utility requirements select a safe fallback",
+          "1649, 971 measured Large utility requirements select a safe fallback",
+          "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+          "480px Largest shallow root uses narrow ledger without target overlap",
+          "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+          "rolling copy leaves the occupied slot on wide grips and the final drop",
+          "reset, restore and lowered drops seed static counts",
+          "reduced effects, hide and cancel retain the authoritative count",
+          "eight decorative balls retain channel padding at128px rail width"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "RecapFeedback",
+      "result": {
+        "passed": 16,
+        "cases": [
+          "matching committed receipt starts once and retains count through HUD refresh",
+          "count up lands on exact score chain clears and earned nectar",
+          "hide cancels immediately and reopening the same receipt cannot replay",
+          "hidden ancestor cancels and does not consume a future receipt",
+          "Saving delayed and pending states suppress old receipt and currency transfer",
+          "stale sequence cannot announce the previous reward",
+          "new receipt cancels the old animation and reinitializes every counter",
+          "daily only failure retains missed side quest zero and exact total",
+          "zero earned never invents nectar drops or transfer sounds",
+          "reduced effects shows final static values with no recap cues",
+          "audio remains routed through the muted shared audio group",
+          "short recap scrolls readable center while excluding pinned footer",
+          "roomy recap follows reward egg metrics details and keeps saved values",
+          "selected egg progress draws above its panel and retains partial or full saved balance",
+          "first Saved receipt survives synchronous resize during publication",
+          "destroying the component removes its animation connection"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "SaveNoticeOwnership",
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": [
+          "profile retry survives every neutral hatch status in the actual current owner",
+          "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        ]
+      }
+    }
+  ],
+  "walks": {
+    "workbench": [
+      {
+        "root": "-11, 6.998024940490723, 4",
+        "distance": 7.599999904632568,
+        "key": "W",
+        "ms": 388.4615421295166
+      },
+      {
+        "root": "-13.344101905822754, 6.998024940490723, -1.6329931020736694",
+        "distance": 3.060053825378418,
+        "key": "D",
+        "ms": 132.52046406269073
+      },
+      {
+        "root": "-11.376946449279785, 6.998024940490723, -2.45173978805542",
+        "distance": 1.208548665046692,
+        "key": "W",
+        "ms": 100
+      }
+    ],
+    "sideAutoStep": [
+      {
+        "root": "-11.376946449279785, 6.998024940490723, -2.45173978805542",
+        "distance": 5.574472904205322,
+        "key": "W",
+        "ms": 289.8768901824951
+      },
+      {
+        "root": "-12.277989387512207, 8.540194511413574, -4.360267162322998",
+        "distance": 3.5156683921813965,
+        "key": "W",
+        "ms": 158.10985565185547
+      },
+      {
+        "root": "-13.035836219787598, 9.628010749816895, -6.178561210632324",
+        "distance": 1.766740322113037,
+        "key": "W",
+        "ms": 100
+      },
+      {
+        "root": "-13.651169776916504, 9.62802505493164, -7.655460357666016",
+        "distance": 1.1532162427902222,
+        "key": "A",
+        "ms": 100
+      }
+    ],
+    "outerSide": [
+      {
+        "root": "-13.651169776916504, 9.62802505493164, -7.655460357666016",
+        "distance": 2.86958909034729,
+        "key": "A",
+        "ms": 106.07339143753052
+      },
+      {
+        "root": "-15.547417640686035, 6.998002529144287, -6.861701488494873",
+        "distance": 1.4842966794967651,
+        "key": "W",
+        "ms": 100
+      }
+    ],
+    "rear": [
+      {
+        "root": "-15.547417640686035, 6.998024940490723, -6.861701488494873",
+        "distance": 6.148538112640381,
+        "key": "D",
+        "ms": 311.82934045791626
+      },
+      {
+        "root": "-12.440138816833496, 6.998024940490723, -9.055649757385254",
+        "distance": 2.419606924057007,
+        "key": "D",
+        "ms": 100
+      },
+      {
+        "root": "-10.96323013305664, 6.998024940490723, -9.671046257019043",
+        "distance": 1.3294622898101807,
+        "key": "W",
+        "ms": 100
+      }
+    ],
+    "eggs": [
+      {
+        "root": "-15.945164680480957, 6.998024940490723, -0.14052006602287292",
+        "distance": 15.954323768615723,
+        "key": "D",
+        "ms": 650
+      },
+      {
+        "root": "-6.3484086990356445, 6.998024940490723, -4.139694690704346",
+        "distance": 7.804557800292969,
+        "key": "S",
+        "ms": 364.51144218444824
+      },
+      {
+        "root": "-4.196228504180908, 6.998024940490723, 1.026749849319458",
+        "distance": 4.242775917053223,
+        "key": "D",
+        "ms": 207.15619325637817
+      },
+      {
+        "root": "-1.2452044486999512, 6.998024940490723, -0.20336413383483887",
+        "distance": 1.3836843967437744,
+        "key": "S",
+        "ms": 100
+      }
+    ],
+    "journal": [
+      {
+        "root": "-1.2452044486999512, 6.998024940490723, -0.20336416363716125",
+        "distance": 11.541107177734375,
+        "key": "D",
+        "ms": 650
+      },
+      {
+        "root": "8.291406631469727, 6.998024940490723, -4.159976959228516",
+        "distance": 2.183764934539795,
+        "key": "S",
+        "ms": 100
+      },
+      {
+        "root": "8.807862281799316, 6.998024940490723, -2.6851749420166016",
+        "distance": 1.1976548433303833,
+        "key": "D",
+        "ms": 100
+      }
+    ]
+  },
+  "actual": {
+    "before": {
+      "root": "-11.376946449279785, 6.998024940490723, -2.45173978805542",
+      "camera": "-7.0117569, 13.7362518, 8.02471542, 0.923076928, -0.16117622, 0.34921515, 0, 0.907959461, 0.419058204, -0.384615362, -0.386822969, 0.838116407",
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      }
+    },
+    "workbenchAfter": {
+      "camera": "Custom",
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      },
+      "walk": 16
+    },
+    "eggsTouch": {
+      "visible": true,
+      "camera": "Custom",
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      }
+    },
+    "journalGamepad": {
+      "inputs": {
+        "1": {
+          "time": 314427.57909730007,
+          "type": "Gamepad1",
+          "key": "ButtonX",
+          "processed": true
+        }
+      },
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      },
+      "focus": false,
+      "journal": true,
+      "camera": "Custom"
+    },
+    "journalBack": {
+      "inputs": {
+        "1": {
+          "time": 314427.57909730007,
+          "type": "Gamepad1",
+          "key": "ButtonX",
+          "processed": true
+        },
+        "2": {
+          "time": 314437.5832110001,
+          "type": "Gamepad1",
+          "key": "ButtonB",
+          "processed": true
+        }
+      },
+      "jump": false,
+      "camera": "Custom",
+      "journal": false,
+      "walk": 16
+    },
+    "workbenchTouch": {
+      "style": true,
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      },
+      "focus": false
+    }
+  },
+  "integrated": {
+    "beforeRound": {
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "revision": 3,
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "totalWins": 0,
+        "mastery": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "misses": 0,
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 0,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": false,
+            "target": 3,
+            "id": "chain",
+            "progress": 0,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": false,
+            "target": 500,
+            "id": "score",
+            "progress": 0,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "inventoryMask": 1,
+        "nectar": 6
+      },
+      "round": {
+        "PeakChain": 2,
+        "MasteryRanks": "{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0}",
+        "HatchActive": true,
+        "SelectedFamily": "pip",
+        "RunSequence": 1,
+        "BestScore": 80,
+        "Mode": "Room",
+        "InventoryMask": 1,
+        "FieldReady": true,
+        "MasteryMask": 0,
+        "FieldReason": "",
+        "Drops": 2,
+        "DeckThemeId": "sherbet",
+        "PreviewTier2": 2,
+        "FieldFinalStage": 0,
+        "FieldPhase": "Welcome",
+        "MaxClears": 0,
+        "DailyAward": 0,
+        "PreviewTier1": 1,
+        "FieldZoneBound": 2.6,
+        "ReducedEffects": false,
+        "NewBest": true,
+        "Chain": 1,
+        "DangerY": 14.6,
+        "RunFamily": "pip",
+        "HatchCharge": 1,
+        "NectarAward": 0,
+        "CompanionId": "pip",
+        "TrialMask": 0,
+        "SoundLevel": "Full",
+        "HatchState": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}",
+        "RewardStatus": "",
+        "RoundOver": false,
+        "Preset": "Springy",
+        "NextTier": 2,
+        "FieldStage": 0,
+        "MasteryAward": 0,
+        "OwnedPets": 1,
+        "ResetId": 4,
+        "FieldSuccess": false,
+        "Score": 80,
+        "OverflowPressure": 0,
+        "DeckStickerId": "none",
+        "Merges": 3
+      }
+    },
+    "drops": [
+      {
+        "score": 0,
+        "drops": 1,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 20,
+        "drops": 2,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 20,
+        "drops": 3,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 20,
+        "drops": 4,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 20,
+        "drops": 5,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 50,
+        "drops": 6,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 70,
+        "drops": 7,
+        "stage": 0,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 150,
+        "drops": 8,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 180,
+        "drops": 9,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 180,
+        "drops": 10,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 200,
+        "drops": 11,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 200,
+        "drops": 12,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 280,
+        "drops": 13,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 360,
+        "drops": 14,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 360,
+        "drops": 15,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 420,
+        "drops": 16,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 420,
+        "drops": 17,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 420,
+        "drops": 18,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 420,
+        "drops": 19,
+        "stage": 1,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 540,
+        "drops": 20,
+        "stage": 2,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 590,
+        "drops": 21,
+        "stage": 2,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 590,
+        "drops": 22,
+        "stage": 2,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 620,
+        "drops": 23,
+        "stage": 2,
+        "over": false,
+        "ready": true
+      },
+      {
+        "score": 620,
+        "drops": 24,
+        "stage": 2,
+        "over": false,
+        "ready": false
+      }
+    ],
+    "receipt": {
+      "hatch": {
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": [],
+            "marksRemaining": 1,
+            "points": 2,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "1 mark to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "totalWins": 1,
+        "mastery": {
+          "wick": 0,
+          "pip": 2,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "misses": 0,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "revision": 4,
+        "inventoryMask": 1,
+        "nectar": 20
+      },
+      "round": {
+        "PeakChain": 4,
+        "MasteryRanks": "{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0}",
+        "HatchActive": true,
+        "SelectedFamily": "pip",
+        "RunSequence": 2,
+        "FieldBudget": 24,
+        "BestScore": 640,
+        "Mode": "Board",
+        "InventoryMask": 1,
+        "FieldReady": false,
+        "MasteryMask": 0,
+        "FieldSuccess": true,
+        "Drops": 24,
+        "DeckThemeId": "sherbet",
+        "PreviewTier2": 1,
+        "FieldFinalStage": 2,
+        "OwnedPets": 1,
+        "MaxClears": 0,
+        "DailyAward": 6,
+        "PreviewTier1": 1,
+        "FieldZoneBound": 2.6,
+        "ReducedEffects": false,
+        "NewBest": true,
+        "Chain": 1,
+        "FieldReason": "Roots restored",
+        "RunFamily": "pip",
+        "HatchCharge": 1,
+        "NectarAward": 14,
+        "CompanionId": "pip",
+        "TrialMask": 3,
+        "SoundLevel": "Full",
+        "HatchState": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":7,\"puddle\":0,\"orbit\":0},\"nectar\":20,\"revision\":4,\"lastRunReward\":{\"promotedTo\":0,\"daily\":6,\"sequence\":2,\"contracts\":[\"chain\",\"score\"],\"family\":\"pip\",\"masteryPoints\":2,\"base\":8,\"total\":14},\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":2,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":1,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":true,\"title\":\"Chain 3 merges\",\"progress\":3,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":true,\"title\":\"Score 500\",\"progress\":500,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":1,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":3,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"1 mark to rank I\",\"missingChallenges\":[],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":1,\"points\":2,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}",
+        "RewardStatus": "Saved",
+        "RoundOver": true,
+        "Preset": "Springy",
+        "NextTier": 1,
+        "FieldStage": 2,
+        "MasteryAward": 2,
+        "ResetId": 9,
+        "FieldPhase": "Complete",
+        "Score": 640,
+        "OverflowPressure": 0,
+        "DangerY": 8.6,
+        "DeckStickerId": "none",
+        "Merges": 19
+      }
+    },
+    "beforeSpend": {
+      "hatch": {
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": [],
+            "marksRemaining": 1,
+            "points": 2,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "1 mark to rank I"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 0,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "totalWins": 1,
+        "mastery": {
+          "wick": 0,
+          "pip": 2,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "misses": 0,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "revision": 4,
+        "inventoryMask": 1,
+        "nectar": 20
+      },
+      "open": true
+    },
+    "afterSpend": {
+      "masteryRanks": {
+        "wick": 0,
+        "pip": 1,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryLegacyMask": 0,
+      "dailyDay": "20764",
+      "dailyBonus": 6,
+      "status": "Ready",
+      "masteryChallenges": {
+        "wick": 0,
+        "pip": 7,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "nectar": 2,
+      "revision": 5,
+      "lastRunReward": {
+        "promotedTo": 0,
+        "daily": 6,
+        "sequence": 2,
+        "contracts": {
+          "1": "chain",
+          "2": "score"
+        },
+        "family": "pip",
+        "masteryPoints": 2,
+        "base": 8,
+        "total": 14
+      },
+      "misses": 1,
+      "lastHatch": {
+        "masteryRank": 1,
+        "rare": false,
+        "recipe": "meadow",
+        "id": "08950f0d-57ad-4290-b632-efeac40b1051",
+        "duplicate": true,
+        "mastery": 3,
+        "petId": "pip",
+        "promotedTo": 1,
+        "family": "pip"
+      },
+      "masteryDetails": {
+        "wick": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "pip": {
+          "challengeGoal": 3,
+          "challenges": 3,
+          "nextRank": 2,
+          "rank": 1,
+          "rewardHint": "Next: outlined family crest",
+          "nextPoints": 10,
+          "name": "Sprout",
+          "missingChallenges": [],
+          "marksRemaining": 7,
+          "points": 3,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "7 marks to rank II"
+        },
+        "puddle": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "orbit": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        }
+      },
+      "contracts": {
+        "1": {
+          "hint": "Complete both sides in two rounds",
+          "claimed": false,
+          "target": 2,
+          "id": "runs",
+          "progress": 1,
+          "title": "Finish 2 quests",
+          "reward": 4
+        },
+        "2": {
+          "hint": "Build a chain of 3 in a full round",
+          "claimed": true,
+          "target": 3,
+          "id": "chain",
+          "progress": 3,
+          "title": "Chain 3 merges",
+          "reward": 3
+        },
+        "3": {
+          "hint": "Earn 500 points in a full round",
+          "claimed": true,
+          "target": 500,
+          "id": "score",
+          "progress": 500,
+          "title": "Score 500",
+          "reward": 3
+        }
+      },
+      "mastery": {
+        "wick": 0,
+        "pip": 3,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "inventoryMask": 1,
+      "totalWins": 1,
+      "dailyAvailable": false
+    },
+    "afterX": {
+      "masteryRanks": {
+        "wick": 0,
+        "pip": 1,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryLegacyMask": 0,
+      "dailyDay": "20764",
+      "dailyBonus": 6,
+      "status": "Ready",
+      "masteryChallenges": {
+        "wick": 0,
+        "pip": 7,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "nectar": 2,
+      "revision": 5,
+      "lastRunReward": {
+        "promotedTo": 0,
+        "daily": 6,
+        "sequence": 2,
+        "contracts": {
+          "1": "chain",
+          "2": "score"
+        },
+        "family": "pip",
+        "masteryPoints": 2,
+        "base": 8,
+        "total": 14
+      },
+      "misses": 1,
+      "lastHatch": {
+        "masteryRank": 1,
+        "rare": false,
+        "recipe": "meadow",
+        "id": "08950f0d-57ad-4290-b632-efeac40b1051",
+        "duplicate": true,
+        "mastery": 3,
+        "petId": "pip",
+        "promotedTo": 1,
+        "family": "pip"
+      },
+      "masteryDetails": {
+        "wick": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "pip": {
+          "challengeGoal": 3,
+          "challenges": 3,
+          "nextRank": 2,
+          "rank": 1,
+          "rewardHint": "Next: outlined family crest",
+          "nextPoints": 10,
+          "name": "Sprout",
+          "missingChallenges": [],
+          "marksRemaining": 7,
+          "points": 3,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "7 marks to rank II"
+        },
+        "puddle": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "orbit": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        }
+      },
+      "contracts": {
+        "1": {
+          "hint": "Complete both sides in two rounds",
+          "claimed": false,
+          "target": 2,
+          "id": "runs",
+          "progress": 1,
+          "title": "Finish 2 quests",
+          "reward": 4
+        },
+        "2": {
+          "hint": "Build a chain of 3 in a full round",
+          "claimed": true,
+          "target": 3,
+          "id": "chain",
+          "progress": 3,
+          "title": "Chain 3 merges",
+          "reward": 3
+        },
+        "3": {
+          "hint": "Earn 500 points in a full round",
+          "claimed": true,
+          "target": 500,
+          "id": "score",
+          "progress": 500,
+          "title": "Score 500",
+          "reward": 3
+        }
+      },
+      "mastery": {
+        "wick": 0,
+        "pip": 3,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "inventoryMask": 1,
+      "totalWins": 1,
+      "dailyAvailable": false
+    },
+    "reopen": {
+      "hatch": {
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 1,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "dailyBonus": 6,
+        "status": "Ready",
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "nectar": 2,
+        "revision": 5,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "misses": 1,
+        "lastHatch": {
+          "masteryRank": 1,
+          "rare": false,
+          "recipe": "meadow",
+          "id": "08950f0d-57ad-4290-b632-efeac40b1051",
+          "duplicate": true,
+          "mastery": 3,
+          "petId": "pip",
+          "promotedTo": 1,
+          "family": "pip"
+        },
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 2,
+            "rank": 1,
+            "rewardHint": "Next: outlined family crest",
+            "nextPoints": 10,
+            "name": "Sprout",
+            "missingChallenges": [],
+            "marksRemaining": 7,
+            "points": 3,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "7 marks to rank II"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "mastery": {
+          "wick": 0,
+          "pip": 3,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "inventoryMask": 1,
+        "totalWins": 1,
+        "dailyAvailable": false
+      },
+      "open": true
+    },
+    "meet": {
+      "back": true,
+      "camera": "Scriptable",
+      "hatch": {
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 2,
+            "rank": 1,
+            "rewardHint": "Next: outlined family crest",
+            "nextPoints": 10,
+            "name": "Sprout",
+            "missingChallenges": [],
+            "marksRemaining": 7,
+            "points": 3,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "7 marks to rank II"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 1,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "totalWins": 1,
+        "mastery": {
+          "wick": 0,
+          "pip": 3,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "misses": 1,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "revision": 6,
+        "inventoryMask": 1,
+        "nectar": 2
+      },
+      "walk": 0
+    },
+    "back": {
+      "jump": false,
+      "camera": "Custom",
+      "hatch": {
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 2,
+            "rank": 1,
+            "rewardHint": "Next: outlined family crest",
+            "nextPoints": 10,
+            "name": "Sprout",
+            "missingChallenges": [],
+            "marksRemaining": 7,
+            "points": 3,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "7 marks to rank II"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 1,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "totalWins": 1,
+        "mastery": {
+          "wick": 0,
+          "pip": 3,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "misses": 1,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "revision": 6,
+        "inventoryMask": 1,
+        "nectar": 2
+      },
+      "walk": 16
+    },
+    "commands": {
+      "1": {
+        "value": "meadow",
+        "revision": 4,
+        "action": "hatch",
+        "time": 314723.5870797001
+      },
+      "2": {
+        "value": "08950f0d-57ad-4290-b632-efeac40b1051",
+        "revision": 5,
+        "action": "ack",
+        "time": 314743.71894149994
+      }
+    },
+    "finalAssertions": {
+      "camera": "Custom",
+      "hatch": {
+        "masteryDetails": {
+          "wick": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "pip": {
+            "challengeGoal": 3,
+            "challenges": 3,
+            "nextRank": 2,
+            "rank": 1,
+            "rewardHint": "Next: outlined family crest",
+            "nextPoints": 10,
+            "name": "Sprout",
+            "missingChallenges": [],
+            "marksRemaining": 7,
+            "points": 3,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "7 marks to rank II"
+          },
+          "puddle": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          },
+          "orbit": {
+            "challengeGoal": 3,
+            "challenges": 0,
+            "nextRank": 1,
+            "rank": 0,
+            "rewardHint": "Next: family badge",
+            "nextPoints": 3,
+            "name": "Unranked",
+            "missingChallenges": {
+              "1": "Clean win",
+              "2": "Win with a chain of 3",
+              "3": "Win with 500 points"
+            },
+            "marksRemaining": 3,
+            "points": 0,
+            "hint": "Win rounds or hatch duplicates",
+            "nextGoal": "3 marks to rank I"
+          }
+        },
+        "masteryRanks": {
+          "wick": 0,
+          "pip": 1,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryChallenges": {
+          "wick": 0,
+          "pip": 7,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "masteryLegacyMask": 0,
+        "dailyDay": "20764",
+        "totalWins": 1,
+        "mastery": {
+          "wick": 0,
+          "pip": 3,
+          "puddle": 0,
+          "orbit": 0
+        },
+        "contracts": {
+          "1": {
+            "hint": "Complete both sides in two rounds",
+            "claimed": false,
+            "target": 2,
+            "id": "runs",
+            "progress": 1,
+            "title": "Finish 2 quests",
+            "reward": 4
+          },
+          "2": {
+            "hint": "Build a chain of 3 in a full round",
+            "claimed": true,
+            "target": 3,
+            "id": "chain",
+            "progress": 3,
+            "title": "Chain 3 merges",
+            "reward": 3
+          },
+          "3": {
+            "hint": "Earn 500 points in a full round",
+            "claimed": true,
+            "target": 500,
+            "id": "score",
+            "progress": 500,
+            "title": "Score 500",
+            "reward": 3
+          }
+        },
+        "misses": 1,
+        "lastRunReward": {
+          "promotedTo": 0,
+          "daily": 6,
+          "sequence": 2,
+          "contracts": {
+            "1": "chain",
+            "2": "score"
+          },
+          "family": "pip",
+          "masteryPoints": 2,
+          "base": 8,
+          "total": 14
+        },
+        "dailyBonus": 6,
+        "dailyAvailable": false,
+        "status": "Ready",
+        "revision": 6,
+        "inventoryMask": 1,
+        "nectar": 2
+      },
+      "mode": "Room",
+      "walk": 16,
+      "assertionsPassed": true
+    }
+  },
+  "limitations": [
+    "Studio desktop/emulator and virtual controller, not physical phone/controller/live multiplayer.",
+    "Walking used read-only target solver sending actual WASD. Round used read-only aim solver with actual pointer drops; proves mechanics, not unassisted fun or comprehension.",
+    "Prompt native window PNGs include CoreGui; MCP JPGs omit native prompts and do not prove prompt clearance.",
+    "Offset diagnostics changed only local prompt offset at fixed camera/root, before matching source literals and fresh scene fixture verification.",
+    "LandscapeSensor supports both landscape notch positions, not native portrait play.",
+    "A diagonal close table approach auto-stepped onto it; ordinary outside side/rear route returned to floor. Canopy and table collidable policy unchanged.",
+    "Native run is isolated Studio store; live-client persistent save/rejoin and audible audio mix remain unverified."
+  ]
+}

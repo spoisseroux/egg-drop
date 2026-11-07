@@ -270,7 +270,8 @@ function Art.build(room, part)
 	local eggsSign=box("EggsSign",0,5.5,-3.5,2.45,.64,.14,Color3.fromHex("#38694A"))
 	sign(eggsSign,"Eggs")
 	local eggPrompt=Instance.new("ProximityPrompt")
-	eggPrompt.Name,eggPrompt.ObjectText,eggPrompt.ActionText="BrowseEggs","Hatch tree","Browse eggs"
+	eggPrompt.Name,eggPrompt.ObjectText,eggPrompt.ActionText="BrowseEggs","","Browse eggs"
+	eggPrompt.UIOffset=Vector2.new(72,-16)
 	eggPrompt.Style=Enum.ProximityPromptStyle.Default
 	eggPrompt.KeyboardKeyCode,eggPrompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
 	eggPrompt.ClickablePrompt,eggPrompt.RequiresLineOfSight,eggPrompt.HoldDuration=true,false,0
@@ -434,19 +435,22 @@ function Art.build(room, part)
 		oval("BoundaryStone", x + 0.6, 4.4, z - 0.5, 2.5, 1.1, 1.7, stone:Lerp(moss, 0.2))
 	end
 
+	-- Raise the complete service assemblies; supports keep their original floor seats.
+	local serviceLift=1.10
 	for _, station in ipairs({
-		{ x = -11, id = "Customize", title = "Deck workbench", action = "Customize" },
+		{ x = -11, id = "Customize", title = "Deck workbench", action = "Style deck" },
 		{ x = 11, id = "Journal", title = "Field journal", action = "Open journal" },
 	}) do
 		local x, id = station.x, station.id
 		for _, side in ipairs({ -1, 1 }) do
-			box("TableLeg", x + side * 2.05, 4.66, -6.3, 0.34, 1.32, 1.62, bark, true)
+			box("TableLeg", x + side * 2.05, 4.66+serviceLift*.5, -6.3, 0.34, 1.32+serviceLift, 1.62, bark, true)
 		end
-		local top = box(id .. "Top", x, 5.41, -6.3, 5.15, 0.24, 2.25, wood, true)
-		sign(box(id .. "Sign", x, 6.2, -7.2, 4.65, 0.68, 0.18, bark), station.title)
+		local top = box(id .. "Top", x, 5.41+serviceLift, -6.3, 5.15, 0.24, 2.25, wood, true)
+		sign(box(id .. "Sign", x, 6.2+serviceLift, -7.2, 4.65, 0.68, 0.18, bark), station.title)
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.ActionText = station.action
-		prompt.ObjectText = station.title
+		prompt.ObjectText = ""
+		prompt.UIOffset=Vector2.new(if x<0 then 112 else 72,-12)
 		prompt.RequiresLineOfSight = false
 		prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
 		prompt.ClickablePrompt,prompt.HoldDuration=true,0
@@ -457,16 +461,16 @@ function Art.build(room, part)
 	end
 
 	for _, x in ipairs({ -13.5, -8.5 }) do
-		box("AwningPost", x, 5.8, -7.75, 0.22, 3.6, 0.22, bark)
+		box("AwningPost", x, 5.8+serviceLift*.5, -7.75, 0.22, 3.6+serviceLift, 0.22, bark)
 	end
-	local awning = box("CanvasAwning", -11, 7.55, -6.9, 5.65, 0.12, 2.35, Color3.fromHex("#EBDAAC"))
+	local awning = box("CanvasAwning", -11, 7.55+serviceLift, -6.9, 5.65, 0.12, 2.35, Color3.fromHex("#EBDAAC"))
 	awning.CFrame *= CFrame.Angles(math.rad(-9), 0, 0)
 	-- One readable journal station: a raised field guide and painted family seals.
 	-- These small decorations leave the existing table/prompt and paths intact.
 	for _, side in ipairs({ -1, 1 }) do
-		box("FieldGuideStand", 11 + side * 0.78, 5.67, -6.45, 0.24, 0.28, 0.62, bark)
+		box("FieldGuideStand", 11 + side * 0.78, 5.67+serviceLift, -6.45, 0.24, 0.28, 0.62, bark)
 	end
-	local guide = box("FieldGuideCover", 11, 5.83, -6.15, 2.32, 0.16, 1.42, Color3.fromHex("#38694A"))
+	local guide = box("FieldGuideCover", 11, 5.83+serviceLift, -6.15, 2.32, 0.16, 1.42, Color3.fromHex("#38694A"))
 	guide.CFrame *= CFrame.Angles(math.rad(18), 0, 0)
 	local function bookDetail(name, offset, size, color)
 		local piece = box(name, 0, 0, 0, size.X, size.Y, size.Z, color)
@@ -491,10 +495,10 @@ function Art.build(room, part)
 	box("JournalWayfinderPost", 5.8, 4.9, 3.8, 0.16, 1.8, 0.16, bark)
 	local wayfinder = box("JournalWayfinder", 5.8, 5.65, 3.8, 2.7, 0.64, 0.13, Color3.fromHex("#38694A"))
 	sign(wayfinder, "Journal  →")
-	box("DisplayDeck", -11.2, 5.77, -6.0, 1.02, 0.47, 0.15, Color3.fromHex("#303B49"))
-	box("DisplayLCD", -11.2, 5.77, -5.91, 0.28, 0.39, 0.04, Color3.fromHex("#71CAD6"))
-	box("DisplayRocker", -11.53, 5.77, -5.91, 0.15, 0.07, 0.04, bark)
-	box("DisplayA", -10.87, 5.77, -5.91, 0.095, 0.09, 0.045, Color3.fromHex("#F0B850"))
+	box("DisplayDeck", -11.2, 5.77+serviceLift, -6.0, 1.02, 0.47, 0.15, Color3.fromHex("#303B49"))
+	box("DisplayLCD", -11.2, 5.77+serviceLift, -5.91, 0.28, 0.39, 0.04, Color3.fromHex("#71CAD6"))
+	box("DisplayRocker", -11.53, 5.77+serviceLift, -5.91, 0.15, 0.07, 0.04, bark)
+	box("DisplayA", -10.87, 5.77+serviceLift, -5.91, 0.095, 0.09, 0.045, Color3.fromHex("#F0B850"))
 	for _, side in ipairs({ -1, 1 }) do
 		box("GardenBench", side * 11.8, 4.66, 12.6, 5.3, 0.22, 1.48, wood, true)
 		for _, x in ipairs({ 10.0, 13.6 }) do
