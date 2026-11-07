@@ -6,7 +6,7 @@ local flameHinge = CFrame.new(0, 1.8, 0)
 local function piece(self, name, size, offset, color, ball, animated)
 	local part = Instance.new("Part")
 	part.Name = name
-	part.Size = size
+	part.Size = size*self.worldScale
 	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
@@ -19,21 +19,21 @@ local function piece(self, name, size, offset, color, ball, animated)
 		mesh.Parent = part
 	end
 	part.Parent = self.model
-	table.insert(self.pieces, { part = part, offset = offset, animated = animated })
+	table.insert(self.pieces, { part = part, offset = offset, animated = animated==true, foot = if type(animated)=="string"then animated else nil })
 	return part
 end
 
-function Visual.new(parent, origin, pet)
+function Visual.new(parent, origin, pet, worldScale)
 	local model = Instance.new("Model")
 	model.Name = pet.name
 	model:SetAttribute("PetFamily", if pet.family == "wick" then "Wick" elseif pet.family == "orbit" then "Orbit" else pet.name)
-	local self = setmetatable({ model = model, origin = origin, pieces = {}, time = 0, greeting = 0, lastFrame = -1 }, Visual)
+	local self = setmetatable({ model = model, worldScale = worldScale or 1, worldContext=worldScale~=nil, origin = origin, pieces = {}, time = 0, greeting = 0, lastFrame = -1 }, Visual)
 	local ink = Color3.fromHex("#392846")
 	local wick = pet.id == "wick" or pet.family == "wick"
 	self.wick = wick
 	model.PrimaryPart = piece(self, "Body", Vector3.new(1.9, 1.8, 1.55), CFrame.new(0, 1.2, 0), pet.color, true)
 	for _, side in ipairs({ -1, 1 }) do
-		piece(self, "Foot", Vector3.new(0.53, 0.24, 0.64), CFrame.new(side * 0.52, 0.18, 0.25), pet.color, true)
+		piece(self, "Foot", Vector3.new(0.53, 0.24, 0.64), CFrame.new(side * 0.52, 0.18, 0.25), pet.color, true, if side == -1 then "footLeft"else "footRight")
 		piece(self, "Eye", Vector3.new(0.13, 0.21, 0.07), CFrame.new(side * 0.28, 1.38, 0.72), ink)
 		piece(self, "Cheek", Vector3.new(0.23, 0.08, 0.07), CFrame.new(side * 0.44, 1.12, 0.70),
 			if wick then Color3.fromHex("#FFD0A2") else Color3.fromHex("#F4D2F5"), true)
@@ -93,10 +93,27 @@ function Visual:update(dt)
 			flourish = CFrame.Angles(0, sweep * math.pi * 2, 0)
 		end
 	end
-	local pivot = CFrame.new(self.origin + Vector3.new(0, hop + 0.045 * (1 + math.sin(self.time * 4)), 0))
-		* CFrame.Angles(0, (self.yaw or 0) + math.sin(self.time * 2.4) * 0.08, math.sin(self.time * 3) * (0.03 + hop * 0.19))
+	local reduced=self.reducedEffects==true
+	if reduced then hop,flourish=0,CFrame.identity end
+	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
+	local travelBob=if self.wick then 0 else (1-math.cos(stride*2))*.035*gait
+	local worldScale=self.worldScale
+	local pivot = CFrame.new(self.origin + Vector3.new(0, (hop + travelBob + (if reduced then 0 else 0.045 * (1 + math.sin(self.time * 4))))*worldScale, 0))
+		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(self.time * 2.4) * 0.08), if reduced then 0 else math.sin(self.time * 3) * (0.03 + hop * 0.19))
 	for _, item in ipairs(self.pieces) do
-		item.part.CFrame = pivot * (if item.animated then flourish * item.offset else item.offset)
+		local pose=if item.animated then flourish*item.offset else item.offset
+		if self.wick and item.foot then
+			local step=math.sin(stride+(if item.foot=="footLeft"then 0 else math.pi))
+			pose=CFrame.new(0,math.max(0,step)*.085*gait,step*.075*gait)*pose
+		elseif not self.wick and item.part.Name=="OrbitRing"then
+			pose=CFrame.Angles(0,0,math.sin(stride)*.025*gait)*pose
+		end
+		local placed=pivot * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
+		if self.worldContext and item.foot then
+			local half=(math.abs(placed.RightVector.Y)*item.part.Size.X+math.abs(placed.UpVector.Y)*item.part.Size.Y+math.abs(placed.LookVector.Y)*item.part.Size.Z)*.5
+			placed+=Vector3.new(0,math.max(0,self.origin.Y-(placed.Y-half)),0)
+		end
+		item.part.CFrame=placed
 	end
 end
 

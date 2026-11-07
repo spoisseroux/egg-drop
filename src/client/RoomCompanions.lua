@@ -57,6 +57,7 @@ function Companions:update(dt)
 				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask, rank = item.rank, legacy = item.legacy }
 				self.active[item.player] = entry
 			end
+			if entry.root~=item.root then entry.followState=nil;PetFollow.rest(entry.visual)end
 			entry.root = item.root
 			visible[item.player] = true
 		end
@@ -69,7 +70,7 @@ function Companions:update(dt)
 	end
 	for _, entry in pairs(self.active) do
 		if not entry.root.Parent then continue end
-		entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState)
+		entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())
 		entry.visual:update(dt)
 		PetPrestige.update(entry.visual, dt, self.reduceEffects())
 	end

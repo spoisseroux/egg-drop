@@ -1,5 +1,6 @@
 -- Original Droplet Puddle: a low gel body and a raised, waving water tail.
 -- Origin is the floor; the face looks along +Z. The host drives update().
+local Bounds=require(script.Parent.PetRigBounds)
 local PuddleVisual = {}
 PuddleVisual.__index = PuddleVisual
 
@@ -34,12 +35,13 @@ local function piece(self, name, size, frame, color, rounded, role)
 	return part
 end
 
-function PuddleVisual.new(parent, position)
+function PuddleVisual.new(parent, position, _pet, worldScale)
 	local model = Instance.new("Model")
 	model.Name = "Puddle"
 	model:SetAttribute("PetFamily", "Puddle")
 	local self = setmetatable({
 		model = model,
+		worldScale = worldScale or 1, worldContext=worldScale~=nil,
 		origin = position,
 		pieces = {},
 		time = 0,
@@ -132,12 +134,18 @@ function PuddleVisual:update(dt)
 	if g < 1.50 then
 		wave = math.sin(g * 15) * math.sin(g / 1.50 * math.pi) * 0.48
 	end
-	local breathe = math.sin(t * 2.1) * 0.018
+	local reduced=self.reducedEffects==true
+	if reduced then bounce,squash,wave=0,0,0 end
+	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
+	squash+=math.sin(stride*2)*.025*gait
+	local worldScale=self.worldScale
+	local breathe = if reduced then 0 else math.sin(t * 2.1) * 0.018
 	local scale = Vector3.new(1 + squash * 0.55 - breathe * 0.4, 1 - squash + breathe, 1 + squash * 0.30)
-	local root = CFrame.new(self.origin + Vector3.new(0, bounce, 0))
-		* CFrame.Angles(0, (self.yaw or 0) + math.sin(t * 0.9) * 0.025, 0)
+	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
+		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 0.9) * 0.025), 0)
 	local blink = t % 5.1 > 4.93
 	local tailBase = CFrame.new(Vector3.new(0.90, 0.49, -0.25) * scale)
+	if self.worldContext then Bounds.begin(self)end
 	for _, entry in ipairs(self.pieces) do
 		local rest = entry.frame
 		local pose = CFrame.new(rest.Position * scale) * rest.Rotation
@@ -148,22 +156,24 @@ function PuddleVisual:update(dt)
 			local radius = 1.1 + math.clamp(u, 0, 1) * 0.85
 			pose = CFrame.new(rest.X * radius, rest.Y, rest.Z * radius * 0.78) * rest.Rotation
 			size = Vector3.new(entry.size.X * radius, entry.size.Y, entry.size.Z)
-			transparency = if u >= 0 and u < 1 then 0.20 + u * 0.80 else 1
-			entry.part.CFrame = CFrame.new(self.origin) * pose
+			transparency = if not reduced and u >= 0 and u < 1 then 0.20 + u * 0.80 else 1
+			entry.part.CFrame = CFrame.new(self.origin) * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
 		else
 			if entry.role == "tail" then
-				pose = tailBase * CFrame.Angles(0, 0, math.sin(t * 2.8) * 0.06 + wave)
+				pose = tailBase * CFrame.Angles(0, 0, (if reduced then 0 else math.sin(t * 2.8) * 0.06) + wave)
 					* tailBase:Inverse() * pose
 			elseif entry.role == "eye" and blink then
 				size = Vector3.new(size.X, 0.055, size.Z)
 			elseif entry.role == "spark" and blink then
 				transparency = 1
 			end
-			entry.part.CFrame = root * pose
+			entry.part.CFrame = root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
 		end
-		entry.part.Size = size
+		entry.part.Size = size*worldScale
 		entry.part.Transparency = transparency
+		if self.worldContext and entry.role~="ripple"then Bounds.include(self,entry.part.CFrame,entry.part.Size)end
 	end
+	if self.worldContext then Bounds.finish(self)end
 end
 
 function PuddleVisual:destroy()

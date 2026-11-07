@@ -1,5 +1,7 @@
 local HttpService = game:GetService("HttpService")
 local FamilyCrest = require(script.Parent.FamilyCrest)
+local GuiService=game:GetService("GuiService")
+local RigBounds=require(script.Parent.PetRigBounds)
 local Prestige = {}
 local families = { "pip", "puddle", "wick", "orbit" }
 local roman = { "I", "II", "III" }
@@ -47,7 +49,8 @@ function Prestige.attach(visual, pet, rank, legacy)
 	if rank > 0 then
 		local badge = Instance.new("BillboardGui")
 		badge.Name, badge.Adornee = "FamilyPrestigeBadge", body
-		badge.Size, badge.StudsOffsetWorldSpace = UDim2.fromOffset(46, 26), Vector3.new(1.05, 0.55, 0)
+		badge.Size, badge.StudsOffsetWorldSpace = UDim2.fromOffset(46, 26), Vector3.zero
+		badge.Enabled=false;visual.prestigeBadge=badge
 		badge.AlwaysOnTop, badge.LightInfluence, badge.MaxDistance = false, 0, 30
 		badge.Parent = body
 		local plate = shape(badge, "Crest", UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), Color3.fromHex("#314738"), 0.24)
@@ -71,16 +74,45 @@ function Prestige.attach(visual, pet, rank, legacy)
 		local emitter = Instance.new("ParticleEmitter")
 		emitter.Name, emitter.Texture = "FamilyFlourish", "rbxasset://textures/particles/sparkles_main.dds"
 		emitter.Color, emitter.LightEmission = ColorSequence.new(tint), 0.3
-		emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.12), NumberSequenceKeypoint.new(1, 0) })
+		local scale=visual.worldScale or 1
+		emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.12*scale), NumberSequenceKeypoint.new(1, 0) })
 		emitter.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.15), NumberSequenceKeypoint.new(1, 1) })
-		emitter.Lifetime, emitter.Speed, emitter.SpreadAngle = NumberRange.new(0.45, 0.7), NumberRange.new(0.5, 1.3), Vector2.new(55, 55)
-		emitter.Acceleration, emitter.Rate, emitter.Enabled = Vector3.new(0, 0.8, 0), 0, false
+		emitter.Lifetime, emitter.Speed, emitter.SpreadAngle = NumberRange.new(0.45, 0.7), NumberRange.new(0.5*scale, 1.3*scale), Vector2.new(55, 55)
+		emitter.Acceleration, emitter.Rate, emitter.Enabled = Vector3.new(0, 0.8*scale, 0), 0, false
 		emitter.Parent = body
 		visual.masteryEmitter, visual.masteryBurstIn = emitter, 3
 	end
 end
 
+-- One native post-pose OBB and eight projections; no descendant walks,
+-- raycasts, attachment parts or per-frame GUI allocation.
+function Prestige.updateBadge(visual,camera)
+	local badge=visual.prestigeBadge
+	if not badge or not badge.Parent then return end
+	local body=visual.model.PrimaryPart
+	if not camera or not body or not visual.model.Parent then badge.Enabled=false;return end
+	local viewport=camera.ViewportSize
+	if viewport.X<1 or viewport.Y<1 or (camera.CFrame.Position-body.Position).Magnitude>badge.MaxDistance then badge.Enabled=false;return end
+	local cf,size=RigBounds.get(visual)
+	local left,top,right,bottom=math.huge,math.huge,-math.huge,-math.huge
+	for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do
+		local point=camera:WorldToViewportPoint(cf:PointToWorldSpace(Vector3.new(size.X*x,size.Y*y,size.Z*z)*.5))
+		if point.Z<=.1 then badge.Enabled=false;return end
+		left,top,right,bottom=math.min(left,point.X),math.min(top,point.Y),math.max(right,point.X),math.max(bottom,point.Y)
+	end end end
+	local center=camera:WorldToViewportPoint(cf.Position)
+	local px=(left+right)*.5;local py=top-5-13
+	local inset,bottomInset=GuiService:GetGuiInset()
+	if right<inset.X or left>viewport.X-bottomInset.X or bottom<inset.Y or top>viewport.Y-bottomInset.Y then badge.Enabled=false;return end
+	if px-23<inset.X+4 or px+23>viewport.X-bottomInset.X-4 or py-13<inset.Y+4 or py+13>viewport.Y-bottomInset.Y-4 then badge.Enabled=false;return end
+	local unit=2*center.Z*math.tan(math.rad(camera.FieldOfView)*.5)/viewport.Y
+	local position=cf.Position+camera.CFrame.RightVector*((px-center.X)*unit)+camera.CFrame.UpVector*((center.Y-py)*unit)
+	badge.StudsOffsetWorldSpace=position-body.Position;badge.Enabled=true
+end
+function Prestige.crestReserve(visual)return if visual.prestigeBadge and visual.prestigeBadge.Parent then 32 else 0 end
+
 function Prestige.update(visual, dt, reduced)
+	Prestige.updateBadge(visual,workspace.CurrentCamera)
 	if not visual.masteryEmitter then return end
 	if reduced then
 		visual.masteryEmitter:Clear()

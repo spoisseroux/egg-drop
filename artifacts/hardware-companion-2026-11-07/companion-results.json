@@ -1,0 +1,411 @@
+{
+  "place": 96451847774961,
+  "date": "2026-11-07",
+  "cases": {
+    "uniqueNativeMedium": 105,
+    "scale": 17,
+    "crest": 10,
+    "oldCameraProjectionChecks": 72,
+    "animatedCrestSamples": 1890
+  },
+  "records": {
+    "initial": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompanionScale",
+        "result": {
+          "passed": 17,
+          "cases": [
+            "pip authored default1 and world.72 stay uniform through animated poses",
+            "pip travel gait rests snaps turns and respects reduced effects",
+            "puddle authored default1 and world.72 stay uniform through animated poses",
+            "puddle travel gait rests snaps turns and respects reduced effects",
+            "wick authored default1 and world.72 stay uniform through animated poses",
+            "wick travel gait rests snaps turns and respects reduced effects",
+            "orbit authored default1 and world.72 stay uniform through animated poses",
+            "orbit travel gait rests snaps turns and respects reduced effects",
+            "bloom_pip authored default1 and world.72 stay uniform through animated poses",
+            "bloom_pip travel gait rests snaps turns and respects reduced effects",
+            "foxfire_wick authored default1 and world.72 stay uniform through animated poses",
+            "foxfire_wick travel gait rests snaps turns and respects reduced effects",
+            "eclipse_orbit authored default1 and world.72 stay uniform through animated poses",
+            "eclipse_orbit travel gait rests snaps turns and respects reduced effects",
+            "ground sampling stays10Hz without per-foot queries",
+            "normal16stud movement is bounded to3.5cycles at15/30/60Hz",
+            "stride advances by rendered horizontal distance rather than wall clock"
+          ]
+        }
+      },
+      {
+        "ok": false,
+        "preference": "Medium",
+        "name": "CompanionCrest",
+        "result": "Players.keehar01.PlayerScripts.Client.QACompanionCrest:78: Players.keehar01.PlayerScripts.Client.QACompanionCrest:28: crest hidden in supported framing: pip733, 307 greeting"
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "GreetingLifecycle",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "blocked shot propagates false without spending interaction cooldown",
+            "accepted greeting starts one cooldown and rejects immediate repeat",
+            "menus and transitions cannot enter a second shot",
+            "focused greeting delegates reaction without camera recapture or cooldown reset"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PetGreetingShot",
+        "result": {
+          "projectionChecks": 72,
+          "models": 7,
+          "passed": 35,
+          "cases": [
+            "pip fits landscape at rest and greeting 0.3/0.7",
+            "pip fits portrait at rest and greeting 0.3/0.7",
+            "pip fits wide at rest and greeting 0.3/0.7",
+            "puddle fits landscape at rest and greeting 0.3/0.7",
+            "puddle fits portrait at rest and greeting 0.3/0.7",
+            "puddle fits wide at rest and greeting 0.3/0.7",
+            "wick fits landscape at rest and greeting 0.3/0.7",
+            "wick fits portrait at rest and greeting 0.3/0.7",
+            "wick fits wide at rest and greeting 0.3/0.7",
+            "orbit fits landscape at rest and greeting 0.3/0.7",
+            "orbit fits portrait at rest and greeting 0.3/0.7",
+            "orbit fits wide at rest and greeting 0.3/0.7",
+            "bloom_pip fits landscape at rest and greeting 0.3/0.7",
+            "bloom_pip fits portrait at rest and greeting 0.3/0.7",
+            "bloom_pip fits wide at rest and greeting 0.3/0.7",
+            "foxfire_wick fits landscape at rest and greeting 0.3/0.7",
+            "foxfire_wick fits portrait at rest and greeting 0.3/0.7",
+            "foxfire_wick fits wide at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits landscape at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits portrait at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits wide at rest and greeting 0.3/0.7",
+            "edges and corners keep the complete greeting footprint on supported floor",
+            "missing floor or invalid viewport fails before world queries",
+            "no ground falls back after bounded world queries",
+            "high ground falls back after bounded world queries",
+            "blocked falls back after bounded world queries",
+            "a rotated non-query sign occludes a finite camera segment",
+            "parallel misses and padded grazes are distinguished",
+            "blockers behind the camera or beyond the target do not occlude",
+            "lower-body and side occluders can block while the center ray remains clear",
+            "a blocked first candidate falls back to a clear shot within the query budget",
+            "every visually blocked candidate yields a bounded roam fallback",
+            "restore keeps the original shot and focus translated by player motion",
+            "replacement camera or root cannot receive an old greeting restoration",
+            "a root reparented into another character or detached invalidates the snapshot"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PetFocusUI",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "movement and jumping restore exact prior settings once",
+            "petting bounds account for core-safe offset and reject hidden geometry",
+            "focus navigation is safe-sized and input bindings clean up",
+            "petting pointer uses core-safe input coordinates exactly once",
+            "other modals suspend focus UI and receive Back/movement/Greet input",
+            "repeat greeting reacts in the same shot and throttles rubbing",
+            "reduced effects and stale camera/root never animate or keep a lock",
+            "focus movement release restores only the captured controller",
+            "camera teardown invalidates stale greeting epochs without touching a replacement",
+            "aspect reframe preserves original restore shot without greet or recapture"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "RoamReturnCamera",
+        "result": {
+          "passed": 15,
+          "cases": [
+            "initial Board presentation does not capture a return roam shot",
+            "actual Room exit captures before the separate pre-Room restore",
+            "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+            "the same root translates the return transform and Focus together",
+            "active greeting restores underlying roam before capturing the Deck return",
+            "Scriptable camera without an accepted greeting and dead root are never captured",
+            "replaced root character or camera rejects old shot and seeds a clear angle",
+            "consumed or missing shots seed arrival even after previous roaming",
+            "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+            "missing camera defers arrival without consuming the shot or marking first roam",
+            "staggered root availability retries once then ordinary roaming retains its angle",
+            "missing humanoid also defers placement until its live subject is available",
+            "Board cancellation clears a pending placement so late roots cannot move the camera",
+            "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+            "teardown invalidates return shot before camera and UI cleanup"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "FamilyCrest",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "all family ranks render at24px with no text or input capture",
+            "unchanged HUD refresh preserves artwork instances and descendant count",
+            "menu refresh keeps family crests and fits all family buttons",
+            "earned pet badge cleanup preserves unranked and legacy effects"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "LoungeStations",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "rare-only inventory is browsable while an explicit empty mask overrides legacy rank",
+            "missing mask rejects legacy prefix and trials until the loaded mask arrives",
+            "committed pending ID recovery is separate from Ready-only browsing",
+            "all presentation owners reject free roam without changing focus controls",
+            "UI lifetime rejects detached destroyed disabled and missing presentation nodes",
+            "new and late-tagged streamed prompts inherit the current overlay owner",
+            "overlapping nest and journal radii expose only the nearest shared-key station",
+            "dispatch rechecks local player enabled state distance and current ownership",
+            "detached reinserted and invalid-parent prompts share the single cache",
+            "destroy disconnects trigger stream and owner listeners and disables owned prompts"
+          ]
+        }
+      }
+    ],
+    "finalCamera": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompanionCrest",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "pip ranked focus reserves complete animated crown and plate at three aspects",
+            "puddle ranked focus reserves complete animated crown and plate at three aspects",
+            "wick ranked focus reserves complete animated crown and plate at three aspects",
+            "orbit ranked focus reserves complete animated crown and plate at three aspects",
+            "bloom_pip ranked focus reserves complete animated crown and plate at three aspects",
+            "foxfire_wick ranked focus reserves complete animated crown and plate at three aspects",
+            "eclipse_orbit ranked focus reserves complete animated crown and plate at three aspects",
+            "invisible Puddle ripple cannot move badge/framing while tail and crown remain included",
+            "rank0 has no plate; rankI updates before the no-emitter return",
+            "ranked badge hides out of range/behind/offscreen then restores without allocations"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PetGreetingShot",
+        "result": {
+          "projectionChecks": 72,
+          "models": 7,
+          "passed": 35,
+          "cases": [
+            "pip fits landscape at rest and greeting 0.3/0.7",
+            "pip fits portrait at rest and greeting 0.3/0.7",
+            "pip fits wide at rest and greeting 0.3/0.7",
+            "puddle fits landscape at rest and greeting 0.3/0.7",
+            "puddle fits portrait at rest and greeting 0.3/0.7",
+            "puddle fits wide at rest and greeting 0.3/0.7",
+            "wick fits landscape at rest and greeting 0.3/0.7",
+            "wick fits portrait at rest and greeting 0.3/0.7",
+            "wick fits wide at rest and greeting 0.3/0.7",
+            "orbit fits landscape at rest and greeting 0.3/0.7",
+            "orbit fits portrait at rest and greeting 0.3/0.7",
+            "orbit fits wide at rest and greeting 0.3/0.7",
+            "bloom_pip fits landscape at rest and greeting 0.3/0.7",
+            "bloom_pip fits portrait at rest and greeting 0.3/0.7",
+            "bloom_pip fits wide at rest and greeting 0.3/0.7",
+            "foxfire_wick fits landscape at rest and greeting 0.3/0.7",
+            "foxfire_wick fits portrait at rest and greeting 0.3/0.7",
+            "foxfire_wick fits wide at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits landscape at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits portrait at rest and greeting 0.3/0.7",
+            "eclipse_orbit fits wide at rest and greeting 0.3/0.7",
+            "edges and corners keep the complete greeting footprint on supported floor",
+            "missing floor or invalid viewport fails before world queries",
+            "no ground falls back after bounded world queries",
+            "high ground falls back after bounded world queries",
+            "blocked falls back after bounded world queries",
+            "a rotated non-query sign occludes a finite camera segment",
+            "parallel misses and padded grazes are distinguished",
+            "blockers behind the camera or beyond the target do not occlude",
+            "lower-body and side occluders can block while the center ray remains clear",
+            "a blocked first candidate falls back to a clear shot within the query budget",
+            "every visually blocked candidate yields a bounded roam fallback",
+            "restore keeps the original shot and focus translated by player motion",
+            "replacement camera or root cannot receive an old greeting restoration",
+            "a root reparented into another character or detached invalidates the snapshot"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PetFocusUI",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "movement and jumping restore exact prior settings once",
+            "petting bounds account for core-safe offset and reject hidden geometry",
+            "focus navigation is safe-sized and input bindings clean up",
+            "petting pointer uses core-safe input coordinates exactly once",
+            "other modals suspend focus UI and receive Back/movement/Greet input",
+            "repeat greeting reacts in the same shot and throttles rubbing",
+            "reduced effects and stale camera/root never animate or keep a lock",
+            "focus movement release restores only the captured controller",
+            "camera teardown invalidates stale greeting epochs without touching a replacement",
+            "aspect reframe preserves original restore shot without greet or recapture"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "RoamReturnCamera",
+        "result": {
+          "passed": 15,
+          "cases": [
+            "initial Board presentation does not capture a return roam shot",
+            "actual Room exit captures before the separate pre-Room restore",
+            "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+            "the same root translates the return transform and Focus together",
+            "active greeting restores underlying roam before capturing the Deck return",
+            "Scriptable camera without an accepted greeting and dead root are never captured",
+            "replaced root character or camera rejects old shot and seeds a clear angle",
+            "consumed or missing shots seed arrival even after previous roaming",
+            "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+            "missing camera defers arrival without consuming the shot or marking first roam",
+            "staggered root availability retries once then ordinary roaming retains its angle",
+            "missing humanoid also defers placement until its live subject is available",
+            "Board cancellation clears a pending placement so late roots cannot move the camera",
+            "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+            "teardown invalidates return shot before camera and UI cleanup"
+          ]
+        }
+      }
+    ],
+    "failureDiagnostic": [
+      {
+        "ok": false,
+        "preference": "Medium",
+        "name": "CompanionCrest",
+        "result": "Players.keehar01.PlayerScripts.Client.QACompanionCrest:78: Players.keehar01.PlayerScripts.Client.QACompanionCrest:28: crest hidden in supported framing: pip733, 307 greeting {\"origin\":\"0, 4.025000095367432, -10.93400764465332\",\"distance\":8.165783882141114,\"body\":\"0.007695313543081284, 5.543420791625977, -10.93424129486084\",\"top\":84.62366485595703,\"camera\":\"-0.01714315079152584, 6.253191947937012, -2.7994003295898438\",\"time\":1.9,\"viewport\":\"733, 307\",\"inset\":\"0, 58\",\"greeting\":0.5}"
+      }
+    ]
+  },
+  "walk": {
+    "count": 361,
+    "bodyTravel": 19.058719220099825,
+    "maxFrameStep": 0.2933339474541164,
+    "activeFrames": 119,
+    "stalledActiveFrames": 0,
+    "tailHorizontalSpan": 0.03637504577636719,
+    "footStrideRange": 0.10799640417098999,
+    "instances": [
+      41,
+      41
+    ],
+    "camera": "Custom",
+    "walkSpeed": 16,
+    "start": [
+      24.20378303527832,
+      6.998024940490723,
+      -3.7243523597717285
+    ],
+    "end": [
+      18.275571823120117,
+      6.998024940490723,
+      10.9619140625
+    ],
+    "p50Ms": 16.704799607396126,
+    "p95Ms": 17.85700023174286,
+    "tailFootZRange": 0.0000017136335372924805
+  },
+  "sourceExpected": {
+    "StarterPlayer.StarterPlayerScripts.Client.BoardAudio": 3000979607,
+    "StarterPlayer.StarterPlayerScripts.Client.BoardQuestHUD": 255119140,
+    "StarterPlayer.StarterPlayerScripts.Client.BonusPetVisual": 2469204543,
+    "StarterPlayer.StarterPlayerScripts.Client.ControllerFocus": 1200577160,
+    "StarterPlayer.StarterPlayerScripts.Client.DeckArt": 312208704,
+    "StarterPlayer.StarterPlayerScripts.Client.DeckLayout": 4006866143,
+    "StarterPlayer.StarterPlayerScripts.Client.DeckMenu": 1414865566,
+    "StarterPlayer.StarterPlayerScripts.Client.DeckPicker": 3996153902,
+    "StarterPlayer.StarterPlayerScripts.Client.DeckTransition": 17394735,
+    "StarterPlayer.StarterPlayerScripts.Client.DropDispenser": 1888438696,
+    "StarterPlayer.StarterPlayerScripts.Client.EggArt": 3365184290,
+    "StarterPlayer.StarterPlayerScripts.Client.EggHatchView": 3803066274,
+    "StarterPlayer.StarterPlayerScripts.Client.FamilyCrest": 1079099867,
+    "StarterPlayer.StarterPlayerScripts.Client.FirstHatchGuide": 3837690744,
+    "StarterPlayer.StarterPlayerScripts.Client.HandheldScreens": 3356901974,
+    "StarterPlayer.StarterPlayerScripts.Client.HatchCinematic": 3742620105,
+    "StarterPlayer.StarterPlayerScripts.Client.HatchNavigation": 3217096440,
+    "StarterPlayer.StarterPlayerScripts.Client.HatchReveal": 3106613351,
+    "StarterPlayer.StarterPlayerScripts.Client.HollowClock": 1686006719,
+    "StarterPlayer.StarterPlayerScripts.Client": 3449018154,
+    "StarterPlayer.StarterPlayerScripts.Client.JellyLCD": 1441384248,
+    "StarterPlayer.StarterPlayerScripts.Client.JellySpanSurface": 1394968546,
+    "StarterPlayer.StarterPlayerScripts.Client.JellySprite": 424028069,
+    "StarterPlayer.StarterPlayerScripts.Client.JellyVisual": 453749963,
+    "StarterPlayer.StarterPlayerScripts.Client.JournalPromptPriority": 3185101288,
+    "StarterPlayer.StarterPlayerScripts.Client.LoungeStations": 2020518517,
+    "StarterPlayer.StarterPlayerScripts.Client.PetFocusUI": 337185628,
+    "StarterPlayer.StarterPlayerScripts.Client.PetFollow": 3293744316,
+    "StarterPlayer.StarterPlayerScripts.Client.PetGreetingShot": 3032847313,
+    "StarterPlayer.StarterPlayerScripts.Client.PetJournal": 969280049,
+    "StarterPlayer.StarterPlayerScripts.Client.PetPortrait": 1542201334,
+    "StarterPlayer.StarterPlayerScripts.Client.PetPrestige": 971511022,
+    "StarterPlayer.StarterPlayerScripts.Client.PetRigBounds": 2418223082,
+    "StarterPlayer.StarterPlayerScripts.Client.PipVisual": 3602913925,
+    "StarterPlayer.StarterPlayerScripts.Client.PresentationPolicy": 718701887,
+    "StarterPlayer.StarterPlayerScripts.Client.PuddleVisual": 2649958662,
+    "StarterPlayer.StarterPlayerScripts.Client.RecapFeedback": 1485838465,
+    "StarterPlayer.StarterPlayerScripts.Client.RoomCompanions": 4212580942,
+    "StarterPlayer.StarterPlayerScripts.Client.RoomView": 3604969371,
+    "StarterPlayer.StarterPlayerScripts.Client.RoundRecap": 1772707286,
+    "StarterPlayer.StarterPlayerScripts.Client.RunReceipt": 1926350897,
+    "StarterPlayer.StarterPlayerScripts.Client.SaveNotice": 619075139,
+    "ReplicatedStorage.Shared.BoardConfig": 3804976776,
+    "ReplicatedStorage.Shared.DailyContracts": 4199071389,
+    "ReplicatedStorage.Shared.DeckPalette": 2542098077,
+    "ReplicatedStorage.Shared.DeckSettings": 3032192356,
+    "ReplicatedStorage.Shared.DeckStickers": 1287327148,
+    "ReplicatedStorage.Shared.DeckThemes": 3607598005,
+    "ReplicatedStorage.Shared.EggCatalog": 1798252114,
+    "ReplicatedStorage.Shared.FamilyMastery": 2103273219,
+    "ReplicatedStorage.Shared": 3397649189,
+    "ReplicatedStorage.Shared.PetCatalog": 156025591,
+    "ReplicatedStorage.Shared.PocketTrials": 2575178847,
+    "ServerScriptService.Server.BoardRound": 1284421566,
+    "ServerScriptService.Server.BoardSimulation": 464837289,
+    "ServerScriptService.Server.CloseProgress": 388090471,
+    "ServerScriptService.Server.FieldRun": 3150518642,
+    "ServerScriptService.Server.FirstSession": 1272941558,
+    "ServerScriptService.Server.HatchProgress": 416152521,
+    "ServerScriptService.Server": 1130379051,
+    "ServerScriptService.Server.Lounge": 1608707562,
+    "ServerScriptService.Server.LoungeArt": 3405679169,
+    "ServerScriptService.Server.PlayerProgress": 2502872275,
+    "ServerScriptService.Server.ProgressStore": 107585254,
+    "ServerScriptService.Server.SessionProfile": 2040837247
+  },
+  "limits": [
+    "Actual walking is local single-player Studio keyboard input; no physical-phone or live remote/multiplayer proof",
+    "3 aspect crest fixtures use isolated native model+projection cameras; photographs use native desktop/phone camera fixture",
+    "Largest preference final integrated UI regression remains scheduled",
+    "First photo fixture had an authoring syntax error and camera contention; corrected isolated fixture, then removed; no runtime source fault"
+  ]
+}

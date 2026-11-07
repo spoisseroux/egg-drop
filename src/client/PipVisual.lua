@@ -37,7 +37,7 @@ local function piece(self, name, size, frame, color, rounded, role)
 	return part
 end
 
-function PipVisual.new(parent, origin, pet)
+function PipVisual.new(parent, origin, pet, worldScale)
 	local isBloom = pet and pet.id == "bloom_pip"
 	local bodyColor = if isBloom then pet.color else COLORS.cream
 	local model = Instance.new("Model")
@@ -45,6 +45,7 @@ function PipVisual.new(parent, origin, pet)
 	model:SetAttribute("PetFamily", "Pip")
 	local self = setmetatable({
 		model = model,
+		worldScale = worldScale or 1, worldContext=worldScale~=nil,
 		origin = origin,
 		pieces = {},
 		time = 0,
@@ -55,7 +56,7 @@ function PipVisual.new(parent, origin, pet)
 	-- Tiny moss slippers support a wide, bottom-heavy egg silhouette.
 	for _, side in ipairs({ -1, 1 }) do
 		piece(self, "Slipper", Vector3.new(0.57, 0.28, 0.70),
-			CFrame.new(side * 0.49, 0.14, 0.20), COLORS.leafDark, true)
+			CFrame.new(side * 0.49, 0.14, 0.20), COLORS.leafDark, true, if side == -1 then "footLeft"else "footRight")
 	end
 	local body = piece(self, "Body", Vector3.new(1.83, 2.06, 1.56),
 		CFrame.new(0, 1.43, 0), bodyColor, true)
@@ -147,28 +148,40 @@ function PipVisual:update(dt)
 		local u = (g - 0.76) / 0.49
 		squash = 0.12 * math.sin(u * math.pi) * (1 - u)
 	end
-	local breathe = math.sin(t * 2.2) * 0.012
+	local reduced=self.reducedEffects==true
+	if reduced then bounce,squash,wave=0,0,0 end
+	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
+	local breathe = if reduced then 0 else math.sin(t * 2.2) * 0.012
+	local worldScale=self.worldScale
 	local scale = Vector3.new(1 + squash * 0.48 - breathe, 1 - squash + breathe, 1 + squash * 0.30)
-	local root = CFrame.new(self.origin + Vector3.new(0, bounce, 0))
-		* CFrame.Angles(0, (self.yaw or 0) + math.sin(t * 1.1) * 0.035, math.sin(t * 1.8) * 0.025)
+	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
+		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 1.1) * 0.035), if reduced then 0 else math.sin(t * 1.8) * 0.025)
 	local blink = (t % 4.8 > 4.62) or (g > 0.30 and g < 0.61)
 	for _, entry in ipairs(self.pieces) do
 		local rest = entry.frame
 		local pose = CFrame.new(rest.Position * scale) * rest.Rotation
 		local size = entry.size * scale
-		if entry.role == "wave" then
+		if entry.role=="footLeft"or entry.role=="footRight"then
+			local step=math.sin(stride+(if entry.role=="footLeft"then 0 else math.pi))
+			pose=CFrame.new(0,math.max(0,step)*.085*gait,step*.075*gait)*pose
+		elseif entry.role == "wave" then
 			pose *= CFrame.Angles(0, 0, -wave)
 		elseif entry.role == "sprig" then
 			-- Rotation around its base prevents the sprig from sliding off the head.
 			local base = CFrame.new(Vector3.new(0, 2.36, 0) * scale)
-			pose = base * CFrame.Angles(0, 0, math.sin(t * 2.5) * 0.045 + wave * 0.12)
+			pose = base * CFrame.Angles(0, 0, (if reduced then 0 else math.sin(t * 2.5) * 0.045) + wave * 0.12)
 				* base:Inverse() * pose
 		elseif entry.role == "eye" and blink then
 			size = Vector3.new(size.X, 0.065, size.Z)
 		end
 		entry.part.Transparency = if entry.role == "spark" and blink then 1 else 0
-		entry.part.Size = size
-		entry.part.CFrame = root * pose
+		entry.part.Size = size*worldScale
+		local placed=root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
+		if self.worldContext and(entry.role=="footLeft"or entry.role=="footRight")then
+			local half=(math.abs(placed.RightVector.Y)*entry.part.Size.X+math.abs(placed.UpVector.Y)*entry.part.Size.Y+math.abs(placed.LookVector.Y)*entry.part.Size.Z)*.5
+			placed+=Vector3.new(0,math.max(0,self.origin.Y-(placed.Y-half)),0)
+		end
+		entry.part.CFrame=placed
 	end
 end
 

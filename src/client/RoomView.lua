@@ -13,6 +13,7 @@ local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
 local PetPrestige = require(script.Parent.PetPrestige)
+local PetRigBounds=require(script.Parent.PetRigBounds)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -25,7 +26,7 @@ local visuals = { pip = PipVisual, puddle = PuddleVisual }
 
 local function createPet(parent, origin, pet, masteryMask, rank, legacy)
 	local visual = visuals[pet.family or pet.id] or BonusPetVisual
-	local result = visual.new(parent, origin, pet)
+	local result = visual.new(parent, origin, pet, .72)
 	if legacy == nil then
 		local index = table.find({ "pip", "puddle", "wick", "orbit" }, pet.family or pet.id)
 		legacy = index and bit32.band(masteryMask or 0, bit32.lshift(1, index - 1)) ~= 0
@@ -154,7 +155,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				if not root or not humanoid or humanoid.Health <= 0 or not shot or shot.root ~= root
 					or shot.camera ~= workspace.CurrentCamera then self:useRoomCamera(false) end
 			end
-			if root and not self.focusing then self.followState = PetFollow.step(self.pet, root, dt, self.followState) end
+			local reduced=self.reduceEffects()
+			self.pet.reducedEffects=reduced
+			if root and not self.focusing then self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)
+			else self.followState=nil;PetFollow.rest(self.pet)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
 				self:cancelCameraTween()
 				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
@@ -393,13 +397,16 @@ end
 
 function Room:planGreeting(camera, root, floor)
 	local lounge = floor.Parent
-	local bounds, size = self.pet.model:GetBoundingBox()
+	local bounds, size = PetRigBounds.get(self.pet)
 	local exclude = {self.pet.model}
 	for _, player in ipairs(Players:GetPlayers()) do if player.Character then table.insert(exclude,player.Character) end end
 	local params=RaycastParams.new()
 	params.FilterDescendantsInstances,params.RespectCanCollide=exclude,true
 	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)
-	local reach=PetGreetingShot.maximumReach(size,aspect)
+	local crestReserve=PetPrestige.crestReserve(self.pet)
+	local safeTop=if crestReserve>0 then GuiService:GetGuiInset().Y else 0
+	local animationRise=if crestReserve>0 then 1.2*(self.pet.worldScale or 1)else 0
+	local reach=PetGreetingShot.maximumReach(size,aspect,crestReserve,camera.ViewportSize.Y,safeTop,animationRise)
 	local visualBlocks={}
 	for _, part in ipairs(lounge:GetChildren()) do
 		if part:IsA("BasePart") and part~=floor and part.Transparency<.9
@@ -408,7 +415,7 @@ function Room:planGreeting(camera, root, floor)
 	end
 	local started, groundQueries, candidates = os.clock(), 0, 0
 	local plan=PetGreetingShot.plan({
-		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,
+		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,animationTopReserve=animationRise,
 		centerOffset=CFrame.Angles(0,self.pet.yaw or 0,0):VectorToObjectSpace(bounds.Position-self.pet.origin),
 		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},
 		ground=function(position)
