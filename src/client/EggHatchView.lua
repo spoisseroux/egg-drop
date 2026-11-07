@@ -506,7 +506,9 @@ function View:selectRecipe(id)
 end
 
 function View:update(state)
+	local wasResult=self.state.lastHatch~=nil
 	self.state = state or {}
+	if wasResult~=(self.state.lastHatch~=nil)then self:bumpControllerEpoch()end
 	if self.errorMessage and self.errorRevision and self.state.status=="Ready" and (self.state.revision or 0)>self.errorRevision then self.errorMessage,self.errorRevision=nil,nil end
 	local intent = self.ackIntent
 	local result = self.state.lastHatch
@@ -610,7 +612,16 @@ function View:retryAcknowledgement()
 	end)
 end
 
+function View:bumpControllerEpoch()
+	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
+end
+function View:getControllerFocus()
+	if not self.shade.Visible or self.state.lastHatch~=nil then return nil end
+	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
+		target=function()return self.closeButton end,fallback=self.closeButton}
+end
 function View:open(state)
+	self:bumpControllerEpoch()
 	if not self.shade.Visible then
 		self.previousSelection = GuiService.SelectedObject
 		self.body.CanvasPosition = Vector2.zero
@@ -624,6 +635,7 @@ function View:open(state)
 end
 
 function View:close(reason, choice)
+	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
 	self:revokeIntent()
 	self.shade.Visible = false

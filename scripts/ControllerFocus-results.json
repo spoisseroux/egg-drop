@@ -1,0 +1,244 @@
+{
+  "slice": "Controller focus takeover",
+  "utc": "2026-11-07T12:04Z",
+  "headBefore": "f6d1f4f",
+  "clientMedium": [
+    {
+      "ok": true,
+      "result": {
+        "cases": {
+          "1": "first A is focus-only through held release; next fresh A passes to native activation",
+          "2": "actual Gamepad Begin captures before UIS changes and same-device notification preserves it",
+          "3": "release before the delayed UIS notification waits for that current device",
+          "4": "native Dpad focus wins before deferred fallback",
+          "5": "Dpad seeds once when native direction leaves no selection",
+          "6": "already focused A passes even before input type updates",
+          "7": "repeat and duplicate held Begin never focus before release or dispatch twice",
+          "8": "same-instance close and reopen invalidate the captured generation",
+          "9": "sheet switch drains old A without focusing its successor",
+          "10": "pointer return cancels focus but drains the original controller gesture",
+          "11": "CoreGui or text capture immediately passes A and clears held acquisition",
+          "12": "busy transition focus result recap and absent owners cannot acquire or intercept",
+          "13": "outside-owner and destroyed targets fall back to neutral close only",
+          "14": "no live target means no focus write and no action",
+          "15": "hidden ancestor disabled layer and detached PlayerGui reject the owner",
+          "16": "ensure-visible cannot focus a target after its owner changes synchronously",
+          "17": "disconnect with no End clears that device hold and reconnect can acquire",
+          "18": "two gamepads retain distinct captured gestures through either release order",
+          "19": "disconnecting the older device releases a completed newer-device handoff",
+          "20": "Cancel drains the old press and permits a fresh focus-only press",
+          "21": "current device change before deferred execution prevents acquisition",
+          "22": "destroy disconnects watches cancels queued tasks and passes subsequent input"
+        },
+        "passed": 22,
+        "heldInputIsSemanticFixture": true
+      },
+      "name": "ControllerFocus",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "cases": {
+          "1": "pointer-open Menu seeds current Daily or Mastery tab without routing",
+          "2": "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+          "3": "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+          "4": "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+          "5": "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+          "6": "direct controller Journal opening retains its valid existing owned selection",
+          "7": "result arriving under an open shop revokes the captured ordinary-shop owner",
+          "8": "all four same-instance openings advance generation and hidden sheets expose no target"
+        },
+        "passed": 8,
+        "inputIsSemanticFixture": true
+      },
+      "name": "ControllerSheets",
+      "preference": "Medium"
+    }
+  ],
+  "clientLargest": [
+    {
+      "ok": true,
+      "result": {
+        "cases": {
+          "1": "first A is focus-only through held release; next fresh A passes to native activation",
+          "2": "actual Gamepad Begin captures before UIS changes and same-device notification preserves it",
+          "3": "release before the delayed UIS notification waits for that current device",
+          "4": "native Dpad focus wins before deferred fallback",
+          "5": "Dpad seeds once when native direction leaves no selection",
+          "6": "already focused A passes even before input type updates",
+          "7": "repeat and duplicate held Begin never focus before release or dispatch twice",
+          "8": "same-instance close and reopen invalidate the captured generation",
+          "9": "sheet switch drains old A without focusing its successor",
+          "10": "pointer return cancels focus but drains the original controller gesture",
+          "11": "CoreGui or text capture immediately passes A and clears held acquisition",
+          "12": "busy transition focus result recap and absent owners cannot acquire or intercept",
+          "13": "outside-owner and destroyed targets fall back to neutral close only",
+          "14": "no live target means no focus write and no action",
+          "15": "hidden ancestor disabled layer and detached PlayerGui reject the owner",
+          "16": "ensure-visible cannot focus a target after its owner changes synchronously",
+          "17": "disconnect with no End clears that device hold and reconnect can acquire",
+          "18": "two gamepads retain distinct captured gestures through either release order",
+          "19": "disconnecting the older device releases a completed newer-device handoff",
+          "20": "Cancel drains the old press and permits a fresh focus-only press",
+          "21": "current device change before deferred execution prevents acquisition",
+          "22": "destroy disconnects watches cancels queued tasks and passes subsequent input"
+        },
+        "passed": 22,
+        "heldInputIsSemanticFixture": true
+      },
+      "name": "ControllerFocus",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "cases": {
+          "1": "pointer-open Menu seeds current Daily or Mastery tab without routing",
+          "2": "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+          "3": "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+          "4": "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+          "5": "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+          "6": "direct controller Journal opening retains its valid existing owned selection",
+          "7": "result arriving under an open shop revokes the captured ordinary-shop owner",
+          "8": "all four same-instance openings advance generation and hidden sheets expose no target"
+        },
+        "passed": 8,
+        "inputIsSemanticFixture": true
+      },
+      "name": "ControllerSheets",
+      "preference": "Largest"
+    }
+  ],
+  "regressionsLargest": [
+    {
+      "ok": true,
+      "result": {
+        "passed": 12,
+        "cases": {
+          "1": "swatches preview only across resize tabs and scrolling",
+          "2": "X Back and forced-dismiss common close route roll back once per opening",
+          "3": "Equip captures pending IDs before rollback and submits exactly once",
+          "4": "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+          "5": "Club settings apply once immediately and persist through closing",
+          "6": "Roblox reduced motion cannot be overridden by a setting or reflow",
+          "7": "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+          "8": "authoritative empty inventory has no legacy track or hidden selectable row",
+          "9": "legacy tracking remains explicit only when the inventory mask is absent",
+          "10": "owned row equips once and Family goals never equips tracks or selects a family",
+          "11": "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+          "12": "measured Ranks caption retains mastery page identity and callback"
+        }
+      },
+      "name": "StyleJournalActions",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 18,
+        "cases": {
+          "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "2": "Replay never purchases and synchronous confirmation fires once",
+          "3": "Retry and same-ID updates retain immutable choice",
+          "4": "Pending feedback preserves choice before state catches up",
+          "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "7": "Close cancels a scheduled pre-dispatch retry",
+          "8": "Busy feedback queues a retry until Ready for the same result",
+          "9": "A retry timer encountering Busy retains its work until Ready",
+          "10": "Another pending transaction releases the captured ack on Ready",
+          "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "12": "A changed result revokes old navigation",
+          "13": "Close during retry cancels navigation without a second acknowledgement",
+          "14": "Definitive rejection permits changing the action",
+          "15": "Actions remain locked during an unfinished cinematic",
+          "16": "Duplicate caption uses copied mastery progress and retains both choices",
+          "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+          "18": "44px result actions fit short landscape safe areas and long names"
+        }
+      },
+      "name": "HatchActions",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "already equipped pet focuses without duplicate equip",
+          "2": "rare-only companion waits for server equip acknowledgment",
+          "3": "mode and local handoff must both finish before equip",
+          "4": "manual cancellation prevents late equip and focus",
+          "5": "overlay interruption cancels pending focus",
+          "6": "unconfirmed equip never substitutes a local pet",
+          "7": "replay resets finished board once after handoff",
+          "8": "replay preserves an unfinished board",
+          "9": "cancelled replay cannot reset a later round",
+          "10": "newer navigation wins over a stale mode wait"
+        }
+      },
+      "name": "HatchNavigation",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+          "2": "page changes keep absolute header and tab positions stable",
+          "3": "complete illustrated destinations start below the scroll clip",
+          "4": "all three shallow contracts show a complete44px first row and independent gift",
+          "5": "claimed gift cannot claim again and earned contracts remain informational",
+          "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+          "7": "scroll cue ends at reachable content and small pages end after content",
+          "8": "mastery cards wrap exact missing conditions at real body size",
+          "9": "hidden and unchanged snapshots perform no text measurement layout",
+          "10": "locked family rows omit unused progress space and cannot select a family"
+        }
+      },
+      "name": "MenuPolish",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": {
+          "1": "profile retry survives every neutral hatch status in the actual current owner",
+          "2": "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        }
+      },
+      "name": "SaveNoticeOwnership",
+      "preference": "Largest"
+    }
+  ],
+  "native": {
+    "input": "Studio virtual controller actual Gamepad1 (not MCP ButtonA)",
+    "medium": [
+      "Menu D-pad takeover",
+      "Menu first A focuses current tab; fresh A activates Daily; B closes",
+      "Journal first A focuses Pip; D-pad to Family goals; fresh A opens Mastery",
+      "Style first A focuses Shell; D-pad Right then fresh A switches Sticker; B closes",
+      "Ordinary Eggs first A focuses X without closing; second A closes; independent D-pad seeds X"
+    ],
+    "largest": [
+      "Actual pointer menu -> first Gamepad1 A focuses Tab_play and keeps Menu open",
+      "Native Roblox button menu above ordinary Eggs; first B returns native menu to navigation overlay, second B closes native overlay; shop stays open"
+    ],
+    "limitations": [
+      "Held A, disconnect, dual-device, stale epoch and exclusion stress are semantic fixtures.",
+      "No physical controller, phone, or live multiplayer evidence."
+    ]
+  },
+  "source": {
+    "rojo": true,
+    "allLuaWrappers": 63,
+    "allRepoSourcesMatched": 63,
+    "console": "Only known EditableImage disabled and existing asset 203785492 type mismatch warnings."
+  },
+  "review": "Astra runtime plus frozen 22+8 fixtures GO",
+  "harness": "Initial SaveNoticeOwnership regression run correctly rejected open ordinary shop; closed it and reran 2/2. An accidentally repeated Medium focused run is excluded; preferred Largest verified before counted Largest run."
+}

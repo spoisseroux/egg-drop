@@ -184,3 +184,13 @@ Native controls verified unchanged-status Menu/Style/Journal/Eggs/roam/board/foc
 
 Console contains the existing EditableImage-disabled / asset203785492 warnings and explicitly expected isolated fault-injection warnings, with no new ordinary-play exception. Retry displays are local presentation fixtures; server recovery uses isolated stores. Physical phones/controllers, live account rejoin and live multiplayer remain unverified. Private publication follows the integrated checkpoint, not this working-source acceptance.
 
+# Controller focus checkpoint — November 7, 07:04 Eastern
+
+Accepted the reviewed pointer-to-controller takeover for Menu, Style, Journal, and the ordinary egg shop. The first unfocused A press focuses a safe current target after release; a fresh A activates through Roblox. Existing valid native selection is preserved. Result/reveal, recap, board, roaming, pet focus, busy transitions, CoreGui, and text entry stay outside this acquisition path. Per-device captures handle notification ordering, disconnects, stale sheet generations, and teardown.
+
+Evidence: `scripts/ControllerFocus-results.json`: 30 focused checks at actual Medium and 30 at actual Largest, plus 52 targeted Largest regressions. The 22 gesture/race checks are semantic fixtures; the eight sheet checks use real enabled ScreenGui components. All 63 repository Lua sources match the correct Egg Drop Edit place and compile through wrappers; Rojo build passes. Astra reviewed runtime and frozen fixtures with no blocker.
+
+Actual Studio virtual-controller Gamepad1 checks covered all four ordinary sheets at Medium and pointer-to-A Menu takeover at Largest. First A seeded focus; subsequent A/D-pad/B navigation behaved as intended. Opening Roblox's native menu above Eggs retained the shop while B first backed to native navigation and then closed that native overlay. Held inputs, two devices, disconnects, result takeover, and unusual race cancellation are simulated coverage, not hardware evidence. Console contained only the previously known EditableImage-disabled and asset 203785492 type mismatch warnings.
+
+Private publication remains v69 at 8b49b75 until final integrated publication. Next bounded slice is the reproduced clipped Largest welcome instruction; no reward or economy changes.
+

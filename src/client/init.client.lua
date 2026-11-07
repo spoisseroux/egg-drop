@@ -34,6 +34,7 @@ local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
 local PresentationPolicy = require(script.PresentationPolicy)
 local SaveNotice=require(script.SaveNotice)
+local ControllerFocus=require(script.ControllerFocus)
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -1578,6 +1579,47 @@ local function handleControl(name, state, input)
 end
 
 local priority = Enum.ContextActionPriority.High.Value
+-- Four ordinary sheets can acquire focus once after pointer use. Native focus and
+-- activation remain the dispatchers; this coordinator only writes SelectedObject.
+local controllerFocus=ControllerFocus.new({
+	read=function()
+		local native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil
+		if native then return{native=true,blocked=true}end
+		if roomView.destroyed or roomView.busy or roomView.switchQueued or roomView.transition.shade.Visible
+			or roomView.focusing or (hatchNavigation and hatchNavigation.active)then return{blocked=true}end
+		local owner
+		if nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
+		elseif isPickerOpen()then owner=picker:getControllerFocus()
+		elseif journal.shade.Visible then owner=journal:getControllerFocus()
+		elseif gameMenu.shade.Visible then owner=gameMenu:getControllerFocus()end
+		return{owner=owner,blocked=owner==nil}
+	end,
+	playerGui=function()return player:FindFirstChild("PlayerGui")end,
+	input=function()return UserInputService:GetLastInputType()end,
+	aDown=function(kind)return UserInputService:IsGamepadButtonDown(kind,Enum.KeyCode.ButtonA)end,
+	selected=function()return GuiService.SelectedObject end,
+	select=function(target)GuiService.SelectedObject=target end,
+	afterInput=function(callback)task.defer(function()RunService.Heartbeat:Wait();callback()end)end,
+})
+local controllerAction="EggDropSheetHandoffA"
+ContextActionService:BindActionAtPriority(controllerAction,function(_,state,input)return controllerFocus:handleA(state,input)end,
+	false,priority+500,Enum.KeyCode.ButtonA)
+controllerFocus:watch(UserInputService.LastInputTypeChanged,function(kind)controllerFocus:onInputTypeChanged(kind)end)
+controllerFocus:watch(UserInputService.GamepadDisconnected,function(device)controllerFocus:onGamepadDisconnected(device)end)
+controllerFocus:watch(UserInputService.InputBegan,function(input)
+	local key=input.KeyCode
+	if key==Enum.KeyCode.DPadUp or key==Enum.KeyCode.DPadDown or key==Enum.KeyCode.DPadLeft or key==Enum.KeyCode.DPadRight then controllerFocus:onNavigation(input)end
+end)
+for _,root in ipairs({gameMenu.shade,picker.shade,journal.shade,nurseryView.shade})do
+	controllerFocus:watch(root:GetPropertyChangedSignal("Visible"))
+	controllerFocus:watch(root:GetAttributeChangedSignal("ControllerEpoch"))
+end
+for _,root in ipairs({modal,roomView.controls,roomView.focusUI.panel,roomView.transition.shade})do controllerFocus:watch(root:GetPropertyChangedSignal("Visible"))end
+controllerFocus:watch(GuiService.MenuOpened);controllerFocus:watch(GuiService.MenuClosed)
+controllerFocus:watch(UserInputService.TextBoxFocused);controllerFocus:watch(UserInputService.TextBoxFocusReleased)
+controllerFocus:watch(UserInputService.WindowFocusReleased,function()controllerFocus:invalidate(true);controllerFocus.inputKind=nil end)
+controllerFocus:watch(gui.Destroying,function()controllerFocus:destroy();ContextActionService:UnbindAction(controllerAction)end)
+
 -- Keep footer navigation explicit while up/down reads a long saved receipt.
 ContextActionService:BindActionAtPriority("EggDropReceiptScroll", function(_, state, input)
 	if not recapOwnsInput() or not recap.hasReceipt

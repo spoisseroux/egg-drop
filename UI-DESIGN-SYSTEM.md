@@ -1,6 +1,15 @@
 # Pocket Deck UI design system
 
-Design handoff for the Egg Drop client, based on commit `1cd0927`, 7 November 2026. Dimensions are Roblox UI offset pixels within the already inset content root. The tables below specify design targets for implementation and visual review. They aren't measurements of a shipped redesign.
+Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 November 2026. Dimensions are Roblox UI offset pixels within the already inset content root. The design tables specify targets. The checkpoint below records implementation and verification through `f6d1f4f`.
+
+## Implementation checkpoint through `f6d1f4f`
+
+- **Desktop deck.** At 1649×971, the finished LCD measured approximately 417 px across, or 430 px including its bezel, inside an approximately 830 px case. The LCD occupies about 50% of the case width (52% with bezel), within the 48–55% desktop target. Studio Version History confirmed private version 69 at `8b49b75`. The subsequent results below are branch and Studio verification. [UI redesign results](scripts/UIRedesign-results.json) · [Delivery record](UI-OVERNIGHT.md)
+- **Phone landscape.** At the iPhone emulator’s 733×307 safe root, the menu now shows the first illustrated destination row with complete labels. Both egg recipes and prices fit above the pinned action. Rotation retained Sprout’s 24-nectar price and the 18-nectar shortfall against a wallet of 6. [Emulator reflow results](scripts/EmulatorReflow-results.json)
+- **Style and Journal.** Style reserves a complete swatch row before choosing its preview size. X and Equip stay reachable while scrolling. Journal keeps X and Family goals visible, uses measured rows and shows an overflow cue until the last pet is reachable in full. Desktop and touch-emulator captures were checked at Medium and Largest text size. [Style and Journal results](scripts/StyleJournal-results.json)
+- **Save notices.** The active screen presents the status. Load and save retries describe automatic recovery where the server performs it. A lost session directs the player to rejoin. An unreadable save makes no recovery promise. A fixture-injected retry retained the committed pet viewport, and actual close/reopen controls retained its hatch ID and balance. [Save-notice results](scripts/SaveNotice-results.json)
+
+Two observed issues remain beyond this checkpoint. Switching from pointer or touch to gamepad can leave Menu, Style, Journal or the egg shop without a selected control. The desktop welcome instruction can clip “Space” at Largest text size. Their corrections are pending. Physical-phone comfort and physical-controller behavior remain unverified. [Overnight verification record](UI-OVERNIGHT.md)
 
 ## What the player should see
 

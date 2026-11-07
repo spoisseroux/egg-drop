@@ -156,7 +156,27 @@ function Journal:openFamilyGoals()
 	if not self.shade.Visible or not self.onGoals then return false end
 	self:close();self.onGoals();return true
 end
+function Journal:bumpControllerEpoch()
+	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
+end
+function Journal:getControllerTarget()
+	local track
+	for _,entry in ipairs(self.cards)do
+		if entry.Selectable and entry.Interactable then
+			if entry:GetAttribute("ControllerOwned")then return entry end
+			if entry.Track.Visible and not track then track=entry end
+		end
+	end
+	return track or self.closeButton
+end
+function Journal:getControllerFocus()
+	if not self.shade.Visible then return nil end
+	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
+		target=function()return self:getControllerTarget()end,fallback=self.closeButton,
+		ensure=function(target)if target.Parent==self.scroll then self:ensureVisible(target)end end}
+end
 function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,masteryRanks)
+	self:bumpControllerEpoch()
 	self.baseTitle=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
 	local firstOwned,firstTrack
 	for index,entry in ipairs(self.cards)do
@@ -175,6 +195,7 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked)}
 		end
 		entry.Interactable,entry.Selectable=unlocked or trackable,unlocked or trackable
+		entry:SetAttribute("ControllerOwned",unlocked)
 		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end
 	end
 	self.previousSelection=GuiService.SelectedObject;self.shade.Visible=true;self.scroll.CanvasPosition=Vector2.zero;self:layout()
@@ -189,6 +210,7 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 	end
 end
 function Journal:close()
+	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
 	self.shade.Visible=false;self.openGeneration=(self.openGeneration or 0)+1
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then

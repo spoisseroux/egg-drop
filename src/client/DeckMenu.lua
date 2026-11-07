@@ -447,7 +447,16 @@ function Menu:setPage(key)
 	self.resumeButton.Visible,self.dailyButton.Visible=key=="play",key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()
 end
+function Menu:bumpControllerEpoch()
+	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
+end
+function Menu:getControllerFocus()
+	if not self.shade.Visible then return nil end
+	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
+		target=function()return self.tabs[self.page]or self.closeButton end,fallback=self.closeButton}
+end
 function Menu:open()
+	self:bumpControllerEpoch()
 	self.previousSelection=GuiService.SelectedObject
 	self.body.CanvasPosition=Vector2.zero
 	self.safeTop=nil
@@ -455,6 +464,7 @@ function Menu:open()
 	if string.match(game:GetService("UserInputService"):GetLastInputType().Name,"^Gamepad") then GuiService.SelectedObject=self.closeButton end
 end
 function Menu:close()
+	if self.shade.Visible then self:bumpControllerEpoch()end
 	self.shade.Visible=false
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then
 		local previous=self.previousSelection

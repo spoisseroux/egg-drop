@@ -301,11 +301,21 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 	if self.shade.Visible and self.clubLayoutKey~=key then self:layout()end
 	self.clubLayoutKey=key
 end
+function Picker:bumpControllerEpoch()
+	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
+end
+function Picker:getControllerFocus()
+	if not self.shade.Visible then return nil end
+	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
+		target=function()return self.tabs[self.active]or self.cancel end,fallback=self.cancel}
+end
 function Picker:open(themeId,stickerId)
+	self:bumpControllerEpoch()
 	self.previousSelection=GuiService.SelectedObject;self.safeTop=nil;self.shade.Visible=true;self:showTab("Shell");self:select(themeId,stickerId)
 	if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs.Shell end
 end
 function Picker:close()
+	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
 	self.shade.Visible=false;self.onClose()
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then
