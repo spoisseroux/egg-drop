@@ -25,6 +25,7 @@ local Audio = require(script.BoardAudio)
 local DeckPicker = require(script.DeckPicker)
 local PetJournal = require(script.PetJournal)
 local RoomView = require(script.RoomView)
+local LoungeStations = require(script.LoungeStations)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
 local RoundRecap = require(script.RoundRecap)
@@ -466,6 +467,8 @@ local journal
 local nurseryView
 local nurseryState
 local openNursery
+local visitEggs
+local modal
 local trackedRare
 local gameMenu
 local openMenu
@@ -487,8 +490,32 @@ end, function()
 end, function()
 	openJournal()
 end, function()
-	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible)
+	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
+local function stationContext()
+	local character=player.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+	local alive=character~=nil and character~=roomView.removingCharacter and character:IsDescendantOf(workspace)
+		and root~=nil and root.Parent==character and humanoid~=nil and humanoid.Health>0
+	return{uiReady=LoungeStations.uiLive(roomView,player:FindFirstChild("PlayerGui"),gui,overlayGui,
+			roomView.controls,roomView.transition.shade,modal,gameMenu and gameMenu.shade,
+			nurseryView and nurseryView.shade,journal and journal.shade,picker and picker.shade),
+		mode=board:GetAttribute("Mode"),viewMode=roomView.mode,alive=alive,
+		position=if alive then root.Position else nil,busy=roomView.busy or roomView.transition.shade.Visible,
+		switchQueued=roomView.switchQueued,focusing=roomView.focusing,menuOpen=roomView.menuOpen,
+		overlay=(modal and modal.Visible) or isPickerOpen() or (journal and journal.shade.Visible)
+			or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible),
+		coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,
+		snapshot=nurseryState,rank=board:GetAttribute("OwnedPets") or 0,trials=board:GetAttribute("TrialMask") or 0}
+end
+roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
+roomView.stations=LoungeStations.new({player=player,read=stationContext,
+	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
+	triggered=ProximityPromptService.PromptTriggered,routes={
+		Customize=function()openPicker()end,Journal=function()openJournal()end,Eggs=function()visitEggs()end,
+	}})
+
 do
 	local handoff = gui.DeckHandoff
 	handoff.Parent = safeOverlays
@@ -548,7 +575,7 @@ roomButton.Activated:Connect(function()
 		end)
 	end
 end)
-local modal = make("Frame", "RoundCard", {
+modal = make("Frame", "RoundCard", {
 	Active = true, Visible = false, BorderSizePixel = 0, ZIndex = 10,
 	AnchorPoint = Vector2.new(0.5, 0.5),
 }, safeOverlays)
@@ -713,17 +740,17 @@ nurseryView.onClosed = function(reason, choice)
 		hatchNavigation:play()
 	end
 end
-local function visitEggs()
-	cancelHatchNavigation()
-	local generation = hatchNavigation.generation
-	if roomView.busy or not (board:GetAttribute("OwnedPets") > 0) then return end
-	request:FireServer("mode", "Room")
-	task.spawn(function()
-		local deadline = os.clock() + 4
-		repeat task.wait(.1) until (board:GetAttribute("Mode") == "Room" and not roomView.busy) or os.clock() > deadline
-		if hatchNavigation.generation == generation then openNursery() end
-	end)
+visitEggs = function()
+	return LoungeStations.visitEggs({cancel=cancelHatchNavigation,read=stationContext,
+		generation=function()return hatchNavigation.generation end,
+		identity=function()return player.Character,workspace.CurrentCamera end,
+		canEnterFromBoard=function()
+			return not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen()
+				and not gameMenu.shade.Visible and (not modal.Visible or recap.frame.Visible)
+		end,
+		sendMode=function(mode)request:FireServer("mode",mode)end,open=openNursery})
 end
+
 eggButton.Visible = false
 local shownNurseryHatch
 local function refreshNursery()
@@ -732,6 +759,7 @@ local function refreshNursery()
 	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
 	if not ok or type(state) ~= "table" then return end
 	nurseryState = state
+	roomView.stations:refresh()
 	roomView.transition:refresh()
 	nurseryView:update(state)
 	local result = state.lastHatch
@@ -864,34 +892,16 @@ openJournal = function()
 		nurseryState and nurseryState.masteryRanks)
 	audio:play("menu")
 end
-ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)
-	if playerWhoTriggered ~= player or board:GetAttribute("Mode") ~= "Room" or roomView.busy
-		or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible or roomView.focusing then
-		return
-	end
-	local station = prompt:GetAttribute("PocketClubStation")
-	if station == "Customize" then
-		openPicker()
-	elseif station == "Journal" then
-		openJournal()
-	end
-end)
-task.spawn(function()
-	local lounge = workspace:WaitForChild("EggDropLounge")
-	local function updatePrompts()
-		for _, object in ipairs(lounge:GetDescendants()) do
-			if object:IsA("ProximityPrompt") and object:GetAttribute("PocketClubStation") then
-				object.Enabled = board:GetAttribute("Mode") == "Room" and not roomView.busy and not roomView.focusing
-					and not modal.Visible and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
-			end
-		end
-	end
-	board:GetAttributeChangedSignal("Mode"):Connect(updatePrompts)
-	for _, overlay in ipairs({ picker.shade, journal.shade, nurseryView.shade, gameMenu.shade, roomView.controls }) do
-		overlay:GetPropertyChangedSignal("Visible"):Connect(updatePrompts)
-	end
-	updatePrompts()
-end)
+-- The shared cache owns both native station visibility and final activation validation.
+for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade})do
+	roomView.stations:watch(overlay:GetPropertyChangedSignal("Visible"))
+end
+roomView.stations:watch(GuiService.MenuOpened)
+roomView.stations:watch(GuiService.MenuClosed)
+roomView.stations:watch(UserInputService.TextBoxFocused)
+roomView.stations:watch(UserInputService.TextBoxFocusReleased)
+roomView.stations:refresh()
+
 customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
 local function repaintEquipped()
 	task.defer(function()

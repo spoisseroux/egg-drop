@@ -13,7 +13,6 @@ local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
 local PetPrestige = require(script.Parent.PetPrestige)
-local JournalPromptPriority = require(script.Parent.JournalPromptPriority)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -118,8 +117,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	leave.Activated:Connect(function()
 		if not self.busy and not overlayOpen() then self:requestSwitch(onReturn) end
 	end)
+	watch(Players.LocalPlayer.CharacterRemoving,function(character)self.removingCharacter=character;self.returnRoamShot=nil;if self.stations then self.stations:refresh()end end)
 	watch(Players.LocalPlayer.CharacterAdded, function(character)
 		-- Cancel against the old character immediately; waiting for Humanoid must not retain a lock.
+		self.removingCharacter=nil
+		self.returnRoamShot=nil
 		self.transition:hide()
 		self:releaseFocusMovement()
 		if self.focusing then self:useRoomCamera(false) end
@@ -132,9 +134,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		end
 	end)
 	watch(workspace:GetPropertyChangedSignal("CurrentCamera"), function()
+		self.returnRoamShot=nil
 		if self.mode == "Room" then self:useRoomCamera(false) end
 	end)
 	watch(RunService.RenderStepped, function(dt)
+		self:retryArrivalPlacement()
 		self:updateControls()
 		if self.pet then
 			local character = Players.LocalPlayer.Character
@@ -166,29 +170,14 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 end
 
 function Room:stationInReach()
-	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	local lounge = workspace:FindFirstChild("EggDropLounge")
-	if not root or not lounge then return false end
-	if self.promptLounge ~= lounge then
-		if self.stationAdded then self.stationAdded:Disconnect() end
-		if self.stationRemoved then self.stationRemoved:Disconnect() end
-		self.promptLounge, self.stationPrompts = lounge, {}
-		local function add(object)
-			if object:IsA("ProximityPrompt") and object:GetAttribute("PocketClubStation") then table.insert(self.stationPrompts, object) end
-		end
-		self.stationAdded = lounge.DescendantAdded:Connect(add)
-		self.stationRemoved = lounge.DescendantRemoving:Connect(function(object)
-			local index = table.find(self.stationPrompts, object)
-			if index then table.remove(self.stationPrompts, index) end
-		end)
-		for _, object in ipairs(lounge:GetDescendants()) do add(object) end
-	end
-	return JournalPromptPriority.stationInReach(root.Position, self.stationPrompts)
+	return self.stations~=nil and self.stations:inReach()
 end
 
 function Room:updateControls()
+	if self.stations then self.stations:refresh() end
 	local unobscured = self.mode == "Room" and not self.focusing and not self.busy
-		and not self.menuOpen and not self.overlayOpen()
+		and not self.menuOpen and not self.overlayOpen() and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
+	if self.canRoam then unobscured=self.canRoam() end
 	self.controls.Visible = unobscured
 	if self.focusUI then self.focusUI:setActive(self.focusing and self.mode == "Room") end
 	if self.petPrompt then self.petPrompt.Enabled = unobscured and not self:stationInReach() end
@@ -205,6 +194,8 @@ function Room:collapseControls()
 end
 
 function Room:interactPet()
+	if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox() then return false end
+	if not self.focusing and self.canRoam and not self.canRoam() then return false end
 	if self.mode ~= "Room" or self.busy or self.overlayOpen() or self.menuOpen or not self.pet then return false end
 	if self.focusing then return self:reactPet(false) end
 	local now = os.clock()
@@ -263,7 +254,9 @@ function Room:showPet(pet)
 	prompt.ClickablePrompt, prompt.RequiresLineOfSight, prompt.HoldDuration = true, false, 0
 	prompt.MaxActivationDistance, prompt.UIOffset = 9, Vector2.new(0, 22)
 	prompt.Enabled, prompt.Parent = false, body
-	prompt.Triggered:Connect(function(who) if who == nil or who == Players.LocalPlayer then self:interactPet() end end)
+	prompt.Triggered:Connect(function(who)
+		if (who==nil or who==Players.LocalPlayer) and self.petPrompt==prompt and prompt.Enabled and not self:stationInReach() then self:interactPet() end
+	end)
 	local click = Instance.new("ClickDetector")
 	click.MaxActivationDistance, click.Parent = 9, body
 	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then self:interactPet() end end)
@@ -279,6 +272,26 @@ function Room:cancelCameraTween()
 		self.cameraTween:Cancel()
 		self.cameraTween = nil
 	end
+end
+
+function Room:cameraIdentity()
+	local character=Players.LocalPlayer.Character
+	return workspace.CurrentCamera,character and character:FindFirstChild("HumanoidRootPart"),
+		character and character:FindFirstChildOfClass("Humanoid")
+end
+
+-- Capture only the outgoing free-roam view, before savedCamera restores its separate
+-- pre-Room owner. Greeting Back must finish first so Scriptable framing never leaks.
+function Room:captureReturnRoam()
+	self.returnRoamShot=nil
+	if self.arrivalPlacementPending or self.arrivalUnplaced then self.arrivalPlacementPending=nil;return false end
+	if self.destroyed or self.mode~="Room" then return false end
+	if self.focusing or self.greetingCamera then self:useRoomCamera(false) end
+	local camera,root,humanoid=self:cameraIdentity()
+	if not camera or not camera.Parent or camera.CameraType~=Enum.CameraType.Custom
+		or not root or not root.Parent or not humanoid or humanoid.Health<=0 then return false end
+	self.returnRoamShot=PetGreetingShot.capture(camera,root)
+	return true
 end
 
 function Room:restoreCamera()
@@ -297,7 +310,8 @@ function Room:restoreCamera()
 	end
 	local saved = self.savedCamera
 	self.savedCamera = nil
-	if saved and saved.camera == workspace.CurrentCamera and saved.camera.Parent then
+	local camera=self:cameraIdentity()
+	if saved and saved.camera == camera and saved.camera.Parent then
 		saved.camera.CFrame = saved.transform
 		saved.camera.Focus = saved.focus
 		saved.camera.FieldOfView = saved.fov
@@ -305,9 +319,23 @@ function Room:restoreCamera()
 	end
 end
 
-function Room:useRoomCamera(animate)
+function Room:retryArrivalPlacement()
+	if self.arrivalPlacementPending and not self.destroyed and self.mode=="Room" and self.target=="Room" then
+		self:useRoomCamera(false)
+	end
+end
+
+function Room:useRoomCamera(animate, arriving)
 	self:releaseFocusMovement()
-	local camera = workspace.CurrentCamera
+	if arriving then self.arrivalPlacementPending=true;self.arrivalUnplaced=true end
+	local placing=self.arrivalPlacementPending==true
+	local camera,root,humanoid=self:cameraIdentity()
+	-- Arrival owns a one-shot placement until every live camera subject exists.
+	-- A streamed/respawning root must not turn this into an ordinary roam callback.
+	if placing and (not camera or not camera.Parent or not root or not root.Parent
+		or not humanoid or humanoid.Health<=0) then return false end
+	local returning=if placing then self.returnRoamShot else nil
+	if placing then self.arrivalPlacementPending=nil;self.arrivalUnplaced=false;self.returnRoamShot=nil end
 	if not camera then
 		self:restoreCamera()
 		return
@@ -330,13 +358,11 @@ function Room:useRoomCamera(animate)
 	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self.greetButton.Text = "Say hi"
 	self:updateControls()
-	local character = Players.LocalPlayer.Character
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if humanoid then
 		camera.CameraSubject = humanoid
 	end
 	local restored = PetGreetingShot.restore(greeting, camera, root)
+	if not restored and placing then restored=PetGreetingShot.restore(returning,camera,root) end
 	if greeting and self.pet and root then
 		local origin
 		if restored and greeting.pet == self.pet then
@@ -351,9 +377,10 @@ function Room:useRoomCamera(animate)
 		self.pet:update(0)
 	end
 	if not restored then camera.FieldOfView = 65 end
-	if root and not self.roamed and not restored then
+	if root and (placing or not self.roamed) and not restored then
 		local target = root.Position + Vector3.new(0, 1, 0)
 		camera.CFrame = CFrame.lookAt(target + Vector3.new(5, 6, 12), target)
+		camera.Focus = CFrame.new(target)
 	end
 	self.roamed = true
 	camera.CameraType = Enum.CameraType.Custom
@@ -542,7 +569,7 @@ function Room:show(mode, animate)
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
 		self:showPet(self.requestedPet or equipped)
 		self.requestedPet = nil
-		self:useRoomCamera(animate)
+		self:useRoomCamera(animate,true)
 		if meet then
 			local epoch, visual = self.focusEpoch, self.pet
 			task.delay(0.35, function()
@@ -551,6 +578,8 @@ function Room:show(mode, animate)
 			end)
 		end
 	else
+		if self.arrivalPlacementPending then self.returnRoamShot=nil end
+		self.arrivalPlacementPending=nil
 		self.companions:clear()
 		if self.pet then
 			self.pet:destroy()
@@ -590,6 +619,7 @@ function Room:driveModes(initial)
 				-- A replicated destination can change while the curtain is moving.
 				if self.target==destination then
 					local changed=self.mode~=destination
+					if changed and self.mode=="Room" and destination=="Board" then self:captureReturnRoam() end
 					self.mode=destination
 					self:show(destination,token~=nil and self.transition:owns(token))
 					if changed and not self.overlayOpen() and not GuiService.MenuIsOpen then
@@ -615,6 +645,10 @@ function Room:driveModes(initial)
 end
 
 function Room:setMode(mode)
+	if mode~="Room" then
+		if self.arrivalPlacementPending then self.returnRoamShot=nil end
+		self.arrivalPlacementPending=nil
+	end
 	if self.target~=mode then self.lastSwitchAt=os.clock() end
 	self.target=mode
 	self.transition:refresh()
@@ -630,13 +664,15 @@ end
 function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+	self.arrivalUnplaced=nil
+	self.arrivalPlacementPending=nil
+	self.returnRoamShot=nil
 	self.switchEpoch=(self.switchEpoch or 0)+1
 	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self:restoreCamera()
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end
 	table.clear(self.connections)
-	if self.stationAdded then self.stationAdded:Disconnect() end
-	if self.stationRemoved then self.stationRemoved:Disconnect() end
+	if self.stations then self.stations:destroy() end
 	self.companions:clear()
 	if self.pet then self.pet:destroy(); self.pet = nil end
 	self.petPrompt, self.petClick = nil, nil

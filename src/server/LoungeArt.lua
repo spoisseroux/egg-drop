@@ -253,8 +253,31 @@ function Art.build(room, part)
 		end
 	end
 	for _, x in ipairs({ -1.85, 1.87 }) do
-		oval("HatcheryEgg", x, 4.63, -6.06, 0.65, 0.95, 0.59, Color3.fromHex("#EEE0AE"))
+		local meadow=x<0
+		oval("HatcheryEgg",x,if meadow then 4.85 else 4.63,-6.06,if meadow then 1.10 else .65,if meadow then 1.45 else .95,if meadow then .98 else .59,
+			if meadow then Color3.fromHex("#E5E9B5") else Color3.fromHex("#EEE0AE"))
+		if meadow then
+			-- The same leaf/seed identity as the existing Meadow recipe; no new egg type.
+			for _,side in ipairs({-1,1}) do
+				local mark=oval("MeadowEggLeaf",x+side*.12,5.13,-5.55,.32,.15,.035,leaf[1])
+				mark.CFrame*=CFrame.Angles(0,0,side*math.rad(24));mark.CastShadow=false
+			end
+			oval("MeadowEggSeed",x,4.67,-5.55,.18,.24,.035,leaf[1]).CastShadow=false
+		end
 	end
+	-- A browsable marker at the nest's front edge, with no movement/camera collision.
+	box("EggsSignPost",0,4.88,-3.5,.15,1.65,.15,bark)
+	local eggsSign=box("EggsSign",0,5.5,-3.5,2.45,.64,.14,Color3.fromHex("#38694A"))
+	sign(eggsSign,"Eggs")
+	local eggPrompt=Instance.new("ProximityPrompt")
+	eggPrompt.Name,eggPrompt.ObjectText,eggPrompt.ActionText="BrowseEggs","Hatch tree","Browse eggs"
+	eggPrompt.Style=Enum.ProximityPromptStyle.Default
+	eggPrompt.KeyboardKeyCode,eggPrompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
+	eggPrompt.ClickablePrompt,eggPrompt.RequiresLineOfSight,eggPrompt.HoldDuration=true,false,0
+	eggPrompt.Exclusivity=Enum.ProximityPromptExclusivity.OnePerButton
+	eggPrompt.MaxActivationDistance=5
+	eggPrompt:SetAttribute("PocketClubStation","Eggs")
+	eggPrompt.Parent=eggsSign
 
 	-- Overlapping pools form a bend. The shallow bank covers their joins.
 	local waterEdge = Color3.fromHex("#73B7B2")
@@ -425,6 +448,9 @@ function Art.build(room, part)
 		prompt.ActionText = station.action
 		prompt.ObjectText = station.title
 		prompt.RequiresLineOfSight = false
+		prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
+		prompt.ClickablePrompt,prompt.HoldDuration=true,0
+		prompt.Exclusivity=Enum.ProximityPromptExclusivity.OnePerButton
 		prompt.MaxActivationDistance = 7
 		prompt:SetAttribute("PocketClubStation", id)
 		prompt.Parent = top

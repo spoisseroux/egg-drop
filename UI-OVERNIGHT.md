@@ -51,10 +51,11 @@ Physical phone comfort, live shared multiplayer, live-account DataStore rejoin, 
 - [x] Audit current screenshots and structural code causes.
 - [x] Resume existing heartbeat with updated November7 scope and9AM cutoff.
 - [x] Complete/reference/review design system. Astra approved `UI-DESIGN-SYSTEM.md`, based on inspected publisher screenshots and Roblox platform guidance.
-- [ ] Implement coherent client pass with Sol. Step1 foundation/handheld/presentation ownership passed Astra code/render review; Step2 menu/recap/chrome now in progress.
-- [ ] Astra code and screenshot review; resolve blockers.
-- [ ] Native and actual-control acceptance; honest before/after gallery.
-- [ ] Commit/push, verify existing private publication, morning rundown.
+- [x] Implement and review the integrated client pass with Sol and Astra; checkpoint8b49b75.
+- [x] Corrected real-game regression harness, actual-control reward/hatch journey and reviewed desktop/Largest gallery.
+- [x] Commit/push and confirm privatev69 Published.
+- [ ] Finish bounded physical hatch-tree route and actual Device Emulator middle-height reflow follow-up described below.
+- [ ] Final integrated acceptance/publication and self-contained morning rundown.
 
 
 ## Added user steering: physical destinations
@@ -104,3 +105,31 @@ Latest actual-control journey: Pip welcome reveal → Meet held Scriptable focus
 Final fresh console has no game runtime exception. Existing EditableImage-disabled and asset203785492 type warnings remain. One exploratory QA command incorrectly read Text on a native Chat ImageButton and logged an AssistantCommand exception; this was not a game script failure. No security setting changed. Automated aiming uses known board state and proves route function, not newcomer comprehension or fun.
 
 Accepted native desktop captures in `artifacts/ui-redesign-2026-11-07`: `accepted-medium-deck.jpg`, `accepted-medium-recap-full.jpg`, `accepted-medium-recap-partial.jpg`, `accepted-medium-eggs.jpg`, `accepted-medium-reveal.jpg`. Largest captures include `approved-largest-left-568.jpg`, `approved-largest-left-480.jpg`, `approved-largest-left-narrow.jpg`, `approved-largest-field-desktop.jpg` and `preferred-largest-daily-reflow.jpg`; the RIGHT-narrow image is explicitly a local stage fixture. Physical phone, live multiplayer and live-account rejoin remain untested. Private publication follows the reviewed commit, then the bounded physical egg route can start.
+
+Published UI checkpoint: Studio Version History confirms **v69 Published**, title **Pocket Deck design system - 8b49b75**, on the existing private Egg Drop place96451847774961. Publication promoted the latest tested source; auto-save timestamps alone were not used as confirmation. Git8b49b75 is pushed. The physical-route slice starts after this checkpoint.
+
+### Actual Device Emulator follow-up — acceptance reopened
+
+After v69, Studio's built-in iPhone17 Pro landscape emulator was enabled. This is emulator evidence, not a physical phone. Its actual camera viewport is749×381, TouchEnabledtrue, KeyboardEnabledfalse, original Medium preference, overlay safe content733×307. The menu card680×283 leaves body640×97, but the roomy Play destination row is176px: the initial view shows icons with captions below the fold. Mastery similarly spends the first view on general earning rules. Astra confirmed a hierarchy blocker and approved a bounded available-body-height reflow, after current world source is frozen. The private v69 is a tested checkpoint, not final phone-menu acceptance. `emulator-landscape-menu.jpg` and `emulator-landscape-mastery.jpg` are diagnostic before images.
+
+MCP instance-path mouse input reports Success but does not reliably activate GUI buttons in the device emulator (screen scaling). Native Sky screenshot-coordinate tap activated Resume, closed Menu and entered the field board. Native screenshot-coordinate A tap is checked against accepted Drops rather than tool status. Use native screenshot input for emulator acceptance; do not count the ineffective MCP clicks as player actions.
+
+Emulator checks before the middle-height fix: native landscape A tap changed accepted Drops0→1; dispenser showed23/24. Rotating to portrait produced401×777/safe385×703, retaining sequence/drops. Native portrait Menu→Hatch eggs opened the same shop without spending (wallet6). Selecting Sprout changed the action to need18 at cost24. Rotating back retained Sprout and its80/20 odds and shortfall. The remaining landscape shop body is only77px and clips both full recipe choices (same <280 threshold issue); include EggHatchView in the body-budget fix while preserving the liked roomy design. Portrait DropCaption also spans the controls width and centers between Menu/Lounge instead of above A; align/hide its decorative caption. These are observed follow-ups, not final emulator acceptance.
+
+## Physical route integration — review-driven fixes
+
+Astra reviewed the shared station controller and requested stricter loaded-mask browse eligibility and a UI-lifetime gate on delayed Board→Room navigation. Sol resolved both. Frozen tests passed77 client cases across8 relevant suites plus34 isolated server cases. A subsequent roam camera fix adds its own lifecycle suite; final counts below will supersede this checkpoint. All60 runtime source wrappers compile, no Edit QA artifacts; Rojo builds.
+
+Actual keyboard/controller route checks: walked4 input segments to Eggs, E and ButtonX each opened exactly the existing shop, wallet6 and player position unchanged, Custom camera. Modal hid all3 stations. Walked3 segments to Journal, E opened it; Family goals opened Mastery without selecting a new family. Walked4 segments to bench, ButtonX opened style. Escape→ButtonB dismissed only the native menu and retained style; secondB closed style. At the nest, Escape→E left native menu in charge, shopclosed and all promptsdisabled. Local rare-only presentation fixture(mask16/prefix0, settledRoom) opened from both tree and Menu, then restored original attributes. These were local state fixtures, not server rare-only profile changes.
+
+Cross-route actual purchase:24-drop adaptive control run, score620/chain3, both sidescomplete, saved reward12 made wallet18. One18-nectar Meadow purchase left0, duplicatePip ID `be594b7d-98ec-48b9-91d5-fe58730ab905`. X→tree/E and X→Menu/Eggs reopened that exact ID and balance, no reroll/debit. A local Retrying presentation fixture reopened the same already-committed ID through the tree and was restored to Ready without acknowledging. Isolated delayed save/reconnect fixtures remain distinct from a live-account reconnect.
+
+Actual route testing exposed a pre-existing camera retention bug: Deck return skipped clear initial placement after restoring the pre-Room shot, placing the view through the tree. Astra audited it and approved a distinct one-use outgoing roam snapshot. Sol implemented capture before external-camera restore, identity/translation-checked return and clear fallback. An actual normal round trip at the nest retained camera transform exactly; Focus/root shifted only~1.2e-7stud, FOV65/Custom unchanged. `world-roam-return-clear.jpg` shows the cleared return. Astra then requested retaining arrival intent while camera/root/Humanoid are temporarily absent; Sol added pending-only retry and cancellation on Board/teardown,14 lifecycle cases awaiting final native rerun.
+
+Explicit pet click beside an enabled station entered held Scriptable focus with WalkSpeed0; repeatGreet stayed in that view and disabled station prompts, Back restored Custom/16 and the Eggs prompt. For MCP 3D mouse projection use WorldToScreenPoint, not WorldToViewportPoint (58px inset difference). Earlier wrong-coordinate inputs and hidden-button test clicks did not count as successful pet interactions. The GUI click helper now checks visible ancestors/ScreenGui before input to prevent clicks through hidden controls. No game runtime exception observed; expected backend failure-injection warnings and exploratory AssistantCommand errors are recorded separately.
+
+## Physical route acceptance — final checkpoint
+
+Astra final source GO after the focused fixes, including one-shot pending arrival and forced departure during root replication. Final source: **127 client cases across10 suites pass**, including15 RoamReturnCamera cases; **34 isolated server cases pass**; all60 source wrappers compile; Rojo build and diffcheck pass. Raw records are `scripts/WorldInteractions-results.json`. These overlap UI-suite cases and must not be added as a unique grand total. Source is frozen for commit. Private remainsv69 until the separately queued mid-height phone UI reflow passes.
+
+On the final source, actual welcome→Meet→Back→4-segment walk to nest→Deck→Lounge restored CFrame, Focus, root position and FOV exactly at recorded precision, Custom camera. E opened the shop, ButtonB returned to roam. Enabled Studio iPhone17 Pro landscape (749×381, TouchEnabledtrue), tapped the native Browse eggs prompt using screenshot coordinates, and observed shopopen/wallet6/playerpositionunchanged/Custom. Native cornerX closed it and restored WalkSpeed16 and the Eggs prompt. This establishes emulated touch route function, not physical phone comfort. Current room screenshot shows all three physical destinations around the existing tree; the remaining landscape shop clipping is tracked in the separate UI follow-up.
