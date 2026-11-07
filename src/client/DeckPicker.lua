@@ -104,6 +104,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	end
 	self.reward=text(scroll,"Reward","Finish all three to earn the Club sticker","Supporting");self.reward.TextColor3=Art.Muted
 	self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
+	self.music=button(scroll,"MusicSetting","Music: On",function()self:changeSetting("music")end)
 	self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
@@ -198,7 +199,7 @@ function Picker:layout()
 		end
 		Art.type(self.reward,"Supporting",short);local h=Art.textHeight(self.reward,bodyW-8,24)
 		place(self.reward,4,y,bodyW-8,h);y+=h+12
-		for _,control in ipairs({self.sound,self.motion})do
+		for _,control in ipairs({self.sound,self.music,self.motion})do
 			Art.type(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
 			place(control,4,y,bodyW-8,h);y+=h+8
 		end
@@ -240,6 +241,7 @@ function Picker:showTab(active)
 	self.active=active;local club=active=="Club"
 	self.display.Visible,self.apply.Visible=not club,not club
 	self.clubHeader.Visible,self.reward.Visible,self.sound.Visible,self.motion.Visible=club,club,club,club
+	self.music.Visible=club
 	for _,row in ipairs(self.rows)do row.frame.Visible=club end
 	for tab,control in pairs(self.tabs)do control.BackgroundColor3=if tab==active then Art.Inset else Art.Raised;control.TextColor3=if tab==active then Art.Leaf else Art.Silver end
 	for tab,choices in pairs(self.choices)do for _,stroke in pairs(choices)do stroke.Parent.Visible=tab==active end end
@@ -256,7 +258,7 @@ function Picker:applyPreview()
 	self:close();self.onApply(themeId,stickerId);return true
 end
 function Picker:changeSetting(key)
-	local control=if key=="sound"then self.sound elseif key=="motion"then self.motion else nil
+	local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion else nil
 	if not self.shade.Visible or self.active~="Club"or not control or not control.Interactable then return false end
 	self.onSetting(key);return true
 end
@@ -271,8 +273,9 @@ function Picker:select(themeId,stickerId)
 	for id,stroke in pairs(self.choices.Sticker)do stroke.Enabled=id==stickerId end
 	self.onPreview(themeId,stickerId);self:layout();return true
 end
-function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask)
+function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask,musicEnabled)
 	self.sound.Text="SFX: "..sound
+	self.music.Text=if musicEnabled==false then "Music: Off"else "Music: On"
 	self.motion.Text=if systemReduced then "Motion: Roblox"elseif reduced then "Motion: Low"else "Motion: Full"
 	self.motion.Interactable,self.motion.Selectable=not systemReduced,not systemReduced
 	local count=0
@@ -294,7 +297,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		swatch.Caption.TextColor3=if available then Art.Silver else Art.Muted
 		if swatch.Chip:FindFirstChild("Mark")then swatch.Chip.Mark.TextColor3=if available then option.color or Art.Muted else Art.Muted end
 	end
-	local signature={self.sound.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
+	local signature={self.sound.Text,self.music.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
 	for _,row in ipairs(self.rows)do table.insert(signature,row.title.Text..row.status.Text)end
 	for _,id in ipairs(Stickers.Order)do table.insert(signature,self.choices.Sticker[id].Parent.Caption.Text)end
 	local key=table.concat(signature,"|")

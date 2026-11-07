@@ -24,18 +24,23 @@ return function(client,parent)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
 	local function picker()
-		local f={previews={},applied={},settings={},closed=0,sound="On",reduced=false}
+		local f={previews={},applied={},settings={},closed=0,sound="On",reduced=false,music=true,musicChanges=0}
 		local view
 		view=Picker.new(root,nil,nil,function(theme,sticker)table.insert(f.previews,{theme,sticker})end,function()
 			f.closed+=1;f.visibleTheme,f.visibleSticker="sherbet","none"
 			if f.resetIds then view.themeId,view.stickerId="sherbet","none"end
 		end,function(theme,sticker)table.insert(f.applied,{theme,sticker})end,function(key)
+			if key=="music"then
+				f.music=not f.music;f.musicChanges+=1
+				view:updateClub(1,0,0,0,f.sound,f.reduced,false,Catalog.bit("pip"),f.music)
+				return
+			end
 			table.insert(f.settings,key)
 			if key=="sound"then f.sound="Muted"else f.reduced=true end
-			view:updateClub(1,0,0,0,f.sound,f.reduced,false,Catalog.bit("pip"))
+			view:updateClub(1,0,0,0,f.sound,f.reduced,false,Catalog.bit("pip"),f.music)
 		end)
 		table.insert(views,view);f.view=view
-		view:updateClub(1,0,0,0,f.sound,f.reduced,false,Catalog.bit("pip"));view:open("sherbet","none");return f
+		view:updateClub(1,0,0,0,f.sound,f.reduced,false,Catalog.bit("pip"),f.music);view:open("sherbet","none");return f
 	end
 	local function journal()
 		local f={visits={},tracks={},goals=0};local view
@@ -84,6 +89,20 @@ return function(client,parent)
 		test("Roblox reduced motion cannot be overridden by a setting or reflow",function()
 			local f=picker();local view=f.view;view:updateClub(1,0,0,0,"On",false,true,Catalog.bit("pip"));view:showTab("Club")
 			assert(not view.motion.Interactable and not view:changeSetting("motion"));view:layout();assert(#f.settings==0);view:close()
+		end)
+		test("Music stays session-local through four viewport reflows and reopening while SFX submits once",function()
+			local f=picker();local view=f.view;view:showTab("Club")
+			assert(view:changeSetting("music") and not f.music and f.musicChanges==1 and #f.settings==0)
+			for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703),Vector2.new(1649,971)})do
+				root.Size=UDim2.fromOffset(size.X,size.Y);settle();view:layout()
+				view:close();view:open("sherbet","none");view:showTab("Club");settle()
+				assert(view.music.Visible and view.music.Interactable and view.music.Selectable)
+				assert(view.music.Text=="Music: Off" and f.musicChanges==1 and #f.settings==0)
+			end
+			assert(view:changeSetting("sound") and #f.settings==1 and f.settings[1]=="sound")
+			assert(view:changeSetting("music") and f.music and f.musicChanges==2 and #f.settings==1)
+			view:close();assert(not view:changeSetting("music") and f.musicChanges==2)
+			root.Size=UDim2.fromOffset(733,307);settle()
 		end)
 		test("sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",function()
 			local f=journal();local view=f.view

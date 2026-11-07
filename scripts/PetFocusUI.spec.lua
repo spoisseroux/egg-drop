@@ -52,7 +52,7 @@ return function(client, _parent)
 			local count = { back = 0, greet = 0, pet = 0 }
 			ui = Focus.new(host, { back = function() count.back += 1 end, greet = function() count.greet += 1 end,
 				pet = function() count.pet += 1 end, canReact = function() return true end })
-			assert(ui.back.Size.Y.Offset >= 44 and ui.greet.Size.Y.Offset >= 44 and ui.gui.DisplayOrder < 10,
+			assert(ui.back.Size.Y.Offset >= 44 and ui.greet==nil and ui.panel:FindFirstChild("Greet")==nil and ui.gui.DisplayOrder < 10,
 				"inactive focus surface blocks lounge navigation")
 			ui:setActive(true)
 			assert(ui.gui.DisplayOrder >= 40)
@@ -71,10 +71,11 @@ return function(client, _parent)
 			local fake = setmetatable({ active = true,
 				root = { AbsolutePosition = Vector2.new(12, 8) },
 				glove = {}, hit = { Position = UDim2.fromOffset(0, 0), Size = UDim2.fromOffset(400, 250) },
-				callbacks = { canReact = function() return true end, pet = function() reacted += 1 end },
+				callbacks = { canReact = function() return true end, pet = function() reacted += 1;return true end },
 			}, Focus)
-			fake:movePointer({ Position = Vector3.new(200, 100, 0) }, true)
-			assert(fake.glove.Position == UDim2.fromOffset(188, 92) and reacted == 1,
+			local input={Position=Vector3.new(200,100,0),UserInputType=Enum.UserInputType.Touch}
+			assert(fake:beginPointer(input))
+			assert(fake.glove.Position == UDim2.fromOffset(188, 92) and reacted == 0,
 				"petting glove has an extra GUI-inset displacement")
 		end)
 		test("other modals suspend focus UI and receive Back/movement/Greet input", function()
@@ -122,7 +123,7 @@ return function(client, _parent)
 			local fake, counts = roomFixture(true)
 			assert(Room.reactPet(fake, true))
 			local greeted, sounded = counts()
-			assert(greeted == 0 and sounded == 1)
+			assert(greeted == 0 and sounded == 0 and fake.pet.affection>0)
 			fake.lastReactionAt = -math.huge
 			fake.greetingCamera.root = {}
 			assert(not Room.reactPet(fake, false))

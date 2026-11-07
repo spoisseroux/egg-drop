@@ -94,7 +94,9 @@ return function(client,parent)
 						assert(not view.apply.Visible)
 						assert(view.moreCue.Visible==(view.scroll.CanvasSize.Y.Offset>view.scroll.AbsoluteSize.Y+1))
 						for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
-						readable(view.reward);readable(view.sound);readable(view.motion);reach(view.motion,view.scroll)
+						readable(view.reward);readable(view.sound);readable(view.music);readable(view.motion)
+						assert(view.music.AbsoluteSize.Y>=44 and view.music.Selectable and view.music.Interactable,"Music target inaccessible")
+						reach(view.music,view.scroll);reach(view.motion,view.scroll)
 						local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged Club snapshot reset reading")
 						view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
 					end

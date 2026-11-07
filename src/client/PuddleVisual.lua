@@ -117,6 +117,8 @@ function PuddleVisual:update(dt)
 		dt = 0
 	end
 	self.time += dt
+	self.affection=math.max(0,(self.affection or 0)-dt)
+	local happy=self.petting==true or self.affection>0
 	self.greeting += dt
 	-- Position, heading and pose update every render frame while following.
 	local t, g = self.time, self.greeting
@@ -143,7 +145,7 @@ function PuddleVisual:update(dt)
 	local scale = Vector3.new(1 + squash * 0.55 - breathe * 0.4, 1 - squash + breathe, 1 + squash * 0.30)
 	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
 		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 0.9) * 0.025), 0)
-	local blink = t % 5.1 > 4.93
+	local blink = t % 5.1 > 4.93 or happy
 	local tailBase = CFrame.new(Vector3.new(0.90, 0.49, -0.25) * scale)
 	if self.worldContext then Bounds.begin(self)end
 	for _, entry in ipairs(self.pieces) do
@@ -169,6 +171,7 @@ function PuddleVisual:update(dt)
 			end
 			entry.part.CFrame = root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
 		end
+		if happy and entry.part.Name=="Smile"then size=Vector3.new(size.X*1.5,size.Y*.8,size.Z)end
 		entry.part.Size = size*worldScale
 		entry.part.Transparency = transparency
 		if self.worldContext and entry.role~="ripple"then Bounds.include(self,entry.part.CFrame,entry.part.Size)end

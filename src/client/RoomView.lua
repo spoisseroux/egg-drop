@@ -98,8 +98,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	}, Room)
 	self.focusUI = PetFocusUI.new(gui, {
 		back = function() if self.focusing then self:useRoomCamera(false) end end,
-		greet = function() self:reactPet(false) end,
-		pet = function() self:reactPet(true) end,
+		greet = function()return self:reactPet(false)end,
+		pet = function()return self:reactPet(true)end,
+		petContact=function(active)return self:setPetContact(active)end,
 		canOwnInput = function() return not self.busy and not self.overlayOpen() end,
 		canReact = function()
 			return self.focusing and self.mode == "Room" and not self.busy and not self.overlayOpen()
@@ -238,6 +239,8 @@ function Room:choosePet(pet)
 end
 
 function Room:showPet(pet)
+	if self.focusUI then self.focusUI:cancelPointer()end
+	self:setPetContact(false)
 	local owned = self.progress:GetAttribute("OwnedPets") or 0
 	local trials = self.progress:GetAttribute("TrialMask") or 0
 	if not pet or not Pets.isUnlocked(pet, owned, trials, self.progress:GetAttribute("InventoryMask")) then pet = Pets[1] end
@@ -304,6 +307,8 @@ function Room:captureReturnRoam()
 end
 
 function Room:restoreCamera()
+	if self.focusUI then self.focusUI:cancelPointer()end
+	self:setPetContact(false)
 	self:releaseFocusMovement()
 	self:cancelCameraTween()
 	self.greetingCamera = nil
@@ -335,6 +340,8 @@ function Room:retryArrivalPlacement()
 end
 
 function Room:useRoomCamera(animate, arriving)
+	if self.focusUI then self.focusUI:cancelPointer()end
+	self:setPetContact(false)
 	self:releaseFocusMovement()
 	if arriving then self.arrivalPlacementPending=true;self.arrivalUnplaced=true end
 	local placing=self.arrivalPlacementPending==true
@@ -511,6 +518,7 @@ function Room:focusPet()
 	self:updateControls()
 	self.audio:play(self.shownPet.cue)
 	if not self.reduceEffects() then self.cameraTween=tween(camera,.20,{FieldOfView=plan.fov}) end
+	if self.focusUI then self.focusUI:retireRoamHint()end
 	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
 	if self.viewportChanged then self.viewportChanged:Disconnect() end
 	local epoch = self.focusEpoch
@@ -552,9 +560,26 @@ function Room:releaseFocusMovement()
 	if lock.controls and lock.restoreControls then pcall(function() lock.controls:Enable() end) end
 end
 
+function Room:setPetContact(active)
+	if not active then
+		if not self.petContactActive then return false end
+		self.petContactActive=false
+		if self.contactPet then self.contactPet.petting=false end
+		self.contactPet=nil
+		if self.audio and self.audio.setPurr then self.audio:setPurr(false)end
+		return true
+	end
+	if self.petContactActive then return true end
+	local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
+		or not self.pet or not self.greetingCamera or self.greetingCamera.root~=root or self.greetingCamera.camera~=workspace.CurrentCamera then return false end
+	self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
+	return self.audio and self.audio.setPurr and self.audio:setPurr(true)or false
+end
+
 function Room:reactPet(petting)
 	if not self.focusing or self.mode ~= "Room" or self.busy or self.overlayOpen() or GuiService.MenuIsOpen
-		or not self.pet or not self.greetingCamera then return false end
+		or self.menuOpen or UserInputService:GetFocusedTextBox()or not self.pet or not self.greetingCamera then return false end
 	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 	if self.greetingCamera.root ~= root or self.greetingCamera.camera ~= workspace.CurrentCamera then
 		self:useRoomCamera(false)
@@ -565,8 +590,10 @@ function Room:reactPet(petting)
 	self.lastReactionAt = now
 	-- Reactions stay in the already accepted camera shot. No replanning, movement,
 	-- persistence mutation or reward event is involved in greeting/petting.
-	if not self.reduceEffects() then self.pet:greet() end
-	if now - (self.lastReactionAudioAt or -math.huge) >= 0.7 then
+	self.pet.affection=.9
+	if not petting and not self.reduceEffects() then self.pet:greet() end
+	if self.focusUI and self.focusUI.retireFocusHint then self.focusUI:retireFocusHint()end
+	if not petting and now - (self.lastReactionAudioAt or -math.huge) >= 0.7 then
 		self.lastReactionAudioAt = now
 		self.audio:play(self.shownPet.cue, if petting then 1.04 else 1, if petting then 0.42 else 0.7)
 	end

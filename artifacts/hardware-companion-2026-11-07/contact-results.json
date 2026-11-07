@@ -1,0 +1,1636 @@
+{
+  "date": "2026-11-07",
+  "review": "Astra architecture/source/fixture/screenshots GO",
+  "limitations": [
+    "Actual native input runs are Studio desktop and emulator only; no physical phone/controller or live multiplayer.",
+    "DidLoop/Playing prove engine playback, not audible mix or click-free transcode. Original PCM seam metadata is separate.",
+    "SaveNoticeOwnership first attempt rejected style-open precondition; rerun quiet roam passed2.",
+    "RoamReturnCamera first attempt found stale UI double missing cancelPointer; meaningful teardown double fixed,15passed Medium/Largest.",
+    "Final integrated purchase route and private update pending station slice."
+  ],
+  "contactMediumCore": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "LoopAudio",
+      "result": {
+        "evidence": "deterministic scheduler/voice doubles; not an audible audition",
+        "passed": 15,
+        "cases": [
+          "unresolved master and fast ready assets are silent",
+          "master 1 music true",
+          "master 1 music false",
+          "master 0.4 music true",
+          "master 0.4 music false",
+          "master 0 music true",
+          "master 0 music false",
+          "independent ducks do not overwrite master or session choice",
+          "old same-name duck expiry cannot remove replacement",
+          "one purr owner and old fade cannot stop a new gesture",
+          "mute consumes purr without deferred unmute start",
+          "asset readiness never queues purr and starts only one music",
+          "inactive device never accepts purr",
+          "retry stops effects but preserves independent music preference",
+          "destroy invalidates delayed ducks fades and future starts"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "PresentationAudio",
+      "result": {
+        "passed": 3,
+        "cases": [
+          "mid boot overlay cancels queued pitches and only its own voice",
+          "muted and reduced motion suppress every queued chime note",
+          "new owner cannot receive the old boot's queued pitches"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "DirectPetting",
+      "result": {
+        "passed": 19,
+        "cases": [
+          "press records candidate and release emits exactly one accepted tap",
+          "cumulative9px begins one rub with no release tap or repeated cue",
+          "one inactivity deadline stops and held motion cannot resurrect contact",
+          "coalesced release motion is consumed without tap or purr onset",
+          "canceled short release is cleanup and never a tap",
+          "blur clears stale opener leases without resurrecting held contact",
+          "a stationary long hold does not become tap or rub",
+          "leaving the pet ends once and returning held never creates another gesture",
+          "unrelated pointer cannot adopt or end an owned touch",
+          "rejected rub never starts purr or synthesizes release tap",
+          "failed or muted purr attempt remains consumed through the same held gesture",
+          "opening touch and mouse are drained before a fresh press",
+          "modal/native ownership loss cancels contact before another reaction",
+          "Room contact owns one voice attempt and one held grin without state writes",
+          "reduced rub grants static affection without species audio or camera recapture",
+          "only Back is selected and carried A drains before fresh native activation",
+          "first shown lesson retires on exit and save recovery never resurrects it",
+          "projected small pet retains44px target without including crest or floor FX",
+          "all seven muted reduced faces hold a readable grin with no body movement"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "PetFocusUI",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "movement and jumping restore exact prior settings once",
+          "petting bounds account for core-safe offset and reject hidden geometry",
+          "focus navigation is safe-sized and input bindings clean up",
+          "petting pointer uses core-safe input coordinates exactly once",
+          "other modals suspend focus UI and receive Back/movement/Greet input",
+          "repeat greeting reacts in the same shot and throttles rubbing",
+          "reduced effects and stale camera/root never animate or keep a lock",
+          "focus movement release restores only the captured controller",
+          "camera teardown invalidates stale greeting epochs without touching a replacement",
+          "aspect reframe preserves original restore shot without greet or recapture"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "StyleJournalActions",
+      "result": {
+        "passed": 13,
+        "cases": [
+          "swatches preview only across resize tabs and scrolling",
+          "X Back and forced-dismiss common close route roll back once per opening",
+          "Equip captures pending IDs before rollback and submits exactly once",
+          "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+          "Club settings apply once immediately and persist through closing",
+          "Roblox reduced motion cannot be overridden by a setting or reflow",
+          "Music stays session-local through four viewport reflows and reopening while SFX submits once",
+          "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+          "authoritative empty inventory has no legacy track or hidden selectable row",
+          "legacy tracking remains explicit only when the inventory mask is absent",
+          "owned row equips once and Family goals never equips tracks or selects a family",
+          "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+          "measured Ranks caption retains mastery page identity and callback"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "StyleJournalLayout",
+      "result": {
+        "preference": "Medium",
+        "passed": 8,
+        "cases": [
+          "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+          "733, 307 Journal measures all seven name status rank and crest rows",
+          "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+          "568, 160 Journal measures all seven name status rank and crest rows",
+          "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+          "385, 703 Journal measures all seven name status rank and crest rows",
+          "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+          "1649, 971 Journal measures all seven name status rank and crest rows"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "GreetingLifecycle",
+      "result": {
+        "passed": 4,
+        "cases": [
+          "blocked shot propagates false without spending interaction cooldown",
+          "accepted greeting starts one cooldown and rejects immediate repeat",
+          "menus and transitions cannot enter a second shot",
+          "focused greeting delegates reaction without camera recapture or cooldown reset"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "PetRoamHint",
+      "result": {
+        "passed": 4,
+        "cases": [
+          "733, 307 preferred roam hint stays measured below dock inside core safe root",
+          "568, 160 preferred roam hint stays measured below dock inside core safe root",
+          "385, 703 preferred roam hint stays measured below dock inside core safe root",
+          "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+        ]
+      }
+    }
+  ],
+  "contactMediumSave": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "SaveNoticeLayout",
+      "result": {
+        "preference": "Medium",
+        "rootSize": "full matrix",
+        "passed": 9,
+        "cases": [
+          "733, 307 passive status belongs to each modal without covering pinned actions",
+          "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+          "568, 160 passive status belongs to each modal without covering pinned actions",
+          "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+          "385, 703 passive status belongs to each modal without covering pinned actions",
+          "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+          "1649, 971 passive status belongs to each modal without covering pinned actions",
+          "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+          "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+        ]
+      }
+    },
+    {
+      "ok": false,
+      "preference": "Medium",
+      "name": "SaveNoticeOwnership",
+      "result": "Players.keehar01.PlayerScripts.Client.QASaveNoticeOwnership:52: Players.keehar01.PlayerScripts.Client.QASaveNoticeOwnership:19: quiet settled route required; current owner style"
+    }
+  ],
+  "contactMediumOwnership": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "SaveNoticeOwnership",
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": [
+          "profile retry survives every neutral hatch status in the actual current owner",
+          "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        ]
+      }
+    }
+  ],
+  "contactMediumInput": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "ControllerFocus",
+      "result": {
+        "cases": [
+          "first A is focus-only through held release; next fresh A passes to native activation",
+          "actual Gamepad Begin captures before UIS changes and same-device notification preserves it",
+          "release before the delayed UIS notification waits for that current device",
+          "native Dpad focus wins before deferred fallback",
+          "Dpad seeds once when native direction leaves no selection",
+          "already focused A passes even before input type updates",
+          "repeat and duplicate held Begin never focus before release or dispatch twice",
+          "same-instance close and reopen invalidate the captured generation",
+          "sheet switch drains old A without focusing its successor",
+          "pointer return cancels focus but drains the original controller gesture",
+          "CoreGui or text capture immediately passes A and clears held acquisition",
+          "busy transition focus result recap and absent owners cannot acquire or intercept",
+          "outside-owner and destroyed targets fall back to neutral close only",
+          "no live target means no focus write and no action",
+          "hidden ancestor disabled layer and detached PlayerGui reject the owner",
+          "ensure-visible cannot focus a target after its owner changes synchronously",
+          "disconnect with no End clears that device hold and reconnect can acquire",
+          "two gamepads retain distinct captured gestures through either release order",
+          "disconnecting the older device releases a completed newer-device handoff",
+          "Cancel drains the old press and permits a fresh focus-only press",
+          "current device change before deferred execution prevents acquisition",
+          "destroy disconnects watches cancels queued tasks and passes subsequent input"
+        ],
+        "passed": 22,
+        "heldInputIsSemanticFixture": true
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "ControllerSheets",
+      "result": {
+        "cases": [
+          "pointer-open Menu seeds current Daily or Mastery tab without routing",
+          "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+          "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+          "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+          "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+          "direct controller Journal opening retains its valid existing owned selection",
+          "result arriving under an open shop revokes the captured ordinary-shop owner",
+          "all four same-instance openings advance generation and hidden sheets expose no target"
+        ],
+        "passed": 8,
+        "inputIsSemanticFixture": true
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "SharedHeaders",
+      "result": {
+        "preference": "Medium",
+        "passed": 12,
+        "cases": [
+          "1649, 971 exact menu wallet and stable bare-X header",
+          "1649, 971 recipe prices and status stay independent of exact balance",
+          "733, 307 exact menu wallet and stable bare-X header",
+          "733, 307 recipe prices and status stay independent of exact balance",
+          "568, 160 exact menu wallet and stable bare-X header",
+          "568, 160 recipe prices and status stay independent of exact balance",
+          "385, 703 exact menu wallet and stable bare-X header",
+          "385, 703 recipe prices and status stay independent of exact balance",
+          "focused unselected recipe survives rebuild and rotation without changing selection",
+          "focused daily remains visible while disabled gift falls back to neutral X",
+          "X/footer survive rebuild and detached GUI cannot reclaim focus",
+          "two independent circle controls retain native names and preferred transparency"
+        ]
+      }
+    }
+  ],
+  "contactMediumReturn": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "RoamReturnCamera",
+      "result": {
+        "passed": 15,
+        "cases": [
+          "initial Board presentation does not capture a return roam shot",
+          "actual Room exit captures before the separate pre-Room restore",
+          "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+          "the same root translates the return transform and Focus together",
+          "active greeting restores underlying roam before capturing the Deck return",
+          "Scriptable camera without an accepted greeting and dead root are never captured",
+          "replaced root character or camera rejects old shot and seeds a clear angle",
+          "consumed or missing shots seed arrival even after previous roaming",
+          "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+          "missing camera defers arrival without consuming the shot or marking first roam",
+          "staggered root availability retries once then ordinary roaming retains its angle",
+          "missing humanoid also defers placement until its live subject is available",
+          "Board cancellation clears a pending placement so late roots cannot move the camera",
+          "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+          "teardown invalidates return shot before camera and UI cleanup"
+        ]
+      }
+    }
+  ],
+  "contactMediumCompanionDelta": [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "CompanionScale",
+      "result": {
+        "passed": 17,
+        "cases": [
+          "pip authored default1 and world.72 stay uniform through animated poses",
+          "pip travel gait rests snaps turns and respects reduced effects",
+          "puddle authored default1 and world.72 stay uniform through animated poses",
+          "puddle travel gait rests snaps turns and respects reduced effects",
+          "wick authored default1 and world.72 stay uniform through animated poses",
+          "wick travel gait rests snaps turns and respects reduced effects",
+          "orbit authored default1 and world.72 stay uniform through animated poses",
+          "orbit travel gait rests snaps turns and respects reduced effects",
+          "bloom_pip authored default1 and world.72 stay uniform through animated poses",
+          "bloom_pip travel gait rests snaps turns and respects reduced effects",
+          "foxfire_wick authored default1 and world.72 stay uniform through animated poses",
+          "foxfire_wick travel gait rests snaps turns and respects reduced effects",
+          "eclipse_orbit authored default1 and world.72 stay uniform through animated poses",
+          "eclipse_orbit travel gait rests snaps turns and respects reduced effects",
+          "ground sampling stays10Hz without per-foot queries",
+          "normal16stud movement is bounded to3.5cycles at15/30/60Hz",
+          "stride advances by rendered horizontal distance rather than wall clock"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "PetGreetingShot",
+      "result": {
+        "projectionChecks": 72,
+        "models": 7,
+        "passed": 35,
+        "cases": [
+          "pip fits landscape at rest and greeting 0.3/0.7",
+          "pip fits portrait at rest and greeting 0.3/0.7",
+          "pip fits wide at rest and greeting 0.3/0.7",
+          "puddle fits landscape at rest and greeting 0.3/0.7",
+          "puddle fits portrait at rest and greeting 0.3/0.7",
+          "puddle fits wide at rest and greeting 0.3/0.7",
+          "wick fits landscape at rest and greeting 0.3/0.7",
+          "wick fits portrait at rest and greeting 0.3/0.7",
+          "wick fits wide at rest and greeting 0.3/0.7",
+          "orbit fits landscape at rest and greeting 0.3/0.7",
+          "orbit fits portrait at rest and greeting 0.3/0.7",
+          "orbit fits wide at rest and greeting 0.3/0.7",
+          "bloom_pip fits landscape at rest and greeting 0.3/0.7",
+          "bloom_pip fits portrait at rest and greeting 0.3/0.7",
+          "bloom_pip fits wide at rest and greeting 0.3/0.7",
+          "foxfire_wick fits landscape at rest and greeting 0.3/0.7",
+          "foxfire_wick fits portrait at rest and greeting 0.3/0.7",
+          "foxfire_wick fits wide at rest and greeting 0.3/0.7",
+          "eclipse_orbit fits landscape at rest and greeting 0.3/0.7",
+          "eclipse_orbit fits portrait at rest and greeting 0.3/0.7",
+          "eclipse_orbit fits wide at rest and greeting 0.3/0.7",
+          "edges and corners keep the complete greeting footprint on supported floor",
+          "missing floor or invalid viewport fails before world queries",
+          "no ground falls back after bounded world queries",
+          "high ground falls back after bounded world queries",
+          "blocked falls back after bounded world queries",
+          "a rotated non-query sign occludes a finite camera segment",
+          "parallel misses and padded grazes are distinguished",
+          "blockers behind the camera or beyond the target do not occlude",
+          "lower-body and side occluders can block while the center ray remains clear",
+          "a blocked first candidate falls back to a clear shot within the query budget",
+          "every visually blocked candidate yields a bounded roam fallback",
+          "restore keeps the original shot and focus translated by player motion",
+          "replacement camera or root cannot receive an old greeting restoration",
+          "a root reparented into another character or detached invalidates the snapshot"
+        ]
+      }
+    },
+    {
+      "ok": false,
+      "preference": "Medium",
+      "name": "RoamReturnCamera",
+      "result": "Players.keehar01.PlayerScripts.Client.QARoamReturnCamera:167: Players.keehar01.PlayerScripts.Client.RoomView:310: attempt to call missing method 'cancelPointer' of table"
+    }
+  ],
+  "contactLargestCore": [
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "LoopAudio",
+      "result": {
+        "evidence": "deterministic scheduler/voice doubles; not an audible audition",
+        "passed": 15,
+        "cases": [
+          "unresolved master and fast ready assets are silent",
+          "master 1 music true",
+          "master 1 music false",
+          "master 0.4 music true",
+          "master 0.4 music false",
+          "master 0 music true",
+          "master 0 music false",
+          "independent ducks do not overwrite master or session choice",
+          "old same-name duck expiry cannot remove replacement",
+          "one purr owner and old fade cannot stop a new gesture",
+          "mute consumes purr without deferred unmute start",
+          "asset readiness never queues purr and starts only one music",
+          "inactive device never accepts purr",
+          "retry stops effects but preserves independent music preference",
+          "destroy invalidates delayed ducks fades and future starts"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "PresentationAudio",
+      "result": {
+        "passed": 3,
+        "cases": [
+          "mid boot overlay cancels queued pitches and only its own voice",
+          "muted and reduced motion suppress every queued chime note",
+          "new owner cannot receive the old boot's queued pitches"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "DirectPetting",
+      "result": {
+        "passed": 19,
+        "cases": [
+          "press records candidate and release emits exactly one accepted tap",
+          "cumulative9px begins one rub with no release tap or repeated cue",
+          "one inactivity deadline stops and held motion cannot resurrect contact",
+          "coalesced release motion is consumed without tap or purr onset",
+          "canceled short release is cleanup and never a tap",
+          "blur clears stale opener leases without resurrecting held contact",
+          "a stationary long hold does not become tap or rub",
+          "leaving the pet ends once and returning held never creates another gesture",
+          "unrelated pointer cannot adopt or end an owned touch",
+          "rejected rub never starts purr or synthesizes release tap",
+          "failed or muted purr attempt remains consumed through the same held gesture",
+          "opening touch and mouse are drained before a fresh press",
+          "modal/native ownership loss cancels contact before another reaction",
+          "Room contact owns one voice attempt and one held grin without state writes",
+          "reduced rub grants static affection without species audio or camera recapture",
+          "only Back is selected and carried A drains before fresh native activation",
+          "first shown lesson retires on exit and save recovery never resurrects it",
+          "projected small pet retains44px target without including crest or floor FX",
+          "all seven muted reduced faces hold a readable grin with no body movement"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "PetFocusUI",
+      "result": {
+        "passed": 10,
+        "cases": [
+          "movement and jumping restore exact prior settings once",
+          "petting bounds account for core-safe offset and reject hidden geometry",
+          "focus navigation is safe-sized and input bindings clean up",
+          "petting pointer uses core-safe input coordinates exactly once",
+          "other modals suspend focus UI and receive Back/movement/Greet input",
+          "repeat greeting reacts in the same shot and throttles rubbing",
+          "reduced effects and stale camera/root never animate or keep a lock",
+          "focus movement release restores only the captured controller",
+          "camera teardown invalidates stale greeting epochs without touching a replacement",
+          "aspect reframe preserves original restore shot without greet or recapture"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "StyleJournalActions",
+      "result": {
+        "passed": 13,
+        "cases": [
+          "swatches preview only across resize tabs and scrolling",
+          "X Back and forced-dismiss common close route roll back once per opening",
+          "Equip captures pending IDs before rollback and submits exactly once",
+          "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+          "Club settings apply once immediately and persist through closing",
+          "Roblox reduced motion cannot be overridden by a setting or reflow",
+          "Music stays session-local through four viewport reflows and reopening while SFX submits once",
+          "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+          "authoritative empty inventory has no legacy track or hidden selectable row",
+          "legacy tracking remains explicit only when the inventory mask is absent",
+          "owned row equips once and Family goals never equips tracks or selects a family",
+          "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+          "measured Ranks caption retains mastery page identity and callback"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "StyleJournalLayout",
+      "result": {
+        "preference": "Largest",
+        "passed": 8,
+        "cases": [
+          "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+          "733, 307 Journal measures all seven name status rank and crest rows",
+          "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+          "568, 160 Journal measures all seven name status rank and crest rows",
+          "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+          "385, 703 Journal measures all seven name status rank and crest rows",
+          "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+          "1649, 971 Journal measures all seven name status rank and crest rows"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "GreetingLifecycle",
+      "result": {
+        "passed": 4,
+        "cases": [
+          "blocked shot propagates false without spending interaction cooldown",
+          "accepted greeting starts one cooldown and rejects immediate repeat",
+          "menus and transitions cannot enter a second shot",
+          "focused greeting delegates reaction without camera recapture or cooldown reset"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "PetRoamHint",
+      "result": {
+        "passed": 4,
+        "cases": [
+          "733, 307 preferred roam hint stays measured below dock inside core safe root",
+          "568, 160 preferred roam hint stays measured below dock inside core safe root",
+          "385, 703 preferred roam hint stays measured below dock inside core safe root",
+          "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "RoamReturnCamera",
+      "result": {
+        "passed": 15,
+        "cases": [
+          "initial Board presentation does not capture a return roam shot",
+          "actual Room exit captures before the separate pre-Room restore",
+          "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+          "the same root translates the return transform and Focus together",
+          "active greeting restores underlying roam before capturing the Deck return",
+          "Scriptable camera without an accepted greeting and dead root are never captured",
+          "replaced root character or camera rejects old shot and seeds a clear angle",
+          "consumed or missing shots seed arrival even after previous roaming",
+          "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+          "missing camera defers arrival without consuming the shot or marking first roam",
+          "staggered root availability retries once then ordinary roaming retains its angle",
+          "missing humanoid also defers placement until its live subject is available",
+          "Board cancellation clears a pending placement so late roots cannot move the camera",
+          "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+          "teardown invalidates return shot before camera and UI cleanup"
+        ]
+      }
+    }
+  ],
+  "contactLargestSave": [
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "SaveNoticeLayout",
+      "result": {
+        "preference": "Largest",
+        "rootSize": "full matrix",
+        "passed": 9,
+        "cases": [
+          "733, 307 passive status belongs to each modal without covering pinned actions",
+          "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+          "568, 160 passive status belongs to each modal without covering pinned actions",
+          "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+          "385, 703 passive status belongs to each modal without covering pinned actions",
+          "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+          "1649, 971 passive status belongs to each modal without covering pinned actions",
+          "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+          "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "SaveNoticeOwnership",
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": [
+          "profile retry survives every neutral hatch status in the actual current owner",
+          "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "preference": "Largest",
+      "name": "SharedHeaders",
+      "result": {
+        "preference": "Largest",
+        "passed": 12,
+        "cases": [
+          "1649, 971 exact menu wallet and stable bare-X header",
+          "1649, 971 recipe prices and status stay independent of exact balance",
+          "733, 307 exact menu wallet and stable bare-X header",
+          "733, 307 recipe prices and status stay independent of exact balance",
+          "568, 160 exact menu wallet and stable bare-X header",
+          "568, 160 recipe prices and status stay independent of exact balance",
+          "385, 703 exact menu wallet and stable bare-X header",
+          "385, 703 recipe prices and status stay independent of exact balance",
+          "focused unselected recipe survives rebuild and rotation without changing selection",
+          "focused daily remains visible while disabled gift falls back to neutral X",
+          "X/footer survive rebuild and detached GUI cannot reclaim focus",
+          "two independent circle controls retain native names and preferred transparency"
+        ]
+      }
+    }
+  ],
+  "contactServer": [
+    {
+      "ok": true,
+      "suite": "HatchProgress",
+      "result": {
+        "passed": 21,
+        "cases": {
+          "1": "all catalog outcomes and rare protection",
+          "2": "legacy seven-pet migration and one-time credits",
+          "3": "starter grant, persistent reveal, exact acknowledgement",
+          "4": "ambiguous session acquire resumes the same lease",
+          "5": "direct full-cost spending, stale commands and callback retries",
+          "6": "ambiguous committed hatch cannot reroll or duplicate",
+          "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+          "8": "monotonic payouts reject replay beyond receipt history",
+          "9": "lease takeover fences stale commands and renewals",
+          "10": "local overlap, sparse inventory and public isolation",
+          "11": "failed legacy load cannot spend or overwrite",
+          "12": "daily reward is once per Hollow day and survives callback retry",
+          "13": "every advertised result grants once and rare protection resets",
+          "14": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+          "15": "mastery ranks need permanent points and three distinct successful challenges",
+          "16": "daily contracts and mastery pay atomically once per run and day",
+          "17": "completed-budget failures can earn skill contracts but not mastery or free wins",
+          "18": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+          "19": "compound award retries immutable stats and original day before or after commit",
+          "20": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+          "21": "rare-only ownership trains its base family and duplicate marks continue beyond three"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "suite": "CloseProgress",
+      "result": {
+        "passed": 2,
+        "cases": {
+          "1": "drain pending and earned payout before release",
+          "2": "failed drain keeps lease fenced"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "suite": "SessionRecovery",
+      "result": {
+        "persistentWrites": false,
+        "passed": 8,
+        "cases": {
+          "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+          "2": "profile save failure times out without releasing the lease and later recovers",
+          "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+          "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+          "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+          "6": "a setting changed during an in-flight autosave drains before lease release",
+          "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+          "8": "the actual Studio store keeps both writers in one isolated cloned root"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "suite": "SessionHost",
+      "result": {
+        "persistentWrites": false,
+        "passed": 2,
+        "cases": {
+          "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+          "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "suite": "StudioStore",
+      "result": {
+        "persistentWrites": false,
+        "passed": 1,
+        "cases": {
+          "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+        }
+      }
+    }
+  ],
+  "contactSources": {
+    "place": 96451847774961,
+    "compileErrors": [],
+    "checked": 65,
+    "mismatches": []
+  },
+  "contactActualMovingRub": {
+    "musicPlaying": true,
+    "purrStarts": 1,
+    "camera": "Scriptable",
+    "glove": true,
+    "purrGain": 0.23999999463558197,
+    "musicTime": 45.297,
+    "purrLoops": 5,
+    "purrPlaying": true,
+    "hint": false
+  },
+  "contactActualRelease": {
+    "musicPlaying": true,
+    "purrPlaying": false,
+    "purrGain": 0
+  },
+  "contactActualMusicMatrix": [
+    {
+      "gain": 0.12999999523162842,
+      "master": 1,
+      "musicMaster": 1,
+      "music": "Music: On",
+      "sound": "Full",
+      "playing": true
+    },
+    {
+      "gain": 0,
+      "master": 1,
+      "musicMaster": 1,
+      "music": "Music: Off",
+      "sound": "Full",
+      "playing": false
+    },
+    {
+      "gain": 0.12999999523162842,
+      "master": 0.4000000059604645,
+      "musicMaster": 0.4000000059604645,
+      "music": "Music: On",
+      "sound": "Quiet",
+      "playing": true
+    },
+    {
+      "gain": 0,
+      "master": 0.4000000059604645,
+      "musicMaster": 0.4000000059604645,
+      "music": "Music: Off",
+      "sound": "Quiet",
+      "playing": false
+    },
+    {
+      "gain": 0,
+      "master": 0,
+      "musicMaster": 0,
+      "music": "Music: On",
+      "sound": "Off",
+      "playing": false
+    },
+    {
+      "gain": 0,
+      "master": 0,
+      "musicMaster": 0,
+      "music": "Music: Off",
+      "sound": "Off",
+      "playing": false
+    }
+  ],
+  "contactActualMusicTransport": {
+    "music": 0,
+    "sound": 1,
+    "exists": true
+  },
+  "contactControllerEvidence": {
+    "A": {
+      "camera": "Custom",
+      "events": "[{\"time\":312947.8757918,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":312984.7415616,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77443949997,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77677710007,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":312991.9075742001,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":313024.41122530007,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313034.0758761999,\"type\":\"Gamepad1\",\"key\":\"ButtonA\",\"processed\":true}]",
+      "jump": false,
+      "speed": 16,
+      "focus": false
+    },
+    "B": {
+      "camera": "Custom",
+      "events": "[{\"time\":312947.8757918,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":312984.7415616,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77443949997,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77677710007,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":312991.9075742001,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":313024.41122530007,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313034.0758761999,\"type\":\"Gamepad1\",\"key\":\"ButtonA\",\"processed\":true},{\"time\":313041.3081884,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313048.64001089989,\"type\":\"Gamepad1\",\"key\":\"ButtonB\",\"processed\":true}]",
+      "jump": false,
+      "speed": 16,
+      "focus": false
+    },
+    "kind": "Actual native Controller Emulator clicks; Gamepad1 events confirmed; not physical hardware."
+  },
+  "contactActualControllerA": {
+    "camera": "Custom",
+    "events": "[{\"time\":312947.8757918,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":312984.7415616,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77443949997,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77677710007,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":312991.9075742001,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":313024.41122530007,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313034.0758761999,\"type\":\"Gamepad1\",\"key\":\"ButtonA\",\"processed\":true}]",
+    "jump": false,
+    "speed": 16,
+    "focus": false
+  },
+  "contactActualControllerB": {
+    "camera": "Custom",
+    "events": "[{\"time\":312947.8757918,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":312984.7415616,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77443949997,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77677710007,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":312991.9075742001,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":313024.41122530007,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313034.0758761999,\"type\":\"Gamepad1\",\"key\":\"ButtonA\",\"processed\":true},{\"time\":313041.3081884,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313048.64001089989,\"type\":\"Gamepad1\",\"key\":\"ButtonB\",\"processed\":true}]",
+    "jump": false,
+    "speed": 16,
+    "focus": false
+  },
+  "contactActualPhone": {
+    "events": "[{\"time\":312947.8757918,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":312984.7415616,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77443949997,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":312984.77677710007,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":312991.9075742001,\"type\":\"Keyboard\",\"key\":\"Seven\",\"processed\":false},{\"time\":313024.41122530007,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313034.0758761999,\"type\":\"Gamepad1\",\"key\":\"ButtonA\",\"processed\":true},{\"time\":313041.3081884,\"type\":\"Gamepad1\",\"key\":\"ButtonX\",\"processed\":true},{\"time\":313048.64001089989,\"type\":\"Gamepad1\",\"key\":\"ButtonB\",\"processed\":true},{\"time\":313114.8694152001,\"type\":\"MouseMovement\",\"key\":\"None\",\"processed\":false},{\"time\":313114.8870448,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":313114.88885680006,\"type\":\"MouseButton1\",\"key\":\"None\",\"processed\":false},{\"time\":313120.34022639997,\"type\":\"Keyboard\",\"key\":\"E\",\"processed\":true},{\"time\":313147.4003522999,\"type\":\"Focus\",\"key\":\"None\",\"processed\":false},{\"time\":313147.41942139997,\"type\":\"Touch\",\"key\":\"None\",\"processed\":true}]",
+    "focus": true,
+    "purrStarts": 2,
+    "purrPlaying": false,
+    "hint": false
+  },
+  "contactPhoneScroll": {
+    "position": "0, 304.861237",
+    "input": "frame-spaced MCP emits Touch; Sky drag coalesced to near-zero",
+    "music": true,
+    "controlsReachable": true,
+    "active": false
+  },
+  "phoneScrollTrace": {
+    "events": {
+      "1": {
+        "t": 313515.0207191,
+        "k": "Touch",
+        "v": "478.260009765625, 137.08250427246094, 0"
+      },
+      "2": {
+        "t": 313515.0353886001,
+        "k": "canvas",
+        "v": "0, 1.09500122"
+      },
+      "3": {
+        "t": 313515.0356868999,
+        "k": "Touch",
+        "v": "478, 137, 0"
+      },
+      "4": {
+        "t": 313527.15255420003,
+        "k": "Touch",
+        "v": "418, 196.71240234375, 0"
+      },
+      "5": {
+        "t": 313527.1680568999,
+        "k": "Touch",
+        "v": "418, 195.38998413085938, 0"
+      },
+      "6": {
+        "t": 313527.1851621,
+        "k": "Touch",
+        "v": "418, 194.13858032226562, 0"
+      },
+      "7": {
+        "t": 313527.2014138999,
+        "k": "Touch",
+        "v": "418, 192.94332885742188, 0"
+      },
+      "8": {
+        "t": 313527.21803870006,
+        "k": "Touch",
+        "v": "418, 191.63046264648438, 0"
+      },
+      "9": {
+        "t": 313527.23450420005,
+        "k": "Touch",
+        "v": "418, 190.3824462890625, 0"
+      },
+      "10": {
+        "t": 313527.2530306,
+        "k": "Touch",
+        "v": "418, 189.11105346679688, 0"
+      },
+      "11": {
+        "t": 313527.26790690003,
+        "k": "Touch",
+        "v": "418, 187.84991455078125, 0"
+      },
+      "12": {
+        "t": 313527.2857911,
+        "k": "Touch",
+        "v": "418, 186.4293212890625, 0"
+      },
+      "13": {
+        "t": 313527.3019671,
+        "k": "canvas",
+        "v": "0, 2.2333374"
+      },
+      "14": {
+        "t": 313527.30240270006,
+        "k": "Touch",
+        "v": "418, 185.29098510742188, 0"
+      },
+      "15": {
+        "t": 313527.3185288999,
+        "k": "canvas",
+        "v": "0, 3.60043335"
+      },
+      "16": {
+        "t": 313527.3189053999,
+        "k": "Touch",
+        "v": "418, 183.92388916015625, 0"
+      },
+      "17": {
+        "t": 313527.3350408999,
+        "k": "canvas",
+        "v": "0, 4.85964966"
+      },
+      "18": {
+        "t": 313527.33538249996,
+        "k": "Touch",
+        "v": "418, 182.6646728515625, 0"
+      },
+      "19": {
+        "t": 313527.35194229987,
+        "k": "canvas",
+        "v": "0, 6.13262939"
+      },
+      "20": {
+        "t": 313527.3522953999,
+        "k": "Touch",
+        "v": "418, 181.39169311523438, 0"
+      },
+      "21": {
+        "t": 313527.3679352999,
+        "k": "canvas",
+        "v": "0, 7.39859009"
+      },
+      "22": {
+        "t": 313527.36833920004,
+        "k": "Touch",
+        "v": "418, 180.125732421875, 0"
+      },
+      "23": {
+        "t": 313527.3851175001,
+        "k": "canvas",
+        "v": "0, 8.68807983"
+      },
+      "24": {
+        "t": 313527.3854447999,
+        "k": "Touch",
+        "v": "418, 178.83624267578125, 0"
+      },
+      "25": {
+        "t": 313527.4024266999,
+        "k": "canvas",
+        "v": "0, 9.91810608"
+      },
+      "26": {
+        "t": 313527.4027972999,
+        "k": "Touch",
+        "v": "418, 177.60621643066406, 0"
+      },
+      "27": {
+        "t": 313527.41811189987,
+        "k": "canvas",
+        "v": "0, 11.2361755"
+      },
+      "28": {
+        "t": 313527.41854820005,
+        "k": "Touch",
+        "v": "418, 176.28814697265625, 0"
+      },
+      "29": {
+        "t": 313527.4355450999,
+        "k": "canvas",
+        "v": "0, 12.5243225"
+      },
+      "30": {
+        "t": 313527.4360155999,
+        "k": "Touch",
+        "v": "418, 175, 0"
+      },
+      "31": {
+        "t": 313527.56788969995,
+        "k": "canvas",
+        "v": "0, 13.965683"
+      },
+      "32": {
+        "t": 313527.5682756,
+        "k": "Touch",
+        "v": "418, 173.5586395263672, 0"
+      },
+      "33": {
+        "t": 313527.5851024999,
+        "k": "canvas",
+        "v": "0, 15.2831268"
+      },
+      "34": {
+        "t": 313527.5854316,
+        "k": "Touch",
+        "v": "418, 172.24119567871094, 0"
+      },
+      "35": {
+        "t": 313527.60158300004,
+        "k": "canvas",
+        "v": "0, 16.6557617"
+      },
+      "36": {
+        "t": 313527.6019494999,
+        "k": "Touch",
+        "v": "418, 170.86856079101562, 0"
+      },
+      "37": {
+        "t": 313527.6181606001,
+        "k": "canvas",
+        "v": "0, 18.0936279"
+      },
+      "38": {
+        "t": 313527.61863199994,
+        "k": "Touch",
+        "v": "418, 169.43069458007812, 0"
+      },
+      "39": {
+        "t": 313527.6349629001,
+        "k": "canvas",
+        "v": "0, 19.4661713"
+      },
+      "40": {
+        "t": 313527.63531109993,
+        "k": "Touch",
+        "v": "418, 168.0581512451172, 0"
+      },
+      "41": {
+        "t": 313527.65220730007,
+        "k": "canvas",
+        "v": "0, 20.844162"
+      },
+      "42": {
+        "t": 313527.65270820004,
+        "k": "Touch",
+        "v": "418, 166.68016052246094, 0"
+      },
+      "43": {
+        "t": 313527.6687904,
+        "k": "canvas",
+        "v": "0, 22.2459717"
+      },
+      "44": {
+        "t": 313527.66914270003,
+        "k": "Touch",
+        "v": "418, 165.27835083007812, 0"
+      },
+      "45": {
+        "t": 313527.6849153999,
+        "k": "canvas",
+        "v": "0, 23.6845703"
+      },
+      "46": {
+        "t": 313527.6853272,
+        "k": "Touch",
+        "v": "418, 163.83975219726562, 0"
+      },
+      "47": {
+        "t": 313527.7017035,
+        "k": "canvas",
+        "v": "0, 25.0651245"
+      },
+      "48": {
+        "t": 313527.702054,
+        "k": "Touch",
+        "v": "418, 162.45919799804688, 0"
+      },
+      "49": {
+        "t": 313527.7176047999,
+        "k": "canvas",
+        "v": "0, 26.4081268"
+      },
+      "50": {
+        "t": 313527.71799269994,
+        "k": "Touch",
+        "v": "418, 161.11619567871094, 0"
+      },
+      "51": {
+        "t": 313527.73508769996,
+        "k": "canvas",
+        "v": "0, 27.8077087"
+      },
+      "52": {
+        "t": 313527.735415,
+        "k": "Touch",
+        "v": "418, 159.71661376953125, 0"
+      },
+      "53": {
+        "t": 313527.75166439987,
+        "k": "canvas",
+        "v": "0, 29.1356049"
+      },
+      "54": {
+        "t": 313527.7520757001,
+        "k": "Touch",
+        "v": "418, 158.3887176513672, 0"
+      },
+      "55": {
+        "t": 313527.7689729,
+        "k": "canvas",
+        "v": "0, 30.5924988"
+      },
+      "56": {
+        "t": 313527.7693366001,
+        "k": "Touch",
+        "v": "418, 156.93182373046875, 0"
+      },
+      "57": {
+        "t": 313527.78700609994,
+        "k": "canvas",
+        "v": "0, 31.9726257"
+      },
+      "58": {
+        "t": 313527.7875033,
+        "k": "Touch",
+        "v": "418, 155.55169677734375, 0"
+      },
+      "59": {
+        "t": 313527.80298239994,
+        "k": "canvas",
+        "v": "0, 33.4143066"
+      },
+      "60": {
+        "t": 313527.80331879994,
+        "k": "Touch",
+        "v": "418, 154.11001586914062, 0"
+      },
+      "61": {
+        "t": 313527.8180948,
+        "k": "canvas",
+        "v": "0, 34.9156494"
+      },
+      "62": {
+        "t": 313527.8186194999,
+        "k": "Touch",
+        "v": "418, 152.60867309570312, 0"
+      },
+      "63": {
+        "t": 313527.83562589996,
+        "k": "canvas",
+        "v": "0, 36.2495728"
+      },
+      "64": {
+        "t": 313527.835984,
+        "k": "Touch",
+        "v": "418, 151.27474975585938, 0"
+      },
+      "65": {
+        "t": 313527.8514898999,
+        "k": "canvas",
+        "v": "0, 37.5046539"
+      },
+      "66": {
+        "t": 313527.8518574999,
+        "k": "Touch",
+        "v": "418, 150.01966857910156, 0"
+      },
+      "67": {
+        "t": 313527.8712901999,
+        "k": "canvas",
+        "v": "0, 37.5243225"
+      },
+      "68": {
+        "t": 313527.87166030006,
+        "k": "Touch",
+        "v": "418, 150, 0"
+      },
+      "69": {
+        "t": 313528.0019403999,
+        "k": "canvas",
+        "v": "0, 39.2377625"
+      },
+      "70": {
+        "t": 313528.0022958999,
+        "k": "Touch",
+        "v": "418, 148.28656005859375, 0"
+      },
+      "71": {
+        "t": 313528.0189447,
+        "k": "canvas",
+        "v": "0, 40.9340973"
+      },
+      "72": {
+        "t": 313528.0193236999,
+        "k": "Touch",
+        "v": "418, 146.59022521972656, 0"
+      },
+      "73": {
+        "t": 313528.03503490007,
+        "k": "canvas",
+        "v": "0, 42.5966797"
+      },
+      "74": {
+        "t": 313528.03545049997,
+        "k": "Touch",
+        "v": "418, 144.92764282226562, 0"
+      },
+      "75": {
+        "t": 313528.0520456,
+        "k": "canvas",
+        "v": "0, 44.2964478"
+      },
+      "76": {
+        "t": 313528.0523927,
+        "k": "Touch",
+        "v": "418, 143.22787475585938, 0"
+      },
+      "77": {
+        "t": 313528.06813200004,
+        "k": "canvas",
+        "v": "0, 45.9072266"
+      },
+      "78": {
+        "t": 313528.0684894,
+        "k": "Touch",
+        "v": "418, 141.61709594726562, 0"
+      },
+      "79": {
+        "t": 313528.0847600999,
+        "k": "canvas",
+        "v": "0, 47.6082916"
+      },
+      "80": {
+        "t": 313528.0851396001,
+        "k": "Touch",
+        "v": "418, 139.91603088378906, 0"
+      },
+      "81": {
+        "t": 313528.1011602001,
+        "k": "canvas",
+        "v": "0, 49.2164459"
+      },
+      "82": {
+        "t": 313528.1014991,
+        "k": "Touch",
+        "v": "418, 138.30787658691406, 0"
+      },
+      "83": {
+        "t": 313528.1185667,
+        "k": "canvas",
+        "v": "0, 50.8769836"
+      },
+      "84": {
+        "t": 313528.1190573999,
+        "k": "Touch",
+        "v": "418, 136.6473388671875, 0"
+      },
+      "85": {
+        "t": 313528.1355232999,
+        "k": "canvas",
+        "v": "0, 52.5184479"
+      },
+      "86": {
+        "t": 313528.13585940003,
+        "k": "Touch",
+        "v": "418, 135.00587463378906, 0"
+      },
+      "87": {
+        "t": 313528.1513089,
+        "k": "canvas",
+        "v": "0, 54.2601624"
+      },
+      "88": {
+        "t": 313528.15170529997,
+        "k": "Touch",
+        "v": "418, 133.26416015625, 0"
+      },
+      "89": {
+        "t": 313528.16779770004,
+        "k": "canvas",
+        "v": "0, 55.9569702"
+      },
+      "90": {
+        "t": 313528.1681899,
+        "k": "Touch",
+        "v": "418, 131.56735229492188, 0"
+      },
+      "91": {
+        "t": 313528.18434050004,
+        "k": "canvas",
+        "v": "0, 57.5332794"
+      },
+      "92": {
+        "t": 313528.1847667,
+        "k": "Touch",
+        "v": "418, 129.9910430908203, 0"
+      },
+      "93": {
+        "t": 313528.20108120004,
+        "k": "canvas",
+        "v": "0, 59.1833038"
+      },
+      "94": {
+        "t": 313528.2014389001,
+        "k": "Touch",
+        "v": "418, 128.3410186767578, 0"
+      },
+      "95": {
+        "t": 313528.2176158,
+        "k": "canvas",
+        "v": "0, 60.8359222"
+      },
+      "96": {
+        "t": 313528.21800570004,
+        "k": "Touch",
+        "v": "418, 126.68840026855469, 0"
+      },
+      "97": {
+        "t": 313528.23462800006,
+        "k": "canvas",
+        "v": "0, 62.5100403"
+      },
+      "98": {
+        "t": 313528.2350466,
+        "k": "Touch",
+        "v": "418, 125.0142822265625, 0"
+      },
+      "99": {
+        "t": 313528.2508864,
+        "k": "canvas",
+        "v": "0, 64.1646576"
+      },
+      "100": {
+        "t": 313528.2512340001,
+        "k": "Touch",
+        "v": "418, 123.35966491699219, 0"
+      },
+      "101": {
+        "t": 313528.26768309996,
+        "k": "canvas",
+        "v": "0, 65.8608398"
+      },
+      "102": {
+        "t": 313528.26811089995,
+        "k": "Touch",
+        "v": "418, 121.66348266601562, 0"
+      },
+      "103": {
+        "t": 313528.2851885001,
+        "k": "canvas",
+        "v": "0, 67.4924316"
+      },
+      "104": {
+        "t": 313528.28555679996,
+        "k": "Touch",
+        "v": "418, 120.03189086914062, 0"
+      },
+      "105": {
+        "t": 313528.3017025001,
+        "k": "canvas",
+        "v": "0, 67.5243225"
+      },
+      "106": {
+        "t": 313528.30206579994,
+        "k": "Touch",
+        "v": "418, 120, 0"
+      },
+      "107": {
+        "t": 313528.41918940004,
+        "k": "canvas",
+        "v": "0, 69.285202"
+      },
+      "108": {
+        "t": 313528.4356060999,
+        "k": "canvas",
+        "v": "0, 70.9761429"
+      },
+      "109": {
+        "t": 313528.4517925,
+        "k": "canvas",
+        "v": "0, 72.5425568"
+      },
+      "110": {
+        "t": 313528.4690815001,
+        "k": "canvas",
+        "v": "0, 74.1469193"
+      },
+      "111": {
+        "t": 313528.48560809996,
+        "k": "canvas",
+        "v": "0, 75.6401825"
+      },
+      "112": {
+        "t": 313528.5021744999,
+        "k": "canvas",
+        "v": "0, 77.0673447"
+      },
+      "113": {
+        "t": 313528.51913479995,
+        "k": "canvas",
+        "v": "0, 78.4739685"
+      },
+      "114": {
+        "t": 313528.5361373001,
+        "k": "canvas",
+        "v": "0, 79.8283997"
+      },
+      "115": {
+        "t": 313528.5512643,
+        "k": "canvas",
+        "v": "0, 81.0029678"
+      },
+      "116": {
+        "t": 313528.5686933,
+        "k": "canvas",
+        "v": "0, 82.2711411"
+      },
+      "117": {
+        "t": 313528.58493510005,
+        "k": "canvas",
+        "v": "0, 83.4382477"
+      },
+      "118": {
+        "t": 313528.6017147,
+        "k": "canvas",
+        "v": "0, 84.5765381"
+      },
+      "119": {
+        "t": 313528.6181691999,
+        "k": "canvas",
+        "v": "0, 85.6639175"
+      },
+      "120": {
+        "t": 313528.6365851001,
+        "k": "canvas",
+        "v": "0, 86.8193588"
+      },
+      "121": {
+        "t": 313528.65257399995,
+        "k": "canvas",
+        "v": "0, 87.7863998"
+      },
+      "122": {
+        "t": 313528.66879589995,
+        "k": "canvas",
+        "v": "0, 88.7193222"
+      },
+      "123": {
+        "t": 313528.6856390999,
+        "k": "canvas",
+        "v": "0, 89.6666336"
+      },
+      "124": {
+        "t": 313528.70230649994,
+        "k": "canvas",
+        "v": "0, 90.552475"
+      },
+      "125": {
+        "t": 313528.7190910999,
+        "k": "canvas",
+        "v": "0, 91.4218597"
+      },
+      "126": {
+        "t": 313528.73548040004,
+        "k": "canvas",
+        "v": "0, 92.2422714"
+      },
+      "127": {
+        "t": 313528.75257969997,
+        "k": "canvas",
+        "v": "0, 93.0542603"
+      },
+      "128": {
+        "t": 313528.7693113,
+        "k": "canvas",
+        "v": "0, 93.8160324"
+      },
+      "129": {
+        "t": 313528.7870747,
+        "k": "canvas",
+        "v": "0, 94.5965652"
+      },
+      "130": {
+        "t": 313528.8033874999,
+        "k": "canvas",
+        "v": "0, 95.2885513"
+      },
+      "131": {
+        "t": 313528.8188785999,
+        "k": "canvas",
+        "v": "0, 95.9172134"
+      },
+      "132": {
+        "t": 313528.8351940999,
+        "k": "canvas",
+        "v": "0, 96.5573196"
+      },
+      "133": {
+        "t": 313528.8528342999,
+        "k": "canvas",
+        "v": "0, 97.2182083"
+      },
+      "134": {
+        "t": 313528.86924559996,
+        "k": "canvas",
+        "v": "0, 97.8115997"
+      },
+      "135": {
+        "t": 313528.8865698001,
+        "k": "canvas",
+        "v": "0, 98.4152603"
+      },
+      "136": {
+        "t": 313528.90251270006,
+        "k": "canvas",
+        "v": "0, 98.9481964"
+      },
+      "137": {
+        "t": 313528.9185887999,
+        "k": "canvas",
+        "v": "0, 99.4620743"
+      },
+      "138": {
+        "t": 313528.93536749994,
+        "k": "canvas",
+        "v": "0, 99.97966"
+      },
+      "139": {
+        "t": 313528.95322420006,
+        "k": "canvas",
+        "v": "0, 100.502281"
+      },
+      "140": {
+        "t": 313528.9684132,
+        "k": "canvas",
+        "v": "0, 100.941925"
+      },
+      "141": {
+        "t": 313528.98569640005,
+        "k": "canvas",
+        "v": "0, 101.421265"
+      },
+      "142": {
+        "t": 313529.00321780005,
+        "k": "canvas",
+        "v": "0, 101.881645"
+      },
+      "143": {
+        "t": 313529.0189101,
+        "k": "canvas",
+        "v": "0, 102.277504"
+      },
+      "144": {
+        "t": 313529.0356791001,
+        "k": "canvas",
+        "v": "0, 102.686409"
+      },
+      "145": {
+        "t": 313529.0520086,
+        "k": "canvas",
+        "v": "0, 103.066139"
+      },
+      "146": {
+        "t": 313529.06807400007,
+        "k": "canvas",
+        "v": "0, 103.432014"
+      },
+      "147": {
+        "t": 313529.08707499993,
+        "k": "canvas",
+        "v": "0, 103.831993"
+      },
+      "148": {
+        "t": 313529.1014546,
+        "k": "canvas",
+        "v": "0, 104.140144"
+      },
+      "149": {
+        "t": 313529.1183203,
+        "k": "canvas",
+        "v": "0, 104.47596"
+      },
+      "150": {
+        "t": 313529.1352408,
+        "k": "canvas",
+        "v": "0, 104.803406"
+      },
+      "151": {
+        "t": 313529.15164140007,
+        "k": "canvas",
+        "v": "0, 105.102997"
+      }
+    },
+    "fixtureActiveRestored": false
+  },
+  "contactLargestNativeBack": {
+    "camera": "Custom",
+    "jump": false,
+    "walk": 16
+  },
+  "contactMusicSeamStart": {
+    "counters": {
+      "MusicLoops": 9,
+      "PurrLoops": 5,
+      "MusicStarts": 9,
+      "PurrStarts": 2
+    },
+    "observedAt": 313585.2827619,
+    "position": 25.207
+  },
+  "contactMusicSeamEnd": {
+    "counters": {
+      "MusicLoops": 11,
+      "PurrLoops": 5,
+      "MusicStarts": 9,
+      "PurrStarts": 2
+    },
+    "observedAt": 313674.94764779997,
+    "position": 8.204
+  }
+}

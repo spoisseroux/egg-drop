@@ -124,7 +124,7 @@ return function(client,parent,rootSize)
 					for _,status in ipairs(statuses)do
 						focus:setSaveNotice(Notice.resolve(nil,status));focus:update(nil,nil,true);settle()
 						local label=if active then focus.helper else focus.hint;readable(label)
-						assert(inside(label,focus.root) and not overlaps(label,focus.back) and not overlaps(label,focus.greet))
+						assert(inside(label,focus.root) and not overlaps(label,focus.back))
 					end
 				end
 				focus:setSaveNotice(nil);focus:setActive(false);focus:destroy()

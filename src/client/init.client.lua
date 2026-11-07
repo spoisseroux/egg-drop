@@ -769,6 +769,12 @@ end, function(themeId, stickerId)
 	request:FireServer("appearance", themeId, stickerId)
 	audio:play("menu")
 end, function(actionName)
+	if actionName == "music" then
+		audio:setMusicEnabled(not audio:isMusicEnabled())
+		picker.music.Text = if audio:isMusicEnabled() then "Music: On" else "Music: Off"
+		picker:layout()
+		return
+	end
 	request:FireServer(actionName)
 end)
 
@@ -937,7 +943,7 @@ local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
-		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"))
+		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled())
 end
 
 openPicker = function()
@@ -2002,14 +2008,15 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
 end))
 
 local function applySound(preview)
-	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
-	audio:setVolume(Settings.Sound[sound])
+	local sound = board:GetAttribute("SoundLevel")
+	audio:setVolume(if Settings.validSound(sound) then Settings.Sound[sound] else 0)
 	if preview and isPickerOpen() then
 		audio:play("menu")
 	end
 end
 applySound(false)
 board:GetAttributeChangedSignal("SoundLevel"):Connect(function() applySound(true) end)
+gui.Destroying:Connect(function() audio:destroy() end)
 local function refreshMotion()
 	if reduceEffects() then
 		reveal:cancel()

@@ -132,6 +132,8 @@ function PipVisual:update(dt)
 		dt = 0
 	end
 	self.time += dt
+	self.affection=math.max(0,(self.affection or 0)-dt)
+	local happy=self.petting==true or self.affection>0
 	self.greeting += dt
 	-- Position, heading and pose update every render frame while following.
 	local t = self.time
@@ -156,7 +158,7 @@ function PipVisual:update(dt)
 	local scale = Vector3.new(1 + squash * 0.48 - breathe, 1 - squash + breathe, 1 + squash * 0.30)
 	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
 		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 1.1) * 0.035), if reduced then 0 else math.sin(t * 1.8) * 0.025)
-	local blink = (t % 4.8 > 4.62) or (g > 0.30 and g < 0.61)
+	local blink = (t % 4.8 > 4.62) or (g > 0.30 and g < 0.61) or happy
 	for _, entry in ipairs(self.pieces) do
 		local rest = entry.frame
 		local pose = CFrame.new(rest.Position * scale) * rest.Rotation
@@ -174,6 +176,7 @@ function PipVisual:update(dt)
 		elseif entry.role == "eye" and blink then
 			size = Vector3.new(size.X, 0.065, size.Z)
 		end
+		if happy and entry.part.Name=="Smile"then size=Vector3.new(size.X*1.5,size.Y*.8,size.Z)elseif happy and entry.part.Name=="SmileCorner"then pose=CFrame.new(0,.04,0)*pose end
 		entry.part.Transparency = if entry.role == "spark" and blink then 1 else 0
 		entry.part.Size = size*worldScale
 		local placed=root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)

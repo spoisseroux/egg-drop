@@ -157,10 +157,20 @@ return function(client)
 		end)
 		test("teardown invalidates return shot before camera and UI cleanup",function()
 			local f=fixture();local r=f.room;assert(r:captureReturnRoam())
-			r.companions={clear=function()end};r.focusUI={destroy=function()end};r.controls={Destroy=function()end}
+			local cancelled,stopped,destroyed=0,0,0
+			local contactPet={petting=true};r.petContactActive,r.contactPet=true,contactPet
+			r.audio={setPurr=function(_,active)assert(active==false);stopped+=1 end}
+			r.companions={clear=function()end}
+			r.focusUI={cancelPointer=function()cancelled+=1 end,destroy=function()
+				assert(cancelled==1 and stopped==1 and not r.petContactActive and not contactPet.petting,"contact survived UI teardown")
+				destroyed+=1
+			end}
+			r.controls={Destroy=function()end}
 			r.transition={hide=function()end,shade={Destroy=function()end}}
 			r.arrivalPlacementPending=true
 			r:destroy();assert(r.destroyed and not r.arrivalPlacementPending and r.returnRoamShot==nil and not r:captureReturnRoam())
+			assert(cancelled==1 and stopped==1 and destroyed==1)
+			r:destroy();assert(cancelled==1 and stopped==1 and destroyed==1,"duplicate teardown repeated contact cleanup")
 		end)
 	end)
 	for _,object in ipairs(garbage)do object:Destroy()end
