@@ -7,6 +7,11 @@
   "assets": [
     {
       "file": "egg_drop_meadow_loop.wav",
+      "roblox_asset_id": 98540058987296,
+      "studio_client_preload": {
+        "status": "Success",
+        "time_length_seconds": 53.333
+      },
       "sha256": "78f854223825c31961ca3342d83af181edec32947aada34c6827e866cdb47b2a",
       "bytes": 9408044,
       "sample_rate": 44100,
@@ -40,6 +45,11 @@
     },
     {
       "file": "egg_drop_purr_loop.wav",
+      "roblox_asset_id": 80835586668229,
+      "studio_client_preload": {
+        "status": "Success",
+        "time_length_seconds": 2.0
+      },
       "sha256": "995d15f7244bf524d71fc4f70c3b62bb912c3ee9203277c0186ea308fdfd3a2e",
       "bytes": 176444,
       "sample_rate": 44100,
@@ -68,5 +78,15 @@
       "seam_step_vs_nearby_max": 0.9659090909090909
     }
   ],
-  "note": "Circular PCM masters; Roblox transcoding still requires listening review."
+  "experience_access_verification": {
+    "verified_date": "2026-11-07",
+    "experience_name": "Egg Drop",
+    "experience_id": 10774758591,
+    "applies_to_both_assets": true,
+    "dashboard_route": "Experiences / Add",
+    "dashboard_status": "Already added",
+    "completion": "Done",
+    "account_public_surfacing_distribution_agreement_privacy_changes": false
+  },
+  "note": "Circular PCM masters; uploaded assets passed Studio client preload and dashboard experience-access verification. Roblox transcoding still requires listening review; runtime integration is pending."
 }
