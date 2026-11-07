@@ -144,6 +144,80 @@ function Art.watchTextPreference(owner,visible,reflow)
 	return connection
 end
 
+-- Common sheet chrome keeps actual value data separate from title/status copy.
+-- Widgets/connections remain owned by their sheet; this only styles and places.
+function Art.bareClose(button)
+	Art.close(button)
+	if button:GetAttribute("BareClose")then return button end
+	button:SetAttribute("BareClose",true)
+	local border=button:FindFirstChildOfClass("UIStroke")
+	button.BackgroundTransparency=1
+	local pressed=false
+	local function paint()
+		local focused=game:GetService("GuiService").SelectedObject==button
+		button.BackgroundTransparency=if pressed then .80 elseif focused then .94 else 1
+		if border then border.Color=Art.Focus;border.Transparency=if focused or pressed then .05 else 1 end
+	end
+	button.SelectionGained:Connect(paint);button.SelectionLost:Connect(function()pressed=false;paint()end)
+	button.MouseButton1Down:Connect(function()pressed=true;paint()end)
+	button.MouseButton1Up:Connect(function()pressed=false;paint()end)
+	button.MouseLeave:Connect(function()pressed=false;paint()end)
+	paint();return button
+end
+local function clearInset(label)
+	local inset=label:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy()end
+end
+function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
+	options=options or {};local pad=options.pad or 10;local top=options.top or 0
+	Art.type(heading,if options.status then "Body"else "Heading",true)
+	Art.type(amount,"Body",true);clearInset(heading);clearInset(amount)
+	amount.Text=tostring(options.amount or 0);amount.TextWrapped=false;amount.TextXAlignment=Enum.TextXAlignment.Left
+	amount:SetAttribute("AccessibleLabel",amount.Text.." nectar")
+	wallet.BackgroundTransparency=1
+	local amountW=Art.textWidth(amount)+2;local glyphW,gap=18,4
+	local walletW=glyphW+gap+amountW
+	local closeX=width-pad-44
+	local minimumLeft=pad+walletW+6
+	local right=closeX-6
+	local secondary=options.secondary;local secondaryW,secondaryH=0,44
+	if secondary then Art.type(secondary,"Action",true);secondaryW=math.max(44,Art.textWidth(secondary)+12);secondaryH=Art.actionHeight(secondary,secondaryW)end
+	local full,short=options.title or "",options.shortTitle or options.title or ""
+	local function intrinsic(content)return Art.textWidth(heading,content)end
+	local secondaryHeader=secondary and secondaryH<=44 and right-minimumLeft-secondaryW-8>=intrinsic(short)
+	if secondaryHeader then right-=secondaryW+8 end
+	local available=math.max(1,right-minimumLeft)
+	heading.Text=if intrinsic(full)<=available then full else short
+	heading:SetAttribute("AccessibleLabel",options.accessibleTitle or full)
+	heading.TextWrapped=intrinsic(heading.Text)>available
+	heading.TextXAlignment=Enum.TextXAlignment.Center
+	local titleW=math.min(available,intrinsic(heading.Text))
+	local titleH=Art.textHeight(heading,titleW,0)
+	local rowH=math.max(44,titleH,Art.textHeight(amount,amountW,0))
+	local titleX=math.clamp((width-titleW)/2,minimumLeft,math.max(minimumLeft,right-titleW))
+	heading.Position,heading.Size=UDim2.fromOffset(titleX,top+(rowH-titleH)/2),UDim2.fromOffset(titleW,titleH)
+	wallet.Position,wallet.Size=UDim2.fromOffset(pad,top),UDim2.fromOffset(walletW,rowH)
+	glyph.Position,glyph.Size=UDim2.fromOffset(0,(rowH-20)/2),UDim2.fromOffset(glyphW,20);glyph.Visible=true
+	amount.Position,amount.Size=UDim2.fromOffset(glyphW+gap,0),UDim2.fromOffset(amountW,rowH);amount.Visible=true
+	close.Position,close.Size=UDim2.fromOffset(closeX,top+(rowH-44)/2),UDim2.fromOffset(44,44)
+	if secondaryHeader then secondary.Position,secondary.Size=UDim2.fromOffset(closeX-8-secondaryW,top+(rowH-44)/2),UDim2.fromOffset(secondaryW,44)end
+	return{height=top+rowH,rowHeight=rowH,secondaryHeader=secondaryHeader==true,secondaryWidth=secondaryW,secondaryHeight=secondaryH,walletWidth=walletW,titleFull=full}
+end
+function Art.dockTransparency(preference)return .18*math.clamp(preference,0,1)end
+function Art.dockCircle(button,kind)
+	button.Text=if kind=="menu"then "Menu"else "Open deck";button.TextTransparency=1;button.BackgroundColor3=Art.Surface;Art.corner(button,24)
+	button:SetAttribute("AccessibleLabel",if kind=="menu"then "Menu"else "Deck")
+	local glyph=Art.frame(button,"DockGlyph",Art.Silver,UDim2.new(.5,-12,.5,-12),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1
+	if kind=="menu"then
+		for index=0,2 do local bar=Art.frame(glyph,"Bar",Art.Silver,UDim2.fromOffset(2,4+index*7),UDim2.fromOffset(20,2),glyph.ZIndex);Art.corner(bar,1)end
+	else
+		local deck=Art.frame(glyph,"Handheld",Art.Silver,UDim2.fromOffset(0,4),UDim2.fromOffset(24,16),glyph.ZIndex);deck.BackgroundTransparency=1;Art.corner(deck,4);Art.stroke(deck,Art.Silver,0,1)
+		local screen=Art.frame(deck,"Screen",Art.LCD,UDim2.fromOffset(8,3),UDim2.fromOffset(8,10),deck.ZIndex);Art.corner(screen,1)
+		Art.frame(deck,"Rocker",Art.Silver,UDim2.fromOffset(3,7),UDim2.fromOffset(3,3),deck.ZIndex)
+		Art.corner(Art.frame(deck,"A",Art.Silver,UDim2.fromOffset(19,7),UDim2.fromOffset(3,3),deck.ZIndex),2)
+	end
+	return button
+end
+
 function Art.leaf(parent, name, position, size, tint, rotation, z)
 	local leaf = Art.frame(parent, name, tint, position, size, z)
 	Art.corner(leaf, 1000)

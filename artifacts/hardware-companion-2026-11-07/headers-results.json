@@ -1,0 +1,1238 @@
+{
+  "date": "2026-11-07",
+  "place": 96451847774961,
+  "summary": {
+    "clientUniquePerPreference": 176,
+    "preferences": [
+      "Medium",
+      "Largest"
+    ],
+    "serverIsolated": 34,
+    "sourceCount": 64,
+    "limits": [
+      "Studio emulator; no physical phone or live multiplayer proof",
+      "ControllerSheets and ControllerFocus use semantic input fixtures; no new physical controller walkthrough in this slice",
+      "Actual purchase walkthrough predates final stable-instance and CTA wording fixes; final runtime action fixtures and final integrated walkthrough still required before release"
+    ]
+  },
+  "records": {
+    "headerMediumLayout": [
+      {
+        "ok": false,
+        "preference": "Medium",
+        "name": "SharedHeaders",
+        "result": "Players.keehar01.PlayerScripts.Client.QASharedHeaders:86: Players.keehar01.PlayerScripts.Client.QASharedHeaders:45: assertion failed!"
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompactEggShop",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "160/198/236 roots retain measured choices exact wallet and pinned action",
+            "Sprout selection retains exact24price and6shortfall without purchasing",
+            "350x279 names and costs remain native readable and reachable",
+            "errors pending and terminal notices never replace authoritative wallet data",
+            "daily gift all odds and rare protection stay reachable",
+            "rotation preserves selection while unchanged snapshots preserve reading scroll",
+            "compact shop result transition preserves ID and both safe actions",
+            "reopening keeps selected recipe and explicit pinned price without sends"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "MenuPolish",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "one readable header and44px controls fit desktop portrait and shallow roots",
+            "page changes keep absolute header and tab positions stable",
+            "complete illustrated destinations start below the scroll clip",
+            "all three shallow contracts show a complete44px first row and independent gift",
+            "claimed gift cannot claim again and earned contracts remain informational",
+            "fresh open and page entry reset scroll while snapshots retain reading position",
+            "scroll cue ends at reachable content and small pages end after content",
+            "mastery cards wrap exact missing conditions at real body size",
+            "hidden and unchanged snapshots perform no text measurement layout",
+            "locked family rows omit unused progress space and cannot select a family"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PreferredTextLayout",
+        "result": {
+          "preference": "Medium",
+          "passed": 9,
+          "cases": [
+            "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+            "680, 700 measured shop header and pinned purchase route fit",
+            "680, 700 recap reward wallet and complete receipt stay readable",
+            "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+            "390, 740 measured shop header and pinned purchase route fit",
+            "390, 740 recap reward wallet and complete receipt stay readable",
+            "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+            "568, 160 measured shop header and pinned purchase route fit",
+            "568, 160 recap reward wallet and complete receipt stay readable"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "EmulatorSafeArea",
+        "result": {
+          "preference": "Medium",
+          "passed": 8,
+          "cases": [
+            "733x306 measured menu landing shows all destination titles with stable tabs",
+            "733x306 shop shows both complete recipes above a pinned exact shortfall",
+            "733x307 measured menu landing shows all destination titles with stable tabs",
+            "733x307 shop shows both complete recipes above a pinned exact shortfall",
+            "733x308 measured menu landing shows all destination titles with stable tabs",
+            "733x308 shop shows both complete recipes above a pinned exact shortfall",
+            "portrait selection rotated to landscape stays selected at the top without a purchase",
+            "roomy desktop menu and shop retain their illustrated layouts"
+          ]
+        }
+      }
+    ],
+    "headerMediumActions": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HatchActions",
+        "result": {
+          "passed": 18,
+          "cases": [
+            "Meet acknowledges exact rare-only result and waits for advanced Ready",
+            "Replay never purchases and synchronous confirmation fires once",
+            "Retry and same-ID updates retain immutable choice",
+            "Pending feedback preserves choice before state catches up",
+            "Throttle, lock, and network feedback cannot erase an in-flight choice",
+            "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+            "Close cancels a scheduled pre-dispatch retry",
+            "Busy feedback queues a retry until Ready for the same result",
+            "A retry timer encountering Busy retains its work until Ready",
+            "Another pending transaction releases the captured ack on Ready",
+            "Repeated pre-dispatch locks are bounded and expose a user retry",
+            "A changed result revokes old navigation",
+            "Close during retry cancels navigation without a second acknowledgement",
+            "Definitive rejection permits changing the action",
+            "Actions remain locked during an unfinished cinematic",
+            "Duplicate caption uses copied mastery progress and retains both choices",
+            "corner X dismisses and reopens the same committed result without acknowledgment",
+            "44px result actions fit short landscape safe areas and long names"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HatchNavigation",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "already equipped pet focuses without duplicate equip",
+            "rare-only companion waits for server equip acknowledgment",
+            "mode and local handoff must both finish before equip",
+            "manual cancellation prevents late equip and focus",
+            "overlay interruption cancels pending focus",
+            "unconfirmed equip never substitutes a local pet",
+            "replay resets finished board once after handoff",
+            "replay preserves an unfinished board",
+            "cancelled replay cannot reset a later round",
+            "newer navigation wins over a stale mode wait"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "EggBrowseNavigation",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "settled rare-only Room opens immediately without same-mode request",
+            "Menu and tree recovery reopen the same committed ID without purchase or acknowledgment",
+            "unloaded or explicitly empty inventory cannot start a browse route",
+            "board origin waits for both server mode and settled local presentation",
+            "a newer navigation generation cancels the old board waiter",
+            "character and camera replacement cancel delayed presentation",
+            "native menu text capture and death interrupt waiting before late open",
+            "UI teardown stops the Board waiter immediately even with unchanged character and camera",
+            "empty inventory or another sheet at arrival cannot reopen the shop",
+            "blocked board route has no mode request and timeout never opens stale state"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "ControllerSheets",
+        "result": {
+          "cases": [
+            "pointer-open Menu seeds current Daily or Mastery tab without routing",
+            "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+            "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+            "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+            "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+            "direct controller Journal opening retains its valid existing owned selection",
+            "result arriving under an open shop revokes the captured ordinary-shop owner",
+            "all four same-instance openings advance generation and hidden sheets expose no target"
+          ],
+          "passed": 8,
+          "inputIsSemanticFixture": true
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "ControllerFocus",
+        "result": {
+          "cases": [
+            "first A is focus-only through held release; next fresh A passes to native activation",
+            "actual Gamepad Begin captures before UIS changes and same-device notification preserves it",
+            "release before the delayed UIS notification waits for that current device",
+            "native Dpad focus wins before deferred fallback",
+            "Dpad seeds once when native direction leaves no selection",
+            "already focused A passes even before input type updates",
+            "repeat and duplicate held Begin never focus before release or dispatch twice",
+            "same-instance close and reopen invalidate the captured generation",
+            "sheet switch drains old A without focusing its successor",
+            "pointer return cancels focus but drains the original controller gesture",
+            "CoreGui or text capture immediately passes A and clears held acquisition",
+            "busy transition focus result recap and absent owners cannot acquire or intercept",
+            "outside-owner and destroyed targets fall back to neutral close only",
+            "no live target means no focus write and no action",
+            "hidden ancestor disabled layer and detached PlayerGui reject the owner",
+            "ensure-visible cannot focus a target after its owner changes synchronously",
+            "disconnect with no End clears that device hold and reconnect can acquire",
+            "two gamepads retain distinct captured gestures through either release order",
+            "disconnecting the older device releases a completed newer-device handoff",
+            "Cancel drains the old press and permits a fresh focus-only press",
+            "current device change before deferred execution prevents acquisition",
+            "destroy disconnects watches cancels queued tasks and passes subsequent input"
+          ],
+          "passed": 22,
+          "heldInputIsSemanticFixture": true
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "StyleJournalActions",
+        "result": {
+          "passed": 12,
+          "cases": [
+            "swatches preview only across resize tabs and scrolling",
+            "X Back and forced-dismiss common close route roll back once per opening",
+            "Equip captures pending IDs before rollback and submits exactly once",
+            "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+            "Club settings apply once immediately and persist through closing",
+            "Roblox reduced motion cannot be overridden by a setting or reflow",
+            "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+            "authoritative empty inventory has no legacy track or hidden selectable row",
+            "legacy tracking remains explicit only when the inventory mask is absent",
+            "owned row equips once and Family goals never equips tracks or selects a family",
+            "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+            "measured Ranks caption retains mastery page identity and callback"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "StyleJournalLayout",
+        "result": {
+          "preference": "Medium",
+          "passed": 8,
+          "cases": [
+            "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+            "733, 307 Journal measures all seven name status rank and crest rows",
+            "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+            "568, 160 Journal measures all seven name status rank and crest rows",
+            "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+            "385, 703 Journal measures all seven name status rank and crest rows",
+            "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+            "1649, 971 Journal measures all seven name status rank and crest rows"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "PetRoamHint",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "733, 307 preferred roam hint stays measured below dock inside core safe root",
+            "568, 160 preferred roam hint stays measured below dock inside core safe root",
+            "385, 703 preferred roam hint stays measured below dock inside core safe root",
+            "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "RoamReturnCamera",
+        "result": {
+          "passed": 15,
+          "cases": [
+            "initial Board presentation does not capture a return roam shot",
+            "actual Room exit captures before the separate pre-Room restore",
+            "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+            "the same root translates the return transform and Focus together",
+            "active greeting restores underlying roam before capturing the Deck return",
+            "Scriptable camera without an accepted greeting and dead root are never captured",
+            "replaced root character or camera rejects old shot and seeds a clear angle",
+            "consumed or missing shots seed arrival even after previous roaming",
+            "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+            "missing camera defers arrival without consuming the shot or marking first roam",
+            "staggered root availability retries once then ordinary roaming retains its angle",
+            "missing humanoid also defers placement until its live subject is available",
+            "Board cancellation clears a pending placement so late roots cannot move the camera",
+            "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+            "teardown invalidates return shot before camera and UI cleanup"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "FamilyCrest",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "all family ranks render at24px with no text or input capture",
+            "unchanged HUD refresh preserves artwork instances and descendant count",
+            "menu refresh keeps family crests and fits all family buttons",
+            "earned pet badge cleanup preserves unranked and legacy effects"
+          ]
+        }
+      }
+    ],
+    "headerMediumSaveMatrix": [
+      {
+        "root": [
+          733,
+          307
+        ],
+        "reports": [
+          {
+            "ok": true,
+            "preference": "Medium",
+            "name": "SaveNoticeLayout",
+            "result": {
+              "preference": "Medium",
+              "rootSize": "733, 307",
+              "passed": 2,
+              "cases": [
+                "733, 307 passive status belongs to each modal without covering pinned actions",
+                "733, 307 same-ID reveal and ordinary shop retain authority across status recovery"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "root": [
+          568,
+          160
+        ],
+        "reports": [
+          {
+            "ok": true,
+            "preference": "Medium",
+            "name": "SaveNoticeLayout",
+            "result": {
+              "preference": "Medium",
+              "rootSize": "568, 160",
+              "passed": 2,
+              "cases": [
+                "568, 160 passive status belongs to each modal without covering pinned actions",
+                "568, 160 same-ID reveal and ordinary shop retain authority across status recovery"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "root": [
+          385,
+          703
+        ],
+        "reports": [
+          {
+            "ok": true,
+            "preference": "Medium",
+            "name": "SaveNoticeLayout",
+            "result": {
+              "preference": "Medium",
+              "rootSize": "385, 703",
+              "passed": 2,
+              "cases": [
+                "385, 703 passive status belongs to each modal without covering pinned actions",
+                "385, 703 same-ID reveal and ordinary shop retain authority across status recovery"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "root": [
+          1649,
+          971
+        ],
+        "reports": [
+          {
+            "ok": true,
+            "preference": "Medium",
+            "name": "SaveNoticeLayout",
+            "result": {
+              "preference": "Medium",
+              "rootSize": "1649, 971",
+              "passed": 3,
+              "cases": [
+                "1649, 971 passive status belongs to each modal without covering pinned actions",
+                "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+                "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "headerMediumSaveLogic": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "SaveNotice",
+        "result": {
+          "passed": 9,
+          "cases": [
+            "retryable load states promise automatic retry without asking for rejoin",
+            "session wait save retry and terminal states keep distinct truthful instructions",
+            "blocking hatch status wins without discarding the profile source",
+            "unknown hatch status cannot hide a recognized profile retry instruction",
+            "neutral hatch states never suppress profile load or save retry",
+            "recovery clears derived notice and never rewrites wallet result ID selection or command feedback",
+            "terminal notices persist until an explicit source change without invented timers",
+            "one modal or room owner excludes every covered presentation",
+            "compact wording changes copy without changing text size or save semantics"
+          ]
+        }
+      }
+    ],
+    "headerFinalMediumFocus": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "SharedHeaders",
+        "result": {
+          "preference": "Medium",
+          "passed": 12,
+          "cases": [
+            "1649, 971 exact menu wallet and stable bare-X header",
+            "1649, 971 recipe prices and status stay independent of exact balance",
+            "733, 307 exact menu wallet and stable bare-X header",
+            "733, 307 recipe prices and status stay independent of exact balance",
+            "568, 160 exact menu wallet and stable bare-X header",
+            "568, 160 recipe prices and status stay independent of exact balance",
+            "385, 703 exact menu wallet and stable bare-X header",
+            "385, 703 recipe prices and status stay independent of exact balance",
+            "focused unselected recipe survives rebuild and rotation without changing selection",
+            "focused daily remains visible while disabled gift falls back to neutral X",
+            "X/footer survive rebuild and detached GUI cannot reclaim focus",
+            "two independent circle controls retain native names and preferred transparency"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompactEggShop",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "160/198/236 roots retain measured choices exact wallet and pinned action",
+            "Sprout selection retains exact24price and6shortfall without purchasing",
+            "350x279 names and costs remain native readable and reachable",
+            "errors pending and terminal notices never replace authoritative wallet data",
+            "daily gift all odds and rare protection stay reachable",
+            "rotation preserves selection while unchanged snapshots preserve reading scroll",
+            "compact shop result transition preserves ID and both safe actions",
+            "reopening keeps selected recipe and explicit pinned price without sends"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HatchActions",
+        "result": {
+          "passed": 18,
+          "cases": [
+            "Meet acknowledges exact rare-only result and waits for advanced Ready",
+            "Replay never purchases and synchronous confirmation fires once",
+            "Retry and same-ID updates retain immutable choice",
+            "Pending feedback preserves choice before state catches up",
+            "Throttle, lock, and network feedback cannot erase an in-flight choice",
+            "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+            "Close cancels a scheduled pre-dispatch retry",
+            "Busy feedback queues a retry until Ready for the same result",
+            "A retry timer encountering Busy retains its work until Ready",
+            "Another pending transaction releases the captured ack on Ready",
+            "Repeated pre-dispatch locks are bounded and expose a user retry",
+            "A changed result revokes old navigation",
+            "Close during retry cancels navigation without a second acknowledgement",
+            "Definitive rejection permits changing the action",
+            "Actions remain locked during an unfinished cinematic",
+            "Duplicate caption uses copied mastery progress and retains both choices",
+            "corner X dismisses and reopens the same committed result without acknowledgment",
+            "44px result actions fit short landscape safe areas and long names"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "ControllerSheets",
+        "result": {
+          "cases": [
+            "pointer-open Menu seeds current Daily or Mastery tab without routing",
+            "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+            "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+            "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+            "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+            "direct controller Journal opening retains its valid existing owned selection",
+            "result arriving under an open shop revokes the captured ordinary-shop owner",
+            "all four same-instance openings advance generation and hidden sheets expose no target"
+          ],
+          "passed": 8,
+          "inputIsSemanticFixture": true
+        }
+      }
+    ],
+    "headerFinalMediumCopy": [
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "SharedHeaders",
+        "result": {
+          "preference": "Medium",
+          "passed": 12,
+          "cases": [
+            "1649, 971 exact menu wallet and stable bare-X header",
+            "1649, 971 recipe prices and status stay independent of exact balance",
+            "733, 307 exact menu wallet and stable bare-X header",
+            "733, 307 recipe prices and status stay independent of exact balance",
+            "568, 160 exact menu wallet and stable bare-X header",
+            "568, 160 recipe prices and status stay independent of exact balance",
+            "385, 703 exact menu wallet and stable bare-X header",
+            "385, 703 recipe prices and status stay independent of exact balance",
+            "focused unselected recipe survives rebuild and rotation without changing selection",
+            "focused daily remains visible while disabled gift falls back to neutral X",
+            "X/footer survive rebuild and detached GUI cannot reclaim focus",
+            "two independent circle controls retain native names and preferred transparency"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompactEggShop",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "160/198/236 roots retain measured choices exact wallet and pinned action",
+            "Sprout selection retains exact24price and6shortfall without purchasing",
+            "350x279 names and costs remain native readable and reachable",
+            "errors pending and terminal notices never replace authoritative wallet data",
+            "daily gift all odds and rare protection stay reachable",
+            "rotation preserves selection while unchanged snapshots preserve reading scroll",
+            "compact shop result transition preserves ID and both safe actions",
+            "reopening keeps selected recipe and explicit pinned price without sends"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Medium",
+        "name": "FamilyCrest",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "all family ranks render at24px with no text or input capture",
+            "unchanged HUD refresh preserves artwork instances and descendant count",
+            "menu refresh keeps family crests and fits all family buttons",
+            "earned pet badge cleanup preserves unranked and legacy effects"
+          ]
+        }
+      }
+    ],
+    "headerLargestLayout": [
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SharedHeaders",
+        "result": {
+          "preference": "Largest",
+          "passed": 12,
+          "cases": [
+            "1649, 971 exact menu wallet and stable bare-X header",
+            "1649, 971 recipe prices and status stay independent of exact balance",
+            "733, 307 exact menu wallet and stable bare-X header",
+            "733, 307 recipe prices and status stay independent of exact balance",
+            "568, 160 exact menu wallet and stable bare-X header",
+            "568, 160 recipe prices and status stay independent of exact balance",
+            "385, 703 exact menu wallet and stable bare-X header",
+            "385, 703 recipe prices and status stay independent of exact balance",
+            "focused unselected recipe survives rebuild and rotation without changing selection",
+            "focused daily remains visible while disabled gift falls back to neutral X",
+            "X/footer survive rebuild and detached GUI cannot reclaim focus",
+            "two independent circle controls retain native names and preferred transparency"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "CompactEggShop",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "160/198/236 roots retain measured choices exact wallet and pinned action",
+            "Sprout selection retains exact24price and6shortfall without purchasing",
+            "350x279 names and costs remain native readable and reachable",
+            "errors pending and terminal notices never replace authoritative wallet data",
+            "daily gift all odds and rare protection stay reachable",
+            "rotation preserves selection while unchanged snapshots preserve reading scroll",
+            "compact shop result transition preserves ID and both safe actions",
+            "reopening keeps selected recipe and explicit pinned price without sends"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "MenuPolish",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "one readable header and44px controls fit desktop portrait and shallow roots",
+            "page changes keep absolute header and tab positions stable",
+            "complete illustrated destinations start below the scroll clip",
+            "all three shallow contracts show a complete44px first row and independent gift",
+            "claimed gift cannot claim again and earned contracts remain informational",
+            "fresh open and page entry reset scroll while snapshots retain reading position",
+            "scroll cue ends at reachable content and small pages end after content",
+            "mastery cards wrap exact missing conditions at real body size",
+            "hidden and unchanged snapshots perform no text measurement layout",
+            "locked family rows omit unused progress space and cannot select a family"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "PreferredTextLayout",
+        "result": {
+          "preference": "Largest",
+          "passed": 9,
+          "cases": [
+            "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+            "680, 700 measured shop header and pinned purchase route fit",
+            "680, 700 recap reward wallet and complete receipt stay readable",
+            "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+            "390, 740 measured shop header and pinned purchase route fit",
+            "390, 740 recap reward wallet and complete receipt stay readable",
+            "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+            "568, 160 measured shop header and pinned purchase route fit",
+            "568, 160 recap reward wallet and complete receipt stay readable"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "EmulatorSafeArea",
+        "result": {
+          "preference": "Largest",
+          "passed": 8,
+          "cases": [
+            "733x306 measured menu landing shows all destination titles with stable tabs",
+            "733x306 shop shows both complete recipes above a pinned exact shortfall",
+            "733x307 measured menu landing shows all destination titles with stable tabs",
+            "733x307 shop shows both complete recipes above a pinned exact shortfall",
+            "733x308 measured menu landing shows all destination titles with stable tabs",
+            "733x308 shop shows both complete recipes above a pinned exact shortfall",
+            "portrait selection rotated to landscape stays selected at the top without a purchase",
+            "roomy desktop menu and shop retain their illustrated layouts"
+          ]
+        }
+      }
+    ],
+    "headerLargestActions": [
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "HatchActions",
+        "result": {
+          "passed": 18,
+          "cases": [
+            "Meet acknowledges exact rare-only result and waits for advanced Ready",
+            "Replay never purchases and synchronous confirmation fires once",
+            "Retry and same-ID updates retain immutable choice",
+            "Pending feedback preserves choice before state catches up",
+            "Throttle, lock, and network feedback cannot erase an in-flight choice",
+            "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+            "Close cancels a scheduled pre-dispatch retry",
+            "Busy feedback queues a retry until Ready for the same result",
+            "A retry timer encountering Busy retains its work until Ready",
+            "Another pending transaction releases the captured ack on Ready",
+            "Repeated pre-dispatch locks are bounded and expose a user retry",
+            "A changed result revokes old navigation",
+            "Close during retry cancels navigation without a second acknowledgement",
+            "Definitive rejection permits changing the action",
+            "Actions remain locked during an unfinished cinematic",
+            "Duplicate caption uses copied mastery progress and retains both choices",
+            "corner X dismisses and reopens the same committed result without acknowledgment",
+            "44px result actions fit short landscape safe areas and long names"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "HatchNavigation",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "already equipped pet focuses without duplicate equip",
+            "rare-only companion waits for server equip acknowledgment",
+            "mode and local handoff must both finish before equip",
+            "manual cancellation prevents late equip and focus",
+            "overlay interruption cancels pending focus",
+            "unconfirmed equip never substitutes a local pet",
+            "replay resets finished board once after handoff",
+            "replay preserves an unfinished board",
+            "cancelled replay cannot reset a later round",
+            "newer navigation wins over a stale mode wait"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "EggBrowseNavigation",
+        "result": {
+          "passed": 10,
+          "cases": [
+            "settled rare-only Room opens immediately without same-mode request",
+            "Menu and tree recovery reopen the same committed ID without purchase or acknowledgment",
+            "unloaded or explicitly empty inventory cannot start a browse route",
+            "board origin waits for both server mode and settled local presentation",
+            "a newer navigation generation cancels the old board waiter",
+            "character and camera replacement cancel delayed presentation",
+            "native menu text capture and death interrupt waiting before late open",
+            "UI teardown stops the Board waiter immediately even with unchanged character and camera",
+            "empty inventory or another sheet at arrival cannot reopen the shop",
+            "blocked board route has no mode request and timeout never opens stale state"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "ControllerSheets",
+        "result": {
+          "cases": [
+            "pointer-open Menu seeds current Daily or Mastery tab without routing",
+            "pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",
+            "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+            "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+            "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+            "direct controller Journal opening retains its valid existing owned selection",
+            "result arriving under an open shop revokes the captured ordinary-shop owner",
+            "all four same-instance openings advance generation and hidden sheets expose no target"
+          ],
+          "passed": 8,
+          "inputIsSemanticFixture": true
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "ControllerFocus",
+        "result": {
+          "cases": [
+            "first A is focus-only through held release; next fresh A passes to native activation",
+            "actual Gamepad Begin captures before UIS changes and same-device notification preserves it",
+            "release before the delayed UIS notification waits for that current device",
+            "native Dpad focus wins before deferred fallback",
+            "Dpad seeds once when native direction leaves no selection",
+            "already focused A passes even before input type updates",
+            "repeat and duplicate held Begin never focus before release or dispatch twice",
+            "same-instance close and reopen invalidate the captured generation",
+            "sheet switch drains old A without focusing its successor",
+            "pointer return cancels focus but drains the original controller gesture",
+            "CoreGui or text capture immediately passes A and clears held acquisition",
+            "busy transition focus result recap and absent owners cannot acquire or intercept",
+            "outside-owner and destroyed targets fall back to neutral close only",
+            "no live target means no focus write and no action",
+            "hidden ancestor disabled layer and detached PlayerGui reject the owner",
+            "ensure-visible cannot focus a target after its owner changes synchronously",
+            "disconnect with no End clears that device hold and reconnect can acquire",
+            "two gamepads retain distinct captured gestures through either release order",
+            "disconnecting the older device releases a completed newer-device handoff",
+            "Cancel drains the old press and permits a fresh focus-only press",
+            "current device change before deferred execution prevents acquisition",
+            "destroy disconnects watches cancels queued tasks and passes subsequent input"
+          ],
+          "passed": 22,
+          "heldInputIsSemanticFixture": true
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "StyleJournalActions",
+        "result": {
+          "passed": 12,
+          "cases": [
+            "swatches preview only across resize tabs and scrolling",
+            "X Back and forced-dismiss common close route roll back once per opening",
+            "Equip captures pending IDs before rollback and submits exactly once",
+            "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+            "Club settings apply once immediately and persist through closing",
+            "Roblox reduced motion cannot be overridden by a setting or reflow",
+            "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+            "authoritative empty inventory has no legacy track or hidden selectable row",
+            "legacy tracking remains explicit only when the inventory mask is absent",
+            "owned row equips once and Family goals never equips tracks or selects a family",
+            "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+            "measured Ranks caption retains mastery page identity and callback"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "StyleJournalLayout",
+        "result": {
+          "preference": "Largest",
+          "passed": 8,
+          "cases": [
+            "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+            "733, 307 Journal measures all seven name status rank and crest rows",
+            "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+            "568, 160 Journal measures all seven name status rank and crest rows",
+            "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+            "385, 703 Journal measures all seven name status rank and crest rows",
+            "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+            "1649, 971 Journal measures all seven name status rank and crest rows"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "PetRoamHint",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "733, 307 preferred roam hint stays measured below dock inside core safe root",
+            "568, 160 preferred roam hint stays measured below dock inside core safe root",
+            "385, 703 preferred roam hint stays measured below dock inside core safe root",
+            "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "RoamReturnCamera",
+        "result": {
+          "passed": 15,
+          "cases": [
+            "initial Board presentation does not capture a return roam shot",
+            "actual Room exit captures before the separate pre-Room restore",
+            "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+            "the same root translates the return transform and Focus together",
+            "active greeting restores underlying roam before capturing the Deck return",
+            "Scriptable camera without an accepted greeting and dead root are never captured",
+            "replaced root character or camera rejects old shot and seeds a clear angle",
+            "consumed or missing shots seed arrival even after previous roaming",
+            "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+            "missing camera defers arrival without consuming the shot or marking first roam",
+            "staggered root availability retries once then ordinary roaming retains its angle",
+            "missing humanoid also defers placement until its live subject is available",
+            "Board cancellation clears a pending placement so late roots cannot move the camera",
+            "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+            "teardown invalidates return shot before camera and UI cleanup"
+          ]
+        }
+      },
+      {
+        "ok": false,
+        "preference": "Largest",
+        "name": "FamilyCrest",
+        "result": "Players.keehar01.PlayerScripts.Client.QAFamilyCrest:63: Players.keehar01.PlayerScripts.Client.QAFamilyCrest:44: assertion failed!"
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNotice",
+        "result": {
+          "passed": 9,
+          "cases": [
+            "retryable load states promise automatic retry without asking for rejoin",
+            "session wait save retry and terminal states keep distinct truthful instructions",
+            "blocking hatch status wins without discarding the profile source",
+            "unknown hatch status cannot hide a recognized profile retry instruction",
+            "neutral hatch states never suppress profile load or save retry",
+            "recovery clears derived notice and never rewrites wallet result ID selection or command feedback",
+            "terminal notices persist until an explicit source change without invented timers",
+            "one modal or room owner excludes every covered presentation",
+            "compact wording changes copy without changing text size or save semantics"
+          ]
+        }
+      }
+    ],
+    "headerLargestSaveMatrix": [
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNoticeLayout",
+        "result": {
+          "preference": "Largest",
+          "rootSize": "733, 307",
+          "passed": 2,
+          "cases": [
+            "733, 307 passive status belongs to each modal without covering pinned actions",
+            "733, 307 same-ID reveal and ordinary shop retain authority across status recovery"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNoticeLayout",
+        "result": {
+          "preference": "Largest",
+          "rootSize": "568, 160",
+          "passed": 2,
+          "cases": [
+            "568, 160 passive status belongs to each modal without covering pinned actions",
+            "568, 160 same-ID reveal and ordinary shop retain authority across status recovery"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNoticeLayout",
+        "result": {
+          "preference": "Largest",
+          "rootSize": "385, 703",
+          "passed": 2,
+          "cases": [
+            "385, 703 passive status belongs to each modal without covering pinned actions",
+            "385, 703 same-ID reveal and ordinary shop retain authority across status recovery"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SaveNoticeLayout",
+        "result": {
+          "preference": "Largest",
+          "rootSize": "1649, 971",
+          "passed": 3,
+          "cases": [
+            "1649, 971 passive status belongs to each modal without covering pinned actions",
+            "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+            "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+          ]
+        }
+      }
+    ],
+    "headerFinalLargestFocus": [
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "SharedHeaders",
+        "result": {
+          "preference": "Largest",
+          "passed": 12,
+          "cases": [
+            "1649, 971 exact menu wallet and stable bare-X header",
+            "1649, 971 recipe prices and status stay independent of exact balance",
+            "733, 307 exact menu wallet and stable bare-X header",
+            "733, 307 recipe prices and status stay independent of exact balance",
+            "568, 160 exact menu wallet and stable bare-X header",
+            "568, 160 recipe prices and status stay independent of exact balance",
+            "385, 703 exact menu wallet and stable bare-X header",
+            "385, 703 recipe prices and status stay independent of exact balance",
+            "focused unselected recipe survives rebuild and rotation without changing selection",
+            "focused daily remains visible while disabled gift falls back to neutral X",
+            "X/footer survive rebuild and detached GUI cannot reclaim focus",
+            "two independent circle controls retain native names and preferred transparency"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "CompactEggShop",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "160/198/236 roots retain measured choices exact wallet and pinned action",
+            "Sprout selection retains exact24price and6shortfall without purchasing",
+            "350x279 names and costs remain native readable and reachable",
+            "errors pending and terminal notices never replace authoritative wallet data",
+            "daily gift all odds and rare protection stay reachable",
+            "rotation preserves selection while unchanged snapshots preserve reading scroll",
+            "compact shop result transition preserves ID and both safe actions",
+            "reopening keeps selected recipe and explicit pinned price without sends"
+          ]
+        }
+      },
+      {
+        "ok": true,
+        "preference": "Largest",
+        "name": "FamilyCrest",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "all family ranks render at24px with no text or input capture",
+            "unchanged HUD refresh preserves artwork instances and descendant count",
+            "menu refresh keeps family crests and fits all family buttons",
+            "earned pet badge cleanup preserves unranked and legacy effects"
+          ]
+        }
+      }
+    ],
+    "headerServerFinal": [
+      {
+        "ok": true,
+        "suite": "HatchProgress",
+        "result": {
+          "passed": 21,
+          "cases": {
+            "1": "all catalog outcomes and rare protection",
+            "2": "legacy seven-pet migration and one-time credits",
+            "3": "starter grant, persistent reveal, exact acknowledgement",
+            "4": "ambiguous session acquire resumes the same lease",
+            "5": "direct full-cost spending, stale commands and callback retries",
+            "6": "ambiguous committed hatch cannot reroll or duplicate",
+            "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+            "8": "monotonic payouts reject replay beyond receipt history",
+            "9": "lease takeover fences stale commands and renewals",
+            "10": "local overlap, sparse inventory and public isolation",
+            "11": "failed legacy load cannot spend or overwrite",
+            "12": "daily reward is once per Hollow day and survives callback retry",
+            "13": "every advertised result grants once and rare protection resets",
+            "14": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+            "15": "mastery ranks need permanent points and three distinct successful challenges",
+            "16": "daily contracts and mastery pay atomically once per run and day",
+            "17": "completed-budget failures can earn skill contracts but not mastery or free wins",
+            "18": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+            "19": "compound award retries immutable stats and original day before or after commit",
+            "20": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+            "21": "rare-only ownership trains its base family and duplicate marks continue beyond three"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "suite": "CloseProgress",
+        "result": {
+          "passed": 2,
+          "cases": {
+            "1": "drain pending and earned payout before release",
+            "2": "failed drain keeps lease fenced"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "suite": "SessionRecovery",
+        "result": {
+          "persistentWrites": false,
+          "passed": 8,
+          "cases": {
+            "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+            "2": "profile save failure times out without releasing the lease and later recovers",
+            "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+            "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+            "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+            "6": "a setting changed during an in-flight autosave drains before lease release",
+            "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+            "8": "the actual Studio store keeps both writers in one isolated cloned root"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "suite": "SessionHost",
+        "result": {
+          "persistentWrites": false,
+          "passed": 2,
+          "cases": {
+            "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+            "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "suite": "StudioStore",
+        "result": {
+          "persistentWrites": false,
+          "passed": 1,
+          "cases": {
+            "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+          }
+        }
+      }
+    ],
+    "headerRoundReceipt": {
+      "revision": 4,
+      "score": 980,
+      "drops": 24,
+      "over": true,
+      "inventoryMask": 1,
+      "award": 14,
+      "nectar": 20
+    },
+    "headerPurchase": {
+      "lastHatch": {
+        "masteryRank": 0,
+        "rare": false,
+        "recipe": "meadow",
+        "id": "1fc3a116-d0a1-43b8-b865-ca8947b73cf6",
+        "duplicate": false,
+        "mastery": 0,
+        "petId": "puddle",
+        "promotedTo": 0,
+        "family": "puddle"
+      },
+      "revision": 5,
+      "inventoryMask": 3,
+      "nectar": 2
+    },
+    "headerReopened": {
+      "revision": 5,
+      "lastHatch": "1fc3a116-d0a1-43b8-b865-ca8947b73cf6",
+      "open": true,
+      "inventoryMask": 3,
+      "nectar": 2
+    },
+    "headerAcked": {
+      "focus": true,
+      "revision": 6,
+      "inventoryMask": 3,
+      "nectar": 2
+    },
+    "headerCameraReturn": {
+      "cameraType": "Custom",
+      "focus": false,
+      "dock": true,
+      "mode": "Room",
+      "walkSpeed": 16,
+      "subjectIsHumanoid": true
+    },
+    "headerFamilyDiagnostic": [
+      {
+        "ok": false,
+        "preference": "Largest",
+        "name": "FamilyCrest",
+        "result": "Players.keehar01.PlayerScripts.Client.QAFamilyCrest:63: Players.keehar01.PlayerScripts.Client.QAFamilyCrest:44: {\"fit\":true,\"name\":\"Wick · Choose\",\"bounds\":\"190, 30\",\"button\":\"\",\"nameFit\":true,\"nameSize\":\"242, 46\",\"size\":\"304, 46\"}"
+      }
+    ],
+    "headerFinalSourceExpected": {
+      "StarterPlayer.StarterPlayerScripts.Client.BoardAudio": 3000979607,
+      "StarterPlayer.StarterPlayerScripts.Client.BoardQuestHUD": 255119140,
+      "StarterPlayer.StarterPlayerScripts.Client.BonusPetVisual": 273018585,
+      "StarterPlayer.StarterPlayerScripts.Client.ControllerFocus": 1200577160,
+      "StarterPlayer.StarterPlayerScripts.Client.DeckArt": 312208704,
+      "StarterPlayer.StarterPlayerScripts.Client.DeckLayout": 4006866143,
+      "StarterPlayer.StarterPlayerScripts.Client.DeckMenu": 1414865566,
+      "StarterPlayer.StarterPlayerScripts.Client.DeckPicker": 3996153902,
+      "StarterPlayer.StarterPlayerScripts.Client.DeckTransition": 17394735,
+      "StarterPlayer.StarterPlayerScripts.Client.DropDispenser": 1888438696,
+      "StarterPlayer.StarterPlayerScripts.Client.EggArt": 3365184290,
+      "StarterPlayer.StarterPlayerScripts.Client.EggHatchView": 3803066274,
+      "StarterPlayer.StarterPlayerScripts.Client.FamilyCrest": 1079099867,
+      "StarterPlayer.StarterPlayerScripts.Client.FirstHatchGuide": 3837690744,
+      "StarterPlayer.StarterPlayerScripts.Client.HandheldScreens": 3356901974,
+      "StarterPlayer.StarterPlayerScripts.Client.HatchCinematic": 3742620105,
+      "StarterPlayer.StarterPlayerScripts.Client.HatchNavigation": 3217096440,
+      "StarterPlayer.StarterPlayerScripts.Client.HatchReveal": 3106613351,
+      "StarterPlayer.StarterPlayerScripts.Client.HollowClock": 1686006719,
+      "StarterPlayer.StarterPlayerScripts.Client": 3449018154,
+      "StarterPlayer.StarterPlayerScripts.Client.JellyLCD": 1441384248,
+      "StarterPlayer.StarterPlayerScripts.Client.JellySpanSurface": 1394968546,
+      "StarterPlayer.StarterPlayerScripts.Client.JellySprite": 424028069,
+      "StarterPlayer.StarterPlayerScripts.Client.JellyVisual": 453749963,
+      "StarterPlayer.StarterPlayerScripts.Client.JournalPromptPriority": 3185101288,
+      "StarterPlayer.StarterPlayerScripts.Client.LoungeStations": 2020518517,
+      "StarterPlayer.StarterPlayerScripts.Client.PetFocusUI": 337185628,
+      "StarterPlayer.StarterPlayerScripts.Client.PetFollow": 383453208,
+      "StarterPlayer.StarterPlayerScripts.Client.PetGreetingShot": 1401022744,
+      "StarterPlayer.StarterPlayerScripts.Client.PetJournal": 969280049,
+      "StarterPlayer.StarterPlayerScripts.Client.PetPortrait": 1542201334,
+      "StarterPlayer.StarterPlayerScripts.Client.PetPrestige": 2441548528,
+      "StarterPlayer.StarterPlayerScripts.Client.PipVisual": 2017926953,
+      "StarterPlayer.StarterPlayerScripts.Client.PresentationPolicy": 718701887,
+      "StarterPlayer.StarterPlayerScripts.Client.PuddleVisual": 2104105261,
+      "StarterPlayer.StarterPlayerScripts.Client.RecapFeedback": 1485838465,
+      "StarterPlayer.StarterPlayerScripts.Client.RoomCompanions": 688324777,
+      "StarterPlayer.StarterPlayerScripts.Client.RoomView": 3462543178,
+      "StarterPlayer.StarterPlayerScripts.Client.RoundRecap": 1772707286,
+      "StarterPlayer.StarterPlayerScripts.Client.RunReceipt": 1926350897,
+      "StarterPlayer.StarterPlayerScripts.Client.SaveNotice": 619075139,
+      "ReplicatedStorage.Shared.BoardConfig": 3804976776,
+      "ReplicatedStorage.Shared.DailyContracts": 4199071389,
+      "ReplicatedStorage.Shared.DeckPalette": 2542098077,
+      "ReplicatedStorage.Shared.DeckSettings": 3032192356,
+      "ReplicatedStorage.Shared.DeckStickers": 1287327148,
+      "ReplicatedStorage.Shared.DeckThemes": 3607598005,
+      "ReplicatedStorage.Shared.EggCatalog": 1798252114,
+      "ReplicatedStorage.Shared.FamilyMastery": 2103273219,
+      "ReplicatedStorage.Shared": 3397649189,
+      "ReplicatedStorage.Shared.PetCatalog": 156025591,
+      "ReplicatedStorage.Shared.PocketTrials": 2575178847,
+      "ServerScriptService.Server.BoardRound": 1284421566,
+      "ServerScriptService.Server.BoardSimulation": 464837289,
+      "ServerScriptService.Server.CloseProgress": 388090471,
+      "ServerScriptService.Server.FieldRun": 3150518642,
+      "ServerScriptService.Server.FirstSession": 1272941558,
+      "ServerScriptService.Server.HatchProgress": 416152521,
+      "ServerScriptService.Server": 1130379051,
+      "ServerScriptService.Server.Lounge": 1608707562,
+      "ServerScriptService.Server.LoungeArt": 3405679169,
+      "ServerScriptService.Server.PlayerProgress": 2502872275,
+      "ServerScriptService.Server.ProgressStore": 107585254,
+      "ServerScriptService.Server.SessionProfile": 2040837247
+    },
+    "headerFinalConsole": {
+      "content": [
+        {
+          "type": "text",
+          "text": "EditableImage is not accessible. Go to the Security Tab in Experience Settings to enable this API.\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type"
+        }
+      ],
+      "isError": false
+    }
+  }
+}

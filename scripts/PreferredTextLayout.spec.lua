@@ -55,10 +55,11 @@ return function(client,parent)
 					local snapshot=state();snapshot.nectar=balance
 					shop:update(snapshot);settle()
 					readable(shop.heading);readable(shop.action)
-					if shop.nectar.Visible then
+					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." nectar")
+					do
 						readable(shop.nectar)
 						assert(shop.nectar.AbsolutePosition.X>=shop.wallet.AbsolutePosition.X and shop.nectar.AbsolutePosition.X+shop.nectar.AbsoluteSize.X<=shop.wallet.AbsolutePosition.X+shop.wallet.AbsoluteSize.X,"amount exceeds its chip")
-					else assert(shop.compactStatus and shop.body.EggColumn.CompactStatus);readable(shop.body.EggColumn.CompactStatus) end
+					end
 					if shop.note.Visible then readable(shop.note)end
 					assert(shop.action.AbsoluteSize.Y>=44 and shop.closeButton.AbsoluteSize==Vector2.new(44,44))
 					assert(shop.body.AbsoluteSize.Y>=44 and shop.body.AbsolutePosition.Y+shop.body.AbsoluteSize.Y<=shop.action.AbsolutePosition.Y,"shop must preserve a whole44px row outside footer at balance "..balance)

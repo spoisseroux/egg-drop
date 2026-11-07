@@ -81,7 +81,7 @@ function Menu.new(parent,callbacks)
 	self.wallet=decoration(card,"Wallet",UDim2.fromOffset(0,0),UDim2.fromOffset(180,28),Art.Inset,8)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
 	self.nectar=text(self.wallet,"Nectar","0 nectar","Body",Art.Amber)
-	self.closeButton=Art.close(button(card,"Close","×",function()self:activate("close")end))
+	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:activate("close")end))
 	self.resumeButton=button(card,"Deck","Resume",function()self:activate("play")end)
 	self.resumeButton.BackgroundColor3,self.resumeButton.TextColor3=Art.Leaf,Art.Ink
 	self.dailyButton=button(card,"DailyBonus","Gift +6",function()self:activate("daily")end)
@@ -156,92 +156,38 @@ function Menu:layout()
 	self.layingOut=true
 	local size=self.parent.AbsoluteSize
 	local width=math.max(1,math.min(680,size.X-24))
-	-- Predict the roomy body's real budget before choosing header/card geometry.
-	-- Phone landscape safe areas can be taller than 280 while leaving <100px here.
-	local roomyUsable=math.max(1,width-40)
-	Art.type(self.heading,if self.saveNotice then "Body"else "Heading",false);Art.type(self.nectar,"Body",false)
-	for _,action in ipairs({self.resumeButton,self.dailyButton})do Art.type(action,"Action",true)end
-	local roomyTitleH=Art.textHeight(self.heading,roomyUsable-56,32)
-	local roomyWalletH=Art.textHeight(self.nectar,math.min(roomyUsable,174),24)
-	local roomyActionW=math.min(roomyUsable,math.max(120,Art.textWidth(self.resumeButton)+16,Art.textWidth(self.dailyButton)+16))
-	local roomyActionH=math.max(Art.actionHeight(self.resumeButton,roomyActionW),Art.actionHeight(self.dailyButton,roomyActionW))
-	local roomyWalletW=math.min(210,math.max(100,Art.textWidth(self.nectar)+30))
-	local roomyRowY=14+math.max(roomyTitleH,44)+8
-	local roomyActionY=if roomyWalletW+roomyActionW+12<=roomyUsable then roomyRowY else roomyRowY+roomyWalletH+12
-	local roomyTabH=44
-	for key,tab in pairs(self.tabs)do typeTab(tab,key,false,(roomyUsable-12)/3);roomyTabH=math.max(roomyTabH,Art.actionHeight(tab,(roomyUsable-12)/3))end
-	local roomyHeader=math.max(roomyRowY+roomyWalletH+4,roomyActionY+roomyActionH)+12+roomyTabH+12
-	local destinationW=width-72
-	local roomyList=destinationW<480
-	if not roomyList then destinationW=(destinationW-24)/3 end
-	local firstRow=if roomyList then 88 else 168
-	for _,item in ipairs(self.destinations)do
-		Art.type(item.title,"Action",false);Art.type(item.subtitle,"Supporting",false)
-		local tx=if roomyList then 78 else 8
-		local th=Art.textHeight(item.title,destinationW-tx-8,26)
-		local sh=Art.textHeight(item.subtitle,destinationW-tx-8,24)
-		firstRow=math.max(firstRow,if roomyList then th+sh+36 else 12+72+12+th+sh+20)
-	end
-	self.shallow=size.Y>=280 and size.Y-24-roomyHeader-8<firstRow+24
+	self.shallow=size.Y>=280 and size.Y<440
 	self.compact=size.Y<280 or self.shallow
-	self.width,self.pad=width,if self.compact then 8 else 20
+	self.width,self.pad=width,if self.compact then 8 else 12
 	local pad=self.pad;local usable=math.max(1,width-pad*2)
-	Art.type(self.heading,if self.saveNotice then "Body"else "Heading",self.compact);Art.type(self.nectar,"Body",self.compact)
-	if self.compact then self.nectar.TextSize=12 end
-	for _,action in ipairs({self.resumeButton,self.dailyButton}) do Art.type(action,"Action",true) end
-	local titleH=Art.textHeight(self.heading,usable-56,if self.compact then 22 else 32)
-	local walletH=Art.textHeight(self.nectar,math.min(usable,174),if self.compact then 18 else 24)
-	local compactHeaderRow=if self.shallow then 52 else 44
-	self.scrollChrome=self.compact and (titleH+walletH+2>compactHeaderRow)
-	local actionW=math.min(usable,math.max(120,Art.textWidth(self.resumeButton)+16,Art.textWidth(self.dailyButton)+16))
-	local actionH=math.max(Art.actionHeight(self.resumeButton,actionW),Art.actionHeight(self.dailyButton,actionW))
-	if self.compact and (Art.textWidth(self.heading)>usable-actionW-68 or Art.textWidth(self.nectar)>usable-actionW-68) then
-		self.scrollChrome=true
-	end
-	local walletW=math.min(210,math.max(100,Art.textWidth(self.nectar)+(if self.compact then 0 else 30)))
+	self.wallet.Parent,self.nectar.Parent=self.card,self.wallet
+	local notice=self.saveNotice
+	self.headerTitle=if notice then notice.short else "Pocket menu"
+	self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.wallet.NectarDrop,self.closeButton,{
+		pad=pad,top=if self.compact then 0 else 8,amount=self.state.nectar or 0,title=self.headerTitle,
+		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil,secondary=self.resumeButton})
+	self.resumeInBody=not self.headerPlan.secondaryHeader
+	self.resumeButton.Parent=if self.resumeInBody then self.pages.play else self.card
+	self.resumeButton.BackgroundColor3,self.resumeButton.TextColor3=Art.Raised,Art.Silver
 	local tabH=44
-	for key,tab in pairs(self.tabs) do typeTab(tab,key,self.compact,(usable-12)/3);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3)) end
-	local titleY=if self.compact then 0 else 14
-	local tabY
-	if self.compact then tabY=compactHeaderRow else
-		local rowY=titleY+math.max(titleH,44)+8
-		local sameRow=walletW+actionW+12<=usable
-		place(self.wallet,pad,rowY,walletW,walletH+4)
-		local actionY=if sameRow then rowY else rowY+walletH+12
-		for _,action in ipairs({self.resumeButton,self.dailyButton}) do action.Parent=self.card;place(action,width-pad-actionW,actionY,actionW,actionH) end
-		tabY=math.max(rowY+walletH+4,actionY+actionH)+12
-	end
-	place(self.heading,pad,titleY,usable-56,titleH)
-	place(self.closeButton,width-pad-44,titleY,44,44)
-	self.wallet.NectarDrop.Visible=not self.compact
-	if self.compact and not self.scrollChrome then
-		self.wallet.Parent=self.card;place(self.wallet,pad,if self.shallow then 28 else 23,math.max(1,usable-actionW-68),walletH)
-		self.heading.Size=UDim2.fromOffset(math.max(1,usable-actionW-68),titleH)
-		for _,action in ipairs({self.resumeButton,self.dailyButton}) do action.Parent=self.card;place(action,width-pad-52-actionW,0,actionW,44) end
-	elseif not self.compact then self.wallet.Parent=self.card end
-	if self.scrollChrome then walletH=Art.textHeight(self.nectar,math.max(1,usable-16-actionW-12),18) end
-	self.scrollChromeHeight=if self.scrollChrome then math.max(44,actionH,walletH+6)+12 else 0
-	self.headerHeight=tabY+tabH+4+(if self.compact then 0 else 8)
-	local maximum=math.max(1,size.Y-(if self.compact then 8 else 24))
-	self.bodyBudget=math.max(44,maximum-self.headerHeight-8)
+	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-12)/3);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3))end
+	local tabY=self.headerPlan.height+(if self.compact then 4 else 8)
+	self.headerHeight=tabY+tabH+(if self.compact then 4 else 8)
+	local maximum=math.max(1,size.Y-(if self.compact then 8 else 24));local bottom=if self.compact then 4 else 8
+	self.bodyBudget=math.max(44,maximum-self.headerHeight-bottom)
+	self.scrollChrome,self.scrollChromeHeight=false,0
 	self:layoutContents()
-	local height=math.min(maximum,self.headerHeight+(self.pageHeights[self.page] or 0)+8)
+	local height=math.min(maximum,self.headerHeight+(self.pageHeights[self.page]or 0)+bottom)
 	if self.layoutRootSize~=size or self.safeTop==nil then
-		local tallest=0;for _,h in pairs(self.pageHeights) do tallest=math.max(tallest,h) end
-		self.safeTop=math.max(0,(size.Y-math.min(maximum,self.headerHeight+tallest+8))/2);self.layoutRootSize=size
+		local tallest=0;for _,h in pairs(self.pageHeights)do tallest=math.max(tallest,h)end
+		self.safeTop=math.max(0,(size.Y-math.min(maximum,self.headerHeight+tallest+bottom))/2);self.layoutRootSize=size
 	end
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
-	for index,key in ipairs({"play","daily","mastery"}) do place(self.tabs[key],pad+(index-1)*usable/3,tabY,usable/3-4,tabH) end
-	place(self.body,pad,self.headerHeight,usable,math.max(44,height-self.headerHeight-8))
-	if self.scrollChrome then
-		local page=self.pages[self.page];local contentW=usable-16
-		local chromeY=if self.page=="mastery" and self.compact then (self.pageHeights.mastery-self.scrollChromeHeight) else 0
-		self.wallet.Parent=page;place(self.wallet,4,chromeY+6,math.max(1,contentW-actionW-12),walletH)
-		for _,action in ipairs({self.resumeButton,self.dailyButton}) do action.Parent=page;place(action,contentW-actionW,4,actionW,actionH);action.ZIndex=34 end
-	end
-	place(self.nectar,if self.compact then 0 else 30,0,math.max(1,self.wallet.Size.X.Offset-(if self.compact then 0 else 36)),self.wallet.Size.Y.Offset)
+	for index,key in ipairs({"play","daily","mastery"})do place(self.tabs[key],pad+(index-1)*usable/3,tabY,usable/3-4,tabH)end
+	place(self.body,pad,self.headerHeight,usable,math.max(44,height-self.headerHeight-bottom))
 	place(self.moreCue,width-18,height-26,16,20)
 	self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,self.body.CanvasSize.Y.Offset-self.body.Size.Y.Offset)))
+	self.headerLayoutKey=table.concat({self.headerTitle,self.nectar.Text,self.dailyButton.Text},"|")
 	self:refreshScrollCue();self.layingOut=false
 end
 function Menu:layoutContents(wanted)
@@ -254,6 +200,14 @@ function Menu:layoutContents(wanted)
 	local usable=width-inset*2
 	local short=self.compact
 	local list=usable<480
+	if short and not list then
+		local column=(usable-24)/3;local tallest=44
+		for _,item in ipairs(self.destinations)do
+			Art.type(item.title,"Action",true)
+			tallest=math.max(tallest,Art.textHeight(item.title,column-(if self.shallow then 58 else 46)-8,24)+8)
+		end
+		if tallest+inset*2>(self.bodyBudget or math.huge)then list=true end
+	end
 
 	local start=inset+(self.scrollChromeHeight or 0)
 	local y=start
@@ -283,6 +237,11 @@ function Menu:layoutContents(wanted)
 		item.subtitle.Visible=not short;place(item.subtitle,tx,ty+item.titleH+6,w-tx-8,item.subH);item.subtitle.TextXAlignment=item.title.TextXAlignment
 	end
 	y+=if list then #self.destinations*(destinationHeight+8)-8 else destinationHeight
+	if self.resumeInBody then
+		self.resumeButton.Parent=self.pages.play;y+=8
+		place(self.resumeButton,inset,y,math.min(usable,self.headerPlan.secondaryWidth),self.headerPlan.secondaryHeight)
+		y+=self.headerPlan.secondaryHeight
+	end
 	local recipeH=math.max(64,Art.textHeight(self.recipe,usable-64,48)+16)
 	y+=12;place(self.recipePanel,inset,y,usable,recipeH);place(self.recipe,54,8,usable-64,recipeH-16)
 	y+=recipeH+12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)
@@ -290,6 +249,11 @@ function Menu:layoutContents(wanted)
 	end
 	if not wanted or wanted=="daily" then
 	y=start
+	Art.type(self.dailyButton,"Action",true)
+	self.dailyButton.Parent=self.pages.daily
+	local giftW=math.min(usable,math.max(44,Art.textWidth(self.dailyButton)+16))
+	local giftH=Art.actionHeight(self.dailyButton,giftW)
+	if self.state.dailyAvailable then place(self.dailyButton,inset,y,giftW,giftH);y+=giftH+8 end
 	local dailyH=if short then 44 elseif list then 96 else 176
 	for _,row in ipairs(self.dailyCards) do
 		local w=if list then usable else (usable-24)/3
@@ -317,6 +281,7 @@ function Menu:layoutContents(wanted)
 		place(row.fill.Parent,6,dailyH-7,w-12,if short then 3 else 5)
 	end
 	y+=if list then #self.dailyCards*(dailyH+8)-8 else dailyH
+	if not self.state.dailyAvailable then y+=8;place(self.dailyButton,inset,y,giftW,giftH);y+=giftH end
 	y+=12;local hintH2=Art.textHeight(self.dailyHint,usable,44);place(self.dailyHint,inset,y,usable,hintH2)
 	self.pageHeights.daily=y+hintH2+inset
 	end
@@ -365,7 +330,7 @@ function Menu:refreshScrollCue()
 end
 function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
-	self.nectar.Text = tostring(state.nectar or 0) .. " nectar"
+	self.nectar.Text = tostring(state.nectar or 0)
 	local recipe = Catalog.ById[recipeId] or Catalog.ById.meadow
 	self.recipe.Text = recipe.name .. " · " .. (state.nectar or 0) .. "/" .. recipe.cost .. " nectar"
 	local egg = self.recipePanel:FindFirstChild("Egg")
@@ -413,7 +378,8 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 			else string.format("Rank %s · %d/%d marks", ({ [0] = "—", "I", "II", "III" })[rank] or "III", points, if rank == 0 then 3 elseif rank == 1 then 10 else 25)
 	end
 	self.familyNote.Text = "Next round: " .. (names[selected] or "Pip") .. (if runFamily and runFamily ~= selected then " · Current run: " .. (names[runFamily] or "Pip") else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
-	self.heading.Text=if self.saveNotice then self.saveNotice.short else "Pocket menu"
+	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
+	if not self.shade.Visible then self.heading.Text=self.headerTitle end
 	self.playHint.Text="Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2."
 	if self.saveNotice then
 		self.playHint.Text=self.saveNotice.detail.."\n"..self.playHint.Text
@@ -428,8 +394,10 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 		table.insert(familySignature,self.familyHints[family].Text..tostring(self.families[family]:GetAttribute("FamilyOwned")))
 	end
 	self.contentSignatures={play=self.recipe.Text..self.playHint.Text,daily=table.concat(dailySignature,"|"),mastery=table.concat(familySignature,"|")}
-	if self.shade.Visible and self.renderedSignatures and self.renderedSignatures[self.page]~=self.contentSignatures[self.page] then
-		self:layoutContents(self.page)
+	if self.shade.Visible then
+		local headerKey=table.concat({self.headerTitle,self.nectar.Text,self.dailyButton.Text},"|")
+		if self.headerLayoutKey~=headerKey then self:layout()
+		elseif self.renderedSignatures and self.renderedSignatures[self.page]~=self.contentSignatures[self.page]then self:layoutContents(self.page)end
 	end
 end
 

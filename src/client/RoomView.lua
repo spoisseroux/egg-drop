@@ -71,14 +71,16 @@ local function tween(object, seconds, properties)
 end
 
 function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects, onEggs)
-	-- A small roaming pill replaces the always-open five-button panel.
-	local controls = frame(gui, "LoungeControls", UDim2.fromOffset(180, 48), UDim2.new(1, -12, 0, 12), Art.Surface, 8)
+	-- Two separate passive-backed circles keep the same named action targets.
+	local controls = frame(gui, "LoungeControls", UDim2.fromOffset(104, 48), UDim2.new(1, -12, 0, 12), Art.Surface, 8)
 	controls.AnchorPoint = Vector2.new(1, 0)
 	controls.Visible = false
-	Art.panel(controls, 10)
-	local menu = button(controls, "Menu", "Menu", UDim2.fromOffset(4, 2), Art.Raised)
-	local leave = button(controls, "OpenHandheld", "Deck", UDim2.fromOffset(92, 2), Art.Cyan)
-	menu.Size, leave.Size = UDim2.fromOffset(84, 44), UDim2.fromOffset(84, 44)
+	controls.BackgroundTransparency=1
+	local menu = button(controls, "Menu", "Menu", UDim2.fromOffset(0, 0), Art.Raised)
+	local leave = button(controls, "OpenHandheld", "Deck", UDim2.fromOffset(56, 0), Art.Cyan)
+	menu.Size, leave.Size = UDim2.fromOffset(48,48),UDim2.fromOffset(48,48)
+	Art.dockCircle(menu,"menu");Art.dockCircle(leave,"deck")
+	menu.BackgroundTransparency,leave.BackgroundTransparency=Art.dockTransparency(GuiService.PreferredTransparency),Art.dockTransparency(GuiService.PreferredTransparency)
 	-- Retain these handles for the welcome guide and old controller restoration.
 	local heading = Art.text(controls, "Heading", "Sprout Hollow", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), Art.Silver, 12)
 	local welcome = Art.text(controls, "FirstVisit", "", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), Art.Muted, 11)
@@ -108,6 +110,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		table.insert(self.connections, connection)
 		return connection
 	end
+	watch(GuiService:GetPropertyChangedSignal("PreferredTransparency"),function()
+		menu.BackgroundTransparency,leave.BackgroundTransparency=Art.dockTransparency(GuiService.PreferredTransparency),Art.dockTransparency(GuiService.PreferredTransparency)
+	end)
 	menu.Activated:Connect(function()
 		if self.mode == "Room" and not self.busy and not self.focusing and not overlayOpen() then
 			if self.onOpenMenu then self.onOpenMenu() else onCollection() end

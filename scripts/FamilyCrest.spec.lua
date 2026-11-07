@@ -40,9 +40,16 @@ return function(client, parent)
 			local artwork=menu.families.pip.FamilyCrest.Artwork
 			for _=1,20 do menu:update(state,"pip","wick",0,0,0,"meadow")end
 			assert(menu.families.pip.FamilyCrest.Artwork==artwork)
+			local function inside(node,host)
+				local p,s,q,t=node.AbsolutePosition,node.AbsoluteSize,host.AbsolutePosition,host.AbsoluteSize
+				return p.X>=q.X-.1 and p.Y>=q.Y-.1 and p.X+s.X<=q.X+t.X+.1 and p.Y+s.Y<=q.Y+t.Y+.1
+			end
 			for _,button in pairs(menu.families)do
-				assert(button.TextFits and button.FamilyName.TextFits and button.AbsoluteSize.Y==44)
-				assert(button.FamilyCrest.AbsolutePosition.X+24 <= button.FamilyName.AbsolutePosition.X)
+				local name=button.FamilyName
+				local diagnostic=string.format("%s text=%q button=%s name=%s bounds=%s",button.Name,name.Text,tostring(button.AbsoluteSize),tostring(name.AbsoluteSize),tostring(name.TextBounds))
+				assert(button.TextFits and name.TextFits and button.AbsoluteSize.Y>=44,diagnostic)
+				assert(inside(name,button) and inside(button.FamilyCrest,button) and inside(button,button.Parent),"family content outside measured row: "..diagnostic)
+				assert(button.FamilyCrest.AbsolutePosition.X+24 <= name.AbsolutePosition.X)
 			end
 		end)
 		test("earned pet badge cleanup preserves unranked and legacy effects",function()

@@ -48,7 +48,7 @@ return function(client, parent)
 			local menu=fixture()
 			for _,size in ipairs({Vector2.new(568,160),Vector2.new(350,279),Vector2.new(568,390),Vector2.new(390,740),Vector2.new(1649,971)}) do
 				resize(menu,size.X,size.Y)
-				assert(menu.heading.TextFits and menu.nectar.TextFits and menu.nectar.Text=="24 nectar",fitDiagnostic(menu.heading,menu.nectar))
+				assert(menu.heading.TextFits and menu.nectar.TextFits and menu.nectar.Text=="24" and menu.nectar:GetAttribute("AccessibleLabel")=="24 nectar",fitDiagnostic(menu.heading,menu.nectar))
 				assert(menu.closeButton.Text=="×" and menu.closeButton:GetAttribute("AccessibleLabel")=="Close")
 				for _,tab in pairs(menu.tabs) do
 					assert(tab.AbsoluteSize.Y>=44 and tab.TextFits and inside(tab,menu.card),fitDiagnostic(tab))
