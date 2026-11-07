@@ -1,5 +1,7 @@
 # Egg Drop overnight playtest and delivery plan
 
+**November7 continuation checkpoint:** the reference-backed UI/world pass is complete at runtime24751c2, private **v93 Published**, with final source/render review and actual control walkthrough. Use [MORNING-RUNDOWN.md](MORNING-RUNDOWN.md), [UI-OVERNIGHT.md](UI-OVERNIGHT.md) and the linked raw reports as the current record. The November6 plan and earlier checkpoints below are historical. Remaining November7 automation wakes should preserve the accepted build, report only a meaningful regression, and at09:00 Eastern finish the handoff and pause the existing heartbeat. No new feature slice is pending.
+
 **Start from the reviewed arcade pass on `feat/egg-drop-arcade-polish`.** The six-hour target is one complete experience a new player can discover unaided: meet Pip, understand a field quest, earn nectar toward a specific egg, greet a hatchling and choose a reason to return. Start with an actual playthrough. Spend remaining time on the first point where that sequence breaks.
 
 ## Baseline for the next worker

@@ -1,0 +1,49 @@
+{
+  "commit": "24751c2",
+  "preference": "Medium",
+  "controls": "Actual Studio keyboard/on-screen pointer; solver reads current board to choose real drag/release inputs (automated walk, not human playtest).",
+  "welcome": {
+    "owned": "Guaranteed Pip",
+    "nectar": 6,
+    "revision": 3,
+    "cameraAfterBack": "Custom"
+  },
+  "field": {
+    "drops": 24,
+    "score": 640,
+    "peakChain": 4,
+    "bothBanks": true,
+    "base": 6,
+    "daily": 6,
+    "earned": 12,
+    "nectar": 18,
+    "revision": 4,
+    "marksPip": 1
+  },
+  "purchase": {
+    "recipe": "meadow",
+    "cost": 18,
+    "nectar": 0,
+    "revision": 5,
+    "pet": "wick",
+    "duplicate": false,
+    "inventoryMask": 5,
+    "resultId": "8f32a231-9a02-48a0-8612-576158de1941"
+  },
+  "reopen": {
+    "via": "X -> Menu -> Hatch eggs",
+    "sameId": true,
+    "sameNectar": 0,
+    "sameRevision": 5
+  },
+  "meet": {
+    "revision": 6,
+    "resultCleared": true,
+    "nectar": 0,
+    "focus": "Scriptable",
+    "back": "Custom",
+    "cameraSubject": "Workspace.keehar01.Humanoid"
+  },
+  "screens": "final-medium-* in artifacts/ui-redesign-2026-11-07",
+  "limitation": "One early Meet click during the reopened cinematic was ignored while actions were locked; waited for Interactable and actual next click acknowledged once. No physical phone/live multiplayer or live datastore proof."
+}

@@ -1,6 +1,6 @@
 # Pocket Deck UI design system
 
-Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 November 2026. Dimensions are Roblox UI offset pixels within the already inset content root. The design tables specify targets. The checkpoint below records implementation and verification through `f6d1f4f`.
+Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 November 2026. Dimensions are Roblox UI offset pixels within the already inset content root. The design tables specify targets. Runtime24751c2 is now private **v93 Published**, verified in refreshed Studio Version History. The historical checkpoint below covers the original implementation, followed by the final input/coaching checks. [Morning handoff](MORNING-RUNDOWN.md).
 
 ## Implementation checkpoint through `f6d1f4f`
 
@@ -9,7 +9,7 @@ Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 
 - **Style and Journal.** Style reserves a complete swatch row before choosing its preview size. X and Equip stay reachable while scrolling. Journal keeps X and Family goals visible, uses measured rows and shows an overflow cue until the last pet is reachable in full. Desktop and touch-emulator captures were checked at Medium and Largest text size. [Style and Journal results](scripts/StyleJournal-results.json)
 - **Save notices.** The active screen presents the status. Load and save retries describe automatic recovery where the server performs it. A lost session directs the player to rejoin. An unreadable save makes no recovery promise. A fixture-injected retry retained the committed pet viewport, and actual close/reopen controls retained its hatch ID and balance. [Save-notice results](scripts/SaveNotice-results.json)
 
-Two observed issues remain beyond this checkpoint. Switching from pointer or touch to gamepad can leave Menu, Style, Journal or the egg shop without a selected control. The desktop welcome instruction can clip “Space” at Largest text size. Their corrections are pending. Physical-phone comfort and physical-controller behavior remain unverified. [Overnight verification record](UI-OVERNIGHT.md)
+The two observed follow-ups were corrected before v93. Controller566a655 acquires a safe target on the first unfocused A without activating it;30 focused cases at Medium and Largest plus52 targeted regressions and actual Studio Gamepad1 navigation pass. Welcome24751c2 preserves each semantic phase with measured wrapping at native text size;56 checks at each preference and the actual Largest desktop Space/matching/Pip frames pass. The final Medium loop purchased new Wick once and reopened its exact committed result before Meet/Back. Astra approved the source, fixtures and final11 renders. Physical-phone comfort and physical-controller behavior remain unverified. [Overnight verification record](UI-OVERNIGHT.md)
 
 ## What the player should see
 

@@ -184,7 +184,7 @@ Native controls verified unchanged-status Menu/Style/Journal/Eggs/roam/board/foc
 
 Console contains the existing EditableImage-disabled / asset203785492 warnings and explicitly expected isolated fault-injection warnings, with no new ordinary-play exception. Retry displays are local presentation fixtures; server recovery uses isolated stores. Physical phones/controllers, live account rejoin and live multiplayer remain unverified. Private publication follows the integrated checkpoint, not this working-source acceptance.
 
-# Controller focus checkpoint — November 7, 07:04 Eastern
+## Controller focus checkpoint — November 7
 
 Accepted the reviewed pointer-to-controller takeover for Menu, Style, Journal, and the ordinary egg shop. The first unfocused A press focuses a safe current target after release; a fresh A activates through Roblox. Existing valid native selection is preserved. Result/reveal, recap, board, roaming, pet focus, busy transitions, CoreGui, and text entry stay outside this acquisition path. Per-device captures handle notification ordering, disconnects, stale sheet generations, and teardown.
 
@@ -194,11 +194,21 @@ Actual Studio virtual-controller Gamepad1 checks covered all four ordinary sheet
 
 Private publication remains v69 at 8b49b75 until final integrated publication. Next bounded slice is the reproduced clipped Largest welcome instruction; no reward or economy changes.
 
-# Welcome instruction acceptance — November 7, 07:18 Eastern
+## Welcome instruction acceptance — November 7
 
 The welcome guide now measures the actual padded text well and native body font. Optional headings yield before useful instructions. Wrapped or concise alternatives preserve aim/drop controls, the exact matching tier pair, or the Pip charge goal for the current phase. The old width-only generic Aim fallback is gone. Phase, mark, input, actual box, font and preferred text size invalidate the cache; unchanged updates do not repeatedly measure. No tray, control, wallet, utility or dispenser rectangle moved.
 
 `scripts/WelcomeCoaching-results.json` records **56 client checks at actual Medium and the same56 at Largest**: WelcomeCoaching6, Onboarding8, HandheldTextLayout5, CompactDeck12, DeckExperience23 and SaveNoticeOwnership2. An extra Large run also passed56; it is not Medium evidence. Each of four root cases checks all three phases and keyboard/controller/touch hints in an enabled ScreenGui. The repaired Onboarding fixture now uses production typography/wrapping. The dispenser fixture reserves measured train room before asserting rolling origin and explicitly checks short-well counter fallback; its runtime is unchanged. Both corrections retained behavioral assertions. All63 source hashes match Edit and compile through wrappers; Rojo builds. Astra final source/fixture/render GO.
 
 Actual Largest desktop controls: Space accepted drop1 and showed Drop I onto I; pointer A accepted drop2 and showed Merge for Pip with charge5. Initial full Space instruction and all later phases fit179×104. On Studio iPhone17Pro749×381 (safe733×307), the phase3 text fit205×30; an actual Touch drag/release accepted drop3 and its cascade earned Pip. A client-only save-retry presentation temporarily showed Save retry, then clearing it restored Merge for Pip with drops2/merges2 unchanged. This is not a live outage/rejoin test. Original Medium restored; console only known warnings. Next is the combined native loop, final private publication and morning handoff.
+
+## Final integrated private checkpoint — November 7, 07:25 Eastern
+
+Runtime24751c2 is pushed. Astra reviewed all11 final-medium images with render GO. The final actual-control Studio loop earned guaranteed Pip and6 nectar, completed24 drops (640/chain4/both banks), saved quest6+daily6 for18, and spent18 once for new Wick. Sparse inventory5 correctly means Pip+Wick. X/Menu/Eggs retained resultID8f32a231-9a02-48a0-8612-576158de1941, bank0 and revision5. A settled Meet acknowledged once to revision6, held Wick in Scriptable focus, and Back restored Custom with character Humanoid subject. One earlier click while the reopened cinematic still locked actions was ignored; it did not acknowledge or spend. The aiming helper used read-only board state to choose actual drag/release inputs; it was not a human comprehension test. Raw `scripts/FinalUILoop-results.json`.
+
+Studio was stopped, correct place96451847774961 asserted and all QA instances absent. Existing private publication was updated after the gates. Refreshed native Version History shows **v93 Published**, title **Pocket Deck and Hollow experience - 24751c2**; captured in `private-published-24751c2.png`. Medium restored, desktop device, Rojo egg-drop/localhost34873 connected. No release/access/security/account changes. Final63-source checks cover every repository Lua source including the Shared registry root. No runtime edits followed the frozen24751c2 verification.
+
+Morning handoff and gallery are in MORNING-RUNDOWN.md and artifacts/ui-redesign-2026-11-07/index.html. The gallery labels final desktop, prior accepted phone-emulator slices, actual native controller, and client-only retry fixtures separately. Physical phone/controller comfort, live DataStore rejoin and multiplayer, low-end performance, newcomer understanding and voluntary replay remain unverified. Known EditableImage-disabled and external asset203785492 warnings remain. Nursery/new economies remain deferred; original effects are wired but finished background music is not shipped.
+
+All authorized bounded redesign/world slices are complete. Remaining wakes before09:00 Eastern should inspect this checkpoint and git state, stay quiet if unchanged, and make no speculative feature additions. A reproduced regression can justify a bounded reviewed fix. At/after09:00 start no new changes, confirm the safe checkpoint, give the self-contained handoff and pause the existing automation. Publication is already verified; documentation-only commits do not require another Studio publish.
 

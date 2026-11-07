@@ -1,6 +1,6 @@
 # Egg Drop — morning handoff, November 7, 2026
 
-**Working checkpoint, 05:30 AM Eastern.** Reviewed source through `a623636` is committed and pushed on `feat/egg-drop-arcade-polish`. The existing private place currently has **v69 Published**, title **Pocket Deck design system - 8b49b75**. The newer physical hatch route, phone reflow and Style/Journal polish passed Studio tests and Astra review but await the final integrated private update. Save-retry messaging, controller switching and an observed Largest welcome instruction remain the next bounded fixes; this document will be updated after their gates.
+**Private build updated:** Studio's refreshed Version History confirms **v93 Published**, titled **Pocket Deck and Hollow experience - 24751c2**. Runtime `24751c2` is committed and pushed on `feat/egg-drop-arcade-polish`. Astra approved the final source, fixtures and11 integrated Medium renders. The same existing private place was updated; no access or account setting changed. [Publication screenshot](artifacts/ui-redesign-2026-11-07/private-published-24751c2.png).
 
 [Open the private game](https://www.roblox.com/games/96451847774961/Egg-Drop). The account must already have access. Roblox Player on this computer is signed out; no authentication or account settings were changed.
 
@@ -17,6 +17,12 @@ Physical destinations now have a purpose: the tree browses eggs, the Field journ
 Pet focus is held until **Back**. Greet can be repeated, and holding/rubbing the pet produces a reaction. The pet hint is outside the creature. Pets remain collection/companionship/prestige; they do not produce income or paid power.
 
 Style now shows the actual finish silhouette, keeps a complete first choice visible on phone landscape, and pins X, tabs and Equip. Preview is reversible until Equip. Journal wraps long rare names, separates portrait and family crest, and keeps Family goals visible. Both lists signal additional content with a chevron that clears at the end. These changes passed85 actual-game cases at each of Medium and Largest,60 source wrapper compilations, Rojo build, and Astra source/native-render review. Emulator touch swipes reached the final Shell and Journal choices; Club end geometry was fixture-assisted. The original Medium text preference is restored.
+
+Save problems now appear once inside the screen being used, with distinct truthful instructions for automatic retry, session waiting or rejoin. A neutral hatch state cannot hide a profile retry. Recovery keeps the same result and pet viewport. No transaction or reward rule changed.
+
+Switching from a pointer to a controller in Menu, Style, Journal or the ordinary egg shop acquires a safe focus target. First unfocused A focuses; the next fresh A activates. Existing native selection is preserved. Roblox's own menu keeps priority. Held/dual-pad/disconnect/race coverage is simulated; native Studio virtual-controller checks corroborated ordinary navigation.
+
+Welcome instructions now wrap at actual preferred text size and remove optional headings before losing the current lesson. They retain aim/drop controls, the exact matching marks, or the Pip goal. The clipped Largest desktop Space instruction is fixed without moving the tray or controls. A save retry temporarily replaces the lesson, and recovery restores the correct phase.
 
 ## What the player does
 
@@ -52,15 +58,23 @@ Daily contracts auto-credit once per Hollow day: finish2 quests **+4**, chain3 *
 
 Publisher examples support familiar objects for familiar services: Adopt Me uses a Nursery egg machine; Pet Simulator99 combines physical machines with inventory shortcuts. Roblox supports native keyboard/controller/touch proximity interactions. For this compact loop, the appropriate decision is an optional walk to an existing landmark plus immediate recap/Menu access. It is not evidence that physical shops cause retention. [Research and implementation evidence](WORLD-INTERACTIONS.md) · [UI references and reusable rules](UI-DESIGN-SYSTEM.md).
 
+These follow the specific conventions verified in [Adopt Me's egg release](https://www.playadopt.me/news/garden-egg-release-notes), [Pet Simulator99's physical Supercomputer](https://www.biggames.io/post/pet-simulator-99-update-6) and [later inventory access](https://www.biggames.io/post/pet-simulator-99-update-26). They establish examples, not Roblox-wide prevalence or a reason to add another room, currency or shop.
+
 ## Evidence and limits
 
 | Checkpoint | Verified evidence |
 | --- | --- |
 | UI8b49b75 / privatev69 |214 actual-game client cases across21 suites at Medium;42 separate Largest cases;34 isolated server cases;59 source wrappers; Rojo; native24-drop→saved14→Meadow18→same-ID reopen→Meet journey |
-| World92df51c |127 client cases across10 suites, including15 camera lifecycle cases;34 isolated server cases;60 source wrappers; Rojo; actual walks, E/virtualX, native-menu priority, same-ID purchase/reopen, emulated touch browse/pet/Back |
+| World92df51c |127 client cases across10 suites, including15 camera lifecycle cases;34 isolated server cases;60 source wrappers; Rojo; actual walks and E; injected ButtonX verified keycode routing; native-menu priority, same-ID purchase/reopen, emulated touch browse/pet/Back |
 | Phone6da2865 |98 actual-game client cases across10 suites at Medium and the same98 at Largest;60 source wrappers; Rojo; actual Studio phone-emulator tabs/choices/rotation/A; Astra source and rendered GO |
+| Style/Journal a623636 |85 client cases across9 suites at each of Medium/Largest;60 selected source wrappers; Rojo; actual emulator swipes, rare-name/crest layouts and camera/glove checks; Astra GO |
+| Save feedback f6d1f4f |113 client checks at each of Medium/Largest;34 isolated server cases;61 selected source wrappers; Rojo; actual partial and successful rounds, one paid duplicate hatch, same-ID reopen/ack and client-only retry presentation; Astra GO |
+| Controller566a655 |30 focused checks at each of Medium/Largest plus52 targeted Largest regressions; actual virtual-controller navigation;63 complete source hashes/wrappers; Rojo; Astra GO |
+| Welcome24751c2 |56 checks across6 suites at each of Medium/Largest; four root cases each cover3 phases×3 input types; actual Largest Space/A/touch accepted drops and phase-correct save recovery;63 complete source hashes/wrappers; Rojo; Astra source/render GO |
 
-These counts overlap across slices and preferences. Do not add them as unique tests. Corrected rendering tests run in real game LocalScripts with enabled ScreenGui hosts; earlier plugin-context Largest fixture passes were superseded. Reports: `scripts/UIRedesign-results.json`, `WorldInteractions-results.json`, `EmulatorReflow-results.json`; detailed control/fixture distinctions in [UI-OVERNIGHT.md](UI-OVERNIGHT.md).
+These counts overlap across slices and preferences. Do not add them as unique tests. Corrected rendering tests run in real game LocalScripts with enabled ScreenGui hosts; earlier plugin-context Largest fixture passes were superseded. Older selected-wrapper counts omitted the trivial Shared registry root; the final63 checks include every repository source. Reports in `scripts/`: UIRedesign, WorldInteractions, EmulatorReflow, StyleJournal, SaveNotice, ControllerFocus and WelcomeCoaching `-results.json`. Detailed control/fixture distinctions are in [UI-OVERNIGHT.md](UI-OVERNIGHT.md).
+
+The final24751c2 Studio walkthrough used actual controls: welcome Pip/6 nectar;24 drops, score640/chain4/both banks; quest6+daily6 saved wallet18; Meadow spent18 once for **new Wick**, bank0, sparse inventory5 (Pip+Wick), revision5. X→Menu→Eggs retained ID `8f32a231-9a02-48a0-8612-576158de1941`, wallet and revision. After the cinematic unlocked its actions, Meet acknowledged once (revision6), opened Wick in held Scriptable focus, and Back restored Custom camera and the character Humanoid subject. The aiming helper read board state to choose real drag/release inputs. This is an automated walkthrough, not an unaided human test. [Screenshots](artifacts/ui-redesign-2026-11-07/index.html).
 
 Known console warnings: EditableImage unavailable and external asset203785492 type mismatch. No security setting was changed to bypass them. The latest ordinary-play console has no game runtime exception. Failure-injection warnings in server fixtures are expected.
 
@@ -71,3 +85,5 @@ Known console warnings: EditableImage unavailable and external asset203785492 ty
 Use the private link while signed into the authorized account. On phone use landscape. Desktop arrows/A-D aim; Space or on-screen A drops. Try one field, read its recap, hatch, Meet, Back, and walk to each station. Preview/cancel a finish, equip one, then leave/rejoin and compare wallet, collection, companion, settings and any unacknowledged hatch. Finally try a second player.
 
 Where the goal becomes unclear and whether you voluntarily choose another round matter more than another automated solver run. Monetization and additional pet/social purpose remain future decisions after that evidence.
+
+You can adjust simple button offsets and hardware dimensions yourself in `src/client/DeckLayout.lua` through its named `Layout.Settings`. Save in VS Code, let Egg Drop Rojo sync, then stop/start Play. Studio Play property edits are temporary. [Small UI editing guide](UI-EDITING.md).
