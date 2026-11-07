@@ -3,6 +3,7 @@
 return function(client, parent)
 	local Recap = require(client.RoundRecap)
 	local Guide = require(client.FirstHatchGuide)
+	local Art = require(client.DeckArt)
 	local View = require(client.EggHatchView)
 	local Catalog = require(game.ReplicatedStorage.Shared.EggCatalog)
 	local root = Instance.new("Frame")
@@ -54,13 +55,19 @@ return function(client, parent)
 			node.Name, node.Size, node.Parent = name, UDim2.fromOffset(140, 38), root
 			nodes[name] = node
 		end
+		-- Match the production compact status role before Guide measures candidate copy.
+		Art.type(nodes.status,"Body",true)
+		nodes.status.TextWrapped=true
 		local guide = Guide.new(nodes.rail, nodes.rocker, nodes.drop, nodes.meter, nodes.status)
-		test("shallow welcome coaching is one concise input-specific line",function()
-			for _,entry in ipairs({{Enum.UserInputType.Keyboard,"←/→ + Space"},{Enum.UserInputType.Gamepad1,"Aim then A"},{Enum.UserInputType.Touch,"Drag & release"}}) do
+		test("shallow welcome coaching preserves each input and semantic phase",function()
+			for _,entry in ipairs({{Enum.UserInputType.Keyboard,"Space"},{Enum.UserInputType.Gamepad1,"A"},{Enum.UserInputType.Touch,"Drag"}}) do
 				local caption=guide:step(0,0,0,0,entry[1],"I",true,true)
-				assert(caption==entry[2] and not caption:find("\n",1,true))
+				assert(caption:find(entry[2],1,true) and not caption:find("\n",1,true))
+				nodes.status.Text=caption;task.wait(.03);assert(nodes.status.TextFits,caption)
 			end
-			assert(guide:step(1,0,0,0,Enum.UserInputType.Keyboard,"II",true,true)=="Match II + II")
+			local match=guide:step(1,0,0,0,Enum.UserInputType.Keyboard,"II",true,true)
+			local first,last=match:find("II",1,true);assert(first and match:find("II",last+1,true),match)
+			nodes.status.Text=match;task.wait(.03);assert(nodes.status.TextFits,match)
 			assert(guide:step(2,1,1,0,Enum.UserInputType.Keyboard,"I",true,true)=="Merge for Pip")
 		end)
 		test("first field coaching responds to stage, overlays, first win and compact height", function()

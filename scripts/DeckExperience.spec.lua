@@ -2,6 +2,8 @@ return function(client,parent)
 	local Layout=require(client.DeckLayout)
 	local Dispenser=require(client.DropDispenser)
 	local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
+	local TextService=game:GetService("TextService")
+	local RunService=game:GetService("RunService")
 	local cases={}
 	local function test(name,fn)fn();table.insert(cases,name)end
 	local function intersects(a,b)
@@ -65,8 +67,13 @@ return function(client,parent)
 		for _,pair in ipairs({{"queue","meter"},{"meter","wallet"},{"wallet","drop"},{"menu","dpad"},{"lounge","dpad"},{"quest","menu"}}) do assert(not intersects(l[pair[1]],l[pair[2]]),table.concat(pair,"/")) end
 		assert(l.tray.w>=70 and l.tray.h>=120-1e-6)
 	end)
-	local root=Instance.new("Frame");root.Size=UDim2.fromOffset(220,56);root.Parent=parent
+	-- The rolling-copy contract needs a visible train; preferred text can legitimately
+	-- use the entire old 56px well. Reserve its measured count row plus channel room.
+	local countBounds=TextService:GetTextSize("Drops left 24/24",14,Enum.Font.Gotham,Vector2.new(10000,10000))
+	local trainHeight=math.ceil(countBounds.Y)+40
+	local root=Instance.new("Frame");root.Size=UDim2.fromOffset(math.max(220,math.ceil(countBounds.X)+12),trainHeight);root.Parent=parent
 	local reduced=false;local d=Dispenser.new(root,function()return reduced end)
+	RunService.Heartbeat:Wait();RunService.Heartbeat:Wait()
 	test("accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",function()
 		d:update(1,0,24,true);d:update(1,1,24,true);assert(d.pulses==1 and d.remaining==23)
 		for _=1,12 do d:update(1,1,24,true)end;assert(d.pulses==1)
@@ -74,9 +81,11 @@ return function(client,parent)
 	test("rolling copy leaves the occupied slot on wide grips and the final drop",function()
 		for _,remaining in ipairs({23,1})do
 			d:update(100+remaining,24-remaining,24,true)
+			assert(d.channel.Visible and d.label.TextFits,"rolling fixture must show the train and count")
 			local slot=d.balls[math.min(8,remaining)]
 			local expected=d.channel.Position+slot.Position
 			d:update(100+remaining,25-remaining,24,true)
+			assert(d.channel.Visible and d.rolling.Visible,"accepted drop did not roll from a visible channel")
 			assert(d.rolling.Position==expected,"rolling ball detached from train")
 		end
 	end)
@@ -88,11 +97,17 @@ return function(client,parent)
 		reduced=true;d:update(2,7,24,true);assert(d.pulses==4 and not d.rolling.Visible)
 		d:update(2,8,24,false);assert(not d.host.Visible and d.remaining==16 and d.pulses==4)
 		d:cancel();assert(not d.rolling.Visible and d.label.Text=="Drops left 16/24")
+		-- A short well intentionally yields its decorative channel to the exact counter.
+		local compactLine=TextService:GetTextSize("16/24",12,Enum.Font.Gotham,Vector2.new(10000,10000))
+		root.Size=UDim2.fromOffset(math.max(88,math.ceil(compactLine.X)+4),math.ceil(compactLine.Y)+4)
+		RunService.Heartbeat:Wait();RunService.Heartbeat:Wait();d:update(2,8,24,true)
+		assert(not d.channel.Visible and not d.rolling.Visible and d.label.Text=="16/24" and d.label.TextFits,"compact fallback must retain readable exact count")
+		assert(d.remaining==16 and d.pulses==4)
 	end)
 	test("eight decorative balls retain channel padding at128px rail width",function()
-		root.Size=UDim2.fromOffset(128,56)
+		root.Size=UDim2.fromOffset(128,trainHeight)
 		game:GetService("RunService").Heartbeat:Wait();game:GetService("RunService").Heartbeat:Wait()
-		d:layout()
+		d:layout();assert(d.channel.Visible and d.label.TextFits,"padded train fixture must be visible")
 		for _,ball in ipairs(d.balls) do
 			assert(ball.Position.X.Offset>=6 and ball.Position.X.Offset+ball.Size.X.Offset<=d.channel.AbsoluteSize.X-6,"ball crosses padded channel")
 		end

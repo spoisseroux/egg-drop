@@ -1,5 +1,7 @@
 local Art = require(script.Parent.DeckArt)
 local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local TextService = game:GetService("TextService")
+local GuiService = game:GetService("GuiService")
 
 local Guide = {}
 Guide.__index = Guide
@@ -16,6 +18,7 @@ end
 
 function Guide.new(rail, rocker, drop, meter, status)
 	local self = setmetatable({
+		status = status,
 		rail = outline(rail, 9, Art.Cyan),
 		rocker = outline(rocker, 10, Art.Cyan),
 		drop = outline(drop, 100, Art.Cyan),
@@ -63,28 +66,55 @@ function Guide:fieldStep(stage, totalWins, active)
 	return true
 end
 
+local function inset(label, width, height)
+	local padding=label:FindFirstChildOfClass("UIPadding")
+	if not padding then return 0,0 end
+	return padding.PaddingLeft.Offset+padding.PaddingRight.Offset+(padding.PaddingLeft.Scale+padding.PaddingRight.Scale)*width,
+		padding.PaddingTop.Offset+padding.PaddingBottom.Offset+(padding.PaddingTop.Scale+padding.PaddingBottom.Scale)*height
+end
+
+-- Optional step headings yield before the instruction. Every fallback retains the
+-- current phase; font size and native preferred-text scaling remain unchanged.
+function Guide:fitStep(step, inputType, mark, compact)
+	local touch=inputType==Enum.UserInputType.Touch
+	local controller=string.match(inputType.Name,"^Gamepad")~=nil
+	local control=if touch then "Drag tray, release" elseif controller then "D-pad then A" else "←/→ then Space"
+	local concise=if touch then "Drag & release" elseif controller then "Aim then A" else "←/→ + Space"
+	local candidates
+	if step==1 then
+		candidates=if compact then {concise,if touch then "Drag, lift" elseif controller then "Aim + A" else "←→ Space"}
+			else {"1/3  AIM & DROP\n"..control,control,concise,if touch then "Drag, lift" elseif controller then "Aim + A" else "←→ Space"}
+	elseif step==2 then
+		candidates=if compact then {"Match "..mark.." + "..mark,mark.."+"..mark}
+			else {"2/3  MATCH MARKS\nDrop "..mark.." onto "..mark,"Match "..mark.." + "..mark,mark.."+"..mark}
+	else
+		candidates=if compact then {"Merge for Pip"}else {"3/3  HATCH PIP\nMerge to fill charge","Merge for Pip"}
+	end
+	local label=self.status
+	if not label or label.AbsoluteSize.X<=0 or label.AbsoluteSize.Y<=0 then return candidates[1] end
+	local size=label.AbsoluteSize
+	local horizontal,vertical=inset(label,size.X,size.Y)
+	local width,height=math.max(1,size.X-horizontal-4),math.max(1,size.Y-vertical-4)
+	local key=table.concat({step,inputType.Name,mark,tostring(compact),size.X,size.Y,horizontal,vertical,label.Font.Name,label.TextSize,GuiService.PreferredTextSize.Name},"|")
+	if self.lessonKey==key then return self.lessonText end
+	local chosen=candidates[#candidates]
+	for _,candidate in ipairs(candidates)do
+		local bounds=TextService:GetTextSize(candidate,label.TextSize,label.Font,Vector2.new(width,10000))
+		if bounds.X<=width and bounds.Y<=height then chosen=candidate;break end
+	end
+	self.lessonKey,self.lessonText=key,chosen
+	return chosen
+end
+
 function Guide:step(drops, merges, charge, owned, inputType, mark, active, compact)
 	local touch = inputType == Enum.UserInputType.Touch
-	local controller = string.match(inputType.Name, "^Gamepad") ~= nil
 	local step = if owned > 0 then 0 elseif merges > 0 or charge > 0 then 3 elseif drops > 0 then 2 else 1
 	self.rail.Visible = active and touch and step == 1
 	self.rocker.Visible = active and not touch and step == 1
 	self.drop.Visible = active and not touch and (step == 1 or step == 2)
 	self.meter.Visible = active and step == 3
-	if compact then
-		if step == 1 then return if touch then "Drag & release" elseif controller then "Aim then A" else "←/→ + Space" end
-		if step == 2 then return "Match "..mark.." + "..mark end
-		if step == 3 then return "Merge for Pip" end
-		return nil
-	end
-	if step == 1 then
-		return "1/3  AIM & DROP\n" .. (if touch then "Drag tray, release" elseif controller then "D-pad then A" else "←/→ then Space")
-	elseif step == 2 then
-		return string.format("2/3  MATCH MARKS\nDrop %s onto %s", mark, mark)
-	elseif step == 3 then
-		return "3/3  HATCH PIP\nMerge to fill charge"
-	end
-	return nil
+	if step==0 then return nil end
+	return self:fitStep(step,inputType,mark,compact==true)
 end
 
 return Guide

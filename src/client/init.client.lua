@@ -1155,6 +1155,9 @@ updateHud = function()
 		clearPlayInputs()
 		picker:close()
 	end
+	Art.type(status,"Body",false)
+	status.TextSize=if backdrop:GetAttribute("CompactInstruction") then 12 else 16
+	status.TextWrapped=true
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
 		Config.Tiers[nextTier()].mark, canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
 	local fieldCoaching = false
@@ -1164,13 +1167,6 @@ updateHud = function()
 	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
-	Art.type(status,"Body",false)
-	status.TextSize=if backdrop:GetAttribute("CompactInstruction") then 12 else 16
-	status.TextWrapped=backdrop:GetAttribute("CompactInstruction")~=true
-	if lesson and status.AbsoluteSize.Y<60 and TextService:GetTextSize(lesson,12,Enum.Font.Gotham,Vector2.new(1000,100)).X>status.AbsoluteSize.X-8 then
-		local input=UserInputService:GetLastInputType()
-		lesson=if input==Enum.UserInputType.Touch then "Drag, lift" elseif isGamepad(input) then "Aim then A" else "←→ Space"
-	end
 	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
 		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 nectar" else "Win quest +6 nectar\nLow pile +2 bonus")
 	pet.Visible = showHatch == true and not over

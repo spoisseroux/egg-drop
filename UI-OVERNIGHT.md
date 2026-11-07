@@ -194,3 +194,11 @@ Actual Studio virtual-controller Gamepad1 checks covered all four ordinary sheet
 
 Private publication remains v69 at 8b49b75 until final integrated publication. Next bounded slice is the reproduced clipped Largest welcome instruction; no reward or economy changes.
 
+# Welcome instruction acceptance — November 7, 07:18 Eastern
+
+The welcome guide now measures the actual padded text well and native body font. Optional headings yield before useful instructions. Wrapped or concise alternatives preserve aim/drop controls, the exact matching tier pair, or the Pip charge goal for the current phase. The old width-only generic Aim fallback is gone. Phase, mark, input, actual box, font and preferred text size invalidate the cache; unchanged updates do not repeatedly measure. No tray, control, wallet, utility or dispenser rectangle moved.
+
+`scripts/WelcomeCoaching-results.json` records **56 client checks at actual Medium and the same56 at Largest**: WelcomeCoaching6, Onboarding8, HandheldTextLayout5, CompactDeck12, DeckExperience23 and SaveNoticeOwnership2. An extra Large run also passed56; it is not Medium evidence. Each of four root cases checks all three phases and keyboard/controller/touch hints in an enabled ScreenGui. The repaired Onboarding fixture now uses production typography/wrapping. The dispenser fixture reserves measured train room before asserting rolling origin and explicitly checks short-well counter fallback; its runtime is unchanged. Both corrections retained behavioral assertions. All63 source hashes match Edit and compile through wrappers; Rojo builds. Astra final source/fixture/render GO.
+
+Actual Largest desktop controls: Space accepted drop1 and showed Drop I onto I; pointer A accepted drop2 and showed Merge for Pip with charge5. Initial full Space instruction and all later phases fit179×104. On Studio iPhone17Pro749×381 (safe733×307), the phase3 text fit205×30; an actual Touch drag/release accepted drop3 and its cascade earned Pip. A client-only save-retry presentation temporarily showed Save retry, then clearing it restored Merge for Pip with drops2/merges2 unchanged. This is not a live outage/rejoin test. Original Medium restored; console only known warnings. Next is the combined native loop, final private publication and morning handoff.
+
