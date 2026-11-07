@@ -6,6 +6,7 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local FamilyCrest = require(script.Parent.FamilyCrest)
 local Portrait = require(script.Parent.PetPortrait)
 local EggArt = require(script.Parent.EggArt)
+local SaveNotice=require(script.Parent.SaveNotice)
 local Menu = {}
 Menu.__index = Menu
 local names = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
@@ -158,7 +159,7 @@ function Menu:layout()
 	-- Predict the roomy body's real budget before choosing header/card geometry.
 	-- Phone landscape safe areas can be taller than 280 while leaving <100px here.
 	local roomyUsable=math.max(1,width-40)
-	Art.type(self.heading,"Heading",false);Art.type(self.nectar,"Body",false)
+	Art.type(self.heading,if self.saveNotice then "Body"else "Heading",false);Art.type(self.nectar,"Body",false)
 	for _,action in ipairs({self.resumeButton,self.dailyButton})do Art.type(action,"Action",true)end
 	local roomyTitleH=Art.textHeight(self.heading,roomyUsable-56,32)
 	local roomyWalletH=Art.textHeight(self.nectar,math.min(roomyUsable,174),24)
@@ -185,7 +186,7 @@ function Menu:layout()
 	self.compact=size.Y<280 or self.shallow
 	self.width,self.pad=width,if self.compact then 8 else 20
 	local pad=self.pad;local usable=math.max(1,width-pad*2)
-	Art.type(self.heading,"Heading",self.compact);Art.type(self.nectar,"Body",self.compact)
+	Art.type(self.heading,if self.saveNotice then "Body"else "Heading",self.compact);Art.type(self.nectar,"Body",self.compact)
 	if self.compact then self.nectar.TextSize=12 end
 	for _,action in ipairs({self.resumeButton,self.dailyButton}) do Art.type(action,"Action",true) end
 	local titleH=Art.textHeight(self.heading,usable-56,if self.compact then 22 else 32)
@@ -363,7 +364,7 @@ function Menu:refreshScrollCue()
 	self.moreCue.Visible=overflow and self.body.CanvasPosition.Y+self.body.AbsoluteSize.Y<self.body.CanvasSize.Y.Offset-1
 end
 function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
-	state = state or {}; self.state = state;self.selectedFamily=selected
+	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
 	self.nectar.Text = tostring(state.nectar or 0) .. " nectar"
 	local recipe = Catalog.ById[recipeId] or Catalog.ById.meadow
 	self.recipe.Text = recipe.name .. " · " .. (state.nectar or 0) .. "/" .. recipe.cost .. " nectar"
@@ -412,6 +413,13 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 			else string.format("Rank %s · %d/%d marks", ({ [0] = "—", "I", "II", "III" })[rank] or "III", points, if rank == 0 then 3 elseif rank == 1 then 10 else 25)
 	end
 	self.familyNote.Text = "Next round: " .. (names[selected] or "Pip") .. (if runFamily and runFamily ~= selected then " · Current run: " .. (names[runFamily] or "Pip") else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
+	self.heading.Text=if self.saveNotice then self.saveNotice.short else "Pocket menu"
+	self.playHint.Text="Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2."
+	if self.saveNotice then
+		self.playHint.Text=self.saveNotice.detail.."\n"..self.playHint.Text
+		self.dailyHint.Text=self.saveNotice.detail.."\n"..self.dailyHint.Text
+		self.familyNote.Text=self.saveNotice.detail.."\n"..self.familyNote.Text
+	end
 	self.card:SetAttribute("RunScore", score or 0); self.card:SetAttribute("RunChain", chain or 0); self.card:SetAttribute("PersonalBest", best or 0)
 	local dailySignature={self.dailyHint.Text}
 	for _,row in ipairs(self.dailyCards) do table.insert(dailySignature,row.title.Text) end
@@ -419,12 +427,18 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	for _,family in ipairs(Catalog.Families) do
 		table.insert(familySignature,self.familyHints[family].Text..tostring(self.families[family]:GetAttribute("FamilyOwned")))
 	end
-	self.contentSignatures={play=self.recipe.Text,daily=table.concat(dailySignature,"|"),mastery=table.concat(familySignature,"|")}
+	self.contentSignatures={play=self.recipe.Text..self.playHint.Text,daily=table.concat(dailySignature,"|"),mastery=table.concat(familySignature,"|")}
 	if self.shade.Visible and self.renderedSignatures and self.renderedSignatures[self.page]~=self.contentSignatures[self.page] then
 		self:layoutContents(self.page)
 	end
 end
 
+function Menu:setSaveNotice(notice)
+	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
+	self.saveNotice=notice
+	self:update(self.state,self.selectedFamily,self.runFamily,self.card:GetAttribute("RunScore"),self.card:GetAttribute("RunChain"),self.card:GetAttribute("PersonalBest"),self.recipeId)
+	self:layout();return true
+end
 function Menu:setPage(key)
 	if not self.pages[key] then return end
 	self.page=key

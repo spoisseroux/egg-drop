@@ -6,6 +6,7 @@ local Themes=require(Shared.DeckThemes)
 local Stickers=require(Shared.DeckStickers)
 local Trials=require(Shared.PocketTrials)
 local Art=require(script.Parent.DeckArt)
+local SaveNotice=require(script.Parent.SaveNotice)
 local Picker={};Picker.__index=Picker
 local function visibleSelection(node)
 	if not node or not node.Parent or not node:IsA("GuiObject") or not node.Selectable then return nil end
@@ -44,6 +45,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={}},rows={},
 		onPreview=onPreview,onClose=onClose,onApply=onApply,onSetting=onSetting,active="Shell"},Picker)
 	self.heading=text(card,"Heading","Deck style","Heading")
+	self.saveMarker=text(card,"SaveStatus","","Supporting");self.saveMarker.TextColor3=Art.Amber;self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
+	self.saveDetail=text(scroll,"SaveInstruction","","Body");self.saveDetail.TextColor3=Art.Amber;self.saveDetail.Visible=false
 	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
@@ -110,8 +113,17 @@ function Picker:layout()
 	if self.layingOut then return end;self.layingOut=true
 	local size=self.shade.AbsoluteSize;local short=size.Y<220
 	local width=math.max(1,math.min(620,size.X-24));local pad=if short then 8 else 16
-	local usable=width-pad*2;local bodyW=usable-8
-	Art.type(self.heading,"Heading",false)
+	local usable=width-pad*2
+	Art.type(self.saveMarker,"Supporting",short)
+	local markerW=0
+	if short and self.saveNotice then
+		local limit=usable*.42
+		self.saveMarker.Text=SaveNotice.caption(self.saveNotice,function(value)return Art.textWidth(self.saveMarker,value)+16<=limit end)
+		markerW=math.min(limit,Art.textWidth(self.saveMarker)+16)
+	end
+	local scrollW=usable-(if markerW>0 then markerW+12 else 0);local bodyW=scrollW-8
+	self.heading.Text=if self.saveNotice then self.saveNotice.short else "Deck style"
+	Art.type(self.heading,if self.saveNotice then "Body"else "Heading",false)
 	self.heading.Visible=not short
 	local headingH=Art.textHeight(self.heading,usable-56,32)
 	local tabsY=if short then 4 else math.max(44,headingH)+12
@@ -129,6 +141,11 @@ function Picker:layout()
 	local bodyBudget=math.max(44,maximum-header-footerH-12)
 	local function layoutBody(active)
 	local y=4
+	if self.saveNotice then
+		Art.type(self.saveDetail,"Body",short);self.saveDetail.Text=self.saveNotice.detail
+		local h=Art.textHeight(self.saveDetail,bodyW-8,24)
+		place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
+	end
 	if active~="Club"then
 		Art.type(self.previewName,"Action",short);Art.type(self.previewNote,"Supporting",short)
 
@@ -147,9 +164,9 @@ function Picker:layout()
 		local compactNameH=Art.textHeight(self.previewName,compactNameW,24)
 		local compactHeight=math.max(48,compactNameH+8)
 		local mode,displayH,gap="hidden",0,0
-		y=if bodyBudget>=rowH+8 then 4 else 0
-		if y+fullHeight+12+rowH+4<=bodyBudget then mode,displayH,gap="full",fullHeight,12
-		elseif y+compactHeight+8+rowH+4<=bodyBudget then mode,displayH,gap="compact",compactHeight,8 end
+		y=if self.saveNotice then y else (if bodyBudget>=rowH+8 then 4 else 0)
+		if not self.saveNotice and y+fullHeight+12+rowH+4<=bodyBudget then mode,displayH,gap="full",fullHeight,12
+		elseif not self.saveNotice and y+compactHeight+8+rowH+4<=bodyBudget then mode,displayH,gap="compact",compactHeight,8 end
 		if active==self.active then
 			self.previewMode=mode;self.display.Visible=mode~="hidden";self.previewNote.Visible=mode=="full"
 			local scale=self.shell:FindFirstChild("PreviewScale")
@@ -199,7 +216,9 @@ function Picker:layout()
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
 	place(self.heading,pad,4,usable-56,headingH);place(self.cancel,width-pad-44,4,44,44)
 	for index,tab in ipairs({"Shell","Sticker","Club"})do place(self.tabs[tab],pad+(index-1)*(tabW+6),tabsY,tabW,tabH)end
-	place(self.scroll,pad,header,usable,math.max(44,height-header-footer-4))
+	self.saveMarker.Visible=markerW>0;self.saveDetail.Visible=self.saveNotice~=nil
+	place(self.saveMarker,pad,header,markerW,math.max(44,height-header-footer-4))
+	place(self.scroll,pad+(if markerW>0 then markerW+12 else 0),header,scrollW,math.max(44,height-header-footer-4))
 	place(self.apply,pad,height-footerH-4,usable,footerH)
 	self.scroll.CanvasSize=UDim2.fromOffset(0,y)
 	place(self.moreCue,width-pad-12,header+self.scroll.Size.Y.Offset-20,12,20)
@@ -211,6 +230,10 @@ function Picker:refreshScrollCue()
 	local overflow=self.scroll.CanvasSize.Y.Offset>height+1
 	self.scroll.ScrollingEnabled=overflow;self.scroll.ScrollBarImageTransparency=if overflow then 0 else 1
 	self.moreCue.Visible=overflow and self.scroll.CanvasPosition.Y+height<self.scroll.CanvasSize.Y.Offset-1
+end
+function Picker:setSaveNotice(notice)
+	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
+	self.saveNotice=notice;self:layout();return true
 end
 function Picker:showTab(active)
 	if not self.tabs[active]then return end

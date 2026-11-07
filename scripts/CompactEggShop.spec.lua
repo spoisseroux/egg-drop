@@ -137,7 +137,7 @@ return function(client, parent)
 			assert(view.heading.Text == "Hatch eggs" and view.nectar.Text == "0 nectar")
 			local unavailable = snapshot(0); unavailable.status = "SessionLost"
 			view:update(unavailable); view:setError("This hatch session moved to another server. Rejoin to continue.")
-			assert(view.heading.Text == "Save unavailable" and view.nectar.Text:find("rejoin", 1, true) and not view.action.Interactable)
+			assert(view.heading.Text == "Rejoin to continue" and view.body.EggColumn.SaveInstruction.Text:find("Rejoin", 1, true) and not view.action.Interactable,"terminal session status must keep its explicit instruction and disabled purchase")
 			view:update(snapshot(0))
 			view:setError("One moment…")
 			resize(390, 740, view)

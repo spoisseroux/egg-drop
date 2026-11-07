@@ -33,6 +33,7 @@ local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
 local PresentationPolicy = require(script.PresentationPolicy)
+local SaveNotice=require(script.SaveNotice)
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -79,34 +80,6 @@ end
 local gui = make("ScreenGui", "EggDrop", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets, DisplayOrder = 10,
 }, player:WaitForChild("PlayerGui"))
-do
-	local notice = label("TextLabel", "SaveNotice", "", gui, Art.Ink)
-	notice.AnchorPoint = Vector2.new(0.5, 1)
-	notice.Position = UDim2.new(0.5, 0, 1, -2)
-	notice.Size = UDim2.new(1, -16, 0, 21)
-	notice.TextColor3 = Art.Amber
-	notice.TextScaled = true
-	notice.ZIndex = 21
-	Art.corner(notice, 5)
-	make("UISizeConstraint", "BannerSize", { MaxSize = Vector2.new(386, 21) }, notice)
-	make("UITextSizeConstraint", "BannerText", { MinTextSize = 9, MaxTextSize = 12 }, notice)
-	local function showSaveStatus()
-		local state = board:GetAttribute("SaveStatus")
-		local encoded = board:GetAttribute("HatchState")
-		if type(encoded) == "string" then
-			local ok, value = pcall(HttpService.JSONDecode, HttpService, encoded)
-			if ok and value.status ~= "Ready" and value.status ~= "Busy" then state = value.status end
-		end
-		notice.Visible = state ~= nil and state ~= "Ready" and state ~= "Busy"
-		notice.Text = if state == "Temporary" then "Loading saved progress · retrying safely"
-			elseif state == "Retrying" then "Saving progress · retrying, please wait"
-			elseif state == "Locked" then "Waiting for previous session to close…"
-			elseif state then "Hatch save unavailable · rejoin to continue" else ""
-	end
-	board:GetAttributeChangedSignal("SaveStatus"):Connect(showSaveStatus)
-	board:GetAttributeChangedSignal("HatchState"):Connect(showSaveStatus)
-	showSaveStatus()
-end
 local bleed = make("ScreenGui", "EggDropBleed", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 9,
 }, gui.Parent)
@@ -500,6 +473,11 @@ local picker
 local journal
 local nurseryView
 local nurseryState
+local currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),nil)
+local saveNoticeOwner
+local refreshSaveNotice
+local saveNoticeLayoutQueued=false
+local boardSaveCaptionKey,boardSaveCaption
 local openNursery
 local visitEggs
 local modal
@@ -661,6 +639,22 @@ for _, button in ipairs({ modalAction, keepPlaying }) do
 	Art.fitText(button, 15, 10, 9)
 	button.TextWrapped = true
 end
+local legacySaveScroll=make("ScrollingFrame","SaveBody",{Visible=false,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=11,
+	ScrollingDirection=Enum.ScrollingDirection.Y,ElasticBehavior=Enum.ElasticBehavior.Never,ScrollBarThickness=4,ScrollBarImageColor3=Art.Leaf},modal)
+local legacySaveContent=Art.frame(legacySaveScroll,"WelcomeContent",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(100,220),11)
+legacySaveContent.BackgroundTransparency=1
+local legacySaveDetail=Art.text(legacySaveScroll,"SaveInstruction","",UDim2.fromOffset(4,228),UDim2.fromOffset(100,24),Art.Amber,14)
+legacySaveDetail.TextXAlignment=Enum.TextXAlignment.Left
+local function restoreLegacySaveParents()
+	local wasApplied=legacySaveScroll.Visible
+	legacySaveScroll.Visible=false
+	if wasApplied then
+		modalTag.Position,modalTag.Size=UDim2.fromOffset(12,5),UDim2.new(1,-24,0,16)
+		modalTag.Font,modalTag.TextSize,modalTag.TextScaled,modalTag.TextWrapped=Enum.Font.Gotham,11,false,false
+		for _,button in ipairs({modalAction,keepPlaying})do button.Font=Enum.Font.GothamMedium;Art.fitText(button,15,10,9,true)end
+	end
+	for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer,recap.frame})do if node.Parent~=modal then node.Parent=modal end end
+end
 local knownPets = board:GetAttribute("OwnedPets") or 0
 local hatchQueue = {}
 local revealedPet
@@ -793,6 +787,8 @@ local function refreshNursery()
 	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
 	if not ok or type(state) ~= "table" then return end
 	nurseryState = state
+	currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
+	if refreshSaveNotice then refreshSaveNotice()end
 	roomView.stations:refresh()
 	roomView.transition:refresh()
 	nurseryView:update(state)
@@ -935,6 +931,62 @@ roomView.stations:watch(GuiService.MenuClosed)
 roomView.stations:watch(UserInputService.TextBoxFocused)
 roomView.stations:watch(UserInputService.TextBoxFocusReleased)
 roomView.stations:refresh()
+
+local lastSavePresentation
+refreshSaveNotice=function()
+	if not gui.Parent or roomView.destroyed then return end
+	local owner=if currentSaveNotice then SaveNotice.owner({
+		native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil or roomView.busy or roomView.transition.shade.Visible,
+		eggs=nurseryView:isOpen(),style=isPickerOpen(),journal=journal.shade.Visible,menu=gameMenu.shade.Visible,
+		modal=modal.Visible,recap=recap.frame.Visible,focusing=roomView.focusing,
+		mode=if board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"then "Room"else "Board"})else nil
+	saveNoticeOwner=owner
+	nurseryView:setSaveNotice(if owner=="eggs"then currentSaveNotice else nil)
+	picker:setSaveNotice(if owner=="style"then currentSaveNotice else nil)
+	journal:setSaveNotice(if owner=="journal"then currentSaveNotice else nil)
+	gameMenu:setSaveNotice(if owner=="menu"then currentSaveNotice else nil)
+	roomView.focusUI:setSaveNotice(if owner=="roam"or owner=="focus"then currentSaveNotice else nil)
+	recap:setSaveNotice(if owner=="recap"then currentSaveNotice else nil,
+		if owner=="recap"and modal.Size.Y.Offset<300 then modalTitle.Text else nil)
+	status.Visible=not (currentSaveNotice~=nil and owner~="board")
+	if owner~="board"then status:SetAttribute("AccessibleLabel",nil)end
+	if owner=="board"then
+		Art.type(status,"Body",backdrop:GetAttribute("CompactInstruction")==true)
+		if backdrop:GetAttribute("CompactInstruction")then status.TextSize=12 end
+		local captionKey=currentSaveNotice.key..tostring(status.AbsoluteSize)..tostring(status.TextSize)..status.Font.Name..GuiService.PreferredTextSize.Name
+		if boardSaveCaptionKey~=captionKey then
+			boardSaveCaption=SaveNotice.caption(currentSaveNotice,function(value)return Art.textWidth(status,value)<=status.AbsoluteSize.X-8 end)
+			boardSaveCaptionKey=captionKey
+		end
+		status.Text=boardSaveCaption
+		status:SetAttribute("AccessibleLabel",currentSaveNotice.detail)
+		status.BackgroundTransparency,status.TextColor3=.08,Art.Amber;questHUD.host.Visible=false
+		-- The persistent save state owns this same status well over transient drop copy.
+		if dropCaption.Text~="DROP"then dropCaption.Visible=false end
+	elseif owner=="recap"or owner=="welcome"then modalTag.Text=currentSaveNotice.short end
+	gui:SetAttribute("SaveNoticeOwner",owner or "");gui:SetAttribute("SaveNoticeCode",if currentSaveNotice then currentSaveNotice.code else "")
+	local key=(owner or "")..SaveNotice.key(currentSaveNotice)
+	if key~=lastSavePresentation then
+		lastSavePresentation=key
+		if layout and not saveNoticeLayoutQueued then
+			saveNoticeLayoutQueued=true;task.defer(function()saveNoticeLayoutQueued=false;if gui.Parent then layout()end end)
+		end
+	end
+end
+local saveNoticeConnections={}
+local function watchSaveNotice(signal)
+	table.insert(saveNoticeConnections,signal:Connect(function()refreshSaveNotice()end))
+end
+for _,node in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,roomView.controls,roomView.focusUI.panel,roomView.transition.shade})do
+	watchSaveNotice(node:GetPropertyChangedSignal("Visible"))
+end
+watchSaveNotice(GuiService.MenuOpened);watchSaveNotice(GuiService.MenuClosed)
+watchSaveNotice(UserInputService.TextBoxFocused);watchSaveNotice(UserInputService.TextBoxFocusReleased)
+table.insert(saveNoticeConnections,board:GetAttributeChangedSignal("SaveStatus"):Connect(function()
+	currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),nurseryState);refreshSaveNotice()
+end))
+gui.Destroying:Connect(function()for _,connection in ipairs(saveNoticeConnections)do connection:Disconnect()end;table.clear(saveNoticeConnections)end)
+refreshSaveNotice()
 
 customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
 local function repaintEquipped()
@@ -1232,6 +1284,7 @@ updateHud = function()
 			end, hatchPet.cue, hatchPet.color)
 		end
 	end
+	if refreshSaveNotice then refreshSaveNotice()end
 end
 
 layout = function()
@@ -1370,17 +1423,20 @@ layout = function()
 		item.node.Size=UDim2.fromScale(zoneWidth,.95)
 	end
 	modal.Position=UDim2.fromScale(.5,.5)
+	restoreLegacySaveParents()
+	local modalSave=if saveNoticeOwner=="recap"or saveNoticeOwner=="welcome"then currentSaveNotice else nil
 	local fieldRecap=recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0
-	local dialogHeight=if fieldRecap then math.min(500,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-32))
+	local dialogHeight=if fieldRecap then math.min(500,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
 	modal:SetAttribute("CompactDialog",dialogHeight<220)
 	modal.Size=UDim2.fromOffset(math.min(if fieldRecap then 600 else 440,screen.X-(if fieldRecap then 16 else 32)),dialogHeight)
 	if fieldRecap then
 		local compact=dialogHeight<300
-		modalTag.Visible=not compact
+		modalTag.Visible=not compact or modalSave~=nil
+		modalTitle.Visible=not (compact and modalSave~=nil)
 		Art.type(modalTitle,"Heading",compact)
 		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if compact then 28 else 36)
 		local titleY=2
-		if not compact then
+		if not compact or modalSave then
 			Art.type(modalTag,"Supporting",true)
 			local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,18)
 			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+9
@@ -1392,11 +1448,11 @@ layout = function()
 		local bottomMargin=if compact then 8 else 16
 		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
 		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
-		recap.headerInset=titleY+titleH+8
+		recap.headerInset=if compact and modalSave then titleY+1 else titleY+titleH+8
 		recap.footerInset=footerH+bottomMargin+8
 
 	else
-		modalTag.Visible=true
+		modalTag.Visible=true;modalTitle.Visible=true
 		modalTitle.Position=UDim2.fromOffset(0,18)
 	end
 	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0 then recap:layoutField(dialogHeight)end
@@ -1405,8 +1461,31 @@ layout = function()
 	hatchIndex.Visible=pet.Visible and dialogHeight>=220
 	pet.Position=UDim2.new(.5,0,0,55+stageHeight/2);pet.Size=UDim2.fromOffset(math.min(88,stageHeight-4),math.min(88,stageHeight-4))
 	local portrait=pet:FindFirstChild("Portrait");if portrait then portrait.StageFit.Scale=math.min(1,pet.Size.Y.Offset/91)end
+	if modalSave and not fieldRecap then
+		Art.type(modalTag,"Supporting",true);modalTag.Text=modalSave.short
+		local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,22)
+		modalTag.Position,modalTag.Size=UDim2.fromOffset(12,2),UDim2.new(1,-24,0,tagH)
+		local bw=(modal.Size.X.Offset-36)/2
+		Art.type(modalAction,"Body",true);Art.type(keepPlaying,"Body",true)
+		if Art.textHeight(modalAction,bw,0)+8>44 then modalAction.Text=if recap.frame.Visible then "Retry"else "Meet"end
+		if Art.textHeight(keepPlaying,bw,0)+8>44 then keepPlaying.Text="Play"end
+		local footerH=math.max(44,Art.textHeight(modalAction,bw,0)+8,Art.textHeight(keepPlaying,bw,0)+8)
+		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-footerH-4),UDim2.new(.5,-18,0,footerH)
+		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,-footerH-4),UDim2.new(.5,-18,0,footerH)
+		local top=tagH+8;local height=math.max(1,dialogHeight-top-footerH-8)
+		legacySaveScroll.Position,legacySaveScroll.Size=UDim2.fromOffset(12,top),UDim2.new(1,-24,0,height)
+		legacySaveContent.Size=UDim2.fromOffset(modal.Size.X.Offset-24,220)
+		for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer,recap.frame})do node.Parent=legacySaveContent end
+		Art.type(legacySaveDetail,"Body",true);legacySaveDetail.Text=modalSave.detail
+		local h=Art.textHeight(legacySaveDetail,modal.Size.X.Offset-32,24)
+		legacySaveDetail.Position,legacySaveDetail.Size=UDim2.fromOffset(4,228),UDim2.fromOffset(modal.Size.X.Offset-32,h)
+		local total=228+h+4;legacySaveScroll.CanvasSize=UDim2.fromOffset(0,total)
+		legacySaveScroll.ScrollingEnabled=total>height;legacySaveScroll.Visible=true
+		legacySaveScroll.CanvasPosition=Vector2.new(0,math.clamp(legacySaveScroll.CanvasPosition.Y,0,math.max(0,total-height)))
+	end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
+	if refreshSaveNotice then refreshSaveNotice()end
 end
 
 local function aimFromScreen(x)
@@ -1910,7 +1989,14 @@ Art.watchTextPreference(backdrop,function()return backdrop.Visible end,function(
 backdrop:GetPropertyChangedSignal("Visible"):Connect(function()if backdrop.Visible and backdrop:GetAttribute("TextPreferenceDirty") then layout();updateHud();backdrop:SetAttribute("TextPreferenceDirty",false)end end)
 status:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(updateHud) end)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
+local previousSaveBusy,previousSaveFocus,previousSaveMode
 RunService.RenderStepped:Connect(function(dt)
+	-- Completion is local and may leave every Visible property unchanged. Poll only
+	-- these scalars, then run the owner handoff once; never decode/walk UI per frame.
+	if previousSaveBusy~=roomView.busy or previousSaveFocus~=roomView.focusing or previousSaveMode~=roomView.mode then
+		previousSaveBusy,previousSaveFocus,previousSaveMode=roomView.busy,roomView.focusing,roomView.mode
+		refreshSaveNotice()
+	end
 	if hatchNavigation and hatchNavigation.active then
 		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 		if humanoid and humanoid.MoveDirection.Magnitude > .05 then cancelHatchNavigation() end

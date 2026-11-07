@@ -7,6 +7,7 @@ local EggCatalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalo
 local familyNames = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
 local ranks = { "I", "II", "III" }
 
+local SaveNotice=require(script.Parent.SaveNotice)
 local Recap = {}
 Recap.__index = Recap
 
@@ -119,6 +120,9 @@ function Recap.new(parent, audio, reduceEffects)
 	detailsButton.Activated:Connect(function() self:setDetails(not self.detailsOpen) end)
 	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() if self.fieldMode then self:layoutField(frame.AbsoluteSize.Y) end end)
 	Art.watchTextPreference(frame,function()return self:isVisible()end,function()if self.onPreferredLayout then self.onPreferredLayout() else self:layoutField(frame.AbsoluteSize.Y) end end)
+	self.saveDetail=Art.text(body,"SaveInstruction","",UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Amber,14)
+	self.saveDetail.TextXAlignment,self.saveDetail.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Top
+	self.saveDetail.Visible=false
 	self.feedback = Feedback.new(function(sample) self:paintFeedback(sample) end, audio, reduceEffects)
 	-- Any hidden ancestor also ends the sequence; returning to this receipt shows
 	-- final values and cannot replay its sound or transfer.
@@ -352,11 +356,17 @@ function Recap:setDetails(open)
 	self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)
 	if self.detailsOpen then
 		local maximum=math.max(0,self.fieldBody.CanvasSize.Y.Offset-self.fieldBody.AbsoluteSize.Y)
-		self.fieldBody.CanvasPosition=Vector2.new(0,math.min(math.max(0,(self.detailsTop or 56)-56),maximum))
+		self.fieldBody.CanvasPosition=Vector2.new(0,math.min(math.max(0,(self.detailsTop or 56)+(self.noticeInset or 0)-56),maximum))
 	else self.fieldBody.CanvasPosition=Vector2.zero end
 end
 local function place(node,x,y,w,h)
 	node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)
+end
+function Recap:setSaveNotice(notice,outcome)
+	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice) and self.saveOutcome==outcome then return false end
+	self.saveNotice,self.saveOutcome=notice,outcome
+	if self.fieldMode then self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)end
+	return true
 end
 function Recap:layoutField(height)
 	self.layoutHeight=height
@@ -371,7 +381,15 @@ function Recap:layoutField(height)
 	self.fieldBody.Visible=true
 	self.goal.Parent=self.fieldBody
 	self.goal.BackgroundTransparency=1
-	place(self.goal,0,0,width,340)
+	local noticeInset=0
+	self.saveDetail.Visible=self.saveNotice~=nil
+	if self.saveNotice then
+		Art.type(self.saveDetail,"Body",compact)
+		self.saveDetail.Text=(if self.saveOutcome then self.saveOutcome.."\n"else "")..self.saveNotice.detail
+		local h=Art.textHeight(self.saveDetail,width-8,24);place(self.saveDetail,4,0,width-8,h);noticeInset=h+12
+	end
+	self.noticeInset=noticeInset
+	place(self.goal,0,noticeInset,width,340)
 	self.goal.Visible=true
 	self.summary.Visible=false
 	self.title.Visible,self.detail.Visible=not self.hasReceipt,not self.hasReceipt
@@ -464,9 +482,9 @@ function Recap:layoutField(height)
 		for _,label in ipairs(self.componentLabels) do label.Visible=false end
 		self.receiptScroll.Visible=false
 	end
-	place(self.goal,0,0,width,total)
-	self.fieldBody.CanvasSize=UDim2.fromOffset(0,total)
-	self.fieldBody.ScrollingEnabled=total>self.fieldBody.AbsoluteSize.Y
-	self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(self.fieldBody.CanvasPosition.Y,0,math.max(0,total-self.fieldBody.Size.Y.Offset)))
+	place(self.goal,0,noticeInset,width,total)
+	self.fieldBody.CanvasSize=UDim2.fromOffset(0,total+noticeInset)
+	self.fieldBody.ScrollingEnabled=total+noticeInset>self.fieldBody.AbsoluteSize.Y
+	self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(self.fieldBody.CanvasPosition.Y,0,math.max(0,total+noticeInset-self.fieldBody.Size.Y.Offset)))
 end
 return Recap

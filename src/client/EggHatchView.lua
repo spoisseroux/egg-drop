@@ -8,6 +8,7 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local EggArt = require(script.Parent.EggArt)
 
+local SaveNotice=require(script.Parent.SaveNotice)
 local View = {}
 View.__index = View
 
@@ -70,6 +71,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local body = Instance.new("ScrollingFrame")
 	body.Name, body.Position, body.Size = "Body", UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
 	body.BackgroundTransparency, body.BorderSizePixel, body.ZIndex = 1, 0, 22
+	body.ClipsDescendants=true
 	body.ScrollBarThickness, body.ScrollBarImageColor3 = 4, Art.Leaf
 	body.ScrollingDirection, body.ElasticBehavior = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never
 	body.Parent = card
@@ -110,6 +112,24 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	return self
 end
 
+function View:getSaveNotice()
+	return if self.noticeManaged then self.managedSaveNotice else SaveNotice.resolve(nil,self.state)
+end
+function View:setSaveNotice(notice)
+	local previous=self:getSaveNotice()
+	self.noticeManaged,self.managedSaveNotice=true,notice
+	if SaveNotice.key(previous)==SaveNotice.key(notice)then return false end
+	self:layout();return true
+end
+function View:restoreRevealParent()
+	if self.revealHost.Parent~=self.card then
+		-- Offset size survives reparenting without a cinematic resize/replay.
+		local size=self.revealHost.AbsoluteSize
+		self.revealHost.Size=UDim2.fromOffset(size.X,size.Y);self.revealHost.Parent=self.card
+	end
+	self.revealHost.Position,self.revealHost.Size=UDim2.fromOffset(10,10),UDim2.new(1,-20,1,-80)
+	self.note.Parent=self.card
+end
 function View:headerKey()
 	return table.concat({self.heading.Text,self.nectar.Text,self.note.Text,self.selected,tostring(self.state.lastHatch~=nil)},"|")
 end
@@ -120,6 +140,8 @@ end
 function View:layout()
 	local size = self.shade.AbsoluteSize
 	local result = self.state.lastHatch ~= nil
+	local notice=self:getSaveNotice()
+	if not (result and notice)then self:restoreRevealParent()else self.note.Parent=self.card end
 	local previousBudgetCompact=self.budgetCompact
 	local cardW=math.clamp(size.X-32,1,560)
 	-- Measure the roomy header/footer first. A landscape safe area may be >280
@@ -127,7 +149,7 @@ function View:layout()
 	local roomyBody=math.huge
 	if not result then
 		self.compactShop=false;self:refreshShopHeader()
-		Art.type(self.heading,"Heading",false);Art.type(self.nectar,"Body",false);Art.type(self.note,"Supporting",false)
+		Art.type(self.heading,if notice then "Body"else "Heading",false);Art.type(self.nectar,"Body",false);Art.type(self.note,"Supporting",false)
 		Art.type(self.action,"Action",cardW<400)
 		local titleH=Art.textHeight(self.heading,cardW-80,28)
 		local chipW=math.min(math.max(1,cardW-24),math.max(146,Art.textWidth(self.nectar)+44))
@@ -175,7 +197,7 @@ function View:layout()
 	self.wallet.Visible = not result
 	self.meetButton.Visible = result
 	self.heading.Visible, self.nectar.Visible, self.note.Visible, self.body.Visible = not result, not result, not result and not compactShop, not result
-	Art.type(self.heading,"Heading",compactShop)
+	Art.type(self.heading,if notice then "Body"else "Heading",compactShop)
 	Art.type(self.nectar,"Body",compactShop)
 	if not compactShop then
 		self.note.Position,self.note.Size=UDim2.fromOffset(12,70),UDim2.new(1,-24,0,34)
@@ -216,6 +238,26 @@ function View:layout()
 	elseif not result then
 		self.body.Size=UDim2.new(1,-24,1,-self.body.Position.Y.Offset-footerH-18)
 	end
+	if result and notice then
+		-- Keep the cinematic's normal dimensions and identity; only its viewport
+		-- joins the existing scroll owner when a persistent instruction needs room.
+		self.heading.Visible=true;self.heading.Text=notice.short;Art.type(self.heading,"Body",true)
+		self.heading.Position,self.heading.Size=UDim2.fromOffset(12,4),UDim2.new(1,-80,0,44)
+		self.body.Visible=true
+		local top=48;local gap=if self.shade.AbsoluteSize.Y<200 then 4 else 12
+		self.action.Position,self.meetButton.Position=UDim2.new(.5,6,1,-footerH-gap),UDim2.new(0,12,1,-footerH-gap)
+		self.body.Position,self.body.Size=UDim2.fromOffset(12,top),UDim2.new(1,-24,1,-top-footerH-gap-4)
+		self.revealHost.Size=UDim2.fromOffset(math.max(1,cardW-20),math.max(1,self.card.Size.Y.Offset-80))
+		self.revealHost.Parent=self.body;self.revealHost.Position=UDim2.fromOffset(0,0)
+		for _,child in ipairs(self.body:GetChildren())do if child~=self.revealHost then child:Destroy()end end
+		self.note.Parent=self.body;self.note.Visible=true;self.note.Text=notice.detail;Art.type(self.note,"Body",true)
+		local heroH=self.revealHost.Size.Y.Offset
+		local h=Art.textHeight(self.note,cardW-32,24)
+		self.note.Position,self.note.Size=UDim2.fromOffset(4,heroH+8),UDim2.fromOffset(cardW-32,h)
+		local total=heroH+8+h+4
+		self.body.CanvasSize=UDim2.fromOffset(0,total);self.body.ScrollingEnabled=total>self.body.Size.Y.Offset
+		self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,total-self.body.Size.Y.Offset)))
+	end
 	self.layoutHeaderKey=self:headerKey()
 	if self.shade.Visible then
 		self:renderBody()
@@ -227,30 +269,21 @@ function View:layout()
 end
 
 function View:refreshShopHeader()
-	self.heading.Text = "Hatch eggs"
-	self.nectar.Text = string.format("%d nectar", self.state.nectar or 0)
-	-- Rotation must reconstruct the normal notice from its source state rather
-	-- than expose a caption left over from an earlier unavailable/save snapshot.
-	self.note.Visible = self.state.lastHatch == nil and not self.compactShop
-	self.note.Text = self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
-	if not self.errorMessage and self.state.status and self.state.status ~= "Ready" and self.state.status ~= "Busy" then
-		self.note.Text = "Egg save unavailable · try again shortly"
-	end
-	if not self.compactShop then return end
-	local status, message = self.state.status, self.errorMessage
-	if self.pending or status == "Busy" or status == "Retrying" or status == "Pending" then
-		self.heading.Text = "Saving…"
-		self.nectar.Text = if status == "Retrying" then "Saving · retrying automatically" else "Finishing your last action…"
-	elseif status and status ~= "Ready" then
-		self.heading.Text = "Save unavailable"
-		self.nectar.Text = if status == "Locked" then "Previous session is closing"
-			elseif status == "SessionLost" then "Session moved · rejoin to continue" else "Rejoin before spending nectar"
+	local notice=self:getSaveNotice()
+	self.heading.Text=if notice then notice.short else "Hatch eggs"
+	self.nectar.Text=string.format("%d nectar",self.state.nectar or 0)
+	self.note.Visible=self.state.lastHatch==nil and not self.compactShop
+	self.note.Text=if notice then notice.detail else self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
+	if notice or not self.compactShop then return end
+	local status,message=self.state.status,self.errorMessage
+	if self.pending or status=="Busy"or status=="Pending"then
+		self.heading.Text="Saving…";self.nectar.Text="Finishing your last action…"
 	elseif message then
-		self.heading.Text = "Try again"
-		self.nectar.Text = if message == "One moment…" then "One moment · try again"
-			elseif message == "Your hatch progress updated. Try again." or message == "RevisionChanged" then "Progress updated · try again"
-			elseif message == "Earn more nectar in a field run." then "Need more nectar · play a run"
-			elseif message == "Finishing your last save…" or message == "Finishing your last hatch action…" then "Finishing your last save…"
+		self.heading.Text="Try again"
+		self.nectar.Text=if message=="One moment…"then "One moment · try again"
+			elseif message=="Your hatch progress updated. Try again."or message=="RevisionChanged"then "Progress updated · try again"
+			elseif message=="Earn more nectar in a field run."then "Need more nectar · play a run"
+			elseif message=="Finishing your last save…"or message=="Finishing your last hatch action…"then "Finishing your last save…"
 			else "Action unavailable · try again"
 	end
 end
@@ -353,6 +386,7 @@ function View:renderBody()
 	self.renderingBody = true
 	local canvasPosition = self.body.CanvasPosition
 	self.revealHost.Visible = false
+	self:restoreRevealParent()
 	self.body:ClearAllChildren()
 	local size = self.body.AbsoluteSize
 	local compact = self.compactShop == true
@@ -364,9 +398,16 @@ function View:renderBody()
 	local recipe = Catalog.ById[self.selected]
 	local recipeStep = if compact then 52 else 91
 	local compactTextX = 36
+	local startY=0
+	local notice=self:getSaveNotice()
+	if compact and notice then
+		local detail=Art.text(left,"SaveInstruction",notice.detail,UDim2.fromOffset(3,0),UDim2.fromOffset(columnWidth-9,24),Art.Amber,14)
+		Art.type(detail,"Body",true);local h=Art.textHeight(detail,columnWidth-9,24)
+		detail.Size=UDim2.fromOffset(columnWidth-9,h);startY=h+12
+	end
 	for index, id in ipairs(Catalog.Order) do
 		local option = Catalog.ById[id]
-		local y = (if compact then math.floor((index - 1) / 2) else index - 1) * recipeStep + (if compact then 0 else 3)
+		local y = startY+(if compact then math.floor((index - 1) / 2) else index - 1) * recipeStep + (if compact then 0 else 3)
 		local position = if compact then UDim2.new((index - 1) % 2 * 0.5, 2, 0, y) else UDim2.fromOffset(2, y)
 		local choice = button(left, "Recipe_" .. id, "", position, UDim2.new(if compact then 0.5 else 1, if compact then -6 else -7, 0, if compact then 44 else 83),
 			if self.selected == id then Art.Raised else Art.Surface)
@@ -389,7 +430,7 @@ function View:renderBody()
 		end
 		choice.Activated:Connect(function() self:selectRecipe(id) end)
 	end
-	local y = if compact then math.ceil(#Catalog.Order / 2) * recipeStep else #Catalog.Order * recipeStep + 8
+	local y = startY+(if compact then math.ceil(#Catalog.Order / 2) * recipeStep else #Catalog.Order * recipeStep + 8)
 	if compact and self.compactStatus then
 		local status=Art.text(left,"CompactStatus",self.nectar.Text,UDim2.fromOffset(3,y),UDim2.new(1,-9,0,24),Art.Muted,12)
 		Art.type(status,"Supporting",true)
@@ -466,6 +507,7 @@ end
 
 function View:update(state)
 	self.state = state or {}
+	if self.errorMessage and self.errorRevision and self.state.status=="Ready" and (self.state.revision or 0)>self.errorRevision then self.errorMessage,self.errorRevision=nil,nil end
 	local intent = self.ackIntent
 	local result = self.state.lastHatch
 	if intent and result and result.id ~= intent.id then
@@ -483,9 +525,6 @@ function View:update(state)
 	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
 	self.nectar.Text = string.format("%d nectar", self.state.nectar or 0)
 	self.note.Text = self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
-	if self.state.status and self.state.status ~= "Ready" and self.state.status ~= "Busy" then
-		self.note.Text = "Egg save unavailable · try again shortly"
-	end
 	self:layout()
 	if self.shade.Visible then
 		if result then
@@ -537,6 +576,7 @@ function View:setError(message)
 	if rejected then self:revokeIntent() end
 	self.pending = self.ackIntent ~= nil or status == "Busy"
 	self.errorMessage = message
+	self.errorRevision=self.state.revision or 0
 	self.note.Text = message or "Earn nectar. Choose an egg. Meet a new friend."
 	if message == "One moment…" or message == "Finishing your last save…"
 		or message == "Finishing your last hatch action…"
@@ -588,6 +628,7 @@ function View:close(reason, choice)
 	self:revokeIntent()
 	self.shade.Visible = false
 	self.cinematic:cancel()
+	self:restoreRevealParent()
 	self.revealHost.Visible = false
 	self.playingId, self.ackReady, self.pending, self.retryAvailable = nil, false, false, false
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then

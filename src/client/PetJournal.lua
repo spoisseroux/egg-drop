@@ -4,6 +4,7 @@ local Pets=require(ReplicatedStorage.Shared.PetCatalog)
 local Art=require(script.Parent.DeckArt)
 local Portrait=require(script.Parent.PetPortrait)
 local Crest=require(script.Parent.FamilyCrest)
+local SaveNotice=require(script.Parent.SaveNotice)
 local Journal={};Journal.__index=Journal
 local familyNames={pip="Pip",puddle="Puddle",wick="Wick",orbit="Orbit"}
 local rankNames={[0]="Unranked","I","II","III"}
@@ -40,6 +41,8 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
 	self.title=text(card,"Title","Pet journal · 00/07","Heading")
+	self.baseTitle=self.title.Text
+	self.saveDetail=text(scroll,"SaveInstruction","","Body",Art.Amber);self.saveDetail.Visible=false
 	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
@@ -68,7 +71,8 @@ function Journal:layout()
 	local size=self.shade.AbsoluteSize;local short=size.Y<220
 	local width=math.max(1,math.min(680,size.X-24));local pad=if short then 8 else 16
 	local usable=width-pad*2;local bodyW=usable-8
-	Art.type(self.title,if short then "Body"else "Heading",short)
+	self.title.Text=if self.saveNotice then self.saveNotice.short else self.baseTitle
+	Art.type(self.title,if short or self.saveNotice then "Body"else "Heading",short)
 	local titleH=Art.textHeight(self.title,usable-56,28);local header=math.max(44,titleH)+8
 	local footerH=0
 	if self.goalsButton then
@@ -85,6 +89,11 @@ function Journal:layout()
 	local columns=if (bodyW-8)/2>=minColumn then 2 else 1
 	self.columns=columns
 	local y=4;local index=1
+	self.saveDetail.Visible=self.saveNotice~=nil
+	if self.saveNotice then
+		Art.type(self.saveDetail,"Body",short);self.saveDetail.Text=self.saveNotice.detail
+		local h=Art.textHeight(self.saveDetail,bodyW-8,24);place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
+	end
 	while index<=#self.cards do
 		local group=if columns==2 and not Pets.collection[index].trial then math.min(2,#Pets-index+1)else 1
 		local rowW=if group==2 then (bodyW-12)/2 else bodyW-8
@@ -123,6 +132,10 @@ function Journal:layout()
 	local selected=GuiService.SelectedObject
 	if selected and selected.Parent==self.scroll and self.shade.Visible then self:ensureVisible(selected)end
 end
+function Journal:setSaveNotice(notice)
+	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
+	self.saveNotice=notice;self:layout();return true
+end
 function Journal:refreshScrollCue()
 	local height=self.scroll.AbsoluteSize.Y
 	local overflow=self.scroll.CanvasSize.Y.Offset>height+1
@@ -144,7 +157,7 @@ function Journal:openFamilyGoals()
 	self:close();self.onGoals();return true
 end
 function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,masteryRanks)
-	self.title.Text=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
+	self.baseTitle=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
 	local firstOwned,firstTrack
 	for index,entry in ipairs(self.cards)do
 		local pet=Pets.collection[index];local unlocked=Pets.isUnlocked(pet,owned,trials,inventoryMask)

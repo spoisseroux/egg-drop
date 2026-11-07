@@ -1,0 +1,665 @@
+{
+  "medium": [
+    {
+      "ok": true,
+      "result": {
+        "passed": 9,
+        "cases": {
+          "1": "retryable load states promise automatic retry without asking for rejoin",
+          "2": "session wait save retry and terminal states keep distinct truthful instructions",
+          "3": "blocking hatch status wins without discarding the profile source",
+          "4": "unknown hatch status cannot hide a recognized profile retry instruction",
+          "5": "neutral hatch states never suppress profile load or save retry",
+          "6": "recovery clears derived notice and never rewrites wallet result ID selection or command feedback",
+          "7": "terminal notices persist until an explicit source change without invented timers",
+          "8": "one modal or room owner excludes every covered presentation",
+          "9": "compact wording changes copy without changing text size or save semantics"
+        }
+      },
+      "name": "SaveNotice",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": {
+          "1": "profile retry survives every neutral hatch status in the actual current owner",
+          "2": "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        }
+      },
+      "name": "SaveNoticeOwnership",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "rootSize": "733, 307",
+        "passed": 2,
+        "cases": {
+          "1": "733, 307 passive status belongs to each modal without covering pinned actions",
+          "2": "733, 307 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "rootSize": "568, 160",
+        "passed": 2,
+        "cases": {
+          "1": "568, 160 passive status belongs to each modal without covering pinned actions",
+          "2": "568, 160 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "rootSize": "385, 703",
+        "passed": 2,
+        "cases": {
+          "1": "385, 703 passive status belongs to each modal without covering pinned actions",
+          "2": "385, 703 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "rootSize": "1649, 971",
+        "passed": 3,
+        "cases": {
+          "1": "1649, 971 passive status belongs to each modal without covering pinned actions",
+          "2": "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+          "3": "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "cases": {
+          "1": "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+          "2": "733, 307 Journal measures all seven name status rank and crest rows",
+          "3": "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+          "4": "568, 160 Journal measures all seven name status rank and crest rows",
+          "5": "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+          "6": "385, 703 Journal measures all seven name status rank and crest rows",
+          "7": "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+          "8": "1649, 971 Journal measures all seven name status rank and crest rows"
+        },
+        "passed": 8
+      },
+      "name": "StyleJournalLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 12,
+        "cases": {
+          "1": "swatches preview only across resize tabs and scrolling",
+          "2": "X Back and forced-dismiss common close route roll back once per opening",
+          "3": "Equip captures pending IDs before rollback and submits exactly once",
+          "4": "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+          "5": "Club settings apply once immediately and persist through closing",
+          "6": "Roblox reduced motion cannot be overridden by a setting or reflow",
+          "7": "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+          "8": "authoritative empty inventory has no legacy track or hidden selectable row",
+          "9": "legacy tracking remains explicit only when the inventory mask is absent",
+          "10": "owned row equips once and Family goals never equips tracks or selects a family",
+          "11": "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+          "12": "measured Ranks caption retains mastery page identity and callback"
+        }
+      },
+      "name": "StyleJournalActions",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "733, 307 preferred roam hint stays measured below dock inside core safe root",
+          "2": "568, 160 preferred roam hint stays measured below dock inside core safe root",
+          "3": "385, 703 preferred roam hint stays measured below dock inside core safe root",
+          "4": "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+        }
+      },
+      "name": "PetRoamHint",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "a rare-only inventory inherits its family rank without unlocking the base pet",
+          "2": "family goals routes once after closing and issues no equip or track action",
+          "3": "legacy constructor preserves pinned close and optional rank arguments",
+          "4": "compact and portrait journal shows complete rows and 44px footer controls"
+        }
+      },
+      "name": "JournalPurpose",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "movement and jumping restore exact prior settings once",
+          "2": "petting bounds account for core-safe offset and reject hidden geometry",
+          "3": "focus navigation is safe-sized and input bindings clean up",
+          "4": "petting pointer uses core-safe input coordinates exactly once",
+          "5": "other modals suspend focus UI and receive Back/movement/Greet input",
+          "6": "repeat greeting reacts in the same shot and throttles rubbing",
+          "7": "reduced effects and stale camera/root never animate or keep a lock",
+          "8": "focus movement release restores only the captured controller",
+          "9": "camera teardown invalidates stale greeting epochs without touching a replacement",
+          "10": "aspect reframe preserves original restore shot without greet or recapture"
+        }
+      },
+      "name": "PetFocusUI",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+          "2": "page changes keep absolute header and tab positions stable",
+          "3": "complete illustrated destinations start below the scroll clip",
+          "4": "all three shallow contracts show a complete44px first row and independent gift",
+          "5": "claimed gift cannot claim again and earned contracts remain informational",
+          "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+          "7": "scroll cue ends at reachable content and small pages end after content",
+          "8": "mastery cards wrap exact missing conditions at real body size",
+          "9": "hidden and unchanged snapshots perform no text measurement layout",
+          "10": "locked family rows omit unused progress space and cannot select a family"
+        }
+      },
+      "name": "MenuPolish",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "cases": {
+          "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+          "2": "680, 700 measured shop header and pinned purchase route fit",
+          "3": "680, 700 recap reward wallet and complete receipt stay readable",
+          "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+          "5": "390, 740 measured shop header and pinned purchase route fit",
+          "6": "390, 740 recap reward wallet and complete receipt stay readable",
+          "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+          "8": "568, 160 measured shop header and pinned purchase route fit",
+          "9": "568, 160 recap reward wallet and complete receipt stay readable"
+        },
+        "passed": 9
+      },
+      "name": "PreferredTextLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "already equipped pet focuses without duplicate equip",
+          "2": "rare-only companion waits for server equip acknowledgment",
+          "3": "mode and local handoff must both finish before equip",
+          "4": "manual cancellation prevents late equip and focus",
+          "5": "overlay interruption cancels pending focus",
+          "6": "unconfirmed equip never substitutes a local pet",
+          "7": "replay resets finished board once after handoff",
+          "8": "replay preserves an unfinished board",
+          "9": "cancelled replay cannot reset a later round",
+          "10": "newer navigation wins over a stale mode wait"
+        }
+      },
+      "name": "HatchNavigation",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 18,
+        "cases": {
+          "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "2": "Replay never purchases and synchronous confirmation fires once",
+          "3": "Retry and same-ID updates retain immutable choice",
+          "4": "Pending feedback preserves choice before state catches up",
+          "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "7": "Close cancels a scheduled pre-dispatch retry",
+          "8": "Busy feedback queues a retry until Ready for the same result",
+          "9": "A retry timer encountering Busy retains its work until Ready",
+          "10": "Another pending transaction releases the captured ack on Ready",
+          "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "12": "A changed result revokes old navigation",
+          "13": "Close during retry cancels navigation without a second acknowledgement",
+          "14": "Definitive rejection permits changing the action",
+          "15": "Actions remain locked during an unfinished cinematic",
+          "16": "Duplicate caption uses copied mastery progress and retains both choices",
+          "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+          "18": "44px result actions fit short landscape safe areas and long names"
+        }
+      },
+      "name": "HatchActions",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "160/198/236 safe heights show both complete recipes and separate 44px controls",
+          "2": "selecting Sprout uses its 24 nectar cost and exact missing amount",
+          "3": "narrow 350x279 shop keeps both complete recipe names and costs readable",
+          "4": "compact errors and save state remain visible and clear when retried",
+          "5": "daily gift, every hatch odd and rare protection remain completely reachable",
+          "6": "rotation resets normal shop geometry while preserving selection and bounded scroll",
+          "7": "compact shop transitions preserve both 44px hatch result actions",
+          "8": "reopening keeps the purchased recipe and cost explicit in the pinned action"
+        }
+      },
+      "name": "CompactEggShop",
+      "preference": "Medium"
+    }
+  ],
+  "largest": [
+    {
+      "ok": true,
+      "result": {
+        "passed": 9,
+        "cases": {
+          "1": "retryable load states promise automatic retry without asking for rejoin",
+          "2": "session wait save retry and terminal states keep distinct truthful instructions",
+          "3": "blocking hatch status wins without discarding the profile source",
+          "4": "unknown hatch status cannot hide a recognized profile retry instruction",
+          "5": "neutral hatch states never suppress profile load or save retry",
+          "6": "recovery clears derived notice and never rewrites wallet result ID selection or command feedback",
+          "7": "terminal notices persist until an explicit source change without invented timers",
+          "8": "one modal or room owner excludes every covered presentation",
+          "9": "compact wording changes copy without changing text size or save semantics"
+        }
+      },
+      "name": "SaveNotice",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "clientLocalOnly": true,
+        "passed": 2,
+        "cases": {
+          "1": "profile retry survives every neutral hatch status in the actual current owner",
+          "2": "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+        }
+      },
+      "name": "SaveNoticeOwnership",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "rootSize": "733, 307",
+        "passed": 2,
+        "cases": {
+          "1": "733, 307 passive status belongs to each modal without covering pinned actions",
+          "2": "733, 307 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "rootSize": "568, 160",
+        "passed": 2,
+        "cases": {
+          "1": "568, 160 passive status belongs to each modal without covering pinned actions",
+          "2": "568, 160 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "rootSize": "385, 703",
+        "passed": 2,
+        "cases": {
+          "1": "385, 703 passive status belongs to each modal without covering pinned actions",
+          "2": "385, 703 same-ID reveal and ordinary shop retain authority across status recovery"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "rootSize": "1649, 971",
+        "passed": 3,
+        "cases": {
+          "1": "1649, 971 passive status belongs to each modal without covering pinned actions",
+          "2": "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+          "3": "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+        }
+      },
+      "name": "SaveNoticeLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "cases": {
+          "1": "733, 307 Style pins X tabs and Equip around reachable preferred-text content",
+          "2": "733, 307 Journal measures all seven name status rank and crest rows",
+          "3": "568, 160 Style pins X tabs and Equip around reachable preferred-text content",
+          "4": "568, 160 Journal measures all seven name status rank and crest rows",
+          "5": "385, 703 Style pins X tabs and Equip around reachable preferred-text content",
+          "6": "385, 703 Journal measures all seven name status rank and crest rows",
+          "7": "1649, 971 Style pins X tabs and Equip around reachable preferred-text content",
+          "8": "1649, 971 Journal measures all seven name status rank and crest rows"
+        },
+        "passed": 8
+      },
+      "name": "StyleJournalLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 12,
+        "cases": {
+          "1": "swatches preview only across resize tabs and scrolling",
+          "2": "X Back and forced-dismiss common close route roll back once per opening",
+          "3": "Equip captures pending IDs before rollback and submits exactly once",
+          "4": "locked stickers stay unavailable and a hidden tab cannot submit Equip",
+          "5": "Club settings apply once immediately and persist through closing",
+          "6": "Roblox reduced motion cannot be overridden by a setting or reflow",
+          "7": "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+          "8": "authoritative empty inventory has no legacy track or hidden selectable row",
+          "9": "legacy tracking remains explicit only when the inventory mask is absent",
+          "10": "owned row equips once and Family goals never equips tracks or selects a family",
+          "11": "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+          "12": "measured Ranks caption retains mastery page identity and callback"
+        }
+      },
+      "name": "StyleJournalActions",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "733, 307 preferred roam hint stays measured below dock inside core safe root",
+          "2": "568, 160 preferred roam hint stays measured below dock inside core safe root",
+          "3": "385, 703 preferred roam hint stays measured below dock inside core safe root",
+          "4": "1649, 971 preferred roam hint stays measured below dock inside core safe root"
+        }
+      },
+      "name": "PetRoamHint",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "a rare-only inventory inherits its family rank without unlocking the base pet",
+          "2": "family goals routes once after closing and issues no equip or track action",
+          "3": "legacy constructor preserves pinned close and optional rank arguments",
+          "4": "compact and portrait journal shows complete rows and 44px footer controls"
+        }
+      },
+      "name": "JournalPurpose",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "movement and jumping restore exact prior settings once",
+          "2": "petting bounds account for core-safe offset and reject hidden geometry",
+          "3": "focus navigation is safe-sized and input bindings clean up",
+          "4": "petting pointer uses core-safe input coordinates exactly once",
+          "5": "other modals suspend focus UI and receive Back/movement/Greet input",
+          "6": "repeat greeting reacts in the same shot and throttles rubbing",
+          "7": "reduced effects and stale camera/root never animate or keep a lock",
+          "8": "focus movement release restores only the captured controller",
+          "9": "camera teardown invalidates stale greeting epochs without touching a replacement",
+          "10": "aspect reframe preserves original restore shot without greet or recapture"
+        }
+      },
+      "name": "PetFocusUI",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+          "2": "page changes keep absolute header and tab positions stable",
+          "3": "complete illustrated destinations start below the scroll clip",
+          "4": "all three shallow contracts show a complete44px first row and independent gift",
+          "5": "claimed gift cannot claim again and earned contracts remain informational",
+          "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+          "7": "scroll cue ends at reachable content and small pages end after content",
+          "8": "mastery cards wrap exact missing conditions at real body size",
+          "9": "hidden and unchanged snapshots perform no text measurement layout",
+          "10": "locked family rows omit unused progress space and cannot select a family"
+        }
+      },
+      "name": "MenuPolish",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "cases": {
+          "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+          "2": "680, 700 measured shop header and pinned purchase route fit",
+          "3": "680, 700 recap reward wallet and complete receipt stay readable",
+          "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+          "5": "390, 740 measured shop header and pinned purchase route fit",
+          "6": "390, 740 recap reward wallet and complete receipt stay readable",
+          "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+          "8": "568, 160 measured shop header and pinned purchase route fit",
+          "9": "568, 160 recap reward wallet and complete receipt stay readable"
+        },
+        "passed": 9
+      },
+      "name": "PreferredTextLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "already equipped pet focuses without duplicate equip",
+          "2": "rare-only companion waits for server equip acknowledgment",
+          "3": "mode and local handoff must both finish before equip",
+          "4": "manual cancellation prevents late equip and focus",
+          "5": "overlay interruption cancels pending focus",
+          "6": "unconfirmed equip never substitutes a local pet",
+          "7": "replay resets finished board once after handoff",
+          "8": "replay preserves an unfinished board",
+          "9": "cancelled replay cannot reset a later round",
+          "10": "newer navigation wins over a stale mode wait"
+        }
+      },
+      "name": "HatchNavigation",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 18,
+        "cases": {
+          "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "2": "Replay never purchases and synchronous confirmation fires once",
+          "3": "Retry and same-ID updates retain immutable choice",
+          "4": "Pending feedback preserves choice before state catches up",
+          "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "7": "Close cancels a scheduled pre-dispatch retry",
+          "8": "Busy feedback queues a retry until Ready for the same result",
+          "9": "A retry timer encountering Busy retains its work until Ready",
+          "10": "Another pending transaction releases the captured ack on Ready",
+          "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "12": "A changed result revokes old navigation",
+          "13": "Close during retry cancels navigation without a second acknowledgement",
+          "14": "Definitive rejection permits changing the action",
+          "15": "Actions remain locked during an unfinished cinematic",
+          "16": "Duplicate caption uses copied mastery progress and retains both choices",
+          "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+          "18": "44px result actions fit short landscape safe areas and long names"
+        }
+      },
+      "name": "HatchActions",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "160/198/236 safe heights show both complete recipes and separate 44px controls",
+          "2": "selecting Sprout uses its 24 nectar cost and exact missing amount",
+          "3": "narrow 350x279 shop keeps both complete recipe names and costs readable",
+          "4": "compact errors and save state remain visible and clear when retried",
+          "5": "daily gift, every hatch odd and rare protection remain completely reachable",
+          "6": "rotation resets normal shop geometry while preserving selection and bounded scroll",
+          "7": "compact shop transitions preserve both 44px hatch result actions",
+          "8": "reopening keeps the purchased recipe and cost explicit in the pinned action"
+        }
+      },
+      "name": "CompactEggShop",
+      "preference": "Largest"
+    }
+  ],
+  "server": [
+    {
+      "ok": true,
+      "name": "HatchProgress",
+      "result": {
+        "passed": 21,
+        "cases": [
+          "all catalog outcomes and rare protection",
+          "legacy seven-pet migration and one-time credits",
+          "starter grant, persistent reveal, exact acknowledgement",
+          "ambiguous session acquire resumes the same lease",
+          "direct full-cost spending, stale commands and callback retries",
+          "ambiguous committed hatch cannot reroll or duplicate",
+          "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+          "monotonic payouts reject replay beyond receipt history",
+          "lease takeover fences stale commands and renewals",
+          "local overlap, sparse inventory and public isolation",
+          "failed legacy load cannot spend or overwrite",
+          "daily reward is once per Hollow day and survives callback retry",
+          "every advertised result grants once and rare protection resets",
+          "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+          "mastery ranks need permanent points and three distinct successful challenges",
+          "daily contracts and mastery pay atomically once per run and day",
+          "completed-budget failures can earn skill contracts but not mastery or free wins",
+          "run start-day lock, daily rollover and rollback cannot reassign a contract",
+          "compound award retries immutable stats and original day before or after commit",
+          "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+          "rare-only ownership trains its base family and duplicate marks continue beyond three"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "CloseProgress",
+      "result": {
+        "passed": 2,
+        "cases": [
+          "drain pending and earned payout before release",
+          "failed drain keeps lease fenced"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "SessionRecovery",
+      "result": {
+        "persistentWrites": false,
+        "passed": 8,
+        "cases": [
+          "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+          "profile save failure times out without releasing the lease and later recovers",
+          "failed initial load cannot write defaults or acquire a persistent hatch session",
+          "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+          "locked and unavailable sessions preserve provisional rare and sticker choices",
+          "a setting changed during an in-flight autosave drains before lease release",
+          "a temporary profile recovers through a fresh read and authoritative acquisition",
+          "the actual Studio store keeps both writers in one isolated cloned root"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "SessionHost",
+      "result": {
+        "persistentWrites": false,
+        "passed": 2,
+        "cases": [
+          "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+          "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "StudioStore",
+      "result": {
+        "persistentWrites": false,
+        "passed": 1,
+        "cases": [
+          "actual default Studio writers preserve settings and one reveal across reacquisition"
+        ]
+      }
+    }
+  ],
+  "evidence": {
+    "sourceWrappers": 61,
+    "rojo": true,
+    "astra": "GO",
+    "native": "Actual two24drop fields: firstLEFTonly score610chain4 daily6 bank6→12; secondbothgoals score600chain3 quest6 bank12→18. Meadow spent18 once duplicatePip IDbef14b2d-f52b-40f0-af62-115e2db6f1bd revision6 wallet0; presentationRetrying keptviewportinstance, actualwheel76/max76 completeinstruction/name, Readykeptsameviewport; X/MenuEggs sameID/revision/bank; Meetonce rev7 clearedresult Scriptablefocus, BackCustom. Temporary presentation ownerhandoffs menu/style/journal/eggs/roam/board/focus confirmed withoutstatuschange. OriginalMediumrestored.",
+    "limits": "Local status fixtures and isolated server stores do not prove real outage/liveaccountrejoin. Physical phone/controller/live multiplayer untested."
+  }
+}

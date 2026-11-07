@@ -3,6 +3,7 @@ local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 local Art = require(script.Parent.DeckArt)
 
+local SaveNotice=require(script.Parent.SaveNotice)
 local Focus = {}
 Focus.__index = Focus
 local serial = 0
@@ -196,12 +197,37 @@ function Focus:layoutRoamHint()
 	local dockBottom=if dock and dock.Parent then dock.AbsolutePosition.Y+dock.AbsoluteSize.Y-self.root.AbsolutePosition.Y+8 else 64
 	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..GuiService.PreferredTextSize.Name
 	if self.hintLayoutKey==key then return end;self.hintLayoutKey=key
-	Art.type(self.hint,"Supporting",size.Y<280)
-	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(360,Art.textWidth(self.hint)+16)))
+	Art.type(self.hint,if self.saveNotice then "Body"else "Supporting",size.Y<280)
+	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(if self.saveNotice then math.max(1,size.X-24)else 360,Art.textWidth(self.hint)+16)))
 	local height=Art.textHeight(self.hint,width,24)+8
 	local y=math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
 	self.hint.AnchorPoint=Vector2.zero
 	self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,size.X-width-12),y),UDim2.fromOffset(width,height)
+end
+
+function Focus:layoutSaveHelper()
+	local size=self.root.AbsoluteSize
+	local value=if self.saveNotice then self.saveNotice.detail else self.helper.Text
+	local key=value..tostring(size)..GuiService.PreferredTextSize.Name..tostring(self.saveNotice~=nil)
+	if self.helperLayoutKey==key then return end;self.helperLayoutKey=key
+	if self.saveNotice then
+		self.helper.Text=value;Art.type(self.helper,"Supporting",size.Y<280)
+		local width=math.max(1,math.min(size.X-24,Art.textWidth(self.helper)+16))
+		self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+8)
+	else
+		self.helper.Font,self.helper.TextSize,self.helper.TextScaled,self.helper.TextWrapped=Enum.Font.GothamMedium,12,false,false
+		self.helper.Size=UDim2.fromOffset(230,26)
+	end
+end
+function Focus:setSaveNotice(notice)
+	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
+	self.saveNotice=notice;self.hintLayoutKey=nil;self.helperLayoutKey=nil
+	if notice then self.hint.Text=notice.detail;self.helper.Text=notice.detail else
+		local pad=string.match(UserInputService:GetLastInputType().Name,"^Gamepad")
+		self.hint.Text=if pad then "X  Say hi to your pet"elseif UserInputService.TouchEnabled then "Tap your pet to say hi"else "E  Say hi to your pet"
+		self.helper.Text=if pad then "X  Greet    B  Back"else "Hold and rub to pet"
+	end
+	self:layoutRoamHint();self:layoutSaveHelper();return true
 end
 
 function Focus:update(camera, pet, roamHint)
@@ -209,13 +235,14 @@ function Focus:update(camera, pet, roamHint)
 	local ownsInput = self:canOwnInput()
 	self.panel.Visible = self.active and ownsInput
 	self.gui.DisplayOrder = if self.panel.Visible then 40 else 9
-	self.hint.Visible = not self.active and ownsInput and roamHint == true
+	self.hint.Visible = not self.active and ownsInput and (roamHint==true or self.saveNotice~=nil)
 	local kind = UserInputService:GetLastInputType()
-	self.hint.Text = if string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
+	self.hint.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
 		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
 	self:layoutRoamHint()
 	if not self.active then return end
-	self.helper.Text = if string.match(kind.Name, "^Gamepad") then "X  Greet    B  Back" else "Hold and rub to pet"
+	self.helper.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "X  Greet    B  Back" else "Hold and rub to pet"
+	self:layoutSaveHelper()
 	local canReact = ownsInput and self.callbacks.canReact()
 	self.greet.Interactable = canReact
 	local position, size = Focus.projectBounds(camera, pet and pet.model, self.root)
