@@ -120,8 +120,36 @@ end
 function View:layout()
 	local size = self.shade.AbsoluteSize
 	local result = self.state.lastHatch ~= nil
-	local compactShop = not result and size.Y < 280
-	self.compactShop = compactShop
+	local previousBudgetCompact=self.budgetCompact
+	local cardW=math.clamp(size.X-32,1,560)
+	-- Measure the roomy header/footer first. A landscape safe area may be >280
+	-- tall but still leave less than the two ordinary 83px recipe choices need.
+	local roomyBody=math.huge
+	if not result then
+		self.compactShop=false;self:refreshShopHeader()
+		Art.type(self.heading,"Heading",false);Art.type(self.nectar,"Body",false);Art.type(self.note,"Supporting",false)
+		Art.type(self.action,"Action",cardW<400)
+		local titleH=Art.textHeight(self.heading,cardW-80,28)
+		local chipW=math.min(math.max(1,cardW-24),math.max(146,Art.textWidth(self.nectar)+44))
+		local walletH=Art.textHeight(self.nectar,math.max(1,chipW-36),20)
+		local noteH=Art.textHeight(self.note,cardW-24,34)
+		local bodyTop=6+math.max(titleH,44)+8+walletH+16+noteH+8
+		local footerH=44;local caption=self.action.Text
+		for _,id in ipairs(Catalog.Order)do
+			local option=Catalog.ById[id];local missing=math.max(0,option.cost-(self.state.nectar or 0))
+			self.action.Text=if self.pending then "Saving…" elseif missing>0 then string.format("Play for %s · need %d nectar",option.name,missing)
+				else string.format("Hatch %s · %d nectar",option.name,option.cost)
+			footerH=math.max(footerH,Art.textHeight(self.action,cardW-24,0)+(if cardW<400 then 8 else 12))
+		end
+		self.action.Text=caption
+		roomyBody=math.clamp(size.Y-32,1,580)-bodyTop-footerH-18
+	end
+	local compactShop=not result and (size.Y<280 or roomyBody<177)
+	self.compactShop=compactShop
+	if not result then Art.type(self.action,"Action",compactShop or cardW<400) end
+	self.budgetCompact=compactShop and size.Y>=280
+	local resetRecipeScroll=self.budgetCompact and (not previousBudgetCompact or self.layoutSize~=size)
+	self.layoutSize=size
 	-- Keep the two 44px action rows separate even in a short landscape safe area.
 	local verticalMargin = if compactShop or (result and size.Y < 200) then 16 else 32
 	self.card.Size = UDim2.fromOffset(math.clamp(size.X - 32, 1, 560), math.clamp(size.Y - verticalMargin, 1, 580))
@@ -189,7 +217,13 @@ function View:layout()
 		self.body.Size=UDim2.new(1,-24,1,-self.body.Position.Y.Offset-footerH-18)
 	end
 	self.layoutHeaderKey=self:headerKey()
-	if self.shade.Visible then self:renderBody() end
+	if self.shade.Visible then
+		self:renderBody()
+		if resetRecipeScroll then self.body.CanvasPosition=Vector2.zero end
+	end
+	if not result and not self.refreshingFooterLayout then
+		self.refreshingFooterLayout=true;self:refreshFooter();self.refreshingFooterLayout=nil
+	end
 end
 
 function View:refreshShopHeader()

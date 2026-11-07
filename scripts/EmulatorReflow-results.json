@@ -1,0 +1,423 @@
+{
+  "date": "2026-11-07",
+  "sourceParent": "92df51c",
+  "place": 96451847774961,
+  "context": "Actual game LocalScript + enabled ScreenGui under PlayerGui. Fixtures are not physical-device evidence.",
+  "medium": [
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "cases": {
+          "1": "733x306 measured menu landing shows all destination titles with stable tabs",
+          "2": "733x306 shop shows both complete recipes above a pinned exact shortfall",
+          "3": "733x307 measured menu landing shows all destination titles with stable tabs",
+          "4": "733x307 shop shows both complete recipes above a pinned exact shortfall",
+          "5": "733x308 measured menu landing shows all destination titles with stable tabs",
+          "6": "733x308 shop shows both complete recipes above a pinned exact shortfall",
+          "7": "portrait selection rotated to landscape stays selected at the top without a purchase",
+          "8": "roomy desktop menu and shop retain their illustrated layouts"
+        },
+        "passed": 8
+      },
+      "name": "EmulatorSafeArea",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 4,
+        "cases": {
+          "1": "568, 160 drop states stay readable and restore objective without moving controls",
+          "2": "480, 160 drop states stay readable and restore objective without moving controls",
+          "3": "385, 703 drop states stay readable and restore objective without moving controls",
+          "4": "resizing while falling transfers status ownership and restores readiness"
+        }
+      },
+      "name": "DropCaption",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 12,
+        "cases": {
+          "1": "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+          "2": "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+          "3": "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+          "4": "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+          "5": "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+          "6": "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+          "7": "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+          "8": "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+          "9": "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+          "10": "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+          "11": "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+          "12": "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+        }
+      },
+      "name": "CompactDeck",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+          "2": "page changes keep absolute header and tab positions stable",
+          "3": "complete illustrated destinations start below the scroll clip",
+          "4": "all three shallow contracts show a complete44px first row and independent gift",
+          "5": "claimed gift cannot claim again and earned contracts remain informational",
+          "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+          "7": "scroll cue ends at reachable content and small pages end after content",
+          "8": "mastery cards wrap exact missing conditions at real body size",
+          "9": "hidden and unchanged snapshots perform no text measurement layout",
+          "10": "locked family rows omit unused progress space and cannot select a family"
+        }
+      },
+      "name": "MenuPolish",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "cases": {
+          "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+          "2": "680, 700 measured shop header and pinned purchase route fit",
+          "3": "680, 700 recap reward wallet and complete receipt stay readable",
+          "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+          "5": "390, 740 measured shop header and pinned purchase route fit",
+          "6": "390, 740 recap reward wallet and complete receipt stay readable",
+          "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+          "8": "568, 160 measured shop header and pinned purchase route fit",
+          "9": "568, 160 recap reward wallet and complete receipt stay readable"
+        },
+        "passed": 9
+      },
+      "name": "PreferredTextLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "cases": {
+          "1": "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "2": "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "3": "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "4": "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "5": "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+        },
+        "passed": 5
+      },
+      "name": "HandheldTextLayout",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "160/198/236 safe heights show both complete recipes and separate 44px controls",
+          "2": "selecting Sprout uses its 24 nectar cost and exact missing amount",
+          "3": "narrow 350x279 shop keeps both complete recipe names and costs readable",
+          "4": "compact errors and save state remain visible and clear when retried",
+          "5": "daily gift, every hatch odd and rare protection remain completely reachable",
+          "6": "rotation resets normal shop geometry while preserving selection and bounded scroll",
+          "7": "compact shop transitions preserve both 44px hatch result actions",
+          "8": "reopening keeps the purchased recipe and cost explicit in the pinned action"
+        }
+      },
+      "name": "CompactEggShop",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 18,
+        "cases": {
+          "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "2": "Replay never purchases and synchronous confirmation fires once",
+          "3": "Retry and same-ID updates retain immutable choice",
+          "4": "Pending feedback preserves choice before state catches up",
+          "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "7": "Close cancels a scheduled pre-dispatch retry",
+          "8": "Busy feedback queues a retry until Ready for the same result",
+          "9": "A retry timer encountering Busy retains its work until Ready",
+          "10": "Another pending transaction releases the captured ack on Ready",
+          "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "12": "A changed result revokes old navigation",
+          "13": "Close during retry cancels navigation without a second acknowledgement",
+          "14": "Definitive rejection permits changing the action",
+          "15": "Actions remain locked during an unfinished cinematic",
+          "16": "Duplicate caption uses copied mastery progress and retains both choices",
+          "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+          "18": "44px result actions fit short landscape safe areas and long names"
+        }
+      },
+      "name": "HatchActions",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 16,
+        "cases": {
+          "1": "matching committed receipt starts once and retains count through HUD refresh",
+          "2": "count up lands on exact score chain clears and earned nectar",
+          "3": "hide cancels immediately and reopening the same receipt cannot replay",
+          "4": "hidden ancestor cancels and does not consume a future receipt",
+          "5": "Saving delayed and pending states suppress old receipt and currency transfer",
+          "6": "stale sequence cannot announce the previous reward",
+          "7": "new receipt cancels the old animation and reinitializes every counter",
+          "8": "daily only failure retains missed side quest zero and exact total",
+          "9": "zero earned never invents nectar drops or transfer sounds",
+          "10": "reduced effects shows final static values with no recap cues",
+          "11": "audio remains routed through the muted shared audio group",
+          "12": "short recap scrolls readable center while excluding pinned footer",
+          "13": "roomy recap follows reward egg metrics details and keeps saved values",
+          "14": "selected egg progress draws above its panel and retains partial or full saved balance",
+          "15": "first Saved receipt survives synchronous resize during publication",
+          "16": "destroying the component removes its animation connection"
+        }
+      },
+      "name": "RecapFeedback",
+      "preference": "Medium"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "daily-only failed quest remains a failure with committed balance",
+          "2": "right target and overflow explanations use terminal state",
+          "3": "transient save error never displays old balance as a receipt",
+          "4": "selected recipe uses saved balance without adding the payout twice",
+          "5": "compact pending recap keeps readable status out of pinned footer",
+          "6": "shallow welcome coaching is one concise input-specific line",
+          "7": "first field coaching responds to stage, overlays, first win and compact height",
+          "8": "starter reveal receives a copy with the correct egg goal"
+        }
+      },
+      "name": "Onboarding",
+      "preference": "Medium"
+    }
+  ],
+  "largest": [
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "cases": {
+          "1": "733x306 measured menu landing shows all destination titles with stable tabs",
+          "2": "733x306 shop shows both complete recipes above a pinned exact shortfall",
+          "3": "733x307 measured menu landing shows all destination titles with stable tabs",
+          "4": "733x307 shop shows both complete recipes above a pinned exact shortfall",
+          "5": "733x308 measured menu landing shows all destination titles with stable tabs",
+          "6": "733x308 shop shows both complete recipes above a pinned exact shortfall",
+          "7": "portrait selection rotated to landscape stays selected at the top without a purchase",
+          "8": "roomy desktop menu and shop retain their illustrated layouts"
+        },
+        "passed": 8
+      },
+      "name": "EmulatorSafeArea",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 4,
+        "cases": {
+          "1": "568, 160 drop states stay readable and restore objective without moving controls",
+          "2": "480, 160 drop states stay readable and restore objective without moving controls",
+          "3": "385, 703 drop states stay readable and restore objective without moving controls",
+          "4": "resizing while falling transfers status ownership and restores readiness"
+        }
+      },
+      "name": "DropCaption",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 12,
+        "cases": {
+          "1": "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+          "2": "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+          "3": "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+          "4": "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+          "5": "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+          "6": "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+          "7": "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+          "8": "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+          "9": "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+          "10": "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+          "11": "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+          "12": "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+        }
+      },
+      "name": "CompactDeck",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "cases": {
+          "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+          "2": "680, 700 measured shop header and pinned purchase route fit",
+          "3": "680, 700 recap reward wallet and complete receipt stay readable",
+          "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+          "5": "390, 740 measured shop header and pinned purchase route fit",
+          "6": "390, 740 recap reward wallet and complete receipt stay readable",
+          "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+          "8": "568, 160 measured shop header and pinned purchase route fit",
+          "9": "568, 160 recap reward wallet and complete receipt stay readable"
+        },
+        "passed": 9
+      },
+      "name": "PreferredTextLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "preference": "Largest",
+        "cases": {
+          "1": "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "2": "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "3": "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "4": "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "5": "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+        },
+        "passed": 5
+      },
+      "name": "HandheldTextLayout",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 18,
+        "cases": {
+          "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "2": "Replay never purchases and synchronous confirmation fires once",
+          "3": "Retry and same-ID updates retain immutable choice",
+          "4": "Pending feedback preserves choice before state catches up",
+          "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "7": "Close cancels a scheduled pre-dispatch retry",
+          "8": "Busy feedback queues a retry until Ready for the same result",
+          "9": "A retry timer encountering Busy retains its work until Ready",
+          "10": "Another pending transaction releases the captured ack on Ready",
+          "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "12": "A changed result revokes old navigation",
+          "13": "Close during retry cancels navigation without a second acknowledgement",
+          "14": "Definitive rejection permits changing the action",
+          "15": "Actions remain locked during an unfinished cinematic",
+          "16": "Duplicate caption uses copied mastery progress and retains both choices",
+          "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+          "18": "44px result actions fit short landscape safe areas and long names"
+        }
+      },
+      "name": "HatchActions",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "daily-only failed quest remains a failure with committed balance",
+          "2": "right target and overflow explanations use terminal state",
+          "3": "transient save error never displays old balance as a receipt",
+          "4": "selected recipe uses saved balance without adding the payout twice",
+          "5": "compact pending recap keeps readable status out of pinned footer",
+          "6": "shallow welcome coaching is one concise input-specific line",
+          "7": "first field coaching responds to stage, overlays, first win and compact height",
+          "8": "starter reveal receives a copy with the correct egg goal"
+        }
+      },
+      "name": "Onboarding",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "160/198/236 safe heights show both complete recipes and separate 44px controls",
+          "2": "selecting Sprout uses its 24 nectar cost and exact missing amount",
+          "3": "narrow 350x279 shop keeps both complete recipe names and costs readable",
+          "4": "compact errors and save state remain visible and clear when retried",
+          "5": "daily gift, every hatch odd and rare protection remain completely reachable",
+          "6": "rotation resets normal shop geometry while preserving selection and bounded scroll",
+          "7": "compact shop transitions preserve both 44px hatch result actions",
+          "8": "reopening keeps the purchased recipe and cost explicit in the pinned action"
+        }
+      },
+      "name": "CompactEggShop",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 16,
+        "cases": {
+          "1": "matching committed receipt starts once and retains count through HUD refresh",
+          "2": "count up lands on exact score chain clears and earned nectar",
+          "3": "hide cancels immediately and reopening the same receipt cannot replay",
+          "4": "hidden ancestor cancels and does not consume a future receipt",
+          "5": "Saving delayed and pending states suppress old receipt and currency transfer",
+          "6": "stale sequence cannot announce the previous reward",
+          "7": "new receipt cancels the old animation and reinitializes every counter",
+          "8": "daily only failure retains missed side quest zero and exact total",
+          "9": "zero earned never invents nectar drops or transfer sounds",
+          "10": "reduced effects shows final static values with no recap cues",
+          "11": "audio remains routed through the muted shared audio group",
+          "12": "short recap scrolls readable center while excluding pinned footer",
+          "13": "roomy recap follows reward egg metrics details and keeps saved values",
+          "14": "selected egg progress draws above its panel and retains partial or full saved balance",
+          "15": "first Saved receipt survives synchronous resize during publication",
+          "16": "destroying the component removes its animation connection"
+        }
+      },
+      "name": "RecapFeedback",
+      "preference": "Largest"
+    },
+    {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+          "2": "page changes keep absolute header and tab positions stable",
+          "3": "complete illustrated destinations start below the scroll clip",
+          "4": "all three shallow contracts show a complete44px first row and independent gift",
+          "5": "claimed gift cannot claim again and earned contracts remain informational",
+          "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+          "7": "scroll cue ends at reachable content and small pages end after content",
+          "8": "mastery cards wrap exact missing conditions at real body size",
+          "9": "hidden and unchanged snapshots perform no text measurement layout",
+          "10": "locked family rows omit unused progress space and cannot select a family"
+        }
+      },
+      "name": "MenuPolish",
+      "preference": "Largest"
+    }
+  ],
+  "native": "Studio iPhone17 Pro: landscape749x381 safe733x307; portrait401x777 safe385x703. Native screenshot-coordinate menu/tab/shop/select/X/Deck/A inputs; Sprout24/18-shortfall at wallet6 retained through rotation. Largest A accepted drop0->1 with Falling quest-host status. No purchase this slice.",
+  "review": "Astra source and six Medium/five Largest actual emulator captures GO.",
+  "limitations": [
+    "Physical phone, physical controller, live multiplayer not tested.",
+    "Live Roblox Player is signed out; no authentication attempted.",
+    "Private place remains v69 until final integrated publication."
+  ]
+}

@@ -12,6 +12,15 @@ return function(client, parent)
 	local recap = Recap.new(root, audio, function() return reduced end)
 	recap.frame.Visible = true
 	local cases = {}
+	local function fitDiagnostic(...)
+		local rows={}
+		for _,node in ipairs({...})do
+			table.insert(rows,string.format("%s text=%q size=%s bounds=%s position=%s fontSize=%s visible=%s fits=%s",
+				node:GetFullName(),node.Text,tostring(node.AbsoluteSize),tostring(node.TextBounds),tostring(node.AbsolutePosition),
+				tostring(node.TextSize),tostring(node.Visible),tostring(node.TextFits)))
+		end
+		return table.concat(rows," | ")
+	end
 	local function test(name, run) run(); table.insert(cases, name) end
 	local function result(sequence, changes)
 		local value = { sequence = sequence, status = "Saved", success = true, stage = 2, reason = "Completed",
@@ -117,16 +126,17 @@ return function(client, parent)
 			for _,height in ipairs({128,166,198,236}) do
 				root.Size=UDim2.fromOffset(360,height);task.wait(.06);show(result(30+height));task.wait(.06)
 				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
-				assert(recap.earnedGraphic.TextFits and recap.bankGraphic.TextFits and recap.eggGoal.TextFits)
+				assert(recap.earnedGraphic.TextFits and recap.bankGraphic.TextFits and recap.eggGoal.TextFits,fitDiagnostic(recap.earnedGraphic,recap.bankGraphic,recap.eggGoal))
 				assert(not recap.earnedGraphic.TextScaled and recap.earnedGraphic.TextSize>=26)
 				assert(recap.detailsButton.Visible and not recap.receiptScroll.Visible)
 				recap:setDetails(true)
-				for _,row in ipairs(recap.receiptRows) do assert(row.TextFits and row.TextSize>=14 and not row.TextScaled) end
+				game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
+				for _,row in ipairs(recap.receiptRows) do assert(row.TextFits and row.TextSize>=14 and not row.TextScaled,fitDiagnostic(row)) end
 			end
 		end)
 		test("roomy recap follows reward egg metrics details and keeps saved values",function()
 			root.Size=UDim2.fromOffset(600,500);task.wait(.06);show(result(450));task.wait(.06)
-			assert(recap.detailsButton.Visible and recap.detailsButton.AbsoluteSize.Y==44 and recap.detailsButton.TextFits)
+			assert(recap.detailsButton.Visible and recap.detailsButton.AbsoluteSize.Y>=44 and recap.detailsButton.TextFits,fitDiagnostic(recap.detailsButton))
 			assert(not recap.receiptScroll.Visible and recap.stats.Visible)
 			assert(recap.earnedGraphic.Position.Y.Offset<recap.eggPanel.Position.Y.Offset and recap.eggPanel.Position.Y.Offset<recap.stats.Position.Y.Offset)
 			assert(recap.values[1].Text=="630" and recap.bestValue.Text=="700" and recap.values[2].Parent.Label.Text=="Longest chain")

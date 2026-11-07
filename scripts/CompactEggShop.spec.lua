@@ -4,6 +4,15 @@ return function(client, parent)
 	local root = Instance.new("Frame")
 	root.Name, root.Size, root.BackgroundTransparency, root.Parent = "_CompactEggShopSpec", UDim2.fromOffset(568, 160), 1, parent
 	local cases, views = {}, {}
+	local function fitDiagnostic(...)
+		local rows={}
+		for _,node in ipairs({...})do
+			table.insert(rows,string.format("%s text=%q size=%s bounds=%s position=%s fontSize=%s visible=%s fits=%s",
+				node:GetFullName(),node.Text,tostring(node.AbsoluteSize),tostring(node.TextBounds),tostring(node.AbsolutePosition),
+				tostring(node.TextSize),tostring(node.Visible),tostring(node.TextFits)))
+		end
+		return table.concat(rows," | ")
+	end
 	local function test(name, run) run(); table.insert(cases, name) end
 	local function resize(width, height, view)
 		root.Size = UDim2.fromOffset(width, height)
@@ -39,6 +48,15 @@ return function(client, parent)
 		view:open(snapshot())
 		return view, sent
 	end
+	local function readableHeader(view)
+		assert(view.heading.TextFits,fitDiagnostic(view.heading))
+		if view.nectar.Visible then assert(view.nectar.TextFits,fitDiagnostic(view.nectar))
+		else
+			local status=view.body.EggColumn:FindFirstChild("CompactStatus")
+			assert(view.compactStatus and status and status.Visible,"hidden wallet requires a visible status equivalent")
+			assert(status.Text==view.nectar.Text and status.TextFits,fitDiagnostic(status,view.nectar))
+		end
+	end
 	local function fullyVisible(node, scroll)
 		return node.AbsolutePosition.Y >= scroll.AbsolutePosition.Y - 0.1
 			and node.AbsolutePosition.Y + node.AbsoluteSize.Y <= scroll.AbsolutePosition.Y + scroll.AbsoluteSize.Y + 0.1
@@ -60,17 +78,17 @@ return function(client, parent)
 				for _, id in ipairs({ "meadow", "sprout" }) do
 					local recipe = view.body.EggColumn:FindFirstChild("Recipe_" .. id)
 					assert(recipe.AbsoluteSize.Y == 44 and fullyVisible(recipe, view.body))
-					assert(recipe.RecipeName.TextFits and recipe.Cost.TextFits, "half-width recipe text: " .. id)
+					assert(recipe.RecipeName.TextFits and recipe.Cost.TextFits, "half-width recipe text: " .. id.." "..fitDiagnostic(recipe.RecipeName,recipe.Cost))
 				end
 				local meadow, sprout = view.body.EggColumn.Recipe_meadow, view.body.EggColumn.Recipe_sprout
 				assert(meadow.Position.Y.Offset == 0 and sprout.Position.Y.Offset == 0)
 				assert(meadow.AbsolutePosition.X + meadow.AbsoluteSize.X < sprout.AbsolutePosition.X)
-				assert(view.heading.TextFits and view.nectar.TextFits)
-				assert(view.closeButton.AbsoluteSize.Y == 44 and view.closeButton.AbsoluteSize.X == 44 and view.closeButton.TextFits)
-				assert(view.action.AbsoluteSize.Y == 44 and view.action.TextFits)
+				readableHeader(view)
+				assert(view.closeButton.AbsoluteSize.Y == 44 and view.closeButton.AbsoluteSize.X == 44 and view.closeButton.TextFits,fitDiagnostic(view.closeButton))
+				assert(view.action.AbsoluteSize.Y >= 44 and view.action.TextFits,fitDiagnostic(view.action))
 				assert(view.closeButton.AbsolutePosition.Y + 44 <= view.body.AbsolutePosition.Y + 0.1)
 				assert(view.body.AbsolutePosition.Y + view.body.AbsoluteSize.Y < view.action.AbsolutePosition.Y)
-				assert(view.action.AbsolutePosition.Y + 44 <= root.AbsolutePosition.Y + height)
+				assert(view.action.AbsolutePosition.Y + view.action.AbsoluteSize.Y <= root.AbsolutePosition.Y + height)
 				assert(not view.note.Visible and not view.meetButton.Visible)
 				assert(view.body.OutcomeColumn.Position.X.Offset == 0, "compact shop uses one scroll column even on wide phones")
 				view:close()
@@ -95,14 +113,14 @@ return function(client, parent)
 			local meadow, sprout = view.body.EggColumn.Recipe_meadow, view.body.EggColumn.Recipe_sprout
 			for _, row in ipairs({ meadow, sprout }) do
 				assert(row.AbsoluteSize.Y == 44 and fullyVisible(row, view.body))
-				assert(row.RecipeName.TextFits and row.Cost.TextFits, "narrow recipe text: " .. row.Name)
+				assert(row.RecipeName.TextFits and row.Cost.TextFits, "narrow recipe text: " .. row.Name.." "..fitDiagnostic(row.RecipeName,row.Cost))
 				assert(row.AbsolutePosition.X >= view.body.AbsolutePosition.X)
 				assert(row.AbsolutePosition.X + row.AbsoluteSize.X <= view.body.AbsolutePosition.X + view.body.AbsoluteSize.X)
 			end
 			assert(meadow.AbsolutePosition.X + meadow.AbsoluteSize.X < sprout.AbsolutePosition.X)
 			view:selectRecipe("sprout"); view:update(snapshot(24)); task.wait(0.04)
-			assert(view.action.Text == "Hatch Sprout Focused · 24 nectar" and view.action.TextFits and view.action.Interactable and #sent == 0)
-			assert(view.closeButton.AbsoluteSize.Y == 44 and view.action.AbsoluteSize.Y == 44)
+			assert(view.action.Text == "Hatch Sprout Focused · 24 nectar" and view.action.TextFits and view.action.Interactable and #sent == 0,fitDiagnostic(view.action))
+			assert(view.closeButton.AbsoluteSize.Y == 44 and view.action.AbsoluteSize.Y >= 44 and fullyVisible(view.action,view.card),fitDiagnostic(view.closeButton,view.action))
 			view:close()
 		end)
 		test("compact errors and save state remain visible and clear when retried", function()
@@ -110,8 +128,8 @@ return function(client, parent)
 			local view, sent = fixture(); resize(568, 160, view)
 			for _, message in ipairs({ "One moment…", "Your hatch progress updated. Try again." }) do
 				view:setError(message); task.wait(0.03)
-				assert(view.heading.Visible and view.nectar.Visible and view.heading.Text == "Try again")
-				assert(view.nectar.Text:find("try again", 1, true) and view.heading.TextFits and view.nectar.TextFits)
+				assert(view.heading.Visible and (view.nectar.Visible or view.compactStatus) and view.heading.Text == "Try again","compact error needs a visible header/status representation")
+				assert(view.nectar.Text:find("try again", 1, true),fitDiagnostic(view.nectar));readableHeader(view)
 			end
 			view:send("hatch", "meadow"); task.wait(0.03)
 			assert(view.errorMessage == nil and view.heading.Text == "Saving…" and not view.nectar.Text:find("Progress updated", 1, true) and #sent == 1)
@@ -134,18 +152,18 @@ return function(client, parent)
 			resize(568, 160)
 			local view = fixture(); resize(568, 160, view)
 			local daily, odds = view.body.EggColumn.DailyNectar, view.body.OutcomeColumn
-			assert(daily.AbsoluteSize.Y == 44 and daily.Interactable and daily.TextFits)
+			assert(daily.AbsoluteSize.Y == 44 and daily.Interactable and daily.TextFits,fitDiagnostic(daily))
 			scrollTo(view, daily)
 			local count = 0
 			for _, row in ipairs(odds:GetChildren()) do
 				if row.Name:match("^Outcome_") then
 					count += 1; scrollTo(view, row)
-					assert(row:FindFirstChild("Name").TextFits and row.Probability.TextFits)
+					assert(row:FindFirstChild("Name").TextFits and row.Probability.TextFits,fitDiagnostic(row:FindFirstChild("Name"),row.Probability))
 				end
 			end
 			assert(count == 7)
-			scrollTo(view, odds.RareProtection); assert(odds.RareProtection.TextFits and odds.RareProtection.Text:find("3 / 7", 1, true))
-			scrollTo(view, odds.Duplicates); assert(odds.Duplicates.TextFits)
+			scrollTo(view, odds.RareProtection); assert(odds.RareProtection.TextFits and odds.RareProtection.Text:find("3 / 7", 1, true),fitDiagnostic(odds.RareProtection))
+			scrollTo(view, odds.Duplicates); assert(odds.Duplicates.TextFits,fitDiagnostic(odds.Duplicates))
 			view:close()
 		end)
 		test("rotation resets normal shop geometry while preserving selection and bounded scroll", function()
@@ -163,7 +181,7 @@ return function(client, parent)
 				assert(node.AbsolutePosition.X>=view.card.AbsolutePosition.X and node.AbsolutePosition.X+node.AbsoluteSize.X<=view.card.AbsolutePosition.X+view.card.AbsoluteSize.X,"rotated header width: "..node.Name)
 				assert(node.AbsolutePosition.Y+node.AbsoluteSize.Y<=view.body.AbsolutePosition.Y,"header covers shop body: "..node.Name)
 			end
-			assert(view.heading.TextFits and view.nectar.TextFits and view.note.TextFits,"normal header must remain readable after rotation")
+			assert(view.heading.TextFits and view.nectar.TextFits and view.note.TextFits,"normal header must remain readable after rotation "..fitDiagnostic(view.heading,view.nectar,view.note))
 			assert(view.heading.AbsolutePosition.X+view.heading.AbsoluteSize.X<=view.closeButton.AbsolutePosition.X,"title covers corner X")
 			assert(view.wallet.AbsolutePosition.Y+view.wallet.AbsoluteSize.Y<=view.note.AbsolutePosition.Y,"wallet covers notice")
 			assert(view.body.CanvasPosition.Y == 100 and view.body.CanvasPosition.Y <= view.body.CanvasSize.Y.Offset - view.body.AbsoluteSize.Y)
@@ -172,7 +190,7 @@ return function(client, parent)
 			view.body.CanvasPosition = Vector2.new(0, view.body.CanvasSize.Y.Offset - view.body.AbsoluteSize.Y)
 			resize(390, 740, view)
 			assert(view.body.CanvasPosition.Y >= 0 and view.body.CanvasPosition.Y <= math.max(0, view.body.CanvasSize.Y.Offset - view.body.AbsoluteSize.Y))
-			assert(view.closeButton.TextFits and view.action.TextFits and view.body.EggColumn.Recipe_sprout.RecipeName.TextFits)
+			assert(view.closeButton.TextFits and view.action.TextFits and view.body.EggColumn.Recipe_sprout.RecipeName.TextFits,fitDiagnostic(view.closeButton,view.action,view.body.EggColumn.Recipe_sprout.RecipeName))
 			view:close()
 		end)
 		test("compact shop transitions preserve both 44px hatch result actions", function()
@@ -180,7 +198,9 @@ return function(client, parent)
 			local view, sent = fixture()
 			view:update(snapshot(24, { id = "compact-result-fixture", petId = "foxfire_wick", family = "wick", rare = true })); task.wait(0.06)
 			assert(not view.compactShop and view.meetButton.Visible and not view.body.Visible)
-			for _, node in ipairs({ view.meetButton, view.action, view.closeButton }) do assert(node.AbsoluteSize.Y == 44 and node.TextFits) end
+			for _, node in ipairs({ view.meetButton, view.action, view.closeButton }) do
+				assert((if node==view.closeButton then node.AbsoluteSize.Y==44 else node.AbsoluteSize.Y>=44) and node.TextFits and fullyVisible(node,view.card),fitDiagnostic(node))
+			end
 			assert(view.meetButton.Interactable and view.action.Interactable and (view.action.Text == "Play again" or view.action.Text=="Play") and view.state.lastHatch.id=="compact-result-fixture" and #sent == 0)
 			assert(view.closeButton.AbsolutePosition.Y + 44 <= view.meetButton.AbsolutePosition.Y)
 			view:close()
@@ -191,8 +211,8 @@ return function(client, parent)
 			view:selectRecipe("sprout"); view:update(snapshot(24)); view:close()
 			view:open(snapshot(24)); resize(568, 160, view)
 			assert(view.selected == "sprout" and view.action.Text == "Hatch Sprout Focused · 24 nectar")
-			assert(view.action.Visible and view.action.Interactable and view.action.TextFits and #sent == 0)
-			assert(view.action.AbsolutePosition.Y + 44 <= root.AbsolutePosition.Y + root.AbsoluteSize.Y)
+			assert(view.action.Visible and view.action.Interactable and view.action.TextFits and #sent == 0,fitDiagnostic(view.action))
+			assert(view.action.AbsolutePosition.Y + view.action.AbsoluteSize.Y <= root.AbsolutePosition.Y + root.AbsoluteSize.Y)
 			view:close()
 		end)
 	end)

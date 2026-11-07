@@ -443,6 +443,40 @@ dropCaption.Size = UDim2.fromOffset(48, 16)
 dropCaption.Font = Enum.Font.Code
 dropCaption.TextColor3 = Art.Silver
 dropCaption.TextSize = 11
+local dropCaptionLayout,captionStatusQueued
+local function layoutDropCaption(l)
+	if not l then return end
+	dropCaptionLayout=l
+	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Enum.Font.GothamBold
+	local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(dropCaption)+8))
+	local height=Art.textHeight(dropCaption,width,16)
+	local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
+	local function free(y)
+		if y<l.shell.y+8 or y+height>l.shell.y+l.shell.h-8 then return false end
+		for _,r in ipairs({l.queue,l.meter,l.menu,l.lounge,l.dpad,l.drop,l.bezel,l.wallet,l.quest,l.tray})do
+			if x<r.x+r.w and x+width>r.x and y<r.y+r.h and y+height>r.y then return false end
+		end
+		return true
+	end
+	local top
+	for _,y in ipairs({l.drop.y-height-4,l.drop.y+l.dropSize+4,l.queue.y+l.queue.h+4})do
+		if free(y)then top=y;break end
+	end
+	-- The DROP etching may yield, while transient blocking states remain readable.
+	local meaningful=dropCaption.Text~="DROP"
+	-- Settling already owns the quest's status line; keep one visible explanation.
+	if dropCaption.Text=="SETTLE" then top=nil end
+	dropCaption.Visible=top~=nil and (not l.short or meaningful)
+	if not top and meaningful then
+		-- During a blocked drop the existing status line owns the explanation;
+		-- retain the label next to A only when it has an independent safe slot.
+		dropCaption:SetAttribute("BlockedCaption",dropCaption.Text)
+	else dropCaption:SetAttribute("BlockedCaption",nil)end
+	if top then
+		dropCaption.Position=UDim2.fromOffset(x-l.shell.x,top-l.shell.y)
+		dropCaption.Size=UDim2.fromOffset(width,height)
+	end
+end
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(57, 28), BackgroundTransparency = 1 }, hardware)
 for row = 0, 2 do
 	for column = 0, 5 do
@@ -1154,8 +1188,22 @@ updateHud = function()
 	rail.Interactable = canAim() and not isPickerOpen()
 	action.Interactable = canPlay()
 	dropCaption.Text = if board:GetAttribute("FieldPhase") == "Settling" then "SETTLE"
-		elseif nurseryState and nurseryState.status ~= "Ready" then "WAIT"
+		elseif nurseryState and nurseryState.status ~= "Ready" then
+			(if nurseryState.status=="Busy" or nurseryState.status=="Retrying" or nurseryState.status=="Pending" then "SAVING"
+				elseif nurseryState.status=="SessionLost" then "REJOIN" else "SAVE WAIT")
 		elseif board:GetAttribute("FieldReady") == false then "FALLING" else "DROP"
+	layoutDropCaption(dropCaptionLayout)
+	if dropCaption:GetAttribute("BlockedCaption") then
+		local candidates=if dropCaption.Text=="SETTLE" then {"Settling…","Settling","Wait"}
+			elseif dropCaption.Text=="FALLING" then {"Falling…","Falling","Wait"}
+			elseif dropCaption.Text=="SAVING" then {"Saving…","Saving","Wait"}
+			elseif dropCaption.Text=="REJOIN" then {"Rejoin"} else {"Save wait","Wait"}
+		for _,caption in ipairs(candidates)do
+			status.Text=caption
+			if Art.textWidth(status)<=status.AbsoluteSize.X-8 then break end
+		end
+		questHUD.host.Visible=false;status.BackgroundTransparency=.08;status.TextColor3=Art.Silver
+	end
 	local unlocked = owned > 0
 	roomButton.Interactable = unlocked and not modal.Visible
 	eggButton.Interactable = unlocked and not modal.Visible
@@ -1274,14 +1322,11 @@ layout = function()
 	action.Position,action.Size=UDim2.fromOffset(l.drop.x-l.shell.x,l.drop.y-l.shell.y),UDim2.fromOffset(l.dropSize,l.dropSize)
 	action.TextSize=math.floor(l.dropSize*.5)
 	hardware.DropWell.Position,hardware.DropWell.Size=action.Position+UDim2.fromOffset(-3,1),UDim2.fromOffset(l.dropSize+6,l.dropSize+5)
-	Art.type(dropCaption,"Supporting",l.short)
-	dropCaption.Font=Enum.Font.GothamBold
-	dropCaption.Visible=not l.short
-	local dropW=l.right.w-8
-	local dropH=Art.textHeight(dropCaption,dropW,16)
-	local above=l.drop.y-l.meter.y-l.meter.h>=dropH+8
-	dropCaption.Position=UDim2.fromOffset(l.right.x-l.shell.x+4,l.drop.y-l.shell.y+(if above then -dropH-4 else l.dropSize+4))
-	dropCaption.Size=UDim2.fromOffset(dropW,dropH)
+	local previousBlocked=dropCaption:GetAttribute("BlockedCaption")
+	layoutDropCaption(l)
+	if previousBlocked~=dropCaption:GetAttribute("BlockedCaption") and not captionStatusQueued then
+		captionStatusQueued=true;task.defer(function()captionStatusQueued=false;updateHud()end)
+	end
 	for index,button in ipairs({customizeButton,roomButton})do
 		place(button,if index==1 then l.menu else l.lounge)
 		button.KeyWell.Visible=false

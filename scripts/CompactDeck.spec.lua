@@ -18,7 +18,7 @@ return function(gui,board)
 		return ax<br-.1 and bx<ar-.1 and ay<bd-.1 and by<ad-.1
 	end
 	local ok,problem=pcall(function()
-		for _,size in ipairs({Vector2.new(568,160),Vector2.new(568,198),Vector2.new(350,279),Vector2.new(568,279),Vector2.new(568,280),Vector2.new(667,285),Vector2.new(844,300),Vector2.new(844,330),Vector2.new(844,390),Vector2.new(390,740)})do
+		for _,size in ipairs({Vector2.new(568,160),Vector2.new(568,198),Vector2.new(350,279),Vector2.new(568,279),Vector2.new(568,280),Vector2.new(667,285),Vector2.new(844,300),Vector2.new(844,330),Vector2.new(844,390),Vector2.new(390,740),Vector2.new(385,703),Vector2.new(733,307)})do
 			b.Position,b.Size=UDim2.fromOffset(30,30),UDim2.fromOffset(size.X,size.Y);settle()
 			local x,y,right,bottom=bounds(b)
 			assert(b.Tray.AbsoluteSize.X>=70 and b.Tray.AbsoluteSize.Y>=120,"tray too small "..tostring(size))
@@ -56,6 +56,14 @@ return function(gui,board)
 			assert(count.TextFits and count.TextSize>=12 and not count.TextScaled,"remaining counter clipped "..tostring(size))
 			assert(inside(count,dispenser) and (not channel.Visible or inside(channel,dispenser)),"dispenser outside meter")
 			assert(not channel.Visible or channel.AbsolutePosition.Y+channel.AbsoluteSize.Y<=count.AbsolutePosition.Y+.1,"dispenser covers remaining count")
+			local caption=b.DeckControls.DropCaption
+			if caption.Visible then
+				local a=b.DeckControls.Drop
+				local offset=math.abs(caption.AbsolutePosition.X+caption.AbsoluteSize.X/2-a.AbsolutePosition.X-a.AbsoluteSize.X/2)
+				assert(offset<=math.max(1,(caption.AbsoluteSize.X-a.AbsoluteSize.X)/2),"drop caption detached from A")
+				assert(caption.TextFits and inside(caption,b.CartridgeShell) and not overlaps(caption,a))
+				for _,other in ipairs({b.Customize,b.VisitRoom,b.LCDBezel,b.HatchTrack,b.PieceQueue})do assert(not overlaps(caption,other),"caption covers "..other.Name)end
+			end
 			local stable={queue,queue.Dropping.Caption,queue.Next.Caption,queue.Dropping.Piece,queue.Next.Piece,channel,count}
 			for index=1,8 do
 				local ball=channel:FindFirstChild("Ball"..index)
