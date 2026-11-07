@@ -1,5 +1,7 @@
 # Egg Drop — morning handoff, November 7, 2026
 
+> Historical overnight checkpoint. The current private build is v125 Published (runtime f813d61); see [November7 afternoon rundown](AFTERNOON-RUNDOWN.md). The overnight automation remains finished.
+
 **Private build updated:** Studio's refreshed Version History confirms **v93 Published**, titled **Pocket Deck and Hollow experience - 24751c2**. Runtime `24751c2` is committed and pushed on `feat/egg-drop-arcade-polish`. Astra approved the final source, fixtures and11 integrated Medium renders. The same existing private place was updated; no access or account setting changed. [Publication screenshot](artifacts/ui-redesign-2026-11-07/private-published-24751c2.png).
 
 [Open the private game](https://www.roblox.com/games/96451847774961/Egg-Drop). The account must already have access. Roblox Player on this computer is signed out; no authentication or account settings were changed.

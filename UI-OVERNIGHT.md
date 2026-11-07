@@ -1,5 +1,7 @@
 # Egg Drop UI redesign overnight — 2026-11-07
 
+> Historical overnight checkpoint. The current private build is v125 Published (runtime f813d61); see [November7 afternoon rundown](AFTERNOON-RUNDOWN.md). The overnight automation remains finished.
+
 ## Active request and checkpoint
 
 User reviewed the actual screenshots and rejected their design coherence. Work through 9 AM America/New_York, November 7, 2026; then finish a safe checkpoint, publish only tested/reviewed private changes, give a self-contained screenshot rundown and pause the existing heartbeat. Branch `feat/egg-drop-arcade-polish`; starting commit `1cd0927` (implementation `6c73611`), private place96451847774961 version48. Preserve untracked `artifacts/ui-pass` evidence and unrelated user files. Never target `roblox_suica_collector`.
