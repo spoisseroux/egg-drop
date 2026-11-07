@@ -5,6 +5,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
@@ -30,6 +31,7 @@ local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
+local PresentationPolicy = require(script.PresentationPolicy)
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -113,7 +115,7 @@ local overlayGui = make("ScreenGui", "EggDropOverlays", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 11,
 }, gui.Parent)
 local modalShade = Art.frame(overlayGui, "ModalShade", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 1)
-modalShade.BackgroundTransparency = 0.18
+modalShade.BackgroundTransparency = 0.40
 modalShade.Active, modalShade.Visible = true, false
 local safeOverlays = Art.frame(overlayGui, "SafeContent", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), 2)
 safeOverlays.BackgroundTransparency = 1
@@ -164,7 +166,7 @@ do
 end
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
-	BackgroundColor3 = Color3.fromHex("#C6DFA0"), BorderSizePixel = 0,
+	BackgroundColor3 = Art.LCD, BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
 }, backdrop)
@@ -192,7 +194,7 @@ for index,side in ipairs({-1,1})do
 	local edge=Art.stroke(zone,tint,.1,2)
 	local caption=Art.text(zone,"Target",if side==-1 then "LEFT"else"RIGHT",UDim2.fromOffset(0,2),UDim2.new(1,0,0,14),Art.Silver,10)
 	caption.BackgroundColor3,caption.BackgroundTransparency=Art.Ink,.1
-	Art.fitText(caption,10,7,0)
+	Art.type(caption,"Supporting",true);caption.TextWrapped=false;caption.Size=UDim2.new(1,0,0,18)
 	for stripe=1,8 do
 		local dash=Art.frame(zone,"Hatch",Art.Ink,UDim2.new(if side==-1 then 1 else 0,if side==-1 then -3 else 0,stripe/9,0),UDim2.fromOffset(3,9),7)
 		dash.BackgroundTransparency=.25
@@ -271,6 +273,7 @@ for index,name in ipairs({"Dropping","Next"})do
 end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
 	UDim2.fromOffset(40, 12), Art.Muted, 10)
+local walletDrop=require(script.EggArt).nectar(backdrop,UDim2.fromOffset(0,0),UDim2.fromOffset(18,20),4)
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
 bestReadout.Font = Enum.Font.Code
 bestReadout.TextXAlignment = Enum.TextXAlignment.Left
@@ -310,10 +313,9 @@ make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 local status = label("TextLabel", "Status", "", backdrop)
 status.TextWrapped = true
 status.TextColor3 = Art.Silver
-status.TextScaled = true
+status.TextScaled = false
 status.BackgroundColor3 = Art.Ink
 Art.corner(status, 6)
-make("UITextSizeConstraint", "ReadoutSize", { MinTextSize = 9, MaxTextSize = 16 }, status)
 local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
 }, backdrop)
@@ -392,7 +394,7 @@ local function utilityButton(name, titleText)
 	local caption = label("TextLabel", "Caption", titleText, cap)
 	caption.Position = UDim2.fromOffset(0, 3)
 	caption.Size = UDim2.new(1, 0, 1, -3)
-	caption.Font = Enum.Font.Code
+	caption.Font = Enum.Font.GothamBold
 	caption.TextSize = 12
 	caption.TextColor3 = Art.Silver
 	button.MouseButton1Down:Connect(function()
@@ -468,12 +470,14 @@ local trackedRare
 local gameMenu
 local openMenu
 local closeMenu
+local updateHud
+local layout
 local hatchNavigation
 local function cancelHatchNavigation()
 	if hatchNavigation then hatchNavigation:cancel() end
 end
 local function isPickerOpen()
-	return picker.shade.Visible
+	return picker ~= nil and picker.shade.Visible
 end
 local roomView = RoomView.new(gui, backdrop, board, audio, function()
 	cancelHatchNavigation()
@@ -483,7 +487,7 @@ end, function()
 end, function()
 	openJournal()
 end, function()
-	return isPickerOpen() or journal.shade.Visible or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible)
+	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
 do
 	local handoff = gui.DeckHandoff
@@ -581,6 +585,7 @@ pet.ZIndex = 14
 pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
 local recap = RoundRecap.new(modal, audio, reduceEffects)
+recap.onPreferredLayout=function()if layout then layout() end end
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
 modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
@@ -634,18 +639,18 @@ local function paintDeck(id, stickerId)
 	rightAim.BackgroundColor3 = leftAim.BackgroundColor3
 	leftAim.TextColor3 = if theme.rocker then Art.Ink else Art.Silver
 	rightAim.TextColor3 = leftAim.TextColor3
-	title.TextColor3 = if id == "moss" then Art.Silver else Art.Ink
+	title.TextColor3 = Art.Silver
 	status.TextColor3 = if status.BackgroundTransparency < 1 then Art.Silver else title.TextColor3
 	dropCaption.TextColor3 = title.TextColor3
 	hardware.MakerMark.TextColor3 = title.TextColor3
 	Art.tintBackdrop(backing,theme)
-	modalShade.BackgroundColor3=theme.backdrop or Art.Backdrop
+	modalShade.BackgroundColor3=Art.Ink
 	Stickers.paint(deckSticker, stickerId)
 	if backdrop:GetAttribute("StickerSlot")~=true then deckSticker.Visible=false end
 end
 
 local function canAim()
-	return board:GetAttribute("Mode") == "Board" and not modal.Visible
+	return board:GetAttribute("Mode") == "Board" and not modal.Visible and not roomView.busy
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 		and not (nurseryView and nurseryView:isOpen()) and board:GetAttribute("FieldPhase") ~= "Settling"
 		and not board:GetAttribute("RoundOver")
@@ -727,6 +732,7 @@ local function refreshNursery()
 	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
 	if not ok or type(state) ~= "table" then return end
 	nurseryState = state
+	roomView.transition:refresh()
 	nurseryView:update(state)
 	local result = state.lastHatch
 	if result and result.id ~= shownNurseryHatch then
@@ -742,7 +748,11 @@ local function refreshNursery()
 			local deadline = os.clock() + 5
 			repeat task.wait(.1) until (board:GetAttribute("Mode") == "Room" and not roomView.busy) or os.clock() > deadline
 			if hatchNavigation.generation == generation and nurseryState and nurseryState.lastHatch
-				and nurseryState.lastHatch.id == result.id then openNursery() end
+				and nurseryState.lastHatch.id == result.id then
+				PresentationPolicy.presentCommittedHatch(result.id,generation,{generation=hatchNavigation.generation,
+					id=nurseryState.lastHatch.id,mode=board:GetAttribute("Mode"),ready=not roomView.busy},
+					function()if closeMenu then closeMenu()end end,openNursery)
+			end
 		end)
 	end
 end
@@ -794,11 +804,15 @@ do
 		safeOverlays.Size = UDim2.fromOffset(math.max(1,backdrop.AbsoluteSize.X-margin*2),math.max(1,backdrop.AbsoluteSize.Y-margin*2))
 	end
 	local function updateShade()
+		roomView.transition:refresh()
 		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible
 		request:FireServer("pause", modalShade.Visible)
 	end
 	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade }) do
-		node:GetPropertyChangedSignal("Visible"):Connect(updateShade)
+		node:GetPropertyChangedSignal("Visible"):Connect(function()
+			updateShade()
+			if node ~= modal and updateHud then task.defer(updateHud) end
+		end)
 	end
 	-- Handoff must cover overlays as well as the board during a mode switch.
 	handoff.ZIndex = 50
@@ -808,6 +822,18 @@ do
 	alignSafeContent()
 	updateShade()
 end
+
+roomView.transition.presentationState = function()
+	return { mode=board:GetAttribute("Mode"), ended=board:GetAttribute("RoundOver")==true,
+		pendingHatch=hatchQueue[1]~=nil or (nurseryState and nurseryState.lastHatch~=nil),
+		overlay=modal.Visible or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen()
+			or gameMenu.shade.Visible or GuiService.MenuIsOpen, reduced=reduceEffects() }
+end
+for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
+	board:GetAttributeChangedSignal(name):Connect(function() roomView.transition:refresh() end)
+end
+GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(function() roomView.transition:refresh() end)
+GuiService.MenuOpened:Connect(function() roomView.transition:refresh() end)
 
 local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
@@ -903,7 +929,13 @@ local function drawAim()
 		.. " · " .. Config.Tiers[board:GetAttribute("PreviewTier2") or 1].mark
 	nextReadout.TextColor3 = Config.Tiers[tier].color
 	if queuePieces then
-		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);piece.BackgroundColor3=Config.Tiers[t].color;piece.Mark.Text=Config.Tiers[t].mark end
+		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);piece.BackgroundColor3=Config.Tiers[t].color;piece.Mark.Text=Config.Tiers[t].mark
+			if queueHost:GetAttribute("InlineTiers") then piece.Parent.Caption.Text=(if index==1 then "Now " else "Next ")..piece.Mark.Text;piece.Parent.Caption.TextColor3=Config.Tiers[t].color end
+		end
+		if queueHost:GetAttribute("CombinedTiers") then
+			queuePieces[1].Parent.Caption.Text="Now "..queuePieces[1].Mark.Text.."/Next "..queuePieces[2].Mark.Text
+			queuePieces[1].Parent.Caption.TextColor3=Art.Silver
+		end
 	end
 	local overflow = project(Vector2.new(0, board:GetAttribute("DangerY") or Config.OverflowY))
 	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
@@ -918,7 +950,7 @@ local function shouldCoachField()
 		and board:GetAttribute("FieldPhase") == "Playing" and canAim() and not isPickerOpen() and not roomView.busy
 end
 
-local function updateHud()
+updateHud = function()
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
@@ -1014,29 +1046,36 @@ local function updateHud()
 		item.node.Visible = nurseryActive and owned > 0
 		item.node.BackgroundTransparency = if stage == index - 1 then .88 else .97
 		item.node.Target.Text = if stage>=index then "✓" elseif item.side==-1 then "LEFT" else "RIGHT"
+		item.node.Target.Visible=item.node.AbsoluteSize.X>=36 or stage>=index
 		item.edge.Transparency = if stage == index - 1 then .1 else .7
 	end
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
 	local wasRecap = recap.frame.Visible
-	modal.Visible = over or showHatch
+	modal.Visible = (over or showHatch) and not (isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible)
 	if modal.Visible then
 		clearPlayInputs()
 		picker:close()
 	end
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
-		Config.Tiers[nextTier()].mark, canPlay())
+		Config.Tiers[nextTier()].mark, canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
 	local fieldActive = nurseryActive and owned > 0
-	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive)
+	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true)
 	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
-	status.ReadoutSize.MaxTextSize = if lesson then 16 else 13
+	Art.type(status,"Body",false)
+	status.TextSize=if backdrop:GetAttribute("CompactInstruction") then 12 else 16
+	status.TextWrapped=backdrop:GetAttribute("CompactInstruction")~=true
+	if lesson and status.AbsoluteSize.Y<60 and TextService:GetTextSize(lesson,12,Enum.Font.Gotham,Vector2.new(1000,100)).X>status.AbsoluteSize.X-8 then
+		local input=UserInputService:GetLastInputType()
+		lesson=if input==Enum.UserInputType.Touch then "Drag, lift" elseif isGamepad(input) then "Aim then A" else "←→ Space"
+	end
 	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
-		then trialNotice else "Win quest +6 nectar\nLow pile +2 bonus"
+		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 nectar" else "Win quest +6 nectar\nLow pile +2 bonus")
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
 	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
@@ -1044,6 +1083,7 @@ local function updateHud()
 		elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	recap.frame.Visible = over
 	if wasRecap ~= over then
+		if layout then task.defer(layout) end
 		modalTitle.Size = UDim2.new(1, 0, 0, if over then 22 else 35)
 	end
 	local runReceipt = RunReceipt.select(nurseryState, board:GetAttribute("RunSequence"), board:GetAttribute("RewardStatus"), over)
@@ -1071,6 +1111,7 @@ local function updateHud()
 	end
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
 	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
+	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
 	if gameMenu then gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
 	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
@@ -1082,6 +1123,19 @@ local function updateHud()
 	modalAction.Size = UDim2.new(if over and not showEggChoice then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over or showEggChoice
 	keepPlaying.Text = if showEggChoice then "Hatch eggs" else "Keep playing"
+	if showEggChoice then
+		local affordable=runReceipt~=nil and (nurseryState and nurseryState.nectar or 0)>=(EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow).cost
+		modalAction.BackgroundColor3=if affordable then Art.Raised else Art.Leaf
+		modalAction.TextColor3=if affordable then Art.Silver else Art.Ink
+		keepPlaying.BackgroundColor3=if affordable then Art.Leaf else Art.Raised
+		keepPlaying.TextColor3=if affordable then Art.Ink else Art.Silver
+		local shallow=modal.Size.Y.Offset<300
+		local footerH=math.max(44,modalAction.Size.Y.Offset,keepPlaying.Size.Y.Offset)
+		local footerY=-(if shallow then 8 else 16)-footerH
+		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,footerY),UDim2.new(.5,-18,0,footerH)
+		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,footerY),UDim2.new(.5,-18,0,footerH)
+		Art.type(modalAction,"Action",shallow);Art.type(keepPlaying,"Action",shallow)
+	end
 	if modal.Visible and (not wasVisible or (over and not wasRecap)) and isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = modalAction
 	elseif not modal.Visible and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(modal) then
@@ -1090,7 +1144,7 @@ local function updateHud()
 	rail.Interactable = canAim() and not isPickerOpen()
 	action.Interactable = canPlay()
 	dropCaption.Text = if board:GetAttribute("FieldPhase") == "Settling" then "SETTLE"
-		elseif nurseryState and nurseryState.status ~= "Ready" then "SAVE WAIT"
+		elseif nurseryState and nurseryState.status ~= "Ready" then "WAIT"
 		elseif board:GetAttribute("FieldReady") == false then "FALLING" else "DROP"
 	local unlocked = owned > 0
 	roomButton.Interactable = unlocked and not modal.Visible
@@ -1122,38 +1176,86 @@ local function updateHud()
 	end
 end
 
-local function layout()
+layout = function()
 	clearPlayInputs()
 	local screen=backdrop.AbsoluteSize
 	local ratio=(Config.Width+.8)/(Config.Height+.8)
-	local l=DeckLayout.resolve(screen,ratio)
+	local short=screen.X>=350 and screen.X>=screen.Y*1.2 and screen.Y<280
+	local capSize=if short then 12 else 14
+	local utilityW=math.ceil(TextService:GetTextSize("Lounge",capSize,Enum.Font.GothamBold,Vector2.new(1000,100)).X)+14
+	local queueCaptionH=math.ceil(TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y)
+	local markBounds=TextService:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100))
+	local markD=math.max(18,math.ceil(math.max(markBounds.X,markBounds.Y))+6)
+	local lineH=queueCaptionH+4
+	local walletH=math.ceil(TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y)+4
+	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max(lineH+markD+2,lineH*2+4),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
 	backdrop:SetAttribute("CompactLandscape",l.short)
+	backdrop:SetAttribute("CompactInstruction",l.short or l.dense or l.quest.h<60)
 	backdrop:SetAttribute("SideGoalLayout",true)
 	local function place(node,r)node.Position,node.Size=UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h)end
 	place(shell,l.shell);place(bezel,l.bezel);place(viewport,l.tray);overlay.Position,overlay.Size=viewport.Position,viewport.Size
-	shell.MicroTrim.Visible=l.lateral
+	shell.MicroTrim.Visible=l.lateral and l.left.w>=160
+	local showEtching=not l.lateral or (l.left.w>=160 and Art.textWidth(title)+40<=l.left.w)
+	for _,name in ipairs({"SproutLeaf","DropMark","ModelStamp"}) do
+		local etching=shell:FindFirstChild(name)
+		if etching then etching.Visible=showEtching end
+	end
 	local radius=if l.lateral then math.clamp(math.floor(l.shell.h*.075),18,32)else 23
 	shell.ShellCurve.CornerRadius=UDim.new(0,radius)
 	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-4)
 	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-5)
 	place(rail,l.tray);rail.BackgroundTransparency=1;rail.ReadoutDivider.Visible=false
 	bestReadout.Visible,nextReadout.Visible,mascot.Visible=false,false,false
-	scoreCaption.Visible=true;scoreCaption.Position=UDim2.fromOffset(l.wallet.x-l.tray.x,l.wallet.y-l.tray.y)
-	scoreCaption.Size=UDim2.fromOffset(math.min(64,l.wallet.w*.48),l.wallet.h)
+	local nectarWallet=(board:GetAttribute("OwnedPets") or 0)>0
+	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral)
+	local captionW=if nectarWallet then 26 else math.min(l.wallet.w*.6,Art.textWidth(scoreCaption))
+	scoreCaption.Visible=not nectarWallet
+	scoreCaption.Position=UDim2.fromOffset(l.wallet.x-l.tray.x,l.wallet.y-l.tray.y)
+	scoreCaption.Size=UDim2.fromOffset(captionW,l.wallet.h)
 	scoreCaption.BackgroundColor3,scoreCaption.BackgroundTransparency=Art.Ink,.05
-	readout.Position=scoreCaption.Position+UDim2.fromOffset(scoreCaption.Size.X.Offset,0)
-	readout.Size=UDim2.fromOffset(l.wallet.w-scoreCaption.Size.X.Offset,l.wallet.h)
+	walletDrop.Visible=nectarWallet;place(walletDrop,{x=l.wallet.x+3,y=l.wallet.y+1,w=17,h=math.min(22,l.wallet.h-2)})
+	readout.Position=scoreCaption.Position+UDim2.fromOffset(captionW,0)
+	readout.Size=UDim2.fromOffset(l.wallet.w-captionW,l.wallet.h)
 	readout.BackgroundColor3,readout.BackgroundTransparency=Art.Ink,.05
-	readout.TextScaled=true;readout.TextTruncate=Enum.TextTruncate.None
+	Art.type(readout,if l.short or l.dense or not l.lateral then "Supporting" else "Action",l.short or l.dense or not l.lateral)
+	readout.TextTruncate=Enum.TextTruncate.None
 	place(queueHost,l.queue)
-	for _,piece in ipairs(queuePieces)do
-		local d=math.min(32,math.max(12,l.queue.h-22))
-		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,if l.queue.h<35 then 12 else 19),UDim2.fromOffset(d,d)
-		piece.Parent.Caption.Size=UDim2.new(1,-4,0,if l.queue.h<35 then 10 else 14)
+	local nextWidth=TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+8
+	local verticalQueue=l.lateral and not l.inlineQueue and l.queue.w/2-4<nextWidth
+	local inlineQueue=l.inlineQueue==true or verticalQueue or (not l.lateral and lineH+markD+2>l.queue.h)
+	local combinedQueue=inlineQueue and not verticalQueue and l.queue.h<lineH*2+4 and TextService:GetTextSize("Next III",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+6>l.queue.w/2-4
+	queueHost:SetAttribute("InlineTiers",inlineQueue or combinedQueue)
+	queueHost:SetAttribute("CombinedTiers",combinedQueue)
+	for index,piece in ipairs(queuePieces)do
+		local caption=piece.Parent.Caption
+		if verticalQueue then
+			piece.Parent.Position,piece.Parent.Size=UDim2.fromOffset(0,(index-1)*(lineH+4)),UDim2.new(1,0,0,lineH)
+		elseif combinedQueue then
+			piece.Parent.Position,piece.Parent.Size=UDim2.fromOffset(0,0),UDim2.fromScale(1,1)
+		else piece.Parent.Position,piece.Parent.Size=UDim2.fromScale((index-1)*.5,0),UDim2.fromScale(.5,1) end
+		caption.Visible=not combinedQueue or index==1
+		Art.type(caption,"Supporting",l.short or l.dense or not l.lateral)
+		local inset=caption:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy() end
+		local captionH=math.ceil(TextService:GetTextSize("Next",caption.TextSize,caption.Font,Vector2.new(1000,100)).Y)+4
+		piece.Visible=not inlineQueue and not combinedQueue
+		Art.type(piece.Mark,"Supporting",true);piece.Mark.Font=Enum.Font.GothamBold
+		local markInset=piece.Mark:FindFirstChildOfClass("UIPadding");if markInset then markInset:Destroy() end
+		local d=markD
+		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,captionH+2),UDim2.fromOffset(d,d)
+		caption.Size=UDim2.new(1,-4,0,captionH)
+		local droppingWidth=TextService:GetTextSize("Dropping",caption.TextSize,caption.Font,Vector2.new(1000,100)).X
+		local word=if index==1 then (if l.queue.w/2-8<droppingWidth then "Now" else "Dropping") else "Next"
+		caption:SetAttribute("QueueWord",word)
+		caption.Text=if inlineQueue then (if index==1 then "Now " else "Next ")..piece.Mark.Text else word
+		caption.TextColor3=if inlineQueue then piece.BackgroundColor3 else Art.Muted
 	end
+	if combinedQueue then queuePieces[1].Parent.Caption.Text="Now "..queuePieces[1].Mark.Text.."/Next "..queuePieces[2].Mark.Text;queuePieces[1].Parent.Caption.TextColor3=Art.Silver end
 	place(status,l.quest);status.ClipsDescendants=true
 	place(meter,l.meter);rareGoal.Visible,eggGoal.Visible=false,false
 	meterText.Position,meterText.Size=UDim2.fromOffset(2,0),UDim2.new(1,-4,1,0)
+	Art.type(meterText,"Body",false)
+	meterText.TextSize=if l.short then 12 else 16
+	meterText.TextStrokeTransparency=1
 	place(hardware,l.shell)
 	dpad.Position,dpad.Size=UDim2.fromOffset(l.dpad.x-l.shell.x,l.dpad.y-l.shell.y),UDim2.fromOffset(l.dpad.w,l.dpad.h)
 	dpad.RockerWell.Size=UDim2.fromOffset(l.dpad.w+6,l.aimSize+7)
@@ -1162,19 +1264,40 @@ local function layout()
 	action.Position,action.Size=UDim2.fromOffset(l.drop.x-l.shell.x,l.drop.y-l.shell.y),UDim2.fromOffset(l.dropSize,l.dropSize)
 	action.TextSize=math.floor(l.dropSize*.5)
 	hardware.DropWell.Position,hardware.DropWell.Size=action.Position+UDim2.fromOffset(-3,1),UDim2.fromOffset(l.dropSize+6,l.dropSize+5)
+	Art.type(dropCaption,"Supporting",l.short)
+	dropCaption.Font=Enum.Font.GothamBold
 	dropCaption.Visible=not l.short
-	dropCaption.Position,dropCaption.Size=action.Position+UDim2.fromOffset(-10,-20),UDim2.fromOffset(l.dropSize+20,16)
+	local dropW=l.right.w-8
+	local dropH=Art.textHeight(dropCaption,dropW,16)
+	local above=l.drop.y-l.meter.y-l.meter.h>=dropH+8
+	dropCaption.Position=UDim2.fromOffset(l.right.x-l.shell.x+4,l.drop.y-l.shell.y+(if above then -dropH-4 else l.dropSize+4))
+	dropCaption.Size=UDim2.fromOffset(dropW,dropH)
 	for index,button in ipairs({customizeButton,roomButton})do
 		place(button,if index==1 then l.menu else l.lounge)
 		button.KeyWell.Visible=false
 		button.Cap.Position,button.Cap.Size=UDim2.new(.5,0,0,7),UDim2.new(1,-6,0,DeckLayout.Settings.UtilityCapHeight)
-		button.Cap.Caption.Text=if index==1 then "MENU"else"LOUNGE"
-		button.Cap.Caption.TextSize=11
+		local icon=button.Cap:FindFirstChild("CompactIcon")
+		if not icon then
+			icon=Art.frame(button.Cap,"CompactIcon",Art.Ink,UDim2.new(.5,-10,.5,-10),UDim2.fromOffset(20,20),button.Cap.ZIndex+2)
+			icon.BackgroundTransparency=1
+			if index==1 then
+				for row=0,2 do Art.frame(icon,"MenuBar",Art.Silver,UDim2.fromOffset(2,3+row*6),UDim2.fromOffset(16,2),icon.ZIndex+1) end
+			else
+				local left=Art.frame(icon,"Roof",Art.Silver,UDim2.fromOffset(1,4),UDim2.fromOffset(11,2),icon.ZIndex+1);left.Rotation=-38
+				local right=Art.frame(icon,"Roof",Art.Silver,UDim2.fromOffset(8,4),UDim2.fromOffset(11,2),icon.ZIndex+1);right.Rotation=38
+				Art.frame(icon,"House",Art.Silver,UDim2.fromOffset(4,8),UDim2.fromOffset(12,10),icon.ZIndex+1)
+				Art.frame(icon,"Door",Art.Raised,UDim2.fromOffset(9,12),UDim2.fromOffset(4,6),icon.ZIndex+2)
+			end
+		end
+		icon.Visible=l.compactUtilities==true
+		button:SetAttribute("AccessibleLabel",if index==1 then "Menu" else "Lounge")
+		button.Cap.Caption.Text=if l.compactUtilities then "" elseif index==1 then "Menu"else"Lounge"
+		button.Cap.Caption.TextSize=if l.short then 12 else 14
 	end
 	eggButton.Visible=false
-	title.Visible=l.lateral and l.shell.h>=280
+	title.Visible=l.lateral and l.shell.h>=280 and Art.textWidth(title)<=l.left.w
 	title.Position,title.Size=UDim2.fromOffset(l.left.x,l.shell.y+6),UDim2.fromOffset(l.left.w,20)
-	title.TextSize=math.min(20,math.max(12,math.floor(l.left.w*.09)))
+	title.TextSize=18
 	local free=l.drop.y-(l.meter.y+l.meter.h)
 	vents.Visible=l.lateral and free>80
 	vents.Position=UDim2.fromOffset(l.right.x-l.shell.x+(l.right.w-57)/2,l.meter.y+l.meter.h-l.shell.y+18)
@@ -1192,9 +1315,35 @@ local function layout()
 		item.node.Size=UDim2.fromScale(zoneWidth,.95)
 	end
 	modal.Position=UDim2.fromScale(.5,.5)
-	local dialogHeight=math.min(300,math.max(1,screen.Y-32))
+	local fieldRecap=recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0
+	local dialogHeight=if fieldRecap then math.min(500,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-32))
 	modal:SetAttribute("CompactDialog",dialogHeight<220)
-	modal.Size=UDim2.fromOffset(math.min(440,screen.X-32),dialogHeight)
+	modal.Size=UDim2.fromOffset(math.min(if fieldRecap then 600 else 440,screen.X-(if fieldRecap then 16 else 32)),dialogHeight)
+	if fieldRecap then
+		local compact=dialogHeight<300
+		modalTag.Visible=not compact
+		Art.type(modalTitle,"Heading",compact)
+		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if compact then 28 else 36)
+		local titleY=2
+		if not compact then
+			Art.type(modalTag,"Supporting",true)
+			local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,18)
+			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+9
+		end
+		modalTitle.Position,modalTitle.Size=UDim2.fromOffset(12,titleY),UDim2.new(1,-24,0,titleH)
+		Art.type(modalAction,"Action",compact);Art.type(keepPlaying,"Action",compact)
+		local bw=(modal.Size.X.Offset-36)/2
+		local footerH=math.max(Art.actionHeight(modalAction,bw),Art.actionHeight(keepPlaying,bw))
+		local bottomMargin=if compact then 8 else 16
+		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
+		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
+		recap.headerInset=titleY+titleH+8
+		recap.footerInset=footerH+bottomMargin+8
+
+	else
+		modalTag.Visible=true
+		modalTitle.Position=UDim2.fromOffset(0,18)
+	end
 	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0 then recap:layoutField(dialogHeight)end
 	local stageHeight=math.max(24,dialogHeight-110-(if dialogHeight<220 then 0 else 18))
 	hatchStage.Size=UDim2.new(1,-24,0,stageHeight);hatchIndex.Position=UDim2.fromOffset(12,55+stageHeight)
@@ -1250,10 +1399,15 @@ for button, direction in pairs({ [leftAim] = -1, [rightAim] = 1 }) do
 end
 action.Activated:Connect(dropEgg)
 
+local function recapOwnsInput()
+	return PresentationPolicy.ownsRecap({modal=modal.Visible,recap=recap.frame.Visible,busy=roomView.busy,
+		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible,
+		coreMenu=GuiService.MenuIsOpen})
+end
+
 local function requestRetry()
 	cancelHatchNavigation()
-	if modal.Visible and recap.frame.Visible and not roomView.busy and not GuiService.MenuIsOpen
-		and not UserInputService:GetFocusedTextBox() then
+	if recapOwnsInput() and not UserInputService:GetFocusedTextBox() then
 		request:FireServer("reset")
 	end
 end
@@ -1266,7 +1420,7 @@ local function handleControl(name, state, input)
 		heldAim[key] = nil
 	end
 	local gamepad = isGamepad(input.UserInputType)
-	if key == Enum.KeyCode.ButtonA and recap.frame.Visible and not GuiService.MenuIsOpen then
+	if key == Enum.KeyCode.ButtonA and recapOwnsInput() then
 		if GuiService.SelectedObject and GuiService.SelectedObject.Visible and GuiService.SelectedObject:IsDescendantOf(modal) then return Enum.ContextActionResult.Pass end
 		if state == Enum.UserInputState.Begin then
 			requestRetry()
@@ -1292,7 +1446,7 @@ end
 local priority = Enum.ContextActionPriority.High.Value
 -- Keep footer navigation explicit while up/down reads a long saved receipt.
 ContextActionService:BindActionAtPriority("EggDropReceiptScroll", function(_, state, input)
-	if not modal.Visible or not recap.frame.Visible or not recap.hasReceipt or GuiService.MenuIsOpen
+	if not recapOwnsInput() or not recap.hasReceipt
 		or UserInputService:GetFocusedTextBox() then return Enum.ContextActionResult.Pass end
 	if state == Enum.UserInputState.Begin then
 		local key = input.KeyCode
@@ -1313,6 +1467,7 @@ ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, 
 ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
+	if not PresentationPolicy.canSheetBack({coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,busy=roomView.busy}) then return Enum.ContextActionResult.Pass end
 	if gameMenu and gameMenu.shade.Visible then
 		if state == Enum.UserInputState.Begin then closeMenu() end
 		return Enum.ContextActionResult.Sink
@@ -1696,6 +1851,9 @@ board:GetAttributeChangedSignal("RoundOver"):Connect(function()
 	end
 end)
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
+Art.watchTextPreference(backdrop,function()return backdrop.Visible end,function()layout();updateHud()end)
+backdrop:GetPropertyChangedSignal("Visible"):Connect(function()if backdrop.Visible and backdrop:GetAttribute("TextPreferenceDirty") then layout();updateHud();backdrop:SetAttribute("TextPreferenceDirty",false)end end)
+status:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(updateHud) end)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 RunService.RenderStepped:Connect(function(dt)
 	if hatchNavigation and hatchNavigation.active then
@@ -1820,15 +1978,4 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 layout()
 updateHud()
-if board:GetAttribute("Mode")=="Board" and not reduceEffects() then
-	roomView.busy=true
-	task.spawn(function()
-		local ok,problem=pcall(function()
-			roomView.transition:cover(false)
-			if board:GetAttribute("Mode")=="Board"then roomView.transition:reveal(true)else roomView.transition:hide()end
-		end)
-		roomView.transition:hide();roomView.busy=false
-		if not ok then warn("Pocket Deck startup:",problem)end
-		roomView:setMode(board:GetAttribute("Mode"))
-	end)
-else roomView:setMode(board:GetAttribute("Mode"))end
+roomView:startPresentation(board:GetAttribute("Mode"))

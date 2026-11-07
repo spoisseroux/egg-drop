@@ -120,6 +120,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	end)
 	watch(Players.LocalPlayer.CharacterAdded, function(character)
 		-- Cancel against the old character immediately; waiting for Humanoid must not retain a lock.
+		self.transition:hide()
 		self:releaseFocusMovement()
 		if self.focusing then self:useRoomCamera(false) end
 		local humanoid = character:WaitForChild("Humanoid", 5)
@@ -568,47 +569,68 @@ function Room:show(mode, animate)
 	end
 end
 
-function Room:setMode(mode)
-	if self.target ~= mode then
-		self.lastSwitchAt = os.clock()
-	end
-	self.target = mode
-	if mode ~= "Room" and self.focusing then self:useRoomCamera(false) end
-	if self.busy or self.mode == mode then
-		return
-	end
-	self.busy = true
+-- Initial entry and replicated mode changes share one runner/input lock.
+function Room:driveModes(initial)
+	if self.busy or self.destroyed then return end
+	self.switchEpoch=(self.switchEpoch or 0)+1
+	local epoch=self.switchEpoch
+	self.busy=true
 	task.spawn(function()
-		while self.mode ~= self.target do
-			local animate = not self.reduceEffects()
-			if animate then
-				if self.mode == "Room" then
-					self:cancelCameraTween()
+		local token
+		local ok,problem=pcall(function()
+			local first=initial == true
+			while not self.destroyed and self.switchEpoch==epoch and (first or self.mode~=self.target) do
+				local destination=self.target
+				token=self.transition:begin(destination=="Board",if first then "initial" else "arrival")
+				if token then
+					if self.mode=="Room" then self:cancelCameraTween() end
+					self.transition:cover(not first and self.mode=="Board",token)
 				end
-				self.transition:cover(self.mode == "Board")
-			end
-			animate = animate and not self.reduceEffects()
-			if self.mode ~= self.target then
-				self.mode = self.target
-				self:show(self.mode, animate)
-				self.audio:play(if self.mode == "Room" then self.shownPet.cue else "menu")
-			end
-			if animate then
-				self.transition:reveal(self.mode == "Board")
-				if self.cameraTween and self.cameraTween.PlaybackState == Enum.PlaybackState.Playing then
-					self.cameraTween.Completed:Wait()
+				if self.destroyed or self.switchEpoch~=epoch then return end
+				-- A replicated destination can change while the curtain is moving.
+				if self.target==destination then
+					local changed=self.mode~=destination
+					self.mode=destination
+					self:show(destination,token~=nil and self.transition:owns(token))
+					if changed and not self.overlayOpen() and not GuiService.MenuIsOpen then
+						self.audio:play(if destination=="Room" then self.shownPet.cue else "menu")
+					end
+					if token then self.transition:reveal(destination=="Board",token) end
+					-- Keep Meet/focus from snapshotting an unfinished lounge camera move.
+					if self.cameraTween and self.cameraTween.PlaybackState==Enum.PlaybackState.Playing then
+						self.cameraTween.Completed:Wait()
+					end
+				else
+					self.transition:hide(token)
 				end
-			else
-				self.transition:hide()
+				first=false
 			end
-		end
-		self.busy = false
+		end)
+		if self.switchEpoch~=epoch or self.destroyed then return end
+		if token then self.transition:hide(token) end
+		self.busy=false
+		self:updateControls()
+		if not ok then warn("Pocket Deck presentation:",problem) end
 	end)
+end
+
+function Room:setMode(mode)
+	if self.target~=mode then self.lastSwitchAt=os.clock() end
+	self.target=mode
+	self.transition:refresh()
+	if mode~="Room" and self.focusing then self:useRoomCamera(false) end
+	if not self.busy and self.mode~=mode then self:driveModes(false) end
+end
+
+function Room:startPresentation(mode)
+	self.target=mode
+	self:driveModes(true)
 end
 
 function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+	self.switchEpoch=(self.switchEpoch or 0)+1
 	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self:restoreCamera()
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end

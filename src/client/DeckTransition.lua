@@ -1,5 +1,6 @@
 local TweenService = game:GetService("TweenService")
 local Art = require(script.Parent.DeckArt)
+local Policy = require(script.Parent.PresentationPolicy)
 
 local Transition = {}
 Transition.__index = Transition
@@ -44,59 +45,105 @@ function Transition.new(gui, tray, audio, reduceEffects)
 	local logo=Art.frame(aperture,"BootLogo",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),54)
 	logo.BackgroundTransparency=1;logo.Visible=false
 	local mark=Art.text(logo,"Name","POCKET\nDECK",UDim2.new(0,2,.5,0),UDim2.new(1,-4,0,34),Art.Silver,14)
-	Art.fitText(mark,14,8,0,true)
+	Art.type(mark,"Action",false)
+	mark.Size=UDim2.new(1,-16,0,48)
+	mark.Position=UDim2.new(0,8,.5,0)
 	local dots={}
 	for index=1,7 do
 		local dot=Art.frame(logo,"SeedDot",Art.Leaf,UDim2.new(.5,(index%3-1)*5-2,.5,-28+math.floor(index/3)*5),UDim2.fromOffset(4,4),55)
 		Art.corner(dot,2);dots[index]=dot
 	end
-	return setmetatable({ shade=shade,aperture=aperture,top=top,bottom=bottom,scan=scan,logo=logo,mark=mark,dots=dots,audio=audio,reduce=reduceEffects,epoch=0,boots=0 },Transition)
+	local self = setmetatable({ shade=shade,aperture=aperture,top=top,bottom=bottom,scan=scan,logo=logo,mark=mark,dots=dots,audio=audio,reduce=reduceEffects,boots=0,motions={} },Transition)
+	self.policy = Policy.new(function()
+		return if self.presentationState then self.presentationState() else { mode = "Board", reduced = self.reduce() }
+	end)
+	return self
 end
 
-function Transition:cover(fromDeck)
+function Transition:begin(toDeck, route)
+	self:hide()
+	return self.policy:begin(toDeck, route)
+end
+
+function Transition:owns(token)
+	return self.policy:owns(token)
+end
+
+function Transition:motion(token, object, seconds, properties, companion)
+	if not self:owns(token) then return false end
+	local motion = tween(object, seconds, properties)
+	self.motions[motion] = true
+	local paired=if companion then tween(companion,seconds,properties) else nil
+	if paired then self.motions[paired]=true end
+	motion.Completed:Wait()
+	self.motions[motion] = nil
+	if paired then self.motions[paired]=nil end
+	return self:owns(token)
+end
+
+function Transition:cover(fromDeck, token)
+	if not self:owns(token) then return false end
 	self.shade.BackgroundTransparency = 1
 	self.shade.Visible = true
 	self.aperture.Visible = fromDeck
 	if fromDeck then
 		self.top.Size, self.bottom.Size = UDim2.fromScale(1, 0), UDim2.fromScale(1, 0)
-		tween(self.bottom, 0.14, { Size = UDim2.fromScale(1, 0.5) })
-		tween(self.top, 0.14, { Size = UDim2.fromScale(1, 0.5) }).Completed:Wait()
+		-- Both shutters share the same ownership token and cancellation set.
+		if not self:motion(token,self.top,.14,{Size=UDim2.fromScale(1,.5)},self.bottom) then return false end
 		self.scan.Visible = true
 	end
-	tween(self.shade, if fromDeck then 0.10 else 0.16, { BackgroundTransparency = 0 }).Completed:Wait()
+	if not self:motion(token,self.shade,if fromDeck then .10 else .16,{BackgroundTransparency=0}) then return false end
 	self.aperture.Visible, self.scan.Visible = false, false
+	return true
 end
 
-function Transition:reveal(toDeck)
-	self.epoch+=1;local epoch=self.epoch
+function Transition:reveal(toDeck, token)
+	if not self:owns(token) then return false end
 	if toDeck then
-		self.boots+=1;self.shade:SetAttribute("Boots",self.boots)
+		self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
 		self.logo.Visible=true;self.mark.TextTransparency=1
-		for index,dot in ipairs(self.dots)do dot.BackgroundTransparency=1;task.delay(index*.025,function()
-			if self.epoch==epoch and self.logo.Visible then dot.BackgroundTransparency=0 end
-		end)end
-		if self.audio and self.audio.boot then self.audio:boot()end
-		self.top.Size, self.bottom.Size = UDim2.fromScale(1, 0.5), UDim2.fromScale(1, 0.5)
-		self.aperture.Visible, self.scan.Visible = true, true
-		tween(self.shade, 0.10, { BackgroundTransparency = 1 }).Completed:Wait()
-		self.scan.Visible = false
-		tween(self.mark,.12,{TextTransparency=0})
-		task.wait(.32)
-		if self.epoch~=epoch then return end
+		self.mark.TextSize=if self.aperture.AbsoluteSize.X<100 then 12 else 18
+		for index,dot in ipairs(self.dots) do
+			dot.BackgroundTransparency=1
+			task.delay(index*.025,function()
+				if self:owns(token) and self.logo.Visible then dot.BackgroundTransparency=0 end
+			end)
+		end
+		if self.audio and self.audio.boot and self:owns(token) then
+			self.audio:boot(function() return self:owns(token) end)
+		end
+		self.top.Size,self.bottom.Size=UDim2.fromScale(1,.5),UDim2.fromScale(1,.5)
+		self.aperture.Visible,self.scan.Visible=true,true
+		if not self:motion(token,self.shade,.10,{BackgroundTransparency=1}) then return false end
+		self.scan.Visible=false
+		if not self:motion(token,self.mark,.12,{TextTransparency=0}) then return false end
+		task.wait(.20)
+		if not self:owns(token) then return false end
 		self.logo.Visible=false
-		tween(self.bottom, 0.16, { Size = UDim2.fromScale(1, 0) })
-		tween(self.top, 0.16, { Size = UDim2.fromScale(1, 0) }).Completed:Wait()
+		if not self:motion(token,self.top,.16,{Size=UDim2.fromScale(1,0)},self.bottom) then return false end
 	else
-		tween(self.shade, 0.28, { BackgroundTransparency = 1 }).Completed:Wait()
+		if not self:motion(token,self.shade,.28,{BackgroundTransparency=1}) then return false end
 	end
-	self:hide()
+	self:hide(token)
+	return true
 end
 
-function Transition:hide()
-	self.epoch+=1
+-- Re-evaluate synchronously when any overlay, round state or motion preference changes.
+function Transition:refresh()
+	local token=self.policy.active
+	if token and not self:owns(token) then self:hide(token) end
+end
+
+function Transition:hide(token)
+	if token and self.policy.active ~= token then return false end
+	self.policy:cancel()
+	for motion in pairs(self.motions) do motion:Cancel() end
+	table.clear(self.motions)
+	if self.audio and self.audio.cancelBoot then self.audio:cancelBoot() end
 	self.logo.Visible=false
-	self.shade.Visible = false
-	self.aperture.Visible, self.scan.Visible = false, false
+	self.shade.Visible=false
+	self.aperture.Visible,self.scan.Visible=false,false
+	return true
 end
 
 return Transition

@@ -39,16 +39,13 @@ return function(client, parent)
 			assert(recap.fieldHeading == "Both sides complete!" and recap.detail.Text:find("23/24", 1, true))
 			recap:updateField(result({ balance = 24, recipe = Catalog.ById.sprout })); assert(recap.detail.Text:find("ready to hatch", 1, true))
 		end)
-		test("compact recap text fits and does not overlap its footer", function()
-			for _, height in ipairs({128, 166, 198, 236}) do
-				root.Size = UDim2.fromOffset(360, height); task.wait(.06)
-				recap:update(630, 3, 0, nil, 0, nil, 0, 700)
-				recap:updateField(result()); task.wait(.06)
-				assert(recap.title.TextFits and recap.detail.TextFits, "Recap text clipped at " .. height)
-				assert(recap.goal.Position.Y.Offset + recap.goal.Size.Y.Offset <= height - 58)
-				if recap.stats.Visible then
-					for _, value in ipairs(recap.values) do assert(value.AbsoluteSize.Y >= 18 and value.TextFits) end
-				end
+		test("compact pending recap keeps readable status out of pinned footer",function()
+			for _,height in ipairs({128,166,198,236}) do
+				root.Size=UDim2.fromOffset(360,height);task.wait(.06)
+				recap:update(630,3,0,nil,0,nil,0,700);recap:updateField(result());task.wait(.06)
+				assert(recap.title.TextFits and recap.detail.TextFits)
+				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
+				assert(not recap.title.TextScaled and recap.title.TextSize>=14)
 			end
 		end)
 		local nodes = {}
@@ -58,6 +55,14 @@ return function(client, parent)
 			nodes[name] = node
 		end
 		local guide = Guide.new(nodes.rail, nodes.rocker, nodes.drop, nodes.meter, nodes.status)
+		test("shallow welcome coaching is one concise input-specific line",function()
+			for _,entry in ipairs({{Enum.UserInputType.Keyboard,"←/→ + Space"},{Enum.UserInputType.Gamepad1,"Aim then A"},{Enum.UserInputType.Touch,"Drag & release"}}) do
+				local caption=guide:step(0,0,0,0,entry[1],"I",true,true)
+				assert(caption==entry[2] and not caption:find("\n",1,true))
+			end
+			assert(guide:step(1,0,0,0,Enum.UserInputType.Keyboard,"II",true,true)=="Match II + II")
+			assert(guide:step(2,1,1,0,Enum.UserInputType.Keyboard,"I",true,true)=="Merge for Pip")
+		end)
 		test("first field coaching responds to stage, overlays, first win and compact height", function()
 			task.wait(.06)
 			assert(guide:fieldStep(0, 0, true) and guide.field.heading.Text == "MATCH ON LEFT")

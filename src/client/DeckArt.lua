@@ -1,13 +1,17 @@
 local Art = {}
 
+-- Stable interface roles; player finishes only tint the physical casing/backing.
+Art.Type = { Reward = 34, Heading = 26, Action = 18, Body = 16, Supporting = 14, Compact = 12 }
+Art.Space = { Small = 4, Related = 8, Group = 16, Panel = 24 }
 for name, hex in pairs({
-	Backdrop = "#284E32", Ink = "#142D20", Surface = "#244B32", Raised = "#315C3D",
-	Line = "#8AAC70", Silver = "#F4F8E9", Muted = "#C5D9AD", Amber = "#FFC85A",
-	Leaf = "#C2EC74", Orange = "#FFA63C", Canopy = "#366940", Field = "#427546",
+	Backdrop = "#232620", Ink = "#282722", Surface = "#353630", Raised = "#45483E", Inset = "#292C27",
+	Line = "#8D9E8E", Silver = "#F5F6F1", Muted = "#CDD1C7", Amber = "#FFBF50",
+	Leaf = "#A8DE78", Orange = "#FFBF50", Canopy = "#303B31", Field = "#2B332C",
+	Focus = "#83D7EF", Danger = "#FF907B", LCD = "#D2E5BB", LCDInk = "#213D37",
 }) do
 	Art[name] = Color3.fromHex(hex)
 end
--- Keep the public token for existing consumers; the accent is now leaf green.
+-- Existing consumers use Cyan for affirmative fills. Focus has its own role.
 Art.Cyan = Art.Leaf
 
 local function node(class, parent, properties)
@@ -49,7 +53,7 @@ end
 function Art.text(parent, name, content, position, size, color, textSize, font)
 	return node("TextLabel", parent, {
 		Name = name, Text = content, Position = position, Size = size, TextColor3 = color,
-		TextSize = textSize, Font = font or Enum.Font.Code, BackgroundTransparency = 1,
+		TextSize = textSize, Font = font or Enum.Font.Gotham, BackgroundTransparency = 1,
 		ZIndex = parent.ZIndex + 1, Active = false,
 	})
 end
@@ -68,6 +72,61 @@ function Art.fitText(label, maximum, minimum, padding, wrapped)
 	inset.PaddingLeft, inset.PaddingRight = UDim.new(0, gap), UDim.new(0, gap)
 	inset.PaddingTop, inset.PaddingBottom = UDim.new(0, 2), UDim.new(0, 2)
 	return limit
+end
+
+-- Functional text keeps a real size and preferred-text support. Layout owns wrapping.
+function Art.type(label, role, compact)
+	local sizes = { Reward = 26, Heading = 20, Action = 16, Body = 14, Supporting = 12 }
+	local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+	if constraint then constraint:Destroy() end
+	local inset=label:FindFirstChildOfClass("UIPadding")
+	if inset then inset.PaddingTop,inset.PaddingBottom=UDim.new(0,0),UDim.new(0,0) end
+	label.TextScaled = false
+	label.TextSize = if compact then (sizes[role] or 14) else (Art.Type[role] or 16)
+	label.Font = if role == "Reward" or role == "Heading" or role == "Action" then Enum.Font.GothamBold else Enum.Font.Gotham
+	label.TextWrapped = true
+	label.TextTruncate = Enum.TextTruncate.None
+	return label
+end
+
+function Art.close(button)
+	button.Name,button.Text="Close","×"
+	button:SetAttribute("AccessibleLabel","Close")
+	Art.type(button,"Heading",false)
+	button.TextSize=26
+	button.TextWrapped=false
+	local inset=button:FindFirstChildOfClass("UIPadding")
+	if inset then inset.PaddingLeft,inset.PaddingRight=UDim.new(0,0),UDim.new(0,0) end
+	return button
+end
+
+function Art.textHeight(label,width,minimum)
+	local inset=label:FindFirstChildOfClass("UIPadding")
+	local horizontal=if inset then inset.PaddingLeft.Offset+inset.PaddingRight.Offset+(inset.PaddingLeft.Scale+inset.PaddingRight.Scale)*width else 0
+	local measured=game:GetService("TextService"):GetTextSize(label.Text,label.TextSize,label.Font,Vector2.new(math.max(1,width-horizontal),10000))
+	return math.max(minimum or 0,math.ceil(measured.Y)+4)
+end
+function Art.textWidth(label,content)
+	return math.ceil(game:GetService("TextService"):GetTextSize(content or label.Text,label.TextSize,label.Font,Vector2.new(10000,10000)).X)+8
+end
+function Art.actionHeight(label,width)
+	return math.max(44,Art.textHeight(label,width,0)+12)
+end
+-- One invalidation listener per component; hidden sheets reflow on open.
+function Art.watchTextPreference(owner,visible,reflow)
+	local queued,alive=false,true
+	local connection=game:GetService("GuiService"):GetPropertyChangedSignal("PreferredTextSize"):Connect(function()
+		owner:SetAttribute("TextPreferenceDirty",true)
+		if queued or not visible() then return end
+		queued=true
+		task.defer(function()
+			game:GetService("RunService").Heartbeat:Wait()
+			queued=false
+			if alive and owner.Parent and visible() then reflow();owner:SetAttribute("TextPreferenceDirty",false) end
+		end)
+	end)
+	owner.Destroying:Connect(function()alive=false;connection:Disconnect()end)
+	return connection
 end
 
 function Art.leaf(parent, name, position, size, tint, rotation, z)
@@ -157,16 +216,16 @@ function Art.button(button, radius)
 	local border = Art.stroke(button, Art.Line, 0.22)
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
-			border.Color = Art.Cyan
+			border.Color = Art.Focus
 		end
 	end)
 	local function restore()
 		border.Color = if button == game:GetService("GuiService").SelectedObject
-			then Art.Cyan else Art.Line
+			then Art.Focus else Art.Line
 	end
 	button.MouseButton1Up:Connect(restore)
 	button.MouseLeave:Connect(restore)
-	button.SelectionGained:Connect(function() border.Color = Art.Cyan end)
+	button.SelectionGained:Connect(function() border.Color = Art.Focus end)
 	button.SelectionLost:Connect(function() border.Color = Art.Line end)
 	return border
 end

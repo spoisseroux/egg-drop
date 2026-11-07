@@ -63,7 +63,7 @@ function Guide:fieldStep(stage, totalWins, active)
 	return true
 end
 
-function Guide:step(drops, merges, charge, owned, inputType, mark, active)
+function Guide:step(drops, merges, charge, owned, inputType, mark, active, compact)
 	local touch = inputType == Enum.UserInputType.Touch
 	local controller = string.match(inputType.Name, "^Gamepad") ~= nil
 	local step = if owned > 0 then 0 elseif merges > 0 or charge > 0 then 3 elseif drops > 0 then 2 else 1
@@ -71,6 +71,12 @@ function Guide:step(drops, merges, charge, owned, inputType, mark, active)
 	self.rocker.Visible = active and not touch and step == 1
 	self.drop.Visible = active and not touch and (step == 1 or step == 2)
 	self.meter.Visible = active and step == 3
+	if compact then
+		if step == 1 then return if touch then "Drag & release" elseif controller then "Aim then A" else "←/→ + Space" end
+		if step == 2 then return "Match "..mark.." + "..mark end
+		if step == 3 then return "Merge for Pip" end
+		return nil
+	end
 	if step == 1 then
 		return "1/3  AIM & DROP\n" .. (if touch then "Drag tray, release" elseif controller then "D-pad then A" else "←/→ then Space")
 	elseif step == 2 then

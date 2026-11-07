@@ -15,11 +15,21 @@ return function(client)
 		assert(Room.interactPet(value) and value.lastPetAt)
 		assert(not Room.interactPet(value) and calls==1)
 	end)
-	test("menus transitions and existing focus cannot enter a second shot",function()
-		for _,key in ipairs({"busy","focusing","menuOpen"})do
+	test("menus and transitions cannot enter a second shot",function()
+		for _,key in ipairs({"busy","menuOpen"})do
 			local value=state(function()error("must not start another shot")end)
 			value[key]=true;assert(not Room.interactPet(value))
 		end
+	end)
+	test("focused greeting delegates reaction without camera recapture or cooldown reset",function()
+		local reactions=0
+		local value=state(function()error("focused greeting must not recapture camera")end)
+		value.focusing,value.lastPetAt=true,123
+		value.reactPet=function(_,petting)assert(petting==false);reactions+=1;return true end
+		assert(Room.interactPet(value) and Room.interactPet(value) and reactions==2)
+		assert(value.focusing and value.lastPetAt==123)
+		value.reactPet=function()return false end
+		assert(not Room.interactPet(value) and value.lastPetAt==123)
 	end)
 	return{passed=#cases,cases=cases}
 end

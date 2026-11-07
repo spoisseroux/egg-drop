@@ -1,0 +1,625 @@
+{
+  "date": "2026-11-07",
+  "context": "Actual game LocalScript; temporary ScreenGui hosts; CompactDeck uses actual UI",
+  "medium": {
+    "passed": 214,
+    "suites": [
+      {
+        "ok": true,
+        "result": {
+          "passed": 23,
+          "cases": {
+            "1": "568, 160 distinct screen, grips and controls",
+            "2": "568, 198 distinct screen, grips and controls",
+            "3": "350, 279 distinct screen, grips and controls",
+            "4": "640, 530 distinct screen, grips and controls",
+            "5": "844, 330 distinct screen, grips and controls",
+            "6": "844, 390 distinct screen, grips and controls",
+            "7": "390, 740 distinct screen, grips and controls",
+            "8": "1650, 972 distinct screen, grips and controls",
+            "9": "1649, 971 tray-first desktop mass and bounded equal rails",
+            "10": "1280, 720 tray-first desktop mass and bounded equal rails",
+            "11": "1024, 768 tray-first desktop mass and bounded equal rails",
+            "12": "568, 160 measured Large utility requirements select a safe fallback",
+            "13": "350, 160 measured Large utility requirements select a safe fallback",
+            "14": "350, 279 measured Large utility requirements select a safe fallback",
+            "15": "568, 280 measured Large utility requirements select a safe fallback",
+            "16": "1649, 971 measured Large utility requirements select a safe fallback",
+            "17": "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+            "18": "480px Largest shallow root uses narrow ledger without target overlap",
+            "19": "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+            "20": "rolling copy leaves the occupied slot on wide grips and the final drop",
+            "21": "reset, restore and lowered drops seed static counts",
+            "22": "reduced effects, hide and cancel retain the authoritative count",
+            "23": "eight decorative balls retain channel padding at128px rail width"
+          }
+        },
+        "name": "DeckExperience",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 16,
+          "cases": {
+            "1": "matching committed receipt starts once and retains count through HUD refresh",
+            "2": "count up lands on exact score chain clears and earned nectar",
+            "3": "hide cancels immediately and reopening the same receipt cannot replay",
+            "4": "hidden ancestor cancels and does not consume a future receipt",
+            "5": "Saving delayed and pending states suppress old receipt and currency transfer",
+            "6": "stale sequence cannot announce the previous reward",
+            "7": "new receipt cancels the old animation and reinitializes every counter",
+            "8": "daily only failure retains missed side quest zero and exact total",
+            "9": "zero earned never invents nectar drops or transfer sounds",
+            "10": "reduced effects shows final static values with no recap cues",
+            "11": "audio remains routed through the muted shared audio group",
+            "12": "short recap scrolls readable center while excluding pinned footer",
+            "13": "roomy recap follows reward egg metrics details and keeps saved values",
+            "14": "selected egg progress draws above its panel and retains partial or full saved balance",
+            "15": "first Saved receipt survives synchronous resize during publication",
+            "16": "destroying the component removes its animation connection"
+          }
+        },
+        "name": "RecapFeedback",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "preference": "Medium",
+          "cases": {
+            "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+            "2": "680, 700 measured shop header and pinned purchase route fit",
+            "3": "680, 700 recap reward wallet and complete receipt stay readable",
+            "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+            "5": "390, 740 measured shop header and pinned purchase route fit",
+            "6": "390, 740 recap reward wallet and complete receipt stay readable",
+            "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+            "8": "568, 160 measured shop header and pinned purchase route fit",
+            "9": "568, 160 recap reward wallet and complete receipt stay readable"
+          },
+          "passed": 9
+        },
+        "name": "PreferredTextLayout",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "preference": "Medium",
+          "cases": {
+            "1": "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "2": "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "3": "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "4": "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "5": "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+          },
+          "passed": 5
+        },
+        "name": "HandheldTextLayout",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "persistentWrites": false,
+          "passed": 10,
+          "cases": {
+            "1": "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+            "2": "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+            "3": "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "4": "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "5": "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+            "6": "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+            "7": "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+            "8": "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+            "9": "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+            "10": "390, 740 safe tray and44px controls; readable queue and stable dispenser"
+          }
+        },
+        "name": "CompactDeck",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 18,
+          "cases": {
+            "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+            "2": "Replay never purchases and synchronous confirmation fires once",
+            "3": "Retry and same-ID updates retain immutable choice",
+            "4": "Pending feedback preserves choice before state catches up",
+            "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+            "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+            "7": "Close cancels a scheduled pre-dispatch retry",
+            "8": "Busy feedback queues a retry until Ready for the same result",
+            "9": "A retry timer encountering Busy retains its work until Ready",
+            "10": "Another pending transaction releases the captured ack on Ready",
+            "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+            "12": "A changed result revokes old navigation",
+            "13": "Close during retry cancels navigation without a second acknowledgement",
+            "14": "Definitive rejection permits changing the action",
+            "15": "Actions remain locked during an unfinished cinematic",
+            "16": "Duplicate caption uses copied mastery progress and retains both choices",
+            "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+            "18": "44px result actions fit short landscape safe areas and long names"
+          }
+        },
+        "name": "HatchActions",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "all three contracts use canonical names and component rewards",
+            "2": "daily-only failed quest grants no family marks",
+            "3": "played family owns the next goal even after another family is selected",
+            "4": "committed promotion is announced with its next goal",
+            "5": "overflow after both goals explains survival without asking to redo goals",
+            "6": "loading a matching receipt hides previous balances and promotions",
+            "7": "an unresolved save cannot present an old receipt",
+            "8": "compact center retains exact cost and complete readable receipt rows",
+            "9": "receipt navigation reaches both bounds without moving footer selection",
+            "10": "menu names missing win conditions and clamps completed rank III"
+          }
+        },
+        "name": "RewardPresentation",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "daily-only failed quest remains a failure with committed balance",
+            "2": "right target and overflow explanations use terminal state",
+            "3": "transient save error never displays old balance as a receipt",
+            "4": "selected recipe uses saved balance without adding the payout twice",
+            "5": "compact pending recap keeps readable status out of pinned footer",
+            "6": "shallow welcome coaching is one concise input-specific line",
+            "7": "first field coaching responds to stage, overlays, first win and compact height",
+            "8": "starter reveal receives a copy with the correct egg goal"
+          }
+        },
+        "name": "Onboarding",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "one readable header and44px controls fit desktop portrait and shallow roots",
+            "2": "page changes keep absolute header and tab positions stable",
+            "3": "complete illustrated destinations start below the scroll clip",
+            "4": "all three shallow contracts show a complete44px first row and independent gift",
+            "5": "claimed gift cannot claim again and earned contracts remain informational",
+            "6": "fresh open and page entry reset scroll while snapshots retain reading position",
+            "7": "scroll cue ends at reachable content and small pages end after content",
+            "8": "mastery cards wrap exact missing conditions at real body size",
+            "9": "hidden and unchanged snapshots perform no text measurement layout",
+            "10": "locked family rows are shorter and cannot select a family"
+          }
+        },
+        "name": "MenuPolish",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "fresh initial board and deliberate arrival may own one boot",
+            "2": "HUD refresh resize replay and sheet close never manufacture boot",
+            "3": "ended board pending reveal and each interactive owner suppress initial boot",
+            "4": "ended board arrival leaves recap in charge",
+            "5": "overlay arriving mid boot revokes dots visuals and sound with same predicate",
+            "6": "old completion cannot release or hide a newer presentation",
+            "7": "route changes reduced motion and teardown revoke delayed work",
+            "8": "ended board under menu passes gamepad A to the visible sheet",
+            "9": "native menu and text capture retain Back instead of closing covered sheets",
+            "10": "late committed hatch preempts Menu in order and never acknowledges or purchases"
+          }
+        },
+        "name": "PresentationPolicy",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "mid boot overlay cancels queued pitches and only its own voice",
+            "2": "muted and reduced motion suppress every queued chime note",
+            "3": "new owner cannot receive the old boot's queued pitches"
+          }
+        },
+        "name": "PresentationAudio",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "movement and jumping restore exact prior settings once",
+            "2": "petting bounds account for core-safe offset and reject hidden geometry",
+            "3": "focus navigation is safe-sized and input bindings clean up",
+            "4": "petting pointer uses core-safe input coordinates exactly once",
+            "5": "other modals suspend focus UI and receive Back/movement/Greet input",
+            "6": "repeat greeting reacts in the same shot and throttles rubbing",
+            "7": "reduced effects and stale camera/root never animate or keep a lock",
+            "8": "focus movement release restores only the captured controller",
+            "9": "camera teardown invalidates stale greeting epochs without touching a replacement",
+            "10": "aspect reframe preserves original restore shot without greet or recapture"
+          }
+        },
+        "name": "PetFocusUI",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "already equipped pet focuses without duplicate equip",
+            "2": "rare-only companion waits for server equip acknowledgment",
+            "3": "mode and local handoff must both finish before equip",
+            "4": "manual cancellation prevents late equip and focus",
+            "5": "overlay interruption cancels pending focus",
+            "6": "unconfirmed equip never substitutes a local pet",
+            "7": "replay resets finished board once after handoff",
+            "8": "replay preserves an unfinished board",
+            "9": "cancelled replay cannot reset a later round",
+            "10": "newer navigation wins over a stale mode wait"
+          }
+        },
+        "name": "HatchNavigation",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "all four families retain their rank thresholds and completion flags",
+            "2": "early goals name the exact remaining marks and next rank",
+            "3": "25 marks missing only chain names the win requirement",
+            "4": "mastered families never predict another rank or negative marks",
+            "5": "failed skill contracts cannot record mastery win challenges",
+            "6": "prior equal-value receipt and promotion cannot enter a new recap",
+            "7": "late snapshot and non-saved states remain unconfirmed",
+            "8": "receipt stays attached to the played family"
+          }
+        },
+        "name": "RunGoals",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "original Meadow and Sprout silhouettes have distinct motifs and no input capture",
+            "2": "wide recipe eggs render above their buttons with full names and prices",
+            "3": "350px compact recipes retain 24px foreground artwork and complete text",
+            "4": "the egg stand follows recipe selection without rebuilding transactions"
+          }
+        },
+        "name": "EggArt",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "a rare-only inventory inherits its family rank without unlocking the base pet",
+            "2": "family goals routes once after closing and issues no equip or track action",
+            "3": "legacy constructor preserves centered close and optional rank arguments",
+            "4": "compact and portrait journal shows complete rows and 44px footer controls"
+          }
+        },
+        "name": "JournalPurpose",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 5,
+          "cases": {
+            "1": "reachable enabled journal suppresses ambiguous pet shortcut",
+            "2": "moving away releases the pet shortcut",
+            "3": "hidden or transition-disabled stations do not claim input",
+            "4": "removed station and empty list release input",
+            "5": "room cache follows added, removed and reparented station prompts"
+          }
+        },
+        "name": "JournalPromptPriority",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "all family ranks render at24px with no text or input capture",
+            "2": "unchanged HUD refresh preserves artwork instances and descendant count",
+            "3": "menu refresh keeps family crests and fits all family buttons",
+            "4": "earned pet badge cleanup preserves unranked and legacy effects"
+          }
+        },
+        "name": "FamilyCrest",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "models": 7,
+          "cases": {
+            "1": "pip fits landscape at rest and greeting 0.3/0.7",
+            "2": "pip fits portrait at rest and greeting 0.3/0.7",
+            "3": "pip fits wide at rest and greeting 0.3/0.7",
+            "4": "puddle fits landscape at rest and greeting 0.3/0.7",
+            "5": "puddle fits portrait at rest and greeting 0.3/0.7",
+            "6": "puddle fits wide at rest and greeting 0.3/0.7",
+            "7": "wick fits landscape at rest and greeting 0.3/0.7",
+            "8": "wick fits portrait at rest and greeting 0.3/0.7",
+            "9": "wick fits wide at rest and greeting 0.3/0.7",
+            "10": "orbit fits landscape at rest and greeting 0.3/0.7",
+            "11": "orbit fits portrait at rest and greeting 0.3/0.7",
+            "12": "orbit fits wide at rest and greeting 0.3/0.7",
+            "13": "bloom_pip fits landscape at rest and greeting 0.3/0.7",
+            "14": "bloom_pip fits portrait at rest and greeting 0.3/0.7",
+            "15": "bloom_pip fits wide at rest and greeting 0.3/0.7",
+            "16": "foxfire_wick fits landscape at rest and greeting 0.3/0.7",
+            "17": "foxfire_wick fits portrait at rest and greeting 0.3/0.7",
+            "18": "foxfire_wick fits wide at rest and greeting 0.3/0.7",
+            "19": "eclipse_orbit fits landscape at rest and greeting 0.3/0.7",
+            "20": "eclipse_orbit fits portrait at rest and greeting 0.3/0.7",
+            "21": "eclipse_orbit fits wide at rest and greeting 0.3/0.7",
+            "22": "edges and corners keep the complete greeting footprint on supported floor",
+            "23": "missing floor or invalid viewport fails before world queries",
+            "24": "no ground falls back after bounded world queries",
+            "25": "high ground falls back after bounded world queries",
+            "26": "blocked falls back after bounded world queries",
+            "27": "a rotated non-query sign occludes a finite camera segment",
+            "28": "parallel misses and padded grazes are distinguished",
+            "29": "blockers behind the camera or beyond the target do not occlude",
+            "30": "lower-body and side occluders can block while the center ray remains clear",
+            "31": "a blocked first candidate falls back to a clear shot within the query budget",
+            "32": "every visually blocked candidate yields a bounded roam fallback",
+            "33": "restore keeps the original shot and focus translated by player motion",
+            "34": "replacement camera or root cannot receive an old greeting restoration",
+            "35": "a root reparented into another character or detached invalidates the snapshot"
+          },
+          "passed": 35,
+          "projectionChecks": 72
+        },
+        "name": "PetGreetingShot",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "blocked shot propagates false without spending interaction cooldown",
+            "2": "accepted greeting starts one cooldown and rejects immediate repeat",
+            "3": "menus and transitions cannot enter a second shot",
+            "4": "focused greeting delegates reaction without camera recapture or cooldown reset"
+          }
+        },
+        "name": "GreetingLifecycle",
+        "preference": "Medium"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "160/198/236 safe heights show both complete recipes and separate 44px controls",
+            "2": "selecting Sprout uses its 24 nectar cost and exact missing amount",
+            "3": "narrow 350x279 shop keeps both complete recipe names and costs readable",
+            "4": "compact errors and save state remain visible and clear when retried",
+            "5": "daily gift, every hatch odd and rare protection remain completely reachable",
+            "6": "rotation resets normal shop geometry while preserving selection and bounded scroll",
+            "7": "compact shop transitions preserve both 44px hatch result actions",
+            "8": "reopening keeps the purchased recipe and cost explicit in the pinned action"
+          }
+        },
+        "name": "CompactEggShop",
+        "preference": "Medium"
+      }
+    ]
+  },
+  "largest": {
+    "passed": 42,
+    "suites": [
+      {
+        "ok": true,
+        "result": {
+          "preference": "Largest",
+          "cases": {
+            "1": "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+            "2": "680, 700 measured shop header and pinned purchase route fit",
+            "3": "680, 700 recap reward wallet and complete receipt stay readable",
+            "4": "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+            "5": "390, 740 measured shop header and pinned purchase route fit",
+            "6": "390, 740 recap reward wallet and complete receipt stay readable",
+            "7": "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+            "8": "568, 160 measured shop header and pinned purchase route fit",
+            "9": "568, 160 recap reward wallet and complete receipt stay readable"
+          },
+          "passed": 9
+        },
+        "name": "PreferredTextLayout",
+        "preference": "Largest"
+      },
+      {
+        "ok": true,
+        "result": {
+          "preference": "Largest",
+          "cases": {
+            "1": "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "2": "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "3": "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "4": "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+            "5": "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+          },
+          "passed": 5
+        },
+        "name": "HandheldTextLayout",
+        "preference": "Largest"
+      },
+      {
+        "ok": true,
+        "result": {
+          "persistentWrites": false,
+          "passed": 10,
+          "cases": {
+            "1": "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+            "2": "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+            "3": "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "4": "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "5": "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+            "6": "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+            "7": "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+            "8": "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+            "9": "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+            "10": "390, 740 safe tray and44px controls; readable queue and stable dispenser"
+          }
+        },
+        "name": "CompactDeck",
+        "preference": "Largest"
+      },
+      {
+        "ok": true,
+        "result": {
+          "passed": 18,
+          "cases": {
+            "1": "Meet acknowledges exact rare-only result and waits for advanced Ready",
+            "2": "Replay never purchases and synchronous confirmation fires once",
+            "3": "Retry and same-ID updates retain immutable choice",
+            "4": "Pending feedback preserves choice before state catches up",
+            "5": "Throttle, lock, and network feedback cannot erase an in-flight choice",
+            "6": "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+            "7": "Close cancels a scheduled pre-dispatch retry",
+            "8": "Busy feedback queues a retry until Ready for the same result",
+            "9": "A retry timer encountering Busy retains its work until Ready",
+            "10": "Another pending transaction releases the captured ack on Ready",
+            "11": "Repeated pre-dispatch locks are bounded and expose a user retry",
+            "12": "A changed result revokes old navigation",
+            "13": "Close during retry cancels navigation without a second acknowledgement",
+            "14": "Definitive rejection permits changing the action",
+            "15": "Actions remain locked during an unfinished cinematic",
+            "16": "Duplicate caption uses copied mastery progress and retains both choices",
+            "17": "corner X dismisses and reopens the same committed result without acknowledgment",
+            "18": "44px result actions fit short landscape safe areas and long names"
+          }
+        },
+        "name": "HatchActions",
+        "preference": "Largest"
+      }
+    ]
+  },
+  "server": {
+    "passed": 34,
+    "persistentWrites": false,
+    "suites": [
+      {
+        "ok": true,
+        "name": "HatchProgress",
+        "result": {
+          "passed": 21,
+          "cases": {
+            "1": "all catalog outcomes and rare protection",
+            "2": "legacy seven-pet migration and one-time credits",
+            "3": "starter grant, persistent reveal, exact acknowledgement",
+            "4": "ambiguous session acquire resumes the same lease",
+            "5": "direct full-cost spending, stale commands and callback retries",
+            "6": "ambiguous committed hatch cannot reroll or duplicate",
+            "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+            "8": "monotonic payouts reject replay beyond receipt history",
+            "9": "lease takeover fences stale commands and renewals",
+            "10": "local overlap, sparse inventory and public isolation",
+            "11": "failed legacy load cannot spend or overwrite",
+            "12": "daily reward is once per Hollow day and survives callback retry",
+            "13": "every advertised result grants once and rare protection resets",
+            "14": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+            "15": "mastery ranks need permanent points and three distinct successful challenges",
+            "16": "daily contracts and mastery pay atomically once per run and day",
+            "17": "completed-budget failures can earn skill contracts but not mastery or free wins",
+            "18": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+            "19": "compound award retries immutable stats and original day before or after commit",
+            "20": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+            "21": "rare-only ownership trains its base family and duplicate marks continue beyond three"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "CloseProgress",
+        "result": {
+          "passed": 2,
+          "cases": {
+            "1": "drain pending and earned payout before release",
+            "2": "failed drain keeps lease fenced"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "SessionRecovery",
+        "result": {
+          "persistentWrites": false,
+          "passed": 8,
+          "cases": {
+            "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+            "2": "profile save failure times out without releasing the lease and later recovers",
+            "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+            "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+            "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+            "6": "a setting changed during an in-flight autosave drains before lease release",
+            "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+            "8": "the actual Studio store keeps both writers in one isolated cloned root"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "SessionHost",
+        "result": {
+          "persistentWrites": false,
+          "passed": 2,
+          "cases": {
+            "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+            "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "StudioStore",
+        "result": {
+          "persistentWrites": false,
+          "passed": 1,
+          "cases": {
+            "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+          }
+        }
+      }
+    ]
+  },
+  "syntax": {
+    "passed": 59
+  },
+  "limitations": [
+    "GUI sizes are desktop fixtures, not physical phones",
+    "Isolated server recovery is not a live-account DataStore rejoin",
+    "Solo Studio is not live multiplayer",
+    "Fun, discovery and retention remain human playtest questions"
+  ]
+}

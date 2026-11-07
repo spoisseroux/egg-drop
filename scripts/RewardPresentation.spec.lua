@@ -68,37 +68,29 @@ return function(client, parent)
 			assert(recap.title.Text == "Saving your rewards…" and not recap.receiptScroll.Visible)
 			assert(not recap.detail.Text:find("987654", 1, true) and recap.receiptLines == nil)
 		end)
-		test("compact receipt keeps costs pinned and scrolls complete readable rows", function()
-			for _, height in ipairs({ 128, 166, 198, 236 }) do
-				root.Size = UDim2.fromOffset(360, height); task.wait(0.06)
-				recap:updateField(result({ mastery = Mastery.describe(25, 0) })); task.wait(0.06)
-				assert(recap.title.TextFits and recap.title.Text:find("20/18", 1, true), "pinned total/egg cost at " .. height)
-				assert(recap.goal.Position.Y.Offset + recap.goal.Size.Y.Offset <= height - 58)
-				local scroll = recap.receiptScroll
-				assert(scroll.ZIndex > recap.goal.ZIndex and recap.receiptRows[1].ZIndex > scroll.ZIndex, "receipt draws above goal panel")
-				assert(scroll.AbsoluteSize.Y >= recap.receiptRowHeight, "whole row viewport at " .. height)
-				for _, row in ipairs(recap.receiptRows) do
-					assert(row.TextFits and row.AbsoluteSize.Y <= scroll.AbsoluteSize.Y, "readable receipt row at " .. height .. ": " .. row.Text)
-				end
-				scroll.CanvasPosition = Vector2.new(0, math.max(0, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)); task.wait(0.06)
-				local last = recap.receiptRows[#recap.receiptRows]
-				assert(last.AbsolutePosition.Y >= scroll.AbsolutePosition.Y - 1)
-				assert(last.AbsolutePosition.Y + last.AbsoluteSize.Y <= scroll.AbsolutePosition.Y + scroll.AbsoluteSize.Y + 1,
-					"last reward line reachable at " .. height)
+		test("compact center retains exact cost and complete readable receipt rows",function()
+			for _,height in ipairs({128,166,198,236}) do
+				root.Size=UDim2.fromOffset(360,height);task.wait(.06)
+				recap:updateField(result({mastery=Mastery.describe(25,0)}));recap:setDetails(true);task.wait(.06)
+				assert(recap.title.Text:find("20/18",1,true) and recap.bankGraphic.Text=="Nectar saved: 20")
+				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
+				for _,row in ipairs(recap.receiptRows) do assert(row.TextFits and row.TextSize>=14,"readable receipt "..row.Text) end
+				local scroll=recap.fieldBody
+				scroll.CanvasPosition=Vector2.new(0,math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y));task.wait(.06)
+				local last=recap.receiptRows[#recap.receiptRows]
+				assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1,"last row top at "..height..": "..last.AbsolutePosition.Y.." < "..scroll.AbsolutePosition.Y..", row="..last.AbsoluteSize.Y..", viewport="..scroll.AbsoluteSize.Y)
+				assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=scroll.AbsolutePosition.Y+scroll.AbsoluteSize.Y+1,"last line unreachable")
 			end
 		end)
-		test("receipt navigation reaches both bounds without moving footer selection", function()
-			root.Size = UDim2.fromOffset(360, 166); task.wait(0.06)
-			recap:updateField(result({ mastery = Mastery.describe(25, 0) })); task.wait(0.06)
-			local GuiService = game:GetService("GuiService")
-			local selected = GuiService.SelectedObject
-			local iterations = 0
-			while recap:scrollReceipt(1) do iterations += 1; assert(iterations < 100) end
-			assert(recap.receiptScroll.CanvasPosition.Y == recap.receiptScroll.CanvasSize.Y.Offset - recap.receiptScroll.AbsoluteSize.Y)
-			assert(not recap:scrollReceipt(1) and GuiService.SelectedObject == selected)
-			while recap:scrollReceipt(-1) do iterations += 1; assert(iterations < 100) end
-			assert(recap.receiptScroll.CanvasPosition.Y == 0 and not recap:scrollReceipt(-1))
-			recap:updateField(result({ receiptPending = true })); assert(not recap:scrollReceipt(1))
+		test("receipt navigation reaches both bounds without moving footer selection",function()
+			root.Size=UDim2.fromOffset(360,166);task.wait(.06);recap:updateField(result({mastery=Mastery.describe(25,0)}));task.wait(.06)
+			local GuiService=game:GetService("GuiService");local selected=GuiService.SelectedObject;local iterations=0
+			while recap:scrollReceipt(1) do iterations+=1;assert(iterations<100) end
+			assert(recap.fieldBody.CanvasPosition.Y==recap.fieldBody.CanvasSize.Y.Offset-recap.fieldBody.AbsoluteSize.Y)
+			assert(not recap:scrollReceipt(1) and GuiService.SelectedObject==selected)
+			while recap:scrollReceipt(-1) do iterations+=1;assert(iterations<100) end
+			assert(recap.fieldBody.CanvasPosition.Y==0 and not recap:scrollReceipt(-1))
+			recap:updateField(result({receiptPending=true}));assert(not recap:scrollReceipt(1))
 		end)
 		test("menu names missing win conditions and clamps completed rank III", function()
 			root.Size = UDim2.fromOffset(360, 236)

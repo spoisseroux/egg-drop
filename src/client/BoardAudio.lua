@@ -106,17 +106,30 @@ function Audio:setVolume(volume)
 	end
 end
 
-function Audio:boot()
+function Audio:cancelBoot()
 	self.bootEpoch=(self.bootEpoch or 0)+1
+	if self.bootVoice then self.bootVoice:Stop();self.bootVoice:Destroy();self.bootVoice=nil end
+end
+function Audio:boot(owns)
+	self:cancelBoot()
 	local token=self.bootEpoch
-	for index,pitch in ipairs({.88,1.10,1.32})do
-		task.delay((index-1)*.09,function()
-			if self.bootEpoch==token and self.group.Parent then self:play("charge",pitch,.20)end
+	local source=self.voices.charge and self.voices.charge[1]
+	if not source or (owns and not owns()) then return end
+	local voice=source:Clone()
+	voice.Name,voice.Volume,voice.Parent="EggDrop_Boot",.20,SoundService
+	self.bootVoice=voice
+	local schedule=self.schedule or task.delay
+	for index,pitch in ipairs({.88,1.10,1.32}) do
+		schedule((index-1)*.09,function()
+			if self.bootEpoch==token and self.group.Parent and (not owns or owns()) and self.group.Volume>0 then
+				voice.PlaybackSpeed,voice.TimePosition=pitch,0
+				voice:Play()
+			end
 		end)
 	end
 end
 function Audio:stop()
-	self.bootEpoch=(self.bootEpoch or 0)+1
+	self:cancelBoot()
 	for _, voices in pairs(self.voices) do
 		for _, voice in ipairs(voices) do
 			voice:Stop()

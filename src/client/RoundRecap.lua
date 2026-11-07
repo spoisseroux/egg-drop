@@ -1,6 +1,8 @@
 local Art = require(script.Parent.DeckArt)
 local Daily = require(game:GetService("ReplicatedStorage").Shared.DailyContracts)
 local Feedback = require(script.Parent.RecapFeedback)
+local EggArt = require(script.Parent.EggArt)
+local EggCatalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 
 local familyNames = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
 local ranks = { "I", "II", "III" }
@@ -93,11 +95,30 @@ function Recap.new(parent, audio, reduceEffects)
 	receipt.ZIndex = goal.ZIndex + 1
 	receipt.ScrollingDirection, receipt.ElasticBehavior = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never
 	receipt.Visible, receipt.Parent = false, goal
+	-- Field receipts have one scrolling center. The outcome and decision footer are outside it.
+	local body=Instance.new("ScrollingFrame")
+	body.Name,body.BackgroundTransparency,body.BorderSizePixel,body.ZIndex="FieldBody",1,0,frame.ZIndex+1
+	body.ScrollBarThickness,body.ScrollBarImageColor3=4,Art.Leaf
+	body.ScrollingDirection,body.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
+	body.Visible,body.Parent=false,frame
+	local eggPanel=Art.frame(goal,"SelectedEgg",Art.Inset,UDim2.fromOffset(0,88),UDim2.new(1,0,0,116),goal.ZIndex+1)
+	Art.corner(eggPanel,12);eggPanel.Visible=false
+	local eggDrawing=Art.frame(eggPanel,"ArtWell",Art.Inset,UDim2.fromOffset(10,10),UDim2.fromOffset(52,76),eggPanel.ZIndex+1)
+	eggDrawing.BackgroundTransparency=1
+	local shortfall=Art.text(eggPanel,"Shortfall","",UDim2.fromOffset(76,66),UDim2.new(1,-88,0,24),Art.Muted,14)
+	local personalBest=Art.frame(stats,"PersonalBest",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(100,64))
+	personalBest.BackgroundTransparency=1
+	local bestCaption=Art.text(personalBest,"Label","Personal best",UDim2.fromOffset(0,0),UDim2.new(1,0,0,24),Art.Muted,14)
+	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),Art.Silver,24,Enum.Font.GothamBold)
+	personalBest.Visible=false
 	local self = setmetatable({ frame = frame, stats = stats, goal = goal, values = values, title = title, detail = detail,
 		fill = fill, receiptScroll = receipt, receiptRows = {}, scales = scales, accents = accents,
 		nectarIcon = nectarIcon, earnedGraphic = earnedGraphic, bankGraphic = bankGraphic, transfer = transfer, chips = chips,
-		detailsButton = detailsButton, summary = summary, componentLabels = componentLabels, eggGoal = eggGoal }, Recap)
+		detailsButton = detailsButton, summary = summary, componentLabels = componentLabels, eggGoal = eggGoal,
+		fieldBody=body,eggPanel=eggPanel,eggDrawing=eggDrawing,shortfall=shortfall,bestMetric=personalBest,bestCaption=bestCaption,bestValue=bestValue }, Recap)
 	detailsButton.Activated:Connect(function() self:setDetails(not self.detailsOpen) end)
+	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() if self.fieldMode then self:layoutField(frame.AbsoluteSize.Y) end end)
+	Art.watchTextPreference(frame,function()return self:isVisible()end,function()if self.onPreferredLayout then self.onPreferredLayout() else self:layoutField(frame.AbsoluteSize.Y) end end)
 	self.feedback = Feedback.new(function(sample) self:paintFeedback(sample) end, audio, reduceEffects)
 	-- Any hidden ancestor also ends the sequence; returning to this receipt shows
 	-- final values and cannot replay its sound or transfer.
@@ -133,29 +154,29 @@ function Recap:paintFeedback(sample)
 		for index, target in ipairs(targets) do
 			local progress = if sample then sample.stats[index] else 1
 			local number = math.floor(target * (1 - (1 - progress) ^ 3) + .0001)
-			self.values[index].Text = if index == 1 then string.format("%d / %d", number, self.statBest or 0)
+			self.values[index].Text = if index == 1 then (if self.fieldMode then tostring(number) else string.format("%d / %d", number, self.statBest or 0))
 				elseif index == 2 then "×" .. number else tostring(number)
 			local pop = if progress > 0 and progress < 1 then math.sin(progress * math.pi) else 0
 			self.scales[index].Scale = 1 + pop * .075
 			self.accents[index].BackgroundTransparency = 1 - pop * .8
 			self.values[index].TextTransparency = if sample then (1 - progress) * .25 else 0
-			self.values[index].Position = UDim2.fromOffset(3 + (1 - progress) * 7, 14)
+			self.values[index].Position = UDim2.fromOffset(3 + (1 - progress) * 7, if self.fieldMode then 26 else 14)
 		end
 	end
 	if self.displayReward ~= nil then
 		local amount = if sample then math.floor(self.displayReward * sample.earned) else self.displayReward
-		self.earnedGraphic.Text = string.format("+%d NECTAR", amount)
-		self.bankGraphic.Text = string.format("Egg bank %d/%d", self.displayBalance, self.displayCost)
+		self.earnedGraphic.Text = string.format("+%d nectar", amount)
+		self.bankGraphic.Text = string.format("Nectar saved: %d", self.displayBalance)
 	end
 	if self.finalTitle then
 		self.title.Text = if sample and self.displayReward then
-			string.format("Nectar +%d · Egg bank %d/%d", math.floor(self.displayReward * sample.earned), self.displayBalance, self.displayCost)
+			string.format("Nectar +%d · Saved %d/%d", math.floor(self.displayReward * sample.earned), self.displayBalance, self.displayCost)
 			else self.finalTitle
 	end
 	self.transfer.Visible = sample ~= nil and self.hasReceipt == true and (self.displayReward or 0) > 0
 	local landed = false
 	local tall = (self.layoutHeight or 0) >= 300
-	local destinationX, destinationY = if tall then .55 else .87, if tall then 32 else 5
+	local destinationX, destinationY = .55, 135
 	for index, chip in ipairs(self.chips) do
 		local phase = if sample then math.clamp(sample.transfer * 1.65 - (index - 1) * .12, 0, 1) else 0
 		chip.Visible = self.transfer.Visible and index <= math.min(6, self.displayReward or 0) and phase > 0 and phase < 1
@@ -178,6 +199,11 @@ function Recap:update(score, peakChain, clears, nextPet, charge, nextRare, rareP
 	-- Field recaps own their animated/pinned title. This function is also used by
 	-- legacy welcome recaps and is called on every HUD refresh.
 	if self.fieldMode and self.frame.Visible then self:paintFeedback(self.presentation); return end
+	self.fieldBody.Visible,self.eggPanel.Visible,self.bestMetric.Visible=false,false,false
+	self.goal.Parent,self.stats.Parent=self.frame,self.frame
+	self.goal.BackgroundTransparency=0
+	if not self.title:FindFirstChildOfClass("UITextSizeConstraint") then fitText(self.title,13) end
+	if not self.detail:FindFirstChildOfClass("UITextSizeConstraint") then fitText(self.detail,12) end
 	self.finalTitle, self.displayReward = nil, nil
 	self.title.Visible, self.detail.Visible = true, true
 	self.earnedGraphic.Visible, self.bankGraphic.Visible, self.nectarIcon.Visible, self.receiptScroll.Visible = false, false, false, false
@@ -203,19 +229,24 @@ function Recap:update(score, peakChain, clears, nextPet, charge, nextRare, rareP
 end
 
 function Recap:updateField(result)
-	self.fieldMode = true
+	self.updatingField = true
 	local saving = result.status ~= "Saved"
 	local loading = not saving and result.receiptPending == true
 	local reward = if not saving and not loading then result.reward else nil
 	if reward and result.sequence ~= nil and reward.sequence ~= result.sequence then reward = nil; loading = true end
-	self.hasReceipt = reward ~= nil
+	local balance,cost=result.balance,result.recipe.cost
+	local recipeId
+	for id,recipe in pairs(EggCatalog.ById) do if recipe==result.recipe or recipe.name==result.recipe.name then recipeId=id;break end end
+	-- Publish all canonical display data before hasReceipt or any GuiObject writes.
+	self.displayRecipe,self.displayRecipeId,self.displayReward,self.displayBalance,self.displayCost=
+		result.recipe,recipeId,if reward then reward.total else nil,balance,cost
+	self.hasReceipt,self.fieldMode=reward~=nil,true
 	self.fieldHeading = if result.reason == "Overflow" then "Tray overflowed"
 		elseif result.success then "Both sides complete!"
 		elseif result.stage == 0 then "LEFT goal missed" else "RIGHT goal missed"
 	self.title.Text = if loading then "Loading receipt…"
 		elseif saving then (if result.status == "Saving" then "Saving your rewards…" else "Reward save delayed · retrying") else
 		string.format("Nectar +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
-	local balance, cost = result.balance, result.recipe.cost
 	local egg = if balance >= cost then result.recipe.name .. " · ready to hatch"
 		else string.format("%s · %d/%d · need %d nectar", result.recipe.name, balance, cost, cost - balance)
 	local hint = if result.reason == "Overflow" then "Merge below the line to clear its warning."
@@ -231,13 +262,17 @@ function Recap:updateField(result)
 	self.detail.Visible, self.receiptScroll.Visible = not self.hasReceipt, self.hasReceipt
 	self.nectarIcon.Visible = self.hasReceipt
 	if reward then
-		if self.detailsSequence ~= reward.sequence then self.detailsOpen = false; self.detailsSequence = reward.sequence end
+		if self.detailsSequence ~= reward.sequence then self.detailsOpen = false; self.detailsSequence = reward.sequence;self.fieldBody.CanvasPosition=Vector2.zero end
 		self.componentLabels[1].Text = string.format("Quest +%d", reward.base or 0)
 		self.componentLabels[2].Text = string.format("Daily +%d", reward.daily or 0)
 		self.eggGoal.Text = egg
 		-- The total and saved egg balance remain pinned while the receipt scrolls.
-		self.title.Text = string.format("Nectar +%d · Egg bank %d/%d", reward.total, balance, cost)
+		self.title.Text = string.format("Nectar +%d · Saved %d/%d", reward.total, balance, cost)
 		local lines = { string.format("Quest nectar +%d", reward.base or 0), string.format("Daily contracts total +%d", reward.daily or 0) }
+		if self.statTargets then
+			table.insert(lines,"Score "..self.statTargets[1].." · Personal best "..(self.statBest or 0))
+			table.insert(lines,"Longest chain ×"..self.statTargets[2].." · Tier V clears "..self.statTargets[3])
+		end
 		if not result.success then
 			table.insert(lines, if result.reason == "Overflow" and result.stage >= 2 then "Both sides done · clear the overflow line"
 				elseif result.reason == "Overflow" then "Clear the overflow warning before retrying"
@@ -277,9 +312,8 @@ function Recap:updateField(result)
 				local row = Art.text(self.receiptScroll, "Line" .. index, line, UDim2.fromOffset(5, (index - 1) * 24),
 					UDim2.new(1, -14, 0, 24), if line:find("unlocked!", 1, true) then Art.Amber else Art.Silver, 12)
 				row.TextXAlignment, row.TextYAlignment = Enum.TextXAlignment.Left, Enum.TextYAlignment.Center
-				Art.fitText(row, 12, 9, 0, false)
-				local padding = row:FindFirstChildOfClass("UIPadding")
-				padding.PaddingTop, padding.PaddingBottom = UDim.new(0, 0), UDim.new(0, 0)
+				Art.type(row,"Body",false)
+				row.TextWrapped=true
 				table.insert(self.receiptRows, row)
 			end
 			self.receiptScroll.CanvasSize = UDim2.fromOffset(0, #lines * 24)
@@ -295,89 +329,144 @@ function Recap:updateField(result)
 	-- earned drops travel towards the bank. No transient balance is invented.
 	self.fill.Parent.Visible = self.hasReceipt
 	self.fill.Size = UDim2.fromScale(math.clamp(balance / cost, 0, 1), 1)
-	self:layoutField(self.frame.AbsoluteSize.Y)
+	self.updatingField=false
+	local height=self.pendingFieldHeight or self.frame.AbsoluteSize.Y
+	self.pendingFieldHeight=nil
+	self:layoutField(height)
 	self.feedback:observe(result, self:isVisible())
 	self:paintFeedback(if self.feedback.active then self.presentation else nil)
 end
 
 function Recap:scrollReceipt(direction)
-	if not self.hasReceipt or not self.frame.Visible or type(direction) ~= "number" or direction == 0 then return false end
-	if self.detailsButton.Visible and not self.detailsOpen then self:setDetails(true); return true end
-	if not self.receiptScroll.Visible then return false end
-	local scroll = self.receiptScroll
-	local rowHeight = self.receiptRowHeight or 24
-	local page = math.max(rowHeight, math.floor(scroll.AbsoluteSize.Y / rowHeight) * rowHeight)
-	local maximum = math.max(0, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)
-	local current = scroll.CanvasPosition.Y
-	local nextPosition = math.clamp(current + (if direction > 0 then page else -page), 0, maximum)
-	scroll.CanvasPosition = Vector2.new(0, nextPosition)
-	return nextPosition ~= current
+	if not self.hasReceipt or not self:isVisible() or type(direction)~="number" or direction==0 then return false end
+	if not self.detailsOpen then self:setDetails(true);return true end
+	local scroll=self.fieldBody
+	local page=math.max(28,math.floor(scroll.AbsoluteSize.Y/28)*28)
+	local maximum=math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y)
+	local before=scroll.CanvasPosition.Y
+	scroll.CanvasPosition=Vector2.new(0,math.clamp(before+(if direction>0 then page else -page),0,maximum))
+	return scroll.CanvasPosition.Y~=before
 end
-
 function Recap:setDetails(open)
-	self.detailsOpen = open == true
+	self.detailsOpen=open==true
 	self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)
+	if self.detailsOpen then
+		local maximum=math.max(0,self.fieldBody.CanvasSize.Y.Offset-self.fieldBody.AbsoluteSize.Y)
+		self.fieldBody.CanvasPosition=Vector2.new(0,math.min(math.max(0,(self.detailsTop or 56)-56),maximum))
+	else self.fieldBody.CanvasPosition=Vector2.zero end
 end
-
+local function place(node,x,y,w,h)
+	node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)
+end
 function Recap:layoutField(height)
-	self.layoutHeight = height
+	self.layoutHeight=height
+	if self.updatingField then self.pendingFieldHeight=height;return end
+	if not self.fieldMode then return end
+	local compact=height<300
+	local pad=if compact then 8 else 20
+	local top=self.headerInset or (if compact then 36 else 72)
+	local bottom=self.footerInset or (if compact then 60 else 76)
+	local width=math.max(1,self.frame.AbsoluteSize.X-pad*2-8)
+	place(self.fieldBody,pad,top,width+8,math.max(1,height-top-bottom))
+	self.fieldBody.Visible=true
+	self.goal.Parent=self.fieldBody
+	self.goal.BackgroundTransparency=1
+	place(self.goal,0,0,width,340)
+	self.goal.Visible=true
+	self.summary.Visible=false
+	self.title.Visible,self.detail.Visible=not self.hasReceipt,not self.hasReceipt
+	self.earnedGraphic.Visible,self.bankGraphic.Visible,self.nectarIcon.Visible=self.hasReceipt,self.hasReceipt,self.hasReceipt
+	self.eggPanel.Visible,self.detailsButton.Visible=self.hasReceipt,self.hasReceipt
+	self.stats.Visible=self.hasReceipt and not compact and width>=420
+	self.bestMetric.Visible=self.stats.Visible
+	Art.type(self.title,"Body",compact);Art.type(self.detail,"Body",compact)
+	place(self.title,4,4,width-8,40)
+	local detailH=Art.textHeight(self.detail,width-8,60)
+	place(self.detail,4,48,width-8,detailH)
+	local total=52+detailH
 	if self.hasReceipt then
-		local tall = height >= 300
-		local statsHeight = if tall then 58 elseif height >= 236 then 34 else 0
-		self.stats.Visible = statsHeight > 0
-		self.stats.Position, self.stats.Size = UDim2.fromOffset(12, 42), UDim2.new(1, -24, 0, statsHeight)
-		local y = if tall then 106 elseif statsHeight > 0 then 82 else 40
-		local goalHeight = math.max(0, height - 58 - y)
-		self.goal.Position, self.goal.Size, self.goal.Visible = UDim2.fromOffset(12, y), UDim2.new(1, -24, 0, goalHeight), goalHeight > 0
-		local headingHeight = if goalHeight < 45 then 14 else 26
-		self.title.Visible = goalHeight < 45
-		self.earnedGraphic.Visible, self.bankGraphic.Visible = goalHeight >= 45, goalHeight >= 45
-		self.title:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = if goalHeight < 45 then 13 else 22
-		local iconWidth = if goalHeight < 45 then 11 else 17
-		self.nectarIcon.Position, self.nectarIcon.Size = UDim2.fromOffset(5, 2), UDim2.fromOffset(iconWidth, headingHeight - 3)
-		self.title.Position, self.title.Size = UDim2.fromOffset(iconWidth + 9, 0), UDim2.new(1, -iconWidth - 15, 0, headingHeight)
-		self.fill.Parent.Position, self.fill.Parent.Size = UDim2.fromOffset(6, headingHeight), UDim2.new(1, -12, 0, 2)
-		self.receiptScroll.Position = UDim2.fromOffset(2, headingHeight + 2)
-		self.receiptScroll.Size = UDim2.new(1, -4, 1, -headingHeight - 4)
-		self.detailsButton.Visible, self.summary.Visible = tall, tall and not self.detailsOpen
-		self.detailsButton.Text = if self.detailsOpen then "Less" else "Details"
-		self.detailsButton.Position = UDim2.new(1, -96, 0, 0)
-		self.receiptScroll.Visible = not tall or self.detailsOpen == true
-		if tall then
-			self.earnedGraphic.Position, self.earnedGraphic.Size = UDim2.fromOffset(27, 0), UDim2.new(1, -129, 0, 28)
-			self.bankGraphic.Position, self.bankGraphic.Size = UDim2.fromOffset(27, 28), UDim2.new(1, -129, 0, 16)
-			self.fill.Parent.Position = UDim2.fromOffset(6, 46)
-			self.receiptScroll.Position, self.receiptScroll.Size = UDim2.fromOffset(2, 50), UDim2.new(1, -4, 1, -52)
-		else
-			self.earnedGraphic.Position, self.earnedGraphic.Size = UDim2.fromOffset(27, 0), UDim2.new(.52, -28, 0, 26)
-			self.bankGraphic.Position, self.bankGraphic.Size = UDim2.new(.52, 0, 0, 0), UDim2.new(.48, -6, 0, 26)
+		Art.type(self.earnedGraphic,"Reward",compact)
+		place(self.nectarIcon,6,10,24,30)
+		local heroH=Art.textHeight(self.earnedGraphic,width-48,46)
+		place(self.earnedGraphic,44,0,width-48,heroH)
+		local sourceH=24
+		for _,label in ipairs(self.componentLabels) do Art.type(label,"Supporting",compact);sourceH=math.max(sourceH,Art.textHeight(label,(width-48)/2,24)) end
+		for index,label in ipairs(self.componentLabels) do
+			label.Parent=self.goal;Art.type(label,"Supporting",compact)
+			label.TextXAlignment=Enum.TextXAlignment.Left
+			place(label,44+(index-1)*(width-48)/2,heroH+2,(width-48)/2,sourceH)
+			label.Visible=true
 		end
-		local rowHeight = if height < 160 then 12 else 24
-		self.receiptRowHeight = rowHeight
-		for index, row in ipairs(self.receiptRows) do
-			row.Position, row.Size = UDim2.fromOffset(5, (index - 1) * rowHeight), UDim2.new(1, -14, 0, rowHeight)
-			row:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = if rowHeight == 12 then 10 else 12
+		local eggY=heroH+sourceH+18
+		place(self.eggPanel,0,eggY,width,116)
+		self.eggGoal.Parent,self.bankGraphic.Parent=self.eggPanel,self.eggPanel
+		Art.type(self.eggGoal,"Action",compact);Art.type(self.bankGraphic,"Body",compact);Art.type(self.shortfall,"Supporting",compact)
+		self.eggGoal.Text=self.displayRecipe.name.." · "..self.displayCost.." nectar"
+		self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch" else "Need "..(self.displayCost-self.displayBalance).." more nectar"
+		self.shortfall.TextColor3=if self.displayBalance>=self.displayCost then Art.Leaf else Art.Muted
+		local eggTitleH=Art.textHeight(self.eggGoal,width-88,26)
+		local walletY=eggTitleH+12
+		self.bankGraphic.Text=string.format("Nectar saved: %d",self.displayBalance)
+		local walletH=Art.textHeight(self.bankGraphic,width-88,24)
+		local shortY=walletY+walletH+4
+		local shortH=Art.textHeight(self.shortfall,width-88,24)
+		local eggHeight=math.max(116,shortY+shortH+20)
+		place(self.eggPanel,0,eggY,width,eggHeight)
+		place(self.eggGoal,76,8,width-88,eggTitleH);place(self.bankGraphic,76,walletY,width-88,walletH);place(self.shortfall,76,shortY,width-88,shortH)
+		self.fill.Parent.Parent=self.eggPanel
+		self.fill.Parent.ZIndex=self.eggPanel.ZIndex+1
+		self.fill.ZIndex=self.eggPanel.ZIndex+2
+		self.eggGoal.TextXAlignment,self.bankGraphic.TextXAlignment,self.shortfall.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
+		place(self.fill.Parent,12,eggHeight-14,width-24,6)
+		local recipeId=self.displayRecipeId or "meadow"
+		if self.drawnRecipe~=recipeId then
+			self.eggDrawing:ClearAllChildren();self.drawnRecipe=recipeId
+			EggArt.create(self.eggDrawing,recipeId,UDim2.fromOffset(4,4),UDim2.fromOffset(44,60),self.eggDrawing.ZIndex+1)
 		end
-		self.receiptScroll.CanvasSize = UDim2.fromOffset(0, #self.receiptRows * rowHeight)
-		self.receiptScroll.ScrollingEnabled = self.receiptScroll.CanvasSize.Y.Offset > self.receiptScroll.AbsoluteSize.Y
-		return
+		self.stats.Parent=self.goal
+		local statsY=eggY+eggHeight+12
+		place(self.stats,0,statsY,width,64)
+		for index,value in ipairs(self.values) do
+			local tile=value.Parent
+			tile.Visible=index<3
+			if index<3 then
+				place(tile,if index==1 then 0 else width*2/3,0,width/3-8,64)
+				Art.type(tile.Label,"Supporting",false);tile.Label.Text=if index==1 then "Score" else "Longest chain"
+				place(tile.Label,3,0,width/3-14,24)
+				Art.type(value,"Heading",false);place(value,3,26,width/3-14,Art.textHeight(value,width/3-14,32))
+			end
+		end
+		place(self.bestMetric,width/3,0,width/3-8,64)
+		Art.type(self.bestCaption,"Supporting",false);Art.type(self.bestValue,"Heading",false)
+		self.bestValue.Text=tostring(self.statBest or 0)
+		self.bestValue.Size=UDim2.new(1,0,0,Art.textHeight(self.bestValue,width/3-8,32))
+		local detailsY=if self.stats.Visible then statsY+76 else statsY
+		Art.type(self.detailsButton,"Action",compact)
+		self.detailsButton.Text=if self.detailsOpen then "Hide details" else "Round details"
+		local detailsH=Art.actionHeight(self.detailsButton,width)
+		place(self.detailsButton,0,detailsY,width,detailsH)
+		self.detailsTop=detailsY+detailsH+12
+		local y=0
+		self.receiptRowHeight=28
+		for index,row in ipairs(self.receiptRows) do
+			Art.type(row,"Body",compact)
+			local h=Art.textHeight(row,width-16,28)
+			place(row,8,y,width-16,h);y+=h+(if index<#self.receiptRows then 8 else 0)
+		end
+		self.receiptScroll.Parent=self.goal
+		self.receiptScroll.Visible=self.detailsOpen==true
+		self.receiptScroll.ScrollingEnabled=false
+		self.receiptScroll.ScrollBarThickness=0
+		place(self.receiptScroll,0,self.detailsTop,width,y)
+		self.receiptScroll.CanvasSize=UDim2.fromOffset(0,y)
+		total=if self.detailsOpen then self.detailsTop+y+4 else detailsY+detailsH+8
+	else
+		for _,label in ipairs(self.componentLabels) do label.Visible=false end
+		self.receiptScroll.Visible=false
 	end
-	self.title:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = 13
-	self.detailsButton.Visible, self.summary.Visible = false, false
-	self.title.Visible = true
-	self.earnedGraphic.Visible, self.bankGraphic.Visible = false, false
-	self.nectarIcon.Visible = false
-	local statsHeight = if height >= 210 then 50 elseif height >= 190 then 34 else 0
-	self.detail.Text = if height < 160 then self.shortFieldDetail or self.detail.Text else self.fullFieldDetail or self.detail.Text
-	self.stats.Visible = statsHeight > 0
-	self.stats.Position, self.stats.Size = UDim2.fromOffset(12, 46), UDim2.new(1, -24, 0, statsHeight)
-	local y = 46 + (if statsHeight > 0 then statsHeight + 6 else 0)
-	local goalHeight = math.max(0, height - 52 - y - 6)
-	self.goal.Position, self.goal.Size = UDim2.fromOffset(12, y), UDim2.new(1, -24, 0, goalHeight)
-	self.goal.Visible = goalHeight >= 20
-	local headingHeight = math.min(18, math.floor(goalHeight * .42))
-	self.title.Position, self.title.Size = UDim2.fromOffset(6, 0), UDim2.new(1, -12, 0, headingHeight)
-	self.detail.Position, self.detail.Size = UDim2.fromOffset(6, headingHeight), UDim2.new(1, -12, 1, -headingHeight - 2)
+	place(self.goal,0,0,width,total)
+	self.fieldBody.CanvasSize=UDim2.fromOffset(0,total)
+	self.fieldBody.ScrollingEnabled=total>self.fieldBody.AbsoluteSize.Y
+	self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(self.fieldBody.CanvasPosition.Y,0,math.max(0,total-self.fieldBody.Size.Y.Offset)))
 end
-
 return Recap
