@@ -159,6 +159,7 @@ local effects = make("Frame", "MergeEffects", {
 local sprites = make("Frame", "Sprites", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 3,
 }, overlay)
+Sprite.texture(sprites)
 local fieldZones = {}
 local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),6)
 zoneLayer.BackgroundTransparency=1;zoneLayer.ClipsDescendants=true
@@ -173,6 +174,7 @@ local lcd = JellyLCD.new(overlay)
 local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
 local pixelMerges = {}
+local rendererPresentation={visible=false,connections={}}
 
 local function lcdEnabled()
 	return lcd ~= nil and gui:GetAttribute("PixelLCD") ~= false and not gui:GetAttribute("MeshPreview")
@@ -373,13 +375,15 @@ eggGoalText.TextXAlignment = Enum.TextXAlignment.Left
 Art.fitText(eggGoalText, 13, 9, 0, true)
 local overflowLine = make("Frame", "OverflowLine", {
 	BackgroundColor3 = Palette.Amber, BackgroundTransparency = 0.45,
-	BorderSizePixel = 0, ZIndex = 2,
+	BorderSizePixel = 0, ZIndex = 5,
 }, overlay)
 local pressureTrack = Art.frame(overlay, "DangerTrack", Art.Ink, UDim2.new(1, -7, 0, 4), UDim2.new(0, 4, .22, 0), 7)
 local pressureFill = Art.frame(pressureTrack, "Fill", Art.Amber, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
 pressureFill.AnchorPoint = Vector2.new(0, 1)
 pressureTrack.Visible = false
-local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Art.Amber, 11)
+local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Art.LCDInk, 11)
+pressureText.ZIndex=8
+pressureText.TextWrapped=true
 pressureText.Visible = false
 local targetRing = make("Frame", "MatchHint", {
 	AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, ZIndex = 4,
@@ -1345,6 +1349,10 @@ layout = function()
 	backdrop:SetAttribute("SideGoalLayout",true)
 	local function place(node,r)node.Position,node.Size=UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h)end
 	place(shell,l.shell);place(bezel,l.bezel);place(viewport,l.tray);overlay.Position,overlay.Size=viewport.Position,viewport.Size
+	-- Native preferred text may exceed the authored 16px warning well. Measure
+	-- on layout/preferences only, retaining font11 and its original Y=3.
+	local warningBounds=TextService:GetTextSize(pressureText.Text,pressureText.TextSize,pressureText.Font,Vector2.new(math.max(1,math.floor(l.tray.w)-14),10000))
+	pressureText.Size=UDim2.new(1,-14,0,math.max(16,math.ceil(warningBounds.Y)+2))
 	shell.MicroTrim.Visible=l.lateral and l.left.w>=160
 	local showEtching=not l.lateral or (l.left.w>=160 and Art.textWidth(title)+40<=l.left.w)
 	for _,name in ipairs({"SproutLeaf","DropMark","ModelStamp"}) do
@@ -1786,23 +1794,25 @@ pet.Activated:Connect(function()
 end)
 
 local function addView(source)
+	if rendererPresentation.destroyed then return end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
 	if not tier or not id then
 		return
 	end
 	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
-		then Jelly.new(scene, source) else Sprite.new(sprites, source)
+		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width})
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
 	mark.TextColor3 = Palette.Ink
-	mark.Size = UDim2.fromOffset(30, 22)
+	mark.Size = Sprite.markSize(mark.Text)
 	mark.ZIndex = 4
 	eggViews[source] = { gel = gel, mark = mark, id = id }
 	viewsById[id] = gel
 end
 
 local function removeView(source)
+	if rendererPresentation.destroyed then return end
 	local view = eggViews[source]
 	if view then
 		view.gel:destroy()
@@ -1811,8 +1821,19 @@ local function removeView(source)
 		eggViews[source] = nil
 	end
 end
-board.ChildAdded:Connect(addView)
-board.ChildRemoved:Connect(removeView)
+table.insert(rendererPresentation.connections,board.ChildAdded:Connect(addView))
+table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(removeView))
+table.insert(rendererPresentation.connections,GuiService:GetPropertyChangedSignal("PreferredTextSize"):Connect(function()
+	if rendererPresentation.markRefreshQueued then return end
+	rendererPresentation.markRefreshQueued=true
+	task.defer(function()
+		RunService.Heartbeat:Wait();rendererPresentation.markRefreshQueued=false
+		if rendererPresentation.destroyed or not gui.Parent then return end
+		-- Native font metrics settle with the preference before populating its cache.
+		Sprite.invalidateMarkSizes()
+		for _,view in pairs(eggViews)do view.mark.Size=Sprite.markSize(view.mark.Text)end
+	end)
+end))
 if RunService:IsStudio() then
 	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
 		for _, source in ipairs(board:GetChildren()) do
@@ -1825,7 +1846,8 @@ for _, source in ipairs(board:GetChildren()) do
 	addView(source)
 end
 
-impacts.OnClientEvent:Connect(function(batch)
+table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch)
+	if rendererPresentation.destroyed then return end
 	local strongest = 0
 	local bankHit = false
 	for _, impact in ipairs(batch) do
@@ -1846,7 +1868,7 @@ impacts.OnClientEvent:Connect(function(batch)
 		audio:play(if bankHit then "bank" else "land", math.clamp(0.82 + strongest / 100, 0.9, 1.2),
 			math.clamp(strongest / 70, 0.24, 0.55))
 	end
-end)
+end))
 
 local function gelDrop(from, to, diameter, color, duration, outward)
 	local movement = to - from
@@ -1869,7 +1891,8 @@ local function gelDrop(from, to, diameter, color, duration, outward)
 	tween:Play()
 end
 
-feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id, cleared)
+table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id, cleared)
+	if rendererPresentation.destroyed then return end
 	if board:GetAttribute("Mode") ~= "Board" then
 		return
 	end
@@ -1882,6 +1905,7 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 		lastChainAccent = now
 		audio:play("merge_chain", 1 + math.min(chain - 2, 4) * 0.035, 0.34)
 	end
+	if not rendererPresentation.visible then return end
 	local reduced = reduceEffects()
 	local pixelMerge = lcdEnabled() and not cleared and not reduced
 	if pixelMerge then
@@ -1975,7 +1999,7 @@ feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id
 		pop:Destroy()
 	end)
 	tween:Play()
-end)
+end))
 
 local function applySound(preview)
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
@@ -2060,7 +2084,8 @@ backdrop:GetPropertyChangedSignal("Visible"):Connect(function()if backdrop.Visib
 status:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(updateHud) end)
 viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(drawAim)
 local previousSaveBusy,previousSaveFocus,previousSaveMode
-RunService.RenderStepped:Connect(function(dt)
+local rendererConnection
+rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	-- Completion is local and may leave every Visible property unchanged. Poll only
 	-- these scalars, then run the owner handoff once; never decode/walk UI per frame.
 	if previousSaveBusy~=roomView.busy or previousSaveFocus~=roomView.focusing or previousSaveMode~=roomView.mode then
@@ -2092,6 +2117,7 @@ RunService.RenderStepped:Connect(function(dt)
 	local now,reduced=os.clock(),reduceEffects()
 	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible,reduced)
 	if not backdrop.Visible then
+		rendererPresentation.visible=false;lcdElapsed=lcdStep
 		return
 	end
 	local pressure = board:GetAttribute("OverflowPressure") or 0
@@ -2107,6 +2133,17 @@ RunService.RenderStepped:Connect(function(dt)
 				elseif mood == "happy" then Art.Amber else Art.Ink
 		end
 	end
+	local presented=gui.Enabled and backdrop.Visible and not GuiService.MenuIsOpen and not modal.Visible
+		and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
+		and not roomView.busy and not roomView.transition.shade.Visible
+	if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
+	if not rendererPresentation.visible then
+		-- Resume at the current authoritative locations, never interpolate an old
+		-- frozen pile through a newly uncovered board.
+		for source,view in pairs(eggViews)do view.gel.position=source.Position;view.gel.age=math.max(view.gel.age or 0,1.5)end
+		lcdElapsed=lcdStep
+	end
+	rendererPresentation.visible=true
 	local closest
 	local distance = math.huge
 	local tier = nextTier()
@@ -2173,6 +2210,12 @@ RunService.RenderStepped:Connect(function(dt)
 		else
 			lcd:destroy()
 			lcd = nil
+			-- Preallocated cheap pieces take over in this same frame, including a
+			-- first-paint failure; never expose zero-size or stale cached children.
+			for source,view in pairs(eggViews)do
+				local position=view.gel:render(source.Position,0,now,project,true,reduced)
+				local point=project(Vector2.new(position.X,position.Y));view.mark.Position=UDim2.fromOffset(point.X,point.Y)
+			end
 		end
 	end
 	local pixelVisible = lcd ~= nil and lcd.label.Visible
@@ -2186,6 +2229,16 @@ RunService.RenderStepped:Connect(function(dt)
 		targetRing.Position = UDim2.fromOffset(closest.X, closest.Y)
 		targetRing.Size = UDim2.fromOffset(diameter, diameter)
 	end
+end)
+gui.Destroying:Connect(function()
+	if rendererPresentation.destroyed then return end
+	rendererPresentation.destroyed=true;rendererPresentation.visible=false
+	for _,connection in ipairs(rendererPresentation.connections)do connection:Disconnect()end
+	table.clear(rendererPresentation.connections)
+	if rendererConnection then rendererConnection:Disconnect();rendererConnection=nil end
+	if lcd then lcd:destroy();lcd=nil end
+	for _,view in pairs(eggViews)do view.gel:destroy();view.mark:Destroy()end
+	table.clear(eggViews);table.clear(viewsById);table.clear(pixelMerges)
 end)
 layout()
 updateHud()

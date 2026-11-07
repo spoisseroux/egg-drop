@@ -1,0 +1,151 @@
+{
+  "ok": true,
+  "viewport": "1626, 994",
+  "result": {
+    "logicalGrid": [
+      84,
+      141
+    ],
+    "deviceViewport": "1626, 994",
+    "renderHz": 30,
+    "cpuClock": "os.clock around renderer animation/paint only; excludes deterministic scene setup",
+    "fixtureSize": "{0, 354}, {0, 594}",
+    "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+    "reports": [
+      {
+        "rendererAtEnd": "span",
+        "fallback": false,
+        "scenario": "idle",
+        "peakAllocated": 4096,
+        "cpuPaintMs": {
+          "p50": 0.3513998817652464,
+          "p95": 0.4934000317007303,
+          "max": 0.597700010985136
+        },
+        "cpuAllMs": {
+          "p50": 0.009299954399466515,
+          "p95": 0.4696999676525593,
+          "max": 0.597700010985136
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 587,
+        "peakPropertyWrites": 15,
+        "peakDemand": 28,
+        "peakUsed": 28,
+        "wholeClientFrameMs": {
+          "p50": 16.672000288963318,
+          "p95": 17.994500696659088,
+          "max": 19.392799586057663
+        },
+        "failures": 0,
+        "backend": "span",
+        "paintedFrames": 75
+      },
+      {
+        "rendererAtEnd": "span",
+        "fallback": false,
+        "scenario": "falling",
+        "peakAllocated": 4096,
+        "cpuPaintMs": {
+          "p50": 9.032699977979064,
+          "p95": 11.03530009277165,
+          "max": 12.862600153312087
+        },
+        "cpuAllMs": {
+          "p50": 0.05450006574392319,
+          "p95": 10.07930003106594,
+          "max": 12.862600153312087
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 587,
+        "peakPropertyWrites": 3456,
+        "peakDemand": 1213,
+        "peakUsed": 1213,
+        "wholeClientFrameMs": {
+          "p50": 17.842400819063187,
+          "p95": 20.72340063750744,
+          "max": 25.022199377417564
+        },
+        "failures": 0,
+        "backend": "span",
+        "paintedFrames": 75
+      },
+      {
+        "rendererAtEnd": "span",
+        "fallback": false,
+        "scenario": "pile24",
+        "peakAllocated": 4096,
+        "cpuPaintMs": {
+          "p50": 2.8643999248743057,
+          "p95": 3.649699967354536,
+          "max": 6.362099898979068
+        },
+        "cpuAllMs": {
+          "p50": 0.03850017674267292,
+          "p95": 3.2909999135881662,
+          "max": 6.362099898979068
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 587,
+        "peakPropertyWrites": 1884,
+        "peakDemand": 680,
+        "peakUsed": 680,
+        "wholeClientFrameMs": {
+          "p50": 16.645200550556183,
+          "p95": 17.85079948604107,
+          "max": 28.715699911117554
+        },
+        "failures": 0,
+        "backend": "span",
+        "paintedFrames": 75
+      },
+      {
+        "rendererAtEnd": "span",
+        "fallback": false,
+        "scenario": "multiMerge",
+        "peakAllocated": 4096,
+        "cpuPaintMs": {
+          "p50": 6.565700052306056,
+          "p95": 7.424600189551711,
+          "max": 9.195799939334393
+        },
+        "cpuAllMs": {
+          "p50": 0.05219993181526661,
+          "p95": 7.3373999912291765,
+          "max": 9.195799939334393
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 587,
+        "peakPropertyWrites": 2095,
+        "peakDemand": 739,
+        "peakUsed": 739,
+        "wholeClientFrameMs": {
+          "p50": 16.669699922204018,
+          "p95": 17.86479912698269,
+          "max": 19.93050053715706
+        },
+        "failures": 0,
+        "backend": "span",
+        "paintedFrames": 75
+      }
+    ],
+    "finalStats": {
+      "spansUsed": 667,
+      "constructionMs": 163.62960007973015,
+      "dynamicAllocated": 4096,
+      "dynamicCreated": 4096,
+      "lastDemand": 667,
+      "propertyWrites": 1848,
+      "visibleSpans": 667,
+      "staticAllocated": 587,
+      "peakDemand": 1226
+    },
+    "backend": "span",
+    "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only"
+  },
+  "preference": "Medium"
+}

@@ -1,11 +1,12 @@
 -- One tiny transparent framebuffer shared by every jelly on the board.
 local AssetService = game:GetService("AssetService")
 local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local SpanSurface = require(script.Parent.JellySpanSurface)
 
 local LCD = {}
 LCD.__index = LCD
-LCD.Width = 84
-LCD.Height = 112
+LCD.Width = 64
+LCD.Height = math.round(LCD.Width * (Config.Height + 0.8) / (Config.Width + 0.8))
 LCD.MergeDuration = 0.32
 
 local WIDTH, HEIGHT = LCD.Width, LCD.Height
@@ -25,9 +26,14 @@ local function rgba(color)
 		+ 4278190080
 end
 
+local palettes={}
+local paletteCount=0
 local function palette(color)
-	return { rgba(color:Lerp(INK, 0.65)), rgba(color:Lerp(INK, 0.27)),
-		rgba(color), rgba(color:Lerp(WHITE, 0.7)) }
+	local key=rgba(color);local cached=palettes[key]
+	if cached then return cached end
+	cached={rgba(color:Lerp(INK,.65)),rgba(color:Lerp(INK,.27)),key,rgba(color:Lerp(WHITE,.7))}
+	if paletteCount<64 then palettes[key]=cached;paletteCount+=1 end
+	return cached
 end
 
 local function boardPixels()
@@ -55,7 +61,7 @@ end
 
 local guide = rgba(Color3.fromHex("#54783E"))
 
--- Sampling is clipped before entering the loops: work never exceeds 84x112.
+-- Sampling is clipped before entering the loops: work never exceeds the fixed 64x107 grid.
 local function raster(self, minX, minY, maxX, maxY, colors, sample)
 	if self.failed then return end
 	minX, minY = math.max(math.ceil(leftWall - 0.5), math.floor(minX)),
@@ -83,35 +89,39 @@ local function raster(self, minX, minY, maxX, maxY, colors, sample)
 	end
 end
 
-function LCD.new(parent)
-	local editable, label
-	local ok = pcall(function()
-		editable = AssetService:CreateEditableImage({ Size = SIZE })
-		if not editable then error("EditableImage allocation unavailable") end
-		label = Instance.new("ImageLabel")
-		label.Name = "JellyLCD"
-		label.BackgroundTransparency = 1
-		label.BorderSizePixel = 0
-		label.Size = UDim2.fromScale(1, 1)
-		label.Position = UDim2.fromScale(0, 0)
-		label.ZIndex = 3
-		label.Visible = false
-		label.ResampleMode = Enum.ResamplerMode.Pixelated
-		label.ImageContent = Content.fromObject(editable)
-		label.Parent = parent
+function LCD.new(parent, options)
+	options=options or {}
+	local background=boardPixels()
+	local function span()
+		local pixels=buffer.create(WIDTH*HEIGHT*4)
+		local surface=SpanSurface.new(parent,background,WIDTH,HEIGHT,options.maxSpans or 1536)
+		if not surface then return nil end
+		return setmetatable({surface=surface,label=surface.root,background=background,pixels=pixels,failed=false,backend="span"},LCD)
+	end
+	if options.backend=="span"then return span()end
+	local editable,label
+	local ok=pcall(function()
+		editable=AssetService:CreateEditableImage({Size=SIZE})
+		if not editable then error("EditableImage allocation unavailable")end
+		-- Allocation alone can succeed while the experience cannot access writes.
+		-- Establish capability before choosing the image owner; never change settings.
+		editable:WritePixelsBuffer(Vector2.zero,SIZE,background)
+		label=Instance.new("ImageLabel");label.Name="JellyLCD";label.BackgroundTransparency=1;label.BorderSizePixel=0
+		label.Size,label.Position=UDim2.fromScale(1,1),UDim2.fromScale(0,0);label.ZIndex,label.Visible=3,false
+		label.ResampleMode=Enum.ResamplerMode.Pixelated;label.ImageContent=Content.fromObject(editable);label.Parent=parent
 	end)
 	if not ok then
-		if label then label:Destroy() end
-		if editable then editable:Destroy() end
-		return nil
+		if label then label:Destroy()end;if editable then editable:Destroy()end
+		return if options.backend=="image"then nil else span()
 	end
-	return setmetatable({
-		image = editable, label = label, background = boardPixels(),
-		pixels = buffer.create(WIDTH * HEIGHT * 4), failed = false,
-	}, LCD)
+	return setmetatable({image=editable,label=label,background=background,pixels=buffer.create(WIDTH*HEIGHT*4),failed=false,backend="image"},LCD)
+end
+function LCD:getStats()
+	return if self.surface then self.surface.stats else{backend=self.backend,failed=self.failed}
 end
 
 function LCD:beginFrame()
+	self.rasterStarted=os.clock()
 	buffer.copy(self.pixels, 0, self.background)
 end
 
@@ -127,8 +137,9 @@ function LCD:draw(center, radiusX, radiusY, angleRadians, color, ripple)
 	if self.failed or radiusX <= 0 or radiusY <= 0 then return end
 	local c, s = math.cos(angleRadians), math.sin(angleRadians)
 	local wobble = math.clamp(ripple or 0, -1, 1) * 0.075
-	local extentX = math.sqrt((radiusX * c) ^ 2 + (radiusY * s) ^ 2) * 1.09 + 1
-	local extentY = math.sqrt((radiusX * s) ^ 2 + (radiusY * c) ^ 2) * 1.09 + 1
+	local lightRadiusX=math.sqrt((radiusX*c)^2+(radiusY*s)^2)
+	local lightRadiusY=math.sqrt((radiusX*s)^2+(radiusY*c)^2)
+	local extentX,extentY=lightRadiusX*1.09+1,lightRadiusY*1.09+1
 	local scale = math.min(radiusX, radiusY)
 	raster(self, center.X - extentX, center.Y - extentY, center.X + extentX, center.Y + extentY,
 		palette(color), function(x, y)
@@ -138,7 +149,11 @@ function LCD:draw(center, radiusX, radiusY, angleRadians, color, ripple)
 			if q > 1.19 then return 1, 0, 0 end
 			-- A bounded polynomial ripple gives a soft asymmetric edge without per-pixel trig.
 			local edge = 1 + wobble * (nx * nx - ny * ny) * nx
-			return (math.sqrt(q) - edge) * scale, nx, ny
+			-- Only inside/rim classification is consumed by raster; squared tests
+			-- produce exactly the same classes without a square root per pixel.
+			if q>edge*edge then return 1,0,0 end
+			local inner=math.max(0,edge-.85/scale)
+			return if q>inner*inner then -.5 else -1,dx/lightRadiusX,dy/lightRadiusY
 		end)
 end
 
@@ -167,6 +182,8 @@ function LCD:merge(first, second, target, radius, resultRadius, color, age)
 	local core = radius * 0.42 * (1 - t) + resultRadius * t
 	local neck = radius * (0.22 + 0.12 * t)
 	local blend = math.max(0.5, radius * 0.22 * (1 - t))
+	local lightRadiusX=math.max(core,math.abs(a.X-target.X)+lobe,math.abs(b.X-target.X)+lobe)+blend
+	local lightRadiusY=math.max(core,math.abs(a.Y-target.Y)+lobe,math.abs(b.Y-target.Y)+lobe)+blend
 	local margin = math.max(radius, resultRadius) + blend + 1
 	raster(self, math.min(a.X, b.X, target.X) - margin, math.min(a.Y, b.Y, target.Y) - margin,
 		math.max(a.X, b.X, target.X) + margin, math.max(a.Y, b.Y, target.Y) + margin,
@@ -178,15 +195,21 @@ function LCD:merge(first, second, target, radius, resultRadius, color, age)
 			d = smoothMin(d, capsule(x, y, a, target, neck), blend)
 			d = smoothMin(d, capsule(x, y, b, target, neck), blend)
 			d = smoothMin(d, math.sqrt(tx * tx + ty * ty) - core, blend)
-			return d, tx / radius, ty / radius
+			return d,tx/lightRadiusX,ty/lightRadiusY
 		end)
 end
 
 function LCD:finishFrame()
 	if self.failed then return false end
-	local ok = pcall(function()
-		self.image:WritePixelsBuffer(Vector2.zero, SIZE, self.pixels)
-	end)
+	local rasterMs=(os.clock()-(self.rasterStarted or os.clock()))*1000
+	if self.surface then self.surface.stats.rasterMs=rasterMs end
+	local ok
+	if self.surface then
+		local painted,result=pcall(self.surface.paint,self.surface,self.pixels);ok=painted and result
+		if not painted then self.surface.stats.failure="paint-error";self.surface.failed=true end
+	else
+		ok=pcall(function()self.image:WritePixelsBuffer(Vector2.zero,SIZE,self.pixels)end)
+	end
 	if not ok then
 		self.failed = true
 		self.label.Visible = false
@@ -195,9 +218,10 @@ function LCD:finishFrame()
 end
 
 function LCD:destroy()
+	if self.destroyed then return end
+	self.destroyed=true
 	self.failed = true
-	self.label:Destroy()
-	self.image:Destroy()
+	if self.surface then self.surface:destroy()else self.label:Destroy();self.image:Destroy()end
 end
 
 return LCD

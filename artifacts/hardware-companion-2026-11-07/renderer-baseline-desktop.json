@@ -1,0 +1,135 @@
+{
+  "ok": true,
+  "viewport": "1626, 994",
+  "result": {
+    "logicalGrid": [
+      84,
+      112
+    ],
+    "cpuClock": "os.clock around renderer animation/paint only; excludes deterministic scene setup",
+    "reports": [
+      {
+        "fallback": false,
+        "scenario": "idle",
+        "peakAllocated": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "cpuAllMs": {
+          "p50": 0.08060014806687832,
+          "p95": 0.11580018326640129,
+          "max": 0.1938000787049532
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 0,
+        "peakPropertyWrites": 5,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "wholeClientFrameMs": {
+          "p50": 16.62749983370304,
+          "p95": 17.77680031955242,
+          "max": 18.32900010049343
+        },
+        "failures": 0,
+        "backend": "baseline",
+        "paintedFrames": 0
+      },
+      {
+        "fallback": false,
+        "scenario": "falling",
+        "peakAllocated": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "cpuAllMs": {
+          "p50": 0.7685001473873854,
+          "p95": 1.113999867811799,
+          "max": 1.223200000822544
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 0,
+        "peakPropertyWrites": 120,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "wholeClientFrameMs": {
+          "p50": 16.65540039539337,
+          "p95": 17.708199098706245,
+          "max": 18.571700900793076
+        },
+        "failures": 0,
+        "backend": "baseline",
+        "paintedFrames": 0
+      },
+      {
+        "fallback": false,
+        "scenario": "pile24",
+        "peakAllocated": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "cpuAllMs": {
+          "p50": 0.48370007425546646,
+          "p95": 0.7106999401003122,
+          "max": 0.9738998487591743
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 0,
+        "peakPropertyWrites": 120,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "wholeClientFrameMs": {
+          "p50": 16.557399183511734,
+          "p95": 17.979800701141357,
+          "max": 18.858199939131737
+        },
+        "failures": 0,
+        "backend": "baseline",
+        "paintedFrames": 0
+      },
+      {
+        "fallback": false,
+        "scenario": "multiMerge",
+        "peakAllocated": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "cpuAllMs": {
+          "p50": 0.6269000004976988,
+          "p95": 0.9153001010417938,
+          "max": 1.0846999939531088
+        },
+        "frames": 150,
+        "createdAfterWarmup": 0,
+        "staticAllocated": 0,
+        "peakPropertyWrites": 120,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "wholeClientFrameMs": {
+          "p50": 16.65410026907921,
+          "p95": 17.889399081468582,
+          "max": 18.843000754714012
+        },
+        "failures": 0,
+        "backend": "baseline",
+        "paintedFrames": 0
+      }
+    ],
+    "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+    "renderHz": 30,
+    "finalStats": [],
+    "backend": "baseline",
+    "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only"
+  },
+  "preference": "Medium"
+}
