@@ -23,6 +23,14 @@ local function button(parent,name,caption,action)
 	b.Activated:Connect(action)
 	return b
 end
+local function typeTab(tab,key,compact,width)
+	Art.type(tab,"Action",compact)
+	if key~="mastery"then return end
+	tab.Text="Mastery";tab:SetAttribute("AccessibleLabel","Family mastery ranks")
+	local inset=tab:FindFirstChildOfClass("UIPadding")
+	local available=width-(if inset then inset.PaddingLeft.Offset+inset.PaddingRight.Offset else 0)
+	if Art.textWidth(tab,"Mastery")>available and Art.textWidth(tab,"Ranks")<=available then tab.Text="Ranks"end
+end
 local function place(node,x,y,w,h)
 	node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)
 end
@@ -160,7 +168,7 @@ function Menu:layout()
 	local roomyRowY=14+math.max(roomyTitleH,44)+8
 	local roomyActionY=if roomyWalletW+roomyActionW+12<=roomyUsable then roomyRowY else roomyRowY+roomyWalletH+12
 	local roomyTabH=44
-	for _,tab in pairs(self.tabs)do Art.type(tab,"Action",false);roomyTabH=math.max(roomyTabH,Art.actionHeight(tab,(roomyUsable-12)/3))end
+	for key,tab in pairs(self.tabs)do typeTab(tab,key,false,(roomyUsable-12)/3);roomyTabH=math.max(roomyTabH,Art.actionHeight(tab,(roomyUsable-12)/3))end
 	local roomyHeader=math.max(roomyRowY+roomyWalletH+4,roomyActionY+roomyActionH)+12+roomyTabH+12
 	local destinationW=width-72
 	local roomyList=destinationW<480
@@ -191,7 +199,7 @@ function Menu:layout()
 	end
 	local walletW=math.min(210,math.max(100,Art.textWidth(self.nectar)+(if self.compact then 0 else 30)))
 	local tabH=44
-	for _,tab in pairs(self.tabs) do Art.type(tab,"Action",self.compact);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3)) end
+	for key,tab in pairs(self.tabs) do typeTab(tab,key,self.compact,(usable-12)/3);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3)) end
 	local titleY=if self.compact then 0 else 14
 	local tabY
 	if self.compact then tabY=compactHeaderRow else

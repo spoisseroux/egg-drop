@@ -1,167 +1,185 @@
-local GuiService = game:GetService("GuiService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Pets = require(ReplicatedStorage.Shared.PetCatalog)
-local Art = require(script.Parent.DeckArt)
-local Portrait = require(script.Parent.PetPortrait)
-
-local Journal = {}
-Journal.__index = Journal
-local CARD_HEIGHT = 378
-local LIST_HEIGHT = (math.ceil(#Pets / 2) + #Pets.rares) * 55 - 3
-local familyNames = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
-local rankNames = { [0] = "Unranked", "I", "II", "III" }
-
-function Journal.new(gui, make, label, onVisit, onTrack, onGoals)
-	local shade = make("Frame", "PetJournal", {
-		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
-		BackgroundTransparency = 1, Active = true, Visible = false, ZIndex = 20,
-	}, gui)
-	local card = make("Frame", "Card", {
-		AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 21,
-		Position = UDim2.fromScale(0.5, 0.5),
-	}, shade)
-	local scroll = make("ScrollingFrame", "Scroll", {
-		Size = UDim2.new(1, -16, 1, -100), Position = UDim2.fromOffset(8, 40),
-		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 22,
-		ScrollingDirection = Enum.ScrollingDirection.Y, ScrollBarThickness = 4,
-		ScrollBarImageColor3 = Art.Cyan, ElasticBehavior = Enum.ElasticBehavior.Never,
-		CanvasSize = UDim2.fromOffset(0, LIST_HEIGHT),
-	}, card)
-	local function layout()
-		local size = shade.AbsoluteSize
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 24, 1, 400),
-			math.clamp(size.Y - (if size.Y < 220 then 8 else 40), 1, CARD_HEIGHT))
+local GuiService=game:GetService("GuiService")
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local Pets=require(ReplicatedStorage.Shared.PetCatalog)
+local Art=require(script.Parent.DeckArt)
+local Portrait=require(script.Parent.PetPortrait)
+local Crest=require(script.Parent.FamilyCrest)
+local Journal={};Journal.__index=Journal
+local familyNames={pip="Pip",puddle="Puddle",wick="Wick",orbit="Orbit"}
+local rankNames={[0]="Unranked","I","II","III"}
+local function visibleSelection(node)
+	if not node or not node.Parent or not node:IsA("GuiObject") or not node.Selectable then return nil end
+	local playerGui=game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+	if not playerGui or not node:IsDescendantOf(playerGui) then return nil end
+	local ancestor=node
+	while ancestor do
+		if ancestor:IsA("GuiObject") and not ancestor.Visible then return nil end
+		if ancestor:IsA("ScreenGui") and not ancestor.Enabled then return nil end
+		ancestor=ancestor.Parent
 	end
-	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
-	layout()
-	Art.panel(card, 12)
-	local title = label("TextLabel", "Title", "", card)
-	title.Size = UDim2.new(1, 0, 0, 34)
-	title.TextColor3 = Art.Cyan
-	title.Font = Enum.Font.Code
-	title.TextSize = 16
-	title.ZIndex = 22
-	Art.fitText(title, 16, 11, 12)
-	local self = setmetatable({ shade = shade, card = card, scroll = scroll, title = title, cards = {}, portraits = {}, onGoals = onGoals }, Journal)
-	for index, pet in ipairs(Pets.collection) do
-		local entry = label("TextButton", pet.name, "", scroll, Art.Raised)
-		local column = if pet.trial then 0 else (index - 1) % 2 * 0.5
-		local row = if pet.trial then math.ceil(#Pets / 2) + index - #Pets - 1 else math.floor((index - 1) / 2)
-		entry.Position = UDim2.new(column, 3, 0, 2 + row * 55)
-		entry.Size = UDim2.new(if pet.trial then 1 else 0.5, -10, 0, 50)
-		entry.ZIndex = 22
-		Art.button(entry, 6)
-		local well = Art.frame(entry, "PortraitWell", Art.Ink, UDim2.fromOffset(5, 5), UDim2.fromOffset(36, 36))
-		Art.corner(well, 4)
-		local name = Art.text(entry, "Species", if pet.trial then pet.name .. "  ·  Rare" else pet.name,
-			UDim2.fromOffset(47, 4), UDim2.new(1, -51, 0, 20),
-			Art.Silver, 15, Enum.Font.GothamBold)
-		name.TextXAlignment = Enum.TextXAlignment.Left
-		name.TextTruncate = Enum.TextTruncate.AtEnd
-		Art.fitText(name, 15, 10, 0)
-		local status = Art.text(entry, "Status", "", UDim2.fromOffset(47, 22), UDim2.new(1, -51, 0, 25),
-			Art.Muted, 11, Enum.Font.GothamMedium)
-		status.TextXAlignment = Enum.TextXAlignment.Left
-		Art.fitText(status, 11, 9, 0, true)
-		local statusInset = status:FindFirstChildOfClass("UIPadding")
-		statusInset.PaddingTop, statusInset.PaddingBottom = UDim.new(0, 0), UDim.new(0, 0)
-		if pet.trial then
-			local track = Art.text(entry, "Track", "TRACK & PLAY", UDim2.new(1, -91, 0, 5),
-				UDim2.fromOffset(87, 16), Art.Cyan, 10, Enum.Font.GothamBold)
-			track.TextXAlignment = Enum.TextXAlignment.Right
-			track.Visible = false
+	return node
+end
+local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
+local function text(parent,name,value,role,color)
+	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or Art.Silver,16)
+	Art.type(node,role);node.TextXAlignment=Enum.TextXAlignment.Left;return node
+end
+local function button(parent,name,value,action)
+	local node=Instance.new("TextButton");node.Name,node.Text,node.Parent=name,value,parent
+	node.BackgroundColor3,node.TextColor3,node.BorderSizePixel,node.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
+	Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
+end
+function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
+	local shade=Art.frame(gui,"PetJournal",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
+	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
+	local card=Art.frame(shade,"Card",Art.Surface,UDim2.fromScale(.5,.5),UDim2.fromOffset(680,500),21)
+	card.AnchorPoint=Vector2.new(.5,.5);Art.panel(card,16)
+	local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
+	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,22
+	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
+	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
+	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
+	self.title=text(card,"Title","Pet journal · 00/07","Heading")
+	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
+	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
+	for _,entry in ipairs({{1,45},{5,-45}})do
+		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
+	end
+	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
+	self.closeButton=Art.close(button(card,"Close","×",function()self:close()end))
+	if onGoals then self.goalsButton=button(card,"FamilyGoals","Family goals",function()self:openFamilyGoals()end)end
+	for index,pet in ipairs(Pets.collection)do
+		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
+		local well=Art.frame(entry,"PortraitWell",Art.Inset,UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
+		text(entry,"Species",pet.name..(if pet.trial then " · Rare"else ""),"Action")
+		text(entry,"Status","Hatch from eggs","Body",Art.Muted)
+		text(entry,"FamilyRank","","Supporting",Art.Muted)
+		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
+		Crest.create(entry,pet.family or pet.id,0,UDim2.fromOffset(0,0),UDim2.fromOffset(36,36),entry.ZIndex+2,true)
+		self.cards[index]=entry
+	end
+	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
+	Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
+	self:layout();return self
+end
+function Journal:layout()
+	if self.layingOut then return end;self.layingOut=true
+	local size=self.shade.AbsoluteSize;local short=size.Y<220
+	local width=math.max(1,math.min(680,size.X-24));local pad=if short then 8 else 16
+	local usable=width-pad*2;local bodyW=usable-8
+	Art.type(self.title,if short then "Body"else "Heading",short)
+	local titleH=Art.textHeight(self.title,usable-56,28);local header=math.max(44,titleH)+8
+	local footerH=0
+	if self.goalsButton then
+		Art.type(self.goalsButton,if short then "Body"else "Action",short)
+		footerH=math.max(44,Art.textHeight(self.goalsButton,usable,0)+(if short then 8 else 12))
+	end
+	local minColumn=240
+	for index,entry in ipairs(self.cards)do
+		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.FamilyRank,"Supporting",short);Art.type(entry.Track,"Supporting",short)
+		if not Pets.collection[index].trial then
+			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+136,Art.textWidth(entry.FamilyRank)+136)
 		end
-		self.cards[index] = entry
-		entry.Activated:Connect(function()
-			if self.shade.Visible and entry.Interactable then
-				self:close()
-				if entry:FindFirstChild("Track") and entry.Track.Visible then
-					onTrack(pet)
-				else
-					onVisit(pet)
-				end
-			end
+	end
+	local columns=if (bodyW-8)/2>=minColumn then 2 else 1
+	self.columns=columns
+	local y=4;local index=1
+	while index<=#self.cards do
+		local group=if columns==2 and not Pets.collection[index].trial then math.min(2,#Pets-index+1)else 1
+		local rowW=if group==2 then (bodyW-12)/2 else bodyW-8
+		local rowH=76
+		for slot=index,index+group-1 do
+			local entry=self.cards[slot];local textW=math.max(1,rowW-136)
+			local nameH=Art.textHeight(entry.Species,textW,24);local statusH=Art.textHeight(entry.Status,textW,22)
+			local rankH=if entry.FamilyRank.Visible then Art.textHeight(entry.FamilyRank,textW,20)else 0
+			local trackH=if entry.Track.Visible then Art.textHeight(entry.Track,textW,20)else 0
+			entry:SetAttribute("NameHeight",nameH);entry:SetAttribute("StatusHeight",statusH)
+			entry:SetAttribute("RankHeight",rankH);entry:SetAttribute("TrackHeight",trackH)
+			rowH=math.max(rowH,16+nameH+4+statusH+(if rankH>0 then rankH+4 else 0)+(if trackH>0 then trackH+4 else 0))
+		end
+		for slot=index,index+group-1 do
+			local entry=self.cards[slot];local x=4+(slot-index)*(rowW+8);local textW=math.max(1,rowW-136)
+			place(entry,x,y,rowW,rowH);place(entry.PortraitWell,8,8,60,60)
+			place(entry.FamilyCrest,rowW-48,8,36,36)
+			local sy=8;place(entry.Species,80,sy,textW,entry:GetAttribute("NameHeight"));sy+=entry:GetAttribute("NameHeight")+4
+			place(entry.Status,80,sy,textW,entry:GetAttribute("StatusHeight"));sy+=entry:GetAttribute("StatusHeight")+4
+			local rankH=entry:GetAttribute("RankHeight");place(entry.FamilyRank,80,sy,textW,rankH);sy+=if rankH>0 then rankH+4 else 0
+			place(entry.Track,80,sy,textW,entry:GetAttribute("TrackHeight"))
+		end
+		y+=rowH+8;index+=group
+	end
+	local footer=if self.goalsButton then footerH+8 else 0
+	local maximum=math.max(1,math.min(680,size.Y-(if short then 8 else 24)))
+	local height=math.min(maximum,header+y+footer+8)
+	self.card.Size=UDim2.fromOffset(width,height)
+	place(self.title,pad,4,usable-56,titleH);place(self.closeButton,width-pad-44,4,44,44)
+	place(self.scroll,pad,header,usable,math.max(44,height-header-footer-4))
+	if self.goalsButton then place(self.goalsButton,pad,height-footerH-4,usable,footerH)end
+	self.scroll.CanvasSize=UDim2.fromOffset(0,y)
+	place(self.moreCue,width-pad-12,header+self.scroll.Size.Y.Offset-20,12,20)
+	self.scroll.CanvasPosition=Vector2.new(0,math.clamp(self.scroll.CanvasPosition.Y,0,math.max(0,y-self.scroll.Size.Y.Offset)))
+	self:refreshScrollCue();self.layingOut=false
+	local selected=GuiService.SelectedObject
+	if selected and selected.Parent==self.scroll and self.shade.Visible then self:ensureVisible(selected)end
+end
+function Journal:refreshScrollCue()
+	local height=self.scroll.AbsoluteSize.Y
+	local overflow=self.scroll.CanvasSize.Y.Offset>height+1
+	self.scroll.ScrollingEnabled=overflow;self.scroll.ScrollBarImageTransparency=if overflow then 0 else 1
+	self.moreCue.Visible=overflow and self.scroll.CanvasPosition.Y+height<self.scroll.CanvasSize.Y.Offset-1
+end
+function Journal:ensureVisible(entry)
+	local height=self.scroll.Size.Y.Offset;local top=entry.Position.Y.Offset;local current=self.scroll.CanvasPosition.Y
+	local wanted=if entry.Size.Y.Offset>height or top<current then top elseif top+entry.Size.Y.Offset>current+height then top+entry.Size.Y.Offset-height else current
+	self.scroll.CanvasPosition=Vector2.new(0,math.clamp(wanted,0,math.max(0,self.scroll.CanvasSize.Y.Offset-height)))
+end
+function Journal:activatePet(index)
+	local entry=self.cards[index];if not self.shade.Visible or not entry or not entry.Interactable then return false end
+	local pet=Pets.collection[index];local tracking=entry.Track.Visible
+	self:close();if tracking then self.onTrack(pet)else self.onVisit(pet)end;return true
+end
+function Journal:openFamilyGoals()
+	if not self.shade.Visible or not self.onGoals then return false end
+	self:close();self.onGoals();return true
+end
+function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,masteryRanks)
+	self.title.Text=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
+	local firstOwned,firstTrack
+	for index,entry in ipairs(self.cards)do
+		local pet=Pets.collection[index];local unlocked=Pets.isUnlocked(pet,owned,trials,inventoryMask)
+		local equipped=unlocked and pet.id==companionId
+		local trackable=inventoryMask==nil and pet.trial~=nil and not unlocked
+		local family=pet.family or pet.id;local rank=math.clamp(math.floor(tonumber(masteryRanks and masteryRanks[family])or 0),0,3)
+		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
+		entry.FamilyRank.Text=(familyNames[family]or family).." · "..rankNames[rank];entry.FamilyRank.Visible=unlocked
+		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
+		entry.Status.TextColor3=if equipped then Art.Leaf else Art.Muted
+		entry.Species.TextColor3=if pet.trial then Art.Amber elseif unlocked then Art.Silver else Art.Muted
+		Crest.update(entry.FamilyCrest,family,rank,not unlocked)
+		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
+			if self.portraits[index]then self.portraits[index].sprite:Destroy()end
+			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked)}
+		end
+		entry.Interactable,entry.Selectable=unlocked or trackable,unlocked or trackable
+		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end
+	end
+	self.previousSelection=GuiService.SelectedObject;self.shade.Visible=true;self.scroll.CanvasPosition=Vector2.zero;self:layout()
+	self.openGeneration=(self.openGeneration or 0)+1;local generation=self.openGeneration
+	if selected then
+		local focus=firstOwned or firstTrack or self.closeButton;GuiService.SelectedObject=focus
+		if focus.Parent==self.scroll then self:ensureVisible(focus)end
+		task.defer(function()
+			game:GetService("RunService").Heartbeat:Wait()
+			if self.shade.Parent and self.shade.Visible and self.openGeneration==generation and GuiService.SelectedObject==focus and focus.Parent==self.scroll then self:ensureVisible(focus)end
 		end)
 	end
-	local close = label("TextButton", "Close", "Close", card, Art.Ink)
-	close.Position = UDim2.new(0.25, 0, 1, -52)
-	close.Size = UDim2.new(0.5, 0, 0, 44)
-	close.ZIndex = 22
-	close.TextColor3 = Art.Silver
-	Art.button(close, 6)
-	Art.fitText(close, 15, 12, 8)
-	close.Activated:Connect(function()
-		self:close()
-	end)
-	self.closeButton = close
-	if onGoals then
-		close.Position, close.Size = UDim2.new(0, 8, 1, -52), UDim2.new(0.5, -12, 0, 44)
-		local goals = label("TextButton", "FamilyGoals", "Family goals", card, Art.Canopy)
-		goals.Position, goals.Size = UDim2.new(0.5, 4, 1, -52), UDim2.new(0.5, -12, 0, 44)
-		goals.ZIndex, goals.TextColor3 = 22, Art.Silver
-		Art.button(goals, 6)
-		Art.fitText(goals, 15, 10, 8, true)
-		goals.Activated:Connect(function() self:openFamilyGoals() end)
-		self.goalsButton = goals
-	end
-	return self
 end
-
-function Journal:openFamilyGoals()
-	if not self.shade.Visible or not self.onGoals then return end
-	self:close()
-	self.onGoals()
-end
-
-function Journal:open(owned, trials, companionId, selected, tracked, inventoryMask, masteryRanks)
-	self.title.Text = string.format("PET JOURNAL  ·  %02d/%02d", Pets.ownedCount(owned, trials, inventoryMask), #Pets.collection)
-	for index, entry in ipairs(self.cards) do
-		local pet = Pets.collection[index]
-		local unlocked = Pets.isUnlocked(pet, owned, trials, inventoryMask)
-		local equipped = unlocked and pet.id == companionId
-		local trackable = inventoryMask == nil and pet.trial ~= nil and not unlocked
-		local family = pet.family or pet.id
-		local rank = math.clamp(math.floor(tonumber(masteryRanks and masteryRanks[family]) or 0), 0, 3)
-		entry.Status.Text = if unlocked then (if equipped then "Equipped" else "Equip") .. "\n"
-			.. (familyNames[family] or family) .. " · " .. rankNames[rank]
-			elseif inventoryMask ~= nil then "Hatch from eggs"
-			elseif pet.trial then pet.trial.hint else pet.charge .. " charge to hatch"
-		if pet.trial then
-			entry.Track.Visible = trackable
-			entry.Track.Text = if tracked == pet then "TRACKED · PLAY" else "TRACK & PLAY"
-			entry.Species.Text = if trackable then pet.name else pet.name .. "  ·  Rare"
-			entry.Species.Size = UDim2.new(1, if trackable then -140 else -51, 0, 20)
-		end
-		entry.Status.TextColor3 = if equipped then Art.Cyan else Art.Muted
-		entry.Species.TextColor3 = if pet.trial then Art.Amber elseif unlocked then Art.Silver else Art.Muted
-		if not self.portraits[index] or self.portraits[index].unlocked ~= unlocked then
-			if self.portraits[index] then
-				self.portraits[index].sprite:Destroy()
-			end
-			self.portraits[index] = {
-				unlocked = unlocked,
-				sprite = Portrait.create(entry.PortraitWell, pet, 2, UDim2.fromScale(0.5, 0.5), 23, not unlocked),
-			}
-		end
-		entry.Interactable = unlocked or trackable
-		entry.Selectable = entry.Interactable
-	end
-	self.shade.Visible = true
-	self.scroll.CanvasPosition = Vector2.zero
-	self.previousSelection = GuiService.SelectedObject
-	if selected then
-		GuiService.SelectedObject = if self.cards[1].Selectable then self.cards[1] else self.closeButton
-	end
-end
-
 function Journal:close()
-	if self.shade.Visible then
-		local selected = GuiService.SelectedObject
-		self.shade.Visible = false
-		if selected and selected:IsDescendantOf(self.shade) then
-			GuiService.SelectedObject = self.previousSelection
-		end
+	if not self.shade.Visible then return end
+	self.shade.Visible=false;self.openGeneration=(self.openGeneration or 0)+1
+	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then
+		GuiService.SelectedObject=visibleSelection(self.previousSelection)
 	end
 end
-
 return Journal

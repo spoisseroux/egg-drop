@@ -113,7 +113,7 @@ function Focus.new(parentGui, callbacks)
 	Art.corner(frame(glove, "Cuff", UDim2.fromOffset(7, 27), UDim2.fromOffset(16, 5), Art.Leaf, 7), 0.3)
 	local self = setmetatable({ gui = gui, root = root, panel = panel, back = back, greet = greet,
 		hit = hit, glove = glove, helper = helper, hint = hint, callbacks = callbacks, connections = {},
-		actionPrefix = "EggDropPetFocus" .. serial, active = false }, Focus)
+		actionPrefix = "EggDropPetFocus" .. serial, active = false, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
 	table.insert(self.connections, back.Activated:Connect(function() callbacks.back() end))
 	table.insert(self.connections, greet.Activated:Connect(function() if callbacks.canReact() then callbacks.greet() end end))
 	table.insert(self.connections, hit.InputBegan:Connect(function(input)
@@ -132,6 +132,9 @@ function Focus.new(parentGui, callbacks)
 	end))
 	table.insert(self.connections, UserInputService.WindowFocusReleased:Connect(function() self:cancelPointer() end))
 	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
+	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self:layoutRoamHint()end))
+	Art.watchTextPreference(gui,function()return self.hint.Visible end,function()self.hintLayoutKey=nil;self:layoutRoamHint()end)
+	self:layoutRoamHint()
 	return self
 end
 
@@ -186,6 +189,21 @@ function Focus:setActive(active)
 	end
 end
 
+function Focus:layoutRoamHint()
+	if self.destroyed then return end
+	local size=self.root.AbsoluteSize
+	local dock=self.roamDock
+	local dockBottom=if dock and dock.Parent then dock.AbsolutePosition.Y+dock.AbsoluteSize.Y-self.root.AbsolutePosition.Y+8 else 64
+	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..GuiService.PreferredTextSize.Name
+	if self.hintLayoutKey==key then return end;self.hintLayoutKey=key
+	Art.type(self.hint,"Supporting",size.Y<280)
+	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(360,Art.textWidth(self.hint)+16)))
+	local height=Art.textHeight(self.hint,width,24)+8
+	local y=math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
+	self.hint.AnchorPoint=Vector2.zero
+	self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,size.X-width-12),y),UDim2.fromOffset(width,height)
+end
+
 function Focus:update(camera, pet, roamHint)
 	if self.destroyed then return end
 	local ownsInput = self:canOwnInput()
@@ -195,6 +213,7 @@ function Focus:update(camera, pet, roamHint)
 	local kind = UserInputService:GetLastInputType()
 	self.hint.Text = if string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
 		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
+	self:layoutRoamHint()
 	if not self.active then return end
 	self.helper.Text = if string.match(kind.Name, "^Gamepad") then "X  Greet    B  Back" else "Hold and rub to pet"
 	local canReact = ownsInput and self.callbacks.canReact()

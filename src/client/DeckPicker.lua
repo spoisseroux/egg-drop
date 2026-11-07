@@ -1,268 +1,292 @@
-local Shared = game:GetService("ReplicatedStorage").Shared
-local Palette = require(Shared.DeckPalette)
-local Themes = require(Shared.DeckThemes)
-local Stickers = require(Shared.DeckStickers)
-local Trials = require(Shared.PocketTrials)
-local Art = require(script.Parent.DeckArt)
-
-local Picker = {}
-Picker.__index = Picker
-local CARD_HEIGHT = 320
-local trialIcons = {
-	{ ".XX....", "X..X...", "X..XXX.", ".XX..X.", "...X.X.", "....XX." },
-	{ ".....X.", ".....X.", "...X.X.", "...X.X.", ".X.X.X.", ".X.X.X." },
-	{ "...X...", "..XXX..", ".XX.XX.", ".X.X.X.", ".XX.XX.", "..XXX.." },
-}
-
-function Picker.new(gui, make, label, onPreview, onClose, onApply, onSetting)
-	local shade = make("Frame", "DeckPicker", {
-		Size = UDim2.fromScale(1, 1), BackgroundColor3 = Art.Ink,
-		BackgroundTransparency = 1, BorderSizePixel = 0, Active = true, Visible = false, ZIndex = 20,
-	}, gui)
-	local scroll = make("ScrollingFrame", "Scroll", {
-		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 20,
-		ScrollingDirection = Enum.ScrollingDirection.Y, ScrollBarThickness = 4,
-		ScrollBarImageColor3 = Art.Cyan, ElasticBehavior = Enum.ElasticBehavior.Never,
-	}, shade)
-	local card = make("Frame", "Card", {
-		AnchorPoint = Vector2.new(0.5, 0), ZIndex = 21, BorderSizePixel = 0,
-	}, scroll)
-	local function layout()
-		local size = scroll.AbsoluteSize
-		local height = math.max(size.Y, CARD_HEIGHT + 40)
-		scroll.CanvasSize = UDim2.fromOffset(size.X, height)
-		scroll.ScrollingEnabled = height > size.Y
-		card.Size = UDim2.fromOffset(math.clamp(size.X - 40, 1, 354), CARD_HEIGHT)
-		card.Position = UDim2.fromOffset(size.X / 2, (height - CARD_HEIGHT) / 2)
+local Shared=game:GetService("ReplicatedStorage").Shared
+local GuiService=game:GetService("GuiService")
+local UserInputService=game:GetService("UserInputService")
+local Palette=require(Shared.DeckPalette)
+local Themes=require(Shared.DeckThemes)
+local Stickers=require(Shared.DeckStickers)
+local Trials=require(Shared.PocketTrials)
+local Art=require(script.Parent.DeckArt)
+local Picker={};Picker.__index=Picker
+local function visibleSelection(node)
+	if not node or not node.Parent or not node:IsA("GuiObject") or not node.Selectable then return nil end
+	local playerGui=game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+	if not playerGui or not node:IsDescendantOf(playerGui) then return nil end
+	local ancestor=node
+	while ancestor do
+		if ancestor:IsA("GuiObject") and not ancestor.Visible then return nil end
+		if ancestor:IsA("ScreenGui") and not ancestor.Enabled then return nil end
+		ancestor=ancestor.Parent
 	end
-	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
-	layout()
-	Art.panel(card, 12)
-
-	local function tile(parent, name, position, size, color)
-		local part = make("Frame", name, {
-			Position = position, Size = size, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = 22,
-		}, parent)
-		make("UICorner", "Curve", { CornerRadius = UDim.new(0, 5) }, part)
-		return part
-	end
-
-	local display = tile(card, "Display", UDim2.fromOffset(9, 56), UDim2.new(1, -18, 0, 94), Art.Ink)
-	Art.stroke(display, Art.Line)
-	local shell = tile(display, "Preview", UDim2.new(0.5, -51, 0, 15), UDim2.fromOffset(102, 63), Palette.Shell)
-	Art.shade(shell, 1, 0.75)
-	Art.stroke(shell, Art.Muted, 0.45)
-	local previewName = Art.text(display, "PreviewName", "", UDim2.fromOffset(9, 68),
-		UDim2.new(0.5, -64, 0, 16), Art.Muted, 11)
-	previewName.TextXAlignment = Enum.TextXAlignment.Left
-	local deckId = Art.text(display, "Model", "PD·01", UDim2.new(0.5, 57, 0, 68),
-		UDim2.new(0.5, -67, 0, 16), Art.Muted, 11)
-	deckId.TextXAlignment = Enum.TextXAlignment.Right
-	local bezel = tile(shell, "Bezel", UDim2.fromOffset(29, 5), UDim2.fromOffset(44, 53), Palette.Rim)
-	local screen = tile(bezel, "Screen", UDim2.fromOffset(4, 3), UDim2.fromOffset(36, 47), Palette.Tray)
-	tile(screen, "SmallEgg", UDim2.fromOffset(6, 34), UDim2.fromOffset(8, 8), Palette.JellyBlue)
-	tile(screen, "BigEgg", UDim2.fromOffset(17, 29), UDim2.fromOffset(13, 13), Palette.Ember)
-	tile(shell, "AimRocker", UDim2.fromOffset(7, 25), UDim2.fromOffset(16, 7), Palette.Ink)
-	local buttonA = tile(shell, "A", UDim2.fromOffset(80, 23), UDim2.fromOffset(13, 13), Palette.Primary)
-	tile(shell, "Customize", UDim2.fromOffset(8, 46), UDim2.fromOffset(14, 4), Palette.Ink)
-	tile(shell, "Lounge", UDim2.fromOffset(8, 54), UDim2.fromOffset(14, 4), Palette.Ink)
-	local sticker = label("TextLabel", "Sticker", "", shell, Palette.Primary)
-	sticker.Position = UDim2.fromOffset(80, 40)
-	sticker.Size = UDim2.fromOffset(13, 13)
-	sticker.TextSize = 12
-	sticker.Rotation = -11
-	sticker.ZIndex = 23
-	make("UICorner", "Curve", { CornerRadius = UDim.new(0, 3) }, sticker)
-
-	local function button(name, title, position, size, color)
-		local control = label("TextButton", name, title, card, color)
-		control.Position, control.Size = position, size
-		control.ZIndex = 22
-		Art.button(control, 6)
-		control.TextColor3 = Art.Silver
-		return control
-	end
-	local self = setmetatable({
-		shade = shade, scroll = scroll, shell = shell, bezel = bezel, buttonA = buttonA,
-		display = display, previewName = previewName,
-		sticker = sticker, choices = { Shell = {}, Sticker = {} }, tabs = {}, rows = {},
-		onPreview = onPreview, onClose = onClose,
-	}, Picker)
-	for index, tab in ipairs({ "Shell", "Sticker", "Club" }) do
-		local control = button(tab .. "Tab", tab, UDim2.new((index - 1) / 3, 7, 0, 6),
-			UDim2.new(1 / 3, -14, 0, 44), Art.Raised)
-		local bar = Art.frame(control, "SelectedTab", Art.Cyan, UDim2.new(0.25, 0, 1, -3), UDim2.new(0.5, 0, 0, 2))
-		Art.corner(bar, 1)
-		self.tabs[tab] = control
-		control.Activated:Connect(function()
-			self:showTab(tab)
-		end)
-		if tab == "Club" then
-			continue
-		end
-		local catalog = if tab == "Shell" then Themes else Stickers
-		local columns = if tab == "Shell" then #catalog.Order else 3
-		for slot, id in ipairs(catalog.Order) do
-			local option = catalog.ById[id]
-			local width = 1 / columns
-			local swatch = button(id, option.name, UDim2.new((slot - 1) % columns * width, 5, 0, 156 + math.floor((slot - 1) / columns) * 49),
-				UDim2.new(width, -9, 0, 44), Art.Raised)
-			swatch.TextSize = 12
-			swatch.TextWrapped = true
-			swatch.TextYAlignment = Enum.TextYAlignment.Bottom
-			make("UIPadding", "LabelInset", { PaddingBottom = UDim.new(0, 4) }, swatch)
-			Art.text(swatch, "Chip", if tab == "Shell" then "■" else option.mark or "–",
-				UDim2.fromOffset(0, 2), UDim2.new(1, 0, 0, 21), option.buttons or option.color or Art.Muted, 19)
-			self.choices[tab][id] = make("UIStroke", "Selection", {
-				Color = Art.Cyan, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Enabled = false,
-			}, swatch)
-			swatch.Activated:Connect(function()
-				if tab == "Shell" then
-					self:select(id, self.stickerId)
-				else
-					self:select(self.themeId, id)
-				end
-			end)
-		end
-	end
-	local cancel = button("Cancel", "Close", UDim2.new(0, 9, 1, -50), UDim2.new(0.5, -13, 0, 44), Art.Ink)
-	local apply = button("Apply", "Equip", UDim2.new(0.5, 4, 1, -50), UDim2.new(0.5, -13, 0, 44), Art.Cyan)
-	apply.TextColor3 = Art.Ink
-	self.cancel, self.apply = cancel, apply
-	local function clubLabel(name, content, y, size, background)
-		local row = label("TextLabel", name, content, card, background)
-		row.Position, row.Size = UDim2.fromOffset(9, y), UDim2.new(1, -18, 0, 27)
-		row.TextSize, row.ZIndex, row.Visible = size, 22, false
-		row.TextColor3 = Art.Silver
-		return row
-	end
-	self.clubHeader = clubLabel("TrialHeading", "", 53, 16)
-	self.clubHeader.Font = Enum.Font.Code
-	self.clubHeader.TextColor3 = Art.Cyan
-	for index, goal in ipairs(Trials.Goals) do
-		local row = Art.frame(card, "Trial" .. goal.bit, Art.Raised, UDim2.fromOffset(9, 81 + (index - 1) * 37),
-			UDim2.new(1, -18, 0, 34), 22)
-		Art.corner(row, 5)
-		Art.pixels(row, "Badge", trialIcons[index], { X = Art.Cyan }, 2, UDim2.fromOffset(10, 9))
-		local title = Art.text(row, "Goal", goal.hint, UDim2.fromOffset(34, 0), UDim2.new(1, -105, 1, -1),
-			Art.Silver, 13, Enum.Font.GothamMedium)
-		title.TextXAlignment = Enum.TextXAlignment.Left
-		title.TextTruncate = Enum.TextTruncate.AtEnd
-		local status = Art.text(row, "Progress", "", UDim2.new(1, -66, 0, 0), UDim2.new(0, 57, 1, -1), Art.Muted, 12)
-		status.TextXAlignment = Enum.TextXAlignment.Right
-		local track = Art.frame(row, "Track", Art.Ink, UDim2.new(0, 34, 1, -4), UDim2.new(1, -44, 0, 2))
-		local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))
-		self.rows[index] = { frame = row, title = title, status = status, fill = fill }
-	end
-	self.reward = clubLabel("Reward", "", 193, 12)
-	Art.insignia(self.reward, 1, UDim2.fromOffset(5, 9), Art.Amber, 23)
-	self.sound = button("SoundSetting", "", UDim2.fromOffset(9, 223), UDim2.new(0.5, -13, 0, 44), Art.Raised)
-	self.motion = button("MotionSetting", "", UDim2.new(0.5, 4, 0, 223), UDim2.new(0.5, -13, 0, 44), Art.Raised)
-	self.sound.TextSize, self.motion.TextSize = 14, 14
-	self.sound.Activated:Connect(function()
-		onSetting("sound")
-	end)
-	self.motion.Activated:Connect(function()
-		onSetting("motion")
-	end)
-	cancel.Activated:Connect(function()
-		self:close()
-	end)
-	apply.Activated:Connect(function()
-		local themeId, stickerId = self.themeId, self.stickerId
-		self:close()
-		onApply(themeId, stickerId)
-	end)
-	return self
+	return node
 end
+local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
+local function text(parent,name,value,role)
+	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Silver,16)
+	Art.type(node,role);node.TextXAlignment=Enum.TextXAlignment.Left;return node
+end
+local function button(parent,name,value,action)
+	local node=Instance.new("TextButton");node.Name,node.Text,node.Parent=name,value,parent
+	node.BackgroundColor3,node.TextColor3,node.BorderSizePixel,node.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
+	Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
+end
+local function panel(parent,name,color)
+	local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(100,44),parent.ZIndex+1)
+	Art.corner(node,8);return node
+end
+function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
+	local shade=Art.frame(gui,"DeckPicker",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
+	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
+	local card=panel(shade,"Card",Art.Surface);card.AnchorPoint=Vector2.new(.5,0);card.Position=UDim2.fromScale(.5,.5);Art.panel(card,16)
+	local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
+	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,card.ZIndex+1
+	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
+	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
+	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={}},rows={},
+		onPreview=onPreview,onClose=onClose,onApply=onApply,onSetting=onSetting,active="Shell"},Picker)
+	self.heading=text(card,"Heading","Deck style","Heading")
+	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
+	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
+	for _,entry in ipairs({{1,45},{5,-45}})do
+		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
+	end
+	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
+	self.cancel=Art.close(button(card,"Close","×",function()self:close()end));self.closeButton=self.cancel
+	self.apply=button(card,"Apply","Equip",function()self:applyPreview()end);self.apply.BackgroundColor3,self.apply.TextColor3=Art.Leaf,Art.Ink
+	for _,tab in ipairs({"Shell","Sticker","Club"})do
+		self.tabs[tab]=button(card,tab.."Tab",tab,function()self:showTab(tab)end)
+	end
+	self.display=panel(scroll,"Display",Art.Inset)
+	self.previewName=text(self.display,"PreviewName","Scout","Action")
+	self.previewNote=text(self.display,"PreviewNote","Preview · Equip to save","Supporting");self.previewNote.TextColor3=Art.Muted
+	self.shell=panel(self.display,"Preview",Palette.Shell);place(self.shell,12,12,102,68)
+	self.face=panel(self.shell,"Face",Palette.Shell);place(self.face,4,4,94,60)
+	self.bezel=panel(self.face,"Bezel",Palette.Rim);place(self.bezel,25,4,44,52)
+	local screen=panel(self.bezel,"Screen",Palette.Tray);place(screen,4,3,36,46)
+	local small=panel(screen,"SmallEgg",Palette.JellyBlue);place(small,6,31,8,8)
+	local big=panel(screen,"BigEgg",Palette.Ember);place(big,17,26,13,13)
+	local rocker=panel(self.face,"AimRocker",Palette.Ink);place(rocker,5,24,16,7)
+	self.buttonA=panel(self.face,"A",Palette.Primary);place(self.buttonA,76,23,13,13)
+	self.sticker=Art.text(self.face,"Sticker","",UDim2.fromOffset(75,40),UDim2.fromOffset(14,14),Art.Amber,12);self.sticker.Rotation=-11
+	-- These are graphic marks inside miniature hardware, not readable UI words.
+	Art.fitText(self.sticker,12,10,0,false)
+	local stickerInset=self.sticker:FindFirstChildOfClass("UIPadding");stickerInset.PaddingTop,stickerInset.PaddingBottom=UDim.new(0,0),UDim.new(0,0)
+	for _,tab in ipairs({"Shell","Sticker"})do
+		local catalog=if tab=="Shell"then Themes else Stickers
+		for _,id in ipairs(catalog.Order)do
+			local option=catalog.ById[id]
+			local swatch=button(scroll,id,"",function()self:activateChoice(tab,id)end)
+			local chip=panel(swatch,"Chip",if tab=="Shell"then option.shell else Art.Inset)
+			if tab=="Shell"then
+				local face=panel(chip,"Face",option.face or option.shell);place(face,3,3,36,24)
+				local accent=panel(face,"Accent",option.buttons);place(accent,25,6,8,8)
+			else
+				chip.BackgroundTransparency=1
+				local mark=Art.text(chip,"Mark",option.mark or "–",UDim2.fromScale(0,0),UDim2.fromScale(1,1),option.color or Art.Muted,24)
+				mark.Font=Enum.Font.GothamBold;Art.fitText(mark,24,18,0,false)
+				local inset=mark:FindFirstChildOfClass("UIPadding");inset.PaddingTop,inset.PaddingBottom=UDim.new(0,0),UDim.new(0,0)
+			end
+			text(swatch,"Caption",option.name,"Body")
+			local stroke=Instance.new("UIStroke");stroke.Name,stroke.Color,stroke.Thickness,stroke.Enabled,stroke.Parent="Selection",Art.Amber,2,false,swatch
+			self.choices[tab][id]=stroke
+		end
+	end
+	self.clubHeader=text(scroll,"TrialHeading","Pocket trials","Heading")
+	for index,goal in ipairs(Trials.Goals)do
+		local row=panel(scroll,"Trial"..goal.bit,Art.Raised)
+		local title=text(row,"Goal",goal.hint,"Body")
+		local status=text(row,"Progress","","Supporting");status.TextColor3=Art.Muted
+		local track=panel(row,"Track",Art.Ink);local fill=panel(track,"Fill",Art.Leaf)
+		self.rows[index]={frame=row,title=title,status=status,fill=fill}
+	end
+	self.reward=text(scroll,"Reward","Finish all three to earn the Club sticker","Supporting");self.reward.TextColor3=Art.Muted
+	self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
+	self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
+	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
+	Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
+	self:showTab("Shell");return self
+end
+function Picker:layout()
+	if self.layingOut then return end;self.layingOut=true
+	local size=self.shade.AbsoluteSize;local short=size.Y<220
+	local width=math.max(1,math.min(620,size.X-24));local pad=if short then 8 else 16
+	local usable=width-pad*2;local bodyW=usable-8
+	Art.type(self.heading,"Heading",false)
+	self.heading.Visible=not short
+	local headingH=Art.textHeight(self.heading,usable-56,32)
+	local tabsY=if short then 4 else math.max(44,headingH)+12
+	local tabW=if short then (usable-64)/3 else (usable-12)/3
+	local tabH=44
+	for _,tab in pairs(self.tabs)do
+		Art.type(tab,if short then "Body" else "Action",short)
+		tabH=math.max(tabH,Art.textHeight(tab,tabW,0)+(if short then 8 else 12))
+	end
+	local header=tabsY+tabH+4
+	Art.type(self.apply,if short then "Body"else "Action",short)
+	local footerH=math.max(44,Art.textHeight(self.apply,usable,0)+(if short then 8 else 12))
+	local footer=if self.active=="Club"then 0 else footerH+8
+	local maximum=math.max(1,size.Y-(if short then 8 else 24))
+	local bodyBudget=math.max(44,maximum-header-footerH-12)
+	local function layoutBody(active)
+	local y=4
+	if active~="Club"then
+		Art.type(self.previewName,"Action",short);Art.type(self.previewNote,"Supporting",short)
 
+		local catalog=if active=="Shell"then Themes else Stickers
+		local minW=150
+		for _,id in ipairs(catalog.Order)do local caption=self.choices[active][id].Parent.Caption;Art.type(caption,"Body",short);minW=math.max(minW,Art.textWidth(caption)+76)end
+		local columns=math.max(1,math.min(3,math.floor((bodyW+8)/(minW+8))))
+		local swatchW=(bodyW-8-(columns-1)*8)/columns;local rowH=44
+		local labelPad=if short then 4 else 8
+		for _,id in ipairs(catalog.Order)do rowH=math.max(rowH,Art.textHeight(self.choices[active][id].Parent.Caption,swatchW-68,0)+labelPad*2)end
+		local nameW=math.max(1,bodyW-148)
+		local nameH=Art.textHeight(self.previewName,nameW,24)
+		local noteH=Art.textHeight(self.previewNote,nameW,22)
+		local fullHeight=math.max(92,nameH+noteH+28)
+		local compactNameW=math.max(1,bodyW-96)
+		local compactNameH=Art.textHeight(self.previewName,compactNameW,24)
+		local compactHeight=math.max(48,compactNameH+8)
+		local mode,displayH,gap="hidden",0,0
+		y=if bodyBudget>=rowH+8 then 4 else 0
+		if y+fullHeight+12+rowH+4<=bodyBudget then mode,displayH,gap="full",fullHeight,12
+		elseif y+compactHeight+8+rowH+4<=bodyBudget then mode,displayH,gap="compact",compactHeight,8 end
+		if active==self.active then
+			self.previewMode=mode;self.display.Visible=mode~="hidden";self.previewNote.Visible=mode=="full"
+			local scale=self.shell:FindFirstChild("PreviewScale")
+			if not scale then scale=Instance.new("UIScale");scale.Name,scale.Parent="PreviewScale",self.shell end
+			scale.Scale=if mode=="compact"then .5 else 1
+			self.shell.Position=if mode=="compact"then UDim2.fromOffset(10,(displayH-34)/2)else UDim2.fromOffset(12,12)
+			place(self.display,4,y,bodyW-8,displayH)
+			if mode=="compact"then place(self.previewName,78,4,compactNameW,compactNameH)
+			else place(self.previewName,130,12,nameW,nameH);place(self.previewNote,130,16+nameH,nameW,noteH)end
+		end
+		y+=displayH+gap
+
+		for index,id in ipairs(catalog.Order)do
+			local swatch=self.choices[active][id].Parent
+			place(swatch,4+(index-1)%columns*(swatchW+8),y+math.floor((index-1)/columns)*(rowH+8),swatchW,rowH)
+			place(swatch.Chip,10,(rowH-30)/2,42,30);place(swatch.Caption,60,labelPad,swatchW-68,rowH-labelPad*2)
+		end
+		y+=math.ceil(#catalog.Order/columns)*(rowH+8)
+	else
+		Art.type(self.clubHeader,"Heading",short);local h=Art.textHeight(self.clubHeader,bodyW-8,28)
+		place(self.clubHeader,4,y,bodyW-8,h);y+=h+12
+		for _,row in ipairs(self.rows)do
+			Art.type(row.title,"Body",short);Art.type(row.status,"Supporting",short)
+			local th=Art.textHeight(row.title,bodyW-32,24);local sh=Art.textHeight(row.status,bodyW-32,22)
+			local h=th+sh+30;place(row.frame,4,y,bodyW-8,h)
+			place(row.title,12,8,bodyW-32,th);place(row.status,12,12+th,bodyW-32,sh)
+			place(row.fill.Parent,12,h-10,bodyW-32,4);row.fill.Size=UDim2.fromScale(row.fill:GetAttribute("Progress") or 0,1)
+			y+=h+8
+		end
+		Art.type(self.reward,"Supporting",short);local h=Art.textHeight(self.reward,bodyW-8,24)
+		place(self.reward,4,y,bodyW-8,h);y+=h+12
+		for _,control in ipairs({self.sound,self.motion})do
+			Art.type(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
+			place(control,4,y,bodyW-8,h);y+=h+8
+		end
+	end
+	return y
+	end
+	local heights={Shell=layoutBody("Shell"),Sticker=layoutBody("Sticker"),Club=layoutBody("Club")}
+	local y=heights[self.active]
+
+	if self.safeTop==nil or self.layoutRootSize~=size then
+		local tallest=header+math.max(heights.Shell+footerH+8,heights.Sticker+footerH+8,heights.Club)+8
+		self.safeTop=math.max(0,(size.Y-math.min(maximum,tallest))/2);self.layoutRootSize=size
+	end
+	local height=math.min(maximum,math.max(1,size.Y-self.safeTop-4),header+y+footer+8)
+	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
+	place(self.heading,pad,4,usable-56,headingH);place(self.cancel,width-pad-44,4,44,44)
+	for index,tab in ipairs({"Shell","Sticker","Club"})do place(self.tabs[tab],pad+(index-1)*(tabW+6),tabsY,tabW,tabH)end
+	place(self.scroll,pad,header,usable,math.max(44,height-header-footer-4))
+	place(self.apply,pad,height-footerH-4,usable,footerH)
+	self.scroll.CanvasSize=UDim2.fromOffset(0,y)
+	place(self.moreCue,width-pad-12,header+self.scroll.Size.Y.Offset-20,12,20)
+	self.scroll.CanvasPosition=Vector2.new(0,math.clamp(self.scroll.CanvasPosition.Y,0,math.max(0,y-self.scroll.Size.Y.Offset)))
+	self:refreshScrollCue();self.layingOut=false
+end
+function Picker:refreshScrollCue()
+	local height=self.scroll.AbsoluteSize.Y
+	local overflow=self.scroll.CanvasSize.Y.Offset>height+1
+	self.scroll.ScrollingEnabled=overflow;self.scroll.ScrollBarImageTransparency=if overflow then 0 else 1
+	self.moreCue.Visible=overflow and self.scroll.CanvasPosition.Y+height<self.scroll.CanvasSize.Y.Offset-1
+end
 function Picker:showTab(active)
-	self.active = active
-	local club = active == "Club"
-	self.display.Visible = not club
-	self.apply.Visible = not club
-	self.cancel.Size = UDim2.new(if club then 1 else 0.5, if club then -18 else -13, 0, 44)
-	self.clubHeader.Visible, self.reward.Visible, self.sound.Visible, self.motion.Visible = club, club, club, club
-	for _, row in ipairs(self.rows) do
-		row.frame.Visible = club
-	end
-	for tab, control in pairs(self.tabs) do
-		control.BackgroundColor3 = if tab == active then Art.Raised else Art.Ink
-		control.TextColor3 = if tab == active then Art.Cyan else Art.Silver
-		control.SelectedTab.Visible = tab == active
-	end
-	for tab, choices in pairs(self.choices) do
-		local visible = tab == active
-		for _, stroke in pairs(choices) do
-			stroke.Parent.Visible = visible
-		end
-	end
+	if not self.tabs[active]then return end
+	self.active=active;local club=active=="Club"
+	self.display.Visible,self.apply.Visible=not club,not club
+	self.clubHeader.Visible,self.reward.Visible,self.sound.Visible,self.motion.Visible=club,club,club,club
+	for _,row in ipairs(self.rows)do row.frame.Visible=club end
+	for tab,control in pairs(self.tabs)do control.BackgroundColor3=if tab==active then Art.Inset else Art.Raised;control.TextColor3=if tab==active then Art.Leaf else Art.Silver end
+	for tab,choices in pairs(self.choices)do for _,stroke in pairs(choices)do stroke.Parent.Visible=tab==active end end
+	self.scroll.CanvasPosition=Vector2.zero;self:layout()
 end
-
-function Picker:select(themeId, stickerId)
-	self.themeId, self.stickerId = themeId, stickerId
-	local theme = Themes.ById[themeId]
-	self.previewName.Text = theme.name:upper()
-	self.shell.BackgroundColor3 = theme.face or theme.shell
-	self.shell.AimRocker.BackgroundColor3 = theme.rocker or Palette.Ink
-	self.bezel.BackgroundColor3 = theme.trim
-	self.buttonA.BackgroundColor3 = theme.buttons
-	Stickers.paint(self.sticker, stickerId)
-	for choice, stroke in pairs(self.choices.Shell) do
-		stroke.Enabled = choice == themeId
-	end
-	for choice, stroke in pairs(self.choices.Sticker) do
-		stroke.Enabled = choice == stickerId
-	end
-	self.onPreview(themeId, stickerId)
+function Picker:activateChoice(tab,id)
+	local stroke=self.choices[tab]and self.choices[tab][id]
+	if not self.shade.Visible or self.active~=tab or not stroke or not stroke.Parent.Interactable then return false end
+	self:select(if tab=="Shell"then id else self.themeId,if tab=="Sticker"then id else self.stickerId);return true
 end
-
-function Picker:updateClub(owned, mask, peak, score, sound, reduced, systemReduced, inventoryMask)
-	self.sound.Text = "SFX: " .. sound
-	self.motion.Text = if systemReduced then "Motion: Roblox" elseif reduced then "Motion: Low" else "Motion: Full"
-	self.motion.Interactable = not systemReduced
-	self.motion.Selectable = not systemReduced
-	local count = 0
-	for index, goal in ipairs(Trials.Goals) do
-		local done = bit32.band(mask, goal.bit) ~= 0
-		local current = if index == 1 then peak elseif index == 2 then score else 0
-		local row = self.rows[index]
-		row.title.Text = if goal == Trials.HighRoller then (if done then "High score trial complete" else "High score · Score " .. goal.target)
-			elseif done then goal.name else goal.hint
-		row.status.Text = if done then "✓ DONE" elseif index == 3 then "0/1" else string.format("%d/%d", current, goal.target)
-		row.status.TextColor3 = if done then Color3.fromHex("#A9E34B") else Art.Muted
-		row.fill.Size = UDim2.fromScale(if done then 1 else math.min(1, current / goal.target), 1)
-		row.fill.BackgroundColor3 = if done then Color3.fromHex("#A9E34B") else Art.Cyan
-		count += if done then 1 else 0
-	end
-	self.clubHeader.Text = string.format("POCKET TRIALS   %d/%d", count, #Trials.Goals)
-	local clubComplete = Trials.clubComplete(mask)
-	self.reward.Text = if clubComplete then "Club sticker ready in the Sticker tab" else "Finish all three to earn the Club sticker"
-	self.reward.TextColor3 = if clubComplete then Art.Amber else Art.Muted
-	for id, stroke in pairs(self.choices.Sticker) do
-		local available = Stickers.canEquip(id, owned, mask, inventoryMask)
-		local swatch = stroke.Parent
-		local sticker = Stickers.ById[id]
-		swatch.Interactable = available
-		swatch.Selectable = available
-		swatch.Text = if available then sticker.name elseif sticker.trials then "Club trials" else "Hatch " .. sticker.name
-		swatch.TextColor3 = if available then Art.Silver else Art.Muted
-		swatch.Chip.TextColor3 = if available then sticker.color or Art.Muted else Art.Muted
-	end
+function Picker:applyPreview()
+	if not self.shade.Visible or self.active=="Club"then return false end
+	local themeId,stickerId=self.themeId,self.stickerId
+	self:close();self.onApply(themeId,stickerId);return true
 end
-
-function Picker:open(themeId, stickerId)
-	self.scroll.CanvasPosition = Vector2.zero
-	self.shade.Visible = true
-	self:showTab("Shell")
-	self:select(themeId, stickerId)
+function Picker:changeSetting(key)
+	local control=if key=="sound"then self.sound elseif key=="motion"then self.motion else nil
+	if not self.shade.Visible or self.active~="Club"or not control or not control.Interactable then return false end
+	self.onSetting(key);return true
 end
-
+function Picker:select(themeId,stickerId)
+	local theme=Themes.ById[themeId];if not theme or not Stickers.ById[stickerId]then return false end
+	self.themeId,self.stickerId=themeId,stickerId;self.previewName.Text=theme.name
+	self.shell.BackgroundColor3,self.face.BackgroundColor3=theme.shell,theme.face or theme.shell
+	self.face.AimRocker.BackgroundColor3=theme.rocker or Palette.Ink
+	self.bezel.BackgroundColor3,self.buttonA.BackgroundColor3=theme.trim,theme.buttons
+	Stickers.paint(self.sticker,stickerId)
+	for id,stroke in pairs(self.choices.Shell)do stroke.Enabled=id==themeId end
+	for id,stroke in pairs(self.choices.Sticker)do stroke.Enabled=id==stickerId end
+	self.onPreview(themeId,stickerId);self:layout();return true
+end
+function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask)
+	self.sound.Text="SFX: "..sound
+	self.motion.Text=if systemReduced then "Motion: Roblox"elseif reduced then "Motion: Low"else "Motion: Full"
+	self.motion.Interactable,self.motion.Selectable=not systemReduced,not systemReduced
+	local count=0
+	for index,goal in ipairs(Trials.Goals)do
+		local done=bit32.band(mask,goal.bit)~=0;local current=if index==1 then peak elseif index==2 then score else 0
+		local row=self.rows[index]
+		row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
+		row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
+		row.status.TextColor3=if done then Art.Leaf else Art.Muted
+		row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf
+		count+=if done then 1 else 0
+	end
+	self.clubHeader.Text=string.format("Pocket trials · %d/%d",count,#Trials.Goals)
+	self.reward.Text=if Trials.clubComplete(mask)then "Club sticker ready in the Sticker tab"else "Finish all three to earn the Club sticker"
+	for id,stroke in pairs(self.choices.Sticker)do
+		local available=Stickers.canEquip(id,owned,mask,inventoryMask);local swatch=stroke.Parent;local option=Stickers.ById[id]
+		swatch.Interactable,swatch.Selectable=available,available
+		swatch.Caption.Text=if available then option.name elseif option.trials then "Club trials"else "Hatch "..option.name
+		swatch.Caption.TextColor3=if available then Art.Silver else Art.Muted
+		if swatch.Chip:FindFirstChild("Mark")then swatch.Chip.Mark.TextColor3=if available then option.color or Art.Muted else Art.Muted end
+	end
+	local signature={self.sound.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
+	for _,row in ipairs(self.rows)do table.insert(signature,row.title.Text..row.status.Text)end
+	for _,id in ipairs(Stickers.Order)do table.insert(signature,self.choices.Sticker[id].Parent.Caption.Text)end
+	local key=table.concat(signature,"|")
+	if self.shade.Visible and self.clubLayoutKey~=key then self:layout()end
+	self.clubLayoutKey=key
+end
+function Picker:open(themeId,stickerId)
+	self.previousSelection=GuiService.SelectedObject;self.safeTop=nil;self.shade.Visible=true;self:showTab("Shell");self:select(themeId,stickerId)
+	if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs.Shell end
+end
 function Picker:close()
-	if self.shade.Visible then
-		self.shade.Visible = false
-		self.onClose()
+	if not self.shade.Visible then return end
+	self.shade.Visible=false;self.onClose()
+	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then
+		GuiService.SelectedObject=visibleSelection(self.previousSelection)
 	end
 end
-
 return Picker
