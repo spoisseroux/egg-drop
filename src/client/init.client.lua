@@ -32,7 +32,7 @@ local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
-local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent)}
+local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={}}
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -173,6 +173,8 @@ for index,side in ipairs({-1,1})do
 	fieldZones[index]={node=zone,side=side}
 end
 
+clientUI.centerZone=Art.frame(zoneLayer,"CenterGoalRegion",Color3.fromHex("#466853"),UDim2.fromScale(.4,.025),UDim2.fromScale(.2,.95),6)
+clientUI.centerZone.BackgroundTransparency=.79;clientUI.centerZone.Active=false;clientUI.centerZone.Selectable=false;clientUI.centerZone.Visible=false
 Art.lcdCorners(overlay,bezel.BackgroundColor3)
 local lcd = JellyLCD.new(overlay)
 local lcdStep = 1 / 30
@@ -929,6 +931,8 @@ openMenu = function()
 	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() then return end
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
+ clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+ gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"))
 	gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
 	gameMenu:open();return true
 end
@@ -1149,6 +1153,7 @@ local function shouldCoachField()
 end
 
 updateHud = function()
+ clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
@@ -1214,7 +1219,7 @@ updateHud = function()
 		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
 	layoutDropMeter()
-	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board"and rendererPresentation.canPresent(board:GetAttribute("ResetId")))
+	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	for _,cell in ipairs(segments)do cell.Visible=false end
 	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
@@ -1231,21 +1236,20 @@ updateHud = function()
 	else
 		rareGoal.Text = string.format("Beat your best\n%d pts", best)
 	end
-	if nurseryActive and owned > 0 then
-		local stage = board:GetAttribute("FieldStage") or 0
-		local phase = board:GetAttribute("FieldPhase")
-		rareGoal.Text = if phase == "Settling" then "QUEST · settling…"
-			elseif stage == 0 then "QUEST 1/2\nII + II on LEFT"
-			elseif stage == 1 then "QUEST 2/2\nII + II on RIGHT"
-			else "QUEST ✓\nKeep pile low"
-	end
-	local mode = board:GetAttribute("Mode")
-	for index, item in ipairs(fieldZones) do
-		local stage = board:GetAttribute("FieldStage") or 0
-		item.node.Visible = nurseryActive and owned > 0
-		item.node.BackgroundTransparency = if stage == index - 1 then .79 else .86
-
-	end
+ if nurseryActive and owned>0 then
+  rareGoal.Text=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase")).instruction
+ end
+ local mode=board:GetAttribute("Mode")
+ clientUI.fieldCopy=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase"))
+ for _,item in ipairs(fieldZones)do
+  item.node.Visible=nurseryActive and owned>0
+  item.node.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .79 else .86
+ end
+ clientUI.centerZone.Visible=nurseryActive and owned>0 and clientUI.fieldCopy.zone=="center"
+ if clientUI.centerZone.Visible then
+  clientUI.centerZone.Position=UDim2.fromScale(.5+clientUI.fieldCopy.goal.zone.min/(Config.Width+.8),.025)
+  clientUI.centerZone.Size=UDim2.fromScale((clientUI.fieldCopy.goal.zone.max-clientUI.fieldCopy.goal.zone.min)/(Config.Width+.8),.95)
+ end
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
@@ -1263,7 +1267,7 @@ updateHud = function()
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
 	local fieldActive = nurseryActive and owned > 0
-	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true)
+	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true,clientUI.fieldView or false)
 	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching or fieldActive then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
@@ -1284,7 +1288,7 @@ updateHud = function()
 		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
 		if nurseryActive and owned > 0 then
 			recap:updateField({ sequence = board:GetAttribute("RunSequence"), success = board:GetAttribute("FieldSuccess"), reason = board:GetAttribute("FieldReason"),
-				stage = board:GetAttribute("FieldFinalStage") or 0, status = board:GetAttribute("RewardStatus"),
+				stage = board:GetAttribute("FieldFinalStage") or 0, objective=clientUI.fieldView,phase=board:GetAttribute("FieldPhase"),status = board:GetAttribute("RewardStatus"),
 				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
 				balance = nurseryState and nurseryState.nectar or 0,
 				reward = runReceipt, receiptPending = board:GetAttribute("RewardStatus") == "Saved" and not runReceipt,
@@ -1303,7 +1307,7 @@ updateHud = function()
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	layoutWallet(instrumentLayout)
 	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
-	if gameMenu then gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
+	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
 	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
 	modalAction.Text = if rewardPending then "Saving…" elseif over then "Try again" else "Meet " .. (hatchName or "")
 	modalAction.Interactable = not rewardPending
@@ -1397,11 +1401,12 @@ layout = function()
 	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",14,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
 	local walletH=math.ceil(TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y)+4
 	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+ clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
 	local instructionCompact=l.short or l.dense or l.quest.h<60
 	if (board:GetAttribute("OwnedPets")or 0)>0 then
 		-- Field content only; welcome retains the exact pre-existing coaching band.
 		if l.lateral and not l.dense and not l.short then l.quest.y=l.wallet.y+l.wallet.h+6 end
-		DeckLayout.fitFieldQuest(l,questHUD:preferredHeight(l.quest.w,l.quest.h,instructionCompact))
+		DeckLayout.fitFieldQuest(l,questHUD:preferredHeight(l.quest.w,l.quest.h,instructionCompact,clientUI.fieldView or false))
 	end
 	DeckLayout.fitInstruments(l,dispenser:preferredHeight(l.meter.w,l.meter.h))
 	instrumentLayout=l
@@ -2044,6 +2049,12 @@ board:GetAttributeChangedSignal("RoundOver"):Connect(function()
 		audio:play(if board:GetAttribute("FieldSuccess") then "charge" else "overflow")
 	end
 end)
+for _,attribute in ipairs({"FieldObjective","RunSequence"})do
+ board:GetAttributeChangedSignal(attribute):Connect(function()
+  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+  layout();updateHud()
+ end)
+end
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 Art.watchTextPreference(backdrop,function()return backdrop.Visible end,function()layout();updateHud()end)
 backdrop:GetPropertyChangedSignal("Visible"):Connect(function()if backdrop.Visible and backdrop:GetAttribute("TextPreferenceDirty") then layout();updateHud();backdrop:SetAttribute("TextPreferenceDirty",false)end end)

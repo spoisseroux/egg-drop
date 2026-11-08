@@ -14,6 +14,7 @@ local Lounge = require(script.Lounge)
 local Progress = require(script.PlayerProgress)
 local FirstSession = require(script.FirstSession)
 local FieldRun = require(script.FieldRun)
+local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
 local Nursery = require(script.HatchProgress)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
@@ -123,6 +124,11 @@ local function publishState(board)
 	board.folder:SetAttribute("FieldStage", board.field and board.field.rootStage or 0)
 	board.folder:SetAttribute("FieldBudget", board.field and board.field.budget or nil)
 	board.folder:SetAttribute("FieldZoneBound", FieldRun.ZoneBound)
+	local objectiveKey=if board.field then board.runSequence..":"..board.field.rootStage..":"..board.field.goalProgress else ""
+	if board.objectiveKey~=objectiveKey then
+		board.objectiveKey=objectiveKey
+		board.folder:SetAttribute("FieldObjective",if board.field then HttpService:JSONEncode(board.field:public(board.runSequence))else "")
+	end
 	board.folder:SetAttribute("FieldReady", canProgress(board)
 		and (not board.field or (board.field:canDrop(board.sim.drops) and Simulation.canDrop(board.sim))))
 end
@@ -168,7 +174,12 @@ local function reset(board, preset)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
 	local field = hasPip(board) and board.nursery.status == "Ready"
-	board.field = if field then FieldRun.new() else nil
+	local descriptor
+	if field then
+		local count=board.fieldCount or 0
+		descriptor=FieldObjectives.create(FieldObjectives.next(count),Random.new():NextInteger(1,2147483646))
+		board.fieldCount=count+1
+	end
 	local selected = board.selectedFamily or NurseryCatalog.family(board.profile.companionId) or "pip"
 	board.runFamily = if FamilyMastery.ownsFamily(inventory(board), selected) then selected else "pip"
 	board.selectedFamily = board.runFamily
@@ -176,8 +187,9 @@ local function reset(board, preset)
 	board.runSequence = board.nursery.nextRunSeq
 	board.folder:SetAttribute("RunSequence", board.runSequence)
 	board.nursery.nextRunSeq += 1
+	board.field=if field then FieldRun.new({descriptor=descriptor,sequence=board.runSequence})else nil
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial,
-		if field then FieldRun.simulationOptions(Random.new():NextInteger(1, 2147483646)) else nil)
+		if field then FieldObjectives.simulationOptions(descriptor,preset) else nil)
 	board.round = Round.new(if field then FieldRun.roundOptions() else nil)
 	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
@@ -568,7 +580,7 @@ RunService.Heartbeat:Connect(function(dt)
 				board.round.score += 10 * (merge.tier + math.min(board.chain - 1, 9)) + (if merge.cleared then 100 else 0)
 				Progress.recordScore(board.profile, board.round.score)
 				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
-				if board.field then board.field:observe(merge) end
+				if board.field then board.field:observe(merge,{sequence=board.runSequence,ordinal=board.merges,chain=board.chain,playTime=board.playTime}) end
 				if not hasPip(board) and board.profile.rank < 1 then
 					Progress.chargeHatch(board.profile, merge.tier)
 				end
@@ -580,12 +592,13 @@ RunService.Heartbeat:Connect(function(dt)
 			if board.profile.rank >= 1 and not hasPip(board) then grantWelcome(player, board) end
 			if board.field then
 				local oldPhase, oldStage = board.field.phase, board.field.rootStage
+				local expired=board.field:expireChain(board.playTime,board.lastMerge)
 				local result = board.field:step(board.sim.eggs, Config.FixedStep, board.sim.drops, board.round.over)
 				if result then
 					board.round.over = true
 					settleReward(player, board)
 				end
-				if oldPhase ~= board.field.phase or oldStage ~= board.field.rootStage then publishState(board) end
+				if expired or oldPhase ~= board.field.phase or oldStage ~= board.field.rootStage then publishState(board) end
 			end
 			if #merged > 0 or board.round.over then
 				publishState(board)

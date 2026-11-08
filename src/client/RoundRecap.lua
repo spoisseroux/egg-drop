@@ -254,10 +254,10 @@ function Recap:updateField(result)
 		string.format("Nectar +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
 	local egg = if balance >= cost then result.recipe.name .. " · ready to hatch"
 		else string.format("%s · %d/%d · need %d nectar", result.recipe.name, balance, cost, cost - balance)
-	local hint = if result.reason == "Overflow" then "Merge below the line to clear its warning."
-		elseif result.success then "Your quest earns nectar for eggs."
-		elseif result.stage == 0 then "Make II + II on LEFT, then RIGHT."
-		else "LEFT is done. Make II + II on RIGHT."
+ local hint=if result.reason=="Overflow"and(result.stage or 0)>=2 then "Both goals done · clear the overflow line"
+  elseif result.reason=="Overflow"then "Merge below the line to clear its warning."
+  elseif result.success then "Both goals and 24 drops earn nectar for eggs."
+  else Receipt.questHint(result)
 	self.fullFieldDetail = if loading then "Waiting for this round's saved receipt."
 		elseif saving then "Rewards appear after saving. Please wait." else hint .. "\n" .. egg
 	self.shortFieldDetail = if loading then "Waiting for this round's saved receipt."
@@ -278,13 +278,9 @@ function Recap:updateField(result)
 			table.insert(lines,"Score "..self.statTargets[1].." · Personal best "..(self.statBest or 0))
 			table.insert(lines,"Longest chain ×"..self.statTargets[2].." · Tier V clears "..self.statTargets[3])
 		end
-		if not result.success then
-			table.insert(lines, if result.reason == "Overflow" and result.stage >= 2 then "Both sides done · clear the overflow line"
-				elseif result.reason == "Overflow" then "Clear the overflow warning before retrying"
-				elseif result.stage == 0 then "Next round: match on LEFT, then RIGHT"
-				elseif result.stage == 1 then "LEFT done · match on RIGHT next round"
-				else "Both sides done · survive all 24 drops")
-		end
+  local fieldDetails=Receipt.questDetails(result)
+  if fieldDetails then table.insert(lines,fieldDetails)end
+  if not result.success then table.insert(lines,Receipt.questHint(result))end
 		for _, id in ipairs(reward.contracts or {}) do
 			for _, contract in ipairs(Daily.Definitions) do
 				if contract.id == id then table.insert(lines, string.format("%s · %d nectar", contract.title, contract.reward)); break end
@@ -293,7 +289,7 @@ function Recap:updateField(result)
 		local family = Receipt.familyName(reward.family)
 		local marks = reward.masteryPoints or 0
 		table.insert(lines, if marks > 0 then string.format("%s mastery +%d %s", family, marks, if marks == 1 then "mark" else "marks")
-			else "No family marks · finish quest and 24 drops")
+			else "No family marks · finish both goals and 24 drops")
 		if (reward.promotedTo or 0) > 0 then table.insert(lines, family .. " rank " .. (ranks[reward.promotedTo] or "III") .. " unlocked!") end
 		local mastery = result.mastery
 		if mastery then

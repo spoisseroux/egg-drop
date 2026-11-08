@@ -7,6 +7,7 @@ local FamilyCrest = require(script.Parent.FamilyCrest)
 local Portrait = require(script.Parent.PetPortrait)
 local EggArt = require(script.Parent.EggArt)
 local SaveNotice=require(script.Parent.SaveNotice)
+local QuestCopy=require(script.Parent.FieldQuestText)
 local Menu = {}
 Menu.__index = Menu
 local names = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
@@ -80,7 +81,7 @@ function Menu.new(parent,callbacks)
 	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
 	local card=Art.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(680,430),29)
 	card.AnchorPoint=Vector2.new(.5,0);Art.panel(card,18)
-	local self=setmetatable({shade=shade,card=card,parent=parent,callbacks=callbacks,pages={},tabs={},destinations={},daily={},dailyCards={},families={},familyCards={},familyText={},familyHints={},page="play",state={}},Menu)
+	local self=setmetatable({shade=shade,card=card,parent=parent,callbacks=callbacks,pages={},tabs={},destinations={},daily={},dailyCards={},families={},familyCards={},familyText={},familyHints={},page="play",state={},connections={}},Menu)
 	self.heading=text(card,"Heading","Pocket menu","Heading")
 	self.wallet=decoration(card,"Wallet",UDim2.fromOffset(0,0),UDim2.fromOffset(180,28),"inset",8)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
@@ -114,7 +115,7 @@ function Menu.new(parent,callbacks)
 	self.recipePanel=decoration(self.pages.play,"EggGoalPanel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64),"inset",10)
 	EggArt.create(self.recipePanel,"meadow",UDim2.fromOffset(10,9),UDim2.fromOffset(34,44),self.recipePanel.ZIndex+1)
 	self.recipe=text(self.recipePanel,"EggGoal","Mixed Meadow · 0/18 nectar","Body")
-	self.playHint=text(self.pages.play,"NectarPurpose","Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2.","Supporting","muted")
+	self.playHint=text(self.pages.play,"NectarPurpose","Complete both goals to earn nectar. Keep the pile low for +2.","Supporting","muted")
 	for index=1,3 do
 		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),"raised",12)
 		local icon=Art.frame(panel,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
@@ -139,14 +140,32 @@ function Menu.new(parent,callbacks)
 		self.familyText[family]=text(panel,"Progress_"..family,"Not discovered","Supporting")
 		self.familyHints[family]=text(panel,"Reward_"..family,"Hatch a member of this family to begin mastery.","Body","muted")
 	end
-	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
-	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
-	body:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
-	Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
+ local function watch(signal,callback)
+  table.insert(self.connections,signal:Connect(function(...)if self:isLive()then callback(...)end end))
+ end
+ watch(parent:GetPropertyChangedSignal("AbsoluteSize"),function()self:layout()end)
+ watch(body:GetPropertyChangedSignal("AbsoluteSize"),function()self:refreshScrollCue()end)
+ watch(body:GetPropertyChangedSignal("CanvasPosition"),function()self:refreshScrollCue()end)
+ table.insert(self.connections,Art.watchTextPreference(shade,function()return self:isLive()and shade.Visible end,function()self:refreshTextPreference()end))
+ shade.Destroying:Connect(function()
+  if self.destroyed then return end
+  self.destroyed=true
+  for _,connection in ipairs(self.connections)do connection:Disconnect()end
+  table.clear(self.connections)
+ end)
 	self:setPage("play");self:layout()
 	return self
 end
+function Menu:isLive()
+ return not self.destroyed and self.shade.Parent~=nil and self.parent.Parent~=nil
+  and self.card.Parent==self.shade and self.wallet.Parent~=nil and self.nectar.Parent~=nil and self.body.Parent==self.card
+end
+function Menu:refreshTextPreference()
+ if not self:isLive()then return false end
+ self.safeTop=nil;self:layout();return true
+end
 function Menu:activate(key,value)
+ if not self:isLive()then return false end
 	if not self.shade.Visible then return false end
 	if key=="daily" and not self.dailyButton.Interactable then return false end
 	if key=="family" and (not self.families[value] or not self.families[value].Interactable) then return false end
@@ -154,7 +173,7 @@ function Menu:activate(key,value)
 	local accepted=callback(value);if accepted==false then return false end;if self.onAccepted then self.onAccepted(if key=="close"then "back"else "confirm")end;return true
 end
 function Menu:layout()
-	if self.layingOut then return end
+ if not self:isLive()or self.layingOut then return false end
 	self.layingOut=true
 	local size=self.parent.AbsoluteSize
 	local width=math.max(1,math.min(680,size.X-24))
@@ -190,6 +209,7 @@ function Menu:layout()
 	self:refreshScrollCue();self.layingOut=false
 end
 function Menu:layoutContents(wanted)
+ if not self:isLive()then return false end
 	if not self.width then return end
 	self.layoutPasses=(self.layoutPasses or 0)+1
 	self.pageHeights=self.pageHeights or {}
@@ -318,11 +338,13 @@ function Menu:layoutContents(wanted)
 	self:refreshScrollCue()
 end
 function Menu:refreshScrollCue()
+ if not self:isLive()then return false end
 	local overflow=self.body.CanvasSize.Y.Offset>self.body.AbsoluteSize.Y+1
 	self.body.ScrollingEnabled=overflow;self.body.ScrollBarImageTransparency=if overflow then 0 else 1
 	self.moreCue.Visible=overflow and self.body.CanvasPosition.Y+self.body.AbsoluteSize.Y<self.body.CanvasSize.Y.Offset-1
 end
 function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
+ if not self:isLive()then return false end
 	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
 	self.nectar.Text = tostring(state.nectar or 0)
 	local recipe = Catalog.ById[recipeId] or Catalog.ById.meadow
@@ -374,7 +396,8 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	self.familyNote.Text = "Next round: " .. (names[selected] or "Pip") .. (if runFamily and runFamily ~= selected then " · Current run: " .. (names[runFamily] or "Pip") else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
 	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
 	if not self.shade.Visible then self.heading.Text=self.headerTitle end
-	self.playHint.Text="Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2."
+	local objective=if self.fieldObjective==nil then QuestCopy.legacy(0)elseif self.fieldObjective==false then nil else self.fieldObjective
+ self.playHint.Text=QuestCopy.menu(objective,self.fieldPhase)..(if objective and objective.empty then "\nKeep the pile low for +2."else "\nComplete both goals and 24 drops to earn nectar. Keep the pile low for +2.")
 	if self.saveNotice then
 		self.playHint.Text=self.saveNotice.detail.."\n"..self.playHint.Text
 		self.dailyHint.Text=self.saveNotice.detail.."\n"..self.dailyHint.Text
@@ -395,17 +418,27 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	end
 end
 
+function Menu:setFieldObjective(objective,phase)
+ if not self:isLive()then return false end
+ if self.fieldObjective==objective and self.fieldPhase==phase then return false end
+ self.fieldObjective,self.fieldPhase=objective,phase
+ self:update(self.state,self.selectedFamily,self.runFamily,self.card:GetAttribute("RunScore"),self.card:GetAttribute("RunChain"),self.card:GetAttribute("PersonalBest"),self.recipeId)
+ return true
+end
 function Menu:setSaveNotice(notice)
+ if not self:isLive()then return false end
 	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
 	self.saveNotice=notice
 	self:update(self.state,self.selectedFamily,self.runFamily,self.card:GetAttribute("RunScore"),self.card:GetAttribute("RunChain"),self.card:GetAttribute("PersonalBest"),self.recipeId)
 	self:layout();return true
 end
 function Menu:activatePage(key)
+ if not self:isLive()then return false end
  if not self.shade.Visible or self.page==key or not self.pages[key]then return false end
  self:setPage(key);if self.onAccepted then self.onAccepted("tab")end;return true
 end
 function Menu:setPage(key)
+ if not self:isLive()then return false end
 	if not self.pages[key] then return end
 	self.page=key
 	for name,page in pairs(self.pages) do page.Visible=name==key end
@@ -414,14 +447,17 @@ function Menu:setPage(key)
 	self.body.CanvasPosition=Vector2.zero;self:layout()
 end
 function Menu:bumpControllerEpoch()
+ if not self:isLive()then return false end
 	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
 end
 function Menu:getControllerFocus()
+ if not self:isLive()then return nil end
 	if not self.shade.Visible then return nil end
 	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
 		target=function()return self.tabs[self.page]or self.closeButton end,fallback=self.closeButton}
 end
 function Menu:open()
+ if not self:isLive()then return false end
 	self:bumpControllerEpoch()
 	self.previousSelection=GuiService.SelectedObject
 	self.body.CanvasPosition=Vector2.zero
@@ -430,6 +466,7 @@ function Menu:open()
 	if string.match(game:GetService("UserInputService"):GetLastInputType().Name,"^Gamepad") then GuiService.SelectedObject=self.closeButton end
 end
 function Menu:close()
+ if not self:isLive()then return false end
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	self.shade.Visible=false
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then

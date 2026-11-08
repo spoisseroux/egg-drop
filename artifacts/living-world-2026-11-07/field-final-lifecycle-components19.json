@@ -1,0 +1,42 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "MenuLifecycle",
+    "result": [
+      "live resize and preferred-text reflow retain wallet and pinned close",
+      "same-step teardown fences queued preference work and parent resize",
+      "all external resize/scroll/preference connections disconnect",
+      "late providers and stale actions do not mutate detached menu or send",
+      "a replacement menu still responds without reviving prior listeners"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FieldQuestLayout",
+    "result": [
+      "1649, 971 every active goal count expiry complete and save recovery fits",
+      "1649, 971 Menu exposes metadata without replacing live actions or selection",
+      "733, 307 every active goal count expiry complete and save recovery fits",
+      "733, 307 Menu exposes metadata without replacing live actions or selection",
+      "568, 160 every active goal count expiry complete and save recovery fits",
+      "568, 160 Menu exposes metadata without replacing live actions or selection",
+      "385, 703 every active goal count expiry complete and save recovery fits",
+      "385, 703 Menu exposes metadata without replacing live actions or selection"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DispenserFeedback",
+    "result": [
+      "first snapshot is static; one accepted drop compresses fixed neutral instrument",
+      "duplicate HUD never rebinds compression or increments count",
+      "counter jumps and run replacement remain silent static snapshots",
+      "reduced fade retains count without moving train or outline",
+      "covered field keeps exact static counter and returns without another drop",
+      "cover cancellation stops both effects without replay on uncover"
+    ]
+  }
+]

@@ -36,9 +36,10 @@ function Simulation.new(preset, serial, options)
 		end
 		board.seed = options.seed
 	end
-	if options.kick ~= nil then
+	if options.kick ~= nil or options.bounce~=nil then
 		board.physics = table.clone(Config.Presets[preset])
-		board.physics.kick = options.kick
+		if options.kick~=nil then board.physics.kick = options.kick end
+		if options.bounce~=nil then board.physics.bounce=options.bounce end
 	end
 	for _, seed in ipairs(options.starter or Config.Starter) do
 		addEgg(board, Vector2.new(seed.x, Config.Tiers[seed.tier].radius), seed.tier)

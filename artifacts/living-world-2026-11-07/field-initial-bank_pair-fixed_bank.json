@@ -1,0 +1,1085 @@
+{
+  "ok": true,
+  "result": {
+    "evidence": "production solver; legal host cooldown/contact gate; goal-aware timing reacts only to public first-link events",
+    "persistentWrites": false,
+    "count": 24,
+    "rows": {
+      "1": {
+        "meanFirstStageDrop": 12.958333333333334,
+        "threeDistinctWinningSeeds": false,
+        "successRate": 0.08333333333333333,
+        "policy": "fixed_bank",
+        "runs": 24,
+        "winningTraces": {
+          "1": {
+            "trace": {
+              "1": {
+                "at": 0,
+                "drop": 1,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "2": {
+                "at": 1.249999999999998,
+                "drop": 2,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "3": {
+                "at": 2.499999999999994,
+                "drop": 3,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "4": {
+                "at": 3.7499999999999893,
+                "drop": 4,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "5": {
+                "at": 5.000000000000038,
+                "drop": 5,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "6": {
+                "at": 6.2500000000001,
+                "drop": 6,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "7": {
+                "at": 7.5000000000001625,
+                "drop": 7,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "8": {
+                "at": 8.750000000000144,
+                "drop": 8,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "9": {
+                "at": 10.000000000000073,
+                "drop": 9,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "10": {
+                "at": 11.250000000000002,
+                "drop": 10,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "11": {
+                "at": 12.49999999999993,
+                "drop": 11,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "12": {
+                "at": 13.74999999999986,
+                "drop": 12,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "13": {
+                "at": 14.999999999999789,
+                "drop": 13,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "14": {
+                "at": 16.24999999999972,
+                "drop": 14,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "15": {
+                "at": 17.49999999999965,
+                "drop": 15,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "16": {
+                "at": 18.749999999999577,
+                "drop": 16,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "17": {
+                "at": 19.999999999999506,
+                "drop": 17,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "18": {
+                "at": 21.249999999999435,
+                "drop": 18,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "19": {
+                "at": 22.499999999999364,
+                "drop": 19,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "20": {
+                "at": 23.749999999999293,
+                "drop": 20,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "21": {
+                "at": 24.999999999999222,
+                "drop": 21,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "22": {
+                "at": 26.24999999999915,
+                "drop": 22,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "23": {
+                "at": 27.49999999999908,
+                "drop": 23,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "24": {
+                "at": 28.74999999999901,
+                "drop": 24,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              }
+            },
+            "seed": 40016
+          },
+          "2": {
+            "trace": {
+              "1": {
+                "at": 0,
+                "drop": 1,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "2": {
+                "at": 1.249999999999998,
+                "drop": 2,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "3": {
+                "at": 2.499999999999994,
+                "drop": 3,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "4": {
+                "at": 3.7499999999999893,
+                "drop": 4,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "5": {
+                "at": 5.000000000000038,
+                "drop": 5,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "6": {
+                "at": 6.2500000000001,
+                "drop": 6,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "7": {
+                "at": 7.5000000000001625,
+                "drop": 7,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "8": {
+                "at": 8.750000000000144,
+                "drop": 8,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "9": {
+                "at": 10.000000000000073,
+                "drop": 9,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "10": {
+                "at": 11.250000000000002,
+                "drop": 10,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "11": {
+                "at": 12.49999999999993,
+                "drop": 11,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "12": {
+                "at": 13.74999999999986,
+                "drop": 12,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "13": {
+                "at": 14.999999999999789,
+                "drop": 13,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "14": {
+                "at": 16.24999999999972,
+                "drop": 14,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "15": {
+                "at": 17.49999999999965,
+                "drop": 15,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "16": {
+                "at": 18.749999999999577,
+                "drop": 16,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "17": {
+                "at": 19.999999999999506,
+                "drop": 17,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "18": {
+                "at": 21.249999999999435,
+                "drop": 18,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "19": {
+                "at": 22.499999999999364,
+                "drop": 19,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "20": {
+                "at": 23.749999999999293,
+                "drop": 20,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "21": {
+                "at": 24.999999999999222,
+                "drop": 21,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "22": {
+                "at": 26.24999999999915,
+                "drop": 22,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              },
+              "23": {
+                "at": 27.49999999999908,
+                "drop": 23,
+                "tier": 2,
+                "aim": 0.08520179372197306
+              },
+              "24": {
+                "at": 28.74999999999901,
+                "drop": 24,
+                "tier": 1,
+                "aim": 0.11297071129707115
+              }
+            },
+            "seed": 40017
+          }
+        },
+        "timeouts": 0,
+        "stages": 26,
+        "overflows": 0,
+        "firstStages": 24,
+        "meanReward": 0.5833333333333334,
+        "wins": 2,
+        "meanStages": 1.0833333333333333,
+        "firstStageRate": 1,
+        "template": "bank_pair",
+        "firstStageDropSum": 311,
+        "successfulSeeds": {
+          "1": 40016,
+          "2": 40017
+        },
+        "reward": 14
+      }
+    },
+    "samples": {
+      "1": {
+        "score": 640,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.668665504455566,
+        "firstStageDrop": 19,
+        "overflow": false,
+        "success": false,
+        "seed": 40001,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "2": {
+        "score": 710,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.414534187316894,
+        "firstStageDrop": 14,
+        "overflow": false,
+        "success": false,
+        "seed": 40002,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 19
+      },
+      "3": {
+        "score": 620,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 6.766527271270752,
+        "firstStageDrop": 22,
+        "overflow": false,
+        "success": false,
+        "seed": 40003,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 17
+      },
+      "4": {
+        "score": 640,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.148734664916992,
+        "firstStageDrop": 9,
+        "overflow": false,
+        "success": false,
+        "seed": 40004,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "5": {
+        "score": 670,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.409367179870605,
+        "firstStageDrop": 13,
+        "overflow": false,
+        "success": false,
+        "seed": 40005,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "6": {
+        "score": 660,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.412036991119384,
+        "firstStageDrop": 13,
+        "overflow": false,
+        "success": false,
+        "seed": 40006,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "7": {
+        "score": 680,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.566007232666015,
+        "firstStageDrop": 12,
+        "overflow": false,
+        "success": false,
+        "seed": 40007,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "8": {
+        "score": 660,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 5.687032079696655,
+        "firstStageDrop": 13,
+        "overflow": false,
+        "success": false,
+        "seed": 40008,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "9": {
+        "score": 720,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 5.620091772079467,
+        "firstStageDrop": 22,
+        "overflow": false,
+        "success": false,
+        "seed": 40009,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "10": {
+        "score": 670,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 6.161476020812988,
+        "firstStageDrop": 8,
+        "overflow": false,
+        "success": false,
+        "seed": 40010,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "11": {
+        "score": 730,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 6.745745277404785,
+        "firstStageDrop": 14,
+        "overflow": false,
+        "success": false,
+        "seed": 40011,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "12": {
+        "score": 660,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.564309692382812,
+        "firstStageDrop": 10,
+        "overflow": false,
+        "success": false,
+        "seed": 40012,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "13": {
+        "score": 630,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.1479898452758786,
+        "firstStageDrop": 7,
+        "overflow": false,
+        "success": false,
+        "seed": 40013,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 17
+      },
+      "14": {
+        "score": 760,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.093353843688964,
+        "firstStageDrop": 10,
+        "overflow": false,
+        "success": false,
+        "seed": 40014,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "15": {
+        "score": 710,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 6.45770299911499,
+        "firstStageDrop": 8,
+        "overflow": false,
+        "success": false,
+        "seed": 40015,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "16": {
+        "score": 720,
+        "policy": "fixed_bank",
+        "stages": 2,
+        "trace": {
+          "1": {
+            "at": 0,
+            "drop": 1,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "2": {
+            "at": 1.249999999999998,
+            "drop": 2,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "3": {
+            "at": 2.499999999999994,
+            "drop": 3,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "4": {
+            "at": 3.7499999999999893,
+            "drop": 4,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "5": {
+            "at": 5.000000000000038,
+            "drop": 5,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "6": {
+            "at": 6.2500000000001,
+            "drop": 6,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "7": {
+            "at": 7.5000000000001625,
+            "drop": 7,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "8": {
+            "at": 8.750000000000144,
+            "drop": 8,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "9": {
+            "at": 10.000000000000073,
+            "drop": 9,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "10": {
+            "at": 11.250000000000002,
+            "drop": 10,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "11": {
+            "at": 12.49999999999993,
+            "drop": 11,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "12": {
+            "at": 13.74999999999986,
+            "drop": 12,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "13": {
+            "at": 14.999999999999789,
+            "drop": 13,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "14": {
+            "at": 16.24999999999972,
+            "drop": 14,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "15": {
+            "at": 17.49999999999965,
+            "drop": 15,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "16": {
+            "at": 18.749999999999577,
+            "drop": 16,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "17": {
+            "at": 19.999999999999506,
+            "drop": 17,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "18": {
+            "at": 21.249999999999435,
+            "drop": 18,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "19": {
+            "at": 22.499999999999364,
+            "drop": 19,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "20": {
+            "at": 23.749999999999293,
+            "drop": 20,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "21": {
+            "at": 24.999999999999222,
+            "drop": 21,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "22": {
+            "at": 26.24999999999915,
+            "drop": 22,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "23": {
+            "at": 27.49999999999908,
+            "drop": 23,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "24": {
+            "at": 28.74999999999901,
+            "drop": 24,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          }
+        },
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.414321041107177,
+        "firstStageDrop": 8,
+        "template": "bank_pair",
+        "success": true,
+        "seed": 40016,
+        "rejectedAttempts": 0,
+        "overflow": false,
+        "baseReward": 6,
+        "merges": 19
+      },
+      "17": {
+        "score": 740,
+        "policy": "fixed_bank",
+        "stages": 2,
+        "trace": {
+          "1": {
+            "at": 0,
+            "drop": 1,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "2": {
+            "at": 1.249999999999998,
+            "drop": 2,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "3": {
+            "at": 2.499999999999994,
+            "drop": 3,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "4": {
+            "at": 3.7499999999999893,
+            "drop": 4,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "5": {
+            "at": 5.000000000000038,
+            "drop": 5,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "6": {
+            "at": 6.2500000000001,
+            "drop": 6,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "7": {
+            "at": 7.5000000000001625,
+            "drop": 7,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "8": {
+            "at": 8.750000000000144,
+            "drop": 8,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "9": {
+            "at": 10.000000000000073,
+            "drop": 9,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "10": {
+            "at": 11.250000000000002,
+            "drop": 10,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "11": {
+            "at": 12.49999999999993,
+            "drop": 11,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "12": {
+            "at": 13.74999999999986,
+            "drop": 12,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "13": {
+            "at": 14.999999999999789,
+            "drop": 13,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "14": {
+            "at": 16.24999999999972,
+            "drop": 14,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "15": {
+            "at": 17.49999999999965,
+            "drop": 15,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "16": {
+            "at": 18.749999999999577,
+            "drop": 16,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "17": {
+            "at": 19.999999999999506,
+            "drop": 17,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "18": {
+            "at": 21.249999999999435,
+            "drop": 18,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "19": {
+            "at": 22.499999999999364,
+            "drop": 19,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "20": {
+            "at": 23.749999999999293,
+            "drop": 20,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "21": {
+            "at": 24.999999999999222,
+            "drop": 21,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "22": {
+            "at": 26.24999999999915,
+            "drop": 22,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          },
+          "23": {
+            "at": 27.49999999999908,
+            "drop": 23,
+            "tier": 2,
+            "aim": 0.08520179372197306
+          },
+          "24": {
+            "at": 28.74999999999901,
+            "drop": 24,
+            "tier": 1,
+            "aim": 0.11297071129707115
+          }
+        },
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.448081588745117,
+        "firstStageDrop": 11,
+        "template": "bank_pair",
+        "success": true,
+        "seed": 40017,
+        "rejectedAttempts": 0,
+        "overflow": false,
+        "baseReward": 8,
+        "merges": 18
+      },
+      "18": {
+        "score": 670,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.668862915039062,
+        "firstStageDrop": 9,
+        "overflow": false,
+        "success": false,
+        "seed": 40018,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "19": {
+        "score": 680,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.409178829193115,
+        "firstStageDrop": 13,
+        "overflow": false,
+        "success": false,
+        "seed": 40019,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 19
+      },
+      "20": {
+        "score": 650,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.705769634246826,
+        "firstStageDrop": 11,
+        "overflow": false,
+        "success": false,
+        "seed": 40020,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "21": {
+        "score": 670,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 7.707073307037353,
+        "firstStageDrop": 23,
+        "overflow": false,
+        "success": false,
+        "seed": 40021,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "22": {
+        "score": 670,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.411743259429931,
+        "firstStageDrop": 15,
+        "overflow": false,
+        "success": false,
+        "seed": 40022,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "23": {
+        "score": 700,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 5.65358600616455,
+        "firstStageDrop": 18,
+        "overflow": false,
+        "success": false,
+        "seed": 40023,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      },
+      "24": {
+        "score": 710,
+        "policy": "fixed_bank",
+        "stages": 1,
+        "attempts": 24,
+        "chainExpiries": 0,
+        "seconds": 32.76666666666545,
+        "timeout": false,
+        "drops": 24,
+        "finalHeight": 8.25453815460205,
+        "firstStageDrop": 9,
+        "overflow": false,
+        "success": false,
+        "seed": 40024,
+        "template": "bank_pair",
+        "rejectedAttempts": 0,
+        "baseReward": 0,
+        "merges": 18
+      }
+    },
+    "liveState": false,
+    "cadence": 1.25,
+    "firstSeed": 40001
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "status": "NONSHIPPING ISOLATED DIAGNOSTIC",
+  "shippingDecision": "Retain original runtime Lantern chain; do not promote separated candidate",
+  "candidateCriterion": "Fixed first fresh link anchor; second new event same chain and separation >=2 studs",
+  "diagnosticAssumption": "Goal-aware assumes visible fixed first-link marker which runtime does not publish",
+  "rows": [
+    {
+      "policy": "naive_spread",
+      "runs": 24,
+      "wins": 24,
+      "overflows": 0,
+      "timeouts": 0,
+      "meanReward": 7.333333333333333,
+      "meanStages": 2,
+      "firstStageRate": 1,
+      "meanFirstStageDrop": 4.333333333333333,
+      "completedSecondStage": 24
+    },
+    {
+      "policy": "fixed_bank",
+      "runs": 24,
+      "wins": 23,
+      "overflows": 0,
+      "timeouts": 0,
+      "meanReward": 6.916666666666667,
+      "meanStages": 1.9583333333333333,
+      "firstStageRate": 1,
+      "meanFirstStageDrop": 4.833333333333333,
+      "completedSecondStage": 23
+    },
+    {
+      "policy": "goal_aware",
+      "runs": 24,
+      "wins": 23,
+      "overflows": 0,
+      "timeouts": 0,
+      "meanReward": 6.916666666666667,
+      "meanStages": 1.9583333333333333,
+      "firstStageRate": 1,
+      "meanFirstStageDrop": 4.25,
+      "completedSecondStage": 23
+    },
+    {
+      "policy": "fast_center",
+      "runs": 24,
+      "wins": 0,
+      "overflows": 24,
+      "timeouts": 0,
+      "meanReward": 0,
+      "meanStages": 1,
+      "firstStageRate": 1,
+      "meanFirstStageDrop": 4.208333333333333,
+      "completedSecondStage": 0
+    }
+  ],
+  "replay": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "rows": [
+        {
+          "seconds": 33.19999999999876,
+          "template": "lantern_chain",
+          "drops": 24,
+          "policy": "goal_aware",
+          "persistentWrites": false,
+          "seed": 40001,
+          "merges": 19,
+          "matches": true,
+          "score": 630,
+          "reward": 6
+        },
+        {
+          "seconds": 33.14166666666543,
+          "template": "lantern_chain",
+          "drops": 24,
+          "policy": "goal_aware",
+          "persistentWrites": false,
+          "seed": 40002,
+          "merges": 19,
+          "matches": true,
+          "score": 750,
+          "reward": 6
+        },
+        {
+          "seconds": 32.71666666666545,
+          "template": "lantern_chain",
+          "drops": 24,
+          "policy": "goal_aware",
+          "persistentWrites": false,
+          "seed": 40003,
+          "merges": 18,
+          "matches": true,
+          "score": 700,
+          "reward": 8
+        }
+      ],
+      "passed": 3,
+      "evidence": "exact accepted aim/time/tier trace replay through the unchanged production solver"
+    }
+  },
+  "runtimeSourceModified": false,
+  "workspaceModified": false,
+  "persistentWrites": false
+}

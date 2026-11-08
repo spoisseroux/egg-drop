@@ -1,0 +1,23 @@
+{
+  "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+  "drops": 24,
+  "over": true,
+  "rewardStatus": "Saved",
+  "stage": 2,
+  "lastRunReward": {
+    "promotedTo": 0,
+    "daily": 6,
+    "sequence": 2,
+    "contracts": {
+      "1": "chain",
+      "2": "score"
+    },
+    "family": "pip",
+    "masteryPoints": 2,
+    "base": 8,
+    "total": 14
+  },
+  "score": 650,
+  "seq": 2,
+  "nectar": 20
+}

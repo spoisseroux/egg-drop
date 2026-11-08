@@ -1,5 +1,6 @@
 -- Presentation must never reuse a prior run's equal-value receipt or promotion.
 local Receipt = {}
+local QuestCopy=require(script.Parent.FieldQuestText)
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Pets=require(Shared.PetCatalog)
 local Mastery=require(Shared.FamilyMastery)
@@ -19,6 +20,13 @@ function Receipt.outcome(result)
 	if result.reason=="Overflow"then return "Overflow"end
 	if result.success then return "Round complete"end
 	return string.format("%d of 2 goals",math.clamp(result.stage or 0,0,2))
+end
+function Receipt.questHint(result)
+ return QuestCopy.recap(if result.objective and result.objective.sequence==result.sequence then result.objective else nil,result.stage or 0,result.reason)
+end
+function Receipt.questDetails(result)
+ if not result.objective or result.objective.sequence~=result.sequence then return nil end
+ return QuestCopy.menu(result.objective,result.phase)
 end
 function Receipt.familyName(family)
 	local pet=Pets.byId[family];return if pet then pet.name else "Family"

@@ -1,0 +1,83 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FieldQuestText",
+    "result": [
+      "Bank teaches minimum III without changing the two ordered locations",
+      "Creek exact II has center bounds and preserves the published seeded side",
+      "Lantern distinguishes two initial merges from two new linked merges",
+      "chain expiry changes displayed actual count back to zero",
+      "complete goals and settling never invent another active bank",
+      "public snapshot decoding is cached across HUD updates",
+      "missing metadata alone uses legacy Bank; malformed metadata fails closed",
+      "Menu and recap retain the completed field while stale receipt data stays rejected"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FieldQuestLayout",
+    "result": [
+      "1649, 971 every active goal count expiry complete and save recovery fits",
+      "1649, 971 Menu exposes metadata without replacing live actions or selection",
+      "733, 307 every active goal count expiry complete and save recovery fits",
+      "733, 307 Menu exposes metadata without replacing live actions or selection",
+      "568, 160 every active goal count expiry complete and save recovery fits",
+      "568, 160 Menu exposes metadata without replacing live actions or selection",
+      "385, 703 every active goal count expiry complete and save recovery fits",
+      "385, 703 Menu exposes metadata without replacing live actions or selection"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DispenserFeedback",
+    "result": [
+      "first snapshot is static; one accepted drop compresses fixed neutral instrument",
+      "duplicate HUD never rebinds compression or increments count",
+      "counter jumps and run replacement remain silent static snapshots",
+      "reduced fade retains count without moving train or outline",
+      "covered field keeps exact static counter and returns without another drop",
+      "cover cancellation stops both effects without replay on uncover"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "Onboarding",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "daily-only failed quest remains a failure with committed balance",
+        "right target and overflow explanations use terminal state",
+        "transient save error never displays old balance as a receipt",
+        "selected recipe uses saved balance without adding the payout twice",
+        "compact pending recap keeps readable status out of pinned footer",
+        "shallow welcome coaching preserves each input and semantic phase",
+        "first field coaching responds to stage, overlays, first win and compact height",
+        "starter reveal receives a copy with the correct egg goal"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  }
+]

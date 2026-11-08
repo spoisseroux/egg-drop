@@ -1,0 +1,57 @@
+return function(client)
+ local Copy=require(client.FieldQuestText);local Receipt=require(client.RunReceipt)
+ local Catalog=require(game.ReplicatedStorage.Shared.FieldObjectives);local Http=game:GetService("HttpService")
+ local cases={};local function test(name,run)run();table.insert(cases,name)end
+ local function public(id,step,progress,sequence,seed)
+  local d=Catalog.create(id,seed or 17)
+  return{sequence=sequence or 71,templateId=d.id,title=d.title,dynamics={id=d.dynamics.id,label=d.dynamics.label},goals=d.goals,
+   step=step or 1,progress=progress or 0,target=if step==3 then 0 else d.goals[step or 1].target,complete=step==3}
+ end
+ test("Bank teaches minimum III without changing the two ordered locations",function()
+  local a=public("bank_pair");assert(Copy.valid(a,71));assert(Copy.describe(a).instruction=="Make III or higher on LEFT")
+  local b=public("bank_pair",2);assert(Copy.describe(b).instruction=="Make III or higher on RIGHT")
+ end)
+ test("Creek exact II has center bounds and preserves the published seeded side",function()
+  local a=public("creek_crossing");local c=Copy.describe(a)
+  assert(c.instruction=="Match I + I in CENTER"and c.dynamics=="Soft banks"and c.goal.zone.min==-1.6 and c.goal.zone.max==1.6)
+  for _,seed in ipairs({16,17})do local b=public("creek_crossing",2,0,71,seed);assert(Copy.describe(b).zone==b.goals[2].zone.kind)end
+ end)
+ test("Lantern distinguishes two initial merges from two new linked merges",function()
+  local a=public("lantern_chain",1,1);local b=public("lantern_chain",2,1)
+  assert(Copy.describe(a).instruction:find("Make 2 merges anywhere",1,true))
+  assert(Copy.describe(b).instruction:find("2 new merges in one chain",1,true))
+  assert(Copy.describe(b).candidates[#Copy.describe(b).candidates]:find("1/2",1,true))
+ end)
+ test("chain expiry changes displayed actual count back to zero",function()
+  assert(Copy.describe(public("lantern_chain",2,1)).instruction:find("1/2",1,true))
+  assert(Copy.describe(public("lantern_chain",2,0)).instruction:find("0/2",1,true))
+ end)
+ test("complete goals and settling never invent another active bank",function()
+  local complete=public("creek_crossing",3,0);local c=Copy.describe(complete)
+  assert(Copy.valid(complete,71)and c.zone=="any"and c.goal==nil and c.ticker=="1 ✓   2 ✓")
+  assert(Copy.describe(public("lantern_chain"),"Settling").instruction:find("Settling",1,true))
+ end)
+ test("public snapshot decoding is cached across HUD updates",function()
+  local attrs={FieldObjective=Http:JSONEncode(public("creek_crossing")),RunSequence=71,FieldStage=0};local board={GetAttribute=function(_,key)return attrs[key]end}
+  local calls=0;local cache={decode=function(raw)calls+=1;return Http:JSONDecode(raw)end}
+  local first=Copy.read(board,cache);for _=1,100 do assert(Copy.read(board,cache)==first)end;assert(calls==1)
+  attrs.RunSequence=72;assert(Copy.read(board,cache)==nil and calls==2);assert(Copy.describe(cache.value).instruction=="Field loading…")
+  attrs.FieldObjective=Http:JSONEncode(public("lantern_chain",1,0,72));assert(Copy.read(board,cache).templateId=="lantern_chain"and calls==3)
+ end)
+ test("missing metadata alone uses legacy Bank; malformed metadata fails closed",function()
+  local attrs={RunSequence=71,FieldStage=1};local board={GetAttribute=function(_,key)return attrs[key]end};local cache={}
+  assert(Copy.read(board,cache).legacy and Copy.describe(cache.value).zone=="right")
+  attrs.FieldObjective="not JSON";assert(Copy.read(board,cache)==nil)
+  attrs.FieldObjective="";assert(Copy.read(board,cache).empty and not Copy.menu(cache.value):find("loading",1,true))
+  local bad=public("creek_crossing");bad.step=3;bad.complete=false;assert(not Copy.valid(bad,71))
+ end)
+ test("Menu and recap retain the completed field while stale receipt data stays rejected",function()
+  local view=public("lantern_chain",2,1);local menu=Copy.menu(view)
+  assert(not menu:find("0/2",1,true),"static goal definitions invented empty progress")
+  assert(menu:find("Springy banks",1,true)and menu:find("1. Make 2 merges",1,true)and menu:find("2. Connect 2 new merges",1,true))
+  local value={sequence=71,stage=1,objective=view};assert(Receipt.questHint(value):find("Lantern chain",1,true))
+  value.sequence=72;assert(Receipt.questDetails(value)==nil and not Receipt.questHint(value):find("Lantern",1,true))
+  assert(Receipt.select({lastRunReward={sequence=71,total=8}},72,"Saved",true)==nil)
+ end)
+ return cases
+end

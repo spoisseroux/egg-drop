@@ -1,0 +1,20 @@
+{
+  "objective": "{\"sequence\":4,\"dynamics\":{\"id\":\"springy\",\"label\":\"Springy banks\"},\"step\":3,\"complete\":true,\"templateId\":\"lantern_chain\",\"title\":\"Lantern chain\",\"target\":0,\"goals\":[{\"id\":\"two_merges\",\"kind\":\"count\",\"target\":2,\"zone\":{\"kind\":\"any\"}},{\"id\":\"two_linked\",\"kind\":\"chain\",\"target\":2,\"zone\":{\"kind\":\"any\"}}],\"progress\":0}",
+  "drops": 24,
+  "over": true,
+  "rewardStatus": "Saved",
+  "stage": 2,
+  "lastRunReward": {
+    "promotedTo": 0,
+    "daily": 0,
+    "sequence": 4,
+    "contracts": [],
+    "family": "pip",
+    "masteryPoints": 2,
+    "base": 8,
+    "total": 8
+  },
+  "score": 950,
+  "seq": 4,
+  "nectar": 38
+}

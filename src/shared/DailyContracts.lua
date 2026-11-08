@@ -2,7 +2,7 @@ local Catalog = require(script.Parent.EggCatalog)
 
 local Daily = {
 	Definitions = {
-		{ id = "runs", title = "Finish 2 quests", hint = "Complete both sides in two rounds", target = 2, reward = 4, bit = 1 },
+		{ id = "runs", title = "Win 2 rounds", hint = "Complete both goals in 24 drops without overflow", target = 2, reward = 4, bit = 1 },
 		{ id = "chain", title = "Chain 3 merges", hint = "Build a chain of 3 in a full round", target = 3, reward = 3, bit = 2 },
 		{ id = "score", title = "Score 500", hint = "Earn 500 points in a full round", target = 500, reward = 3, bit = 4 },
 	},

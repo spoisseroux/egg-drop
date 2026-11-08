@@ -1,0 +1,22 @@
+{
+  "objective": "{\"sequence\":3,\"dynamics\":{\"id\":\"soft\",\"label\":\"Soft banks\"},\"step\":3,\"complete\":true,\"templateId\":\"creek_crossing\",\"title\":\"Creek crossing\",\"target\":0,\"goals\":[{\"tier\":2,\"id\":\"center_ii\",\"kind\":\"merge\",\"zone\":{\"min\":-1.6,\"kind\":\"center\",\"max\":1.6},\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"far_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+  "drops": 24,
+  "over": true,
+  "rewardStatus": "Saved",
+  "stage": 2,
+  "lastRunReward": {
+    "promotedTo": 1,
+    "daily": 4,
+    "sequence": 3,
+    "contracts": {
+      "1": "runs"
+    },
+    "family": "pip",
+    "masteryPoints": 1,
+    "base": 6,
+    "total": 10
+  },
+  "score": 570,
+  "seq": 3,
+  "nectar": 30
+}

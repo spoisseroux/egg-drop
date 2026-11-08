@@ -1,0 +1,9 @@
+{
+  "initial": "+0 nectar",
+  "daily": "Daily +4",
+  "starts": 1,
+  "active": false,
+  "presentationFixture": true,
+  "quest": "Quest +6",
+  "settled": "+10 nectar"
+}

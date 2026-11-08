@@ -71,7 +71,7 @@ function Dispenser:layout()
 		ball.Visible=i<=math.min(8,self.remaining or 0)
 	end
 end
-function Dispenser:update(reset,drops,budget,active)
+function Dispenser:update(reset,drops,budget,active,animate)
 	budget=budget or 24;drops=drops or 0
 	local accepted=self.reset==reset and self.drops~=nil and drops==self.drops+1
 	if self.reset~=reset or (self.drops and drops<self.drops)then self:cancel()end
@@ -82,7 +82,7 @@ function Dispenser:update(reset,drops,budget,active)
 	self.budget=budget
 	self.host.Visible=active==true
 	self:layout()
-	if not active then self:cancel();return end
+	if not active or animate==false then self:cancel();return end
 	if accepted then
 		self.pulses+=1;self.host:SetAttribute("AcceptedPulses",self.pulses)
 		self:cancel()

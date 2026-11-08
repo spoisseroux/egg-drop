@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "result": {
+    "passed": 13,
+    "persistentWrites": false,
+    "cases": {
+      "1": "zero-based rotation and deep frozen descriptors have no mutable aliases",
+      "2": "Bank minimum tier and inclusive left and right boundaries retain the original behavior",
+      "3": "Creek exact II center includes endpoints but rejects higher tier and outside",
+      "4": "Creek seeded bank uses a separate derivation while the bag is identical across templates",
+      "5": "Lantern needs four different events; second event cannot serve both objectives",
+      "6": "fresh second-stage events may continue the physical chain but a broken chain resets progress",
+      "7": "expiry is strictly after 1.25 and clears a partial link exactly once",
+      "8": "wrong run and stale ordinals cannot advance a new run even when cleared id is nil",
+      "9": "terminal tick observations count before settlement and overflow still has priority",
+      "10": "Gentle Springy and descriptor overrides remain per-board without changing Config",
+      "11": "legacy custom targets are copied and remain supported",
+      "12": "public snapshots are coherent copied schema and complete at step three",
+      "13": "public decoder rejects malformed goal shape title and template dynamics"
+    },
+    "evidence": "fresh pure solver sources and immutable catalog; no live state"
+  }
+}

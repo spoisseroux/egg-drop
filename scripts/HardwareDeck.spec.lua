@@ -6,13 +6,14 @@ return function(gui,board)
 	local raw=board:GetAttribute("HatchState");local state=HttpService:JSONDecode(raw)
 	assert(state.status=="Ready" and state.lastHatch==nil,"Ready snapshot without pending result required")
 	local b=gui.Backdrop;local size,position=b.Size,b.Position
-	local attrs={};for _,key in ipairs({"OwnedPets","HatchActive","FieldStage","FieldPhase","Score"})do attrs[key]={board:GetAttribute(key)}end
+	local attrs={};for _,key in ipairs({"OwnedPets","HatchActive","FieldStage","FieldPhase","FieldObjective","Score"})do attrs[key]={board:GetAttribute(key)}end
 	local cases={};local function test(name,run)run();table.insert(cases,name)end
 	local function settle()for _=1,3 do RunService.Heartbeat:Wait()end end
 	local function readable(n)assert(n.TextFits,n.Name.." text="..n.Text.." box="..tostring(n.AbsoluteSize).." bounds="..tostring(n.TextBounds));assert(not n.TextScaled)end
 	local function overlaps(a,c)local p,s,q,t=a.AbsolutePosition,a.AbsoluteSize,c.AbsolutePosition,c.AbsoluteSize;return p.X<q.X+t.X-.1 and q.X<p.X+s.X-.1 and p.Y<q.Y+t.Y-.1 and q.Y<p.Y+s.Y-.1 end
 	local ok,problem=pcall(function()
-		board:SetAttribute("HatchActive",true);board:SetAttribute("OwnedPets",math.max(1,board:GetAttribute("OwnedPets")or 0));board:SetAttribute("FieldStage",0);board:SetAttribute("FieldPhase","Playing");settle()
+		board:SetAttribute("FieldObjective",nil) -- This legacy Bank fixture intentionally drives FieldStage.
+  board:SetAttribute("HatchActive",true);board:SetAttribute("OwnedPets",math.max(1,board:GetAttribute("OwnedPets")or 0));board:SetAttribute("FieldStage",0);board:SetAttribute("FieldPhase","Playing");settle()
 		for _,root in ipairs({Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703),Vector2.new(350,279)})do
 			test(tostring(root).." exact wallets inset queue count and targets fit",function()
 				b.Position,b.Size=UDim2.fromOffset(30,30),UDim2.fromOffset(root.X,root.Y);settle()
@@ -60,7 +61,7 @@ return function(gui,board)
 	end)
 	-- Restore Ready snapshot and all local model fields even on assertion failure.
 	board:SetAttribute("OwnedPets",attrs.OwnedPets[1]);settle()
-	for _,key in ipairs({"HatchActive","FieldStage","FieldPhase","Score"})do board:SetAttribute(key,attrs[key][1])end
+	for _,key in ipairs({"HatchActive","FieldStage","FieldPhase","FieldObjective","Score"})do board:SetAttribute(key,attrs[key][1])end
 	board:SetAttribute("HatchState",raw);b.Size,b.Position=size,position;settle()
 	assert(ok,problem)
 	return{passed=#cases,cases=cases,localPresentationOnly=true}
