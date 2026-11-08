@@ -47,23 +47,23 @@ return function(client,parent)
 	local ok,problem=pcall(function()
 		for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703),Vector2.new(1649,971)})do
 			root.Size=UDim2.fromOffset(size.X,size.Y);settle()
-			test(tostring(size).." Style pins X tabs and Equip around reachable preferred-text content",function()
+			test(tostring(size).." Style pins X and tabs around reachable preferred-text content",function()
 				local events=0
 				local view=Picker.new(root,nil,nil,function()end,function()end,function()events+=1 end,function()events+=1 end)
 				table.insert(views,view);club(view);view:open("brick","star");settle()
 				local tabY=view.tabs.Shell.AbsolutePosition.Y;local closeY=view.cancel.AbsolutePosition.Y
-				for _,tab in ipairs({"Shell","Sticker","Club","Shell"})do
+				for _,tab in ipairs({"Shell","Sticker","Trials","Settings","Shell"})do
 					view:showTab(tab);settle()
 					assert(inside(view.card,root) and inside(view.scroll,view.card) and view.scroll.AbsoluteSize.Y>=44)
 					assert(view.cancel.AbsoluteSize==Vector2.new(44,44) and inside(view.cancel,view.card) and not view.cancel:IsDescendantOf(view.scroll));readable(view.cancel)
-					assert(view.tabs.Shell.AbsolutePosition.Y==tabY and view.cancel.AbsolutePosition.Y==closeY,"Style tab band moved")
+					if tab=="Shell"or tab=="Sticker"then assert(view.tabs.Shell.AbsolutePosition.Y==tabY and view.cancel.AbsolutePosition.Y==closeY,"Style tab band moved")end
 					for _,button in pairs(view.tabs)do
 						assert(button.AbsoluteSize.Y>=44 and inside(button,view.card));readable(button)
 						if button.AbsolutePosition.Y<view.cancel.AbsolutePosition.Y+44 then assert(button.AbsolutePosition.X+button.AbsoluteSize.X<=view.cancel.AbsolutePosition.X,"tab overlaps X")end
 					end
-					if tab~="Club"then
-						assert(view.apply.Visible and inside(view.apply,view.card) and view.apply.AbsoluteSize.Y>=44);readable(view.apply)
-						assert(view.scroll.AbsolutePosition.Y+view.scroll.AbsoluteSize.Y<=view.apply.AbsolutePosition.Y,"body covers Equip")
+					if tab=="Shell"or tab=="Sticker"then
+						assert(not view.card:FindFirstChild("Apply"),"obsolete Equip remains")
+						assert(inside(view.scroll,view.card))
 						if view.display.Visible then
 							assert(inside(view.display,view.scroll));readable(view.previewName)
 							if view.previewNote.Visible then readable(view.previewNote)end
@@ -89,16 +89,19 @@ return function(client,parent)
 						if tab=="Shell"then
 							local chip=view.choices.Shell.brick.Parent.Chip
 							assert(chip.BackgroundColor3==Themes.ById.brick.shell and chip.Face.BackgroundColor3==Themes.ById.brick.face and chip.Face.Accent.BackgroundColor3==Themes.ById.brick.buttons)
-						else assert(not view.choices.Sticker.club.Parent.Interactable and not view:activateChoice("Sticker","club"))end
+						else assert(view.choices.Sticker.club.Parent.Interactable and not view.available.club)end
 					else
-						assert(not view.apply.Visible)
-						assert(view.moreCue.Visible==(view.scroll.CanvasSize.Y.Offset>view.scroll.AbsoluteSize.Y+1))
-						for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
-						readable(view.reward);readable(view.sound);readable(view.music);readable(view.motion)
-						assert(view.music.AbsoluteSize.Y>=44 and view.music.Selectable and view.music.Interactable,"Music target inaccessible")
-						reach(view.music,view.scroll);reach(view.motion,view.scroll)
-						local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged Club snapshot reset reading")
-						view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
+      assert(not view.card:FindFirstChild("Apply")and not view.tabs.Shell.Visible and not view.tabs.Sticker.Visible)
+      if tab=="Trials"then
+       assert(not view.sound.Visible);for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
+       readable(view.reward);reach(view.reward,view.scroll)
+      else
+       assert(not view.clubHeader.Visible);readable(view.sound);readable(view.music);readable(view.motion)
+       assert(view.music.AbsoluteSize.Y>=44 and view.music.Selectable and view.music.Interactable)
+       reach(view.music,view.scroll);reach(view.motion,view.scroll)
+      end
+      local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged data reset reading")
+      view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
 					end
 					assert(view.themeId=="brick" and view.stickerId=="star" and events==0,"layout or scroll submitted an action")
 				end

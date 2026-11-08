@@ -26,11 +26,13 @@ return function(client,parent)
 			test("733x"..height.." measured menu landing shows all destination titles with stable tabs",function()
 				assert(menu.shallow and menu.compact and menu.bodyBudget>=menu.body.AbsoluteSize.Y-1)
 				assert(menu.body.CanvasPosition.Y==0 and menu.headerHeight<=116)
-				for _,item in ipairs(menu.destinations)do
+				for index,item in ipairs(menu.destinations)do
+     if index>3 then menu.body.CanvasPosition=Vector2.new(0,math.clamp(item.button.Position.Y.Offset,0,math.max(0,menu.body.CanvasSize.Y.Offset-menu.body.AbsoluteSize.Y)));settle()end
 					assert(inside(item.button,menu.body) and inside(item.title,menu.body),"first destination row clipped: "..item.kind)
 					assert(item.title.TextFits and item.art.AbsoluteSize.X>=32 and item.button.AbsoluteSize.Y>=44)
 					assert(not item.subtitle.Visible,"secondary caption must yield before primary title")
 				end
+				menu.body.CanvasPosition=Vector2.zero
 				local tabY=menu.tabs.play.AbsolutePosition.Y
 				for _,page in ipairs({"daily","mastery","play"})do
 					menu:setPage(page);settle();assert(menu.tabs.play.AbsolutePosition.Y==tabY)

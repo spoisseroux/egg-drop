@@ -1,0 +1,148 @@
+{
+  "beforeHatch": {
+    "masteryRanks": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "masteryLegacyMask": 0,
+    "dailyDay": "20764",
+    "dailyBonus": 6,
+    "status": "Ready",
+    "masteryChallenges": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "nectar": 6,
+    "revision": 3,
+    "misses": 0,
+    "dailyAvailable": false,
+    "inventoryMask": 1,
+    "mastery": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "contracts": [
+      {
+        "claimed": false,
+        "title": "Finish 2 quests",
+        "progress": 0,
+        "id": "runs",
+        "reward": 4,
+        "target": 2,
+        "hint": "Complete both sides in two rounds"
+      },
+      {
+        "claimed": false,
+        "title": "Chain 3 merges",
+        "progress": 0,
+        "id": "chain",
+        "reward": 3,
+        "target": 3,
+        "hint": "Build a chain of 3 in a full round"
+      },
+      {
+        "claimed": false,
+        "title": "Score 500",
+        "progress": 0,
+        "id": "score",
+        "reward": 3,
+        "target": 500,
+        "hint": "Earn 500 points in a full round"
+      }
+    ],
+    "totalWins": 0,
+    "masteryDetails": {
+      "wick": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I",
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "nextPoints": 3,
+        "rank": 0
+      },
+      "pip": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I",
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "nextPoints": 3,
+        "rank": 0
+      },
+      "puddle": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I",
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "nextPoints": 3,
+        "rank": 0
+      },
+      "orbit": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I",
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "nextPoints": 3,
+        "rank": 0
+      }
+    }
+  },
+  "after": {
+    "sticker": "star",
+    "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}",
+    "drops": 2,
+    "replies": "[{\"seq\":1,\"revision\":1,\"themeId\":\"stone\",\"slot\":\"theme\",\"id\":\"stone\",\"lastSeq\":1,\"stickerId\":\"none\",\"status\":\"Applied\"},{\"seq\":1,\"revision\":1,\"themeId\":\"stone\",\"slot\":\"theme\",\"id\":\"stone\",\"lastSeq\":1,\"stickerId\":\"none\",\"status\":\"Saved\"},{\"seq\":2,\"revision\":2,\"themeId\":\"ice\",\"slot\":\"theme\",\"id\":\"ice\",\"lastSeq\":2,\"stickerId\":\"none\",\"status\":\"Applied\"},{\"seq\":3,\"revision\":3,\"themeId\":\"stone\",\"slot\":\"theme\",\"id\":\"stone\",\"lastSeq\":3,\"stickerId\":\"none\",\"status\":\"Applied\"},{\"seq\":1,\"revision\":4,\"themeId\":\"stone\",\"slot\":\"sticker\",\"id\":\"star\",\"lastSeq\":1,\"stickerId\":\"star\",\"status\":\"Applied\"},{\"seq\":2,\"revision\":5,\"themeId\":\"stone\",\"slot\":\"sticker\",\"id\":\"none\",\"lastSeq\":2,\"stickerId\":\"none\",\"status\":\"Applied\"},{\"seq\":3,\"revision\":6,\"themeId\":\"stone\",\"slot\":\"sticker\",\"id\":\"star\",\"lastSeq\":3,\"stickerId\":\"star\",\"status\":\"Applied\"},{\"seq\":3,\"revision\":6,\"themeId\":\"stone\",\"slot\":\"theme\",\"id\":\"stone\",\"lastSeq\":3,\"stickerId\":\"star\",\"status\":\"Saved\"},{\"seq\":3,\"revision\":6,\"themeId\":\"stone\",\"slot\":\"sticker\",\"id\":\"star\",\"lastSeq\":3,\"stickerId\":\"star\",\"status\":\"Saved\"}]",
+    "theme": "stone",
+    "appearanceRevision": 6,
+    "run": 2
+  },
+  "locked": {
+    "before": 6,
+    "after": 6
+  }
+}

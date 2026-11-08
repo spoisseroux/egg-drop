@@ -35,6 +35,7 @@ local DeckLayout = require(script.DeckLayout)
 local PresentationPolicy = require(script.PresentationPolicy)
 local SaveNotice=require(script.SaveNotice)
 local ControllerFocus=require(script.ControllerFocus)
+local AppearanceIntent=require(script.AppearanceIntent)
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -214,10 +215,9 @@ local power = make("Frame", "PowerLight", {
 }, shell)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, power)
 Art.stroke(power, Art.Cyan, 0.65, 3)
-local deckSticker = label("TextLabel", "DeckSticker", "", backdrop, Palette.Primary)
-deckSticker.Size = UDim2.fromOffset(24, 24)
-deckSticker.Rotation = -11
-make("UICorner", "StickerCurve", { CornerRadius = UDim.new(0, 5) }, deckSticker)
+local deckSticker=Art.frame(shell.Faceplate,"DeckSticker",Art.Amber,UDim2.fromOffset(0,0),UDim2.fromOffset(84,84),shell.Faceplate.ZIndex+1)
+deckSticker.BackgroundTransparency=1;deckSticker.Active,deckSticker.Selectable=false,false
+shell.Faceplate.ClipsDescendants=true
 local rail = label("TextButton", "AimRail", "", backdrop, Art.Ink)
 rail.AutoButtonColor = false
 rail.Font = Enum.Font.Code
@@ -488,6 +488,7 @@ local function layoutDropCaption(l)
 		dropCaption.Position=UDim2.fromOffset(x-l.shell.x,top-l.shell.y)
 		dropCaption.Size=UDim2.fromOffset(width,height)
 	end
+ Stickers.layoutPrint(deckSticker,l,if top and dropCaption.Visible then {x=x,y=top,w=width,h=height}else nil)
 end
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(57, 28), BackgroundTransparency = 1 }, hardware)
 for row = 0, 2 do
@@ -721,6 +722,8 @@ local function equippedAppearance()
 		board:GetAttribute("DeckStickerId") or Stickers.Default
 end
 
+local appearanceIntent
+local pickerReturn
 local previewStickerId=Stickers.Default
 local function paintDeck(id, stickerId)
 	previewStickerId=stickerId
@@ -743,7 +746,7 @@ local function paintDeck(id, stickerId)
 	for _,instrument in ipairs({walletFace,queueHost,status,meter})do instrument.InsetLip.BackgroundColor3=theme.trim end
 	modalShade.BackgroundColor3=Art.Ink
 	Stickers.paint(deckSticker, stickerId)
-	if backdrop:GetAttribute("StickerSlot")~=true then deckSticker.Visible=false end
+
 end
 
 local function canAim()
@@ -758,17 +761,27 @@ local function canPlay()
 		and board:GetAttribute("FieldReady") ~= false
 end
 
-picker = DeckPicker.new(safeOverlays, make, label, paintDeck, function()
+picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reason)
 	local selected = GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(picker.shade) then
 		local controls = gui.LoungeControls
 		GuiService.SelectedObject = if board:GetAttribute("Mode") == "Room" and controls.Visible
 			then controls.OpenHandheld else nil
 	end
-	paintDeck(equippedAppearance())
 	rail.Interactable = canAim()
-end, function(themeId, stickerId)
-	request:FireServer("appearance", themeId, stickerId)
+ local back=pickerReturn;pickerReturn=nil
+ if reason=="back"and back and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen()then
+  openMenu();gameMenu:setPage(back.page);gameMenu.body.CanvasPosition=back.scroll
+  if isGamepad(UserInputService:GetLastInputType())and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and ControllerFocus.live(back.target,gameMenu.shade,player:FindFirstChild("PlayerGui"),true)then
+   local y=back.target.AbsolutePosition.Y-gameMenu.body.AbsolutePosition.Y+gameMenu.body.CanvasPosition.Y
+   local viewport=gameMenu.body.AbsoluteSize.Y;local desired=gameMenu.body.CanvasPosition.Y
+   if y<desired then desired=y elseif y+back.target.AbsoluteSize.Y>desired+viewport then desired=y+back.target.AbsoluteSize.Y-viewport end
+   gameMenu.body.CanvasPosition=Vector2.new(0,math.clamp(desired,0,math.max(0,gameMenu.body.CanvasSize.Y.Offset-viewport)))
+   GuiService.SelectedObject=back.target
+  end
+ end
+end, function(slot,id)
+ if appearanceIntent then appearanceIntent:choose(slot,id)end
 	audio:play("menu")
 end, function(actionName)
 	if actionName == "music" then
@@ -884,7 +897,9 @@ gameMenu = DeckMenu.new(safeOverlays, {
 			if hatchNavigation.generation==generation and board:GetAttribute("Mode")=="Room" and not roomView.busy then openJournal() end
 		end)
 	end,
-	style = function() closeMenu(); openPicker() end,
+	style=function()local target=gameMenu.destinations[3].button;local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=target};closeMenu();openPicker("Shell",back)end,
+ trials=function()local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=gameMenu.destinations[4].button};closeMenu();openPicker("Trials",back)end,
+ settings=function()local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=gameMenu.destinations[5].button};closeMenu();openPicker("Settings",back)end,
 	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
 	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
 	family = function(family) request:FireServer("family", family) end,
@@ -948,7 +963,7 @@ local function updateClub()
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled())
 end
 
-openPicker = function()
+openPicker = function(mode,back)
 	cancelHatchNavigation()
 	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
@@ -957,9 +972,10 @@ openPicker = function()
 	rail.Interactable = false
 	local themeId, stickerId = equippedAppearance()
 	updateClub()
-	picker:open(themeId, stickerId)
+	pickerReturn=back
+	picker:open(themeId, stickerId,mode)
 	if isGamepad(UserInputService:GetLastInputType()) then
-		GuiService.SelectedObject = picker.tabs.Shell
+		GuiService.SelectedObject = picker.tabs[picker.active]or (if picker.active=="Settings"then picker.sound else picker.cancel)
 	end
 	audio:play("menu")
 end
@@ -1037,16 +1053,20 @@ gui.Destroying:Connect(function()for _,connection in ipairs(saveNoticeConnection
 refreshSaveNotice()
 
 customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
-local function repaintEquipped()
-	task.defer(function()
-		if not isPickerOpen() then
-			paintDeck(equippedAppearance())
-		end
-	end)
+do
+ local theme,sticker=equippedAppearance()
+ appearanceIntent=AppearanceIntent.new({themeId=theme,stickerId=sticker,revision=board:GetAttribute("AppearanceRevision")or 0,
+  send=function(payload)request:FireServer("appearanceSlot",payload)end,
+  changed=function(state)picker:setAppearance(state);paintDeck(state.confirmedTheme,state.confirmedSticker)end})
+ picker.onRetry=function(slot)appearanceIntent:retry(slot)end
+ picker:setAppearance(appearanceIntent:view());paintDeck(theme,sticker)
+ local result=remotes:WaitForChild("AppearanceResult")
+ local resultConnection=result.OnClientEvent:Connect(function(message)appearanceIntent:receive(message)end)
+ local revisionConnection=board:GetAttributeChangedSignal("AppearanceRevision"):Connect(function()
+  task.defer(function()if gui.Parent then local t,s=equippedAppearance();appearanceIntent:snapshot(t,s,board:GetAttribute("AppearanceRevision")or 0)end end)
+ end)
+ gui.Destroying:Connect(function()resultConnection:Disconnect();revisionConnection:Disconnect();appearanceIntent:destroy()end)
 end
-board:GetAttributeChangedSignal("DeckThemeId"):Connect(repaintEquipped)
-board:GetAttributeChangedSignal("DeckStickerId"):Connect(repaintEquipped)
-paintDeck(equippedAppearance())
 
 local function nextTier()
 	return board:GetAttribute("NextTier") or 1
@@ -1455,11 +1475,6 @@ layout = function()
 	hardware.MakerMark.Visible=false
 	shell.Faceplate.AimSeat.Visible,shell.Faceplate.ActionSeat.Visible=false,false
 	shell.Faceplate.AccentBands.Visible=false
-	local stickerRoom=l.lateral and l.menu.y-(l.quest.y+l.quest.h)>=34
-	backdrop:SetAttribute("StickerSlot",stickerRoom)
-	deckSticker.Position,deckSticker.Size=UDim2.fromOffset(l.left.x+l.left.w/2-12,l.quest.y+l.quest.h+6),UDim2.fromOffset(24,24)
-	Stickers.paint(deckSticker,previewStickerId)
-	deckSticker.Visible=deckSticker.Visible and stickerRoom
 	local zoneWidth=math.max(0,(Config.Width/2-(board:GetAttribute("FieldZoneBound") or 2.6))/(Config.Width+.8))
 	for _,item in ipairs(fieldZones)do
 		item.node.Position=UDim2.fromScale(if item.side==-1 then .027 else 1-.027-zoneWidth,.025)
@@ -1712,7 +1727,7 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 	end
 	if isPickerOpen() then
 		if state == Enum.UserInputState.Begin then
-			picker:close()
+			picker:back()
 		end
 		return Enum.ContextActionResult.Sink
 	end

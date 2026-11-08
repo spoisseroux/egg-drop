@@ -106,13 +106,11 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	stickerFace.LightInfluence = 0
 	stickerFace.MaxDistance = 34
 	stickerFace.Parent = shell
-	local decal = Instance.new("TextLabel")
+	local decal = Instance.new("Frame")
 	decal.Name = "Decal"
-	decal.Position = UDim2.fromOffset(133, 9)
-	decal.Size = UDim2.fromOffset(14, 14)
+	decal.Position = UDim2.fromOffset(119, 17)
+	decal.Size = UDim2.fromOffset(48, 48)
 	decal.Rotation = -11
-	decal.TextSize = 12
-	decal.Font = Enum.Font.GothamBold
 	decal.BorderSizePixel = 0
 	decal.Parent = stickerFace
 	local rounded = Instance.new("UICorner")

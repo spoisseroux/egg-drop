@@ -43,6 +43,10 @@ end
 local function destinationArt(host, kind)
 	if kind == "eggs" then
 		EggArt.create(host, "meadow", UDim2.fromScale(.10, .02), UDim2.fromScale(.80, .96), host.ZIndex + 1)
+	elseif kind=="trials"then
+		FamilyCrest.create(host,"pip",1,UDim2.fromScale(.1,.1),UDim2.fromScale(.8,.8),host.ZIndex+1)
+	elseif kind=="settings"then
+		for i=1,3 do local y=.2+(i-1)*.25;decoration(host,"SettingRail",UDim2.fromScale(.12,y),UDim2.fromScale(.76,.06),Art.Muted,2);decoration(host,"SettingKnob",UDim2.fromScale(if i==2 then .55 else .25,y-.06),UDim2.fromScale(.16,.18),Art.Amber,4)end
 	elseif kind == "pets" then
 		local portrait = Portrait.create(host, Pets.byId.pip, 4, UDim2.fromScale(.5, .5), host.ZIndex + 2)
 		local scale = Instance.new("UIScale")
@@ -99,7 +103,7 @@ function Menu.new(parent,callbacks)
 		page.BackgroundTransparency=1;self.pages[key]=page
 		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Mastery",function()self:setPage(key)end)
 	end
-	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"}}) do
+	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
 		local illustration=Art.frame(b,"Illustration",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
 		illustration.BackgroundTransparency=1;destinationArt(illustration,entry[3])
@@ -219,8 +223,8 @@ function Menu:layoutContents(wanted)
 	end
 	for index,item in ipairs(self.destinations) do
 		local w=if list then usable else (usable-24)/3
-		local x=inset+(if list then 0 else (index-1)*(w+12))
-		local top=y+(if list then (index-1)*(destinationHeight+8) else 0)
+		local x=inset+(if list then 0 else ((index-1)%3)*(w+12))
+		local top=y+(if list then (index-1)*(destinationHeight+8) else math.floor((index-1)/3)*(destinationHeight+8))
 		place(item.button,x,top,w,destinationHeight)
 		local horizontal=short or list;local artSize=if short then (if self.shallow then 36 else 24) elseif list then 56 else 72
 		place(item.art,if horizontal then 10 else (w-artSize)/2,if horizontal then (destinationHeight-artSize)/2 else 12,artSize,artSize)
@@ -231,7 +235,7 @@ function Menu:layoutContents(wanted)
 		item.title.TextXAlignment=if horizontal then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
 		item.subtitle.Visible=not short;place(item.subtitle,tx,ty+item.titleH+6,w-tx-8,item.subH);item.subtitle.TextXAlignment=item.title.TextXAlignment
 	end
-	y+=if list then #self.destinations*(destinationHeight+8)-8 else destinationHeight
+	y+=if list then #self.destinations*(destinationHeight+8)-8 else math.ceil(#self.destinations/3)*(destinationHeight+8)-8
 	local recipeH=math.max(64,Art.textHeight(self.recipe,usable-64,48)+16)
 	y+=12;place(self.recipePanel,inset,y,usable,recipeH);place(self.recipe,54,8,usable-64,recipeH-16)
 	y+=recipeH+12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)

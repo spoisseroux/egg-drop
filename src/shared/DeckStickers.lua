@@ -1,4 +1,5 @@
 local Trials = require(script.Parent.PocketTrials)
+local StickerArt=require(script.Parent.DeckStickerArt)
 
 local Stickers = {
 	Default = "none",
@@ -9,7 +10,7 @@ local Stickers = {
 		glitch = { name = "Glitch", mark = "+", color = Color3.fromHex("#A4D4C1"), ink = Color3.fromHex("#203A35") },
 		seed = { name = "Seed", mark = "◆", color = Color3.fromHex("#EAA48C"), ink = Color3.fromHex("#462824") },
 		wick = { name = "Wick", mark = "▲", color = Color3.fromHex("#F9AB63"), ink = Color3.fromHex("#532C2B"), rank = 3 },
-		club = { name = "Club", mark = "✦", color = Color3.fromHex("#81D6C4"), ink = Color3.fromHex("#163D38"), trials = true },
+		club = { name = "Trial crest", mark = "✦", color = Color3.fromHex("#81D6C4"), ink = Color3.fromHex("#163D38"), trials = true },
 	},
 }
 
@@ -20,14 +21,12 @@ function Stickers.canEquip(id, rank, trials, inventoryMask)
 	return sticker ~= nil and rankAllowed and (not sticker.trials or Trials.clubComplete(trials))
 end
 
-function Stickers.paint(label, id)
-	local sticker = Stickers.ById[id] or Stickers.ById.none
-	label.Visible = sticker.mark ~= nil
-	if sticker.mark then
-		label.Text = sticker.mark
-		label.BackgroundColor3 = sticker.color
-		label.TextColor3 = sticker.ink
-	end
+Stickers.printSeat=StickerArt.printSeat
+Stickers.layoutPrint=StickerArt.layoutPrint
+
+function Stickers.paint(host,id)
+	StickerArt.paint(host,if Stickers.ById[id]then id else Stickers.Default)
 end
+
 
 return Stickers

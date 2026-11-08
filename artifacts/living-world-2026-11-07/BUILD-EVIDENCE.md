@@ -51,3 +51,20 @@ Gallery (provenance is explicit):
 The actual BGDistortionerv1.2.zip arrived via Taildrop in Downloads and Astra inspected its shader, configuration, eight presets and four example textures read-only. The background plan now derives from its two independently tiled wave/palette layers. No raw archive, third-party code or textures entered the repository.
 
 Next authorized slice: immediate authoritative style/sticker selection, larger shell graphics and separate Settings/Pocket Trials navigation. Palette propagation/background unlocks, expanded living world, vivid feedback, varied field dynamics and pet affection rewards remain queued. The existing private place remains v125 until a tested integrated update is published.
+
+## Slice 3 — immediate styles, navigation and original case prints
+
+Reviewed by Astra in source and final Medium desktop/phone captures. Sol implemented separate slot intent queues, immutable appearance save proofs, immediate unlocked selection, amber confirmed checks, explicit locked previews, five Menu destinations, separate Settings/Pocket Trials and the shared illustrated case print. The pending/check/Saved states distinguish accepted input from durable proof. Old two-ID appearance requests remain supported.
+
+Verification:
+- All 69 runtime sources matched Studio and compiled. Rojo build and git diff check passed.
+- Isolated native Luau: appearance server 14, client coordinator 14, existing session recovery/host 10 cases passed. These use controlled stores/clocks, not live rejoin evidence.
+- Medium client suite 112 cases passed, then final visual fixes passed AppearanceStyle 14 and StickerPrintSeat 16. Largest final suite passed 86 cases: AppearanceStyle14, StickerPrintSeat16, StyleJournalLayout8, StyleJournalActions13, ControllerSheets8, SaveNoticeLayout9, MenuPolish10, EmulatorSafeArea8.
+- Actual controls: rapid Stone→Ice→Stone and Star→Blank→Star ended at stone/star revision6 with correlated Applied then Saved replies. A normal server Script read the actual isolated StudioStore record: same IDs/stamp/writer, sibling hatch data preserved. Locked Wick inspection and returning to worn Star sent no extra appearance request. Native phone A worked through the passive final print: one accepted drop, 24→23 left. Native emulator Gamepad1 B returned Style to its Menu opener.
+- Actual walking to the workbench, E open and X close returned to roaming without opening Menu. Music off/on restored the existing session setting. Native text preference restored to Medium.
+- Console contains the previously known unavailable EditableImage and unrelated asset203785492 type warnings; no new Luau runtime errors.
+- Production worn-device factory creates the illustrated SurfaceGui and85 descendants. Edit screenshot capture did not reliably render that GUI, so this is structural evidence only; worn-model visual acceptance remains for integrated live checking. Temporary model/module/light/camera fixtures were removed and editor camera restored.
+
+This is Studio desktop/phone/controller-emulator and isolated-store evidence. Physical phone, physical controller, real private-server persistence/rejoin and live multiplayer were not tested here. Private place remains v125 until the integrated update passes.
+
+Accepted gallery: appearance-final-style-sticker-medium.jpg, appearance-final-locked-preview-medium.jpg, appearance-final-print-desktop.jpg, appearance-final-print-phone.jpg, appearance-final-style-largest-phone.jpg. Additional Menu/Settings/Trials captures and exact JSON results are beside this note.

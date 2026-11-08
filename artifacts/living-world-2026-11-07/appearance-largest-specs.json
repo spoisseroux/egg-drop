@@ -1,0 +1,173 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "AppearanceStyle",
+    "result": {
+      "passed": 14,
+      "cases": [
+        "1649, 971 Style two tabs and first choice fit without Equip",
+        "1649, 971 leaf modes expose existing actions and no hidden Style targets",
+        "1649, 971 latest pending and definitive checks survive resize and reopen without writes",
+        "733, 307 Style two tabs and first choice fit without Equip",
+        "733, 307 leaf modes expose existing actions and no hidden Style targets",
+        "733, 307 latest pending and definitive checks survive resize and reopen without writes",
+        "568, 160 Style two tabs and first choice fit without Equip",
+        "568, 160 leaf modes expose existing actions and no hidden Style targets",
+        "568, 160 latest pending and definitive checks survive resize and reopen without writes",
+        "385, 703 Style two tabs and first choice fit without Equip",
+        "385, 703 leaf modes expose existing actions and no hidden Style targets",
+        "385, 703 latest pending and definitive checks survive resize and reopen without writes",
+        "original multicolor print reused across none star cycles and resize",
+        "locked inspect and Trials back preserve same Style focus without request"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StickerPrintSeat",
+    "result": {
+      "passed": 16,
+      "cases": [
+        "1649, 971 DROP independent count/caption and fixed inputs",
+        "1649, 971 FALLING independent count/caption and fixed inputs",
+        "1649, 971 SETTLE independent count/caption and fixed inputs",
+        "1649, 971 SAVING independent count/caption and fixed inputs",
+        "733, 307 DROP independent count/caption and fixed inputs",
+        "733, 307 FALLING independent count/caption and fixed inputs",
+        "733, 307 SETTLE independent count/caption and fixed inputs",
+        "733, 307 SAVING independent count/caption and fixed inputs",
+        "568, 160 DROP independent count/caption and fixed inputs",
+        "568, 160 FALLING independent count/caption and fixed inputs",
+        "568, 160 SETTLE independent count/caption and fixed inputs",
+        "568, 160 SAVING independent count/caption and fixed inputs",
+        "385, 703 DROP independent count/caption and fixed inputs",
+        "385, 703 FALLING independent count/caption and fixed inputs",
+        "385, 703 SETTLE independent count/caption and fixed inputs",
+        "385, 703 SAVING independent count/caption and fixed inputs"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StyleJournalLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 8,
+      "cases": [
+        "733, 307 Style pins X and tabs around reachable preferred-text content",
+        "733, 307 Journal measures all seven name status rank and crest rows",
+        "568, 160 Style pins X and tabs around reachable preferred-text content",
+        "568, 160 Journal measures all seven name status rank and crest rows",
+        "385, 703 Style pins X and tabs around reachable preferred-text content",
+        "385, 703 Journal measures all seven name status rank and crest rows",
+        "1649, 971 Style pins X and tabs around reachable preferred-text content",
+        "1649, 971 Journal measures all seven name status rank and crest rows"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StyleJournalActions",
+    "result": {
+      "passed": 13,
+      "cases": [
+        "unlocked choices submit one slot immediately and never on reflow",
+        "X Back forced close and reopen never submit or rollback",
+        "confirmed checks follow acknowledged pair independently of pending choice",
+        "locked art remains inspectable with concrete unlock and no appearance send",
+        "Settings apply once immediately and persist through closing",
+        "Roblox reduced motion cannot be overridden by a setting or reflow",
+        "Music stays session-local through four viewport reflows and reopening while SFX submits once",
+        "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+        "authoritative empty inventory has no legacy track or hidden selectable row",
+        "legacy tracking remains explicit only when the inventory mask is absent",
+        "owned row equips once and Family goals never equips tracks or selects a family",
+        "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+        "measured Ranks caption retains mastery page identity and callback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "ControllerSheets",
+    "result": {
+      "cases": [
+        "pointer-open Menu seeds current Daily or Mastery tab without routing",
+        "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+        "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "direct controller Journal opening retains its valid existing owned selection",
+        "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "all four same-instance openings advance generation and hidden sheets expose no target"
+      ],
+      "passed": 8,
+      "inputIsSemanticFixture": true
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SaveNoticeLayout",
+    "result": {
+      "preference": "Largest",
+      "rootSize": "full matrix",
+      "passed": 9,
+      "cases": [
+        "733, 307 passive status belongs to each modal without covering pinned actions",
+        "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+        "568, 160 passive status belongs to each modal without covering pinned actions",
+        "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+        "385, 703 passive status belongs to each modal without covering pinned actions",
+        "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+        "1649, 971 passive status belongs to each modal without covering pinned actions",
+        "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+        "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "mastery cards wrap exact missing conditions at real body size",
+        "hidden and unchanged snapshots perform no text measurement layout",
+        "locked family rows omit unused progress space and cannot select a family"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "EmulatorSafeArea",
+    "result": {
+      "preference": "Largest",
+      "passed": 8,
+      "cases": [
+        "733x306 measured menu landing shows all destination titles with stable tabs",
+        "733x306 shop shows both complete recipes above a pinned exact shortfall",
+        "733x307 measured menu landing shows all destination titles with stable tabs",
+        "733x307 shop shows both complete recipes above a pinned exact shortfall",
+        "733x308 measured menu landing shows all destination titles with stable tabs",
+        "733x308 shop shows both complete recipes above a pinned exact shortfall",
+        "portrait selection rotated to landscape stays selected at the top without a purchase",
+        "roomy desktop menu and shop retain their illustrated layouts"
+      ]
+    }
+  }
+]

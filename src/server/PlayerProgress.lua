@@ -8,6 +8,12 @@ local Progress = {}
 local pending = {}
 local store = require(script.Parent.ProgressStore)
 local writer = game.JobId
+local function appearanceStamp(value)
+	return if type(value)=="number" and value==value and value>=0 and value<=9007199254740000 and value%1==0 then value else 0
+end
+local function appearanceChange(theme,sticker,at,generation)
+	return table.freeze({theme=theme,sticker=sticker,at=at,generation=generation,writer=writer})
+end
 
 local function markDirty(profile)
 	if not profile.loadFailed then
@@ -61,6 +67,12 @@ local function decode(key, record, success)
 			elseif rank > 0 then Pets[1].id else nil,
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
 		sticker = if type(record.sticker) == "string" and Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
+		lastAppearanceAt = appearanceStamp(record.themeAt),
+		appearanceGeneration = 0,
+		appearanceSaved = if success then {
+			theme = if Themes.ById[record.theme] then record.theme else Themes.Default,
+			sticker = if Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
+		} else nil,
 		trials = trials,
 		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
 		reduced = record.reduced == true,
@@ -100,7 +112,9 @@ local function flush(profile)
 	if profile.loadFailed then return false, "Temporary" end
 	profile.saving = true
 	local rank, charge, best = profile.earnedRank, profile.earnedCharge, profile.earnedBest
-	local theme, sticker, themeAt = profile.theme, profile.sticker, profile.themeAt
+	local appearance = profile.appearanceChange
+	local theme, sticker, themeAt = if appearance then appearance.theme else profile.theme,
+		if appearance then appearance.sticker else profile.sticker, if appearance then appearance.at else nil
 	local companionId, companionAt = profile.companionId, profile.companionAt
 	local earnedTrials = profile.earnedTrials
 	local soundChange, motionChange = profile.soundChange, profile.motionChange
@@ -131,10 +145,10 @@ local function flush(profile)
 		end
 		mergeSetting("sound", soundChange)
 		mergeSetting("reduced", motionChange)
-		local previousTime = if type(record.themeAt) == "number" then record.themeAt else 0
+		local previousTime = appearanceStamp(record.themeAt)
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
 		if themeAt and (themeAt > previousTime or (themeAt == previousTime and writer >= previousWriter)) then
-			record.theme, record.sticker, record.themeAt, record.themeWriter = theme, sticker, themeAt, writer
+			record.theme, record.sticker, record.themeAt, record.themeWriter = theme, sticker, themeAt, appearance.writer
 		end
 		local previousCompanionTime = if type(record.companionAt) == "number" then record.companionAt else 0
 		local previousCompanionWriter = if type(record.companionWriter) == "string" then record.companionWriter else ""
@@ -160,8 +174,36 @@ local function flush(profile)
 	if best == profile.earnedBest then
 		profile.earnedBest = nil
 	end
-	if themeAt == profile.themeAt then
-		profile.themeAt = nil
+	if appearance then
+		local verified=type(result)=="table" and result.theme==appearance.theme and result.sticker==appearance.sticker
+			and result.themeAt==appearance.at and result.themeWriter==appearance.writer
+		if verified then
+			profile.appearanceSaved={theme=appearance.theme,sticker=appearance.sticker}
+			if profile.appearanceChange==appearance then profile.appearanceChange=nil;profile.themeAt=nil end
+			if profile.onAppearanceSaved then profile.onAppearanceSaved(appearance) end
+		else
+			-- Honor a proven newer foreign winner unless a genuinely newer local
+			-- intent arrived while saving. Never replay the captured older click.
+			local current=profile.appearanceChange
+			local foreignAt=appearanceStamp(type(result)=="table" and result.themeAt)
+			local foreignWriter=if type(result)=="table" and type(result.themeWriter)=="string" then result.themeWriter else nil
+			local validForeign=type(result)=="table" and type(result.theme)=="string" and Themes.ById[result.theme]
+				and type(result.sticker)=="string" and Stickers.ById[result.sticker] and foreignWriter
+				and foreignAt==result.themeAt and (foreignAt>appearance.at or (foreignAt==appearance.at and foreignWriter>appearance.writer))
+			if current and current.generation==appearance.generation and validForeign then
+				profile.theme,profile.sticker=result.theme,result.sticker
+				if profile.resolveAppearance then profile.theme,profile.sticker=profile.resolveAppearance(profile.theme,profile.sticker) end
+				profile.lastAppearanceAt=math.max(profile.lastAppearanceAt or 0,foreignAt)
+				profile.appearanceSaved={theme=result.theme,sticker=result.sticker}
+				profile.appearanceChange,profile.themeAt=nil,nil
+				if profile.onAppearanceSuperseded then profile.onAppearanceSuperseded(appearance) end
+			elseif current then
+				local at=math.max(profile.lastAppearanceAt or 0,appearanceStamp(type(result)=="table" and result.themeAt))+1
+				profile.lastAppearanceAt,profile.themeAt=at,at
+				profile.appearanceChange=appearanceChange(current.theme,current.sticker,at,current.generation)
+				setSaveFailed(profile,true)
+			end
+		end
 	end
 	if companionAt == profile.companionAt then
 		profile.companionAt = nil
@@ -218,8 +260,12 @@ end
 function Progress.equip(profile, theme, sticker)
 	profile.theme = theme
 	profile.sticker = sticker
-	profile.themeAt = DateTime.now().UnixTimestampMillis
+	profile.appearanceGeneration=(profile.appearanceGeneration or 0)+1
+	local at=math.max(DateTime.now().UnixTimestampMillis,(profile.lastAppearanceAt or 0)+1)
+	profile.lastAppearanceAt,profile.themeAt=at,at
+	profile.appearanceChange=appearanceChange(theme,sticker,at,profile.appearanceGeneration)
 	markDirty(profile)
+	return profile.appearanceChange
 end
 
 function Progress.chargeHatch(profile, amount)

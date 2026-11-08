@@ -1,0 +1,34 @@
+[
+  {
+    "ok": true,
+    "suite": "SessionRecovery",
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": {
+        "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+        "2": "profile save failure times out without releasing the lease and later recovers",
+        "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+        "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+        "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+        "6": "a setting changed during an in-flight autosave drains before lease release",
+        "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+        "8": "the actual Studio store keeps both writers in one isolated cloned root"
+      }
+    },
+    "context": "Edit isolated native Luau"
+  },
+  {
+    "ok": true,
+    "suite": "SessionHost",
+    "result": {
+      "persistentWrites": false,
+      "passed": 2,
+      "cases": {
+        "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+        "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+      }
+    },
+    "context": "Edit isolated native Luau"
+  }
+]

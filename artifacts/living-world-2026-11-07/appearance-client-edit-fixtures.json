@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "context": "Edit isolated native Luau",
+  "result": {
+    "passed": 14,
+    "note": "Actual client.AppearanceIntent driver ran successfully after preserving separate AppearanceIntentClient.spec.lua; no GUI or remote writes. Full per-case output is in the tool trace."
+  }
+}

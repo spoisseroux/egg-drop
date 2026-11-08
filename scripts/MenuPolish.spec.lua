@@ -24,7 +24,7 @@ return function(client, parent)
 	end
 	local function fixture()
 		local calls, callbacks = {}, {}
-		for _, key in ipairs({ "close", "eggs", "pets", "style", "play", "daily", "family" }) do
+		for _, key in ipairs({ "close", "eggs", "pets", "style", "trials", "settings", "play", "daily", "family" }) do
 			callbacks[key] = function(value) table.insert(calls, { key, value }) end
 		end
 		local menu = Menu.new(root, callbacks)
@@ -69,13 +69,13 @@ return function(client, parent)
 		end)
 		test("complete illustrated destinations start below the scroll clip",function()
 			local menu,calls=fixture();resize(menu,680,700);menu:setPage("play");task.wait(.03)
-			assert(#menu.destinations==3 and not menu.resumeButton and not menu.card:FindFirstChild("Deck",true)and not menu.dailyButton.Visible)
+			assert(#menu.destinations==5 and not menu.resumeButton and not menu.card:FindFirstChild("Deck",true)and not menu.dailyButton.Visible)
 			for _,item in ipairs(menu.destinations) do
 				assert(item.art.Visible and #item.art:GetChildren()>0 and item.title.TextFits and item.subtitle.TextFits,fitDiagnostic(item.title,item.subtitle))
 				assert(item.button.Position.Y.Offset>=12 and item.art.Position.Y.Offset>=8)
 				assert(menu:activate(item.kind))
 			end
-			assert(menu:activate("close") and #calls==4)
+			assert(menu:activate("close") and #calls==6)
 			menu:close()
 		end)
 		test("all three shallow contracts show a complete44px first row and independent gift",function()

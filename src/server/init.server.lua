@@ -20,6 +20,7 @@ local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local CloseProgress = require(script.CloseProgress)
 local SessionProfile = require(script.SessionProfile)
 local RunReturn = require(script.RunReturn)
+local AppearanceIntent = require(script.AppearanceIntent)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -34,6 +35,7 @@ local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
+local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
 local loading = {}
@@ -51,6 +53,19 @@ end
 
 local function canProgress(board)
 	return board.profileReady and SessionProfile.ready(board.nursery, board.nurseryBusy)
+end
+
+local function publishAppearance(board)
+	board.folder:SetAttribute("DeckThemeId",board.profile.theme)
+	board.folder:SetAttribute("DeckStickerId",board.profile.sticker)
+	board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
+	Lounge.setAppearance(board.player.Character,board.profile.theme,board.profile.sticker)
+end
+
+local function validateAppearance(board,slot,id)
+	if slot=="theme" then return if Themes.ById[id] then nil else "Invalid" end
+	if not Stickers.ById[id] then return "Invalid" end
+	return if Stickers.canEquip(id,board.profile.rank,board.profile.trials,inventory(board)) then nil else "Locked"
 end
 
 local function publishNursery(board)
@@ -199,6 +214,8 @@ local function addPlayer(player)
 	nextSlot += 1
 	local slot = nextSlot
 	local board = {
+		player = player,
+		appearance = AppearanceIntent.new(),
 		folder = folder,
 		parts = {},
 		impacts = {},
@@ -221,6 +238,7 @@ local function addPlayer(player)
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
+	folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 	folder:SetAttribute("SoundLevel", profile.sound)
 	folder:SetAttribute("ReducedEffects", profile.reduced)
 	folder:SetAttribute("SaveStatus", if profile.loadFailed then "Temporary" else nil)
@@ -228,6 +246,21 @@ local function addPlayer(player)
 		if boards[player] == board and folder.Parent then
 			folder:SetAttribute("SaveStatus", if failed then "Retrying" else nil)
 		end
+	end
+	profile.onAppearanceSaved=function(candidate)
+		if boards[player]~=board or board.closing then return end
+		for _,result in ipairs(AppearanceIntent.saved(board.appearance,profile,candidate))do
+			appearanceResult:FireClient(player,result)
+		end
+	end
+	profile.resolveAppearance=function(theme,sticker)
+		return theme,if Stickers.canEquip(sticker,profile.rank,profile.trials,inventory(board)) then sticker else Stickers.Default
+	end
+	profile.onAppearanceSuperseded=function(candidate)
+		if boards[player]~=board or board.closing then return end
+		local results=AppearanceIntent.superseded(board.appearance,profile,candidate)
+		publishAppearance(board)
+		for _,result in ipairs(results)do appearanceResult:FireClient(player,result) end
 	end
 	folder.Parent = trays
 	if board.firstSession then
@@ -261,6 +294,9 @@ Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
 	if board then
 		board.profile.onSaveFailed = nil
+		board.profile.onAppearanceSaved = nil
+		board.profile.onAppearanceSuperseded = nil
+		board.profile.resolveAppearance = nil
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		boards[player] = nil
@@ -274,23 +310,37 @@ end
 
 request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
-	if not board or board.closing then
+	if not board then return end
+	local now = os.clock()
+	if action=="appearanceSlot" then
+		local usable=if board.closing then "Closing" else canProgress(board)
+		local result,changed=AppearanceIntent.request(board.appearance,board.profile,value,now,usable,
+			function(slot,id)return validateAppearance(board,slot,id)end,Progress.equip)
+		if changed then publishAppearance(board) end
+		if result then appearanceResult:FireClient(player,result) end
 		return
 	end
-	local now = os.clock()
-	if (action == "appearance" or action == "sound" or action == "motion" or action == "companion"
+	if board.closing then
+		if action=="appearance" then appearanceResult:FireClient(player,{slot="pair",seq=0,id="",status="Rejected",
+			reason="Closing",revision=board.appearance.revision,themeId=board.profile.theme,stickerId=board.profile.sticker}) end
+		return
+	end
+	if (action == "sound" or action == "motion" or action == "companion"
 		or action == "family" or action == "drop" or action == "reset" or action == "preset")
 		and not canProgress(board) then return end
 	if action == "appearance" then
-		if typeof(value) == "string" and Themes.ById[value] and typeof(sticker) == "string"
-			and Stickers.canEquip(sticker, board.profile.rank, board.profile.trials, inventory(board))
-			and (value ~= board.profile.theme or sticker ~= board.profile.sticker) and now - board.lastAppearanceChange >= 0.25 then
-			board.lastAppearanceChange = now
-			Progress.equip(board.profile, value, sticker)
-			board.folder:SetAttribute("DeckThemeId", value)
-			board.folder:SetAttribute("DeckStickerId", sticker)
-			Lounge.setAppearance(player.Character, value, sticker)
+		-- Compatibility for the previous full-pair client; new clients send slots.
+		local reason=if not canProgress(board) then "Unavailable" elseif typeof(value)~="string" or typeof(sticker)~="string" then "Malformed"
+			else validateAppearance(board,"theme",value) or validateAppearance(board,"sticker",sticker)
+		if not reason and now-board.appearance.lastAt<.25 then reason="Throttled" end
+		if not reason then
+			board.appearance.lastAt=now
+			if value~=board.profile.theme or sticker~=board.profile.sticker then
+				Progress.equip(board.profile,value,sticker);board.appearance.revision+=1;publishAppearance(board)
+			end
 		end
+		appearanceResult:FireClient(player,{slot="pair",seq=0,id="",revision=board.appearance.revision,
+			themeId=board.profile.theme,stickerId=board.profile.sticker,status=if reason then "Rejected" else "Applied",reason=reason})
 		return
 	end
 	if action == "sound" or action == "motion" then
@@ -591,8 +641,11 @@ task.spawn(function()
 							board.mode = if hasPip(board) then "Room" else "Board"
 							reset(board, board.sim.preset)
 							board.folder:SetAttribute("Mode", board.mode)
+							if board.folder:GetAttribute("DeckThemeId")~=board.profile.theme
+								or board.folder:GetAttribute("DeckStickerId")~=board.profile.sticker then board.appearance.revision+=1 end
 							board.folder:SetAttribute("DeckThemeId", board.profile.theme)
 							board.folder:SetAttribute("DeckStickerId", board.profile.sticker)
+							board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 							board.folder:SetAttribute("SoundLevel", board.profile.sound)
 							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)
 							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme, board.profile.sticker)

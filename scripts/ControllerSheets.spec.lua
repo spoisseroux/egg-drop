@@ -62,11 +62,11 @@ return function(client,parent)
 			end
 			close(view)
 		end)
-		test("pointer-open Style seeds active Sticker or Club tab without preview Apply or settings writes",function()
+		test("pointer-open Style seeds active Sticker or Settings without appearance or settings writes",function()
 			local view=picker()
-			for _,tab in ipairs({"Sticker","Club"})do
+			for _,tab in ipairs({"Sticker","Settings"})do
 				view:showTab(tab);local f=coordinator(view);local before=total();f:pad();f:flush()
-				assert(GuiService.SelectedObject==view.tabs[tab] and f.writes==1 and total()==before,tab)
+				assert(GuiService.SelectedObject==(view.tabs[tab]or view.sound) and f.writes==1 and total()==before,tab)
 				f.co:destroy()
 			end
 			close(view)
