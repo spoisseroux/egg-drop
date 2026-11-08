@@ -61,7 +61,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	shade.BackgroundTransparency, shade.Active, shade.Visible = 1, true, false
 	local card = frame(shade, "Card", "panel", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(560, 540), 21)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
-	Art.panel(card, 16, Art.Amber)
+	Art.panel(card, 16, "accent")
 	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
 	heading.Font = Art.Font.Heading
 	local nectar = label(card, "Nectar", "0 nectar", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
@@ -80,20 +80,29 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	body.Parent = card
 	local close = button(card, "Close", "×", UDim2.new(0, 12, 1, -56), UDim2.new(0.30, -18, 0, 44), "raised", 60)
 	Art.bareClose(close)
-	local action = button(card, "Action", "Hatch", UDim2.new(0.30, 2, 1, -56), UDim2.new(0.70, -14, 0, 44), Art.Amber, 60)
-	local meet = button(card, "Meet", "Meet friend", UDim2.new(0, 12, 1, -56), UDim2.new(0.50, -18, 0, 44), Art.Leaf, 60)
+	local action = button(card, "Action", "Hatch", UDim2.new(0.30, 2, 1, -56), UDim2.new(0.70, -14, 0, 44), "accent", 60)
+	local meet = button(card, "Meet", "Meet friend", UDim2.new(0, 12, 1, -56), UDim2.new(0.50, -18, 0, 44), "accent", 60)
 	meet.Visible = false
-	local revealHost = frame(card, "RevealHost", "panel", UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
+	local revealHost = frame(card, "RevealHost", "inset", UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
 	revealHost.Visible = false
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
 		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
 		closeButton = close, action = action, meetButton = meet, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
-		intentToken = 0,
+		intentToken = 0, presentationGeneration = 0,
 	}, View)
-	self.cinematic = HatchCinematic.new(revealHost, audio, reduceEffects)
-	Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
+	self.cinematic = HatchCinematic.new(revealHost, audio, reduceEffects, function()
+		return shade.Visible and (not self.ownsPresentation or self.ownsPresentation())
+	end)
+	Art.watchTextPreference(shade,function()return shade.Visible end,function()
+		self:layout()
+		if self.state.lastHatch and self.cinematic.result then
+			-- Preferred text can change native leading without changing the stage size.
+			self.cinematic:layout()
+			self:layout()
+		end
+	end)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:layout() end)
 	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if shade.Visible then self:renderBody() end
@@ -234,37 +243,69 @@ function View:ensureSelectedRecipe()
 	self.body.CanvasPosition=Vector2.new(0,math.clamp(wanted,0,math.max(0,self.body.CanvasSize.Y.Offset-height)))
 end
 function View:layout()
-	if not self.state.lastHatch then return self:layoutShop()end
-	local size=self.shade.AbsoluteSize;local notice=self:getSaveNotice()
-	if not notice then self:restoreRevealParent()else self.note.Parent=self.card end
-	self.compactShop,self.budgetCompact=false,false
-	self.card.Size=UDim2.fromOffset(math.clamp(size.X-32,1,560),math.clamp(size.Y-(if size.Y<200 then 16 else 32),1,580))
-	self.closeButton.Position,self.closeButton.Size=UDim2.new(1,-56,0,6),UDim2.fromOffset(44,44)
-	self.wallet.Visible,self.heading.Visible,self.nectar.Visible,self.note.Visible,self.body.Visible=false,false,false,false,false
-	self.meetButton.Visible=true
-	local width=(self.card.Size.X.Offset-36)/2
-	local footerH=math.max(44,self:footerRowHeight(self.action,width),self:footerRowHeight(self.meetButton,width));self.footerHeight=footerH
-	self.action.Size,self.action.Position=UDim2.new(.5,-18,0,footerH),UDim2.new(.5,6,1,-footerH-12)
-	self.meetButton.Size,self.meetButton.Position=UDim2.new(.5,-18,0,footerH),UDim2.new(0,12,1,-footerH-12)
-	if notice then
-		-- Status-only reflow retains the playing ID, epoch and exact hero size.
-		self.heading.Visible=true;self.heading.Text=notice.short;Art.type(self.heading,"Body",true)
-		self.heading.Position,self.heading.Size=UDim2.fromOffset(12,4),UDim2.new(1,-80,0,44)
-		self.body.Visible=true
-		local top=48;local gap=if size.Y<200 then 4 else 12
-		self.action.Position,self.meetButton.Position=UDim2.new(.5,6,1,-footerH-gap),UDim2.new(0,12,1,-footerH-gap)
-		self.body.Position,self.body.Size=UDim2.fromOffset(12,top),UDim2.new(1,-24,1,-top-footerH-gap-4)
-		self.revealHost.Size=UDim2.fromOffset(math.max(1,self.card.Size.X.Offset-20),math.max(1,self.card.Size.Y.Offset-80))
-		self.revealHost.Parent=self.body;self.revealHost.Position=UDim2.fromOffset(0,0)
-		for _,child in ipairs(self.body:GetChildren())do if child~=self.revealHost then child:Destroy()end end
-		self.note.Parent=self.body;self.note.Visible=true;self.note.Text=notice.detail;Art.type(self.note,"Body",true)
-		local heroH=self.revealHost.Size.Y.Offset;local h=Art.textHeight(self.note,self.card.Size.X.Offset-32,24)
-		self.note.Position,self.note.Size=UDim2.fromOffset(4,heroH+8),UDim2.fromOffset(self.card.Size.X.Offset-32,h)
-		local total=heroH+8+h+4
-		self.body.CanvasSize=UDim2.fromOffset(0,total);self.body.ScrollingEnabled=total>self.body.Size.Y.Offset
-		self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,total-self.body.Size.Y.Offset)))
+	if not self.state.lastHatch then return self:layoutShop() end
+	if self.layingOutResult then return end
+	self.layingOutResult = true
+	local size = self.shade.AbsoluteSize
+	local notice = self:getSaveNotice()
+	self.compactShop, self.budgetCompact = false, false
+	self.card.Size = UDim2.fromOffset(math.clamp(size.X-32,1,560), math.clamp(size.Y-(if size.Y<200 then 16 else 32),1,580))
+	self.closeButton.Position, self.closeButton.Size = UDim2.new(1,-56,0,6), UDim2.fromOffset(44,44)
+	self.wallet.Visible, self.heading.Visible, self.nectar.Visible, self.note.Visible = false, false, false, false
+	self.meetButton.Visible = true
+	local width = (self.card.Size.X.Offset-36)/2
+	local footerH = math.max(44,self:footerRowHeight(self.action,width),self:footerRowHeight(self.meetButton,width))
+	self.footerHeight = footerH
+	self.action.Size, self.action.Position = UDim2.new(.5,-18,0,footerH), UDim2.new(.5,6,1,-footerH-12)
+	self.meetButton.Size, self.meetButton.Position = UDim2.new(.5,-18,0,footerH), UDim2.new(0,12,1,-footerH-12)
+	local stageW, normalH = math.max(1,self.card.Size.X.Offset-20), math.max(1,self.card.Size.Y.Offset-80)
+	local function minimumHeight(w,h)
+		return if self.cinematic.minimumHeightForWidth then self.cinematic:minimumHeightForWidth(w,h) else self.cinematic.minimumHeight or 0
 	end
-	self.layoutHeaderKey=self:headerKey()
+	-- Choose the owner once from the normal candidate, independent of whichever
+	-- typography was painted by an earlier direct or scrolling layout.
+	local shortStage = minimumHeight(stageW,normalH)>normalH
+	if shortStage then stageW = math.max(1,self.card.Size.X.Offset-76) end
+	local stageH = normalH
+	for _=1,3 do
+		local nextHeight = math.max(stageH,minimumHeight(stageW,stageH))
+		if nextHeight == stageH then break end
+		stageH = nextHeight
+	end
+	self.resultScrollable = notice ~= nil or shortStage
+	-- The stage rectangle is solved independently of save status, preserving its
+	-- exact hero and epoch while the same result moves into the scrolling owner.
+	self.note.Parent = self.card
+	if self.resultScrollable then
+		local top = if notice then 48 else 8
+		local gap = if size.Y<200 then 4 else 12
+		local bodyW = self.card.Size.X.Offset-(if shortStage and not notice then 72 else 24)
+		self.body.Visible = true
+		self.action.Position, self.meetButton.Position = UDim2.new(.5,6,1,-footerH-gap), UDim2.new(0,12,1,-footerH-gap)
+		self.body.Position, self.body.Size = UDim2.fromOffset(12,top), UDim2.fromOffset(bodyW, math.max(1,self.card.Size.Y.Offset-top-footerH-gap-4))
+		self.revealHost.Size = UDim2.fromOffset(stageW,stageH)
+		self.revealHost.Parent, self.revealHost.Position = self.body, UDim2.fromOffset(0,0)
+		for _,child in ipairs(self.body:GetChildren()) do if child~=self.revealHost then child:Destroy() end end
+		local total = stageH+4
+		if notice then
+			self.heading.Visible = true; self.heading.Text = notice.short; Art.type(self.heading,"Body",true)
+			self.heading.Position, self.heading.Size = UDim2.fromOffset(12,4), UDim2.new(1,-80,0,44)
+			self.note.Parent, self.note.Visible, self.note.Text = self.body, true, notice.detail
+			Art.type(self.note,"Body",true)
+			local h = Art.textHeight(self.note,self.card.Size.X.Offset-32,24)
+			self.note.Position, self.note.Size = UDim2.fromOffset(4,stageH+8), UDim2.fromOffset(self.card.Size.X.Offset-32,h)
+			total = stageH+8+h+4
+		end
+		self.body.CanvasSize = UDim2.fromOffset(0,total)
+		self.body.ScrollingEnabled = total>self.body.Size.Y.Offset
+		self.body.CanvasPosition = Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,total-self.body.Size.Y.Offset)))
+	else
+		-- Move the live scene before hiding its former scrolling ancestor.
+		self:restoreRevealParent()
+		self.body.Visible = false
+	end
+	self.layoutHeaderKey = self:headerKey()
+	self.layingOutResult = false
 	if not self.refreshingFooterLayout then self.refreshingFooterLayout=true;self:refreshFooter();self.refreshingFooterLayout=nil end
 end
 
@@ -298,11 +339,24 @@ function View:chooseResult(intent)
 	self:send("ack", result.id)
 end
 
+function View:ownsInput()
+	if not self.shade.Visible or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
+		or (self.audio and self.audio.deviceActive == false)
+		or (self.ownsPresentation and not self.ownsPresentation()) then return false end
+	local ancestor = self.shade
+	while ancestor do
+		if ancestor:IsA("GuiObject") and (not ancestor.Visible or not ancestor.Interactable)
+			or ancestor:IsA("ScreenGui") and not ancestor.Enabled then return false end
+		ancestor = ancestor.Parent
+	end
+	return self.shade.Parent ~= nil
+end
+
 function View:selectResultAction()
-	if not string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then return end
+	if not self:ownsInput() or not string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then return end
 	local selected = GuiService.SelectedObject
 	if selected == self.closeButton then return end
-	GuiService.SelectedObject = if self.meetButton.Interactable then self.meetButton else nil
+	if self.meetButton.Interactable then GuiService.SelectedObject = self.meetButton end
 end
 
 function View:send(command, value)
@@ -545,6 +599,7 @@ function View:update(state)
 	if self.errorMessage and self.errorRevision and self.state.status=="Ready" and (self.state.revision or 0)>self.errorRevision then self.errorMessage,self.errorRevision=nil,nil end
 	local intent = self.ackIntent
 	local result = self.state.lastHatch
+	if result and self.shade.Visible and self.playingId ~= result.id then self.body.CanvasPosition = Vector2.zero end
 	if intent and result and result.id ~= intent.id then
 		self:revokeIntent()
 		intent = nil
@@ -565,6 +620,9 @@ function View:update(state)
 		if result then
 			self.revealHost.Visible = true
 			if self.playingId ~= result.id then
+				self.presentationGeneration += 1
+				local generation = self.presentationGeneration
+				local skipIntro = self.lastPresentedId == result.id
 				self.playingId, self.ackReady = result.id, false
 				local presentation = table.clone(result)
 				local pet = Pets.byId[result.petId]
@@ -583,16 +641,29 @@ function View:update(state)
 					presentation.starterGoal = if balance >= recipe.cost then recipe.name .. " ready · choose it in Menu"
 						else string.format("%s · %d/%d nectar · win quests", recipe.name, balance, recipe.cost)
 				end
+				local completed = false
 				self.cinematic:play(presentation, function()
-					if self.shade.Visible and self.state.lastHatch and self.state.lastHatch.id == result.id then
-						self.ackReady = true
-						self:refreshFooter()
-						self:selectResultAction()
+					-- A cancelled intro may finish after X and a same-ID reopen.
+					if completed or self.presentationGeneration ~= generation or not self.shade.Visible
+						or not self.state.lastHatch or self.state.lastHatch.id ~= result.id then return end
+					completed = true
+					self.ackReady = true
+					self:refreshFooter()
+					if self:ownsInput() then self:selectResultAction() end
+				end, { skipIntro = skipIntro, onPresented = function()
+					if self.presentationGeneration == generation and self.shade.Visible
+						and self.state.lastHatch and self.state.lastHatch.id == result.id then
+						-- One bounded session marker survives X; it never acknowledges a result.
+						self.lastPresentedId = result.id
 					end
-				end)
+				end })
+				self:layout()
 			end
 		else
-			if self.playingId then self.cinematic:cancel() end
+			if self.playingId then
+				self.presentationGeneration += 1
+				self.cinematic:cancel()
+			end
 			self.playingId, self.ackReady = nil, false
 			self:renderBody()
 		end
@@ -653,6 +724,11 @@ function View:getControllerFocus()
 	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
 		target=function()return self.closeButton end,fallback=self.closeButton}
 end
+function View:openingFocusTarget()
+	if self.state.lastHatch and not self.ackReady then return nil end
+	local target = if self.state.lastHatch then self.meetButton else self.action
+	return if target.Interactable then target else self.closeButton
+end
 function View:open(state)
 	self:bumpControllerEpoch()
 	if not self.shade.Visible then
@@ -662,8 +738,8 @@ function View:open(state)
 	self.errorMessage = nil
 	self.shade.Visible = true
 	self:update(state or self.state)
-	if self.shade.Visible and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
-		GuiService.SelectedObject = if self.state.lastHatch then (if self.ackReady then self.meetButton else nil) else self.action
+	if self:ownsInput() and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
+		GuiService.SelectedObject = self:openingFocusTarget()
 	end
 end
 
@@ -672,6 +748,7 @@ function View:close(reason, choice)
 	if not self.shade.Visible then return end
  if (reason==nil or reason=="close"or reason=="earn")and self.onAccepted then self.onAccepted(if reason=="earn"then "confirm"else "back")end
 	self:revokeIntent()
+	self.presentationGeneration += 1
 	self.shade.Visible = false
 	self.cinematic:cancel()
 	self:restoreRevealParent()

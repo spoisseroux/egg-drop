@@ -1,0 +1,318 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HatchCinematic",
+    "result": {
+      "fixtureOnly": true,
+      "geometry": [
+        {
+          "independentBand": 218,
+          "canonicalLabels": {
+            "caption": {
+              "height": 34,
+              "nativeHeight": 30,
+              "required": 34,
+              "width": 576
+            },
+            "name": {
+              "height": 44,
+              "nativeHeight": 40,
+              "required": 44,
+              "width": 576
+            },
+            "tag": {
+              "height": 34,
+              "nativeHeight": 30,
+              "required": 34,
+              "width": 576
+            }
+          },
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "text reserve",
+          "exception": "Largest600x360 canonical text budget; Medium normal48% floor retained",
+          "bandHeight": 218,
+          "fraction": 0.44758283722217207,
+          "stageHeight": 360,
+          "preparationMs": 9.20079997740686,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "independentBand": 218,
+          "canonicalLabels": {
+            "caption": {
+              "height": 34,
+              "nativeHeight": 30,
+              "required": 34,
+              "width": 576
+            },
+            "name": {
+              "height": 44,
+              "nativeHeight": 40,
+              "required": 44,
+              "width": 576
+            },
+            "tag": {
+              "height": 34,
+              "nativeHeight": 30,
+              "required": 34,
+              "width": 576
+            }
+          },
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "text reserve",
+          "exception": "Largest600x360 canonical text budget; Medium normal48% floor retained",
+          "bandHeight": 218,
+          "fraction": 0.4124787649220623,
+          "stageHeight": 360,
+          "preparationMs": 11.181199923157692,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "text reserve",
+          "bandHeight": 218,
+          "fraction": 0.46687928030017045,
+          "stageHeight": 360,
+          "preparationMs": 2.2274998482316732,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "text reserve",
+          "bandHeight": 218,
+          "fraction": 0.38802390759436,
+          "stageHeight": 360,
+          "preparationMs": 4.810400074347854,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "text reserve",
+          "bandHeight": 218,
+          "fraction": 0.45540796181400556,
+          "stageHeight": 360,
+          "preparationMs": 11.169500183314085,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "text reserve",
+          "bandHeight": 218,
+          "fraction": 0.46154520447270264,
+          "stageHeight": 360,
+          "preparationMs": 2.4078998249024153,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "text reserve",
+          "bandHeight": 218,
+          "fraction": 0.38802390759436,
+          "stageHeight": 360,
+          "preparationMs": 5.925799952819943,
+          "limited": true,
+          "preference": "Largest",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.5138696794320088,
+          "stageHeight": 420,
+          "preparationMs": 8.731599897146225,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "swept width",
+          "bandHeight": 292,
+          "fraction": 0.34917605677409325,
+          "stageHeight": 420,
+          "preparationMs": 10.126600041985512,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.5360239181427907,
+          "stageHeight": 420,
+          "preparationMs": 2.6516998186707497,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.44549009574398346,
+          "stageHeight": 420,
+          "preparationMs": 4.885300062596798,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.5228537018991729,
+          "stageHeight": 420,
+          "preparationMs": 11.499299900606275,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.5298998677825524,
+          "stageHeight": 420,
+          "preparationMs": 2.4250000715255737,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "full greeting",
+          "bandHeight": 292,
+          "fraction": 0.44549009574398346,
+          "stageHeight": 420,
+          "preparationMs": 5.513299955055118,
+          "limited": true,
+          "preference": "Largest",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999971139598,
+          "stageHeight": 180,
+          "preparationMs": 8.54890001937747,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.589999993271128,
+          "stageHeight": 180,
+          "preparationMs": 9.96820000000298,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999843055449,
+          "stageHeight": 180,
+          "preparationMs": 2.275999868288636,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 5.214800126850605,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999845886932,
+          "stageHeight": 180,
+          "preparationMs": 9.807199938222766,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999956499742,
+          "stageHeight": 180,
+          "preparationMs": 2.6142001152038574,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 7.969999918714166,
+          "limited": false,
+          "preference": "Largest",
+          "size": "500, 180"
+        }
+      ],
+      "passed": 7,
+      "cases": [
+        "all seven real subjects fit the rectangular viewport through every greeting frame",
+        "common and rare complete once and retain moving settled motes without replaying cues",
+        "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+        "covered first play defers marker while presented owner loss lands final and stops its clock",
+        "resize keeps exact hero and epoch and device discontinuity settles only once",
+        "candidate minimum height is independent of previous stage and painted text sizes",
+        "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+      ]
+    }
+  }
+]

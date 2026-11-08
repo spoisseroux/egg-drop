@@ -11,10 +11,10 @@ return function(client, parent)
 	local function state(revision, hatch, status)
 		return { status = status or "Ready", revision = revision, lastHatch = hatch, nectar = 24, inventoryMask = 32 }
 	end
-	local function fixture(hatch, transport, reduced)
-		local sent, completed = {}, {}
+	local function fixture(hatch, transport, reduced, beforeOpen)
+		local sent, completed, sounds = {}, {}, {}
 		local view
-		view = View.new(root, { play = function() end }, function() return reduced ~= false end, function(command, value, revision)
+		view = View.new(root, { play = function(_, cue) table.insert(sounds, cue) end }, function() return reduced ~= false end, function(command, value, revision)
 			table.insert(sent, { command = command, value = value, revision = revision })
 			if transport then transport(view, command, value, revision) end
 		end)
@@ -23,8 +23,9 @@ return function(client, parent)
 			assert(view.ackIntent == nil, "intent must be dequeued before navigation")
 			table.insert(completed, { reason = reason, choice = choice })
 		end
-		view:open(state(10, hatch or result()))
-		return view, sent, completed
+		local openingState = if beforeOpen then beforeOpen(view) else nil
+		view:open(openingState or state(10, hatch or result()))
+		return view, sent, completed, sounds
 	end
 	local ok, problem = pcall(function()
 		test("Meet acknowledges exact rare-only result and waits for advanced Ready", function()
@@ -186,6 +187,201 @@ return function(client, parent)
 			view:close("close");view:open(state(10,hatch))
 			assert(#sent==0 and #completed==1 and view.state.lastHatch.id=="retained-x")
 			assert(view.closeButton.AbsoluteSize==Vector2.new(44,44))
+		end)
+		test("Mid-crack X and two reopens retain the result and show the quiet final scene", function()
+			local hatch = result("mid-crack-retained")
+			local view, sent, completed, sounds = fixture(hatch, nil, false)
+			task.wait(0.65)
+			assert(view.cinematic.active and view.lastPresentedId == hatch.id and not view.ackReady)
+			view:close("close")
+			local heard = #sounds
+			for _ = 1, 2 do
+				view:open(state(10, hatch))
+				assert(view.lastPresentedId == hatch.id and view.playingId == hatch.id and view.ackReady)
+				assert(not view.cinematic.active and view.meetButton.Interactable and view.action.Interactable)
+				assert(#sent == 0 and #sounds == heard, "reopen replayed a cue or acknowledged without a choice")
+				view:close("close")
+			end
+			assert(#completed == 3 and view.lastPresentedId == hatch.id)
+		end)
+		test("Hidden snapshots and a covered first paint do not reserve the presentation marker", function()
+			local hatch = result("unseen")
+			local owner = false
+			local view, sent = fixture(hatch, nil, false, function(instance)
+				instance.ownsPresentation = function() return owner end
+				instance:update(state(10, hatch))
+				assert(instance.lastPresentedId == nil and instance.playingId == nil)
+			end)
+			assert(view.lastPresentedId == nil and #sent == 0)
+			view:close("close")
+			owner = true
+			view:open(state(10, hatch))
+			assert(view.lastPresentedId == hatch.id and view.cinematic.active and not view.ackReady)
+			view.cinematic:finishStatic(); view:close()
+		end)
+		test("A stale same-ID completion cannot unlock or steal focus after reopen", function()
+			local plays, selections = {}, 0
+			local hatch = result("same-id-generation")
+			local view, sent = fixture(hatch, nil, true, function(instance)
+				instance.cinematic:cancel()
+				instance.cinematic = {
+					cancel = function() end,
+					play = function(_, _, complete, options)
+						table.insert(plays, {complete=complete, options=options})
+						options.onPresented()
+						if options.skipIntro then complete(); complete() end
+					end,
+				}
+				instance.selectResultAction = function() selections += 1 end
+			end)
+			assert(not view.ackReady and not plays[1].options.skipIntro)
+			view:close(); view:open(state(10, hatch))
+			assert(plays[2].options.skipIntro and view.ackReady and selections == 1)
+			plays[1].complete(); plays[2].complete()
+			assert(selections == 1 and #sent == 0, "cancelled or duplicate completion reclaimed selection")
+			view:update(state(11, result("replacement", "pip")))
+			assert(not view.ackReady and view.lastPresentedId == "replacement")
+			plays[2].options.onPresented(); plays[2].complete()
+			assert(not view.ackReady and view.lastPresentedId == "replacement" and selections == 1)
+			plays[3].complete(); assert(view.ackReady and selections == 2)
+		end)
+		test("Fresh controller focus waits for Meet while a deliberate X remains selected", function()
+			local GuiService = game:GetService("GuiService")
+			local previous = GuiService.SelectedObject
+			local hatch = result("controller-intro")
+			local view = fixture(hatch, nil, false)
+			assert(view:openingFocusTarget() == nil, "fresh intro must not automatically pin X")
+			view.cinematic:finishStatic()
+			assert(view:openingFocusTarget() == view.meetButton and view.meetButton.Interactable)
+			GuiService.SelectedObject = view.closeButton
+			view:selectResultAction()
+			assert(GuiService.SelectedObject == view.closeButton, "finishing must retain a deliberately focused X")
+			view:update(state(10, hatch, "Retrying"))
+			assert(view:openingFocusTarget() == view.closeButton, "settled disabled actions fall back to X")
+			GuiService.SelectedObject = previous
+		end)
+		test("A covered intro completes without reclaiming the covering owner's focus", function()
+			local owned, selections = true, 0
+			local hatch = result("covered-mid-intro")
+			local view, sent = fixture(hatch, nil, false, function(instance)
+				instance.ownsPresentation = function() return owned end
+				instance.selectResultAction = function() selections += 1 end
+			end)
+			assert(view.lastPresentedId == hatch.id and view.cinematic.active)
+			owned = false
+			view.cinematic:finishStatic()
+			assert(view.ackReady and selections == 0 and #sent == 0)
+			view:close(); owned = true; view:open(state(10, hatch))
+			assert(view.ackReady and not view.cinematic.active and selections == 1 and #sent == 0)
+		end)
+		test("Same-ID save recovery preserves generation, hero and presentation history", function()
+			local Notice = require(client.SaveNotice)
+			local hatch = result("save-reconcile")
+			local view, sent = fixture(hatch)
+			local epoch, hero, generation = view.cinematic.epoch, view.cinematic.heroViewport, view.presentationGeneration
+			local selected = view.selected
+			view:update(state(10, hatch, "Retrying"))
+			view:setSaveNotice(Notice.resolve(nil, "Retrying"))
+			assert(view.revealHost.Parent == view.body and view.cinematic.heroViewport == hero and hero.Parent)
+			assert(view.cinematic.epoch == epoch and view.presentationGeneration == generation and view.lastPresentedId == hatch.id)
+			assert(not view.meetButton.Interactable and #sent == 0)
+			view:update(state(11, hatch)); view:setSaveNotice(nil)
+			assert(view.cinematic.epoch == epoch and view.cinematic.heroViewport == hero and view.selected == selected)
+			assert(view.ackReady and view.meetButton.Interactable and view.action.Interactable and #sent == 0)
+		end)
+		test("Confirmed Ember themes the result shell and peach Meet action", function()
+			local Art = require(client.DeckArt)
+			local Themes = require(game.ReplicatedStorage.Shared.DeckThemes)
+			local previous = Art.getTheme()
+			local view = fixture(result("ember-result"))
+			Art.applyTheme(Themes.ById.brick)
+			assert(view.card.BackgroundColor3 == Themes.ById.brick.ui.panel)
+			assert(view.revealHost.BackgroundColor3 == Themes.ById.brick.ui.inset)
+			assert(view.card.Accent.BackgroundColor3 == Themes.ById.brick.buttons)
+			assert(view.meetButton.BackgroundColor3 == Themes.ById.brick.buttons and view.meetButton.TextColor3 == Themes.ById.brick.ui.ink)
+			assert(view.heading.TextColor3 == Themes.ById.brick.ui.text and view.note.TextColor3 == Themes.ById.brick.ui.muted)
+			Art.applyTheme(previous)
+		end)
+		test("Result layout measurement is independent of the previously painted text size", function()
+			local Notice=require(client.SaveNotice)
+			root.Size=UDim2.fromOffset(733,307)
+			for _=1,3 do game:GetService("RunService").Heartbeat:Wait() end
+			local hatch=result("canonical-measurement")
+			local view=fixture(hatch)
+			local normalH=math.max(1,view.card.Size.Y.Offset-80)
+			local trialW=math.max(1,view.card.Size.X.Offset-20)
+			local minimum=view.cinematic:minimumHeightForWidth(trialW,normalH)
+			local stage,epoch,hero=view.revealHost.Size,view.cinematic.epoch,view.cinematic.heroViewport
+			local expectedParent=if minimum>normalH then view.body else view.card
+			-- Simulate typography left over from another candidate; measuring must
+			-- use the proposed canonical role, rather than these painted properties.
+			view.cinematic.heading.TextSize=10;view.cinematic.caption.TextSize=10;view.cinematic.tag.TextSize=10
+			assert(view.cinematic:minimumHeightForWidth(trialW,normalH)==minimum)
+			view:layout();view.cinematic:layout();view:layout()
+			assert(view.revealHost.Size==stage and view.revealHost.Parent==expectedParent)
+			for _,notice in ipairs({"Retrying","Unavailable"})do
+				view:setSaveNotice(Notice.resolve(nil,notice));view:layout();view:setSaveNotice(nil);view:layout()
+				assert(view.revealHost.Size==stage and view.revealHost.Parent==expectedParent)
+				assert(view.cinematic.epoch==epoch and view.cinematic.heroViewport==hero and view.ackReady)
+			end
+			view:close();root.Size=UDim2.fromOffset(360,580)
+			for _=1,3 do game:GetService("RunService").Heartbeat:Wait() end
+		end)
+		test("Short animated same-ID layout and notice reparent retain active ownership", function()
+			local Notice = require(client.SaveNotice)
+			root.Size=UDim2.fromOffset(360,166)
+			for _=1,3 do game:GetService("RunService").Heartbeat:Wait() end
+			local hatch=result("short-active-owner")
+			local view, sent, _, sounds=fixture(hatch,nil,false)
+			assert(view.resultScrollable and view.cinematic.active)
+			local epoch,age,hero,heard=view.cinematic.epoch,view.cinematic.age,view.cinematic.heroViewport,#sounds
+			view:update(state(10,hatch));view:layout()
+			view:setSaveNotice(Notice.resolve(nil,"Retrying"));view:update(state(10,hatch));view:layout()
+			view:setSaveNotice(nil);view:layout()
+			assert(view.cinematic.active and view.cinematic.epoch==epoch and view.cinematic.age==age)
+			assert(view.cinematic.heroViewport==hero and #sounds==heard and #sent==0, "benign layout interrupted or replayed the intro")
+			view:close();root.Size=UDim2.fromOffset(360,580)
+			for _=1,3 do game:GetService("RunService").Heartbeat:Wait() end
+		end)
+		test("Short result captions remain reachable in the single body without covering X", function()
+			local function settle() for _=1,3 do game:GetService("RunService").Heartbeat:Wait() end end
+			local function visibleOverlap(a,b)
+				local p,s,bp,bs=a.AbsolutePosition,a.AbsoluteSize,b.AbsolutePosition,b.AbsoluteSize
+				return p.X<bp.X+bs.X and bp.X<p.X+s.X and p.Y<bp.Y+bs.Y and bp.Y<p.Y+s.Y
+			end
+			for _,height in ipairs({128,166,198}) do
+				root.Size = UDim2.fromOffset(360,height); settle()
+				local hatch = result("truthful-short-"..height)
+				hatch.duplicate = true
+				local view = fixture(hatch,nil,true,function(instance)
+					local snapshot=state(10,hatch)
+					snapshot.masteryDetails={wick={rank=2,points=18,nextPoints=25,challenges=1,challengeGoal=3}}
+					return snapshot
+				end)
+				local snapshot=state(10,hatch)
+				snapshot.masteryDetails={wick={rank=2,points=18,nextPoints=25,challenges=1,challengeGoal=3}}
+				view:update(snapshot);settle()
+				local epoch,hero=view.cinematic.epoch,view.cinematic.heroViewport
+				assert(view.resultScrollable and view.revealHost.Parent==view.body and view.body.AbsoluteSize.Y>=44)
+				assert(not visibleOverlap(view.body,view.closeButton) and not visibleOverlap(view.body,view.action))
+				for _,name in ipairs({"PetName","Mastery"}) do
+					local label=view.cinematic.frame:FindFirstChild(name,true)
+					assert(label and label.TextFits,name.." must retain complete truthful text at "..height)
+					local top=label.AbsolutePosition.Y-view.body.AbsolutePosition.Y+view.body.CanvasPosition.Y
+					local maximum=math.max(0,view.body.CanvasSize.Y.Offset-view.body.AbsoluteSize.Y)
+					for _,target in ipairs({top,top+label.AbsoluteSize.Y-view.body.AbsoluteSize.Y}) do
+						view.body.CanvasPosition=Vector2.new(0,math.clamp(target,0,maximum));settle()
+						assert(label.AbsolutePosition.Y<view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y and label.AbsolutePosition.Y+label.AbsoluteSize.Y>view.body.AbsolutePosition.Y,name.." cannot be reached")
+					end
+				end
+				local caption=view.cinematic.frame:FindFirstChild("Mastery",true)
+				assert(caption.Text:find("18/25",1,true) and caption.Text:find("1/3 challenges",1,true))
+				local offset=view.body.CanvasPosition
+				view:update(snapshot)
+				assert(view.cinematic.epoch==epoch and view.cinematic.heroViewport==hero and view.body.CanvasPosition==offset)
+				view:close()
+			end
+			root.Size=UDim2.fromOffset(360,580);settle()
 		end)
 		test("44px result actions fit short landscape safe areas and long names", function()
 			for _, height in ipairs({ 128, 166, 198, 580 }) do

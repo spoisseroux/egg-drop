@@ -1,0 +1,415 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchCinematic",
+    "result": {
+      "fixtureOnly": true,
+      "geometry": [
+        {
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5338143930172694,
+          "stageHeight": 360,
+          "preparationMs": 8.174600079655647,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.491947150824478,
+          "stageHeight": 360,
+          "preparationMs": 9.76529996842146,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5568284994405702,
+          "stageHeight": 360,
+          "preparationMs": 1.9970000721514225,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.46278080722263126,
+          "stageHeight": 360,
+          "preparationMs": 5.189300049096346,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5431471104203737,
+          "stageHeight": 360,
+          "preparationMs": 10.099000064656138,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5504667576279939,
+          "stageHeight": 360,
+          "preparationMs": 2.7600000612437725,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.46278080722263126,
+          "stageHeight": 360,
+          "preparationMs": 5.0995999481529,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5807431308649414,
+          "stageHeight": 420,
+          "preparationMs": 9.28339990787208,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "swept width",
+          "bandHeight": 330,
+          "fraction": 0.3466615056411466,
+          "stageHeight": 420,
+          "preparationMs": 9.954400127753615,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999940314162,
+          "stageHeight": 420,
+          "preparationMs": 2.2835000418126583,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "swept width",
+          "bandHeight": 330,
+          "fraction": 0.4920470789957318,
+          "stageHeight": 420,
+          "preparationMs": 4.568599862977862,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999465077901,
+          "stageHeight": 420,
+          "preparationMs": 11.045800056308508,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999825155837,
+          "stageHeight": 420,
+          "preparationMs": 2.7155999559909105,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "swept width",
+          "bandHeight": 330,
+          "fraction": 0.4920470789957318,
+          "stageHeight": 420,
+          "preparationMs": 4.998499993234873,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 10976,
+          "pet": "pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999971139598,
+          "stageHeight": 180,
+          "preparationMs": 10.237399954348803,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 6272,
+          "pet": "puddle",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.589999993271128,
+          "stageHeight": 180,
+          "preparationMs": 11.617799988016486,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999843055449,
+          "stageHeight": 180,
+          "preparationMs": 3.2484999392181635,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 6.064199842512608,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999845886932,
+          "stageHeight": 180,
+          "preparationMs": 12.427800102159381,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999956499742,
+          "stageHeight": 180,
+          "preparationMs": 3.280299948528409,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 5.424299975857139,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        }
+      ],
+      "passed": 7,
+      "cases": [
+        "all seven real subjects fit the rectangular viewport through every greeting frame",
+        "common and rare complete once and retain moving settled motes without replaying cues",
+        "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+        "covered first play defers marker while presented owner loss lands final and stops its clock",
+        "resize keeps exact hero and epoch and device discontinuity settles only once",
+        "candidate minimum height is independent of previous stage and painted text sizes",
+        "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchActions",
+    "result": {
+      "passed": 28,
+      "cases": [
+        "Meet acknowledges exact rare-only result and waits for advanced Ready",
+        "Replay never purchases and synchronous confirmation fires once",
+        "Retry and same-ID updates retain immutable choice",
+        "Pending feedback preserves choice before state catches up",
+        "Throttle, lock, and network feedback cannot erase an in-flight choice",
+        "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+        "Close cancels a scheduled pre-dispatch retry",
+        "Busy feedback queues a retry until Ready for the same result",
+        "A retry timer encountering Busy retains its work until Ready",
+        "Another pending transaction releases the captured ack on Ready",
+        "Repeated pre-dispatch locks are bounded and expose a user retry",
+        "A changed result revokes old navigation",
+        "Close during retry cancels navigation without a second acknowledgement",
+        "Definitive rejection permits changing the action",
+        "Actions remain locked during an unfinished cinematic",
+        "Duplicate caption uses copied mastery progress and retains both choices",
+        "corner X dismisses and reopens the same committed result without acknowledgment",
+        "Mid-crack X and two reopens retain the result and show the quiet final scene",
+        "Hidden snapshots and a covered first paint do not reserve the presentation marker",
+        "A stale same-ID completion cannot unlock or steal focus after reopen",
+        "Fresh controller focus waits for Meet while a deliberate X remains selected",
+        "A covered intro completes without reclaiming the covering owner's focus",
+        "Same-ID save recovery preserves generation, hero and presentation history",
+        "Confirmed Ember themes the result shell and peach Meet action",
+        "Result layout measurement is independent of the previously painted text size",
+        "Short animated same-ID layout and notice reparent retain active ownership",
+        "Short result captions remain reachable in the single body without covering X",
+        "44px result actions fit short landscape safe areas and long names"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchNavigation",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "already equipped pet focuses without duplicate equip",
+        "rare-only companion waits for server equip acknowledgment",
+        "mode and local handoff must both finish before equip",
+        "manual cancellation prevents late equip and focus",
+        "overlay interruption cancels pending focus",
+        "unconfirmed equip never substitutes a local pet",
+        "Room replay delegates fresh entry to server without a deferred reset",
+        "replay preserves an unfinished board",
+        "already Board replay carries exactly the captured ended sequence",
+        "sequence changes while waiting cannot reset a newer field",
+        "cancelled Board replay cannot reset after its handoff",
+        "newer navigation wins over a stale mode wait"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SaveNoticeLayout",
+    "result": {
+      "preference": "Medium",
+      "rootSize": "full matrix",
+      "passed": 9,
+      "cases": [
+        "733, 307 passive status belongs to each modal without covering pinned actions",
+        "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+        "568, 160 passive status belongs to each modal without covering pinned actions",
+        "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+        "385, 703 passive status belongs to each modal without covering pinned actions",
+        "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+        "1649, 971 passive status belongs to each modal without covering pinned actions",
+        "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+        "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ControllerSheets",
+    "result": {
+      "cases": [
+        "pointer-open Menu seeds current Daily or Mastery tab without routing",
+        "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+        "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "direct controller Journal opening retains its valid existing owned selection",
+        "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "all four same-instance openings advance generation and hidden sheets expose no target",
+        "recap Details preserve both pinned footer selections and never dispatch a route"
+      ],
+      "passed": 9,
+      "inputIsSemanticFixture": true
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PreferredTextLayout",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+        "680, 700 measured shop header and pinned purchase route fit",
+        "680, 700 recap reward wallet and complete receipt stay readable",
+        "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+        "390, 740 measured shop header and pinned purchase route fit",
+        "390, 740 recap reward wallet and complete receipt stay readable",
+        "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+        "568, 160 measured shop header and pinned purchase route fit",
+        "568, 160 recap reward wallet and complete receipt stay readable"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PresentationPolicy",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "fresh initial board and deliberate arrival may own one boot",
+        "HUD refresh resize replay and sheet close never manufacture boot",
+        "ended board pending reveal and each interactive owner suppress initial boot",
+        "ended board arrival leaves recap in charge",
+        "overlay arriving mid boot revokes dots visuals and sound with same predicate",
+        "old completion cannot release or hide a newer presentation",
+        "route changes reduced motion and teardown revoke delayed work",
+        "ended board under menu passes gamepad A to the visible sheet",
+        "native menu and text capture retain Back instead of closing covered sheets",
+        "late committed hatch preempts Menu in order and never acknowledges or purchases"
+      ]
+    }
+  }
+]

@@ -1,0 +1,67 @@
+[
+  {
+    "ok": false,
+    "preference": "Largest",
+    "name": "HatchCinematic",
+    "result": "Players.keehar01.PlayerScripts.Client.QAHatchCinematic:135: Players.keehar01.PlayerScripts.Client.QAHatchCinematic:50: pip normal stage fraction 0.44758283722217207 limited by text reserve"
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HatchActions",
+    "result": {
+      "passed": 28,
+      "cases": [
+        "Meet acknowledges exact rare-only result and waits for advanced Ready",
+        "Replay never purchases and synchronous confirmation fires once",
+        "Retry and same-ID updates retain immutable choice",
+        "Pending feedback preserves choice before state catches up",
+        "Throttle, lock, and network feedback cannot erase an in-flight choice",
+        "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+        "Close cancels a scheduled pre-dispatch retry",
+        "Busy feedback queues a retry until Ready for the same result",
+        "A retry timer encountering Busy retains its work until Ready",
+        "Another pending transaction releases the captured ack on Ready",
+        "Repeated pre-dispatch locks are bounded and expose a user retry",
+        "A changed result revokes old navigation",
+        "Close during retry cancels navigation without a second acknowledgement",
+        "Definitive rejection permits changing the action",
+        "Actions remain locked during an unfinished cinematic",
+        "Duplicate caption uses copied mastery progress and retains both choices",
+        "corner X dismisses and reopens the same committed result without acknowledgment",
+        "Mid-crack X and two reopens retain the result and show the quiet final scene",
+        "Hidden snapshots and a covered first paint do not reserve the presentation marker",
+        "A stale same-ID completion cannot unlock or steal focus after reopen",
+        "Fresh controller focus waits for Meet while a deliberate X remains selected",
+        "A covered intro completes without reclaiming the covering owner's focus",
+        "Same-ID save recovery preserves generation, hero and presentation history",
+        "Confirmed Ember themes the result shell and peach Meet action",
+        "Result layout measurement is independent of the previously painted text size",
+        "Short animated same-ID layout and notice reparent retain active ownership",
+        "Short result captions remain reachable in the single body without covering X",
+        "44px result actions fit short landscape safe areas and long names"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SaveNoticeLayout",
+    "result": {
+      "preference": "Largest",
+      "rootSize": "full matrix",
+      "passed": 9,
+      "cases": [
+        "733, 307 passive status belongs to each modal without covering pinned actions",
+        "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+        "568, 160 passive status belongs to each modal without covering pinned actions",
+        "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+        "385, 703 passive status belongs to each modal without covering pinned actions",
+        "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+        "1649, 971 passive status belongs to each modal without covering pinned actions",
+        "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+        "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+      ]
+    }
+  }
+]

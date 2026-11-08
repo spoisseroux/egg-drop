@@ -839,6 +839,10 @@ end)
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
+nurseryView.ownsPresentation = function()
+	return not roomView.busy and not roomView.transition.shade.Visible and not modal.Visible
+		and not isPickerOpen() and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
+end
 openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
 	picker:close()
@@ -1059,6 +1063,7 @@ refreshSaveNotice=function()
 	roomView.focusUI:setSaveNotice(if owner=="roam"or owner=="focus"then currentSaveNotice else nil)
 	recap:setSaveNotice(if owner=="recap"then currentSaveNotice else nil,
 		if owner=="recap"and modal.Size.Y.Offset<300 then modalTitle.Text else nil)
+	nurseryView.cinematic:refreshOwner()
 	status.Visible=not (currentSaveNotice~=nil and owner~="board")
 	if owner~="board"then status:SetAttribute("AccessibleLabel",nil)end
 	if owner=="board"then
@@ -2003,6 +2008,7 @@ applySound()
 board:GetAttributeChangedSignal("SoundLevel"):Connect(applySound)
 gui.Destroying:Connect(function() audio:destroy() end)
 local function refreshMotion()
+	nurseryView.cinematic:refreshOwner()
 	if reduceEffects() then
 		reveal:cancel()
 		rendererPresentation.fx:clear()

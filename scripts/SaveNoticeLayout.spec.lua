@@ -157,7 +157,28 @@ return function(client,parent,rootSize)
 					reach(v.note,v.body)
 					assert(callbacks==before and sounds==soundCount)
 				end)
-				assert(shop.revealHost.Parent==shop.card and shop.cinematic.epoch==epoch and shop.cinematic.heroViewport==viewport and shop.state.lastHatch.id==result.id)
+				local normalH=math.max(1,shop.card.Size.Y.Offset-80)
+				local minimum=shop.cinematic:minimumHeightForWidth(math.max(1,shop.card.Size.X.Offset-20),normalH)
+				local shortStage=minimum>normalH
+				local expectedParent=if shortStage then shop.body else shop.card
+				local diagnostic=string.format("root=%s parent=%s expected=%s normalH=%g minimum=%g stage=%s body=%s canvas=%s epoch=%s/%s",
+					tostring(size),shop.revealHost.Parent:GetFullName(),expectedParent:GetFullName(),normalH,minimum,tostring(shop.revealHost.AbsoluteSize),
+					tostring(shop.body.AbsoluteSize),tostring(shop.body.CanvasPosition),tostring(shop.cinematic.epoch),tostring(epoch))
+				assert(shop.revealHost.Parent==expectedParent,diagnostic)
+				assert(shop.body.Visible==shortStage and shop.revealHost.AbsoluteSize==pixelSize,diagnostic)
+				assert(shop.cinematic.epoch==epoch and shop.cinematic.heroViewport==viewport and viewport.Parent,diagnostic)
+				assert(shop.playingId==result.id and shop.state.lastHatch.id==result.id and shop.ackReady==ready and shop.selected=="sprout" and shop.state.nectar==24)
+				assert(shop.meetButton.Interactable and shop.action.Interactable and callbacks==before and sounds==soundCount)
+				for _,control in ipairs({shop.closeButton,shop.meetButton,shop.action})do
+					assert(control.AbsoluteSize.Y>=44 and inside(control,shop.card) and control.TextFits,diagnostic)
+				end
+				if shortStage then
+					assert(shop.body.AbsoluteSize.Y>=44 and not overlaps(shop.body,shop.closeButton) and not overlaps(shop.body,shop.action) and not overlaps(shop.body,shop.meetButton),diagnostic)
+				end
+				for _,name in ipairs({"PetName","Mastery"})do
+					local label=shop.cinematic.frame:FindFirstChild(name,true);assert(label and label.Visible,diagnostic);readable(label)
+					if shortStage then reach(label,shop.body)end
+				end
 				shop:close();shop:open(state(result));settle()
 				assert(shop.state.lastHatch.id==result.id and callbacks==before and shop.selected=="sprout");shop:close()
 			end)

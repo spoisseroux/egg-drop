@@ -1,0 +1,75 @@
+{
+  "before": {
+    "at": 404630.6049438,
+    "bits": {
+      "1": {
+        "y": 116.5,
+        "x": 178,
+        "name": "HatchBit1"
+      },
+      "2": {
+        "y": 73.5,
+        "x": 247,
+        "name": "HatchBit2"
+      },
+      "3": {
+        "y": 79.5,
+        "x": 299,
+        "name": "HatchBit3"
+      },
+      "4": {
+        "y": 140.5,
+        "x": 335,
+        "name": "HatchBit4"
+      },
+      "5": {
+        "y": 183.5,
+        "x": 266,
+        "name": "HatchBit5"
+      },
+      "6": {
+        "y": 173.5,
+        "x": 212,
+        "name": "HatchBit6"
+      }
+    },
+    "audio": "[{\"at\":404592.0375606001,\"name\":\"EggDrop_aim\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404592.4198614999,\"name\":\"EggDrop_drop\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":1},{\"at\":404593.5540264,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.5600000023841858,\"loaded\":true,\"speed\":1.002500057220459},{\"at\":404593.5542432999,\"name\":\"EggDrop_merge_jelly\",\"volume\":0.3808000087738037,\"loaded\":true,\"speed\":1.1951531171798707},{\"at\":404593.55430329989,\"name\":\"EggDrop_merge_chain\",\"volume\":0.30000001192092898,\"loaded\":true,\"speed\":1.1951531171798707},{\"at\":404593.5552093999,\"name\":\"EggDrop_charge\",\"volume\":0.3499999940395355,\"loaded\":true,\"speed\":1.149999976158142},{\"at\":404594.5886482999,\"name\":\"EggDrop_aim\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404594.9527278,\"name\":\"EggDrop_drop\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":1},{\"at\":404596.08693840008,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.5600000023841858,\"loaded\":true,\"speed\":1.0099999904632569},{\"at\":404596.08822389997,\"name\":\"EggDrop_charge\",\"volume\":0.3499999940395355,\"loaded\":true,\"speed\":1.0299999713897706},{\"at\":404596.3569799999,\"name\":\"EggDrop_pet\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404596.76480949998,\"name\":\"EggDrop_hatch_rise\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":0.9399999976158142},{\"at\":404597.2042558999,\"name\":\"EggDrop_charge\",\"volume\":0.25,\"loaded\":true,\"speed\":0.9200000166893005},{\"at\":404597.62106340008,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.25,\"loaded\":true,\"speed\":0.9200000166893005},{\"at\":404597.9708324999,\"name\":\"EggDrop_hatch\",\"volume\":0.6499999761581421,\"loaded\":true,\"speed\":1.0199999809265137},{\"at\":404598.2539858001,\"name\":\"EggDrop_pet\",\"volume\":0.5,\"loaded\":true,\"speed\":1}]"
+  },
+  "after": {
+    "at": 404632.72253110004,
+    "bits": {
+      "1": {
+        "y": 72.5,
+        "x": 254,
+        "name": "HatchBit1"
+      },
+      "2": {
+        "y": 108.5,
+        "x": 332,
+        "name": "HatchBit2"
+      },
+      "3": {
+        "y": 143.5,
+        "x": 332,
+        "name": "HatchBit3"
+      },
+      "4": {
+        "y": 184.5,
+        "x": 259,
+        "name": "HatchBit4"
+      },
+      "5": {
+        "y": 148.5,
+        "x": 181,
+        "name": "HatchBit5"
+      },
+      "6": {
+        "y": 109.5,
+        "x": 179,
+        "name": "HatchBit6"
+      }
+    },
+    "audio": "[{\"at\":404592.0375606001,\"name\":\"EggDrop_aim\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404592.4198614999,\"name\":\"EggDrop_drop\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":1},{\"at\":404593.5540264,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.5600000023841858,\"loaded\":true,\"speed\":1.002500057220459},{\"at\":404593.5542432999,\"name\":\"EggDrop_merge_jelly\",\"volume\":0.3808000087738037,\"loaded\":true,\"speed\":1.1951531171798707},{\"at\":404593.55430329989,\"name\":\"EggDrop_merge_chain\",\"volume\":0.30000001192092898,\"loaded\":true,\"speed\":1.1951531171798707},{\"at\":404593.5552093999,\"name\":\"EggDrop_charge\",\"volume\":0.3499999940395355,\"loaded\":true,\"speed\":1.149999976158142},{\"at\":404594.5886482999,\"name\":\"EggDrop_aim\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404594.9527278,\"name\":\"EggDrop_drop\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":1},{\"at\":404596.08693840008,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.5600000023841858,\"loaded\":true,\"speed\":1.0099999904632569},{\"at\":404596.08822389997,\"name\":\"EggDrop_charge\",\"volume\":0.3499999940395355,\"loaded\":true,\"speed\":1.0299999713897706},{\"at\":404596.3569799999,\"name\":\"EggDrop_pet\",\"volume\":0.7200000286102295,\"loaded\":true,\"speed\":1},{\"at\":404596.76480949998,\"name\":\"EggDrop_hatch_rise\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":0.9399999976158142},{\"at\":404597.2042558999,\"name\":\"EggDrop_charge\",\"volume\":0.25,\"loaded\":true,\"speed\":0.9200000166893005},{\"at\":404597.62106340008,\"name\":\"EggDrop_merge_bubble\",\"volume\":0.25,\"loaded\":true,\"speed\":0.9200000166893005},{\"at\":404597.9708324999,\"name\":\"EggDrop_hatch\",\"volume\":0.6499999761581421,\"loaded\":true,\"speed\":1.0199999809265137},{\"at\":404598.2539858001,\"name\":\"EggDrop_pet\",\"volume\":0.5,\"loaded\":true,\"speed\":1}]"
+  },
+  "actualPresentation": true
+}

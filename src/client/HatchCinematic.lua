@@ -1,332 +1,352 @@
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Art = require(script.Parent.DeckArt)
-local Portrait = require(script.Parent.PetPortrait)
-local Pets = require(ReplicatedStorage.Shared.PetCatalog)
-
-local Cinematic = {}
-Cinematic.__index = Cinematic
-
-local function round(parent, name, color, position, size, z)
-	local node = Art.frame(parent, name, color, position, size, z)
-	node.AnchorPoint = Vector2.new(0.5, 0.5)
-	Art.corner(node, 1000)
-	return node
+-- One committed result, persistent scene/pool, and one visible-owner clock.
+local RunService=game:GetService("RunService")
+local GuiService=game:GetService("GuiService")
+local Input=game:GetService("UserInputService")
+local TextService=game:GetService("TextService")
+local Art=require(script.Parent.DeckArt)
+local Portrait=require(script.Parent.PetPortrait)
+local Bounds=require(script.Parent.PetRigBounds)
+local Shot=require(script.Parent.PetGreetingShot)
+local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
+local function frame(parent,name,color,z)
+ local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),z);node.Active,node.Selectable=false,false;return node
 end
-
-local function text(parent, name, content, position, size, color, maximum)
-	local node = Art.text(parent, name, content, position, size, color, maximum, Enum.Font.GothamBold)
-	Art.fitText(node, maximum, 10, 6, true)
-	return node
+local function circle(parent,name,color,z)local node=frame(parent,name,color,z);node.AnchorPoint=Vector2.new(.5,.5);Art.corner(node,1000);return node end
+local function place(node,x,y,w,h)node.Position=UDim2.fromOffset(x,y);node.Size=UDim2.fromOffset(math.max(1,w),math.max(1,h))end
+local function label(parent,name,value,role,color)
+ local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),color,14);Art.type(node,role,true);node.TextXAlignment=Enum.TextXAlignment.Center;return node
 end
-
-function Cinematic.new(parent, audio, reduceEffects)
-	local frame = Art.frame(parent, "HatchCinematic", Art.Ink, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 42)
-	frame.Visible = false
-	frame.ClipsDescendants = true
-	Art.corner(frame, 14)
-	local self = setmetatable({
-		frame = frame, audio = audio, reduceEffects = reduceEffects, epoch = 0,
-		tweens = {}, active = false,
-	}, Cinematic)
-	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		if self.active and self.startedAt and os.clock() - self.startedAt > 0.15 then
-			-- Resizing must not leave the reveal offscreen or its footer permanently locked.
-			self:finishStatic()
-		elseif not self.active and self.frame.Visible and self.result then
-			self:clearHero()
-			self.frame:ClearAllChildren()
-			Art.corner(self.frame, 14)
-			self:drawResult(self.result)
-		end
-	end)
-	return self
+local function rest(visual,pet)visual.greeting=if(pet.family or pet.id)=="pip"or pet.id=="puddle"then 2 else 0;visual:update(0)end
+local function include(visual,points)
+ for _,entry in ipairs(visual.pieces)do local p=entry.part
+  if entry.role~="ripple"and entry.faceRole~="spark"and p.Transparency<.99 then
+   local cf,size=p.CFrame,p.Size
+   Bounds.include(visual,cf,size)
+   if points then for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do table.insert(points,cf:PointToWorldSpace(size*Vector3.new(x,y,z)*.5))end end end end
+  end
+ end
 end
-
+function Cinematic.new(parent,audio,reduceEffects,owns)
+ local root=Art.frame(parent,"HatchCinematic","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),42)
+ root.Visible=false;root.ClipsDescendants=true;root.Active=false;Art.corner(root,14)
+ local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
+ local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
+ for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
+ local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
+ watch(root:GetPropertyChangedSignal("AbsoluteSize"),function()if self.result and not self.building then self:layout();self:refreshOwner()end end)
+ watch(root.AncestryChanged,function()self:watchAncestors();self:refreshOwner()end)
+ watch(GuiService:GetPropertyChangedSignal("MenuIsOpen"),function()self:refreshOwner()end)
+ watch(GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"),function()self:refreshOwner()end)
+ watch(Input.WindowFocusReleased,function()self.windowActive=false;self:refreshOwner()end)
+ watch(Input.WindowFocused,function()self.windowActive=true;self:refreshOwner()end)
+ watch(Input.TextBoxFocused,function()self:refreshOwner()end);watch(Input.TextBoxFocusReleased,function()self:refreshOwner()end)
+ watch(root.Destroying,function()self:destroy(true)end);self:watchAncestors();return self
+end
+function Cinematic:reduced()return if type(self.reduceEffects)=="function"then self.reduceEffects()==true else self.reduceEffects==true end
+function Cinematic:visible()
+ local node=self.frame
+ while node do
+  if node:IsA("GuiObject")and not node.Visible then return false end
+  if node:IsA("ScreenGui")and not node.Enabled then return false end
+  node=node.Parent
+ end
+ return self.frame.Parent~=nil
+end
+function Cinematic:owned()
+ return not self.destroyed and self:visible()and self.windowActive and not GuiService.MenuIsOpen and Input:GetFocusedTextBox()==nil and(not self.owns or self.owns())and(not self.audio or self.audio.deviceActive~=false)
+end
+function Cinematic:watchAncestors()
+ for _,c in ipairs(self.ancestorConnections)do c:Disconnect()end;table.clear(self.ancestorConnections)
+ local node=self.frame
+ while node do
+  if node:IsA("GuiObject")or node:IsA("ScreenGui")then
+   table.insert(self.ancestorConnections,node:GetPropertyChangedSignal(if node:IsA("ScreenGui")then "Enabled"else "Visible"):Connect(function()self:refreshOwner()end))
+  end
+  node=node.Parent
+ end
+end
+function Cinematic:disconnectClock()if self.connection then self.connection:Disconnect();self.connection=nil end end
+function Cinematic:cue(name,pitch,volume)if self.audio and self:owned()and not self:reduced()then self.audio:play(name,pitch,volume,self.audioOwner)end end
+function Cinematic:stopAudio()if self.audio and self.audio.stopOwner and self.audioOwner then self.audio:stopOwner(self.audioOwner)end end
 function Cinematic:clearHero()
-	if self.heroConnection then
-		self.heroConnection:Disconnect()
-		self.heroConnection = nil
-	end
-	if self.heroVisual then
-		self.heroVisual:destroy()
-		self.heroVisual = nil
-	end
-	if self.heroViewport then
-		self.heroViewport:Destroy()
-		self.heroViewport = nil
-	end
+ if self.heroVisual then self.heroVisual:destroy();self.heroVisual=nil end
+ if self.heroViewport then self.heroViewport:Destroy();self.heroViewport=nil end
+ self.heroCamera,self.heroPoints,self.envelopeFrame,self.envelopeSize,self.sweptPoints,self.outlineCenter=nil,nil,nil,nil,nil,nil
 end
-
-function Cinematic:createHero(parent, pet, animate)
-	self:clearHero()
-	local viewport = Instance.new("ViewportFrame")
-	viewport.Name = "PetHero3D"
-	viewport.Size = UDim2.fromScale(1, 1)
-	viewport.BackgroundTransparency = 1
-	viewport.BorderSizePixel = 0
-	viewport.ZIndex = 50
-	viewport.Ambient = Color3.fromRGB(190, 204, 178)
-	viewport.LightColor = Color3.fromRGB(255, 240, 212)
-	viewport.LightDirection = Vector3.new(-1, -1.4, -3)
-	viewport.Parent = parent
-	self.heroViewport = viewport
-	local ok = pcall(function()
-		local world = Instance.new("WorldModel")
-		world.Name, world.Parent = "PetStage", viewport
-		local family = pet.family or pet.id
-		local visualModule = if family == "pip" then script.Parent.PipVisual
-			elseif family == "puddle" then script.Parent.PuddleVisual else script.Parent.BonusPetVisual
-		local visual = require(visualModule).new(world, Vector3.zero, pet)
-		self.heroVisual = visual
-		-- Each family has a different crown/tail width. Frame its real bounds plus
-		-- greeting headroom so leaves and rare flames cannot be cropped.
-		local bounds, dimensions = visual.model:GetBoundingBox()
-		local camera = Instance.new("Camera")
-		camera.Name, camera.FieldOfView = "HeroCamera", 30
-		local target = Vector3.new(bounds.Position.X, bounds.Position.Y + 0.22, 0)
-		local extent = math.max(dimensions.Y + 0.80, dimensions.X + 0.35)
-		local distance = extent / (2 * math.tan(math.rad(camera.FieldOfView / 2))) * 1.04
-		camera.CFrame = CFrame.lookAt(target + Vector3.new(0.22, 0.10, distance), target)
-		camera.Parent = viewport
-		viewport.CurrentCamera = camera
-		parent:SetAttribute("RenderMode", "3D")
-		if animate and not self.reduceEffects() then
-			visual:greet()
-			local elapsed = 0
-			local connection
-			local function stop()
-				connection:Disconnect()
-				if self.heroConnection == connection then self.heroConnection = nil end
-			end
-			connection = RunService.RenderStepped:Connect(function(dt)
-				if self.heroVisual ~= visual or not self.frame.Visible or not viewport.Parent then
-					stop()
-					return
-				end
-				elapsed += dt
-				if self.reduceEffects() or elapsed >= 1.8 then
-					visual:update(3)
-					stop()
-				else
-					visual:update(dt)
-				end
-			end)
-			self.heroConnection = connection
-		else
-			visual:update(3)
-		end
-	end)
-	if not ok then
-		self:clearHero()
-		parent:SetAttribute("RenderMode", "PixelFallback")
-		Portrait.create(parent, pet, parent.Size.Y.Offset / 13, UDim2.fromScale(0.5, 0.5), 50)
-	end
-end
-
-function Cinematic:stopMotions()
-	for _, motion in ipairs(self.tweens) do motion:Cancel() end
-	table.clear(self.tweens)
-end
-
 function Cinematic:cancel()
-	self.epoch += 1
-	self:stopMotions()
-	self:clearHero()
-	self.active = false
-	self.frame.Visible = false
-	self.frame:ClearAllChildren()
-	self.onComplete = nil
+ self.epoch+=1;self:disconnectClock();self:stopAudio();self.active=false;self.onComplete=nil;self.onPresented=nil;self.presented=false
+ self:clearHero();if self.stage then self.stage:Destroy();self.stage=nil end;if self.resultRoot then self.resultRoot:Destroy();self.resultRoot=nil end
+ self.result=nil;self.liveBits=0;self.frame.Visible=false;for _,bit in ipairs(self.bits)do bit.Visible=false end
+ self.quietPainted=nil
+end
+function Cinematic:destroy(fromSignal)
+ if self.destroyed then return end;self:cancel();self.destroyed=true
+ for _,c in ipairs(self.connections)do c:Disconnect()end;for _,c in ipairs(self.ancestorConnections)do c:Disconnect()end
+ table.clear(self.connections);table.clear(self.ancestorConnections);if not fromSignal then self.frame:Destroy()end
+end
+function Cinematic:complete()local callback=self.onComplete;self.onComplete=nil;if callback then callback()end end
+function Cinematic:createHero()
+ local preparationStarted=os.clock()
+ local viewport=Instance.new("ViewportFrame");viewport.Name="PetHero3D";viewport.Size=UDim2.fromScale(1,1);viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.ZIndex=50
+ viewport.Ambient=Color3.fromRGB(190,204,178);viewport.LightColor=Color3.fromRGB(255,240,212);viewport.LightDirection=Vector3.new(-1,-1.4,-3);viewport.Parent=self.heroHost;self.heroViewport=viewport
+ local ok=pcall(function()
+  if self.forceFallback then error("isolated pixel fallback fixture")end
+  local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport
+  local family=self.pet.family or self.pet.id
+  local module=if family=="pip"then script.Parent.PipVisual elseif family=="puddle"then script.Parent.PuddleVisual else script.Parent.BonusPetVisual
+  local visual=require(module).new(world,Vector3.zero,self.pet);self.heroVisual=visual;rest(visual,self.pet)
+  Bounds.begin(visual);include(visual);Bounds.finish(visual);self.neutralFrame,self.neutralSize=Bounds.get(visual)
+  self.heroPoints=Shot.captureSilhouette(visual,self.neutralFrame)
+  -- Bounded authored animation sample, once per result. Relayout reuses it.
+  local time,greeting=visual.time,visual.greeting;self.sweptPoints={};Bounds.begin(visual);include(visual,self.sweptPoints);visual:greet()
+  for _=1,48 do visual:update(1/30);include(visual,self.sweptPoints)end
+  Bounds.finish(visual);self.envelopeFrame,self.envelopeSize=Bounds.get(visual);self.envelopeSize+=Vector3.one*.10
+  visual.time,visual.greeting=time,greeting;visual:update(0);visual.rigBoundsFrame,visual.rigBoundsSize=self.neutralFrame,self.neutralSize
+  local camera=Instance.new("Camera");camera.Name="HeroCamera";camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera;self.heroCamera=camera;self.renderMode="3D"
+ end)
+ if not ok then self:clearHero();self.renderMode="PixelFallback";self.portrait=Portrait.create(self.heroHost,self.pet,1,UDim2.fromScale(.5,.5),50)end
+ self.heroHost:SetAttribute("RenderMode",self.renderMode)
+ self.heroPreparationMs=(os.clock()-preparationStarted)*1000
+end
+function Cinematic:fitHero(width,height,stageHeight)
+ if not self.heroCamera then
+  if self.portrait then local unit=math.max(.1,math.min(width/13,stageHeight*.59/11,height/13));local scale=self.portrait:FindFirstChild("HatchPortraitScale")or Instance.new("UIScale");scale.Name="HatchPortraitScale";scale.Scale=unit;scale.Parent=self.portrait end
+  return
+ end
+ local aspect=width/math.max(1,height);local tangent=math.tan(math.rad(30)*.5)
+ local hx,vy=tangent*aspect*.94,tangent*.94
+ local right,left,top,bottom,near=-math.huge,-math.huge,-math.huge,-math.huge,-math.huge
+ -- Fixed front camera: exact support distance in one pass over the cached sweep.
+ for _,p in ipairs(self.sweptPoints)do
+  right,left=math.max(right,p.Z+p.X/hx),math.max(left,p.Z-p.X/hx)
+  top,bottom=math.max(top,p.Z+p.Y/vy),math.max(bottom,p.Z-p.Y/vy)
+  near=math.max(near,p.Z+.55)
+ end
+ local target=Vector3.new((right-left)*hx*.5,(top-bottom)*vy*.5,0)
+ local horizontal,vertical=(right+left)*.5,(top+bottom)*.5
+ local safe=math.max(horizontal,vertical,near)+.04
+ local wanted=math.min(.90,.59*stageHeight/math.max(1,height))
+ local function candidate(distance)return CFrame.lookAt(target+Vector3.new(0,0,distance),target)end
+ local function occupancy(distance)return Shot.projectedPointsHeight(candidate(distance),self.heroPoints,self.neutralFrame,30)end
+ local low,high=safe,math.max(safe,3)
+ for _=1,12 do if occupancy(high)<=wanted then break end;high*=1.3 end
+ for _=1,22 do local mid=(low+high)*.5;if occupancy(mid)<=wanted then high=mid else low=mid end end
+ self.heroCamera.CFrame=candidate(high)
+ local transform=self.heroCamera.CFrame:ToObjectSpace(self.neutralFrame)
+ local minX,maxX,minY,maxY=math.huge,-math.huge,math.huge,-math.huge
+ local pixelScale=height/(2*tangent)
+ for _,point in ipairs(self.heroPoints)do
+  local p=transform:PointToWorldSpace(point);local x,y=p.X/-p.Z*pixelScale,-p.Y/-p.Z*pixelScale
+  minX,maxX,minY,maxY=math.min(minX,x),math.max(maxX,x),math.min(minY,y),math.max(maxY,y)
+ end
+ self.outlineCenter=self.center+Vector2.new((minX+maxX)*.5,(minY+maxY)*.5)
+ self.outlineHalfWidth,self.outlineHalfHeight=(maxX-minX)*.5,(maxY-minY)*.5
+ self.heroFraction=occupancy(high)*height/math.max(1,stageHeight)
+ self.fitLimited=self.heroFraction<wanted*height/math.max(1,stageHeight)-.015
+ self.fitReason=if not self.fitLimited then "target"elseif horizontal>vertical and horizontal>near then "swept width"elseif height<stageHeight*.65 then "text reserve"else "full greeting"
+
+end
+function Cinematic:minimumHeightForWidth(width,height)
+ if not self.caption then return 160 end
+ -- Candidate geometry owns its font contract. Never read the last painted sizes:
+ -- a narrow stacked stage may otherwise change the next full-width decision.
+ height=height or 180
+ local landscape=width>=360 and width/math.max(1,height)>=2
+ local roomy=(height>=300 and width>=360)or landscape
+ local wrap=math.max(1,if landscape then width-math.floor(width*.56)-24 else width-24)
+ local function measured(value,size,font,minimum)
+  return math.max(minimum or 0,math.ceil(TextService:GetTextSize(value,size,font,Vector2.new(wrap,10000)).Y)+4)
+ end
+ local name=measured(self.pet.name,if roomy then 26 else 20,Art.Font.Heading,24)
+ local tag=measured(self.tag.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
+ local caption=measured(self.caption.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
+ return math.max(160,math.ceil(name+tag+caption+(if landscape then 64 else 40)))
 end
 
-function Cinematic:motion(object, seconds, properties, style, direction)
-	local motion = TweenService:Create(object,
-		TweenInfo.new(seconds, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), properties)
-	table.insert(self.tweens, motion)
-	motion:Play()
-	return motion
+function Cinematic:layout()
+ if not self.resultRoot then return end
+ local w,h=math.max(1,self.frame.AbsoluteSize.X),math.max(1,self.frame.AbsoluteSize.Y);self.layoutWidth,self.layoutHeight=w,h
+ self.landscapeLayout=w>=360 and w/h>=2
+ local roomy=(h>=300 and w>=360)or self.landscapeLayout
+ Art.roomyType(self.caption,"Supporting",not roomy,roomy);Art.roomyType(self.heading,"Heading",not roomy,roomy);Art.roomyType(self.tag,"Supporting",not roomy,roomy)
+ if roomy then self.heading.TextSize=26 end
+ local short=h<140
+ self.heading.Text=if short then (if self.result.rare then "Rare · "else "")..(if self.result.duplicate then "Duplicate · "else "")..self.pet.name else self.pet.name
+ local heroX,heroY,heroW,heroH,textX,textW=12,0,w-24,1,12,w-24
+ if self.landscapeLayout then heroW=math.max(1,math.floor(w*.56)-18);textX=heroW+30;textW=math.max(1,w-textX-12)end
+ local captionH=Art.textHeight(self.caption,textW,18);local nameH=Art.textHeight(self.heading,textW,24);local tagH=if not short then Art.textHeight(self.tag,textW,18)else 0
+ self.tag.Visible=tagH>0
+ local tagY=if self.landscapeLayout then 44 else 4
+ place(self.tag,textX,tagY,textW,math.max(1,tagH))
+ local nameY=if self.landscapeLayout then tagY+tagH+6 else math.max(tagH+8,h-captionH-nameH-12)
+ place(self.heading,textX,nameY,textW,nameH);place(self.caption,textX,nameY+nameH+4,textW,captionH)
+ if self.landscapeLayout then heroY,heroH=8,math.max(1,h-16)else heroY=tagH+10;heroH=math.max(1,nameY-heroY-8)end
+ self.minimumHeight=self:minimumHeightForWidth(w,h)
+ self.center,self.bandTop,self.bandHeight=Vector2.new(heroX+heroW*.5,heroY+heroH*.5),heroY,heroH
+ place(self.heroHost,heroX,heroY,heroW,heroH);self:fitHero(heroW,heroH,h);self.heroPixels=math.min(h*.55,heroH*.85)
+ local r,c=self.heroPixels,self.center
+ self.shell.Size=UDim2.fromOffset(r*.60,r*.80);self.shell.Position=UDim2.fromOffset(c.X,c.Y)
+ self.cradle.Position=UDim2.fromOffset(c.X,c.Y+math.min(heroH*.40,r*.36));self.cradle.Size=UDim2.fromOffset(math.min(heroW,r*1.15),math.max(4,r*.11))
+ self.halo.Position=UDim2.fromOffset(c.X,c.Y);self.halo.Size=UDim2.fromOffset(math.min(heroW,r*1.40),math.min(heroH,r*1.10))
+ if self.anticipation then place(self.anticipation,textX,math.max(0,h-40),textW,30)end
+ self:paint()
 end
 
-function Cinematic:layoutResult(result)
-	local pet = Pets.byId[result.petId] or Pets[1]
-	local size = self.frame.AbsoluteSize
-	local height = math.max(1, size.Y)
-	local compact = height < 140
-	local heroSize = math.clamp(math.min(height - (if compact then 50 else 82), size.X - 28), 22, 260)
-	local centerY = if compact then math.max(12, (height - 43) * 0.5) else height * 0.43
-	return pet, heroSize, centerY, compact
+function Cinematic:buildScene()
+ self.pet=Pets.byId[self.result.petId]or Pets[1]
+ self.stage=Art.frame(self.frame,"HatchStage","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),43)
+ self.halo=circle(self.stage,"DiscoveryHalo",if self.result.rare then Art.Amber else "accent",44);self.halo.BackgroundTransparency=.92;self.haloStroke=Art.stroke(self.halo,if self.result.rare then Art.Amber else self.pet.color,.82,1)
+ Art.bind(self.halo,{BackgroundColor3=function()return self.pet.color:Lerp(Art.paletteColor("accent"),.18)end})
+ self.cradle=circle(self.stage,"CradleRing","raised",45);self.cradle.BackgroundTransparency=.65;Art.stroke(self.cradle,"line",.78,1)
+ self.shell=circle(self.stage,"Shell",self.pet.color:Lerp(Art.Silver,.72),46);Art.shade(self.shell,1,.78);Art.stroke(self.shell,"accent",.2,2);self.shellScale=Instance.new("UIScale");self.shellScale.Parent=self.shell
+ self.crack=label(self.shell,"Crack","╱╲","Heading","accent");self.crack.AnchorPoint=Vector2.new(.5,.5);self.crack.Position=UDim2.fromScale(.5,.5);self.crack.Size=UDim2.fromScale(.7,.7)
+ self.resultRoot=Art.frame(self.frame,"Result","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),49);self.resultRoot.BackgroundTransparency=1
+ self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
+ local rare=self.result.rare==true
+ local tag=if self.result.duplicate then(if rare then "RARE FAMILY DUPLICATE"else "FAMILY DUPLICATE")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
+ self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then Art.Amber else "accent");self.heading=label(self.resultRoot,"PetName",self.pet.name,"Heading","text")
+ local family=(self.result.family or self.pet.family or self.pet.id):gsub("^%l",string.upper)
+ local detail=if self.result.duplicate then string.format("%s family  +1 mark  ·  %d total",family,self.result.mastery or 0)elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
+ if self.result.duplicate and(self.result.promotedTo or 0)>0 then detail="+1 mark · "..family.." rank "..({"I","II","III"})[self.result.promotedTo].." unlocked!"elseif self.result.duplicate and self.result.masteryHint then detail=self.result.masteryHint end
+ self.caption=label(self.resultRoot,"Mastery",detail,"Supporting","muted");self:createHero();self:layout()
+ self.anticipation=label(self.stage,"Anticipation","Something is stirring…","Body","muted")
+ place(self.anticipation,12,math.max(0,self.layoutHeight-40),self.layoutWidth-24,30)
+ self.beats={{.45,"charge",.92,.25},{.88,"merge_bubble",.92,.25},{if rare then 1.72 else 1.22,"hatch",if rare then .92 else 1.02,.65},{(if rare then 1.72 else 1.22)+.28,self.pet.cue,1,.5}}
+ if rare then table.insert(self.beats,{1.28,"charge",1.18,.26})end
+ for i,node in ipairs(self.bits)do
+  local index=i
+  Art.bind(node,{BackgroundColor3=function()
+   if index>=13 and index<=16 then return Color3.fromHex("#FFF0CD"):Lerp(self.pet.color,.10)end
+   if index>=17 and index<=20 then
+    if index%2==1 then return Art.Amber end
+    return if(self.pet.family or self.pet.id)=="orbit"then self.pet.color else self.pet.accent or self.pet.color
+   end
+   return if self.result and self.result.rare and(index%3==0 or(index>=17 and index<=20))then Art.Amber elseif index%2==0 then self.pet.color else Art.paletteColor("accent")
+  end})
+ end
 end
-
-function Cinematic:drawResult(result, animate)
-	local pet, heroSize, centerY, compact = self:layoutResult(result)
-	local color = if result.rare then Art.Amber else Art.Leaf
-	local root = Art.frame(self.frame, "Result", Art.Ink, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 47)
-	root.BackgroundTransparency = 1
-	local halo = round(root, "DiscoveryHalo", color, UDim2.new(0.5, 0, 0, centerY),
-		UDim2.fromOffset(heroSize * 1.43, heroSize * 1.1), 47)
-	halo.BackgroundTransparency = 0.94
-	Art.stroke(halo, color, 0.70, 2)
-	local hero = Art.frame(root, "Hero", Art.Ink, UDim2.new(0.5, 0, 0, centerY),
-		UDim2.fromOffset(heroSize, heroSize), 49)
-	hero.AnchorPoint = Vector2.new(0.5, 0.5)
-	hero.BackgroundTransparency = 1
-	self:createHero(hero, pet, animate)
-	local scale = Instance.new("UIScale")
-	scale.Name, scale.Parent = "RevealScale", hero
-	local tagText = if result.duplicate then (if result.rare then "RARE FAMILY DUPLICATE" else "FAMILY DUPLICATE")
-		elseif result.rare then "RARE DISCOVERY" else "A NEW LITTLE WONDER"
-	local tag = text(root, "Rarity", tagText,
-		UDim2.fromOffset(8, 5), UDim2.new(1, -16, 0, 18), color, 12)
-	tag.Visible = not compact
-	local heading = text(root, "PetName", pet.name,
-		UDim2.new(0, 8, 1, -43), UDim2.new(1, -16, 0, 23), Art.Silver, 25)
-	local family = (result.family or pet.family or pet.id):gsub("^%l", string.upper)
-	local detail = if result.duplicate
-		then string.format("%s family  +1 mark  ·  %d total", family, result.mastery or 0)
-		elseif result.starter and result.starterGoal then result.starterGoal
-		else "A new friend for Sprout Hollow"
-	if result.duplicate and (result.promotedTo or 0) > 0 then
-		detail = "+1 mark · " .. family .. " rank " .. ({ "I", "II", "III" })[result.promotedTo] .. " unlocked!"
-	elseif result.duplicate and result.masteryHint then
-		detail = result.masteryHint
-	end
-
-	local caption = text(root, "Mastery", detail, UDim2.new(0, 8, 1, -21), UDim2.new(1, -16, 0, 19),
-		if result.duplicate then Art.Leaf else Art.Muted, 12)
-	return root, hero, scale, heading, caption
+function Cinematic:paint()
+ if not self.stage then return end
+ local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22;local revealed=not self.active or self.age>=split
+ self.resultRoot.Visible=revealed;self.shell.Visible=not revealed;self.crack.Visible=self.age>=.60 and not revealed
+ if self.anticipation then
+  self.anticipation.Visible=not revealed
+  local value=if rare and self.age>1.15 then "A rare glow…"elseif self.age>.6 then "A little more…"else "Something is stirring…"
+  if self.anticipation.Text~=value then self.anticipation.Text=value end
+ end
+ self.shell.Rotation=if self.active then math.sin(self.age*22)*math.min(8,self.age*7)else 0
+ self.shellScale.Scale=if self.active then .88+math.min(1,self.age/.45)*.12+math.sin(self.age*12)*.025 else 1
+ self.heroScale.Scale=if self.active and revealed then 1+math.sin(math.min(1,(self.age-split)/.48)*math.pi)*.07 else 1
+ local quiet=self:reduced()or not self:owned();self.halo.Rotation=if rare and not quiet then self.age*8 else 0
+ self.haloStroke.Transparency=if not revealed then .72-math.max(0,math.sin(self.age*12))*.45 elseif rare then .70 else .84
+ self:paintBits(revealed,quiet)
+end
+-- Every role has an authored trajectory; all reuse the same24 passive slots.
+function Cinematic:burstBit(index,age,rare)
+ local r=self.heroPixels;local theta,x,y,w,h,rotation
+ local plate=index>=13 and index<=16
+ local ray=rare and index>=17 and index<=20
+ local delay=if ray or index>=21 then .13 else 0
+ if age<delay then return 0,0,1,1,0,1,false end
+ local t=math.clamp((age-delay)/(.75-delay),0,1);local eased=1-(1-t)^3
+ local alpha=if t<.67 then .10 else .10+.90*(t-.67)/.33
+ local center=self.outlineCenter or self.center
+ if plate then
+  local slot=index-13;local side=if slot%2==0 then -1 else 1;local vertical=if slot<2 then -1 else 1
+  x=self.center.X+side*r*(.29+.56*eased)
+  y=self.center.Y+vertical*r*(.12+.40*eased)-math.sin(t*math.pi)*r*.18
+  w,h=if slot<2 then r*.18 else r*.23,if slot<2 then r*.25 else r*.12
+  rotation=side*(12+eased*112)+vertical*8
+ elseif ray then
+  theta=math.rad(35+(index-17)*90)
+  local rx=(self.outlineHalfWidth or r*.4)*1.20;local ry=(self.outlineHalfHeight or r*.5)*1.12
+  local radial=.88+.34*eased
+  x,y=center.X+math.cos(theta)*rx*radial,center.Y+math.sin(theta)*ry*radial
+  w,h=4,r*(.15+.17*eased);rotation=math.deg(theta)-90
+ else
+  theta=if index<=12 then index/12*math.pi*2 else math.rad(45+(index-21)*90)
+  local rx=math.min(self.heroHost.Size.X.Offset*.44,r*.86);local ry=math.min(self.bandHeight*.43,r*.62)
+  x,y=center.X+math.cos(theta)*rx*eased,center.Y+math.sin(theta)*ry*eased
+  w,h=if index%3==0 then 5 else 3,if index%3==0 then 9 else 5;rotation=math.deg(theta)+eased*60
+ end
+ return x,y,w,h,rotation,alpha,true
+end
+function Cinematic:paintBits(revealed,quiet)
+ local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22
+ local count=if rare then 8 else 6;local burstAge=self.age-split;local burst=burstAge>=0 and burstAge<.75 and self.active
+ self.liveBits=0
+ for i,node in ipairs(self.bits)do
+  local show=not quiet and self.bandHeight>=20 and((burst and i<=(if rare then 24 else 16))or(revealed and i<=count)or(not revealed and i<=4))
+  local x,y,w,h,rotation,alpha
+  if show and burst then x,y,w,h,rotation,alpha,show=self:burstBit(i,burstAge,rare)
+  elseif show then
+   local theta=i*math.pi*2/count+self.age*.62+(i%3)*.18
+   local rx=math.min(self.heroHost.Size.X.Offset*.42,self.heroPixels*.75);local ry=math.min(self.bandHeight*.40,self.heroPixels*.52)
+   if not revealed then local pull=1-math.clamp(self.age/.45,0,1)*.35;rx*=pull;ry*=pull end
+   x,y=self.center.X+math.cos(theta)*rx,self.center.Y+math.sin(theta)*ry
+   w,h=if i%3==0 then 5 else 3,if i%3==0 then 9 else 5
+   rotation,alpha=math.deg(theta)+self.age*12,.26+(math.sin(self.age*1.8+i)+1)*.16
+  end
+  node.Visible=show
+  if show then
+   self.liveBits+=1
+   local angle=math.rad(rotation);local ex=(math.abs(math.cos(angle))*w+math.abs(math.sin(angle))*h)*.5
+   local ey=(math.abs(math.sin(angle))*w+math.abs(math.cos(angle))*h)*.5
+   local left,right=self.heroHost.Position.X.Offset+ex+2,self.heroHost.Position.X.Offset+self.heroHost.Size.X.Offset-ex-2
+   local top,bottom=self.bandTop+ey+2,self.bandTop+self.bandHeight-ey-2
+   x,y=math.clamp(x,left,math.max(left,right)),math.clamp(y,top,math.max(top,bottom))
+   node.Position=UDim2.fromOffset(x,y);node.Size=UDim2.fromOffset(w,h);node.Rotation=rotation;node.BackgroundTransparency=alpha;self.writes+=4
+  end
+ end
 end
 
 function Cinematic:finishStatic()
-	if not self.active or not self.result then return end
-	self.epoch += 1
-	self:stopMotions()
-	self:clearHero()
-	self.frame:ClearAllChildren()
-	Art.corner(self.frame, 14)
-	self:drawResult(self.result)
-	self.active = false
-	local complete = self.onComplete
-	self.onComplete = nil
-	if complete then complete() end
+ if not self.resultRoot then return end
+ self.active=false;self.age=math.max(self.age,self.duration or 0);self:stopAudio()
+ if self.heroVisual then self.heroVisual.reducedEffects=self:reduced();rest(self.heroVisual,self.pet)end
+ self:paint();self.quietPainted=not self:owned()or self:reduced();self:complete()
 end
-
-function Cinematic:play(result, onComplete)
-	self:cancel()
-	self.result = result
-	self.onComplete = onComplete
-	self.active, self.startedAt = true, os.clock()
-	self.frame.Visible = true
-	Art.corner(self.frame, 14)
-	if self.reduceEffects() then
-		self.audio:play("hatch", 1, 0.65)
-		self:finishStatic()
-		return
-	end
-	local epoch = self.epoch
-	local function later(seconds, callback)
-		task.delay(seconds, function()
-			if self.active and self.epoch == epoch and self.frame.Parent then
-				if self.reduceEffects() then self:finishStatic() else callback() end
-			end
-		end)
-	end
-	local pet, heroSize, centerY, compact = self:layoutResult(result)
-	local rare = result.rare == true
-	local accent = if rare then Art.Amber else Art.Leaf
-	local burstAt = if rare then 1.85 else 1.35
-	local endAt = if rare then 3.35 else 2.65
-	local center = UDim2.new(0.5, 0, 0, centerY)
-	local stage = Art.frame(self.frame, "HatchStage", Art.Ink, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 43)
-	stage.BackgroundTransparency = 1
-	local glow = round(stage, "InnerLight", accent, center,
-		UDim2.fromOffset(heroSize * 0.6, heroSize * 0.6), 43)
-	glow.BackgroundTransparency = 0.96
-	local glowEdge = Art.stroke(glow, accent, 0.85, 2)
-	local ring = round(stage, "CradleRing", Art.Field, center + UDim2.fromOffset(0, heroSize * 0.35),
-		UDim2.fromOffset(heroSize * 1.1, heroSize * 0.20), 44)
-	Art.stroke(ring, Art.Leaf, 0.6, 2)
-	local rig = Art.frame(stage, "Shell", pet.color:Lerp(Art.Silver, 0.74), center,
-		UDim2.fromOffset(heroSize * 0.60, heroSize * 0.80), 46)
-	rig.AnchorPoint = Vector2.new(0.5, 0.5)
-	Art.corner(rig, 1000)
-	Art.shade(rig, 1, 0.78)
-	Art.stroke(rig, accent, 0.18, 2)
-	local shellScale = Instance.new("UIScale")
-	shellScale.Scale, shellScale.Parent = 0.83, rig
-	local highlight = round(rig, "ShellGlint", Art.Silver, UDim2.fromScale(0.30, 0.23),
-		UDim2.fromScale(0.21, 0.075), 47)
-	highlight.Rotation = -28
-	local crack = Art.pixels(rig, "Crack", { "..X..", ".XX..", ".X...", ".XX..", "..X..", "..XX.", "...X." },
-		{ X = accent }, math.max(1, heroSize / 45), UDim2.fromScale(0.5, 0.32), 48)
-	crack.AnchorPoint = Vector2.new(0.5, 0)
-	crack.Visible = false
-	local anticipation = text(stage, "Anticipation", "Something is stirring…",
-		UDim2.new(0, 8, 1, -30), UDim2.new(1, -16, 0, 24), Art.Muted, 16)
-	self.audio:play("hatch_rise", if rare then 0.82 else 0.94, 0.62)
-	self:motion(shellScale, 0.38, { Scale = 1.02 }, Enum.EasingStyle.Back)
-	later(0.42, function()
-		self.audio:play("charge", 0.92, 0.35)
-		self:motion(rig, 0.17, { Rotation = -7, Size = UDim2.fromOffset(heroSize * 0.66, heroSize * 0.73) })
-	end)
-	later(0.65, function()
-		crack.Visible = true
-		anticipation.Text = "A little more…"
-		self:motion(rig, 0.22, { Rotation = 6, Size = UDim2.fromOffset(heroSize * 0.56, heroSize * 0.87) })
-		self:motion(glowEdge, 0.5, { Transparency = 0.10, Thickness = if rare then 4 else 3 })
-		self:motion(glow, 0.5, { BackgroundTransparency = 0.85,
-			Size = UDim2.fromOffset(heroSize * 1.15, heroSize * 1.15) })
-	end)
-	later(1.02, function()
-		self:motion(rig, 0.20, { Rotation = -3, Size = UDim2.fromOffset(heroSize * 0.64, heroSize * 0.76) })
-		self.audio:play("merge_bubble", 0.84, 0.28)
-	end)
-	if rare then
-		later(1.30, function()
-			anticipation.Text = "A rare glow…"
-			anticipation.TextColor3 = Art.Amber
-			self:motion(rig, 0.30, { Rotation = 4 })
-			self:motion(shellScale, 0.35, { Scale = 1.12 })
-			self.audio:play("charge", 1.12, 0.42)
-		end)
-	end
-	later(burstAt, function()
-		rig.Visible, anticipation.Visible = false, false
-		self.audio:play("hatch", if rare then 0.92 else 1.02, 0.78)
-		local _, _, scale, heading, caption = self:drawResult(result, true)
-		scale.Scale = 0.08
-		heading.TextTransparency, caption.TextTransparency = 1, 1
-		self:motion(scale, 0.50, { Scale = 1 }, Enum.EasingStyle.Back)
-		self:motion(heading, 0.36, { TextTransparency = 0 })
-		self:motion(caption, 0.50, { TextTransparency = 0 })
-		self:motion(glow, 0.64, { Size = UDim2.fromOffset(heroSize * 2.4, heroSize * 1.8), BackgroundTransparency = 1 })
-		self:motion(glowEdge, 0.64, { Transparency = 1 })
-		-- Four split shell plates, then a bounded garden-seed burst. No persistent emitters.
-		for index = 1, 4 do
-			local side = if index % 2 == 0 then 1 else -1
-			local vertical = if index <= 2 then -1 else 1
-			local shard = round(stage, "ShellPlate", pet.color:Lerp(Art.Silver, 0.72), center,
-				UDim2.fromOffset(heroSize * 0.30, heroSize * 0.35), 51)
-			self:motion(shard, 0.70, {
-				Position = center + UDim2.fromOffset(side * heroSize * 0.9, vertical * heroSize * 0.6),
-				Rotation = side * (80 + index * 15), BackgroundTransparency = 1,
-			})
-		end
-		local count = if rare then 20 else 14
-		for index = 1, count do
-			local angle = index / count * math.pi * 2
-			local radius = heroSize * (0.72 + (index % 3) * 0.17)
-			local tint = if index % 3 == 0 then pet.color elseif index % 2 == 0 then accent else Art.Silver
-			local seed = round(stage, "BloomSeed", tint, center,
-				UDim2.fromOffset(if index % 3 == 0 then 5 else 3, if index % 3 == 0 then 12 else 5), 52)
-			self:motion(seed, 0.55 + (index % 4) * 0.09, {
-				Position = center + UDim2.fromOffset(math.cos(angle) * radius, math.sin(angle) * radius * 0.65),
-				Rotation = math.deg(angle) + 90, BackgroundTransparency = 1,
-			})
-		end
-	end)
-	later(burstAt + 0.40, function() self.audio:play(pet.cue, if rare then 1.06 else 1, 0.60) end)
-	later(endAt, function() self:finishStatic() end)
+function Cinematic:refreshOwner()
+ if self.destroyed or not self.result or self.building then return end
+ if not self:owned()then
+  self:disconnectClock();self:stopAudio();if self.presented and self.active then self:finishStatic()elseif self.resultRoot and not self.quietPainted then self:paint();self.quietPainted=true end;return
+ end
+ local epoch=self.epoch
+ if not self.presented then
+  self.presented=true;local callback=self.onPresented;self.onPresented=nil;if callback then callback()end
+  if self.epoch~=epoch or not self.result then return end
+  if self.active and not self:reduced()then self:cue("hatch_rise",if self.result.rare then .82 else .94,.48)end
+ end
+ if self:reduced()then self:disconnectClock();if self.active or not self.quietPainted then self:finishStatic()end;return end
+ self.quietPainted=nil
+ if not self.active then self:complete();if self.epoch~=epoch or not self.result then return end end
+ if not self.connection then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)end
 end
-
+function Cinematic:step(dt)
+ if not self.result or not self:owned()or self:reduced()then self:refreshOwner();return end
+ if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self:finishStatic();return end
+ local before=self.age;self.age+=math.max(0,dt);local epoch=self.epoch
+ if self.active then
+  local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22
+  for _,beat in ipairs(self.beats)do
+   if before<beat[1]and self.age>=beat[1]then self:cue(beat[2],beat[3],beat[4]);if self.epoch~=epoch then return end;if beat[1]==split and self.heroVisual then self.heroVisual:greet()end end
+  end
+  if self.age>=self.duration then self:finishStatic();if self.epoch~=epoch then return end end
+ end
+ self.sampleAge=(self.sampleAge or 0)+dt
+ if self.sampleAge>=1/30 then local elapsed=self.sampleAge;self.sampleAge=0
+  if self.heroVisual and(not self.active or self.resultRoot.Visible)then self.heroVisual.reducedEffects=false;self.heroVisual:update(elapsed)end
+  self:paint()
+ end
+end
+function Cinematic:play(result,onComplete,options)
+ if self.destroyed then return end
+ self:cancel();options=options or {};self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets[1]
+ self.duration=if result.rare then 3.1 else 2.5;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
+ self.active=not options.skipIntro and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
+ if not self.active then self.age=self.duration;self:paint()end
+ local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
+end
+function Cinematic:getStats()return{allocatedBits=#self.bits,liveBits=self.liveBits or 0,clock=self.connection~=nil,active=self.active,age=self.age,epoch=self.epoch,renderMode=self.renderMode,heroFraction=self.heroFraction,fitLimited=self.fitLimited,fitReason=self.fitReason,sweptPoints=if self.sweptPoints then #self.sweptPoints else 0,writes=self.writes,heroPreparationMs=self.heroPreparationMs}end
 return Cinematic
