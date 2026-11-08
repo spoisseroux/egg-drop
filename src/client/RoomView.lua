@@ -163,7 +163,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			if self.focusing then
 				local shot = self.greetingCamera
 				if not root or not humanoid or humanoid.Health <= 0 or not shot or shot.root ~= root
-					or shot.camera ~= workspace.CurrentCamera then self:useRoomCamera(false) end
+					or shot.camera ~= workspace.CurrentCamera then self:useRoomCamera(false)
+				else self:reframeFocus()end
 			end
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
@@ -174,6 +175,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
 			end
 			self.pet:update(dt)
+			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 			self.companions:update(dt)
 		end
@@ -258,12 +260,13 @@ function Room:showPet(pet)
 	self.shownPet = pet
 	local oldOrigin = self.pet and self.pet.origin
 	local oldYaw = self.pet and self.pet.yaw
-	if self.pet then self.pet:destroy() end
+	if self.pet then self.pet.focusPose=false;self.pet:destroy() end
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local position = oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
 	local rank, legacy = PetPrestige.read(self.progress, pet)
 	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy)
+	self.pet.focusPose=self.focusing==true;self.focusGeometry=nil
 	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
 	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)
 	self.pet.model:SetAttribute("LocalCompanion", true)
@@ -319,6 +322,7 @@ function Room:captureReturnRoam()
 end
 
 function Room:restoreCamera()
+	if self.pet then self.pet.focusPose=false;self.pet.focused=false end
 	if self.focusUI then self.focusUI:cancelPointer()end
 	self:setPetContact(false)
 	self:releaseFocusMovement()
@@ -382,6 +386,7 @@ function Room:useRoomCamera(animate, arriving)
 	end
 	self.greetingCamera = nil
 	self.focusing = false
+	if self.pet then self.pet.focusPose=false;self.pet.focused=false end
 	self.focusMotion, self.followState = nil, nil
 	self.focusEpoch = (self.focusEpoch or 0) + 1
 	self.greetButton.Text = "Say hi"
@@ -414,17 +419,32 @@ function Room:useRoomCamera(animate, arriving)
 	camera.CameraType = Enum.CameraType.Custom
 end
 
+function Room.captureFocusSubject(pet,family)
+	local fields={"greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame"}
+	local saved={};for i,key in ipairs(fields)do saved[i]=pet[key]end
+	pet.greeting=if family=="pip"or family=="puddle"then 2 else 0
+	pet.focusPose,pet.gaitWeight,pet.movementBob,pet.affectionTilt=true,0,0,0
+	pet:update(0)
+	local bounds,size=PetRigBounds.get(pet)
+	local silhouette=PetGreetingShot.captureSilhouette(pet,bounds)
+	for i,key in ipairs(fields)do pet[key]=saved[i]end
+	pet:update(0)
+	return bounds,size,silhouette
+end
+
 function Room:planGreeting(camera, root, floor)
+	local started=os.clock()
 	local lounge = floor.Parent
-	local bounds, size = PetRigBounds.get(self.pet)
+	local bounds,size,silhouette=Room.captureFocusSubject(self.pet,self.shownPet.family or self.shownPet.id)
 	local exclude = {self.pet.model}
 	for _, player in ipairs(Players:GetPlayers()) do if player.Character then table.insert(exclude,player.Character) end end
 	local params=RaycastParams.new()
 	params.FilterDescendantsInstances,params.RespectCanCollide=exclude,true
 	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)
 	local crestReserve=PetPrestige.crestReserve(self.pet)
-	local safeTop=if crestReserve>0 then GuiService:GetGuiInset().Y else 0
-	local animationRise=if crestReserve>0 then 1.2*(self.pet.worldScale or 1)else 0
+	local topInset,bottomInset=GuiService:GetGuiInset()
+	local safeTop=topInset.Y
+	local animationRise=.55*(self.pet.worldScale or 1)
 	local reach=PetGreetingShot.maximumReach(size,aspect,crestReserve,camera.ViewportSize.Y,safeTop,animationRise)
 	local visualBlocks={}
 	for _, part in ipairs(lounge:GetChildren()) do
@@ -432,9 +452,9 @@ function Room:planGreeting(camera, root, floor)
 			and (part.Size.Magnitude>=2 or part.Name:find("Sign") or part.Name:find("FieldGuide"))
 			and (part.Position-root.Position).Magnitude<=reach+part.Size.Magnitude*.5 then table.insert(visualBlocks,part) end
 	end
-	local started, groundQueries, candidates = os.clock(), 0, 0
+	local groundQueries,candidates=0,0
 	local plan=PetGreetingShot.plan({
-		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,animationTopReserve=animationRise,
+		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,silhouette=silhouette,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=animationRise,
 		centerOffset=CFrame.Angles(0,self.pet.yaw or 0,0):VectorToObjectSpace(bounds.Position-self.pet.origin),
 		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},
 		ground=function(position)
@@ -467,12 +487,19 @@ end
 function Room:applyFocusPlan(plan, camera)
 	self:cancelCameraTween()
 	self.pet.origin, self.pet.yaw = plan.origin, plan.yaw
+	self.pet.focusPose=true
 	self.pet.lastFrame = -1
 	self.pet:update(0)
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame, camera.Focus, camera.FieldOfView = plan.camera, CFrame.new(plan.target), plan.fov
 	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
+	self.focusGeometry=Room.focusGeometryKey(camera)
 	if self.focusUI then self.focusUI:cancelPointer() end
+end
+
+function Room.focusGeometryKey(camera)
+	local top,bottom=GuiService:GetGuiInset()
+	return tostring(camera.ViewportSize)..":"..tostring(top)..":"..tostring(bottom)
 end
 
 function Room:reframeFocus()
@@ -483,13 +510,13 @@ function Room:reframeFocus()
 		or shot.root ~= root or not root or self.mode ~= "Room" then return false end
 	local viewport = camera.ViewportSize
 	if viewport.X <= 0 or viewport.Y <= 0 then return false end
-	local aspect = viewport.X / viewport.Y
-	if self.focusAspect and math.abs(aspect - self.focusAspect) < 0.001 then return true end
+	local geometry=Room.focusGeometryKey(camera)
+	if self.focusGeometry==geometry then return true end
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
-	if not floor then return false end
+	if not floor then self:useRoomCamera(false);return false end
 	local plan = self:planGreeting(camera, root, floor)
-	if not plan then return false end
+	if not plan then self:useRoomCamera(false);return false end
 	-- Resize changes only the geometry. The original pre-focus restore snapshot,
 	-- pet origin, root and generation remain untouched for Back/respawn handling.
 	self:applyFocusPlan(plan, camera)
@@ -521,6 +548,7 @@ function Room:focusPet()
 	end
 	-- Stage both in one callback. Only FOV settles; no lens path crosses the pet.
 	self.pet.origin,self.pet.yaw=plan.origin,plan.yaw
+	self.pet.focusPose=true
 	if not self.reduceEffects() then self.pet:greet() end
 	self.pet.lastFrame = -1
 	self.pet:update(0)
@@ -532,6 +560,7 @@ function Room:focusPet()
 	if not self.reduceEffects() then self.cameraTween=tween(camera,.20,{FieldOfView=plan.fov}) end
 	if self.focusUI then self.focusUI:retireRoamHint()end
 	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
+	self.focusGeometry=Room.focusGeometryKey(camera)
 	if self.viewportChanged then self.viewportChanged:Disconnect() end
 	local epoch = self.focusEpoch
 	self.viewportChanged = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
@@ -589,6 +618,11 @@ function Room:setPetContact(active)
 	if self.removingCharacter==Players.LocalPlayer.Character or not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
 		or not self.pet or not self.greetingCamera or self.greetingCamera.root~=root or self.greetingCamera.camera~=workspace.CurrentCamera then return false end
  self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
+ if self.affection then self.affection:begin(self.reduceEffects())end
+ local now=os.clock()
+ if not self.reduceEffects()and now-(self.lastContactChirpAt or -math.huge)>=1.5 and now-(self.lastReactionAudioAt or -math.huge)>=.7 then
+  self.lastContactChirpAt=now;self.lastReactionAudioAt=now;self.audio:play(self.shownPet.cue,1.04,.26)
+ end
  self.contactContext={pet=self.pet,root=root,camera=workspace.CurrentCamera,shot=self.greetingCamera}
  if self.petContactIntent then self.petContactIntent:begin(self.shownPet.id,self.contactContext)end
  if self.audio and self.audio.setPurr then self.audio:setPurr(true)end
@@ -654,6 +688,7 @@ function Room:show(mode, animate)
 		self.arrivalPlacementPending=nil
 		self.companions:clear()
 		if self.pet then
+			self.pet.focusPose=false
 			self.pet:destroy()
 			self.pet = nil
 		end

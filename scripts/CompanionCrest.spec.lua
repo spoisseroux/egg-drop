@@ -32,12 +32,23 @@ return function(client)
   assert(badge.Size==UDim2.fromOffset(46,26)and not badge.AlwaysOnTop and badge.MaxDistance==30)
  end
  local ok,problem=pcall(function()
+  test("focus softens only plate and border then restores exact authored transparency",function()
+   local v=make(Pets.byId.pip,1)
+   local camera=projection(CFrame.lookAt(Vector3.new(0,8,12),Vector3.new(0,5.2,0)),Vector2.new(733,307))
+   local plate,stroke=v.prestigePlate,v.prestigeStroke;local plateAlpha,strokeAlpha=plate.BackgroundTransparency,stroke.Transparency
+   local preference=math.clamp(game:GetService("GuiService").PreferredTransparency,0,1)
+   v.focused=true;Prestige.updateBadge(v,camera);assert(math.abs(plate.BackgroundTransparency-.62*preference)<.000001 and math.abs(stroke.Transparency-.45*preference)<.000001)
+   for _=1,30 do Prestige.updateBadge(v,camera)end
+   v.focused=false;Prestige.updateBadge(v,camera);assert(plate.BackgroundTransparency==plateAlpha and stroke.Transparency==strokeAlpha)
+   assert(v.prestigeBadge.Crest.Rank.TextTransparency==0);v:destroy()
+  end)
   for _,pet in ipairs(Pets.collection)do
    test(pet.id.." ranked focus reserves complete animated crown and plate at three aspects",function()
-    local v=make(pet,1);assert(not v.masteryEmitter and Prestige.crestReserve(v)==32)
+    local v=make(pet,1);v.focusPose=true;assert(not v.masteryEmitter and Prestige.crestReserve(v)==32)
     for _,viewport in ipairs({Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(385,703)})do
-     local bounds,size=Bounds.get(v);local args={size=size,centerOffset=CFrame.Angles(0,v.yaw or 0,0):VectorToObjectSpace(bounds.Position-v.origin),rootPosition=Vector3.new(0,7,0),forward=Vector3.new(0,0,-1),aspect=viewport.X/viewport.Y,
-      crestPixelReserve=32,viewportHeight=viewport.Y,safeTopInset=game:GetService("GuiService"):GetGuiInset().Y,animationTopReserve=1.2*v.worldScale,floor={cf=CFrame.new(0,3.5,0),size=Vector3.new(112,1,96)},ground=function()return 4.025 end,clear=function()return true end}
+     local topInset,bottomInset=game:GetService("GuiService"):GetGuiInset()
+     local bounds,size=Bounds.get(v);local args={size=size,silhouette=Shot.captureSilhouette(v,bounds),centerOffset=CFrame.Angles(0,v.yaw or 0,0):VectorToObjectSpace(bounds.Position-v.origin),rootPosition=Vector3.new(0,7,0),forward=Vector3.new(0,0,-1),aspect=viewport.X/viewport.Y,
+      crestPixelReserve=32,viewportHeight=viewport.Y,safeTopInset=topInset.Y,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=.55*v.worldScale,floor={cf=CFrame.new(0,3.5,0),size=Vector3.new(112,1,96)},ground=function()return 4.025 end,clear=function()return true end}
      local plan=Shot.plan(args);assert(plan,"no ranked focus plan: "..pet.id..tostring(viewport));local reach=Shot.maximumReach(size,args.aspect,32,viewport.Y,args.safeTopInset,args.animationTopReserve)
      assert((plan.camera.Position-args.rootPosition).Magnitude<=reach,"rank headroom exceeded existing candidate bound")
      v.origin,v.yaw=plan.origin,plan.yaw;v.greeting=if pet.id=="pip"or pet.family=="pip"or pet.id=="puddle"then 3 else 0;v:update(0)

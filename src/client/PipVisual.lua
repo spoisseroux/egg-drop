@@ -154,6 +154,7 @@ function PipVisual:update(dt)
 	end
 	local reduced=self.reducedEffects==true
 	if reduced then bounce,squash,wave=0,0,0 end
+	if self.focusPose then bounce*=.35 end
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
 	local breathe = if reduced then 0 else math.sin(t * 2.2) * 0.012
 	local worldScale=self.worldScale

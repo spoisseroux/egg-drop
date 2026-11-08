@@ -1,0 +1,68 @@
+{
+  "inputs": [
+    {
+      "at": 17.631167099811137,
+      "type": "Touch",
+      "point": "374, 170, 0"
+    }
+  ],
+  "petCount": 0,
+  "frames": 2460,
+  "glove": false,
+  "sounds": [
+    {
+      "name": "EggDrop_pet",
+      "at": 18.16490039997734
+    },
+    {
+      "name": "EggDrop_Purr",
+      "at": 18.16495699994266
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 21.165304499911144
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 25.181280099786818
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 30.18174049980007
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 33.1986745998729
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 37.19817429990508
+    }
+  ],
+  "firstPetal": 18.181466599926353,
+  "age": 40.997527999803424,
+  "packets": [
+    {
+      "at": 18.22969129984267,
+      "packet": {
+        "leaseId": "12c8b991-582d-436e-8b2f-633ca030b57c",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 1
+      }
+    },
+    {
+      "at": 40.81361349998042,
+      "packet": {
+        "requestGeneration": 1,
+        "leaseId": "12c8b991-582d-436e-8b2f-633ca030b57c",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    }
+  ],
+  "wallet": 6,
+  "petals": 106,
+  "glyphEdges": 0
+}

@@ -140,6 +140,7 @@ function PuddleVisual:update(dt)
 	end
 	local reduced=self.reducedEffects==true
 	if reduced then bounce,squash,wave=0,0,0 end
+	if self.focusPose then bounce*=.35 end
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
 	squash+=math.sin(stride*2)*.025*gait
 	local worldScale=self.worldScale

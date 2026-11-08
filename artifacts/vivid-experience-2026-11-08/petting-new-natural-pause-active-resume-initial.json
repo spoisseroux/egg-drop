@@ -1,0 +1,115 @@
+{
+  "petCount": 0,
+  "frames": 3188,
+  "glove": false,
+  "sounds": [
+    {
+      "name": "EggDrop_pet",
+      "at": 0.8990682000294328
+    },
+    {
+      "name": "EggDrop_Purr",
+      "at": 0.8991406999994069
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 3.897283600177616
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 7.897771500051022
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 12.89822670002468
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 15.898744500009343
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 19.914426499977708
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 46.82990530016832
+    },
+    {
+      "name": "EggDrop_Purr",
+      "at": 46.82996690017171
+    },
+    {
+      "name": "EggDrop_Purr",
+      "at": 48.01261160010472
+    },
+    {
+      "name": "EggDrop_pet",
+      "at": 51.012151800096035
+    }
+  ],
+  "firstPetal": 0.9142780001275241,
+  "age": 53.14447559998371,
+  "packets": [
+    {
+      "at": 0.9637298001907766,
+      "packet": {
+        "leaseId": "f6da4e30-c0dd-4cfc-b3dd-546955a42ca4",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 1
+      }
+    },
+    {
+      "at": 20.86277800006792,
+      "packet": {
+        "requestGeneration": 1,
+        "leaseId": "f6da4e30-c0dd-4cfc-b3dd-546955a42ca4",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    },
+    {
+      "at": 46.89406030019745,
+      "packet": {
+        "leaseId": "3ed5bd13-6b3a-468c-a1ab-7e8f76075566",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 2
+      }
+    },
+    {
+      "at": 47.76169760012999,
+      "packet": {
+        "requestGeneration": 2,
+        "leaseId": "3ed5bd13-6b3a-468c-a1ab-7e8f76075566",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    },
+    {
+      "at": 48.07749729999341,
+      "packet": {
+        "leaseId": "35742f3e-4d72-4949-9b23-b465dfb19d54",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 3
+      }
+    },
+    {
+      "at": 52.927889600163326,
+      "packet": {
+        "requestGeneration": 3,
+        "leaseId": "35742f3e-4d72-4949-9b23-b465dfb19d54",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    }
+  ],
+  "wallet": 6,
+  "petals": 158,
+  "glyphEdges": 0
+}

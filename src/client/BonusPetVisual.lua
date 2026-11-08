@@ -99,6 +99,7 @@ function Visual:update(dt)
 	end
 	local reduced=self.reducedEffects==true
 	if reduced then hop,flourish=0,CFrame.identity end
+	if self.focusPose then hop*=.35 end
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
 	local travelBob=if self.worldContext and not reduced then self.movementBob or 0 else 0
 	local worldScale=self.worldScale

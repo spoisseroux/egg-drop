@@ -1,0 +1,23 @@
+# Vivid experience pass — verification record
+
+Starting release privatev180/runtime7910cf8, branch feat/egg-drop-arcade-polish. User supplied five new phone captures and explicitly requested Astra design followed by Sol6.1 High implementation. The accepted seven-slice direction is [VIVID-EXPERIENCE-PASS.md](../../VIVID-EXPERIENCE-PASS.md). Record evidence by frozen slice; do not treat a plan, changed source or isolated fixture as completed native verification.
+
+## Gallery repair
+
+e3789b0 repaired all17 Markdown pictures to existing absolute local paths and added a portable relative-path GALLERY.html alongside it. Both versions have17 images; all paths exist. The browser version avoids a Markdown viewer hiding local image previews.
+
+## 1. Companion focus/contact — accepted
+
+Root reproduced the user-facing interaction failure on the frozen v180 client using actual foreground MouseButton1. One held press moved over9px, paused350ms and resumed. It granted exactly one contact lease, then ended and hid the glove; resumed movement could not restart before release. See petting-old-pause-resume-reproduced.json. The old240ms deadline retired the held identity, and the first animated flourish was delayed several seconds. This is actual input evidence, unlike the previous manually-called gesture fixtures. Desktop delivered InputObject.Position matched the MCP coordinates; no production coordinate correction was justified.
+
+Astra approved800ms inactivity pause with retained captured pointer, new9px deliberate motion to resume, immediate bounded face/chirp/petals, closer safely fitted camera, translucent focused crest and44px graphical Back. Leave/blur/CoreGui/owner loss still retire held identity until release. Server12s/50%/+1/cap5 rules remain unchanged. Sol6.1 High owns the companion source/spec changes. Native and source-review results will be appended before acceptance.
+
+Final source freeze b35a42d741bd9b63550c55891907e5ca7bbc17e95c8969d5458d4d80dddbefef received Astra GO after fixes. Actual phone-emulator Pip is fully framed with graphical Back and 190.36px per-part extent in323safe pixels (58.9%); accepted pet-focus-phone-close-final.png. The closer camera uses cached visible-piece points, not empty aggregate bounding corners. Focus-only greeting hop is35% of ordinary; a synchronous neutral capture restores any in-flight pose before queries. All four insets and ranked crests are accounted for, and missing/blocked reframe restores roam. Outside focus, greeting/hatch/follow behavior is independent.
+
+Fresh final native138cases pass: Direct23, Focus12, Held8, Affection8, Greeting60, Crest11, Lifecycle4, Intent12 (companion-final-native138.json). The Greeting matrix preserves full focused and ordinary90-frame animation safety across seven species/aspects. An expanded matrix exposed Orbit's ordinary lateral roll; its explicit ordinary side reserve is.6, focused.35. No full-animation clipping assertion was weakened. Earlier failed snapshots are diagnostics and are not the accepted total.
+
+Actual desktop natural350ms-pause rubbing continued for~20s with one lease/purr, immediate petals one rendered frame after accepted start, and varied3–5s cues. A longer pause ended that lease; fresh movement from the same held pointer restarted. Actual calibrated phone Touch continued22.6s with one grant/purr, immediate petals and no reward on its naturally missed opportunity. A separate29s E hold saved one+1 at the second opportunity (receipt sequence3, wallet6→7,petCount1, exactly one glyph). See petting-phone-actual-continuous.json and petting-phone-and-held-e-natural.json. Random successes are not guaranteed per gesture; isolated existing server tests cover fail/success/cap behavior. Phone raw injection coordinates were calibrated by observed Touch Position; no production coordinate patch was made.
+
+Actual Back restored Custom camera/WalkSpeed16. Final native source gate81/81 matches/compiles, Rojo builds, diff check passes, and normal console contains only existing optional EditableImage/external203785492 warnings. No server/economy source changed. This is Studio emulation and actual desktop input, not a physical-phone or live-multiplayer result.
+
+Remaining sequential slices: shared palettes/type; hardware/decal/background/jelly; recap; hatch; daily gift; central Hollow. Existing private place remains v180 until the full integrated gate passes. Physical phone, live multiplayer and real private-client persistence require separate evidence.

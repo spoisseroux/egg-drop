@@ -35,9 +35,17 @@ end
 function Affection:clear()
  if self.cleared then return end;self.cleared=true
  if self.pet then self.pet.affectionTilt,self.pet.affectionBlush=0,0 end
- self.elapsed,self.nextVariation,self.index,self.variationAge=0,3,0,nil
+ self.elapsed,self.nextVariation,self.index,self.variationAge,self.startAge=0,3,0,nil,nil
  for _,p in ipairs(self.petals)do p.Transparency=1 end
  self.award.Enabled=false;self.awardUntil=nil
+end
+function Affection:begin(reduced)
+ if self.destroyed or not self.pet or not self.pet.model.Parent then return end
+ local now=if self.clock then self.clock()else os.clock()
+ local bloom=not reduced and now-(self.lastStartAt or -math.huge)>=1.5
+ if bloom then self.lastStartAt=now end
+ self.cleared=false;self.startAge=if bloom then 0 else nil
+ self.pet.affection=.9;self.pet.affectionBlush=.55
 end
 function Affection:showSaved(reduced)
  if self.destroyed or not self.pet or not self.pet.model.Parent then return false end
@@ -63,15 +71,18 @@ function Affection:step(dt,active,reduced)
   end
  elseif self.elapsed>0 then self:clear()end
  if self.variationAge then self.variationAge+=dt end
+ if self.startAge then self.startAge+=dt;if self.startAge>=.9 then self.startAge=nil end end
  local wave=if self.variationAge and self.variationAge<.9 then math.max(0,math.sin(self.variationAge/.9*math.pi))else 0
+ local welcome=if self.startAge then math.max(0,1-self.startAge/.9)else 0
  pet.affectionTilt=if active and not reduced and self.index==1 then math.sin((self.variationAge or 0)*6)*wave*.045 else 0
- pet.affectionBlush=if active and reduced then .55 elseif active and self.index==2 then wave*.7 else 0
+ pet.affectionBlush=if active and reduced then .55 elseif active then math.max(welcome*.55,if self.index==2 then wave*.7 else 0)else 0
  local body=pet.model.PrimaryPart;local scale=pet.worldScale or 1
  for i,p in ipairs(self.petals)do
-  local show=active and not reduced and self.index==3 and wave>0
-  p.Transparency=if show then 1-wave*.8 else 1
+  local strength=math.max(welcome,if self.index==3 then wave else 0)
+  local show=active and not reduced and strength>0
+  p.Transparency=if show then 1-strength*.8 else 1
   if show and body then
-   local age=self.variationAge or 0
+   local age=self.startAge or self.variationAge or 0
    p.CFrame=body.CFrame*CFrame.new((i-2)*.45*scale,(.5+age*.65)*scale,(.6+math.sin(age*4+i)*.08)*scale)*CFrame.Angles(0,0,(i-2)*.4+age)
   end
  end

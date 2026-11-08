@@ -8,16 +8,17 @@ return function(client, _parent)
 	local floor = { cf = CFrame.new(0, 3.5, 0), size = Vector3.new(112, 1, 96) }
 	local cases, visuals, projections = {}, {}, 0
 	local function test(name, run) run(); table.insert(cases, name) end
-	local function makeVisual(pet)
+	local function makeVisual(pet,worldScale)
 		local family = pet.family or pet.id
 		local module = if family == "pip" then client.PipVisual elseif family == "puddle" then client.PuddleVisual else client.BonusPetVisual
-		local visual = require(module).new(fixture, Vector3.new(0, 4.025, 0), pet)
+		local visual = require(module).new(fixture, Vector3.new(0, 4.025, 0), pet,worldScale or .72)
 		table.insert(visuals, visual)
 		return visual
 	end
 	local function arguments(visual, aspect, rootPosition, forward)
 		local bounds, size = visual.model:GetBoundingBox()
 		return { rootPosition = rootPosition or Vector3.new(0, 7, 0), forward = forward or Vector3.new(0, 0, -1),
+			silhouette=Shot.captureSilhouette(visual,bounds),animationTopReserve=.9*(visual.worldScale or 1),animationSideReserve=if visual.focusPose then .35 else .6,
 			size = size, centerOffset = CFrame.Angles(0, visual.yaw or 0, 0):VectorToObjectSpace(bounds.Position - visual.origin),
 			aspect = aspect or 16 / 9, floor = floor, ground = function() return 4.025 end, clear = function() return true end }
 	end
@@ -52,23 +53,71 @@ return function(client, _parent)
 			and (actual.UpVector - expected.UpVector).Magnitude < 0.0001
 	end
 	local ok, problem = pcall(function()
-		for _, pet in ipairs(Pets.collection) do
-			for _, viewport in ipairs({ { "landscape", 16 / 9 }, { "portrait", 390 / 740 }, { "wide", 568 / 160 } }) do
-				test(pet.id .. " fits " .. viewport[1] .. " at rest and greeting 0.3/0.7", function()
-					local visual = makeVisual(pet)
-					local plan = Shot.plan(arguments(visual, viewport[2]))
-					assert(plan, "no supported flat-floor greeting shot for " .. pet.id .. "/" .. viewport[1])
-					visual.origin, visual.yaw = plan.origin, plan.yaw
-					visual:update(0)
-					assertProjection(visual, plan, viewport[2], pet.id .. "/" .. viewport[1] .. "/rest")
-					visual:greet(); visual:update(0.3)
-					assertProjection(visual, plan, viewport[2], pet.id .. "/" .. viewport[1] .. "/0.3")
-					visual:update(0.4)
-					assertProjection(visual, plan, viewport[2], pet.id .. "/" .. viewport[1] .. "/0.7")
+		test("representative rest silhouette occupies55to65percent of post-inset safe height",function()
+			for _,viewport in ipairs({Vector2.new(1649,971),Vector2.new(390,740),Vector2.new(733,307)})do
+				local args={rootPosition=Vector3.new(0,7,0),forward=Vector3.new(0,0,-1),size=Vector3.new(1.5,2.4,1.1),centerOffset=Vector3.new(0,1.2,0),
+					aspect=viewport.X/viewport.Y,viewportHeight=viewport.Y,safeTopInset=40,safeBottomInset=12,animationTopReserve=.65,
+					floor=floor,ground=function()return 4.025 end,clear=function()return true end}
+				local plan=Shot.plan(args);assert(plan,"no representative close focus")
+				local fraction=Shot.projectedHeight(plan.camera,plan.origin+args.centerOffset,args.size)/(1-52/viewport.Y)
+				assert(fraction>=.55 and fraction<=.65,"representative pet too distant or cropped: "..tostring(fraction).." at "..tostring(viewport))
+			end
+		end)
+		test("actual Pip and Wick close focus fills safe height on desktop and portrait",function()
+			for _,pet in ipairs({Pets.byId.pip,Pets.byId.wick})do
+				for _,viewport in ipairs({Vector2.new(1649,971),Vector2.new(385,703)})do
+					local visual=makeVisual(pet,.72);visual.focusPose=true;local args=arguments(visual,viewport.X/viewport.Y)
+					local bounds=visual.model:GetBoundingBox();args.silhouette=Shot.captureSilhouette(visual,bounds)
+					args.viewportHeight,args.safeTopInset,args.safeBottomInset,args.animationTopReserve=viewport.Y,58,0,.55*(visual.worldScale or 1)
+					local plan=Shot.plan(args);assert(plan,"no actual close focus for "..pet.id)
+					visual.origin,visual.yaw=plan.origin,plan.yaw;visual:update(0)
+					local basis=CFrame.new(plan.origin)*CFrame.Angles(0,plan.yaw,0)*CFrame.new(args.centerOffset)
+					local fraction=Shot.projectedPointsHeight(plan.camera,args.silhouette,basis)/(1-58/viewport.Y)
+					assert(fraction>=.55 and fraction<=.65,pet.id.." actual safe-height fraction "..tostring(fraction).." at "..tostring(viewport))
 					visual:destroy()
-				end)
+				end
+			end
+		end)
+		test("piece capture excludes ripple and glints and near-plane projection fails closed",function()
+			local body={Parent=true,CFrame=CFrame.new(0,1,0),Size=Vector3.new(1,2,1),Transparency=0}
+			local huge={Parent=true,CFrame=CFrame.new(0,100,0),Size=Vector3.new(100,100,100),Transparency=0}
+			local points=Shot.captureSilhouette({yaw=0,pieces={{part=body},{part=huge,role="ripple"},{part=huge,faceRole="spark"}}},CFrame.new(0,1,0))
+			assert(#points==8)
+			local camera=CFrame.lookAt(Vector3.new(0,0,8),Vector3.zero)
+			assert(Shot.projectedPointsHeight(camera,points)>0 and Shot.projectedPointsHeight(CFrame.identity,points)==math.huge)
+		end)
+		for _,pet in ipairs(Pets.collection)do
+			for _,focused in ipairs({false,true})do
+				for _,viewport in ipairs({{"landscape",16/9},{"portrait",390/740},{"wide",568/160}})do
+					test(pet.id..(if focused then " focused"else " ordinary").." complete greeting fits "..viewport[1],function()
+						local visual=makeVisual(pet);visual.focusPose=focused
+						local args=arguments(visual,viewport[2]);args.animationTopReserve=(if focused then .55 else .9)*visual.worldScale
+						local plan=Shot.plan(args);assert(plan,"no supported greeting shot for "..pet.id)
+						visual.origin,visual.yaw=plan.origin,plan.yaw;visual:update(0)
+						assertProjection(visual,plan,viewport[2],pet.id..(if focused then "/focused/"else "/ordinary/")..viewport[1].."/rest")
+						visual:greet()
+						for frame=1,90 do visual:update(1/60);assertProjection(visual,plan,viewport[2],pet.id..(if focused then "/focused/"else "/ordinary/")..viewport[1].."/greeting@"..frame)end
+						visual:destroy()
+					end)
+				end
 			end
 		end
+		test("rest subject capture restores in-flight greeting fields and every visible pose",function()
+			local Room=require(client.RoomView)
+			for _,pet in ipairs(Pets.collection)do
+				local v=makeVisual(pet);v:greet();v:update(.33)
+				local greeting,focusPose,gait,bob,tilt,last=v.greeting,v.focusPose,v.gaitWeight,v.movementBob,v.affectionTilt,v.lastFrame
+				local frames={};for _,entry in ipairs(v.pieces)do frames[entry.part]=entry.part.CFrame end
+				local bounds,size,points=Room.captureFocusSubject(v,pet.family or pet.id)
+				assert(bounds and size.Y>0 and #points>0)
+				assert(v.greeting==greeting and v.focusPose==focusPose and v.gaitWeight==gait and v.movementBob==bob and v.affectionTilt==tilt and v.lastFrame==last,pet.id.." snapshot changed greeting ownership")
+				for part,frame in pairs(frames)do assert((part.Position-frame.Position).Magnitude<.00001 and part.CFrame.LookVector:Dot(frame.LookVector)>.999999,pet.id.." snapshot changed original pose")end
+				-- A cleared focus flag restores the full ordinary renderer at the same clock.
+				v.focusPose=true;v:update(0);assert(v.model.PrimaryPart.Position.Y<frames[v.model.PrimaryPart].Y,pet.id.." focus did not soften greeting")
+				v.focusPose=nil;v:update(0);assert((v.model.PrimaryPart.Position-frames[v.model.PrimaryPart].Position).Magnitude<.00001,pet.id.." ordinary greeting did not restore")
+				v:destroy()
+			end
+		end)
 		test("edges and corners keep the complete greeting footprint on supported floor", function()
 			for _, edge in ipairs({ Vector3.new(52, 7, 0), Vector3.new(-52, 7, 0), Vector3.new(0, 7, 44), Vector3.new(0, 7, -44),
 				Vector3.new(52, 7, 44), Vector3.new(-52, 7, 44), Vector3.new(52, 7, -44), Vector3.new(-52, 7, -44) }) do

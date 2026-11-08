@@ -1,0 +1,33 @@
+{
+  "packets": [
+    {
+      "at": 13.430787899997085,
+      "packet": {
+        "leaseId": "4f94a4e6-8959-4826-8cf8-9b3188a46e21",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 1
+      }
+    },
+    {
+      "at": 14.280628700042143,
+      "packet": {
+        "requestGeneration": 1,
+        "leaseId": "4f94a4e6-8959-4826-8cf8-9b3188a46e21",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "at": 12.915010700002313,
+      "type": "MouseButton1",
+      "key": "None",
+      "point": "818, 515, 0"
+    }
+  ],
+  "focus": true,
+  "glove": false
+}

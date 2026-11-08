@@ -92,7 +92,13 @@ function Focus.new(parentGui, callbacks)
 	root.BackgroundTransparency = 1
 	local panel = frame(root, "FocusControls", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), "ink", 2)
 	panel.BackgroundTransparency, panel.Visible = 1, false
-	local back = button(panel, "Back", "Back", Vector2.zero, UDim2.fromOffset(12, 12), "panel")
+	local back = button(panel, "Back", "", Vector2.zero, UDim2.fromOffset(12, 12), "panel")
+	back.Size=UDim2.fromOffset(44,44);back:SetAttribute("AccessibleLabel","Back to roaming")
+	local shaft=frame(back,"ArrowShaft",UDim2.fromOffset(13,21),UDim2.fromOffset(20,3),"text",11)
+	for _,sign in ipairs({-1,1})do
+		local arm=frame(back,"ArrowArm",UDim2.fromOffset(11,if sign<0 then 16 else 24),UDim2.fromOffset(13,3),"text",11)
+		arm.Rotation=sign*45
+	end
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
 	helper.AnchorPoint, helper.Position, helper.Size = Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -14), UDim2.fromOffset(230, 26)
@@ -188,7 +194,14 @@ function Focus:checkContactDeadline()
   held.active=true;self.contactAttempted=true
   if self.callbacks.petContact then self.callbacks.petContact(true,"held")end
  end
-	if self.contactDeadline and self:now()>=self.contactDeadline then self:cancelPointer();return true end
+	if self.contactDeadline and self:now()>=self.contactDeadline then
+		-- A brief rest ends the reward lease, not ownership of this finger. Only
+		-- fresh deliberate motion can restart it; idle updates never do.
+		self.contactDeadline=nil;self.strokeDistance=0;self.rubAccepted=false
+		if self.contactAttempted then self.contactAttempted=false;if self.callbacks.petContact then self.callbacks.petContact(false)end end
+		self.glove.Visible=false
+		return true
+	end
 	return false
 end
 function Focus:pointerMatches(input)
@@ -221,6 +234,8 @@ function Focus:movePointer(input,began)
  if input.UserInputState==Enum.UserInputState.Cancel then self:endPointer(input);return end
 	if not self.pointer then return end
 	if not self.active or not self:canOwnInput()or not self.callbacks.canReact()then self:cancelPointer();return end
+	self:checkContactDeadline()
+	if not self.pointer then return end
 	local point=Vector2.new(input.Position.X,input.Position.Y)-self.root.AbsolutePosition
 	if not self:inside(point)then self:cancelPointer();return end
 	local traveled=if self.previousPoint then(point-self.previousPoint).Magnitude else 0
@@ -235,11 +250,11 @@ function Focus:movePointer(input,began)
 			if self.rubAccepted then self:retireFocusHint()end
 		end
 		if self.rubAccepted and not self.contactAttempted then
-			self.contactAttempted=true;self.contactDeadline=self:now()+.24
+			self.contactAttempted=true;self.contactDeadline=self:now()+.8
 			if self.callbacks.petContact then self.callbacks.petContact(true,"pointer")end
 		end
 	end
-	if self.contactAttempted and traveled>.5 then self.contactDeadline=self:now()+.24 end
+	if self.contactAttempted and traveled>.5 then self.contactDeadline=self:now()+.8 end
 end
 function Focus:endPointer(input)
 	if input.UserInputType==Enum.UserInputType.MouseButton1 then self.openingMouse=false;self.retiredMouse=false end

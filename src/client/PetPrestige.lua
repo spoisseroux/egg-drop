@@ -56,6 +56,8 @@ function Prestige.attach(visual, pet, rank, legacy)
 		local plate = shape(badge, "Crest", UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), Color3.fromHex("#314738"), 0.24)
 		local stroke = Instance.new("UIStroke")
 		stroke.Color, stroke.Thickness, stroke.Parent = tint, if rank == 3 then 2 else 1, plate
+		visual.prestigePlate,visual.prestigeStroke=plate,stroke
+		visual.prestigePlateAlpha,visual.prestigeStrokeAlpha=plate.BackgroundTransparency,stroke.Transparency
 		FamilyCrest.create(plate, pet.family or pet.id, rank, UDim2.fromOffset(1, 1), UDim2.fromOffset(24, 24), 2)
 
 		local text = Instance.new("TextLabel")
@@ -89,6 +91,13 @@ end
 function Prestige.updateBadge(visual,camera)
 	local badge=visual.prestigeBadge
 	if not badge or not badge.Parent then return end
+	local focused=visual.focused==true
+	local preference=math.clamp(GuiService.PreferredTransparency,0,1)
+	if visual.prestigeFocused~=focused or visual.prestigeTransparency~=preference then
+		visual.prestigeFocused,visual.prestigeTransparency=focused,preference
+		if visual.prestigePlate then visual.prestigePlate.BackgroundTransparency=if focused then .62*preference else visual.prestigePlateAlpha end
+		if visual.prestigeStroke then visual.prestigeStroke.Transparency=if focused then .45*preference else visual.prestigeStrokeAlpha end
+	end
 	local body=visual.model.PrimaryPart
 	if not camera or not body or not visual.model.Parent then badge.Enabled=false;return end
 	local viewport=camera.ViewportSize

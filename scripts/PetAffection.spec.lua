@@ -15,6 +15,16 @@ return function(client)
    for _,p in ipairs(fx.petals)do assert(p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery and p.Transparency==1 and not p:IsDescendantOf(pip.model))end
    assert(fx.label.Text=="+1"and fx.award.Plate:FindFirstChild("NectarDrop")and not fx.label.Active and not fx.label.Selectable and not fx.label.TextScaled)
   end)
+  test("qualified start shows pooled petals immediately with a cooldown and static reduced cheeks",function()
+   local now=0;fx.clock=function()return now end;fx:begin(false);fx:step(1/60,true,false)
+   assert(pip.affectionBlush>0 and fx.petals[1].Transparency<1 and not fx.award.Enabled)
+   fx:clear();now=1;fx:begin(false);fx:step(1/60,true,false)
+   for _,p in ipairs(fx.petals)do assert(p.Transparency==1,"rapid restart bypassed petal cooldown")end
+   fx:clear();now=3;fx:begin(true);fx:step(1/60,true,true)
+   assert(pip.affectionBlush>0 and pip.affectionTilt==0)
+   for _,p in ipairs(fx.petals)do assert(p.Transparency==1)end
+   fx:clear();fx.clock=nil
+  end)
   test("continuous contact rotates bounded variations at three-to-five seconds without allocations",function()
    local count=#fx.folder:GetDescendants();pip.petting=true
    for _=1,260 do fx:step(.05,true,false);pip:update(.05);assert(math.abs(pip.affectionTilt or 0)<=.04501)end

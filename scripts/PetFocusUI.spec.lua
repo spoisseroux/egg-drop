@@ -169,7 +169,16 @@ return function(client, _parent)
 			assert(released == 1 and cancelled == 1 and disconnected == 1 and fake.focusEpoch == 33)
 			oldCamera:Destroy()
 		end)
-		test("aspect reframe preserves original restore shot without greet or recapture", function()
+		test("same-aspect viewport resize has a distinct safe geometry key",function()
+			assert(Room.focusGeometryKey({ViewportSize=Vector2.new(400,800)})~=Room.focusGeometryKey({ViewportSize=Vector2.new(300,600)}),"same aspect suppressed pixel headroom reframe")
+		end)
+		test("blocked resize releases focus through the existing roam restoration path",function()
+			local restored=0;local camera=workspace.CurrentCamera
+			local fake={focusing=true,mode="Room",pet={},focusGeometry="old geometry",greetingCamera={camera=camera,root=currentRoot},
+				planGreeting=function()return nil end,useRoomCamera=function(_,placing)assert(placing==false);restored+=1 end}
+			assert(not Room.reframeFocus(fake)and restored==1,"invalid new viewport retained a clipped locked shot")
+		end)
+		test("viewport reframe preserves original restore shot without greet or recapture", function()
 			local camera = Instance.new("Camera")
 			camera.Parent = fixture
 			local updated, cancelled, pointerCancelled = 0, 0, 0
