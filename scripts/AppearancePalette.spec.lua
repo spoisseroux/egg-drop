@@ -12,12 +12,27 @@ return function(client,parent,onlySize)
  local function fit(n)assert(n.TextFits,n:GetFullName().." "..n.Text.." "..tostring(n.AbsoluteSize).." "..tostring(n.TextBounds))end
  local function channel(c)local function v(x)return if x<=.04045 then x/12.92 else ((x+.055)/1.055)^2.4 end;return .2126*v(c.R)+.7152*v(c.G)+.0722*v(c.B)end
  local function contrast(a,b)a,b=channel(a),channel(b);return(math.max(a,b)+.05)/(math.min(a,b)+.05)end
+ local function shade(c,f)return Color3.new(c.R*f,c.G*f,c.B*f)end
  local function result(seq)return{sequence=seq,status="Saved",success=true,stage=2,reason="Completed",award=8,daily=0,balance=10,recipe=game.ReplicatedStorage.Shared.EggCatalog and require(game.ReplicatedStorage.Shared.EggCatalog).ById.meadow,reward={sequence=seq,total=8,base=8,daily=0,family="pip",masteryPoints=1,promotedTo=0,contracts={}}}end
  local ok,err=pcall(function()
  test("all8 palettes keep body supporting and LCD ink readable",function()
   for _,id in ipairs(Themes.Order)do local t=Themes.ById[id]
    for _,role in ipairs({"panel","raised","inset","selected"})do assert(contrast(t.ui.text,t.ui[role])>=4.5,id.." text contrast "..role)end
    assert(contrast(t.ui.muted,t.ui.raised)>=4.5 and contrast(Art.LCDInk,t.lcd.base)>=4.5,id.." supporting/LCD contrast")
+   -- Gradients are neutral multipliers over the role color. Check both authored
+   -- ends, including the TextButton foreground when its own gradient is applied.
+   for _,sample in ipairs({{"panel",.84},{"raised",.93},{"inset",.93},{"selected",.93}})do
+    for _,factor in ipairs({1,sample[2]})do
+     local background=shade(t.ui[sample[1]],factor)
+     assert(contrast(t.ui.text,background)>=4.5 and contrast(shade(t.ui.muted,factor),background)>=4.5,id.." composited functional copy "..sample[1])
+    end
+   end
+   for _,factor in ipairs({1,.88})do
+    assert(contrast(shade(t.ui.ink,factor),shade(t.ui.accent,factor))>=4.5,id.." composited primary ink")
+    assert(contrast(t.ui.ink,shade(t.ui.accent,factor))>=3,id.." primary dark boundary")
+   end
+   assert(contrast(t.ui.ink,t.highlight)>=4.5,id.." backed shell title ink")
+   assert(#t.shellGradient.Keypoints==3 and t.shellGradient.Keypoints[1].Value==t.highlight and t.shellGradient.Keypoints[3].Value==t.shell,id.." authored finish stops")
   end
  end)
  for _,size in ipairs(if onlySize then {onlySize}else {Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703)})do
@@ -38,6 +53,8 @@ return function(client,parent,onlySize)
    for _,id in ipairs(Themes.Order)do
     local t=Themes.ById[id];Art.applyTheme(t);settle()
     assert(menu.card.BackgroundColor3==t.ui.panel and menu.tabs.mastery.BackgroundColor3==t.ui.selected and menu.tabs.mastery.TextColor3==t.ui.text)
+    assert(shop.action.BackgroundColor3==t.ui.accent and shop.action.TextColor3==t.ui.ink,"actual refreshed shop CTA retained fixed reward color")
+    assert(menu.card:FindFirstChildOfClass("UIGradient").Rotation==100 and menu.nectar.Font==Art.Font.Counter)
     assert(picker.card.BackgroundColor3==t.ui.panel and picker.tabs.Shell.BackgroundColor3==t.ui.selected)
     assert(journal.card.BackgroundColor3==t.ui.panel and journal.cards[1].BackgroundColor3==t.ui.raised and journal.cards[1].Species.TextColor3==t.ui.text)
     assert(shop.card.BackgroundColor3==t.ui.panel and recipe.BackgroundColor3==t.ui.selected and recipe.RecipeName.TextColor3==t.ui.text)

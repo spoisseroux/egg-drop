@@ -25,11 +25,11 @@ return function(client,parent,onlySize)
   root.Size=UDim2.fromOffset(size.X,size.Y);settle()
   local service=game:GetService("TextService");local short=size.X>=size.Y*1.2 and size.Y<280
   local cap=if short then 12 else 14
-  local line=math.ceil(service:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
-  local mark=service:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100));local diameter=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
-  local wallet=math.ceil(service:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y)+4
-  local l=Layout.resolve(size,11.8/19.8,{utilityWidth=service:GetTextSize("Lounge",cap,Enum.Font.GothamBold,Vector2.new(1000,100)).X+14,lineHeight=line,
-   queueHeight=math.max(line+diameter+10,line*2+8),walletLineHeight=wallet,countWidth=service:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+  local line=math.ceil(service:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y)+4
+  local mark=service:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100));local diameter=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
+  local wallet=math.ceil(service:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y)+4
+  local l=Layout.resolve(size,11.8/19.8,{utilityWidth=service:GetTextSize("Lounge",cap,Art.Font.Action,Vector2.new(1000,100)).X+14,lineHeight=line,
+   queueHeight=math.max(line+diameter+10,line*2+8),walletLineHeight=wallet,countWidth=service:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
   local compact=l.short or l.dense or l.quest.h<60
   local host=Art.frame(root,"QuestWell",Art.Ink,UDim2.fromOffset(l.quest.x,l.quest.y),UDim2.fromOffset(l.quest.w,l.quest.h),2)
   local quest=Quest.new(host)

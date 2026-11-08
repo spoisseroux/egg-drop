@@ -16,6 +16,8 @@ return function(client,parent,rootSize)
  local function state(amount,available)return{status="Ready",revision=12,nectar=amount,inventoryMask=127,dailyAvailable=available==true,dailyBonus=6,dailyDay="20000",mastery={pip=3,wick=3}}end
  local function header(v,amount)
   fit(v.heading);fit(v.nectar);fit(v.closeButton)
+  assert(v.nectar.Font==Art.Font.Counter and v.nectar:GetAttribute("TypeRole")=="Counter","wallet lost exact-counter face")
+  assert(v.heading.Font==(if v.heading:GetAttribute("TypeRole")=="Heading"then Art.Font.Heading else Art.Font.Body),"heading role face differs")
   assert(v.nectar.Visible and v.nectar.Text==tostring(amount) and v.nectar:GetAttribute("AccessibleLabel")==tostring(amount).." nectar")
   assert(v.wallet.BackgroundTransparency==1 and inside(v.wallet,v.card) and inside(v.closeButton,v.card))
   assert(v.closeButton.AbsoluteSize==Vector2.new(44,44) and v.closeButton:GetAttribute("BareClose"))

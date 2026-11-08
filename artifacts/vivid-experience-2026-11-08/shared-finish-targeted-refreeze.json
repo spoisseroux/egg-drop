@@ -1,0 +1,43 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SharedFinish",
+    "result": {
+      "preference": "Medium",
+      "passed": 12,
+      "cases": [
+        "assigned faces retain measured targets and distinguish exact Roman marks",
+        "sherbet hot theme paints actual primary, disabled and restored states",
+        "stone hot theme paints actual primary, disabled and restored states",
+        "ice hot theme paints actual primary, disabled and restored states",
+        "brick hot theme paints actual primary, disabled and restored states",
+        "moss hot theme paints actual primary, disabled and restored states",
+        "honey hot theme paints actual primary, disabled and restored states",
+        "gloaming hot theme paints actual primary, disabled and restored states",
+        "copperleaf hot theme paints actual primary, disabled and restored states",
+        "locked finish preview never changes confirmed sheet or control colors",
+        "repeated themes, previews and state paints allocate no nodes or sequences",
+        "controller focus keeps an outer light stroke and inner dark keyline"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HardwareInstruments",
+    "result": {
+      "preference": "Medium",
+      "passed": 7,
+      "cases": [
+        "1649, 971 field pack keeps control seats and complete instruction",
+        "733, 307 field pack keeps control seats and complete instruction",
+        "568, 160 field pack keeps control seats and complete instruction",
+        "385, 703 field pack keeps control seats and complete instruction",
+        "inset face is clipped passive depth with no action underline or focus stroke",
+        "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+        "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+      ]
+    }
+  }
+]

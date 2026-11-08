@@ -1,0 +1,102 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SharedFinish",
+    "result": {
+      "preference": "Largest",
+      "passed": 12,
+      "cases": [
+        "assigned faces retain measured targets and distinguish exact Roman marks",
+        "sherbet hot theme paints actual primary, disabled and restored states",
+        "stone hot theme paints actual primary, disabled and restored states",
+        "ice hot theme paints actual primary, disabled and restored states",
+        "brick hot theme paints actual primary, disabled and restored states",
+        "moss hot theme paints actual primary, disabled and restored states",
+        "honey hot theme paints actual primary, disabled and restored states",
+        "gloaming hot theme paints actual primary, disabled and restored states",
+        "copperleaf hot theme paints actual primary, disabled and restored states",
+        "locked finish preview never changes confirmed sheet or control colors",
+        "repeated themes, previews and state paints allocate no nodes or sequences",
+        "controller focus keeps an outer light stroke and inner dark keyline"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "PreferredTextLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 9,
+      "cases": [
+        "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+        "680, 700 measured shop header and pinned purchase route fit",
+        "680, 700 recap reward wallet and complete receipt stay readable",
+        "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+        "390, 740 measured shop header and pinned purchase route fit",
+        "390, 740 recap reward wallet and complete receipt stay readable",
+        "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+        "568, 160 measured shop header and pinned purchase route fit",
+        "568, 160 recap reward wallet and complete receipt stay readable"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SharedHeaders",
+    "result": {
+      "preference": "Largest",
+      "passed": 12,
+      "cases": [
+        "1649, 971 exact menu wallet and stable bare-X header",
+        "1649, 971 recipe prices and status stay independent of exact balance",
+        "733, 307 exact menu wallet and stable bare-X header",
+        "733, 307 recipe prices and status stay independent of exact balance",
+        "568, 160 exact menu wallet and stable bare-X header",
+        "568, 160 recipe prices and status stay independent of exact balance",
+        "385, 703 exact menu wallet and stable bare-X header",
+        "385, 703 recipe prices and status stay independent of exact balance",
+        "focused unselected recipe survives rebuild and rotation without changing selection",
+        "focused daily remains visible while disabled gift falls back to neutral X",
+        "X/footer survive rebuild and detached GUI cannot reclaim focus",
+        "two independent circle controls retain native names and preferred transparency"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HandheldTextLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 5,
+      "cases": [
+        "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HardwareInstruments",
+    "result": {
+      "preference": "Largest",
+      "passed": 7,
+      "cases": [
+        "1649, 971 field pack keeps control seats and complete instruction",
+        "733, 307 field pack keeps control seats and complete instruction",
+        "568, 160 field pack keeps control seats and complete instruction",
+        "385, 703 field pack keeps control seats and complete instruction",
+        "inset face is clipped passive depth with no action underline or focus stroke",
+        "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+        "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+      ]
+    }
+  }
+]

@@ -39,14 +39,14 @@ function Recap.new(parent, audio, reduceEffects)
 		fitText(Art.text(tile, "Label", caption, UDim2.fromOffset(2, 2), UDim2.new(1, -4, 0, 12),
 			"muted", 11), 11)
 		local value = Art.text(tile, "Value", "", UDim2.fromOffset(3, 14), UDim2.new(1, -6, 1, -16),
-			if index == 1 then Art.Amber else "text", 26)
+			if index == 1 then Art.Amber else "text", 26, Art.Font.Counter)
 		fitText(value, 26)
 		values[index] = value
 	end
 	local goal = Art.frame(frame, "Goal", "raised", UDim2.new(0, 12, 1, -88), UDim2.new(1, -24, 0, 30))
 	Art.corner(goal, 5)
 	local title = Art.text(goal, "Heading", "", UDim2.fromOffset(6, 1), UDim2.new(1, -12, 0, 14),
-		Art.Cyan, 13, Enum.Font.GothamBold)
+		Art.Cyan, 13, Art.Font.Heading)
 	fitText(title, 13)
 	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), "text", 12)
 	fitText(detail, 12)
@@ -56,16 +56,16 @@ function Recap.new(parent, audio, reduceEffects)
 	Art.corner(nectarIcon, 8)
 	Art.leaf(nectarIcon, "Leaf", UDim2.fromOffset(6, -3), UDim2.fromOffset(8, 5), Art.Leaf, -25)
 	nectarIcon.Visible = false
-	local earnedGraphic = Art.text(goal, "EarnedNectar", "+0 NECTAR", UDim2.fromOffset(27, 0), UDim2.new(.52, -28, 0, 26), Art.Amber, 26, Enum.Font.GothamBold)
+	local earnedGraphic = Art.text(goal, "EarnedNectar", "+0 NECTAR", UDim2.fromOffset(27, 0), UDim2.new(.52, -28, 0, 26), Art.Amber, 26, Art.Font.Reward)
 	fitText(earnedGraphic, 26)
 	earnedGraphic.TextXAlignment = Enum.TextXAlignment.Left
-	local bankGraphic = Art.text(goal, "SavedEggBank", "", UDim2.new(.52, 0, 0, 0), UDim2.new(.48, -6, 0, 26), Art.Leaf, 13, Enum.Font.GothamBold)
+	local bankGraphic = Art.text(goal, "SavedEggBank", "", UDim2.new(.52, 0, 0, 0), UDim2.new(.48, -6, 0, 26), Art.Leaf, 13, Art.Font.Counter)
 	fitText(bankGraphic, 13)
 	earnedGraphic.Visible, bankGraphic.Visible = false, false
 	local detailsButton = Instance.new("TextButton")
 	detailsButton.Name, detailsButton.Text, detailsButton.Size = "Details", "Details", UDim2.fromOffset(90, 44)
 	detailsButton.BackgroundColor3, detailsButton.TextColor3 = Art.Ink, Art.Silver
-	detailsButton.Font, detailsButton.TextSize, detailsButton.BorderSizePixel = Enum.Font.GothamBold, 14, 0
+	detailsButton.Font, detailsButton.TextSize, detailsButton.BorderSizePixel = Art.Font.Action, 14, 0
 	detailsButton.ZIndex, detailsButton.Visible, detailsButton.Parent = goal.ZIndex + 3, false, goal
 	Art.bind(detailsButton,{BackgroundColor3="ink",TextColor3="text"});Art.button(detailsButton, 8); Art.fitText(detailsButton, 14, 10, 4, false)
 	local summary = Art.frame(goal, "RewardChips", "raised", UDim2.fromOffset(6, 52), UDim2.new(1, -12, 1, -54))
@@ -74,7 +74,7 @@ function Recap.new(parent, audio, reduceEffects)
 	for index, caption in ipairs({ "Quest", "Daily" }) do
 		local chip = Art.frame(summary, caption .. "Chip", "ink", UDim2.new((index - 1) * .5, 1, 0, 0), UDim2.new(.5, -3, 0, 36))
 		Art.corner(chip, 8)
-		local label = Art.text(chip, "Value", caption .. " +0", UDim2.fromOffset(4, 0), UDim2.new(1, -8, 1, 0), if index == 1 then Art.Leaf else Art.Amber, 18, Enum.Font.GothamBold)
+		local label = Art.text(chip, "Value", caption .. " +0", UDim2.fromOffset(4, 0), UDim2.new(1, -8, 1, 0), if index == 1 then Art.Leaf else Art.Amber, 18, Art.Font.Counter)
 		fitText(label, 18)
 		componentLabels[index] = label
 	end
@@ -110,7 +110,7 @@ function Recap.new(parent, audio, reduceEffects)
 	local personalBest=Art.frame(stats,"PersonalBest","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64))
 	personalBest.BackgroundTransparency=1
 	local bestCaption=Art.text(personalBest,"Label","Personal best",UDim2.fromOffset(0,0),UDim2.new(1,0,0,24),"muted",14)
-	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),"text",24,Enum.Font.GothamBold)
+	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),"text",24,Art.Font.Counter)
 	personalBest.Visible=false
 	local promotion=Art.text(goal,"FamilyPromotion","",UDim2.fromOffset(4,0),UDim2.new(1,-8,0,24),Art.Leaf,12)
 	promotion.TextXAlignment=Enum.TextXAlignment.Left;promotion.Visible=false
@@ -412,14 +412,14 @@ function Recap:layoutField(height)
 	local total=titleH+6+detailH
 	self.promotionLabel.Visible=false
 	if self.hasReceipt then
-		Art.type(self.earnedGraphic,"Heading",true)
+		Art.type(self.earnedGraphic,"Reward",true)
 		local heroH=Art.textHeight(self.earnedGraphic,width-42,28)
 		place(self.nectarIcon,6,math.max(0,(heroH-24)/2),18,24)
 		place(self.earnedGraphic,34,0,width-38,heroH)
 		local y=heroH+6;local visible=0;local sourceH=0
 		for _,label in ipairs(self.componentLabels)do
 			label.Parent=self.goal
-			Art.type(label,"Supporting",true);label.TextXAlignment=Enum.TextXAlignment.Left
+			Art.type(label,"Counter",true);label.TextXAlignment=Enum.TextXAlignment.Left
 			label.Visible=not label.Text:match("%+0$")
 			if label.Visible then visible+=1;sourceH=math.max(sourceH,Art.textHeight(label,(width-8)/2,16))end
 		end
@@ -437,7 +437,7 @@ function Recap:layoutField(height)
 		local eggY=y
 		self.eggPanel.BackgroundTransparency=1
 		self.eggGoal.Parent,self.bankGraphic.Parent=self.eggPanel,self.eggPanel
-		Art.type(self.eggGoal,"Body",true);Art.type(self.bankGraphic,"Body",true);Art.type(self.shortfall,"Supporting",true)
+		Art.type(self.eggGoal,"Body",true);Art.type(self.bankGraphic,"Counter",true);Art.type(self.shortfall,"Supporting",true)
 		local name=if self.displayRecipeId=="meadow"then "Meadow"elseif self.displayRecipeId=="sprout"then "Sprout"else self.displayRecipe.name
 		self.eggGoal.Text=string.format("%s · %d/%d",name,self.displayBalance,self.displayCost)
 		self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch"else string.format("%d more to hatch",self.displayCost-self.displayBalance)

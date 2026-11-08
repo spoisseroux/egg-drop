@@ -39,7 +39,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
 	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,card.ZIndex+1
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
-	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
+	scroll.ScrollBarThickness=4;Art.bind(scroll,{ScrollBarImageColor3="accent"})
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={},Background={}},rows={},
 		onPreview=onPreview,onClose=onClose,onApply=onApply,available={},confirmed={},onSetting=onSetting,active="Shell"},Picker)
 	self.heading=text(card,"Heading","Deck style","Heading")
@@ -48,7 +48,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	self.moreCue=Art.frame(card,"MoreBelow","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
-		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
+		local bar=Art.frame(self.moreCue,"Chevron","accent",UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
 	end
 	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue();self:refreshBackgroundPreview()end)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue();self:refreshBackgroundPreview()end)
@@ -301,7 +301,7 @@ end
 function Picker:preview(themeId,stickerId)
  local theme=Themes.ById[themeId];if not theme or not Stickers.ById[stickerId]then return false end
  self.previewName.Text=if self.active=="Sticker"then Stickers.ById[stickerId].name else theme.name
- self.shell.BackgroundColor3,self.face.BackgroundColor3=theme.shell,theme.face or theme.shell
+ Art.finish(self.shell,theme,"shell");Art.finish(self.face,theme,"face")
  self.face.AimRocker.BackgroundColor3=theme.rocker or Palette.Ink
  self.bezel.BackgroundColor3,self.buttonA.BackgroundColor3=theme.trim,theme.buttons
  self.screen.BackgroundColor3=theme.lcd.base

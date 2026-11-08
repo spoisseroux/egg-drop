@@ -10,15 +10,15 @@ return function(client,parent,onlySize)
  for _,size in ipairs(if onlySize then {onlySize}else {Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703)})do
   local short=size.X>=350 and size.X>=size.Y*1.2 and size.Y<280
   local cap=if short then 12 else 14
-  local qh=math.ceil(Text:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
-  local mark=Text:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100));local d=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
-  local l=Layout.resolve(size,ratio,{utilityWidth=Text:GetTextSize("Lounge",cap,Enum.Font.GothamBold,Vector2.new(1000,100)).X+14,
-   lineHeight=qh,queueHeight=math.max(qh+d+10,qh*2+8),walletLineHeight=Text:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y+4,countWidth=Text:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+  local qh=math.ceil(Text:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y)+4
+  local mark=Text:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100));local d=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
+  local l=Layout.resolve(size,ratio,{utilityWidth=Text:GetTextSize("Lounge",cap,Art.Font.Action,Vector2.new(1000,100)).X+14,
+   lineHeight=qh,queueHeight=math.max(qh+d+10,qh*2+8),walletLineHeight=Text:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y+4,countWidth=Text:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
   Layout.fitInstruments(l,Dispenser.preferredHeight({budget=24},l.meter.w,l.meter.h))
   local face=Instance.new("Frame");face.BackgroundTransparency=1;face.Position=UDim2.fromOffset(l.shell.x+5,l.shell.y+4);face.Size=UDim2.fromOffset(l.shell.w-10,l.shell.h-8);face.Parent=root
   local host=Instance.new("Frame");host.Parent=face;Stickers.paint(host,"star");local pixels=host.StickerPixels
   for _,word in ipairs({"DROP","FALLING","SETTLE","SAVING"})do
-   label.Text=word;Art.type(label,"Supporting",l.short);label.Font=Enum.Font.GothamBold
+   label.Text=word;Art.type(label,"Supporting",l.short);label.Font=Art.Font.Action
    local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(label)+8));local height=Art.textHeight(label,width,16)
    local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
    local caption

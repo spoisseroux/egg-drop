@@ -13,12 +13,12 @@ return function(client,parent)
 	local function make(name,r)return Art.frame(root,name,Art.Ink,UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h),2)end
 	local function resolved(size)
 		local short=size.X>=350 and size.X>=size.Y*1.2 and size.Y<280
-		local utility=TextService:GetTextSize("Lounge",if short then 12 else 14,Enum.Font.GothamBold,Vector2.new(1000,100)).X+14
-		local line=TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y+4
-		local mark=TextService:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100))
+		local utility=TextService:GetTextSize("Lounge",if short then 12 else 14,Art.Font.Action,Vector2.new(1000,100)).X+14
+		local line=TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y+4
+		local mark=TextService:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100))
 		local d=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
-		local caption=TextService:GetTextSize("Next",if short then 12 else 14,Enum.Font.Gotham,Vector2.new(1000,100)).Y+4
-		return Layout.resolve(size,(Config.Width+.8)/(Config.Height+.8),{utilityWidth=utility,lineHeight=line,queueHeight=math.max(caption+d+10,line*2+8),walletLineHeight=TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y+4,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+		local caption=TextService:GetTextSize("Next",if short then 12 else 14,Art.Font.Body,Vector2.new(1000,100)).Y+4
+		return Layout.resolve(size,(Config.Width+.8)/(Config.Height+.8),{utilityWidth=utility,lineHeight=line,queueHeight=math.max(caption+d+10,line*2+8),walletLineHeight=TextService:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y+4,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
 	end
 	local ok,problem=pcall(function()
 		for _,size in ipairs({Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703)})do
@@ -82,7 +82,7 @@ return function(client,parent)
 			Art.tintBackdrop(host,Themes.ById.brick);local tint=floats[1].BackgroundColor3
 			Art.updateBackdrop(host,20,true,true);for _,n in ipairs(floats)do assert(n.Position==bases[n][1] and n.Rotation==bases[n][2])end
 			Art.updateBackdrop(host,200,false,false);for _,n in ipairs(floats)do assert(n.Position==bases[n][1])end
-			Art.updateBackdrop(host,2000,true,false);local resumed=pose();for _,n in ipairs(floats)do for k=1,3 do assert(math.abs(resumed[n][k]-d[n][k])<.0001)end end
+			Art.updateBackdrop(host,2000,true,false);local resumed=pose();for _,n in ipairs(floats)do for k=1,3 do assert(math.abs(resumed[n][k]-d[n][k])<.0001,"sampled phase changed on resume: "..n.Name.." component="..k.." before="..d[n][k].." resumed="..resumed[n][k])end end
 			assert(floats[1].BackgroundColor3==tint);host:Destroy();Art.updateBackdrop(host,3000,true,false)
 		end)
 	end)

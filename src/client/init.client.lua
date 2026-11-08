@@ -74,7 +74,7 @@ end
 
 local function label(class, name, content, parent, background)
 	return make(class, name, {
-		Text = content, Font = Enum.Font.GothamMedium, TextSize = 15,
+		Text = content, Font = Art.Font.Body, TextSize = 15,
 		TextColor3 = if background then Palette.Ink else Palette.Paper,
 		BackgroundColor3 = background or Palette.Panel, BackgroundTransparency = background and 0 or 1,
 		BorderSizePixel = 0,
@@ -214,9 +214,10 @@ for _, sign in ipairs({ -1, 1 }) do
 end
 
 local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
-title.Font = Enum.Font.GothamBold
+title.Font = Art.Font.Heading
 title.TextSize = 17
-title.TextColor3 = Art.Silver
+title.TextColor3 = Art.Ink
+title.BackgroundTransparency=0;Art.corner(title,4)
 Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10)
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
@@ -229,7 +230,7 @@ deckSticker.BackgroundTransparency=1;deckSticker.Active,deckSticker.Selectable=f
 shell.Faceplate.ClipsDescendants=true
 local rail = label("TextButton", "AimRail", "", backdrop, Art.Ink)
 rail.AutoButtonColor = false
-rail.Font = Enum.Font.Code
+rail.Font = Art.Font.Counter
 rail.TextColor3 = Palette.Paper
 rail.Selectable = false
 make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
@@ -237,7 +238,8 @@ make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 local walletFace=Art.instrument(Art.frame(rail,"WalletInstrument",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,32),rail.ZIndex))
 Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
-readout.Font = Enum.Font.Code
+readout.Font = Art.Font.Counter
+readout:SetAttribute("TypeRole","Counter")
 make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 }, readout)
 readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
@@ -250,7 +252,7 @@ for index,name in ipairs({"Dropping","Next"})do
 	local caption=Art.text(slot,"Caption",name,UDim2.fromOffset(2,0),UDim2.new(1,-4,0,14),Art.Muted,11);Art.fitText(caption,12,8,0)
 	local ball=Art.frame(slot,"Piece",Config.Tiers[1].color,UDim2.new(.5,-14,0,19),UDim2.fromOffset(28,28),6)
 	Art.corner(ball,30);Art.shade(ball,1,.7)
-	local mark=Art.text(ball,"Mark","I",UDim2.fromScale(0,0),UDim2.fromScale(1,1),Art.Ink,12);Art.fitText(mark,12,8,0)
+	local mark=Art.text(ball,"Mark","I",UDim2.fromScale(0,0),UDim2.fromScale(1,1),Art.Ink,12,Art.Font.Counter);mark:SetAttribute("TypeRole","Counter");Art.fitText(mark,12,8,0)
 	queuePieces[index]=ball
 end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
@@ -268,10 +270,10 @@ local function layoutWallet(l)
 		local pad=if l.short or l.dense then 3 else 7
 		local glyphW=if nectar then 20 else math.min(r.w*.55,walletCaptionWidth)
 		local gap,faceW=3,r.w
-		Art.type(readout,if l.short or l.dense or not l.lateral then "Supporting"else "Action",l.short or l.dense or not l.lateral)
+		Art.type(readout,"Counter",l.short or l.dense or not l.lateral)
 		local function digitsWidth()return math.ceil(TextService:GetTextSize(readout.Text,readout.TextSize,readout.Font,Vector2.new(10000,10000)).X)+2 end
 		local digits=digitsWidth()
-		if digits>faceW-pad*2-glyphW-gap then Art.type(readout,"Supporting",true);digits=digitsWidth()end
+		if digits>faceW-pad*2-glyphW-gap then Art.type(readout,"Counter",true);digits=digitsWidth()end
 		if digits>faceW-pad*2-glyphW-gap then
 			pad,glyphW,gap=2,if nectar then 10 else 0,if nectar then 2 else 0
 			local maximum=if l.dense then l.drop.x-r.x-2 elseif l.lateral then l.bezel.x-r.x-2 else l.queue.x-r.x-4
@@ -296,12 +298,12 @@ local function layoutWallet(l)
 	readout:SetAttribute("AccessibleLabel",readout.Text..(if nectar then " nectar"else " score"))
 end
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
-bestReadout.Font = Enum.Font.Code
+bestReadout.Font = Art.Font.Counter
 bestReadout.TextXAlignment = Enum.TextXAlignment.Left
 bestReadout.TextColor3 = Art.Muted
 bestReadout.TextTruncate = Enum.TextTruncate.AtEnd
 local nextReadout = label("TextLabel", "NextReadout", "", rail)
-nextReadout.Font = Enum.Font.Code
+nextReadout.Font = Art.Font.Counter
 nextReadout.TextXAlignment = Enum.TextXAlignment.Right
 local mascot = make("Frame", "PixelPip", {
 	Position = UDim2.new(0, 10, 0.5, -10), Size = UDim2.fromOffset(21, 21), BackgroundTransparency = 1,
@@ -361,7 +363,8 @@ local function layoutDropMeter()
 end
 meter:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutDropMeter)
 local meterText = label("TextLabel", "MeterText", "", meter)
-meterText.Font = Enum.Font.Code
+meterText.Font = Art.Font.Counter
+meterText:SetAttribute("TypeRole","Counter")
 meterText.Size = UDim2.new(0, 62, 1, 0)
 meterText.Position = UDim2.new(1, -64, 0, 0)
 meterText.TextSize = 12
@@ -369,7 +372,7 @@ meterText.TextColor3 = Palette.Paper
 meterText.TextStrokeColor3 = Palette.Ink
 meterText.TextStrokeTransparency = 0
 local rareGoal = Art.text(backdrop, "RareGoal", "", UDim2.fromOffset(0, 0),
-	UDim2.fromOffset(0, 0), Art.Cyan, 12, Enum.Font.GothamMedium)
+	UDim2.fromOffset(0, 0), Art.Cyan, 12, Art.Font.Body)
 rareGoal.TextScaled = true
 rareGoal.TextWrapped = true
 rareGoal.ClipsDescendants = true
@@ -416,7 +419,7 @@ local function utilityButton(name, titleText)
 	local caption = label("TextLabel", "Caption", titleText, cap)
 	caption.Position = UDim2.fromOffset(0, 3)
 	caption.Size = UDim2.new(1, 0, 1, -3)
-	caption.Font = Enum.Font.GothamBold
+	caption.Font = Art.Font.Action
 	caption.TextSize = 12
 	caption.TextColor3 = Art.Silver
 	button.MouseButton1Down:Connect(function()
@@ -437,7 +440,7 @@ local hardware = make("Frame", "DeckControls", { BackgroundTransparency = 1 }, b
 local function hardwareButton(name, text, parent, color, width)
 	local button = label("TextButton", name, text, parent, color)
 	button.Size = UDim2.fromOffset(width, width)
-	button.Font = Enum.Font.Code
+	button.Font = Art.Font.Action
 	button.TextSize = 24
 	button.ZIndex = 3
 	Art.button(button, if width == 44 then 7 else 24)
@@ -461,14 +464,15 @@ aGlint.BackgroundTransparency = 0.50
 Art.corner(aGlint, 1)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
 dropCaption.Size = UDim2.fromOffset(48, 16)
-dropCaption.Font = Enum.Font.Code
+dropCaption.Font = Art.Font.Action
 dropCaption.TextColor3 = Art.Silver
 dropCaption.TextSize = 11
+dropCaption.BackgroundTransparency=0;Art.bind(dropCaption,{BackgroundColor3="panel",TextColor3="text"});Art.corner(dropCaption,4)
 local dropCaptionLayout,captionStatusQueued
 local function layoutDropCaption(l)
 	if not l then return end
 	dropCaptionLayout=l
-	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Enum.Font.GothamBold
+	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Art.Font.Action
 	local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(dropCaption)+8))
 	local height=Art.textHeight(dropCaption,width,16)
 	local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
@@ -508,7 +512,7 @@ for row = 0, 2 do
 	end
 end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
-hardware.MakerMark.Font = Enum.Font.GothamBold
+hardware.MakerMark.Font = Art.Font.Action
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
 firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),UDim2.new(1,-2,1,-2)
 local questHUD = BoardQuestHUD.new(status)
@@ -655,7 +659,7 @@ local modalTag = Art.text(modal, "Channel", "", UDim2.fromOffset(12, 5),
 local modalTitle = label("TextLabel", "Heading", "", modal)
 modalTitle.Position = UDim2.fromOffset(0, 18)
 modalTitle.Size = UDim2.new(1, 0, 0, 35)
-modalTitle.Font = Enum.Font.GothamBold
+modalTitle.Font = Art.Font.Heading
 modalTitle.TextSize = 20
 Art.bind(modalTitle,{TextColor3="text"})
 modalTitle.ZIndex = 11
@@ -711,8 +715,8 @@ local function restoreLegacySaveParents()
 	legacySaveScroll.Visible=false
 	if wasApplied then
 		modalTag.Position,modalTag.Size=UDim2.fromOffset(12,5),UDim2.new(1,-24,0,16)
-		modalTag.Font,modalTag.TextSize,modalTag.TextScaled,modalTag.TextWrapped=Enum.Font.Gotham,11,false,false
-		for _,button in ipairs({modalAction,keepPlaying})do button.Font=Enum.Font.GothamMedium;Art.fitText(button,15,10,9,true)end
+		modalTag.Font,modalTag.TextSize,modalTag.TextScaled,modalTag.TextWrapped=Art.Font.Body,11,false,false
+		for _,button in ipairs({modalAction,keepPlaying})do button.Font=Art.Font.Body;Art.fitText(button,15,10,9,true)end
 	end
 	for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer,recap.frame})do if node.Parent~=modal then node.Parent=modal end end
 end
@@ -756,19 +760,22 @@ local function paintDeck(id, stickerId,backgroundId)
   end
  end
  Art.setBackground(backing,backgroundId or "canopy",theme)
-	shell.BackgroundColor3 = theme.shell
-	shell.Faceplate.BackgroundColor3 = theme.face or theme.shell:Lerp(theme.trim, 0.27)
+	Art.finish(shell,theme,"shell")
+	Art.finish(shell.Faceplate,theme,"face")
 	rim.Color = theme.trim
 	bezelRim.Color = theme.trim
 	customizeLip.Color = theme.buttons
-	action.BackgroundColor3 = theme.buttons
+	Art.control(action,true,action.Interactable)
+ Art.surfaceGradient(leftAim,"primary");Art.surfaceGradient(rightAim,"primary")
 	leftAim.BackgroundColor3 = theme.rocker or Art.Raised
 	rightAim.BackgroundColor3 = leftAim.BackgroundColor3
 	leftAim.TextColor3 = if theme.rocker then Art.Ink else Art.Silver
 	rightAim.TextColor3 = leftAim.TextColor3
-	title.TextColor3 = Art.Silver
+	title.TextColor3 = Art.Ink
+ title.BackgroundColor3=theme.highlight
 	status.TextColor3 = if status.BackgroundTransparency < 1 then Art.Silver else title.TextColor3
-	dropCaption.TextColor3 = title.TextColor3
+	-- A transient blocked-action caption needs a calm surface on every shell.
+ Art.bind(dropCaption,{BackgroundColor3="panel",TextColor3="text"})
 	hardware.MakerMark.TextColor3 = title.TextColor3
 	Art.tintBackdrop(backing,theme)
 	for _,instrument in ipairs({walletFace,queueHost,status,meter})do instrument.InsetLip.BackgroundColor3=theme.trim end
@@ -1324,14 +1331,10 @@ updateHud = function()
 	modalAction.Size = UDim2.new(if over and not showEggChoice then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over or showEggChoice
 	keepPlaying.Text = if showEggChoice then "Hatch eggs" else "Keep playing"
-	local preferredRecapAction=modalAction
+	local affordable=showEggChoice and runReceipt~=nil and (nurseryState and nurseryState.nectar or 0)>=(EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow).cost
+ local preferredRecapAction=if affordable then keepPlaying else modalAction
+ Art.control(modalAction,not affordable,modalAction.Interactable);Art.control(keepPlaying,affordable,keepPlaying.Interactable)
 	if showEggChoice then
-		local affordable=runReceipt~=nil and (nurseryState and nurseryState.nectar or 0)>=(EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow).cost
-		preferredRecapAction=if affordable then keepPlaying else modalAction
-		modalAction.BackgroundColor3=if affordable then Art.Raised else Art.Leaf
-		modalAction.TextColor3=if affordable then Art.Silver else Art.Ink
-		keepPlaying.BackgroundColor3=if affordable then Art.Leaf else Art.Raised
-		keepPlaying.TextColor3=if affordable then Art.Ink else Art.Silver
 		local shallow=backdrop.AbsoluteSize.Y<220
 		local footerH=math.max(44,modalAction.Size.Y.Offset,keepPlaying.Size.Y.Offset)
 		local footerY=-(if shallow then 6 elseif backdrop.AbsoluteSize.Y<440 then 8 else 12)-footerH
@@ -1400,14 +1403,14 @@ layout = function()
 	local ratio=(Config.Width+.8)/(Config.Height+.8)
 	local short=screen.X>=350 and screen.X>=screen.Y*1.2 and screen.Y<280
 	local capSize=if short then 12 else 14
-	local utilityW=math.ceil(TextService:GetTextSize("Lounge",capSize,Enum.Font.GothamBold,Vector2.new(1000,100)).X)+14
-	local queueCaptionH=math.ceil(TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y)
-	local markBounds=TextService:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100))
+	local utilityW=math.ceil(TextService:GetTextSize("Lounge",capSize,Art.Font.Action,Vector2.new(1000,100)).X)+14
+	local queueCaptionH=math.ceil(TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y)
+	local markBounds=TextService:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100))
 	local markD=math.max(18,math.ceil(math.max(markBounds.X,markBounds.Y))+6)
 	local lineH=queueCaptionH+4
-	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",14,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
-	local walletH=math.ceil(TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y)+4
-	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",14,Art.Font.Body,Vector2.new(1000,100)).Y)+4
+	local walletH=math.ceil(TextService:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y)+4
+	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
 	local instructionCompact=l.short or l.dense or l.quest.h<60
 	if (board:GetAttribute("OwnedPets")or 0)>0 then
@@ -1441,10 +1444,10 @@ layout = function()
 	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral)
 	layoutWallet(l)
 	place(queueHost,l.queue)
-	local nextWidth=TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+8
+	local nextWidth=TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).X+8
 	local verticalQueue=l.lateral and not l.inlineQueue and l.queue.w/2-4<nextWidth
 	local inlineQueue=l.inlineQueue==true or verticalQueue or (not l.lateral and lineH+markD+2>l.queue.h)
-	local combinedQueue=inlineQueue and not verticalQueue and l.queue.h<lineH*2+4 and TextService:GetTextSize("Next III",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+6>l.queue.w/2-4
+	local combinedQueue=inlineQueue and not verticalQueue and l.queue.h<lineH*2+4 and TextService:GetTextSize("Next III",12,Art.Font.Body,Vector2.new(1000,100)).X+6>l.queue.w/2-4
 	queueHost:SetAttribute("InlineTiers",inlineQueue or combinedQueue)
 	queueHost:SetAttribute("CombinedTiers",combinedQueue)
 	for index,piece in ipairs(queuePieces)do
@@ -1459,7 +1462,7 @@ layout = function()
 		local inset=caption:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy() end
 		local captionH=math.ceil(TextService:GetTextSize("Next",caption.TextSize,caption.Font,Vector2.new(1000,100)).Y)+4
 		piece.Visible=not inlineQueue and not combinedQueue
-		Art.type(piece.Mark,"Supporting",true);piece.Mark.Font=Enum.Font.GothamBold
+		Art.type(piece.Mark,"Counter",true)
 		local markInset=piece.Mark:FindFirstChildOfClass("UIPadding");if markInset then markInset:Destroy() end
 		local d=markD
 		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,captionH+6),UDim2.fromOffset(d,d)
@@ -1513,9 +1516,11 @@ layout = function()
 		button.Cap.Caption.TextSize=if l.short then 12 else 14
 	end
 	eggButton.Visible=false
-	title.Visible=l.lateral and l.shell.h>=280 and Art.textWidth(title)<=l.left.w
-	title.Position,title.Size=UDim2.fromOffset(l.left.x,l.shell.y+6+(l.instrumentShiftLeft or 0)),UDim2.fromOffset(l.left.w,20)
 	title.TextSize=18
+ local titleW=Art.textWidth(title)+8;local titleH=Art.textHeight(title,titleW,20)
+ local titleY=l.shell.y+6+(l.instrumentShiftLeft or 0)
+ title.Visible=l.lateral and l.shell.h>=280 and titleW<=l.left.w and titleY+titleH<=l.wallet.y-4
+ title.Position,title.Size=UDim2.fromOffset(l.left.x+(l.left.w-titleW)/2,titleY),UDim2.fromOffset(titleW,titleH)
 	vents.Visible=l.speakerVisible
 	vents.Position=UDim2.fromOffset(l.speaker.x-l.shell.x,l.speaker.y-l.shell.y)
 	hardware.MakerMark.Visible=false

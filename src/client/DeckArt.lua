@@ -2,13 +2,14 @@ local Art = {}
 
 -- Stable default constants. Confirmed interface palettes are resolved only by
 -- explicit semantic bindings; species, status and hardware identity stay stable.
-Art.Type = { Reward = 34, Heading = 26, Action = 18, Body = 16, Supporting = 14, Compact = 12 }
-Art.Space = { Small = 4, Related = 8, Group = 16, Panel = 24 }
+Art.Type = { Reward = 32, Heading = 24, Action = 18, Body = 16, Supporting = 14, Counter = 18, Compact = 12 }
+Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.Nunito, Body=Enum.Font.Nunito, Supporting=Enum.Font.Nunito, Counter=Enum.Font.RobotoMono }
+Art.Space = { Small = 4, Related = 8, Group = 12, Panel = 20 }
 for name, hex in pairs({
-	Backdrop = "#232620", Ink = "#282722", Surface = "#353630", Raised = "#45483E", Inset = "#292C27",
-	Line = "#8D9E8E", Silver = "#F5F6F1", Muted = "#CDD1C7", Amber = "#FFBF50",
+	Backdrop = "#123C35", Ink = "#201D32", Surface = "#123C35", Raised = "#234A43", Inset = "#0F322C",
+	Line = "#69F4B3", Silver = "#FFF6E4", Muted = "#E0DCE8", Amber = "#FFC14D",
 	Leaf = "#A8DE78", Orange = "#FFBF50", Canopy = "#303B31", Field = "#2B332C",
-	Focus = "#83D7EF", Danger = "#FF907B", LCD = "#D2E5BB", LCDInk = "#213D37",
+	Focus = "#A3F4FF", Danger = "#FF826D", LCD = "#D2E5BB", LCDInk = "#213D37",
 }) do
 	Art[name] = Color3.fromHex(hex)
 end
@@ -18,7 +19,7 @@ Art.Cyan = Art.Leaf
 -- Explicit semantic bindings; no RGB inference or GUI discovery. The registry
 -- owns one destroy connection per node and paints only on a confirmed theme change.
 local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="Silver",muted="Muted",line="Line",selected="Selected",focus="Focus",accent="Accent"}
-Art.Selected,Art.Accent=Art.Inset,Art.Leaf
+Art.Selected,Art.Accent=Art.Inset,Color3.fromHex("#76F6B0")
 local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,writes=0}
 function Art.paletteColor(role)return (currentTheme and currentTheme.ui and currentTheme.ui[role])or Art[roleNames[role]or role]end
 local function paintBinding(node,entry)
@@ -34,7 +35,9 @@ function Art.bind(object,properties)
   entry.connection=object.Destroying:Connect(function()if bindings[object]then bindings[object]=nil;paletteStats.nodes-=1;entry.connection:Disconnect()end end)
  end
  for property,role in pairs(properties)do entry.properties[property]=role end
- paintBinding(object,entry);return object
+ paintBinding(object,entry)
+ if Art.surfaceGradient and type(properties.BackgroundColor3)=="string"then Art.surfaceGradient(object,properties.BackgroundColor3)end
+ return object
 end
 function Art.themeStats()return table.clone(paletteStats)end
 function Art.getTheme()return currentTheme end
@@ -73,6 +76,41 @@ function Art.shade(parent, top, bottom)
 	return gradient
 end
 
+local surfaceGradients={}
+for role,stops in pairs({panel={1,.84},raised={1,.93},selected={1,.93},inset={.93,1},ink={.93,1},primary={1,.88}})do
+ surfaceGradients[role]=ColorSequence.new(Color3.new(stops[1],stops[1],stops[1]),Color3.new(stops[2],stops[2],stops[2]))
+end
+function Art.surfaceGradient(parent,role)
+ local sequence=surfaceGradients[role];if not sequence then return end
+ local gradient=parent:FindFirstChildOfClass("UIGradient")or node("UIGradient",parent,{Name="SurfaceGradient"})
+ local rotation=if role=="panel"then 100 else 90
+ if gradient.Rotation~=rotation then gradient.Rotation=rotation end
+ if gradient:GetAttribute("SurfaceRole")~=role then gradient.Color=sequence;gradient:SetAttribute("SurfaceRole",role)end
+ return gradient
+end
+-- Explicit hardware application also serves locked previews without changing the
+-- confirmed registry. Sequences are authored once by DeckThemes, never per frame.
+function Art.finish(parent,theme,role)
+ local gradient=parent:FindFirstChildOfClass("UIGradient")or node("UIGradient",parent,{Name="FinishGradient"})
+ local sequence=if role=="face"then theme.faceGradient else theme.shellGradient
+ if gradient:GetAttribute("FinishId")~=theme.name or gradient:GetAttribute("FinishRole")~=role then
+  parent.BackgroundColor3=Color3.new(1,1,1);gradient.Color=sequence;gradient.Rotation=105
+  gradient:SetAttribute("FinishId",theme.name);gradient:SetAttribute("FinishRole",role)
+ end
+ return gradient
+end
+-- State is explicit at the actual refresh site. Reward/status colors never enter
+-- this helper, and repeated refreshes reuse its background gradient and bindings.
+function Art.control(button,primary,enabled)
+ primary,enabled=primary==true,enabled~=false
+ if button:GetAttribute("PrimaryAction")==primary and button:GetAttribute("ActionEnabled")==enabled then return end
+ button:SetAttribute("PrimaryAction",primary)
+ button:SetAttribute("ActionEnabled",enabled)
+ Art.bind(button,{BackgroundColor3=function()return Art.paletteColor(if primary and enabled~=false then "accent"else "raised")end,
+  TextColor3=function()return Art.paletteColor(if enabled==false then "muted"elseif primary then "ink"else "text")end})
+ Art.surfaceGradient(button,if primary and enabled~=false then "primary"else "raised")
+end
+
 function Art.frame(parent,name,color,position,size,z)
  local f=node("Frame",parent,{Name=name,Position=position,Size=size,BackgroundColor3=if type(color)=="string"then Art.paletteColor(color)else color,BorderSizePixel=0,ZIndex=z or parent.ZIndex,Active=false})
  if type(color)=="string"then Art.bind(f,{BackgroundColor3=color})end;return f
@@ -83,7 +121,7 @@ end
 function Art.instrument(parent)
 	Art.bind(parent,{BackgroundColor3="inset"})
 	parent.ClipsDescendants=true
-	Art.corner(parent,8);Art.shade(parent,.78,1)
+	Art.corner(parent,8);Art.surfaceGradient(parent,"inset")
 	if not parent:FindFirstChild("InsetShadow")then
 		local top=Art.frame(parent,"InsetShadow",Art.Ink,UDim2.fromOffset(3,1),UDim2.new(1,-6,0,2),parent.ZIndex+1)
 		top.BackgroundTransparency=.18;Art.corner(top,1)
@@ -94,7 +132,7 @@ function Art.instrument(parent)
 end
 
 function Art.text(parent,name,content,position,size,color,textSize,font)
- local f=node("TextLabel",parent,{Name=name,Text=content,Position=position,Size=size,TextColor3=if type(color)=="string"then Art.paletteColor(color)else color,TextSize=textSize,Font=font or Enum.Font.Gotham,BackgroundTransparency=1,ZIndex=parent.ZIndex+1,Active=false})
+ local f=node("TextLabel",parent,{Name=name,Text=content,Position=position,Size=size,TextColor3=if type(color)=="string"then Art.paletteColor(color)else color,TextSize=textSize,Font=font or Art.Font.Body,BackgroundTransparency=1,ZIndex=parent.ZIndex+1,Active=false})
  if type(color)=="string"then Art.bind(f,{TextColor3=color})end;return f
 end
 
@@ -116,14 +154,15 @@ end
 
 -- Functional text keeps a real size and preferred-text support. Layout owns wrapping.
 function Art.type(label, role, compact)
-	local sizes = { Reward = 26, Heading = 20, Action = 16, Body = 14, Supporting = 12 }
+	local sizes = { Reward = 26, Heading = 20, Action = 16, Body = 14, Supporting = 12, Counter = 12 }
 	local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
 	if constraint then constraint:Destroy() end
 	local inset=label:FindFirstChildOfClass("UIPadding")
 	if inset then inset.PaddingTop,inset.PaddingBottom=UDim.new(0,0),UDim.new(0,0) end
 	label.TextScaled = false
 	label.TextSize = if compact then (sizes[role] or 14) else (Art.Type[role] or 16)
-	label.Font = if role == "Reward" or role == "Heading" or role == "Action" then Enum.Font.GothamBold else Enum.Font.Gotham
+	label.Font = Art.Font[role] or Art.Font.Body
+	label:SetAttribute("TypeRole",role)
 	label.TextWrapped = true
 	label.TextTruncate = Enum.TextTruncate.None
 	return label
@@ -195,7 +234,7 @@ end
 function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 	options=options or {};local pad=options.pad or 10;local top=options.top or 0
 	Art.type(heading,if options.status then "Body"else "Heading",true)
-	Art.type(amount,"Body",true);clearInset(heading);clearInset(amount)
+	Art.type(amount,"Counter",true);clearInset(heading);clearInset(amount)
 	amount.Text=tostring(options.amount or 0);amount.TextWrapped=false;amount.TextXAlignment=Enum.TextXAlignment.Left
 	amount:SetAttribute("AccessibleLabel",amount.Text.." nectar")
 	wallet.BackgroundTransparency=1
@@ -396,7 +435,9 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
 	motion.elapsed=(motion.elapsed+(if motion.lastTime then math.max(0,now-motion.lastTime)else 0))%Art.BackdropPeriod
 	motion.lastTime=now;if motion.resting then motion.bucket=nil end;motion.resting=false
  local bucket=math.floor(motion.elapsed*15+1e-6);if motion.bucket==bucket then return end;motion.bucket=bucket
-	local phase=motion.elapsed/Art.BackdropPeriod*math.pi*2
+	-- Paint the sampled bucket, not its unsampled fractional tail. Returning
+ -- from a hidden/static base pose restores exactly the last displayed phase.
+ local phase=(bucket/15)/Art.BackdropPeriod*math.pi*2
 	for _,entry in ipairs(motion.entries)do
 		entry.node.Position=entry.position+UDim2.fromOffset(math.sin(phase+entry.phase)*entry.x,math.sin(phase*2+entry.phase)*entry.y)
 		entry.node.Rotation=entry.rotation+math.sin(phase+entry.phase)*2
@@ -434,7 +475,7 @@ end
 function Art.panel(parent, radius, accent)
 	Art.bind(parent,{BackgroundColor3="panel"})
 	Art.corner(parent, radius)
-	Art.shade(parent, 1, 0.91)
+	Art.surfaceGradient(parent,"panel")
 	Art.stroke(parent,"line",0.28,2)
 	local highlight = Art.frame(parent, "MoldHighlight", "text", UDim2.fromOffset(radius + 4, 3),
 		UDim2.new(1, -(radius + 4) * 2, 0, 1))
@@ -447,26 +488,38 @@ function Art.button(button, radius)
 	button.AutoButtonColor = false
 	Art.corner(button, radius)
 	local border = Art.stroke(button,"line",0.22)
+ Art.surfaceGradient(button,"raised")
+ local keyline=Art.frame(button,"FocusKeyline",Art.Ink,UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-4),button.ZIndex)
+ keyline.BackgroundTransparency=1;keyline.Active,keyline.Selectable=false,false;Art.corner(keyline,math.max(1,radius-2))
+ local inner=Art.stroke(keyline,"ink",1,1)
  Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.paletteColor("focus") else Art.paletteColor("line") end})
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
 			border.Color = Art.paletteColor("focus")
+   border.Thickness=2;inner.Transparency=0
 		end
 	end)
-	local function restore()
-		border.Color = if button == game:GetService("GuiService").SelectedObject
-			then Art.paletteColor("focus") else Art.paletteColor("line")
+	local function focusPaint(focused)
+  border.Thickness=if focused then 2 else 1;inner.Transparency=if focused then 0 else 1
+		border.Color = if focused then Art.paletteColor("focus") else Art.paletteColor("line")
 	end
-	button.MouseButton1Up:Connect(restore)
-	button.MouseLeave:Connect(restore)
-	button.SelectionGained:Connect(function() border.Color = Art.paletteColor("focus") end)
-	button.SelectionLost:Connect(function() border.Color = Art.paletteColor("line") end)
+	local function restore()focusPaint(button==game:GetService("GuiService").SelectedObject)end
+ button.MouseButton1Up:Connect(restore)
+ button.MouseLeave:Connect(restore)
+ -- Selection events can run before SelectedObject publishes its next value.
+ -- Their event intent is authoritative for this button's paired strokes.
+ button.SelectionGained:Connect(function()focusPaint(true)end)
+ button.SelectionLost:Connect(function()focusPaint(false)end)
+ button:GetPropertyChangedSignal("Interactable"):Connect(function()
+  local primary=button:GetAttribute("PrimaryAction")
+  if primary~=nil then Art.control(button,primary,button.Interactable)end
+ end)
 	return border
 end
 
 function Art.deck(backdrop, shell, bezel)
 	Art.backdrop(backdrop)
-	Art.shade(shell, 1, 0.88)
+	-- Authored finish is applied by paintDeck after confirmed appearance resolves.
 	Art.shade(bezel, 1, 0.9)
 	local seam = Art.frame(shell, "MoldSeam", Art.Ink, UDim2.fromOffset(5, 5), UDim2.new(1, -10, 1, -10))
 	seam.BackgroundTransparency = 1

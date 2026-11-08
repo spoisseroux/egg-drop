@@ -19,7 +19,7 @@ end
 
 local function label(parent, name, content, position, size, color, maximum)
 	local node = Art.text(parent, name, content, position, size, color or "text", maximum or 14,
-		Enum.Font.GothamMedium)
+		Art.Font.Body)
 	Art.fitText(node, maximum or 14, 10, 4, true)
 	return node
 end
@@ -29,7 +29,7 @@ local function button(parent, name, content, position, size, color, z)
 	node.Name, node.Text, node.Position, node.Size = name, content, position, size
 	node.BackgroundColor3 = if type(color)=="string"then Art.paletteColor(color)else color or Art.Raised
 	node.TextColor3 = if color == Art.Amber or color == Art.Leaf then Art.Ink else Art.Silver
-	node.Font, node.TextSize, node.ZIndex = Enum.Font.GothamBold, 14, z or 24
+	node.Font, node.TextSize, node.ZIndex = Art.Font.Action, 14, z or 24
 	node.BorderSizePixel, node.Parent = 0, parent
 	if type(color)=="string"then Art.bind(node,{BackgroundColor3=color})elseif not color then Art.bind(node,{BackgroundColor3="raised"})end
  Art.bind(node,{TextColor3=if color==Art.Amber or color==Art.Leaf then "ink"else "text"})
@@ -63,7 +63,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	Art.panel(card, 16, Art.Amber)
 	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
-	heading.Font = Enum.Font.GothamBold
+	heading.Font = Art.Font.Heading
 	local nectar = label(card, "Nectar", "0 nectar", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
 	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
 	Art.corner(wallet, 10)
@@ -75,7 +75,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	body.Name, body.Position, body.Size = "Body", UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
 	body.BackgroundTransparency, body.BorderSizePixel, body.ZIndex = 1, 0, 22
 	body.ClipsDescendants=true
-	body.ScrollBarThickness, body.ScrollBarImageColor3 = 4, Art.Leaf
+	body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
 	body.ScrollingDirection, body.ElasticBehavior = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never
 	body.Parent = card
 	local close = button(card, "Close", "×", UDim2.new(0, 12, 1, -56), UDim2.new(0.30, -18, 0, 44), "raised", 60)
@@ -151,8 +151,8 @@ function View:recipeMetrics(columnWidth,compact,columns)
 	local nameH,costH=0,0
 	for _,id in ipairs(Catalog.Order)do
 		local option=Catalog.ById[id]
-		nameH=math.max(nameH,nativeHeight(option.name,if compact then 14 else 16,Enum.Font.GothamMedium,textW))
-		costH=math.max(costH,nativeHeight(string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),12,Enum.Font.Gotham,textW))
+		nameH=math.max(nameH,nativeHeight(option.name,if compact then 14 else 16,Art.Font.Body,textW))
+		costH=math.max(costH,nativeHeight(string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),12,Art.Font.Body,textW))
 	end
 	return{columns=columns,width=choiceW,textX=textX,textWidth=textW,nameH=nameH,costH=costH,height=math.max(if compact then 44 else 83,nameH+costH+3+8),artH=if compact then 32 else 66}
 end
@@ -361,11 +361,10 @@ function View:refreshFooter()
 	end
 	self.action.Interactable = ready and not self.pending and canAct == true
 	self.action.TextTransparency=0
-	Art.bind(self.action,{BackgroundColor3=function()return if state.lastHatch then Art.paletteColor("raised") else Art.Amber end})
-	Art.bind(self.action,{TextColor3=function()return if not self.action.Interactable then Art.paletteColor("muted") elseif state.lastHatch then Art.paletteColor("text") else Art.paletteColor("ink") end})
+	Art.control(self.action,not state.lastHatch,self.action.Interactable)
 	self.meetButton.Interactable = state.lastHatch ~= nil and self.action.Interactable
 	self.meetButton.TextTransparency=0
-	Art.bind(self.meetButton,{TextColor3=function()return if self.meetButton.Interactable then Art.paletteColor("ink") else Art.paletteColor("text") end})
+	Art.control(self.meetButton,true,self.meetButton.Interactable)
 	local width=if state.lastHatch then (self.card.Size.X.Offset-36)/2 elseif self.compactShop then self.card.Size.X.Offset-24 else self.card.Size.X.Offset-24
 	local needed=math.max(self:footerRowHeight(self.action,width),if state.lastHatch then self:footerRowHeight(self.meetButton,width) else 44)
 	self:refreshShopHeader()
@@ -457,7 +456,7 @@ function View:renderBody()
 		local padding=choice:FindFirstChildOfClass("UIPadding");if padding then padding:Destroy()end
 		EggArt.create(choice,id,UDim2.fromOffset(if compact then 6 else 12,(metrics.height-metrics.artH)/2),UDim2.fromOffset(if compact then 24 else 52,metrics.artH),choice.ZIndex+2)
 		local groupH=metrics.nameH+3+metrics.costH;local ty=(metrics.height-groupH)/2
-		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),"text",if compact then 14 else 16,Enum.Font.GothamMedium)
+		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),"text",if compact then 14 else 16,Art.Font.Body)
 		local cost=Art.text(choice,"Cost",string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),UDim2.fromOffset(metrics.textX,ty+metrics.nameH+3),UDim2.fromOffset(metrics.textWidth,metrics.costH),Art.Amber,12)
 		name.TextXAlignment,cost.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
 		name.TextWrapped,cost.TextWrapped=true,true

@@ -15,12 +15,12 @@ return function(client,parent)
 		root:ClearAllChildren();root.Size=UDim2.fromOffset(size.X,size.Y);settle()
 		local short=size.X>=350 and size.X>=size.Y*1.2 and size.Y<280
 		local cap=if short then 12 else 14
-		local utility=TextService:GetTextSize("Lounge",cap,Enum.Font.GothamBold,Vector2.new(1000,100)).X+14
-		local line=TextService:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y+4
-		local mark=TextService:GetTextSize("III",12,Enum.Font.GothamBold,Vector2.new(1000,100))
+		local utility=TextService:GetTextSize("Lounge",cap,Art.Font.Action,Vector2.new(1000,100)).X+14
+		local line=TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y+4
+		local mark=TextService:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100))
 		local diameter=math.max(18,math.ceil(math.max(mark.X,mark.Y))+6)
-		local wallet=TextService:GetTextSize("0",18,Enum.Font.GothamBold,Vector2.new(1000,100)).Y+4
-		local l=Layout.resolve(size,11.8/19.8,{utilityWidth=utility,lineHeight=line,queueHeight=math.max(line+diameter+2,line*2+4),walletLineHeight=wallet,countWidth=TextService:GetTextSize("24/24",12,Enum.Font.Gotham,Vector2.new(1000,100)).X+4})
+		local wallet=TextService:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y+4
+		local l=Layout.resolve(size,11.8/19.8,{utilityWidth=utility,lineHeight=line,queueHeight=math.max(line+diameter+2,line*2+4),walletLineHeight=wallet,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
 		local status=Instance.new("TextLabel");status.Name="Status";status.Position=UDim2.fromOffset(l.quest.x,l.quest.y);status.Size=UDim2.fromOffset(l.quest.w,l.quest.h);status.Parent=root
 		local compact=l.short or l.dense or l.quest.h<60
 		Art.type(status,"Body",false);status.TextSize=if compact then 12 else 16;status.TextWrapped=true;status.ClipsDescendants=true

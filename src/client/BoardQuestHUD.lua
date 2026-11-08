@@ -38,13 +38,13 @@ function Quest:preferredHeight(width,available,compact,objective)
  for _,sample in ipairs(samples)do
   local smallest=math.huge
   for _,caption in ipairs(choices(sample,compact))do
-   local bounds=service:GetTextSize(caption,size,Enum.Font.Gotham,Vector2.new(math.max(1,width-8),10000));smallest=math.min(smallest,math.ceil(bounds.Y)+4)
+   local bounds=service:GetTextSize(caption,size,Art.Font.Body,Vector2.new(math.max(1,width-8),10000));smallest=math.min(smallest,math.ceil(bounds.Y)+4)
   end
   h=math.max(h,smallest)
  end
  if not compact then
-  h+=math.ceil(service:GetTextSize(copy.ticker,12,Enum.Font.Gotham,Vector2.new(math.max(1,width-8),10000)).Y)+10
-  if copy.dynamics~=""then h+=math.ceil(service:GetTextSize(copy.dynamics,12,Enum.Font.Gotham,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
+  h+=math.ceil(service:GetTextSize(copy.ticker,12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+10
+  if copy.dynamics~=""then h+=math.ceil(service:GetTextSize(copy.dynamics,12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
  end
  return math.min(available,math.max(20,h))
 end

@@ -12,7 +12,7 @@ return function(client,parent)
  local views={};local ok,problem=pcall(function()
   for _,size in ipairs({Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(480,160),Vector2.new(350,279),Vector2.new(385,703)})do
    test(tostring(size).." passive stacks lower only within measured free rails",function()
-    local line=math.ceil(Text:GetTextSize("Next",12,Enum.Font.Gotham,Vector2.new(1000,100)).Y)+4
+    local line=math.ceil(Text:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y)+4
     local l=Layout.resolve(size,ratio,{lineHeight=line,queueHeight=line+40,utilityWidth=80,countWidth=68})
     local fixed={};for _,name in ipairs({"shell","tray","bezel","menu","lounge","dpad","drop","speaker"})do fixed[name]=copy(l[name])end
     local wallet,quest,queue,meter=copy(l.wallet),copy(l.quest),copy(l.queue),copy(l.meter)

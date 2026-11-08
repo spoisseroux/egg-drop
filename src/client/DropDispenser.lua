@@ -14,7 +14,7 @@ function Dispenser.new(parent,reduceEffects)
 		balls[i]=ball
 	end
 	local label=Art.text(host,"Remaining","Drops left 24/24",UDim2.fromOffset(1,26),UDim2.new(1,-2,0,18),Art.Silver,12)
-	Art.type(label,"Supporting")
+	Art.type(label,"Counter")
 	local rolling=balls[8]:Clone();rolling.Name="RollingBall";rolling.Parent=host;rolling.ZIndex=host.ZIndex+3;rolling.Visible=false
  local nozzle=Art.frame(host,"NozzleCompression",Art.Silver,UDim2.fromScale(.5,.5),UDim2.new(1,-4,1,-4),host.ZIndex)
  nozzle.AnchorPoint=Vector2.new(.5,.5);nozzle.BackgroundTransparency=1;nozzle.Active=false;nozzle.Selectable=false;nozzle.Visible=false;Art.corner(nozzle,8)
@@ -35,8 +35,8 @@ function Dispenser:preferredHeight(width,available)
 	local size=if available<50 then 12 else 14
 	local text=string.format("Drops left %d/%d",self.budget or 24,self.budget or 24)
 	local service=game:GetService("TextService")
-	if service:GetTextSize(text,size,Enum.Font.Gotham,Vector2.new(10000,10000)).X+8>width then text=string.format("%d/%d",self.budget or 24,self.budget or 24)end
-	local needed=math.ceil(service:GetTextSize(text,size,Enum.Font.Gotham,Vector2.new(math.max(1,width-8),10000)).Y)+4
+	if service:GetTextSize(text,size,Art.Font.Counter,Vector2.new(10000,10000)).X+8>width then text=string.format("%d/%d",self.budget or 24,self.budget or 24)end
+	local needed=math.ceil(service:GetTextSize(text,size,Art.Font.Counter,Vector2.new(math.max(1,width-8),10000)).Y)+4
 	local diameter=math.max(1,math.min(18,math.floor((math.max(1,width-8)-19)/8)))
 	local full=needed+diameter+8+6
 	return if full<=available then full else math.min(available,needed+4)
@@ -47,7 +47,8 @@ function Dispenser:layout()
 	local key=table.concat({w,h,self.remaining or 0,self.budget or 24,game:GetService("GuiService").PreferredTextSize.Name},"|")
 	if self.layoutKey==key then return end
 	self.layoutKey=key
-	Art.type(self.label,"Supporting",h<50)
+	Art.type(self.label,"Counter",h<50)
+ self.label.TextSize=if h<50 then 12 else 14
 	local inset=self.label:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy()end
 	self.label.Text=string.format("Drops left %d/%d",self.remaining or 0,self.budget or 24)
 	if Art.textWidth(self.label)>w-8 then self.label.Text=string.format("%d/%d",self.remaining or 0,self.budget or 24)end

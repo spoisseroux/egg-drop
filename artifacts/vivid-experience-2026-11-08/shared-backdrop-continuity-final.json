@@ -1,0 +1,18 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackdropGlobal",
+    "result": {
+      "passed": 6,
+      "cases": [
+        "Global confirmed Canopy is above opaque preview with exact relative order",
+        "Canopy owner Z changes rebase once and restore original exterior depths",
+        "Global locked Creek borrows existing16 hosts above preview",
+        "pattern owner Z and exterior return keep order and reduced steady writes",
+        "explicit host switch release and same-step destroy retain borrowed roots",
+        "unexpected recursive host destruction repairs only missing renderers"
+      ]
+    }
+  }
+]

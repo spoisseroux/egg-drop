@@ -53,7 +53,7 @@ local function destinationArt(host, kind)
 		local scale = Instance.new("UIScale")
 		scale.Name, scale.Parent = "DisplayScale", portrait
 	else
-		local deck = decoration(host, "Handheld", UDim2.fromScale(.03, .20), UDim2.fromScale(.94, .58), Art.Leaf, 8)
+		local deck = decoration(host, "Handheld", UDim2.fromScale(.03, .20), UDim2.fromScale(.94, .58), "accent", 8)
 		local screen = decoration(deck, "Screen", UDim2.fromScale(.30, .14), UDim2.fromScale(.42, .72), "ink", 3)
 		decoration(screen, "ScreenSprout", UDim2.fromScale(.40, .32), UDim2.fromScale(.22, .42), Art.Leaf, 2)
 		decoration(deck, "Rocker", UDim2.fromScale(.09, .43), UDim2.fromScale(.15, .15), Art.Canopy, 2)
@@ -90,13 +90,13 @@ function Menu.new(parent,callbacks)
 	self.dailyButton=button(card,"DailyBonus","Gift +6",function()self:activate("daily")end)
 	local body=Instance.new("ScrollingFrame")
 	body.Name,body.BackgroundTransparency,body.BorderSizePixel,body.ZIndex="Body",1,0,30
-	body.ScrollBarThickness,body.ScrollBarImageColor3=4,Art.Leaf
+	body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
 	body.ScrollingDirection,body.ElasticBehavior,body.Parent=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never,card
 	self.body=body
-	self.moreCue=text(card,"MoreBelow","","Action",Art.Leaf)
+	self.moreCue=text(card,"MoreBelow","","Action","accent")
 	self.moreCue.TextXAlignment=Enum.TextXAlignment.Center;self.moreCue.ZIndex=40
 	for _,entry in ipairs({{3,45},{7,-45}}) do
-		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41)
+		local bar=Art.frame(self.moreCue,"Chevron","accent",UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41)
 		bar.Rotation=entry[2]
 	end
 	for _,key in ipairs({"play","daily","mastery"}) do
@@ -121,7 +121,7 @@ function Menu.new(parent,callbacks)
 		local icon=Art.frame(panel,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
 		Art.bind(icon,{BackgroundColor3="inset"});icon.BackgroundTransparency=0;Art.corner(icon,10);contractArt(icon,index)
 		local title=text(panel,"Title","Loading…","Action")
-		local count=text(panel,"Count","0/1","Heading")
+		local count=text(panel,"Count","0/1","Counter")
 		local reward=text(panel,"Reward","+0 nectar","Supporting",Art.Amber)
 		local track=decoration(panel,"Track",UDim2.fromOffset(0,0),UDim2.fromOffset(100,5),"ink",3)
 		local fill=decoration(track,"Fill",UDim2.fromOffset(0,0),UDim2.fromScale(0,1),Art.Leaf,3)
@@ -271,7 +271,7 @@ function Menu:layoutContents(wanted)
 	local dailyH=if short then 44 elseif list then 96 else 176
 	for _,row in ipairs(self.dailyCards) do
 		local w=if list then usable else (usable-24)/3
-		Art.type(row.title,"Action",short);Art.type(row.count,"Heading",short);Art.type(row.reward,"Supporting",short)
+		Art.type(row.title,"Action",short);Art.type(row.count,"Counter",short);Art.type(row.reward,"Supporting",short)
 		if short then row.title.TextSize=12;row.count.TextSize=14 end
 		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..row.amount.." nectar")
 		local tw=if list and not short then w-72 else w-12
@@ -356,8 +356,7 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	self.dailyButton.Text = if state.dailyAvailable then "Gift +" .. (state.dailyBonus or 6) else "Gift claimed"
 	self.dailyButton.Interactable = state.dailyAvailable == true and state.status == "Ready"
 	self.dailyButton.Selectable=self.dailyButton.Interactable
-	Art.bind(self.dailyButton,{BackgroundColor3=function()return if self.dailyButton.Interactable then Art.Amber else Art.paletteColor("raised") end})
-	Art.bind(self.dailyButton,{TextColor3=function()return if self.dailyButton.Interactable then Art.paletteColor("ink") else Art.paletteColor("muted") end})
+	Art.control(self.dailyButton,true,self.dailyButton.Interactable)
 	self.dailyHint.Text = if state.dailyAvailable then "Claim your separate daily gift above. Contracts pay automatically after a round."
 		else "Daily gift claimed. Finish rounds to complete these contracts; fresh goals arrive tomorrow."
 	for index, row in ipairs(self.dailyCards) do

@@ -5,6 +5,7 @@
 return function(client,parent)
 	local GuiService=game:GetService("GuiService")
 	assert(parent:IsA("ScreenGui") or parent:FindFirstAncestorOfClass("ScreenGui"),"preferred text fixture requires a real ScreenGui host")
+	local Art=require(client.DeckArt)
 	local Menu=require(client.DeckMenu)
 	local Recap=require(client.RoundRecap)
 	local Shop=require(client.EggHatchView)
@@ -33,6 +34,7 @@ return function(client,parent)
 				for _,page in ipairs({"daily","mastery","daily"})do
 					menu:setPage(page);settle();assert(menu.tabs.play.AbsolutePosition.Y==tabY)
 					readable(menu.heading);readable(menu.nectar)
+					assert(menu.nectar.Font==Art.Font.Counter)
 					for _,tab in pairs(menu.tabs)do readable(tab);assert(tab.AbsoluteSize.Y>=44)end
 					if page=="daily" then
 						readable(menu.dailyButton);assert(menu.dailyButton.AbsoluteSize.Y>=44)
@@ -55,6 +57,7 @@ return function(client,parent)
 					local snapshot=state();snapshot.nectar=balance
 					shop:update(snapshot);settle()
 					readable(shop.heading);readable(shop.action)
+						assert(shop.action.Font==Art.Font.Action and shop.action.AbsoluteSize.Y>=44)
 					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." nectar")
 					do
 						readable(shop.nectar)
@@ -75,7 +78,8 @@ return function(client,parent)
 			settle()
 			test(tostring(size).." recap reward wallet and complete receipt stay readable",function()
 				for _,label in ipairs({recap.earnedGraphic,recap.bankGraphic,recap.eggGoal,recap.shortfall,recap.detailsButton})do readable(label)end
-				for _,label in ipairs(recap.componentLabels)do readable(label)end
+				assert(recap.earnedGraphic.Font==Art.Font.Reward)
+				for _,label in ipairs(recap.componentLabels)do readable(label);assert(label.Font==Art.Font.Counter)end
 				recap:setDetails(true);settle();for _,row in ipairs(recap.receiptRows)do readable(row)end
 				local iterations=0;while recap:scrollReceipt(1)do iterations+=1;assert(iterations<100)end
 				settle();local last=recap.receiptRows[#recap.receiptRows]

@@ -1,4 +1,5 @@
 return function(client,parent)
+	local Art=require(client.DeckArt)
 	local Layout=require(client.DeckLayout)
 	local Dispenser=require(client.DropDispenser)
 	local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
@@ -69,7 +70,7 @@ return function(client,parent)
 	end)
 	-- The rolling-copy contract needs a visible train; preferred text can legitimately
 	-- use the entire old 56px well. Reserve its measured count row plus channel room.
-	local countBounds=TextService:GetTextSize("Drops left 24/24",14,Enum.Font.Gotham,Vector2.new(10000,10000))
+	local countBounds=TextService:GetTextSize("Drops left 24/24",14,Art.Font.Counter,Vector2.new(10000,10000))
 	local trainHeight=math.ceil(countBounds.Y)+40
 	local root=Instance.new("Frame");root.Size=UDim2.fromOffset(math.max(220,math.ceil(countBounds.X)+12),trainHeight);root.Parent=parent
 	local reduced=false;local d=Dispenser.new(root,function()return reduced end)
@@ -98,7 +99,7 @@ return function(client,parent)
 		d:update(2,8,24,false);assert(not d.host.Visible and d.remaining==16 and d.pulses==4)
 		d:cancel();assert(not d.rolling.Visible and d.label.Text=="Drops left 16/24")
 		-- A short well intentionally yields its decorative channel to the exact counter.
-		local compactLine=TextService:GetTextSize("16/24",12,Enum.Font.Gotham,Vector2.new(10000,10000))
+		local compactLine=TextService:GetTextSize("16/24",12,Art.Font.Counter,Vector2.new(10000,10000))
 		root.Size=UDim2.fromOffset(math.max(88,math.ceil(compactLine.X)+4),math.ceil(compactLine.Y)+4)
 		RunService.Heartbeat:Wait();RunService.Heartbeat:Wait();d:update(2,8,24,true)
 		assert(not d.channel.Visible and not d.rolling.Visible and d.label.Text=="16/24" and d.label.TextFits,"compact fallback must retain readable exact count")
