@@ -1,0 +1,573 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "VividHandheld",
+    "result": {
+      "preference": "Medium",
+      "cases": [
+        "roomy enamel keeps the exact 700px board and independent 44px controls",
+        "one measured wordmark supports full and compact forms without reallocating",
+        "standard phone landscape has a measured compact mark; shallow controls retain their seats",
+        "boot uses the same passive underprint and joined lettering",
+        "all six smooth prints reuse their die-cut composition through resizing",
+        "1649, 971 roomy menu choices and tabs use their measured larger faces",
+        "1649, 971 Style Settings Trials preserve full labels and reachable final controls",
+        "1000, 650 roomy menu choices and tabs use their measured larger faces",
+        "1000, 650 Style Settings Trials preserve full labels and reachable final controls"
+      ],
+      "passed": 9,
+      "metrics": {
+        "wordmark": {
+          "compactWidth": 40,
+          "compactHeight": 31
+        },
+        "starGlyph": {
+          "host": "220, 220",
+          "font": "SourceSans",
+          "textBounds": "197, 291",
+          "localScale": 2.911764621734619,
+          "measurement": "native text bounds; ink shape requires capture"
+        },
+        "case": {
+          "trayHeight": 700,
+          "height": 724,
+          "trayWidth": 417.1717171717172,
+          "grip": 315.6541414141414,
+          "width": 1100.48
+        }
+      }
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "StickerPrintSeat",
+    "result": {
+      "cases": [
+        "1649, 971 DROP independent count/caption and fixed inputs",
+        "1649, 971 FALLING independent count/caption and fixed inputs",
+        "1649, 971 SETTLE independent count/caption and fixed inputs",
+        "1649, 971 SAVING independent count/caption and fixed inputs",
+        "733, 307 DROP independent count/caption and fixed inputs",
+        "733, 307 FALLING independent count/caption and fixed inputs",
+        "733, 307 SETTLE independent count/caption and fixed inputs",
+        "733, 307 SAVING independent count/caption and fixed inputs",
+        "568, 160 DROP independent count/caption and fixed inputs",
+        "568, 160 FALLING independent count/caption and fixed inputs",
+        "568, 160 SETTLE independent count/caption and fixed inputs",
+        "568, 160 SAVING independent count/caption and fixed inputs",
+        "385, 703 DROP independent count/caption and fixed inputs",
+        "385, 703 FALLING independent count/caption and fixed inputs",
+        "385, 703 SETTLE independent count/caption and fixed inputs",
+        "385, 703 SAVING independent count/caption and fixed inputs"
+      ],
+      "glyphMeasurements": [
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "214, 316",
+          "print": 239,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "214, 316",
+          "print": 239,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "214, 316",
+          "print": 239,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "214, 316",
+          "print": 239,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": true,
+          "dense": false,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "41, 60",
+          "print": 46,
+          "grip": 110
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": true,
+          "dense": false,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "41, 60",
+          "print": 46,
+          "grip": 110
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "41, 60",
+          "print": 46,
+          "grip": 110
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": true,
+          "dense": false,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "41, 60",
+          "print": 46,
+          "grip": 110
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "18, 25",
+          "print": 19,
+          "grip": 102
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "18, 25",
+          "print": 19,
+          "grip": 102
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "18, 25",
+          "print": 19,
+          "grip": 102
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "18, 25",
+          "print": 19,
+          "grip": 102
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "48, 70",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "48, 70",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "48, 70",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "48, 70",
+          "print": 53,
+          "grip": 341
+        }
+      ],
+      "passed": 16,
+      "measurement": "native TextBounds plus outline; actual ink visibility needs capture"
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "AppearanceStyle",
+    "result": {
+      "passed": 14,
+      "cases": [
+        "1649, 971 Style two tabs and first choice fit without Equip",
+        "1649, 971 leaf modes expose existing actions and no hidden Style targets",
+        "1649, 971 latest pending and definitive checks survive resize and reopen without writes",
+        "733, 307 Style two tabs and first choice fit without Equip",
+        "733, 307 leaf modes expose existing actions and no hidden Style targets",
+        "733, 307 latest pending and definitive checks survive resize and reopen without writes",
+        "568, 160 Style two tabs and first choice fit without Equip",
+        "568, 160 leaf modes expose existing actions and no hidden Style targets",
+        "568, 160 latest pending and definitive checks survive resize and reopen without writes",
+        "385, 703 Style two tabs and first choice fit without Equip",
+        "385, 703 leaf modes expose existing actions and no hidden Style targets",
+        "385, 703 latest pending and definitive checks survive resize and reopen without writes",
+        "smooth die-cut and colored print reused across none star cycles and resize",
+        "locked inspect and Trials back preserve same Style focus without request"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyPalette",
+    "result": {
+      "fallbackParts": 5,
+      "tiers": 5,
+      "passed": 2,
+      "cases": [
+        "legacy and vivid tier colors resolve identically without changing physical config",
+        "five fixed fallback layers are passive colored once and never change the source pose"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyLCD",
+    "result": {
+      "cases": [
+        "all five tier hues retain rim lower body upper and tight cream light at authored small size",
+        "automatic backend proves a writable first frame before selecting its owner",
+        "logical grid follows tray aspect with near-square native cells",
+        "standing circles and rotated squash extents match common tray projection within one cell",
+        "two physically touching circles retain neighboring silhouettes",
+        "light stays in upper-left tray quadrant through sideways deformation and final merge",
+        "shared rounded cell edges stay contiguous through fractional native resizing",
+        "pooled repeated rows reuse instances and clear every stale span after disappearance",
+        "GUI paint exceptions become sticky failure and release every resize connection",
+        "hard cap fails before partial paint and stays failed without rebuilding a pool"
+      ],
+      "passed": 10,
+      "grid": [
+        64,
+        107
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellySprite",
+    "result": {
+      "cheapGridWidth": 64,
+      "passed": 6,
+      "cases": [
+        "all five sprite fallbacks use shared vivid roles in the existing bands",
+        "smallest and largest tier keep upper-left mathematically inset unrotated light",
+        "logical center quantizes display without changing returned continuous pose",
+        "covered pose sampling creates no GUI writes and reduced rest stays static",
+        "floor and angled bank remain occlusion boundaries for stepped bands",
+        "sparse fallback grain is static passive and only forty marks"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyMarks",
+    "result": {
+      "preference": "Medium",
+      "legacyBounds": {
+        "I": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "4, 15"
+        },
+        "IV": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "13, 15"
+        },
+        "II": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "8, 15"
+        },
+        "III": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "12, 15"
+        },
+        "V": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "9, 15"
+        }
+      },
+      "passed": 5,
+      "cases": [
+        "I bounds contain native ink without changing font or projected center",
+        "II bounds contain native ink without changing font or projected center",
+        "III bounds contain native ink without changing font or projected center",
+        "IV bounds contain native ink without changing font or projected center",
+        "V bounds contain native ink without changing font or projected center"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckBackground",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "one16-band545-instance surface includes256 actual motif frames",
+        "canopy full period is closed and covers edges",
+        "creek full period is closed and covers edges",
+        "lantern full period is closed and covers edges",
+        "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+        "reduced board preview resize and return recompose same16 hosts once",
+        "exterior phase pauses while independent inspected owner advances",
+        "destroy removes all bands and stays idempotent"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackdropGlobal",
+    "result": {
+      "passed": 6,
+      "cases": [
+        "Global confirmed Canopy is above opaque preview with exact relative order",
+        "Canopy owner Z changes rebase once and restore original exterior depths",
+        "Global locked Creek borrows existing16 hosts above preview",
+        "pattern owner Z and exterior return keep order and reduced steady writes",
+        "explicit host switch release and same-step destroy retain borrowed roots",
+        "unexpected recursive host destruction repairs only missing renderers"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckExperience",
+    "result": {
+      "passed": 23,
+      "cases": [
+        "568, 160 distinct screen, grips and controls",
+        "568, 198 distinct screen, grips and controls",
+        "350, 279 distinct screen, grips and controls",
+        "640, 530 distinct screen, grips and controls",
+        "844, 330 distinct screen, grips and controls",
+        "844, 390 distinct screen, grips and controls",
+        "390, 740 distinct screen, grips and controls",
+        "1650, 972 distinct screen, grips and controls",
+        "1649, 971 tray-first desktop mass and bounded equal rails",
+        "1280, 720 tray-first desktop mass and bounded equal rails",
+        "1024, 768 tray-first desktop mass and bounded equal rails",
+        "568, 160 measured Large utility requirements select a safe fallback",
+        "350, 160 measured Large utility requirements select a safe fallback",
+        "350, 279 measured Large utility requirements select a safe fallback",
+        "568, 280 measured Large utility requirements select a safe fallback",
+        "1649, 971 measured Large utility requirements select a safe fallback",
+        "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+        "480px Largest shallow root uses narrow ledger without target overlap",
+        "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+        "rolling copy leaves the occupied slot on wide grips and the final drop",
+        "reset, restore and lowered drops seed static counts",
+        "reduced effects, hide and cancel retain the authoritative count",
+        "eight decorative balls retain channel padding at128px rail width"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckComposition",
+    "result": {
+      "passed": 11,
+      "cases": [
+        "1649, 971 passive stacks lower only within measured free rails",
+        "733, 307 passive stacks lower only within measured free rails",
+        "568, 160 passive stacks lower only within measured free rails",
+        "480, 160 passive stacks lower only within measured free rails",
+        "350, 279 passive stacks lower only within measured free rails",
+        "385, 703 passive stacks lower only within measured free rails",
+        "speaker seat and visibility survive the midheight threshold unchanged",
+        "full welcome coach keeps its exact size and a tight left rail clamps shift to zero",
+        "short dispenser retains exact24counter and optional centered train without extra well",
+        "Menu has one X close route and no Resume action at either origin",
+        "rounded outside-arc strips cover all four fractional corners and remain passive"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SharedFinish",
+    "result": {
+      "preference": "Medium",
+      "passed": 12,
+      "cases": [
+        "assigned faces retain measured targets and distinguish exact Roman marks",
+        "sherbet hot theme paints actual primary, disabled and restored states",
+        "stone hot theme paints actual primary, disabled and restored states",
+        "ice hot theme paints actual primary, disabled and restored states",
+        "brick hot theme paints actual primary, disabled and restored states",
+        "moss hot theme paints actual primary, disabled and restored states",
+        "honey hot theme paints actual primary, disabled and restored states",
+        "gloaming hot theme paints actual primary, disabled and restored states",
+        "copperleaf hot theme paints actual primary, disabled and restored states",
+        "locked finish preview never changes confirmed sheet or control colors",
+        "repeated themes, previews and state paints allocate no nodes or sequences",
+        "controller focus keeps an outer light stroke and inner dark keyline"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HardwareInstruments",
+    "result": {
+      "preference": "Medium",
+      "passed": 7,
+      "cases": [
+        "1649, 971 field pack keeps control seats and complete instruction",
+        "733, 307 field pack keeps control seats and complete instruction",
+        "568, 160 field pack keeps control seats and complete instruction",
+        "385, 703 field pack keeps control seats and complete instruction",
+        "inset face is clipped passive depth with no action underline or focus stroke",
+        "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+        "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HandheldTextLayout",
+    "result": {
+      "preference": "Medium",
+      "passed": 5,
+      "cases": [
+        "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "WelcomeCoaching",
+    "result": {
+      "preference": "Medium",
+      "passed": 6,
+      "cases": [
+        "1649, 971 all phases and keyboard controller touch controls fit",
+        "733, 307 all phases and keyboard controller touch controls fit",
+        "568, 160 all phases and keyboard controller touch controls fit",
+        "385, 703 all phases and keyboard controller touch controls fit",
+        "observed 179x104 desktop well measures true padding before optional headings",
+        "phase mark input resize and Ready restoration retain current semantic instruction"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FieldQuestLayout",
+    "result": [
+      "1649, 971 every active goal count expiry complete and save recovery fits",
+      "1649, 971 Menu exposes metadata without replacing live actions or selection",
+      "733, 307 every active goal count expiry complete and save recovery fits",
+      "733, 307 Menu exposes metadata without replacing live actions or selection",
+      "568, 160 every active goal count expiry complete and save recovery fits",
+      "568, 160 Menu exposes metadata without replacing live actions or selection",
+      "385, 703 every active goal count expiry complete and save recovery fits",
+      "385, 703 Menu exposes metadata without replacing live actions or selection"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SharedHeaders",
+    "result": {
+      "preference": "Medium",
+      "passed": 12,
+      "cases": [
+        "1649, 971 exact menu wallet and stable bare-X header",
+        "1649, 971 recipe prices and status stay independent of exact balance",
+        "733, 307 exact menu wallet and stable bare-X header",
+        "733, 307 recipe prices and status stay independent of exact balance",
+        "568, 160 exact menu wallet and stable bare-X header",
+        "568, 160 recipe prices and status stay independent of exact balance",
+        "385, 703 exact menu wallet and stable bare-X header",
+        "385, 703 recipe prices and status stay independent of exact balance",
+        "focused unselected recipe survives rebuild and rotation without changing selection",
+        "focused daily remains visible while disabled gift falls back to neutral X",
+        "X/footer survive rebuild and detached GUI cannot reclaim focus",
+        "two independent circle controls retain native names and preferred transparency"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PreferredTextLayout",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+        "680, 700 measured shop header and pinned purchase route fit",
+        "680, 700 recap reward wallet and complete receipt stay readable",
+        "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+        "390, 740 measured shop header and pinned purchase route fit",
+        "390, 740 recap reward wallet and complete receipt stay readable",
+        "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+        "568, 160 measured shop header and pinned purchase route fit",
+        "568, 160 recap reward wallet and complete receipt stay readable"
+      ]
+    }
+  }
+]

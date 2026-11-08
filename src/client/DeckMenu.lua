@@ -25,8 +25,8 @@ local function button(parent,name,caption,action)
 	b.Activated:Connect(action)
 	return b
 end
-local function typeTab(tab,key,compact,width)
-	Art.type(tab,"Action",compact)
+local function typeTab(tab,key,compact,width,roomy)
+	Art.roomyType(tab,"Action",compact,roomy)
 	if key~="mastery"then return end
 	tab.Text="Mastery";tab:SetAttribute("AccessibleLabel","Family mastery ranks")
 	local inset=tab:FindFirstChildOfClass("UIPadding")
@@ -176,7 +176,8 @@ function Menu:layout()
  if not self:isLive()or self.layingOut then return false end
 	self.layingOut=true
 	local size=self.parent.AbsoluteSize
-	local width=math.max(1,math.min(680,size.X-24))
+	self.roomy=size.X>=1000 and size.Y>=650
+ local width=math.max(1,math.min(if self.roomy then 740 else 680,size.X-24))
 	self.shallow=size.Y>=280 and size.Y<440
 	self.compact=size.Y<280 or self.shallow
 	self.width,self.pad=width,if self.compact then 8 else 12
@@ -186,9 +187,9 @@ function Menu:layout()
 	self.headerTitle=if notice then notice.short else "Pocket menu"
 	self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.wallet.NectarDrop,self.closeButton,{
 		pad=pad,top=if self.compact then 0 else 8,amount=self.state.nectar or 0,title=self.headerTitle,
-		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil})
+		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil,roomy=self.roomy})
 	local tabH=44
-	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-12)/3);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3))end
+	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-12)/3,self.roomy);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3))end
 	local tabY=self.headerPlan.height+(if self.compact then 4 else 8)
 	self.headerHeight=tabY+tabH+(if self.compact then 4 else 8)
 	local maximum=math.max(1,size.Y-(if self.compact then 8 else 24));local bottom=if self.compact then 4 else 8
@@ -214,15 +215,17 @@ function Menu:layoutContents(wanted)
 	self.layoutPasses=(self.layoutPasses or 0)+1
 	self.pageHeights=self.pageHeights or {}
 	self.renderedSignatures=self.renderedSignatures or {}
-	local width=self.width-self.pad*2-8
+	local function styleType(n,r,c)return Art.roomyType(n,r,c,self.roomy)end
+ local width=self.width-self.pad*2-8
 	local inset=if self.compact then 4 else 12
 	local usable=width-inset*2
 	local short=self.compact
+ for _,entry in ipairs({{self.recipe,"Body"},{self.playHint,"Supporting"},{self.dailyHint,"Supporting"},{self.familyNote,"Body"}})do styleType(entry[1],entry[2],short)end
 	local list=usable<480
 	if short and not list then
 		local column=(usable-24)/3;local tallest=44
 		for _,item in ipairs(self.destinations)do
-			Art.type(item.title,"Action",true)
+			styleType(item.title,"Action",true)
 			tallest=math.max(tallest,Art.textHeight(item.title,column-(if self.shallow then 58 else 46)-8,24)+8)
 		end
 		if tallest+inset*2>(self.bodyBudget or math.huge)then list=true end
@@ -233,7 +236,7 @@ function Menu:layoutContents(wanted)
 	if not wanted or wanted=="play" then
 	local destinationHeight=if short then (if self.shallow then 56 else 44) elseif list then 88 else 168
 	for _,item in ipairs(self.destinations) do
-		Art.type(item.title,"Action",short);Art.type(item.subtitle,"Supporting",short)
+		styleType(item.title,"Action",short);styleType(item.subtitle,"Supporting",short)
 		local w=if list then usable else (usable-24)/3
 		local tx=if short then (if self.shallow then 58 else 46) elseif list then 78 else 8
 		local titleH=Art.textHeight(item.title,w-tx-8,if short then 24 else 26)
@@ -263,7 +266,7 @@ function Menu:layoutContents(wanted)
 	end
 	if not wanted or wanted=="daily" then
 	y=start
-	Art.type(self.dailyButton,"Action",true)
+	styleType(self.dailyButton,"Action",true)
 	self.dailyButton.Parent=self.pages.daily
 	local giftW=math.min(usable,math.max(44,Art.textWidth(self.dailyButton)+16))
 	local giftH=Art.actionHeight(self.dailyButton,giftW)
@@ -271,7 +274,7 @@ function Menu:layoutContents(wanted)
 	local dailyH=if short then 44 elseif list then 96 else 176
 	for _,row in ipairs(self.dailyCards) do
 		local w=if list then usable else (usable-24)/3
-		Art.type(row.title,"Action",short);Art.type(row.count,"Counter",short);Art.type(row.reward,"Supporting",short)
+		styleType(row.title,"Action",short);styleType(row.count,"Counter",short);styleType(row.reward,"Supporting",short)
 		if short then row.title.TextSize=12;row.count.TextSize=14 end
 		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..row.amount.." nectar")
 		local tw=if list and not short then w-72 else w-12
@@ -310,9 +313,9 @@ function Menu:layoutContents(wanted)
 	end
 	for _,family in ipairs(familyOrder) do
 		local panel,b,hint=self.familyCards[family],self.families[family],self.familyHints[family]
-		Art.type(hint,"Body",short)
+		styleType(hint,"Body",short)
 		local owned=b:GetAttribute("FamilyOwned")==true
-		Art.type(b.FamilyName,"Action",short);Art.type(self.familyText[family],"Supporting",short)
+		styleType(b.FamilyName,"Action",short);styleType(self.familyText[family],"Supporting",short)
 		local buttonH=math.max(44,Art.textHeight(b.FamilyName,usable-62,0)+12)
 		local rankH=Art.textHeight(self.familyText[family],usable-24,24)
 		local hintY=buttonH+(if owned then rankH+8 else 8)

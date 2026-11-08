@@ -90,8 +90,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 			text(swatch,"Caption",option.name,"Body")
 			local border=swatch:FindFirstChildOfClass("UIStroke")
    border.ZIndex=0
-   swatch.SelectionGained:Connect(function()border.Thickness=4 end)
-   swatch.SelectionLost:Connect(function()border.Thickness=1 end)
+   swatch:SetAttribute("FocusThickness",4)
    local stroke=Instance.new("UIStroke")
    stroke.Name,stroke.ApplyStrokeMode,stroke.ZIndex="Selection",Enum.ApplyStrokeMode.Border,1
    stroke.Color,stroke.Thickness,stroke.Enabled,stroke.Parent=Art.Amber,2,false,swatch
@@ -117,9 +116,11 @@ end
 function Picker:layout()
 	if self.layingOut then return end;self.layingOut=true
 	local size=self.shade.AbsoluteSize;local short=size.Y<220
-	local width=math.max(1,math.min(620,size.X-24));local pad=if short then 8 else 16
+ self.roomy=size.X>=1000 and size.Y>=650
+ local function styleType(n,r,c)return Art.roomyType(n,r,c,self.roomy)end
+	local width=math.max(1,math.min(if self.roomy then 720 else 620,size.X-24));local pad=if short then 8 else 16
 	local usable=width-pad*2
-	Art.type(self.saveMarker,"Supporting",short)
+	styleType(self.saveMarker,"Supporting",short)
 	local markerW=0
 	if short and (self.saveNotice or self.appearanceCaption)then
 		local limit=usable*.42
@@ -128,14 +129,14 @@ function Picker:layout()
 	end
 	local scrollW=usable-(if markerW>0 then markerW+12 else 0);local bodyW=scrollW-8
 	self.heading.Text=if self.saveNotice then self.saveNotice.short elseif self.appearanceCaption and not short and (slots[self.active]~=nil)then "Style · "..self.appearanceCaption elseif self.active=="Trials"then "Pocket Trials"elseif self.active=="Settings"then "Settings"else "Deck style"
-	Art.type(self.heading,if self.saveNotice or short then "Body"else "Heading",short)
+	styleType(self.heading,if self.saveNotice or short then "Body"else "Heading",short)
 	self.heading.Visible=not short or self.active=="Trials"or self.active=="Settings"
 	local headingH=Art.textHeight(self.heading,usable-56,32)
 	local tabsY=if short then 4 else math.max(44,headingH)+12
 	local tabW=if short then (usable-56)/3 else (usable-12)/3
 	local tabH=44
 	for key,tab in pairs(self.tabs)do
-		Art.type(tab,if short then "Body" else "Action",short)
+		styleType(tab,if short then "Body" else "Action",short)
 		if key=="Background"then tab.Text="Background";tab:SetAttribute("AccessibleLabel","Background patterns");if Art.textWidth(tab)>tabW-12 then tab.Text="Scenes"end end
 		tabH=math.max(tabH,Art.textHeight(tab,tabW,0)+(if short then 8 else 12))
 	end
@@ -147,18 +148,18 @@ function Picker:layout()
 	local function layoutBody(active)
 	local y=4
 	if self.saveNotice then
-		Art.type(self.saveDetail,"Body",short);self.saveDetail.Text=self.saveNotice.detail
+		styleType(self.saveDetail,"Body",short);self.saveDetail.Text=self.saveNotice.detail
 		local h=Art.textHeight(self.saveDetail,bodyW-8,24)
 		place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
 	end
 	if slots[active]then
-		Art.type(self.previewName,"Action",short);Art.type(self.previewNote,"Supporting",short)
+		styleType(self.previewName,"Action",short);styleType(self.previewNote,"Supporting",short)
 
 		local catalog=catalogs[active]
 		local minW=150
-		for _,id in ipairs(catalog.Order)do local caption=self.choices[active][id].Parent.Caption;Art.type(caption,"Body",short);minW=math.max(minW,Art.textWidth(caption)+76)end
+		for _,id in ipairs(catalog.Order)do local caption=self.choices[active][id].Parent.Caption;styleType(caption,if self.roomy then "Action"else "Body",short);minW=math.max(minW,Art.textWidth(caption)+76)end
 		local columns=math.max(1,math.min(3,math.floor((bodyW+8)/(minW+8))))
-		local swatchW=(bodyW-8-(columns-1)*8)/columns;local rowH=44
+		local swatchW=(bodyW-8-(columns-1)*8)/columns;local rowH=if self.roomy then 52 else 44
 		local labelPad=if short then 4 else 8
 		for _,id in ipairs(catalog.Order)do rowH=math.max(rowH,Art.textHeight(self.choices[active][id].Parent.Caption,swatchW-68,0)+labelPad*2)end
 		local nameW=math.max(1,bodyW-148)
@@ -190,25 +191,25 @@ function Picker:layout()
 			place(swatch.Chip,10,(rowH-30)/2,42,30);place(swatch.Caption,60,labelPad,swatchW-68,rowH-labelPad*2)
 		end
 		y+=math.ceil(#catalog.Order/columns)*(rowH+8)
-  Art.type(self.appearanceStatus,"Supporting",short);local sh=Art.textHeight(self.appearanceStatus,bodyW-8,24)
+  styleType(self.appearanceStatus,"Supporting",short);local sh=Art.textHeight(self.appearanceStatus,bodyW-8,24)
   if active==self.active then place(self.appearanceStatus,4,y,bodyW-8,sh)end;y+=sh+8
-  for _,control in ipairs({self.retryButton,self.trialsLink})do if control.Visible then local h=Art.actionHeight(control,bodyW-8);if active==self.active then place(control,4,y,bodyW-8,h)end;y+=h+8 end end
+  for _,control in ipairs({self.retryButton,self.trialsLink})do if control.Visible then styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8);if active==self.active then place(control,4,y,bodyW-8,h)end;y+=h+8 end end
 	elseif active=="Trials"then
-		Art.type(self.clubHeader,"Heading",short);local h=Art.textHeight(self.clubHeader,bodyW-8,28)
+		styleType(self.clubHeader,"Heading",short);local h=Art.textHeight(self.clubHeader,bodyW-8,28)
 		place(self.clubHeader,4,y,bodyW-8,h);y+=h+12
 		for _,row in ipairs(self.rows)do
-			Art.type(row.title,"Body",short);Art.type(row.status,"Supporting",short)
+			styleType(row.title,"Body",short);styleType(row.status,if row.status:GetAttribute("ExactCounter")then "Counter"else "Supporting",short)
 			local th=Art.textHeight(row.title,bodyW-32,24);local sh=Art.textHeight(row.status,bodyW-32,22)
 			local h=th+sh+30;place(row.frame,4,y,bodyW-8,h)
 			place(row.title,12,8,bodyW-32,th);place(row.status,12,12+th,bodyW-32,sh)
 			place(row.fill.Parent,12,h-10,bodyW-32,4);row.fill.Size=UDim2.fromScale(row.fill:GetAttribute("Progress") or 0,1)
 			y+=h+8
 		end
-		Art.type(self.reward,"Supporting",short);local h=Art.textHeight(self.reward,bodyW-8,24)
+		styleType(self.reward,"Supporting",short);local h=Art.textHeight(self.reward,bodyW-8,24)
 		place(self.reward,4,y,bodyW-8,h);y+=h+12
 	else
 		for _,control in ipairs({self.sound,self.music,self.motion})do
-			Art.type(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
+			styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
 			place(control,4,y,bodyW-8,h);y+=h+8
 		end
 	end
@@ -357,6 +358,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		local done=bit32.band(mask,goal.bit)~=0;local current=if index==1 then peak elseif index==2 then score else 0
 		local row=self.rows[index]
 		row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
+		row.status:SetAttribute("ExactCounter",not done)
 		row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
 		Art.bind(row.status,{TextColor3=function()return if done then Art.Leaf else Art.paletteColor("muted") end})
 		row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf

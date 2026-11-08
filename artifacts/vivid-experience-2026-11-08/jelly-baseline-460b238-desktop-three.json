@@ -1,0 +1,299 @@
+[
+  [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "JellyRendererBenchmark",
+      "result": {
+        "renderHz": 30,
+        "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+        "background": "canopy",
+        "backend": "span",
+        "fieldEffects": false,
+        "logicalGrid": [
+          64,
+          107
+        ],
+        "fieldEffectsFinalInstances": 0,
+        "deviceViewport": "1626, 994",
+        "backgroundFinalInstances": 35,
+        "cpuClock": "os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",
+        "backgroundInstances": 35,
+        "finalStats": {
+          "spansUsed": 500,
+          "constructionMs": 31.61849989555776,
+          "commitMs": 0.16729999333620071,
+          "dynamicAllocated": 1536,
+          "dynamicCreated": 1536,
+          "lastDemand": 500,
+          "propertyWrites": 25,
+          "rowHosts": 107,
+          "visibleSpans": 500,
+          "scanMs": 0.19509997218847275,
+          "rasterMs": 0.9814000222831964,
+          "staticAllocated": 209,
+          "peakDemand": 528
+        },
+        "reports": [
+          {
+            "rasterCpuMs": {
+              "p50": 1.071699894964695,
+              "p95": 1.8868998158723116,
+              "max": 2.253199927508831
+            },
+            "scenario": "pile24",
+            "peakAllocated": 1536,
+            "cpuAllMs": {
+              "p50": 0.13660010881721973,
+              "p95": 2.0804000087082386,
+              "max": 3.002199809998274
+            },
+            "frames": 180,
+            "spanScanCpuMs": {
+              "p50": 0.2180000301450491,
+              "p95": 0.29669981449842453,
+              "max": 0.32590003684163094
+            },
+            "fieldEffectsCpuMs": {
+              "p50": 0.000200001522898674,
+              "p95": 0.000400003045797348,
+              "max": 0.000500120222568512
+            },
+            "backend": "span",
+            "wholeClientFrameMs": {
+              "p50": 16.679100692272186,
+              "p95": 17.885200679302216,
+              "max": 18.707100301980972
+            },
+            "rendererAtEnd": "span",
+            "createdAfterWarmup": 0,
+            "fallback": false,
+            "spanCommitCpuMs": {
+              "p50": 0.2288001123815775,
+              "p95": 0.4032000433653593,
+              "max": 0.49210013821721077
+            },
+            "peakPropertyWrites": 287,
+            "staticAllocated": 209,
+            "peakDemand": 505,
+            "peakUsed": 505,
+            "cpuPaintMs": {
+              "p50": 1.5469999052584171,
+              "p95": 2.397100208327174,
+              "max": 3.002199809998274
+            },
+            "backgroundCpuMs": {
+              "p50": 0.009499955922365189,
+              "p95": 0.04159985110163689,
+              "max": 0.10040006600320339
+            },
+            "failures": 0,
+            "paintedFrames": 90
+          }
+        ],
+        "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+        "backgroundStats": [],
+        "fixtureSize": "{0, 354}, {0, 594}",
+        "fieldEffectsInstances": 0
+      }
+    }
+  ],
+  [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "JellyRendererBenchmark",
+      "result": {
+        "renderHz": 30,
+        "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+        "background": "canopy",
+        "backend": "span",
+        "fieldEffects": false,
+        "logicalGrid": [
+          64,
+          107
+        ],
+        "fieldEffectsFinalInstances": 0,
+        "deviceViewport": "1626, 994",
+        "backgroundFinalInstances": 35,
+        "cpuClock": "os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",
+        "backgroundInstances": 35,
+        "finalStats": {
+          "spansUsed": 499,
+          "constructionMs": 29.572099912911654,
+          "commitMs": 0.13120006769895554,
+          "dynamicAllocated": 1536,
+          "dynamicCreated": 1536,
+          "lastDemand": 499,
+          "propertyWrites": 5,
+          "rowHosts": 107,
+          "visibleSpans": 499,
+          "scanMs": 0.20190002396702766,
+          "rasterMs": 0.9564999490976334,
+          "staticAllocated": 209,
+          "peakDemand": 529
+        },
+        "reports": [
+          {
+            "rasterCpuMs": {
+              "p50": 0.9731000754982233,
+              "p95": 1.4154999516904354,
+              "max": 1.8150999676436186
+            },
+            "scenario": "pile24",
+            "peakAllocated": 1536,
+            "cpuAllMs": {
+              "p50": 0.10779988951981068,
+              "p95": 1.8199000041931868,
+              "max": 2.6406999677419662
+            },
+            "frames": 180,
+            "spanScanCpuMs": {
+              "p50": 0.20979996770620346,
+              "p95": 0.2848000731319189,
+              "max": 0.2894999925047159
+            },
+            "fieldEffectsCpuMs": {
+              "p50": 0.000200001522898674,
+              "p95": 0.00030011869966983795,
+              "max": 0.000400003045797348
+            },
+            "backend": "span",
+            "wholeClientFrameMs": {
+              "p50": 16.696199774742126,
+              "p95": 17.751000821590424,
+              "max": 18.6684001237154
+            },
+            "rendererAtEnd": "span",
+            "createdAfterWarmup": 0,
+            "fallback": false,
+            "spanCommitCpuMs": {
+              "p50": 0.22089993581175804,
+              "p95": 0.4625997971743345,
+              "max": 0.6194000598043203
+            },
+            "peakPropertyWrites": 306,
+            "staticAllocated": 209,
+            "peakDemand": 506,
+            "peakUsed": 506,
+            "cpuPaintMs": {
+              "p50": 1.458900049328804,
+              "p95": 1.918500056490302,
+              "max": 2.6406999677419662
+            },
+            "backgroundCpuMs": {
+              "p50": 0.008299946784973145,
+              "p95": 0.036800047382712364,
+              "max": 0.04659988917410374
+            },
+            "failures": 0,
+            "paintedFrames": 90
+          }
+        ],
+        "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+        "backgroundStats": [],
+        "fixtureSize": "{0, 354}, {0, 594}",
+        "fieldEffectsInstances": 0
+      }
+    }
+  ],
+  [
+    {
+      "ok": true,
+      "preference": "Medium",
+      "name": "JellyRendererBenchmark",
+      "result": {
+        "renderHz": 30,
+        "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+        "background": "canopy",
+        "backend": "span",
+        "fieldEffects": false,
+        "logicalGrid": [
+          64,
+          107
+        ],
+        "fieldEffectsFinalInstances": 0,
+        "deviceViewport": "1626, 994",
+        "backgroundFinalInstances": 35,
+        "cpuClock": "os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",
+        "backgroundInstances": 35,
+        "finalStats": {
+          "spansUsed": 499,
+          "constructionMs": 23.88759981840849,
+          "commitMs": 0.11330004781484604,
+          "dynamicAllocated": 1536,
+          "dynamicCreated": 1536,
+          "lastDemand": 499,
+          "propertyWrites": 11,
+          "rowHosts": 107,
+          "visibleSpans": 499,
+          "scanMs": 0.21110009402036667,
+          "rasterMs": 0.9327000007033348,
+          "staticAllocated": 209,
+          "peakDemand": 524
+        },
+        "reports": [
+          {
+            "rasterCpuMs": {
+              "p50": 0.9552999399602413,
+              "p95": 1.6181999817490578,
+              "max": 1.7083000857383013
+            },
+            "scenario": "pile24",
+            "peakAllocated": 1536,
+            "cpuAllMs": {
+              "p50": 0.10210019536316395,
+              "p95": 1.9602000247687101,
+              "max": 2.2687001619488
+            },
+            "frames": 180,
+            "spanScanCpuMs": {
+              "p50": 0.21110009402036667,
+              "p95": 0.3160999622195959,
+              "max": 0.43770018965005875
+            },
+            "fieldEffectsCpuMs": {
+              "p50": 0.000200001522898674,
+              "p95": 0.00030011869966983795,
+              "max": 0.000500120222568512
+            },
+            "backend": "span",
+            "wholeClientFrameMs": {
+              "p50": 16.73240028321743,
+              "p95": 17.695099115371704,
+              "max": 18.729999661445618
+            },
+            "rendererAtEnd": "span",
+            "createdAfterWarmup": 0,
+            "fallback": false,
+            "spanCommitCpuMs": {
+              "p50": 0.20070001482963562,
+              "p95": 0.3611000720411539,
+              "max": 0.5355000030249357
+            },
+            "peakPropertyWrites": 342,
+            "staticAllocated": 209,
+            "peakDemand": 506,
+            "peakUsed": 506,
+            "cpuPaintMs": {
+              "p50": 1.4196999836713076,
+              "p95": 2.1403999999165535,
+              "max": 2.2687001619488
+            },
+            "backgroundCpuMs": {
+              "p50": 0.00809994526207447,
+              "p95": 0.039499951526522636,
+              "max": 0.14050002209842205
+            },
+            "failures": 0,
+            "paintedFrames": 90
+          }
+        ],
+        "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+        "backgroundStats": [],
+        "fixtureSize": "{0, 354}, {0, 594}",
+        "fieldEffectsInstances": 0
+      }
+    }
+  ]
+]

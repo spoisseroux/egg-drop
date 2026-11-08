@@ -27,7 +27,7 @@ function Quest.new(parent)
 end
 function Quest:preferredHeight(width,available,compact,objective)
  local view=snapshot(0,objective);local copy=Copy.describe(view);local service=game:GetService("TextService")
- local size=if compact then 12 else 16;local h=0
+ local size=if self.roomy then 20 elseif compact then 12 else 16;local h=0
  local samples={copy}
  if view and view.goals then
   for _,goal in ipairs(view.goals)do
@@ -43,8 +43,8 @@ function Quest:preferredHeight(width,available,compact,objective)
   h=math.max(h,smallest)
  end
  if not compact then
-  h+=math.ceil(service:GetTextSize(copy.ticker,12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+10
-  if copy.dynamics~=""then h+=math.ceil(service:GetTextSize(copy.dynamics,12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
+  h+=math.ceil(service:GetTextSize(copy.ticker,if self.roomy then 18 else 12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+10
+  if copy.dynamics~=""then h+=math.ceil(service:GetTextSize(copy.dynamics,if self.roomy then 18 else 12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
  end
  return math.min(available,math.max(20,h))
 end
@@ -55,11 +55,12 @@ function Quest:update(stage,phase,visible,compactHint,objective)
  local height,width=self.host.AbsoluteSize.Y,self.host.AbsoluteSize.X
  local compact=if self.compactHint~=nil then self.compactHint else height<60
  local copy=Copy.describe(snapshot(stage,objective),phase)
- local key=table.concat({stage,phase or "",copy.key,tostring(compact),height,width,game:GetService("GuiService").PreferredTextSize.Name},"|")
+ local key=table.concat({stage,phase or "",copy.key,tostring(compact),tostring(self.roomy),height,width,game:GetService("GuiService").PreferredTextSize.Name},"|")
  if self.layoutKey==key then return end;self.layoutKey=key
- Art.type(self.title,"Body",compact);if compact then self.title.TextSize=12 end
+ Art.type(self.title,"Body",compact);if self.roomy then self.title.TextSize=20 elseif compact then self.title.TextSize=12 end
  self.title.TextWrapped=true
  Art.type(self.progress,"Supporting",true);Art.type(self.dynamics,"Supporting",true)
+ if self.roomy then self.progress.TextSize,self.dynamics.TextSize=18,18 end
  local inner=math.max(1,width-8)
  self.progress.Text=copy.ticker;self.dynamics.Text=copy.dynamics
  local line=math.max(22,math.ceil(game:GetService("TextService"):GetTextSize("M",self.title.TextSize,self.title.Font,Vector2.new(10000,10000)).Y)+4)

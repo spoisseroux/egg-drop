@@ -8,19 +8,22 @@ return function(client,parent)
  local function test(n,f)f();table.insert(cases,n)end
  local function geometry()
   local size=surface.root.AbsoluteSize
+  assert(surface.root.ClipsDescendants,"only exterior print must clip")
+  assert(surface.stats.pitch>=36 and surface.stats.pitch<=80)
+  assert(surface.stats.motifWidth>=10 and surface.stats.motifWidth<=32)
   for _,b in ipairs(surface.bands)do
-   assert(b.host.ClipsDescendants and b.canvas.Size.X.Offset>=size.X*2-.1)
-   assert(b.canvas.Position.X.Offset<=0 and b.canvas.Position.X.Offset+b.canvas.Size.X.Offset>=size.X,"wave opened viewport edge")
-   assert(math.abs(b.canvas.Position.Y.Offset+b.top)<.1,"stale owner vertical crop")
-   assert(b.host.Position.Y.Offset==math.floor((b.row-1)*size.Y/8+.5))
-   assert(math.abs(b.pieces[3].body.Position.X.Scale-b.pieces[1].body.Position.X.Scale-.25)<1e-6,"four half-viewport motif cells must tile2viewport canvas")
+   assert(not b.host.ClipsDescendants and b.canvas.Size.X.Offset>=size.X*2-.1)
+   assert(math.abs(b.canvas.Position.X.Offset)<=8.01 and math.abs(b.canvas.Position.Y.Offset)<=5.01,"unbounded print drift")
+   assert(b.host.Size==UDim2.fromOffset(size.X,size.Y)and b.top==0)
+   for _,p in ipairs(b.pieces)do assert(p.body.Size.X.Offset<=32 and p.body.Size.Y.Offset<=32,"oversized screen-scaled motif")end
+   assert(b.pieces[1].body.Position.X.Scale==0 and b.pieces[2].body.Position.X.Scale==0,"motifs still scale with full viewport")
   end
  end
  local ok,err=pcall(function()
  settle();surface:configure("creek",Themes.ById.ice);surface:update(root,0,true,false);settle();surface:update(root,0,true,false)
  local count=#surface.root:GetDescendants()+1;local first=surface.bands[1].host
  test("one16-band545-instance surface includes256 actual motif frames",function()assert(#surface.bands==16 and surface.stats.primitives==256 and count==545 and surface.stats.created==count);geometry()end)
- for _,id in ipairs({"creek","lantern"})do test(id.." full period is closed and covers edges",function()
+ for _,id in ipairs({"canopy","creek","lantern"})do test(id.." full period is closed and covers edges",function()
   surface:configure(id,Themes.ById.ice);surface:update(root,0,true,false)
   -- New pattern lease begins at zero; sample full exact period with integer harmonics.
   local before={};for i,b in ipairs(surface.bands)do before[i]=b.canvas.Position end
@@ -42,6 +45,7 @@ return function(client,parent)
    assert(surface.root.Parent==owner and surface.bands[1].host==first and #surface.root:GetDescendants()+1==count)
    local writes=surface.stats.writes;surface:update(owner,81,true,true);assert(surface.stats.writes==writes)
   end
+  root.Size=UDim2.fromOffset(1649,971);settle();surface:update(root,81,true,true);geometry();assert(surface.stats.pitch==64 and surface.stats.motifWidth==24)
   root.Size=UDim2.fromOffset(568,160);settle();surface:update(root,82,true,true);geometry()
   local writes=surface.stats.writes;surface:update(root,83,true,true);assert(surface.stats.writes==writes)
  end)

@@ -1,0 +1,5 @@
+{
+  "sounds": 26,
+  "audio": "[{\"at\":401101.2442687,\"name\":\"EggDrop_Music\",\"volume\":0.12999999523162843,\"loaded\":true,\"speed\":1},{\"at\":401101.97579269998,\"name\":\"EggDrop_drop\",\"volume\":0.47999998927116396,\"loaded\":true,\"speed\":1},{\"at\":401103.1747486,\"name\":\"EggDrop_bank\",\"volume\":0.24289242923259736,\"loaded\":true,\"speed\":0.9900246858596802}]",
+  "drops": 1
+}

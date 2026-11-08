@@ -2,6 +2,7 @@
 return function(client,parent)
 	assert(parent:IsA("ScreenGui") and parent.Enabled,"enabled ScreenGui required")
 	local LCD=require(client.JellyLCD);local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
+	local Palette=require(game.ReplicatedStorage.Shared.JellyPalette)
 	local root=Instance.new("Frame");root.Name="_JellyLCDSpec";root.BackgroundTransparency=1;root.Size=UDim2.fromOffset(354,594);root.Parent=parent
 	local RunService=game:GetService("RunService");local cases,instances={},{ }
 	local function test(name,run)run();table.insert(cases,name)end
@@ -22,6 +23,16 @@ return function(client,parent)
 	local function rgba(c)return math.floor(c.R*255+.5)+math.floor(c.G*255+.5)*256+math.floor(c.B*255+.5)*65536+4278190080 end
 	local ok,problem=pcall(function()
 		local lcd=fixture()
+		test("all five tier hues retain rim lower body upper and tight cream light at authored small size",function()
+			local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
+			for tier,entry in ipairs(Config.Tiers)do
+				local radius=entry.radius*LCD.Width/(Config.Width+.8);lcd:beginFrame();lcd:draw(center,radius,radius,0,entry.color,0)
+				local roles=Palette.byTier[tier]
+				for _,role in ipairs({"rim","lower","body","upper","glint"})do assert(bounds(lcd,rgba(roles[role])).count>0,"missing "..role.." in tiny tier "..tier)end
+				local light=bounds(lcd,rgba(roles.glint));local gel=bounds(lcd)
+				assert(light.count<gel.count*.12 and light.x1<center.X and light.y1<center.Y,"cream light covers mark center or dominates tier "..tier)
+			end
+		end)
 		test("automatic backend proves a writable first frame before selecting its owner",function()
 			local automatic=assert(LCD.new(root));table.insert(instances,automatic);settle()
 			assert(automatic.backend=="span"or automatic.backend=="image")
@@ -49,7 +60,7 @@ return function(client,parent)
 			assert(a.x1+1==b.x0 and a.h==b.h,"touching pieces visually overlap or separate")
 		end)
 		test("light stays in upper-left tray quadrant through sideways deformation and final merge",function()
-			local color=Config.Tiers[2].color;local bright=rgba(color:Lerp(Color3.fromHex("#F4F8E9"),.79));local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
+			local color=Config.Tiers[2].color;local bright=rgba(Palette.resolve(color).glint);local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
 			for _,angle in ipairs({0,math.pi/4,math.pi/2,-math.pi/4})do
 				lcd:beginFrame();lcd:draw(center,13,9,angle,color,0);local light=bounds(lcd,bright)
 				assert(light.count>0 and (light.x0+light.x1)/2<center.X and (light.y0+light.y1)/2<center.Y,"painted light rotated with shape")

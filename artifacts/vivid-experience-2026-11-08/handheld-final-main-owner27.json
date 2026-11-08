@@ -1,0 +1,79 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactDeck",
+    "result": {
+      "persistentWrites": false,
+      "passed": 12,
+      "cases": [
+        "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+        "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+        "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+        "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+        "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+        "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HardwareDeck",
+    "result": {
+      "localPresentationOnly": true,
+      "passed": 6,
+      "cases": [
+        "1649, 971 exact wallets inset queue count and targets fit",
+        "733, 307 exact wallets inset queue count and targets fit",
+        "568, 160 exact wallets inset queue count and targets fit",
+        "385, 703 exact wallets inset queue count and targets fit",
+        "350, 279 exact wallets inset queue count and targets fit",
+        "qualified bank regions use only faint phase-owned fill; score refresh preserves pulses"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyRenderOwner",
+    "result": {
+      "teardown": false,
+      "cases": [
+        "DeckMenu pauses sampling then resumes current projection",
+        "DeckPicker pauses sampling then resumes current projection",
+        "PetJournal pauses sampling then resumes current projection",
+        "EggHatchView pauses sampling then resumes current projection",
+        "RoundCard pauses sampling then resumes current projection",
+        "DeckHandoff pauses sampling then resumes current projection",
+        "hidden and disabled GUI owners stop sampling without rebuilding surfaces"
+      ],
+      "passed": 7,
+      "localProbeOnly": true
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyOverflow",
+    "result": {
+      "warningText": {
+        "nativeContent": "68, 11",
+        "textFits": true,
+        "label": "154, 16"
+      },
+      "localPresentationOnly": true,
+      "passed": 2,
+      "cases": [
+        "idle overflow line remains above the opaque LCD at the unchanged physical threshold",
+        "active pressure keeps warning text and fill above the framebuffer"
+      ]
+    }
+  }
+]

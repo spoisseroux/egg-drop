@@ -57,18 +57,19 @@ return function(client,parent,onlySize)
    local selected=v.choices.Sticker.star;local edge=selected.Parent:FindFirstChild("UIStroke")
    assert(selected.ApplyStrokeMode==Enum.ApplyStrokeMode.Border and selected.Color==Art.Amber and selected.Transparency==0 and selected.ZIndex>edge.ZIndex,"confirmed border must render above ordinary edge")
    reach(selected.Parent,v.scroll);Gui.SelectedObject=selected.Parent;settle()
-   assert(Gui.SelectedObject==selected.Parent and edge.Color==Art.paletteColor("focus") and edge.Thickness>selected.Thickness and selected.Enabled and selected.Color~=edge.Color,"focus must remain distinct from confirmed amber")
+   assert(Gui.SelectedObject==selected.Parent and edge.Color==Art.paletteColor("focus") and edge.Thickness>selected.Thickness and selected.Enabled and selected.Color~=edge.Color,string.format("focus must remain distinct: selected=%s target=%s edgeColor=%s expected=%s edgeWidth=%s confirmedWidth=%s confirmedEnabled=%s confirmedColor=%s",tostring(Gui.SelectedObject),tostring(selected.Parent),tostring(edge.Color),tostring(Art.paletteColor("focus")),tostring(edge.Thickness),tostring(selected.Thickness),tostring(selected.Enabled),tostring(selected.Color)))
    Gui.SelectedObject=nil;settle();assert(edge.Color==Art.paletteColor("line") and edge.Thickness<selected.Thickness)
    v:close("back");assert(closes[#closes]=="back"and #sends==0)
   end)
  end
- test("original multicolor print reused across none star cycles and resize",function()
+ test("smooth die-cut and colored print reused across none star cycles and resize",function()
   local host=Instance.new("Frame");host.Parent=root;host.Size=UDim2.fromOffset(96,96);settle()
   for _,id in ipairs(Stickers.Order)do
    Stickers.paint(host,id);if id=="none"then assert(not host.Visible)else
     assert(host.Visible and host.StickerPixels and not host.Active and not host.Selectable)
     local colors={};for _,n in ipairs(host.StickerPixels:GetChildren())do colors[tostring(n.BackgroundColor3)]=true;assert(inside(n,host)and not n.Active and not n.Selectable)end
-    local count=0;for _ in pairs(colors)do count+=1 end;assert(count>=3,"motif lost multicolor "..id)
+    local count=0;for _ in pairs(colors)do count+=1 end;assert(count>=2,"print lost ivory/color distinction "..id)
+    assert(host.StickerPixels:GetAttribute("SmoothPrint")and host.StickerPixels.DieCut and host.StickerPixels.PrintedInk and host.StickerPixels.PrintedInk.Position==UDim2.fromOffset(2,2),"smooth print lost 2px die-cut inset")
    end
   end
   for _=1,2 do Stickers.paint(host,"none");Stickers.paint(host,"star");local pixels=host.StickerPixels;Stickers.paint(host,"star");assert(host.Visible and host.StickerPixels==pixels);host.Size=UDim2.fromOffset(124,124);settle();assert(host.StickerPixels==pixels)end

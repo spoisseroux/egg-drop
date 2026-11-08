@@ -38,8 +38,13 @@ return function(client,parent)
 	for _,size in ipairs({Vector2.new(1649,971),Vector2.new(1280,720),Vector2.new(1024,768)}) do
 		test(tostring(size).." tray-first desktop mass and bounded equal rails",function()
 			local l=Layout.resolve(size,(Config.Width+.8)/(Config.Height+.8))
-			assert(l.regular and l.left.w>=150 and l.left.w<=205 and l.left.w==l.right.w)
-			assert(l.tray.w/l.shell.w>=.48 and l.tray.w/l.shell.w<=.55,"excess empty grip")
+			assert(l.regular and l.roomy and l.left.w>=250 and l.left.w<=340 and l.left.w==l.right.w)
+			local expectedH=math.min(700,size.Y-40)
+   if size.X-28>=1.48*(expectedH+24)then
+    assert((l.tray.w+12)/l.shell.w>=.37 and (l.tray.w+12)/l.shell.w<=.42,"roomy bezel share")
+    assert(l.shell.w/l.shell.h>=1.48 and l.shell.w/l.shell.h<=1.55,"roomy case aspect")
+   else assert(l.shell.w<=size.X-28+.001,"width-constrained roomy fallback escaped safe root")end
+   assert(math.abs(l.tray.h-expectedH)<.001 and math.abs(l.tray.w-expectedH*(Config.Width+.8)/(Config.Height+.8))<.001,"roomy art resized playable tray")
 			assert(l.tray.h>=596 and l.tray.h<=700,"desktop LCD regressed")
 			assert(math.abs(l.tray.w/l.tray.h-(Config.Width+.8)/(Config.Height+.8))<.0001)
 			assert(not intersects(l.menu,l.dpad) and not intersects(l.lounge,l.dpad))

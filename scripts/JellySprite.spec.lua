@@ -2,6 +2,7 @@
 return function(client,parent)
 	assert(parent:IsA("ScreenGui") and parent.Enabled,"enabled ScreenGui required")
 	local Sprite=require(client.JellySprite);local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
+	local Palette=require(game.ReplicatedStorage.Shared.JellyPalette)
 	local root=Instance.new("Frame");root.Name="_JellySpriteSpec";root.BackgroundTransparency=1;root.Size=UDim2.fromOffset(354,594);root.Parent=parent
 	local RunService=game:GetService("RunService");local cases,views,sources={},{},{}
 	local function settle()RunService.Heartbeat:Wait();RunService.Heartbeat:Wait()end
@@ -17,6 +18,22 @@ return function(client,parent)
 	end
 	local ok,problem=pcall(function()
 		settle()
+		test("all five sprite fallbacks use shared vivid roles in the existing bands",function()
+			for tier=1,#Config.Tiers do
+				local view,source=fixture(tier);local colors=Palette.byTier[tier]
+				assert(view.rims[1].node.BackgroundColor3==colors.rim and view.glint.BackgroundColor3==colors.glint)
+				local upper,body,lower=false,false,false
+				for _,fill in ipairs(view.fills)do
+					local gradient=fill.node:FindFirstChildOfClass("UIGradient")
+					if fill.node.BackgroundColor3==colors.lower then lower=true elseif fill.node.BackgroundColor3==colors.body then body=true
+					elseif gradient.Color.Keypoints[1].Value==colors.upper then upper=true end
+				end
+				assert(upper and body and lower,"missing sprite material role tier "..tier)
+				local count=#view.body:GetDescendants();view:impact(Vector2.new(1,0),20)
+				for frame=1,20 do view:render(source.Position,1/60,frame/60,project,true,false)end
+				assert(#view.body:GetDescendants()==count and source.Color==Config.Tiers[tier].color,"feedback rewrote source or grew the pool")
+			end
+		end)
 		test("smallest and largest tier keep upper-left mathematically inset unrotated light",function()
 			for _,tier in ipairs({1,#Config.Tiers})do
 				local view,source=fixture(tier);local allocated=#view.body:GetDescendants()

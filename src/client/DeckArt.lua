@@ -168,6 +168,13 @@ function Art.type(label, role, compact)
 	return label
 end
 
+-- Roomy sheets opt into larger roles through their own measured layout.
+function Art.roomyType(label,role,compact,roomy)
+ Art.type(label,role,compact)
+ if roomy then label.TextSize=({Heading=28,Action=20,Body=17,Supporting=16,Counter=20,Reward=32})[role]or label.TextSize end
+ return label
+end
+
 function Art.close(button)
 	button.Name,button.Text="Close","×"
 	button:SetAttribute("AccessibleLabel","Close")
@@ -233,8 +240,8 @@ local function clearInset(label)
 end
 function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 	options=options or {};local pad=options.pad or 10;local top=options.top or 0
-	Art.type(heading,if options.status then "Body"else "Heading",true)
-	Art.type(amount,"Counter",true);clearInset(heading);clearInset(amount)
+	Art.roomyType(heading,if options.status then "Body"else "Heading",true,options.roomy)
+	Art.roomyType(amount,"Counter",true,options.roomy);clearInset(heading);clearInset(amount)
 	amount.Text=tostring(options.amount or 0);amount.TextWrapped=false;amount.TextXAlignment=Enum.TextXAlignment.Left
 	amount:SetAttribute("AccessibleLabel",amount.Text.." nectar")
 	wallet.BackgroundTransparency=1
@@ -354,6 +361,10 @@ end
 -- tween, or allocation runs per frame; hidden/reduced presentation rests at base.
 function Art.backgroundThumbnail(host,id,theme)return PatternBackdrop.thumbnail(host,id,theme)end
 function Art.backdropStats(parent)local m=backdropMotion[parent];return m and m.surface and not m.surface.destroyed and m.surface.root.Parent and m.surface.stats end
+function Art.setBackdropCase(parent,rect)
+ local motion=backdropMotion[parent];if not motion then return end
+ motion.case=rect;if motion.surface then motion.surface:setCase(rect)end
+end
 function Art.setBackground(parent,id,theme)
  local motion=backdropMotion[parent];if not motion then return end
  motion.confirmed,motion.theme=id,theme
@@ -406,11 +417,11 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
   if id=="canopy"and not canopyAlive then buildCanopy(parent,motion);canopyAlive=true end
  end
  if not wanted and not canopyAlive then if surfaceAlive then motion.surface:update(parent,now,false,reduced)end;return end
- if theme and id~="canopy"then
+ if theme then
   if not wanted and not surfaceAlive then return end
   if canopyAlive then if motion.art.Visible then motion.art.Visible=false end;canopyOwner(motion,parent,parent)end
   if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(parent)end
-  motion.surface:configure(id,theme);motion.surface:update(owner,now,preview or visible,reduced)
+  motion.surface:configure(id,theme);if motion.case then motion.surface:setCase(motion.case)end;motion.surface:update(owner,now,preview or visible,reduced)
   motion.lastTime=nil;return
  end
  if surfaceAlive then motion.surface:update(parent,now,false,reduced)end
@@ -496,11 +507,11 @@ function Art.button(button, radius)
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
 			border.Color = Art.paletteColor("focus")
-   border.Thickness=2;inner.Transparency=0
+   border.Thickness=button:GetAttribute("FocusThickness")or 2;inner.Transparency=0
 		end
 	end)
 	local function focusPaint(focused)
-  border.Thickness=if focused then 2 else 1;inner.Transparency=if focused then 0 else 1
+  border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2 else 1;inner.Transparency=if focused then 0 else 1
 		border.Color = if focused then Art.paletteColor("focus") else Art.paletteColor("line")
 	end
 	local function restore()focusPaint(button==game:GetService("GuiService").SelectedObject)end
@@ -516,6 +527,24 @@ function Art.button(button, radius)
  end)
 	return border
 end
+
+local previewGel=setmetatable({},{__mode="k"});local previewGradients={}
+function Art.jellyPreview(parent,tier,mark)
+ local palette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette).byTier[tier]
+ local state=previewGel[parent]
+ if not state then
+  state={gradient=parent:FindFirstChildOfClass("UIGradient")or node("UIGradient",parent,{}),rim=Art.stroke(parent,palette.rim,0,1),glint=Art.frame(parent,"GelGlint",palette.glint,UDim2.fromScale(.18,.13),UDim2.fromScale(.22,.085),parent.ZIndex+1)}
+  Art.corner(state.glint,100);previewGel[parent]=state
+  parent.Destroying:Connect(function()previewGel[parent]=nil end)
+ end
+ if state.tier==tier then return end;state.tier=tier
+ if not previewGradients[tier]then previewGradients[tier]=ColorSequence.new({ColorSequenceKeypoint.new(0,palette.upper),ColorSequenceKeypoint.new(.48,palette.body),ColorSequenceKeypoint.new(1,palette.lower)})end
+ parent.BackgroundColor3=Color3.new(1,1,1);state.gradient.Color=previewGradients[tier];state.gradient.Rotation=90
+ state.rim.Color=palette.rim;state.glint.BackgroundColor3=palette.glint;parent:SetAttribute("JellyTier",tier)
+ if mark then mark.TextColor3=palette.mark end
+end
+
+function Art.wordmark(parent,z)return require(script.Parent.DeckWordmark).new(parent,z or parent.ZIndex+1,Art)end
 
 function Art.deck(backdrop, shell, bezel)
 	Art.backdrop(backdrop)

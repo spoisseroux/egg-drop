@@ -15,12 +15,29 @@ return function(client,parent,options)
 	root.BackgroundColor3=Color3.fromHex("#C6DFA0");root.BorderSizePixel=0;root.ClipsDescendants=true
 	local fitH=math.min(594,math.max(1,parent.AbsoluteSize.Y-40),math.max(1,parent.AbsoluteSize.X-40)*(Config.Height+.8)/(Config.Width+.8))
 	root.Position,root.Size=UDim2.fromOffset(20,20),UDim2.fromOffset(fitH*(Config.Width+.8)/(Config.Height+.8),fitH);root.Parent=parent
-	local background,pattern,backgroundArt
+	local background,pattern,backgroundArt,backgroundOwner,backgroundCase
  if options.background then
   background=Instance.new("Frame");background.Name="_BenchmarkBackground";background.Size=UDim2.fromScale(1,1);background.BorderSizePixel=0;background.ZIndex=0;background.Parent=parent
   local theme=require(game.ReplicatedStorage.Shared.DeckThemes).ById[options.themeId or "sherbet"]
-  if options.background=="canopy"then backgroundArt=require(options.backgroundArt or client.DeckArt);backgroundArt.backdrop(background);backgroundArt.tintBackdrop(background,theme)
-  else pattern=require(options.backgroundModule or client.DeckBackdrop).new(background);pattern:configure(options.background,theme)end
+  if options.background=="canopy"then
+   backgroundArt=require(options.backgroundArt or client.DeckArt);backgroundArt.backdrop(background)
+   if options.backgroundOwner=="legacy-canopy"then
+    -- Explicit historical baseline: this never claims to exercise production's
+    -- configured pattern owner. Keep its label in comparisons with saved data.
+    backgroundArt.tintBackdrop(background,theme)
+    backgroundArt.updateBackdrop(background,0,true,false,false)
+    backgroundOwner="legacy-canopy"
+    assert(background:FindFirstChild("CanopyArt")and not background:FindFirstChild("PatternSurface"),"legacy baseline unexpectedly allocated a pattern surface")
+   else
+    assert(backgroundArt.setBackground and backgroundArt.setBackdropCase,"production Canopy benchmark requires configured owner/case APIs")
+    backgroundCase=options.backgroundCase or require(client.DeckLayout).resolve(parent.AbsoluteSize,(Config.Width+.8)/(Config.Height+.8)).shell
+    backgroundArt.setBackground(background,"canopy",theme);backgroundArt.setBackdropCase(background,backgroundCase)
+    backgroundArt.updateBackdrop(background,0,true,false,false)
+    backgroundOwner="production-pattern"
+    assert(background:FindFirstChild("PatternSurface")and background.PatternSurface.Visible,"production Canopy benchmark did not activate PatternSurface")
+    assert(not background.CanopyArt.Visible,"legacy canopy remained the active benchmark owner")
+   end
+  else pattern=require(options.backgroundModule or client.DeckBackdrop).new(background);pattern:configure(options.background,theme);backgroundOwner="direct-pattern"end
  end
  local backgroundCount=if background then #background:GetDescendants()+1 else 0
  local spriteHost=Instance.new("Frame");spriteHost.BackgroundTransparency=1;spriteHost.Size=UDim2.fromScale(1,1);spriteHost.Parent=root
@@ -88,7 +105,7 @@ return function(client,parent,options)
 				spriteHost.Visible=procedural or fallback
 				local start=os.clock()
     local backgroundStart=os.clock()
-    if pattern then pattern:update(background,t,true,false)elseif backgroundArt then backgroundArt.updateBackdrop(background,t,true,false)end
+    if pattern then pattern:update(background,t,true,false)elseif backgroundArt then backgroundArt.updateBackdrop(background,t,true,false,false)end
     local backgroundMs=(os.clock()-backgroundStart)*1000
     drawElapsed+=dt
 				local draw=lcd~=nil and not fallback and drawElapsed>=1/30
@@ -139,7 +156,7 @@ return function(client,parent,options)
 			table.insert(reports,report);if options.progress then options.progress(report)end
 		end
 	end)
-	local finalStats=table.clone(stats());local backgroundStats=if pattern then table.clone(pattern.stats)else {}
+	local finalStats=table.clone(stats());local backgroundStats=if pattern then table.clone(pattern.stats)elseif backgroundArt and backgroundArt.backdropStats and backgroundArt.backdropStats(background)then table.clone(backgroundArt.backdropStats(background))else {}
  local backgroundEndCount=if background then #background:GetDescendants()+1 else 0
  if pattern then pattern:destroy()end;if background then background:Destroy()end
  local fxEndCount=if fx then #fx.root:GetDescendants()+1 else 0
@@ -147,5 +164,5 @@ return function(client,parent,options)
  if lcd then lcd:destroy()end
 	for _,gel in ipairs(gels)do gel:destroy()end;for _,source in ipairs(sources)do source:Destroy()end;root:Destroy()
 	assert(ok,problem)
-	return{fieldEffects=fx~=nil,fieldEffectsInstances=fxCount,fieldEffectsFinalInstances=fxEndCount,background=options.background or "off",backgroundInstances=backgroundCount,backgroundFinalInstances=backgroundEndCount,backgroundStats=backgroundStats,backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
+	return{fieldEffects=fx~=nil,fieldEffectsInstances=fxCount,fieldEffectsFinalInstances=fxEndCount,background=options.background or "off",backgroundOwner=backgroundOwner or "off",backgroundCase=backgroundCase,backgroundInstances=backgroundCount,backgroundFinalInstances=backgroundEndCount,backgroundStats=backgroundStats,backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
 end

@@ -32,7 +32,7 @@ function Dispenser:cancel()
 end
 -- Called only by root layout/preference changes, never a HUD-frame measurement.
 function Dispenser:preferredHeight(width,available)
-	local size=if available<50 then 12 else 14
+	local size=if self.roomy then 20 elseif available<50 then 12 else 14
 	local text=string.format("Drops left %d/%d",self.budget or 24,self.budget or 24)
 	local service=game:GetService("TextService")
 	if service:GetTextSize(text,size,Art.Font.Counter,Vector2.new(10000,10000)).X+8>width then text=string.format("%d/%d",self.budget or 24,self.budget or 24)end
@@ -44,11 +44,11 @@ end
 
 function Dispenser:layout()
 	local w,h=self.host.AbsoluteSize.X,self.host.AbsoluteSize.Y
-	local key=table.concat({w,h,self.remaining or 0,self.budget or 24,game:GetService("GuiService").PreferredTextSize.Name},"|")
+	local key=table.concat({w,h,tostring(self.roomy),self.remaining or 0,self.budget or 24,game:GetService("GuiService").PreferredTextSize.Name},"|")
 	if self.layoutKey==key then return end
 	self.layoutKey=key
 	Art.type(self.label,"Counter",h<50)
- self.label.TextSize=if h<50 then 12 else 14
+ self.label.TextSize=if self.roomy then 20 elseif h<50 then 12 else 14
 	local inset=self.label:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy()end
 	self.label.Text=string.format("Drops left %d/%d",self.remaining or 0,self.budget or 24)
 	if Art.textWidth(self.label)>w-8 then self.label.Text=string.format("%d/%d",self.remaining or 0,self.budget or 24)end

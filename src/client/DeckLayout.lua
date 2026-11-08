@@ -36,7 +36,15 @@ function Layout.resolve(size,ratio,needs)
 		local minimumRail=math.max(if regular then s.RailMin else baseMinimum,if canWiden then utilityRail else 0)
 		local dense=(needs.lineHeight or 0)>18 and h<340 and railMaximum>=math.max(120,(needs.countWidth or 60)+52)
 		if dense then minimumRail=railMaximum end
-		local rail=math.clamp(tw*(if regular then .43 else .48),minimumRail,math.max(minimumRail,railMaximum))
+		local roomy=regular and size.X>=1000 and size.Y>=650
+  if roomy then
+   -- The tray has already been solved. Wider enamel rails spend only surplus
+   -- desktop width; compact and portrait cases keep their established geometry.
+   local target=(1.52*(th+24)-tw-s.ScreenGap*2-s.ShellPadding*2)/2
+   railMaximum=math.max(railMaximum,math.min(target,(availableW-tw-s.ScreenGap*2-s.ShellPadding*2)/2))
+  end
+  local rail=if roomy then math.clamp((1.52*(th+24)-tw-s.ScreenGap*2-s.ShellPadding*2)/2,minimumRail,railMaximum)else math.clamp(tw*(if regular then .43 else .48),minimumRail,math.max(minimumRail,railMaximum))
+  out.roomy=roomy
 		tw=math.max(1,math.min(tw,availableW-rail*2-s.ScreenGap*2-s.ShellPadding*2))
 		th=tw/ratio
 		local w=tw+rail*2+s.ScreenGap*2+s.ShellPadding*2
@@ -52,21 +60,23 @@ function Layout.resolve(size,ratio,needs)
 		local ay=center-(aim+8)/2
 		out.dpad=rect(out.left.x+(rail-(aim*2+6))/2,ay,aim*2+6,aim+8)
 		out.drop=rect(out.right.x+(rail-drop)/2,center-drop/2,drop,drop)
-		local walletY=y+(if out.short then 2 else 38)
+		local walletY=y+(if out.short then 2 elseif roomy then 84 else 38)
 		out.wallet=rect(out.left.x,walletY,rail,if out.short then math.max(18,needs.lineHeight or 18) else math.max(28,needs.walletLineHeight or 28))
 		local qy=walletY+out.wallet.h+(if out.short then 2 else 8)
 		local minimumQuest=math.max(if out.short then 18 else 20,needs.lineHeight or 0)
 		local minUtilityY=qy+minimumQuest+8
-		local defaultY=if out.short then y+42 else ay-60
+		local utilityHeight=if roomy then math.max(52,(needs.utilityHeight or 44)+8)else 44
+  local stackedY=if roomy then ay-utilityHeight*2-12 else ay-108
+  local defaultY=if out.short then y+42 elseif roomy then ay-utilityHeight-8 else ay-60
 		local sideWidth=math.max(44,math.min(s.UtilityWidth,(rail-s.UtilityGap)/2))
 		local needsStack=sideWidth<(needs.utilityWidth or 44)
-		local stack=needsStack and rail>=(needs.utilityWidth or 44) and ay-108>=minUtilityY
+		local stack=needsStack and rail>=(needs.utilityWidth or 44) and stackedY>=minUtilityY
 		out.compactUtilities=needsStack and not stack
 		local buttonW=if stack then rail else sideWidth
 		local ux=if stack then out.left.x else out.left.x+(rail-buttonW*2-s.UtilityGap)/2
-		local uy=if stack then ay-108 elseif minUtilityY+44<=ay-4 then math.max(defaultY,minUtilityY) else defaultY
-		out.menu=inside(rect(ux+s.MenuOffsetX,uy+s.MenuOffsetY,buttonW,44),out.left)
-		out.lounge=inside(rect((if stack then ux else ux+buttonW+s.UtilityGap)+s.LoungeOffsetX,uy+(if stack then 52 else 0)+s.LoungeOffsetY,buttonW,44),out.left)
+		local uy=if stack then stackedY elseif minUtilityY+utilityHeight<=ay-4 then math.max(defaultY,minUtilityY) else defaultY
+		out.menu=inside(rect(ux+s.MenuOffsetX,uy+s.MenuOffsetY,buttonW,utilityHeight),out.left)
+		out.lounge=inside(rect((if stack then ux else ux+buttonW+s.UtilityGap)+s.LoungeOffsetX,uy+(if stack then utilityHeight+8 else 0)+s.LoungeOffsetY,buttonW,utilityHeight),out.left)
 		out.quest=rect(out.left.x,qy,rail,if out.short then minimumQuest else math.max(minimumQuest,math.min(s.QuestHeight,uy-qy-8)))
 		local queueH=if out.short then math.max(27,needs.queueHeight or 27) else math.max(27,needs.queueHeight or 44)
 		out.queue=rect(out.right.x,y+8,rail,queueH)
@@ -108,7 +118,7 @@ function Layout.resolve(size,ratio,needs)
 		out.dpad=rect(x+18,by+52,94,52);out.drop=rect(x+w-76,by+52,54,54)
 	end
 	-- Freeze the authored speaker seat before any passive instrument fitting.
-	out.speaker=rect(out.right.x+(out.right.w-57)/2,out.meter.y+out.meter.h+18,57,28)
+	out.speaker=rect(out.right.x+out.right.w-45,out.shell.y+out.shell.h-36,36,16)
 	out.speakerVisible=out.lateral and out.drop.y-(out.meter.y+out.meter.h)>80
 	local t=out.tray;out.bezel=rect(t.x-6,t.y-6,t.w+12,t.h+12)
 	return out
@@ -130,7 +140,7 @@ function Layout.fitInstruments(layout,meterHeight)
 	local leftLimit=math.min(layout.menu.y,layout.lounge.y,layout.dpad.y)-8
 	local left=math.max(0,math.min(target,leftLimit-leftBottom))
 	local bottom=layout.meter.y+layout.meter.h
-	local rightLimit=(if layout.speakerVisible then layout.speaker.y else layout.drop.y)-8
+	local rightLimit=layout.drop.y-(if layout.roomy then layout.right.w*.92 else 8)
 	local right=math.max(0,math.min(target,rightLimit-bottom))
 	layout.wallet.y+=left;layout.quest.y+=left
 	layout.queue.y+=right;layout.meter.y+=right

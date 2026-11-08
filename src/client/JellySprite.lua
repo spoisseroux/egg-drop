@@ -1,6 +1,7 @@
 -- Bounded inexpensive stepped rendition used after LCD allocation/paint failure.
 -- Physics pose is continuous; only this display quantizes to a logical screen grid.
 local Config=require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local JellyPalette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette)
 local Sprite={};Sprite.__index=Sprite
 Sprite.GridWidth=64
 -- Separate upright native glyphs keep the authored font and center. The small
@@ -37,7 +38,7 @@ local function place(slot,x,y,w,h,cellX,cellY)
 end
 function Sprite.new(parent,source,options)
 	options=options or {}
-	local color=source.Color;local deep=color:Lerp(Color3.fromHex("#142D20"),.71)
+	local palette=JellyPalette.resolve(source.Color);local color,deep=palette.body,palette.rim
 	local body=frame(parent,source.Name,deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
 	local gridWidth=options.gridWidth or Sprite.GridWidth
 	local gridHeight=math.round(gridWidth*(Config.Height+.8)/(Config.Width+.8))
@@ -47,12 +48,15 @@ function Sprite.new(parent,source,options)
 		phase=source:GetAttribute("EggId")*.73,gridWidth=gridWidth,gridHeight=gridHeight,bandCount=bands,rims={},fills={},fillBounds={}},Sprite)
 	for index=1,bands do
 		self.rims[index]=frame(body,"Rim"..index,deep)
-		local fill=frame(body,"Gel"..index,if index<=bands/2 then color:Lerp(Color3.new(1,1,1),.16*(1-(index-1)/bands))else color:Lerp(deep,.24*(index/bands)))
+		local upper=index<=bands*.45
+		local fill=frame(body,"Gel"..index,if index>bands*.65 then palette.lower else color)
 		self.fills[index]=fill
-		local gradient=Instance.new("UIGradient");gradient.Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(.78,.78,.78));gradient.Parent=fill.node
+		local gradient=Instance.new("UIGradient")
+		if upper then fill.node.BackgroundColor3=Color3.new(1,1,1);gradient.Color=ColorSequence.new(palette.upper,palette.body)end
+		gradient.Parent=fill.node
 		self.fillBounds[index]={}
 	end
-	self.glints={frame(body,"Glint",color:Lerp(Color3.fromHex("#F4F8E9"),.79)),frame(body,"GlintStep",color:Lerp(Color3.fromHex("#F4F8E9"),.79))}
+	self.glints={frame(body,"Glint",palette.glint),frame(body,"GlintStep",palette.glint)}
 	self.glint=self.glints[1].node;body.Visible=true
 	return self
 end
@@ -98,7 +102,7 @@ function Sprite:paint(rx,ry,angle,cx,cy,cellX,cellY)
 		if bounds.left<0 and bounds.right-bounds.left>=2 and bounds.bottom>bounds.top then
 			glintX=math.max(bounds.left,math.min(math.round(-extentX*.32),bounds.right-1))
 			glintY=math.max(bounds.top,math.min(-1,bounds.bottom-1))
-			glintW=math.max(0,math.min(math.max(1,math.round(math.min(rx,ry)*.45)),bounds.right-glintX,-glintX))
+			glintW=math.max(0,math.min(math.max(1,math.round(math.min(rx,ry)*.30)),bounds.right-glintX,-glintX))
 			glintH=if glintY<0 then 1 else 0
 			stepH=if glintY+1<math.min(0,bounds.bottom)then 1 else 0
 			break

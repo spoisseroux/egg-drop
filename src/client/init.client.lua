@@ -42,6 +42,7 @@ local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
+clientUI.JellyPalette=require(ReplicatedStorage.Shared.JellyPalette)
 clientUI.uiSequence=0
 clientUI.accepted=function(kind)
  if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return end
@@ -213,11 +214,12 @@ for _, sign in ipairs({ -1, 1 }) do
 			* CFrame.Angles(0, 0, sign * math.pi / 4), Palette.Rim)
 end
 
-local title = label("TextLabel", "Title", "POCKET DECK", backdrop)
+local title = label("TextLabel", "Title", "", backdrop)
 title.Font = Art.Font.Heading
 title.TextSize = 17
 title.TextColor3 = Art.Ink
-title.BackgroundTransparency=0;Art.corner(title,4)
+title.BackgroundTransparency=1
+clientUI.wordmark=Art.wordmark(backdrop,3)
 Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10)
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
@@ -252,7 +254,7 @@ for index,name in ipairs({"Dropping","Next"})do
 	local caption=Art.text(slot,"Caption",name,UDim2.fromOffset(2,0),UDim2.new(1,-4,0,14),Art.Muted,11);Art.fitText(caption,12,8,0)
 	local ball=Art.frame(slot,"Piece",Config.Tiers[1].color,UDim2.new(.5,-14,0,19),UDim2.fromOffset(28,28),6)
 	Art.corner(ball,30);Art.shade(ball,1,.7)
-	local mark=Art.text(ball,"Mark","I",UDim2.fromScale(0,0),UDim2.fromScale(1,1),Art.Ink,12,Art.Font.Counter);mark:SetAttribute("TypeRole","Counter");Art.fitText(mark,12,8,0)
+	local mark=Art.text(ball,"Mark","I",UDim2.fromScale(0,0),UDim2.fromScale(1,1),Art.Ink,12,Art.Font.Counter);mark:SetAttribute("TypeRole","Counter");Art.fitText(mark,12,8,0);Art.jellyPreview(ball,1,mark)
 	queuePieces[index]=ball
 end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
@@ -270,7 +272,7 @@ local function layoutWallet(l)
 		local pad=if l.short or l.dense then 3 else 7
 		local glyphW=if nectar then 20 else math.min(r.w*.55,walletCaptionWidth)
 		local gap,faceW=3,r.w
-		Art.type(readout,"Counter",l.short or l.dense or not l.lateral)
+		Art.type(readout,"Counter",l.short or l.dense or not l.lateral);if l.roomy then readout.TextSize=20 end
 		local function digitsWidth()return math.ceil(TextService:GetTextSize(readout.Text,readout.TextSize,readout.Font,Vector2.new(10000,10000)).X)+2 end
 		local digits=digitsWidth()
 		if digits>faceW-pad*2-glyphW-gap then Art.type(readout,"Counter",true);digits=digitsWidth()end
@@ -413,15 +415,15 @@ local function utilityButton(name, titleText)
 	}, button)
 	Art.corner(cap, 11)
 	local edge = make("UIStroke", "Lip", { Color = Palette.Rim, Thickness = 1 }, cap)
-	Art.shade(cap, 1, 0.6)
+	Art.bind(cap,{BackgroundColor3="raised"});Art.surfaceGradient(cap,"raised");Art.bind(edge,{Color="accent"})
 	local inlay = Art.frame(cap, "Inlay", Art.Line, UDim2.fromOffset(9, 4), UDim2.new(1, -18, 0, 2))
-	Art.corner(inlay, 1)
+	Art.corner(inlay, 1);Art.bind(inlay,{BackgroundColor3="accent"})
 	local caption = label("TextLabel", "Caption", titleText, cap)
 	caption.Position = UDim2.fromOffset(0, 3)
 	caption.Size = UDim2.new(1, 0, 1, -3)
 	caption.Font = Art.Font.Action
 	caption.TextSize = 12
-	caption.TextColor3 = Art.Silver
+	Art.bind(caption,{TextColor3="text"})
 	button.MouseButton1Down:Connect(function()
 		cap.Position = UDim2.new(0.5, 0, 0, 9)
 	end)
@@ -472,7 +474,7 @@ local dropCaptionLayout,captionStatusQueued
 local function layoutDropCaption(l)
 	if not l then return end
 	dropCaptionLayout=l
-	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Art.Font.Action
+	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Art.Font.Action;if l.roomy then dropCaption.TextSize=20 end
 	local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(dropCaption)+8))
 	local height=Art.textHeight(dropCaption,width,16)
 	local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
@@ -484,7 +486,12 @@ local function layoutDropCaption(l)
 		return true
 	end
 	local top
-	for _,y in ipairs({l.drop.y-height-4,l.drop.y+l.dropSize+4,l.queue.y+l.queue.h+4})do
+	-- The selected phone print owns the gap above A; its passive caption
+ -- can use the existing lower seat without moving any interaction rectangle.
+ local stickerId=deckSticker:GetAttribute("StickerArtId")
+ local belowFirst=l.lateral and not l.roomy and not l.short and not l.dense and stickerId~=nil and stickerId~="none"
+ local candidates=if belowFirst then {l.drop.y+l.dropSize+4,l.drop.y-height-4,l.queue.y+l.queue.h+4}else {l.drop.y-height-4,l.drop.y+l.dropSize+4,l.queue.y+l.queue.h+4}
+ for _,y in ipairs(candidates)do
 		if free(y)then top=y;break end
 	end
 	-- The DROP etching may yield, while transient blocking states remain readable.
@@ -765,6 +772,7 @@ local function paintDeck(id, stickerId,backgroundId)
 	rim.Color = theme.trim
 	bezelRim.Color = theme.trim
 	customizeLip.Color = theme.buttons
+ roomLip.Color=theme.buttons
 	Art.control(action,true,action.Interactable)
  Art.surfaceGradient(leftAim,"primary");Art.surfaceGradient(rightAim,"primary")
 	leftAim.BackgroundColor3 = theme.rocker or Art.Raised
@@ -781,6 +789,7 @@ local function paintDeck(id, stickerId,backgroundId)
 	for _,instrument in ipairs({walletFace,queueHost,status,meter})do instrument.InsetLip.BackgroundColor3=theme.trim end
 	modalShade.BackgroundColor3=Art.Ink
 	Stickers.paint(deckSticker, stickerId)
+ if dropCaptionLayout then layoutDropCaption(dropCaptionLayout)end
 
 end
 
@@ -1140,13 +1149,13 @@ local function drawAim()
 	ghost.Position = UDim2.fromOffset(position.X, position.Y)
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
-	ghost.BackgroundColor3 = Config.Tiers[tier].color
+	ghost.BackgroundColor3 = clientUI.JellyPalette.byTier[tier].body
 	nextReadout.Text = Config.Tiers[tier].mark .. " · " .. Config.Tiers[board:GetAttribute("PreviewTier1") or 1].mark
 		.. " · " .. Config.Tiers[board:GetAttribute("PreviewTier2") or 1].mark
-	nextReadout.TextColor3 = Config.Tiers[tier].color
+	nextReadout.TextColor3 = clientUI.JellyPalette.byTier[tier].body
 	if queuePieces then
-		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);piece.BackgroundColor3=Config.Tiers[t].color;piece.Mark.Text=Config.Tiers[t].mark
-			if queueHost:GetAttribute("InlineTiers") then piece.Parent.Caption.Text=(if index==1 then "Now " else "Next ")..piece.Mark.Text;piece.Parent.Caption.TextColor3=Config.Tiers[t].color end
+		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);Art.jellyPreview(piece,t,piece.Mark);piece.Mark.Text=Config.Tiers[t].mark
+			if queueHost:GetAttribute("InlineTiers") then piece.Parent.Caption.Text=(if index==1 then "Now " else "Next ")..piece.Mark.Text;piece.Parent.Caption.TextColor3=clientUI.JellyPalette.byTier[t].body end
 		end
 		if queueHost:GetAttribute("CombinedTiers") then
 			queuePieces[1].Parent.Caption.Text="Now "..queuePieces[1].Mark.Text.."/Next "..queuePieces[2].Mark.Text
@@ -1274,7 +1283,7 @@ updateHud = function()
 		picker:close()
 	end
 	Art.type(status,"Body",false)
-	status.TextSize=if backdrop:GetAttribute("CompactInstruction") then 12 else 16
+	status.TextSize=if instrumentLayout and instrumentLayout.roomy then 20 elseif backdrop:GetAttribute("CompactInstruction") then 12 else 16
 	status.TextWrapped=true
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
 		Config.Tiers[nextTier()].mark, canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
@@ -1402,15 +1411,16 @@ layout = function()
 	local screen=backdrop.AbsoluteSize
 	local ratio=(Config.Width+.8)/(Config.Height+.8)
 	local short=screen.X>=350 and screen.X>=screen.Y*1.2 and screen.Y<280
-	local capSize=if short then 12 else 14
+	local capSize=if screen.X>=1000 and screen.Y>=650 then 20 elseif short then 12 else 14
 	local utilityW=math.ceil(TextService:GetTextSize("Lounge",capSize,Art.Font.Action,Vector2.new(1000,100)).X)+14
-	local queueCaptionH=math.ceil(TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).Y)
-	local markBounds=TextService:GetTextSize("III",12,Art.Font.Counter,Vector2.new(1000,100))
+	local queueCaptionH=math.ceil(TextService:GetTextSize("Next",if screen.X>=1000 and screen.Y>=650 then 20 else 12,Art.Font.Body,Vector2.new(1000,100)).Y)
+	local markBounds=TextService:GetTextSize("III",if screen.X>=1000 and screen.Y>=650 then 20 else 12,Art.Font.Counter,Vector2.new(1000,100))
 	local markD=math.max(18,math.ceil(math.max(markBounds.X,markBounds.Y))+6)
 	local lineH=queueCaptionH+4
-	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",14,Art.Font.Body,Vector2.new(1000,100)).Y)+4
-	local walletH=math.ceil(TextService:GetTextSize("0",18,Art.Font.Counter,Vector2.new(1000,100)).Y)+4
-	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
+	local roomyQueueCaptionH=math.ceil(TextService:GetTextSize("Next",if screen.X>=1000 and screen.Y>=650 then 20 else 14,Art.Font.Body,Vector2.new(1000,100)).Y)+4
+	local walletH=math.ceil(TextService:GetTextSize("0",if screen.X>=1000 and screen.Y>=650 then 20 else 18,Art.Font.Counter,Vector2.new(1000,100)).Y)+4
+	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,utilityHeight=math.max(44,math.ceil(TextService:GetTextSize("Lounge",capSize,Art.Font.Action,Vector2.new(1000,100)).Y)+8),queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
+ questHUD.roomy=l.roomy;dispenser.roomy=l.roomy
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
 	local instructionCompact=l.short or l.dense or l.quest.h<60
 	if (board:GetAttribute("OwnedPets")or 0)>0 then
@@ -1420,6 +1430,7 @@ layout = function()
 	end
 	DeckLayout.fitInstruments(l,dispenser:preferredHeight(l.meter.w,l.meter.h))
 	instrumentLayout=l
+ Art.setBackdropCase(backing,{x=l.shell.x+backdrop.AbsolutePosition.X-backing.AbsolutePosition.X,y=l.shell.y+backdrop.AbsolutePosition.Y-backing.AbsolutePosition.Y,w=l.shell.w,h=l.shell.h})
 	backdrop:SetAttribute("CompactLandscape",l.short)
 	backdrop:SetAttribute("CompactInstruction",instructionCompact)
 	backdrop:SetAttribute("SideGoalLayout",true)
@@ -1441,7 +1452,7 @@ layout = function()
 	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-5)
 	place(rail,l.tray);rail.BackgroundTransparency=1;rail.ReadoutDivider.Visible=false
 	bestReadout.Visible,nextReadout.Visible,mascot.Visible=false,false,false
-	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral)
+	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral);if l.roomy then scoreCaption.TextSize=20 end
 	layoutWallet(l)
 	place(queueHost,l.queue)
 	local nextWidth=TextService:GetTextSize("Next",12,Art.Font.Body,Vector2.new(1000,100)).X+8
@@ -1458,11 +1469,11 @@ layout = function()
 			piece.Parent.Position,piece.Parent.Size=UDim2.fromOffset(0,0),UDim2.fromScale(1,1)
 		else piece.Parent.Position,piece.Parent.Size=UDim2.fromScale((index-1)*.5,0),UDim2.fromScale(.5,1) end
 		caption.Visible=not combinedQueue or index==1
-		Art.type(caption,"Supporting",l.short or l.dense or not l.lateral)
+		Art.type(caption,"Supporting",l.short or l.dense or not l.lateral);if l.roomy then caption.TextSize=20 end
 		local inset=caption:FindFirstChildOfClass("UIPadding");if inset then inset:Destroy() end
 		local captionH=math.ceil(TextService:GetTextSize("Next",caption.TextSize,caption.Font,Vector2.new(1000,100)).Y)+4
 		piece.Visible=not inlineQueue and not combinedQueue
-		Art.type(piece.Mark,"Counter",true)
+		Art.type(piece.Mark,"Counter",true);if l.roomy then piece.Mark.TextSize=20 end
 		local markInset=piece.Mark:FindFirstChildOfClass("UIPadding");if markInset then markInset:Destroy() end
 		local d=markD
 		piece.Position,piece.Size=UDim2.new(.5,-d/2,0,captionH+6),UDim2.fromOffset(d,d)
@@ -1471,14 +1482,14 @@ layout = function()
 		local word=if index==1 then "Now"else "Next"
 		caption:SetAttribute("QueueWord",word)
 		caption.Text=if inlineQueue then (if index==1 then "Now " else "Next ")..piece.Mark.Text else word
-		caption.TextColor3=if inlineQueue then piece.BackgroundColor3 else Art.Muted
+		caption.TextColor3=if inlineQueue then clientUI.JellyPalette.byTier[piece:GetAttribute("JellyTier")or 1].body else Art.Muted
 	end
 	if combinedQueue then queuePieces[1].Parent.Caption.Text="Now "..queuePieces[1].Mark.Text.."/Next "..queuePieces[2].Mark.Text;queuePieces[1].Parent.Caption.TextColor3=Art.Silver end
 	place(status,l.quest);status.ClipsDescendants=true
 	place(meter,l.meter);rareGoal.Visible,eggGoal.Visible=false,false
 	meterText.Position,meterText.Size=UDim2.fromOffset(2,0),UDim2.new(1,-4,1,0)
-	Art.type(meterText,"Body",false)
-	meterText.TextSize=if l.short then 12 else 16
+	Art.type(meterText,if l.roomy then "Counter"else "Body",false)
+	meterText.TextSize=if l.roomy then 20 elseif l.short then 12 else 16
 	meterText.TextStrokeTransparency=1
 	place(hardware,l.shell)
 	dpad.Position,dpad.Size=UDim2.fromOffset(l.dpad.x-l.shell.x,l.dpad.y-l.shell.y),UDim2.fromOffset(l.dpad.w,l.dpad.h)
@@ -1496,7 +1507,7 @@ layout = function()
 	for index,button in ipairs({customizeButton,roomButton})do
 		place(button,if index==1 then l.menu else l.lounge)
 		button.KeyWell.Visible=false
-		button.Cap.Position,button.Cap.Size=UDim2.new(.5,0,0,7),UDim2.new(1,-6,0,DeckLayout.Settings.UtilityCapHeight)
+		button.Cap.Position,button.Cap.Size=UDim2.new(.5,0,0,if l.roomy then 4 else 7),UDim2.new(1,-6,0,if l.roomy then math.max(44,button.Size.Y.Offset-8) else DeckLayout.Settings.UtilityCapHeight)
 		local icon=button.Cap:FindFirstChild("CompactIcon")
 		if not icon then
 			icon=Art.frame(button.Cap,"CompactIcon",Art.Ink,UDim2.new(.5,-10,.5,-10),UDim2.fromOffset(20,20),button.Cap.ZIndex+2)
@@ -1507,20 +1518,20 @@ layout = function()
 				local left=Art.frame(icon,"Roof",Art.Silver,UDim2.fromOffset(1,4),UDim2.fromOffset(11,2),icon.ZIndex+1);left.Rotation=-38
 				local right=Art.frame(icon,"Roof",Art.Silver,UDim2.fromOffset(8,4),UDim2.fromOffset(11,2),icon.ZIndex+1);right.Rotation=38
 				Art.frame(icon,"House",Art.Silver,UDim2.fromOffset(4,8),UDim2.fromOffset(12,10),icon.ZIndex+1)
-				Art.frame(icon,"Door",Art.Raised,UDim2.fromOffset(9,12),UDim2.fromOffset(4,6),icon.ZIndex+2)
+				Art.frame(icon,"Door","raised",UDim2.fromOffset(9,12),UDim2.fromOffset(4,6),icon.ZIndex+2)
 			end
 		end
 		icon.Visible=l.compactUtilities==true
 		button:SetAttribute("AccessibleLabel",if index==1 then "Menu" else "Lounge")
 		button.Cap.Caption.Text=if l.compactUtilities then "" elseif index==1 then "Menu"else"Lounge"
-		button.Cap.Caption.TextSize=if l.short then 12 else 14
+		button.Cap.Caption.TextSize=if l.roomy then 20 elseif l.short then 12 else 14
 	end
 	eggButton.Visible=false
-	title.TextSize=18
- local titleW=Art.textWidth(title)+8;local titleH=Art.textHeight(title,titleW,20)
- local titleY=l.shell.y+6+(l.instrumentShiftLeft or 0)
- title.Visible=l.lateral and l.shell.h>=280 and titleW<=l.left.w and titleY+titleH<=l.wallet.y-4
- title.Position,title.Size=UDim2.fromOffset(l.left.x+(l.left.w-titleW)/2,titleY),UDim2.fromOffset(titleW,titleH)
+ title.Visible=false
+ local markY=l.shell.y+(if l.roomy then 10 else 4)+(l.instrumentShiftLeft or 0)
+ local markW,markH=clientUI.wordmark:layout(l.left.w-8,math.max(1,l.wallet.y-markY-8),if l.roomy then 30 else 24)
+ clientUI.wordmark.root.Position=UDim2.fromOffset(l.left.x+(l.left.w-markW)/2,markY)
+ clientUI.wordmark.root.Visible=clientUI.wordmark.root.Visible and l.lateral and not l.short and not l.dense
 	vents.Visible=l.speakerVisible
 	vents.Position=UDim2.fromOffset(l.speaker.x-l.shell.x,l.speaker.y-l.shell.y)
 	hardware.MakerMark.Visible=false
@@ -1889,7 +1900,7 @@ local function addView(source)
 		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width})
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
-	mark.TextColor3 = Palette.Ink
+	mark.TextColor3 = clientUI.JellyPalette.Ink
 	mark.Size = Sprite.markSize(mark.Text)
 	mark.ZIndex = 7
 	eggViews[source] = { gel = gel, mark = mark, id = id }
@@ -1975,10 +1986,10 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
   if #pixelMerges>=6 then table.remove(pixelMerges,1)end
   table.insert(pixelMerges,{first=pixelPoint(first),second=pixelPoint(second),point=pixelPoint(position),
    radius=Config.Tiers[tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[tier].radius*JellyLCD.Width/(Config.Width+.8),
-   color=Config.Tiers[tier].color,start=now,id=id})
+   color=clientUI.JellyPalette.byTier[tier].body,start=now,id=id})
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
- rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),Config.Tiers[tier].color,tier,chain,serial,now,nil,cleared)
+ rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared)
 end))
 
 local function applySound()
@@ -2153,7 +2164,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 				end
 			end
 			local radius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8)
-			local color = Config.Tiers[tier].color:Lerp(Palette.Tray, 0.2)
+			local color = clientUI.JellyPalette.byTier[tier].body
 			local center = pixelPoint(Vector2.new(aimX, Config.SpawnY))
 			lcd:drawGuide(center)
 			lcd:draw(center, radius, radius, 0, color, 0)

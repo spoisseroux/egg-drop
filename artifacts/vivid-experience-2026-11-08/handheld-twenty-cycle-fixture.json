@@ -1,0 +1,15 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HandheldCycles",
+    "result": {
+      "before": 928,
+      "after": 928,
+      "cycles": 20,
+      "noRemotes": true,
+      "passed": 1,
+      "isolatedPresentation": true
+    }
+  }
+]

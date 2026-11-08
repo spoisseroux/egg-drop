@@ -2,6 +2,7 @@
 local AssetService = game:GetService("AssetService")
 local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local SpanSurface = require(script.Parent.JellySpanSurface)
+local JellyPalette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette)
 
 local LCD = {}
 LCD.__index = LCD
@@ -11,8 +12,6 @@ LCD.MergeDuration = 0.32
 
 local WIDTH, HEIGHT = LCD.Width, LCD.Height
 local SIZE = Vector2.new(WIDTH, HEIGHT)
-local WHITE = Color3.fromHex("#F4F8E9")
-local INK = Color3.fromHex("#142D20")
 local leftWall = WIDTH * 0.4 / (Config.Width + 0.8)
 local rightWall = WIDTH - leftWall
 local ceiling = HEIGHT * 0.4 / (Config.Height + 0.8)
@@ -31,7 +30,8 @@ local paletteCount=0
 local function palette(color)
 	local key=rgba(color);local cached=palettes[key]
 	if cached then return cached end
-	cached={rgba(color:Lerp(INK,.71)),rgba(color:Lerp(INK,.30)),key,rgba(color:Lerp(WHITE,.79))}
+	local roles=JellyPalette.resolve(color)
+	cached={rgba(roles.rim),rgba(roles.lower),rgba(roles.body),rgba(roles.upper),rgba(roles.glint)}
 	if paletteCount<64 then palettes[key]=cached;paletteCount+=1 end
 	return cached
 end
@@ -83,7 +83,9 @@ local function raster(self, minX, minY, maxX, maxY, colors, sample)
 					tone = 1
 				elseif lightY + lightX * 0.25 > 0.36 then
 					tone = 2
-				elseif ((lightX + 0.28) / 0.34) ^ 2 + ((lightY + 0.4) / 0.16) ^ 2 < 1 then
+				elseif ((lightX + 0.28) / 0.22) ^ 2 + ((lightY + 0.43) / 0.14) ^ 2 < 1 then
+					tone = 5
+				elseif ((lightX + 0.35) / 0.57) ^ 2 + ((lightY + 0.36) / 0.4) ^ 2 < 1 then
 					tone = 4
 				end
 				buffer.writeu32(self.pixels, (y * WIDTH + x) * 4, colors[tone])

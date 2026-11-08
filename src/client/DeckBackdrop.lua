@@ -14,7 +14,7 @@ function Backdrop.new(parent)
  local root=frame(parent,"PatternSurface");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true
  local self=setmetatable({root=root,home=parent,homeOffset=root.ZIndex-parent.ZIndex,layers={},bands={},elapsed=0,phases=setmetatable({},{__mode="k"}),stats={stripHosts=16,primitives=0,created=1,writes=0,ticks=0}},Backdrop)
  for layer=1,2 do for row=1,8 do
-  local host=frame(root,"Band"..layer.."_"..row);host.ClipsDescendants=true
+  local host=frame(root,"Band"..layer.."_"..row);host.ClipsDescendants=false
   local canvas=frame(host,"RepeatCanvas");local entry={host=host,canvas=canvas,layer=layer,row=row,pieces={}}
   for tile=0,3 do for mark=1,2 do
    local body=frame(canvas,"Motif");local core=frame(body,"Highlight")
@@ -38,20 +38,20 @@ function Backdrop:configure(id,theme)
  self.colorsApplied=false
  for _,b in ipairs(self.bands)do for _,p in ipairs(b.pieces)do
   local layer=b.layer
-  local x=p.tile*.25+(if p.mark==1 then .03 else .16)
-  local y=if p.mark==1 then .20 else .69
-  assign(self,p.body,"Position",UDim2.fromScale(x,y),"geometryWrites")
   if id=="creek"then
-   assign(self,p.body,"Size",UDim2.fromScale(.095,if layer==1 then .14 else .08),"geometryWrites");assign(self,p.body,"Rotation",0,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(.5,0),"styleWrites")
-   assign(self,p.core,"Position",UDim2.fromScale(.06,.21),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.88,.58),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(.5,0),"styleWrites")
+   assign(self,p.body,"Rotation",0,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(.5,0),"styleWrites")
+   assign(self,p.core,"Position",UDim2.fromScale(.09,.25),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.82,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(.5,0),"styleWrites")
+  elseif id=="canopy"then
+   assign(self,p.body,"Rotation",if p.mark==1 then -32 else 28,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(.5,0),"styleWrites")
+   assign(self,p.core,"Position",UDim2.fromScale(.88,.2),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.65,.9),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(.5,0),"styleWrites")
   else
-   assign(self,p.body,"Size",UDim2.fromScale(.0275,if layer==1 then .12 else .07),"geometryWrites");assign(self,p.body,"Rotation",45,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(0,2),"styleWrites")
+   assign(self,p.body,"Rotation",45,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(0,2),"styleWrites")
    assign(self,p.core,"Position",UDim2.fromScale(.25,.25),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.5,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(0,1),"styleWrites")
   end
   assign(self,p.body,"BackgroundTransparency",if layer==1 then .72 else .86,"styleWrites")
   assign(self,p.core,"BackgroundTransparency",if id=="creek"then .12 else .38,"styleWrites")
  end end
- self:colors(.2);return true
+ self.size=nil;self:colors(.2);return true
 end
 function Backdrop:colors(phase)
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true
@@ -62,20 +62,55 @@ function Backdrop:colors(phase)
 end
 function Backdrop:resize()
  local size=self.root.AbsoluteSize;if self.size==size then return end;self.size=size;self.resting=false
+ local pitch=if size.X>=1000 then 64 else 46
+ local motif=if size.X>=1000 then 24 else 18
+ self.stats.pitch,self.stats.motifWidth=pitch,motif
+ -- Reuse 64 motifs per layer: 32 at the side gutters, 16 above and
+ -- 16 below the actual case. Large displays relax pitch instead of adding nodes.
+ local case=self.case
+ if self.root.Parent~=self.home then case=nil end
+ if not case and self.root.Parent==self.home then
+  local ch=math.min(724,math.max(1,size.Y-24));local cw=math.min(size.X-24,ch*1.52)
+  case={x=(size.X-cw)/2,y=(size.Y-ch)/2,w=cw,h=ch}
+ end
+ pitch=math.max(pitch,size.X/32,size.Y/16);self.stats.pitch=pitch
  for _,b in ipairs(self.bands)do
-  local top=math.floor((b.row-1)*size.Y/8+.5);local bottom=math.floor(b.row*size.Y/8+.5)
-  assign(self,b.host,"Position",UDim2.fromOffset(0,top),"geometryWrites");assign(self,b.host,"Size",UDim2.fromOffset(size.X,bottom-top),"geometryWrites")
-  assign(self,b.canvas,"Size",UDim2.fromOffset(size.X*2,size.Y),"geometryWrites");b.top=top
+  assign(self,b.host,"Position",UDim2.fromOffset(0,0),"geometryWrites");assign(self,b.host,"Size",UDim2.fromOffset(size.X,size.Y),"geometryWrites")
+  assign(self,b.canvas,"Size",UDim2.fromOffset(size.X*2,size.Y),"geometryWrites");b.top=0
+  for _,p in ipairs(b.pieces)do
+   local index=(b.row-1)*8+p.tile*2+p.mark-1;local x,y
+   if not case then
+    x=10+(index%8)*pitch+(if b.layer==2 then pitch*.5 else 0);y=8+math.floor(index/8)*pitch
+   elseif index<32 then
+    local side=math.floor(index/16);local column=index%2;local row=math.floor((index%16)/2)
+    local gutter=if side==0 then case.x else size.X-case.x-case.w
+    local inset=(column*2+b.layer-.5)*gutter/4
+    x=if side==0 then inset-motif/2 else size.X-inset-motif/2
+    y=12+row*pitch*2+(b.layer-1)*pitch
+   else
+    local lower=index>=48;local column=(index-32)%16
+    x=16+column*pitch*2+(b.layer-1)*pitch
+    y=if lower then case.y+case.h+12+(b.layer-1)*pitch else 12+(b.layer-1)*pitch
+   end
+   local w=if self.id=="creek"then motif elseif self.id=="canopy"then motif*.56 else motif*.72
+   local h=if self.id=="creek"then motif*.4 elseif self.id=="canopy"then motif*.86 else motif*.85
+   assign(self,p.body,"Position",UDim2.fromOffset(x,y),"geometryWrites");assign(self,p.body,"Size",UDim2.fromOffset(w,h),"geometryWrites")
+  end
  end
  self.bucket=nil
+end
+function Backdrop:setCase(rect)
+ local prior=self.case
+ if prior and prior.x==rect.x and prior.y==rect.y and prior.w==rect.w and prior.h==rect.h then return end
+ self.case=rect;self.size=nil
 end
 function Backdrop:pose(phase)
  local size=self.size
  for _,b in ipairs(self.bands)do
-  local amplitude=size.X*(if b.layer==1 then .026 else .044)
+  local amplitude=if b.layer==1 then 5 else 8
   local direction=if self.id=="lantern"and b.row%2==0 then -1 else 1
   local offset=math.sin(phase*math.pi*2*b.layer+b.row*.56)*amplitude*direction
-  assign(self,b.canvas,"Position",UDim2.fromOffset(-size.X*.5+offset,-b.top),"poseWrites")
+  assign(self,b.canvas,"Position",UDim2.fromOffset(offset,math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 3 else 5)),"poseWrites")
  end
  self.stats.ticks+=1
 end

@@ -44,10 +44,13 @@ function Transition.new(gui, tray, audio, reduceEffects)
 
 	local logo=Art.frame(aperture,"BootLogo",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),54)
 	logo.BackgroundTransparency=1;logo.Visible=false
-	local mark=Art.text(logo,"Name","POCKET\nDECK",UDim2.new(0,2,.5,0),UDim2.new(1,-4,0,34),Art.Silver,14)
-	Art.type(mark,"Action",false)
-	mark.Size=UDim2.new(1,-16,0,48)
-	mark.Position=UDim2.new(0,8,.5,0)
+ local wordmark=Art.wordmark(logo,55);local mark=wordmark.root
+ local function markLayout()
+  local w,h=wordmark:layout(math.max(1,aperture.AbsoluteSize.X-16),math.max(1,aperture.AbsoluteSize.Y*.5),30)
+  mark.Position=UDim2.new(.5,-w/2,.5,-h/2)
+ end
+ aperture:GetPropertyChangedSignal("AbsoluteSize"):Connect(markLayout);markLayout()
+ Art.watchTextPreference(shade,function()return logo.Visible end,markLayout)
 	local dots={}
 	for index=1,7 do
 		local dot=Art.frame(logo,"SeedDot",Art.Leaf,UDim2.new(.5,(index%3-1)*5-2,.5,-28+math.floor(index/3)*5),UDim2.fromOffset(4,4),55)
@@ -101,8 +104,8 @@ function Transition:reveal(toDeck, token)
 	if not self:owns(token) then return false end
 	if toDeck then
 		self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
-		self.logo.Visible=true;self.mark.TextTransparency=1
-		self.mark.TextSize=if self.aperture.AbsoluteSize.X<100 then 12 else 18
+		self.logo.Visible=true;self.mark.GroupTransparency=1
+
 		for index,dot in ipairs(self.dots) do
 			dot.BackgroundTransparency=1
 			task.delay(index*.025,function()
@@ -116,7 +119,7 @@ function Transition:reveal(toDeck, token)
 		self.aperture.Visible,self.scan.Visible=true,true
 		if not self:motion(token,self.shade,.10,{BackgroundTransparency=1}) then return false end
 		self.scan.Visible=false
-		if not self:motion(token,self.mark,.12,{TextTransparency=0}) then return false end
+		if not self:motion(token,self.mark,.12,{GroupTransparency=0}) then return false end
 		task.wait(.20)
 		if not self:owns(token) then return false end
 		self.logo.Visible=false

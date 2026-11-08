@@ -1,0 +1,42 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "VividHandheld",
+    "result": {
+      "preference": "Largest",
+      "cases": [
+        "roomy enamel keeps the exact 700px board and independent 44px controls",
+        "one measured wordmark supports full and compact forms without reallocating",
+        "standard phone landscape has a measured compact mark; shallow controls retain their seats",
+        "boot uses the same passive underprint and joined lettering",
+        "all six smooth prints reuse their die-cut composition through resizing",
+        "1649, 971 roomy menu choices and tabs use their measured larger faces",
+        "1649, 971 Style Settings Trials preserve full labels and reachable final controls",
+        "1000, 650 roomy menu choices and tabs use their measured larger faces",
+        "1000, 650 Style Settings Trials preserve full labels and reachable final controls"
+      ],
+      "passed": 9,
+      "metrics": {
+        "wordmark": {
+          "compactWidth": 55,
+          "compactHeight": 45
+        },
+        "starGlyph": {
+          "host": "220, 220",
+          "font": "SourceSans",
+          "textBounds": "207, 305",
+          "localScale": 2.911764621734619,
+          "measurement": "native text bounds; ink shape requires capture"
+        },
+        "case": {
+          "trayHeight": 700,
+          "height": 724,
+          "trayWidth": 417.1717171717172,
+          "grip": 315.6541414141414,
+          "width": 1100.48
+        }
+      }
+    }
+  }
+]
