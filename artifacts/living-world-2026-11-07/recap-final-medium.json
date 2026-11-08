@@ -1,0 +1,42 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactRecap",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "1649, 971 outcome earned nonzero breakdown and promotion preserve first view",
+        "1649, 971 details retain zeros history and both footer focuses after spend",
+        "733, 307 outcome earned nonzero breakdown and promotion preserve first view",
+        "733, 307 details retain zeros history and both footer focuses after spend",
+        "568, 160 outcome earned nonzero breakdown and promotion preserve first view",
+        "568, 160 details retain zeros history and both footer focuses after spend",
+        "385, 703 outcome earned nonzero breakdown and promotion preserve first view",
+        "385, 703 details retain zeros history and both footer focuses after spend",
+        "Details and rotation refit canonical chrome once without feedback replay or empty tail"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  }
+]

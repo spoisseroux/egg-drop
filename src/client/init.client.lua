@@ -665,6 +665,7 @@ pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
 local recap = RoundRecap.new(modal, audio, reduceEffects)
 recap.onPreferredLayout=function()if layout then layout() end end
+recap.onContentLayout=function()if layout then layout()end end
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
 modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
@@ -1241,11 +1242,7 @@ updateHud = function()
 		else "You hatched " .. (hatchName or "") .. "!"
 	if over and nurseryActive and owned > 0 then
 		modalTitle.Text = recap.fieldHeading or "Quest unfinished"
-		local reward = runReceipt
-		if reward and (reward.promotedTo or 0) > 0 and (board:GetAttribute("MasteryAward") or 0) > 0 then
-			modalTag.Text = "FAMILY PROMOTION · " .. ({ "I", "II", "III" })[reward.promotedTo]
-			modalTitle.Text = (reward.family or "Pet") .. " · " .. ({ "Sprout", "Grove", "Bloom" })[reward.promotedTo]
-		end
+
 	end
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
 	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
@@ -1262,21 +1259,23 @@ updateHud = function()
 	modalAction.Size = UDim2.new(if over and not showEggChoice then 0.82 else 0.43, 0, 0, 44)
 	keepPlaying.Visible = not over or showEggChoice
 	keepPlaying.Text = if showEggChoice then "Hatch eggs" else "Keep playing"
+	local preferredRecapAction=modalAction
 	if showEggChoice then
 		local affordable=runReceipt~=nil and (nurseryState and nurseryState.nectar or 0)>=(EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow).cost
+		preferredRecapAction=if affordable then keepPlaying else modalAction
 		modalAction.BackgroundColor3=if affordable then Art.Raised else Art.Leaf
 		modalAction.TextColor3=if affordable then Art.Silver else Art.Ink
 		keepPlaying.BackgroundColor3=if affordable then Art.Leaf else Art.Raised
 		keepPlaying.TextColor3=if affordable then Art.Ink else Art.Silver
-		local shallow=modal.Size.Y.Offset<300
+		local shallow=backdrop.AbsoluteSize.Y<220
 		local footerH=math.max(44,modalAction.Size.Y.Offset,keepPlaying.Size.Y.Offset)
-		local footerY=-(if shallow then 8 else 16)-footerH
+		local footerY=-(if shallow then 6 elseif backdrop.AbsoluteSize.Y<440 then 8 else 12)-footerH
 		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,footerY),UDim2.new(.5,-18,0,footerH)
 		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,footerY),UDim2.new(.5,-18,0,footerH)
-		Art.type(modalAction,"Action",shallow);Art.type(keepPlaying,"Action",shallow)
+		Art.type(modalAction,if shallow then "Body"else "Action",true);Art.type(keepPlaying,if shallow then "Body"else "Action",true)
 	end
 	if modal.Visible and (not wasVisible or (over and not wasRecap)) and isGamepad(UserInputService:GetLastInputType()) then
-		GuiService.SelectedObject = modalAction
+		GuiService.SelectedObject = preferredRecapAction
 	elseif not modal.Visible and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(modal) then
 		GuiService.SelectedObject = nil
 	end
@@ -1470,36 +1469,45 @@ layout = function()
 	restoreLegacySaveParents()
 	local modalSave=if saveNoticeOwner=="recap"or saveNoticeOwner=="welcome"then currentSaveNotice else nil
 	local fieldRecap=recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0
-	local dialogHeight=if fieldRecap then math.min(500,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
+	local dialogHeight=if fieldRecap then math.min(400,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
 	modal:SetAttribute("CompactDialog",dialogHeight<220)
 	modal.Size=UDim2.fromOffset(math.min(if fieldRecap then 600 else 440,screen.X-(if fieldRecap then 16 else 32)),dialogHeight)
 	if fieldRecap then
-		local compact=dialogHeight<300
+		local compact=screen.Y<440
+		recap.compactLayout=compact
+		local shallow=screen.Y<220
 		modalTag.Visible=not compact or modalSave~=nil
 		modalTitle.Visible=not (compact and modalSave~=nil)
-		Art.type(modalTitle,"Heading",compact)
-		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if compact then 28 else 36)
+		Art.type(modalTitle,if shallow then "Body"else "Heading",true)
+		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if shallow then 22 else 28)
 		local titleY=2
 		if not compact or modalSave then
 			Art.type(modalTag,"Supporting",true)
 			local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,18)
-			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+9
+			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+6
 		end
 		modalTitle.Position,modalTitle.Size=UDim2.fromOffset(12,titleY),UDim2.new(1,-24,0,titleH)
-		Art.type(modalAction,"Action",compact);Art.type(keepPlaying,"Action",compact)
+		Art.type(modalAction,if shallow then "Body"else "Action",true);Art.type(keepPlaying,if shallow then "Body"else "Action",true)
 		local bw=(modal.Size.X.Offset-36)/2
 		local footerH=math.max(Art.actionHeight(modalAction,bw),Art.actionHeight(keepPlaying,bw))
-		local bottomMargin=if compact then 8 else 16
+		local bottomMargin=if shallow then 6 elseif compact then 8 else 12
 		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
 		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
-		recap.headerInset=if compact and modalSave then titleY+1 else titleY+titleH+8
-		recap.footerInset=footerH+bottomMargin+8
+		recap.headerInset=if compact and modalSave then titleY+1 else titleY+titleH+4
+		recap.footerInset=footerH+bottomMargin+4
+		recap.layoutWidth=modal.Size.X.Offset
 
 	else
 		modalTag.Visible=true;modalTitle.Visible=true
 		modalTitle.Position=UDim2.fromOffset(0,18)
 	end
-	if recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0 then recap:layoutField(dialogHeight)end
+	if fieldRecap then
+		recap:layoutField(dialogHeight)
+		local fitted=math.min(dialogHeight,math.max(recap.headerInset+recap.footerInset+44,(recap.bodyContentHeight or 0)+recap.headerInset+recap.footerInset))
+		if fitted~=dialogHeight then
+			dialogHeight=fitted;modal.Size=UDim2.fromOffset(modal.Size.X.Offset,dialogHeight);recap:layoutField(dialogHeight)
+		end
+	end
 	local stageHeight=math.max(24,dialogHeight-110-(if dialogHeight<220 then 0 else 18))
 	hatchStage.Size=UDim2.new(1,-24,0,stageHeight);hatchIndex.Position=UDim2.fromOffset(12,55+stageHeight)
 	hatchIndex.Visible=pet.Visible and dialogHeight>=220
@@ -1585,8 +1593,9 @@ end
 
 local function requestRetry()
 	cancelHatchNavigation()
-	if recapOwnsInput() and not UserInputService:GetFocusedTextBox() then
-		request:FireServer("reset")
+	local sequence=RunReceipt.replaySequence(board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),(board:GetAttribute("OwnedPets")or 0)==0)
+	if sequence and recapOwnsInput() and not UserInputService:GetFocusedTextBox() then
+		request:FireServer("reset",sequence)
 	end
 end
 

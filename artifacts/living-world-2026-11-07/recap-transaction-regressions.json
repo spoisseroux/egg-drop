@@ -1,0 +1,84 @@
+[
+  {
+    "ok": true,
+    "suite": "HatchProgress",
+    "result": {
+      "passed": 21,
+      "cases": {
+        "1": "all catalog outcomes and rare protection",
+        "2": "legacy seven-pet migration and one-time credits",
+        "3": "starter grant, persistent reveal, exact acknowledgement",
+        "4": "ambiguous session acquire resumes the same lease",
+        "5": "direct full-cost spending, stale commands and callback retries",
+        "6": "ambiguous committed hatch cannot reroll or duplicate",
+        "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "8": "monotonic payouts reject replay beyond receipt history",
+        "9": "lease takeover fences stale commands and renewals",
+        "10": "local overlap, sparse inventory and public isolation",
+        "11": "failed legacy load cannot spend or overwrite",
+        "12": "daily reward is once per Hollow day and survives callback retry",
+        "13": "every advertised result grants once and rare protection resets",
+        "14": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "15": "mastery ranks need permanent points and three distinct successful challenges",
+        "16": "daily contracts and mastery pay atomically once per run and day",
+        "17": "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "18": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "19": "compound award retries immutable stats and original day before or after commit",
+        "20": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "21": "rare-only ownership trains its base family and duplicate marks continue beyond three"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "suite": "CloseProgress",
+    "result": {
+      "passed": 2,
+      "cases": {
+        "1": "drain pending and earned payout before release",
+        "2": "failed drain keeps lease fenced"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "suite": "SessionRecovery",
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": {
+        "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+        "2": "profile save failure times out without releasing the lease and later recovers",
+        "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+        "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+        "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+        "6": "a setting changed during an in-flight autosave drains before lease release",
+        "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+        "8": "the actual Studio store keeps both writers in one isolated cloned root"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "suite": "SessionHost",
+    "result": {
+      "persistentWrites": false,
+      "passed": 2,
+      "cases": {
+        "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+        "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "suite": "StudioStore",
+    "result": {
+      "persistentWrites": false,
+      "passed": 1,
+      "cases": {
+        "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+      }
+    }
+  }
+]

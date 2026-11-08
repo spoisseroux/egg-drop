@@ -63,10 +63,14 @@ function Navigation:meet(petId)
 end
 
 function Navigation:play()
-	self:start(function(generation, d)
-		if d.get("Mode") ~= "Board" then d.send("mode", "Board") end
-		if not self:waitUntil(generation, 4, function() return d.get("Mode") == "Board" and d.ready() end) then return end
-		if self:valid(generation) and d.get("RoundOver") then d.send("reset") end
+	local dependencies=self.dependencies
+	local origin,sequence,ended=dependencies.get("Mode"),dependencies.get("RunSequence"),dependencies.get("RoundOver")==true
+	self:start(function(generation,d)
+		-- Room entry is one authoritative server decision, never a later reset.
+		if origin~="Board"then if d.get("Mode")~="Board"then d.send("mode","Board")end;return end
+		if not ended or type(sequence)~="number"then return end
+		if not self:waitUntil(generation,4,function()return d.get("Mode")=="Board"and d.ready()end)then return end
+		if self:valid(generation)and d.get("Mode")=="Board"and d.get("RunSequence")==sequence and d.get("RoundOver")==true then d.send("reset",sequence)end
 	end)
 end
 

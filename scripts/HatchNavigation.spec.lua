@@ -4,7 +4,7 @@ return function(client)
 	local cases = {}
 	local function test(name, body) body(); table.insert(cases, name) end
 	local function fixture(overrides)
-		local f = { time = 0, values = { Mode = "Room", CompanionId = "pip", RoundOver = false },
+		local f = { time = 0, values = { Mode = "Room", CompanionId = "pip", RoundOver = false, RunSequence=17 },
 			requests = {}, presented = {}, failed = 0, blocked = false, ready = true }
 		local dependencies = {
 			get = function(name) return f.values[name] end,
@@ -58,19 +58,28 @@ return function(client)
 		local f = fixture(); f.navigation:meet("wick")
 		assert(#f.presented == 0 and f.failed == 1 and f.values.CompanionId == "pip" and #f.requests <= 6)
 	end)
-	test("replay resets finished board once after handoff", function()
+	test("Room replay delegates fresh entry to server without a deferred reset", function()
 		local f = fixture(); f.values.Mode, f.values.RoundOver = "Room", true
 		f.onWait = function() f.values.Mode = "Board" end
 		f.navigation:play()
-		assert(#f.requests == 2 and f.requests[1][1] == "mode" and f.requests[2][1] == "reset")
+		assert(#f.requests==1 and f.requests[1][1]=="mode" and f.requests[1][2]=="Board")
 	end)
 	test("replay preserves an unfinished board", function()
 		local f = fixture(); f.values.Mode = "Board"; f.navigation:play(); assert(#f.requests == 0)
 	end)
-	test("cancelled replay cannot reset a later round", function()
-		local f = fixture(); f.values.RoundOver = true
-		f.onWait = function() f.navigation:cancel(); f.values.Mode = "Board" end
-		f.navigation:play(); assert(#f.requests == 1 and #f.presented == 0)
+	test("already Board replay carries exactly the captured ended sequence",function()
+		local f=fixture();f.values.Mode,f.values.RoundOver="Board",true
+		f.navigation:play();assert(#f.requests==1 and f.requests[1][1]=="reset"and f.requests[1][2]==17)
+	end)
+	test("sequence changes while waiting cannot reset a newer field",function()
+		local f=fixture();f.values.Mode,f.values.RoundOver="Board",true;f.ready=false
+		f.onWait=function()f.values.RunSequence=18;f.ready=true end
+		f.navigation:play();assert(#f.requests==0)
+	end)
+	test("cancelled Board replay cannot reset after its handoff",function()
+		local f=fixture();f.values.Mode,f.values.RoundOver="Board",true;f.ready=false
+		f.onWait=function()f.navigation:cancel();f.ready=true end
+		f.navigation:play();assert(#f.requests==0)
 	end)
 	test("newer navigation wins over a stale mode wait", function()
 		local f = fixture(); f.values.Mode = "Board"

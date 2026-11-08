@@ -1,0 +1,124 @@
+{
+  "largestDesktop": {
+    "canvas": "{0, 0}, {0, 244}",
+    "footerY": 602,
+    "gap": 8,
+    "body": "576, 244",
+    "font": "Largest",
+    "card": "600, 384",
+    "details": "Round details",
+    "detailsBottom": 594,
+    "sources": {
+      "1": {
+        "visible": true,
+        "text": "Quest +8",
+        "pos": "529, 398",
+        "size": "280, 30"
+      },
+      "2": {
+        "visible": true,
+        "text": "Daily +6",
+        "pos": "809, 398",
+        "size": "280, 30"
+      }
+    }
+  },
+  "largestPhone": {
+    "atTop": {
+      "canvas": "{0, 0}, {0, 244}",
+      "footerY": 261,
+      "gap": -31,
+      "body": "584, 205",
+      "font": "Largest",
+      "card": "600, 307",
+      "details": "Round details",
+      "detailsBottom": 292,
+      "sources": {
+        "1": {
+          "visible": true,
+          "text": "Quest +8",
+          "pos": "86.5, 96",
+          "size": "284, 30"
+        },
+        "2": {
+          "visible": true,
+          "text": "Daily +6",
+          "pos": "370.5, 96",
+          "size": "284, 30"
+        }
+      }
+    },
+    "afterActualTouchScroll": {
+      "canvas": "{0, 0}, {0, 244}",
+      "footerY": 261,
+      "gap": 8,
+      "body": "584, 205",
+      "font": "Largest",
+      "card": "600, 307",
+      "details": "Round details",
+      "detailsBottom": 253,
+      "sources": {
+        "1": {
+          "visible": true,
+          "text": "Quest +8",
+          "pos": "86.5, 57",
+          "size": "284, 30"
+        },
+        "2": {
+          "visible": true,
+          "text": "Daily +6",
+          "pos": "370.5, 57",
+          "size": "284, 30"
+        }
+      }
+    }
+  },
+  "mediumDesktop": {
+    "canvas": "{0, 0}, {0, 180}",
+    "footerY": 560,
+    "gap": 8,
+    "body": "576, 180",
+    "font": "Medium",
+    "card": "600, 296",
+    "details": "Round details",
+    "detailsBottom": 552,
+    "sources": {
+      "1": {
+        "visible": true,
+        "text": "Quest +8",
+        "pos": "529, 410",
+        "size": "280, 16"
+      },
+      "2": {
+        "visible": true,
+        "text": "Daily +6",
+        "pos": "809, 410",
+        "size": "280, 16"
+      }
+    }
+  },
+  "mediumPhone": {
+    "canvas": "{0, 0}, {0, 180}",
+    "footerY": 244.5,
+    "gap": 8,
+    "body": "584, 180",
+    "font": "Medium",
+    "card": "600, 270",
+    "details": "Round details",
+    "detailsBottom": 236.5,
+    "sources": {
+      "1": {
+        "visible": true,
+        "text": "Quest +8",
+        "pos": "86.5, 94.5",
+        "size": "284, 16"
+      },
+      "2": {
+        "visible": true,
+        "text": "Daily +6",
+        "pos": "370.5, 94.5",
+        "size": "284, 16"
+      }
+    }
+  }
+}

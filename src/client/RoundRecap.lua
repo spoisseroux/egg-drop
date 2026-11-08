@@ -4,10 +4,10 @@ local Feedback = require(script.Parent.RecapFeedback)
 local EggArt = require(script.Parent.EggArt)
 local EggCatalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 
-local familyNames = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
 local ranks = { "I", "II", "III" }
 
 local SaveNotice=require(script.Parent.SaveNotice)
+local Receipt=require(script.Parent.RunReceipt)
 local Recap = {}
 Recap.__index = Recap
 
@@ -112,7 +112,9 @@ function Recap.new(parent, audio, reduceEffects)
 	local bestCaption=Art.text(personalBest,"Label","Personal best",UDim2.fromOffset(0,0),UDim2.new(1,0,0,24),Art.Muted,14)
 	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),Art.Silver,24,Enum.Font.GothamBold)
 	personalBest.Visible=false
-	local self = setmetatable({ frame = frame, stats = stats, goal = goal, values = values, title = title, detail = detail,
+	local promotion=Art.text(goal,"FamilyPromotion","",UDim2.fromOffset(4,0),UDim2.new(1,-8,0,24),Art.Leaf,12)
+	promotion.TextXAlignment=Enum.TextXAlignment.Left;promotion.Visible=false
+	local self = setmetatable({ promotionLabel=promotion, frame = frame, stats = stats, goal = goal, values = values, title = title, detail = detail,
 		fill = fill, receiptScroll = receipt, receiptRows = {}, scales = scales, accents = accents,
 		nectarIcon = nectarIcon, earnedGraphic = earnedGraphic, bankGraphic = bankGraphic, transfer = transfer, chips = chips,
 		detailsButton = detailsButton, summary = summary, componentLabels = componentLabels, eggGoal = eggGoal,
@@ -245,9 +247,8 @@ function Recap:updateField(result)
 	self.displayRecipe,self.displayRecipeId,self.displayReward,self.displayBalance,self.displayCost=
 		result.recipe,recipeId,if reward then reward.total else nil,balance,cost
 	self.hasReceipt,self.fieldMode=reward~=nil,true
-	self.fieldHeading = if result.reason == "Overflow" then "Tray overflowed"
-		elseif result.success then "Both sides complete!"
-		elseif result.stage == 0 then "LEFT goal missed" else "RIGHT goal missed"
+	self.fieldHeading=Receipt.outcome(result)
+	self.promotionLabel.Text=Receipt.promotion(reward)or""
 	self.title.Text = if loading then "Loading receipt…"
 		elseif saving then (if result.status == "Saving" then "Saving your rewards…" else "Reward save delayed · retrying") else
 		string.format("Nectar +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
@@ -289,7 +290,7 @@ function Recap:updateField(result)
 				if contract.id == id then table.insert(lines, string.format("%s · %d nectar", contract.title, contract.reward)); break end
 			end
 		end
-		local family = familyNames[reward.family] or reward.family or "Family"
+		local family = Receipt.familyName(reward.family)
 		local marks = reward.masteryPoints or 0
 		table.insert(lines, if marks > 0 then string.format("%s mastery +%d %s", family, marks, if marks == 1 then "mark" else "marks")
 			else "No family marks · finish quest and 24 drops")
@@ -368,123 +369,117 @@ function Recap:setSaveNotice(notice,outcome)
 	if self.fieldMode then self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)end
 	return true
 end
+function Recap:queueChromeFit(key)
+	if self.contentLayoutKey==key then return end
+	self.contentLayoutKey=key
+	if not self.onContentLayout or self.chromeFitQueued then return end
+	self.chromeFitQueued=true
+	task.defer(function()
+		self.chromeFitQueued=false
+		local gui=self.frame:FindFirstAncestorOfClass("ScreenGui")
+		if self.frame.Parent and gui and gui.Enabled and gui.Parent and self.fieldMode and self:isVisible()and self.onContentLayout then self.onContentLayout()end
+	end)
+end
 function Recap:layoutField(height)
 	self.layoutHeight=height
 	if self.updatingField then self.pendingFieldHeight=height;return end
 	if not self.fieldMode then return end
-	local compact=height<300
-	local pad=if compact then 8 else 20
-	local top=self.headerInset or (if compact then 36 else 72)
-	local bottom=self.footerInset or (if compact then 60 else 76)
-	local width=math.max(1,self.frame.AbsoluteSize.X-pad*2-8)
+	local compact=if self.compactLayout~=nil then self.compactLayout else height<300
+	local pad=if compact then 8 else 12
+	local top=self.headerInset or(if compact then 30 else 56)
+	local bottom=self.footerInset or(if compact then 60 else 68)
+	local width=math.max(1,(self.layoutWidth or self.frame.AbsoluteSize.X)-pad*2-8)
 	place(self.fieldBody,pad,top,width+8,math.max(1,height-top-bottom))
-	self.fieldBody.Visible=true
-	self.goal.Parent=self.fieldBody
-	self.goal.BackgroundTransparency=1
-	local noticeInset=0
-	self.saveDetail.Visible=self.saveNotice~=nil
+	self.fieldBody.Visible=true;self.goal.Parent=self.fieldBody;self.goal.BackgroundTransparency=1
+	local noticeInset=0;self.saveDetail.Visible=self.saveNotice~=nil
 	if self.saveNotice then
-		Art.type(self.saveDetail,"Body",compact)
+		Art.type(self.saveDetail,"Body",true)
 		self.saveDetail.Text=(if self.saveOutcome then self.saveOutcome.."\n"else "")..self.saveNotice.detail
-		local h=Art.textHeight(self.saveDetail,width-8,24);place(self.saveDetail,4,0,width-8,h);noticeInset=h+12
+		local h=Art.textHeight(self.saveDetail,width-8,24);place(self.saveDetail,4,0,width-8,h);noticeInset=h+6
 	end
 	self.noticeInset=noticeInset
-	place(self.goal,0,noticeInset,width,340)
-	self.goal.Visible=true
-	self.summary.Visible=false
+	self.goal.Visible=true;self.summary.Visible=false
 	self.title.Visible,self.detail.Visible=not self.hasReceipt,not self.hasReceipt
-	self.earnedGraphic.Visible,self.bankGraphic.Visible,self.nectarIcon.Visible=self.hasReceipt,self.hasReceipt,self.hasReceipt
+	self.earnedGraphic.Visible,self.nectarIcon.Visible=self.hasReceipt,self.hasReceipt
+	self.bankGraphic.Visible=false -- the compact egg line carries the exact live balance
 	self.eggPanel.Visible,self.detailsButton.Visible=self.hasReceipt,self.hasReceipt
-	self.stats.Visible=self.hasReceipt and not compact and width>=420
-	self.bestMetric.Visible=self.stats.Visible
-	Art.type(self.title,"Body",compact);Art.type(self.detail,"Body",compact)
-	place(self.title,4,4,width-8,40)
-	local detailH=Art.textHeight(self.detail,width-8,60)
-	place(self.detail,4,48,width-8,detailH)
-	local total=52+detailH
+	self.stats.Visible,self.bestMetric.Visible=false,false -- quiet metrics retain exact Details rows
+	Art.type(self.title,"Body",true);Art.type(self.detail,"Body",true)
+	local titleH=Art.textHeight(self.title,width-8,24);place(self.title,4,0,width-8,titleH)
+	local detailH=Art.textHeight(self.detail,width-8,28);place(self.detail,4,titleH+6,width-8,detailH)
+	local total=titleH+6+detailH
+	self.promotionLabel.Visible=false
 	if self.hasReceipt then
-		Art.type(self.earnedGraphic,"Reward",compact)
-		place(self.nectarIcon,6,10,24,30)
-		local heroH=Art.textHeight(self.earnedGraphic,width-48,46)
-		place(self.earnedGraphic,44,0,width-48,heroH)
-		local sourceH=24
-		for _,label in ipairs(self.componentLabels) do Art.type(label,"Supporting",compact);sourceH=math.max(sourceH,Art.textHeight(label,(width-48)/2,24)) end
-		for index,label in ipairs(self.componentLabels) do
-			label.Parent=self.goal;Art.type(label,"Supporting",compact)
-			label.TextXAlignment=Enum.TextXAlignment.Left
-			place(label,44+(index-1)*(width-48)/2,heroH+2,(width-48)/2,sourceH)
-			label.Visible=true
+		Art.type(self.earnedGraphic,"Heading",true)
+		local heroH=Art.textHeight(self.earnedGraphic,width-42,28)
+		place(self.nectarIcon,6,math.max(0,(heroH-24)/2),18,24)
+		place(self.earnedGraphic,34,0,width-38,heroH)
+		local y=heroH+6;local visible=0;local sourceH=0
+		for _,label in ipairs(self.componentLabels)do
+			label.Parent=self.goal
+			Art.type(label,"Supporting",true);label.TextXAlignment=Enum.TextXAlignment.Left
+			label.Visible=not label.Text:match("%+0$")
+			if label.Visible then visible+=1;sourceH=math.max(sourceH,Art.textHeight(label,(width-8)/2,16))end
 		end
-		local eggY=heroH+sourceH+18
-		place(self.eggPanel,0,eggY,width,116)
+		local column=0
+		for _,label in ipairs(self.componentLabels)do
+			place(label,4+column*(width-8)/math.max(1,visible),y,(width-8)/math.max(1,visible),math.max(sourceH,Art.textHeight(label,width-8,16)))
+			if label.Visible then column+=1 end
+		end
+		if visible>0 then y+=sourceH+6 end
+		self.promotionLabel.Visible=self.promotionLabel.Text~=""
+		if self.promotionLabel.Visible then
+			Art.type(self.promotionLabel,"Supporting",true);local h=Art.textHeight(self.promotionLabel,width-8,18)
+			place(self.promotionLabel,4,y,width-8,h);y+=h+6
+		end
+		local eggY=y
+		self.eggPanel.BackgroundTransparency=1
 		self.eggGoal.Parent,self.bankGraphic.Parent=self.eggPanel,self.eggPanel
-		Art.type(self.eggGoal,"Action",compact);Art.type(self.bankGraphic,"Body",compact);Art.type(self.shortfall,"Supporting",compact)
-		self.eggGoal.Text=self.displayRecipe.name.." · "..self.displayCost.." nectar"
-		self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch" else "Need "..(self.displayCost-self.displayBalance).." more nectar"
+		Art.type(self.eggGoal,"Body",true);Art.type(self.bankGraphic,"Body",true);Art.type(self.shortfall,"Supporting",true)
+		local name=if self.displayRecipeId=="meadow"then "Meadow"elseif self.displayRecipeId=="sprout"then "Sprout"else self.displayRecipe.name
+		self.eggGoal.Text=string.format("%s · %d/%d",name,self.displayBalance,self.displayCost)
+		self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch"else string.format("%d more to hatch",self.displayCost-self.displayBalance)
 		self.shortfall.TextColor3=if self.displayBalance>=self.displayCost then Art.Leaf else Art.Muted
-		local eggTitleH=Art.textHeight(self.eggGoal,width-88,26)
-		local walletY=eggTitleH+12
 		self.bankGraphic.Text=string.format("Nectar saved: %d",self.displayBalance)
-		local walletH=Art.textHeight(self.bankGraphic,width-88,24)
-		local shortY=walletY+walletH+4
-		local shortH=Art.textHeight(self.shortfall,width-88,24)
-		local eggHeight=math.max(116,shortY+shortH+20)
-		place(self.eggPanel,0,eggY,width,eggHeight)
-		place(self.eggGoal,76,8,width-88,eggTitleH);place(self.bankGraphic,76,walletY,width-88,walletH);place(self.shortfall,76,shortY,width-88,shortH)
-		self.fill.Parent.Parent=self.eggPanel
-		self.fill.Parent.ZIndex=self.eggPanel.ZIndex+1
-		self.fill.ZIndex=self.eggPanel.ZIndex+2
+		local textW=math.max(1,width-48)
+		local eggTitleH=Art.textHeight(self.eggGoal,textW,18);local shortH=Art.textHeight(self.shortfall,textW,16)
+		local eggH=math.max(44,eggTitleH+4+shortH+8)
+		place(self.eggPanel,0,eggY,width,eggH)
+		place(self.eggGoal,44,0,textW,eggTitleH);place(self.shortfall,44,eggTitleH+4,textW,shortH)
+		place(self.bankGraphic,44,0,textW,Art.textHeight(self.bankGraphic,textW,18))
 		self.eggGoal.TextXAlignment,self.bankGraphic.TextXAlignment,self.shortfall.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
-		place(self.fill.Parent,12,eggHeight-14,width-24,6)
+		self.fill.Parent.Parent=self.eggPanel;self.fill.Parent.ZIndex=self.eggPanel.ZIndex+1;self.fill.ZIndex=self.eggPanel.ZIndex+2
+		place(self.fill.Parent,44,eggH-3,textW,3)
+		place(self.eggDrawing,4,math.max(0,(eggH-40)/2),32,40)
 		local recipeId=self.displayRecipeId or "meadow"
 		if self.drawnRecipe~=recipeId then
 			self.eggDrawing:ClearAllChildren();self.drawnRecipe=recipeId
-			EggArt.create(self.eggDrawing,recipeId,UDim2.fromOffset(4,4),UDim2.fromOffset(44,60),self.eggDrawing.ZIndex+1)
+			EggArt.create(self.eggDrawing,recipeId,UDim2.fromOffset(4,4),UDim2.fromOffset(24,32),self.eggDrawing.ZIndex+1)
 		end
-		self.stats.Parent=self.goal
-		local statsY=eggY+eggHeight+12
-		place(self.stats,0,statsY,width,64)
-		for index,value in ipairs(self.values) do
-			local tile=value.Parent
-			tile.Visible=index<3
-			if index<3 then
-				place(tile,if index==1 then 0 else width*2/3,0,width/3-8,64)
-				Art.type(tile.Label,"Supporting",false);tile.Label.Text=if index==1 then "Score" else "Longest chain"
-				place(tile.Label,3,0,width/3-14,24)
-				Art.type(value,"Heading",false);place(value,3,26,width/3-14,Art.textHeight(value,width/3-14,32))
-			end
-		end
-		place(self.bestMetric,width/3,0,width/3-8,64)
-		Art.type(self.bestCaption,"Supporting",false);Art.type(self.bestValue,"Heading",false)
-		self.bestValue.Text=tostring(self.statBest or 0)
-		self.bestValue.Size=UDim2.new(1,0,0,Art.textHeight(self.bestValue,width/3-8,32))
-		local detailsY=if self.stats.Visible then statsY+76 else statsY
-		Art.type(self.detailsButton,"Action",compact)
-		self.detailsButton.Text=if self.detailsOpen then "Hide details" else "Round details"
+		y=eggY+eggH+6
+		Art.type(self.detailsButton,"Body",true)
+		self.detailsButton.Text=if self.detailsOpen then "Hide details"else "Round details"
 		local detailsH=Art.actionHeight(self.detailsButton,width)
-		place(self.detailsButton,0,detailsY,width,detailsH)
-		self.detailsTop=detailsY+detailsH+12
-		local y=0
-		self.receiptRowHeight=28
-		for index,row in ipairs(self.receiptRows) do
-			Art.type(row,"Body",compact)
-			local h=Art.textHeight(row,width-16,28)
-			place(row,8,y,width-16,h);y+=h+(if index<#self.receiptRows then 8 else 0)
+		place(self.detailsButton,0,y,width,detailsH);self.detailsTop=y+detailsH+6
+		local rowsHeight=0;self.receiptRowHeight=28
+		for index,row in ipairs(self.receiptRows)do
+			Art.type(row,"Body",true);local h=Art.textHeight(row,width-16,28)
+			place(row,8,rowsHeight,width-16,h);rowsHeight+=h+(if index<#self.receiptRows then 6 else 0)
 		end
-		self.receiptScroll.Parent=self.goal
-		self.receiptScroll.Visible=self.detailsOpen==true
-		self.receiptScroll.ScrollingEnabled=false
-		self.receiptScroll.ScrollBarThickness=0
-		place(self.receiptScroll,0,self.detailsTop,width,y)
-		self.receiptScroll.CanvasSize=UDim2.fromOffset(0,y)
-		total=if self.detailsOpen then self.detailsTop+y+4 else detailsY+detailsH+8
+		self.receiptScroll.Parent=self.goal;self.receiptScroll.Visible=self.detailsOpen==true
+		self.receiptScroll.ScrollingEnabled=false;self.receiptScroll.ScrollBarThickness=0
+		place(self.receiptScroll,0,self.detailsTop,width,rowsHeight);self.receiptScroll.CanvasSize=UDim2.fromOffset(0,rowsHeight)
+		total=if self.detailsOpen then self.detailsTop+rowsHeight+4 else y+detailsH+4
 	else
-		for _,label in ipairs(self.componentLabels) do label.Visible=false end
+		for _,label in ipairs(self.componentLabels)do label.Visible=false end
 		self.receiptScroll.Visible=false
 	end
+	self.bodyContentHeight=total+noticeInset
 	place(self.goal,0,noticeInset,width,total)
-	self.fieldBody.CanvasSize=UDim2.fromOffset(0,total+noticeInset)
-	self.fieldBody.ScrollingEnabled=total+noticeInset>self.fieldBody.AbsoluteSize.Y
-	self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(self.fieldBody.CanvasPosition.Y,0,math.max(0,total+noticeInset-self.fieldBody.Size.Y.Offset)))
+	self.fieldBody.CanvasSize=UDim2.fromOffset(0,self.bodyContentHeight)
+	self.fieldBody.ScrollingEnabled=self.bodyContentHeight>self.fieldBody.AbsoluteSize.Y
+	self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(self.fieldBody.CanvasPosition.Y,0,math.max(0,self.bodyContentHeight-self.fieldBody.Size.Y.Offset)))
+	self:queueChromeFit(table.concat({width,self.bodyContentHeight,tostring(self.detailsOpen==true),game:GetService("GuiService").PreferredTextSize.Name},"|"))
 end
+
 return Recap

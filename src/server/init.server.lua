@@ -19,6 +19,7 @@ local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local CloseProgress = require(script.CloseProgress)
 local SessionProfile = require(script.SessionProfile)
+local RunReturn = require(script.RunReturn)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -334,7 +335,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			return
 		end
 		board.lastModeChange = now
-		if value == "Board" and hasPip(board) and not board.field then reset(board, board.sim.preset) end
+		if value == "Board" then RunReturn.enter(board, canProgress(board), hasPip(board), reset) end
 		board.mode = value
 		board.menuPaused = false
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
@@ -366,7 +367,13 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if now - board.lastReset < Config.ResetInterval then
 			return
 		end
-		if (action == "reset" and not board.round.over) or (action == "preset" and not RunService:IsStudio()) then
+		if action == "reset" then
+			if not RunReturn.retry(board, canProgress(board), hasPip(board), value, reset) then return end
+			board.lastReset = now
+			if board.firstSession then board.firstSession:record("FirstSessionRoundRetry") end
+			return
+		end
+		if not RunService:IsStudio() then
 			return
 		end
 		local preset = board.sim.preset
@@ -378,9 +385,6 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		end
 		board.lastReset = now
 		reset(board, preset)
-		if action == "reset" and board.firstSession then
-			board.firstSession:record("FirstSessionRoundRetry")
-		end
 	end
 end)
 

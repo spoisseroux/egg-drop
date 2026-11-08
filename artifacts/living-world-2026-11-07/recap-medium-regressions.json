@@ -1,0 +1,171 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactRecap",
+    "result": {
+      "preference": "Medium",
+      "passed": 8,
+      "cases": [
+        "1649, 971 outcome earned nonzero breakdown and promotion preserve first view",
+        "1649, 971 details retain zeros history and both footer focuses after spend",
+        "733, 307 outcome earned nonzero breakdown and promotion preserve first view",
+        "733, 307 details retain zeros history and both footer focuses after spend",
+        "568, 160 outcome earned nonzero breakdown and promotion preserve first view",
+        "568, 160 details retain zeros history and both footer focuses after spend",
+        "385, 703 outcome earned nonzero breakdown and promotion preserve first view",
+        "385, 703 details retain zeros history and both footer focuses after spend"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchNavigation",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "already equipped pet focuses without duplicate equip",
+        "rare-only companion waits for server equip acknowledgment",
+        "mode and local handoff must both finish before equip",
+        "manual cancellation prevents late equip and focus",
+        "overlay interruption cancels pending focus",
+        "unconfirmed equip never substitutes a local pet",
+        "Room replay delegates fresh entry to server without a deferred reset",
+        "replay preserves an unfinished board",
+        "already Board replay carries exactly the captured ended sequence",
+        "sequence changes while waiting cannot reset a newer field",
+        "cancelled Board replay cannot reset after its handoff",
+        "newer navigation wins over a stale mode wait"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RunGoals",
+    "result": {
+      "passed": 11,
+      "cases": [
+        "all four families retain their rank thresholds and completion flags",
+        "early goals name the exact remaining marks and next rank",
+        "25 marks missing only chain names the win requirement",
+        "mastered families never predict another rank or negative marks",
+        "failed skill contracts cannot record mastery win challenges",
+        "prior equal-value receipt and promotion cannot enter a new recap",
+        "late snapshot and non-saved states remain unconfirmed",
+        "receipt stays attached to the played family",
+        "outcome copy is generic and promotion uses canonical public family name",
+        "matching saved zero is still canonical and helpers never mutate its total",
+        "Saved host allows scoped replay while its display snapshot is delayed"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RecapFeedback",
+    "result": {
+      "passed": 16,
+      "cases": [
+        "matching committed receipt starts once and retains count through HUD refresh",
+        "count up lands on exact score chain clears and earned nectar",
+        "hide cancels immediately and reopening the same receipt cannot replay",
+        "hidden ancestor cancels and does not consume a future receipt",
+        "Saving delayed and pending states suppress old receipt and currency transfer",
+        "stale sequence cannot announce the previous reward",
+        "new receipt cancels the old animation and reinitializes every counter",
+        "daily only failure retains missed side quest zero and exact total",
+        "zero earned never invents nectar drops or transfer sounds",
+        "reduced effects shows final static values with no recap cues",
+        "audio remains routed through the muted shared audio group",
+        "short recap scrolls readable center while excluding pinned footer",
+        "roomy recap follows reward egg metrics details and keeps saved values",
+        "selected egg progress draws above its panel and retains partial or full saved balance",
+        "first Saved receipt survives synchronous resize during publication",
+        "destroying the component removes its animation connection"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PresentationPolicy",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "fresh initial board and deliberate arrival may own one boot",
+        "HUD refresh resize replay and sheet close never manufacture boot",
+        "ended board pending reveal and each interactive owner suppress initial boot",
+        "ended board arrival leaves recap in charge",
+        "overlay arriving mid boot revokes dots visuals and sound with same predicate",
+        "old completion cannot release or hide a newer presentation",
+        "route changes reduced motion and teardown revoke delayed work",
+        "ended board under menu passes gamepad A to the visible sheet",
+        "native menu and text capture retain Back instead of closing covered sheets",
+        "late committed hatch preempts Menu in order and never acknowledges or purchases"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PresentationAudio",
+    "result": {
+      "passed": 3,
+      "cases": [
+        "mid boot overlay cancels queued pitches and only its own voice",
+        "muted and reduced motion suppress every queued chime note",
+        "new owner cannot receive the old boot's queued pitches"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchActions",
+    "result": {
+      "passed": 18,
+      "cases": [
+        "Meet acknowledges exact rare-only result and waits for advanced Ready",
+        "Replay never purchases and synchronous confirmation fires once",
+        "Retry and same-ID updates retain immutable choice",
+        "Pending feedback preserves choice before state catches up",
+        "Throttle, lock, and network feedback cannot erase an in-flight choice",
+        "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+        "Close cancels a scheduled pre-dispatch retry",
+        "Busy feedback queues a retry until Ready for the same result",
+        "A retry timer encountering Busy retains its work until Ready",
+        "Another pending transaction releases the captured ack on Ready",
+        "Repeated pre-dispatch locks are bounded and expose a user retry",
+        "A changed result revokes old navigation",
+        "Close during retry cancels navigation without a second acknowledgement",
+        "Definitive rejection permits changing the action",
+        "Actions remain locked during an unfinished cinematic",
+        "Duplicate caption uses copied mastery progress and retains both choices",
+        "corner X dismisses and reopens the same committed result without acknowledgment",
+        "44px result actions fit short landscape safe areas and long names"
+      ]
+    }
+  }
+]

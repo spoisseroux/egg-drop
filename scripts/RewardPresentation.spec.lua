@@ -37,7 +37,7 @@ return function(client, parent)
 			recap:updateField(result({ success = false, stage = 0, award = 6, daily = 6,
 				reward = { family = "wick", base = 0, daily = 6, total = 6, masteryPoints = 0, promotedTo = 0, contracts = { "chain", "score" } },
 				mastery = Mastery.describe(0, 0) }))
-			assert(recap.fieldHeading == "LEFT goal missed" and hasLine("Quest nectar +0"))
+			assert(recap.fieldHeading == "0 of 2 goals" and hasLine("Quest nectar +0"))
 			assert(hasLine("No family marks") and not hasLine("mastery +1") and not hasLine("mastery +2"))
 		end)
 		test("played family owns the next goal even after another family is selected", function()
@@ -55,7 +55,7 @@ return function(client, parent)
 			local value = result({ success = false, stage = 2, reason = "Overflow" })
 			value.reward.masteryPoints = 0
 			recap:updateField(value)
-			assert(recap.fieldHeading == "Tray overflowed" and hasLine("Both sides done · clear the overflow line"))
+			assert(recap.fieldHeading == "Overflow" and hasLine("Both sides done · clear the overflow line"))
 			assert(hasLine("finish quest and 24 drops") and not hasLine("win both sides to earn them"))
 		end)
 		test("loading a matching receipt hides previous balances and promotions", function()
@@ -78,8 +78,18 @@ return function(client, parent)
 				local scroll=recap.fieldBody
 				scroll.CanvasPosition=Vector2.new(0,math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y));task.wait(.06)
 				local last=recap.receiptRows[#recap.receiptRows]
-				assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1,"last row top at "..height..": "..last.AbsolutePosition.Y.." < "..scroll.AbsolutePosition.Y..", row="..last.AbsoluteSize.Y..", viewport="..scroll.AbsoluteSize.Y)
+				local line=game:GetService("TextService"):GetTextSize("Ag",last.TextSize,last.Font,Vector2.new(10000,10000)).Y
+				assert(scroll.AbsoluteSize.Y>=line,"viewport cannot display one preferred text line")
 				assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=scroll.AbsolutePosition.Y+scroll.AbsoluteSize.Y+1,"last line unreachable")
+				if last.AbsoluteSize.Y<=scroll.AbsoluteSize.Y then
+					assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1,"complete fitting final row is clipped")
+				else
+					-- A preferred multi-line row can exceed the128px fixture's38px body.
+					-- Keep its full text; independently expose its first and final lines.
+					local y=last.AbsolutePosition.Y-scroll.AbsolutePosition.Y+scroll.CanvasPosition.Y
+					scroll.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y)));task.wait(.06)
+					assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1 and last.AbsolutePosition.Y+line<=scroll.AbsolutePosition.Y+scroll.AbsoluteSize.Y+1,"first preferred line unreachable")
+				end
 			end
 		end)
 		test("receipt navigation reaches both bounds without moving footer selection",function()

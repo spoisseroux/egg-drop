@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "suite": "RunReturn",
+  "result": {
+    "passed": 21,
+    "evidence": "production server transition API with authoritative state doubles",
+    "cases": {
+      "1": "matching saved 0 return initializes once and rejects old retry",
+      "2": "matching saved 8 return initializes once and rejects old retry",
+      "3": "live and settling outings retain exact simulation queue pile and elapsed time",
+      "4": "closing preserves state on return and explicit retry",
+      "5": "nursery host busy preserves state on return and explicit retry",
+      "6": "handle busy preserves state on return and explicit retry",
+      "7": "pending write preserves state on return and explicit retry",
+      "8": "retrying handle preserves state on return and explicit retry",
+      "9": "payout pending preserves state on return and explicit retry",
+      "10": "unacked hatch preserves state on return and explicit retry",
+      "11": "missing earned receipt preserves state on return and explicit retry",
+      "12": "unsaved earned receipt preserves state on return and explicit retry",
+      "13": "stale earned sequence preserves state on return and explicit retry",
+      "14": "missing durable receipt preserves state on return and explicit retry",
+      "15": "stale durable sequence preserves state on return and explicit retry",
+      "16": "unusable profile cannot start on either route",
+      "17": "starter acknowledgment admits first field without a field receipt",
+      "18": "welcome overflow retry survives without Pip or field receipt",
+      "19": "retry requires the sequence captured at intent, rejects malformed and stale packets",
+      "20": "save completes after return without a background reset; next intentional return starts",
+      "21": "save-before-return and ack-before-return permit only the current intentional entry"
+    }
+  }
+}

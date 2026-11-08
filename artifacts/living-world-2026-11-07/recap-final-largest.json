@@ -1,0 +1,81 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "CompactRecap",
+    "result": {
+      "preference": "Largest",
+      "passed": 9,
+      "cases": [
+        "1649, 971 outcome earned nonzero breakdown and promotion preserve first view",
+        "1649, 971 details retain zeros history and both footer focuses after spend",
+        "733, 307 outcome earned nonzero breakdown and promotion preserve first view",
+        "733, 307 details retain zeros history and both footer focuses after spend",
+        "568, 160 outcome earned nonzero breakdown and promotion preserve first view",
+        "568, 160 details retain zeros history and both footer focuses after spend",
+        "385, 703 outcome earned nonzero breakdown and promotion preserve first view",
+        "385, 703 details retain zeros history and both footer focuses after spend",
+        "Details and rotation refit canonical chrome once without feedback replay or empty tail"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "RecapFeedback",
+    "result": {
+      "passed": 16,
+      "cases": [
+        "matching committed receipt starts once and retains count through HUD refresh",
+        "count up lands on exact score chain clears and earned nectar",
+        "hide cancels immediately and reopening the same receipt cannot replay",
+        "hidden ancestor cancels and does not consume a future receipt",
+        "Saving delayed and pending states suppress old receipt and currency transfer",
+        "stale sequence cannot announce the previous reward",
+        "new receipt cancels the old animation and reinitializes every counter",
+        "daily only failure retains missed side quest zero and exact total",
+        "zero earned never invents nectar drops or transfer sounds",
+        "reduced effects shows final static values with no recap cues",
+        "audio remains routed through the muted shared audio group",
+        "short recap scrolls readable center while excluding pinned footer",
+        "roomy recap follows reward egg metrics details and keeps saved values",
+        "selected egg progress draws above its panel and retains partial or full saved balance",
+        "first Saved receipt survives synchronous resize during publication",
+        "destroying the component removes its animation connection"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SaveNoticeOwnership",
+    "result": {
+      "clientLocalOnly": true,
+      "passed": 2,
+      "cases": [
+        "profile retry survives every neutral hatch status in the actual current owner",
+        "recognized blocking hatch source and Ready recovery replace and clear one passive owner"
+      ]
+    }
+  }
+]
