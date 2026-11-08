@@ -42,7 +42,7 @@ local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
-HollowClock.start()
+clientUI.clock=HollowClock.start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
@@ -2286,6 +2286,7 @@ end)
 gui.Destroying:Connect(function()
 	if rendererPresentation.destroyed then return end
 	rendererPresentation.destroyed=true;rendererPresentation.visible=false
+ if clientUI.clock then clientUI.clock:destroy();clientUI.clock=nil end
 	for _,connection in ipairs(rendererPresentation.connections)do connection:Disconnect()end
 	table.clear(rendererPresentation.connections)
 	if rendererConnection then rendererConnection:Disconnect();rendererConnection=nil end

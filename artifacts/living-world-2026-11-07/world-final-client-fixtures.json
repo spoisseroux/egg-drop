@@ -1,0 +1,39 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HollowClock",
+    "result": {
+      "passed": 7,
+      "cases": [
+        "fixed UTCminus5 real24hour day preserves midnight noon and wrap",
+        "incremental marked lamp cache paints exact day and night only",
+        "parent before attributes activates cached light without another scan",
+        "cached repeated samples and20same-room binds never discover descendants again",
+        "stream removal and replacement release old light subscriptions",
+        "five-second sampler has no per-frame lamp or sky writes",
+        "destroy cancels signal/timer owner and owned Bloom without revival"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HollowAmbience",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "declared candidates register once and cap18 without creating renderer instances",
+        "parent-before-attributes and late cosmetic safety properties become eligible",
+        "one sampler advances at12Hz and repeated absolute time never accumulates",
+        "world-axis amplitudes stay in world space on rotated authored leaves",
+        "covered Deck/menu owner restores once then issues zero steady writes",
+        "reduced composition keeps water/leaves still and suppresses fireflies",
+        "daylight distance and frustum yield to static rest without rays",
+        "20mode cycles preserve connections scan count and18-actor instance budget",
+        "stream removal and world replacement release old metadata safely",
+        "destroy and20GUI-owner restarts disconnect without per-part jobs or instances"
+      ]
+    }
+  }
+]

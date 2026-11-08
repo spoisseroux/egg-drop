@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "result": {
+    "passed": 6,
+    "evidence": "actual source-generated collision geometry; native walking/camera/performance remain separate",
+    "cases": {
+      "1": "floor and four boundaries align with the expanded collision envelope",
+      "2": "boardwalk center and both shoulders have authored solids through former boundary and every joint",
+      "3": "all route centerlines stay inside ground and clear above-ground colliders",
+      "4": "hub stations tree root and original bridge positions stay authored",
+      "5": "eight visible lamps use only four managed shadowless lights including original",
+      "6": "exactly eighteen stable-name ambient parts carry complete immutable rest metadata"
+    }
+  }
+}

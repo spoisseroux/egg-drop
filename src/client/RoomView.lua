@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local PetFocusUI = require(script.Parent.PetFocusUI)
+local HollowAmbience=require(script.Parent.HollowAmbience)
 
 local PipVisual = require(script.Parent.PipVisual)
 local PuddleVisual = require(script.Parent.PuddleVisual)
@@ -96,6 +97,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		companions = RoomCompanions.new(progress.Parent, createPet, reduceEffects),
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
+	self.ambience=HollowAmbience.new()
 	self.focusUI = PetFocusUI.new(gui, {
 		back = function() if self.focusing then self:useRoomCamera(false) end end,
 		greet = function()return self:reactPet(false)end,
@@ -145,6 +147,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.mode == "Room" then self:useRoomCamera(false) end
 	end)
 	watch(RunService.RenderStepped, function(dt)
+  if self.ambience then
+   self.ambience:step(dt,workspace.CurrentCamera,self.mode=="Room"and self.target=="Room"and not self.busy and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox(),self.reduceEffects())
+  end
 		self:retryArrivalPlacement()
 		self:updateControls()
 		if self.pet then
@@ -703,6 +708,7 @@ end
 function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+	if self.ambience then self.ambience:destroy();self.ambience=nil end
 	self.arrivalUnplaced=nil
 	self.arrivalPlacementPending=nil
 	self.returnRoamShot=nil

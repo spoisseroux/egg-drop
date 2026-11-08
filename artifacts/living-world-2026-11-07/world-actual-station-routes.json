@@ -1,0 +1,26 @@
+[
+  {
+    "name": "workbench",
+    "mode": "Room",
+    "camera": "Custom",
+    "buttons": {
+      "1": "Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.DeckPicker.Card.Close"
+    }
+  },
+  {
+    "name": "eggs",
+    "mode": "Room",
+    "camera": "Custom",
+    "buttons": {
+      "1": "Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.EggHatchView.Card.Close"
+    }
+  },
+  {
+    "name": "journal",
+    "mode": "Room",
+    "camera": "Custom",
+    "buttons": {
+      "1": "Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Close"
+    }
+  }
+]

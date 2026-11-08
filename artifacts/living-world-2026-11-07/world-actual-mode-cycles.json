@@ -1,0 +1,302 @@
+[
+  {
+    "cycle": 1,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 9,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 2,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 10,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 3,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 10,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 4,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 11,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 5,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 12,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 6,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 12,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 7,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 13,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 8,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 14,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 9,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 15,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 10,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 15,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 11,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 16,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 12,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 17,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 13,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 17,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 14,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 18,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 15,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 19,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 16,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 19,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 17,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 20,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 18,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 21,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 19,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 22,
+      "managed": 4,
+      "writes": 4
+    }
+  },
+  {
+    "cycle": 20,
+    "alphaDelta": 0,
+    "cfDelta": 0,
+    "nodes": 2951,
+    "mode": "Board",
+    "clock": {
+      "lights": 4,
+      "connections": 17,
+      "scans": 1,
+      "samples": 22,
+      "managed": 4,
+      "writes": 4
+    }
+  }
+]

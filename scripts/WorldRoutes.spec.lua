@@ -1,0 +1,139 @@
+-- Actual authored geometry, fresh source/config; geometry is not a native walk.
+return function(server,artSource)
+	assert(type(artSource)=="string","Actual LoungeArt source required")
+	local lighting=game:GetService("Lighting")
+	local properties={"ClockTime","Brightness","Ambient","OutdoorAmbient","ColorShift_Top","EnvironmentDiffuseScale","EnvironmentSpecularScale","ShadowSoftness"}
+	local saved={};for _,key in ipairs(properties)do saved[key]=lighting[key]end
+	local air=lighting:FindFirstChildOfClass("Atmosphere")
+	local grade=lighting:FindFirstChild("SproutHollowGrade")
+	local effects={}
+	for _,entry in ipairs({{air,{"Density","Offset","Color","Decay","Haze","Glare"}},{grade,{"Contrast","Saturation","TintColor"}}})do
+		if entry[1]then local values={};for _,key in ipairs(entry[2])do values[key]=entry[1][key]end;effects[entry[1]]=values end
+	end
+	local shared=game.ReplicatedStorage.Shared:Clone();shared.Name="_WorldRoutesShared";shared.Parent=server
+	local layout=require(shared.HollowWorldLayout)
+	local realGame=game
+	local fakeGame={}
+	function fakeGame:GetService(name)if name=="ReplicatedStorage"then return{Shared=shared}end;return realGame:GetService(name)end
+	local module=Instance.new("ModuleScript");module.Name="_WorldRoutesFactory"
+	module.Source="return function(e) local game,script,require=e.game,e.script,e.require\n"..artSource.."\nend"
+	module.Parent=server;local ok,factory=pcall(require,module);module:Destroy();assert(ok,factory)
+	local art=factory({game=fakeGame,script=server.LoungeArt,require=require})
+	local room=Instance.new("Model");room.Name="_WorldRoutesFixture";room.Parent=server
+	local parts,cases={},{}
+	local function part(parent,name,size,cf,color,collides)
+		local value=Instance.new("Part");value.Name,value.Size,value.CFrame,value.Color=name,size,cf,color
+		value.Anchored,value.CanCollide=true,collides==true;value.Parent=parent;table.insert(parts,value);return value
+	end
+	local function test(name,check)check();table.insert(cases,name)end
+	local function near(a,b)return(a-b).Magnitude<.001 end
+	local function contains(p,point)
+		local q=p.CFrame:PointToObjectSpace(Vector3.new(point.X,p.Position.Y,point.Y))
+		return math.abs(q.X)<=p.Size.X*.5+.001 and math.abs(q.Z)<=p.Size.Z*.5+.001
+	end
+	local function blocks(p,point)
+		-- Sweep an upright avatar clearance capsule through every local axis.
+		-- X/Z-only tests are invalid for vertically rotated cylinder trunks.
+		local a=p.CFrame:PointToObjectSpace(Vector3.new(point.X,4.65,point.Y))
+		local b=p.CFrame:PointToObjectSpace(Vector3.new(point.X,8,point.Y))
+		local delta=b-a;local extent=p.Size*.5+Vector3.new(.65,.65,.65)
+		local lo,hi=0,1
+		for _,axis in ipairs({"X","Y","Z"})do
+			if math.abs(delta[axis])<.000001 then
+				if math.abs(a[axis])>extent[axis]then return false end
+			else
+				local first,last=(-extent[axis]-a[axis])/delta[axis],(extent[axis]-a[axis])/delta[axis]
+				if first>last then first,last=last,first end
+				lo,hi=math.max(lo,first),math.min(hi,last);if lo>hi then return false end
+			end
+		end
+		return true
+	end
+	local success,problem=pcall(function()
+		art.build(room,part)
+		test("floor and four boundaries align with the expanded collision envelope",function()
+			local floor=room.Floor;assert(floor.CanCollide and floor.CanQuery and floor.Size==Vector3.new(160,1,128))
+			assert(floor.Position.Y+floor.Size.Y*.5==4 and floor:GetAttribute("PlayableWidth")==160 and floor:GetAttribute("PlayableDepth")==128)
+			local boundaries=0
+			for _,p in ipairs(parts)do if p.Name=="GardenBoundary"then
+				boundaries+=1;assert(p.CanCollide and p.Transparency==1)
+				if p.Size.X<1 then assert(math.abs(math.abs(p.Position.X)-79.6)<.001 and p.Size.Z==128)
+				else assert(math.abs(math.abs(p.Position.Z)-63.6)<.001 and p.Size.X==160)end
+			end end;assert(boundaries==4)
+		end)
+		test("boardwalk center and both shoulders have authored solids through former boundary and every joint",function()
+			local decks={};for _,p in ipairs(parts)do if p:GetAttribute("HollowRouteSolid")then table.insert(decks,p);assert(p.CanCollide and p.CanQuery)end end
+			local routes={layout.Routes.Boardwalk,{layout.Routes.EastReturn[1],layout.Routes.EastReturn[2]}}
+			for _,route in ipairs(routes)do for i=2,#route do
+				local a,b=route[i-1],route[i];local delta=b-a;local normal=Vector2.new(-delta.Y,delta.X).Unit
+				for step=0,math.ceil(delta.Magnitude*2)do
+					local center=a:Lerp(b,math.min(1,step/(delta.Magnitude*2)))
+					for _,side in ipairs({-2.2,0,2.2})do
+						local supported=false;for _,deck in ipairs(decks)do if contains(deck,center+normal*side)then supported=true;break end end
+						assert(supported,"unsupported boardwalk shoulder at "..tostring(center))
+					end
+				end
+			end end
+			local banked=0
+			for _,p in ipairs(parts)do if p:GetAttribute("HollowBankPlant")then
+				banked+=1
+				for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+					local corner=p.CFrame:PointToWorldSpace(Vector3.new(x*p.Size.X*.5,y*p.Size.Y*.5,z*p.Size.Z*.5))
+					for _,deck in ipairs(decks)do assert(not contains(deck,Vector2.new(corner.X,corner.Z)),p.Name.." still protrudes onto boardwalk")end
+				end end end
+			end end
+			assert(banked==13,"expected all six shrub lobes and seven flower parts banked together")
+		end)
+		test("all route centerlines stay inside ground and clear above-ground colliders",function()
+			for _,route in pairs(layout.Routes)do for i=2,#route do
+				local a,b=route[i-1],route[i];local delta=b-a;local normal=Vector2.new(-delta.Y,delta.X).Unit
+				for step=0,math.ceil(delta.Magnitude)do
+					local center=a:Lerp(b,math.min(1,step/delta.Magnitude))
+					for _,side in ipairs({-1.6,0,1.6})do
+						local point=center+normal*side;assert(contains(room.Floor,point))
+						for _,p in ipairs(parts)do
+							if p.CanCollide and p.Name~="Floor"and not p:GetAttribute("HollowRouteSolid")and p.Name~="GardenBoundary"then
+								assert(not blocks(p,point),p.Name.." blocks route at "..tostring(point).." collider="..tostring(p.Position))
+							end
+						end
+					end
+				end
+			end end
+		end)
+		test("hub stations tree root and original bridge positions stay authored",function()
+			assert(near(room.CustomizeTop.Position,Vector3.new(-11,6.51,-6.3)))
+			assert(near(room.JournalTop.Position,Vector3.new(11,6.51,-6.3)))
+			assert(near(room.EggsSign.Position,Vector3.new(0,5.5,-3.5)))
+			local stations=0;for _,p in ipairs(room:GetDescendants())do if p:IsA("ProximityPrompt")then stations+=1 end end;assert(stations==3)
+			local tree,bridge=false,false
+			for _,p in ipairs(parts)do
+				if p.Name=="HatchTreeTrunk"and p.CanCollide then tree=true;assert(p.Position.X<0 and p.Position.Z< -10)end
+				if p.Name=="BridgeRail"and math.abs(p.Position.X-17.6)<.001 then bridge=true;assert(math.abs(p.Position.Z+10.53)<.001 or math.abs(p.Position.Z+8.27)<.001)end
+			end;assert(tree and bridge)
+		end)
+		test("eight visible lamps use only four managed shadowless lights including original",function()
+			local lamps,lights=0,0
+			for _,p in ipairs(room:GetDescendants())do
+				if p:GetAttribute("HollowLampFixture")then lamps+=1;assert(p:IsA("BasePart")and p.Material==Enum.Material.Neon)end
+				if p:IsA("PointLight")then lights+=1;assert(p:GetAttribute("HollowLamp")and not p.Shadows)end
+			end;assert(lamps==8 and lights==4)
+		end)
+		test("exactly eighteen stable-name ambient parts carry complete immutable rest metadata",function()
+			local count=0
+			for _,p in ipairs(parts)do if p:GetAttribute("HollowAmbientKind")then
+				count+=1;assert(p.Name:sub(1,14)=="HollowAmbient_"and p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery,p.Name.." name/collision flags")
+				assert(p:GetAttribute("HollowRestCFrame")==p.CFrame,p.Name.." rest CFrame mismatch: "..tostring(p:GetAttribute("HollowRestCFrame")).." actual="..tostring(p.CFrame))
+				assert(p:GetAttribute("HollowRestTransparency")==p.Transparency,p.Name.." rest transparency mismatch: "..tostring(p:GetAttribute("HollowRestTransparency")).." actual="..tostring(p.Transparency))
+				assert(p:GetAttribute("HollowAmbientPeriod")>0 and typeof(p:GetAttribute("HollowAmbientAmplitude"))=="Vector3",p.Name.." period/amplitude")
+				local phase=p:GetAttribute("HollowAmbientPhase");assert(phase>=0 and phase<1,p.Name.." phase cycles")
+			end end;assert(count==18,"ambient count="..count)
+		end)
+	end)
+	room:Destroy();shared:Destroy()
+	for key,value in pairs(saved)do lighting[key]=value end
+	for effect,values in pairs(effects)do for key,value in pairs(values)do effect[key]=value end end
+	if not air then local item=lighting:FindFirstChildOfClass("Atmosphere");if item then item:Destroy()end end
+	if not grade then local item=lighting:FindFirstChild("SproutHollowGrade");if item then item:Destroy()end end
+	assert(success,problem)
+	return{passed=#cases,cases=cases,evidence="actual source-generated collision geometry; native walking/camera/performance remain separate"}
+end
