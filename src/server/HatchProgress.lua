@@ -62,18 +62,19 @@ local function migrate(record, now)
 	local mastery, challenges = {}, {}
 	for _, family in ipairs(Catalog.Families) do mastery[family], challenges[family] = 0, 0 end
 	return {
-		version = 3, migrated = true, welcomeCredited = true,
+		version = 4, migrated = true, welcomeCredited = true,
 		nectar = charge + 6, inventoryMask = mask, mastery = mastery, misses = 0,
 		masteryChallenges = challenges, masteryLegacyMask = 0, totalWins = 0,
 		contracts = Daily.empty(dayOf(now)),
 		revision = 0, epoch = 0, operationSeq = 0, lastAwardSeq = 0,
 		dailyClaimDay = dayOf(now),
+		petDay = dayOf(now), petCount = 0,
 		lease = { token = "", expiresAt = 0 },
 	}
 end
 
-local function valid(state)
-	if type(state) ~= "table" or state.version ~= 3 or state.migrated ~= true
+local function validBase(state,version)
+	if type(state) ~= "table" or state.version ~= version or state.migrated ~= true
 		or state.welcomeCredited ~= true or not integer(state.nectar)
 		or not integer(state.inventoryMask, 127) or not integer(state.misses, 7)
 		or not integer(state.revision) or not integer(state.epoch)
@@ -88,6 +89,9 @@ local function valid(state)
 		return false
 	end
 	local claimDay = tonumber(state.dailyClaimDay)
+	if state.lease.expiresAt~=state.lease.expiresAt or math.abs(state.lease.expiresAt)==math.huge then return false end
+	if state.lastOperation~=nil and(type(state.lastOperation)~="table"or type(state.lastOperation.id)~="string"
+		or not integer(state.lastOperation.sequence)or state.lastOperation.sequence<1 or state.lastOperation.sequence~=state.operationSeq)then return false end
 	if not claimDay or claimDay ~= math.floor(claimDay) or math.abs(claimDay) > 1000000000 then return false end
 	for _, family in ipairs(Catalog.Families) do
 		if not integer(state.mastery[family], Mastery.MaxPoints)
@@ -105,20 +109,41 @@ local function valid(state)
 	return true
 end
 
+local function canonicalDay(value)
+	local number=if type(value)=="string"then tonumber(value)else nil
+	return number~=nil and number==math.floor(number)and math.abs(number)<=1000000000 and tostring(number)==value
+end
+local function valid(state)
+	if not validBase(state,4)or not canonicalDay(state.petDay)or not integer(state.petCount,5)then return false end
+	local receipt=state.lastPetAward
+	if state.petCount==0 then return receipt==nil end
+	return type(receipt)=="table"and type(receipt.id)=="string"and #receipt.id>0 and #receipt.id<=100
+		and integer(receipt.sequence)and receipt.sequence>=state.petCount and receipt.sequence<=state.operationSeq
+		and receipt.day==state.petDay and Pets.byId[receipt.petId]~=nil
+		and (receipt.sequence~=state.operationSeq or (state.lastOperation and state.lastOperation.id==receipt.id))
+end
+
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
 local function upgrade(state, now)
-	if type(state) ~= "table" or state.version ~= 2 then return state end
-	local nextState = clone(state)
-	if type(nextState.mastery) ~= "table" then return state end
-	local challenges, legacy = {}, 0
-	for index, family in ipairs(Catalog.Families) do
-		if not integer(nextState.mastery[family], 3) then return state end
-		challenges[family] = 0
-		if nextState.mastery[family] == 3 then legacy = bit32.bor(legacy, bit32.lshift(1, index - 1)) end
+	if type(state)~="table"then return state end
+	local nextState=state
+	if state.version==2 then
+		nextState=clone(state)
+		if type(nextState.mastery)~="table"then return state end
+		local challenges,legacy={},0
+		for index,family in ipairs(Catalog.Families)do
+			if not integer(nextState.mastery[family],3)then return state end
+			challenges[family]=0
+			if nextState.mastery[family]==3 then legacy=bit32.bor(legacy,bit32.lshift(1,index-1))end
+		end
+		nextState.version,nextState.masteryChallenges,nextState.masteryLegacyMask=3,challenges,legacy
+		nextState.totalWins,nextState.contracts=0,Daily.empty(dayOf(now))
 	end
-	nextState.version, nextState.masteryChallenges, nextState.masteryLegacyMask = 3, challenges, legacy
-	nextState.totalWins, nextState.contracts = 0, Daily.empty(dayOf(now))
+	if nextState.version==3 then
+		if not validBase(nextState,3)or nextState.petDay~=nil or nextState.petCount~=nil or nextState.lastPetAward~=nil then return state end
+		nextState=clone(nextState);nextState.version=4;nextState.petDay=dayOf(now);nextState.petCount=0
+	end
 	return nextState
 end
 
@@ -202,6 +227,7 @@ function Hatching.public(handle)
 		contracts = Daily.public(state.contracts, dayOf(handle.adapter.now())), lastRunReward = clone(state.lastRunReward),
 		misses = state.misses, inventoryMask = state.inventoryMask, mastery = clone(state.mastery),
 		lastHatch = clone(state.lastHatch),
+		petDay = state.petDay, petCount = state.petCount, lastPetAward = clone(state.lastPetAward),
 		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
 	}
@@ -214,7 +240,17 @@ end
 
 -- Pending operations retain their identity and RNG candidate after an ambiguous
 -- write failure. A callback retry can never charge twice or choose another pet.
-local function transact(handle, signature, expectedRevision, apply, candidate)
+local function petProof(pending,state)
+	local receipt=state.lastPetAward
+	return pending.kind=="pet"and receipt and receipt.id==pending.id and receipt.sequence==pending.sequence
+		and receipt.sequence==pending.candidate.sequence
+		and receipt.day==pending.candidate.day and receipt.petId==pending.candidate.petId
+end
+local function committed(pending,state)
+	if pending.kind=="pet"then return petProof(pending,state)end
+	return state.lastOperation and state.lastOperation.id==pending.id
+end
+local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind)
 	if handle.busy then return false, "Busy" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
 	local pending = handle.pending
@@ -226,7 +262,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate)
 		local allowed, failure = apply(clone(handle.state), candidate)
 		if not allowed then return false, failure end
 		pending = {
-			signature = signature, id = handle.adapter.guid(), revision = expectedRevision,
+			signature = signature, id = operationId or handle.adapter.guid(), revision = expectedRevision, kind=kind,
 			sequence = handle.state.operationSeq + 1, apply = apply, candidate = candidate,
 		}
 		handle.pending = pending
@@ -239,12 +275,12 @@ local function transact(handle, signature, expectedRevision, apply, candidate)
 		end
 		local root = clone(previous)
 		local state = root.hatching
-		if state.lastOperation and state.lastOperation.id == pending.id then return root end
+		if committed(pending,state)then return root end -- Proof precedes calendar expiry.
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
-			reason = "RevisionChanged"; return nil
+			reason = "RevisionChanged"; return if pending.kind=="pet"then root else nil
 		end
 		local allowed, failure = pending.apply(state, pending.candidate)
-		if not allowed then reason = failure; return nil end
+		if not allowed then reason = failure; return if pending.kind=="pet"then root else nil end
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence }
@@ -252,12 +288,17 @@ local function transact(handle, signature, expectedRevision, apply, candidate)
 		return root
 	end)
 	handle.busy = false
-	if ok and record and record.hatching and record.hatching.lastOperation
-		and record.hatching.lastOperation.id == pending.id then
+	if ok and record and record.hatching and committed(pending,record.hatching)then
 		accept(handle, record)
 		handle.pending = nil
 		handle.status = "Ready"
 		return true, "Saved"
+	end
+	if ok and pending.kind=="pet"and record and fenced(handle,record.hatching,handle.adapter.now())then
+		-- A fenced unchanged return proves that this operation did not commit.
+		-- Expired-day/revision refusals must not strand Retrying with no pending.
+		accept(handle,record);handle.pending=nil;handle.status="Ready"
+		return false,reason
 	end
 	if not ok then
 		handle.status = "Retrying"
@@ -275,6 +316,34 @@ function Hatching.retry(handle)
 	local pending = handle.pending
 	if not pending then return false, "NoPending" end
 	return transact(handle, pending.signature, pending.revision, pending.apply, pending.candidate)
+end
+
+function Hatching.petCandidate(handle,leaseId,petId)
+	return table.freeze({id=handle.adapter.guid(),day=dayOf(handle.adapter.now()),petId=petId,leaseId=leaseId,sequence=handle.state.operationSeq+1})
+end
+function Hatching.awardPet(handle,candidate)
+	if type(candidate)~="table"then return false,"InvalidPetAward"end
+	for key in pairs(candidate)do if key~="id"and key~="day"and key~="petId"and key~="leaseId"and key~="sequence"then return false,"InvalidPetAward"end end
+	if type(candidate.id)~="string"or #candidate.id<1 or #candidate.id>100 or not canonicalDay(candidate.day)
+		or not integer(candidate.sequence)or candidate.sequence<1
+		or not Pets.byId[candidate.petId]or type(candidate.leaseId)~="string"or #candidate.leaseId<1 or #candidate.leaseId>100 then return false,"InvalidPetAward"end
+	local receipt=handle.state.lastPetAward
+	if receipt and receipt.id==candidate.id and receipt.sequence==candidate.sequence and receipt.day==candidate.day and receipt.petId==candidate.petId then return true,"AlreadySaved"end
+	if candidate.sequence~=handle.state.operationSeq+1 then return false,"StalePetAward"end
+	local fixed=table.freeze(clone(candidate))
+	return transact(handle,"pet:"..fixed.id,handle.state.revision,function(state,captured)
+		local current=dayOf(handle.adapter.now())
+		if captured.day~=current then return false,"ExpiredDay"end
+		if tonumber(current)<tonumber(state.petDay)then return false,"ClockRollback"end
+		if state.lastHatch then return false,"RevealPending"end
+		if not Catalog.isOwned(state.inventoryMask,captured.petId)then return false,"PetChanged"end
+		local count=if tonumber(current)>tonumber(state.petDay)then 0 else state.petCount
+		if count>=5 then return false,"PetCap"end
+		if state.nectar>=1000000000 then return false,"BalanceLimit"end
+		state.nectar+=1;state.petDay=current;state.petCount=count+1
+		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId}
+		return true
+	end,fixed,fixed.id,"pet")
 end
 
 function Hatching.command(handle, action, value, expectedRevision)
@@ -408,7 +477,7 @@ local function maintain(handle, releasing)
 	handle.busy = false
 	if ok and record and record.hatching and record.hatching.lease.token == handle.token then
 		accept(handle, record)
-		if handle.pending and handle.state.lastOperation and handle.state.lastOperation.id == handle.pending.id then
+		if handle.pending and committed(handle.pending,handle.state)then
 			handle.pending = nil
 		end
 		handle.status = if releasing then "Released" elseif handle.pending then "Retrying" else "Ready"

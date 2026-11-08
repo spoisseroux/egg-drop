@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local PetFocusUI = require(script.Parent.PetFocusUI)
+local PetAffection=require(script.Parent.PetAffection)
 local HollowAmbience=require(script.Parent.HollowAmbience)
 
 local PipVisual = require(script.Parent.PipVisual)
@@ -98,6 +99,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
 	self.ambience=HollowAmbience.new()
+ self.affection=PetAffection.new(workspace,function(index)
+  if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
+ end)
 	self.focusUI = PetFocusUI.new(gui, {
 		back = function() if self.focusing then self:useRoomCamera(false) end end,
 		greet = function()return self:reactPet(false)end,
@@ -126,7 +130,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	leave.Activated:Connect(function()
 		if not self.busy and not overlayOpen() then self:requestSwitch(onReturn) end
 	end)
-	watch(Players.LocalPlayer.CharacterRemoving,function(character)self.removingCharacter=character;self.returnRoamShot=nil;if self.stations then self.stations:refresh()end end)
+	watch(Players.LocalPlayer.CharacterRemoving,function(character)self.removingCharacter=character;self.returnRoamShot=nil;if self.focusUI then self.focusUI:cancelPointer()end;self:setPetContact(false);if self.stations then self.stations:refresh()end end)
 	watch(Players.LocalPlayer.CharacterAdded, function(character)
 		-- Cancel against the old character immediately; waiting for Humanoid must not retain a lock.
 		self.removingCharacter=nil
@@ -163,7 +167,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			end
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
-			if root and not self.focusing then self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)
+			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)
 			else self.followState=nil;PetFollow.rest(self.pet)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
 				self:cancelCameraTween()
@@ -174,6 +178,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			self.companions:update(dt)
 		end
 		if self.focusUI then self.focusUI:update(workspace.CurrentCamera, self.pet, self.petPrompt and self.petPrompt.Enabled) end
+  self:updatePetContact(dt)
 	end)
 	for _, attribute in ipairs({ "MasteryRanks", "MasteryMask" }) do
 		watch(progress:GetAttributeChangedSignal(attribute), function()
@@ -209,6 +214,7 @@ function Room:collapseControls()
 end
 
 function Room:interactPet()
+ if self.focusUI and self.focusUI.windowActive==false then return false end
 	if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox() then return false end
 	if not self.focusing and self.canRoam and not self.canRoam() then return false end
 	if self.mode ~= "Room" or self.busy or self.overlayOpen() or self.menuOpen or not self.pet then return false end
@@ -261,6 +267,7 @@ function Room:showPet(pet)
 	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
 	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)
 	self.pet.model:SetAttribute("LocalCompanion", true)
+ if self.affection then self.affection:setPet(self.pet)end
 	self.pet.yaw = if self.focusing and oldYaw then oldYaw elseif root then math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z) else 0
 	self.followState = nil
 	local body = self.pet.model.PrimaryPart
@@ -566,23 +573,44 @@ function Room:releaseFocusMovement()
 end
 
 function Room:setPetContact(active)
+ if active and self.focusUI and self.focusUI.windowActive==false then return false end
 	if not active then
 		if not self.petContactActive then return false end
 		self.petContactActive=false
 		if self.contactPet then self.contactPet.petting=false end
-		self.contactPet=nil
+		self.contactPet=nil;self.contactContext=nil
+  if self.petContactIntent then self.petContactIntent:cancel()end
+  if self.affection then self.affection:clear()end
 		if self.audio and self.audio.setPurr then self.audio:setPurr(false)end
 		return true
 	end
 	if self.petContactActive then return true end
 	local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
+	if self.removingCharacter==Players.LocalPlayer.Character or not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
 		or not self.pet or not self.greetingCamera or self.greetingCamera.root~=root or self.greetingCamera.camera~=workspace.CurrentCamera then return false end
-	self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
-	return self.audio and self.audio.setPurr and self.audio:setPurr(true)or false
+ self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
+ self.contactContext={pet=self.pet,root=root,camera=workspace.CurrentCamera,shot=self.greetingCamera}
+ if self.petContactIntent then self.petContactIntent:begin(self.shownPet.id,self.contactContext)end
+ if self.audio and self.audio.setPurr then self.audio:setPurr(true)end
+ return true
 end
 
+function Room:contactEligible(context)
+ if not context or self.destroyed or not self.petContactActive or not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return false end
+ local root,humanoid
+ local character=Players.LocalPlayer.Character
+ if character then root=character:FindFirstChild("HumanoidRootPart");humanoid=character:FindFirstChildOfClass("Humanoid")end
+ return character~=self.removingCharacter and self.pet==context.pet and self.greetingCamera==context.shot and root==context.root and root~=nil and humanoid and humanoid.Health>0 and workspace.CurrentCamera==context.camera
+  and self.focusUI and self.focusUI.windowActive~=false and self.focusUI:contactValid()
+end
+function Room:updatePetContact(dt)
+ local active=self.petContactActive and self:contactEligible(self.contactContext)
+ if self.petContactActive and not active then self:setPetContact(false)end
+ if self.petContactIntent then self.petContactIntent:step()end
+ if self.affection then self.affection:step(dt,active==true,self.reduceEffects())end
+end
 function Room:reactPet(petting)
+ if self.focusUI and self.focusUI.windowActive==false then return false end
 	if not self.focusing or self.mode ~= "Room" or self.busy or self.overlayOpen() or GuiService.MenuIsOpen
 		or self.menuOpen or UserInputService:GetFocusedTextBox()or not self.pet or not self.greetingCamera then return false end
 	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -629,6 +657,7 @@ function Room:show(mode, animate)
 			self.pet:destroy()
 			self.pet = nil
 		end
+  if self.affection then self.affection:setPet(nil)end
 		self.petPrompt, self.petClick, self.focusMotion = nil, nil, nil
 		self:restoreCamera()
 	end
@@ -708,6 +737,8 @@ end
 function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+ if self.petContactIntent then self.petContactIntent:destroy()end
+ if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end
 	self.arrivalUnplaced=nil
 	self.arrivalPlacementPending=nil

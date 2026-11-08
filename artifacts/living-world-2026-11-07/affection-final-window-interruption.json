@@ -1,0 +1,57 @@
+{
+  "inputs": [
+    {
+      "device": "Keyboard",
+      "at": 0.285343199968338,
+      "key": "E",
+      "position": "423, 234, 0"
+    },
+    {
+      "device": "Touch",
+      "at": 1.5517070000059903,
+      "key": "None",
+      "position": "733, 290, 0"
+    },
+    {
+      "device": "Keyboard",
+      "at": 1.5850460999645293,
+      "key": "E",
+      "position": "795, 368, 0"
+    },
+    {
+      "device": "Touch",
+      "at": 13.468519899994135,
+      "key": "None",
+      "position": "733, 290, 0"
+    }
+  ],
+  "atStart": 342000.3874565,
+  "elapsed": 14.731940600089729,
+  "frames": 334,
+  "glyphEnableEdges": 0,
+  "petCount": 0,
+  "glyphFrames": 0,
+  "packets": [
+    {
+      "at": 2.015119499992579,
+      "packet": {
+        "leaseId": "747c9770-2702-4c95-8bb5-105239082def",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 3
+      }
+    },
+    {
+      "at": 2.7645382001064718,
+      "packet": {
+        "requestGeneration": 3,
+        "leaseId": "747c9770-2702-4c95-8bb5-105239082def",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    }
+  ],
+  "petalFrames": 0,
+  "nectar": 6
+}

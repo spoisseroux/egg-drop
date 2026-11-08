@@ -1,3 +1,4 @@
+local Face=require(script.Parent.PetFace)
 -- Original Droplet Puddle: a low gel body and a raised, waving water tail.
 -- Origin is the floor; the face looks along +Z. The host drives update().
 local Bounds=require(script.Parent.PetRigBounds)
@@ -31,7 +32,7 @@ local function piece(self, name, size, frame, color, rounded, role)
 		mesh.Parent = part
 	end
 	part.Parent = self.model
-	table.insert(self.pieces, { part = part, size = size, frame = frame, role = role })
+	table.insert(self.pieces, { part = part, size = size, frame = frame, role = role,faceRole=if name=="Cheek"then "cheek"elseif name=="EyeSpark"then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material })
 	return part
 end
 
@@ -119,6 +120,7 @@ function PuddleVisual:update(dt)
 	self.time += dt
 	self.affection=math.max(0,(self.affection or 0)-dt)
 	local happy=self.petting==true or self.affection>0
+ local faceDaylight=Face.daylight()
 	self.greeting += dt
 	-- Position, heading and pose update every render frame while following.
 	local t, g = self.time, self.greeting
@@ -141,6 +143,7 @@ function PuddleVisual:update(dt)
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
 	squash+=math.sin(stride*2)*.025*gait
 	local worldScale=self.worldScale
+ local travelBob=if self.worldContext and not reduced then self.movementBob or 0 else 0
 	local breathe = if reduced then 0 else math.sin(t * 2.1) * 0.018
 	local scale = Vector3.new(1 + squash * 0.55 - breathe * 0.4, 1 - squash + breathe, 1 + squash * 0.30)
 	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
@@ -169,9 +172,13 @@ function PuddleVisual:update(dt)
 			elseif entry.role == "spark" and blink then
 				transparency = 1
 			end
+   if entry.part.Name~="PuddleSkirt"and entry.part.Name~="LiquidLobe"then
+    pose=CFrame.new(0,travelBob,0)*CFrame.new(0,.3,0)*CFrame.Angles(0,0,if reduced then 0 else self.affectionTilt or 0)*CFrame.new(0,-.3,0)*pose
+   end
 			entry.part.CFrame = root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)
 		end
 		if happy and entry.part.Name=="Smile"then size=Vector3.new(size.X*1.5,size.Y*.8,size.Z)end
+  Face.paint(entry,self.worldContext,if entry.faceRole=="cheek"then COLORS.cheek:Lerp(Color3.fromHex("#ECA3BF"),self.affectionBlush or 0)else nil,faceDaylight)
 		entry.part.Size = size*worldScale
 		entry.part.Transparency = transparency
 		if self.worldContext and entry.role~="ripple"then Bounds.include(self,entry.part.CFrame,entry.part.Size)end

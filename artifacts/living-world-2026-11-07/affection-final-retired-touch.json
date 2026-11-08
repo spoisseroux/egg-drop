@@ -1,0 +1,39 @@
+{
+  "inputs": [
+    {
+      "device": "Touch",
+      "at": 1.067718500038609,
+      "key": "None",
+      "position": "372, 153, 0"
+    }
+  ],
+  "atStart": 341940.6055383,
+  "elapsed": 24.731876499950886,
+  "frames": 1484,
+  "glyphEnableEdges": 0,
+  "petCount": 0,
+  "glyphFrames": 0,
+  "packets": [
+    {
+      "at": 1.5486063999123871,
+      "packet": {
+        "leaseId": "b804e26a-a7ad-4db3-bd5c-994496bf954b",
+        "petId": "pip",
+        "granted": true,
+        "requestGeneration": 1
+      }
+    },
+    {
+      "at": 4.631916499929503,
+      "packet": {
+        "requestGeneration": 1,
+        "leaseId": "b804e26a-a7ad-4db3-bd5c-994496bf954b",
+        "petId": "pip",
+        "reason": "Ended",
+        "granted": false
+      }
+    }
+  ],
+  "petalFrames": 0,
+  "nectar": 6
+}

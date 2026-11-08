@@ -7,8 +7,8 @@ local PetPrestige = require(script.Parent.PetPrestige)
 local Companions = {}
 Companions.__index = Companions
 
-function Companions.new(boards, createPet, reduceEffects)
-	return setmetatable({ boards = boards, createPet = createPet, reduceEffects = reduceEffects, active = {}, refreshIn = 0 }, Companions)
+function Companions.new(boards, createPet, reduceEffects, options)
+	return setmetatable({ players=options and options.players or function()return Players:GetPlayers()end,boards = boards, createPet = createPet, reduceEffects = reduceEffects, active = {}, refreshIn = 0 }, Companions)
 end
 
 function Companions:clear()
@@ -26,14 +26,15 @@ function Companions:update(dt)
 		local ownRoot = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		local near = {}
 		if ownRoot then
-			for _, player in ipairs(Players:GetPlayers()) do
+			for _, player in ipairs(self.players()) do
 				if player == Players.LocalPlayer then
 					continue
 				end
 				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 				local board = self.boards:FindFirstChild(tostring(player.UserId))
 				local pet = board and Pets.byId[board:GetAttribute("CompanionId")]
-				if root and pet and board:GetAttribute("Mode") == "Room" and (root.Position - ownRoot.Position).Magnitude <= 72 then
+				if root and humanoid and humanoid.Health>0 and pet and board:GetAttribute("Mode") == "Room" and (root.Position - ownRoot.Position).Magnitude <= 72 then
 					local rank, legacy = PetPrestige.read(board, pet)
 					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0, rank = rank, legacy = legacy,
 						distance = (root.Position - ownRoot.Position).Magnitude })

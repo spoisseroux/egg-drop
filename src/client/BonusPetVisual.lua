@@ -1,3 +1,4 @@
+local Face=require(script.Parent.PetFace)
 local Visual = {}
 Visual.__index = Visual
 local GREET_TIME = 0.86
@@ -19,7 +20,7 @@ local function piece(self, name, size, offset, color, ball, animated)
 		mesh.Parent = part
 	end
 	part.Parent = self.model
-	table.insert(self.pieces, { part = part, size=size, offset = offset, animated = animated==true, foot = if type(animated)=="string"then animated else nil })
+	table.insert(self.pieces, { part = part, size=size, offset = offset, animated = animated==true, foot = if type(animated)=="string"then animated else nil,faceRole=if name=="Cheek"then "cheek"elseif name=="EyeSpark"then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material })
 	return part
 end
 
@@ -79,6 +80,7 @@ function Visual:update(dt)
 	self.time += dt
 	self.affection=math.max(0,(self.affection or 0)-dt)
 	local happy=self.petting==true or self.affection>0
+ local faceDaylight=Face.daylight()
 	self.greeting = math.max(0, self.greeting - dt)
 	-- Position, heading and pose update every render frame while following.
 	local hop = 0
@@ -98,18 +100,22 @@ function Visual:update(dt)
 	local reduced=self.reducedEffects==true
 	if reduced then hop,flourish=0,CFrame.identity end
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
-	local travelBob=if self.wick then 0 else (1-math.cos(stride*2))*.035*gait
+	local travelBob=if self.worldContext and not reduced then self.movementBob or 0 else 0
 	local worldScale=self.worldScale
 	local pivot = CFrame.new(self.origin + Vector3.new(0, (hop + travelBob + (if reduced then 0 else 0.045 * (1 + math.sin(self.time * 4))))*worldScale, 0))
-		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(self.time * 2.4) * 0.08), if reduced then 0 else math.sin(self.time * 3) * (0.03 + hop * 0.19))
+		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(self.time * 2.4) * 0.08), if reduced then 0 else math.sin(self.time * 3) * (0.03 + hop * 0.19)+(self.affectionTilt or 0))
 	for _, item in ipairs(self.pieces) do
 		local size=item.size
 		if happy and item.part.Name=="Mouth"then size=Vector3.new(size.X*1.6,size.Y*.8,size.Z)elseif happy and item.part.Name=="Eye"then size=Vector3.new(size.X,size.Y*.45,size.Z)end
+  if item.part.Name=="Cheek"then
+   local base=if self.wick then Color3.fromHex("#FFD0A2")else Color3.fromHex("#F4D2F5")
+   Face.paint(item,self.worldContext,base:Lerp(Color3.fromHex("#EF9CAF"),self.affectionBlush or 0),faceDaylight)
+  end
 		item.part.Size=size*worldScale
 		local pose=if item.animated then flourish*item.offset else item.offset
-		if self.wick and item.foot then
-			local step=math.sin(stride+(if item.foot=="footLeft"then 0 else math.pi))
-			pose=CFrame.new(0,math.max(0,step)*.085*gait,step*.075*gait)*pose
+		if item.foot then
+			local step=if self.wick then math.sin(stride+(if item.foot=="footLeft"then 0 else math.pi))else 0
+			pose=CFrame.new(0,math.max(0,step)*.085*gait-travelBob,step*.075*gait)*pose
 		elseif not self.wick and item.part.Name=="OrbitRing"then
 			pose=CFrame.Angles(0,0,math.sin(stride)*.025*gait)*pose
 		end

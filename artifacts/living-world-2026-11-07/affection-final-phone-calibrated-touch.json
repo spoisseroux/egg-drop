@@ -1,0 +1,48 @@
+{
+  "evidence": "Actual phone-emulator Touch; MCP raw screen offsets calibrated from delivered InputObject.Position (x-62,y-20). No production coordinate changes.",
+  "trace": {
+    "lastPetAward": {
+      "id": "921db2f3-96c9-440c-b475-97cf1a526ca4",
+      "petId": "pip",
+      "sequence": 4,
+      "day": "20765"
+    },
+    "inputs": [
+      {
+        "device": "Touch",
+        "at": 0.7168862998951226,
+        "key": "None",
+        "position": "376, 152, 0"
+      }
+    ],
+    "atStart": 341336.16327170003,
+    "elapsed": 16.249744799919426,
+    "frames": 975,
+    "glyphEnableEdges": 0,
+    "petCount": 2,
+    "glyphFrames": 0,
+    "packets": [
+      {
+        "at": 1.1656084000132978,
+        "packet": {
+          "leaseId": "89dabf19-6724-446e-abe2-28bd544b440d",
+          "petId": "pip",
+          "granted": true,
+          "requestGeneration": 8
+        }
+      },
+      {
+        "at": 16.081399400020018,
+        "packet": {
+          "requestGeneration": 8,
+          "leaseId": "89dabf19-6724-446e-abe2-28bd544b440d",
+          "petId": "pip",
+          "reason": "Ended",
+          "granted": false
+        }
+      }
+    ],
+    "petalFrames": 53,
+    "nectar": 8
+  }
+}

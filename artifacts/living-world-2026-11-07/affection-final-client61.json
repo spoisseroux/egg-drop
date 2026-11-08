@@ -1,0 +1,108 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DirectPetting",
+    "result": {
+      "passed": 22,
+      "cases": [
+        "press records candidate and release emits exactly one accepted tap",
+        "cumulative9px begins one rub with no release tap or repeated cue",
+        "one inactivity deadline stops and held motion cannot resurrect contact",
+        "coalesced release motion is consumed without tap or purr onset",
+        "canceled short release is cleanup and never a tap",
+        "blur clears stale opener leases without resurrecting held contact",
+        "a stationary long hold does not become tap or rub",
+        "same held touch cannot begin again when GuiObject reentry repeats InputBegan",
+        "retired touch never overwrites or ends a different active finger",
+        "mouse primary stays retired across reentry and unrelated touch until button release",
+        "touch retirement survives blur and reframe until its matching physical end or cancel",
+        "unrelated pointer cannot adopt or end an owned touch",
+        "rejected rub never starts purr or synthesizes release tap",
+        "failed or muted purr attempt remains consumed through the same held gesture",
+        "opening touch and mouse are drained before a fresh press",
+        "modal/native ownership loss cancels contact before another reaction",
+        "Room contact owns one voice attempt and one held grin without state writes",
+        "reduced rub grants static affection without species audio or camera recapture",
+        "only Back is selected and carried A drains before fresh native activation",
+        "first shown lesson retires on exit and save recovery never resurrects it",
+        "projected small pet retains44px target without including crest or floor FX",
+        "all seven muted reduced faces hold a readable grin with no body movement"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetHeldContact",
+    "result": [
+      "short E tap greets once without opening a reward contact",
+      "same held E crosses threshold once and remains deliberate until release",
+      "controller X uses identical held admission and matching release",
+      "carried opener E and X drain without greeting or later idle admission",
+      "cancel blur and owner loss end once without a release tap",
+      "background rejects fresh keys and pointer while muted foreground stays eligible",
+      "blurred held gesture drains its release and refocus cannot auto restart",
+      "no key press or mere focused time can open contact"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetContactIntentClient",
+    "result": [
+      "begin has only generation and current pet; no amount or clock",
+      "grant admits string-only pulses at bounded three per second",
+      "no grant produces no pulses and no auto retries",
+      "late grant is immediately ended and cannot acquire a new gesture",
+      "owner loss ends once and never resumes without a fresh begin",
+      "only current saved receipt shows one glyph",
+      "wrong pet lease generation and malformed receipt never display",
+      "saved after contact timeout or close never replays on return",
+      "denied contact keeps visual eligibility but has no pulse/retry",
+      "historical hatch balance/receipt-shaped snapshots are ignored",
+      "different granted lease cannot overwrite current one",
+      "destroy ends once disconnects intent and rejects late delivery"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetAffection",
+    "result": [
+      "three passive pooled petals and depth-respecting saved glyph",
+      "continuous contact rotates bounded variations at three-to-five seconds without allocations",
+      "ending contact clears poses and stops hidden petal motion",
+      "exact saved glyph fixture floats and fades then ends",
+      "reduced contact has static cheeks and glyph without moving petals",
+      "all seven body bobs preserve planted feet or Puddle skirt and hatch scale stays default",
+      "pet swap teardown and late calls never retain a glyph or revive pool"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetNightFace",
+    "result": [
+      "pip bounded night face blush and exact day restoration",
+      "puddle bounded night face blush and exact day restoration",
+      "wick bounded night face blush and exact day restoration",
+      "orbit bounded night face blush and exact day restoration",
+      "bloom_pip bounded night face blush and exact day restoration",
+      "foxfire_wick bounded night face blush and exact day restoration",
+      "eclipse_orbit bounded night face blush and exact day restoration",
+      "default-scale cinematic faces ignore the world night treatment"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompanionEligibility",
+    "result": [
+      "nearest six live peers remain the presentation cap",
+      "dead nearer humanoid yields to next live peer",
+      "nearby replacement root resets gait and bob generation",
+      "repeated owner cycles destroy every old remote rig"
+    ]
+  }
+]

@@ -281,10 +281,12 @@ return function(Hatching, Catalog)
 		assert(Hatching.release(h))
 		local old = db.player_1.hatching
 		old.version, old.mastery.pip, old.mastery.wick = 2, 3, 2
+		old.petDay,old.petCount,old.lastPetAward=nil,nil,nil -- Authentic pre-pet v2 input.
 		old.masteryChallenges, old.masteryLegacyMask, old.contracts, old.totalWins = nil, nil, nil, nil
 		db.player_1.keep, old.nectar = "untouched", 47
 		h = Hatching.load(1, {}, adapter("b"))
-		assert(h.status == "Ready" and h.state.version == 3 and h.state.nectar == 47)
+		assert(h.status == "Ready" and h.state.version == 4 and h.state.nectar == 47)
+		assert(h.state.petCount==0 and h.state.petDay==Hatching.public(h).dailyDay)
 		local public = Hatching.public(h)
 		assert(public.mastery.pip == 3 and public.mastery.wick == 2 and public.masteryLegacyMask == 1)
 		assert(public.masteryRanks.pip == 1 and public.masteryRanks.wick == 0)

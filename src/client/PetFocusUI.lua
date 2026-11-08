@@ -121,22 +121,27 @@ function Focus.new(parentGui, callbacks)
 	Art.corner(frame(glove, "Cuff", UDim2.fromOffset(7, 27), UDim2.fromOffset(16, 5), Art.Leaf, 7), 0.3)
 	local self = setmetatable({ gui = gui, root = root, panel = panel, back = back,
 		hit = hit, glove = glove, helper = helper, hint = hint, callbacks = callbacks, connections = {},
-		actionPrefix = "EggDropPetFocus" .. serial, active = false, heldTouches={}, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
-	table.insert(self.connections, back.Activated:Connect(function() callbacks.back() end))
+		actionPrefix = "EggDropPetFocus" .. serial, active = false, windowActive=true, heldTouches={},retiredTouches=setmetatable({},{__mode="k"}),retiredMouse=false, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
+	table.insert(self.connections, back.Activated:Connect(function()if self.active and self:canOwnInput()then callbacks.back()end end))
 	table.insert(self.connections,UserInputService.TouchStarted:Connect(function(input)self.heldTouches[input]=true end))
-	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil end))
+	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil;self:endPointer(input)end))
 	table.insert(self.connections,hit.InputBegan:Connect(function(input)self:beginPointer(input)end))
 	table.insert(self.connections,UserInputService.InputChanged:Connect(function(input)
-		if self:pointerMatches(input)then self:movePointer(input,false)end
+  if input.UserInputState==Enum.UserInputState.Cancel then self:endPointer(input)
+  elseif self:pointerMatches(input)then self:movePointer(input,false)end
 	end))
 	table.insert(self.connections,UserInputService.InputEnded:Connect(function(input)self:endPointer(input)end))
 	table.insert(self.connections,UserInputService.TextBoxFocused:Connect(function()self:cancelPointer()end))
 	table.insert(self.connections,GuiService:GetPropertyChangedSignal("MenuIsOpen"):Connect(function()if GuiService.MenuIsOpen then self:cancelPointer()end end))
 	table.insert(self.connections,UserInputService.LastInputTypeChanged:Connect(function(kind)
-		if kind~=Enum.UserInputType.Touch and kind~=Enum.UserInputType.MouseMovement and kind~=Enum.UserInputType.MouseButton1 then self:cancelPointer()end
+  local held=self.heldGreet
+  if held then
+   if kind~=held.device and not(held.device==Enum.UserInputType.Keyboard and kind==Enum.UserInputType.MouseMovement)then self:cancelPointer()end
+  elseif kind~=Enum.UserInputType.Touch and kind~=Enum.UserInputType.MouseMovement and kind~=Enum.UserInputType.MouseButton1 then self:cancelPointer()end
 	end))
 	table.insert(self.connections, UserInputService.WindowFocusReleased:Connect(function()self:loseWindowFocus()end))
-	table.insert(self.connections,UserInputService.GamepadDisconnected:Connect(function(kind)if self.openingADevice==kind then self.openingADevice=nil end end))
+ table.insert(self.connections,UserInputService.WindowFocused:Connect(function()self:gainWindowFocus()end))
+	table.insert(self.connections,UserInputService.GamepadDisconnected:Connect(function(kind)if self.openingADevice==kind then self.openingADevice=nil end;if self.heldGreet and self.heldGreet.device==kind then self:cancelPointer()end;if self.openingGreetDevice==kind then self.openingGreetDevice=nil end end))
 	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
 	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper()end))
 	Art.watchTextPreference(gui,function()return self.hint.Visible or self.helper.Visible end,function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper()end)
@@ -150,20 +155,39 @@ function Focus:retireFocusHint()
 	self.helper.Visible=self.saveNotice~=nil and self.active
 end
 function Focus:retireRoamHint()self.roamHintRetired=true;if not self.saveNotice then self.hint.Visible=false end end
-function Focus:cancelPointer()
+function Focus:cancelPointer(released)
+ if self.pointer and not released then
+  if self.pointer.UserInputType==Enum.UserInputType.Touch then
+   self.retiredTouches=self.retiredTouches or setmetatable({},{__mode="k"});self.retiredTouches[self.pointer]=true
+  elseif self.pointer.UserInputType==Enum.UserInputType.MouseButton1 then self.retiredMouse=true end
+ end
 	if self.contactAttempted then
 		self.contactAttempted=false
 		if self.callbacks.petContact then self.callbacks.petContact(false)end
 	end
+ self.heldGreet=nil
 	self.pointer,self.previousPoint,self.strokeDistance,self.contactDeadline=nil,nil,0,nil
 	self.wasRub,self.rubAccepted=false,false
 	self.glove.Visible=false
 end
 function Focus:loseWindowFocus()
-	self:cancelPointer();self.openingMouse=false;self.openingADevice=nil;self.openingTouches={}
-	if self.heldTouches then table.clear(self.heldTouches)end
+ local held=self.heldGreet
+ local blockedE=self.openingGreetE or(held and held.key==Enum.KeyCode.E)
+ local blockedDevice=self.openingGreetDevice or(held and held.key==Enum.KeyCode.ButtonX and held.device)
+ self.windowActive=false;self:cancelPointer();self.openingMouse=false;self.openingADevice=nil
+ self.openingGreetE=blockedE;self.openingGreetDevice=blockedDevice;self.openingTouches={}
+ if self.heldTouches then table.clear(self.heldTouches)end
 end
+function Focus:gainWindowFocus()self.windowActive=true end
+
 function Focus:checkContactDeadline()
+ if self.windowActive==false then self:cancelPointer();return true end
+ local held=self.heldGreet
+ if held and not held.active and self:now()-held.started>=.35 then
+  if not self.active or not self:canOwnInput()or not self.callbacks.canReact()then self:cancelPointer();return true end
+  held.active=true;self.contactAttempted=true
+  if self.callbacks.petContact then self.callbacks.petContact(true,"held")end
+ end
 	if self.contactDeadline and self:now()>=self.contactDeadline then self:cancelPointer();return true end
 	return false
 end
@@ -182,17 +206,21 @@ function Focus:inside(point)
 	return true
 end
 function Focus:beginPointer(input)
-	if not pointer(input)or self.pointer or not self.active or not self:canOwnInput()or not self.callbacks.canReact()then return false end
-	if(self.openingMouse and input.UserInputType==Enum.UserInputType.MouseButton1)or(self.openingTouches and self.openingTouches[input])then return false end
+ if not pointer(input)or self.windowActive==false or self.pointer or not self.active or not self:canOwnInput()or not self.callbacks.canReact()then return false end
+ if(input.UserInputType==Enum.UserInputType.Touch and self.retiredTouches and self.retiredTouches[input])
+  or(input.UserInputType==Enum.UserInputType.MouseButton1 and self.retiredMouse)then return false end
+ if(self.openingMouse and input.UserInputType==Enum.UserInputType.MouseButton1)or(self.openingTouches and self.openingTouches[input])then return false end
 	local point=Vector2.new(input.Position.X,input.Position.Y)-self.root.AbsolutePosition
 	if not self:inside(point)then return false end
+ if self.heldGreet then self:cancelPointer()end
 	self.pointer,self.previousPoint,self.strokeDistance=input,point,0
 	self.pointerStartedAt,self.wasRub,self.rubAccepted=self:now(),false,false
 	self:movePointer(input,true);return true
 end
 function Focus:movePointer(input,began)
+ if input.UserInputState==Enum.UserInputState.Cancel then self:endPointer(input);return end
 	if not self.pointer then return end
-	if input.UserInputState==Enum.UserInputState.Cancel or not self.active or not self:canOwnInput()or not self.callbacks.canReact()then self:cancelPointer();return end
+	if not self.active or not self:canOwnInput()or not self.callbacks.canReact()then self:cancelPointer();return end
 	local point=Vector2.new(input.Position.X,input.Position.Y)-self.root.AbsolutePosition
 	if not self:inside(point)then self:cancelPointer();return end
 	local traveled=if self.previousPoint then(point-self.previousPoint).Magnitude else 0
@@ -207,14 +235,15 @@ function Focus:movePointer(input,began)
 			if self.rubAccepted then self:retireFocusHint()end
 		end
 		if self.rubAccepted and not self.contactAttempted then
-			self.contactAttempted=true
-			if self.callbacks.petContact then self.callbacks.petContact(true)end
+			self.contactAttempted=true;self.contactDeadline=self:now()+.24
+			if self.callbacks.petContact then self.callbacks.petContact(true,"pointer")end
 		end
 	end
 	if self.contactAttempted and traveled>.5 then self.contactDeadline=self:now()+.24 end
 end
 function Focus:endPointer(input)
-	if input.UserInputType==Enum.UserInputType.MouseButton1 then self.openingMouse=false end
+	if input.UserInputType==Enum.UserInputType.MouseButton1 then self.openingMouse=false;self.retiredMouse=false end
+ if input.UserInputType==Enum.UserInputType.Touch and self.retiredTouches then self.retiredTouches[input]=nil end
 	if self.openingTouches then self.openingTouches[input]=nil end
 	local matches=input==self.pointer or(self.pointer and self.pointer.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1)
 	if not matches then return end
@@ -223,7 +252,7 @@ function Focus:endPointer(input)
 	if input.UserInputState~=Enum.UserInputState.Cancel and not self.wasRub and distance<9 and self:now()-(self.pointerStartedAt or 0)<=.45 and self.active and self:canOwnInput()and self.callbacks.canReact()and self:inside(point)then
 		if self.callbacks.greet()==true then self:retireFocusHint()end
 	end
-	self:cancelPointer()
+	self:cancelPointer(true)
 end
 
 function Focus:setActive(active)
@@ -236,6 +265,9 @@ function Focus:setActive(active)
 	self:cancelPointer()
 	local prefix = self.actionPrefix
 	if active then
+  self.openingGreetE=UserInputService:IsKeyDown(Enum.KeyCode.E)
+  local greetKind=UserInputService:GetLastInputType()
+  self.openingGreetDevice=if string.match(greetKind.Name,"^Gamepad")and UserInputService:IsGamepadButtonDown(greetKind,Enum.KeyCode.ButtonX)then greetKind else nil
 		self.openingMouse=UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
 		self.openingTouches={};for input in pairs(self.heldTouches)do self.openingTouches[input]=true end
 		local kind=UserInputService:GetLastInputType()
@@ -244,8 +276,8 @@ function Focus:setActive(active)
 		ContextActionService:BindActionAtPriority(prefix .. "Back", function(_, state)
 			return self:handleBack(state)
 		end, false, priority + 1, Enum.KeyCode.ButtonB)
-		ContextActionService:BindActionAtPriority(prefix .. "Greet", function(_, state)
-			return self:handleGreet(state)
+		ContextActionService:BindActionAtPriority(prefix .. "Greet", function(_, state,input)
+			return self:handleGreet(state,input)
 		end, false, priority, Enum.KeyCode.E, Enum.KeyCode.ButtonX)
 		ContextActionService:BindActionAtPriority(prefix .. "Move", function(_,state,input)return self:handleMove(state,input)end,
 			false, priority, Enum.PlayerActions.CharacterForward, Enum.PlayerActions.CharacterBackward,
@@ -255,7 +287,7 @@ function Focus:setActive(active)
 		if string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then GuiService.SelectedObject = self.back end
 	else
 		if self.focusLessonStarted then self:retireFocusHint()end
-		self.openingADevice=nil;self.openingTouches=nil;self.openingMouse=false
+		self.openingADevice=nil;self.openingTouches=nil;self.openingMouse=false;self.openingGreetE=false;self.openingGreetDevice=nil
 		for _, suffix in ipairs({ "Back", "Greet", "Move" }) do ContextActionService:UnbindAction(prefix .. suffix) end
 		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
 	end
@@ -313,7 +345,7 @@ function Focus:update(camera, pet, roamHint)
 		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
 	self:layoutRoamHint()
 	if not self.active then return end
-	self.helper.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "X  Pet    B  Back" else "Tap or rub to pet"
+	self.helper.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "Hold X to pet · B Back" else "Tap or rub · hold E to pet"
 	self:layoutSaveHelper()
 	local canReact = ownsInput and self.callbacks.canReact()
 	if self.currentPet~=pet or self.currentCamera~=camera then self:cancelPointer()end
@@ -331,7 +363,7 @@ function Focus:update(camera, pet, roamHint)
 end
 
 function Focus:canOwnInput()
-	return not GuiService.MenuIsOpen and UserInputService:GetFocusedTextBox() == nil
+	return self.windowActive~=false and not GuiService.MenuIsOpen and UserInputService:GetFocusedTextBox() == nil
 		and (not self.callbacks.canOwnInput or self.callbacks.canOwnInput())
 end
 
@@ -341,10 +373,28 @@ function Focus:handleBack(state)
 	return Enum.ContextActionResult.Sink
 end
 
-function Focus:handleGreet(state)
-	if not self.active or not self:canOwnInput() then return Enum.ContextActionResult.Pass end
-	if state == Enum.UserInputState.Begin and self.callbacks.canReact() then if self.callbacks.greet()==true then self:retireFocusHint()end end
-	return Enum.ContextActionResult.Sink
+function Focus:contactValid()
+ if self.windowActive==false or not self.contactAttempted or not self.active or not self:canOwnInput()or not self.callbacks.canReact()then return false end
+ return(self.heldGreet~=nil and self.heldGreet.active)or(self.pointer~=nil and self.contactDeadline~=nil and self:now()<self.contactDeadline)
+end
+function Focus:handleGreet(state,input)
+ local device=if input then input.UserInputType else Enum.UserInputType.Keyboard
+ local key=if input then input.KeyCode else Enum.KeyCode.E
+ local opener=(key==Enum.KeyCode.E and self.openingGreetE)or(key==Enum.KeyCode.ButtonX and self.openingGreetDevice==device)
+ if opener then
+  if state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel then if key==Enum.KeyCode.E then self.openingGreetE=false else self.openingGreetDevice=nil end end
+  return if self.active and self:canOwnInput()then Enum.ContextActionResult.Sink else Enum.ContextActionResult.Pass
+ end
+ local held=self.heldGreet
+ if held and held.device==device and held.key==key and(state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel)then self:cancelPointer();return Enum.ContextActionResult.Sink end
+ if self.windowActive==false or not self.active or not self:canOwnInput()then self:cancelPointer();return Enum.ContextActionResult.Pass end
+ if state==Enum.UserInputState.Begin and not held and self.callbacks.canReact()then
+  self:cancelPointer()
+  if self.callbacks.greet()==true then
+   self:retireFocusHint();self.heldGreet={device=device,key=key,started=self:now(),active=false}
+  end
+ end
+ return Enum.ContextActionResult.Sink
 end
 
 function Focus:handleMove(state,input)

@@ -1,0 +1,48 @@
+{
+  "trace": {
+    "lastPetAward": {
+      "id": "921db2f3-96c9-440c-b475-97cf1a526ca4",
+      "petId": "pip",
+      "sequence": 4,
+      "day": "20765"
+    },
+    "inputs": [
+      {
+        "device": "Keyboard",
+        "at": 0.2996071001980454,
+        "key": "ButtonX",
+        "position": "414, 229, 0"
+      }
+    ],
+    "atStart": 341588.8363492999,
+    "elapsed": 15.03181180008687,
+    "frames": 902,
+    "glyphEnableEdges": 0,
+    "petCount": 2,
+    "glyphFrames": 0,
+    "packets": [
+      {
+        "at": 0.7156532001681626,
+        "packet": {
+          "leaseId": "fc71ccee-9044-428f-a3fd-6595299fc78a",
+          "petId": "pip",
+          "granted": true,
+          "requestGeneration": 10
+        }
+      },
+      {
+        "at": 14.882562100188807,
+        "packet": {
+          "requestGeneration": 10,
+          "leaseId": "fc71ccee-9044-428f-a3fd-6595299fc78a",
+          "petId": "pip",
+          "reason": "Ended",
+          "granted": false
+        }
+      }
+    ],
+    "petalFrames": 0,
+    "nectar": 8
+  },
+  "evidence": "Studio virtual ButtonX key route; inspect recorded device classification; not a physical-controller test. Actual saved SFX Off/Motion Reduced, natural RNG."
+}

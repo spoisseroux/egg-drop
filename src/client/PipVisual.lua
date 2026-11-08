@@ -1,3 +1,4 @@
+local Face=require(script.Parent.PetFace)
 -- Original Pip stand-in. Origin is the floor; the face looks along +Z.
 -- The host owns the render connection, interaction, and synth greeting cue.
 local PipVisual = {}
@@ -33,7 +34,7 @@ local function piece(self, name, size, frame, color, rounded, role)
 		mesh.Parent = part
 	end
 	part.Parent = self.model
-	table.insert(self.pieces, { part = part, size = size, frame = frame, role = role })
+	table.insert(self.pieces, { part = part, size = size, frame = frame, role = role,faceRole=if name=="Cheek"then "cheek"elseif name=="EyeSpark"then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material })
 	return part
 end
 
@@ -134,6 +135,7 @@ function PipVisual:update(dt)
 	self.time += dt
 	self.affection=math.max(0,(self.affection or 0)-dt)
 	local happy=self.petting==true or self.affection>0
+ local faceDaylight=Face.daylight()
 	self.greeting += dt
 	-- Position, heading and pose update every render frame while following.
 	local t = self.time
@@ -155,9 +157,10 @@ function PipVisual:update(dt)
 	local gait=self.gaitWeight or 0;local stride=self.gaitPhase or 0
 	local breathe = if reduced then 0 else math.sin(t * 2.2) * 0.012
 	local worldScale=self.worldScale
+ local travelBob=if self.worldContext and not reduced then self.movementBob or 0 else 0
 	local scale = Vector3.new(1 + squash * 0.48 - breathe, 1 - squash + breathe, 1 + squash * 0.30)
-	local root = CFrame.new(self.origin + Vector3.new(0, bounce*worldScale, 0))
-		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 1.1) * 0.035), if reduced then 0 else math.sin(t * 1.8) * 0.025)
+	local root = CFrame.new(self.origin + Vector3.new(0, (bounce+travelBob)*worldScale, 0))
+		* CFrame.Angles(0, (self.yaw or 0) + (if reduced then 0 else math.sin(t * 1.1) * 0.035), if reduced then 0 else math.sin(t * 1.8) * 0.025+(self.affectionTilt or 0))
 	local blink = (t % 4.8 > 4.62) or (g > 0.30 and g < 0.61) or happy
 	for _, entry in ipairs(self.pieces) do
 		local rest = entry.frame
@@ -165,7 +168,7 @@ function PipVisual:update(dt)
 		local size = entry.size * scale
 		if entry.role=="footLeft"or entry.role=="footRight"then
 			local step=math.sin(stride+(if entry.role=="footLeft"then 0 else math.pi))
-			pose=CFrame.new(0,math.max(0,step)*.085*gait,step*.075*gait)*pose
+			pose=CFrame.new(0,math.max(0,step)*.085*gait-travelBob,step*.075*gait)*pose
 		elseif entry.role == "wave" then
 			pose *= CFrame.Angles(0, 0, -wave)
 		elseif entry.role == "sprig" then
@@ -177,6 +180,7 @@ function PipVisual:update(dt)
 			size = Vector3.new(size.X, 0.065, size.Z)
 		end
 		if happy and entry.part.Name=="Smile"then size=Vector3.new(size.X*1.5,size.Y*.8,size.Z)elseif happy and entry.part.Name=="SmileCorner"then pose=CFrame.new(0,.04,0)*pose end
+		Face.paint(entry,self.worldContext,if entry.faceRole=="cheek"then COLORS.peach:Lerp(Color3.fromHex("#F39BAF"),self.affectionBlush or 0)else nil,faceDaylight)
 		entry.part.Transparency = if entry.role == "spark" and blink then 1 else 0
 		entry.part.Size = size*worldScale
 		local placed=root * (CFrame.new(pose.Position*worldScale)*pose.Rotation)

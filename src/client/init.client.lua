@@ -32,7 +32,7 @@ local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
-local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={}}
+local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -555,6 +555,13 @@ end, function()
 end, function()
 	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
+clientUI.petContactRemote=remotes:WaitForChild("PetContact")
+roomView.petContactIntent=clientUI.PetContactIntent.new({now=os.clock,
+ send=function(actionName,payload)clientUI.petContactRemote:FireServer(actionName,payload)end,
+ eligible=function(context)return roomView:contactEligible(context)end,
+ saved=function()if roomView.affection then roomView.affection:showSaved(reduceEffects())end end})
+clientUI.petContactConnection=clientUI.petContactRemote.OnClientEvent:Connect(function(packet)roomView.petContactIntent:receive(packet)end)
+gui.Destroying:Connect(function()clientUI.petContactConnection:Disconnect();roomView.petContactIntent:destroy()end)
 local function stationContext()
 	local character=player.Character
 	local root=character and character:FindFirstChild("HumanoidRootPart")

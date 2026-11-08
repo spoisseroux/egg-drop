@@ -15,6 +15,8 @@ local Progress = require(script.PlayerProgress)
 local FirstSession = require(script.FirstSession)
 local FieldRun = require(script.FieldRun)
 local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
+local PetContactController = require(script.PetContact)
+local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 local Nursery = require(script.HatchProgress)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
@@ -39,6 +41,7 @@ local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
+local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
 local loading = {}
@@ -56,6 +59,36 @@ end
 
 local function canProgress(board)
 	return board.profileReady and SessionProfile.ready(board.nursery, board.nurseryBusy)
+end
+
+local function petState(board)
+	local character=board.player.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+	local handle,state=board.nursery,board.nursery.state
+	local petId=board.profile.companionId
+	local today=Daily.dayOf(handle.adapter.now())
+	return {mode=board.mode,closing=board.closing,petId=petId,owned=NurseryCatalog.isOwned(state.inventoryMask,petId),
+		character=character,root=root,position=root and root.Position,epoch=handle.epoch,status=handle.status,
+		alive=humanoid~=nil and humanoid.Health>0 and root~=nil and character:IsDescendantOf(workspace),
+		ready=canProgress(board)and not handle.busy and not handle.pending,
+		busy=handle.busy or board.nurseryBusy,pendingId=handle.pending and handle.pending.id,
+		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed,
+		lastPetAward=state.lastPetAward,capReached=tonumber(today)<tonumber(state.petDay)
+			or(today==state.petDay and state.petCount>=5)}
+end
+local function petAnchor(state)
+	local room=workspace:FindFirstChild("EggDropLounge")
+	local floor=room and room:FindFirstChild("Floor")
+	if not floor or not state.root then return nil end
+	local position=state.position-state.root.CFrame.LookVector*3+state.root.CFrame.RightVector*2.6
+	local at=floor.CFrame:PointToObjectSpace(position)
+	if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return nil end
+	local params=RaycastParams.new();params.RespectCanCollide=true
+	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
+	local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+	if not hit or hit.Position.Y>state.position.Y+1 or hit.Position.Y<state.position.Y-6 then return nil end
+	return Vector3.new(position.X,hit.Position.Y+.025,position.Z)
 end
 
 local function publishAppearance(board)
@@ -286,6 +319,20 @@ local function addPlayer(player)
 		publishAppearance(board)
 		for _,result in ipairs(results)do appearanceResult:FireClient(player,result) end
 	end
+	local affectionRandom=Random.new()
+	board.petContact=PetContactController.new({now=os.clock,guid=function()return HttpService:GenerateGUID(false)end,
+		random=function()return affectionRandom:NextNumber()end,read=function()return petState(board)end,anchor=petAnchor,
+		candidate=function(lease)return Nursery.petCandidate(board.nursery,lease.id,lease.petId)end,
+		award=function(candidate)
+			if boards[player]~=board or board.closing then return end
+			board.nurseryBusy=true;publishNursery(board)
+			Nursery.awardPet(board.nursery,candidate)
+			board.nurseryBusy=false
+			if boards[player]==board and not board.closing then publishNursery(board);publishState(board)end
+		end,
+		emit=function(packet)
+			if boards[player]==board and not board.closing and player.Parent==Players then petContactRemote:FireClient(player,packet)end
+		end})
 	folder.Parent = trays
 	if board.firstSession then
 		board.firstSession:advance(1)
@@ -305,6 +352,7 @@ local function closeBoard(board)
 	if board.closing then return end
 	closing[board] = true
 	board.closing = true
+	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
@@ -323,9 +371,18 @@ Players.PlayerRemoving:Connect(function(player)
 		board.profile.resolveAppearance = nil
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
+		if board.petContact then board.petContact:destroy()end
 		boards[player] = nil
 		closeBoard(board)
 	end
+end)
+
+petContactRemote.OnServerEvent:Connect(function(player,action,payload)
+	local board=boards[player]
+	if not board or board.closing or not board.petContact then return end
+	if action=="begin"then board.petContact:begin(payload)
+	elseif action=="pulse"then board.petContact:pulse(payload)
+	elseif action=="end"then board.petContact:finish(payload)end
 end)
 
 for _, player in ipairs(Players:GetPlayers()) do
@@ -609,6 +666,7 @@ RunService.Heartbeat:Connect(function(dt)
 	end
 	local now = os.clock()
 	for player, board in pairs(boards) do
+		if board.petContact then board.petContact:update()end
 		syncVisuals(board)
 		if now - (board.lastPressurePublish or 0) >= .1 then
 			board.lastPressurePublish = now
@@ -637,7 +695,7 @@ task.spawn(function()
 				and not board.nurseryBusy and not board.nursery.busy then
 				task.spawn(function()
 					Nursery.retry(board.nursery)
-					if boards[player] == board then publishNursery(board); publishState(board) end
+					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
 				end)
 			end
 		end
@@ -687,7 +745,7 @@ task.spawn(function()
 					else
 						Nursery.renew(board.nursery)
 					end
-					if boards[player] == board then publishNursery(board); publishState(board) end
+					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
 				end)
 			end
 		end

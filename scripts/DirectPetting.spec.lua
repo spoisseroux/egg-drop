@@ -1,3 +1,5 @@
+-- Run with the game viewport foreground: live WindowFocusReleased ownership is retained.
+-- A window=false failure diagnostic requires restoring foreground and rerunning this fixture.
 -- Real LocalScript client host. Gesture fixtures use a deterministic clock and fake callbacks,
 -- not synthetic native input; root separately verifies mouse/touch/Gamepad1 and actual sound.
 return function(client,parent)
@@ -44,14 +46,44 @@ return function(client,parent)
   test("blur clears stale opener leases without resurrecting held contact",function()
    local f,c=gesture();local i=touch(70,80);f:beginPointer(i);rub(f,i);f.heldTouches={[i]=true};f.openingMouse=true;f.openingTouches={[i]=true};f.openingADevice=Enum.UserInputType.Gamepad1
    f:loseWindowFocus();assert(not f.pointer and not f.openingMouse and not f.openingADevice and next(f.heldTouches)==nil and c.stop==1)
-   local mouse={UserInputType=Enum.UserInputType.MouseButton1,Position=touch(70,80).Position};assert(f:beginPointer(mouse));f:cancelPointer();assert(c.start==1)
+   local mouse={UserInputType=Enum.UserInputType.MouseButton1,Position=touch(70,80).Position};assert(not f:beginPointer(mouse));f:gainWindowFocus();assert(f:beginPointer(mouse));f:cancelPointer();assert(c.start==1)
   end)
   test("a stationary long hold does not become tap or rub",function()
    local f,c,advance=gesture();local i=touch(70,80);f:beginPointer(i);advance(1);f:endPointer(i);assert(c.tap==0 and c.rub==0 and c.start==0)
   end)
-  test("leaving the pet ends once and returning held never creates another gesture",function()
-   local f,c=gesture();local i=touch(70,80);f:beginPointer(i);rub(f,i);f:movePointer(touch(400,80),false);f:movePointer(touch(100,80),false);f:endPointer(i)
-   assert(c.start==1 and c.stop==1 and c.tap==0 and not f.pointer)
+  test("same held touch cannot begin again when GuiObject reentry repeats InputBegan",function()
+   local f,c=gesture();local i=touch(70,80);assert(f:beginPointer(i));rub(f,i);f:movePointer(touch(400,80),false)
+   i.Position=touch(100,80).Position
+   for _=1,6 do assert(not f:beginPointer(i));f:movePointer(i,false)end
+   assert(c.start==1 and c.stop==1 and c.tap==0 and not f.pointer and f.retiredTouches[i])
+   local foreign=touch(90,80);f:endPointer(foreign);assert(not f:beginPointer(i)and f.retiredTouches[i])
+   f:endPointer(i);assert(not f.retiredTouches[i]);local fresh=touch(70,80);assert(f:beginPointer(fresh));f:endPointer(fresh)
+   assert(c.start==1 and c.stop==1 and c.tap==1)
+  end)
+  test("retired touch never overwrites or ends a different active finger",function()
+   local f,c=gesture();local a,b=touch(70,80),touch(70,80)
+   f:beginPointer(a);rub(f,a);f:movePointer(touch(400,80),false);assert(f.retiredTouches[a])
+   assert(f:beginPointer(b));rub(f,b);assert(c.start==2 and f.pointer==b)
+   assert(not f:beginPointer(a));f:endPointer(a);assert(f.pointer==b and c.stop==1)
+   f:endPointer(b);assert(c.stop==2 and c.tap==0 and not f.pointer)
+  end)
+  test("mouse primary stays retired across reentry and unrelated touch until button release",function()
+   local f,c=gesture();local a={UserInputType=Enum.UserInputType.MouseButton1,Position=touch(70,80).Position}
+   f:beginPointer(a);f:movePointer({UserInputType=Enum.UserInputType.MouseMovement,Position=touch(90,80).Position},false)
+   f:movePointer({UserInputType=Enum.UserInputType.MouseMovement,Position=touch(400,80).Position},false)
+   local repeatBegin={UserInputType=Enum.UserInputType.MouseButton1,Position=touch(100,80).Position}
+   assert(f.retiredMouse and not f:beginPointer(repeatBegin));f:endPointer(touch(100,80));assert(not f:beginPointer(repeatBegin))
+   f:endPointer(a);assert(not f.retiredMouse and f:beginPointer(repeatBegin));f:endPointer(repeatBegin)
+   assert(c.start==1 and c.stop==1 and c.tap==1)
+  end)
+  test("touch retirement survives blur and reframe until its matching physical end or cancel",function()
+   for _,cancel in ipairs({false,true})do
+    local f,c=gesture();local a=touch(70,80);f:beginPointer(a);rub(f,a);f:loseWindowFocus();f:gainWindowFocus()
+    assert(not f:beginPointer(a)and f.retiredTouches[a]);f:cancelPointer();assert(f.retiredTouches[a])
+    if cancel then a.UserInputState=Enum.UserInputState.Cancel end
+    f:endPointer(a);assert(not f.retiredTouches[a]);assert(f:beginPointer(touch(70,80)));f:cancelPointer()
+    assert(c.start==1 and c.stop==1 and c.tap==0)
+   end
   end)
   test("unrelated pointer cannot adopt or end an owned touch",function()
    local f,c=gesture();local a,b=touch(70,80),touch(90,80);f:beginPointer(a);assert(not f:beginPointer(b)and not f:pointerMatches(b));f:endPointer(b);assert(f.pointer==a and c.tap==0);f:endPointer(a);assert(c.tap==1)
@@ -82,8 +114,15 @@ return function(client,parent)
    return r,events
   end
   test("Room contact owns one voice attempt and one held grin without state writes",function()
-   local r,c=room();local shot=r.greetingCamera;assert(not r:setPetContact(true));assert(r.pet.petting and r.petContactActive and c.start==1)
+   local r,c=room();local shot=r.greetingCamera;assert(r:setPetContact(true));assert(r.pet.petting and r.petContactActive and c.start==1)
    r:setPetContact(true);assert(c.start==1);r:setPetContact(false);r:setPetContact(false);assert(not r.pet.petting and c.stop==1 and r.greetingCamera==shot)
+   r.focusUI={contactValid=function()return true end};r.removingCharacter=Players.LocalPlayer.Character
+   assert(not r:setPetContact(true)and c.start==1)
+   r.removingCharacter=nil;assert(r:setPetContact(true));r.removingCharacter=Players.LocalPlayer.Character
+   assert(not r:contactEligible(r.contactContext));r:updatePetContact(.1)
+   assert(not r.petContactActive and not r.pet.petting and c.stop==2 and r.greetingCamera==shot)
+   r.removingCharacter=nil;r.focusUI.windowActive=false;assert(not r:setPetContact(true)and not r:reactPet(false)and c.start==2)
+   r.focusUI.windowActive=true;assert(r:setPetContact(true)and c.start==3);r:setPetContact(false)
   end)
   test("reduced rub grants static affection without species audio or camera recapture",function()
    local r,c=room();local shot=r.greetingCamera;assert(r:reactPet(true));assert(r.pet.affection>0 and c.cue==0 and c.greet==0 and r.greetingCamera==shot)
@@ -111,7 +150,10 @@ return function(client,parent)
    v:setSaveNotice(Notice.resolve("Retrying",{status="Ready"}));v:update(camera,{model=m},false);settle();assert(v.helper.Visible and v.helper.Text:find("retry",1,true)and v.helper.TextFits)
    v:setSaveNotice(nil);v:update(camera,{model=m},false);assert(not v.helper.Visible)
    v:retireRoamHint();v:setActive(false);v:update(nil,nil,true);assert(not v.hint.Visible)
-   v:setSaveNotice(Notice.resolve("Temporary",{status="Ready"}));v:update(nil,nil,true);assert(v.hint.Visible);v:setSaveNotice(nil);v:update(nil,nil,true);assert(not v.hint.Visible);m:Destroy()
+   v:setSaveNotice(Notice.resolve("Temporary",{status="Ready"}));v:update(nil,nil,true)
+   local context=string.format("active=%s window=%s owns=%s core=%s textbox=%s notice=%s retired=%s hint=%q gui=%s",tostring(v.active),tostring(v.windowActive),tostring(v:canOwnInput()),tostring(Gui.MenuIsOpen),tostring(game:GetService("UserInputService"):GetFocusedTextBox()),tostring(v.saveNotice and v.saveNotice.short),tostring(v.roamHintRetired),v.hint.Text,tostring(v.gui.Enabled))
+   assert(v.hint.Visible,"passive Temporary notice hidden: "..context)
+   v:setSaveNotice(nil);v:update(nil,nil,true);assert(not v.hint.Visible,"retired roam hint resurrected: "..context);m:Destroy()
   end)
   test("projected small pet retains44px target without including crest or floor FX",function()
    local m=Instance.new("Model");local body=Instance.new("Part");body.Size=Vector3.new(.1,.1,.1);body.Parent=m;m.Parent=folder

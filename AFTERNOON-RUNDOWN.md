@@ -1,5 +1,7 @@
 # Egg Drop — November7 afternoon play build
 
+This historical v125 handoff is superseded by [the living Hollow and arcade build](PLAY-BUILD.md), which records the current release and evidence.
+
 **Private v125 Published**, verified in refreshed Studio Version History, titled **Pocket Deck hardware and companions - f813d61**. Runtime `f813d61` is committed and pushed on `feat/egg-drop-arcade-polish`. This supersedes the overnightv93 build. [Private play link](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/hardware-companion-2026-11-07/private-published-f813d61.png).
 
 ## What changed

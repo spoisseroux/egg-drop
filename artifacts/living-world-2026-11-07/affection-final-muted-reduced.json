@@ -1,0 +1,1270 @@
+{
+  "trace": {
+    "lastPetAward": {
+      "id": "921db2f3-96c9-440c-b475-97cf1a526ca4",
+      "petId": "pip",
+      "sequence": 4,
+      "day": "20765"
+    },
+    "inputs": [
+      {
+        "device": "Keyboard",
+        "at": 0.3532720999792218,
+        "key": "E",
+        "position": "414, 229, 0"
+      }
+    ],
+    "atStart": 341535.2551986,
+    "elapsed": 14.84918210003525,
+    "frames": 891,
+    "glyphEnableEdges": 0,
+    "petCount": 2,
+    "glyphFrames": 0,
+    "packets": [
+      {
+        "at": 0.7825142000801861,
+        "packet": {
+          "leaseId": "dea8b7de-0775-4c57-b4c6-d1fa2e5cd269",
+          "petId": "pip",
+          "granted": true,
+          "requestGeneration": 9
+        }
+      }
+    ],
+    "petalFrames": 0,
+    "nectar": 8
+  },
+  "before": {
+    "sounds": [
+      {
+        "plays": 1,
+        "groupVolume": 0,
+        "id": "rbxassetid://98540058987296",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 12,
+        "name": "EggDrop_Music",
+        "volume": 0,
+        "isPlaying": false,
+        "timeLength": 53.333333333333336
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://114394270790206",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_land",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.15002267573696146
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://73790979677763",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_wick",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.2700226757369614
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://124797289860370",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_hatch",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.52
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://108923415809497",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_hatch_rise",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.35002267573696144
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://78319039170839",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_aim",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.06503401360544217
+      },
+      {
+        "plays": 8,
+        "groupVolume": 0,
+        "id": "rbxassetid://80835586668229",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 21,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "isPlaying": false,
+        "timeLength": 2
+      },
+      {
+        "plays": 4,
+        "groupVolume": 0,
+        "id": "rbxassetid://74679010378287",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "isPlaying": false,
+        "timeLength": 0.07501133786848073
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://137957843347780",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_bank",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.11002267573696145
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://72145493661024",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_chain",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.2090702947845805
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://80753325038930",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_retry",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.22503401360544217
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://101342613025976",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_overflow",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.49002267573696145
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://105659319683342",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_orbit",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.38
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://79464813520035",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_puddle",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.36802721088435375
+      },
+      {
+        "plays": 11,
+        "groupVolume": 0,
+        "id": "rbxassetid://104178433438245",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "isPlaying": false,
+        "timeLength": 0.29006802721088437
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://101582196091552",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_charge",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.08
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://125552140473053",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_drop",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.10503401360544218
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      }
+    ],
+    "events": [
+      {
+        "at": 340829.8508343999,
+        "name": "EggDrop_pet",
+        "volume": 0.699999988079071,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340830.21628020005,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340832.2153606999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340833.1997183,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340834.2150145001,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340836.2320218999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340837.21624980005,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 340838.23235429986,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340840.21470759995,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340842.21496529994,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340842.2162464999,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340844.2318861999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340845.23222959996,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340846.23181500006,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340848.2152996999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340849.2338399,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 340850.2151243,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340852.2313595,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340854.2321919,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340854.24881589995,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340856.2155241,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340857.2493435,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340858.21495070006,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340882.58031590004,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340935.9284627999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340989.2597993999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340998.1126468,
+        "name": "EggDrop_Music",
+        "volume": 0.12999999523162842,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340999.62829550006,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341003.0093129999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341006.01052340004,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341009.0108538999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341012.00980959996,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341014.8420257999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341051.48999439995,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341104.8218982001,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341158.16896559997,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341211.50136710005,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341264.83210649993,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341318.17912009987,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341337.2627506,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341339.26181409997,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341340.24736279994,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341341.2619153999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341343.2781358999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341344.2639593,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 341345.27893309994,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341347.27833390003,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341349.279694,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341349.2814332999,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341351.2775468,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341371.51129579986,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341424.8427869,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341471.67686300003,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341478.1732999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341497.07603959995,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341507.3574937999,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341508.14075849997,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      }
+    ],
+    "at": 341535.52116949996
+  },
+  "after": {
+    "sounds": [
+      {
+        "plays": 1,
+        "groupVolume": 0,
+        "id": "rbxassetid://98540058987296",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 12,
+        "name": "EggDrop_Music",
+        "volume": 0,
+        "isPlaying": false,
+        "timeLength": 53.333333333333336
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://114394270790206",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_land",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.15002267573696146
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://73790979677763",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_wick",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.2700226757369614
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://124797289860370",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_hatch",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.52
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://108923415809497",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_hatch_rise",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.35002267573696144
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://132946666827827",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.14
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://78319039170839",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_aim",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.06503401360544217
+      },
+      {
+        "plays": 8,
+        "groupVolume": 0,
+        "id": "rbxassetid://80835586668229",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 21,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "isPlaying": false,
+        "timeLength": 2
+      },
+      {
+        "plays": 4,
+        "groupVolume": 0,
+        "id": "rbxassetid://74679010378287",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "isPlaying": false,
+        "timeLength": 0.07501133786848073
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://137957843347780",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_bank",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.11002267573696145
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://72145493661024",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_chain",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.2090702947845805
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://80753325038930",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_retry",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.22503401360544217
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://101342613025976",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_overflow",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.49002267573696145
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://105659319683342",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_orbit",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.38
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://79464813520035",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_puddle",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.36802721088435375
+      },
+      {
+        "plays": 11,
+        "groupVolume": 0,
+        "id": "rbxassetid://104178433438245",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "isPlaying": false,
+        "timeLength": 0.29006802721088437
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://101582196091552",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_charge",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.08
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://125552140473053",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_drop",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.10503401360544218
+      },
+      {
+        "plays": 0,
+        "groupVolume": 0,
+        "id": "rbxassetid://100118672776397",
+        "isLoaded": true,
+        "timePosition": 0,
+        "loops": 0,
+        "name": "EggDrop_merge_jelly",
+        "volume": 0.5,
+        "isPlaying": false,
+        "timeLength": 0.24303854875283445
+      }
+    ],
+    "events": [
+      {
+        "at": 340829.8508343999,
+        "name": "EggDrop_pet",
+        "volume": 0.699999988079071,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340830.21628020005,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340832.2153606999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340833.1997183,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340834.2150145001,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340836.2320218999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340837.21624980005,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 340838.23235429986,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340840.21470759995,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340842.21496529994,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340842.2162464999,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340844.2318861999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340845.23222959996,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340846.23181500006,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340848.2152996999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340849.2338399,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 340850.2151243,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340852.2313595,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340854.2321919,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340854.24881589995,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340856.2155241,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340857.2493435,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 340858.21495070006,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 340882.58031590004,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340935.9284627999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340989.2597993999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 340998.1126468,
+        "name": "EggDrop_Music",
+        "volume": 0.12999999523162842,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 340999.62829550006,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341003.0093129999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341006.01052340004,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341009.0108538999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341012.00980959996,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341014.8420257999,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341051.48999439995,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341104.8218982001,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341158.16896559997,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341211.50136710005,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341264.83210649993,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341318.17912009987,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341337.2627506,
+        "name": "EggDrop_Purr",
+        "volume": 0,
+        "speed": 1,
+        "kind": "Play"
+      },
+      {
+        "at": 341339.26181409997,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341340.24736279994,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341341.2619153999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341343.2781358999,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341344.2639593,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 0.9599999785423279,
+        "kind": "Play"
+      },
+      {
+        "at": 341345.27893309994,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341347.27833390003,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341349.279694,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341349.2814332999,
+        "name": "EggDrop_pet",
+        "volume": 0.25999999046325684,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341351.2775468,
+        "kind": "Loop",
+        "name": "EggDrop_Purr"
+      },
+      {
+        "at": 341371.51129579986,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341424.8427869,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341471.67686300003,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341478.1732999,
+        "kind": "Loop",
+        "name": "EggDrop_Music"
+      },
+      {
+        "at": 341497.07603959995,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341507.3574937999,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      },
+      {
+        "at": 341508.14075849997,
+        "name": "EggDrop_menu",
+        "volume": 0.6499999761581421,
+        "speed": 1.059999942779541,
+        "kind": "Play"
+      }
+    ],
+    "at": 341550.22072979994
+  },
+  "evidence": "Actual saved Settings: SFX Off and Motion Reduced, foreground phone emulator; no petals/no SFX while server contact remains eligible; natural RNG not forced."
+}

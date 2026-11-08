@@ -1,0 +1,70 @@
+[
+  {
+    "ok": true,
+    "suite": "PetAward",
+    "result": {
+      "passed": 15,
+      "persistentWrites": false,
+      "cases": {
+        "1": "one exact pet operation adds one once, independent of field reward and hatch state",
+        "2": "four to five is atomic and further candidates do no storage work",
+        "3": "immutable captured candidate survives mutation and repeated store callbacks",
+        "4": "forged amount unknown pet and missing lease are rejected before a write",
+        "5": "commit-before-error is proved by exact receipt before midnight expiry",
+        "6": "precommit midnight expiry clears only proved noncommit and restores Ready",
+        "7": "a newer day resets allowance only in its admitted award; rollback never resets it",
+        "8": "a second epoch fences the old writer and awards exactly once",
+        "9": "pending field or hatch operations retain their sole owner",
+        "10": "close drains retained pet proof before releasing without a second award",
+        "11": "authentic v3 upgrades preserve every old nested fact and sibling",
+        "12": "future and malformed persisted schemas are not overwritten",
+        "13": "A then B then replay A cannot reuse an old admitted operation sequence",
+        "14": "A followed by a non-pet operation retains exact A proof without a second award",
+        "15": "renew may prove and clear a committed pet pending operation exactly once"
+      },
+      "evidence": "isolated fenced v4 adapter transactions, clocks and exact commit receipts"
+    }
+  },
+  {
+    "ok": true,
+    "suite": "PetContact",
+    "result": {
+      "passed": 16,
+      "persistentWrites": false,
+      "cases": {
+        "1": "twelve continuous server seconds produce one roll and exact live Saved receipt",
+        "2": "negative outcome consumes opportunity without storage or a promised award",
+        "3": "idle focus stationary timeout and a tap cannot earn",
+        "4": "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+        "5": "restarting after a missed opportunity still requires a new full twelve seconds",
+        "6": "stale cross-player and replaced lease ids cannot extend a new contact",
+        "7": "duplicate begin reuses grant without refreshing its continuity clock",
+        "8": "room ownership pet root generation death movement conflict and epoch invalidate contact",
+        "9": "forged payload and unreachable anchor do no RNG or storage work",
+        "10": "same held context may receive retry or renew proof once but cannot draw while saving",
+        "11": "end or replacement while a commit is pending prevents any later glyph",
+        "12": "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+        "13": "cap mute and reduced effects are independent and capped draws stop",
+        "14": "destroy cancels display and future work while retained ledger work belongs elsewhere",
+        "15": "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+        "16": "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+      },
+      "evidence": "pure server contact continuity and live receipt broker; not proof of human touch"
+    }
+  },
+  {
+    "ok": true,
+    "suite": "PetContactHost",
+    "result": {
+      "passed": 4,
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+        "2": "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+        "3": "wrong equipped pet is rejected through the real host before RNG or storage",
+        "4": "existing retry worker proves ended committed operation without a second glyph or second worker"
+      },
+      "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture"
+    }
+  }
+]

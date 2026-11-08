@@ -1,0 +1,69 @@
+# Living Hollow and arcade pass — accepted gallery
+
+These are native Studio captures unless identified as a presentation fixture. Phone captures are Studio emulation. None establish physical-device performance or live multiplayer.
+
+## Handheld
+
+Before — user-supplied reference:
+
+![Before](references/pocket-deck-before.png)
+
+After — actual final Bank round,10drops accepted:
+
+![Final live field](integrated-final-bank-in-progress.jpg)
+
+Full phone-emulator field with Medium text:
+
+![Phone field](field-phone-medium-full-native.png)
+
+## Receipt and egg
+
+Before — user-supplied reference:
+
+![Before recap](references/recap-before.png)
+
+After — actual24-drop Bank,660points, Saved+12, after the count-up settled:
+
+![Saved recap](integrated-final-settled-recap-desktop.jpg)
+
+Actual18-nectar Meadow purchase, Wick result; same result survived X/reopen:
+
+![Wick result](integrated-final-hatch-reveal-desktop.jpg)
+
+## Style and shared palette
+
+![Original style](references/style-before.png)
+
+![Direct selection](appearance-final-style-sticker-medium.jpg)
+
+![Large right-plate print](appearance-final-print-desktop.jpg)
+
+![Creek palette on menu](palette-creek-menu-desktop.jpg)
+
+![Earned moving Creek background](background-earned-creek-phase-b.jpg)
+
+## A larger Hollow
+
+The same final production world under client-only fixed noon/night clock samples; server daily reward time was not changed:
+
+![Boardwalk noon](world-boardwalk-final-noon-lighting-fixture.jpg)
+
+![Boardwalk night](world-boardwalk-final-night-lighting-fixture.jpg)
+
+![Orchard night](world-orchard-night-lighting-fixture.jpg)
+
+## Companion readability
+
+Frozen previous-source night baseline, seven client-only staged rigs:
+
+![Before night faces](affection-seven-night-baseline-framed-fixture.jpg)
+
+Final production rigs, same seven species under fixed-night lighting. Eyes/cheeks remain visible while bodies keep world lighting; these are not seven owned pets or live peers:
+
+![Final night faces](affection-seven-night-final-production-fixture.jpg)
+
+Actual held E pet focus, captured between reward glyphs:
+
+![Pip held reaction](affection-final-foreground-held-pip.jpg)
+
+[Exact evidence, failed diagnostics and limits](BUILD-EVIDENCE.md) · [Player guide and current private release](../../PLAY-BUILD.md).

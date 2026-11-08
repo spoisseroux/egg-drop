@@ -15,7 +15,7 @@ function Follow.ground(position, visual, fallback)
 end
 
 function Follow.rest(visual)
-	visual.gaitPhase,visual.gaitWeight=0,0
+	visual.gaitPhase,visual.gaitWeight,visual.movementBob=0,0,0
 end
 
 function Follow.step(visual, root, dt, state, reduced)
@@ -51,6 +51,7 @@ function Follow.step(visual, root, dt, state, reduced)
 			visual.gaitPhase=((visual.gaitPhase or 0)+cycles*math.pi*2)%(math.pi*2)
 		end
 	end
+ visual.movementBob=(1-math.cos(visual.gaitPhase or 0))*.025*(visual.gaitWeight or 0)
 	local toward = if delta.Magnitude > 0.30 then delta else Vector3.new(root.Position.X - old.X, 0, root.Position.Z - old.Z)
 	if toward.Magnitude > 0.05 then
 		local wanted = math.atan2(toward.X, toward.Z) -- pet fronts face +Z
