@@ -82,8 +82,6 @@ function Menu.new(parent,callbacks)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
 	self.nectar=text(self.wallet,"Nectar","0 nectar","Body",Art.Amber)
 	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:activate("close")end))
-	self.resumeButton=button(card,"Deck","Resume",function()self:activate("play")end)
-	self.resumeButton.BackgroundColor3,self.resumeButton.TextColor3=Art.Leaf,Art.Ink
 	self.dailyButton=button(card,"DailyBonus","Gift +6",function()self:activate("daily")end)
 	local body=Instance.new("ScrollingFrame")
 	body.Name,body.BackgroundTransparency,body.BorderSizePixel,body.ZIndex="Body",1,0,30
@@ -165,10 +163,7 @@ function Menu:layout()
 	self.headerTitle=if notice then notice.short else "Pocket menu"
 	self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.wallet.NectarDrop,self.closeButton,{
 		pad=pad,top=if self.compact then 0 else 8,amount=self.state.nectar or 0,title=self.headerTitle,
-		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil,secondary=self.resumeButton})
-	self.resumeInBody=not self.headerPlan.secondaryHeader
-	self.resumeButton.Parent=if self.resumeInBody then self.pages.play else self.card
-	self.resumeButton.BackgroundColor3,self.resumeButton.TextColor3=Art.Raised,Art.Silver
+		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil})
 	local tabH=44
 	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-12)/3);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3))end
 	local tabY=self.headerPlan.height+(if self.compact then 4 else 8)
@@ -237,11 +232,6 @@ function Menu:layoutContents(wanted)
 		item.subtitle.Visible=not short;place(item.subtitle,tx,ty+item.titleH+6,w-tx-8,item.subH);item.subtitle.TextXAlignment=item.title.TextXAlignment
 	end
 	y+=if list then #self.destinations*(destinationHeight+8)-8 else destinationHeight
-	if self.resumeInBody then
-		self.resumeButton.Parent=self.pages.play;y+=8
-		place(self.resumeButton,inset,y,math.min(usable,self.headerPlan.secondaryWidth),self.headerPlan.secondaryHeight)
-		y+=self.headerPlan.secondaryHeight
-	end
 	local recipeH=math.max(64,Art.textHeight(self.recipe,usable-64,48)+16)
 	y+=12;place(self.recipePanel,inset,y,usable,recipeH);place(self.recipe,54,8,usable-64,recipeH-16)
 	y+=recipeH+12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)
@@ -412,7 +402,7 @@ function Menu:setPage(key)
 	self.page=key
 	for name,page in pairs(self.pages) do page.Visible=name==key end
 	for name,tab in pairs(self.tabs) do tab.BackgroundColor3=if name==key then Art.Inset else Art.Raised;tab.TextColor3=if name==key then Art.Leaf else Art.Silver end
-	self.resumeButton.Visible,self.dailyButton.Visible=key=="play",key=="daily"
+	self.dailyButton.Visible=key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()
 end
 function Menu:bumpControllerEpoch()

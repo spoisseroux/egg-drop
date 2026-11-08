@@ -44,12 +44,13 @@ return function(gui,board)
 			for _,zone in ipairs({left,right})do
 				assert(#zone:GetChildren()==0 and not zone.Active and not zone.Selectable,"bank owns competing decoration/input")
 				assert(zone.Size.X.Scale>0 and zone.Size.X.Scale<.5)
+				assert(zone.BackgroundColor3==Color3.fromHex("#466853"),"bank must share the neutral LCD tint")
 			end
 			for stage=0,2 do
 				board:SetAttribute("FieldStage",stage);settle()
 				assert(left.Visible and right.Visible)
-				assert(math.abs(left.BackgroundTransparency-(if stage==0 then .90 else .97))<.001)
-				assert(math.abs(right.BackgroundTransparency-(if stage==1 then .90 else .97))<.001)
+				assert(math.abs(left.BackgroundTransparency-(if stage==0 then .79 else .86))<.001)
+				assert(math.abs(right.BackgroundTransparency-(if stage==1 then .79 else .86))<.001)
 				readable(b.Status.ActiveQuest.Instruction)
 			end
 			local dispenser=b.HatchTrack.BallDispenser;local pulses=dispenser:GetAttribute("AcceptedPulses");local counter=dispenser.Remaining.Text

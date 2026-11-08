@@ -24,6 +24,18 @@ function Dispenser:cancel()
 	if self.motion then self.motion:Cancel();self.motion=nil end
 	self.rolling.Visible=false
 end
+-- Called only by root layout/preference changes, never a HUD-frame measurement.
+function Dispenser:preferredHeight(width,available)
+	local size=if available<50 then 12 else 14
+	local text=string.format("Drops left %d/%d",self.budget or 24,self.budget or 24)
+	local service=game:GetService("TextService")
+	if service:GetTextSize(text,size,Enum.Font.Gotham,Vector2.new(10000,10000)).X+8>width then text=string.format("%d/%d",self.budget or 24,self.budget or 24)end
+	local needed=math.ceil(service:GetTextSize(text,size,Enum.Font.Gotham,Vector2.new(math.max(1,width-8),10000)).Y)+4
+	local diameter=math.max(1,math.min(18,math.floor((math.max(1,width-8)-19)/8)))
+	local full=needed+diameter+8+6
+	return if full<=available then full else math.min(available,needed+4)
+end
+
 function Dispenser:layout()
 	local w,h=self.host.AbsoluteSize.X,self.host.AbsoluteSize.Y
 	local key=table.concat({w,h,self.remaining or 0,self.budget or 24,game:GetService("GuiService").PreferredTextSize.Name},"|")

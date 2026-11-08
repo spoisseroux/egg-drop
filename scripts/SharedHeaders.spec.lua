@@ -32,8 +32,7 @@ return function(client,parent,rootSize)
      v:update(state(amount),"pip","wick",0,0,0,"sprout");v:open();settle();header(v,amount)
      local tabY=v.tabs.play.AbsolutePosition.Y
      for _,page in ipairs({"daily","mastery","play"})do v:setPage(page);settle();header(v,amount);assert(v.tabs.play.AbsolutePosition.Y==tabY);for _,t in pairs(v.tabs)do fit(t);assert(t.AbsoluteSize.Y>=44)end end
-     assert(v.body.CanvasPosition.Y==0);fit(v.resumeButton);assert(v.resumeButton.AbsoluteSize.Y>=44)
-     if v.resumeButton.Parent==v.card then assert(not overlap(v.resumeButton,v.heading) and not overlap(v.resumeButton,v.closeButton))end
+     assert(v.body.CanvasPosition.Y==0 and not v.resumeButton and not v.card:FindFirstChild("Deck",true),"redundant Resume survived")
      v:close()
     end
    end)

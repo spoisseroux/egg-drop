@@ -107,6 +107,9 @@ function Layout.resolve(size,ratio,needs)
 		out.aimSize,out.dropSize=44,54
 		out.dpad=rect(x+18,by+52,94,52);out.drop=rect(x+w-76,by+52,54,54)
 	end
+	-- Freeze the authored speaker seat before any passive instrument fitting.
+	out.speaker=rect(out.right.x+(out.right.w-57)/2,out.meter.y+out.meter.h+18,57,28)
+	out.speakerVisible=out.lateral and out.drop.y-(out.meter.y+out.meter.h)>80
 	local t=out.tray;out.bezel=rect(t.x-6,t.y-6,t.w+12,t.h+12)
 	return out
 end
@@ -114,6 +117,24 @@ end
 -- The caller supplies native measured text heights; this module stays pure.
 function Layout.fitFieldQuest(layout,measuredHeight)
 	layout.quest.h=math.max(1,math.min(layout.quest.h,measuredHeight))
+	return layout
+end
+-- Recompose only passive rail instruments after their native text is measured.
+-- Input seats and LCD geometry from resolve remain byte-for-byte untouched.
+function Layout.fitInstruments(layout,meterHeight)
+	layout.meter.h=math.max(1,math.min(layout.meter.h,meterHeight or layout.meter.h))
+	layout.instrumentShiftLeft,layout.instrumentShiftRight=0,0
+	if not layout.lateral or layout.short or layout.dense then return layout end
+	local target=math.floor(layout.shell.h*.06+.5)
+	local leftBottom=math.max(layout.wallet.y+layout.wallet.h,layout.quest.y+layout.quest.h)
+	local leftLimit=math.min(layout.menu.y,layout.lounge.y,layout.dpad.y)-8
+	local left=math.max(0,math.min(target,leftLimit-leftBottom))
+	local bottom=layout.meter.y+layout.meter.h
+	local rightLimit=(if layout.speakerVisible then layout.speaker.y else layout.drop.y)-8
+	local right=math.max(0,math.min(target,rightLimit-bottom))
+	layout.wallet.y+=left;layout.quest.y+=left
+	layout.queue.y+=right;layout.meter.y+=right
+	layout.instrumentShiftLeft,layout.instrumentShiftRight=left,right
 	return layout
 end
 return Layout

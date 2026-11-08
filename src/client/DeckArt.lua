@@ -388,4 +388,39 @@ function Art.tintBackdrop(parent,theme)
 		end
 	end
 end
+-- An owner-independent physical lens mask. Rounded GUI backgrounds do not clip
+-- descendants, so these passive outside-arc strips cover every renderer/overlay.
+function Art.lcdCorners(parent,color)
+	local root=Art.frame(parent,"LCDCornerMask",color,UDim2.fromScale(0,0),UDim2.fromScale(1,1),100)
+	root.BackgroundTransparency=1;root.Active,root.Selectable=false,false
+	local rows={}
+	for corner=1,4 do
+		rows[corner]={}
+		for row=1,12 do
+			local strip=Art.frame(root,"Corner"..corner.."Row"..row,color,UDim2.fromOffset(0,0),UDim2.fromOffset(0,0),100)
+			strip.Active,strip.Selectable=false,false;rows[corner][row]=strip
+		end
+	end
+	local key
+	local function resize()
+		local size=parent.AbsoluteSize
+		local width,height=math.floor(size.X+.5),math.floor(size.Y+.5)
+		local radius=math.max(0,math.min(10,math.floor(width*.08),math.floor(height*.08)))
+		local signature=width..":"..height..":"..radius
+		if key==signature then return end;key=signature
+		for corner=1,4 do for row,strip in ipairs(rows[corner])do
+			strip.Visible=row<=radius
+			if row<=radius then
+				local dy=radius-(row-1)
+				local extent=math.ceil(radius-math.sqrt(math.max(0,radius*radius-dy*dy)))
+				local right,bottom=corner%2==0,corner>2
+				strip.AnchorPoint=Vector2.new(if right then 1 else 0,if bottom then 1 else 0)
+				strip.Position=UDim2.new(if right then 1 else 0,0,if bottom then 1 else 0,if bottom then -(row-1)else row-1)
+				strip.Size=UDim2.fromOffset(extent,1)
+			end
+		end end
+	end
+	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
+	resize();return root
+end
 return Art

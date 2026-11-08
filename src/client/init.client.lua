@@ -164,12 +164,13 @@ local fieldZones = {}
 local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),6)
 zoneLayer.BackgroundTransparency=1;zoneLayer.ClipsDescendants=true
 for index,side in ipairs({-1,1})do
-	local tint=if side==-1 then Color3.fromHex("#3069A5")else Color3.fromHex("#A84F3F")
+	local tint=Color3.fromHex("#466853")
 	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),6)
 	zone.BackgroundTransparency=.94
 	fieldZones[index]={node=zone,side=side}
 end
 
+Art.lcdCorners(overlay,bezel.BackgroundColor3)
 local lcd = JellyLCD.new(overlay)
 local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
@@ -1187,7 +1188,7 @@ updateHud = function()
 	for index, item in ipairs(fieldZones) do
 		local stage = board:GetAttribute("FieldStage") or 0
 		item.node.Visible = nurseryActive and owned > 0
-		item.node.BackgroundTransparency = if stage == index - 1 then .90 else .97
+		item.node.BackgroundTransparency = if stage == index - 1 then .79 else .86
 
 	end
 	local showHatch = hatchPet ~= nil and mode == "Board"
@@ -1349,6 +1350,7 @@ layout = function()
 		if l.lateral and not l.dense and not l.short then l.quest.y=l.wallet.y+l.wallet.h+6 end
 		DeckLayout.fitFieldQuest(l,questHUD:preferredHeight(l.quest.w,l.quest.h,instructionCompact))
 	end
+	DeckLayout.fitInstruments(l,dispenser:preferredHeight(l.meter.w,l.meter.h))
 	instrumentLayout=l
 	backdrop:SetAttribute("CompactLandscape",l.short)
 	backdrop:SetAttribute("CompactInstruction",instructionCompact)
@@ -1447,11 +1449,10 @@ layout = function()
 	end
 	eggButton.Visible=false
 	title.Visible=l.lateral and l.shell.h>=280 and Art.textWidth(title)<=l.left.w
-	title.Position,title.Size=UDim2.fromOffset(l.left.x,l.shell.y+6),UDim2.fromOffset(l.left.w,20)
+	title.Position,title.Size=UDim2.fromOffset(l.left.x,l.shell.y+6+(l.instrumentShiftLeft or 0)),UDim2.fromOffset(l.left.w,20)
 	title.TextSize=18
-	local free=l.drop.y-(l.meter.y+l.meter.h)
-	vents.Visible=l.lateral and free>80
-	vents.Position=UDim2.fromOffset(l.right.x-l.shell.x+(l.right.w-57)/2,l.meter.y+l.meter.h-l.shell.y+18)
+	vents.Visible=l.speakerVisible
+	vents.Position=UDim2.fromOffset(l.speaker.x-l.shell.x,l.speaker.y-l.shell.y)
 	hardware.MakerMark.Visible=false
 	shell.Faceplate.AimSeat.Visible,shell.Faceplate.ActionSeat.Visible=false,false
 	shell.Faceplate.AccentBands.Visible=false

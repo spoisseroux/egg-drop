@@ -1,0 +1,207 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckComposition",
+    "result": {
+      "passed": 11,
+      "cases": [
+        "1649, 971 passive stacks lower only within measured free rails",
+        "733, 307 passive stacks lower only within measured free rails",
+        "568, 160 passive stacks lower only within measured free rails",
+        "480, 160 passive stacks lower only within measured free rails",
+        "350, 279 passive stacks lower only within measured free rails",
+        "385, 703 passive stacks lower only within measured free rails",
+        "speaker seat and visibility survive the midheight threshold unchanged",
+        "full welcome coach keeps its exact size and a tight left rail clamps shift to zero",
+        "short dispenser retains exact24counter and optional centered train without extra well",
+        "Menu has one X close route and no Resume action at either origin",
+        "rounded outside-arc strips cover all four fractional corners and remain passive"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HardwareDeck",
+    "result": {
+      "localPresentationOnly": true,
+      "passed": 6,
+      "cases": [
+        "1649, 971 exact wallets inset queue count and targets fit",
+        "733, 307 exact wallets inset queue count and targets fit",
+        "568, 160 exact wallets inset queue count and targets fit",
+        "385, 703 exact wallets inset queue count and targets fit",
+        "350, 279 exact wallets inset queue count and targets fit",
+        "qualified bank regions use only faint phase-owned fill; score refresh preserves pulses"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckExperience",
+    "result": {
+      "passed": 23,
+      "cases": [
+        "568, 160 distinct screen, grips and controls",
+        "568, 198 distinct screen, grips and controls",
+        "350, 279 distinct screen, grips and controls",
+        "640, 530 distinct screen, grips and controls",
+        "844, 330 distinct screen, grips and controls",
+        "844, 390 distinct screen, grips and controls",
+        "390, 740 distinct screen, grips and controls",
+        "1650, 972 distinct screen, grips and controls",
+        "1649, 971 tray-first desktop mass and bounded equal rails",
+        "1280, 720 tray-first desktop mass and bounded equal rails",
+        "1024, 768 tray-first desktop mass and bounded equal rails",
+        "568, 160 measured Large utility requirements select a safe fallback",
+        "350, 160 measured Large utility requirements select a safe fallback",
+        "350, 279 measured Large utility requirements select a safe fallback",
+        "568, 280 measured Large utility requirements select a safe fallback",
+        "1649, 971 measured Large utility requirements select a safe fallback",
+        "Largest shallow text gets full info lines beside A and tier-equivalent fallback",
+        "480px Largest shallow root uses narrow ledger without target overlap",
+        "accepted drops pulse once; duplicate HUD and rejected taps cannot pulse",
+        "rolling copy leaves the occupied slot on wide grips and the final drop",
+        "reset, restore and lowered drops seed static counts",
+        "reduced effects, hide and cancel retain the authoritative count",
+        "eight decorative balls retain channel padding at128px rail width"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HardwareInstruments",
+    "result": {
+      "preference": "Medium",
+      "passed": 7,
+      "cases": [
+        "1649, 971 field pack keeps control seats and complete instruction",
+        "733, 307 field pack keeps control seats and complete instruction",
+        "568, 160 field pack keeps control seats and complete instruction",
+        "385, 703 field pack keeps control seats and complete instruction",
+        "inset face is clipped passive depth with no action underline or focus stroke",
+        "eight-slot capacity stays centered and accepted roll starts at previous visible slot",
+        "one visible clock closes position and velocity; hidden reduced theme and teardown stay bounded"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DropCaption",
+    "result": {
+      "persistentWrites": false,
+      "passed": 4,
+      "cases": [
+        "568, 160 drop states stay readable and restore objective without moving controls",
+        "480, 160 drop states stay readable and restore objective without moving controls",
+        "385, 703 drop states stay readable and restore objective without moving controls",
+        "resizing while falling transfers status ownership and restores readiness"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactDeck",
+    "result": {
+      "persistentWrites": false,
+      "passed": 12,
+      "cases": [
+        "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+        "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+        "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+        "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+        "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+        "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+        "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+        "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SharedHeaders",
+    "result": {
+      "preference": "Medium",
+      "passed": 12,
+      "cases": [
+        "1649, 971 exact menu wallet and stable bare-X header",
+        "1649, 971 recipe prices and status stay independent of exact balance",
+        "733, 307 exact menu wallet and stable bare-X header",
+        "733, 307 recipe prices and status stay independent of exact balance",
+        "568, 160 exact menu wallet and stable bare-X header",
+        "568, 160 recipe prices and status stay independent of exact balance",
+        "385, 703 exact menu wallet and stable bare-X header",
+        "385, 703 recipe prices and status stay independent of exact balance",
+        "focused unselected recipe survives rebuild and rotation without changing selection",
+        "focused daily remains visible while disabled gift falls back to neutral X",
+        "X/footer survive rebuild and detached GUI cannot reclaim focus",
+        "two independent circle controls retain native names and preferred transparency"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "mastery cards wrap exact missing conditions at real body size",
+        "hidden and unchanged snapshots perform no text measurement layout",
+        "locked family rows omit unused progress space and cannot select a family"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "EmulatorSafeArea",
+    "result": {
+      "preference": "Medium",
+      "passed": 8,
+      "cases": [
+        "733x306 measured menu landing shows all destination titles with stable tabs",
+        "733x306 shop shows both complete recipes above a pinned exact shortfall",
+        "733x307 measured menu landing shows all destination titles with stable tabs",
+        "733x307 shop shows both complete recipes above a pinned exact shortfall",
+        "733x308 measured menu landing shows all destination titles with stable tabs",
+        "733x308 shop shows both complete recipes above a pinned exact shortfall",
+        "portrait selection rotated to landscape stays selected at the top without a purchase",
+        "roomy desktop menu and shop retain their illustrated layouts"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HandheldTextLayout",
+    "result": {
+      "preference": "Medium",
+      "passed": 5,
+      "cases": [
+        "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+      ]
+    }
+  }
+]
