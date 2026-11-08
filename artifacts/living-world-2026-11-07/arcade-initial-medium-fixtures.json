@@ -1,0 +1,149 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FieldEffects",
+    "result": [
+      "fixed four-slot six-fragment passive clipped pool",
+      "hidden and old-run events never enter pool",
+      "published run token remains valid across multiple accepted drops",
+      "counter jumps resets and duplicates do not synthesize drops",
+      "largest merge evicts lesser feedback without allocating",
+      "active lifetime is bounded and releases every fragment",
+      "reduced mode keeps a still local fade without fragments",
+      "one measured reusable chain and max-clear label stays inside every tray",
+      "cover clears immediately and hidden updates write nothing",
+      "reset and reduction transitions retain pool but revoke old work",
+      "steady events and resizing never create new descendants",
+      "teardown is idempotent and rejects late events"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DispenserFeedback",
+    "result": [
+      "first snapshot is static; one accepted drop compresses fixed neutral instrument",
+      "duplicate HUD never rebinds compression or increments count",
+      "counter jumps and run replacement remain silent static snapshots",
+      "reduced fade retains count without moving train or outline",
+      "cover cancellation stops both effects without replay on uncover"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SemanticUI",
+    "result": [
+      "opening updating layout and programmatic page selection remain silent",
+      "two rapid accepted tab switches have distinct callbacks",
+      "disabled controls do not tick or submit and accepted submit ticks once",
+      "X and Back share one accepted close route without forced-close echo",
+      "style tabs and settings distinguish layout from accepted activation",
+      "confirmed no-op and repeat locked inspection stay silent",
+      "shop selection and submit each notify once; pending and reflow do not",
+      "journal goals delegate once and forced lifecycle cleanup is silent"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyLCD",
+    "result": {
+      "cases": [
+        "automatic backend proves a writable first frame before selecting its owner",
+        "logical grid follows tray aspect with near-square native cells",
+        "standing circles and rotated squash extents match common tray projection within one cell",
+        "two physically touching circles retain neighboring silhouettes",
+        "light stays in upper-left tray quadrant through sideways deformation and final merge",
+        "shared rounded cell edges stay contiguous through fractional native resizing",
+        "pooled repeated rows reuse instances and clear every stale span after disappearance",
+        "GUI paint exceptions become sticky failure and release every resize connection",
+        "hard cap fails before partial paint and stays failed without rebuilding a pool"
+      ],
+      "passed": 9,
+      "grid": [
+        64,
+        107
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellySprite",
+    "result": {
+      "cheapGridWidth": 64,
+      "passed": 5,
+      "cases": [
+        "smallest and largest tier keep upper-left mathematically inset unrotated light",
+        "logical center quantizes display without changing returned continuous pose",
+        "covered pose sampling creates no GUI writes and reduced rest stays static",
+        "floor and angled bank remain occlusion boundaries for stepped bands",
+        "sparse fallback grain is static passive and only forty marks"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "mastery cards wrap exact missing conditions at real body size",
+        "hidden and unchanged snapshots perform no text measurement layout",
+        "locked family rows omit unused progress space and cannot select a family"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "StyleJournalActions",
+    "result": {
+      "passed": 13,
+      "cases": [
+        "unlocked choices submit one slot immediately and never on reflow",
+        "X Back forced close and reopen never submit or rollback",
+        "confirmed checks follow acknowledged pair independently of pending choice",
+        "locked art remains inspectable with concrete unlock and no appearance send",
+        "Settings apply once immediately and persist through closing",
+        "Roblox reduced motion cannot be overridden by a setting or reflow",
+        "Music stays session-local through four viewport reflows and reopening while SFX submits once",
+        "sparse rare-only gamepad focus skips locked earlier pets and scrolls to the owned row",
+        "authoritative empty inventory has no legacy track or hidden selectable row",
+        "legacy tracking remains explicit only when the inventory mask is absent",
+        "owned row equips once and Family goals never equips tracks or selects a family",
+        "focus restoration rejects hidden former menus disabled screens and unselectable openers",
+        "measured Ranks caption retains mastery page identity and callback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ControllerSheets",
+    "result": {
+      "cases": [
+        "pointer-open Menu seeds current Daily or Mastery tab without routing",
+        "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+        "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "direct controller Journal opening retains its valid existing owned selection",
+        "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "all four same-instance openings advance generation and hidden sheets expose no target"
+      ],
+      "passed": 8,
+      "inputIsSemanticFixture": true
+    }
+  }
+]

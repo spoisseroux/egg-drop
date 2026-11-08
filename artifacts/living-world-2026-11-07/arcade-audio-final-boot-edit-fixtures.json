@@ -1,0 +1,62 @@
+[
+  {
+    "ok": true,
+    "spec": "ArcadeAudio",
+    "result": {
+      "passed": 10,
+      "evidence": "actual semantic/pitch methods; voice doubles, not an audible mix audition",
+      "cases": {
+        "1": "one semantic action token emits one cue even across a second widget",
+        "2": "ring remains bounded after many unique accepted actions",
+        "3": "mute consumes an action without replay on unmute",
+        "4": "unloaded or inactive cues drop without a delayed echo",
+        "5": "invalid and teardown calls emit no cue",
+        "6": "all six SFX/music choices preserve semantic master behavior",
+        "7": "chain contour is bounded to the approved zero third and fourth intervals",
+        "8": "unloaded merge and drop are discarded before playback state and never replay on readiness",
+        "9": "inactive device discards one-shot before changing voice state",
+        "10": "field owner loss stops exactly field pools while UI hatch purr and music remain independent"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "spec": "LoopAudio",
+    "result": {
+      "passed": 15,
+      "evidence": "deterministic scheduler/voice doubles; not an audible audition",
+      "cases": {
+        "1": "unresolved master and fast ready assets are silent",
+        "2": "master 1 music true",
+        "3": "master 1 music false",
+        "4": "master 0.4 music true",
+        "5": "master 0.4 music false",
+        "6": "master 0 music true",
+        "7": "master 0 music false",
+        "8": "independent ducks do not overwrite master or session choice",
+        "9": "old same-name duck expiry cannot remove replacement",
+        "10": "one purr owner and old fade cannot stop a new gesture",
+        "11": "mute consumes purr without deferred unmute start",
+        "12": "asset readiness never queues purr and starts only one music",
+        "13": "inactive device never accepts purr",
+        "14": "retry stops effects but preserves independent music preference",
+        "15": "destroy invalidates delayed ducks fades and future starts"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "spec": "PresentationAudio",
+    "result": {
+      "passed": 6,
+      "cases": {
+        "1": "mid boot overlay cancels queued pitches and only its own voice",
+        "2": "muted and reduced motion suppress every queued chime note",
+        "3": "new owner cannot receive the old boot's queued pitches",
+        "4": "inactive or unloaded boot admission never clones or queues a voice",
+        "5": "window loss cancels boot epochs and field voices; refocus cannot replay missed notes",
+        "6": "unready cloned boot notes are dropped without playback when readiness later returns"
+      }
+    }
+  }
+]

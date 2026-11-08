@@ -47,5 +47,26 @@ return function(client)
 		assert(voices[1].destroyed and voices[1].plays==0 and voices[2].plays==3)
 		audio:cancelBoot()
 	end)
+	test("inactive or unloaded boot admission never clones or queues a voice",function()
+		local audio,voices,advance=fixture();audio.deviceActive=false
+		audio:boot(function()return true end);advance(1);assert(#voices==0)
+		audio.deviceActive=true;audio.voices.charge[1].IsLoaded=false
+		audio:boot(function()return true end);advance(2);assert(#voices==0)
+		audio.voices.charge[1].IsLoaded=true;assert(#voices==0)
+	end)
+	test("window loss cancels boot epochs and field voices; refocus cannot replay missed notes",function()
+		local audio,voices,advance=fixture()
+		local field={stops=0};function field:Stop()self.stops+=1 end;audio.voices.drop={field}
+		audio:boot(function()return true end);advance(0);assert(voices[1].plays==1)
+		audio:setDeviceActive(false);assert(voices[1].destroyed and field.stops==1)
+		audio:setDeviceActive(true);advance(1);assert(voices[1].plays==1)
+		audio:boot(function()return true end);advance(2);assert(voices[2].plays==3)
+	end)
+	test("unready cloned boot notes are dropped without playback when readiness later returns",function()
+		local audio,voices,advance=fixture();audio:boot(function()return true end)
+		voices[1].IsLoaded=false;advance(1);assert(voices[1].plays==0)
+		voices[1].IsLoaded=true;advance(2);assert(voices[1].plays==0)
+		audio:cancelBoot()
+	end)
 	return{passed=#cases,cases=cases}
 end

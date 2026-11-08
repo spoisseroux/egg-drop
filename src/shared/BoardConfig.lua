@@ -19,11 +19,11 @@ local Config = {
 		Springy = { bounce = 0.64, kick = 11, reach = 3.5 },
 	},
 	Tiers = {
-		{ radius = 0.72, color = Palette.JellyBlue, mark = "I" },
-		{ radius = 1.04, color = Palette.Ember, mark = "II" },
-		{ radius = 1.43, color = Palette.Lime, mark = "III" },
-		{ radius = 1.88, color = Color3.fromHex("#E7A0C3"), mark = "IV" },
-		{ radius = 2.35, color = Color3.fromHex("#C5ABFF"), mark = "V" },
+		{ radius = 0.72, color = Color3.fromHex("#52ADF2"), mark = "I" },
+		{ radius = 1.04, color = Color3.fromHex("#F39749"), mark = "II" },
+		{ radius = 1.43, color = Color3.fromHex("#A8D34C"), mark = "III" },
+		{ radius = 1.88, color = Color3.fromHex("#EF78A4"), mark = "IV" },
+		{ radius = 2.35, color = Color3.fromHex("#AB8CF2"), mark = "V" },
 	},
 	Starter = {
 		{ x = 0, tier = 1 },

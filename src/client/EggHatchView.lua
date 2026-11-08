@@ -310,7 +310,7 @@ function View:send(command, value)
 	self.pending = true
 	self.errorMessage = nil
 	self:refreshFooter()
-	self.audio:play("menu", 1, 0.40)
+	if self.onAccepted then self.onAccepted("confirm")end
 	self.sendCommand(command, value, self.state.revision)
 end
 
@@ -526,6 +526,7 @@ end
 
 function View:selectRecipe(id)
 	if self.pending or self.state.lastHatch or not Catalog.ById[id] then return false end
+ if id==self.selected then return true end
 	self.bodyFocusFallback=false
 	local focused=GuiService.SelectedObject
 	if focused and focused:IsDescendantOf(self.body)and focused.Name:match("^Recipe_")then self.refocusRecipeId=id end
@@ -534,7 +535,7 @@ function View:selectRecipe(id)
 	self:ensureSelectedRecipe()
 	self:refreshFooter()
 	self:queueSelectedRecipe()
-	self.audio:play("aim", 1, 0.4)
+	if self.onAccepted then self.onAccepted("tab")end
 	return true
 end
 
@@ -670,6 +671,7 @@ end
 function View:close(reason, choice)
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
+ if (reason==nil or reason=="close"or reason=="earn")and self.onAccepted then self.onAccepted(if reason=="earn"then "confirm"else "back")end
 	self:revokeIntent()
 	self.shade.Visible = false
 	self.cinematic:cancel()

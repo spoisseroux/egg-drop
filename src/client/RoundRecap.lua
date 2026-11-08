@@ -119,7 +119,7 @@ function Recap.new(parent, audio, reduceEffects)
 		nectarIcon = nectarIcon, earnedGraphic = earnedGraphic, bankGraphic = bankGraphic, transfer = transfer, chips = chips,
 		detailsButton = detailsButton, summary = summary, componentLabels = componentLabels, eggGoal = eggGoal,
 		fieldBody=body,eggPanel=eggPanel,eggDrawing=eggDrawing,shortfall=shortfall,bestMetric=personalBest,bestCaption=bestCaption,bestValue=bestValue }, Recap)
-	detailsButton.Activated:Connect(function() self:setDetails(not self.detailsOpen) end)
+	detailsButton.Activated:Connect(function() self:activateDetails() end)
 	frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() if self.fieldMode then self:layoutField(frame.AbsoluteSize.Y) end end)
 	Art.watchTextPreference(frame,function()return self:isVisible()end,function()if self.onPreferredLayout then self.onPreferredLayout() else self:layoutField(frame.AbsoluteSize.Y) end end)
 	self.saveDetail=Art.text(body,"SaveInstruction","",UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Amber,14)
@@ -351,6 +351,12 @@ function Recap:scrollReceipt(direction)
 	local before=scroll.CanvasPosition.Y
 	scroll.CanvasPosition=Vector2.new(0,math.clamp(before+(if direction>0 then page else -page),0,maximum))
 	return scroll.CanvasPosition.Y~=before
+end
+function Recap:activateDetails()
+ if not self.hasReceipt or not self:isVisible()or not self.detailsButton.Visible or not self.detailsButton.Interactable then return false end
+ self:setDetails(not self.detailsOpen)
+ if self.onAccepted then self.onAccepted("tab")end
+ return true
 end
 function Recap:setDetails(open)
 	self.detailsOpen=open==true

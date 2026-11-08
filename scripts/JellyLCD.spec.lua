@@ -49,7 +49,7 @@ return function(client,parent)
 			assert(a.x1+1==b.x0 and a.h==b.h,"touching pieces visually overlap or separate")
 		end)
 		test("light stays in upper-left tray quadrant through sideways deformation and final merge",function()
-			local color=Config.Tiers[2].color;local bright=rgba(color:Lerp(Color3.fromHex("#F4F8E9"),.7));local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
+			local color=Config.Tiers[2].color;local bright=rgba(color:Lerp(Color3.fromHex("#F4F8E9"),.79));local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
 			for _,angle in ipairs({0,math.pi/4,math.pi/2,-math.pi/4})do
 				lcd:beginFrame();lcd:draw(center,13,9,angle,color,0);local light=bounds(lcd,bright)
 				assert(light.count>0 and (light.x0+light.x1)/2<center.X and (light.y0+light.y1)/2<center.Y,"painted light rotated with shape")

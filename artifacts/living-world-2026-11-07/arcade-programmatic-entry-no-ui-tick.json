@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "at": 336401.2909091001,
+      "name": "EggDrop_Boot",
+      "volume": 0.20000000298023224,
+      "speed": 0.8799999952316284,
+      "kind": "Play"
+    }
+  ],
+  "evidence": "Ordinary temporary LocalScript mode request; not user input",
+  "menuCues": 0
+}

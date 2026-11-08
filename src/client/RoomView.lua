@@ -666,8 +666,8 @@ function Room:driveModes(initial)
 					if changed and self.mode=="Room" and destination=="Board" then self:captureReturnRoam() end
 					self.mode=destination
 					self:show(destination,token~=nil and self.transition:owns(token))
-					if changed and not self.overlayOpen() and not GuiService.MenuIsOpen then
-						self.audio:play(if destination=="Room" then self.shownPet.cue else "menu")
+					if changed and destination=="Room" and not self.overlayOpen() and not GuiService.MenuIsOpen then
+						self.audio:play(self.shownPet.cue)
 					end
 					if token then self.transition:reveal(destination=="Board",token) end
 					-- Keep Meet/focus from snapshotting an unfinished lounge camera move.

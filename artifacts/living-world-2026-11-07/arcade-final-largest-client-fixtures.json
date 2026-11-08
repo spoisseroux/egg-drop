@@ -1,0 +1,98 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "FieldEffects",
+    "result": [
+      "fixed four-slot six-fragment passive clipped pool",
+      "hidden and old-run events never enter pool",
+      "published run token remains valid across multiple accepted drops",
+      "counter jumps resets and duplicates do not synthesize drops",
+      "largest merge evicts lesser feedback without allocating",
+      "active lifetime is bounded and releases every fragment",
+      "reduced mode keeps a still local fade without fragments",
+      "one measured reusable chain and max-clear label stays inside every tray",
+      "cover clears immediately and hidden updates write nothing",
+      "reset and reduction transitions retain pool but revoke old work",
+      "steady events and resizing never create new descendants",
+      "teardown is idempotent and rejects late events"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "DispenserFeedback",
+    "result": [
+      "first snapshot is static; one accepted drop compresses fixed neutral instrument",
+      "duplicate HUD never rebinds compression or increments count",
+      "counter jumps and run replacement remain silent static snapshots",
+      "reduced fade retains count without moving train or outline",
+      "cover cancellation stops both effects without replay on uncover"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SemanticUI",
+    "result": [
+      "opening updating layout and programmatic page selection remain silent",
+      "two rapid accepted tab switches have distinct callbacks",
+      "disabled controls do not tick or submit and accepted submit ticks once",
+      "X and Back share one accepted close route without forced-close echo",
+      "style tabs and settings distinguish layout from accepted activation",
+      "confirmed no-op and repeat locked inspection stay silent",
+      "shop selection and submit each notify once; pending and reflow do not",
+      "recap Details accepts once per activation; layout and programmatic details remain silent",
+      "journal goals delegate once and forced lifecycle cleanup is silent"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "JellyLCD",
+    "result": {
+      "cases": [
+        "automatic backend proves a writable first frame before selecting its owner",
+        "logical grid follows tray aspect with near-square native cells",
+        "standing circles and rotated squash extents match common tray projection within one cell",
+        "two physically touching circles retain neighboring silhouettes",
+        "light stays in upper-left tray quadrant through sideways deformation and final merge",
+        "shared rounded cell edges stay contiguous through fractional native resizing",
+        "pooled repeated rows reuse instances and clear every stale span after disappearance",
+        "GUI paint exceptions become sticky failure and release every resize connection",
+        "hard cap fails before partial paint and stays failed without rebuilding a pool"
+      ],
+      "passed": 9,
+      "grid": [
+        64,
+        107
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "JellySprite",
+    "result": {
+      "cheapGridWidth": 64,
+      "passed": 5,
+      "cases": [
+        "smallest and largest tier keep upper-left mathematically inset unrotated light",
+        "logical center quantizes display without changing returned continuous pose",
+        "covered pose sampling creates no GUI writes and reduced rest stays static",
+        "floor and angled bank remain occlusion boundaries for stepped bands",
+        "sparse fallback grain is static passive and only forty marks"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "FieldFeedbackOwner",
+    "result": [
+      "passive tray-local feedback owner",
+      "live upright marks above halo and fragments",
+      "four halos and twenty-four fragments below pressure words"
+    ]
+  }
+]

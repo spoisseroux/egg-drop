@@ -1,0 +1,8 @@
+{
+  "haloShows": 2,
+  "events": [
+    "EggDrop_merge_bubble",
+    "EggDrop_merge_chain",
+    "EggDrop_land"
+  ]
+}

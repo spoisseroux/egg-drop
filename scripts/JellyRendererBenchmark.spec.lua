@@ -4,7 +4,7 @@
 return function(client,parent,options)
 	options=options or {}
 	assert(parent:IsA("ScreenGui") and parent.Enabled,"enabled ScreenGui required")
-	local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
+	local Config=require(options.config or game.ReplicatedStorage.Shared.BoardConfig)
 	local Sprite=require(options.sprite or client.JellySprite)
 	local LCD=if options.lcd then require(options.lcd)else require(client.JellyLCD)
 	local RunService=game:GetService("RunService")
@@ -24,7 +24,13 @@ return function(client,parent,options)
  end
  local backgroundCount=if background then #background:GetDescendants()+1 else 0
  local spriteHost=Instance.new("Frame");spriteHost.BackgroundTransparency=1;spriteHost.Size=UDim2.fromScale(1,1);spriteHost.Parent=root
-	local sources,gels,marks={},{},{}
+	local fx
+ if options.fieldEffects then
+  fx=require(if options.fieldEffects==true then client.FieldEffects else options.fieldEffects).new(root)
+  fx:setOwner(true,1,false)
+ end
+ local fxCount=if fx then #fx.root:GetDescendants()+1 else 0
+ local sources,gels,marks={},{},{}
 	local worldW,worldH=Config.Width+.8,Config.Height+.8
 	local function project(point)
 		return Vector2.new(root.AbsoluteSize.X*(.5+point.X/worldW),root.AbsoluteSize.Y*(.5-(point.Y-Config.Height/2)/worldH)),root.AbsoluteSize.X/worldW
@@ -59,7 +65,9 @@ return function(client,parent,options)
 	end
 	local ok,problem=pcall(function()
 		for _,scenario in ipairs(scenarios)do
-			local cpu,paintCpu,frameMs,rasterMs,scanMs,commitMs,backgroundCpu={},{},{},{},{},{},{}
+   if fx then fx:clear()end
+   local fxBefore=if fx then fx:getStats()else nil
+			local cpu,paintCpu,frameMs,rasterMs,scanMs,commitMs,backgroundCpu,fxCpu={},{},{},{},{},{},{},{}
 			local peakUsed,peakAllocated,peakStatic,peakWrites,peakDemand=0,0,0,0,0
 			local startCreated,postWarmCreated,painted,failures=0,0,0,0
 			for frame=1,warmup+measuredFrames do
@@ -104,11 +112,22 @@ return function(client,parent,options)
 					end end
 					if not lcd:finishFrame()then failures+=1;fallback=true;lcd.label.Visible=false else lcd.label.Visible=true end
 				end
+    local fxStart=os.clock()
+    if fx then
+     if scenario~="idle"and frame%12==1 then
+      local tier=1+math.floor(frame/12)%5;local p=project(Vector2.new(math.sin(t)*3,8))
+      local kind=if scenario=="multiMerge"then "merge"elseif scenario=="falling"then "impact"else "drop"
+      fx:emit(kind,p,Config.Tiers[tier].radius*root.AbsoluteSize.X/worldW,Config.Tiers[tier].color,tier,1+math.floor(frame/36)%4,1,t)
+      if scenario=="multiMerge"then for n=1,4 do fx:emit("merge",project(Vector2.new((n-2.5)*2,4+n)),Config.Tiers[n].radius*root.AbsoluteSize.X/worldW,Config.Tiers[n].color,n,n,1,t)end end
+     end
+     fx:update(t)
+    end
+    local fxMs=(os.clock()-fxStart)*1000
 				local milliseconds=(os.clock()-start)*1000
 				local sample=stats()
 				if frame==warmup then startCreated=sample.dynamicCreated or 0 end
 				if frame>warmup then
-					table.insert(cpu,milliseconds);table.insert(frameMs,dt*1000);table.insert(backgroundCpu,backgroundMs)
+					table.insert(cpu,milliseconds);table.insert(frameMs,dt*1000);table.insert(backgroundCpu,backgroundMs);table.insert(fxCpu,fxMs)
 					if draw then table.insert(paintCpu,milliseconds);painted+=1;table.insert(rasterMs,sample.rasterMs or 0);table.insert(scanMs,sample.scanMs or 0);table.insert(commitMs,sample.commitMs or 0)end
 					peakUsed=math.max(peakUsed,sample.spansUsed or 0);peakAllocated=math.max(peakAllocated,sample.dynamicAllocated or 0)
 					peakStatic=math.max(peakStatic,sample.staticAllocated or 0);peakDemand=math.max(peakDemand,sample.lastDemand or sample.peakDemand or 0)
@@ -116,15 +135,17 @@ return function(client,parent,options)
 					postWarmCreated=math.max(postWarmCreated,(sample.dynamicCreated or 0)-startCreated)
 				end
 			end
-			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),backgroundCpuMs=distribution(backgroundCpu),peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
+			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),backgroundCpuMs=distribution(backgroundCpu),fieldEffectsCpuMs=distribution(fxCpu),fieldEffectsStats=if fx then {accepted=fx.stats.accepted-fxBefore.accepted,rejected=fx.stats.rejected-fxBefore.rejected,evicted=fx.stats.evicted-fxBefore.evicted,writes=fx.stats.writes-fxBefore.writes,instances=fx.stats.instances,active=fx.stats.active,scope="scenario including warmup"}else nil,peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
 			table.insert(reports,report);if options.progress then options.progress(report)end
 		end
 	end)
 	local finalStats=table.clone(stats());local backgroundStats=if pattern then table.clone(pattern.stats)else {}
  local backgroundEndCount=if background then #background:GetDescendants()+1 else 0
  if pattern then pattern:destroy()end;if background then background:Destroy()end
+ local fxEndCount=if fx then #fx.root:GetDescendants()+1 else 0
+ if fx then fx:destroy()end
  if lcd then lcd:destroy()end
 	for _,gel in ipairs(gels)do gel:destroy()end;for _,source in ipairs(sources)do source:Destroy()end;root:Destroy()
 	assert(ok,problem)
-	return{background=options.background or "off",backgroundInstances=backgroundCount,backgroundFinalInstances=backgroundEndCount,backgroundStats=backgroundStats,backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer + optional background animation/paint; backgroundCpuMs separately attributed, excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
+	return{fieldEffects=fx~=nil,fieldEffectsInstances=fxCount,fieldEffectsFinalInstances=fxEndCount,background=options.background or "off",backgroundInstances=backgroundCount,backgroundFinalInstances=backgroundEndCount,backgroundStats=backgroundStats,backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
 end

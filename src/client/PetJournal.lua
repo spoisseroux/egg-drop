@@ -50,7 +50,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	end
 	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
-	self.closeButton=Art.close(button(card,"Close","×",function()self:close()end))
+	self.closeButton=Art.close(button(card,"Close","×",function()self:close("back")end))
 	if onGoals then self.goalsButton=button(card,"FamilyGoals","Family goals",function()self:openFamilyGoals()end)end
 	for index,pet in ipairs(Pets.collection)do
 		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
@@ -150,11 +150,11 @@ end
 function Journal:activatePet(index)
 	local entry=self.cards[index];if not self.shade.Visible or not entry or not entry.Interactable then return false end
 	local pet=Pets.collection[index];local tracking=entry.Track.Visible
-	self:close();if tracking then self.onTrack(pet)else self.onVisit(pet)end;return true
+	if self.onAccepted then self.onAccepted("confirm")end;self:close();if tracking then self.onTrack(pet)else self.onVisit(pet)end;return true
 end
 function Journal:openFamilyGoals()
 	if not self.shade.Visible or not self.onGoals then return false end
-	self:close();self.onGoals();return true
+	if self.onAccepted then self.onAccepted("confirm")end;self:close();self.onGoals();return true
 end
 function Journal:bumpControllerEpoch()
 	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
@@ -209,9 +209,10 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		end)
 	end
 end
-function Journal:close()
+function Journal:close(reason)
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
+	if reason=="back"and self.onAccepted then self.onAccepted("back")end
 	self.shade.Visible=false;self.openGeneration=(self.openGeneration or 0)+1
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then
 		GuiService.SelectedObject=visibleSelection(self.previousSelection)

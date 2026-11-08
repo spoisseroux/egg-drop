@@ -42,6 +42,11 @@ local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
+clientUI.uiSequence=0
+clientUI.accepted=function(kind)
+ if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return end
+ clientUI.uiSequence+=1;audio:ui(kind,clientUI.uiSequence)
+end
 clientUI.clock=HollowClock.start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
@@ -174,6 +179,11 @@ local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
 local pixelMerges = {}
 local rendererPresentation={visible=false,connections={}}
+rendererPresentation.fx=require(script.FieldEffects).new(effects)
+rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
+rendererPresentation.setFieldOwner=function(visible,serial,reduced)
+ if rendererPresentation.fx:setOwner(visible,serial,reduced)then audio:stopField();if rendererPresentation.dispenser then rendererPresentation.dispenser:cancel()end end
+end
 
 local function lcdEnabled()
 	return lcd ~= nil and gui:GetAttribute("PixelLCD") ~= false and not gui:GetAttribute("MeshPreview")
@@ -501,6 +511,7 @@ local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter
 firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),UDim2.new(1,-2,1,-2)
 local questHUD = BoardQuestHUD.new(status)
 local dispenser = DropDispenser.new(meter, reduceEffects)
+rendererPresentation.dispenser=dispenser
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -534,11 +545,11 @@ local function isPickerOpen()
 end
 local roomView = RoomView.new(gui, backdrop, board, audio, function()
 	cancelHatchNavigation()
-	request:FireServer("mode", "Board")
+	request:FireServer("mode", "Board");clientUI.accepted("confirm")
 end, function()
-	openPicker()
+	if openPicker()then clientUI.accepted("confirm")end
 end, function()
-	openJournal()
+	if openJournal()then clientUI.accepted("confirm")end
 end, function()
 	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
@@ -563,7 +574,7 @@ roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
 roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
 	triggered=ProximityPromptService.PromptTriggered,routes={
-		Customize=function()openPicker()end,Journal=function()openJournal()end,Eggs=function()visitEggs()end,
+		Customize=function()if openPicker()then clientUI.accepted("confirm")end end,Journal=function()if openJournal()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
 	}})
 
 do
@@ -662,6 +673,7 @@ pet.ZIndex = 14
 pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
 local recap = RoundRecap.new(modal, audio, reduceEffects)
+recap.onAccepted=clientUI.accepted
 recap.onPreferredLayout=function()if layout then layout() end end
 recap.onContentLayout=function()if layout then layout()end end
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
@@ -788,8 +800,7 @@ picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reaso
   end
  end
 end, function(slot,id)
- if clientUI.appearanceIntent then clientUI.appearanceIntent:choose(slot,id)end
-	audio:play("menu")
+ return if clientUI.appearanceIntent then clientUI.appearanceIntent:choose(slot,id)else false
 end, function(actionName)
 	if actionName == "music" then
 		audio:setMusicEnabled(not audio:isMusicEnabled())
@@ -919,9 +930,10 @@ openMenu = function()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() then return end
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
 	gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
-	gameMenu:open(); audio:play("menu")
+	gameMenu:open();return true
 end
-roomView.onOpenMenu = openMenu
+roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end end
+picker.onAccepted=clientUI.accepted;journal.onAccepted=clientUI.accepted;gameMenu.onAccepted=clientUI.accepted;nurseryView.onAccepted=clientUI.accepted
 
 do
 	local handoff = safeOverlays.DeckHandoff
@@ -934,6 +946,7 @@ do
 	local function updateShade()
 		roomView.transition:refresh()
 		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible
+  if modalShade.Visible then rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())end
 		request:FireServer("pause", modalShade.Visible)
 	end
 	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade }) do
@@ -984,14 +997,14 @@ openPicker = function(mode,back)
 	if isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs[picker.active]or (if picker.active=="Settings"then picker.sound else picker.cancel)
 	end
-	audio:play("menu")
+ return true
 end
 openJournal = function()
 	cancelHatchNavigation()
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
 		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"),
 		nurseryState and nurseryState.masteryRanks)
-	audio:play("menu")
+ return true
 end
 -- The shared cache owns both native station visibility and final activation validation.
 for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade})do
@@ -1059,13 +1072,13 @@ end))
 gui.Destroying:Connect(function()for _,connection in ipairs(saveNoticeConnections)do connection:Disconnect()end;table.clear(saveNoticeConnections)end)
 refreshSaveNotice()
 
-customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
+customizeButton.Activated:Connect(function() if openMenu and openMenu()then clientUI.accepted("confirm")end end)
 do
  local theme,sticker,background=equippedAppearance()
  clientUI.appearanceIntent=clientUI.AppearanceIntent.new({themeId=theme,stickerId=sticker,revision=board:GetAttribute("AppearanceRevision")or 0,backgroundId=board:GetAttribute("DeckBackgroundId")or"canopy",
   send=function(payload)request:FireServer("appearanceSlot",payload)end,
   changed=function(state)picker:setAppearance(state);paintDeck(state.confirmedTheme,state.confirmedSticker,state.confirmedBackground)end})
- picker.onRetry=function(slot)clientUI.appearanceIntent:retry(slot)end
+ picker.onRetry=function(slot)return clientUI.appearanceIntent:retry(slot)end
  local function refreshFallbacks()
   if not gui.Parent then return end
   local raw=board:GetAttribute("AppearanceFallbacks");local ok,values=pcall(function()return if type(raw)=="string"then HttpService:JSONDecode(raw)else {}end)
@@ -1201,7 +1214,7 @@ updateHud = function()
 		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
 	layoutDropMeter()
-	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board")
+	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board"and rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	for _,cell in ipairs(segments)do cell.Visible=false end
 	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
@@ -1631,8 +1644,11 @@ local function requestRetry()
 	cancelHatchNavigation()
 	local sequence=RunReceipt.replaySequence(board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),(board:GetAttribute("OwnedPets")or 0)==0)
 	if sequence and recapOwnsInput() and not UserInputService:GetFocusedTextBox() then
+  clientUI.accepted("confirm")
 		request:FireServer("reset",sequence)
+  return true
 	end
+ return false
 end
 
 local function handleControl(name, state, input)
@@ -1658,7 +1674,7 @@ local function handleControl(name, state, input)
 		if name == "EggDropDrop" then
 			dropEgg()
 		elseif name == "EggDropCustomize" then
-			openMenu()
+			if openMenu()then clientUI.accepted("confirm")end
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
 		end
@@ -1733,7 +1749,7 @@ ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, p
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
 	if not clientUI.PresentationPolicy.canSheetBack({coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,busy=roomView.busy}) then return Enum.ContextActionResult.Pass end
 	if gameMenu and gameMenu.shade.Visible then
-		if state == Enum.UserInputState.Begin then closeMenu() end
+		if state == Enum.UserInputState.Begin then gameMenu:activate("close") end
 		return Enum.ContextActionResult.Sink
 	end
 	if nurseryView:isOpen() then
@@ -1742,7 +1758,7 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 	end
 	if journal.shade.Visible then
 		if state == Enum.UserInputState.Begin then
-			journal:close()
+			journal:close("back")
 		end
 		return Enum.ContextActionResult.Sink
 	end
@@ -1825,10 +1841,10 @@ keepPlaying.Activated:Connect(function()
 	if roomView.busy then
 		return
 	end
-	if recap.frame.Visible then visitEggs(); return end
+	if recap.frame.Visible then if visitEggs()then clientUI.accepted("confirm")end;return end
 	table.remove(hatchQueue, 1)
 	reveal:cancel()
-	audio:play("menu")
+ clientUI.accepted("back")
 	updateHud()
 end)
 pet.Activated:Connect(function()
@@ -1858,7 +1874,7 @@ local function addView(source)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
 	mark.TextColor3 = Palette.Ink
 	mark.Size = Sprite.markSize(mark.Text)
-	mark.ZIndex = 4
+	mark.ZIndex = 7
 	eggViews[source] = { gel = gel, mark = mark, id = id }
 	viewsById[id] = gel
 end
@@ -1898,175 +1914,67 @@ for _, source in ipairs(board:GetChildren()) do
 	addView(source)
 end
 
-table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch)
-	if rendererPresentation.destroyed then return end
-	local strongest = 0
-	local bankHit = false
-	for _, impact in ipairs(batch) do
-		local gel = viewsById[impact[1]]
-		if gel then
-			if not reduceEffects() then
-				gel:impact(impact[2], impact[3])
-			end
-			if impact[3] > strongest then
-				strongest = impact[3]
-				bankHit = impact[2].Y < 0.78
-			end
-		end
-	end
-	local now = os.clock()
-	if strongest >= 9 and now - lastPlop >= 0.13 then
-		lastPlop = now
-		audio:play(if bankHit then "bank" else "land", math.clamp(0.82 + strongest / 100, 0.9, 1.2),
-			math.clamp(strongest / 70, 0.24, 0.55))
-	end
-end))
-
-local function gelDrop(from, to, diameter, color, duration, outward)
-	local movement = to - from
-	local dot = make("Frame", "GelDrop", {
-		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = color, BorderSizePixel = 0,
-		BackgroundTransparency = if outward then 0.05 else 0.14, ZIndex = 3,
-		Position = UDim2.fromOffset(from.X, from.Y),
-		Size = UDim2.fromOffset(diameter * 1.3, diameter * 0.8),
-		Rotation = math.deg(math.atan2(movement.Y, movement.X)),
-	}, effects)
-	make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, dot)
-	local tween = TweenService:Create(dot, TweenInfo.new(duration, Enum.EasingStyle.Quad), {
-		Position = UDim2.fromOffset(to.X, to.Y),
-		Size = UDim2.fromOffset(diameter * 0.5, diameter * 0.5),
-		BackgroundTransparency = 1,
-	})
-	tween.Completed:Once(function()
-		dot:Destroy()
-	end)
-	tween:Play()
+rendererPresentation.canPresent=function(serial)
+ return type(serial)=="number"and not rendererPresentation.destroyed and serial==board:GetAttribute("ResetId") and gui.Parent~=nil and gui.Enabled
+  and board:GetAttribute("Mode")=="Board" and backdrop.Visible and not GuiService.MenuIsOpen
+  and not UserInputService:GetFocusedTextBox() and not modal.Visible and not modalShade.Visible
+  and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
+  and not roomView.busy and not roomView.transition.shade.Visible
 end
-
-table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position, tier, chain, first, second, id, cleared)
-	if rendererPresentation.destroyed then return end
-	if board:GetAttribute("Mode") ~= "Board" then
-		return
-	end
-	local now = os.clock()
-	mergeBurst = if now - lastMerge < 0.08 then math.min(mergeBurst + 1, 2) else 0
-	lastMerge = now
-	local pitch = 0.98 + (id or 0) % 5 * 0.01
-	audio:play(if tier == 2 then "merge_bubble" else "merge_jelly", pitch, 0.56 * 0.68 ^ mergeBurst)
-	if (chain > 1 or cleared) and now - lastChainAccent >= 0.18 then
-		lastChainAccent = now
-		audio:play("merge_chain", 1 + math.min(chain - 2, 4) * 0.035, 0.34)
-	end
-	if not rendererPresentation.visible then return end
-	local reduced = reduceEffects()
-	local pixelMerge = lcdEnabled() and not cleared and not reduced
-	if pixelMerge then
-		if #pixelMerges >= 6 then
-			table.remove(pixelMerges, 1)
-		end
-		table.insert(pixelMerges, {
-			first = pixelPoint(first), second = pixelPoint(second), point = pixelPoint(position),
-			radius = Config.Tiers[tier - 1].radius * JellyLCD.Width / (Config.Width + 0.8),
-			resultRadius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8),
-			color = Config.Tiers[tier].color, start = now, id = id,
-		})
-	end
-	local previous = effects:FindFirstChild("MergePop")
-	if previous then
-		previous:Destroy()
-	end
-	local count = #effects:GetChildren()
-	local limit = if UserInputService.TouchEnabled then 24 else 48
-	if count + 5 > limit then
-		return
-	end
-	local point = project(position)
-	local color = Config.Tiers[tier].color
-	local scale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
-	local firstPoint, secondPoint = project(first), project(second)
-	local diameter = scale * Config.Tiers[tier - 1].radius * 1.55
-	if not reduced then
-		if not pixelMerge then
-			gelDrop(firstPoint, point, diameter, color, 0.18, false)
-			gelDrop(secondPoint, point, diameter, color, 0.18, false)
-			local delta = secondPoint - firstPoint
-			local bridge = make("Frame", "GelBridge", {
-				AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
-				BackgroundColor3 = color, BackgroundTransparency = 0.1,
-				Position = UDim2.fromOffset(point.X, point.Y),
-				Size = UDim2.fromOffset(delta.Magnitude + diameter * 0.8, diameter * 0.49),
-				Rotation = math.deg(math.atan2(delta.Y, delta.X)),
-			}, effects)
-			make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, bridge)
-			local retract = TweenService:Create(bridge, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
-				Size = UDim2.fromOffset(diameter * 0.74, diameter * 1.1), BackgroundTransparency = 1,
-			})
-			retract.Completed:Once(function() bridge:Destroy() end)
-			retract:Play()
-		end
-		local ring = make("Frame", "MergeRing", {
-			AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3,
-			BackgroundTransparency = 1, Position = UDim2.fromOffset(point.X, point.Y),
-			Size = UDim2.fromOffset(diameter, diameter),
-		}, effects)
-		make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ring)
-		local stroke = make("UIStroke", "Glow", { Color = color, Thickness = 2, Transparency = 0.25 }, ring)
-		local wave = TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {
-			Size = UDim2.fromOffset(diameter * 3.8, diameter * 3.8),
-		})
-		wave.Completed:Once(function() ring:Destroy() end)
-		wave:Play()
-		TweenService:Create(stroke, TweenInfo.new(0.32), { Transparency = 1 }):Play()
-		local beads = math.min(if UserInputService.TouchEnabled then 4 else 8 + math.min(chain - 1, 4), limit - count - 5)
-		for i = 1, beads do
-			local angle = i * math.pi * 2 / beads + chain * 0.5
-			local burst = Vector2.new(math.cos(angle), math.sin(angle)) * scale * (1.6 + i % 3 * 0.52)
-			local tint = if i % 3 == 0 then Palette.Paper else color
-			gelDrop(point, point + burst, math.max(4, scale * (0.21 + i % 3 * 0.08)), tint, 0.26 + i % 3 * 0.07, true)
-		end
-	end
-	local pop = label("TextLabel", "MergePop", if cleared then "MAX CLEAR +100" elseif chain > 1 then "CHAIN x" .. chain else "POP!", effects)
-	pop.TextColor3 = color
-	pop.TextStrokeColor3 = Palette.Ink
-	pop.TextStrokeTransparency = 0.05
-	pop.TextSize = if chain > 1 then 23 else 18
-	pop.AnchorPoint = Vector2.new(0.5, 0.5)
-	pop.Size = UDim2.fromOffset(120, 27)
-	pop.Position = UDim2.fromOffset(point.X, point.Y)
-	pop.ZIndex = 5
-	if reduced then
-		task.delay(0.55, function()
-			pop:Destroy()
-		end)
-		return
-	end
-	if chain > 1 then
-		point -= Vector2.new(0, 21)
-		pop.Position = UDim2.fromOffset(point.X, point.Y)
-	end
-	local tween = TweenService:Create(pop, TweenInfo.new(0.58, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-		Position = UDim2.fromOffset(point.X, point.Y - 44), TextTransparency = 1, TextStrokeTransparency = 1,
-	})
-	tween.Completed:Once(function()
-		pop:Destroy()
-	end)
-	tween:Play()
+table.insert(rendererPresentation.connections,overlay:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()rendererPresentation.fx:clear()end))
+table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial)
+ if not rendererPresentation.canPresent(serial)then return end
+ local strongest,contact,normal,contactSource=0,nil,nil,nil
+ for _,impact in ipairs(batch)do
+  local gel=viewsById[impact[1]]
+  if gel then
+   if not reduceEffects()then gel:impact(impact[2],impact[3])end
+   if impact[3]>strongest then
+    strongest=impact[3];normal=impact[2]
+    for source,view in pairs(eggViews)do if view.id==impact[1]then contactSource=source;break end end
+   end
+  end
+ end
+ local now=os.clock()
+ if strongest>=9 and now-lastPlop>=.13 and contactSource and contactSource.Parent then
+  lastPlop=now
+  local radius=contactSource.Size.X/2
+  contact=Vector2.new(contactSource.Position.X,contactSource.Position.Y)-normal*radius
+  rendererPresentation.setFieldOwner(true,serial,reduceEffects())
+  rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
+  audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))
+ end
+end))
+table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial)
+ if not rendererPresentation.canPresent(serial)then return end
+ local now=os.clock()
+ mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
+ audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
+ if(chain>1 or cleared)and now-lastChainAccent>=.18 then
+  lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),.30)
+ end
+ local reduced=reduceEffects()
+ if lcdEnabled()and not cleared and not reduced then
+  if #pixelMerges>=6 then table.remove(pixelMerges,1)end
+  table.insert(pixelMerges,{first=pixelPoint(first),second=pixelPoint(second),point=pixelPoint(position),
+   radius=Config.Tiers[tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[tier].radius*JellyLCD.Width/(Config.Width+.8),
+   color=Config.Tiers[tier].color,start=now,id=id})
+ end
+ rendererPresentation.setFieldOwner(true,serial,reduced)
+ rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),Config.Tiers[tier].color,tier,chain,serial,now,nil,cleared)
 end))
 
-local function applySound(preview)
+local function applySound()
 	local sound = board:GetAttribute("SoundLevel")
 	audio:setVolume(if Settings.validSound(sound) then Settings.Sound[sound] else 0)
-	if preview and isPickerOpen() then
-		audio:play("menu")
-	end
 end
-applySound(false)
-board:GetAttributeChangedSignal("SoundLevel"):Connect(function() applySound(true) end)
+applySound()
+board:GetAttributeChangedSignal("SoundLevel"):Connect(applySound)
 gui.Destroying:Connect(function() audio:destroy() end)
 local function refreshMotion()
 	if reduceEffects() then
 		reveal:cancel()
-		effects:ClearAllChildren()
+		rendererPresentation.fx:clear()
 		table.clear(pixelMerges)
 	end
 	if isPickerOpen() then
@@ -2091,34 +1999,39 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	picker:close()
 	journal:close()
 	local mode = board:GetAttribute("Mode")
-	if nurseryView then nurseryView:close() end
+	if nurseryView then nurseryView:close("forced") end
 	if closeMenu then closeMenu() end
 	if mode == "Room" then
+  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 		if hatchQueue[1] then
 			table.remove(hatchQueue, 1)
 		end
 		reveal:cancel()
-		effects:ClearAllChildren()
+		rendererPresentation.fx:clear()
 		table.clear(pixelMerges)
 	end
 	roomView:setMode(mode)
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
+ rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
+ rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	if recap.feedback then recap.feedback:cancel() end
 	clearPlayInputs()
 	reveal:cancel()
-	effects:ClearAllChildren()
+	rendererPresentation.fx:clear()
 	table.clear(pixelMerges)
-	audio:stop()
-	audio:play("retry")
 	lastPlop = -math.huge
 	lastMerge = -math.huge
 	lastChainAccent = -math.huge
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
-	if board:GetAttribute("Drops") > 0 then
-		audio:play("drop")
-	end
+ local count,serial=board:GetAttribute("Drops")or 0,board:GetAttribute("ResetId")
+ local accepted=rendererPresentation.fx:observeDrop(serial,count)
+ if accepted and rendererPresentation.canPresent(serial)then
+  audio:play("drop",1,.48)
+  rendererPresentation.setFieldOwner(true,serial,reduceEffects())
+  -- The neutral physical dispenser owns compression; NextTier may already be advanced.
+ end
 end)
 board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 	local charge = board:GetAttribute("HatchCharge")
@@ -2170,6 +2083,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local now,reduced=os.clock(),reduceEffects()
 	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible and not modalShade.Visible and not GuiService.MenuIsOpen,reduced,gui.Enabled and bleed.Enabled and not GuiService.MenuIsOpen)
 	if not backdrop.Visible then
+  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduced)
 		rendererPresentation.visible=false;lcdElapsed=lcdStep
 		return
 	end
@@ -2186,10 +2100,10 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 				elseif mood == "happy" then Art.Amber else Art.Ink
 		end
 	end
-	local presented=gui.Enabled and backdrop.Visible and not GuiService.MenuIsOpen and not modal.Visible
-		and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
-		and not roomView.busy and not roomView.transition.shade.Visible
-	if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
+	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
+ rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
+ if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
+ rendererPresentation.fx:update(now)
 	if not rendererPresentation.visible then
 		-- Resume at the current authoritative locations, never interpolate an old
 		-- frozen pile through a newly uncovered board.
@@ -2285,7 +2199,9 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 end)
 gui.Destroying:Connect(function()
 	if rendererPresentation.destroyed then return end
+ rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	rendererPresentation.destroyed=true;rendererPresentation.visible=false
+ rendererPresentation.fx:destroy()
  if clientUI.clock then clientUI.clock:destroy();clientUI.clock=nil end
 	for _,connection in ipairs(rendererPresentation.connections)do connection:Disconnect()end
 	table.clear(rendererPresentation.connections)

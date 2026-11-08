@@ -1,0 +1,29 @@
+[
+  {
+    "button": "Details",
+    "events": [
+      {
+        "name": "EggDrop_menu",
+        "speed": 1.1200000047683716
+      }
+    ]
+  },
+  {
+    "button": "Details",
+    "events": [
+      {
+        "name": "EggDrop_menu",
+        "speed": 1.1200000047683716
+      }
+    ]
+  },
+  {
+    "button": "Continue",
+    "events": [
+      {
+        "name": "EggDrop_menu",
+        "speed": 1.059999942779541
+      }
+    ]
+  }
+]

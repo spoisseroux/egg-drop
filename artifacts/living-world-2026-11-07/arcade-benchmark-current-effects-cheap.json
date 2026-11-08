@@ -1,0 +1,285 @@
+{
+  "ok": true,
+  "withFx": true,
+  "preference": "Medium",
+  "result": {
+    "renderHz": 30,
+    "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+    "background": "off",
+    "backend": "cheap",
+    "fieldEffects": true,
+    "logicalGrid": [
+      64,
+      107
+    ],
+    "fieldEffectsFinalInstances": 62,
+    "deviceViewport": "1626, 994",
+    "backgroundFinalInstances": 0,
+    "cpuClock": "os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",
+    "backgroundInstances": 0,
+    "finalStats": [],
+    "reports": [
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "idle",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.019700033590197563,
+          "p95": 0.12269988656044006,
+          "max": 0.17200014553964138
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.003200024366378784,
+          "p95": 0.004800036549568176,
+          "max": 0.01950003206729889
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.669100150465965,
+          "p95": 17.797499895095825,
+          "max": 18.32590065896511
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 13,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.0004998873919248581,
+          "p95": 0.0006998889148235321,
+          "max": 0.030399998649954796
+        },
+        "failures": 0,
+        "fieldEffectsStats": {
+          "evicted": 0,
+          "instances": 62,
+          "active": 0,
+          "scope": "scenario including warmup",
+          "rejected": 0,
+          "writes": 0,
+          "accepted": 0
+        },
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "falling",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 1.1764999944716692,
+          "p95": 1.5412999782711267,
+          "max": 3.5749999806284904
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.009699957445263863,
+          "p95": 0.03909994848072529,
+          "max": 0.057399971410632133
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.696499660611153,
+          "p95": 17.631199210882187,
+          "max": 18.4262003749609
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 119,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.0004998873919248581,
+          "p95": 0.000700121745467186,
+          "max": 0.001400010660290718
+        },
+        "failures": 0,
+        "fieldEffectsStats": {
+          "evicted": 0,
+          "instances": 62,
+          "active": 2,
+          "scope": "scenario including warmup",
+          "rejected": 0,
+          "writes": 375,
+          "accepted": 10
+        },
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "pile24",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.1960000954568386,
+          "p95": 0.3754999488592148,
+          "max": 0.6957000587135553
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.012600095942616463,
+          "p95": 0.036800047382712364,
+          "max": 0.04810001701116562
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.65310002863407,
+          "p95": 17.84129999577999,
+          "max": 18.237600103020668
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 42,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.000400003045797348,
+          "p95": 0.000800006091594696,
+          "max": 0.0023997854441404343
+        },
+        "failures": 0,
+        "fieldEffectsStats": {
+          "evicted": 0,
+          "instances": 62,
+          "active": 1,
+          "scope": "scenario including warmup",
+          "rejected": 0,
+          "writes": 312,
+          "accepted": 10
+        },
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "multiMerge",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.33350009471178055,
+          "p95": 0.8604000322520733,
+          "max": 1.1008000001311302
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.05570007488131523,
+          "p95": 0.27600000612437725,
+          "max": 0.5719000473618507
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.677100211381912,
+          "p95": 17.5889004021883,
+          "max": 17.923500388860703
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 58,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.000400003045797348,
+          "p95": 0.000700121745467186,
+          "max": 0.001600012183189392
+        },
+        "failures": 0,
+        "fieldEffectsStats": {
+          "evicted": 26,
+          "instances": 62,
+          "active": 4,
+          "scope": "scenario including warmup",
+          "rejected": 7,
+          "writes": 6925,
+          "accepted": 43
+        },
+        "paintedFrames": 0
+      }
+    ],
+    "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+    "backgroundStats": [],
+    "fixtureSize": "{0, 354}, {0, 594}",
+    "fieldEffectsInstances": 62
+  },
+  "frozen": false
+}

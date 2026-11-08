@@ -16,13 +16,19 @@ function Dispenser.new(parent,reduceEffects)
 	local label=Art.text(host,"Remaining","Drops left 24/24",UDim2.fromOffset(1,26),UDim2.new(1,-2,0,18),Art.Silver,12)
 	Art.type(label,"Supporting")
 	local rolling=balls[8]:Clone();rolling.Name="RollingBall";rolling.Parent=host;rolling.ZIndex=host.ZIndex+3;rolling.Visible=false
-	local self=setmetatable({host=host,channel=channel,balls=balls,label=label,rolling=rolling,reduce=reduceEffects or function()return false end,pulses=0},Dispenser)
+ local nozzle=Art.frame(host,"NozzleCompression",Art.Silver,UDim2.fromScale(.5,.5),UDim2.new(1,-4,1,-4),host.ZIndex)
+ nozzle.AnchorPoint=Vector2.new(.5,.5);nozzle.BackgroundTransparency=1;nozzle.Active=false;nozzle.Selectable=false;nozzle.Visible=false;Art.corner(nozzle,8)
+ local nozzleStroke=Art.stroke(nozzle,Art.Silver,1,1)
+	local self=setmetatable({nozzle=nozzle,nozzleStroke=nozzleStroke,host=host,channel=channel,balls=balls,label=label,rolling=rolling,reduce=reduceEffects or function()return false end,pulses=0},Dispenser)
 	host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:cancel();self:layout()end)
 	return self
 end
 function Dispenser:cancel()
 	if self.motion then self.motion:Cancel();self.motion=nil end
 	self.rolling.Visible=false
+ if self.nozzleMotion then self.nozzleMotion:Cancel();self.nozzleMotion=nil end
+ if self.nozzleFade then self.nozzleFade:Cancel();self.nozzleFade=nil end
+ self.nozzle.Visible=false
 end
 -- Called only by root layout/preference changes, never a HUD-frame measurement.
 function Dispenser:preferredHeight(width,available)
@@ -67,7 +73,7 @@ function Dispenser:layout()
 end
 function Dispenser:update(reset,drops,budget,active)
 	budget=budget or 24;drops=drops or 0
-	local accepted=self.reset==reset and self.drops~=nil and drops>self.drops
+	local accepted=self.reset==reset and self.drops~=nil and drops==self.drops+1
 	if self.reset~=reset or (self.drops and drops<self.drops)then self:cancel()end
 	local previousVisible=math.min(8,self.remaining or 0)
 	local previousSlot=self.balls[math.max(1,previousVisible)]
@@ -80,6 +86,10 @@ function Dispenser:update(reset,drops,budget,active)
 	if accepted then
 		self.pulses+=1;self.host:SetAttribute("AcceptedPulses",self.pulses)
 		self:cancel()
+  self.nozzle.Visible=true;self.nozzleStroke.Transparency=.55
+  self.nozzle.Size=if self.reduce()then UDim2.new(1,-4,1,-4)else UDim2.new(.96,-4,.90,-4)
+  if not self.reduce()then self.nozzleMotion=TweenService:Create(self.nozzle,TweenInfo.new(.18,Enum.EasingStyle.Sine),{Size=UDim2.new(1,-4,1,-4)});self.nozzleMotion:Play()end
+  self.nozzleFade=TweenService:Create(self.nozzleStroke,TweenInfo.new(.18),{Transparency=1});self.nozzleFade:Play()
 		if self.reduce() or not self.channel.Visible then return end
 		local ball=self.rolling;ball.Size=self.balls[1].Size;local slot=self.balls[math.max(1,previousVisible)]
 		ball.Position=rollingOrigin or self.channel.Position+slot.Position

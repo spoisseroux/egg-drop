@@ -54,9 +54,9 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue();self:refreshBackgroundPreview()end)
 	self.cancel=Art.bareClose(button(card,"Close","×",function()self:back()end));self.closeButton=self.cancel;self.cancel.ZIndex=60
 	self.appearanceStatus=text(scroll,"AppearanceStatus","Select to wear immediately.","Supporting")
- self.retryButton=button(scroll,"RetryAppearance","Retry",function()if self.onRetry then self.onRetry(slots[self.active]or "theme")end end)
- self.trialsLink=button(scroll,"ViewTrials","View Pocket Trials",function()self.innerReturn={active=self.active,scroll=self.scroll.CanvasPosition,focus=GuiService.SelectedObject};self:showTab("Trials")end)
- for _,tab in ipairs({"Shell","Sticker","Background"})do self.tabs[tab]=button(card,tab.."Tab",if tab=="Sticker"then "Stickers"elseif tab=="Background"then "Background"else tab,function()self:showTab(tab)end)end
+ self.retryButton=button(scroll,"RetryAppearance","Retry",function()if self.shade.Visible and self.retryButton.Interactable and self.onRetry and self.onRetry(slots[self.active]or "theme")~=false then if self.onAccepted then self.onAccepted("confirm")end end end)
+ self.trialsLink=button(scroll,"ViewTrials","View Pocket Trials",function()self.innerReturn={active=self.active,scroll=self.scroll.CanvasPosition,focus=GuiService.SelectedObject};self:showTab("Trials");if self.onAccepted then self.onAccepted("confirm")end end)
+ for _,tab in ipairs({"Shell","Sticker","Background"})do self.tabs[tab]=button(card,tab.."Tab",if tab=="Sticker"then "Stickers"elseif tab=="Background"then "Background"else tab,function()self:activateTab(tab)end)end
 
 	self.display=panel(scroll,"Display","inset")
 	self.previewName=text(self.display,"PreviewName","Scout","Action")
@@ -258,6 +258,10 @@ function Picker:setSaveNotice(notice)
 	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end
 	self.saveNotice=notice;self:layout();return true
 end
+function Picker:activateTab(active)
+ if not self.shade.Visible or self.active==active or not self.tabs[active]then return false end
+ self:showTab(active);if self.onAccepted then self.onAccepted("tab")end;return true
+end
 function Picker:showTab(active)
  if active=="Club"then active="Trials"end -- Compatibility for old callers, never a public tab.
  if not self.tabs[active]and active~="Trials"and active~="Settings"then return end
@@ -280,16 +284,19 @@ end
 function Picker:activateChoice(tab,id)
  local stroke=self.choices[tab]and self.choices[tab][id]
  if not self.shade.Visible or self.active~=tab or not stroke then return false end
- if not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then self.inspectId,self.inspectSlot=id,slots[tab];self:refreshAppearance();self:layout();return true end
+ if not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then
+  if self.inspectId==id and self.inspectSlot==slots[tab]then return false end
+  self.inspectId,self.inspectSlot=id,slots[tab];self:refreshAppearance();self:layout();if self.onAccepted then self.onAccepted("confirm")end;return true end
  local wasInspect=self.inspectId~=nil;self.inspectId,self.inspectSlot=nil,nil
- if self.onApply then self.onApply(slots[tab],id)end
+ local applied=if self.onApply then self.onApply(slots[tab],id)else false
  if wasInspect then self:refreshAppearance();self:layout()end
+ if (wasInspect or applied~=false)and self.onAccepted then self.onAccepted("confirm")end
  return true
 end
 function Picker:changeSetting(key)
  local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion else nil
  if not self.shade.Visible or self.active~="Settings"or not control or not control.Interactable then return false end
- self.onSetting(key);return true
+ self.onSetting(key);if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 function Picker:preview(themeId,stickerId)
  local theme=Themes.ById[themeId];if not theme or not Stickers.ById[stickerId]then return false end
@@ -384,6 +391,8 @@ function Picker:open(themeId,stickerId,mode)
  if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end
 end
 function Picker:back()
+ if not self.shade.Visible then return false end
+ if self.onAccepted then self.onAccepted("back")end
  if self.innerReturn then local saved=self.innerReturn;self.innerReturn=nil;self.returningFromTrials=true;self:showTab(saved.active);self.returningFromTrials=nil;self.scroll.CanvasPosition=saved.scroll;GuiService.SelectedObject=visibleSelection(saved.focus);return end
  self:close("back")
 end

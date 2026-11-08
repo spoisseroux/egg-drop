@@ -37,7 +37,7 @@ local function place(slot,x,y,w,h,cellX,cellY)
 end
 function Sprite.new(parent,source,options)
 	options=options or {}
-	local color=source.Color;local deep=color:Lerp(Color3.fromHex("#142D20"),.65)
+	local color=source.Color;local deep=color:Lerp(Color3.fromHex("#142D20"),.71)
 	local body=frame(parent,source.Name,deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
 	local gridWidth=options.gridWidth or Sprite.GridWidth
 	local gridHeight=math.round(gridWidth*(Config.Height+.8)/(Config.Width+.8))
@@ -52,7 +52,7 @@ function Sprite.new(parent,source,options)
 		local gradient=Instance.new("UIGradient");gradient.Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(.78,.78,.78));gradient.Parent=fill.node
 		self.fillBounds[index]={}
 	end
-	self.glints={frame(body,"Glint",Color3.fromHex("#F4F8E9")),frame(body,"GlintStep",Color3.fromHex("#F4F8E9"))}
+	self.glints={frame(body,"Glint",color:Lerp(Color3.fromHex("#F4F8E9"),.79)),frame(body,"GlintStep",color:Lerp(Color3.fromHex("#F4F8E9"),.79))}
 	self.glint=self.glints[1].node;body.Visible=true
 	return self
 end

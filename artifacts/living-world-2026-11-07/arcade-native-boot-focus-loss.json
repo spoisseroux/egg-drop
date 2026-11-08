@@ -1,0 +1,60 @@
+{
+  "before": 21,
+  "blurredMusic": {
+    "plays": 1,
+    "groupVolume": 1,
+    "id": "rbxassetid://98540058987296",
+    "isLoaded": true,
+    "timePosition": 0,
+    "loops": 1,
+    "name": "EggDrop_Music",
+    "volume": 0,
+    "isPlaying": false,
+    "timeLength": 53.333333333333336
+  },
+  "resumedMusic": {
+    "plays": 2,
+    "groupVolume": 1,
+    "id": "rbxassetid://98540058987296",
+    "isLoaded": true,
+    "timePosition": 0.332,
+    "loops": 1,
+    "name": "EggDrop_Music",
+    "volume": 0.12999999523162842,
+    "isPlaying": true,
+    "timeLength": 53.333333333333336
+  },
+  "blurEvents": [
+    {
+      "at": 335584.057788,
+      "name": "EggDrop_menu",
+      "volume": 0.6499999761581421,
+      "speed": 1.059999942779541,
+      "kind": "Play"
+    },
+    {
+      "at": 335584.2763749999,
+      "name": "EggDrop_menu",
+      "volume": 0.7200000286102295,
+      "speed": 1,
+      "kind": "Play"
+    },
+    {
+      "at": 335584.2907014999,
+      "name": "EggDrop_Boot",
+      "volume": 0.20000000298023224,
+      "speed": 0.8799999952316284,
+      "kind": "Play"
+    }
+  ],
+  "resumeEvents": [
+    {
+      "at": 335585.5138151001,
+      "name": "EggDrop_Music",
+      "volume": 0.12999999523162842,
+      "speed": 1,
+      "kind": "Play"
+    }
+  ],
+  "snapshotNote": "Final BoardAudio boot-cancellation implementation. This trace predates removal of the duplicate generic RoomView arrival tick; the later final-handheld gesture trace verifies its removal."
+}

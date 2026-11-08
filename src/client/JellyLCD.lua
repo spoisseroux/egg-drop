@@ -31,7 +31,7 @@ local paletteCount=0
 local function palette(color)
 	local key=rgba(color);local cached=palettes[key]
 	if cached then return cached end
-	cached={rgba(color:Lerp(INK,.65)),rgba(color:Lerp(INK,.27)),key,rgba(color:Lerp(WHITE,.7))}
+	cached={rgba(color:Lerp(INK,.71)),rgba(color:Lerp(INK,.30)),key,rgba(color:Lerp(WHITE,.79))}
 	if paletteCount<64 then palettes[key]=cached;paletteCount+=1 end
 	return cached
 end

@@ -1,0 +1,332 @@
+[
+  {
+    "name": "arcade-benchmark-frozen-span",
+    "fxInstances": 0,
+    "finalFxInstances": 0,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.29170000925660133,
+        "paintP95": 0.32160012051463127,
+        "fxP95": 0.00030011869966983795,
+        "frameP95": 17.933199182152748,
+        "peakAllocated": 1536,
+        "demand": 23,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 5.112800048664212,
+        "paintP95": 5.224599968641996,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 17.969299107789993,
+        "peakAllocated": 1536,
+        "demand": 888,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 1.7407999839633703,
+        "paintP95": 1.8016998656094074,
+        "fxP95": 0.0002998858690261841,
+        "frameP95": 17.780199646949768,
+        "peakAllocated": 1536,
+        "demand": 506,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 3.517900127917528,
+        "paintP95": 3.8497999776154757,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.26629973948002,
+        "peakAllocated": 1536,
+        "demand": 572,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  },
+  {
+    "name": "arcade-benchmark-current-span",
+    "fxInstances": 0,
+    "finalFxInstances": 0,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.314400065690279,
+        "paintP95": 0.3285999409854412,
+        "fxP95": 0.0002998858690261841,
+        "frameP95": 17.7730992436409,
+        "peakAllocated": 1536,
+        "demand": 23,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 5.259299883618951,
+        "paintP95": 5.709500052034855,
+        "fxP95": 0.00030011869966983795,
+        "frameP95": 18.0440004914999,
+        "peakAllocated": 1536,
+        "demand": 889,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 1.7275998834520578,
+        "paintP95": 1.8527000211179256,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 17.73669943213463,
+        "peakAllocated": 1536,
+        "demand": 506,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 3.268799977377057,
+        "paintP95": 3.3601000905036926,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 17.84539967775345,
+        "peakAllocated": 1536,
+        "demand": 572,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  },
+  {
+    "name": "arcade-benchmark-current-effects-span",
+    "fxInstances": 62,
+    "finalFxInstances": 62,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.3371001221239567,
+        "paintP95": 0.35699992440640926,
+        "fxP95": 0.004299916326999664,
+        "frameP95": 17.842499539256096,
+        "peakAllocated": 1536,
+        "demand": 23,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 5.51449996419251,
+        "paintP95": 5.788699956610799,
+        "fxP95": 0.04630000330507755,
+        "frameP95": 18.003400415182114,
+        "peakAllocated": 1536,
+        "demand": 882,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 1.79130001924932,
+        "paintP95": 1.8128000665456057,
+        "fxP95": 0.0396000687032938,
+        "frameP95": 17.81029999256134,
+        "peakAllocated": 1536,
+        "demand": 506,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 3.2786999363452196,
+        "paintP95": 3.556799842044711,
+        "fxP95": 0.5675000138580799,
+        "frameP95": 17.879299819469452,
+        "peakAllocated": 1536,
+        "demand": 572,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  },
+  {
+    "name": "arcade-benchmark-frozen-cheap",
+    "fxInstances": 0,
+    "finalFxInstances": 0,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.14319992624223232,
+        "paintP95": 0,
+        "fxP95": 0.0002998858690261841,
+        "frameP95": 17.731400206685066,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 1.5714999753981829,
+        "paintP95": 0,
+        "fxP95": 0.000500120222568512,
+        "frameP95": 17.938699573278427,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 0.34200004301965237,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.081700429320335,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 0.6528999656438828,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.17769929766655,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  },
+  {
+    "name": "arcade-benchmark-current-cheap",
+    "fxInstances": 0,
+    "finalFxInstances": 0,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.10990002192556858,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.059400841593742,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 1.701299799606204,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.180299550294876,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 0.34239981323480606,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.149100244045258,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 0.638199970126152,
+        "paintP95": 0,
+        "fxP95": 0.000400003045797348,
+        "frameP95": 18.13350059092045,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  },
+  {
+    "name": "arcade-benchmark-current-effects-cheap",
+    "fxInstances": 62,
+    "finalFxInstances": 62,
+    "reports": [
+      {
+        "scenario": "idle",
+        "cpuP95": 0.12269988656044006,
+        "paintP95": 0,
+        "fxP95": 0.004800036549568176,
+        "frameP95": 17.797499895095825,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "falling",
+        "cpuP95": 1.5412999782711267,
+        "paintP95": 0,
+        "fxP95": 0.03909994848072529,
+        "frameP95": 17.631199210882187,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "pile24",
+        "cpuP95": 0.3754999488592148,
+        "paintP95": 0,
+        "fxP95": 0.036800047382712364,
+        "frameP95": 17.84129999577999,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      },
+      {
+        "scenario": "multiMerge",
+        "cpuP95": 0.8604000322520733,
+        "paintP95": 0,
+        "fxP95": 0.27600000612437725,
+        "frameP95": 17.5889004021883,
+        "peakAllocated": 0,
+        "demand": 0,
+        "postwarm": 0,
+        "failures": 0,
+        "fallback": false
+      }
+    ]
+  }
+]

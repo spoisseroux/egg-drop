@@ -1,0 +1,91 @@
+{
+  "old": {
+    "before": {
+      "pool": 62,
+      "drops": 1,
+      "shows": 0,
+      "score": 0,
+      "added": 0,
+      "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}"
+    },
+    "after": {
+      "pool": 62,
+      "drops": 1,
+      "shows": 0,
+      "score": 0,
+      "added": 0,
+      "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}"
+    },
+    "old": {
+      "before": {
+        "score": 0,
+        "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}",
+        "drops": 1
+      },
+      "id": 10,
+      "evidence": "Presentation-only QA event; server sim/rewards unchanged",
+      "serial": 8,
+      "published": 9
+    },
+    "newSounds": []
+  },
+  "current": {
+    "before": {
+      "pool": 62,
+      "drops": 2,
+      "shows": 0,
+      "score": 0,
+      "added": 0,
+      "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}"
+    },
+    "after": {
+      "pool": 62,
+      "drops": 2,
+      "shows": 4,
+      "score": 0,
+      "added": 0,
+      "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}"
+    },
+    "current": {
+      "before": {
+        "score": 0,
+        "hatch": "{\"masteryRanks\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"masteryLegacyMask\":0,\"dailyDay\":\"20764\",\"dailyBonus\":6,\"status\":\"Ready\",\"masteryChallenges\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"nectar\":6,\"revision\":3,\"misses\":0,\"dailyAvailable\":false,\"inventoryMask\":1,\"mastery\":{\"wick\":0,\"pip\":0,\"puddle\":0,\"orbit\":0},\"contracts\":[{\"claimed\":false,\"title\":\"Finish 2 quests\",\"progress\":0,\"id\":\"runs\",\"reward\":4,\"target\":2,\"hint\":\"Complete both sides in two rounds\"},{\"claimed\":false,\"title\":\"Chain 3 merges\",\"progress\":0,\"id\":\"chain\",\"reward\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"},{\"claimed\":false,\"title\":\"Score 500\",\"progress\":0,\"id\":\"score\",\"reward\":3,\"target\":500,\"hint\":\"Earn 500 points in a full round\"}],\"totalWins\":0,\"masteryDetails\":{\"wick\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"pip\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"puddle\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0},\"orbit\":{\"challengeGoal\":3,\"challenges\":0,\"nextRank\":1,\"rewardHint\":\"Next: family badge\",\"nextGoal\":\"3 marks to rank I\",\"missingChallenges\":[\"Clean win\",\"Win with a chain of 3\",\"Win with 500 points\"],\"name\":\"Unranked\",\"hint\":\"Win rounds or hatch duplicates\",\"marksRemaining\":3,\"points\":0,\"nextPoints\":3,\"rank\":0}}}",
+        "drops": 2
+      },
+      "id": 10,
+      "evidence": "Presentation-only QA event; server sim/rewards unchanged",
+      "serial": 9,
+      "published": 9
+    },
+    "newSounds": [
+      {
+        "at": 335093.1936951999,
+        "name": "EggDrop_merge_bubble",
+        "volume": 0.5600000023841858,
+        "speed": 1.3348398208618164,
+        "kind": "Play"
+      },
+      {
+        "at": 335093.1937573999,
+        "name": "EggDrop_merge_chain",
+        "volume": 0.30000001192092896,
+        "speed": 1.3348398208618164,
+        "kind": "Play"
+      },
+      {
+        "at": 335093.19430119987,
+        "name": "EggDrop_land",
+        "volume": 0.3571428656578064,
+        "speed": 1.0700000524520874,
+        "kind": "Play"
+      },
+      {
+        "at": 335093.6597817999,
+        "name": "EggDrop_land",
+        "volume": 0.23999999463558197,
+        "speed": 0.927678644657135,
+        "kind": "Play"
+      }
+    ]
+  }
+}

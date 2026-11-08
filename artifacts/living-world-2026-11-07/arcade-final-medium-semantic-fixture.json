@@ -1,0 +1,18 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SemanticUI",
+    "result": [
+      "opening updating layout and programmatic page selection remain silent",
+      "two rapid accepted tab switches have distinct callbacks",
+      "disabled controls do not tick or submit and accepted submit ticks once",
+      "X and Back share one accepted close route without forced-close echo",
+      "style tabs and settings distinguish layout from accepted activation",
+      "confirmed no-op and repeat locked inspection stay silent",
+      "shop selection and submit each notify once; pending and reflow do not",
+      "recap Details accepts once per activation; layout and programmatic details remain silent",
+      "journal goals delegate once and forced lifecycle cleanup is silent"
+    ]
+  }
+]

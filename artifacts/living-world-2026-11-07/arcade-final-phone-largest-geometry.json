@@ -1,0 +1,15 @@
+{
+  "button": {
+    "input": "Touch",
+    "pref": "Largest",
+    "drops": 2
+  },
+  "caption": {
+    "bounds": "147, 56",
+    "pos": "294, 128",
+    "pref": "Largest",
+    "text": "MAX CLEAR +100 pts",
+    "textSize": 14,
+    "size": "160, 60"
+  }
+}

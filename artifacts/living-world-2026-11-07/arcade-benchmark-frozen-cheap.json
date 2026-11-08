@@ -1,0 +1,249 @@
+{
+  "ok": true,
+  "withFx": false,
+  "preference": "Medium",
+  "result": {
+    "renderHz": 30,
+    "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+    "background": "off",
+    "backend": "cheap",
+    "fieldEffects": false,
+    "logicalGrid": [
+      64,
+      107
+    ],
+    "fieldEffectsFinalInstances": 0,
+    "deviceViewport": "1626, 994",
+    "backgroundFinalInstances": 0,
+    "cpuClock": "os.clock around renderer + optional background/field effects; backgroundCpuMs and fieldEffectsCpuMs separately attributed, excludes deterministic scene setup",
+    "backgroundInstances": 0,
+    "finalStats": [],
+    "reports": [
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "idle",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.014799879863858223,
+          "p95": 0.14319992624223232,
+          "max": 0.1922000665217638
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.00010011717677116394,
+          "p95": 0.0002998858690261841,
+          "max": 0.000400003045797348
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.618099063634872,
+          "p95": 17.731400206685066,
+          "max": 19.001400098204613
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 13,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.000400003045797348,
+          "p95": 0.000600004568696022,
+          "max": 0.0006998889148235321
+        },
+        "failures": 0,
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "falling",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 1.0879000183194876,
+          "p95": 1.5714999753981829,
+          "max": 1.7059999518096447
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.000200001522898674,
+          "p95": 0.000500120222568512,
+          "max": 0.000700121745467186
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.66709966957569,
+          "p95": 17.938699573278427,
+          "max": 18.446600064635277
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 112,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.00030011869966983795,
+          "p95": 0.000600004568696022,
+          "max": 0.00090012326836586
+        },
+        "failures": 0,
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "pile24",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.18759979866445065,
+          "p95": 0.34200004301965237,
+          "max": 0.4282000008970499
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.000200001522898674,
+          "p95": 0.000400003045797348,
+          "max": 0.000500120222568512
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.7263001203537,
+          "p95": 18.081700429320335,
+          "max": 18.34619976580143
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 42,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.000400003045797348,
+          "p95": 0.000600004568696022,
+          "max": 0.001400010660290718
+        },
+        "failures": 0,
+        "paintedFrames": 0
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "scenario": "multiMerge",
+        "peakAllocated": 0,
+        "cpuAllMs": {
+          "p50": 0.2527001779526472,
+          "p95": 0.6528999656438828,
+          "max": 0.8806998375803232
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "fieldEffectsCpuMs": {
+          "p50": 0.000200001522898674,
+          "p95": 0.000400003045797348,
+          "max": 0.000600004568696022
+        },
+        "backend": "cheap",
+        "wholeClientFrameMs": {
+          "p50": 16.630399972200394,
+          "p95": 18.17769929766655,
+          "max": 18.39520037174225
+        },
+        "rendererAtEnd": "cheap",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "peakPropertyWrites": 58,
+        "staticAllocated": 0,
+        "peakDemand": 0,
+        "peakUsed": 0,
+        "cpuPaintMs": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "backgroundCpuMs": {
+          "p50": 0.000400003045797348,
+          "p95": 0.000600004568696022,
+          "max": 0.000600004568696022
+        },
+        "failures": 0,
+        "paintedFrames": 0
+      }
+    ],
+    "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+    "backgroundStats": [],
+    "fixtureSize": "{0, 354}, {0, 594}",
+    "fieldEffectsInstances": 0
+  },
+  "frozen": true
+}

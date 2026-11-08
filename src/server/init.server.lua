@@ -575,7 +575,7 @@ RunService.Heartbeat:Connect(function(dt)
 				if board.firstSession then
 					board.firstSession:advance(3)
 				end
-				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared)
+				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"))
 			end
 			if board.profile.rank >= 1 and not hasPip(board) then grantWelcome(player, board) end
 			if board.field then
@@ -610,7 +610,7 @@ RunService.Heartbeat:Connect(function(dt)
 			end
 		end
 		if #batch > 0 then
-			impactsRemote:FireClient(player, batch)
+			impactsRemote:FireClient(player, batch, board.folder:GetAttribute("ResetId"))
 		end
 		table.clear(board.impacts)
 	end

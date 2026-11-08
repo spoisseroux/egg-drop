@@ -1,0 +1,124 @@
+[
+  {
+    "initial": {
+      "sfxMaster": 1,
+      "setting": "Full",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": true,
+      "musicGroup": 1,
+      "musicText": "Music: On",
+      "musicVolume": 0.12999999523162842
+    }
+  },
+  {
+    "action": "MusicSetting",
+    "settings": {
+      "sfxMaster": 1,
+      "setting": "Full",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": false,
+      "musicGroup": 1,
+      "musicText": "Music: Off",
+      "musicVolume": 0
+    },
+    "cues": [
+      "EggDrop_menu"
+    ]
+  },
+  {
+    "action": "SoundSetting",
+    "settings": {
+      "sfxMaster": 0.4000000059604645,
+      "setting": "Quiet",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": false,
+      "musicGroup": 0.4000000059604645,
+      "musicText": "Music: Off",
+      "musicVolume": 0
+    },
+    "cues": [
+      "EggDrop_menu"
+    ]
+  },
+  {
+    "action": "MusicSetting",
+    "settings": {
+      "sfxMaster": 0.4000000059604645,
+      "setting": "Quiet",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": true,
+      "musicGroup": 0.4000000059604645,
+      "musicText": "Music: On",
+      "musicVolume": 0.12999999523162842
+    },
+    "cues": [
+      "EggDrop_Music",
+      "EggDrop_menu"
+    ]
+  },
+  {
+    "action": "SoundSetting",
+    "settings": {
+      "sfxMaster": 0,
+      "setting": "Off",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": false,
+      "musicGroup": 0,
+      "musicText": "Music: On",
+      "musicVolume": 0
+    },
+    "cues": [
+      "EggDrop_menu"
+    ]
+  },
+  {
+    "action": "MusicSetting",
+    "settings": {
+      "sfxMaster": 0,
+      "setting": "Off",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": false,
+      "musicGroup": 0,
+      "musicText": "Music: Off",
+      "musicVolume": 0
+    },
+    "cues": []
+  },
+  {
+    "action": "SoundSetting",
+    "settings": {
+      "sfxMaster": 1,
+      "setting": "Full",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": false,
+      "musicGroup": 1,
+      "musicText": "Music: Off",
+      "musicVolume": 0
+    },
+    "cues": []
+  },
+  {
+    "action": "MusicSetting",
+    "settings": {
+      "sfxMaster": 1,
+      "setting": "Full",
+      "hatchRevision": 3,
+      "drops": 0,
+      "musicPlaying": true,
+      "musicGroup": 1,
+      "musicText": "Music: On",
+      "musicVolume": 0.12999999523162842
+    },
+    "cues": [
+      "EggDrop_Music",
+      "EggDrop_menu"
+    ]
+  }
+]

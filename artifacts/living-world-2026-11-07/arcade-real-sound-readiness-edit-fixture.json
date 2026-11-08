@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "result": {
+    "plays": 0,
+    "isPlaying": false,
+    "isLoaded": true,
+    "passed": 3,
+    "evidence": "Real native Sound unloaded→authorized asset loaded; no Play requested while ready, no deferred playback"
+  }
+}

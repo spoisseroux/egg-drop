@@ -101,7 +101,7 @@ function Menu.new(parent,callbacks)
 	for _,key in ipairs({"play","daily","mastery"}) do
 		local page=Art.frame(body,key,"panel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
 		page.BackgroundTransparency=1;self.pages[key]=page
-		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Mastery",function()self:setPage(key)end)
+		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Mastery",function()self:activatePage(key)end)
 	end
 	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
@@ -151,7 +151,7 @@ function Menu:activate(key,value)
 	if key=="daily" and not self.dailyButton.Interactable then return false end
 	if key=="family" and (not self.families[value] or not self.families[value].Interactable) then return false end
 	local callback=self.callbacks[key];if not callback then return false end
-	callback(value);return true
+	local accepted=callback(value);if accepted==false then return false end;if self.onAccepted then self.onAccepted(if key=="close"then "back"else "confirm")end;return true
 end
 function Menu:layout()
 	if self.layingOut then return end
@@ -400,6 +400,10 @@ function Menu:setSaveNotice(notice)
 	self.saveNotice=notice
 	self:update(self.state,self.selectedFamily,self.runFamily,self.card:GetAttribute("RunScore"),self.card:GetAttribute("RunChain"),self.card:GetAttribute("PersonalBest"),self.recipeId)
 	self:layout();return true
+end
+function Menu:activatePage(key)
+ if not self.shade.Visible or self.page==key or not self.pages[key]then return false end
+ self:setPage(key);if self.onAccepted then self.onAccepted("tab")end;return true
 end
 function Menu:setPage(key)
 	if not self.pages[key] then return end

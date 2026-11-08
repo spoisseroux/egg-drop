@@ -1,0 +1,75 @@
+{
+  "status": "LOCAL AUDITION ONLY; unpublished, not wired to runtime",
+  "default_music_asset_unchanged": 98540058987296,
+  "sample_rate": 44100,
+  "sample_bits": 16,
+  "originals_unchanged": {
+    "assets/audio/egg_drop_meadow_loop.wav": "78f854223825c31961ca3342d83af181edec32947aada34c6827e866cdb47b2a",
+    "assets/concepts/music/egg_drop_quirky_lounge.py": "e9ba6fd53addd794a7c6c40669a509179e8acb35cf841b0d195de8a04fc60e58",
+    "assets/concepts/music/egg_drop_pocket_apricot_quirky.mp3": "a53cdf4237e3abdaafe3ae1ead31d2f00298d608f9bdd791215e8b7483a3b2bb"
+  },
+  "assets": [
+    {
+      "file": "egg_drop_chain_spark_local.wav",
+      "frames": 15876,
+      "channels": 1,
+      "seconds": 0.36,
+      "sha256": "18cfc5c1aaa84f1de6b447673c4840cd77047ecc36e127615b5f8abccc285701",
+      "peak": 0.1437463913299264,
+      "rms": 0.037288028045710936
+    },
+    {
+      "file": "egg_drop_arcade_spark_loop_local.wav",
+      "frames": 2352000,
+      "channels": 2,
+      "seconds": 53.333333333333336,
+      "sha256": "bb6c7b0b6b070e87efb92c2834e49e36189f09b739fe32ad004f490f23762f62",
+      "peak": 0.4451948592907177,
+      "rms": 0.06034808728926098
+    },
+    {
+      "file": "egg_drop_arcade_cues_ab_local.wav",
+      "frames": 197174,
+      "channels": 1,
+      "seconds": 4.471065759637188,
+      "sha256": "e86f8d588b9ff2723b8d58948d9312ddb8a0e6020c2648a36f09aa8612fc47bf",
+      "peak": 0.1437463913299264,
+      "rms": 0.014400431133732617
+    }
+  ],
+  "cue_audition_offsets": [
+    {
+      "label": "baseline_menu_at_0.72",
+      "start_seconds": 0.0
+    },
+    {
+      "label": "confirm_1.06_at_0.65",
+      "start_seconds": 0.6750113378684808
+    },
+    {
+      "label": "tab_1.12_at_0.52",
+      "start_seconds": 1.3457596371882086
+    },
+    {
+      "label": "back_0.84_at_0.35",
+      "start_seconds": 2.012721088435374
+    },
+    {
+      "label": "baseline_chain_at_0.34",
+      "start_seconds": 2.702018140589569
+    },
+    {
+      "label": "original_chain_spark_local_only",
+      "start_seconds": 3.511065759637188
+    }
+  ],
+  "optional_loop": {
+    "bpm": 72,
+    "beats": 64,
+    "seam_delta": [
+      0.0,
+      0.0
+    ],
+    "note": "Needs an audible full-loop seam and gameplay intelligibility check before any adoption."
+  }
+}

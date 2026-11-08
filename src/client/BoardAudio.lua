@@ -31,6 +31,7 @@ local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
 	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "overflow", "retry", "menu",
 }
+local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 
 function Audio.uri(cue)
 	local id = assetIds[cue]
@@ -160,7 +161,7 @@ function Audio:isMusicEnabled() return self.musicEnabled == true end
 function Audio:setDeviceActive(active)
 	if self.destroyed then return end
 	self.deviceActive = active == true
-	if not self.deviceActive then self:silencePurr() end
+	if not self.deviceActive then self:cancelBoot();self:stopField();self:silencePurr() end
 	self:refreshLoops()
 end
 function Audio:setMusicEnabled(enabled)
@@ -214,18 +215,55 @@ end
 
 function Audio:play(name, speed, volume)
 	local voices = self.voices[name]
-	if self.destroyed or not voices or self.group.Volume == 0 then
-		return
+	if self.destroyed or not voices or self.group.Volume == 0 or self.deviceActive==false then
+		return false
 	end
+	local index = (self.indices[name] or 0) % #voices + 1
+	local voice = voices[index]
+	if not voice or voice.IsLoaded==false then return false end
 	if name == "hatch_rise" then self:duck("hatch", 1.2, 0.22)
 	elseif name == "hatch" then self:duck("hatch", 0.9, 0.22) end
-	local index = (self.indices[name] or 0) % #voices + 1
 	self.indices[name] = index
-	local voice = voices[index]
 	voice.PlaybackSpeed = speed or 1
 	voice.Volume = volume or 0.72
 	voice.TimePosition = 0
 	voice:Play()
+	return true
+end
+
+function Audio:stopField()
+	if self.destroyed then return end
+	for _,name in ipairs(fieldCues)do
+		for _,voice in ipairs(self.voices[name]or {})do voice:Stop()end
+	end
+end
+
+-- Only the accepted action owner calls this. The same token may cross widgets,
+-- but never hover/layout/server-ack handlers. Muted actions are consumed too.
+function Audio:ui(kind,token)
+	if self.destroyed then return false end
+	local variants={confirm={1.06,.65},tab={1.12,.52},back={.84,.35}}
+	local variant=variants[kind]
+	local validToken=(type(token)=="string"and #token>0 and #token<=128)
+		or(type(token)=="number"and token==token and token%1==0 and token>=0 and token<math.huge)
+	if not variant or not validToken then return false end
+	self.uiTokens,self.uiRing=self.uiTokens or {},self.uiRing or {}
+	if self.uiTokens[token]then return false end
+	self.uiCursor=(self.uiCursor or 0)%64+1
+	local old=self.uiRing[self.uiCursor];if old~=nil then self.uiTokens[old]=nil end
+	self.uiRing[self.uiCursor],self.uiTokens[token]=token,true
+	if self.deviceActive==false or self.group.Volume==0 or not self.voices.menu then return false end
+	-- Drop unavailable cues now; never replay them when preload later finishes.
+	if self.voices.menu[1].IsLoaded==false then return false end
+	self:play("menu",variant[1],variant[2])
+	return true
+end
+
+function Audio:mergePitch(chain,id)
+	chain=if type(chain)=="number"and chain==chain and chain<math.huge then math.max(1,math.floor(chain))else 1
+	id=if type(id)=="number"and id==id and math.abs(id)<math.huge then math.floor(id)else 0
+	local semitones=if chain>=3 then 5 elseif chain==2 then 3 else 0
+	return 2^(semitones/12)*(1+(id%5)*.0025)
 end
 
 function Audio:setVolume(volume)
@@ -249,11 +287,11 @@ function Audio:cancelBoot()
 	end
 end
 function Audio:boot(owns)
-	if self.destroyed then return end
+	if self.destroyed or self.deviceActive==false then return end
 	self:cancelBoot()
 	local token=self.bootEpoch
 	local source=self.voices.charge and self.voices.charge[1]
-	if not source or (owns and not owns()) then return end
+	if not source or source.IsLoaded==false or (owns and not owns()) then return end
 	local voice=source:Clone()
 	voice.Name,voice.Volume,voice.Parent="EggDrop_Boot",.20,SoundService
 	self.bootVoice=voice
@@ -261,7 +299,8 @@ function Audio:boot(owns)
 	local schedule=self.schedule or task.delay
 	for index,pitch in ipairs({.88,1.10,1.32}) do
 		schedule((index-1)*.09,function()
-			if self.bootEpoch==token and self.group.Parent and (not owns or owns()) and self.group.Volume>0 then
+			if not self.destroyed and self.deviceActive~=false and voice.IsLoaded~=false
+				and self.bootEpoch==token and self.group.Parent and (not owns or owns()) and self.group.Volume>0 then
 				voice.PlaybackSpeed,voice.TimePosition=pitch,0
 				voice:Play()
 			end
@@ -287,6 +326,7 @@ end
 function Audio:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+	self.uiTokens,self.uiRing=nil,nil
 	self:cancelBoot()
 	for _, connection in ipairs(self.connections or {}) do connection:Disconnect() end
 	for _, loop in ipairs({self.music, self.purr}) do
