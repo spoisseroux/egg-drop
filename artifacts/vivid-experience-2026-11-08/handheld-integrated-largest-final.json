@@ -1,0 +1,270 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "VividHandheld",
+    "result": {
+      "preference": "Largest",
+      "cases": [
+        "roomy enamel keeps the exact 700px board and independent 44px controls",
+        "one measured wordmark supports full and compact forms without reallocating",
+        "standard phone landscape has a measured compact mark; shallow controls retain their seats",
+        "boot uses the same passive underprint and joined lettering",
+        "all six smooth prints reuse their die-cut composition through resizing",
+        "1649, 971 roomy menu choices and tabs use their measured larger faces",
+        "1649, 971 Style Settings Trials preserve full labels and reachable final controls",
+        "1000, 650 roomy menu choices and tabs use their measured larger faces",
+        "1000, 650 Style Settings Trials preserve full labels and reachable final controls"
+      ],
+      "passed": 9,
+      "metrics": {
+        "wordmark": {
+          "compactWidth": 55,
+          "compactHeight": 45
+        },
+        "starGlyph": {
+          "host": "220, 220",
+          "font": "SourceSans",
+          "textBounds": "207, 305",
+          "localScale": 2.911764621734619,
+          "measurement": "native text bounds; ink shape requires capture"
+        },
+        "case": {
+          "trayHeight": 700,
+          "height": 724,
+          "trayWidth": 417.1717171717172,
+          "grip": 315.6541414141414,
+          "width": 1100.48
+        }
+      }
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StickerPrintSeat",
+    "result": {
+      "cases": [
+        "1649, 971 DROP independent count/caption and fixed inputs",
+        "1649, 971 FALLING independent count/caption and fixed inputs",
+        "1649, 971 SETTLE independent count/caption and fixed inputs",
+        "1649, 971 SAVING independent count/caption and fixed inputs",
+        "733, 307 DROP independent count/caption and fixed inputs",
+        "733, 307 FALLING independent count/caption and fixed inputs",
+        "733, 307 SETTLE independent count/caption and fixed inputs",
+        "733, 307 SAVING independent count/caption and fixed inputs",
+        "568, 160 DROP independent count/caption and fixed inputs",
+        "568, 160 FALLING independent count/caption and fixed inputs",
+        "568, 160 SETTLE independent count/caption and fixed inputs",
+        "568, 160 SAVING independent count/caption and fixed inputs",
+        "385, 703 DROP independent count/caption and fixed inputs",
+        "385, 703 FALLING independent count/caption and fixed inputs",
+        "385, 703 SETTLE independent count/caption and fixed inputs",
+        "385, 703 SAVING independent count/caption and fixed inputs"
+      ],
+      "glyphMeasurements": [
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "189, 278",
+          "print": 200,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "189, 278",
+          "print": 200,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "216, 318",
+          "print": 230,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "1649, 971",
+          "nativeBounds": "189, 278",
+          "print": 200,
+          "grip": 315.6541414141414
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "101, 149",
+          "print": 102,
+          "grip": 205
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "89, 130",
+          "print": 88,
+          "grip": 205
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "101, 149",
+          "print": 102,
+          "grip": 205
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "733, 307",
+          "nativeBounds": "93, 137",
+          "print": 93,
+          "grip": 205
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "39, 56",
+          "print": 32,
+          "grip": 205
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "32, 47",
+          "print": 25,
+          "grip": 205
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "39, 56",
+          "print": 32,
+          "grip": 205
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": true,
+          "rotation": -15,
+          "root": "568, 160",
+          "nativeBounds": "32, 47",
+          "print": 25,
+          "grip": 205
+        },
+        {
+          "state": "DROP",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "57, 84",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "FALLING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "57, 84",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "SETTLE",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "57, 84",
+          "print": 53,
+          "grip": 341
+        },
+        {
+          "state": "SAVING",
+          "captionBelowA": false,
+          "dense": false,
+          "rotation": -15,
+          "root": "385, 703",
+          "nativeBounds": "57, 84",
+          "print": 53,
+          "grip": 341
+        }
+      ],
+      "passed": 16,
+      "measurement": "native TextBounds plus outline; actual ink visibility needs capture"
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HandheldTextLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 5,
+      "cases": [
+        "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+        "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SharedFinish",
+    "result": {
+      "preference": "Largest",
+      "passed": 12,
+      "cases": [
+        "assigned faces retain measured targets and distinguish exact Roman marks",
+        "sherbet hot theme paints actual primary, disabled and restored states",
+        "stone hot theme paints actual primary, disabled and restored states",
+        "ice hot theme paints actual primary, disabled and restored states",
+        "brick hot theme paints actual primary, disabled and restored states",
+        "moss hot theme paints actual primary, disabled and restored states",
+        "honey hot theme paints actual primary, disabled and restored states",
+        "gloaming hot theme paints actual primary, disabled and restored states",
+        "copperleaf hot theme paints actual primary, disabled and restored states",
+        "locked finish preview never changes confirmed sheet or control colors",
+        "repeated themes, previews and state paints allocate no nodes or sequences",
+        "controller focus keeps an outer light stroke and inner dark keyline"
+      ]
+    }
+  }
+]

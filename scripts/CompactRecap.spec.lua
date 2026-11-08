@@ -46,6 +46,12 @@ return function(client,parent)
     local value=result(100+index,8,0,10,2);show(value)
     assert(title.Text=="Round complete"and v.promotionLabel.Text=="Pip reached Grove · Rank II")
     fit(title);fit(v.earnedGraphic);fit(v.promotionLabel);fit(v.eggGoal);fit(v.shortfall)
+    assert(v.eggGoal.Parent==v.eggPanel and effectivelyVisible(v.eggGoal)and inside(v.eggGoal,v.eggPanel)and v.eggGoal.ZIndex>v.eggPanel.ZIndex,"selected egg name/balance escaped its visible panel")
+    assert(#v.chips==5 and v.detailsButton.Size.Y.Offset>=44 and v.detailsButton.Size.X.Offset<v.goal.Size.X.Offset*.65)
+    if v.twoColumn then
+     local a,b=v.summaryLayout.earned,v.summaryLayout.egg
+     assert(a.y==b.y and b.x-a.x-a.w==12 and a.w<b.w,"wide receipt lost measured 45/55 factual groups")
+    end
     assert(inside(title,root)and inside(v.earnedGraphic,v.fieldBody),"outcome/earned firstview clipped at"..tostring(size))
     assert(v.componentLabels[1].Visible and effectivelyVisible(v.componentLabels[1])and v.componentLabels[1].Parent==v.goal and inside(v.componentLabels[1],v.goal)and not v.componentLabels[2].Visible and v.receiptLines[2]=="Daily contracts total +0")
     assert(v.eggGoal.Text=="Meadow · 10/18"and v.shortfall.Text=="8 more to hatch"and v.eggPanel.Size.Y.Offset<116)
@@ -65,10 +71,17 @@ return function(client,parent)
      Gui.SelectedObject=b;v:setDetails(true);settle();local loops=0
      while v:scrollReceipt(1)do loops+=1;assert(loops<100)end;settle()
      assert(Gui.SelectedObject==b and v.receiptSignature:find("Personal best 700",1,true)and v.receiptSignature:find("Longest chain ×4",1,true))
-     for _,line in ipairs(v.receiptRows)do fit(line)end
+     assert(v.detailsContent.Visible and v.detailsContent.Parent==v.fieldBody and not v.receiptScroll.Visible)
+     if Gui.PreferredTextSize.Name=="Medium"and v.detailsContent.Size.X.Offset>=500 then
+      assert(v.detailCards[1].frame.Size.Y.Offset<=40 and v.detailCards[3].frame.Size.Y.Offset<=40,"short metrics retained empty vertical cards")
+      assert(v.detailCards[1].frame.Position.Y.Offset==v.detailCards[2].frame.Position.Y.Offset and v.detailCards[3].frame.Position.Y.Offset==v.detailCards[4].frame.Position.Y.Offset,"metric pairs were lost")
+     end
+     for _,line in ipairs(v.receiptRows)do fit(line);assert(line.AbsolutePosition.X>=v.fieldBody.AbsolutePosition.X+8-.1,"Details lost left gutter")end
      local last=v.receiptRows[#v.receiptRows];assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=v.fieldBody.AbsolutePosition.Y+v.fieldBody.AbsoluteSize.Y+1)
     end
-    local starts=v.feedback.starts;local value=result(100+index,8,0,2,2);show(value)
+    local starts=v.feedback.starts;local offset=v.fieldBody.CanvasPosition.Y;local selected=Gui.SelectedObject
+    local value=result(100+index,8,0,2,2);show(value)
+    assert(v.detailsOpen and Gui.SelectedObject==selected and v.fieldBody.CanvasPosition.Y==math.min(offset,math.max(0,v.fieldBody.CanvasSize.Y.Offset-v.fieldBody.Size.Y.Offset)),"same Saved sequence spending reset detail state")
     assert(value.reward.total==8 and v.displayReward==8 and v.earnedGraphic.Text=="+8 nectar"and v.eggGoal.Text=="Meadow · 2/18"and v.feedback.starts==starts)
     v:setDetails(false);show(result(200+index,0,0,2))
     assert(v.hasReceipt and v.earnedGraphic.Text=="+0 nectar"and not v.componentLabels[1].Visible and not v.componentLabels[2].Visible)

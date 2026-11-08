@@ -1,0 +1,23 @@
+{
+  "drops": 0,
+  "phase": "Playing",
+  "lastReward": {
+    "promotedTo": 0,
+    "daily": 6,
+    "sequence": 2,
+    "contracts": {
+      "1": "chain",
+      "2": "score"
+    },
+    "family": "pip",
+    "masteryPoints": 2,
+    "base": 8,
+    "total": 14
+  },
+  "run": 3,
+  "recap": false,
+  "roundOver": false,
+  "mode": "Board",
+  "preference": "Medium",
+  "wallet": 20
+}

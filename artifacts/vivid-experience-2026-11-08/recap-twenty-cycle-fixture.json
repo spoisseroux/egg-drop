@@ -1,0 +1,14 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RecapCycles",
+    "result": {
+      "before": 200,
+      "after": 200,
+      "cycles": 20,
+      "passed": 1,
+      "description": "Isolated production recap reopen/details; no inputs/remotes/profile mutations"
+    }
+  }
+]

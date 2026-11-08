@@ -1,0 +1,474 @@
+{
+  "solverAssisted": true,
+  "actualPointerControls": true,
+  "trace": [
+    {
+      "before": {
+        "drops": 0,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 1
+      }
+    },
+    {
+      "before": {
+        "drops": 1,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 2
+      }
+    },
+    {
+      "before": {
+        "drops": 2,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 3
+      }
+    },
+    {
+      "before": {
+        "drops": 3,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 4
+      }
+    },
+    {
+      "before": {
+        "drops": 4,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 5
+      }
+    },
+    {
+      "before": {
+        "drops": 5,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 6
+      }
+    },
+    {
+      "before": {
+        "drops": 6,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 7
+      }
+    },
+    {
+      "before": {
+        "drops": 7,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 8
+      }
+    },
+    {
+      "before": {
+        "drops": 8,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 9
+      }
+    },
+    {
+      "before": {
+        "drops": 9,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 10
+      }
+    },
+    {
+      "before": {
+        "drops": 10,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":1,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 11
+      }
+    },
+    {
+      "before": {
+        "drops": 11,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 649.9406779661017,
+        "target": -4.6,
+        "mode": "Board",
+        "step": 1,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 12
+      }
+    },
+    {
+      "before": {
+        "drops": 12,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 975.0593220338983,
+        "target": 4.6,
+        "mode": "Board",
+        "step": 2,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 13
+      }
+    },
+    {
+      "before": {
+        "drops": 13,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 975.0593220338983,
+        "target": 4.6,
+        "mode": "Board",
+        "step": 2,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 14
+      }
+    },
+    {
+      "before": {
+        "drops": 14,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 981.4203463974645,
+        "target": 4.78000020980835,
+        "mode": "Board",
+        "step": 2,
+        "choices": {
+          "1": {
+            "y": 2.569597005844116,
+            "x": 4.78000020980835,
+            "tier": 1
+          }
+        }
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 15
+      }
+    },
+    {
+      "before": {
+        "drops": 15,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 975.0593220338983,
+        "target": 4.6,
+        "mode": "Board",
+        "step": 2,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 16
+      }
+    },
+    {
+      "before": {
+        "drops": 16,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 975.0593220338983,
+        "target": 4.6,
+        "mode": "Board",
+        "step": 2,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 17
+      }
+    },
+    {
+      "before": {
+        "drops": 17,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 912.2261898396379,
+        "target": 2.821988105773926,
+        "mode": "Board",
+        "step": 2,
+        "choices": {
+          "1": {
+            "y": 0.7200000286102295,
+            "x": 2.821988105773926,
+            "tier": 1
+          }
+        }
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":2,\"complete\":false,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":1,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 18
+      }
+    },
+    {
+      "before": {
+        "drops": 18,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 908.7703737363977,
+        "target": 2.7241976261138916,
+        "mode": "Board",
+        "step": 2,
+        "choices": {
+          "1": {
+            "y": 1.0399999618530273,
+            "x": 2.7241976261138916,
+            "tier": 2
+          }
+        }
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 19
+      }
+    },
+    {
+      "before": {
+        "drops": 19,
+        "phase": "Playing",
+        "nextTier": 2,
+        "y": 272,
+        "x": 969.4564989865836,
+        "target": 4.441454887390137,
+        "mode": "Board",
+        "step": 3,
+        "choices": {
+          "1": {
+            "y": 3.1950454711914062,
+            "x": 4.441454887390137,
+            "tier": 2
+          }
+        }
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 20
+      }
+    },
+    {
+      "before": {
+        "drops": 20,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 812.5,
+        "target": 0,
+        "mode": "Board",
+        "step": 3,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 21
+      }
+    },
+    {
+      "before": {
+        "drops": 21,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 803.7037581091715,
+        "target": -0.24891044199466705,
+        "mode": "Board",
+        "step": 3,
+        "choices": {
+          "1": {
+            "y": 4.204613208770752,
+            "x": -0.24891044199466705,
+            "tier": 1
+          }
+        }
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 22
+      }
+    },
+    {
+      "before": {
+        "drops": 22,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 812.5,
+        "target": 0,
+        "mode": "Board",
+        "step": 3,
+        "choices": []
+      },
+      "after": {
+        "phase": "Playing",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 23
+      }
+    },
+    {
+      "before": {
+        "drops": 23,
+        "phase": "Playing",
+        "nextTier": 1,
+        "y": 272,
+        "x": 880.26534005747,
+        "target": 1.9175803661346436,
+        "mode": "Board",
+        "step": 3,
+        "choices": {
+          "1": {
+            "y": 4.369314193725586,
+            "x": 1.9175803661346436,
+            "tier": 1
+          }
+        }
+      },
+      "after": {
+        "phase": "Settling",
+        "objective": "{\"sequence\":2,\"dynamics\":{\"id\":\"classic\",\"label\":\"Classic banks\"},\"step\":3,\"complete\":true,\"templateId\":\"bank_pair\",\"title\":\"Bank pair\",\"target\":0,\"goals\":[{\"zone\":{\"min\":-5.5,\"kind\":\"left\",\"max\":-2.6},\"id\":\"left_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1},{\"zone\":{\"min\":2.6,\"kind\":\"right\",\"max\":5.5},\"id\":\"right_iii\",\"minTier\":3,\"kind\":\"merge\",\"target\":1}],\"progress\":0}",
+        "drops": 24
+      }
+    }
+  ]
+}

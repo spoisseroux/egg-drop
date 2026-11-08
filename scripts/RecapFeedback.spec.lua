@@ -1,6 +1,7 @@
 -- Studio Client presentation fixtures. No remotes or progression writes.
 return function(client, parent)
 	local Recap = require(client.RoundRecap)
+	local Feedback=require(client.RecapFeedback)
 	local Catalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 	local root = Instance.new("Frame")
 	root.Name, root.Size, root.BackgroundTransparency, root.Parent = "_RecapFeedbackSpec", UDim2.fromOffset(360, 236), 1, parent
@@ -35,11 +36,112 @@ return function(client, parent)
 		-- Advance deterministically without waiting for native rendering frames.
 		if recap.feedback.connection then recap.feedback.connection:Disconnect(); recap.feedback.connection = nil end
 	end
+	local function advance(feedback,duration)
+		local remaining=duration
+		while remaining>.000001 do local dt=math.min(.01,remaining);feedback:step(dt);remaining-=dt end
+	end
+	local function clockFixture()
+		local owner,reduced,last=true,false,nil
+		local audio={group={Volume=1},deviceActive=true,deviceEpoch=0,cues={},stops=0}
+		function audio:play(name,pitch,volume,token)
+			if self.group.Volume>0 and self.deviceActive then table.insert(self.cues,{name=name,pitch=pitch,volume=volume,owner=token})end
+		end
+		function audio:stopOwner()self.stops+=1 end
+		local f=Feedback.new(function(sample)last=sample end,audio,function()return reduced end,function()return owner end)
+		local function observe(value,visible)
+			local started=f:observe(value,visible)
+			if f.connection then f.connection:Disconnect();f.connection=nil end
+			return started
+		end
+		return f,audio,observe,function()return last end,function(value)owner=value end,function(value)reduced=value end
+	end
 	local ok, problem = pcall(function()
+		test("feedback has a separate exact-value lane and bounded 1100ms four-stage sample",function()
+			assert(Feedback.Duration==1.1)
+			for _,age in ipairs({0,.09,.18,.28,.45,.66,.88,1.1})do
+				local sample=Feedback.sample(age);assert(sample.earned==1 and sample.age==age)
+				for _,key in ipairs({"pop","sources","transfer","settle"})do assert(sample[key]>=0 and sample[key]<=1.000001)end
+			end
+			assert(math.abs(Feedback.sample(.09).pop-1)<.000001 and Feedback.sample(.18).pop==0)
+			assert(Feedback.sample(.17).sources==0 and Feedback.sample(.28).sources>.99 and Feedback.sample(.45).sources<.000001)
+			assert(Feedback.sample(.45).transfer==0 and math.abs(Feedback.sample(.88).transfer-1)<.000001 and Feedback.sample(1.1).settle==1)
+		end)
+		test("committed timeline uses two source notes five rising drops and one quiet cadence",function()
+			local f,a,observe,last=clockFixture();local packet=result(800)
+			table.freeze(packet.reward);table.freeze(packet)
+			assert(observe(packet,true)and last().earned==1 and #a.cues==0 and f.chips==5)
+			advance(f,.17);assert(#a.cues==0)
+			advance(f,.17);assert(#a.cues==2 and a.cues[1].name=="bank"and a.cues[2].pitch>a.cues[1].pitch)
+			advance(f,.55);assert(#a.cues==8)
+			local pitch=0;for i=3,7 do local cue=a.cues[i];assert(cue.name=="charge"and cue.pitch>pitch and cue.volume<=.18 and cue.owner==f);pitch=cue.pitch end
+			assert(a.cues[8].name=="bank"and a.cues[8].volume<=.14)
+			advance(f,.3);assert(not f.active and last()==nil and packet.reward.total==14 and packet.balance==20)
+			assert(not observe(packet,true)and #a.cues==8)
+		end)
+		test("owner loss or skipped resume lands final and cannot emit delayed cues",function()
+			for _,mode in ipairs({"covered","skipped","deviceEpoch"})do
+				local f,a,observe,last,owner=clockFixture();local packet=result(801)
+				assert(observe(packet,true));advance(f,.1)
+				if mode=="covered"then owner(false);f:step(.01)
+				elseif mode=="skipped"then f:step(.3)
+				else a.deviceEpoch=2;f:step(.01)end
+				assert(not f.active and last()==nil and #a.cues==0)
+				owner(true);f:step(.01);assert(not observe(packet,true)and #a.cues==0)
+			end
+		end)
+		test("matching late receipt starts once while pending stale and repeated Saved packets cannot replay",function()
+			local f,a,observe=clockFixture();local pending=result(804,{receiptPending=true})
+			assert(not observe(pending,true)and #a.cues==0)
+			local stale=result(804);stale.reward.sequence=803
+			assert(not observe(stale,true)and #a.cues==0)
+			local saved=result(804);assert(observe(saved,true));advance(f,.2);local count=#a.cues
+			assert(not observe(pending,true)and not f.active)
+			assert(not observe(saved,true)and #a.cues==count and f.starts==1)
+		end)
+		test("cancel inside first render cannot install an inactive clock or emit a zero cue after close",function()
+			local f;local cues=0;local audio={play=function()cues+=1 end}
+			f=Feedback.new(function(sample)if sample then f:cancel()end end,audio,false)
+			assert(not f:observe(result(805),true)and not f.active and f.connection==nil and cues==0)
+			local zero=result(806);zero.reward.total=0
+			local closing=false
+			f=Feedback.new(function()if closing then closing=false;f:cancel()end end,audio,false)
+			-- Initial key publication can render too; close only the zero final paint.
+			f.key=806;closing=true
+			assert(not f:observe(zero,true)and f.connection==nil and cues==0)
+			f=Feedback.new(function(sample)if sample and f.key==807 then f:observe(result(808),true)end end,audio,false)
+			assert(not f:observe(result(807),true)and f.key==808 and f.active and f.connection~=nil)
+			f:cancel();assert(f.connection==nil)
+		end)
+		test("zero is one quiet accent only while hidden reduced muted and background receipts stay quiet",function()
+			local zero=result(802);zero.reward.total=0
+			local f,a,observe,last=clockFixture();assert(not observe(zero,false)and #a.cues==0)
+			assert(not observe(zero,true)and #a.cues==1 and not f.active and last()==nil)
+			assert(not observe(zero,true)and #a.cues==1)
+			for _,mode in ipairs({"reduced","muted","background"})do
+				local g,b,show,_,_,reduce=clockFixture()
+				if mode=="reduced"then reduce(true)elseif mode=="muted"then b.group.Volume=0 else b.deviceActive=false end
+				show(result(803),true);advance(g,1.2);assert(#b.cues==0)
+				reduce(false);b.group.Volume=1;b.deviceActive=true;assert(not show(result(803),true)and #b.cues==0)
+			end
+		end)
+		test("owned pooled voices stop on cancel without stopping a newer ordinary or owned cue",function()
+			local Audio=require(client.BoardAudio)
+			local voice={IsLoaded=true,plays=0,stops=0};function voice:Play()self.plays+=1 end;function voice:Stop()self.stops+=1 end
+			local audio=setmetatable({group={Volume=1},deviceActive=true,indices={},voices={bank={voice}}},Audio)
+			local first,second={},{}
+			assert(audio:play("bank",1,.1,first));assert(audio:play("bank",1,.1));assert(audio:stopOwner(first)==0 and voice.stops==0)
+			assert(audio:play("bank",1,.1,first)and audio:play("bank",1,.1,second))
+			assert(audio:stopOwner(first)==0 and audio:stopOwner(second)==1 and voice.stops==1)
+			voice.IsLoaded=false;assert(not audio:play("bank",1,.1,first)and next(audio.voiceOwners)==nil)
+			voice.IsLoaded=true;assert(audio:play("bank",1,.1,first))
+			for _,name in ipairs({"cancelBoot","stopField","silencePurr","refreshLoops"})do audio[name]=function()end end
+			audio:setDeviceActive(false);assert(audio.deviceEpoch==1 and audio.voiceOwners==nil and voice.stops==2)
+			audio:setDeviceActive(true);audio:setDeviceActive(true);assert(audio.deviceEpoch==2)
+		end)
 		test("matching committed receipt starts once and retains count through HUD refresh", function()
 			local value = result(1)
 			show(value)
-			assert(recap.feedback.active and recap.feedback.starts == 1 and recap.values[1].Text == "0")
+			assert(recap.feedback.active and recap.feedback.starts == 1 and recap.values[1].Text == "0"and recap.earnedGraphic.Text=="+14 nectar")
 			recap.feedback:step(.2)
 			local count = recap.values[1].Text
 			show(value)
@@ -47,9 +149,9 @@ return function(client, parent)
 			assert(recap.bankGraphic.Text == "Nectar saved: 20" and value.balance == 20 and value.reward.total == 14)
 		end)
 		test("count up lands on exact score chain clears and earned nectar", function()
-			recap.feedback:step(.66)
+			advance(recap.feedback,.5)
 			assert(recap.values[1].Text == "630" and recap.values[2].Text == "×4" and recap.values[3].Text == "2")
-			assert(recap.transfer.Visible and recap.bankGraphic.Text == "Nectar saved: 20")
+			assert(recap.transfer.Visible==recap.transferAnchorsVisible and recap.bankGraphic.Text == "Nectar saved: 20"and recap.earnedGraphic.Text=="+14 nectar")
 			recap.feedback:step(.8)
 			assert(not recap.feedback.active and not recap.transfer.Visible)
 			assert(recap.earnedGraphic.Text == "+14 nectar" and recap.scales[1].Scale == 1)
@@ -128,7 +230,7 @@ return function(client, parent)
 				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
 				assert(recap.earnedGraphic.TextFits and recap.bankGraphic.TextFits and recap.eggGoal.TextFits,fitDiagnostic(recap.earnedGraphic,recap.bankGraphic,recap.eggGoal))
 				assert(not recap.earnedGraphic.TextScaled and recap.earnedGraphic.TextSize>=20)
-				assert(recap.detailsButton.Visible and not recap.receiptScroll.Visible)
+				assert(recap.detailsButton.Visible and not recap.detailsContent.Visible and not recap.receiptScroll.Visible)
 				recap:setDetails(true)
 				game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
 				for _,row in ipairs(recap.receiptRows) do assert(row.TextFits and row.TextSize>=14 and not row.TextScaled,fitDiagnostic(row)) end
@@ -137,14 +239,41 @@ return function(client, parent)
 		test("roomy recap follows reward egg metrics details and keeps saved values",function()
 			root.Size=UDim2.fromOffset(600,500);task.wait(.06);show(result(450));task.wait(.06)
 			assert(recap.detailsButton.Visible and recap.detailsButton.AbsoluteSize.Y>=44 and recap.detailsButton.TextFits,fitDiagnostic(recap.detailsButton))
-			assert(not recap.receiptScroll.Visible and not recap.stats.Visible)
-			assert(recap.earnedGraphic.Position.Y.Offset<recap.eggPanel.Position.Y.Offset and recap.eggPanel.Position.Y.Offset<recap.detailsButton.Position.Y.Offset)
+			assert(not recap.detailsContent.Visible and not recap.receiptScroll.Visible and not recap.stats.Visible)
+			local summary=recap.summaryLayout
+			assert(recap.twoColumn and summary.twoColumn and summary.egg.x>=summary.earned.x+summary.earned.w+11.9 and summary.egg.y==summary.earned.y)
 			assert(recap.values[1].Text=="630" and recap.receiptSignature:find("Personal best 700",1,true)and recap.receiptSignature:find("Longest chain ×4",1,true))
 			assert(recap.componentLabels[1].Text=="Quest +8" and recap.componentLabels[2].Text=="Daily +6")
-			assert(recap:scrollReceipt(1) and recap.detailsOpen and recap.receiptScroll.Visible)
+			assert(recap:scrollReceipt(1) and recap.detailsOpen and recap.detailsContent.Visible and not recap.receiptScroll.Visible)
 			local signature=recap.receiptSignature;show(result(450));assert(recap.detailsOpen and recap.receiptSignature==signature)
-			recap:setDetails(false);assert(not recap.receiptScroll.Visible)
+			recap:setDetails(false);assert(not recap.detailsContent.Visible and not recap.receiptScroll.Visible)
 			show(result(451));assert(not recap.detailsOpen and recap.shortfall.Text=="Ready to hatch")
+		end)
+		test("transfer uses visible measured anchors and hides every drop when Details scrolls them away",function()
+			reduced=false;root.Size=UDim2.fromOffset(600,500);task.wait(.06);show(result(452));task.wait(.06)
+			recap.fieldBody.CanvasPosition=Vector2.zero
+			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
+			advance(recap.feedback,.62)
+			assert(recap.transferAnchorsVisible and recap.transfer.Visible,"roomy visible summary did not own measured transfer")
+			assert(#recap.chips==5 and recap.earnedGraphic.Text=="+14 nectar"and recap.bankGraphic.Text=="Nectar saved: 20")
+			local savedHeader,savedFooter,savedWidth=recap.headerInset,recap.footerInset,recap.layoutWidth
+			root.Size=UDim2.fromOffset(600,220);recap.headerInset,recap.footerInset,recap.layoutWidth=30,60,600
+			recap:layoutField(220);recap:setDetails(true)
+			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
+			assert(recap.fieldBody.CanvasSize.Y.Offset>recap.fieldBody.AbsoluteSize.Y+1,"clip fixture needs actual expanded overflow")
+			recap.fieldBody.CanvasPosition=Vector2.new(0,math.max(0,recap.fieldBody.CanvasSize.Y.Offset-recap.fieldBody.AbsoluteSize.Y))
+			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
+			local function physicallyInside(node)
+				local p,s,q,v=node.AbsolutePosition,node.AbsoluteSize,recap.fieldBody.AbsolutePosition,recap.fieldBody.AbsoluteSize
+				return p.X>=q.X-.5 and p.Y>=q.Y-.5 and p.X+s.X<=q.X+v.X+.5 and p.Y+s.Y<=q.Y+v.Y+.5
+			end
+			assert(not physicallyInside(recap.nectarIcon)or not physicallyInside(recap.fill.Parent),"scroll fixture left both measured anchors inside the viewport")
+			recap:paintFeedback(Feedback.sample(.62))
+			assert(not recap.transferAnchorsVisible and not recap.transfer.Visible,"clipped bottle or meter kept a travel lane")
+			for _,chip in ipairs(recap.chips)do assert(not chip.Visible)end
+			recap.feedback:cancel()
+			recap.headerInset,recap.footerInset,recap.layoutWidth=savedHeader,savedFooter,savedWidth
+			root.Size=UDim2.fromOffset(600,500);recap:layoutField(500)
 		end)
 		test("selected egg progress draws above its panel and retains partial or full saved balance",function()
 			reduced=true

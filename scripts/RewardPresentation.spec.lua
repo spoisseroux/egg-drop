@@ -26,12 +26,20 @@ return function(client, parent)
 	local ok, problem = pcall(function()
 		test("all three contracts use canonical names and component rewards", function()
 			recap:updateField(result())
+   assert(recap.earnedGraphic.Text=="+18 nectar"and #recap.chips==5,"first Saved frame hid the exact receipt total")
+   assert(recap.eggGoal.Parent==recap.eggPanel and recap.eggGoal.Visible and recap.eggPanel.Visible and recap.eggGoal.Text:find("20/18",1,true)and recap.eggGoal.ZIndex>recap.eggPanel.ZIndex,"live selected egg name/balance is covered")
 			assert(recap.title.Text:find("Nectar +18", 1, true) and recap.title.Text:find("20/18", 1, true))
 			assert(hasLine("Quest nectar +8") and hasLine("Daily contracts total +10"))
 			for _, contract in ipairs(Daily.Definitions) do
 				assert(hasLine(contract.title .. " · " .. contract.reward .. " nectar"))
 			end
 			assert(hasLine("Wick mastery +2 marks") and hasLine("Wick next: 1 mark to rank I"))
+   local sections={};for _,card in ipairs(recap.detailCards)do sections[card.kind]=true end
+   assert(sections.contract and sections.mastery and sections.source,"receipt lost structured source/contract/mastery facts")
+   local familyCount=0;local familyText=""
+   for _,card in ipairs(recap.detailCards)do if card.kind=="mastery"then familyCount+=1;familyText=card.title.Text end end
+   assert(familyCount==1 and familyText:find("Wick mastery +2 marks",1,true)and familyText:find("Wick next:",1,true),"family facts were lost or split across redundant cards")
+   for _,card in ipairs(recap.detailCards)do assert(not card.title.Text:find("costs 18 nectar",1,true),"visual receipt repeated the live egg summary")end
 		end)
 		test("daily-only failed quest grants no family marks", function()
 			recap:updateField(result({ success = false, stage = 0, award = 6, daily = 6,
@@ -82,7 +90,11 @@ return function(client, parent)
 				assert(scroll.AbsoluteSize.Y>=line,"viewport cannot display one preferred text line")
 				assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=scroll.AbsolutePosition.Y+scroll.AbsoluteSize.Y+1,"last line unreachable")
 				if last.AbsoluteSize.Y<=scroll.AbsoluteSize.Y then
-					assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1,"complete fitting final row is clipped")
+     -- A grouped card has bottom padding. Absolute max-scroll proves its final
+     -- line is reachable; now reveal the valid offset for the complete label.
+     local y=last.AbsolutePosition.Y-scroll.AbsolutePosition.Y+scroll.CanvasPosition.Y
+     scroll.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y)));task.wait(.06)
+     assert(last.AbsolutePosition.Y>=scroll.AbsolutePosition.Y-1 and last.AbsolutePosition.Y+last.AbsoluteSize.Y<=scroll.AbsolutePosition.Y+scroll.AbsoluteSize.Y+1,string.format("complete fitting final row is unreachable: fixtureH=%s viewY=%s viewH=%s rowY=%s rowH=%s textBounds=%s canvasY=%s canvasH=%s text=%q",height,scroll.AbsolutePosition.Y,scroll.AbsoluteSize.Y,last.AbsolutePosition.Y,last.AbsoluteSize.Y,tostring(last.TextBounds),scroll.CanvasPosition.Y,scroll.CanvasSize.Y.Offset,last.Text))
 				else
 					-- A preferred multi-line row can exceed the128px fixture's38px body.
 					-- Keep its full text; independently expose its first and final lines.

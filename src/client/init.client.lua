@@ -1546,7 +1546,7 @@ layout = function()
 	restoreLegacySaveParents()
 	local modalSave=if saveNoticeOwner=="recap"or saveNoticeOwner=="welcome"then currentSaveNotice else nil
 	local fieldRecap=recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0
-	local dialogHeight=if fieldRecap then math.min(400,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
+	local dialogHeight=if fieldRecap then math.min(if recap.detailsOpen then 720 else 400,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
 	modal:SetAttribute("CompactDialog",dialogHeight<220)
 	modal.Size=UDim2.fromOffset(math.min(if fieldRecap then 600 else 440,screen.X-(if fieldRecap then 16 else 32)),dialogHeight)
 	if fieldRecap then
@@ -1667,6 +1667,8 @@ local function recapOwnsInput()
 		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible,
 		coreMenu=GuiService.MenuIsOpen})
 end
+
+recap.ownsFeedback=function()return recapOwnsInput()and audio.deviceActive ~= false end
 
 local function requestRetry()
 	cancelHatchNavigation()
@@ -1834,6 +1836,7 @@ UserInputService.InputEnded:Connect(function(input)
 	end
 end)
 UserInputService.WindowFocusReleased:Connect(clearPlayInputs)
+UserInputService.WindowFocused:Connect(updateHud)
 GuiService.MenuOpened:Connect(clearPlayInputs)
 GuiService.MenuOpened:Connect(updateHud)
 GuiService.MenuClosed:Connect(updateHud)

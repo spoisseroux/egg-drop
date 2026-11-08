@@ -160,8 +160,13 @@ end
 function Audio:isMusicEnabled() return self.musicEnabled == true end
 function Audio:setDeviceActive(active)
 	if self.destroyed then return end
+	if self.deviceActive~=(active==true)then self.deviceEpoch=(self.deviceEpoch or 0)+1 end
 	self.deviceActive = active == true
-	if not self.deviceActive then self:cancelBoot();self:stopField();self:silencePurr() end
+	if not self.deviceActive then
+		for voice in pairs(self.voiceOwners or {})do voice:Stop()end
+		self.voiceOwners=nil
+		self:cancelBoot();self:stopField();self:silencePurr()
+	end
 	self:refreshLoops()
 end
 function Audio:setMusicEnabled(enabled)
@@ -213,7 +218,7 @@ function Audio:duck(name, duration, gain)
 	end)
 end
 
-function Audio:play(name, speed, volume)
+function Audio:play(name, speed, volume, owner)
 	local voices = self.voices[name]
 	if self.destroyed or not voices or self.group.Volume == 0 or self.deviceActive==false then
 		return false
@@ -227,8 +232,21 @@ function Audio:play(name, speed, volume)
 	voice.PlaybackSpeed = speed or 1
 	voice.Volume = volume or 0.72
 	voice.TimePosition = 0
+	if owner~=nil then
+		self.voiceOwners=self.voiceOwners or {};self.voiceOwners[voice]=owner
+	elseif self.voiceOwners then self.voiceOwners[voice]=nil end
 	voice:Play()
 	return true
+end
+
+-- Ownership is attached to an existing pooled voice, never to a new Sound.
+-- A later ordinary or owned play replaces the tag before starting that voice.
+function Audio:stopOwner(owner)
+	local stopped=0
+	for voice,token in pairs(self.voiceOwners or {})do
+		if token==owner then voice:Stop();self.voiceOwners[voice]=nil;stopped+=1 end
+	end
+	return stopped
 end
 
 function Audio:stopField()
@@ -321,11 +339,13 @@ function Audio:stop()
 			voice:Stop()
 		end
 	end
+	self.voiceOwners=nil
 end
 
 function Audio:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+	self.voiceOwners=nil
 	self.uiTokens,self.uiRing=nil,nil
 	self:cancelBoot()
 	for _, connection in ipairs(self.connections or {}) do connection:Disconnect() end

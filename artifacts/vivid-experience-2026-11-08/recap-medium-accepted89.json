@@ -1,0 +1,176 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactRecap",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "1649, 971 outcome earned nonzero breakdown and promotion preserve first view",
+        "1649, 971 details retain zeros history and both footer focuses after spend",
+        "733, 307 outcome earned nonzero breakdown and promotion preserve first view",
+        "733, 307 details retain zeros history and both footer focuses after spend",
+        "568, 160 outcome earned nonzero breakdown and promotion preserve first view",
+        "568, 160 details retain zeros history and both footer focuses after spend",
+        "385, 703 outcome earned nonzero breakdown and promotion preserve first view",
+        "385, 703 details retain zeros history and both footer focuses after spend",
+        "Details and rotation refit canonical chrome once without feedback replay or empty tail"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RecapFeedback",
+    "result": {
+      "passed": 24,
+      "cases": [
+        "feedback has a separate exact-value lane and bounded 1100ms four-stage sample",
+        "committed timeline uses two source notes five rising drops and one quiet cadence",
+        "owner loss or skipped resume lands final and cannot emit delayed cues",
+        "matching late receipt starts once while pending stale and repeated Saved packets cannot replay",
+        "cancel inside first render cannot install an inactive clock or emit a zero cue after close",
+        "zero is one quiet accent only while hidden reduced muted and background receipts stay quiet",
+        "owned pooled voices stop on cancel without stopping a newer ordinary or owned cue",
+        "matching committed receipt starts once and retains count through HUD refresh",
+        "count up lands on exact score chain clears and earned nectar",
+        "hide cancels immediately and reopening the same receipt cannot replay",
+        "hidden ancestor cancels and does not consume a future receipt",
+        "Saving delayed and pending states suppress old receipt and currency transfer",
+        "stale sequence cannot announce the previous reward",
+        "new receipt cancels the old animation and reinitializes every counter",
+        "daily only failure retains missed side quest zero and exact total",
+        "zero earned never invents nectar drops or transfer sounds",
+        "reduced effects shows final static values with no recap cues",
+        "audio remains routed through the muted shared audio group",
+        "short recap scrolls readable center while excluding pinned footer",
+        "roomy recap follows reward egg metrics details and keeps saved values",
+        "transfer uses visible measured anchors and hides every drop when Details scrolls them away",
+        "selected egg progress draws above its panel and retains partial or full saved balance",
+        "first Saved receipt survives synchronous resize during publication",
+        "destroying the component removes its animation connection"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ControllerSheets",
+    "result": {
+      "cases": [
+        "pointer-open Menu seeds current Daily or Mastery tab without routing",
+        "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+        "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "direct controller Journal opening retains its valid existing owned selection",
+        "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "all four same-instance openings advance generation and hidden sheets expose no target",
+        "recap Details preserve both pinned footer selections and never dispatch a route"
+      ],
+      "passed": 9,
+      "inputIsSemanticFixture": true
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PreferredTextLayout",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+        "680, 700 measured shop header and pinned purchase route fit",
+        "680, 700 recap reward wallet and complete receipt stay readable",
+        "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+        "390, 740 measured shop header and pinned purchase route fit",
+        "390, 740 recap reward wallet and complete receipt stay readable",
+        "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+        "568, 160 measured shop header and pinned purchase route fit",
+        "568, 160 recap reward wallet and complete receipt stay readable"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SaveNoticeLayout",
+    "result": {
+      "preference": "Medium",
+      "rootSize": "full matrix",
+      "passed": 9,
+      "cases": [
+        "733, 307 passive status belongs to each modal without covering pinned actions",
+        "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+        "568, 160 passive status belongs to each modal without covering pinned actions",
+        "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+        "385, 703 passive status belongs to each modal without covering pinned actions",
+        "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+        "1649, 971 passive status belongs to each modal without covering pinned actions",
+        "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+        "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "AppearancePalette",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "all8 palettes keep body supporting and LCD ink readable",
+        "1649, 971 open sheets adopt each palette without identity/focus/receipt changes",
+        "1649, 971 newly rebuilt recipe and receipt rows inherit active palette",
+        "733, 307 open sheets adopt each palette without identity/focus/receipt changes",
+        "733, 307 newly rebuilt recipe and receipt rows inherit active palette",
+        "568, 160 open sheets adopt each palette without identity/focus/receipt changes",
+        "568, 160 newly rebuilt recipe and receipt rows inherit active palette",
+        "385, 703 open sheets adopt each palette without identity/focus/receipt changes",
+        "385, 703 newly rebuilt recipe and receipt rows inherit active palette"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PresentationPolicy",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "fresh initial board and deliberate arrival may own one boot",
+        "HUD refresh resize replay and sheet close never manufacture boot",
+        "ended board pending reveal and each interactive owner suppress initial boot",
+        "ended board arrival leaves recap in charge",
+        "overlay arriving mid boot revokes dots visuals and sound with same predicate",
+        "old completion cannot release or hide a newer presentation",
+        "route changes reduced motion and teardown revoke delayed work",
+        "ended board under menu passes gamepad A to the visible sheet",
+        "native menu and text capture retain Back instead of closing covered sheets",
+        "late committed hatch preempts Menu in order and never acknowledges or purchases"
+      ]
+    }
+  }
+]
