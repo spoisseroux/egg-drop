@@ -183,7 +183,7 @@ Evidence:
 
 The isolated store fixtures and actual StudioStore gameplay are distinct evidence. Physical phone/controller, live peer/multiplayer, real private-database save/rejoin and human listening remain unverified. Private place remains v125. No publication follows from these source or native test results.
 
-## Final integrated verification — accepted; publication recorded separately
+## Final integrated verification and private publication — accepted
 
 Fresh final Play, isolated StudioStore, Medium text, actual controls: welcome accepted two drops and granted guaranteed Pip; Meet acknowledged it and Back restored roam. A full Bank sequence2 used24 actual pointer drops with read-only aim selection,660points/chain4, both goals, Saved+12 (Quest6 +Daily6), wallet6→18, Pip+1mark. The pile legitimately missed the clean bonus. The final settled screenshot was taken after the count-up and shows +12 and Meadow18/18; it replaces the earlier opening +0 captures as accepted evidence.
 
@@ -191,4 +191,6 @@ Recap Hatch eggs → explicit18-nectar Meadow purchase produced Wick, wallet0/re
 
 Final fresh-source server suites reran69 (PetAward15/Contact16/Host4 +transaction34), all passed; RunReturn21 also passed. They are repetitions of the named coverage, not90 new unique cases. The ordinary final Play console before injected-failure fixtures contained only the existing optional EditableImage and external203785492 wrong-type warnings. Native source gate compiled and hash-matched81/81 against disk, Rojo built, diff check passed and Edit QA-instance scan was empty. Core menu closed, Medium text, desktop preview, profiler Off/graphics Automatic; SFX Full/Motion Full/Music On restored.
 
-Actual W/D movement plus settling sampled240 rendered frames in affection-final-actual-wasd-follow240.json. The subsequent Room sample measured180 frames after30 warm-up, p50 16.736ms/p95 17.850ms/max18.806ms, unchanged2951Room nodes/1618parts/18ambient/4lights. The affection pool was idle, all three petals hidden, glyph disabled,14 descendants. This is a short desktop Studio sample, not a physical-phone performance result or an old/full-build comparison. No gameplay source changes followed the final gate. Publication/version proof belongs in PLAY-BUILD.md.
+Actual W/D movement plus settling sampled240 rendered frames in affection-final-actual-wasd-follow240.json. The subsequent Room sample measured180 frames after30 warm-up, p50 16.736ms/p95 17.850ms/max18.806ms, unchanged2951Room nodes/1618parts/18ambient/4lights. The affection pool was idle, all three petals hidden, glyph disabled,14 descendants. This is a short desktop Studio sample, not a physical-phone performance result or an old/full-build comparison. No gameplay source changes followed the final gate.
+
+After the integrated gate and pushed runtime7910cf8, native Publish updated only the existing Egg Drop place96451847774961. Refreshed Version History confirms **v180 Published**, titled **Living Hollow and arcade - 7910cf8**, with exact verification/limitations in its version notes. Proof: private-published-v180-7910cf8.png. Studio remains Edit/Rojo34873 connected. Earlier v125 references above are historical pre-publication checkpoints. This documentation-only follow-up requires no new place publication.

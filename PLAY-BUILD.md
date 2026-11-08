@@ -1,6 +1,6 @@
 # Egg Drop — living Hollow and arcade play build
 
-Release checkpoint: all eight bounded slices reviewed by Astra, implemented by Sol, tested and committed on `feat/egg-drop-arcade-polish`. Existing private-place publication is pending final Version History confirmation. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop). Nursery, paid products and public release remain deferred.
+**Private v180 Published**, confirmed in refreshed Studio Version History: **Living Hollow and arcade - 7910cf8**. All eight bounded slices were reviewed by Astra, implemented by Sol, tested and pushed on `feat/egg-drop-arcade-polish`; runtime commit `7910cf8`. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/living-world-2026-11-07/private-published-v180-7910cf8.png). This supersedes private v125. Nursery, paid products and public release remain deferred.
 
 ## What changed
 
