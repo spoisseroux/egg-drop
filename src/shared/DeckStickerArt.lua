@@ -9,10 +9,13 @@ local masks={
  club={"0000011111100000","0001111111111000","0011111111111100","0011111111111100","0011111111111100","0011111111111100","0011111111111100","0011111111111100","0001111111111000","0001111111111000","0000111111110000","0000011111100000","0000001111000000","0000000110000000","0000000000000000","0000000000000000"},
 }
 local palettes={star={"#493313","#DFA742","#FFE29A","#FFF4C8"},glitch={"#203A35","#4B9D8C","#A4D4C1","#ECF9D5"},seed={"#462824","#CE765E","#EAA48C","#FFE0AD"},wick={"#532C2B","#DC6E35","#F9AB63","#FFF0B0"},club={"#163D38","#3B9E8E","#81D6C4","#EAD58B"}}
+masks.lantern={"0000001111000000","0000011001100000","0000010000100000","0000111111110000","0001111111111000","0000111111110000","0000111111110000","0000111111110000","0000111111110000","0000111111110000","0000111111110000","0000111111110000","0001111111111000","0001111111111000","0000011111100000","0000000000000000"}
+palettes.lantern={"#563A28","#BC763C","#FFD47D","#FFF1BA"}
 local function filled(mask,x,y)return y>=1 and y<=16 and x>=1 and x<=16 and mask[y]:sub(x,x)=="1"end
 local function tone(id,mask,x,y)
  if not filled(mask,x,y)then return nil end
  if not filled(mask,x-1,y)or not filled(mask,x+1,y)or not filled(mask,x,y-1)or not filled(mask,x,y+1)then return 1 end
+ if id=="lantern"and y>=6 and y<=11 and x>=7 and x<=10 then return 4 end
  if id=="seed"and y<=5 then return if x<9 then 3 else 2 end
  if id=="wick"and y>=8 and x>=6 and x<=9 then return 4 end
  if id=="club"and((x==7 or x==8)and y>=4 and y<=10 or y==6 and x>=5 and x<=10)then return 4 end

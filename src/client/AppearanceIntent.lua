@@ -1,22 +1,24 @@
 -- Session-local appearance intent transport. Server responses/attributes own confirmation.
 local Intent={};Intent.__index=Intent
-local order={"theme","sticker"}
+local order={"theme","sticker","background"}
+local fields={theme="themeId",sticker="stickerId",background="backgroundId"}
 function Intent.new(d)
- local self=setmetatable({d=d,alive=true,revision=d.revision or 0,confirmed={theme=d.themeId,sticker=d.stickerId},slots={},nextSend=0,timerToken=0},Intent)
+ local self=setmetatable({d=d,alive=true,revision=d.revision or 0,confirmed={theme=d.themeId,sticker=d.stickerId,background=d.backgroundId or "canopy"},slots={},fallbacks={},nextSend=0,timerToken=0},Intent)
  for _,slot in ipairs(order)do self.slots[slot]={counter=0,status="Ready"}end
  return self
 end
 function Intent:now()return (self.d.now or os.clock)()end
 function Intent:view()
- local v={themeId=self.confirmed.theme,stickerId=self.confirmed.sticker,confirmedTheme=self.confirmed.theme,confirmedSticker=self.confirmed.sticker,revision=self.revision,slots={}}
- for _,slot in ipairs(order)do local s=self.slots[slot];if s.desired then v[if slot=="theme"then "themeId"else "stickerId"]=s.desired.id end
-  v.slots[slot]={status=s.status,id=if s.desired then s.desired.id else s.acceptedId,reason=s.reason,seq=if s.desired then s.desired.seq else s.acceptedSeq}
+ local v={themeId=self.confirmed.theme,stickerId=self.confirmed.sticker,confirmedTheme=self.confirmed.theme,confirmedSticker=self.confirmed.sticker,backgroundId=self.confirmed.background,confirmedBackground=self.confirmed.background,revision=self.revision,slots={},fallbacks=table.clone(self.fallbacks)}
+ for _,slot in ipairs(order)do local s=self.slots[slot];if s.desired then v[fields[slot]]=s.desired.id end
+  local status=if not s.desired and (s.status=="Saved"or s.status=="Applied")and (s.acceptedId~=self.confirmed[slot]or self.fallbacks[slot])then "Ready"else s.status
+  v.slots[slot]={status=status,fallback=self.fallbacks[slot],id=if s.desired then s.desired.id else s.acceptedId,reason=s.reason,seq=if s.desired then s.desired.seq else s.acceptedSeq}
  end
  return v
 end
 function Intent:emit()
- local pieces={self.confirmed.theme or"",self.confirmed.sticker or"",self.revision}
- for _,slot in ipairs(order)do local s=self.slots[slot];table.insert(pieces,table.concat({s.status,s.desired and s.desired.id or"",s.desired and s.desired.seq or 0,s.reason or"",s.savedSeq or 0},":"))end
+ local pieces={self.confirmed.theme or"",self.confirmed.sticker or"",self.confirmed.background or"",self.revision}
+ for _,slot in ipairs(order)do local s=self.slots[slot];table.insert(pieces,table.concat({s.status,s.desired and s.desired.id or"",s.desired and s.desired.seq or 0,s.reason or"",s.savedSeq or 0,self.fallbacks[slot]or ""},":"))end
  local key=table.concat(pieces,"|");if self.key==key then return end;self.key=key
  if self.d.changed then self.d.changed(self:view())end
 end
@@ -34,10 +36,17 @@ function Intent:schedule(at)
   self.timer,self.timerAt=nil,nil;self:step()
  end)
 end
+function Intent:setFallbacks(values)
+ if not self.alive then return false end
+ local nextValues={}
+ if type(values)=="table"then for _,slot in ipairs(order)do local reason=values[slot];if reason=="Unknown"or reason=="Locked"then nextValues[slot]=reason end end end
+ local changed=false;for _,slot in ipairs(order)do if self.fallbacks[slot]~=nextValues[slot]then changed=true end end
+ if not changed then return false end;self.fallbacks=nextValues;self:emit();return true
+end
 function Intent:choose(slot,id)
  local s=self.slots[slot];if not self.alive or not s or type(id)~="string"then return false end
  if s.desired and s.desired.id==id then return false end
- if not s.flight and not s.desired and self.confirmed[slot]==id then s.desired=nil;s.status="Ready";s.reason=nil;self:emit();return false end
+ if not s.flight and not s.desired and not self.fallbacks[slot]and self.confirmed[slot]==id then s.desired=nil;s.status="Ready";s.reason=nil;self:emit();return false end
  s.counter+=1;if s.counter>2147483647 then s.counter=2147483647;return false end
  s.desired={id=id,seq=s.counter,attempts=0,rebases=0};s.status,s.reason="Pending",nil
  self:emit();self:step();return true
@@ -48,16 +57,16 @@ function Intent:retry(slot)
  if s.rejectedId and s.reason~="Locked"and s.reason~="InvalidChoice"and s.reason~="Invalid"and s.reason~="Superseded"then return self:choose(slot,s.rejectedId)end
  return false
 end
-function Intent:snapshot(theme,sticker,revision)
+function Intent:snapshot(theme,sticker,revision,background)
  if not self.alive or type(revision)~="number"or revision<self.revision or type(theme)~="string"or type(sticker)~="string"then return false end
- self.revision=revision;self.confirmed.theme,self.confirmed.sticker=theme,sticker;self:emit();return true
+ self.revision=revision;self.confirmed.theme,self.confirmed.sticker,self.confirmed.background=theme,sticker,background or "canopy";self:emit();return true
 end
 function Intent:receive(message)
  if not self.alive or type(message)~="table"then return false end
  local s=self.slots[message.slot];if not s or type(message.seq)~="number"or type(message.id)~="string"then return false end
  local status=message.status;if status~="Applied"and status~="Rejected"and status~="Saved"then return false end
  if type(message.revision)=="number"and message.revision>=self.revision and type(message.themeId)=="string"and type(message.stickerId)=="string"then
-  self.revision=message.revision;self.confirmed.theme,self.confirmed.sticker=message.themeId,message.stickerId
+  self.revision=message.revision;self.confirmed.theme,self.confirmed.sticker,self.confirmed.background=message.themeId,message.stickerId,message.backgroundId or self.confirmed.background
  end
  local current=s.flight or (if s.status=="Retry"then s.desired else nil);local matching=current and current.seq==message.seq and current.id==message.id
  if status=="Saved"then

@@ -4,6 +4,10 @@ local UserInputService=game:GetService("UserInputService")
 local Palette=require(Shared.DeckPalette)
 local Themes=require(Shared.DeckThemes)
 local Stickers=require(Shared.DeckStickers)
+local Backgrounds=require(Shared.DeckBackgrounds)
+local AppearanceCatalog=require(Shared.AppearanceCatalog)
+local catalogs={Shell=Themes,Sticker=Stickers,Background=Backgrounds}
+local slots={Shell="theme",Sticker="sticker",Background="background"}
 local Trials=require(Shared.PocketTrials)
 local Art=require(script.Parent.DeckArt)
 local SaveNotice=require(script.Parent.SaveNotice)
@@ -16,68 +20,72 @@ local function visibleSelection(node)
 end
 local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,value,role)
-	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Silver,16)
+	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16)
 	Art.type(node,role);node.TextXAlignment=Enum.TextXAlignment.Left;return node
 end
 local function button(parent,name,value,action)
 	local node=Instance.new("TextButton");node.Name,node.Text,node.Parent=name,value,parent
 	node.BackgroundColor3,node.TextColor3,node.BorderSizePixel,node.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
-	Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
+	Art.bind(node,{BackgroundColor3="raised",TextColor3="text"});Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
 end
 local function panel(parent,name,color)
 	local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(100,44),parent.ZIndex+1)
 	Art.corner(node,8);return node
 end
 function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
-	local shade=Art.frame(gui,"DeckPicker",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
+	local shade=Art.frame(gui,"DeckPicker","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
 	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
-	local card=panel(shade,"Card",Art.Surface);card.AnchorPoint=Vector2.new(.5,0);card.Position=UDim2.fromScale(.5,.5);Art.panel(card,16)
+	local card=panel(shade,"Card","panel");card.AnchorPoint=Vector2.new(.5,0);card.Position=UDim2.fromScale(.5,.5);Art.panel(card,16)
 	local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
 	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,card.ZIndex+1
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
-	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={}},rows={},
+	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={},Background={}},rows={},
 		onPreview=onPreview,onClose=onClose,onApply=onApply,available={},confirmed={},onSetting=onSetting,active="Shell"},Picker)
 	self.heading=text(card,"Heading","Deck style","Heading")
-	self.saveMarker=text(card,"SaveStatus","","Supporting");self.saveMarker.TextColor3=Art.Amber;self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
-	self.saveDetail=text(scroll,"SaveInstruction","","Body");self.saveDetail.TextColor3=Art.Amber;self.saveDetail.Visible=false
-	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
+	self.saveMarker=text(card,"SaveStatus","","Supporting");Art.bind(self.saveMarker,{TextColor3=function()return Art.Amber end});self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
+	self.saveDetail=text(scroll,"SaveInstruction","","Body");Art.bind(self.saveDetail,{TextColor3=function()return Art.Amber end});self.saveDetail.Visible=false
+	self.moreCue=Art.frame(card,"MoreBelow","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
 		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
 	end
-	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
-	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
-	self.cancel=Art.bareClose(button(card,"Close","×",function()self:back()end));self.closeButton=self.cancel
+	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue();self:refreshBackgroundPreview()end)
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue();self:refreshBackgroundPreview()end)
+	self.cancel=Art.bareClose(button(card,"Close","×",function()self:back()end));self.closeButton=self.cancel;self.cancel.ZIndex=60
 	self.appearanceStatus=text(scroll,"AppearanceStatus","Select to wear immediately.","Supporting")
- self.retryButton=button(scroll,"RetryAppearance","Retry",function()if self.onRetry then self.onRetry(if self.active=="Shell"then "theme"else "sticker")end end)
+ self.retryButton=button(scroll,"RetryAppearance","Retry",function()if self.onRetry then self.onRetry(slots[self.active]or "theme")end end)
  self.trialsLink=button(scroll,"ViewTrials","View Pocket Trials",function()self.innerReturn={active=self.active,scroll=self.scroll.CanvasPosition,focus=GuiService.SelectedObject};self:showTab("Trials")end)
- for _,tab in ipairs({"Shell","Sticker"})do self.tabs[tab]=button(card,tab.."Tab",if tab=="Sticker"then "Stickers"else tab,function()self:showTab(tab)end)end
+ for _,tab in ipairs({"Shell","Sticker","Background"})do self.tabs[tab]=button(card,tab.."Tab",if tab=="Sticker"then "Stickers"elseif tab=="Background"then "Background"else tab,function()self:showTab(tab)end)end
 
-	self.display=panel(scroll,"Display",Art.Inset)
+	self.display=panel(scroll,"Display","inset")
 	self.previewName=text(self.display,"PreviewName","Scout","Action")
-	self.previewNote=text(self.display,"PreviewNote","Selection applies immediately","Supporting");self.previewNote.TextColor3=Art.Muted
+	self.previewName.ZIndex=40
+	self.previewNote=text(self.display,"PreviewNote","Selection applies immediately","Supporting");Art.bind(self.previewNote,{TextColor3="muted"});self.previewNote.ZIndex=40
 	self.shell=panel(self.display,"Preview",Palette.Shell);place(self.shell,12,12,102,68)
 	self.face=panel(self.shell,"Face",Palette.Shell);place(self.face,4,4,94,60)
 	self.bezel=panel(self.face,"Bezel",Palette.Rim);place(self.bezel,25,4,44,52)
-	local screen=panel(self.bezel,"Screen",Palette.Tray);place(screen,4,3,36,46)
+	local screen=panel(self.bezel,"Screen",Palette.Tray);self.screen=screen;place(screen,4,3,36,46)
 	local small=panel(screen,"SmallEgg",Palette.JellyBlue);place(small,6,31,8,8)
 	local big=panel(screen,"BigEgg",Palette.Ember);place(big,17,26,13,13)
 	local rocker=panel(self.face,"AimRocker",Palette.Ink);place(rocker,5,24,16,7)
 	self.buttonA=panel(self.face,"A",Palette.Primary);place(self.buttonA,76,23,13,13)
 	self.sticker=Art.frame(self.face,"Sticker",Art.Amber,UDim2.fromOffset(70,37),UDim2.fromOffset(23,23),self.face.ZIndex+1);self.sticker.BackgroundTransparency=1
-	for _,tab in ipairs({"Shell","Sticker"})do
-		local catalog=if tab=="Shell"then Themes else Stickers
+	self.backgroundPreview=Art.frame(self.display,"BackgroundPreview","inset",UDim2.fromOffset(12,12),UDim2.fromOffset(102,68),self.display.ZIndex+1);self.backgroundPreview.ClipsDescendants=true;self.backgroundPreview.Visible=false
+	for _,tab in ipairs({"Shell","Sticker","Background"})do
+		local catalog=catalogs[tab]
 		for _,id in ipairs(catalog.Order)do
 			local option=catalog.ById[id]
 			local swatch=button(scroll,id,"",function()self:activateChoice(tab,id)end)
-			local chip=panel(swatch,"Chip",if tab=="Shell"then option.shell else Art.Inset)
+			local chip=panel(swatch,"Chip",if tab=="Shell"then option.shell else "inset")
 			if tab=="Shell"then
 				local face=panel(chip,"Face",option.face or option.shell);place(face,3,3,36,24)
 				local accent=panel(face,"Accent",option.buttons);place(accent,25,6,8,8)
-			else
+			elseif tab=="Sticker"then
 				chip.BackgroundTransparency=1
 				Stickers.paint(chip,id)
+   else
+    Art.backgroundThumbnail(chip,id,Themes.ById[Themes.Default])
 			end
 			text(swatch,"Caption",option.name,"Body")
 			local border=swatch:FindFirstChildOfClass("UIStroke")
@@ -92,13 +100,13 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	end
 	self.clubHeader=text(scroll,"TrialHeading","Pocket trials","Heading")
 	for index,goal in ipairs(Trials.Goals)do
-		local row=panel(scroll,"Trial"..goal.bit,Art.Raised)
+		local row=panel(scroll,"Trial"..goal.bit,"raised")
 		local title=text(row,"Goal",goal.hint,"Body")
-		local status=text(row,"Progress","","Supporting");status.TextColor3=Art.Muted
-		local track=panel(row,"Track",Art.Ink);local fill=panel(track,"Fill",Art.Leaf)
+		local status=text(row,"Progress","","Supporting");Art.bind(status,{TextColor3="muted"})
+		local track=panel(row,"Track","ink");local fill=panel(track,"Fill",Art.Leaf)
 		self.rows[index]={frame=row,title=title,status=status,fill=fill}
 	end
-	self.reward=text(scroll,"Reward","Finish all three to earn the Trial crest","Supporting");self.reward.TextColor3=Art.Muted
+	self.reward=text(scroll,"Reward","Finish all three to earn the Trial crest","Supporting");Art.bind(self.reward,{TextColor3="muted"})
 	self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
 	self.music=button(scroll,"MusicSetting","Music: On",function()self:changeSetting("music")end)
 	self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
@@ -119,15 +127,16 @@ function Picker:layout()
 		markerW=math.min(limit,Art.textWidth(self.saveMarker)+16)
 	end
 	local scrollW=usable-(if markerW>0 then markerW+12 else 0);local bodyW=scrollW-8
-	self.heading.Text=if self.saveNotice then self.saveNotice.short elseif self.appearanceCaption and not short and (self.active=="Shell"or self.active=="Sticker")then "Style · "..self.appearanceCaption elseif self.active=="Trials"then "Pocket Trials"elseif self.active=="Settings"then "Settings"else "Deck style"
+	self.heading.Text=if self.saveNotice then self.saveNotice.short elseif self.appearanceCaption and not short and (slots[self.active]~=nil)then "Style · "..self.appearanceCaption elseif self.active=="Trials"then "Pocket Trials"elseif self.active=="Settings"then "Settings"else "Deck style"
 	Art.type(self.heading,if self.saveNotice or short then "Body"else "Heading",short)
 	self.heading.Visible=not short or self.active=="Trials"or self.active=="Settings"
 	local headingH=Art.textHeight(self.heading,usable-56,32)
 	local tabsY=if short then 4 else math.max(44,headingH)+12
-	local tabW=if short then (usable-56)/2 else (usable-8)/2
+	local tabW=if short then (usable-56)/3 else (usable-12)/3
 	local tabH=44
-	for _,tab in pairs(self.tabs)do
+	for key,tab in pairs(self.tabs)do
 		Art.type(tab,if short then "Body" else "Action",short)
+		if key=="Background"then tab.Text="Background";tab:SetAttribute("AccessibleLabel","Background patterns");if Art.textWidth(tab)>tabW-12 then tab.Text="Scenes"end end
 		tabH=math.max(tabH,Art.textHeight(tab,tabW,0)+(if short then 8 else 12))
 	end
 	local leaf=self.active=="Trials"or self.active=="Settings"
@@ -142,10 +151,10 @@ function Picker:layout()
 		local h=Art.textHeight(self.saveDetail,bodyW-8,24)
 		place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
 	end
-	if active=="Shell"or active=="Sticker"then
+	if slots[active]then
 		Art.type(self.previewName,"Action",short);Art.type(self.previewNote,"Supporting",short)
 
-		local catalog=if active=="Shell"then Themes else Stickers
+		local catalog=catalogs[active]
 		local minW=150
 		for _,id in ipairs(catalog.Order)do local caption=self.choices[active][id].Parent.Caption;Art.type(caption,"Body",short);minW=math.max(minW,Art.textWidth(caption)+76)end
 		local columns=math.max(1,math.min(3,math.floor((bodyW+8)/(minW+8))))
@@ -205,17 +214,17 @@ function Picker:layout()
 	end
 	return y
 	end
-	local heights={Shell=layoutBody("Shell"),Sticker=layoutBody("Sticker"),Trials=layoutBody("Trials"),Settings=layoutBody("Settings")}
+	local heights={Shell=layoutBody("Shell"),Sticker=layoutBody("Sticker"),Background=layoutBody("Background"),Trials=layoutBody("Trials"),Settings=layoutBody("Settings")}
 	local y=heights[self.active]
 
 	if self.safeTop==nil or self.layoutRootSize~=size then
-		local tallest=header+math.max(heights.Shell+footerH+8,heights.Sticker+footerH+8,heights.Trials,heights.Settings)+8
+		local tallest=header+math.max(heights.Shell+footerH+8,heights.Sticker+footerH+8,heights.Background+8,heights.Trials,heights.Settings)+8
 		self.safeTop=math.max(0,(size.Y-math.min(maximum,tallest))/2);self.layoutRootSize=size
 	end
 	local height=math.min(maximum,math.max(1,size.Y-self.safeTop-4),header+y+footer+8)
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
 	place(self.heading,pad,4,usable-56,headingH);place(self.cancel,width-pad-44,4,44,44)
-	for index,tab in ipairs({"Shell","Sticker"})do place(self.tabs[tab],pad+(index-1)*(tabW+6),tabsY,tabW,tabH)end
+	for index,tab in ipairs({"Shell","Sticker","Background"})do place(self.tabs[tab],pad+(index-1)*(tabW+6),tabsY,tabW,tabH)end
 	self.saveMarker.Visible=markerW>0;self.saveDetail.Visible=self.saveNotice~=nil
 	place(self.saveMarker,pad,header,markerW,math.max(44,height-header-footer-4))
 	place(self.scroll,pad+(if markerW>0 then markerW+12 else 0),header,scrollW,math.max(44,height-header-footer-4))
@@ -223,7 +232,21 @@ function Picker:layout()
 	self.scroll.CanvasSize=UDim2.fromOffset(0,y)
 	place(self.moreCue,width-pad-12,header+self.scroll.Size.Y.Offset-20,12,20)
 	self.scroll.CanvasPosition=Vector2.new(0,math.clamp(self.scroll.CanvasPosition.Y,0,math.max(0,y-self.scroll.Size.Y.Offset)))
-	self:refreshScrollCue();self.layingOut=false
+	self:refreshScrollCue();self.layingOut=false;self:refreshBackgroundPreview()
+end
+function Picker:refreshBackgroundPreview()
+ if not self.backgroundPreview then return end
+ local active=self.shade.Visible and self.active=="Background"and self.display.Visible
+ self.shell.Visible=self.active~="Background"
+ if active then
+  local compact=self.previewMode=="compact";local height=if compact then 34 else 68
+  self.backgroundPreview.Position=if compact then UDim2.fromOffset(10,(self.display.Size.Y.Offset-height)/2)else UDim2.fromOffset(12,12)
+  self.backgroundPreview.Size=UDim2.fromOffset(if compact then 52 else 102,height)
+ end
+ local top=self.display.Position.Y.Offset+self.backgroundPreview.Position.Y.Offset-self.scroll.CanvasPosition.Y
+ active=active and top+self.backgroundPreview.Size.Y.Offset>0 and top<self.scroll.Size.Y.Offset
+ self.backgroundPreview.Visible=active
+ Art.setBackgroundPreview(self.backgroundPreview,if self.inspectSlot=="background"then self.inspectId else self.backgroundId or Backgrounds.Default,Themes.ById[self.confirmed.theme or Themes.Default],active)
 end
 function Picker:refreshScrollCue()
 	local height=self.scroll.AbsoluteSize.Y
@@ -238,14 +261,14 @@ end
 function Picker:showTab(active)
  if active=="Club"then active="Trials"end -- Compatibility for old callers, never a public tab.
  if not self.tabs[active]and active~="Trials"and active~="Settings"then return end
- if active=="Shell"then self.inspectId=nil end
+ if not self.returningFromTrials and active~=self.active and active~="Trials"then self.inspectId,self.inspectSlot=nil,nil end
  local changed=self.active~=active;self.active=active
- local style=active=="Shell"or active=="Sticker";local trials=active=="Trials";local settings=active=="Settings"
+ local style=slots[active]~=nil;local trials=active=="Trials";local settings=active=="Settings"
  self.display.Visible,self.appearanceStatus.Visible=style,style
  self.clubHeader.Visible,self.reward.Visible=trials,trials
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
  for _,row in ipairs(self.rows)do row.frame.Visible=trials end
- for tab,control in pairs(self.tabs)do control.Visible=style;control.BackgroundColor3=if tab==active then Art.Inset else Art.Raised;control.TextColor3=if tab==active then Art.Leaf else Art.Silver end
+ for tab,control in pairs(self.tabs)do control.Visible=style;Art.bind(control,{BackgroundColor3=function()return if tab==active then Art.paletteColor("selected") else Art.paletteColor("raised") end,TextColor3="text"}) end
  for tab,choices in pairs(self.choices)do for _,stroke in pairs(choices)do stroke.Parent.Visible=tab==active end end
  self:refreshAppearance();self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
@@ -257,9 +280,9 @@ end
 function Picker:activateChoice(tab,id)
  local stroke=self.choices[tab]and self.choices[tab][id]
  if not self.shade.Visible or self.active~=tab or not stroke then return false end
- if tab=="Sticker"and not self.available[id]then self.inspectId=id;self:preview(self.themeId,id);self:refreshAppearance();self:layout();return true end
- local wasInspect=self.inspectId~=nil;self.inspectId=nil
- if self.onApply then self.onApply(if tab=="Shell"then "theme"else "sticker",id)end
+ if not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then self.inspectId,self.inspectSlot=id,slots[tab];self:refreshAppearance();self:layout();return true end
+ local wasInspect=self.inspectId~=nil;self.inspectId,self.inspectSlot=nil,nil
+ if self.onApply then self.onApply(slots[tab],id)end
  if wasInspect then self:refreshAppearance();self:layout()end
  return true
 end
@@ -274,33 +297,50 @@ function Picker:preview(themeId,stickerId)
  self.shell.BackgroundColor3,self.face.BackgroundColor3=theme.shell,theme.face or theme.shell
  self.face.AimRocker.BackgroundColor3=theme.rocker or Palette.Ink
  self.bezel.BackgroundColor3,self.buttonA.BackgroundColor3=theme.trim,theme.buttons
+ self.screen.BackgroundColor3=theme.lcd.base
  Stickers.paint(self.sticker,stickerId);return true
 end
-function Picker:select(themeId,stickerId)
- self.themeId,self.stickerId=themeId,stickerId;self.confirmed={theme=themeId,sticker=stickerId};self:refreshAppearance();self:layout();return true
+function Picker:select(themeId,stickerId,backgroundId)
+ self.themeId,self.stickerId,self.backgroundId=themeId,stickerId,backgroundId or Backgrounds.Default;self.confirmed={theme=themeId,sticker=stickerId,background=backgroundId or Backgrounds.Default};self:refreshAppearance();self:layout();return true
 end
 function Picker:setAppearance(state)
- self.appearance=state;self.themeId,self.stickerId=state.themeId,state.stickerId
- self.confirmed={theme=state.confirmedTheme,sticker=state.confirmedSticker};self:refreshAppearance();if self.shade.Visible then self:layout()end
+ self.appearance=state;self.themeId,self.stickerId,self.backgroundId=state.themeId,state.stickerId,state.backgroundId or Backgrounds.Default
+ self.confirmed={theme=state.confirmedTheme,sticker=state.confirmedSticker,background=state.confirmedBackground or Backgrounds.Default};self:refreshAppearance();if self.shade.Visible then self:layout()end
 end
 function Picker:refreshAppearance()
- self.previewNote.Text=if self.inspectId then "Locked preview"else "Selection applies immediately"
- local style=self.active=="Shell"or self.active=="Sticker";local slot=if self.active=="Shell"then "theme"else "sticker"
+ local style=slots[self.active]~=nil;local slot=slots[self.active]or "theme"
  local status=self.appearance and self.appearance.slots[slot]
- self.appearanceCaption=if self.inspectId then "Locked"elseif status then ({Pending="Applying",Applied="Saving",Saved="Saved",Rejected="Not applied",Retry="Retry"})[status.status]else nil
+ local inspected=self.inspectId and AppearanceCatalog.describeRequirement(self.inspectSlot,self.inspectId,self.facts)
+ self.previewNote.Text=if inspected then (if inspected.unlocked then "Available preview"else "Locked preview")else "Selection applies immediately"
+ local fallback=self.appearance and self.appearance.fallbacks and self.appearance.fallbacks[slot]
+ self.appearanceCaption=if inspected then (if inspected.unlocked then "Available"else "Locked")elseif status then ({Pending="Applying",Applied="Saving",Saved="Saved",Rejected="Not applied",Retry="Retry"})[status.status]else nil
+ if fallback and not self.appearanceCaption then self.appearanceCaption="Using default"end
  local words={Pending="Applying...",Applied="Worn - saving...",Saved="Worn - saved",Rejected="Not applied",Retry="Reply delayed - Retry"}
  self.appearanceStatus.Text=if status and words[status.status]then words[status.status]..(if status.reason then " - "..status.reason else "")else "Select to wear immediately."
- if self.inspectId then self.appearanceStatus.Text=if self.inspectId=="club"then "Locked - complete all three Pocket Trials."else "Locked - hatch Wick to earn this sticker."end
+ if fallback then
+  local catalog=catalogs[self.active]or Themes;local id=self.confirmed[slot]
+  local name=catalog.ById[id]and catalog.ById[id].name or "default"
+  local notice="Previous "..(if slot=="theme"then "shell"else slot).." unavailable - using "..name
+  self.appearanceStatus.Text=notice..(if status and status.status=="Pending"then " - Applying..."else "")
+ end
+ if inspected then
+  self.appearanceStatus.Text=if inspected.unlocked then "Available - Select to wear"else "Locked - "..inspected.text..string.format(" (%d/%d)",inspected.progress,inspected.target)
+ end
  self.retryButton.Visible=style and status~=nil and (status.status=="Retry"or(status.status=="Rejected"and status.reason~="Superseded"and status.reason~="Locked"and status.reason~="InvalidChoice"and status.reason~="Invalid"))
- self.trialsLink.Visible=style and self.inspectId=="club"
+ self.trialsLink.Visible=style and inspected~=nil and not inspected.unlocked and (inspected.rule=="trials"or inspected.rule=="highRoller"or inspected.rule=="chain3")
  for tab,choices in pairs(self.choices)do for id,stroke in pairs(choices)do
-  local accepted=self.confirmed[if tab=="Shell"then "theme"else "sticker"]==id
-  stroke.Enabled=accepted;local option=(if tab=="Shell"then Themes else Stickers).ById[id]
-  stroke.Parent.Caption.Text=option.name..(if accepted then " \u{2713}"elseif tab=="Sticker"and not self.available[id]then " - Locked"else "")
+  local accepted=self.confirmed[slots[tab]]==id
+  stroke.Enabled=accepted;local option=catalogs[tab].ById[id]
+  local unlocked=AppearanceCatalog.canEquip(slots[tab],id,self.facts)
+  Art.bind(stroke.Parent.Caption,{TextColor3=if unlocked then "text"else "muted"})
+  if tab=="Background"then Art.backgroundThumbnail(stroke.Parent.Chip,id,Themes.ById[self.confirmed.theme or Themes.Default])end
+  stroke.Parent.Caption.Text=option.name..(if accepted then " \u{2713}"elseif not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then " - Locked"else "")
  end end
- self:preview(self.themeId or Themes.Default,self.inspectId or self.stickerId or Stickers.Default)
+ self:preview(if self.inspectSlot=="theme"then self.inspectId else self.themeId or Themes.Default,if self.inspectSlot=="sticker"then self.inspectId else self.stickerId or Stickers.Default)
+ if self.active=="Background"then self.previewName.Text=Backgrounds.ById[if self.inspectSlot=="background"then self.inspectId else self.backgroundId or Backgrounds.Default].name end
 end
-function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask,musicEnabled)
+function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask,musicEnabled,totalWins,masteryRanks)
+ self.facts={rank=owned,trials=mask,inventoryMask=inventoryMask,totalWins=totalWins or 0,masteryRanks=masteryRanks or {}}
 	self.sound.Text="SFX: "..sound
 	self.music.Text=if musicEnabled==false then "Music: Off"else "Music: On"
 	self.motion.Text=if systemReduced then "Motion: Roblox"elseif reduced then "Motion: Low"else "Motion: Full"
@@ -311,7 +351,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		local row=self.rows[index]
 		row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
 		row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
-		row.status.TextColor3=if done then Art.Leaf else Art.Muted
+		Art.bind(row.status,{TextColor3=function()return if done then Art.Leaf else Art.paletteColor("muted") end})
 		row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf
 		count+=if done then 1 else 0
 	end
@@ -320,7 +360,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 	for id,stroke in pairs(self.choices.Sticker)do
 		local available=Stickers.canEquip(id,owned,mask,inventoryMask);local swatch=stroke.Parent;local option=Stickers.ById[id]
 		self.available[id]=available;swatch.Interactable,swatch.Selectable=true,true
-  swatch.Caption.TextColor3=if available then Art.Silver else Art.Muted
+  Art.bind(swatch.Caption,{TextColor3=function()return if available then Art.paletteColor("text") else Art.paletteColor("muted") end})
 	end
 	self:refreshAppearance()
 	local signature={self.sound.Text,self.music.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
@@ -339,15 +379,16 @@ function Picker:getControllerFocus()
 		target=function()return self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end,fallback=self.cancel}
 end
 function Picker:open(themeId,stickerId,mode)
- self:bumpControllerEpoch();self.previousSelection=GuiService.SelectedObject;self.safeTop=nil;self.innerReturn=nil;self.inspectId=nil
+ self:bumpControllerEpoch();self.previousSelection=GuiService.SelectedObject;self.safeTop=nil;self.innerReturn=nil;self.inspectId,self.inspectSlot=nil,nil
  self.shade.Visible=true;if not self.appearance then self:select(themeId,stickerId)end;self:showTab(mode or "Shell")
  if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end
 end
 function Picker:back()
- if self.innerReturn then local saved=self.innerReturn;self.innerReturn=nil;self:showTab(saved.active);self.scroll.CanvasPosition=saved.scroll;GuiService.SelectedObject=visibleSelection(saved.focus);return end
+ if self.innerReturn then local saved=self.innerReturn;self.innerReturn=nil;self.returningFromTrials=true;self:showTab(saved.active);self.returningFromTrials=nil;self.scroll.CanvasPosition=saved.scroll;GuiService.SelectedObject=visibleSelection(saved.focus);return end
  self:close("back")
 end
 function Picker:close(reason)
+ Art.setBackgroundPreview(self.backgroundPreview,nil,nil,false)
  if not self.shade.Visible then return end
  self:bumpControllerEpoch();self.shade.Visible=false;self.innerReturn=nil;self.onClose(reason or "forced")
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=visibleSelection(self.previousSelection)end

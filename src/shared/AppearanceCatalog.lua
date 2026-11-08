@@ -1,0 +1,52 @@
+-- One public evaluator for previews and server validation; no backwards imports.
+local Themes=require(script.Parent.DeckThemes)
+local Stickers=require(script.Parent.DeckStickers)
+local Backgrounds=require(script.Parent.DeckBackgrounds)
+local Mastery=require(script.Parent.FamilyMastery)
+local Eggs=require(script.Parent.EggCatalog)
+local Trials=require(script.Parent.PocketTrials)
+local Catalog={}
+function Catalog.facts(profile,hatch)
+	profile,hatch=profile or {},hatch or {}
+	local ranks=hatch.masteryRanks or {}
+	if not hatch.masteryRanks and hatch.mastery then
+		for _,family in ipairs(Eggs.Families)do ranks[family]=Mastery.rank(hatch.mastery[family]or 0,(hatch.masteryChallenges or {})[family]or 0)end
+	end
+	return {rank=profile.rank or 0,trials=profile.trials or 0,inventoryMask=hatch.inventoryMask,
+		totalWins=hatch.totalWins or 0,masteryRanks=ranks}
+end
+local definitions={free={text="Available",target=1},firstWin={text="Win one saved field round",target=1},
+	rankI={text="Reach rank I with an owned family",target=1},rankII={text="Reach rank II with an owned family",target=2},
+	highRoller={text="Complete High Roller: score 250 in one round",target=1},chain3={text="Complete Triple Pop: chain 3 merges",target=1},
+	wick={text="Own Wick",target=1},trials={text="Complete all three Pocket Trials",target=3}}
+local function maximumRank(facts)
+	local highest=0
+	for _,family in ipairs(Eggs.Families)do
+		if facts.inventoryMask~=nil and Mastery.ownsFamily(facts.inventoryMask,family)then
+			local rank=(facts.masteryRanks or {})[family]
+			if type(rank)=="number"and rank==rank and rank%1==0 and rank>=0 and rank<=3 then highest=math.max(highest,rank)end
+		end
+	end
+	return highest -- Legacy finishes do not fabricate mastery for new cosmetics.
+end
+function Catalog.describeRequirement(slot,id,facts)
+	facts=facts or {}
+	local collection=if slot=="theme"then Themes elseif slot=="sticker"then Stickers elseif slot=="background"then Backgrounds else nil
+	local item=collection and collection.ById[id]
+	if not item then return {rule="invalid",text="Unknown appearance",progress=0,target=1,unlocked=false}end
+	local rule=item.rule or (if slot=="sticker"and id=="wick"then "wick"elseif slot=="sticker"and id=="club"then "trials"else "free")
+	local definition=definitions[rule]
+	if not definition then return {rule="invalid",text="Unknown requirement",progress=0,target=1,unlocked=false}end
+	local trials=Trials.mask(facts.trials)
+	local progress=1
+	if rule=="firstWin"then
+		local wins=facts.totalWins;progress=if type(wins)=="number"and wins==wins and wins>=0 and wins%1==0 then math.min(wins,1)else 0
+	elseif rule=="rankI"or rule=="rankII"then progress=maximumRank(facts)
+	elseif rule=="highRoller"then progress=if bit32.band(trials,Trials.HighRoller.bit)~=0 then 1 else 0
+	elseif rule=="chain3"then progress=if bit32.band(trials,Trials.Goals[1].bit)~=0 then 1 else 0
+	elseif rule=="wick"then progress=if Stickers.canEquip(id,facts.rank or 0,trials,facts.inventoryMask)then 1 else 0
+	elseif rule=="trials"then progress=0;for _,goal in ipairs(Trials.Goals)do if bit32.band(trials,goal.bit)~=0 then progress+=1 end end end
+	return {rule=rule,text=definition.text,progress=math.min(progress,definition.target),target=definition.target,unlocked=progress>=definition.target}
+end
+function Catalog.canEquip(slot,id,facts)return Catalog.describeRequirement(slot,id,facts).unlocked end
+return Catalog

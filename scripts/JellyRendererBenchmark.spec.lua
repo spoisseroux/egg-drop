@@ -15,7 +15,15 @@ return function(client,parent,options)
 	root.BackgroundColor3=Color3.fromHex("#C6DFA0");root.BorderSizePixel=0;root.ClipsDescendants=true
 	local fitH=math.min(594,math.max(1,parent.AbsoluteSize.Y-40),math.max(1,parent.AbsoluteSize.X-40)*(Config.Height+.8)/(Config.Width+.8))
 	root.Position,root.Size=UDim2.fromOffset(20,20),UDim2.fromOffset(fitH*(Config.Width+.8)/(Config.Height+.8),fitH);root.Parent=parent
-	local spriteHost=Instance.new("Frame");spriteHost.BackgroundTransparency=1;spriteHost.Size=UDim2.fromScale(1,1);spriteHost.Parent=root
+	local background,pattern,backgroundArt
+ if options.background then
+  background=Instance.new("Frame");background.Name="_BenchmarkBackground";background.Size=UDim2.fromScale(1,1);background.BorderSizePixel=0;background.ZIndex=0;background.Parent=parent
+  local theme=require(game.ReplicatedStorage.Shared.DeckThemes).ById[options.themeId or "sherbet"]
+  if options.background=="canopy"then backgroundArt=require(options.backgroundArt or client.DeckArt);backgroundArt.backdrop(background);backgroundArt.tintBackdrop(background,theme)
+  else pattern=require(options.backgroundModule or client.DeckBackdrop).new(background);pattern:configure(options.background,theme)end
+ end
+ local backgroundCount=if background then #background:GetDescendants()+1 else 0
+ local spriteHost=Instance.new("Frame");spriteHost.BackgroundTransparency=1;spriteHost.Size=UDim2.fromScale(1,1);spriteHost.Parent=root
 	local sources,gels,marks={},{},{}
 	local worldW,worldH=Config.Width+.8,Config.Height+.8
 	local function project(point)
@@ -51,7 +59,7 @@ return function(client,parent,options)
 	end
 	local ok,problem=pcall(function()
 		for _,scenario in ipairs(scenarios)do
-			local cpu,paintCpu,frameMs,rasterMs,scanMs,commitMs={},{},{},{},{},{}
+			local cpu,paintCpu,frameMs,rasterMs,scanMs,commitMs,backgroundCpu={},{},{},{},{},{},{}
 			local peakUsed,peakAllocated,peakStatic,peakWrites,peakDemand=0,0,0,0,0
 			local startCreated,postWarmCreated,painted,failures=0,0,0,0
 			for frame=1,warmup+measuredFrames do
@@ -70,7 +78,11 @@ return function(client,parent,options)
 					if gels[index].body.Visible~=shown then gels[index].body.Visible=shown end
 				end
 				spriteHost.Visible=procedural or fallback
-				local start=os.clock();drawElapsed+=dt
+				local start=os.clock()
+    local backgroundStart=os.clock()
+    if pattern then pattern:update(background,t,true,false)elseif backgroundArt then backgroundArt.updateBackdrop(background,t,true,false)end
+    local backgroundMs=(os.clock()-backgroundStart)*1000
+    drawElapsed+=dt
 				local draw=lcd~=nil and not fallback and drawElapsed>=1/30
 				if draw then drawElapsed%=1/30;lcd:beginFrame()end
 				local markWrites,spriteWrites=0,0
@@ -96,7 +108,7 @@ return function(client,parent,options)
 				local sample=stats()
 				if frame==warmup then startCreated=sample.dynamicCreated or 0 end
 				if frame>warmup then
-					table.insert(cpu,milliseconds);table.insert(frameMs,dt*1000)
+					table.insert(cpu,milliseconds);table.insert(frameMs,dt*1000);table.insert(backgroundCpu,backgroundMs)
 					if draw then table.insert(paintCpu,milliseconds);painted+=1;table.insert(rasterMs,sample.rasterMs or 0);table.insert(scanMs,sample.scanMs or 0);table.insert(commitMs,sample.commitMs or 0)end
 					peakUsed=math.max(peakUsed,sample.spansUsed or 0);peakAllocated=math.max(peakAllocated,sample.dynamicAllocated or 0)
 					peakStatic=math.max(peakStatic,sample.staticAllocated or 0);peakDemand=math.max(peakDemand,sample.lastDemand or sample.peakDemand or 0)
@@ -104,12 +116,15 @@ return function(client,parent,options)
 					postWarmCreated=math.max(postWarmCreated,(sample.dynamicCreated or 0)-startCreated)
 				end
 			end
-			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
+			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),backgroundCpuMs=distribution(backgroundCpu),peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
 			table.insert(reports,report);if options.progress then options.progress(report)end
 		end
 	end)
-	local finalStats=table.clone(stats());if lcd then lcd:destroy()end
+	local finalStats=table.clone(stats());local backgroundStats=if pattern then table.clone(pattern.stats)else {}
+ local backgroundEndCount=if background then #background:GetDescendants()+1 else 0
+ if pattern then pattern:destroy()end;if background then background:Destroy()end
+ if lcd then lcd:destroy()end
 	for _,gel in ipairs(gels)do gel:destroy()end;for _,source in ipairs(sources)do source:Destroy()end;root:Destroy()
 	assert(ok,problem)
-	return{backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer animation/paint only; excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
+	return{background=options.background or "off",backgroundInstances=backgroundCount,backgroundFinalInstances=backgroundEndCount,backgroundStats=backgroundStats,backend=backend,fixtureSize=tostring(fixtureSize),deviceViewport=tostring(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize),logicalGrid={LCD.Width,LCD.Height},renderHz=30,sampleFrameClock="RenderStepped dt: whole client + Studio; not renderer-only",cpuClock="os.clock around renderer + optional background animation/paint; backgroundCpuMs separately attributed, excludes deterministic scene setup",baselineWrites="issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",reports=reports,finalStats=finalStats}
 end

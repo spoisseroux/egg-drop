@@ -156,5 +156,11 @@ function Sprite.texture(parent)
 	end end
 	return host
 end
+function Sprite.setSurfacePalette(parent,colors)
+ local host=parent:FindFirstChild("FallbackGrain");if not host then return end
+ host.BackgroundColor3=colors.guide
+ -- Cached static grain only; never visit or recolor gel/tier descendants.
+ for _,dot in ipairs(host:GetChildren())do if dot:IsA("Frame")then dot.BackgroundColor3=colors.dither end end
+end
 function Sprite:destroy()if self.destroyed then return end;self.destroyed=true;self.body:Destroy()end
 return Sprite

@@ -1,0 +1,21 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ThemeLCD",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "sherbet static roles preserve gel/pool/current owner",
+        "stone static roles preserve gel/pool/current owner",
+        "ice static roles preserve gel/pool/current owner",
+        "brick static roles preserve gel/pool/current owner",
+        "moss static roles preserve gel/pool/current owner",
+        "honey static roles preserve gel/pool/current owner",
+        "gloaming static roles preserve gel/pool/current owner",
+        "copperleaf static roles preserve gel/pool/current owner",
+        "failed repaint is explicit sticky failure for existing cheap-owner bridge"
+      ]
+    }
+  }
+]

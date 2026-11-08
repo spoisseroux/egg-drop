@@ -1,0 +1,271 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "BackdropGlobal",
+    "result": {
+      "passed": 6,
+      "cases": [
+        "Global confirmed Canopy is above opaque preview with exact relative order",
+        "Canopy owner Z changes rebase once and restore original exterior depths",
+        "Global locked Creek borrows existing16 hosts above preview",
+        "pattern owner Z and exterior return keep order and reduced steady writes",
+        "explicit host switch release and same-step destroy retain borrowed roots",
+        "unexpected recursive host destruction repairs only missing renderers"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "BackgroundPicker",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "1649, 971 actual third category fits with complete first choice and neutralX",
+        "1649, 971 locked preview/no-op reselect and real third-slot reply stay separate",
+        "1649, 971 fully clipped inspected preview yields shared motion owner",
+        "733, 307 actual third category fits with complete first choice and neutralX",
+        "733, 307 locked preview/no-op reselect and real third-slot reply stay separate",
+        "733, 307 fully clipped inspected preview yields shared motion owner",
+        "568, 160 actual third category fits with complete first choice and neutralX",
+        "568, 160 locked preview/no-op reselect and real third-slot reply stay separate",
+        "568, 160 fully clipped inspected preview yields shared motion owner",
+        "385, 703 actual third category fits with complete first choice and neutralX",
+        "385, 703 locked preview/no-op reselect and real third-slot reply stay separate",
+        "385, 703 fully clipped inspected preview yields shared motion owner"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "DeckBackground",
+    "result": {
+      "passed": 7,
+      "cases": [
+        "one16-band545-instance surface includes256 actual motif frames",
+        "creek full period is closed and covers edges",
+        "lantern full period is closed and covers edges",
+        "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+        "reduced board preview resize and return recompose same16 hosts once",
+        "exterior phase pauses while independent inspected owner advances",
+        "destroy removes all bands and stays idempotent"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "AppearancePalette",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "all8 palettes keep body supporting and LCD ink readable",
+        "1649, 971 open sheets adopt each palette without identity/focus/receipt changes",
+        "1649, 971 newly rebuilt recipe and receipt rows inherit active palette",
+        "733, 307 open sheets adopt each palette without identity/focus/receipt changes",
+        "733, 307 newly rebuilt recipe and receipt rows inherit active palette",
+        "568, 160 open sheets adopt each palette without identity/focus/receipt changes",
+        "568, 160 newly rebuilt recipe and receipt rows inherit active palette",
+        "385, 703 open sheets adopt each palette without identity/focus/receipt changes",
+        "385, 703 newly rebuilt recipe and receipt rows inherit active palette"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "ThemeLCD",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "sherbet static roles preserve gel/pool/current owner",
+        "stone static roles preserve gel/pool/current owner",
+        "ice static roles preserve gel/pool/current owner",
+        "brick static roles preserve gel/pool/current owner",
+        "moss static roles preserve gel/pool/current owner",
+        "honey static roles preserve gel/pool/current owner",
+        "gloaming static roles preserve gel/pool/current owner",
+        "copperleaf static roles preserve gel/pool/current owner",
+        "failed repaint is explicit sticky failure for existing cheap-owner bridge"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "AppearanceIntentClient",
+    "result": {
+      "passed": 21,
+      "cases": [
+        "independent slots globally paced with latest unsent sticker",
+        "Applied is confirmed but not durable until matching Saved",
+        "rapid same-slot choices coalesce behind accepted old request",
+        "late lower-revision sibling cannot roll back atomic pair",
+        "throttle retries identical seq only after retryAfter",
+        "new choice cancels queued throttled retry",
+        "missing reply uses same seq max three then explicit Retry",
+        "late Saved resolves timed-out desired without manual resend",
+        "compensating confirmed choice after lost reply sends newer sequence",
+        "Superseded after Applied adopts foreign pair and never resends old",
+        "old Superseded and Saved cannot terminate newer local intent",
+        "stale newest intent rebases from lastSeq in bounded session",
+        "Locked rejection reconciles and cannot retry old locked item",
+        "view snapshots and repeated identical authoritative pair send nothing",
+        "three independent latest slots serialize without losing sibling intent",
+        "background timeout resends same identity and matching Saved alone proves durability",
+        "older pair-shaped reply cannot reset newer accepted background",
+        "old background Saved cannot make a newer background choice durable",
+        "unknown fallback marker is read-only; absent old field is ordinary default",
+        "fallback correction becomes Saved only from correlated proof and marker removal",
+        "other-slot durability can clear fallback without fabricating background acknowledgement"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StyleJournalLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 8,
+      "cases": [
+        "733, 307 Style pins X and tabs around reachable preferred-text content",
+        "733, 307 Journal measures all seven name status rank and crest rows",
+        "568, 160 Style pins X and tabs around reachable preferred-text content",
+        "568, 160 Journal measures all seven name status rank and crest rows",
+        "385, 703 Style pins X and tabs around reachable preferred-text content",
+        "385, 703 Journal measures all seven name status rank and crest rows",
+        "1649, 971 Style pins X and tabs around reachable preferred-text content",
+        "1649, 971 Journal measures all seven name status rank and crest rows"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "mastery cards wrap exact missing conditions at real body size",
+        "hidden and unchanged snapshots perform no text measurement layout",
+        "locked family rows omit unused progress space and cannot select a family"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SharedHeaders",
+    "result": {
+      "preference": "Largest",
+      "passed": 12,
+      "cases": [
+        "1649, 971 exact menu wallet and stable bare-X header",
+        "1649, 971 recipe prices and status stay independent of exact balance",
+        "733, 307 exact menu wallet and stable bare-X header",
+        "733, 307 recipe prices and status stay independent of exact balance",
+        "568, 160 exact menu wallet and stable bare-X header",
+        "568, 160 recipe prices and status stay independent of exact balance",
+        "385, 703 exact menu wallet and stable bare-X header",
+        "385, 703 recipe prices and status stay independent of exact balance",
+        "focused unselected recipe survives rebuild and rotation without changing selection",
+        "focused daily remains visible while disabled gift falls back to neutral X",
+        "X/footer survive rebuild and detached GUI cannot reclaim focus",
+        "two independent circle controls retain native names and preferred transparency"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "SaveNoticeLayout",
+    "result": {
+      "preference": "Largest",
+      "rootSize": "full matrix",
+      "passed": 9,
+      "cases": [
+        "733, 307 passive status belongs to each modal without covering pinned actions",
+        "733, 307 same-ID reveal and ordinary shop retain authority across status recovery",
+        "568, 160 passive status belongs to each modal without covering pinned actions",
+        "568, 160 same-ID reveal and ordinary shop retain authority across status recovery",
+        "385, 703 passive status belongs to each modal without covering pinned actions",
+        "385, 703 same-ID reveal and ordinary shop retain authority across status recovery",
+        "1649, 971 passive status belongs to each modal without covering pinned actions",
+        "1649, 971 same-ID reveal and ordinary shop retain authority across status recovery",
+        "persistent retry wins over stale command feedback and newer Ready clears that feedback"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "ControllerSheets",
+    "result": {
+      "cases": [
+        "pointer-open Menu seeds current Daily or Mastery tab without routing",
+        "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "explicit empty Journal uses X while legitimate legacy Journal can focus Track",
+        "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "direct controller Journal opening retains its valid existing owned selection",
+        "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "all four same-instance openings advance generation and hidden sheets expose no target"
+      ],
+      "passed": 8,
+      "inputIsSemanticFixture": true
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "JellyMarks",
+    "result": {
+      "preference": "Largest",
+      "legacyBounds": {
+        "I": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "8, 29"
+        },
+        "IV": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "25, 29"
+        },
+        "II": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "15, 29"
+        },
+        "III": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "23, 29"
+        },
+        "V": {
+          "labelSize": "30, 22",
+          "textFits": true,
+          "nativeContent": "18, 29"
+        }
+      },
+      "passed": 5,
+      "cases": [
+        "I bounds contain native ink without changing font or projected center",
+        "II bounds contain native ink without changing font or projected center",
+        "III bounds contain native ink without changing font or projected center",
+        "IV bounds contain native ink without changing font or projected center",
+        "V bounds contain native ink without changing font or projected center"
+      ]
+    }
+  }
+]

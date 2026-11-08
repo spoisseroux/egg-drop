@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "result": {
+    "passed": 5,
+    "persistentWrites": false,
+    "cases": [
+      "old background-less profile defaults logically without a write or reward mutation",
+      "explicit invalid background has Unknown provenance and cannot prove fallback Saved",
+      "locked persisted choices reconcile effectively while retaining actual stored proof",
+      "acquired committed facts retain genuinely earned choices",
+      "legacy rank-I points and finish flag do not fabricate rank-II ornament eligibility"
+    ],
+    "evidence": "actual acquired-profile hydration; fresh shared modules; zero writes"
+  }
+}

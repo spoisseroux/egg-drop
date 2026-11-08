@@ -1,0 +1,63 @@
+[
+  {
+    "ok": true,
+    "suite": "BackgroundAppearancePersistence",
+    "result": {
+      "passed": 20,
+      "persistentWrites": false,
+      "cases": {
+        "1": "rapid cross-slot intents explicitly throttle and same-sequence latest retry preserves both slots",
+        "2": "duplicate accepted packet replays without reapplying and stale/conflicting packets expose watermark",
+        "3": "no-op loaded selection is durably known without a write",
+        "4": "no-op pending selection remains Applied until persistence proof",
+        "5": "locked invalid and unavailable terminal rejects preserve pair and cache their sequence",
+        "6": "malformed replies are bounded and closing returns an explicit correlated rejection",
+        "7": "same-millisecond A B A during a suspended flush cannot clear or confirm the newer A",
+        "8": "accepted timestamp remains increasing after dirty state is cleared",
+        "9": "commit followed by error retains exact immutable candidate for retry",
+        "10": "newer foreign writer causes retained latest intent retry, never a false Saved",
+        "11": "legitimate newer foreign winner supersedes an older click without an automatic rewrite",
+        "12": "equal stamp higher writer wins and live eligibility validates the adopted sticker",
+        "13": "writer mismatch with matching pair and stamp still requires retry",
+        "14": "appearance writes preserve siblings and hatch subtree and reload durable IDs",
+        "15": "missing background is a factual default; malformed stored ID is not proof of fallback",
+        "16": "third slot saves atomically with theme and sticker and legacy equip preserves it",
+        "17": "background A B A during save cannot inherit earlier A proof",
+        "18": "wrong returned background cannot prove Saved even with matching pair stamp and writer",
+        "19": "foreign triple wins only without a newer local intent",
+        "20": "verified triple clears an old fallback warning even when another slot triggered its write"
+      },
+      "evidence": "fresh cloned shared/protocol plus real PlayerProgress source; isolated logical reload"
+    }
+  },
+  {
+    "ok": true,
+    "suite": "SessionRecovery",
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": {
+        "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+        "2": "profile save failure times out without releasing the lease and later recovers",
+        "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+        "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+        "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+        "6": "a setting changed during an in-flight autosave drains before lease release",
+        "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+        "8": "the actual Studio store keeps both writers in one isolated cloned root"
+      }
+    }
+  },
+  {
+    "ok": true,
+    "suite": "SessionHost",
+    "result": {
+      "persistentWrites": false,
+      "passed": 2,
+      "cases": {
+        "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+        "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+      }
+    }
+  }
+]

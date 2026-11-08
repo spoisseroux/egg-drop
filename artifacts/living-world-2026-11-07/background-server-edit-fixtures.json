@@ -1,0 +1,50 @@
+[
+  {
+    "ok": true,
+    "suite": "BackgroundAppearanceCatalog",
+    "result": {
+      "passed": 7,
+      "persistentWrites": false,
+      "cases": {
+        "1": "five historic themes stay free while new themes require exact saved facts",
+        "2": "unowned and legacy effects cannot manufacture new rank II eligibility",
+        "3": "backgrounds and Lantern stamp distinguish High Roller from Triple Pop",
+        "4": "existing Wick and complete-trial crest locks preserve sparse and legacy behavior",
+        "5": "raw and public HatchState facts produce the same real mastery ranks",
+        "6": "newly committed facts refresh eligibility without another purchase or grant",
+        "7": "all eight themes expose complete semantic palettes and readable muted/text states"
+      },
+      "evidence": "fresh shared catalogs; derived facts only"
+    }
+  },
+  {
+    "ok": true,
+    "suite": "BackgroundAppearancePersistence",
+    "result": {
+      "passed": 19,
+      "persistentWrites": false,
+      "cases": {
+        "1": "rapid cross-slot intents explicitly throttle and same-sequence latest retry preserves both slots",
+        "2": "duplicate accepted packet replays without reapplying and stale/conflicting packets expose watermark",
+        "3": "no-op loaded selection is durably known without a write",
+        "4": "no-op pending selection remains Applied until persistence proof",
+        "5": "locked invalid and unavailable terminal rejects preserve pair and cache their sequence",
+        "6": "malformed replies are bounded and closing returns an explicit correlated rejection",
+        "7": "same-millisecond A B A during a suspended flush cannot clear or confirm the newer A",
+        "8": "accepted timestamp remains increasing after dirty state is cleared",
+        "9": "commit followed by error retains exact immutable candidate for retry",
+        "10": "newer foreign writer causes retained latest intent retry, never a false Saved",
+        "11": "legitimate newer foreign winner supersedes an older click without an automatic rewrite",
+        "12": "equal stamp higher writer wins and live eligibility validates the adopted sticker",
+        "13": "writer mismatch with matching pair and stamp still requires retry",
+        "14": "appearance writes preserve siblings and hatch subtree and reload durable IDs",
+        "15": "missing background is a factual default; malformed stored ID is not proof of fallback",
+        "16": "third slot saves atomically with theme and sticker and legacy equip preserves it",
+        "17": "background A B A during save cannot inherit earlier A proof",
+        "18": "wrong returned background cannot prove Saved even with matching pair stamp and writer",
+        "19": "foreign triple wins only without a newer local intent"
+      },
+      "evidence": "fresh cloned shared/protocol plus real PlayerProgress source; isolated logical reload"
+    }
+  }
+]

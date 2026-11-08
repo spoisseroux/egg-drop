@@ -11,7 +11,7 @@ local Menu = {}
 Menu.__index = Menu
 local names = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
 local function text(parent,name,content,role,color)
-	local node=Art.text(parent,name,content,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or Art.Silver,16)
+	local node=Art.text(parent,name,content,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or "text",16)
 	Art.type(node,role or "Body")
 	node.TextXAlignment,node.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Center
 	return node
@@ -20,7 +20,7 @@ local function button(parent,name,caption,action)
 	local b=Instance.new("TextButton")
 	b.Name,b.Text,b.Size=name,caption,UDim2.fromOffset(100,44)
 	b.BackgroundColor3,b.TextColor3,b.BorderSizePixel,b.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
-	b.Parent=parent;Art.button(b,10);Art.type(b,"Action")
+	b.Parent=parent;Art.bind(b,{BackgroundColor3="raised",TextColor3="text"});Art.button(b,10);Art.type(b,"Action")
 	b.Activated:Connect(action)
 	return b
 end
@@ -46,14 +46,14 @@ local function destinationArt(host, kind)
 	elseif kind=="trials"then
 		FamilyCrest.create(host,"pip",1,UDim2.fromScale(.1,.1),UDim2.fromScale(.8,.8),host.ZIndex+1)
 	elseif kind=="settings"then
-		for i=1,3 do local y=.2+(i-1)*.25;decoration(host,"SettingRail",UDim2.fromScale(.12,y),UDim2.fromScale(.76,.06),Art.Muted,2);decoration(host,"SettingKnob",UDim2.fromScale(if i==2 then .55 else .25,y-.06),UDim2.fromScale(.16,.18),Art.Amber,4)end
+		for i=1,3 do local y=.2+(i-1)*.25;decoration(host,"SettingRail",UDim2.fromScale(.12,y),UDim2.fromScale(.76,.06),"muted",2);decoration(host,"SettingKnob",UDim2.fromScale(if i==2 then .55 else .25,y-.06),UDim2.fromScale(.16,.18),Art.Amber,4)end
 	elseif kind == "pets" then
 		local portrait = Portrait.create(host, Pets.byId.pip, 4, UDim2.fromScale(.5, .5), host.ZIndex + 2)
 		local scale = Instance.new("UIScale")
 		scale.Name, scale.Parent = "DisplayScale", portrait
 	else
 		local deck = decoration(host, "Handheld", UDim2.fromScale(.03, .20), UDim2.fromScale(.94, .58), Art.Leaf, 8)
-		local screen = decoration(deck, "Screen", UDim2.fromScale(.30, .14), UDim2.fromScale(.42, .72), Art.Ink, 3)
+		local screen = decoration(deck, "Screen", UDim2.fromScale(.30, .14), UDim2.fromScale(.42, .72), "ink", 3)
 		decoration(screen, "ScreenSprout", UDim2.fromScale(.40, .32), UDim2.fromScale(.22, .42), Art.Leaf, 2)
 		decoration(deck, "Rocker", UDim2.fromScale(.09, .43), UDim2.fromScale(.15, .15), Art.Canopy, 2)
 		decoration(deck, "DropButton", UDim2.fromScale(.80, .37), UDim2.fromScale(.13, .24), Art.Orange, 100)
@@ -71,18 +71,18 @@ local function contractArt(host, index)
 	else
 		local star = decoration(host, "ScoreDiamond", UDim2.fromScale(.24, .20), UDim2.fromScale(.52, .58), Art.Orange, 3)
 		star.Rotation = 45
-		decoration(host, "ScoreGlint", UDim2.fromScale(.44, .34), UDim2.fromScale(.13, .24), Art.Silver, 2)
+		decoration(host, "ScoreGlint", UDim2.fromScale(.44, .34), UDim2.fromScale(.13, .24), "text", 2)
 	end
 end
 
 function Menu.new(parent,callbacks)
-	local shade=Art.frame(parent,"DeckMenu",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),28)
+	local shade=Art.frame(parent,"DeckMenu","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),28)
 	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
-	local card=Art.frame(shade,"Card",Art.Surface,UDim2.fromScale(.5,.5),UDim2.fromOffset(680,430),29)
+	local card=Art.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(680,430),29)
 	card.AnchorPoint=Vector2.new(.5,0);Art.panel(card,18)
 	local self=setmetatable({shade=shade,card=card,parent=parent,callbacks=callbacks,pages={},tabs={},destinations={},daily={},dailyCards={},families={},familyCards={},familyText={},familyHints={},page="play",state={}},Menu)
 	self.heading=text(card,"Heading","Pocket menu","Heading")
-	self.wallet=decoration(card,"Wallet",UDim2.fromOffset(0,0),UDim2.fromOffset(180,28),Art.Inset,8)
+	self.wallet=decoration(card,"Wallet",UDim2.fromOffset(0,0),UDim2.fromOffset(180,28),"inset",8)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
 	self.nectar=text(self.wallet,"Nectar","0 nectar","Body",Art.Amber)
 	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:activate("close")end))
@@ -99,37 +99,37 @@ function Menu.new(parent,callbacks)
 		bar.Rotation=entry[2]
 	end
 	for _,key in ipairs({"play","daily","mastery"}) do
-		local page=Art.frame(body,key,Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
+		local page=Art.frame(body,key,"panel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
 		page.BackgroundTransparency=1;self.pages[key]=page
 		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Mastery",function()self:setPage(key)end)
 	end
 	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
-		local illustration=Art.frame(b,"Illustration",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
+		local illustration=Art.frame(b,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
 		illustration.BackgroundTransparency=1;destinationArt(illustration,entry[3])
 		local title=text(b,"Title",entry[2],"Action")
-		local subtitle=text(b,"Subtitle",entry[4],"Supporting",Art.Muted)
+		local subtitle=text(b,"Subtitle",entry[4],"Supporting","muted")
 		table.insert(self.destinations,{button=b,art=illustration,title=title,subtitle=subtitle,kind=entry[3]})
 	end
-	self.recipePanel=decoration(self.pages.play,"EggGoalPanel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64),Art.Inset,10)
+	self.recipePanel=decoration(self.pages.play,"EggGoalPanel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64),"inset",10)
 	EggArt.create(self.recipePanel,"meadow",UDim2.fromOffset(10,9),UDim2.fromOffset(34,44),self.recipePanel.ZIndex+1)
 	self.recipe=text(self.recipePanel,"EggGoal","Mixed Meadow · 0/18 nectar","Body")
-	self.playHint=text(self.pages.play,"NectarPurpose","Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2.","Supporting",Art.Muted)
+	self.playHint=text(self.pages.play,"NectarPurpose","Complete LEFT and RIGHT to earn nectar. Keep the pile low for +2.","Supporting","muted")
 	for index=1,3 do
-		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),Art.Raised,12)
-		local icon=Art.frame(panel,"Illustration",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
-		icon.BackgroundColor3,icon.BackgroundTransparency=Art.Inset,0;Art.corner(icon,10);contractArt(icon,index)
+		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),"raised",12)
+		local icon=Art.frame(panel,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
+		Art.bind(icon,{BackgroundColor3="inset"});icon.BackgroundTransparency=0;Art.corner(icon,10);contractArt(icon,index)
 		local title=text(panel,"Title","Loading…","Action")
 		local count=text(panel,"Count","0/1","Heading")
 		local reward=text(panel,"Reward","+0 nectar","Supporting",Art.Amber)
-		local track=decoration(panel,"Track",UDim2.fromOffset(0,0),UDim2.fromOffset(100,5),Art.Ink,3)
+		local track=decoration(panel,"Track",UDim2.fromOffset(0,0),UDim2.fromOffset(100,5),"ink",3)
 		local fill=decoration(track,"Fill",UDim2.fromOffset(0,0),UDim2.fromScale(0,1),Art.Leaf,3)
 		self.daily[index]=title;self.dailyCards[index]={panel=panel,art=icon,title=title,count=count,reward=reward,fill=fill,complete=false,amount=0}
 	end
-	self.dailyHint=text(self.pages.daily,"GiftExplanation","Contracts pay automatically after a round. The daily gift above is separate.","Supporting",Art.Muted)
-	self.familyNote=text(self.pages.mastery,"FamilyNote","Pick a family for your next round.","Body",Art.Muted)
+	self.dailyHint=text(self.pages.daily,"GiftExplanation","Contracts pay automatically after a round. The daily gift above is separate.","Supporting","muted")
+	self.familyNote=text(self.pages.mastery,"FamilyNote","Pick a family for your next round.","Body","muted")
 	for _,family in ipairs(Catalog.Families) do
-		local panel=decoration(self.pages.mastery,"Card_"..family,UDim2.fromOffset(0,0),UDim2.fromOffset(100,120),Art.Raised,12)
+		local panel=decoration(self.pages.mastery,"Card_"..family,UDim2.fromOffset(0,0),UDim2.fromOffset(100,120),"raised",12)
 		local b=button(panel,"Family_"..family,"",function()self:activate("family",family)end)
 		b.BackgroundTransparency=1;b.TextTransparency=1
 		local border=b:FindFirstChildOfClass("UIStroke");if border then border.Transparency=.65 end
@@ -137,7 +137,7 @@ function Menu.new(parent,callbacks)
 		local caption=text(b,"FamilyName",names[family],"Action")
 		self.families[family],self.familyCards[family]=b,panel
 		self.familyText[family]=text(panel,"Progress_"..family,"Not discovered","Supporting")
-		self.familyHints[family]=text(panel,"Reward_"..family,"Hatch a member of this family to begin mastery.","Body",Art.Muted)
+		self.familyHints[family]=text(panel,"Reward_"..family,"Hatch a member of this family to begin mastery.","Body","muted")
 	end
 	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
 	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
@@ -334,8 +334,8 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	self.dailyButton.Text = if state.dailyAvailable then "Gift +" .. (state.dailyBonus or 6) else "Gift claimed"
 	self.dailyButton.Interactable = state.dailyAvailable == true and state.status == "Ready"
 	self.dailyButton.Selectable=self.dailyButton.Interactable
-	self.dailyButton.BackgroundColor3 = if self.dailyButton.Interactable then Art.Amber else Art.Raised
-	self.dailyButton.TextColor3 = if self.dailyButton.Interactable then Art.Ink else Art.Muted
+	Art.bind(self.dailyButton,{BackgroundColor3=function()return if self.dailyButton.Interactable then Art.Amber else Art.paletteColor("raised") end})
+	Art.bind(self.dailyButton,{TextColor3=function()return if self.dailyButton.Interactable then Art.paletteColor("ink") else Art.paletteColor("muted") end})
 	self.dailyHint.Text = if state.dailyAvailable then "Claim your separate daily gift above. Contracts pay automatically after a round."
 		else "Daily gift claimed. Finish rounds to complete these contracts; fresh goals arrive tomorrow."
 	for index, row in ipairs(self.dailyCards) do
@@ -364,7 +364,7 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 		b.Interactable = owned and state.status == "Ready"
 		b.Selectable=owned;b:SetAttribute("FamilyOwned",owned)
 		b:FindFirstChildOfClass("UIStroke").Transparency=if owned then .22 else 1
-		self.familyCards[family].BackgroundColor3=if selected==family then Art.Inset else Art.Raised
+		Art.bind(self.familyCards[family],{BackgroundColor3=function()return if selected==family then Art.paletteColor("selected") else Art.paletteColor("raised") end})
 		FamilyCrest.update(b.FamilyCrest, family, rank, not owned)
 		b.FamilyName.Text = names[family] .. (if selected == family then " · Next round ✓" elseif not owned then " · Locked" else " · Choose")
 		self.familyText[family].Text = if not owned then "Discover a family member in eggs"
@@ -405,7 +405,7 @@ function Menu:setPage(key)
 	if not self.pages[key] then return end
 	self.page=key
 	for name,page in pairs(self.pages) do page.Visible=name==key end
-	for name,tab in pairs(self.tabs) do tab.BackgroundColor3=if name==key then Art.Inset else Art.Raised;tab.TextColor3=if name==key then Art.Leaf else Art.Silver end
+	for name,tab in pairs(self.tabs) do Art.bind(tab,{BackgroundColor3=function()return if name==key then Art.paletteColor("selected") else Art.paletteColor("raised") end,TextColor3="text"}) end
 	self.dailyButton.Visible=key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()
 end

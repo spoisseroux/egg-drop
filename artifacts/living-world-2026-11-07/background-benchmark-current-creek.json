@@ -1,0 +1,250 @@
+{
+  "ok": true,
+  "preference": "Medium",
+  "result": {
+    "logicalGrid": [
+      64,
+      107
+    ],
+    "deviceViewport": "1626, 994",
+    "renderHz": 30,
+    "backgroundFinalInstances": 546,
+    "finalStats": {
+      "spansUsed": 480,
+      "constructionMs": 28.985500102862716,
+      "commitMs": 0.5448001902550459,
+      "dynamicAllocated": 1536,
+      "dynamicCreated": 1536,
+      "lastDemand": 480,
+      "propertyWrites": 224,
+      "rowHosts": 107,
+      "visibleSpans": 480,
+      "scanMs": 0.19219983369112015,
+      "rasterMs": 2.009699819609523,
+      "staticAllocated": 209,
+      "peakDemand": 889
+    },
+    "reports": [
+      {
+        "rasterCpuMs": {
+          "p50": 0.028999987989664078,
+          "p95": 0.06669992581009865,
+          "max": 0.09480002336204052
+        },
+        "scenario": "idle",
+        "peakAllocated": 1536,
+        "cpuAllMs": {
+          "p50": 0.21780002862215042,
+          "p95": 0.29019988141953945,
+          "max": 0.376399839296937
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0.17899996601045132,
+          "p95": 0.22539985366165638,
+          "max": 0.24720001965761185
+        },
+        "backend": "span",
+        "wholeClientFrameMs": {
+          "p50": 16.79440028965473,
+          "p95": 17.672300338745117,
+          "max": 17.833000048995018
+        },
+        "rendererAtEnd": "span",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0.013400102034211159,
+          "p95": 0.08159992285072803,
+          "max": 0.13720011338591576
+        },
+        "staticAllocated": 209,
+        "peakPropertyWrites": 27,
+        "peakDemand": 23,
+        "peakUsed": 23,
+        "backgroundCpuMs": {
+          "p50": 0.007100170478224754,
+          "p95": 0.045900000259280205,
+          "max": 0.06160000339150429
+        },
+        "failures": 0,
+        "cpuPaintMs": {
+          "p50": 0.24889991618692875,
+          "p95": 0.32279989682137966,
+          "max": 0.376399839296937
+        },
+        "paintedFrames": 46
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 1.6604000702500343,
+          "p95": 2.1291000302881002,
+          "max": 2.263600006699562
+        },
+        "scenario": "falling",
+        "peakAllocated": 1536,
+        "cpuAllMs": {
+          "p50": 0.08749985136091709,
+          "p95": 5.381800001487136,
+          "max": 5.989599972963333
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0.23259990848600864,
+          "p95": 0.3299000672996044,
+          "max": 0.3603000659495592
+        },
+        "backend": "span",
+        "wholeClientFrameMs": {
+          "p50": 16.72009937465191,
+          "p95": 17.774200066924095,
+          "max": 18.216099590063095
+        },
+        "rendererAtEnd": "span",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 2.47819977812469,
+          "p95": 3.3238998148590326,
+          "max": 3.410500008612871
+        },
+        "staticAllocated": 209,
+        "peakPropertyWrites": 2300,
+        "peakDemand": 889,
+        "peakUsed": 889,
+        "backgroundCpuMs": {
+          "p50": 0.0068999361246824265,
+          "p95": 0.05879998207092285,
+          "max": 0.1745999325066805
+        },
+        "failures": 0,
+        "cpuPaintMs": {
+          "p50": 4.410600056871772,
+          "p95": 5.484999855980277,
+          "max": 5.989599972963333
+        },
+        "paintedFrames": 45
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 0.9862000588327646,
+          "p95": 1.22410012409091,
+          "max": 1.710499869659543
+        },
+        "scenario": "pile24",
+        "peakAllocated": 1536,
+        "cpuAllMs": {
+          "p50": 0.08080014958977699,
+          "p95": 1.7470999155193567,
+          "max": 2.27969978004694
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0.21609989926218987,
+          "p95": 0.27840002439916134,
+          "max": 0.3193998709321022
+        },
+        "backend": "span",
+        "wholeClientFrameMs": {
+          "p50": 16.699200496077538,
+          "p95": 17.885299399495125,
+          "max": 18.27229931950569
+        },
+        "rendererAtEnd": "span",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0.28069992549717426,
+          "p95": 0.4879999905824661,
+          "max": 0.6611000280827284
+        },
+        "staticAllocated": 209,
+        "peakPropertyWrites": 250,
+        "peakDemand": 505,
+        "peakUsed": 505,
+        "backgroundCpuMs": {
+          "p50": 0.00700005330145359,
+          "p95": 0.04910002462565899,
+          "max": 0.060999998822808266
+        },
+        "failures": 0,
+        "cpuPaintMs": {
+          "p50": 1.5551999676972628,
+          "p95": 1.846899976953864,
+          "max": 2.27969978004694
+        },
+        "paintedFrames": 44
+      },
+      {
+        "rasterCpuMs": {
+          "p50": 1.9515000749379396,
+          "p95": 2.4938001297414303,
+          "max": 2.5950002018362284
+        },
+        "scenario": "multiMerge",
+        "peakAllocated": 1536,
+        "cpuAllMs": {
+          "p50": 2.1905999165028334,
+          "p95": 3.2885000109672546,
+          "max": 3.697700100019574
+        },
+        "frames": 90,
+        "spanScanCpuMs": {
+          "p50": 0.2039000391960144,
+          "p95": 0.255499966442585,
+          "max": 0.27130008675158024
+        },
+        "backend": "span",
+        "wholeClientFrameMs": {
+          "p50": 16.55850000679493,
+          "p95": 17.91349984705448,
+          "max": 18.175499513745308
+        },
+        "rendererAtEnd": "span",
+        "createdAfterWarmup": 0,
+        "fallback": false,
+        "spanCommitCpuMs": {
+          "p50": 0.519599998369813,
+          "p95": 1.0003999341279268,
+          "max": 1.168800052255392
+        },
+        "staticAllocated": 209,
+        "peakPropertyWrites": 618,
+        "peakDemand": 572,
+        "peakUsed": 572,
+        "backgroundCpuMs": {
+          "p50": 0.0068999361246824265,
+          "p95": 0.05370005965232849,
+          "max": 0.07670000195503235
+        },
+        "failures": 0,
+        "cpuPaintMs": {
+          "p50": 2.7534998953342438,
+          "p95": 3.38410004042089,
+          "max": 3.697700100019574
+        },
+        "paintedFrames": 46
+      }
+    ],
+    "cpuClock": "os.clock around renderer + optional background animation/paint; backgroundCpuMs separately attributed, excludes deterministic scene setup",
+    "backgroundInstances": 546,
+    "baselineWrites": "issued writes inferred from frozen Sprite render(4) +mark(1), not native property event instrumentation",
+    "sampleFrameClock": "RenderStepped dt: whole client + Studio; not renderer-only",
+    "fixtureSize": "{0, 354}, {0, 594}",
+    "background": "creek",
+    "backend": "span",
+    "backgroundStats": {
+      "created": 545,
+      "constructionMs": 4.3650001753121614,
+      "ticks": 110,
+      "stripHosts": 16,
+      "primitives": 256,
+      "poseWrites": 1153,
+      "styleWrites": 513,
+      "writes": 2481,
+      "geometryWrites": 558,
+      "colorWrites": 257
+    }
+  },
+  "frozen": false
+}

@@ -1,6 +1,7 @@
 local Art = {}
 
--- Stable interface roles; player finishes only tint the physical casing/backing.
+-- Stable default constants. Confirmed interface palettes are resolved only by
+-- explicit semantic bindings; species, status and hardware identity stay stable.
 Art.Type = { Reward = 34, Heading = 26, Action = 18, Body = 16, Supporting = 14, Compact = 12 }
 Art.Space = { Small = 4, Related = 8, Group = 16, Panel = 24 }
 for name, hex in pairs({
@@ -13,6 +14,37 @@ for name, hex in pairs({
 end
 -- Existing consumers use Cyan for affirmative fills. Focus has its own role.
 Art.Cyan = Art.Leaf
+
+-- Explicit semantic bindings; no RGB inference or GUI discovery. The registry
+-- owns one destroy connection per node and paints only on a confirmed theme change.
+local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="Silver",muted="Muted",line="Line",selected="Selected",focus="Focus",accent="Accent"}
+Art.Selected,Art.Accent=Art.Inset,Art.Leaf
+local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,writes=0}
+function Art.paletteColor(role)return (currentTheme and currentTheme.ui and currentTheme.ui[role])or Art[roleNames[role]or role]end
+local function paintBinding(node,entry)
+ for property,role in pairs(entry.properties)do
+  local value=if type(role)=="function"then role()else Art.paletteColor(role)
+  if node[property]~=value then node[property]=value;paletteStats.writes+=1 end
+ end
+end
+function Art.bind(object,properties)
+ local entry=bindings[object]
+ if not entry then
+  entry={properties={}};bindings[object]=entry;paletteStats.nodes+=1
+  entry.connection=object.Destroying:Connect(function()if bindings[object]then bindings[object]=nil;paletteStats.nodes-=1;entry.connection:Disconnect()end end)
+ end
+ for property,role in pairs(properties)do entry.properties[property]=role end
+ paintBinding(object,entry);return object
+end
+function Art.themeStats()return table.clone(paletteStats)end
+function Art.getTheme()return currentTheme end
+function Art.applyTheme(theme)
+ if currentTheme==theme then return false end
+ currentTheme=theme
+ paletteStats.applies+=1;paletteStats.writes=0
+ for object,entry in pairs(bindings)do paintBinding(object,entry)end
+ return true
+end
 
 local function node(class, parent, properties)
 	local object = Instance.new(class)
@@ -29,11 +61,9 @@ function Art.corner(parent, radius)
 	return curve
 end
 
-function Art.stroke(parent, color, transparency, thickness)
-	return node("UIStroke", parent, {
-		ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Color = color,
-		Thickness = thickness or 1, Transparency = transparency or 0,
-	})
+function Art.stroke(parent,color,transparency,thickness)
+ local stroke=node("UIStroke",parent,{ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Color=if type(color)=="string"then Art.paletteColor(color)else color,Thickness=thickness or 1,Transparency=transparency or 0})
+ if type(color)=="string"then Art.bind(stroke,{Color=color})end;return stroke
 end
 
 function Art.shade(parent, top, bottom)
@@ -43,17 +73,15 @@ function Art.shade(parent, top, bottom)
 	return gradient
 end
 
-function Art.frame(parent, name, color, position, size, z)
-	return node("Frame", parent, {
-		Name = name, Position = position, Size = size, BackgroundColor3 = color,
-		BorderSizePixel = 0, ZIndex = z or parent.ZIndex, Active = false,
-	})
+function Art.frame(parent,name,color,position,size,z)
+ local f=node("Frame",parent,{Name=name,Position=position,Size=size,BackgroundColor3=if type(color)=="string"then Art.paletteColor(color)else color,BorderSizePixel=0,ZIndex=z or parent.ZIndex,Active=false})
+ if type(color)=="string"then Art.bind(f,{BackgroundColor3=color})end;return f
 end
 
 -- Passive glass instruments share one recessed face; their children remain data,
 -- never action seats or focus targets. All depth stays inside the solved rectangle.
 function Art.instrument(parent)
-	parent.BackgroundColor3=Color3.fromHex("#2B352D")
+	Art.bind(parent,{BackgroundColor3="inset"})
 	parent.ClipsDescendants=true
 	Art.corner(parent,8);Art.shade(parent,.78,1)
 	if not parent:FindFirstChild("InsetShadow")then
@@ -65,12 +93,9 @@ function Art.instrument(parent)
 	return parent
 end
 
-function Art.text(parent, name, content, position, size, color, textSize, font)
-	return node("TextLabel", parent, {
-		Name = name, Text = content, Position = position, Size = size, TextColor3 = color,
-		TextSize = textSize, Font = font or Enum.Font.Gotham, BackgroundTransparency = 1,
-		ZIndex = parent.ZIndex + 1, Active = false,
-	})
+function Art.text(parent,name,content,position,size,color,textSize,font)
+ local f=node("TextLabel",parent,{Name=name,Text=content,Position=position,Size=size,TextColor3=if type(color)=="string"then Art.paletteColor(color)else color,TextSize=textSize,Font=font or Enum.Font.Gotham,BackgroundTransparency=1,ZIndex=parent.ZIndex+1,Active=false})
+ if type(color)=="string"then Art.bind(f,{TextColor3=color})end;return f
 end
 
 -- Opt-in for bounded button/readout text. Repeated layouts reuse the same objects.
@@ -156,7 +181,7 @@ function Art.bareClose(button)
 	local function paint()
 		local focused=game:GetService("GuiService").SelectedObject==button
 		button.BackgroundTransparency=if pressed then .80 elseif focused then .94 else 1
-		if border then border.Color=Art.Focus;border.Transparency=if focused or pressed then .05 else 1 end
+		if border then border.Color=Art.paletteColor("focus");border.Transparency=if focused or pressed then .05 else 1 end
 	end
 	button.SelectionGained:Connect(paint);button.SelectionLost:Connect(function()pressed=false;paint()end)
 	button.MouseButton1Down:Connect(function()pressed=true;paint()end)
@@ -204,16 +229,16 @@ function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 end
 function Art.dockTransparency(preference)return .18*math.clamp(preference,0,1)end
 function Art.dockCircle(button,kind)
-	button.Text=if kind=="menu"then "Menu"else "Open deck";button.TextTransparency=1;button.BackgroundColor3=Art.Surface;Art.corner(button,24)
+	button.Text=if kind=="menu"then "Menu"else "Open deck";button.TextTransparency=1;Art.bind(button,{BackgroundColor3="panel"});Art.corner(button,24)
 	button:SetAttribute("AccessibleLabel",if kind=="menu"then "Menu"else "Deck")
-	local glyph=Art.frame(button,"DockGlyph",Art.Silver,UDim2.new(.5,-12,.5,-12),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1
+	local glyph=Art.frame(button,"DockGlyph","text",UDim2.new(.5,-12,.5,-12),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1
 	if kind=="menu"then
-		for index=0,2 do local bar=Art.frame(glyph,"Bar",Art.Silver,UDim2.fromOffset(2,4+index*7),UDim2.fromOffset(20,2),glyph.ZIndex);Art.corner(bar,1)end
+		for index=0,2 do local bar=Art.frame(glyph,"Bar","text",UDim2.fromOffset(2,4+index*7),UDim2.fromOffset(20,2),glyph.ZIndex);Art.corner(bar,1)end
 	else
-		local deck=Art.frame(glyph,"Handheld",Art.Silver,UDim2.fromOffset(0,4),UDim2.fromOffset(24,16),glyph.ZIndex);deck.BackgroundTransparency=1;Art.corner(deck,4);Art.stroke(deck,Art.Silver,0,1)
+		local deck=Art.frame(glyph,"Handheld","text",UDim2.fromOffset(0,4),UDim2.fromOffset(24,16),glyph.ZIndex);deck.BackgroundTransparency=1;Art.corner(deck,4);Art.stroke(deck,"text",0,1)
 		local screen=Art.frame(deck,"Screen",Art.LCD,UDim2.fromOffset(8,3),UDim2.fromOffset(8,10),deck.ZIndex);Art.corner(screen,1)
-		Art.frame(deck,"Rocker",Art.Silver,UDim2.fromOffset(3,7),UDim2.fromOffset(3,3),deck.ZIndex)
-		Art.corner(Art.frame(deck,"A",Art.Silver,UDim2.fromOffset(19,7),UDim2.fromOffset(3,3),deck.ZIndex),2)
+		Art.frame(deck,"Rocker","text",UDim2.fromOffset(3,7),UDim2.fromOffset(3,3),deck.ZIndex)
+		Art.corner(Art.frame(deck,"A","text",UDim2.fromOffset(19,7),UDim2.fromOffset(3,3),deck.ZIndex),2)
 	end
 	return button
 end
@@ -228,17 +253,25 @@ function Art.leaf(parent, name, position, size, tint, rotation, z)
 	return leaf
 end
 
+local PatternBackdrop=require(script.Parent.DeckBackdrop)
+local previewBackground
+local previewLeases=setmetatable({},{__mode="k"})
 local backdropMotion=setmetatable({},{__mode="k"})
+local function canopyOwner(motion,home,owner)
+ if not motion.art or not motion.art.Parent or not owner.Parent then return end
+ if motion.art.Parent~=owner then motion.art.Parent=owner end
+ if motion.layerOwner==owner and motion.layerOwnerZ==owner.ZIndex then return end
+ motion.layerOwner,motion.layerOwnerZ=owner,owner.ZIndex
+ local base=owner.ZIndex+(if owner==home then motion.homeOffset else 1)
+ for _,entry in ipairs(motion.layers)do local z=base+entry.offset;if entry.node.ZIndex~=z then entry.node.ZIndex=z end end
+end
 Art.BackdropPeriod=12
-function Art.backdrop(parent)
-	parent.BackgroundColor3 = Art.Backdrop
-	parent.ClipsDescendants = true
-	Art.shade(parent, 1, 0.76)
-	if parent:FindFirstChild("CanopyArt") then return end
-	local art = Art.frame(parent, "CanopyArt", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1))
-	art.BackgroundTransparency = 1
-	local motion={entries={},resting=true,elapsed=0};backdropMotion[parent]=motion
-	parent.Destroying:Connect(function()backdropMotion[parent]=nil end)
+local function buildCanopy(parent,motion)
+ local art=Art.frame(parent,"CanopyArt",Art.Backdrop,UDim2.fromScale(0,0),UDim2.fromScale(1,1));art.BackgroundTransparency=1
+ if motion.owner and motion.owner.Parent then motion.phases[motion.owner]=motion.elapsed end
+ motion.art,motion.entries,motion.layers=art,{},{}
+ motion.homeOffset=art.ZIndex-parent.ZIndex;motion.layerOwner=nil;motion.layerOwnerZ=nil
+ motion.owner=nil;motion.lastTime=nil;motion.lastTint=nil;motion.bucket=nil;motion.resting=true
 	-- Broad silhouettes read as an outdoor setting, even around a small phone deck.
 	for index, data in ipairs({
 		{ -0.18, -0.38, 0.65, 0.78, Art.Canopy },
@@ -263,14 +296,96 @@ function Art.backdrop(parent)
 		seed.BackgroundTransparency = 0.35
 		table.insert(motion.entries,{node=seed,position=seed.Position,rotation=seed.Rotation,phase=index*math.pi/2+.4,x=4,y=3})
 	end
+ motion.layers[1]={node=art,offset=0}
+ for _,node in ipairs(art:GetDescendants())do if node:IsA("GuiObject")then table.insert(motion.layers,{node=node,offset=node.ZIndex-art.ZIndex})end end
+end
+function Art.backdrop(parent)
+ if backdropMotion[parent]then return end
+ parent.BackgroundColor3=Art.Backdrop;parent.ClipsDescendants=true;Art.shade(parent,1,.76)
+ local motion={entries={},layers={},resting=true,elapsed=0,phases=setmetatable({},{__mode="k"}),confirmed="canopy"}
+ backdropMotion[parent]=motion;buildCanopy(parent,motion)
+ parent.Destroying:Connect(function()
+  motion.destroyed=true;backdropMotion[parent]=nil
+  if motion.surface then motion.surface:destroy()end
+  if motion.art and motion.art.Parent then motion.art:Destroy()end
+ end)
 end
 
 -- The existing board render clock calls this once. No new connection, GUI walk,
 -- tween, or allocation runs per frame; hidden/reduced presentation rests at base.
-function Art.updateBackdrop(parent,now,visible,reduced)
+function Art.backgroundThumbnail(host,id,theme)return PatternBackdrop.thumbnail(host,id,theme)end
+function Art.backdropStats(parent)local m=backdropMotion[parent];return m and m.surface and not m.surface.destroyed and m.surface.root.Parent and m.surface.stats end
+function Art.setBackground(parent,id,theme)
+ local motion=backdropMotion[parent];if not motion then return end
+ motion.confirmed,motion.theme=id,theme
+end
+local function returnPreview(host)
+ -- This is a cached-owner registry, visited only on an explicit handoff. Return
+ -- before callers can destroy a temporary page under deferred signal delivery.
+ for parent,motion in pairs(backdropMotion)do
+  if not motion.destroyed and parent:IsDescendantOf(game)then
+   if motion.art and motion.art.Parent==host then canopyOwner(motion,parent,parent);motion.art.Visible=false end
+   if motion.surface and not motion.surface.destroyed and motion.surface.root.Parent==host then motion.surface:releaseOwner(host)end
+  end
+ end
+end
+local function releasePreview(host)
+ if not previewLeases[host]then return end
+ previewLeases[host]=nil;returnPreview(host)
+end
+function Art.isBackgroundPreviewVisible(host)return previewBackground~=nil and previewBackground.host==host and host.Parent~=nil end
+function Art.setBackgroundPreview(host,id,theme,active)
+ if not active or not host.Parent then
+  if previewBackground and previewBackground.host==host then previewBackground=nil end
+  releasePreview(host);return
+ end
+ if previewBackground and previewBackground.host~=host then releasePreview(previewBackground.host)end
+ if not host:GetAttribute("BackgroundPreviewOwner")then
+  host:SetAttribute("BackgroundPreviewOwner",true)
+  host.Destroying:Connect(function()
+   if previewBackground and previewBackground.host==host then previewBackground=nil end
+   -- Deferred destruction can already have removed children. Never reparent a
+   -- dead root here; the next visible request repairs only a missing renderer.
+   releasePreview(host)
+  end)
+ end
+ previewLeases[host]=true;previewBackground={host=host,id=id,theme=theme}
+end
+
+function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
 	local motion=backdropMotion[parent]
-	if not motion then return end
-	if not visible or reduced then
+	if not motion or motion.destroyed or not parent:IsDescendantOf(game)then return end
+ local preview=previewBackground and previewBackground.host.Parent and previewBackground.host.Visible and previewAllowed~=false
+ local owner=if preview then previewBackground.host else parent
+ local id=if preview then previewBackground.id else motion.confirmed
+ local theme=if preview then previewBackground.theme else motion.theme
+ local wanted=preview or visible
+ local canopyAlive=motion.art and motion.art.Parent~=nil
+ local surfaceAlive=motion.surface and not motion.surface.destroyed and motion.surface.root.Parent~=nil
+ if wanted then
+  if motion.surface and not surfaceAlive then motion.surface:destroy();motion.surface=nil end
+  if id=="canopy"and not canopyAlive then buildCanopy(parent,motion);canopyAlive=true end
+ end
+ if not wanted and not canopyAlive then if surfaceAlive then motion.surface:update(parent,now,false,reduced)end;return end
+ if theme and id~="canopy"then
+  if not wanted and not surfaceAlive then return end
+  if canopyAlive then if motion.art.Visible then motion.art.Visible=false end;canopyOwner(motion,parent,parent)end
+  if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(parent)end
+  motion.surface:configure(id,theme);motion.surface:update(owner,now,preview or visible,reduced)
+  motion.lastTime=nil;return
+ end
+ if surfaceAlive then motion.surface:update(parent,now,false,reduced)end
+ canopyOwner(motion,parent,owner);if not motion.art.Visible then motion.art.Visible=true end
+ visible=preview or visible
+ if motion.owner~=owner then
+  if motion.owner then motion.phases[motion.owner]=motion.elapsed end
+  motion.owner=owner;motion.elapsed=motion.phases[owner]or 0;motion.lastTime=nil;motion.bucket=nil;motion.resting=false
+ end
+ if theme and motion.lastTint~=theme then
+  for _,node in ipairs(motion.art:GetChildren())do if node:IsA("Frame")then node.BackgroundColor3=if node.Name:find("Canopy")then theme.band else theme.trim end end
+  motion.lastTint=theme
+ end
+ if not visible or reduced then
 		if not motion.resting then
 			for _,entry in ipairs(motion.entries)do entry.node.Position=entry.position;entry.node.Rotation=entry.rotation end
 			motion.resting=true
@@ -279,7 +394,8 @@ function Art.updateBackdrop(parent,now,visible,reduced)
 		return
 	end
 	motion.elapsed=(motion.elapsed+(if motion.lastTime then math.max(0,now-motion.lastTime)else 0))%Art.BackdropPeriod
-	motion.lastTime=now;motion.resting=false
+	motion.lastTime=now;if motion.resting then motion.bucket=nil end;motion.resting=false
+ local bucket=math.floor(motion.elapsed*15+1e-6);if motion.bucket==bucket then return end;motion.bucket=bucket
 	local phase=motion.elapsed/Art.BackdropPeriod*math.pi*2
 	for _,entry in ipairs(motion.entries)do
 		entry.node.Position=entry.position+UDim2.fromOffset(math.sin(phase+entry.phase)*entry.x,math.sin(phase*2+entry.phase)*entry.y)
@@ -316,34 +432,35 @@ function Art.insignia(parent, unit, position, tint, z)
 end
 
 function Art.panel(parent, radius, accent)
-	parent.BackgroundColor3 = Art.Surface
+	Art.bind(parent,{BackgroundColor3="panel"})
 	Art.corner(parent, radius)
 	Art.shade(parent, 1, 0.91)
-	Art.stroke(parent, Art.Line, 0.28, 2)
-	local highlight = Art.frame(parent, "MoldHighlight", Art.Silver, UDim2.fromOffset(radius + 4, 3),
+	Art.stroke(parent,"line",0.28,2)
+	local highlight = Art.frame(parent, "MoldHighlight", "text", UDim2.fromOffset(radius + 4, 3),
 		UDim2.new(1, -(radius + 4) * 2, 0, 1))
 	highlight.BackgroundTransparency = 0.77
-	local mark = Art.frame(parent, "Accent", accent or Art.Leaf, UDim2.new(0.5, -13, 1, -5), UDim2.fromOffset(26, 2))
+	local mark = Art.frame(parent, "Accent", accent or "accent", UDim2.new(0.5, -13, 1, -5), UDim2.fromOffset(26, 2))
 	Art.corner(mark, 1)
 end
 
 function Art.button(button, radius)
 	button.AutoButtonColor = false
 	Art.corner(button, radius)
-	local border = Art.stroke(button, Art.Line, 0.22)
+	local border = Art.stroke(button,"line",0.22)
+ Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.paletteColor("focus") else Art.paletteColor("line") end})
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
-			border.Color = Art.Focus
+			border.Color = Art.paletteColor("focus")
 		end
 	end)
 	local function restore()
 		border.Color = if button == game:GetService("GuiService").SelectedObject
-			then Art.Focus else Art.Line
+			then Art.paletteColor("focus") else Art.paletteColor("line")
 	end
 	button.MouseButton1Up:Connect(restore)
 	button.MouseLeave:Connect(restore)
-	button.SelectionGained:Connect(function() border.Color = Art.Focus end)
-	button.SelectionLost:Connect(function() border.Color = Art.Line end)
+	button.SelectionGained:Connect(function() border.Color = Art.paletteColor("focus") end)
+	button.SelectionLost:Connect(function() border.Color = Art.paletteColor("line") end)
 	return border
 end
 
@@ -379,7 +496,7 @@ end
 
 function Art.tintBackdrop(parent,theme)
 	parent.BackgroundColor3=theme.backdrop or Art.Backdrop
-	local art=parent:FindFirstChild("CanopyArt")
+	local art=backdropMotion[parent]and backdropMotion[parent].art or parent:FindFirstChild("CanopyArt")
 	if not art then return end
 	for _,node in ipairs(art:GetChildren())do
 		if node:IsA("Frame")then

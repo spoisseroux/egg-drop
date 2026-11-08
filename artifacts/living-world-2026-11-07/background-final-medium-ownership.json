@@ -1,0 +1,57 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackdropGlobal",
+    "result": {
+      "passed": 6,
+      "cases": [
+        "Global confirmed Canopy is above opaque preview with exact relative order",
+        "Canopy owner Z changes rebase once and restore original exterior depths",
+        "Global locked Creek borrows existing16 hosts above preview",
+        "pattern owner Z and exterior return keep order and reduced steady writes",
+        "explicit host switch release and same-step destroy retain borrowed roots",
+        "unexpected recursive host destruction repairs only missing renderers"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackgroundPicker",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "1649, 971 actual third category fits with complete first choice and neutralX",
+        "1649, 971 locked preview/no-op reselect and real third-slot reply stay separate",
+        "1649, 971 fully clipped inspected preview yields shared motion owner",
+        "733, 307 actual third category fits with complete first choice and neutralX",
+        "733, 307 locked preview/no-op reselect and real third-slot reply stay separate",
+        "733, 307 fully clipped inspected preview yields shared motion owner",
+        "568, 160 actual third category fits with complete first choice and neutralX",
+        "568, 160 locked preview/no-op reselect and real third-slot reply stay separate",
+        "568, 160 fully clipped inspected preview yields shared motion owner",
+        "385, 703 actual third category fits with complete first choice and neutralX",
+        "385, 703 locked preview/no-op reselect and real third-slot reply stay separate",
+        "385, 703 fully clipped inspected preview yields shared motion owner"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckBackground",
+    "result": {
+      "passed": 7,
+      "cases": [
+        "one16-band545-instance surface includes256 actual motif frames",
+        "creek full period is closed and covers edges",
+        "lantern full period is closed and covers edges",
+        "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+        "reduced board preview resize and return recompose same16 hosts once",
+        "exterior phase pauses while independent inspected owner advances",
+        "destroy removes all bands and stays idempotent"
+      ]
+    }
+  }
+]

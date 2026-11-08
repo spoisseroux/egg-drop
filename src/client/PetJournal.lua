@@ -22,18 +22,18 @@ local function visibleSelection(node)
 end
 local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,value,role,color)
-	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or Art.Silver,16)
+	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or "text",16)
 	Art.type(node,role);node.TextXAlignment=Enum.TextXAlignment.Left;return node
 end
 local function button(parent,name,value,action)
 	local node=Instance.new("TextButton");node.Name,node.Text,node.Parent=name,value,parent
 	node.BackgroundColor3,node.TextColor3,node.BorderSizePixel,node.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
-	Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
+	Art.bind(node,{BackgroundColor3="raised",TextColor3="text"});Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
 end
 function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
-	local shade=Art.frame(gui,"PetJournal",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
+	local shade=Art.frame(gui,"PetJournal","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
 	shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
-	local card=Art.frame(shade,"Card",Art.Surface,UDim2.fromScale(.5,.5),UDim2.fromOffset(680,500),21)
+	local card=Art.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(680,500),21)
 	card.AnchorPoint=Vector2.new(.5,.5);Art.panel(card,16)
 	local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
 	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,22
@@ -43,7 +43,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	self.title=text(card,"Title","Pet journal · 00/07","Heading")
 	self.baseTitle=self.title.Text
 	self.saveDetail=text(scroll,"SaveInstruction","","Body",Art.Amber);self.saveDetail.Visible=false
-	self.moreCue=Art.frame(card,"MoreBelow",Art.Surface,UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
+	self.moreCue=Art.frame(card,"MoreBelow","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
 		local bar=Art.frame(self.moreCue,"Chevron",Art.Leaf,UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41);bar.Rotation=entry[2]
@@ -54,10 +54,10 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	if onGoals then self.goalsButton=button(card,"FamilyGoals","Family goals",function()self:openFamilyGoals()end)end
 	for index,pet in ipairs(Pets.collection)do
 		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
-		local well=Art.frame(entry,"PortraitWell",Art.Inset,UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
+		local well=Art.frame(entry,"PortraitWell","inset",UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
 		text(entry,"Species",pet.name..(if pet.trial then " · Rare"else ""),"Action")
-		text(entry,"Status","Hatch from eggs","Body",Art.Muted)
-		text(entry,"FamilyRank","","Supporting",Art.Muted)
+		text(entry,"Status","Hatch from eggs","Body","muted")
+		text(entry,"FamilyRank","","Supporting","muted")
 		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
 		Crest.create(entry,pet.family or pet.id,0,UDim2.fromOffset(0,0),UDim2.fromOffset(36,36),entry.ZIndex+2,true)
 		self.cards[index]=entry
@@ -187,8 +187,8 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
 		entry.FamilyRank.Text=(familyNames[family]or family).." · "..rankNames[rank];entry.FamilyRank.Visible=unlocked
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
-		entry.Status.TextColor3=if equipped then Art.Leaf else Art.Muted
-		entry.Species.TextColor3=if pet.trial then Art.Amber elseif unlocked then Art.Silver else Art.Muted
+		Art.bind(entry.Status,{TextColor3=function()return if equipped then Art.Leaf else Art.paletteColor("muted") end})
+		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Art.Amber elseif unlocked then Art.paletteColor("text") else Art.paletteColor("muted") end})
 		Crest.update(entry.FamilyCrest,family,rank,not unlocked)
 		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
 			if self.portraits[index]then self.portraits[index].sprite:Destroy()end

@@ -62,7 +62,8 @@ end
 local function frame(parent, name, position, size, color, z)
 	local node = Instance.new("Frame")
 	node.Name, node.Position, node.Size = name, position, size
-	node.BorderSizePixel, node.BackgroundColor3, node.ZIndex, node.Parent = 0, color, z or 1, parent
+	node.BorderSizePixel,node.BackgroundColor3,node.ZIndex,node.Parent=0,if type(color)=="string"then Art.paletteColor(color)else color,z or 1,parent
+ if type(color)=="string"then Art.bind(node,{BackgroundColor3=color})end
 	return node
 end
 
@@ -70,10 +71,11 @@ local function button(parent, name, text, anchor, position, tint)
 	local node = Instance.new("TextButton")
 	node.Name, node.Text, node.Font, node.TextSize = name, text, Enum.Font.GothamBold, 14
 	node.AnchorPoint, node.Position, node.Size = anchor, position, UDim2.fromOffset(108, 44)
-	node.BackgroundColor3, node.TextColor3, node.BorderSizePixel = tint, Art.Silver, 0
+	node.BackgroundColor3,node.TextColor3,node.BorderSizePixel=if type(tint)=="string"then Art.paletteColor(tint)else tint,Art.Silver,0
 	node.ZIndex, node.Parent = 10, parent
-	Art.corner(node, 10)
-	Art.stroke(node, Art.Line, 0.3, 1)
+	if type(tint)=="string"then Art.bind(node,{BackgroundColor3=tint})end;Art.bind(node,{TextColor3="text"})
+ Art.corner(node, 10)
+	Art.stroke(node, "line", 0.3, 1)
 	return node
 end
 
@@ -86,24 +88,25 @@ function Focus.new(parentGui, callbacks)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.ResetOnSpawn, gui.ScreenInsets = "EggDropPetFocus", false, Enum.ScreenInsets.CoreUISafeInsets
 	gui.DisplayOrder, gui.ZIndexBehavior, gui.Parent = 9, Enum.ZIndexBehavior.Sibling, parentGui.Parent
-	local root = frame(gui, "SafeContent", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Art.Ink)
+	local root = frame(gui, "SafeContent", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), "ink")
 	root.BackgroundTransparency = 1
-	local panel = frame(root, "FocusControls", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Art.Ink, 2)
+	local panel = frame(root, "FocusControls", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), "ink", 2)
 	panel.BackgroundTransparency, panel.Visible = 1, false
-	local back = button(panel, "Back", "Back", Vector2.zero, UDim2.fromOffset(12, 12), Art.Surface)
+	local back = button(panel, "Back", "Back", Vector2.zero, UDim2.fromOffset(12, 12), "panel")
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
 	helper.AnchorPoint, helper.Position, helper.Size = Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -14), UDim2.fromOffset(230, 26)
 	helper.BackgroundColor3, helper.BackgroundTransparency, helper.TextColor3 = Art.Surface, 0.15, Art.Silver
 	helper.BorderSizePixel, helper.ZIndex, helper.Parent = 0, 8, panel
-	Art.corner(helper, 10)
+	Art.bind(helper,{BackgroundColor3="panel",TextColor3="text"});Art.corner(helper, 10)
 	local hint = helper:Clone()
 	hint.Name, hint.AnchorPoint, hint.Position = "RoamPetHint", Vector2.new(1, 0), UDim2.new(1, -12, 0, 64)
 	hint.Size, hint.TextSize, hint.Text, hint.Visible, hint.Parent = UDim2.fromOffset(180, 22), 11, "Tap your pet to say hi", false, root
-	local hit = Instance.new("TextButton")
+	Art.bind(hint,{BackgroundColor3="panel",TextColor3="text"})
+ local hit = Instance.new("TextButton")
 	hit.Name, hit.Text, hit.BackgroundTransparency, hit.BorderSizePixel = "PettingArea", "", 1, 0
 	hit.AutoButtonColor, hit.Selectable, hit.ZIndex, hit.Parent = false, false, 2, panel
-	local glove = frame(panel, "PettingGlove", UDim2.fromOffset(0, 0), UDim2.fromOffset(26, 32), Art.Ink, 5)
+	local glove = frame(panel, "PettingGlove", UDim2.fromOffset(0, 0), UDim2.fromOffset(26, 32), "ink", 5)
 	glove.BackgroundTransparency, glove.Visible, glove.AnchorPoint = 1, false, Vector2.new(0.45, 0.35)
 	local cream = Color3.fromHex("#FFF0CD")
 	local palm = frame(glove, "Palm", UDim2.fromOffset(5, 11), UDim2.fromOffset(19, 18), cream, 6)

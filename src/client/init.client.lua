@@ -32,10 +32,7 @@ local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
-local PresentationPolicy = require(script.PresentationPolicy)
-local SaveNotice=require(script.SaveNotice)
-local ControllerFocus=require(script.ControllerFocus)
-local AppearanceIntent=require(script.AppearanceIntent)
+local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent)}
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -443,7 +440,7 @@ local rightAim = hardwareButton("Right", "▶", dpad, Art.Raised, 44)
 leftAim.Position, rightAim.Position = UDim2.fromOffset(0, 8), UDim2.fromOffset(50, 8)
 leftAim.TextColor3, rightAim.TextColor3 = Art.Silver, Art.Silver
 leftAim.TextSize, rightAim.TextSize = 16, 16
-Art.corner(Art.frame(hardware, "DropWell", Art.Ink, UDim2.new(1, -51, 0, 1), UDim2.fromOffset(54, 53)), 27)
+Art.corner(Art.frame(hardware, "DropWell", Art.Ink, UDim2.new(1, -51, 0, 1), UDim2.fromOffset(54, 53)), 27).CornerRadius=UDim.new(.5,0)
 local action = hardwareButton("Drop", "A", hardware, Art.Amber, 48)
 action:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
 Art.stroke(action, Art.Ink, 0.14, 3)
@@ -514,7 +511,7 @@ local picker
 local journal
 local nurseryView
 local nurseryState
-local currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),nil)
+local currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),nil)
 local saveNoticeOwner
 local refreshSaveNotice
 local saveNoticeLayoutQueued=false
@@ -640,7 +637,7 @@ modalTitle.Position = UDim2.fromOffset(0, 18)
 modalTitle.Size = UDim2.new(1, 0, 0, 35)
 modalTitle.Font = Enum.Font.GothamBold
 modalTitle.TextSize = 20
-modalTitle.TextColor3 = Art.Silver
+Art.bind(modalTitle,{TextColor3="text"})
 modalTitle.ZIndex = 11
 Art.fitText(modalTitle, 20, 12, 12)
 local hatchStage = Art.frame(modal, "HatchStage", Art.Ink, UDim2.fromOffset(12, 55), UDim2.new(1, -24, 0, 108), 11)
@@ -675,7 +672,8 @@ local keepPlaying = label("TextButton", "KeepPlaying", "Keep playing", modal, Ar
 keepPlaying.Position = UDim2.new(0.52, 0, 1, -52)
 keepPlaying.Size = UDim2.new(0.43, 0, 0, 44)
 keepPlaying.ZIndex = 11
-keepPlaying.TextColor3 = Art.Silver
+Art.bind(keepPlaying,{BackgroundColor3="raised",TextColor3="text"})
+Art.bind(modalAction,{TextColor3="ink"})
 for _, button in ipairs({ modalAction, keepPlaying }) do
 	Art.button(button, 7)
 	Art.fitText(button, 15, 10, 9)
@@ -719,15 +717,24 @@ end
 
 local function equippedAppearance()
 	return board:GetAttribute("DeckThemeId") or Themes.Default,
-		board:GetAttribute("DeckStickerId") or Stickers.Default
+		board:GetAttribute("DeckStickerId") or Stickers.Default,board:GetAttribute("DeckBackgroundId")or"canopy"
 end
 
-local appearanceIntent
-local pickerReturn
 local previewStickerId=Stickers.Default
-local function paintDeck(id, stickerId)
+local function paintDeck(id, stickerId,backgroundId)
+ local key=id.."|"..stickerId.."|"..(backgroundId or "canopy")
+ if rendererPresentation.physicalAppearanceKey==key then return end;rendererPresentation.physicalAppearanceKey=key
 	previewStickerId=stickerId
 	local theme = Themes.ById[id]
+ if Art.applyTheme(theme)then
+  viewport.BackgroundColor3=theme.lcd.base;track.BackgroundColor3=theme.lcd.guide
+  Sprite.setSurfacePalette(sprites,theme.lcd)
+  if lcd and not lcd:setPalette(theme.lcd)then
+   lcd:destroy();lcd=nil;sprites.Visible=rendererPresentation.visible
+   if rendererPresentation.restoreCheap then rendererPresentation.restoreCheap(os.clock(),reduceEffects())end
+  end
+ end
+ Art.setBackground(backing,backgroundId or "canopy",theme)
 	shell.BackgroundColor3 = theme.shell
 	shell.Faceplate.BackgroundColor3 = theme.face or theme.shell:Lerp(theme.trim, 0.27)
 	rim.Color = theme.trim
@@ -769,10 +776,10 @@ picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reaso
 			then controls.OpenHandheld else nil
 	end
 	rail.Interactable = canAim()
- local back=pickerReturn;pickerReturn=nil
+ local back=clientUI.pickerReturn;clientUI.pickerReturn=nil
  if reason=="back"and back and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen()then
   openMenu();gameMenu:setPage(back.page);gameMenu.body.CanvasPosition=back.scroll
-  if isGamepad(UserInputService:GetLastInputType())and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and ControllerFocus.live(back.target,gameMenu.shade,player:FindFirstChild("PlayerGui"),true)then
+  if isGamepad(UserInputService:GetLastInputType())and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and clientUI.ControllerFocus.live(back.target,gameMenu.shade,player:FindFirstChild("PlayerGui"),true)then
    local y=back.target.AbsolutePosition.Y-gameMenu.body.AbsolutePosition.Y+gameMenu.body.CanvasPosition.Y
    local viewport=gameMenu.body.AbsoluteSize.Y;local desired=gameMenu.body.CanvasPosition.Y
    if y<desired then desired=y elseif y+back.target.AbsoluteSize.Y>desired+viewport then desired=y+back.target.AbsoluteSize.Y-viewport end
@@ -781,7 +788,7 @@ picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reaso
   end
  end
 end, function(slot,id)
- if appearanceIntent then appearanceIntent:choose(slot,id)end
+ if clientUI.appearanceIntent then clientUI.appearanceIntent:choose(slot,id)end
 	audio:play("menu")
 end, function(actionName)
 	if actionName == "music" then
@@ -848,7 +855,7 @@ local function refreshNursery()
 	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
 	if not ok or type(state) ~= "table" then return end
 	nurseryState = state
-	currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
+	currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
 	if refreshSaveNotice then refreshSaveNotice()end
 	roomView.stations:refresh()
 	roomView.transition:refresh()
@@ -868,7 +875,7 @@ local function refreshNursery()
 			repeat task.wait(.1) until (board:GetAttribute("Mode") == "Room" and not roomView.busy) or os.clock() > deadline
 			if hatchNavigation.generation == generation and nurseryState and nurseryState.lastHatch
 				and nurseryState.lastHatch.id == result.id then
-				PresentationPolicy.presentCommittedHatch(result.id,generation,{generation=hatchNavigation.generation,
+				clientUI.PresentationPolicy.presentCommittedHatch(result.id,generation,{generation=hatchNavigation.generation,
 					id=nurseryState.lastHatch.id,mode=board:GetAttribute("Mode"),ready=not roomView.busy},
 					function()if closeMenu then closeMenu()end end,openNursery)
 			end
@@ -960,7 +967,7 @@ local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
-		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled())
+		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
 end
 
 openPicker = function(mode,back)
@@ -972,7 +979,7 @@ openPicker = function(mode,back)
 	rail.Interactable = false
 	local themeId, stickerId = equippedAppearance()
 	updateClub()
-	pickerReturn=back
+	clientUI.pickerReturn=back
 	picker:open(themeId, stickerId,mode)
 	if isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs[picker.active]or (if picker.active=="Settings"then picker.sound else picker.cancel)
@@ -999,7 +1006,7 @@ roomView.stations:refresh()
 local lastSavePresentation
 refreshSaveNotice=function()
 	if not gui.Parent or roomView.destroyed then return end
-	local owner=if currentSaveNotice then SaveNotice.owner({
+	local owner=if currentSaveNotice then clientUI.SaveNotice.owner({
 		native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil or roomView.busy or roomView.transition.shade.Visible,
 		eggs=nurseryView:isOpen(),style=isPickerOpen(),journal=journal.shade.Visible,menu=gameMenu.shade.Visible,
 		modal=modal.Visible,recap=recap.frame.Visible,focusing=roomView.focusing,
@@ -1019,7 +1026,7 @@ refreshSaveNotice=function()
 		if backdrop:GetAttribute("CompactInstruction")then status.TextSize=12 end
 		local captionKey=currentSaveNotice.key..tostring(status.AbsoluteSize)..tostring(status.TextSize)..status.Font.Name..GuiService.PreferredTextSize.Name
 		if boardSaveCaptionKey~=captionKey then
-			boardSaveCaption=SaveNotice.caption(currentSaveNotice,function(value)return Art.textWidth(status,value)<=status.AbsoluteSize.X-8 end)
+			boardSaveCaption=clientUI.SaveNotice.caption(currentSaveNotice,function(value)return Art.textWidth(status,value)<=status.AbsoluteSize.X-8 end)
 			boardSaveCaptionKey=captionKey
 		end
 		status.Text=boardSaveCaption
@@ -1029,7 +1036,7 @@ refreshSaveNotice=function()
 		if dropCaption.Text~="DROP"then dropCaption.Visible=false end
 	elseif owner=="recap"or owner=="welcome"then modalTag.Text=currentSaveNotice.short end
 	gui:SetAttribute("SaveNoticeOwner",owner or "");gui:SetAttribute("SaveNoticeCode",if currentSaveNotice then currentSaveNotice.code else "")
-	local key=(owner or "")..SaveNotice.key(currentSaveNotice)
+	local key=(owner or "")..clientUI.SaveNotice.key(currentSaveNotice)
 	if key~=lastSavePresentation then
 		lastSavePresentation=key
 		if layout and not saveNoticeLayoutQueued then
@@ -1047,25 +1054,32 @@ end
 watchSaveNotice(GuiService.MenuOpened);watchSaveNotice(GuiService.MenuClosed)
 watchSaveNotice(UserInputService.TextBoxFocused);watchSaveNotice(UserInputService.TextBoxFocusReleased)
 table.insert(saveNoticeConnections,board:GetAttributeChangedSignal("SaveStatus"):Connect(function()
-	currentSaveNotice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),nurseryState);refreshSaveNotice()
+	currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),nurseryState);refreshSaveNotice()
 end))
 gui.Destroying:Connect(function()for _,connection in ipairs(saveNoticeConnections)do connection:Disconnect()end;table.clear(saveNoticeConnections)end)
 refreshSaveNotice()
 
 customizeButton.Activated:Connect(function() if openMenu then openMenu() end end)
 do
- local theme,sticker=equippedAppearance()
- appearanceIntent=AppearanceIntent.new({themeId=theme,stickerId=sticker,revision=board:GetAttribute("AppearanceRevision")or 0,
+ local theme,sticker,background=equippedAppearance()
+ clientUI.appearanceIntent=clientUI.AppearanceIntent.new({themeId=theme,stickerId=sticker,revision=board:GetAttribute("AppearanceRevision")or 0,backgroundId=board:GetAttribute("DeckBackgroundId")or"canopy",
   send=function(payload)request:FireServer("appearanceSlot",payload)end,
-  changed=function(state)picker:setAppearance(state);paintDeck(state.confirmedTheme,state.confirmedSticker)end})
- picker.onRetry=function(slot)appearanceIntent:retry(slot)end
- picker:setAppearance(appearanceIntent:view());paintDeck(theme,sticker)
+  changed=function(state)picker:setAppearance(state);paintDeck(state.confirmedTheme,state.confirmedSticker,state.confirmedBackground)end})
+ picker.onRetry=function(slot)clientUI.appearanceIntent:retry(slot)end
+ local function refreshFallbacks()
+  if not gui.Parent then return end
+  local raw=board:GetAttribute("AppearanceFallbacks");local ok,values=pcall(function()return if type(raw)=="string"then HttpService:JSONDecode(raw)else {}end)
+  clientUI.appearanceIntent:setFallbacks(if ok then values else {})
+ end
+ refreshFallbacks()
+ local fallbackConnection=board:GetAttributeChangedSignal("AppearanceFallbacks"):Connect(function()task.defer(refreshFallbacks)end)
+ picker:setAppearance(clientUI.appearanceIntent:view());paintDeck(theme,sticker,background)
  local result=remotes:WaitForChild("AppearanceResult")
- local resultConnection=result.OnClientEvent:Connect(function(message)appearanceIntent:receive(message)end)
+ local resultConnection=result.OnClientEvent:Connect(function(message)clientUI.appearanceIntent:receive(message)end)
  local revisionConnection=board:GetAttributeChangedSignal("AppearanceRevision"):Connect(function()
-  task.defer(function()if gui.Parent then local t,s=equippedAppearance();appearanceIntent:snapshot(t,s,board:GetAttribute("AppearanceRevision")or 0)end end)
+  task.defer(function()if gui.Parent then local t,s,b=equippedAppearance();clientUI.appearanceIntent:snapshot(t,s,board:GetAttribute("AppearanceRevision")or 0,b)end end)
  end)
- gui.Destroying:Connect(function()resultConnection:Disconnect();revisionConnection:Disconnect();appearanceIntent:destroy()end)
+ gui.Destroying:Connect(function()resultConnection:Disconnect();revisionConnection:Disconnect();fallbackConnection:Disconnect();clientUI.appearanceIntent:destroy()end)
 end
 
 local function nextTier()
@@ -1078,6 +1092,13 @@ local function project(position)
 	return Vector2.new(size.X / 2 + position.X * pixelsPerStud,
 		size.Y / 2 - (position.Y - Config.Height / 2) * pixelsPerStud), pixelsPerStud
 end
+rendererPresentation.restoreCheap=function(now,reduced)
+ for source,view in pairs(eggViews)do
+  local position=view.gel:render(source.Position,0,now,project,true,reduced)
+  local point=project(Vector2.new(position.X,position.Y));view.mark.Position=UDim2.fromOffset(point.X,point.Y)
+ end
+end
+
 
 local function drawAim()
 	local tier = nextTier()
@@ -1601,7 +1622,7 @@ end
 action.Activated:Connect(dropEgg)
 
 local function recapOwnsInput()
-	return PresentationPolicy.ownsRecap({modal=modal.Visible,recap=recap.frame.Visible,busy=roomView.busy,
+	return clientUI.PresentationPolicy.ownsRecap({modal=modal.Visible,recap=recap.frame.Visible,busy=roomView.busy,
 		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible,
 		coreMenu=GuiService.MenuIsOpen})
 end
@@ -1648,7 +1669,7 @@ end
 local priority = Enum.ContextActionPriority.High.Value
 -- Four ordinary sheets can acquire focus once after pointer use. Native focus and
 -- activation remain the dispatchers; this coordinator only writes SelectedObject.
-local controllerFocus=ControllerFocus.new({
+local controllerFocus=clientUI.ControllerFocus.new({
 	read=function()
 		local native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil
 		if native then return{native=true,blocked=true}end
@@ -1710,7 +1731,7 @@ ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, 
 ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, priority,
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
-	if not PresentationPolicy.canSheetBack({coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,busy=roomView.busy}) then return Enum.ContextActionResult.Pass end
+	if not clientUI.PresentationPolicy.canSheetBack({coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,busy=roomView.busy}) then return Enum.ContextActionResult.Pass end
 	if gameMenu and gameMenu.shade.Visible then
 		if state == Enum.UserInputState.Begin then closeMenu() end
 		return Enum.ContextActionResult.Sink
@@ -2147,7 +2168,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		table.clear(heldAim)
 	end
 	local now,reduced=os.clock(),reduceEffects()
-	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible,reduced)
+	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible and not modalShade.Visible and not GuiService.MenuIsOpen,reduced,gui.Enabled and bleed.Enabled and not GuiService.MenuIsOpen)
 	if not backdrop.Visible then
 		rendererPresentation.visible=false;lcdElapsed=lcdStep
 		return

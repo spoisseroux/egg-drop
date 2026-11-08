@@ -1,0 +1,124 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackdropGlobal",
+    "result": {
+      "passed": 4,
+      "cases": [
+        "Global confirmed Canopy is above opaque preview with exact relative order",
+        "Canopy owner Z changes rebase once and restore original exterior depths",
+        "Global locked Creek borrows existing16 hosts above preview",
+        "pattern owner Z and exterior return keep order and reduced steady writes"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "BackgroundPicker",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "1649, 971 actual third category fits with complete first choice and neutralX",
+        "1649, 971 locked preview/no-op reselect and real third-slot reply stay separate",
+        "1649, 971 fully clipped inspected preview yields shared motion owner",
+        "733, 307 actual third category fits with complete first choice and neutralX",
+        "733, 307 locked preview/no-op reselect and real third-slot reply stay separate",
+        "733, 307 fully clipped inspected preview yields shared motion owner",
+        "568, 160 actual third category fits with complete first choice and neutralX",
+        "568, 160 locked preview/no-op reselect and real third-slot reply stay separate",
+        "568, 160 fully clipped inspected preview yields shared motion owner",
+        "385, 703 actual third category fits with complete first choice and neutralX",
+        "385, 703 locked preview/no-op reselect and real third-slot reply stay separate",
+        "385, 703 fully clipped inspected preview yields shared motion owner"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "DeckBackground",
+    "result": {
+      "passed": 7,
+      "cases": [
+        "one16-band545-instance surface includes256 actual motif frames",
+        "creek full period is closed and covers edges",
+        "lantern full period is closed and covers edges",
+        "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+        "reduced board preview resize and return recompose same16 hosts once",
+        "exterior phase pauses while independent inspected owner advances",
+        "destroy removes all bands and stays idempotent"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "AppearancePalette",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "all8 palettes keep body supporting and LCD ink readable",
+        "1649, 971 open sheets adopt each palette without identity/focus/receipt changes",
+        "1649, 971 newly rebuilt recipe and receipt rows inherit active palette",
+        "733, 307 open sheets adopt each palette without identity/focus/receipt changes",
+        "733, 307 newly rebuilt recipe and receipt rows inherit active palette",
+        "568, 160 open sheets adopt each palette without identity/focus/receipt changes",
+        "568, 160 newly rebuilt recipe and receipt rows inherit active palette",
+        "385, 703 open sheets adopt each palette without identity/focus/receipt changes",
+        "385, 703 newly rebuilt recipe and receipt rows inherit active palette"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ThemeLCD",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "sherbet static roles preserve gel/pool/current owner",
+        "stone static roles preserve gel/pool/current owner",
+        "ice static roles preserve gel/pool/current owner",
+        "brick static roles preserve gel/pool/current owner",
+        "moss static roles preserve gel/pool/current owner",
+        "honey static roles preserve gel/pool/current owner",
+        "gloaming static roles preserve gel/pool/current owner",
+        "copperleaf static roles preserve gel/pool/current owner",
+        "failed repaint is explicit sticky failure for existing cheap-owner bridge"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "AppearanceIntentClient",
+    "result": {
+      "passed": 21,
+      "cases": [
+        "independent slots globally paced with latest unsent sticker",
+        "Applied is confirmed but not durable until matching Saved",
+        "rapid same-slot choices coalesce behind accepted old request",
+        "late lower-revision sibling cannot roll back atomic pair",
+        "throttle retries identical seq only after retryAfter",
+        "new choice cancels queued throttled retry",
+        "missing reply uses same seq max three then explicit Retry",
+        "late Saved resolves timed-out desired without manual resend",
+        "compensating confirmed choice after lost reply sends newer sequence",
+        "Superseded after Applied adopts foreign pair and never resends old",
+        "old Superseded and Saved cannot terminate newer local intent",
+        "stale newest intent rebases from lastSeq in bounded session",
+        "Locked rejection reconciles and cannot retry old locked item",
+        "view snapshots and repeated identical authoritative pair send nothing",
+        "three independent latest slots serialize without losing sibling intent",
+        "background timeout resends same identity and matching Saved alone proves durability",
+        "older pair-shaped reply cannot reset newer accepted background",
+        "old background Saved cannot make a newer background choice durable",
+        "unknown fallback marker is read-only; absent old field is ordinary default",
+        "fallback correction becomes Saved only from correlated proof and marker removal",
+        "other-slot durability can clear fallback without fabricating background acknowledgement"
+      ]
+    }
+  }
+]

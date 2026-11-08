@@ -36,7 +36,7 @@ function Surface.new(parent,background,width,height,limit)
 	root=frame(parent,"JellyLCDSpans",3);root.BackgroundTransparency=1;root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true
 	local rectangles,base=staticRectangles(background,width,height)
 	root.BackgroundTransparency=0;root.BackgroundColor3=color(base)
-	local self=setmetatable({root=root,width=width,height=height,background=background,limit=limit,pool={},static={},rectangles=rectangles,xs=table.create(limit),ys=table.create(limit),ws=table.create(limit),colors=table.create(limit),rowStarts=table.create(height),rowCounts=table.create(height),rowHosts={},rowSlots={},liveRowCounts=table.create(height,0),free=table.create(limit),freeCount=limit,retired=table.create(limit),edgesX={},edgesY={},colorCache={},dirty=true,failed=false,stats={dynamicAllocated=limit,dynamicCreated=limit,staticAllocated=0,spansUsed=0,visibleSpans=0,lastDemand=0,peakDemand=0,propertyWrites=0}},Surface)
+	local self=setmetatable({root=root,base=base,width=width,height=height,background=background,limit=limit,pool={},static={},rectangles=rectangles,xs=table.create(limit),ys=table.create(limit),ws=table.create(limit),colors=table.create(limit),rowStarts=table.create(height),rowCounts=table.create(height),rowHosts={},rowSlots={},liveRowCounts=table.create(height,0),free=table.create(limit),freeCount=limit,retired=table.create(limit),edgesX={},edgesY={},colorCache={},dirty=true,failed=false,stats={dynamicAllocated=limit,dynamicCreated=limit,staticAllocated=0,spansUsed=0,visibleSpans=0,lastDemand=0,peakDemand=0,propertyWrites=0}},Surface)
 	for index,r in ipairs(self.rectangles)do
 		local f=frame(root,"BoardSpan"..index,3);f.BackgroundColor3=color(r.c);f.Visible=true;self.static[index]=f
 	end
@@ -58,6 +58,15 @@ function Surface.new(parent,background,width,height,limit)
 	end)
 	if not ok then if root then root:Destroy()end;return nil,result end
 	return result
+end
+-- Geometry is independent of palette identity; all five authored categories
+-- stay distinct. No static or dynamic Instance is replaced on theme changes.
+function Surface:setBackground(background,replacements)
+ if self.failed or not replacements[self.base]then return false end
+ for _,r in ipairs(self.rectangles)do if not replacements[r.c]then return false end end
+ self.base=replacements[self.base];self.root.BackgroundColor3=color(self.base)
+ for i,r in ipairs(self.rectangles)do r.c=replacements[r.c];self.static[i].BackgroundColor3=color(r.c)end
+ self.background=background;return true
 end
 function Surface:resize()
 	local w,h=self.root.AbsoluteSize.X,self.root.AbsoluteSize.Y

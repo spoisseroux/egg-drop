@@ -1,0 +1,34 @@
+{
+  "before": {
+    "scrollPos": {
+      "1": 80.5,
+      "2": 124
+    },
+    "previewTop": 16,
+    "count": 545,
+    "scrollSize": {
+      "1": 588,
+      "2": 175
+    },
+    "max": 121,
+    "hasPattern": true,
+    "canvas": 0,
+    "previewH": 68
+  },
+  "offscreen": {
+    "canvas": 107.8216552734375,
+    "visible": false,
+    "parent": "EggDropBleed.BoardBacking",
+    "z": 2,
+    "count": 545,
+    "alive": true
+  },
+  "returned": {
+    "visible": true,
+    "same": true,
+    "canvas": 0,
+    "z": 25,
+    "count": 545
+  },
+  "input": "Frame-spaced upward touch drag, then mouse-wheel upward targeted at actual Scroll frame; first downward drag did not move canvas; assertions use observed positions."
+}

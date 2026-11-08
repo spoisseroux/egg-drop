@@ -48,6 +48,7 @@ local function paintDevice(device, themeId, stickerId)
 	device.Shell.Color = theme.shell
 	device.FrontPlate.Color = theme.face or theme.shell:Lerp(theme.trim, 0.27)
 	device.Bezel.Color = theme.trim
+	device.Screen.Color = if theme.lcd then theme.lcd.base else Color3.fromHex("#C6DFA0")
 	device.AimRocker.Color = theme.rocker or Color3.fromHex("#283744")
 	device.Confirm.Color = theme.buttons
 	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)

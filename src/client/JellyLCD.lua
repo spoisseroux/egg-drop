@@ -36,13 +36,16 @@ local function palette(color)
 	return cached
 end
 
-local function boardPixels()
+local defaultBoard={outside=Color3.fromHex("#2C4D30"),base=Color3.fromHex("#C6DFA0"),dither=Color3.fromHex("#BBD395"),rail=Color3.fromHex("#749154"),rim=Color3.fromHex("#385632"),guide=Color3.fromHex("#54783E")}
+local boardRoles={"outside","base","dither","rail","rim"}
+local function boardPixels(colors)
+ colors=colors or defaultBoard
 	local pixels = buffer.create(WIDTH * HEIGHT * 4)
-	local outside = rgba(Color3.fromHex("#2C4D30"))
-	local background = rgba(Color3.fromHex("#C6DFA0"))
-	local dither = rgba(Color3.fromHex("#BBD395"))
-	local rail = rgba(Color3.fromHex("#749154"))
-	local rim = rgba(Color3.fromHex("#385632"))
+	local outside = rgba(colors.outside)
+	local background = rgba(colors.base)
+	local dither = rgba(colors.dither)
+	local rail = rgba(colors.rail)
+	local rim = rgba(colors.rim)
 	for y = 0, HEIGHT - 1 do
 		local inset = math.max(0, bank - (floor - (y + 0.5)))
 		for x = 0, WIDTH - 1 do
@@ -91,12 +94,12 @@ end
 
 function LCD.new(parent, options)
 	options=options or {}
-	local background=boardPixels()
+	local background=boardPixels(options.palette)
 	local function span()
 		local pixels=buffer.create(WIDTH*HEIGHT*4)
 		local surface=SpanSurface.new(parent,background,WIDTH,HEIGHT,options.maxSpans or 1536)
 		if not surface then return nil end
-		return setmetatable({surface=surface,label=surface.root,background=background,pixels=pixels,failed=false,backend="span"},LCD)
+		return setmetatable({surface=surface,label=surface.root,background=background,pixels=pixels,failed=false,backend="span",boardPalette=options.palette or defaultBoard,guideColor=rgba((options.palette or defaultBoard).guide)},LCD)
 	end
 	if options.backend=="span"then return span()end
 	local editable,label
@@ -114,13 +117,42 @@ function LCD.new(parent, options)
 		if label then label:Destroy()end;if editable then editable:Destroy()end
 		return if options.backend=="image"then nil else span()
 	end
-	return setmetatable({image=editable,label=label,background=background,pixels=buffer.create(WIDTH*HEIGHT*4),failed=false,backend="image"},LCD)
+	return setmetatable({image=editable,label=label,background=background,pixels=buffer.create(WIDTH*HEIGHT*4),failed=false,backend="image",boardPalette=options.palette or defaultBoard,guideColor=rgba((options.palette or defaultBoard).guide)},LCD)
+end
+-- Recolor the existing board, cached static rectangles and already painted
+-- frame together. The live gel pixels and bounded dynamic pool are retained.
+function LCD:setPalette(colors)
+ if self.destroyed or self.failed then return false end
+ if self.boardPalette==colors then return true end
+ local seen,replacements={},{}
+ for _,role in ipairs(boardRoles)do
+  if typeof(colors[role])~="Color3"then return false end
+  local value=rgba(colors[role]);if seen[value]then return false end;seen[value]=true
+  replacements[rgba(self.boardPalette[role])]=value
+ end
+ if typeof(colors.guide)~="Color3"then return false end
+ local background=boardPixels(colors);local oldGuide,newGuide=self.guideColor,rgba(colors.guide)
+ if not self.painted then buffer.copy(self.pixels,0,background)else
+  for y=0,HEIGHT-1 do for x=0,WIDTH-1 do
+   local offset=(y*WIDTH+x)*4;local pixel=buffer.readu32(self.pixels,offset)
+   if pixel==buffer.readu32(self.background,offset)then buffer.writeu32(self.pixels,offset,buffer.readu32(background,offset))
+   elseif pixel==oldGuide and x==self.guideX and y>=self.guideFirst and y<=self.guideLast and (y-self.guideFirst)%4==0 then buffer.writeu32(self.pixels,offset,newGuide)end
+  end end
+ end
+ local ok=pcall(function()
+  if self.surface then
+   assert(self.surface:setBackground(background,replacements));assert(self.surface:paint(self.pixels))
+  else self.image:WritePixelsBuffer(Vector2.zero,SIZE,self.pixels)end
+ end)
+ if not ok then self.failed=true;self.label.Visible=false;return false end
+ self.background,self.boardPalette,self.guideColor=background,colors,newGuide;return true
 end
 function LCD:getStats()
 	return if self.surface then self.surface.stats else{backend=self.backend,failed=self.failed}
 end
 
 function LCD:beginFrame()
+ self.guideX=nil
 	self.rasterStarted=os.clock()
 	buffer.copy(self.pixels, 0, self.background)
 end
@@ -128,8 +160,9 @@ end
 function LCD:drawGuide(center)
 	local x = math.floor(center.X)
 	local limit = math.floor(floor - math.max(0, bank - (x + 0.5 - leftWall), bank - (rightWall - x - 0.5)))
-	for y = math.floor(center.Y) + 1, limit, 4 do
-		buffer.writeu32(self.pixels, (y * WIDTH + x) * 4, guide)
+	self.guideX,self.guideFirst,self.guideLast=x,math.floor(center.Y)+1,limit
+ for y = self.guideFirst, limit, 4 do
+		buffer.writeu32(self.pixels, (y * WIDTH + x) * 4, self.guideColor)
 	end
 end
 
@@ -214,6 +247,7 @@ function LCD:finishFrame()
 		self.failed = true
 		self.label.Visible = false
 	end
+	if ok then self.painted=true end
 	return ok
 end
 

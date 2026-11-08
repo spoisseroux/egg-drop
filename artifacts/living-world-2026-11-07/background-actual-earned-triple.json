@@ -1,0 +1,87 @@
+{
+  "record": {
+    "sticker": "lantern",
+    "stamp": 1794106711684,
+    "writerPresent": true,
+    "trials": 3,
+    "hatchingRevision": 4,
+    "totalWins": 1,
+    "inventory": 1,
+    "background": "creek",
+    "theme": "honey",
+    "nectar": 20
+  },
+  "actual": {
+    "appearance": 3,
+    "log": {
+      "1": {
+        "themeId": "honey",
+        "slot": "theme",
+        "id": "honey",
+        "backgroundId": "canopy",
+        "seq": 1,
+        "status": "Applied",
+        "lastSeq": 1,
+        "stickerId": "none",
+        "revision": 1
+      },
+      "2": {
+        "themeId": "honey",
+        "slot": "sticker",
+        "id": "lantern",
+        "backgroundId": "canopy",
+        "seq": 1,
+        "status": "Applied",
+        "lastSeq": 1,
+        "stickerId": "lantern",
+        "revision": 2
+      },
+      "3": {
+        "themeId": "honey",
+        "slot": "background",
+        "id": "creek",
+        "backgroundId": "creek",
+        "seq": 1,
+        "status": "Applied",
+        "lastSeq": 1,
+        "stickerId": "lantern",
+        "revision": 3
+      },
+      "4": {
+        "themeId": "honey",
+        "slot": "sticker",
+        "id": "lantern",
+        "backgroundId": "creek",
+        "seq": 1,
+        "status": "Saved",
+        "lastSeq": 1,
+        "stickerId": "lantern",
+        "revision": 3
+      },
+      "5": {
+        "themeId": "honey",
+        "slot": "background",
+        "id": "creek",
+        "backgroundId": "creek",
+        "seq": 1,
+        "status": "Saved",
+        "lastSeq": 1,
+        "stickerId": "lantern",
+        "revision": 3
+      },
+      "6": {
+        "themeId": "honey",
+        "slot": "theme",
+        "id": "honey",
+        "backgroundId": "creek",
+        "seq": 1,
+        "status": "Saved",
+        "lastSeq": 1,
+        "stickerId": "lantern",
+        "revision": 3
+      }
+    },
+    "sequence": 3,
+    "drops": 0
+  }
+}

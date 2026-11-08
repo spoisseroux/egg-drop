@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "suite": "WornTheme",
+  "result": {
+    "passed": 2,
+    "persistentWrites": false,
+    "cases": {
+      "1": "actual worn factory initializes the Screen with its selected LCD palette",
+      "2": "all eight updates tint the same Screen without repainting independent overlay dots or geometry"
+    },
+    "evidence": "actual Lounge factory/update; overlay sentinel preservation, not a LiveTray rendering audition"
+  }
+}

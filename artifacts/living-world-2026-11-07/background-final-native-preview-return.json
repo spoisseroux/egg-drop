@@ -1,0 +1,35 @@
+{
+  "before": {
+    "scrollPos": {
+      "1": 80.5,
+      "2": 124
+    },
+    "previewTop": 16,
+    "count": 545,
+    "scrollSize": {
+      "1": 588,
+      "2": 175
+    },
+    "max": 121,
+    "hasPattern": true,
+    "canvas": 0,
+    "previewH": 68
+  },
+  "returned": {
+    "visible": true,
+    "same": true,
+    "canvas": 0,
+    "z": 25,
+    "count": 545
+  },
+  "exterior": {
+    "canopyZ": 1,
+    "same": true,
+    "count": 545,
+    "canopyVisible": true,
+    "patternVisible": false,
+    "mode": "Board",
+    "pref": "Medium",
+    "patternZ": 2
+  }
+}

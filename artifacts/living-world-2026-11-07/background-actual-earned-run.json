@@ -1,0 +1,322 @@
+{
+  "inputs": [
+    {
+      "score": 0,
+      "drops": 1,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 0,
+      "drops": 2,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 60,
+      "drops": 3,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 60,
+      "drops": 4,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 60,
+      "drops": 5,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 120,
+      "drops": 6,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 180,
+      "drops": 7,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 200,
+      "drops": 8,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 200,
+      "drops": 9,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 200,
+      "drops": 10,
+      "stage": 0,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 230,
+      "drops": 11,
+      "stage": 1,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 230,
+      "drops": 12,
+      "stage": 1,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 250,
+      "drops": 13,
+      "stage": 1,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 290,
+      "drops": 14,
+      "stage": 1,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 290,
+      "drops": 15,
+      "stage": 1,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 320,
+      "drops": 16,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 320,
+      "drops": 17,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 340,
+      "drops": 18,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 340,
+      "drops": 19,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 440,
+      "drops": 20,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 560,
+      "drops": 21,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 560,
+      "drops": 22,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 560,
+      "drops": 23,
+      "stage": 2,
+      "over": false,
+      "ready": true
+    },
+    {
+      "score": 620,
+      "drops": 24,
+      "stage": 2,
+      "over": false,
+      "ready": false
+    }
+  ],
+  "result": {
+    "trials": 3,
+    "score": 620,
+    "success": true,
+    "phase": "Complete",
+    "hatch": {
+      "masteryDetails": {
+        "wick": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "pip": {
+          "challengeGoal": 3,
+          "challenges": 3,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": [],
+          "marksRemaining": 1,
+          "points": 2,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "1 mark to rank I"
+        },
+        "puddle": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "orbit": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        }
+      },
+      "masteryRanks": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryChallenges": {
+        "wick": 0,
+        "pip": 7,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryLegacyMask": 0,
+      "dailyDay": "20764",
+      "totalWins": 1,
+      "mastery": {
+        "wick": 0,
+        "pip": 2,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "contracts": {
+        "1": {
+          "hint": "Complete both sides in two rounds",
+          "claimed": false,
+          "target": 2,
+          "id": "runs",
+          "progress": 1,
+          "title": "Finish 2 quests",
+          "reward": 4
+        },
+        "2": {
+          "hint": "Build a chain of 3 in a full round",
+          "claimed": true,
+          "target": 3,
+          "id": "chain",
+          "progress": 3,
+          "title": "Chain 3 merges",
+          "reward": 3
+        },
+        "3": {
+          "hint": "Earn 500 points in a full round",
+          "claimed": true,
+          "target": 500,
+          "id": "score",
+          "progress": 500,
+          "title": "Score 500",
+          "reward": 3
+        }
+      },
+      "misses": 0,
+      "lastRunReward": {
+        "promotedTo": 0,
+        "daily": 6,
+        "sequence": 2,
+        "contracts": {
+          "1": "chain",
+          "2": "score"
+        },
+        "family": "pip",
+        "masteryPoints": 2,
+        "base": 8,
+        "total": 14
+      },
+      "dailyBonus": 6,
+      "dailyAvailable": false,
+      "status": "Ready",
+      "revision": 4,
+      "inventoryMask": 1,
+      "nectar": 20
+    },
+    "over": true,
+    "reward": "Saved"
+  }
+}

@@ -18,7 +18,7 @@ local function frame(parent, name, color, position, size, z)
 end
 
 local function label(parent, name, content, position, size, color, maximum)
-	local node = Art.text(parent, name, content, position, size, color or Art.Silver, maximum or 14,
+	local node = Art.text(parent, name, content, position, size, color or "text", maximum or 14,
 		Enum.Font.GothamMedium)
 	Art.fitText(node, maximum or 14, 10, 4, true)
 	return node
@@ -27,17 +27,19 @@ end
 local function button(parent, name, content, position, size, color, z)
 	local node = Instance.new("TextButton")
 	node.Name, node.Text, node.Position, node.Size = name, content, position, size
-	node.BackgroundColor3 = color or Art.Raised
+	node.BackgroundColor3 = if type(color)=="string"then Art.paletteColor(color)else color or Art.Raised
 	node.TextColor3 = if color == Art.Amber or color == Art.Leaf then Art.Ink else Art.Silver
 	node.Font, node.TextSize, node.ZIndex = Enum.Font.GothamBold, 14, z or 24
 	node.BorderSizePixel, node.Parent = 0, parent
-	Art.button(node, 10)
+	if type(color)=="string"then Art.bind(node,{BackgroundColor3=color})elseif not color then Art.bind(node,{BackgroundColor3="raised"})end
+ Art.bind(node,{TextColor3=if color==Art.Amber or color==Art.Leaf then "ink"else "text"})
+ Art.button(node, 10)
 	Art.fitText(node, 14, 10, 8, true)
 	return node
 end
 
 local function eggGraphic(parent, recipeId, color, y)
-	local scene = frame(parent, "EggStand", Art.Ink, UDim2.fromOffset(0, y), UDim2.new(1, -5, 0, 112))
+	local scene = frame(parent, "EggStand", "ink", UDim2.fromOffset(0, y), UDim2.new(1, -5, 0, 112))
 	Art.corner(scene, 14)
 	Art.shade(scene, 1.1, 0.82)
 	local halo = frame(scene, "WarmLight", color, UDim2.new(0.5, -42, 0.5, -42), UDim2.fromOffset(84, 84))
@@ -55,12 +57,12 @@ local function eggGraphic(parent, recipeId, color, y)
 end
 
 function View.new(parent, audio, reduceEffects, sendCommand)
-	local shade = frame(parent, "EggHatchView", Art.Ink, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 20)
+	local shade = frame(parent, "EggHatchView", "ink", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 20)
 	shade.BackgroundTransparency, shade.Active, shade.Visible = 1, true, false
-	local card = frame(shade, "Card", Art.Surface, UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(560, 540), 21)
+	local card = frame(shade, "Card", "panel", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(560, 540), 21)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	Art.panel(card, 16, Art.Amber)
-	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), Art.Silver, 20)
+	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
 	heading.Font = Enum.Font.GothamBold
 	local nectar = label(card, "Nectar", "0 nectar", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
 	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
@@ -68,7 +70,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), 23)
 	nectar.Parent=wallet;nectar.ZIndex = 25
 	local note = label(card, "Notice", "Earn nectar. Choose an egg. Meet a new friend.", UDim2.fromOffset(12, 29),
-		UDim2.new(1, -24, 0, 16), Art.Muted, 11)
+		UDim2.new(1, -24, 0, 16), "muted", 11)
 	local body = Instance.new("ScrollingFrame")
 	body.Name, body.Position, body.Size = "Body", UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
 	body.BackgroundTransparency, body.BorderSizePixel, body.ZIndex = 1, 0, 22
@@ -76,12 +78,12 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	body.ScrollBarThickness, body.ScrollBarImageColor3 = 4, Art.Leaf
 	body.ScrollingDirection, body.ElasticBehavior = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never
 	body.Parent = card
-	local close = button(card, "Close", "×", UDim2.new(0, 12, 1, -56), UDim2.new(0.30, -18, 0, 44), Art.Raised, 60)
+	local close = button(card, "Close", "×", UDim2.new(0, 12, 1, -56), UDim2.new(0.30, -18, 0, 44), "raised", 60)
 	Art.bareClose(close)
 	local action = button(card, "Action", "Hatch", UDim2.new(0.30, 2, 1, -56), UDim2.new(0.70, -14, 0, 44), Art.Amber, 60)
 	local meet = button(card, "Meet", "Meet friend", UDim2.new(0, 12, 1, -56), UDim2.new(0.50, -18, 0, 44), Art.Leaf, 60)
 	meet.Visible = false
-	local revealHost = frame(card, "RevealHost", Art.Surface, UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
+	local revealHost = frame(card, "RevealHost", "panel", UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
 	revealHost.Visible = false
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
@@ -359,11 +361,11 @@ function View:refreshFooter()
 	end
 	self.action.Interactable = ready and not self.pending and canAct == true
 	self.action.TextTransparency=0
-	self.action.BackgroundColor3=if state.lastHatch then Art.Raised else Art.Amber
-	self.action.TextColor3=if not self.action.Interactable then Art.Muted elseif state.lastHatch then Art.Silver else Art.Ink
+	Art.bind(self.action,{BackgroundColor3=function()return if state.lastHatch then Art.paletteColor("raised") else Art.Amber end})
+	Art.bind(self.action,{TextColor3=function()return if not self.action.Interactable then Art.paletteColor("muted") elseif state.lastHatch then Art.paletteColor("text") else Art.paletteColor("ink") end})
 	self.meetButton.Interactable = state.lastHatch ~= nil and self.action.Interactable
 	self.meetButton.TextTransparency=0
-	self.meetButton.TextColor3=if self.meetButton.Interactable then Art.Ink else Art.Silver
+	Art.bind(self.meetButton,{TextColor3=function()return if self.meetButton.Interactable then Art.paletteColor("ink") else Art.paletteColor("text") end})
 	local width=if state.lastHatch then (self.card.Size.X.Offset-36)/2 elseif self.compactShop then self.card.Size.X.Offset-24 else self.card.Size.X.Offset-24
 	local needed=math.max(self:footerRowHeight(self.action,width),if state.lastHatch then self:footerRowHeight(self.meetButton,width) else 44)
 	self:refreshShopHeader()
@@ -422,7 +424,7 @@ function View:renderBody()
 	local compact = self.compactShop == true
 	local split = not compact and size.X >= 470
 	local columnWidth = if split then (size.X - 18) / 2 else math.max(1, size.X - 6)
-	left=left or frame(self.body,"EggColumn",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(columnWidth,0))
+	left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(columnWidth,0))
 	left.Size=UDim2.fromOffset(columnWidth,0);left.BackgroundTransparency=1
 	local state = self.state
 	local recipe = Catalog.ById[self.selected]
@@ -441,7 +443,7 @@ function View:renderBody()
 		local x=4+((index-1)%metrics.columns)*(metrics.width+8)
 		local choice=left:FindFirstChild("Recipe_"..id)
 		if not choice then
-			choice=button(left,"Recipe_"..id,"",UDim2.fromOffset(x,y),UDim2.fromOffset(metrics.width,metrics.height),Art.Surface)
+			choice=button(left,"Recipe_"..id,"",UDim2.fromOffset(x,y),UDim2.fromOffset(metrics.width,metrics.height),"panel")
 			choice.Activated:Connect(function()
 				if liveShopTarget(choice,self.shade)and not self.state.lastHatch then self:selectRecipe(id)end
 			end)
@@ -449,13 +451,13 @@ function View:renderBody()
 		end
 		for _,child in ipairs(choice:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
 		choice.Position,choice.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(metrics.width,metrics.height)
-		choice.BackgroundColor3=if self.selected==id then Art.Raised else Art.Surface
+		Art.bind(choice,{BackgroundColor3=function()return if self.selected==id then Art.paletteColor("selected") else Art.paletteColor("panel") end})
 		choice.Interactable,choice.Selectable=not self.pending,not self.pending
 		choice.SelectedOutline.Enabled=self.selected==id
 		local padding=choice:FindFirstChildOfClass("UIPadding");if padding then padding:Destroy()end
 		EggArt.create(choice,id,UDim2.fromOffset(if compact then 6 else 12,(metrics.height-metrics.artH)/2),UDim2.fromOffset(if compact then 24 else 52,metrics.artH),choice.ZIndex+2)
 		local groupH=metrics.nameH+3+metrics.costH;local ty=(metrics.height-groupH)/2
-		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),Art.Silver,if compact then 14 else 16,Enum.Font.GothamMedium)
+		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),"text",if compact then 14 else 16,Enum.Font.GothamMedium)
 		local cost=Art.text(choice,"Cost",string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),UDim2.fromOffset(metrics.textX,ty+metrics.nameH+3),UDim2.fromOffset(metrics.textWidth,metrics.costH),Art.Amber,12)
 		name.TextXAlignment,cost.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
 		name.TextWrapped,cost.TextWrapped=true,true
@@ -463,7 +465,7 @@ function View:renderBody()
 	local y=startY+math.ceil(#Catalog.Order/metrics.columns)*(metrics.height+8)
 	label(left, "NectarProgress", string.format("%d / %d nectar", state.nectar or 0, recipe.cost),
 		UDim2.fromOffset(3, y), UDim2.new(1, -9, 0, 21), Art.Leaf, 13)
-	local track = frame(left, "NectarTrack", Art.Ink, UDim2.fromOffset(7, y + 24), UDim2.new(1, -18, 0, 6))
+	local track = frame(left, "NectarTrack", "ink", UDim2.fromOffset(7, y + 24), UDim2.new(1, -18, 0, 6))
 	Art.corner(track, 3)
 	local fill = frame(track, "Fill", Art.Amber, UDim2.fromOffset(0, 0),
 		UDim2.fromScale(math.clamp((state.nectar or 0) / recipe.cost, 0, 1), 1))
@@ -472,7 +474,7 @@ function View:renderBody()
 		elseif state.dailyDay then "Daily nectar claimed" else "Daily nectar loading…"
 	local daily=left:FindFirstChild("DailyNectar")
 	if not daily then
-		daily=button(left,"DailyNectar",dailyTitle,UDim2.fromOffset(3,y+41),UDim2.new(1,-9,0,44),Art.Raised)
+		daily=button(left,"DailyNectar",dailyTitle,UDim2.fromOffset(3,y+41),UDim2.new(1,-9,0,44),"raised")
 		daily.Activated:Connect(function()
 			local current=self.state
 			if liveShopTarget(daily,self.shade)and not current.lastHatch and not self.pending and current.dailyAvailable==true and current.dailyDay~=nil
@@ -489,7 +491,7 @@ function View:renderBody()
 	left.Size = UDim2.fromOffset(columnWidth, leftHeight)
 	local rightY = if split then 0 else leftHeight + 10
 	local rightX = if split then columnWidth + 12 else 0
-	local odds = frame(self.body, "OutcomeColumn", Art.Ink, UDim2.fromOffset(rightX, rightY), UDim2.fromOffset(columnWidth, 20))
+	local odds = frame(self.body, "OutcomeColumn", "ink", UDim2.fromOffset(rightX, rightY), UDim2.fromOffset(columnWidth, 20))
 	odds.BackgroundTransparency = 1
 	label(odds, "OddsHeading", "POSSIBLE HATCHES", UDim2.fromOffset(0, 1), UDim2.new(1, -2, 0, 22), Art.Leaf, 12)
 	local misses = state.misses or 0
@@ -497,21 +499,21 @@ function View:renderBody()
 	for index, outcome in ipairs(rows) do
 		local pet = Pets.byId[outcome.id]
 		if not pet then continue end
-		local row = frame(odds, "Outcome_" .. outcome.id, Art.Raised, UDim2.fromOffset(2, 27 + (index - 1) * 29), UDim2.new(1, -7, 0, 26))
+		local row = frame(odds, "Outcome_" .. outcome.id, "raised", UDim2.fromOffset(2, 27 + (index - 1) * 29), UDim2.new(1, -7, 0, 26))
 		Art.corner(row, 6)
 		Portrait.create(row, pet, 1, UDim2.fromOffset(15, 13), 25)
 		local name = label(row, "Name", pet.name, UDim2.fromOffset(29, 0), UDim2.new(1, -77, 1, 0),
 			if pet.trial then Art.Amber else Art.Silver, 12)
 		name.TextXAlignment = Enum.TextXAlignment.Left
 		label(row, "Probability", string.format("%.0f%%", outcome.weight), UDim2.new(1, -47, 0, 0),
-			UDim2.fromOffset(44, 26), Art.Silver, 12)
+			UDim2.fromOffset(44, 26), "text", 12)
 	end
 	local protectionY = 31 + #rows * 29
 	local protection = if misses >= 7 then "Your next hatch is guaranteed rare"
 		else string.format("Rare protection  %d / 7\nAfter 7 non-rares, the next hatch is rare", misses)
-	label(odds, "RareProtection", protection, UDim2.fromOffset(2, protectionY), UDim2.new(1, -7, 0, 43), Art.Muted, 11)
+	label(odds, "RareProtection", protection, UDim2.fromOffset(2, protectionY), UDim2.new(1, -7, 0, 43), "muted", 11)
 	label(odds, "Duplicates", "Already owned? Gain family mastery.", UDim2.fromOffset(2, protectionY + 48),
-		UDim2.new(1, -7, 0, 31), Art.Muted, 11)
+		UDim2.new(1, -7, 0, 31), "muted", 11)
 	local rightHeight = protectionY + 84
 	odds.Size = UDim2.fromOffset(columnWidth, rightHeight)
 	local canvasHeight = if split then math.max(leftHeight, rightHeight) else rightY + rightHeight

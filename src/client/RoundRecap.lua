@@ -20,14 +20,14 @@ local function fitText(label, maximum)
 end
 
 function Recap.new(parent, audio, reduceEffects)
-	local frame = Art.frame(parent, "Recap", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), 11)
+	local frame = Art.frame(parent, "Recap", "ink", UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), 11)
 	frame.BackgroundTransparency = 1
 	frame.Visible = false
-	local stats = Art.frame(frame, "Stats", Art.Ink, UDim2.fromOffset(12, 46), UDim2.new(1, -24, 1, -136))
+	local stats = Art.frame(frame, "Stats", "ink", UDim2.fromOffset(12, 46), UDim2.new(1, -24, 1, -136))
 	stats.BackgroundTransparency = 1
 	local values, scales, accents = {}, {}, {}
 	for index, caption in ipairs({ "SCORE / BEST", "BEST CHAIN", "TIER V CLEARS" }) do
-		local tile = Art.frame(stats, "Stat" .. index, Art.Ink, UDim2.new((index - 1) / 3, 2, 0, 0),
+		local tile = Art.frame(stats, "Stat" .. index, "ink", UDim2.new((index - 1) / 3, 2, 0, 0),
 			UDim2.new(1 / 3, -4, 1, 0))
 		Art.corner(tile, 5)
 		local scale = Instance.new("UIScale")
@@ -37,20 +37,20 @@ function Recap.new(parent, audio, reduceEffects)
 		accent.BackgroundTransparency = 1
 		accents[index] = accent
 		fitText(Art.text(tile, "Label", caption, UDim2.fromOffset(2, 2), UDim2.new(1, -4, 0, 12),
-			Art.Muted, 11), 11)
+			"muted", 11), 11)
 		local value = Art.text(tile, "Value", "", UDim2.fromOffset(3, 14), UDim2.new(1, -6, 1, -16),
-			if index == 1 then Art.Amber else Art.Silver, 26)
+			if index == 1 then Art.Amber else "text", 26)
 		fitText(value, 26)
 		values[index] = value
 	end
-	local goal = Art.frame(frame, "Goal", Art.Raised, UDim2.new(0, 12, 1, -88), UDim2.new(1, -24, 0, 30))
+	local goal = Art.frame(frame, "Goal", "raised", UDim2.new(0, 12, 1, -88), UDim2.new(1, -24, 0, 30))
 	Art.corner(goal, 5)
 	local title = Art.text(goal, "Heading", "", UDim2.fromOffset(6, 1), UDim2.new(1, -12, 0, 14),
 		Art.Cyan, 13, Enum.Font.GothamBold)
 	fitText(title, 13)
-	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), Art.Silver, 12)
+	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), "text", 12)
 	fitText(detail, 12)
-	local track = Art.frame(goal, "Track", Art.Ink, UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
+	local track = Art.frame(goal, "Track", "ink", UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
 	local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))
 	local nectarIcon = Art.frame(goal, "NectarIcon", Art.Amber, UDim2.fromOffset(7, 4), UDim2.fromOffset(14, 18))
 	Art.corner(nectarIcon, 8)
@@ -67,18 +67,18 @@ function Recap.new(parent, audio, reduceEffects)
 	detailsButton.BackgroundColor3, detailsButton.TextColor3 = Art.Ink, Art.Silver
 	detailsButton.Font, detailsButton.TextSize, detailsButton.BorderSizePixel = Enum.Font.GothamBold, 14, 0
 	detailsButton.ZIndex, detailsButton.Visible, detailsButton.Parent = goal.ZIndex + 3, false, goal
-	Art.button(detailsButton, 8); Art.fitText(detailsButton, 14, 10, 4, false)
-	local summary = Art.frame(goal, "RewardChips", Art.Raised, UDim2.fromOffset(6, 52), UDim2.new(1, -12, 1, -54))
+	Art.bind(detailsButton,{BackgroundColor3="ink",TextColor3="text"});Art.button(detailsButton, 8); Art.fitText(detailsButton, 14, 10, 4, false)
+	local summary = Art.frame(goal, "RewardChips", "raised", UDim2.fromOffset(6, 52), UDim2.new(1, -12, 1, -54))
 	summary.BackgroundTransparency, summary.Visible = 1, false
 	local componentLabels = {}
 	for index, caption in ipairs({ "Quest", "Daily" }) do
-		local chip = Art.frame(summary, caption .. "Chip", Art.Ink, UDim2.new((index - 1) * .5, 1, 0, 0), UDim2.new(.5, -3, 0, 36))
+		local chip = Art.frame(summary, caption .. "Chip", "ink", UDim2.new((index - 1) * .5, 1, 0, 0), UDim2.new(.5, -3, 0, 36))
 		Art.corner(chip, 8)
 		local label = Art.text(chip, "Value", caption .. " +0", UDim2.fromOffset(4, 0), UDim2.new(1, -8, 1, 0), if index == 1 then Art.Leaf else Art.Amber, 18, Enum.Font.GothamBold)
 		fitText(label, 18)
 		componentLabels[index] = label
 	end
-	local eggGoal = Art.text(summary, "EggGoal", "", UDim2.fromOffset(4, 40), UDim2.new(1, -8, 0, 32), Art.Silver, 13)
+	local eggGoal = Art.text(summary, "EggGoal", "", UDim2.fromOffset(4, 40), UDim2.new(1, -8, 0, 32), "text", 13)
 	fitText(eggGoal, 13)
 	eggGoal.TextWrapped = true
 	local transfer = Art.frame(goal, "NectarTransfer", Art.Amber, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), goal.ZIndex + 4)
@@ -102,15 +102,15 @@ function Recap.new(parent, audio, reduceEffects)
 	body.ScrollBarThickness,body.ScrollBarImageColor3=4,Art.Leaf
 	body.ScrollingDirection,body.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	body.Visible,body.Parent=false,frame
-	local eggPanel=Art.frame(goal,"SelectedEgg",Art.Inset,UDim2.fromOffset(0,88),UDim2.new(1,0,0,116),goal.ZIndex+1)
+	local eggPanel=Art.frame(goal,"SelectedEgg","inset",UDim2.fromOffset(0,88),UDim2.new(1,0,0,116),goal.ZIndex+1)
 	Art.corner(eggPanel,12);eggPanel.Visible=false
-	local eggDrawing=Art.frame(eggPanel,"ArtWell",Art.Inset,UDim2.fromOffset(10,10),UDim2.fromOffset(52,76),eggPanel.ZIndex+1)
+	local eggDrawing=Art.frame(eggPanel,"ArtWell","inset",UDim2.fromOffset(10,10),UDim2.fromOffset(52,76),eggPanel.ZIndex+1)
 	eggDrawing.BackgroundTransparency=1
-	local shortfall=Art.text(eggPanel,"Shortfall","",UDim2.fromOffset(76,66),UDim2.new(1,-88,0,24),Art.Muted,14)
-	local personalBest=Art.frame(stats,"PersonalBest",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(100,64))
+	local shortfall=Art.text(eggPanel,"Shortfall","",UDim2.fromOffset(76,66),UDim2.new(1,-88,0,24),"muted",14)
+	local personalBest=Art.frame(stats,"PersonalBest","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64))
 	personalBest.BackgroundTransparency=1
-	local bestCaption=Art.text(personalBest,"Label","Personal best",UDim2.fromOffset(0,0),UDim2.new(1,0,0,24),Art.Muted,14)
-	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),Art.Silver,24,Enum.Font.GothamBold)
+	local bestCaption=Art.text(personalBest,"Label","Personal best",UDim2.fromOffset(0,0),UDim2.new(1,0,0,24),"muted",14)
+	local bestValue=Art.text(personalBest,"Value","0",UDim2.fromOffset(0,26),UDim2.new(1,0,0,32),"text",24,Enum.Font.GothamBold)
 	personalBest.Visible=false
 	local promotion=Art.text(goal,"FamilyPromotion","",UDim2.fromOffset(4,0),UDim2.new(1,-8,0,24),Art.Leaf,12)
 	promotion.TextXAlignment=Enum.TextXAlignment.Left;promotion.Visible=false
@@ -315,7 +315,7 @@ function Recap:updateField(result)
 			self.receiptScroll.CanvasPosition = Vector2.zero
 			for index, line in ipairs(lines) do
 				local row = Art.text(self.receiptScroll, "Line" .. index, line, UDim2.fromOffset(5, (index - 1) * 24),
-					UDim2.new(1, -14, 0, 24), if line:find("unlocked!", 1, true) then Art.Amber else Art.Silver, 12)
+					UDim2.new(1, -14, 0, 24), if line:find("unlocked!", 1, true) then Art.Amber else "text", 12)
 				row.TextXAlignment, row.TextYAlignment = Enum.TextXAlignment.Left, Enum.TextYAlignment.Center
 				Art.type(row,"Body",false)
 				row.TextWrapped=true
@@ -439,7 +439,7 @@ function Recap:layoutField(height)
 		local name=if self.displayRecipeId=="meadow"then "Meadow"elseif self.displayRecipeId=="sprout"then "Sprout"else self.displayRecipe.name
 		self.eggGoal.Text=string.format("%s · %d/%d",name,self.displayBalance,self.displayCost)
 		self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch"else string.format("%d more to hatch",self.displayCost-self.displayBalance)
-		self.shortfall.TextColor3=if self.displayBalance>=self.displayCost then Art.Leaf else Art.Muted
+		Art.bind(self.shortfall,{TextColor3=function()return if self.displayBalance>=self.displayCost then Art.Leaf else Art.paletteColor("muted") end})
 		self.bankGraphic.Text=string.format("Nectar saved: %d",self.displayBalance)
 		local textW=math.max(1,width-48)
 		local eggTitleH=Art.textHeight(self.eggGoal,textW,18);local shortH=Art.textHeight(self.shortfall,textW,16)

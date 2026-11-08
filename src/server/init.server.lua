@@ -21,6 +21,8 @@ local CloseProgress = require(script.CloseProgress)
 local SessionProfile = require(script.SessionProfile)
 local RunReturn = require(script.RunReturn)
 local AppearanceIntent = require(script.AppearanceIntent)
+local AppearanceCatalog = require(ReplicatedStorage.Shared.AppearanceCatalog)
+local Backgrounds = require(ReplicatedStorage.Shared.DeckBackgrounds)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -58,14 +60,15 @@ end
 local function publishAppearance(board)
 	board.folder:SetAttribute("DeckThemeId",board.profile.theme)
 	board.folder:SetAttribute("DeckStickerId",board.profile.sticker)
+	board.folder:SetAttribute("DeckBackgroundId",board.profile.background)
+	board.folder:SetAttribute("AppearanceFallbacks",HttpService:JSONEncode(board.profile.appearanceFallbacks or {}))
 	board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 	Lounge.setAppearance(board.player.Character,board.profile.theme,board.profile.sticker)
 end
 
 local function validateAppearance(board,slot,id)
-	if slot=="theme" then return if Themes.ById[id] then nil else "Invalid" end
-	if not Stickers.ById[id] then return "Invalid" end
-	return if Stickers.canEquip(id,board.profile.rank,board.profile.trials,inventory(board)) then nil else "Locked"
+	local description=AppearanceCatalog.describeRequirement(slot,id,AppearanceCatalog.facts(board.profile,board.nursery.state))
+	return if description.rule=="invalid"then "Invalid"elseif description.unlocked then nil else "Locked"
 end
 
 local function publishNursery(board)
@@ -238,6 +241,8 @@ local function addPlayer(player)
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
+	folder:SetAttribute("DeckBackgroundId",profile.background)
+	folder:SetAttribute("AppearanceFallbacks",HttpService:JSONEncode(profile.appearanceFallbacks or {}))
 	folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 	folder:SetAttribute("SoundLevel", profile.sound)
 	folder:SetAttribute("ReducedEffects", profile.reduced)
@@ -249,12 +254,19 @@ local function addPlayer(player)
 	end
 	profile.onAppearanceSaved=function(candidate)
 		if boards[player]~=board or board.closing then return end
+		board.folder:SetAttribute("AppearanceFallbacks",HttpService:JSONEncode(profile.appearanceFallbacks or {}))
 		for _,result in ipairs(AppearanceIntent.saved(board.appearance,profile,candidate))do
 			appearanceResult:FireClient(player,result)
 		end
 	end
-	profile.resolveAppearance=function(theme,sticker)
-		return theme,if Stickers.canEquip(sticker,profile.rank,profile.trials,inventory(board)) then sticker else Stickers.Default
+	profile.resolveAppearance=function(theme,sticker,background)
+		local facts=AppearanceCatalog.facts(profile,board.nursery.state)
+		profile.appearanceFallbacks={}
+		local function allowed(slot,id,default)
+			if AppearanceCatalog.canEquip(slot,id,facts)then return id end
+			profile.appearanceFallbacks[slot]="Locked";return default
+		end
+		return allowed("theme",theme,Themes.Default),allowed("sticker",sticker,Stickers.Default),allowed("background",background,Backgrounds.Default)
 	end
 	profile.onAppearanceSuperseded=function(candidate)
 		if boards[player]~=board or board.closing then return end
@@ -322,7 +334,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	if board.closing then
 		if action=="appearance" then appearanceResult:FireClient(player,{slot="pair",seq=0,id="",status="Rejected",
-			reason="Closing",revision=board.appearance.revision,themeId=board.profile.theme,stickerId=board.profile.sticker}) end
+			reason="Closing",revision=board.appearance.revision,themeId=board.profile.theme,stickerId=board.profile.sticker,backgroundId=board.profile.background}) end
 		return
 	end
 	if (action == "sound" or action == "motion" or action == "companion"
@@ -336,11 +348,11 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if not reason then
 			board.appearance.lastAt=now
 			if value~=board.profile.theme or sticker~=board.profile.sticker then
-				Progress.equip(board.profile,value,sticker);board.appearance.revision+=1;publishAppearance(board)
+				Progress.equip(board.profile,value,sticker,board.profile.background);board.appearance.revision+=1;publishAppearance(board)
 			end
 		end
 		appearanceResult:FireClient(player,{slot="pair",seq=0,id="",revision=board.appearance.revision,
-			themeId=board.profile.theme,stickerId=board.profile.sticker,status=if reason then "Rejected" else "Applied",reason=reason})
+			themeId=board.profile.theme,stickerId=board.profile.sticker,backgroundId=board.profile.background,status=if reason then "Rejected" else "Applied",reason=reason})
 		return
 	end
 	if action == "sound" or action == "motion" then
@@ -642,9 +654,12 @@ task.spawn(function()
 							reset(board, board.sim.preset)
 							board.folder:SetAttribute("Mode", board.mode)
 							if board.folder:GetAttribute("DeckThemeId")~=board.profile.theme
-								or board.folder:GetAttribute("DeckStickerId")~=board.profile.sticker then board.appearance.revision+=1 end
+								or board.folder:GetAttribute("DeckStickerId")~=board.profile.sticker
+								or board.folder:GetAttribute("DeckBackgroundId")~=board.profile.background then board.appearance.revision+=1 end
 							board.folder:SetAttribute("DeckThemeId", board.profile.theme)
 							board.folder:SetAttribute("DeckStickerId", board.profile.sticker)
+							board.folder:SetAttribute("DeckBackgroundId",board.profile.background)
+							board.folder:SetAttribute("AppearanceFallbacks",HttpService:JSONEncode(board.profile.appearanceFallbacks or {}))
 							board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 							board.folder:SetAttribute("SoundLevel", board.profile.sound)
 							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)

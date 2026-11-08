@@ -3,10 +3,10 @@ local Intent = {}
 function Intent.new() return {revision=0,slots={},lastAt=-math.huge,lastMalformed=-math.huge} end
 local function snapshot(state,profile,slot,seq,id,status,reason)
 	return {slot=slot,seq=seq,id=id,status=status,reason=reason,revision=state.revision,
-		themeId=profile.theme,stickerId=profile.sticker,lastSeq=state.slots[slot] and state.slots[slot].seq or 0}
+		themeId=profile.theme,stickerId=profile.sticker,backgroundId=profile.background or "canopy",lastSeq=state.slots[slot] and state.slots[slot].seq or 0}
 end
 function Intent.request(state,profile,packet,now,usable,validate,equip)
-	if type(packet)~="table" or (packet.slot~="theme" and packet.slot~="sticker")
+	if type(packet)~="table" or (packet.slot~="theme" and packet.slot~="sticker" and packet.slot~="background")
 		or type(packet.id)~="string" or #packet.id>64 or type(packet.seq)~="number"
 		or packet.seq~=packet.seq or packet.seq<1 or packet.seq>2147483647 or packet.seq%1~=0 then
 		if now-state.lastMalformed<.25 then return nil,false end
@@ -26,11 +26,13 @@ function Intent.request(state,profile,packet,now,usable,validate,equip)
 	end
 	local changed=false
 	if not reason then
+		if profile.appearanceFallbacks then profile.appearanceFallbacks[slot]=nil end
 		local saved=profile.appearanceSaved
 		if profile[slot]~=id or (not profile.appearanceChange and (not saved or saved[slot]~=id)) then
 			local theme=if slot=="theme" then id else profile.theme
 			local sticker=if slot=="sticker" then id else profile.sticker
-			equip(profile,theme,sticker);state.revision+=1;changed=true
+			local background=if slot=="background"then id else profile.background or "canopy"
+			equip(profile,theme,sticker,background);state.revision+=1;changed=true
 		end
 		state.lastAt=now
 	end

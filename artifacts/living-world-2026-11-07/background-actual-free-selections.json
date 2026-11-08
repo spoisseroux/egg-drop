@@ -1,0 +1,251 @@
+{
+  "sticker": "star",
+  "revision": 6,
+  "hatch": {
+    "masteryRanks": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "revision": 3,
+    "masteryLegacyMask": 0,
+    "dailyDay": "20764",
+    "masteryChallenges": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "totalWins": 0,
+    "mastery": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "misses": 0,
+    "contracts": {
+      "1": {
+        "hint": "Complete both sides in two rounds",
+        "claimed": false,
+        "target": 2,
+        "id": "runs",
+        "progress": 0,
+        "title": "Finish 2 quests",
+        "reward": 4
+      },
+      "2": {
+        "hint": "Build a chain of 3 in a full round",
+        "claimed": false,
+        "target": 3,
+        "id": "chain",
+        "progress": 0,
+        "title": "Chain 3 merges",
+        "reward": 3
+      },
+      "3": {
+        "hint": "Earn 500 points in a full round",
+        "claimed": false,
+        "target": 500,
+        "id": "score",
+        "progress": 0,
+        "title": "Score 500",
+        "reward": 3
+      }
+    },
+    "dailyBonus": 6,
+    "dailyAvailable": false,
+    "status": "Ready",
+    "masteryDetails": {
+      "wick": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "rewardHint": "Next: family badge",
+        "nextPoints": 3,
+        "name": "Unranked",
+        "missingChallenges": {
+          "1": "Clean win",
+          "2": "Win with a chain of 3",
+          "3": "Win with 500 points"
+        },
+        "marksRemaining": 3,
+        "points": 0,
+        "hint": "Win rounds or hatch duplicates",
+        "nextGoal": "3 marks to rank I"
+      },
+      "pip": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "rewardHint": "Next: family badge",
+        "nextPoints": 3,
+        "name": "Unranked",
+        "missingChallenges": {
+          "1": "Clean win",
+          "2": "Win with a chain of 3",
+          "3": "Win with 500 points"
+        },
+        "marksRemaining": 3,
+        "points": 0,
+        "hint": "Win rounds or hatch duplicates",
+        "nextGoal": "3 marks to rank I"
+      },
+      "puddle": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "rewardHint": "Next: family badge",
+        "nextPoints": 3,
+        "name": "Unranked",
+        "missingChallenges": {
+          "1": "Clean win",
+          "2": "Win with a chain of 3",
+          "3": "Win with 500 points"
+        },
+        "marksRemaining": 3,
+        "points": 0,
+        "hint": "Win rounds or hatch duplicates",
+        "nextGoal": "3 marks to rank I"
+      },
+      "orbit": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "rewardHint": "Next: family badge",
+        "nextPoints": 3,
+        "name": "Unranked",
+        "missingChallenges": {
+          "1": "Clean win",
+          "2": "Win with a chain of 3",
+          "3": "Win with 500 points"
+        },
+        "marksRemaining": 3,
+        "points": 0,
+        "hint": "Win rounds or hatch duplicates",
+        "nextGoal": "3 marks to rank I"
+      }
+    },
+    "inventoryMask": 1,
+    "nectar": 6
+  },
+  "background": "canopy",
+  "theme": "sherbet",
+  "log": {
+    "1": {
+      "themeId": "ice",
+      "slot": "theme",
+      "id": "ice",
+      "backgroundId": "canopy",
+      "seq": 1,
+      "status": "Applied",
+      "lastSeq": 1,
+      "stickerId": "none",
+      "revision": 1
+    },
+    "2": {
+      "themeId": "ice",
+      "slot": "theme",
+      "id": "ice",
+      "backgroundId": "canopy",
+      "seq": 1,
+      "status": "Saved",
+      "lastSeq": 1,
+      "stickerId": "none",
+      "revision": 1
+    },
+    "3": {
+      "themeId": "brick",
+      "slot": "theme",
+      "id": "brick",
+      "backgroundId": "canopy",
+      "seq": 2,
+      "status": "Applied",
+      "lastSeq": 2,
+      "stickerId": "none",
+      "revision": 2
+    },
+    "4": {
+      "themeId": "brick",
+      "slot": "theme",
+      "id": "brick",
+      "backgroundId": "canopy",
+      "seq": 2,
+      "status": "Saved",
+      "lastSeq": 2,
+      "stickerId": "none",
+      "revision": 2
+    },
+    "5": {
+      "themeId": "moss",
+      "slot": "theme",
+      "id": "moss",
+      "backgroundId": "canopy",
+      "seq": 3,
+      "status": "Applied",
+      "lastSeq": 3,
+      "stickerId": "none",
+      "revision": 3
+    },
+    "6": {
+      "themeId": "stone",
+      "slot": "theme",
+      "id": "stone",
+      "backgroundId": "canopy",
+      "seq": 4,
+      "status": "Applied",
+      "lastSeq": 4,
+      "stickerId": "none",
+      "revision": 4
+    },
+    "7": {
+      "themeId": "sherbet",
+      "slot": "theme",
+      "id": "sherbet",
+      "backgroundId": "canopy",
+      "seq": 5,
+      "status": "Applied",
+      "lastSeq": 5,
+      "stickerId": "none",
+      "revision": 5
+    },
+    "8": {
+      "themeId": "sherbet",
+      "slot": "sticker",
+      "id": "star",
+      "backgroundId": "canopy",
+      "seq": 1,
+      "status": "Applied",
+      "lastSeq": 1,
+      "stickerId": "star",
+      "revision": 6
+    },
+    "9": {
+      "themeId": "sherbet",
+      "slot": "theme",
+      "id": "sherbet",
+      "backgroundId": "canopy",
+      "seq": 5,
+      "status": "Saved",
+      "lastSeq": 5,
+      "stickerId": "star",
+      "revision": 6
+    },
+    "10": {
+      "themeId": "sherbet",
+      "slot": "sticker",
+      "id": "star",
+      "backgroundId": "canopy",
+      "seq": 1,
+      "status": "Saved",
+      "lastSeq": 1,
+      "stickerId": "star",
+      "revision": 6
+    }
+  }
+}
