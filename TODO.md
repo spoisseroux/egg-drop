@@ -2,6 +2,16 @@
 
 Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## Next UI and material pass — planned against private v344
+
+[Astra's companion editor and recap plan](COMPANION-EDITOR-AND-RECAP.md) covers the latest six player captures. These changes are planned, not shipped.
+
+- [ ] Readable round recap with a consistent Stars emblem, default-visible scrolling details and no selected-egg progress area.
+- [ ] One Pet / Hue / Charm editor replacing the separate Journal UI, with square live owned-pet cards, fixed preview/channel controls and independently scrolling options. Preserve ownership, legacy colors, inventory and exact item/equip confirmations.
+- [ ] Consistent full-width tabs, bare X, no editor wallet/hex values/carry footer, illustrated charm rows and mutually exclusive Charm On / Off controls. Prevent header overlap at Largest text and small viewports.
+- [ ] Explicit machine X returns the pet to the owner's arms after confirmed pickup; forced cleanup remains separate. Use up/down-arrow world carry controls.
+- [ ] Replace the segmented Ring with a continuous halo, preserving its saved shape ID; review brighter pet-local materials and stronger charm emission separately in daylight and at night.
+
 ## Completed item-egg and Aero build
 
 Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO.md): unified Companion / Hue shop, saved stacked hue/reset items, independent five-dose channels, migration of old purchases, per-pet customization, seven-ID color support, planted motion, faster aiming and themed supply balls.
