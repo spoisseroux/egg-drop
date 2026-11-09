@@ -78,12 +78,12 @@ return function(client,parent)
 			assert(entry.AbsolutePosition.Y>=view.scroll.AbsolutePosition.Y-1 and entry.AbsolutePosition.Y<view.scroll.AbsolutePosition.Y+view.scroll.AbsoluteSize.Y,"owned row not visible")
 			assert(not view.cards[1].Selectable and not view.cards[1].Interactable);close(view)
 		end)
-		test("explicit empty Journal uses X while legitimate legacy Journal can focus Track",function()
+		test("explicit and legacy empty Journal use X without unavailable retired tracking",function()
 			for _,explicit in ipairs({true,false})do
 				local view=journal(if explicit then 0 else nil);local f=coordinator(view);local before=total();f:pad();f:flush()
-				local target=if explicit then view.closeButton else view.cards[Pets.byId.bloom_pip.index]
+				local target=view.closeButton
 				assert(GuiService.SelectedObject==target and total()==before)
-				if not explicit then assert(target.Track.Visible)end;close(view)
+				for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do local n=view.cards[Pets.byId[id].index];assert(not n.Visible and not n.Track.Visible and not n.Selectable)end;close(view)
 			end
 		end)
 		test("ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",function()

@@ -1,0 +1,125 @@
+{
+  "HueIntent": {
+    "ok": true,
+    "result": {
+      "1": "Hue purchase captures catalog and one operation without client-selected roll",
+      "2": "pending result routes to exact acknowledgment and prevents another purchase",
+      "3": "Use binds pet channel counts and exact pending result without mutating snapshot",
+      "4": "reply before snapshot stays pending; matching saved revision resolves",
+      "5": "snapshot before reply resolves exact committed operation",
+      "6": "retry reuses complete original payload; rejection releases next genuine operation",
+      "7": "ordinary inventory operation omits pending receipt association",
+      "8": "legacy redemption binds migration and exact paid token and purchase"
+    }
+  },
+  "ItemPetVisuals": {
+    "ok": true,
+    "result": {
+      "1": "pip two mapped channels protected face/sculpt and independent reset/charm",
+      "2": "puddle two mapped channels protected face/sculpt and independent reset/charm",
+      "3": "wick two mapped channels protected face/sculpt and independent reset/charm",
+      "4": "orbit two mapped channels protected face/sculpt and independent reset/charm",
+      "5": "bloom_pip two mapped channels protected face/sculpt and independent reset/charm",
+      "6": "foxfire_wick two mapped channels protected face/sculpt and independent reset/charm",
+      "7": "eclipse_orbit two mapped channels protected face/sculpt and independent reset/charm"
+    }
+  },
+  "HueAppearance": {
+    "ok": true,
+    "result": {
+      "passed": 7,
+      "authorityMutation": false,
+      "cases": {
+        "1": "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "2": "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "3": "journal portrait recolors existing pixels using the same body and secondary roles",
+        "4": "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "5": "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "6": "confirmed peer token refresh updates the existing observer rig instead of only Dot",
+        "7": "bodyMix-only confirmation recolors the same visitor model and preserves shared activity state"
+      },
+      "liveCommands": 0
+    }
+  },
+  "CompactEggShop": {
+    "ok": true,
+    "result": {
+      "1": "1649, 971 unified grid exact price and five disclosed item chances",
+      "2": "350, 703 unified grid exact price and five disclosed item chances",
+      "3": "568, 210 unified grid exact price and five disclosed item chances",
+      "4": "active four odds remain disclosed at stored misses7 without an unavailable rare promise"
+    }
+  },
+  "JournalPurpose": {
+    "ok": true,
+    "result": {
+      "passed": 4,
+      "cases": {
+        "1": "rare-only sparse inventory never unlocks base or displays archived ranks",
+        "2": "each owned row has an independent 44px Customize action including legacy rares",
+        "3": "unowned retired pets have no visible row, acquisition hint, customize target or collection denominator",
+        "4": "largest collection rows scroll on compact and portrait safe widths"
+      }
+    }
+  },
+  "HuePalette": {
+    "ok": true,
+    "result": {
+      "1": "linear-light blend uses the standard independent black-white reference",
+      "2": "every learned grade protects facial roles and Original restores neutral channels",
+      "3": "sparse defaults and invalid tokens cannot add arbitrary colors or mutate rank maps",
+      "4": "canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face",
+      "5": "all 1296 legal dose combinations resolve finite colors and preserve authored protected roles on all seven pets",
+      "6": "layered mixture uses pigment mass in linear light and equal bars hit exact shared anchors"
+    }
+  },
+  "ControllerSheets": {
+    "ok": true,
+    "result": {
+      "passed": 9,
+      "cases": {
+        "1": "pointer-open Menu seeds current Play or Daily tab without routing",
+        "2": "pointer-open Style seeds active Sticker or Settings without appearance or settings writes",
+        "3": "sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",
+        "4": "explicit and legacy empty Journal use X without unavailable retired tracking",
+        "5": "ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",
+        "6": "direct controller Journal opening retains its valid existing owned selection",
+        "7": "result arriving under an open shop revokes the captured ordinary-shop owner",
+        "8": "all four same-instance openings advance generation and hidden sheets expose no target",
+        "9": "recap Details preserve both pinned footer selections and never dispatch a route"
+      },
+      "inputIsSemanticFixture": true
+    }
+  },
+  "GardenPetVisual": {
+    "ok": true,
+    "result": {
+      "1": "pip authored imported + native have proper size, forward face and bounded static allocation",
+      "2": "pip six expressions remain distinct with charms off and reduced static motion",
+      "3": "pip charm toggles framing without changing the body hit hull or authority",
+      "4": "pip action generations do not replay greetings or take pose ownership",
+      "5": "puddle authored imported + native have proper size, forward face and bounded static allocation",
+      "6": "puddle six expressions remain distinct with charms off and reduced static motion",
+      "7": "puddle charm toggles framing without changing the body hit hull or authority",
+      "8": "puddle action generations do not replay greetings or take pose ownership",
+      "9": "all seven authored aliases retain identity bits, ordering and rarity",
+      "10": "a named but empty imported resource rejects the entire backend for a faithful native fallback",
+      "11": "twenty complete create/update/destroy cycles release every model"
+    }
+  },
+  "NewBabyRigs": {
+    "ok": true,
+    "result": {
+      "1": "Tikket faithful asset-free silhouette, stable ID and independent saved channels",
+      "2": "Tikket six distinct reduced poses and production sampled semantic rig",
+      "3": "Nuum faithful asset-free silhouette, stable ID and independent saved channels",
+      "4": "Nuum six distinct reduced poses and production sampled semantic rig",
+      "5": "Vezzi faithful asset-free silhouette, stable ID and independent saved channels",
+      "6": "Vezzi six distinct reduced poses and production sampled semantic rig",
+      "7": "Kiprik faithful asset-free silhouette, stable ID and independent saved channels",
+      "8": "Kiprik six distinct reduced poses and production sampled semantic rig",
+      "9": "Nolli faithful asset-free silhouette, stable ID and independent saved channels",
+      "10": "Nolli six distinct reduced poses and production sampled semantic rig"
+    }
+  }
+}

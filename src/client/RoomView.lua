@@ -331,8 +331,7 @@ function Room:showPet(pet)
 	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then self:interactPet() end end)
 	self.petPrompt, self.petClick = prompt, click
 	if not self.reduceEffects() then self.pet:greet() end
-	self.heading.Text = string.format("Sprout Hollow · %s · %d/%d", pet.name,
-		Pets.ownedCount(owned, trials, self.progress:GetAttribute("InventoryMask")), #Pets.collection)
+	self.heading.Text = "Sprout Hollow · "..pet.name.." · "..Pets.collectionSummary(owned,trials,self.progress:GetAttribute("InventoryMask"))
 	self:updateControls()
 end
 

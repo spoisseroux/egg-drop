@@ -1,0 +1,132 @@
+{
+  "HueProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 18,
+      "cases": {
+        "1": "fresh v6 has five private stacks and seven independent color capabilities",
+        "2": "each 20-percent server roll stores exactly one item, one debit and no companion pity change",
+        "3": "stored duplicates stack, pending results block new purchases and result use acknowledges once",
+        "4": "five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",
+        "5": "reservation and settlement retry the frozen draw before and after ambiguous writes",
+        "6": "durable reservation survives writer takeover and settles its original result once",
+        "7": "v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",
+        "8": "held legacy token redeems exactly once without roll/debit and original buy proof survives",
+        "9": "invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",
+        "10": "v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",
+        "11": "bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",
+        "12": "malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",
+        "13": "each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",
+        "14": "two uses of last jar at one revision have one winner and rejected request cannot strand next intent",
+        "15": "v5 zero-cost assignments retain their exact token proof after upgrade and later reset",
+        "16": "corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",
+        "17": "migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",
+        "18": "a sparse Ovelle-only veteran can buy and apply without owning the welcome pet"
+      }
+    }
+  },
+  "HueHost": {
+    "ok": true,
+    "result": {
+      "passed": 4,
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual random buy reservation lost response preserves confirmed stock and same-quote throttle stays Retrying",
+        "2": "background retry held in storage preserves waiter and changed same-ID quote cannot replace candidate",
+        "3": "lost use event recovers committed vectors, replay never consumes later stock and altered pending ID conflicts",
+        "4": "private snapshot is owner-targeted and snapshot requests cannot select another profile"
+      },
+      "evidence": "actual host callbacks and retry coroutine; isolated durable reservation/store suspension"
+    }
+  },
+  "HatchProgress": {
+    "ok": true,
+    "result": {
+      "passed": 22,
+      "cases": {
+        "1": "active four outcomes normalize safely even at the retained rare threshold",
+        "2": "legacy seven-pet migration and one-time credits",
+        "3": "starter grant, persistent reveal, exact acknowledgement",
+        "4": "ambiguous session acquire resumes the same lease",
+        "5": "direct full-cost spending, stale commands and callback retries",
+        "6": "ambiguous committed hatch cannot reroll or duplicate",
+        "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "8": "monotonic payouts reject replay beyond receipt history",
+        "9": "lease takeover fences stale commands and renewals",
+        "10": "local overlap, sparse inventory and public isolation",
+        "11": "failed legacy load cannot spend or overwrite",
+        "12": "daily reward is once per Hollow day and survives callback retry",
+        "13": "every active outcome grants once and absent rare pool freezes earned misses",
+        "14": "paid retired outcome receipts survive reload and acknowledge without reroll or regrant",
+        "15": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "16": "saved wins preserve archived mastery points challenges and rank without promotions",
+        "17": "daily contracts and saved wins commit atomically once per run and day",
+        "18": "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "19": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "20": "compound award retries immutable stats and original day before or after commit",
+        "21": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "22": "rare-only ownership earns saved wins and duplicate preserves archived marks"
+      }
+    }
+  },
+  "NeutralPetRoster": {
+    "ok": true,
+    "result": {
+      "passed": 7,
+      "cases": {
+        "1": "all seven saved IDs and ownership bits remain permanent while only four are active",
+        "2": "active collection target excludes retained owners without changing total ownership semantics",
+        "3": "white Main and achromatic grey Secondary agree across canonical and direct definitions, protected colors stay exact",
+        "4": "hands cuffs feet and floating charm use Secondary without changing semantic geometry",
+        "5": "four pigment anchors and six equal-pair recipes retain their prior exact colors",
+        "6": "partial doses start at new neutral base, reset independently, and retained pets still receive full dyes",
+        "7": "all random samples use normalized surviving weights even with frozen guarantee counter"
+      }
+    }
+  },
+  "GardenState": {
+    "ok": true,
+    "result": {
+      "passed": 12,
+      "cases": {
+        "1": "solo garden investigates, shoves twice, rests and returns without a reward path",
+        "2": "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+        "3": "paired greeting is one atomic action and focus cancels both reservations",
+        "4": "Board is observable and cannot acquire focus, toy or an automatic reward",
+        "5": "focus is owner/pet/range/generation validated and its lease expires",
+        "6": "moved owners and replaced character cannot refresh a stale focus hold",
+        "7": "a superseded participant generation explicitly retires the paired greeting",
+        "8": "equip, character replacement and leave invalidate old generations exactly once",
+        "9": "a delayed first acquisition cannot revive the same alias after equip-away and back",
+        "10": "only one toy reservation exists and another waiting pet gets a turn",
+        "11": "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+        "12": "late join samples the current shared path, not a replayed beginning"
+      }
+    }
+  },
+  "PetAppearance": {
+    "ok": true,
+    "result": {
+      "1": "strict owned aliases and booleans reject forged shapes without a progression mutation",
+      "2": "duplicate and stale requests cannot reapply, and independent pets save exact preferences",
+      "3": "A B A same-value intent settles against the pending per-pet generation",
+      "4": "a newer local toggle during save remains pending and cannot receive the old receipt",
+      "5": "Applied and failed writes retain the previous confirmed public projection",
+      "6": "A commit cannot expose B created while A's write is in flight",
+      "7": "foreign newer same-pet intent supersedes explicitly while other pet and wallet survive",
+      "8": "invalid stored entries default safely and independent per-pet merge retains future fields",
+      "9": "known forms save with visibility while legacy missing shape decodes to Dot",
+      "10": "hidden Ring and Pebble persist the exact shape pair, with same-seq conflict detection",
+      "11": "unknown future form survives decode, public projection and visibility-only old client writes",
+      "12": "newer foreign unknown form wins intact rather than being replaced by an older known shape",
+      "13": "later local shape during an in-flight save cannot receive the earlier shape receipt",
+      "14": "future unknown shape cannot be selected through a forged request",
+      "15": "optional shape presence is part of exact wire identity while resolved pairs remain durable",
+      "16": "v274 explicit unmarked Dot Hide/Show preserves saved Ring Pebble and opaque future IDs",
+      "17": "closed server selection gate rejects marked changes while visibility-only writes preserve shape",
+      "18": "open v2 explicit Dot selection changes the saved shape with exact protocol-aware replay",
+      "19": "unmarked nondefault selections and malformed declared versions cannot change a profile"
+    }
+  }
+}

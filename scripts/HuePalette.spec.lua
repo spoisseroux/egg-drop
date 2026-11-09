@@ -6,9 +6,10 @@ return function(shared)
   local mixed=Palette.tint(Color3.new(0,0,0),Color3.new(1,1,1),.5)
   assert(close(mixed.R,.735356983)and close(mixed.G,.735356983)and close(mixed.B,.735356983))
  end)
- test("every learned grade keeps protected facial roles exact and Original restores authored colors",function()
+ test("every learned grade protects facial roles and Original restores neutral channels",function()
   for _,pet in ipairs({"pip","puddle"})do
    local base=Palette.resolve(pet);assert(table.isfrozen(base))
+   assert(base.body==Color3.fromHex("#FFFFFF")and base.secondary==Color3.fromHex("#C8C8C8"),"Original channel defaults are not neutral")
    for _,hue in ipairs(Hue.Order)do
     local previous=0
     for rank=1,3 do

@@ -492,7 +492,8 @@ function Hatching.command(handle, action, value, expectedRevision)
 			state.nectar -= recipe.cost
 			-- A duplicate is collection status only. Frozen legacy marks remain intact.
 			state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(petId))
-			state.misses = if pet.trial then 0 else math.min(7, state.misses + 1)
+			-- Preserve earned protection while the active pool has no rare outcomes.
+			if Catalog.hasRarePool(value)then state.misses = if pet.trial then 0 else math.min(7, state.misses + 1)end
 			state.lastHatch = { id = choice.id, petId = petId, duplicate = duplicate,
 				family = family, mastery = state.mastery[family], rare = pet.trial ~= nil, recipe = value,
 				masteryRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family]),

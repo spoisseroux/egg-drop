@@ -1,0 +1,754 @@
+{
+  "runtimeSources": [
+    {
+      "path": "src/shared/AppearanceCatalog.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.AppearanceCatalog",
+      "utf8Bytes": 3632,
+      "sha256": "c7eae2072a406e191466e81ccb328620b6f988e881631ef5c9a4163c37554c23"
+    },
+    {
+      "path": "src/shared/BoardConfig.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.BoardConfig",
+      "utf8Bytes": 2899,
+      "sha256": "082a7ea74838e828f8a17c342f7d24aeb2141bda8369ab8df4ef57296128095d"
+    },
+    {
+      "path": "src/shared/DailyContracts.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DailyContracts",
+      "utf8Bytes": 2140,
+      "sha256": "313b13898eeb6ea89ec009a9c648d1c06b3ec430596bd337353f787babb60452"
+    },
+    {
+      "path": "src/shared/DeckBackgrounds.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckBackgrounds",
+      "utf8Bytes": 243,
+      "sha256": "4f8c0448f094540996cefc62f8c4c5b60267441fb2ae179f8e860892f3b822b1"
+    },
+    {
+      "path": "src/shared/DeckPalette.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckPalette",
+      "utf8Bytes": 446,
+      "sha256": "651065f211a158e0dfa14feb2eb23d48146168c96319842645f7b781b7766193"
+    },
+    {
+      "path": "src/shared/DeckSettings.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckSettings",
+      "utf8Bytes": 275,
+      "sha256": "90d28607e5fc5bc4f745f6257edf33e2b3476101ee011c9ca5575306e44a89e2"
+    },
+    {
+      "path": "src/shared/DeckStickerArt.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckStickerArt",
+      "utf8Bytes": 8012,
+      "sha256": "2f08016c47611e101d3c19574d3a6fd1032045a0832cf8f2c811a547fe99ed2d"
+    },
+    {
+      "path": "src/shared/DeckStickers.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckStickers",
+      "utf8Bytes": 1629,
+      "sha256": "edf3781484477779b76f5b8530e198acfe5390a85f154992ab266542901a6c2c"
+    },
+    {
+      "path": "src/shared/DeckThemes.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.DeckThemes",
+      "utf8Bytes": 5489,
+      "sha256": "f22b96a8f398c70e5619b3c5653beabfce3648eeb864fa966556f02963dd14eb"
+    },
+    {
+      "path": "src/shared/EggCatalog.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.EggCatalog",
+      "utf8Bytes": 2507,
+      "sha256": "660983366284332f8d88b2fc713afb8a83180a125c8f4f4ee4fa8fde032b33ee"
+    },
+    {
+      "path": "src/shared/FamilyMastery.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.FamilyMastery",
+      "utf8Bytes": 2658,
+      "sha256": "7524b85301f7873214aa6ad180ec15869871700fd297e70badd8cc050d98a615"
+    },
+    {
+      "path": "src/shared/FieldObjectives.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.FieldObjectives",
+      "utf8Bytes": 4871,
+      "sha256": "48ebb696be31cebe82e81e57d2782f3273dd7edb6ea2a3673cc111d9ce1f230a"
+    },
+    {
+      "path": "src/shared/GardenActivity.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.GardenActivity",
+      "utf8Bytes": 13078,
+      "sha256": "928639cfba25f02f3da6c78f5a0459fd18d58abcc4fdd38937c747becfcf47f6"
+    },
+    {
+      "path": "src/shared/GardenLayout.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.GardenLayout",
+      "utf8Bytes": 908,
+      "sha256": "1e4d9e3336a9cfa079fcf80c8ac3a864389292e11b398379b52a41442489a8cd"
+    },
+    {
+      "path": "src/shared/GardenPathPlanner.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.GardenPathPlanner",
+      "utf8Bytes": 4087,
+      "sha256": "d92709f95eebcb7dd96ce76808e311e9f867f07b1b5c8045048763eff4517878"
+    },
+    {
+      "path": "src/shared/GardenWalkability.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.GardenWalkability",
+      "utf8Bytes": 4360,
+      "sha256": "b7f7f98d5ff736e48c9678f33c4074a04ca4c3d707dc2a75fdb7c7195b9d08af"
+    },
+    {
+      "path": "src/shared/HollowWorldLayout.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.HollowWorldLayout",
+      "utf8Bytes": 1823,
+      "sha256": "ce891b754a4aa01807852aa18532b24da781dd9649816c628dcca7b1436e3cb8"
+    },
+    {
+      "path": "src/shared/HueCatalog.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.HueCatalog",
+      "utf8Bytes": 6081,
+      "sha256": "962a07344108bab4909b819bbc46cf0ea41b42612ca90d0605038fc3c2a44247"
+    },
+    {
+      "path": "src/shared/init.lua",
+      "dataModelPath": "ReplicatedStorage.Shared",
+      "utf8Bytes": 50,
+      "sha256": "a6e359e243c4c8a094b1c952bd2c5b26c9bfa75805c2f4137f98d4e9fbd3ccf2"
+    },
+    {
+      "path": "src/shared/JellyPalette.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.JellyPalette",
+      "utf8Bytes": 1560,
+      "sha256": "03a9c3d371740e4cc9814aa9b7fdb01b2baa5a31638ec19aaa73b2f76089044c"
+    },
+    {
+      "path": "src/shared/NewBabyPortraitDefinitions.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.NewBabyPortraitDefinitions",
+      "utf8Bytes": 1248,
+      "sha256": "4cae92cb6df245ca0097692bc6ae8cf50ab9a5159e09366830ec1c8afaa2b050"
+    },
+    {
+      "path": "src/shared/NewBabyRigDefinitions.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.NewBabyRigDefinitions",
+      "utf8Bytes": 24686,
+      "sha256": "868106aaf2163b40380c92a21c788f1e6521e144aa310c0d0cd3537c1a34d313"
+    },
+    {
+      "path": "src/shared/PetBaseColors.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetBaseColors",
+      "utf8Bytes": 583,
+      "sha256": "f8aeab12a9a9f03ee8f89ee919923b979acf5e8d1c4e92fb31d9e5b5040285b2"
+    },
+    {
+      "path": "src/shared/PetCatalog.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetCatalog",
+      "utf8Bytes": 2939,
+      "sha256": "07563315a27b37f634832c8fce1079ad94bbf1adda1c2333df7d8ceabc0dd6c5"
+    },
+    {
+      "path": "src/shared/PetCharmCatalog.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetCharmCatalog",
+      "utf8Bytes": 650,
+      "sha256": "0f0edf1e996ebc85fa7d2770c16e9a82c703e294d0036ce575a028fdbe634b78"
+    },
+    {
+      "path": "src/shared/PetPalette.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetPalette",
+      "utf8Bytes": 2217,
+      "sha256": "8aa8d7f2b4135044d154a0796bdc0bb4924488c370fd59970373d584776c5a18"
+    },
+    {
+      "path": "src/shared/PetPortraitDefinitions.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetPortraitDefinitions",
+      "utf8Bytes": 556,
+      "sha256": "b1880d3828876af5d073c3f95bbfc0455e130a96db99a8a4f6a575f16211c336"
+    },
+    {
+      "path": "src/shared/PetRigDefinitions.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PetRigDefinitions",
+      "utf8Bytes": 8181,
+      "sha256": "32547df48ec71d58eaeb73cfd5f9a961ea0863ee3754272368a0a61f856f5980"
+    },
+    {
+      "path": "src/shared/PocketTrials.lua",
+      "dataModelPath": "ReplicatedStorage.Shared.PocketTrials",
+      "utf8Bytes": 1298,
+      "sha256": "05aa8ccf4bba8851444c62ad8f592c8f1cf10f75e1c386d3f3b5cae6f0016ec7"
+    },
+    {
+      "path": "src/server/AppearanceIntent.lua",
+      "dataModelPath": "ServerScriptService.Server.AppearanceIntent",
+      "utf8Bytes": 3371,
+      "sha256": "60ef6ffb74ac5709b1832d81f4efb6db7929939c204fe7284dadf31b0dc2f9a9"
+    },
+    {
+      "path": "src/server/BoardRound.lua",
+      "dataModelPath": "ServerScriptService.Server.BoardRound",
+      "utf8Bytes": 1523,
+      "sha256": "6b7323a8ebc5a8dbe1e9aacf2755baaa09f6c28d748b23c355b12e0b1e9b1066"
+    },
+    {
+      "path": "src/server/BoardSimulation.lua",
+      "dataModelPath": "ServerScriptService.Server.BoardSimulation",
+      "utf8Bytes": 6613,
+      "sha256": "dcf7df7628e287e408f7c4858974853235d392e6d1fb980a69aff024147cbbc7"
+    },
+    {
+      "path": "src/server/CloseProgress.lua",
+      "dataModelPath": "ServerScriptService.Server.CloseProgress",
+      "utf8Bytes": 1287,
+      "sha256": "d7705770925b4850cb059ff79df4170f06a72420b07f9fc4b5c49c3914e4818a"
+    },
+    {
+      "path": "src/server/FieldRun.lua",
+      "dataModelPath": "ServerScriptService.Server.FieldRun",
+      "utf8Bytes": 5268,
+      "sha256": "772d2834e31616f212f744ff4b34bd1d671966fb6197a71ec3ce539fabf2edb9"
+    },
+    {
+      "path": "src/server/FirstSession.lua",
+      "dataModelPath": "ServerScriptService.Server.FirstSession",
+      "utf8Bytes": 1207,
+      "sha256": "9e0bec708085f1a3846ecebe02b2c831c3c61ff5495a47ede1454de452cd0dd8"
+    },
+    {
+      "path": "src/server/GardenState.lua",
+      "dataModelPath": "ServerScriptService.Server.GardenState",
+      "utf8Bytes": 22509,
+      "sha256": "ae021a23e3fcfaada3d682a87a7f7353d439aa3627560bba06eb67d4a9fda449"
+    },
+    {
+      "path": "src/server/GardenToyReturn.lua",
+      "dataModelPath": "ServerScriptService.Server.GardenToyReturn",
+      "utf8Bytes": 11435,
+      "sha256": "f96184b0172f3aebeac6179470359de1526e847b5b1b31ac9195fc72da842706"
+    },
+    {
+      "path": "src/server/HatchProgress.lua",
+      "dataModelPath": "ServerScriptService.Server.HatchProgress",
+      "utf8Bytes": 30825,
+      "sha256": "4b7ea6d5ede01128c89a5844a43296f3500ade62a5121392f2a638b48e329567"
+    },
+    {
+      "path": "src/server/HueState.lua",
+      "dataModelPath": "ServerScriptService.Server.HueState",
+      "utf8Bytes": 19852,
+      "sha256": "9d5708d72ce29af7ad4334510a7eaf43e61bddc80248a0582596b1ab3f5d17cc"
+    },
+    {
+      "path": "src/server/init.server.lua",
+      "dataModelPath": "ServerScriptService.Server",
+      "utf8Bytes": 48557,
+      "sha256": "10c7fd9b04f18440ad7026d9718b84ffa80d43c4449ebc331a9ae4b96dd3b360"
+    },
+    {
+      "path": "src/server/LegacyHueState.lua",
+      "dataModelPath": "ServerScriptService.Server.LegacyHueState",
+      "utf8Bytes": 15662,
+      "sha256": "56ae0bc2e61f5fc43a72b16ea4c3ce9741c2489f367f416437847f4769f978f4"
+    },
+    {
+      "path": "src/server/Lounge.lua",
+      "dataModelPath": "ServerScriptService.Server.Lounge",
+      "utf8Bytes": 7780,
+      "sha256": "18cae766cde796745dc048110452ed4f486bacc18a1de7d85446ec81065046e9"
+    },
+    {
+      "path": "src/server/LoungeArt.lua",
+      "dataModelPath": "ServerScriptService.Server.LoungeArt",
+      "utf8Bytes": 32198,
+      "sha256": "e4bd820f218940360fe636ac882d96c27be6aa03a6d22818157cc40bbd54d45e"
+    },
+    {
+      "path": "src/server/LoungeGardenArt.lua",
+      "dataModelPath": "ServerScriptService.Server.LoungeGardenArt",
+      "utf8Bytes": 4878,
+      "sha256": "599f9e8a8e37ea42c173592ba70f6986f96c2b254107434c182cf16ac8baea1d"
+    },
+    {
+      "path": "src/server/LoungeSpringArt.lua",
+      "dataModelPath": "ServerScriptService.Server.LoungeSpringArt",
+      "utf8Bytes": 5836,
+      "sha256": "c294c095e646467bccf78913a6255d52208b1af02de83b2ec8c58950e2c0c078"
+    },
+    {
+      "path": "src/server/PetAppearance.lua",
+      "dataModelPath": "ServerScriptService.Server.PetAppearance",
+      "utf8Bytes": 7015,
+      "sha256": "0ac072d84803e36e210cef7deadc3949c5bbf7cd80edee0cbd055546732e5b1c"
+    },
+    {
+      "path": "src/server/PetContact.lua",
+      "dataModelPath": "ServerScriptService.Server.PetContact",
+      "utf8Bytes": 6527,
+      "sha256": "5314f117f7b88458b12c84fd80a736e3e3bd2583dbfc67a6aaf3617473601254"
+    },
+    {
+      "path": "src/server/PlayerProgress.lua",
+      "dataModelPath": "ServerScriptService.Server.PlayerProgress",
+      "utf8Bytes": 16617,
+      "sha256": "70bf9b08ba6d8e00acb17dec885b70550f51b727492ad58daa26717a1f67b454"
+    },
+    {
+      "path": "src/server/ProgressStore.lua",
+      "dataModelPath": "ServerScriptService.Server.ProgressStore",
+      "utf8Bytes": 850,
+      "sha256": "78026fa0820d073e693cbc9e892ecdd410ad21d3e8eddc0397f89d964b8f611b"
+    },
+    {
+      "path": "src/server/RunReturn.lua",
+      "dataModelPath": "ServerScriptService.Server.RunReturn",
+      "utf8Bytes": 1960,
+      "sha256": "42b4053afeb50dfac43c2522004c61956921fd2410cb73aa6ac4b89640954294"
+    },
+    {
+      "path": "src/server/SessionProfile.lua",
+      "dataModelPath": "ServerScriptService.Server.SessionProfile",
+      "utf8Bytes": 1263,
+      "sha256": "8295d01301551c238e7fa187f6806c5c828e99fa0ddcaaf523d322d536a49c85"
+    },
+    {
+      "path": "src/client/AppearanceIntent.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.AppearanceIntent",
+      "utf8Bytes": 8338,
+      "sha256": "56eb59d855b19c6f7933808bb11b08ded62c1c8c21b12d1b3e60571ccb198c9e"
+    },
+    {
+      "path": "src/client/BoardAudio.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.BoardAudio",
+      "utf8Bytes": 12238,
+      "sha256": "6df86c3edb7c1723266f05a146301f9de3bfe57f32270350f1faa125f9f881df"
+    },
+    {
+      "path": "src/client/BoardQuestHUD.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.BoardQuestHUD",
+      "utf8Bytes": 5611,
+      "sha256": "22363c37b8f3244ca26a0c56c80dedaf1c54bc1083467e9c5a247430376dfe6a"
+    },
+    {
+      "path": "src/client/BonusPetVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.BonusPetVisual",
+      "utf8Bytes": 6519,
+      "sha256": "af794cb70d64e30b5b29bede859887c74f865ab171ea9300a2c30ce341d713bd"
+    },
+    {
+      "path": "src/client/CompanionHatchArt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.CompanionHatchArt",
+      "utf8Bytes": 4497,
+      "sha256": "973295486eaebf1027163f6d9b9b600255b70b35532cdc7d82ea86b6a5e2983d"
+    },
+    {
+      "path": "src/client/ControllerFocus.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.ControllerFocus",
+      "utf8Bytes": 6811,
+      "sha256": "66eb4d6685c1d7abbee0c2fbd05ee25d5744cb7e5648d714032b8c9a506f9e27"
+    },
+    {
+      "path": "src/client/DeckArt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckArt",
+      "utf8Bytes": 37824,
+      "sha256": "cba739c5012c67bb7229f2f92eb8514f711790fee502044d13be527b7909ad4d"
+    },
+    {
+      "path": "src/client/DeckBackdrop.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckBackdrop",
+      "utf8Bytes": 10623,
+      "sha256": "bc9e83d85e2d82e341cd886c3e890e00a5ad04b0510b608d428fd4e53525426c"
+    },
+    {
+      "path": "src/client/DeckLayout.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckLayout",
+      "utf8Bytes": 8462,
+      "sha256": "d886092c07b2b9893f5cadb24f702e7025526c2fa17b93b17698cea4b136ad28"
+    },
+    {
+      "path": "src/client/DeckMenu.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckMenu",
+      "utf8Bytes": 25022,
+      "sha256": "1c360ba4350e88502dcc311b3aebed2cb5ca39e346e5e2bf46fd5f8ba2fe39a8"
+    },
+    {
+      "path": "src/client/DeckPicker.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckPicker",
+      "utf8Bytes": 29834,
+      "sha256": "d861658f4339b0b95b02cf4c4c7b8b5ff542d1edfde23700431e46fff8445045"
+    },
+    {
+      "path": "src/client/DeckTransition.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckTransition",
+      "utf8Bytes": 6052,
+      "sha256": "11cb8e15148fa8869a6130c058b67fef232e5c6d965612e87d63b6ee7366969a"
+    },
+    {
+      "path": "src/client/DeckWordmark.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DeckWordmark",
+      "utf8Bytes": 4420,
+      "sha256": "ae92540edfc44500c5a92810e2301faaf904aecd61fd4fd956f2a91c76dea702"
+    },
+    {
+      "path": "src/client/DropDispenser.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.DropDispenser",
+      "utf8Bytes": 7231,
+      "sha256": "a7108a7c57d38665e63c8d83ffdc1265c858d4e7bd2f42f81015cac4720d302f"
+    },
+    {
+      "path": "src/client/EggArt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.EggArt",
+      "utf8Bytes": 3371,
+      "sha256": "7cb9e52382661b3b4420549280c7e5f7104baed42cc36e770b12f6e5a441da76"
+    },
+    {
+      "path": "src/client/EggHatchView.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.EggHatchView",
+      "utf8Bytes": 39745,
+      "sha256": "dcc6062dddfec61b9c7d5d18f920ebf47c0c1efdfb852b9ae9e16c561f062ec9"
+    },
+    {
+      "path": "src/client/FamilyCrest.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FamilyCrest",
+      "utf8Bytes": 3435,
+      "sha256": "46d9453058d27ed0d13d84116473a07237617a86a54b99fa144334bc9ee07974"
+    },
+    {
+      "path": "src/client/FieldEffects.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FieldEffects",
+      "utf8Bytes": 7007,
+      "sha256": "a1ae94e77846589795303148ef65f4bed84c640eeb66661d8b24f9549461fe29"
+    },
+    {
+      "path": "src/client/FieldQuestText.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FieldQuestText",
+      "utf8Bytes": 5686,
+      "sha256": "190216998b837a9621b8ca623ca8a0074911f3c2030c15a65667728c54a3561a"
+    },
+    {
+      "path": "src/client/FirstHatchGuide.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FirstHatchGuide",
+      "utf8Bytes": 6274,
+      "sha256": "ced8b81d62bd35b2075bc9d4c0876e93f705a4494a284ad58317f5dbb1820689"
+    },
+    {
+      "path": "src/client/FocusCharacterVisibility.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FocusCharacterVisibility",
+      "utf8Bytes": 2526,
+      "sha256": "45c9b4e859e5985b74b5989fee2cfb94a26b50c170d2b12e2ca3f86303a71d38"
+    },
+    {
+      "path": "src/client/FocusTransition.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.FocusTransition",
+      "utf8Bytes": 2487,
+      "sha256": "d4d0607688be113324f7bc636bc3201e40ccac3a7e6c70e93c94fa56452f3d99"
+    },
+    {
+      "path": "src/client/GardenClient.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.GardenClient",
+      "utf8Bytes": 6942,
+      "sha256": "cccfcac12e3faadcf12df00c984add18200613ccb70e5dce6f97a355a281dcd3"
+    },
+    {
+      "path": "src/client/GardenPetVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.GardenPetVisual",
+      "utf8Bytes": 13746,
+      "sha256": "d24432c13af3e132399f930879019d69513621c2da8e711770f12dadb9477f5b"
+    },
+    {
+      "path": "src/client/GardenToyIntent.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.GardenToyIntent",
+      "utf8Bytes": 1428,
+      "sha256": "99846c5793b76ba6c8602e38e532efebef2cee6ceb53740b132ed2048c1a2809"
+    },
+    {
+      "path": "src/client/GardenToyPrompt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.GardenToyPrompt",
+      "utf8Bytes": 5322,
+      "sha256": "17cbed1a07e05bf851b62ed915a60d680db50ca4459d9bb281888aa9f6ef4b04"
+    },
+    {
+      "path": "src/client/GardenToyVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.GardenToyVisual",
+      "utf8Bytes": 1207,
+      "sha256": "e412a0e92609d63430c3e0c219424b74dd4029d4eee4c3cdfbca22da19c28fad"
+    },
+    {
+      "path": "src/client/HandheldScreens.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HandheldScreens",
+      "utf8Bytes": 2320,
+      "sha256": "9baf84a612c286e271baeb3ab9d2326f95eef1ddd5d166c019dc5f776e8eb2ec"
+    },
+    {
+      "path": "src/client/HatchCinematic.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HatchCinematic",
+      "utf8Bytes": 28020,
+      "sha256": "3597754813a7d9102f4cde87dda34eb8dc0b7a09963128a6b9ebf7d4d530395b"
+    },
+    {
+      "path": "src/client/HatchNavigation.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HatchNavigation",
+      "utf8Bytes": 2730,
+      "sha256": "a4c395be8658282465239be34ff2563cc6f94296464e5dc7f50976b1e4636fa8"
+    },
+    {
+      "path": "src/client/HatchReveal.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HatchReveal",
+      "utf8Bytes": 4138,
+      "sha256": "fbc6bf748bf889a4977b88eceae47bbcdcc454a7de358cdbf0bd15cd749eb619"
+    },
+    {
+      "path": "src/client/HollowAmbience.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HollowAmbience",
+      "utf8Bytes": 7943,
+      "sha256": "2324c325c27414c952b445447a47c1614874d60ff1786e76930611453a075438"
+    },
+    {
+      "path": "src/client/HollowClock.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HollowClock",
+      "utf8Bytes": 6526,
+      "sha256": "63971bd3e2cafecffe53ce38437af07ba73b449586bebb95e149933d3f7d3fb9"
+    },
+    {
+      "path": "src/client/HueEggView.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HueEggView",
+      "utf8Bytes": 41528,
+      "sha256": "895b455db0d68f8a0d0ef34bd7e52f600116ff33190647d53c8753077566d138"
+    },
+    {
+      "path": "src/client/HueIntent.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HueIntent",
+      "utf8Bytes": 5895,
+      "sha256": "8d5e2a521b1286c3a0f50b709c2b57c6d2d9175d6d81cd91d131c1deeca4087f"
+    },
+    {
+      "path": "src/client/HueItemReveal.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HueItemReveal",
+      "utf8Bytes": 4157,
+      "sha256": "937ac62d7a9165f81b5956ee90aefab64daff058bedc2a60ba305bbe4fa7cb3a"
+    },
+    {
+      "path": "src/client/HueJarArt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.HueJarArt",
+      "utf8Bytes": 2565,
+      "sha256": "73cd5cacafea888217ba8835de841d7283cdcd65827c110093004426ec9f0b26"
+    },
+    {
+      "path": "src/client/init.client.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client",
+      "utf8Bytes": 121051,
+      "sha256": "53889eeb77bd81fab438369fbcbfa61eef0b2aa3529488cebc49467d352e665c"
+    },
+    {
+      "path": "src/client/JellyLCD.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.JellyLCD",
+      "utf8Bytes": 13644,
+      "sha256": "23161f8fed7a94786109c0d5aaf2756dd0e54e9ad75be51dc6656015ba6aa986"
+    },
+    {
+      "path": "src/client/JellySpanSurface.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.JellySpanSurface",
+      "utf8Bytes": 8843,
+      "sha256": "fbc41ba62bc09ab59d1c4b02861bed6b0b80b0f3f39eb9445b5b61c6e77d24f2"
+    },
+    {
+      "path": "src/client/JellySprite.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.JellySprite",
+      "utf8Bytes": 9772,
+      "sha256": "22bafe25bc90eac883c21a00dd897a10e4fbd5ae65aeb22676170a065768f266"
+    },
+    {
+      "path": "src/client/JellyVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.JellyVisual",
+      "utf8Bytes": 3314,
+      "sha256": "4a7018943c1fecf76f0c4ff507c097614fd716273f2aadc89811f07a5194017d"
+    },
+    {
+      "path": "src/client/JournalPromptPriority.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.JournalPromptPriority",
+      "utf8Bytes": 835,
+      "sha256": "142f8f50ae72620bb90d0bb32db60b4fa8d2431a066471f319003def5fb72cc5"
+    },
+    {
+      "path": "src/client/LegacyPetAppearance.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.LegacyPetAppearance",
+      "utf8Bytes": 3207,
+      "sha256": "80ddd62a31afb60db035139f1736482ed6ed6e99b0613f7df14cfd1b2d886b8a"
+    },
+    {
+      "path": "src/client/LoungeStations.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.LoungeStations",
+      "utf8Bytes": 7650,
+      "sha256": "ed23127f9fd1ec1498477023d10215a9be315b75b0aefc83af50de4a32510539"
+    },
+    {
+      "path": "src/client/OwnerSnapshot.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.OwnerSnapshot",
+      "utf8Bytes": 649,
+      "sha256": "a1b30ccbd43e2f59586ef0bc2db242bc6c0e1bc2d4571374a31dd42bff1dc433"
+    },
+    {
+      "path": "src/client/PetAffection.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetAffection",
+      "utf8Bytes": 6390,
+      "sha256": "b9fe269634d7a2633dc7e6a91eece9b73b48b15cb0bbf25c0d9c7ae4ba39cf98"
+    },
+    {
+      "path": "src/client/PetCharms.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetCharms",
+      "utf8Bytes": 3323,
+      "sha256": "042db3d7c2d00441689b20617c197779a13985befbe12d8336ec620c705e4158"
+    },
+    {
+      "path": "src/client/PetContactIntent.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetContactIntent",
+      "utf8Bytes": 2154,
+      "sha256": "809825f40b6cc611760d6af8f51612c2119e17be3625370c235ba14da8dd7214"
+    },
+    {
+      "path": "src/client/PetExpression.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetExpression",
+      "utf8Bytes": 848,
+      "sha256": "6412b5e0497b50884c5de5aaff5157024827a9b17f89b31861d3dec50f140757"
+    },
+    {
+      "path": "src/client/PetFace.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetFace",
+      "utf8Bytes": 907,
+      "sha256": "42399be02a298db59cb3dc619f02980922833a5e7e59abcd0ef58215ff6e7581"
+    },
+    {
+      "path": "src/client/PetFactory.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetFactory",
+      "utf8Bytes": 551,
+      "sha256": "44fcd65399c5e436af2e35f4b1e767d4930083ae89b1fb65043dbb56cacf229b"
+    },
+    {
+      "path": "src/client/PetFocusKey.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetFocusKey",
+      "utf8Bytes": 1967,
+      "sha256": "a7cd78d5fbce8b6072dfc045787f7436fcc23fb6333b7c881fbe433590f54321"
+    },
+    {
+      "path": "src/client/PetFocusUI.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetFocusUI",
+      "utf8Bytes": 27596,
+      "sha256": "f87707f0674602026cf9cc185b3fef36f1c1e58d6ac1b636a80d49ac109ef2a2"
+    },
+    {
+      "path": "src/client/PetFollow.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetFollow",
+      "utf8Bytes": 5878,
+      "sha256": "6adca246ad009d7c420c49b6be0173302810333001a678f6962054fbd58803bd"
+    },
+    {
+      "path": "src/client/PetGreetingShot.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetGreetingShot",
+      "utf8Bytes": 16188,
+      "sha256": "c101e81f51f98c21fdec0c614bacbe469852b5d60ec7b2e0ca0d80cab8a6c2ec"
+    },
+    {
+      "path": "src/client/PetIdleMotion.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetIdleMotion",
+      "utf8Bytes": 2791,
+      "sha256": "da0df33d9a14934bfc765d1c3d64e7798e5d24241f0b682209e97d3e73161150"
+    },
+    {
+      "path": "src/client/PetJournal.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetJournal",
+      "utf8Bytes": 16407,
+      "sha256": "a02d39f6f21894e6a4188ab28d4f12826ff9f8d17b5a2ffe4719f35d1abf1adc"
+    },
+    {
+      "path": "src/client/PetNightSurfaces.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetNightSurfaces",
+      "utf8Bytes": 3163,
+      "sha256": "b37c7b938b850525ee4d4d03f6bc1ed4d84d935c0c4067875030dece989d4570"
+    },
+    {
+      "path": "src/client/PetPortrait.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetPortrait",
+      "utf8Bytes": 5019,
+      "sha256": "addf6ab380f1db3281208ba5cbe74c30d47c0bc001850d71538ec02c32fd92df"
+    },
+    {
+      "path": "src/client/PetPoseSampler.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetPoseSampler",
+      "utf8Bytes": 6790,
+      "sha256": "5610b122b99d8cd120ea61262c743e09c06c717f1147aa0164391a9f32c0781e"
+    },
+    {
+      "path": "src/client/PetPrestige.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetPrestige",
+      "utf8Bytes": 485,
+      "sha256": "98690f0e4c3134112a424400412bc26472bd561b271485a698560142c6f37bee"
+    },
+    {
+      "path": "src/client/PetRigBounds.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetRigBounds",
+      "utf8Bytes": 1641,
+      "sha256": "a027dba689cd8511daa4db0c3e5b078907741ce2be161d0de23049be658a39f4"
+    },
+    {
+      "path": "src/client/PetToyPose.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PetToyPose",
+      "utf8Bytes": 677,
+      "sha256": "d7987b59d871653ee2251bc4a8aaf68b4994ac7d4acc0b9234dc53d867c39dc0"
+    },
+    {
+      "path": "src/client/PipVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PipVisual",
+      "utf8Bytes": 8497,
+      "sha256": "2ea75064c4d81b05ab6fa61f4833d770751f8593e524f6d4138fdec3f30563d8"
+    },
+    {
+      "path": "src/client/PresentationPolicy.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PresentationPolicy",
+      "utf8Bytes": 1769,
+      "sha256": "dad0d11db8f85e1bc9b565b8f49b3fee624e71e2c146b1a37be35db592543326"
+    },
+    {
+      "path": "src/client/PuddleVisual.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.PuddleVisual",
+      "utf8Bytes": 8025,
+      "sha256": "2be54da62ea16901de0ef43a2766599053207750255cfb98e274fd61fb08943c"
+    },
+    {
+      "path": "src/client/RecapFeedback.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.RecapFeedback",
+      "utf8Bytes": 4104,
+      "sha256": "1816082da11c006f77cc80b0d44f8b8d71ba2882a43278ba04e6b35b892e1e16"
+    },
+    {
+      "path": "src/client/RoomCompanions.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.RoomCompanions",
+      "utf8Bytes": 4657,
+      "sha256": "8887c248472437016dbe6d33810d56c2577086dbd94f4ee11ca652b3ec1c6e6b"
+    },
+    {
+      "path": "src/client/RoomView.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.RoomView",
+      "utf8Bytes": 50258,
+      "sha256": "71c615ef42f77c8b389b2a1ff08fef48de04700a60355b23986d278d731976e3"
+    },
+    {
+      "path": "src/client/RoundRecap.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.RoundRecap",
+      "utf8Bytes": 36412,
+      "sha256": "e5daf09cb03146b898576697dec4f60fa9afa1d8e917d66c81a6ef783f5f762a"
+    },
+    {
+      "path": "src/client/RunReceipt.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.RunReceipt",
+      "utf8Bytes": 1952,
+      "sha256": "63acdf26e9c0b74f0124ee4657fe40182f321e3dc7dea79b527e501c92c3835e"
+    },
+    {
+      "path": "src/client/SaveNotice.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.SaveNotice",
+      "utf8Bytes": 2654,
+      "sha256": "cf97067a56013c5ea6b65a1e0716314e89610e2be1ae8d7bde3f7b32dc677add"
+    },
+    {
+      "path": "src/client/StarText.lua",
+      "dataModelPath": "StarterPlayer.StarterPlayerScripts.Client.StarText",
+      "utf8Bytes": 415,
+      "sha256": "f3720c3a9f2c9236a3294d31203d49c49f6d9dda5a2c0c64f112ed16bdb8a01e"
+    }
+  ]
+}

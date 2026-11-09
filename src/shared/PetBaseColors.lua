@@ -1,0 +1,10 @@
+-- Neutral undyed appearance. Saved hue anchors/doses and protected face palettes are separate.
+local Colors={body=Color3.fromHex("#FFFFFF"),secondary=Color3.fromHex("#C8C8C8")}
+function Colors.applyDefinition(definition)
+ definition.faceBody=definition.faceBody or definition.palette.body
+ definition.palette.body="#FFFFFF";definition.palette.secondary="#C8C8C8"
+ for _,piece in ipairs(definition.pieces)do
+  if piece.channel=="HandL"or piece.channel=="HandR"or piece.channel=="CuffL"or piece.channel=="CuffR"then piece.colorRole="secondary"end
+ end
+end
+return table.freeze(Colors)

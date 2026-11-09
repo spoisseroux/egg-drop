@@ -1,5 +1,6 @@
 local Definitions=require(script.Parent.PetRigDefinitions)
 local Hue=require(script.Parent.HueCatalog)
+local BaseColors=require(script.Parent.PetBaseColors)
 local Palette={}
 local legacy={
  bloom_pip={body="#F6A786",secondary="#74B971"},wick={body="#F79860",secondary="#F6C557"},orbit={body="#C7AEF3",secondary="#806BBA"},
@@ -10,6 +11,7 @@ function Palette.original(petId)
  if not source then return nil end
  local result={};for role,hex in pairs(source)do result[role]=Color3.fromHex(hex)end
  if not def then result.face=Color3.fromHex("#392846");result.mouth=result.face;result.ivory=Color3.fromHex("#FFF6E9");result.blush=Color3.fromHex("#F4D2F5")end
+ result.body=BaseColors.body;result.secondary=BaseColors.secondary
  return result
 end
 local function linear(c)return if c<=.04045 then c/12.92 else ((c+.055)/1.055)^2.4 end

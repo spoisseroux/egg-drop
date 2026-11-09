@@ -1,0 +1,507 @@
+{
+  "files": {
+    "1": {
+      "name": "ReplicatedStorage.Shared.BoardConfig",
+      "bytes": 2899
+    },
+    "2": {
+      "name": "ReplicatedStorage.Shared.DeckPalette",
+      "bytes": 446
+    },
+    "3": {
+      "name": "ReplicatedStorage.Shared.DeckThemes",
+      "bytes": 5489
+    },
+    "4": {
+      "name": "ReplicatedStorage.Shared.PetCatalog",
+      "bytes": 2939
+    },
+    "5": {
+      "name": "ReplicatedStorage.Shared.DeckStickers",
+      "bytes": 1629
+    },
+    "6": {
+      "name": "ReplicatedStorage.Shared.PocketTrials",
+      "bytes": 1298
+    },
+    "7": {
+      "name": "ReplicatedStorage.Shared.DeckSettings",
+      "bytes": 275
+    },
+    "8": {
+      "name": "ReplicatedStorage.Shared.EggCatalog",
+      "bytes": 2507
+    },
+    "9": {
+      "name": "ReplicatedStorage.Shared.DailyContracts",
+      "bytes": 2140
+    },
+    "10": {
+      "name": "ReplicatedStorage.Shared.FamilyMastery",
+      "bytes": 2658
+    },
+    "11": {
+      "name": "ReplicatedStorage.Shared.DeckStickerArt",
+      "bytes": 8012
+    },
+    "12": {
+      "name": "ReplicatedStorage.Shared.DeckBackgrounds",
+      "bytes": 243
+    },
+    "13": {
+      "name": "ReplicatedStorage.Shared.AppearanceCatalog",
+      "bytes": 3632
+    },
+    "14": {
+      "name": "ReplicatedStorage.Shared.HollowWorldLayout",
+      "bytes": 1823
+    },
+    "15": {
+      "name": "ReplicatedStorage.Shared.FieldObjectives",
+      "bytes": 4871
+    },
+    "16": {
+      "name": "ReplicatedStorage.Shared.JellyPalette",
+      "bytes": 1560
+    },
+    "17": {
+      "name": "ReplicatedStorage.Shared.GardenActivity",
+      "bytes": 13078
+    },
+    "18": {
+      "name": "ReplicatedStorage.Shared.GardenLayout",
+      "bytes": 908
+    },
+    "19": {
+      "name": "ReplicatedStorage.Shared.PetPortraitDefinitions",
+      "bytes": 556
+    },
+    "20": {
+      "name": "ReplicatedStorage.Shared.PetRigDefinitions",
+      "bytes": 8181
+    },
+    "21": {
+      "name": "ReplicatedStorage.Shared.PetPalette",
+      "bytes": 2217
+    },
+    "22": {
+      "name": "ReplicatedStorage.Shared.HueCatalog",
+      "bytes": 6081
+    },
+    "23": {
+      "name": "ReplicatedStorage.Shared.PetCharmCatalog",
+      "bytes": 650
+    },
+    "24": {
+      "name": "ReplicatedStorage.Shared.GardenWalkability",
+      "bytes": 4360
+    },
+    "25": {
+      "name": "ReplicatedStorage.Shared.NewBabyRigDefinitions",
+      "bytes": 24686
+    },
+    "26": {
+      "name": "ReplicatedStorage.Shared.GardenPathPlanner",
+      "bytes": 4087
+    },
+    "27": {
+      "name": "ReplicatedStorage.Shared.NewBabyPortraitDefinitions",
+      "bytes": 1248
+    },
+    "28": {
+      "name": "ReplicatedStorage.Shared.PetBaseColors",
+      "bytes": 583
+    },
+    "29": {
+      "name": "ReplicatedStorage.Shared",
+      "bytes": 50
+    },
+    "30": {
+      "name": "ServerScriptService.Server.BoardSimulation",
+      "bytes": 6613
+    },
+    "31": {
+      "name": "ServerScriptService.Server.FieldRun",
+      "bytes": 5268
+    },
+    "32": {
+      "name": "ServerScriptService.Server.HatchProgress",
+      "bytes": 30825
+    },
+    "33": {
+      "name": "ServerScriptService.Server.PlayerProgress",
+      "bytes": 16617
+    },
+    "34": {
+      "name": "ServerScriptService.Server.BoardRound",
+      "bytes": 1523
+    },
+    "35": {
+      "name": "ServerScriptService.Server.FirstSession",
+      "bytes": 1207
+    },
+    "36": {
+      "name": "ServerScriptService.Server.Lounge",
+      "bytes": 7780
+    },
+    "37": {
+      "name": "ServerScriptService.Server.LoungeArt",
+      "bytes": 32198
+    },
+    "38": {
+      "name": "ServerScriptService.Server.CloseProgress",
+      "bytes": 1287
+    },
+    "39": {
+      "name": "ServerScriptService.Server.ProgressStore",
+      "bytes": 850
+    },
+    "40": {
+      "name": "ServerScriptService.Server.SessionProfile",
+      "bytes": 1263
+    },
+    "41": {
+      "name": "ServerScriptService.Server.RunReturn",
+      "bytes": 1960
+    },
+    "42": {
+      "name": "ServerScriptService.Server.AppearanceIntent",
+      "bytes": 3371
+    },
+    "43": {
+      "name": "ServerScriptService.Server.PetContact",
+      "bytes": 6527
+    },
+    "44": {
+      "name": "ServerScriptService.Server.GardenState",
+      "bytes": 22509
+    },
+    "45": {
+      "name": "ServerScriptService.Server.PetAppearance",
+      "bytes": 7015
+    },
+    "46": {
+      "name": "ServerScriptService.Server.HueState",
+      "bytes": 19852
+    },
+    "47": {
+      "name": "ServerScriptService.Server.LegacyHueState",
+      "bytes": 15662
+    },
+    "48": {
+      "name": "ServerScriptService.Server.GardenToyReturn",
+      "bytes": 11435
+    },
+    "49": {
+      "name": "ServerScriptService.Server.LoungeGardenArt",
+      "bytes": 4878
+    },
+    "50": {
+      "name": "ServerScriptService.Server.LoungeSpringArt",
+      "bytes": 5836
+    },
+    "51": {
+      "name": "ServerScriptService.Server",
+      "bytes": 48557
+    },
+    "52": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.RoomView",
+      "bytes": 50258
+    },
+    "53": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.EggHatchView",
+      "bytes": 39745
+    },
+    "54": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HatchCinematic",
+      "bytes": 28020
+    },
+    "55": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetJournal",
+      "bytes": 16407
+    },
+    "56": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.BoardAudio",
+      "bytes": 12238
+    },
+    "57": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.BonusPetVisual",
+      "bytes": 6519
+    },
+    "58": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckArt",
+      "bytes": 37824
+    },
+    "59": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckPicker",
+      "bytes": 29834
+    },
+    "60": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckTransition",
+      "bytes": 6052
+    },
+    "61": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FirstHatchGuide",
+      "bytes": 6274
+    },
+    "62": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HandheldScreens",
+      "bytes": 2320
+    },
+    "63": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HatchReveal",
+      "bytes": 4138
+    },
+    "64": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HollowClock",
+      "bytes": 6526
+    },
+    "65": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.JellyLCD",
+      "bytes": 13644
+    },
+    "66": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.JellySprite",
+      "bytes": 9772
+    },
+    "67": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.JellyVisual",
+      "bytes": 3314
+    },
+    "68": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetPortrait",
+      "bytes": 5019
+    },
+    "69": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PipVisual",
+      "bytes": 8497
+    },
+    "70": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PuddleVisual",
+      "bytes": 8025
+    },
+    "71": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.RoomCompanions",
+      "bytes": 4657
+    },
+    "72": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.RoundRecap",
+      "bytes": 36412
+    },
+    "73": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckMenu",
+      "bytes": 25022
+    },
+    "74": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetFollow",
+      "bytes": 5878
+    },
+    "75": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetPrestige",
+      "bytes": 485
+    },
+    "76": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HatchNavigation",
+      "bytes": 2730
+    },
+    "77": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.RunReceipt",
+      "bytes": 1952
+    },
+    "78": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FamilyCrest",
+      "bytes": 3435
+    },
+    "79": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.JournalPromptPriority",
+      "bytes": 835
+    },
+    "80": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetGreetingShot",
+      "bytes": 16188
+    },
+    "81": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.RecapFeedback",
+      "bytes": 4104
+    },
+    "82": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetFocusUI",
+      "bytes": 27596
+    },
+    "83": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DropDispenser",
+      "bytes": 7231
+    },
+    "84": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckLayout",
+      "bytes": 8462
+    },
+    "85": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.BoardQuestHUD",
+      "bytes": 5611
+    },
+    "86": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.EggArt",
+      "bytes": 3371
+    },
+    "87": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PresentationPolicy",
+      "bytes": 1769
+    },
+    "88": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.LoungeStations",
+      "bytes": 7650
+    },
+    "89": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.SaveNotice",
+      "bytes": 2654
+    },
+    "90": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.ControllerFocus",
+      "bytes": 6811
+    },
+    "91": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.JellySpanSurface",
+      "bytes": 8843
+    },
+    "92": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetRigBounds",
+      "bytes": 1641
+    },
+    "93": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.AppearanceIntent",
+      "bytes": 8338
+    },
+    "94": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckBackdrop",
+      "bytes": 10623
+    },
+    "95": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HollowAmbience",
+      "bytes": 7943
+    },
+    "96": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FieldEffects",
+      "bytes": 7007
+    },
+    "97": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FieldQuestText",
+      "bytes": 5686
+    },
+    "98": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetContactIntent",
+      "bytes": 2154
+    },
+    "99": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetAffection",
+      "bytes": 6390
+    },
+    "100": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetFace",
+      "bytes": 907
+    },
+    "101": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.DeckWordmark",
+      "bytes": 4420
+    },
+    "102": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.GardenClient",
+      "bytes": 6942
+    },
+    "103": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetExpression",
+      "bytes": 848
+    },
+    "104": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetCharms",
+      "bytes": 3323
+    },
+    "105": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetFactory",
+      "bytes": 551
+    },
+    "106": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.GardenPetVisual",
+      "bytes": 13746
+    },
+    "107": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.GardenToyVisual",
+      "bytes": 1207
+    },
+    "108": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetIdleMotion",
+      "bytes": 2791
+    },
+    "109": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HueIntent",
+      "bytes": 5895
+    },
+    "110": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.StarText",
+      "bytes": 415
+    },
+    "111": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HueEggView",
+      "bytes": 41528
+    },
+    "112": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FocusTransition",
+      "bytes": 2487
+    },
+    "113": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.FocusCharacterVisibility",
+      "bytes": 2526
+    },
+    "114": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HueJarArt",
+      "bytes": 2565
+    },
+    "115": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.LegacyPetAppearance",
+      "bytes": 3207
+    },
+    "116": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetPoseSampler",
+      "bytes": 6790
+    },
+    "117": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.OwnerSnapshot",
+      "bytes": 649
+    },
+    "118": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.HueItemReveal",
+      "bytes": 4157
+    },
+    "119": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetNightSurfaces",
+      "bytes": 3163
+    },
+    "120": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetFocusKey",
+      "bytes": 1967
+    },
+    "121": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.CompanionHatchArt",
+      "bytes": 4497
+    },
+    "122": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.GardenToyIntent",
+      "bytes": 1428
+    },
+    "123": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.GardenToyPrompt",
+      "bytes": 5322
+    },
+    "124": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client.PetToyPose",
+      "bytes": 677
+    },
+    "125": {
+      "name": "StarterPlayer.StarterPlayerScripts.Client",
+      "bytes": 121051
+    }
+  },
+  "place": 96451847774961,
+  "count": 125,
+  "errors": []
+}

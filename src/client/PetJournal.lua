@@ -37,7 +37,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},customizeButtons={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
-	self.title=text(card,"Title","Pet journal · 00/07","Heading")
+	self.title=text(card,"Title","Pet journal · 00/04","Heading")
 	self.baseTitle=self.title.Text
 	self.saveDetail=text(scroll,"SaveInstruction","","Body",Art.Amber);self.saveDetail.Visible=false
 	self.moreCue=Art.frame(card,"MoreBelow","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
@@ -56,6 +56,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 		text(entry,"ColorHint","","Supporting","muted")
 		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
 		self.cards[index]=entry
+        entry.Visible=Pets.isActive(pet)
         local customize=button(scroll,"Customize_"..pet.id,"",function()self:customizePet(index)end)
         customize:SetAttribute("AccessibleLabel","Customize "..pet.name)
         -- A separate sibling hit region never equips or visits the pet.
@@ -63,6 +64,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
         Art.frame(customize,"HangerBase","text",UDim2.new(.5,-15,.5,7),UDim2.fromOffset(30,2),customize.ZIndex+1)
         local neck=Art.text(customize,"Hook","?",UDim2.new(.5,-6,.5,-18),UDim2.fromOffset(13,18),"text",16,Art.Font.Action);neck.Rotation=180
         self.customizeButtons[index]=customize
+        customize.Visible=entry.Visible
 	end
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
@@ -98,7 +100,7 @@ function Journal:layout()
 	local minColumn=240
 	for index,entry in ipairs(self.cards)do
 		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.ColorHint,"Supporting",short);Art.type(entry.Track,"Supporting",short)
-		if not Pets.collection[index].trial then
+		if entry.Visible and Pets.isActive(Pets.collection[index])then
 			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+148,Art.textWidth(entry.ColorHint)+148)
 		end
 	end
@@ -111,7 +113,9 @@ function Journal:layout()
 		local h=Art.textHeight(self.saveDetail,bodyW-8,24);place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
 	end
 	while index<=#self.cards do
-		local group=if columns==2 and not Pets.collection[index].trial then math.min(2,#Pets-index+1)else 1
+		if not self.cards[index].Visible then index+=1;continue end
+		local nextEntry=self.cards[index+1]
+		local group=if columns==2 and Pets.isActive(Pets.collection[index])and nextEntry and nextEntry.Visible and Pets.isActive(Pets.collection[index+1])then 2 else 1
 		local rowW=if group==2 then (bodyW-12)/2 else bodyW-8
 		local rowH=76
 		for slot=index,index+group-1 do
@@ -174,7 +178,7 @@ end
 function Journal:getControllerTarget()
 	local track
 	for _,entry in ipairs(self.cards)do
-		if entry.Selectable and entry.Interactable then
+		if entry.Visible and entry.Selectable and entry.Interactable then
 			if entry:GetAttribute("ControllerOwned")then return entry end
 			if entry.Track.Visible and not track then track=entry end
 		end
@@ -192,13 +196,15 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
     self.hasColorPets=inventoryMask~=nil and (bit32.band(inventoryMask,3)~=0)
     if self.colorsButton then self.colorsButton.Visible=self.hasColorPets;self.colorsButton.Interactable=self.hasColorPets end
 	self:bumpControllerEpoch()
-	self.baseTitle=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
+	self.baseTitle="Pet journal · "..Pets.collectionSummary(owned,trials,inventoryMask)
 	local firstOwned,firstTrack
 	for index,entry in ipairs(self.cards)do
 		local pet=Pets.collection[index];local unlocked=Pets.isUnlocked(pet,owned,trials,inventoryMask)
+		local active=Pets.isActive(pet);entry.Visible=active or unlocked
+		entry.Species.Text=if active then pet.name elseif unlocked then pet.name.." · Retained"else ""
 		local equipped=unlocked and pet.id==companionId
-		local trackable=inventoryMask==nil and pet.trial~=nil and not unlocked
-		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
+        local trackable=false
+		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif active then "Hatch from eggs"else ""
         entry.ColorHint.Text=if unlocked then "Customize with the hanger"else ""
         entry.ColorHint.Visible=entry.ColorHint.Text~=""
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
@@ -212,8 +218,9 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		entry.Interactable,entry.Selectable=unlocked or trackable,unlocked or trackable
 		entry:SetAttribute("ControllerOwned",unlocked)
         local customize=self.customizeButtons[index];customize.Interactable,customize.Selectable=unlocked,unlocked
-        customize:SetAttribute("AcquisitionCondition",if unlocked then "Owned"else "Hatch from Companion Eggs")
-        customize:SetAttribute("DisabledReason",if unlocked then nil else "Hatch from Companion Eggs")
+        customize.Visible=entry.Visible
+        customize:SetAttribute("AcquisitionCondition",if unlocked then "Owned"elseif active then "Hatch from Companion Eggs"else nil)
+        customize:SetAttribute("DisabledReason",if unlocked or not active then nil else "Hatch from Companion Eggs")
         Art.control(customize,false,unlocked)
 		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end
 	end

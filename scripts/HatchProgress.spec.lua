@@ -49,20 +49,16 @@ return function(Hatching, Catalog)
 		table.insert(passed, name)
 	end
 
-	test("all catalog outcomes and rare protection", function()
-		for index, unit in ipairs({ 0, 0.35, 0.60, 0.80, 0.90, 0.95, 0.98 }) do
-			assert(Catalog.roll("meadow", 0, unit) == Catalog.ById.meadow.weights[index].id)
+	test("active four outcomes normalize safely even at the retained rare threshold", function()
+		local ids={"pip","puddle","wick","orbit"}
+		for index,unit in ipairs({17.5/90,47.5/90,70/90,85/90})do
+			for misses=0,7 do assert(Catalog.roll("meadow",misses,unit)==ids[index])end
 		end
-		assert(Catalog.roll("meadow", 7, 0) == "bloom_pip")
-		assert(Catalog.roll("meadow", 7, 0.50) == "foxfire_wick")
-		assert(Catalog.roll("meadow", 7, 0.80) == "eclipse_orbit")
-		assert(Catalog.roll("sprout", 7, 0.999) == "bloom_pip")
-		for _, recipe in ipairs(Catalog.Order) do
-			for _, misses in ipairs({ 0, 7 }) do
-				local sum = 0
-				for _, entry in ipairs(Catalog.odds(recipe, misses)) do sum += entry.weight end
-				assert(math.abs(sum - 100) < 0.000001)
-			end
+		assert(not Catalog.hasRarePool("meadow")and #Catalog.odds("sprout",7)==0)
+		for misses=0,7 do
+			local sum=0;local odds=Catalog.odds("meadow",misses);assert(#odds==4)
+			for i,entry in ipairs(odds)do assert(entry.id==ids[i]);sum+=entry.weight end
+			assert(math.abs(sum-100)<.000001)
 		end
 	end)
 
@@ -247,25 +243,40 @@ return function(Hatching, Catalog)
 		assert(nextVisit.state.nectar == 18)
 	end)
 
-	test("every advertised result grants once and rare protection resets", function()
-		for index, sample in ipairs({ 0, 0.35, 0.60, 0.80, 0.90, 0.95, 0.98 }) do
-			local _, c, adapter = fixture()
-			c.sample = sample
-			local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-			assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 6))
-			command(h, "hatch", "meadow")
-			local expected = Catalog.ById.meadow.weights[index].id
-			assert(h.state.lastHatch.petId == expected and Catalog.isOwned(h.state.inventoryMask, expected))
-			assert(h.state.nectar == 0)
+	test("every active outcome grants once and absent rare pool freezes earned misses", function()
+		for index,sample in ipairs({17.5/90,47.5/90,70/90,85/90})do
+			local _,c,adapter=fixture();c.sample=sample
+			local h=Hatching.load(1,{rank=1},adapter("a"))
+			assert(Hatching.award(h,1,6)and Hatching.award(h,2,6))
+			command(h,"hatch","meadow")
+			local expected=Catalog.ById.meadow.weights[index].id
+			assert(h.state.lastHatch.petId==expected and Catalog.isOwned(h.state.inventoryMask,expected))
+			assert(h.state.nectar==0 and h.state.misses==0 and not h.state.lastHatch.rare)
 		end
-		local db, c, adapter = fixture()
-		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-		db.player_1.hatching.misses = 7
-		assert(Hatching.renew(h))
-		assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 6) and Hatching.award(h, 3, 6))
-		c.sample = 0.01
-		command(h, "hatch", "meadow")
-		assert(h.state.lastHatch.petId == "bloom_pip" and h.state.lastHatch.rare and h.state.misses == 0)
+		for misses=0,7 do
+			local db,c,adapter=fixture();local h=Hatching.load(1,{rank=1},adapter("a"))
+			db.player_1.hatching.misses=misses;assert(Hatching.renew(h))
+			assert(Hatching.award(h,1,6)and Hatching.award(h,2,6));c.sample=.999
+			command(h,"hatch","meadow")
+			assert(h.state.lastHatch.petId=="orbit"and not h.state.lastHatch.rare and h.state.misses==misses)
+			command(h,"ack",h.state.lastHatch.id);assert(Hatching.release(h))
+			local again=Hatching.load(1,{},adapter("b"));assert(again.state.misses==misses)
+		end
+	end)
+
+	test("paid retired outcome receipts survive reload and acknowledge without reroll or regrant",function()
+		for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do
+			local db,c,adapter=fixture();local h=Hatching.load(1,{rank=1},adapter("a"));assert(Hatching.release(h))
+			local saved=db.player_1.hatching
+			saved.nectar=47;saved.misses=7;saved.inventoryMask=bit32.bor(saved.inventoryMask,Catalog.bit(id))
+			saved.lastHatch={id="old-paid-"..id,petId=id,rare=true,duplicate=false,recipe="sprout",family=Catalog.family(id),mastery=0}
+			local again=Hatching.load(1,{},adapter("b"));local receipt=again.state.lastHatch
+			assert(again.status=="Ready"and receipt.id=="old-paid-"..id and receipt.petId==id and receipt.rare)
+			local mask,random=again.state.inventoryMask,c.randomCalls
+			command(again,"ack",receipt.id)
+			assert(again.state.lastHatch==nil and again.state.nectar==47 and again.state.inventoryMask==mask and again.state.misses==7 and c.randomCalls==random)
+			assert(not Hatching.command(again,"ack",receipt.id,again.state.revision))
+		end
 	end)
 
 	local function runSummary(h, overrides)

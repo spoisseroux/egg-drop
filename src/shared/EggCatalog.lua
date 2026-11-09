@@ -11,8 +11,6 @@ local Catalog = {
 			weights = {
 				{ id = "pip", weight = 35 }, { id = "puddle", weight = 25 },
 				{ id = "wick", weight = 20 }, { id = "orbit", weight = 10 },
-				{ id = "bloom_pip", weight = 5 }, { id = "foxfire_wick", weight = 3 },
-				{ id = "eclipse_orbit", weight = 2 },
 			},
 		},
 		sprout = {
@@ -47,19 +45,26 @@ end
 
 function Catalog.odds(recipeId, misses)
 	local recipe = Catalog.ById[recipeId]
-	if not recipe then return {} end
-	local guarantee = (misses or 0) >= Catalog.RareGuarantee
+	if not recipe or recipe.retired then return {} end
+	local guarantee = (misses or 0) >= Catalog.RareGuarantee and Catalog.hasRarePool(recipeId)
 	local total = 0
 	for _, entry in ipairs(recipe.weights) do
-		if not guarantee or Pets.byId[entry.id].trial then total += entry.weight end
+		if Pets.isActive(entry.id)and(not guarantee or Pets.byId[entry.id].trial)then total += entry.weight end
 	end
 	local odds = {}
 	for _, entry in ipairs(recipe.weights) do
-		if not guarantee or Pets.byId[entry.id].trial then
+		if Pets.isActive(entry.id)and(not guarantee or Pets.byId[entry.id].trial)then
 			table.insert(odds, { id = entry.id, weight = entry.weight / total * 100 })
 		end
 	end
 	return odds
+end
+
+function Catalog.hasRarePool(recipeId)
+ local recipe=Catalog.ById[recipeId]
+ if not recipe or recipe.retired then return false end
+ for _,entry in ipairs(recipe.weights)do if entry.weight>0 and Pets.isActive(entry.id)and Pets.byId[entry.id].trial then return true end end
+ return false
 end
 
 function Catalog.roll(recipeId, misses, unit)

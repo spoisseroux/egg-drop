@@ -1,4 +1,5 @@
 local Trials = require(script.Parent.PocketTrials)
+local BaseColors = require(script.Parent.PetBaseColors)
 
 local Pets = {
 	{ id = "pip", name = "Zivvi", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
@@ -22,7 +23,15 @@ end
 Pets.byId = {}
 for index, pet in ipairs(Pets.collection) do
 	pet.index = index
+	pet.color, pet.accent = BaseColors.body, BaseColors.secondary
 	Pets.byId[pet.id] = pet
+end
+-- Permanent collection/order/ownership bits above retain all seven saved identities.
+-- Availability is a separate set; retiring an outcome never deletes an owned pet.
+Pets.active = table.freeze({Pets.byId.pip, Pets.byId.puddle, Pets.byId.wick, Pets.byId.orbit})
+Pets.activeById = table.freeze({pip=true,puddle=true,wick=true,orbit=true})
+function Pets.isActive(pet)
+ return Pets.activeById[if type(pet)=="table"then pet.id else pet]==true
 end
 
 function Pets.isUnlocked(pet, rank, trials, inventoryMask)
@@ -50,6 +59,17 @@ function Pets.ownedCount(rank, trials, inventoryMask)
 		end
 	end
 	return count
+end
+
+function Pets.activeOwnedCount(rank, trials, inventoryMask)
+ local count=0
+ for _,pet in ipairs(Pets.active)do if Pets.isUnlocked(pet,rank,trials,inventoryMask)then count+=1 end end
+ return count
+end
+function Pets.collectionSummary(rank,trials,inventoryMask)
+ local active=Pets.activeOwnedCount(rank,trials,inventoryMask)
+ local retained=Pets.ownedCount(rank,trials,inventoryMask)-active
+ return string.format("%02d/%02d",active,#Pets.active)..(if retained>0 then " · "..retained.." retained"else "")
 end
 
 return Pets

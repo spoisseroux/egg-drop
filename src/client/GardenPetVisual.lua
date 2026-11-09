@@ -20,7 +20,7 @@ local function configure(part,color)
 end
 local function add(self,part,def,frame,size)
  configure(part,self.colors[def.colorRole])
- if def.colorRole=="blush"then part.Color=Color3.fromHex(self.definition.palette.body):Lerp(self.colors.blush,.82)end
+ if def.colorRole=="blush"then part.Color=Color3.fromHex(self.definition.faceBody or self.definition.palette.body):Lerp(self.colors.blush,.82)end
  part.Name=def.name;part.Size=size;part.Parent=self.model
  local role=if def.channel=="Charm"then "charm"else nil
  local entry={part=part,name=def.name,colorRole=def.colorRole,channel=def.channel,frame=frame,size=size,role=role,color=part.Color,faceRole=if def.colorRole=="blush"then "cheek"elseif string.find(def.name,"Glint")then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material}

@@ -318,7 +318,7 @@ function View:refresh()
    end
   end
  elseif self.assignment then self.quote.Text="Choose a pet and channel for "..names[self.assignment.itemId]..". Review the exact change before using one jar."
- elseif self.page=="buy"then self.quote.Text="8 Stars · one saved jar\nRose fruit 20% · Tide fruit 20% · Citrus fruit 20% · Iris fruit 20% · Reset Hue 20%\nReset clears one channel. Store any result. Duplicate jars stack. Companion rare protection is unchanged."end
+ elseif self.page=="buy"then self.quote.Text="8 Stars · one saved jar\nRose fruit 20% · Tide fruit 20% · Citrus fruit 20% · Iris fruit 20% · Reset Hue 20%\nReset clears one channel. Store any result. Duplicate jars stack."end
  local decision=confirming and q.itemId~=nil
  for _,node in ipairs({self.confirmTarget,self.confirmDelta,self.confirmStock,self.confirmWarning})do node.Visible=decision end
  if decision then
