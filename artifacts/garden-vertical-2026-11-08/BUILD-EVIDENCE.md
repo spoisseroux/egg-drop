@@ -1,6 +1,6 @@
-# Garden vertical slice — verified private-build candidate
+# Garden vertical slice — private v225 verified
 
-The bounded two-pet foundation passed native verification and both reviews. Commit/push and private publication are the remaining release steps; v180/runtime7910cf8 stays the published checkpoint until the new version is verified. This is a private prototype, not production-readiness certification.
+The bounded two-pet foundation passed native verification and both reviews, was committed/pushed as9ca53a3, and is **private v225 Published**. Refreshed Studio Version History shows **Garden companions - 9ca53a3**. Publication proof: `private-published-v225-9ca53a3.png`. This supersedes v180/runtime7910cf8. This is a private prototype, not production-readiness certification.
 
 ## Models and source gate
 

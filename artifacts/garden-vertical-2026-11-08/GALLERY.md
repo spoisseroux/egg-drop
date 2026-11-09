@@ -1,5 +1,7 @@
 # Zivvi and Ovelle — playable garden foundation
 
+Private v225 Published, runtime9ca53a3. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop).
+
 Open [the local gallery](C:/Users/skunk/Documents/Development/egg-drop/artifacts/garden-vertical-2026-11-08/GALLERY.html) if your Markdown viewer hides images. The image paths below are absolute for the Codex viewer. See [exact evidence and limitations](C:/Users/skunk/Documents/Development/egg-drop/artifacts/garden-vertical-2026-11-08/BUILD-EVIDENCE.md).
 
 ## Two authored companions

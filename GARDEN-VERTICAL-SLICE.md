@@ -37,7 +37,7 @@ Native fixtures, injected peer snapshots and actual multi-client evidence are la
 
 ## Status
 
-Architecture, code and final raster reviews passed. Both authored pets are imported and render through the production factory. Single-client, phone-emulator and two-client controls passed, including the final closer camera. The verified candidate is ready for commit/push and private publication; the published version is tracked in `PLAY-BUILD.md`.
+Architecture, code and final raster reviews passed. Both authored pets are imported and render through the production factory. Single-client, phone-emulator and two-client controls passed, including the final closer camera. Runtime9ca53a3 is committed/pushed and **private v225 Published**, verified in refreshed Studio Version History. `PLAY-BUILD.md` is the current player handoff.
 
 ### Native integration results
 

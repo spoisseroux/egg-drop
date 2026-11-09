@@ -1,6 +1,6 @@
 # Egg Drop — garden companions and arcade play build
 
-**Garden companion checkpoint: verified, publication pending.** The published private place is still v180/runtime7910cf8 until the new publication is verified. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop). Nursery, paid products and public release remain deferred.
+**Private v225 Published — Garden companions - 9ca53a3**, confirmed in refreshed Studio Version History after tests, commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/garden-vertical-2026-11-08/private-published-v225-9ca53a3.png). This supersedes private v180 and includes the intervening handheld/palette/recap/hatch polish. Nursery, paid products and public release remain deferred.
 
 The repository now includes the accepted handheld, shared palette, recap and hatch polish, plus Astra's first two authored baby pets, implemented by Sol. **Zivvi replaces Pip's common visual/name; Ovelle replaces Puddle's.** Their original stored IDs remain stable, preserving earned ownership and pending receipts. The other five visuals are temporary legacy pets. Stars, the remaining two new base forms, egg-item pools and the broader garden redesign are planned, not implemented in this checkpoint.
 
