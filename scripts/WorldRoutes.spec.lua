@@ -12,6 +12,7 @@ return function(server,artSource)
 	end
 	local shared=game.ReplicatedStorage.Shared:Clone();shared.Name="_WorldRoutesShared";shared.Parent=server
 	local layout=require(shared.HollowWorldLayout)
+    local gardenLayout=require(shared.GardenLayout)
 	local realGame=game
 	local fakeGame={}
 	function fakeGame:GetService(name)if name=="ReplicatedStorage"then return{Shared=shared}end;return realGame:GetService(name)end
@@ -100,7 +101,7 @@ return function(server,artSource)
 				end
 			end end
 		end)
-		test("hub stations tree root and original bridge positions stay authored",function()
+		test("hub stations and tree root stay authored while bridge gains4.5usable clearance",function()
 			assert(near(room.CustomizeTop.Position,Vector3.new(-11,6.51,-6.3)))
 			assert(near(room.JournalTop.Position,Vector3.new(11,6.51,-6.3)))
 			assert(near(room.EggsSign.Position,Vector3.new(0,5.5,-3.5)))
@@ -108,9 +109,45 @@ return function(server,artSource)
 			local tree,bridge=false,false
 			for _,p in ipairs(parts)do
 				if p.Name=="HatchTreeTrunk"and p.CanCollide then tree=true;assert(p.Position.X<0 and p.Position.Z< -10)end
-				if p.Name=="BridgeRail"and math.abs(p.Position.X-17.6)<.001 then bridge=true;assert(math.abs(p.Position.Z+10.53)<.001 or math.abs(p.Position.Z+8.27)<.001)end
+				if p.Name=="BridgeRail"and math.abs(p.Position.X-17.6)<.001 then bridge=true;assert(math.abs(p.Position.Z+11.88)<.001 or math.abs(p.Position.Z+6.92)<.001)end
 			end;assert(tree and bridge)
+			local support=room.GardenBridgeSupport;assert(support.CanCollide and support.CanQuery and support.Size.Z==4.5 and support:GetAttribute("GardenWalkableSpan")=="PrimaryBridge")
+			assert(room.NookSupport.CanCollide and room.NookSupport:GetAttribute("GardenWalkableSpan")=="RestNook")
+			assert(not room.ReturnGateEdge.CanCollide and not room.ReturnGateEdge.CanQuery)
 		end)
+        test("one return gate and two flush landing stones derive from the bench-apron toy anchors",function()
+            local toy=gardenLayout.Toy
+            assert(near(toy,Vector3.new(-2,4.025,17.5)))
+            assert(near(gardenLayout.ToyWest,toy+Vector3.new(-2.4,0,0))and near(gardenLayout.ToyEast,toy+Vector3.new(2.4,0,0)))
+            local gate=room.ReturnGateEdge;assert(math.abs(gate.Position.X-toy.X)<.0001 and math.abs(gate.Position.Z-toy.Z)<.0001 and not gate.CanCollide and not gate.CanQuery)
+            local glass,stones=0,{}
+            for _,p in ipairs(parts)do
+                if p.Name=="ReturnGateGlass"then glass+=1;assert(math.abs(p.Position.X-toy.X)<.0001 and math.abs(math.abs(p.Position.Z-toy.Z)-1.35)<.0001 and not p.CanCollide and not p.CanQuery)
+                elseif p.Name=="ReturnSlotStone"then table.insert(stones,p);assert(not p.CanCollide and not p.CanQuery)end
+            end
+            assert(glass==2 and #stones==2)
+            for _,slot in ipairs({gardenLayout.ToyWest,gardenLayout.ToyEast})do
+                local matched=0;for _,p in ipairs(stones)do if Vector2.new(p.Position.X-slot.X,p.Position.Z-slot.Z).Magnitude<.0001 then matched+=1;assert(math.abs(p.Position.Y+p.Size.Y*.5-slot.Y)<.0001)end end
+                assert(matched==1)
+            end
+        end)
+        test("toy reach excludes every spawn and station while both natural owner lanes stay clear",function()
+            local toy=gardenLayout.Toy
+            for row=0,1 do for column=-2,2 do
+                local spawn=Vector2.new(column*5.5,4+row*5)
+                assert((spawn-Vector2.new(toy.X,toy.Z)).Magnitude>8.5,"toy priority overlaps a fresh spawn")
+            end end
+            for _,node in ipairs(room:GetDescendants())do
+                if node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")then
+                    local at=node.Parent.Position;assert(Vector2.new(at.X-toy.X,at.Z-toy.Z).Magnitude>7+node.MaxActivationDistance,"toy and station activation disks overlap")
+                end
+            end
+            for _,point in ipairs({Vector2.new(-4.8,20),Vector2.new(.8,20)})do
+                assert((point-Vector2.new(toy.X,toy.Z)).Magnitude<7)
+                assert(contains(room.Floor,point))
+                for _,p in ipairs(parts)do if p.CanCollide and p~=room.Floor then assert(not blocks(p,point),"owner lane blocked by "..p.Name)end end
+            end
+        end)
 		test("eight visible lamps use only four managed shadowless lights including original",function()
 			local lamps,lights=0,0
 			for _,p in ipairs(room:GetDescendants())do
@@ -118,7 +155,7 @@ return function(server,artSource)
 				if p:IsA("PointLight")then lights+=1;assert(p:GetAttribute("HollowLamp")and not p.Shadows)end
 			end;assert(lamps==8 and lights==4)
 		end)
-		test("exactly eighteen stable-name ambient parts carry complete immutable rest metadata",function()
+		test("seventeen stable-name ambient parts reuse budget including lawn glint and pennant",function()
 			local count=0
 			for _,p in ipairs(parts)do if p:GetAttribute("HollowAmbientKind")then
 				count+=1;assert(p.Name:sub(1,14)=="HollowAmbient_"and p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery,p.Name.." name/collision flags")
@@ -126,7 +163,8 @@ return function(server,artSource)
 				assert(p:GetAttribute("HollowRestTransparency")==p.Transparency,p.Name.." rest transparency mismatch: "..tostring(p:GetAttribute("HollowRestTransparency")).." actual="..tostring(p.Transparency))
 				assert(p:GetAttribute("HollowAmbientPeriod")>0 and typeof(p:GetAttribute("HollowAmbientAmplitude"))=="Vector3",p.Name.." period/amplitude")
 				local phase=p:GetAttribute("HollowAmbientPhase");assert(phase>=0 and phase<1,p.Name.." phase cycles")
-			end end;assert(count==18,"ambient count="..count)
+			end end;assert(count==17,"ambient count="..count)
+			assert(room:FindFirstChild("HollowAmbient_CreekLawnGlint")and room:FindFirstChild("HollowAmbient_BenchPennant"))
 		end)
 	end)
 	room:Destroy();shared:Destroy()

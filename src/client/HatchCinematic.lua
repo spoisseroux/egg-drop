@@ -4,6 +4,7 @@ local GuiService=game:GetService("GuiService")
 local Input=game:GetService("UserInputService")
 local TextService=game:GetService("TextService")
 local Art=require(script.Parent.DeckArt)
+local CompanionArt=require(script.Parent.CompanionHatchArt)
 local Portrait=require(script.Parent.PetPortrait)
 local Bounds=require(script.Parent.PetRigBounds)
 local Shot=require(script.Parent.PetGreetingShot)
@@ -199,21 +200,17 @@ function Cinematic:layout()
  self.center,self.bandTop,self.bandHeight=Vector2.new(heroX+heroW*.5,heroY+heroH*.5),heroY,heroH
  place(self.heroHost,heroX,heroY,heroW,heroH);self:fitHero(heroW,heroH,h);self.heroPixels=math.min(h*.55,heroH*.85)
  local r,c=self.heroPixels,self.center
- self.shell.Size=UDim2.fromOffset(r*.60,r*.80);self.shell.Position=UDim2.fromOffset(c.X,c.Y)
- self.cradle.Position=UDim2.fromOffset(c.X,c.Y+math.min(heroH*.40,r*.36));self.cradle.Size=UDim2.fromOffset(math.min(heroW,r*1.15),math.max(4,r*.11))
- self.halo.Position=UDim2.fromOffset(c.X,c.Y);self.halo.Size=UDim2.fromOffset(math.min(heroW,r*1.40),math.min(heroH,r*1.10))
+ self.discoveryArt:layout(heroX,heroY,heroW,heroH,c,r)
  if self.anticipation then place(self.anticipation,textX,math.max(0,h-40),textW,30)end
  self:paint()
 end
 
 function Cinematic:buildScene()
  self.pet=Pets.byId[self.result.petId]or Pets[1]
- self.stage=Art.frame(self.frame,"HatchStage","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),43)
- self.halo=circle(self.stage,"DiscoveryHalo",if self.result.rare then Art.Amber else "accent",44);self.halo.BackgroundTransparency=.92;self.haloStroke=Art.stroke(self.halo,if self.result.rare then Art.Amber else self.pet.color,.82,1)
- Art.bind(self.halo,{BackgroundColor3=function()return self.pet.color:Lerp(Art.paletteColor("accent"),.18)end})
- self.cradle=circle(self.stage,"CradleRing","raised",45);self.cradle.BackgroundTransparency=.65;Art.stroke(self.cradle,"line",.78,1)
- self.shell=circle(self.stage,"Shell",self.pet.color:Lerp(Art.Silver,.72),46);Art.shade(self.shell,1,.78);Art.stroke(self.shell,"accent",.2,2);self.shellScale=Instance.new("UIScale");self.shellScale.Parent=self.shell
- self.crack=label(self.shell,"Crack","╱╲","Heading","accent");self.crack.AnchorPoint=Vector2.new(.5,.5);self.crack.Position=UDim2.fromScale(.5,.5);self.crack.Size=UDim2.fromScale(.7,.7)
+ self.stage=Art.frame(self.frame,"HatchStage","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),43);self.stage.BackgroundTransparency=1
+ self.discoveryArt=CompanionArt.new(self.stage,self.result.rare==true)
+ self.halo,self.haloStroke,self.cradle=self.discoveryArt.disc,self.discoveryArt.discStroke,self.discoveryArt.cradle
+ self.shell,self.shellScale,self.crack=self.discoveryArt.shell,self.discoveryArt.shellScale,self.discoveryArt.crack
  self.resultRoot=Art.frame(self.frame,"Result","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),49);self.resultRoot.BackgroundTransparency=1
  self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
  local rare=self.result.rare==true
@@ -228,7 +225,8 @@ function Cinematic:buildScene()
  for i,node in ipairs(self.bits)do
   local index=i
   Art.bind(node,{BackgroundColor3=function()
-   if index>=13 and index<=16 then return Color3.fromHex("#FFF0CD"):Lerp(self.pet.color,.10)end
+   if index<=12 then return ({Color3.fromHex("#6CFFF1"),Color3.fromHex("#FFE860"),Color3.fromHex("#386BE2")})[(index-1)%3+1]end
+   if index>=13 and index<=16 then return Color3.fromHex("#FFF0CD")end
    if index>=17 and index<=20 then
     if index%2==1 then return Art.Amber end
     return if(self.pet.family or self.pet.id)=="orbit"then self.pet.color else self.pet.accent or self.pet.color
@@ -261,8 +259,9 @@ function Cinematic:paint()
  self.shell.Rotation=if self.active then math.sin(self.age*22)*math.min(8,self.age*7)else 0
  self.shellScale.Scale=if self.active then .88+math.min(1,self.age/.45)*.12+math.sin(self.age*12)*.025 else 1
  self.heroScale.Scale=if self.active and revealed then 1+math.sin(math.min(1,(self.age-split)/.48)*math.pi)*.07 else 1
- local quiet=self:reduced()or not self:owned();self.halo.Rotation=if rare and not quiet then self.age*8 else 0
- self.haloStroke.Transparency=if not revealed then .72-math.max(0,math.sin(self.age*12))*.45 elseif rare then .70 else .84
+ local quiet=self:reduced()or not self:owned();self.halo.Rotation=0
+ self.haloStroke.Transparency=if not revealed then .62-math.max(0,math.sin(self.age*12))*.15 elseif rare then .42 else .65
+ self.discoveryArt:split(self.age-split,self.active and revealed and self.age-split<.42 and not quiet)
  self:paintBits(revealed,quiet);self:publishDiagnostics("paint")
 end
 -- Every role has an authored trajectory; all reuse the same24 passive slots.
@@ -300,7 +299,7 @@ function Cinematic:paintBits(revealed,quiet)
  local count=if rare then 8 else 6;local burstAge=self.age-split;local burst=burstAge>=0 and burstAge<.75 and self.active
  self.liveBits=0
  for i,node in ipairs(self.bits)do
-  local show=not quiet and self.bandHeight>=20 and((burst and i<=(if rare then 24 else 16))or(revealed and i<=count)or(not revealed and i<=4))
+  local show=not quiet and self.bandHeight>=20 and((burst and(i<=12 or(rare and i>=17)))or(revealed and i<=count)or(not revealed and i<=4))
   local x,y,w,h,rotation,alpha
   if show and burst then x,y,w,h,rotation,alpha,show=self:burstBit(i,burstAge,rare)
   elseif show then

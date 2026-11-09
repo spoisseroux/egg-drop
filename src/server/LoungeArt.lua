@@ -1,13 +1,15 @@
 local Lighting = game:GetService("Lighting")
 local WorldLayout=require(game:GetService("ReplicatedStorage").Shared.HollowWorldLayout)
+local GardenArt=require(script.Parent.LoungeGardenArt)
 
 local Art = {}
-local grass = Color3.fromHex("#87984F")
-local moss = Color3.fromHex("#647D3C")
+local grass = Color3.fromHex("#72B85B")
+local moss = Color3.fromHex("#427E58")
 local bark = Color3.fromHex("#765239")
 local wood = Color3.fromHex("#AE7951")
 local stone = Color3.fromHex("#C9BC9A")
-local leaf = { Color3.fromHex("#55783D"), Color3.fromHex("#739447"), Color3.fromHex("#9BAE51") }
+local leaf = { Color3.fromHex("#427E58"), Color3.fromHex("#69A75C"), Color3.fromHex("#A4C875") }
+local function lawn(x,z)return x>-14 and x<10 and z>-13 and z<8 end
 
 local function sign(parent, title)
 	local surface = Instance.new("SurfaceGui")
@@ -112,8 +114,8 @@ function Art.build(room, part)
 		grade.Parent = Lighting
 	end
 	grade.Contrast = 0.025
-	grade.Saturation = -0.035
-	grade.TintColor = Color3.fromHex("#FFF5E5")
+	grade.Saturation = 0.015
+	grade.TintColor = Color3.fromHex("#F1F7FF")
 
 	local ground = box("Floor", 0, WorldLayout.FloorTop-.5, 0, WorldLayout.Width, 1, WorldLayout.Depth, grass, true)
 	ground:SetAttribute("PlayableWidth", WorldLayout.Width)
@@ -289,8 +291,8 @@ function Art.build(room, part)
 	eggPrompt.Parent=eggsSign
 
 	-- Overlapping pools form a bend. The shallow bank covers their joins.
-	local waterEdge = Color3.fromHex("#73B7B2")
-	local waterDeep = Color3.fromHex("#4F9DAF")
+	local waterEdge = Color3.fromHex("#45C5D0")
+	local waterDeep = Color3.fromHex("#267BA0")
 	local function waterShape(name, x, y, z, width, length, angle, tint)
 		local layer = oval(name, x, y, z, width, 0.09, length, tint)
 		layer.CastShadow = false
@@ -352,15 +354,16 @@ function Art.build(room, part)
 		run.CastShadow = false
 	end
 	waterShape("CreekFoam", 17.0, 4.10, -18.82, 2.35, 0.79, -8, Color3.fromHex("#BCDAD1"))
-	for index = 0, 10 do
-		local x = 14.3 + index * 0.64
-		box("BridgePlank", x, 4.25, -9.4, 0.62, 0.21, 2.4, if index % 2 == 0 then wood else bark, true)
+	for index = 0, 15 do
+		local x = 12.8 + index * 0.64
+		local plank=box("BridgePlank", x, 4.25, -9.4, 0.62, 0.21, 4.5, if index % 2 == 0 then wood else bark, true)
+        plank:SetAttribute("GardenWalkableSpan","PrimaryBridge")
 	end
-	for _, z in ipairs({ -10.53, -8.27 }) do
-		for _, x in ipairs({ 14.4, 17.6, 20.7 }) do
+	for _, z in ipairs({ -11.88, -6.92 }) do
+		for _, x in ipairs({ 12.8, 17.6, 22.4 }) do
 			box("BridgePost", x, 4.76, z, 0.20, 1.18, 0.20, bark)
 		end
-		box("BridgeRail", 17.6, 5.13, z, 6.45, 0.13, 0.13, wood)
+		box("BridgeRail", 17.6, 5.13, z, 9.8, 0.13, 0.13, wood)
 	end
 
 	-- New walkable wings keep the original tree grove at its natural scale.
@@ -527,6 +530,7 @@ function Art.build(room, part)
 		{ -7.9, 12.9, 2.4 }, { 10.2, 14.1, 2.35 }, { 14.2, 12.6, 1.8 },
 	}) do
 		local x, z, size = table.unpack(cluster)
+		if lawn(x,z)then continue end
 		shrub(x, z, size)
 		plant(x + size * 0.5, 4, z + size * 0.25, size * 0.76)
 		plant(x - size * 0.5, 4, z + size * 0.39, size * 0.62)
@@ -534,6 +538,7 @@ function Art.build(room, part)
 	-- Taller edge planting frames the arrival view while leaving the center path open.
 	for _, patch in ipairs({ { -9.8, 5.7 }, { -7.9, 6.3 }, { 10.75, 2.85 }, { 12.45, 3.2 } }) do
 		local x, z = patch[1], patch[2]
+		if lawn(x,z)then continue end
 		local rock = oval("MeadowBoulder", x, 4.20, z, 1.9, 0.8, 1.28, stone:Lerp(moss, 0.15))
 		rock.Material = Enum.Material.Slate
 		rock.CFrame *= CFrame.Angles(0.05, x * 0.34, -0.11)
@@ -549,6 +554,7 @@ function Art.build(room, part)
 		Vector2.new(-3.5, -3.6), Vector2.new(3.8, -5.2), Vector2.new(-8.4, -5.1),
 		Vector2.new(13.5, -6.5), Vector2.new(2.8, 6.9), Vector2.new(-3.2, 8.7), Vector2.new(5.4, 10.1),
 	}) do
+		if lawn(position.X,position.Y)then continue end
 		for index = 1, 3 do
 			flower(position.X + index * 0.26, position.Y + math.sin(index) * 0.3,
 				0.55 + index * 0.05, Color3.fromHex("#FFF1CD"))
@@ -652,7 +658,8 @@ function Art.build(room, part)
 		bit:SetAttribute("HollowRestTransparency",bit.Transparency)
 		bit:SetAttribute("HollowAmbientKind",kind) -- Complete metadata before eligibility.
 	end
-	for i=1,6 do
+	GardenArt.build(room,part)
+	for i=1,5 do
 		ambient("Water"..i,"water",Vector3.new(52+i*2.7,4.13,-25+(i%3)*5.0),Vector3.new(1.3,.025,.09),
 			Color3.fromHex("#D2EBDB"),(i-1)/6,7+i%3,Vector3.new(.35,0,0),.42)
 		ambient("Leaf"..i,"leaf",Vector3.new(-65+i*1.7,5.1+(i%3)*.5,-38+(i%2)*9),Vector3.new(.32,.045,.19),

@@ -29,6 +29,9 @@ return function(server,hostSource)
 	local humanoid={Health=100}
 	local floor={Size=Vector3.new(160,1,128),CFrame=CFrame.new(0,3.5,0)}
 	local room={FindFirstChild=function(_,name)return if name=="Floor"then floor else nil end}
+    -- This care fixture exposes only its controlled dry ground. The host's
+    -- cached scene inventory therefore contains no wet spans or stations.
+    function room:GetDescendants()return{}end
 	local world={EggDropLounge=room}
 	function world:GetServerTimeNow()return 1700000000+c.now end
 	function world:FindFirstChild(name)return if name=="EggDropLounge"then room else nil end

@@ -1,0 +1,430 @@
+{
+  "asset": "vezzi",
+  "displayName": "Vezzi",
+  "legacyId": "bloom_pip",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "neutralBoundsExcludingCharm": [
+    1.4,
+    1.46,
+    0.94
+  ],
+  "bodyHeightTarget": 1.46,
+  "triangles": 6332,
+  "meshCount": 19,
+  "fbxSha256": "6817ec493f9c510ac5438208dbb3a4d5331b9d5ecdf9bee9f20f4299d5ddc10e",
+  "objects": [
+    {
+      "name": "Vezzi__Head",
+      "channel": "Head",
+      "role": "Head",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.016156,
+        0.931868,
+        -0.018135
+      ],
+      "sizeRoblox": [
+        1.367688,
+        0.813767,
+        0.903729
+      ],
+      "triangles": 780,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__Body",
+      "channel": "Body",
+      "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.042438,
+        0.440055,
+        -0.044905
+      ],
+      "sizeRoblox": [
+        0.845905,
+        0.637673,
+        0.735618
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.398123,
+        0.495919,
+        0.051919
+      ],
+      "sizeRoblox": [
+        0.254883,
+        0.336099,
+        0.298206
+      ],
+      "triangles": 306,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.274919,
+        0.11307,
+        0.080375
+      ],
+      "sizeRoblox": [
+        0.356842,
+        0.22614,
+        0.381911
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.481445,
+        0.49548,
+        0.051576
+      ],
+      "sizeRoblox": [
+        0.254601,
+        0.336379,
+        0.297801
+      ],
+      "triangles": 306,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.359795,
+        0.11307,
+        0.080375
+      ],
+      "sizeRoblox": [
+        0.356842,
+        0.22614,
+        0.381911
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__FoldedEar",
+      "channel": "Head",
+      "role": "FoldedEar",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.503519,
+        1.244123,
+        -0.052028
+      ],
+      "sizeRoblox": [
+        0.392961,
+        0.431754,
+        0.350131
+      ],
+      "triangles": 400,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__EarSeam",
+      "channel": "Head",
+      "role": "EarSeam",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.556606,
+        1.280636,
+        0.072625
+      ],
+      "sizeRoblox": [
+        0.178487,
+        0.192626,
+        0.113519
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__BrowFold",
+      "channel": "Head",
+      "role": "BrowFold",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.46434,
+        1.264672,
+        -0.007353
+      ],
+      "sizeRoblox": [
+        0.346496,
+        0.154218,
+        0.313601
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__EyeL",
+      "channel": "Face",
+      "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.298677,
+        0.988531,
+        0.405319
+      ],
+      "sizeRoblox": [
+        0.132515,
+        0.152973,
+        0.061589
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__GlintL",
+      "channel": "Face",
+      "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.321508,
+        1.01468,
+        0.432088
+      ],
+      "sizeRoblox": [
+        0.037672,
+        0.034634,
+        0.019274
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__CheekL",
+      "channel": "Face",
+      "role": "CheekL",
+      "colorRole": "blush",
+      "centerRoblox": [
+        -0.412039,
+        0.90181,
+        0.366936
+      ],
+      "sizeRoblox": [
+        0.111754,
+        0.050863,
+        0.04776
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__EyeR",
+      "channel": "Face",
+      "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.303106,
+        1.026081,
+        0.407492
+      ],
+      "sizeRoblox": [
+        0.13224,
+        0.153722,
+        0.061674
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__GlintR",
+      "channel": "Face",
+      "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.280275,
+        1.05223,
+        0.434262
+      ],
+      "sizeRoblox": [
+        0.037672,
+        0.034634,
+        0.019274
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__CheekR",
+      "channel": "Face",
+      "role": "CheekR",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.428891,
+        0.954281,
+        0.3694
+      ],
+      "sizeRoblox": [
+        0.111796,
+        0.055179,
+        0.047851
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__MouthSmile",
+      "channel": "Face",
+      "role": "MouthSmile",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.028957,
+        0.803734,
+        0.433058
+      ],
+      "sizeRoblox": [
+        0.419119,
+        0.10811,
+        0.044972
+      ],
+      "triangles": 416,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__MouthO",
+      "channel": "Face",
+      "role": "MouthO",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.034829,
+        0.795567,
+        0.441625
+      ],
+      "sizeRoblox": [
+        0.100458,
+        0.1202,
+        0.044972
+      ],
+      "triangles": 256,
+      "exprKeys": []
+    },
+    {
+      "name": "Vezzi__Teeth",
+      "channel": "Face",
+      "role": "Teeth",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.032158,
+        0.806289,
+        0.457686
+      ],
+      "sizeRoblox": [
+        0.246441,
+        0.065551,
+        0.024628
+      ],
+      "triangles": 480,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Vezzi__CharmDot",
+      "channel": "Charm",
+      "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.042438,
+        1.589089,
+        -0.034197
+      ],
+      "sizeRoblox": [
+        0.198634,
+        0.184375,
+        0.182031
+      ],
+      "triangles": 224,
+      "exprKeys": []
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Activity=require(Shared.GardenActivity)
 local Layout=require(Shared.GardenLayout)
+local ToyReturn=require(script.Parent.GardenToyReturn)
 local Garden={};Garden.__index=Garden
 local function distance(a,b) return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 function Garden.new(options)
@@ -32,7 +33,12 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via)
         speed=math.min(Layout.LeashSpeed,math.max(speed,terminal.Magnitude+math.clamp(separation/10,0,1)*2))
         target+=terminal*.5
     end
-    actor.path,duration=Activity.plan(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)
+    if behavior=="follow"and self.options.resolveTarget then
+        local resolved,clamped=self.options.resolveTarget(target,from)
+        if resolved then target=resolved;if clamped then terminal=Vector3.zero end end
+    end
+    local planner=self.options.planPath or Activity.plan
+    actor.path,duration=planner(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)
     actor.startTime,actor.endTime=now,now+duration
     actor.from,actor.to,actor.via=Activity.pack(from),Activity.pack(target),if via then Activity.pack(via)else nil
 
@@ -44,9 +50,11 @@ function Garden:resume(actor,input,prior)
     else self:transition(actor,"follow",input.anchor,.5)end
 end
 function Garden:release(actor)
-    if self.toy.ownerId==actor.ownerId then
+    if actor.toyActionId then ToyReturn.release(self,actor.toyActionId,actor.ownerId);actor.toyActionId=nil end
+    if not self.toy.returnAction and self.toy.ownerId==actor.ownerId and actor.toyReservation==self.toy.reservation then
         self.toy={position=Activity.pack(Layout.Toy)};self.dirty=true
     end
+    actor.toyReservation=nil
     local pair=actor.pairId and self.pairs[actor.pairId]
     actor.pairId=nil
     if pair then
@@ -189,6 +197,17 @@ end
 function Garden:wander(actor,input,now)
     if not self.options.validWander then return false end
     local from=self:position(actor,now)
+    if distance(input.position,Layout.Nook)<=4 and math.abs(input.position.Y-Layout.Nook.Y)<=6 and(from-Layout.Nook).Magnitude<=8 and now>=(actor.nextNookAt or 0)then
+        local target=self.options.validWander(input,Layout.Nook,from)
+        if typeof(target)=="Vector3"then
+            self:transition(actor,"investigate",target,0,"nookApproach")
+            local last=actor.path and actor.path[#actor.path]
+            if last and not last.safetyStop and(Activity.vector(last.to)-target).Magnitude<.1 then
+                actor.nextNookAt=now+18;actor.wanderCount=(actor.wanderCount or 0)+1;return true
+            end
+            self:transition(actor,"follow",input.anchor,.5)
+        end
+    end
     for attempt=1,6 do
         local seed=(actor.ownerId*17+self.serial*37+attempt*101)%997
         local angle=seed/997*math.pi*2
@@ -206,6 +225,7 @@ function Garden:wander(actor,input,now)
 end
 function Garden:decide()
     local now=self.options.now();local ordered={}
+    ToyReturn.step(self,now)
     -- Reservations bind both participant generations; any superseded half ends
     -- the pair before another action can observe or reuse its token.
     local retired={}
@@ -232,6 +252,7 @@ function Garden:decide()
             if distance(self:position(actor,now),input.anchor)>.4 then self:transition(actor,"rest",input.anchor,.5) end
             continue
         end
+        if actor.toyActionId then continue end
         if actor.pairId then
             if now>=actor.endTime then local prior=self:release(actor);self:resume(actor,input,prior)end
             continue
@@ -253,14 +274,23 @@ function Garden:decide()
                 end
             elseif now-actor.idleSince>=3 and not self.toy.ownerId and reachable and not wanderTurn then
                 local duration=math.clamp((position-Layout.Lawn).Magnitude/3+(Layout.Lawn-target).Magnitude/3,1.6,8)
-                self.toy={position=Activity.pack(Layout.Toy),ownerId=actor.ownerId,reservation=self:token()}
+                self.toy={kind="solo",position=Activity.pack(Layout.Toy),ownerId=actor.ownerId,reservation=self:token()}
+                actor.toyReservation=self.toy.reservation
                 self:transition(actor,"investigate",target,duration,nil,nil,Layout.Lawn)
             elseif distance(Activity.vector(actor.to),input.anchor)>.2 then self:transition(actor,"follow",input.anchor,.5)
             elseif not reachable and now-actor.idleSince>=5 then self:transition(actor,"rest",position,2,"wanderPause")end
         elseif now>=actor.endTime then
-            if actor.action=="wander"then
+            if actor.action=="nookApproach"then
+                self:transition(actor,"rest",position,6,"nookRest")
+                local direction=input.position-position
+                local heading=math.atan2(direction.X,direction.Z)
+                local yaw=Activity.sample(actor,now).yaw;local turn=(heading-yaw+math.pi)%(math.pi*2)-math.pi
+                local duration=math.max(.12,math.abs(turn)*1.5/12)
+                actor.path={{from=Activity.pack(position),to=Activity.pack(position),v0={0,0,0},v1={0,0,0},duration=duration,yaw=yaw,turn=turn,turnDuration=duration,pivot=true},
+                    {from=Activity.pack(position),to=Activity.pack(position),v0={0,0,0},v1={0,0,0},duration=6-duration,yaw=heading,turn=0,turnDuration=0}}
+            elseif actor.action=="wander"then
                 self:transition(actor,"rest",position,1.5,"wanderPause")
-            elseif actor.behavior=="investigate" and self.toy.ownerId==actor.ownerId then
+            elseif actor.behavior=="investigate"and not self.toy.returnAction and self.toy.ownerId==actor.ownerId and actor.toyReservation==self.toy.reservation then
                 self:transition(actor,"play",position,2.8,"shove")
                 actor.yaw=math.atan2(Layout.Toy.X-position.X,Layout.Toy.Z-position.Z)
                 local axis=Vector3.new(Layout.Toy.X-position.X,0,Layout.Toy.Z-position.Z)
@@ -278,14 +308,18 @@ end
 function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end
+    if self.toyRequests then self.toyRequests[id]=nil end
     return self:publish()
 end
+function Garden:toyRequest(id,packet)return ToyReturn.request(self,id,packet)end
+function Garden:toyReplay(id,packet)return ToyReturn.replay(self,id,packet)end
 function Garden:snapshot()
     local actors={}
     for id,actor in pairs(self.actors) do
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
-            from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0}
+            from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
+            toyRole=actor.toyRole,toyStartTime=actor.toyStartTime}
     end
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy)}
 end

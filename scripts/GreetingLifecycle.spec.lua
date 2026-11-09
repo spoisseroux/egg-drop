@@ -3,7 +3,7 @@ return function(client)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function state(focus)
-		return{mode="Room",busy=false,focusing=false,menuOpen=false,pet={},overlayOpen=function()return false end,focusPet=focus}
+		return{mode="Room",busy=false,focusing=false,menuOpen=false,pet={},overlayOpen=function()return false end,stationInReach=function()return false end,focusPet=focus}
 	end
 	test("blocked shot propagates false without spending interaction cooldown",function()
 		local value=state(function()return false end)

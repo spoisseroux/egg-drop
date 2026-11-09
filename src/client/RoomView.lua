@@ -16,6 +16,7 @@ local GardenClient=require(script.Parent.GardenClient)
 local GardenActivity=require(ReplicatedStorage.Shared.GardenActivity)
 local GardenLayout=require(ReplicatedStorage.Shared.GardenLayout)
 local GardenToyVisual=require(script.Parent.GardenToyVisual)
+local GardenToyPrompt=require(script.Parent.GardenToyPrompt)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
@@ -97,7 +98,14 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	self.garden=GardenClient.new(progress.Parent)
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
 	self.gardenToy=GardenToyVisual.new(workspace,GardenLayout.Toy)
-	self.companions.garden=self.garden
+	self.toyPrompt=GardenToyPrompt.new(self.garden,self.gardenToy.part,{context=function()
+  local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart");local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+  local enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter
+   and self.focusUI~=nil and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0
+   and not(self.stations and self.stations:inReach())and(not self.canRoam or self.canRoam())
+  return self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character),root and root.Position,enabled
+ end})
+ self.companions.garden=self.garden
 	self.ambience=HollowAmbience.new()
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
@@ -172,6 +180,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		local gardenFocus=self.focusing and self.mode=="Room"and not self.busy and not self.overlayOpen()and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and self.focusUI.windowActive~=false
 		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id)else self.garden:focus(false)end
 		self.garden:step(dt)
+        if self.toyPrompt then self.toyPrompt:step(dt)end
 		if self.gardenToy then
 			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
 			self.gardenToy:setVisible(visible)
@@ -220,7 +229,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 end
 
 function Room:stationInReach()
-	return self.stations~=nil and self.stations:inReach()
+	return(self.stations~=nil and self.stations:inReach())or(self.toyPrompt~=nil and self.toyPrompt:inReach())
 end
 
 function Room:updateControls()
@@ -249,6 +258,7 @@ function Room:interactPet()
 	if not self.focusing and self.canRoam and not self.canRoam() then return false end
 	if self.mode ~= "Room" or self.busy or self.overlayOpen() or self.menuOpen or not self.pet then return false end
 	if self.focusing then return self:reactPet(false) end
+ if self:stationInReach()then return false end
 	local now = os.clock()
 	if now - (self.lastPetAt or -math.huge) < 0.45 then return false end
 	if not self:focusPet() then return false end
@@ -527,6 +537,31 @@ function Room.captureFocusSubject(pet,family)
 	return bounds,size,silhouette
 end
 
+function Room.greetingVisualBlocks(lounge,floor,rootPosition,reach)
+ local blocks={}
+ -- A tiny nonqueryable leaf can cover the lens completely at close range.
+ -- Collect rendered descendants once per plan, never by visual size or physics.
+ for _,part in ipairs(lounge:GetDescendants())do
+  if part:IsA("BasePart")and part~=floor and not part:IsA("Terrain")
+   and 1-(1-part.Transparency)*(1-part.LocalTransparencyModifier)<.99 then
+   local cf,size=part.CFrame,part.Size
+   local mesh=part:FindFirstChildOfClass("SpecialMesh")
+   if mesh then
+    cf*=CFrame.new(mesh.Offset)
+    -- Managed lounge meshes are primitives; their rendered bounds follow Scale.
+    -- FileMesh resources retain their authored Part bounds (no vertex-data API).
+    if mesh.MeshType~=Enum.MeshType.FileMesh then
+     local scale=mesh.Scale;size*=Vector3.new(math.abs(scale.X),math.abs(scale.Y),math.abs(scale.Z))
+    end
+   end
+   if(cf.Position-rootPosition).Magnitude<=reach+size.Magnitude*.5 then
+    table.insert(blocks,{source=part,Parent=part.Parent,CFrame=cf,Size=size})
+   end
+  end
+ end
+ return blocks
+end
+
 function Room:planGreeting(camera, root, floor)
 	local started=os.clock()
 	local lounge = floor.Parent
@@ -541,17 +576,12 @@ function Room:planGreeting(camera, root, floor)
 	local safeTop=topInset.Y+(self.focusUI.controlHeight or 44)+24
 	local animationRise=.55*(self.pet.worldScale or 1)
 	local reach=PetGreetingShot.maximumReach(size,aspect,crestReserve,camera.ViewportSize.Y,safeTop,animationRise)
-	local visualBlocks={}
+	local visualBlocks=Room.greetingVisualBlocks(lounge,floor,root.Position,reach)
 	local ownerParts={}
 	local owner=root.Parent
 	if owner then for _,part in ipairs(owner:GetDescendants())do
 		if part:IsA("BasePart")and part.Transparency<.99 then table.insert(ownerParts,part)end
 	end end
-	for _, part in ipairs(lounge:GetChildren()) do
-		if part:IsA("BasePart") and part~=floor and part.Transparency<.9
-			and (part.Size.Magnitude>=2 or part.Name:find("Sign") or part.Name:find("FieldGuide"))
-			and (part.Position-root.Position).Magnitude<=reach+part.Size.Magnitude*.5 then table.insert(visualBlocks,part) end
-	end
 	local groundQueries,candidates=0,0
 	local plan=PetGreetingShot.plan({
 		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,silhouette=silhouette,focusEnvelope=focusEnvelope,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=animationRise,
@@ -655,6 +685,7 @@ function Room:focusPet()
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
 	if self.focusing then return self:reactPet(false) end
+ if self:stationInReach()then return false end
 	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor or self.focusTransitioning then return false end
     local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
     local public=actor and GardenActivity.sample(actor,workspace:GetServerTimeNow())
@@ -935,6 +966,7 @@ function Room:destroy()
  if self.focusKey then self.focusKey:destroy();self.focusKey=nil end
  if self.petContactIntent then self.petContactIntent:destroy()end
 	if self.focusTransition then self.focusTransition:destroy()end
+	if self.toyPrompt then self.toyPrompt:destroy();self.toyPrompt=nil end
 	if self.garden then self.garden:destroy()end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end

@@ -3,17 +3,17 @@ local Trials = require(script.Parent.PocketTrials)
 local Pets = {
 	{ id = "pip", name = "Zivvi", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
 	{ id = "puddle", name = "Ovelle", charge = 12, cue = "puddle", color = Color3.fromHex("#D3DBD9") },
-	{ id = "wick", name = "Wick", charge = 24, cue = "wick", color = Color3.fromHex("#F79860") },
-	{ id = "orbit", name = "Orbit", charge = 36, cue = "orbit", color = Color3.fromHex("#C7AEF3") },
+	{ id = "wick", name = "Tikket", charge = 24, cue = "wick", color = Color3.fromHex("#DDD6CA") },
+	{ id = "orbit", name = "Nuum", charge = 36, cue = "orbit", color = Color3.fromHex("#D9D9D4") },
 }
 
 Pets.rares = {
-	{ id = "bloom_pip", name = "Bloom Pip", family = "pip", trial = Trials.HighRoller,
-		cue = "pet", color = Color3.fromHex("#F6A786") },
-	{ id = "foxfire_wick", name = "Foxfire Wick", family = "wick", trial = Trials.Fivefold,
-		cue = "wick", color = Color3.fromHex("#8EAEFF"), accent = Color3.fromHex("#54EDDC") },
-	{ id = "eclipse_orbit", name = "Eclipse Orbit", family = "orbit", trial = Trials.DoubleSweep,
-		cue = "orbit", color = Color3.fromHex("#7162C8"), accent = Color3.fromHex("#FFD07E") },
+	{ id = "bloom_pip", name = "Vezzi", family = "pip", trial = Trials.HighRoller,
+		cue = "pet", color = Color3.fromHex("#E4D9CD") },
+	{ id = "foxfire_wick", name = "Kiprik", family = "wick", trial = Trials.Fivefold,
+		cue = "wick", color = Color3.fromHex("#DEDAD7"), accent = Color3.fromHex("#AC9DC1") },
+	{ id = "eclipse_orbit", name = "Nolli", family = "orbit", trial = Trials.DoubleSweep,
+		cue = "orbit", color = Color3.fromHex("#D3D3CC"), accent = Color3.fromHex("#9795AC") },
 }
 Pets.collection = table.clone(Pets)
 for _, pet in ipairs(Pets.rares) do

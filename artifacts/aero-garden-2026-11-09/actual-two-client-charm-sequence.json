@@ -1,0 +1,127 @@
+{
+  "scope": "Actual two local Studio clients; isolated store; normal owner UI inputs, visitor public observations. Not live DataStore rejoin.",
+  "receipts": [
+    {
+      "visible": true,
+      "revision": 1,
+      "shape": "pebble",
+      "status": "Applied",
+      "lastSeq": 1,
+      "seq": 1,
+      "petId": "pip"
+    },
+    {
+      "visible": true,
+      "revision": 1,
+      "shape": "pebble",
+      "status": "Saved",
+      "lastSeq": 1,
+      "seq": 1,
+      "petId": "pip"
+    },
+    {
+      "visible": false,
+      "revision": 2,
+      "shape": "pebble",
+      "status": "Applied",
+      "lastSeq": 2,
+      "seq": 2,
+      "petId": "pip"
+    },
+    {
+      "visible": false,
+      "revision": 2,
+      "shape": "pebble",
+      "status": "Saved",
+      "lastSeq": 2,
+      "seq": 2,
+      "petId": "pip"
+    },
+    {
+      "visible": false,
+      "revision": 3,
+      "shape": "ring",
+      "status": "Applied",
+      "lastSeq": 3,
+      "seq": 3,
+      "petId": "pip"
+    },
+    {
+      "visible": false,
+      "revision": 3,
+      "shape": "ring",
+      "status": "Saved",
+      "lastSeq": 3,
+      "seq": 3,
+      "petId": "pip"
+    },
+    {
+      "visible": true,
+      "revision": 4,
+      "shape": "ring",
+      "status": "Applied",
+      "lastSeq": 4,
+      "seq": 4,
+      "petId": "pip"
+    },
+    {
+      "visible": true,
+      "revision": 4,
+      "shape": "ring",
+      "status": "Saved",
+      "lastSeq": 4,
+      "seq": 4,
+      "petId": "pip"
+    }
+  ],
+  "visitorPebble": {
+    "appearance": {
+      "bodyRank": 0,
+      "charmShape": "pebble",
+      "charmVisible": true,
+      "body": "original",
+      "secondary": "default"
+    },
+    "models": [
+      {
+        "name": "Zivvi",
+        "parts": []
+      },
+      {
+        "name": "Zivvi",
+        "parts": [
+          {
+            "visible": true,
+            "name": "Charm_pebble1",
+            "color": "0.772549, 0.584314, 0.627451"
+          },
+          {
+            "visible": true,
+            "name": "Charm_pebble2",
+            "color": "0.772549, 0.584314, 0.627451"
+          }
+        ]
+      }
+    ]
+  },
+  "visitorHidden": {
+    "appearance": {
+      "bodyRank": 0,
+      "charmShape": "ring",
+      "charmVisible": false,
+      "body": "original",
+      "secondary": "default"
+    },
+    "activeShapeParts": 0
+  },
+  "visitorRing": {
+    "appearance": {
+      "bodyRank": 0,
+      "charmShape": "ring",
+      "charmVisible": true,
+      "body": "original",
+      "secondary": "default"
+    },
+    "activeRingParts": 8
+  }
+}

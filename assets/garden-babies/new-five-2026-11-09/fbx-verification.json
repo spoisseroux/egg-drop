@@ -1,0 +1,86 @@
+{
+  "method": "Separate Blender file reset + FBX re-import for each rig; Roblox Studio import and rendering are separate acceptance gates.",
+  "blender": "5.1.0",
+  "families": {
+    "tikket": {
+      "fbx": "tikket.fbx",
+      "sha256": "2a5eb17cf1da9b73c44f4431272b51a489c360c18dc6267d267ca88382923b37",
+      "objects": 19,
+      "triangles": 6108,
+      "nativeRenderedPartCount": 27,
+      "neutralBoundsGameXYZ": [
+        0.94,
+        1.52,
+        0.85
+      ],
+      "neutralMinY": -0.0,
+      "hasSingleMaterialAndUVPerMesh": true,
+      "nativeSemanticPieceNamesMatch": true,
+      "shapeKeyNamesMatchManifest": true
+    },
+    "nuum": {
+      "fbx": "nuum.fbx",
+      "sha256": "944427ba71f400f29f7dcb7b670abf87955aff0aded331ca56bacde9fcc2a706",
+      "objects": 16,
+      "triangles": 4988,
+      "nativeRenderedPartCount": 22,
+      "neutralBoundsGameXYZ": [
+        1.43,
+        1.22,
+        0.98
+      ],
+      "neutralMinY": -0.0,
+      "hasSingleMaterialAndUVPerMesh": true,
+      "nativeSemanticPieceNamesMatch": true,
+      "shapeKeyNamesMatchManifest": true
+    },
+    "vezzi": {
+      "fbx": "vezzi.fbx",
+      "sha256": "6817ec493f9c510ac5438208dbb3a4d5331b9d5ecdf9bee9f20f4299d5ddc10e",
+      "objects": 19,
+      "triangles": 6332,
+      "nativeRenderedPartCount": 24,
+      "neutralBoundsGameXYZ": [
+        1.4,
+        1.46,
+        0.94
+      ],
+      "neutralMinY": 0.0,
+      "hasSingleMaterialAndUVPerMesh": true,
+      "nativeSemanticPieceNamesMatch": true,
+      "shapeKeyNamesMatchManifest": true
+    },
+    "kiprik": {
+      "fbx": "kiprik.fbx",
+      "sha256": "1983ef098d18a1b982f8ebb5e7ae4d0bb014fa4ee34bfb2dce662c185be4cf5a",
+      "objects": 20,
+      "triangles": 6732,
+      "nativeRenderedPartCount": 28,
+      "neutralBoundsGameXYZ": [
+        1.08,
+        1.56,
+        0.87
+      ],
+      "neutralMinY": 0.0,
+      "hasSingleMaterialAndUVPerMesh": true,
+      "nativeSemanticPieceNamesMatch": true,
+      "shapeKeyNamesMatchManifest": true
+    },
+    "nolli": {
+      "fbx": "nolli.fbx",
+      "sha256": "1b60c344bc9982b60fff10e8e82ffe372fe820bf04c2019e55087db72a2cc2f8",
+      "objects": 17,
+      "triangles": 5848,
+      "nativeRenderedPartCount": 25,
+      "neutralBoundsGameXYZ": [
+        1.5,
+        1.27,
+        1.01
+      ],
+      "neutralMinY": 0.0,
+      "hasSingleMaterialAndUVPerMesh": true,
+      "nativeSemanticPieceNamesMatch": true,
+      "shapeKeyNamesMatchManifest": true
+    }
+  }
+}

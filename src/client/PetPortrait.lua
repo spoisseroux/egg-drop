@@ -43,6 +43,8 @@ local sprites = {
 }
 
 sprites.pip=GardenMaps.zivvi;sprites.puddle=GardenMaps.ovelle
+local newMaps=require(game:GetService("ReplicatedStorage").Shared.NewBabyPortraitDefinitions)
+for id,definition in pairs(Definitions)do if newMaps[definition.id]then sprites[id]=newMaps[definition.id]end end
 
 local cached=setmetatable({},{__mode="k"})
 local function colorsFor(pet,locked,appearance)

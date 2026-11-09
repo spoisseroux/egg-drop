@@ -827,10 +827,10 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  appearance=nurseryView.appearanceFor,
  audio=audio,reduceEffects=reduceEffects,
  shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
- charm=function(petId,visible,shape,seq)
+ charm=function(petId,visible,shape,seq,shapeVersion)
   if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
-  request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,seq=seq})
-  return {petId=petId,visible=visible,shape=shape,seq=seq}
+  request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq})
+  return {petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq}
  end,
  earn=function()if hatchNavigation then hatchNavigation:play()end end,
  pendingHatch=function()if openNursery then openNursery()end end,

@@ -30,6 +30,8 @@ local Backgrounds = require(ReplicatedStorage.Shared.DeckBackgrounds)
 local GardenState = require(script.GardenState)
 local GardenLayout = require(ReplicatedStorage.Shared.GardenLayout)
 local GardenActivity = require(ReplicatedStorage.Shared.GardenActivity)
+local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
+local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 
 local function child(className, name, parent)
@@ -50,7 +52,9 @@ local hueResult = child("RemoteEvent", "HueResult", remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
+local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
 local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
+remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
@@ -87,6 +91,7 @@ local function petState(board)
 		lastPetAward=state.lastPetAward,capReached=tonumber(today)<tonumber(state.petDay)
 			or(today==state.petDay and state.petCount>=5)}
 end
+local gardenScene
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
@@ -98,14 +103,16 @@ local function petAnchor(state)
 	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 	local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
 	if not hit or hit.Position.Y>state.position.Y+1 or hit.Position.Y<state.position.Y-6 then return nil end
-	return Vector3.new(position.X,hit.Position.Y+.025,position.Z)
+    local grounded=Vector3.new(position.X,hit.Position.Y+.025,position.Z)
+    local scene=gardenScene and gardenScene()
+    return if scene then GardenWalkability.resolveAnchor(grounded,scene.wet)or grounded else grounded
 end
 
 -- Cache authored station/water geometry once per live lounge, never scan rigs.
 local wanderScene
-local function validWander(input,target,from)
- local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
- if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
+gardenScene=function()
+ local room=workspace:FindFirstChild("EggDropLounge")
+ if not room then return nil end
  if not wanderScene or wanderScene.room~=room then
   wanderScene={room=room,wet={},stations={}}
   for _,node in ipairs(room:GetDescendants())do
@@ -113,24 +120,57 @@ local function validWander(input,target,from)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
  end
+ return wanderScene
+end
+local function validWander(input,target,from)
+ local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
+ if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
+ gardenScene()
  local at=floor.CFrame:PointToObjectSpace(target)
  if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return nil end
  for _,station in ipairs(wanderScene.stations)do if station.Parent and Vector2.new(target.X-station.Position.X,target.Z-station.Position.Z).Magnitude<3 then return nil end end
- for _,wet in ipairs(wanderScene.wet)do if wet.Parent then
-  for i=0,4 do local point=wet.CFrame:PointToObjectSpace(from:Lerp(target,i/4))
-   if math.abs(point.X)<wet.Size.X*.5+.5 and math.abs(point.Z)<wet.Size.Z*.5+.5 then return nil end
-  end
- end end
  local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
  local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
  if not hit or hit.Material==Enum.Material.Water or math.abs(hit.Position.Y+.025-input.anchor.Y)>.7 then return nil end
  local grounded=Vector3.new(target.X,hit.Position.Y+.025,target.Z)
+ local span,id=GardenWalkability.spanAt(grounded)
+ if span and hit.Instance:GetAttribute("GardenWalkableSpan")~=id then return nil end
  local lift=Vector3.new(0,.7,0)
- if workspace:Raycast(from+lift,grounded-from,params)then return nil end
+ if not GardenWalkability.segmentAllowed(from,grounded,wanderScene.wet)then
+  -- A nearby owner's registered nook may be reached through the existing safe
+  -- bridge exit even when its straight chord crosses unsupported creek.
+  if id~="RestNook"or Vector2.new(input.position.X-target.X,input.position.Z-target.Z).Magnitude>4 or(from-grounded).Magnitude>8 then return nil end
+  local path=GardenPathPlanner.plan(from,grounded,Vector3.zero,GardenLayout.StrollSpeed,0,0,nil,Vector3.zero,wanderScene.wet)
+  local last=path[#path]
+  if not last or last.safetyStop or(GardenActivity.vector(last.to)-grounded).Magnitude>=.1 or not GardenWalkability.pathAllowed(path,wanderScene.wet)then return nil end
+  for _,leg in ipairs(path)do
+   local a,b=GardenActivity.vector(leg.from),GardenActivity.vector(leg.to)
+   if workspace:Raycast(a+lift,b-a,params)then return nil end
+  end
+ elseif workspace:Raycast(from+lift,grounded-from,params)then return nil end
  return grounded
 end
 local garden = GardenState.new({now=function()return workspace:GetServerTimeNow()end,
 	publish=function(snapshot)gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))end,
+    planPath=function(from,to,velocity,speed,minimum,yaw,via,terminal)
+        local scene=gardenScene()
+        return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,if scene then scene.wet else {})
+    end,
+    resolveTarget=function(target,from)
+        local scene=gardenScene();if not scene then return target,false end
+        local resolved=GardenWalkability.resolveAnchor(target,scene.wet)
+        if not resolved then return from,true end
+        local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={scene.room}
+        local hit=workspace:Raycast(resolved+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+        local span,id=GardenWalkability.spanAt(resolved)
+        if not hit or(span and hit.Instance:GetAttribute("GardenWalkableSpan")~=id)then return from,true end
+        local grounded=Vector3.new(resolved.X,hit.Position.Y+.025,resolved.Z)
+        if not GardenWalkability.segmentAllowed(grounded,grounded,scene.wet)then return from,true end
+        return grounded,(grounded-target).Magnitude>.001
+    end,
+    validToyPath=function(path)
+        local scene=gardenScene();return scene~=nil and GardenWalkability.pathAllowed(path,scene.wet)
+    end,
     validWander=validWander,
 	validFocus=function(input,target)
 		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
@@ -515,6 +555,23 @@ gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
 	if not board or board.closing or type(packet)~="table" then return end
 	local now=os.clock()
 	local kind=packet.kind
+	if kind=="toyStart"or kind=="toyJoin"or kind=="toyCancel"then
+        local function rejected(reason)gardenToyResult:FireClient(player,{kind=kind,seq=packet.seq,status="Rejected",reason=reason,actionId=packet.actionId})end
+        if type(packet.seq)~="number"or packet.seq~=packet.seq or packet.seq%1~=0 or packet.seq<1 or packet.seq>2147483647 then return end
+        if packet.petId~=board.profile.companionId or board.mode~="Room"or packet.characterId~=(board.characterGeneration or 0)or packet.petGeneration~=(board.companionGeneration or 0)then rejected("IdentityChanged");return end
+        local replay=garden:toyReplay(player.UserId,packet)
+        if replay then gardenToyResult:FireClient(player,replay);return end
+        if now-(board.gardenToyAt or -math.huge)<.1 then rejected("Throttled");return end
+        board.gardenToyAt=now
+        garden:syncOne(player.UserId,gardenInput(board))
+        local action=garden.toy.returnAction
+        local peerId=if action then action.starterId else garden.toy.ownerId
+        if peerId and peerId~=player.UserId then
+            for owner,other in pairs(boards)do if owner.UserId==peerId then garden:syncOne(owner.UserId,gardenInput(other));break end end
+        end
+        local response=garden:toyRequest(player.UserId,packet)
+        garden:publish();gardenToyResult:FireClient(player,response);return
+    end
 	if kind~="focus"and kind~="focusPulse"and kind~="focusEnd"then return end
 	board.gardenIntentAt=board.gardenIntentAt or {}
 	if now-(board.gardenIntentAt[kind]or -math.huge)<.1 then return end

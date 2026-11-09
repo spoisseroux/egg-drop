@@ -1,0 +1,16 @@
+{
+  "count": 312,
+  "seconds": 101.96139850001782,
+  "highestPetY": 4.410771369934082,
+  "petXRange": [
+    1.1999664306640625,
+    29.69426727294922
+  ],
+  "actions": [
+    "",
+    "wander",
+    "wanderPause"
+  ],
+  "crossedEast": true,
+  "crossedWestAfterEast": true
+}

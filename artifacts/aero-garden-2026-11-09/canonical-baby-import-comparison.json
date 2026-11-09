@@ -1,0 +1,647 @@
+{
+  "scale": 100,
+  "oldMeshes": 31,
+  "newMeshes": 91,
+  "totalMeshes": 122,
+  "maxCenterError": 5.734863281481317e-07,
+  "maxSizeError": 5.939941406518656e-07,
+  "parts": [
+    {
+      "model": "Tikket",
+      "name": "Tikket__Body",
+      "centerError": 5.096435546879385e-07,
+      "sizeError": 4.6704101563932454e-07,
+      "mesh": "rbxassetid://78936275288576"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__CharmDot",
+      "centerError": 4.272460938370415e-07,
+      "sizeError": 4.028320312321476e-07,
+      "mesh": "rbxassetid://114793055703921"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__CheekL",
+      "centerError": 1.3671874965481834e-08,
+      "sizeError": 3.891601562458491e-07,
+      "mesh": "rbxassetid://121948738032497"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__CheekR",
+      "centerError": 5.383300782924039e-08,
+      "sizeError": 3.893737793025931e-07,
+      "mesh": "rbxassetid://130733638952495"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__EyeL",
+      "centerError": 2.0263671851594722e-08,
+      "sizeError": 4.1308593749789235e-07,
+      "mesh": "rbxassetid://87198129374164"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__EyeR",
+      "centerError": 4.748535153975553e-08,
+      "sizeError": 2.9125976562516254e-07,
+      "mesh": "rbxassetid://88429176533364"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__FootL",
+      "centerError": 4.3212890625532463e-07,
+      "sizeError": 2.0178222653877143e-07,
+      "mesh": "rbxassetid://122142577594166"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__FootR",
+      "centerError": 1.7675781249781863e-07,
+      "sizeError": 4.350585937062945e-07,
+      "mesh": "rbxassetid://96434412472474"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__GlintL",
+      "centerError": 2.7099609223313337e-08,
+      "sizeError": 4.038696289065946e-07,
+      "mesh": "rbxassetid://92377178505047"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__GlintR",
+      "centerError": 1.837158203343847e-08,
+      "sizeError": 4.134063720726e-07,
+      "mesh": "rbxassetid://116861324887433"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__HandL",
+      "centerError": 2.7990722656356937e-07,
+      "sizeError": 4.7070312497732303e-07,
+      "mesh": "rbxassetid://114612797463474"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__HandR",
+      "centerError": 5.698852539870458e-07,
+      "sizeError": 4.5117187497112354e-07,
+      "mesh": "rbxassetid://110015660721530"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__Head",
+      "centerError": 5.242919922654465e-07,
+      "sizeError": 4.602050781565836e-07,
+      "mesh": "rbxassetid://101829994880956"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__HipFlapL",
+      "centerError": 2.551269531192446e-07,
+      "sizeError": 4.4937133791833617e-07,
+      "mesh": "rbxassetid://120027653921263"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__HipFlapR",
+      "centerError": 2.2454833981111477e-07,
+      "sizeError": 3.6114501955619716e-07,
+      "mesh": "rbxassetid://119076443812333"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__MittenTipL",
+      "centerError": 3.624267577995166e-07,
+      "sizeError": 4.569091796857716e-07,
+      "mesh": "rbxassetid://117880168442833"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__MittenTipR",
+      "centerError": 3.421630859340441e-07,
+      "sizeError": 4.569091796857716e-07,
+      "mesh": "rbxassetid://134098340713388"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__MouthO",
+      "centerError": 2.124023434912914e-08,
+      "sizeError": 4.772949218703748e-07,
+      "mesh": "rbxassetid://119115866547911"
+    },
+    {
+      "model": "Tikket",
+      "name": "Tikket__MouthSmile",
+      "centerError": 4.780273437500308e-07,
+      "sizeError": 4.772949218703748e-07,
+      "mesh": "rbxassetid://115489788735822"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__Body",
+      "centerError": 1.1590576171061073e-07,
+      "sizeError": 1.3330078130202594e-07,
+      "mesh": "rbxassetid://125483235266967"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__CharmDot",
+      "centerError": 3.4399414050589883e-07,
+      "sizeError": 4.3261718749021405e-07,
+      "mesh": "rbxassetid://125733621444474"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__CheekFold",
+      "centerError": 2.5256347656321676e-07,
+      "sizeError": 2.7966308596694134e-07,
+      "mesh": "rbxassetid://116820506302536"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__CheekL",
+      "centerError": 1.965332036002465e-08,
+      "sizeError": 2.5097656249778444e-07,
+      "mesh": "rbxassetid://97853119026760"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__CheekR",
+      "centerError": 4.3945312500071054e-08,
+      "sizeError": 3.773193359285498e-07,
+      "mesh": "rbxassetid://99407200932028"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__EyeL",
+      "centerError": 2.0385742205419888e-08,
+      "sizeError": 2.5137329101587724e-07,
+      "mesh": "rbxassetid://90242029693300"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__EyeR",
+      "centerError": 1.9531250006199485e-08,
+      "sizeError": 3.5925292971028533e-07,
+      "mesh": "rbxassetid://83946829095788"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__FootL",
+      "centerError": 4.5239257812079714e-07,
+      "sizeError": 4.7320556639807165e-07,
+      "mesh": "rbxassetid://124822745167246"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__FootR",
+      "centerError": 3.2653808593186007e-07,
+      "sizeError": 4.24774169949238e-07,
+      "mesh": "rbxassetid://88519156445655"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__GlintL",
+      "centerError": 2.9541015633682832e-08,
+      "sizeError": 4.422607421880609e-07,
+      "mesh": "rbxassetid://75053423617890"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__GlintR",
+      "centerError": 5.346679687878719e-08,
+      "sizeError": 4.041137695379171e-07,
+      "mesh": "rbxassetid://117308282493837"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__HandL",
+      "centerError": 1.9921874999662137e-07,
+      "sizeError": 4.3432617191641043e-07,
+      "mesh": "rbxassetid://93484300804101"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__HandR",
+      "centerError": 3.9355468750557066e-07,
+      "sizeError": 2.9876708984577505e-07,
+      "mesh": "rbxassetid://82321597612074"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__Head",
+      "centerError": 1.8945312500046052e-07,
+      "sizeError": 4.3969726559733857e-07,
+      "mesh": "rbxassetid://88440223855765"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__MouthO",
+      "centerError": 4.943847653482436e-08,
+      "sizeError": 2.6586914061987876e-07,
+      "mesh": "rbxassetid://83321502298687"
+    },
+    {
+      "model": "Nuum",
+      "name": "Nuum__MouthSmile",
+      "centerError": 3.8427734372348255e-07,
+      "sizeError": 4.948730468745666e-07,
+      "mesh": "rbxassetid://110199881745235"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__Body",
+      "centerError": 1.0650634763020861e-07,
+      "sizeError": 2.861328125547402e-07,
+      "mesh": "rbxassetid://90631331798955"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__BrowFold",
+      "centerError": 4.761962890623833e-07,
+      "sizeError": 4.556884765638536e-07,
+      "mesh": "rbxassetid://75879017464181"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__CharmDot",
+      "centerError": 3.554687499907061e-07,
+      "sizeError": 4.245605468855551e-07,
+      "mesh": "rbxassetid://114143506753393"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__CheekL",
+      "centerError": 4.431152345052425e-08,
+      "sizeError": 4.2065429687460076e-07,
+      "mesh": "rbxassetid://91647296860819"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__CheekR",
+      "centerError": 1.3732910142394417e-08,
+      "sizeError": 4.7216796875138023e-07,
+      "mesh": "rbxassetid://138550749078932"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__EarSeam",
+      "centerError": 3.356933593740008e-07,
+      "sizeError": 4.811401367321722e-07,
+      "mesh": "rbxassetid://78835739405092"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__EyeL",
+      "centerError": 3.9916992267130524e-08,
+      "sizeError": 2.54882812494861e-07,
+      "mesh": "rbxassetid://135965661809110"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__EyeR",
+      "centerError": 6.738281244089706e-08,
+      "sizeError": 3.4692382812340217e-07,
+      "mesh": "rbxassetid://112622794627046"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__FoldedEar",
+      "centerError": 3.803710937333449e-07,
+      "sizeError": 3.1134033201540845e-07,
+      "mesh": "rbxassetid://125253056048910"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__FootL",
+      "centerError": 3.9749145502865346e-08,
+      "sizeError": 4.3548583986141587e-07,
+      "mesh": "rbxassetid://97694415762477"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__FootR",
+      "centerError": 3.9749145502865346e-08,
+      "sizeError": 4.3548583986141587e-07,
+      "mesh": "rbxassetid://86432300513045"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__GlintL",
+      "centerError": 5.017089843573075e-08,
+      "sizeError": 1.6577148437280087e-07,
+      "mesh": "rbxassetid://111313318527038"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__GlintR",
+      "centerError": 3.662109376856293e-08,
+      "sizeError": 1.6577148437280087e-07,
+      "mesh": "rbxassetid://135691227220223"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__HandL",
+      "centerError": 5.734863281481317e-07,
+      "sizeError": 1.7675781249781863e-07,
+      "mesh": "rbxassetid://71062348130632"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__HandR",
+      "centerError": 3.848266602046735e-07,
+      "sizeError": 4.755249023435937e-07,
+      "mesh": "rbxassetid://72986121121217"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__Head",
+      "centerError": 3.7561035156133404e-07,
+      "sizeError": 4.4604492188682343e-07,
+      "mesh": "rbxassetid://113524668096280"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__MouthO",
+      "centerError": 5.969238281444689e-08,
+      "sizeError": 3.7402343749937117e-07,
+      "mesh": "rbxassetid://131527748689786"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__MouthSmile",
+      "centerError": 1.7431640619847144e-07,
+      "sizeError": 4.915771484315101e-07,
+      "mesh": "rbxassetid://75454271229665"
+    },
+    {
+      "model": "Vezzi",
+      "name": "Vezzi__Teeth",
+      "centerError": 4.3200683593619393e-07,
+      "sizeError": 3.763427734448932e-07,
+      "mesh": "rbxassetid://121670030847549"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__Body",
+      "centerError": 1.2426757811656586e-07,
+      "sizeError": 4.229736328964506e-07,
+      "mesh": "rbxassetid://85264302754001"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__CharmDot",
+      "centerError": 1.989746092334599e-07,
+      "sizeError": 4.8831176757691e-07,
+      "mesh": "rbxassetid://74425635025752"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__CheekL",
+      "centerError": 4.016113286375855e-08,
+      "sizeError": 2.1826171874711475e-07,
+      "mesh": "rbxassetid://131904780664265"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__CheekR",
+      "centerError": 1.5747070314375833e-08,
+      "sizeError": 4.292602539118784e-07,
+      "mesh": "rbxassetid://108201863052231"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__EyeL",
+      "centerError": 1.7456054685061062e-08,
+      "sizeError": 3.942871093648437e-07,
+      "mesh": "rbxassetid://131262295238975"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__EyeR",
+      "centerError": 6.286621090367817e-08,
+      "sizeError": 4.57763671884992e-07,
+      "mesh": "rbxassetid://80398121860981"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__FinnedCheekL",
+      "centerError": 3.9245605468196665e-07,
+      "sizeError": 4.1186523436209654e-07,
+      "mesh": "rbxassetid://128915542579173"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__FinnedCheekR",
+      "centerError": 4.134521485177345e-07,
+      "sizeError": 2.3608398436181233e-07,
+      "mesh": "rbxassetid://109800040258520"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__FootL",
+      "centerError": 2.966308593754796e-07,
+      "sizeError": 2.7844238281726774e-07,
+      "mesh": "rbxassetid://93851011026768"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__FootR",
+      "centerError": 5.046386718776663e-07,
+      "sizeError": 2.3315429686920908e-07,
+      "mesh": "rbxassetid://125352936339878"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__GlintL",
+      "centerError": 3.7231445149110698e-09,
+      "sizeError": 3.562011718707958e-07,
+      "mesh": "rbxassetid://99826215679487"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__GlintR",
+      "centerError": 4.797363282182943e-07,
+      "sizeError": 2.7990722656356937e-07,
+      "mesh": "rbxassetid://92125932310128"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__HandL",
+      "centerError": 5.000000000005e-07,
+      "sizeError": 1.3055419922913813e-07,
+      "mesh": "rbxassetid://89916534136848"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__HandR",
+      "centerError": 3.142089843744672e-07,
+      "sizeError": 2.474365234372833e-07,
+      "mesh": "rbxassetid://120290877516869"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__Head",
+      "centerError": 1.8298339843694778e-07,
+      "sizeError": 5.302734374934559e-07,
+      "mesh": "rbxassetid://101967706329820"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__HipFlapL",
+      "centerError": 4.080810546702729e-07,
+      "sizeError": 4.718627929778396e-07,
+      "mesh": "rbxassetid://78942057391263"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__HipFlapR",
+      "centerError": 4.158935546921816e-07,
+      "sizeError": 4.5422363281755196e-07,
+      "mesh": "rbxassetid://75643846024532"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__MittenTipL",
+      "centerError": 3.5998535158343614e-07,
+      "sizeError": 3.3355712891758316e-07,
+      "mesh": "rbxassetid://108141700857410"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__MouthO",
+      "centerError": 2.4658203118255173e-08,
+      "sizeError": 4.6633911132687444e-07,
+      "mesh": "rbxassetid://126132534826485"
+    },
+    {
+      "model": "Kiprik",
+      "name": "Kiprik__MouthSmile",
+      "centerError": 3.2836914076739276e-07,
+      "sizeError": 4.696350097699309e-07,
+      "mesh": "rbxassetid://103566975837651"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__Body",
+      "centerError": 1.1767578123045297e-07,
+      "sizeError": 4.6289062505255885e-07,
+      "mesh": "rbxassetid://88871539466360"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__CharmDot",
+      "centerError": 3.46191406208618e-07,
+      "sizeError": 3.613281250036682e-07,
+      "mesh": "rbxassetid://74141000294316"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__CheekL",
+      "centerError": 5.5419921873856026e-08,
+      "sizeError": 3.1750488280885003e-07,
+      "mesh": "rbxassetid://106507316327919"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__CheekR",
+      "centerError": 4.0771484410839776e-08,
+      "sizeError": 4.0112304687534017e-07,
+      "mesh": "rbxassetid://111997490177241"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__Cowl",
+      "centerError": 2.0874023398675945e-08,
+      "sizeError": 5.939941406518656e-07,
+      "mesh": "rbxassetid://71928749531367"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__EyeL",
+      "centerError": 1.2573242169633403e-08,
+      "sizeError": 3.7902832031311284e-07,
+      "mesh": "rbxassetid://78823332738110"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__EyeR",
+      "centerError": 2.124023434912914e-08,
+      "sizeError": 2.4389648436984324e-07,
+      "mesh": "rbxassetid://128712411429151"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__FootL",
+      "centerError": 3.2556152344820344e-07,
+      "sizeError": 3.8433837890039513e-07,
+      "mesh": "rbxassetid://81290650095938"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__FootR",
+      "centerError": 4.320068359708884e-07,
+      "sizeError": 3.22753906267792e-07,
+      "mesh": "rbxassetid://92239654041685"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__GlintL",
+      "centerError": 2.392578124510436e-08,
+      "sizeError": 4.7369384765377776e-07,
+      "mesh": "rbxassetid://71663557063112"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__GlintR",
+      "centerError": 4.7363281296952664e-08,
+      "sizeError": 4.7369384765377776e-07,
+      "mesh": "rbxassetid://91915769775879"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__HandL",
+      "centerError": 5.074462890997111e-07,
+      "sizeError": 2.3156738276908229e-07,
+      "mesh": "rbxassetid://106881362140033"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__HandR",
+      "centerError": 4.96215820267043e-07,
+      "sizeError": 4.188232421986626e-07,
+      "mesh": "rbxassetid://70510872560849"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__Head",
+      "centerError": 3.8513183594351963e-07,
+      "sizeError": 4.780273438198535e-07,
+      "mesh": "rbxassetid://101737933323668"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__LidFold",
+      "centerError": 4.3719482417658995e-07,
+      "sizeError": 2.885437011823644e-07,
+      "mesh": "rbxassetid://101640593313593"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__MouthO",
+      "centerError": 3.527832030669753e-08,
+      "sizeError": 3.971252441475892e-07,
+      "mesh": "rbxassetid://82207723696322"
+    },
+    {
+      "model": "Nolli",
+      "name": "Nolli__MouthSmile",
+      "centerError": 3.3837890633936496e-07,
+      "sizeError": 5.352783203071976e-07,
+      "mesh": "rbxassetid://101538187504381"
+    }
+  ]
+}

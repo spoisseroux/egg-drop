@@ -1,0 +1,454 @@
+{
+  "asset": "kiprik",
+  "displayName": "Kiprik",
+  "legacyId": "foxfire_wick",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "neutralBoundsExcludingCharm": [
+    1.08,
+    1.56,
+    0.87
+  ],
+  "bodyHeightTarget": 1.56,
+  "triangles": 6732,
+  "meshCount": 20,
+  "fbxSha256": "1983ef098d18a1b982f8ebb5e7ae4d0bb014fa4ee34bfb2dce662c185be4cf5a",
+  "objects": [
+    {
+      "name": "Kiprik__Head",
+      "channel": "Head",
+      "role": "Head",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.027403,
+        1.155215,
+        0.027561
+      ],
+      "sizeRoblox": [
+        0.716493,
+        0.809571,
+        0.743864
+      ],
+      "triangles": 784,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__Body",
+      "channel": "Body",
+      "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.000449,
+        0.483504,
+        0.011224
+      ],
+      "sizeRoblox": [
+        0.394546,
+        0.647009,
+        0.55327
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.243635,
+        0.673853,
+        0.074062
+      ],
+      "sizeRoblox": [
+        0.253917,
+        0.297554,
+        0.435611
+      ],
+      "triangles": 500,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__MittenTipL",
+      "channel": "HandL",
+      "role": "MittenTipL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.238053,
+        0.564766,
+        0.186789
+      ],
+      "sizeRoblox": [
+        0.13496,
+        0.170542,
+        0.214115
+      ],
+      "triangles": 256,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.119553,
+        0.136242,
+        0.14071
+      ],
+      "sizeRoblox": [
+        0.211981,
+        0.272483,
+        0.431132
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__HipFlapL",
+      "channel": "Body",
+      "role": "HipFlapL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.200771,
+        0.432626,
+        -0.084476
+      ],
+      "sizeRoblox": [
+        0.237391,
+        0.313362,
+        0.344325
+      ],
+      "triangles": 360,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.241728,
+        0.62118,
+        0.013947
+      ],
+      "sizeRoblox": [
+        0.18914,
+        0.515546,
+        0.211369
+      ],
+      "triangles": 500,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.138697,
+        0.136242,
+        0.082998
+      ],
+      "sizeRoblox": [
+        0.191136,
+        0.272483,
+        0.37527
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__HipFlapR",
+      "channel": "Body",
+      "role": "HipFlapR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.205264,
+        0.520059,
+        -0.083354
+      ],
+      "sizeRoblox": [
+        0.21163,
+        0.215187,
+        0.332827
+      ],
+      "triangles": 360,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__FinnedCheekL",
+      "channel": "Head",
+      "role": "FinnedCheekL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.371611,
+        1.084443,
+        -0.18627
+      ],
+      "sizeRoblox": [
+        0.336778,
+        0.475781,
+        0.49746
+      ],
+      "triangles": 440,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__FinnedCheekR",
+      "channel": "Head",
+      "role": "FinnedCheekR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.377492,
+        1.147961,
+        -0.18627
+      ],
+      "sizeRoblox": [
+        0.325017,
+        0.430402,
+        0.487752
+      ],
+      "triangles": 440,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__EyeL",
+      "channel": "Face",
+      "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.122754,
+        1.17626,
+        0.397376
+      ],
+      "sizeRoblox": [
+        0.09456,
+        0.154896,
+        0.063598
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__GlintL",
+      "channel": "Face",
+      "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.138358,
+        1.202556,
+        0.424604
+      ],
+      "sizeRoblox": [
+        0.025747,
+        0.034829,
+        0.019604
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__CheekL",
+      "channel": "Face",
+      "role": "CheekL",
+      "colorRole": "blush",
+      "centerRoblox": [
+        -0.188886,
+        1.074212,
+        0.35597
+      ],
+      "sizeRoblox": [
+        0.076564,
+        0.051697,
+        0.048686
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__EyeR",
+      "channel": "Face",
+      "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.174277,
+        1.266295,
+        0.39797
+      ],
+      "sizeRoblox": [
+        0.090366,
+        0.105,
+        0.062413
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__GlintR",
+      "channel": "Face",
+      "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.158673,
+        1.28371,
+        0.425198
+      ],
+      "sizeRoblox": [
+        0.025747,
+        0.034829,
+        0.019604
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__CheekR",
+      "channel": "Face",
+      "role": "CheekR",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.267789,
+        1.212638,
+        0.359893
+      ],
+      "sizeRoblox": [
+        0.074663,
+        0.061232,
+        0.048028
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__MouthSmile",
+      "channel": "Face",
+      "role": "MouthSmile",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.094022,
+        1.04282,
+        0.407009
+      ],
+      "sizeRoblox": [
+        0.163973,
+        0.095423,
+        0.045743
+      ],
+      "triangles": 416,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Kiprik__MouthO",
+      "channel": "Face",
+      "role": "MouthO",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.099344,
+        1.030506,
+        0.415722
+      ],
+      "sizeRoblox": [
+        0.068658,
+        0.120876,
+        0.045743
+      ],
+      "triangles": 256,
+      "exprKeys": []
+    },
+    {
+      "name": "Kiprik__CharmDot",
+      "channel": "Charm",
+      "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.03805,
+        1.75936,
+        0.011224
+      ],
+      "sizeRoblox": [
+        0.135757,
+        0.185411,
+        0.185149
+      ],
+      "triangles": 224,
+      "exprKeys": []
+    }
+  ]
+}

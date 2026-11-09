@@ -79,7 +79,7 @@ function Sampler.attach(visual)
   dt=if type(dt)=="number"and dt==dt and dt>=0 and dt<math.huge then dt else 0
   self.poseElapsed=(self.poseElapsed or 0)+dt;self.poseClock=(self.poseClock or 0)+dt
   local cadence=self.poseCadence or Sampler.DefaultCadence;local bucket=if cadence>0 then math.floor((self.cosmeticTime or self.poseClock)*cadence+1e-6)else -1
-  local stateKey=tostring(self.reducedEffects)..":"..tostring(self.focusPose)..":"..tostring(self.expression)..":"..tostring(self.gardenAction)..":"..tostring(self.charmVisible)..":"..tostring(self.petting)
+  local stateKey=tostring(self.reducedEffects)..":"..tostring(self.focusPose)..":"..tostring(self.expression)..":"..tostring(self.gardenAction)..":"..tostring(self.charmVisible)..":"..tostring(self.renderCharmShape)..":"..tostring(self.petting)
   local root=rootOf(self)
   if not self.gardenPivot then self.pivotStartYaw=nil end
   if not self.poseSlots or cadence<=0 or self.poseDirty or bucket~=self.poseBucket or stateKey~=self.poseStateKey then

@@ -1,0 +1,91 @@
+{
+  "size": 13,
+  "roles": {
+    ".": "transparent",
+    "B": "outline",
+    "H": "body highlight",
+    "M": "body",
+    "D": "blush",
+    "F": "face",
+    "I": "ivory",
+    "S": "secondary",
+    "L": "secondary shadow"
+  },
+  "maps": {
+    "tikket": [
+      "..BBBB.......",
+      "..BHHHBBB....",
+      "..BHMMMMMBB..",
+      "..BMMMMMMMB..",
+      "..BMFIMMFMB..",
+      "..BDMMMMMDB..",
+      "...BMMFFMB...",
+      "...BBMMMMB...",
+      "..BM.BHMB.B..",
+      "..BS.BMMBMB..",
+      "...SLBMMBSB..",
+      "....BMMMB....",
+      "...BSS.BSS..."
+    ],
+    "nuum": [
+      ".............",
+      "....BBBBB....",
+      "..BBHHMMMBBB.",
+      ".BHHMMMMMMMSB",
+      "BMMMMMMMMMSSB",
+      "BMFFMMMFFMSSB",
+      "BDMMMMMMMDBSB",
+      ".BMMMFMMMMSB.",
+      "..BMMMMMMSMB.",
+      ".SMBHMMMMMMS.",
+      "..BMMMMMMMB..",
+      "...BMMMMMBB..",
+      "...BSS.BSS..."
+    ],
+    "vezzi": [
+      "..BSB........",
+      "..BSSB...BBB.",
+      "..BSHBBBBMHB.",
+      ".BHHMMMMMMMB.",
+      "BMMMMMMMMMMMB",
+      "BMFFMMMMFFMMB",
+      "BDFIMMMMFIMDB",
+      ".BMMIIIIMMMB.",
+      "..BBMFFMMMBB.",
+      "...BMMMMMMB..",
+      "..BMBBMMBBMB.",
+      "...BMMMMMMB..",
+      "..BSSB..BSSB."
+    ],
+    "kiprik": [
+      "......BBBB...",
+      "...BBBMMHHB..",
+      "..BHMMMMMHB..",
+      ".SBMMMMMMMB..",
+      "BSBMFMMFIMBS.",
+      "BSBDMMMMMDBSB",
+      ".SBMMMFFMMBS.",
+      "..SBMMMMMBB..",
+      "...MBHHMBB.S.",
+      "..BM.BMMB.B..",
+      "..BS.BMMBSB..",
+      "....BMMMB....",
+      "...BSS.BSS..."
+    ],
+    "nolli": [
+      ".............",
+      "....BBBBB....",
+      "..BBHHMMMBB..",
+      ".BHHMMMMMMMSB",
+      "BSMMMMMMMMSSB",
+      "BSFFMMMFFMMSB",
+      "BSDMMMMMMMDSS",
+      "BSBMMFMMMMBSS",
+      ".BSSMMMMMSSSB",
+      "..BSLLSSSSSB.",
+      "..SMBMMMMMMS.",
+      "...BMMMMMMB..",
+      "...BSS..BSS.."
+    ]
+  }
+}

@@ -169,12 +169,30 @@ function Activity.sample(actor,now)
     local expression=if actor.action=="focus" then "curious" elseif actor.action=="greet" then "pleased"
         elseif actor.behavior=="rest" then "sleepy" elseif actor.behavior=="investigate" then "curious"
         elseif actor.behavior=="play" then (if phase>.43 and phase<.62 then "startled" else "pleased") else "neutral"
-    return {position=position,velocity=velocity,yaw=yaw,phase=phase,actionPhase=phase,behavior=actor.behavior,action=actor.action,
+    local toyTime=if actor.action=="toyReturn"and finite(actor.toyStartTime)then now-actor.toyStartTime else nil
+    return {position=position,velocity=velocity,yaw=yaw,phase=phase,actionPhase=if toyTime then math.clamp(toyTime/5,0,1)else phase,behavior=actor.behavior,action=actor.action,toyRole=actor.toyRole,toyTime=toyTime,
         expression=expression,generation=actor.generation,actionId=actor.actionId,peerId=actor.peerId,mode=actor.mode,pivot=pivoting,pivotPhase=pivotPhase,pivotTurn=pivotTurn}
 end
 function Activity.sampleToy(toy,now)
     if type(toy)~="table" then return nil end
     local position=Activity.vector(toy.position);if not position then return nil end
+    local action=toy.returnAction
+    if toy.kind=="return"and type(action)=="table"and finite(action.startTime)and finite(action.endTime)and finite(action.createdTime)then
+        local near,far=Activity.vector(action.near),Activity.vector(action.far)
+        if not near or not far or action.endTime<=action.startTime then return nil end
+        local function blend(a,b,t)t=math.clamp(t,0,1);return a:Lerp(b,t*t*(3-2*t))end
+        local t=now-action.startTime
+        local pickup=action.pickupTime or action.createdTime
+        local prep=math.clamp((now-pickup)/math.max(.001,action.startTime-pickup),0,1)
+        local semantic=if t<0 then blend(Activity.vector(action.initialBasePosition)or position,near,prep)
+            elseif t<.5 then near elseif t<2.25 then blend(near,far,(t-.5)/1.75)
+            elseif t<2.8 then far elseif t<4.5 then blend(far,near,(t-2.8)/1.7)
+            else blend(near,position,(t-4.5)/.5)
+        local bounce=if t>.5 and t<2.25 then math.sin((t-.5)/1.75*math.pi)*.12 elseif t>2.8 and t<4.5 then math.sin((t-2.8)/1.7*math.pi)*.12 else 0
+        local visual=if t<0 then blend(Activity.vector(action.initialPosition)or position,near,prep)else semantic+Vector3.new(0,bounce,0)
+        local fade=1-prep*prep*(3-2*prep)
+        return{basePosition=semantic,position=visual,tilt=if t<0 then(action.initialTilt or 0)*fade else 0,rotation=if t<0 then(action.initialRotation or 0)*fade else math.clamp(t,0,5)*2,phase=math.clamp(t/5,0,1),actionId=action.id,state=action.state}
+    end
     local phase=if toy.startTime then math.clamp((now-toy.startTime)/math.max(.001,toy.endTime-toy.startTime),0,1) else 1
     local tilt=if toy.actionId and phase<1 then math.sin(phase*math.pi*4)*.40*math.sin(math.pi*phase) else 0
     local axis=Activity.vector(toy.axis)or Vector3.new(0,0,1)

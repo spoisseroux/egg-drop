@@ -1,6 +1,7 @@
 -- Isolated coordinator checks for public/private transform separation and idle work.
 return function(server)
  local Garden=require(server.GardenState);local Activity=require(game.ReplicatedStorage.Shared.GardenActivity)
+ local Layout=require(game.ReplicatedStorage.Shared.GardenLayout)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local function fixture(validate)
   local c={now=0,candidates=0}
@@ -40,7 +41,7 @@ return function(server)
  end)
  test("free reachable toy alternates with nearby wander on the normal decision cadence",function()
   local c=fixture(function(_,target)return target end)
-  c.input.position=Vector3.new(-2,7,-1);c.input.anchor=Vector3.new(-2,4.025,-1)
+  c.input.anchor=Layout.Lawn+Vector3.new(0,0,3);c.input.position=c.input.anchor+Vector3.new(0,3,0)
   c.g:remove(1);c.g:syncOne(1,c.input)
   local actor=c.g.actors[1];local choices={};local lastWander;local toyOwned=false
   for tick=1,180 do

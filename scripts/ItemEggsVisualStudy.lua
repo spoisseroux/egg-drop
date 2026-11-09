@@ -3,31 +3,84 @@
 -- character movement, ownership, inventory, stores or rewards are involved.
 -- owner:set({hour=0,view="wide",preset="mixed",motion="idle",frozen=true})
 -- owner:set({view="side",pets={"pip"},motion="sequence",cadence=15,frozen=false})
--- owner:stats() / owner:destroy(). Only the current runtime is rendered here.
-return function(client,initial)
+-- owner:stats() / owner:destroy(). Current runtime by default; explicit verified archive adapter is rig-only in the current world.
+return function(client,initial,runtime)
  local Players=game:GetService("Players");local Run=game:GetService("RunService");local Lighting=game:GetService("Lighting");local Http=game:GetService("HttpService")
  local player=assert(Players.LocalPlayer,"real native client VM required")
  local Shared=game:GetService("ReplicatedStorage").Shared
  local Factory=require(client.PetFactory);local Follow=require(client.PetFollow);local Clock=require(client.HollowClock)
  local Activity=require(Shared.GardenActivity);local Hue=require(Shared.HueCatalog);local Pets=require(Shared.PetCatalog)
+ if runtime then
+  assert(type(runtime)=="table"and runtime.sourceRevision=="bb8c60bdfac1fff1f77669b918c2b34da14cfad0"and runtime.Factory and runtime.Clock and runtime.Pets,"Only the explicit verified bb8c60b rig archive is supported")
+  Factory=runtime.Factory
+ end
+ local archivedClock=runtime and runtime.Clock
+ local archivedHour,archivedDaylight=archivedClock and archivedClock.lastHour,archivedClock and archivedClock.lastDaylight
  local folder=Instance.new("Folder");folder.Name="_ItemEggsVisualStudy_FIXTURE";folder:SetAttribute("FixtureOnly",true);folder.Parent=workspace
  local gui=Instance.new("ScreenGui");gui.Name="ItemEggsVisualStudy_FIXTURE";gui.ResetOnSpawn=false;gui.IgnoreGuiInset=false;gui.DisplayOrder=1000;gui.Parent=player:WaitForChild("PlayerGui")
  local label=Instance.new("TextLabel");label.Name="FixtureMetadata";label.Size=UDim2.new(1,-24,0,48);label.Position=UDim2.fromOffset(12,4)
  label.BackgroundColor3=Color3.fromHex("#16282C");label.BackgroundTransparency=.12;label.BorderSizePixel=0;label.TextColor3=Color3.fromHex("#FFF6E9")
  label.Font=Enum.Font.GothamMedium;label.TextSize=12;label.TextWrapped=true;label.TextXAlignment=Enum.TextXAlignment.Left;label.Parent=gui
  local owner={folder=folder,gui=gui,visuals={},actors={},connections={},cameras={},savedGui={},frames=0,elapsed=0,destroyed=false,trace={}}
- local state={hour=12,view="front",preset="neutral",motion="idle",cadence=15,reduced=false,frozen=true,pets={"pip","puddle"},origin=Vector3.new(-8,4.025,8),hideUI=true,markers=true,treatment="current",at=0}
+ local state={hour=12,view="front",preset="neutral",motion="idle",cadence=15,reduced=false,frozen=true,pets={"pip","puddle"},origin=Vector3.new(-8,4.025,8),hideUI=true,markers=true,treatment="current",at=0,activeToy=false}
  local bind="ItemEggsStudy_"..Http:GenerateGUID(false)
- local savedEnvironment={};for _,key in ipairs({"ClockTime","Brightness","ExposureCompensation","Ambient","OutdoorAmbient","ColorShift_Top"})do savedEnvironment[key]=Lighting[key]end
+ local environmentKeys={"ClockTime","Brightness","ExposureCompensation","Ambient","OutdoorAmbient","ColorShift_Top"}
+ local airKeys={"Color","Decay","Density"}
+ local savedEnvironment={};for _,key in ipairs(environmentKeys)do savedEnvironment[key]=Lighting[key]end
  local air=Lighting:FindFirstChildOfClass("Atmosphere");local savedAir={};if air then for _,key in ipairs({"Color","Decay","Density"})do savedAir[key]=air[key]end end
  local grade=Lighting:FindFirstChild("SproutHollowGrade");local savedGrade=grade and grade.TintColor
  local savedHour,savedDaylight=Clock.lastHour,Clock.lastDaylight
  local savedLamps={};for _,part in ipairs(workspace:GetDescendants())do if part:IsA("PointLight")and part:GetAttribute("HollowLamp")==true then savedLamps[part]=part.Brightness end end
- local controller=Clock.controller;local borrowed=controller~=nil and not controller.destroyed;local savedNow,savedClockElapsed
- if borrowed then savedNow,savedClockElapsed=controller.now,controller.elapsed end
+ local controller=Clock.controller;local borrowed=controller~=nil and not controller.destroyed;local savedNow,savedClockElapsed,savedControllerDaylight
+ if borrowed then savedNow,savedClockElapsed,savedControllerDaylight=controller.now,controller.elapsed,controller.daylight end
  owner.heldNow=function()return ((state.hour-Clock.TimeZoneOffsetHours)%24)*3600 end
  local function pack(v)return{v.X,v.Y,v.Z}end
  local function rgb(c)return{c.R,c.G,c.B}end
+ local targetEnvironment,targetAir,targetGrade={},{},nil
+ local function synchronizeRigClocks()
+  Clock.lastHour,Clock.lastDaylight=state.hour,owner.heldDaylight
+  if archivedClock then archivedClock.lastHour,archivedClock.lastDaylight=state.hour,owner.heldDaylight end
+ end
+ local function captureLightingTarget()
+  owner.heldDaylight=select(2,Clock.sample(owner.heldNow()));synchronizeRigClocks()
+  for _,key in ipairs(environmentKeys)do targetEnvironment[key]=Lighting[key]end
+  if air and air.Parent then for _,key in ipairs(airKeys)do targetAir[key]=air[key]end end
+  targetGrade=grade and grade.Parent and grade.TintColor or nil
+ end
+ local function enforceLighting()
+  synchronizeRigClocks()
+  -- The command VM may not share the production clock's module cache. Own actual native
+  -- properties at this fixture's existing last-priority render step, without another clock.
+  local corrections=0
+  for key,value in pairs(targetEnvironment)do if Lighting[key]~=value then Lighting[key]=value;corrections+=1 end end
+  if air and air.Parent then for key,value in pairs(targetAir)do if air[key]~=value then air[key]=value;corrections+=1 end end end
+  if targetGrade and grade and grade.Parent and grade.TintColor~=targetGrade then grade.TintColor=targetGrade;corrections+=1 end
+  local before=controller.writes
+  for light,record in pairs(controller.lights)do controller:paint(light,record)end
+  owner.lightingCorrections=(owner.lightingCorrections or 0)+corrections+controller.writes-before
+  owner.lightingFrames=(owner.lightingFrames or 0)+1
+  owner.lastFrameClockTime=Lighting.ClockTime;owner.lastLightingSampleAt=workspace:GetServerTimeNow()
+ end
+ local function lightingMatches()
+  for key,value in pairs(targetEnvironment)do if Lighting[key]~=value then return false end end
+  if air and air.Parent then for key,value in pairs(targetAir)do if air[key]~=value then return false end end end
+  if targetGrade and grade and grade.Parent and grade.TintColor~=targetGrade then return false end
+  for light,record in pairs(controller.lights)do
+   if light.Parent and light:GetAttribute("HollowLamp")==true and record.desired and math.abs(light.Brightness-record.desired)>1e-5 then return false end
+  end
+  return true
+ end
+ local function measuredEnvironment()
+  local result={};for _,key in ipairs(environmentKeys)do local value=Lighting[key];result[key]=if typeof(value)=="Color3"then rgb(value)else value end
+  result.GeographicLatitude=Lighting.GeographicLatitude;result.EnvironmentDiffuseScale=Lighting.EnvironmentDiffuseScale;result.EnvironmentSpecularScale=Lighting.EnvironmentSpecularScale;result.GlobalShadows=Lighting.GlobalShadows
+  if air and air.Parent then result.atmosphere={Color=rgb(air.Color),Decay=rgb(air.Decay),Density=air.Density}end
+  if grade and grade.Parent then result.gradeTint=rgb(grade.TintColor)end
+  local lamps={};for light in pairs(controller.lights)do if light.Parent and light:GetAttribute("HollowLamp")==true then
+   table.insert(lamps,{path=light:GetFullName(),brightness=light.Brightness,color=rgb(light.Color),range=light.Range,enabled=light.Enabled,shadows=light.Shadows})
+  end end
+  table.sort(lamps,function(a,b)return a.path<b.path end);result.lamps=lamps
+  return result
+ end
  local function doseLabel(c)return string.format("R%d T%d C%d I%d",c.rose,c.tide,c.citrus,c.iris)end
  local function hide(item)
   if state.hideUI and item:IsA("ScreenGui")and item~=gui then
@@ -47,16 +100,17 @@ return function(client,initial)
   if self.destroyed then return end;self.destroyed=true;Run:UnbindFromRenderStep(bind)
   for _,connection in ipairs(self.connections)do connection:Disconnect()end
   for _,visual in ipairs(self.visuals)do visual:destroy()end
+  if self.toy then self.toy:destroy();self.toy=nil end
   if borrowed and not controller.destroyed and controller.now==self.heldNow then
-   controller.now=savedNow;controller.elapsed=savedClockElapsed;controller:apply(savedNow())
-  else
-   if controller and not borrowed then controller:destroy()end
-   for key,value in pairs(savedEnvironment)do Lighting[key]=value end
-   if air and air.Parent then for key,value in pairs(savedAir)do air[key]=value end end
-   if grade and grade.Parent then grade.TintColor=savedGrade end
-   for light,brightness in pairs(savedLamps)do if light.Parent then light.Brightness=brightness end end
-   Clock.lastHour,Clock.lastDaylight=savedHour,savedDaylight
-  end
+   controller.now,controller.elapsed,controller.daylight=savedNow,savedClockElapsed,savedControllerDaylight
+  elseif controller and not borrowed then controller:destroy()end
+  -- Restore the exact pre-study snapshot immediately; the ordinary owner continues its cadence.
+  for key,value in pairs(savedEnvironment)do Lighting[key]=value end
+  if air and air.Parent then for key,value in pairs(savedAir)do air[key]=value end end
+  if grade and grade.Parent then grade.TintColor=savedGrade end
+  for light,brightness in pairs(savedLamps)do if light.Parent then light.Brightness=brightness end end
+  Clock.lastHour,Clock.lastDaylight=savedHour,savedDaylight
+  if archivedClock then archivedClock.lastHour,archivedClock.lastDaylight=archivedHour,archivedDaylight end
   for item,enabled in pairs(self.savedGui)do if item.Parent then item.Enabled=enabled end end
   for camera,saved in pairs(self.cameras)do if camera.Parent then pcall(function()camera.CFrame=saved.cf;camera.Focus=saved.focus;camera.FieldOfView=saved.fov;camera.CameraSubject=saved.subject;camera.CameraType=saved.type end)end end
   if folder.Parent then folder:Destroy()end;if gui.Parent then gui:Destroy()end
@@ -92,9 +146,9 @@ return function(client,initial)
  end
  local function metadata()
   local a=owner.appearance
-  label.Text=string.format("FIXTURE • current production rigs • %02d:00 • %s • %s • %s • %s\nMain %s / Secondary %s • no purchases, saved ownership or rewards",state.hour,if state.cadence==0 then "continuous control"else state.cadence.." poses/s",state.motion,state.view,if state.reduced then "reduced"else "normal",doseLabel(a.mainDoses),doseLabel(a.secondaryDoses))
-  folder:SetAttribute("FixtureHour",state.hour);folder:SetAttribute("FixtureCadence",state.cadence);folder:SetAttribute("FixtureMotion",state.motion);folder:SetAttribute("FixtureView",state.view)
-  folder:SetAttribute("HistoricalBaseline",false);folder:SetAttribute("Treatment",state.treatment);folder:SetAttribute("Daylight",Clock.lastDaylight)
+  label.Text=string.format("FIXTURE • %s • %02d:00 • %s • %s • %s • %s\nMain %s / Secondary %s • no purchases, saved ownership or rewards",if runtime then "archived bb8c60b rigs / current world"else "current production rigs",state.hour,if state.cadence==0 then "continuous control"else state.cadence.." poses/s",state.motion,state.view,if state.reduced then "reduced"else "normal",doseLabel(a.mainDoses),doseLabel(a.secondaryDoses))
+  folder:SetAttribute("RequestedHour",state.hour);folder:SetAttribute("ActualClockTime",Lighting.ClockTime);folder:SetAttribute("FixtureHour",state.hour);folder:SetAttribute("FixtureCadence",state.cadence);folder:SetAttribute("FixtureMotion",state.motion);folder:SetAttribute("FixtureView",state.view)
+  folder:SetAttribute("HistoricalBaseline",runtime~=nil);folder:SetAttribute("ComparisonScope","rig-only-current-world");folder:SetAttribute("Treatment",state.treatment);folder:SetAttribute("Daylight",Clock.lastDaylight)
  end
  function owner:set(options)
   if self.destroyed then return false,"destroyed"end;options=options or{}
@@ -113,16 +167,22 @@ return function(client,initial)
   for _,id in ipairs(nextState.pets)do if not Pets.byId[id]then return false,"unknown pet ID"end end
   state=nextState;self.elapsed=state.at;self.frames=0;self.trace={};self.appearance=appearance()
   for _,visual in ipairs(self.visuals)do visual:destroy()end;table.clear(self.visuals);table.clear(self.actors)
+  if self.toy then self.toy:destroy();self.toy=nil end
   if self.markers then self.markers:Destroy();self.markers=nil end
-  controller:apply(self.heldNow())
+  controller:apply(self.heldNow());captureLightingTarget()
   local n=#state.pets;local spacing=if n>2 then 2.8 else 3.2
   for index,id in ipairs(state.pets)do
    local shift=(index-(n+1)/2)*spacing;local offset=if state.view=="side"then Vector3.new(0,0,shift)else Vector3.new(shift,0,0)
    local actor,duration=makeActor(state.origin+offset);self.actors[index]=actor;self.duration=duration
-   local visual=Factory.new(folder,Activity.vector(actor.from),Pets.byId[id],.72,self.appearance)
+   local visual=Factory.new(folder,Activity.vector(actor.from),if runtime then runtime.Pets.byId[id]else Pets.byId[id],.72,self.appearance)
    visual.poseCadence=state.cadence;visual.reducedEffects=state.reduced
    visual.greeting=if id=="pip"or id=="puddle"or id=="bloom_pip"then 2 else 0;visual.time=0;visual.poseDirty=true;visual.cosmeticSeed=index*113
    visual.model:SetAttribute("EvidenceFixture",true);table.insert(self.visuals,visual)
+  end
+  if state.activeToy then
+   local rest=state.origin+Vector3.new(0,0,-1)
+   self.toy=require(client.GardenToyVisual).new(folder,rest)
+   self.toyState={kind="return",position=Activity.pack(rest),returnAction={id=1,state="paired",createdTime=0,startTime=3,endTime=8,near=Activity.pack(rest+Vector3.new(-1,0,0)),far=Activity.pack(rest+Vector3.new(1,0,0))}}
   end
   if state.markers then
    local markers=Instance.new("Folder");markers.Name="FixtureGroundRuler";markers.Parent=folder;self.markers=markers
@@ -143,6 +203,7 @@ return function(client,initial)
   for _,item in ipairs(gui.Parent:GetChildren())do hide(item)end
   metadata();pinCamera();return true
  end
+ function owner:lightingIsControlled()return lightingMatches()end
  function owner:stats()
   local subjects={}
   for index,visual in ipairs(self.visuals)do
@@ -156,8 +217,15 @@ return function(client,initial)
   end
   local quality="unknown";pcall(function()quality=tostring(UserSettings():GetService("UserGameSettings").SavedQualityLevel)end)
   local camera=workspace.CurrentCamera
-  return{fixture=true,historicalBaseline=false,treatment=state.treatment,treatmentNote="current production material treatment",
-   hour=Clock.lastHour,daylight=Clock.lastDaylight,exposure=Lighting.ExposureCompensation,brightness=Lighting.Brightness,graphics=quality,
+  local environment=measuredEnvironment();local actualHour=environment.ClockTime
+  local actualDaylight=select(2,Clock.sample(((actualHour-Clock.TimeZoneOffsetHours)%24)*3600))
+  local delta=math.abs((actualHour-state.hour+12)%24-12)
+  return{fixture=true,historicalBaseline=runtime~=nil,comparisonScope="rig-only-current-world",sourceRevision=if runtime then runtime.sourceRevision else "current-working-tree",treatment=state.treatment,treatmentNote=if runtime then "archived rig/material implementation in current world"else "current production material treatment",
+   hour=Clock.lastHour,requestedHour=state.hour,actualClockTime=actualHour,actualDaylight=actualDaylight,daylight=Clock.lastDaylight,
+   lightingControlled=delta<.00001 and lightingMatches(),lightingClockDelta=delta,lightingCorrections=self.lightingCorrections or 0,lightingFrames=self.lightingFrames or 0,
+   lastFrameClockTime=self.lastFrameClockTime,lastLightingSampleAt=self.lastLightingSampleAt,collectedAt=workspace:GetServerTimeNow(),environment=environment,
+   exposure=Lighting.ExposureCompensation,brightness=Lighting.Brightness,graphics=quality,
+   lastRigCPUSeconds=self.lastRigCPUSeconds,lastFrameSeconds=self.lastFrameSeconds,activeToyFixture=self.toy~=nil,fixtureActorCount=#self.visuals,
    cadence=state.cadence,reduced=state.reduced,frozen=state.frozen,view=state.view,motion=state.motion,frames=self.frames,elapsed=self.elapsed,duration=self.duration,
    cameraFov=camera and camera.FieldOfView,cameraFrame=camera and{camera.CFrame:GetComponents()},origin=pack(state.origin),appearance=self.appearance,subjects=subjects,lastFrames=table.clone(self.trace)}
  end
@@ -169,14 +237,18 @@ return function(client,initial)
   local accepted,why=owner:set(initial);assert(accepted,why)
   Run:BindToRenderStep(bind,Enum.RenderPriority.Last.Value+20,function(dt)
    if owner.destroyed then return end
+   enforceLighting()
    if not state.frozen then owner.elapsed+=math.max(0,dt)end
    owner.frames+=1
+   local rigCPUStarted=os.clock()
    for index,visual in ipairs(owner.visuals)do
     owner.actors[index].mode="Room"
     visual.cosmeticTime=owner.elapsed;visual.reducedEffects=state.reduced
     visual.studyFollow=Follow.activity(visual,owner.actors[index],owner.elapsed+.12,if state.frozen then 0 else dt,visual.studyFollow,state.reduced)
     visual:update(if state.frozen then 0 else dt)
    end
+   owner.lastRigCPUSeconds=os.clock()-rigCPUStarted;owner.lastFrameSeconds=dt
+   if owner.toy then owner.toy:update(Activity.sampleToy(owner.toyState,owner.elapsed%8),dt,state.reduced)end
    if owner.frames%2==0 and owner.visuals[1]then
     local v=owner.visuals[1];table.insert(owner.trace,{frame=owner.frames,time=owner.elapsed,origin=pack(v.origin),yaw=v.yaw or 0,pivot=v.gardenPivot==true,gait=v.gaitPhase or 0})
     if #owner.trace>32 then table.remove(owner.trace,1)end

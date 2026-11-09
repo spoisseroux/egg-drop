@@ -2,6 +2,10 @@
 local function points(values)return table.freeze(values)end
 return table.freeze({
 	Width=160,Depth=128,FloorTop=4,BoardwalkWidth=8,
+    WalkableSpans=table.freeze({
+        PrimaryBridge=table.freeze({center=Vector3.new(17.6,4.25,-9.4),size=Vector3.new(10.0,.21,4.5)}),
+        RestNook=table.freeze({center=Vector3.new(26,4.025,-15.2),size=Vector3.new(8.3,.25,5.0)}),
+    }),
 	Landmarks=table.freeze({Boardwalk=Vector2.new(64,-14),Orchard=Vector2.new(-59,-34)}),
 	Routes=table.freeze({
 		Boardwalk=points({Vector2.new(43,-28),Vector2.new(48,-26),Vector2.new(55,-20),Vector2.new(64,-14)}),

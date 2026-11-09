@@ -1,0 +1,113 @@
+{
+  "revision": "bb8c60bdfac1fff1f77669b918c2b34da14cfad0",
+  "namespace": "_RigStudyArchive_bb8c60b",
+  "manifestSHA256": "4b719fe83a875cb78aa556ec5eb2f26a9dffea26f997893cbfc863ebb01d6de4",
+  "moduleCount": 21,
+  "modules": [
+    {
+      "path": "src/client/BonusPetVisual.lua",
+      "originalSHA256": "af794cb70d64e30b5b29bede859887c74f865ab171ea9300a2c30ce341d713bd",
+      "sandboxSHA256": "af794cb70d64e30b5b29bede859887c74f865ab171ea9300a2c30ce341d713bd"
+    },
+    {
+      "path": "src/client/GardenPetVisual.lua",
+      "originalSHA256": "ebaf66daa6c73b7f0ffca87dc516dd54df8f688f2fb3adaf07ca400c25bfea17",
+      "sandboxSHA256": "c1b91d95ffdaad6afaa3311e570f214d9734d33f9df314ca892a46f3c1203c3d"
+    },
+    {
+      "path": "src/client/HollowClock.lua",
+      "originalSHA256": "63971bd3e2cafecffe53ce38437af07ba73b449586bebb95e149933d3f7d3fb9",
+      "sandboxSHA256": "63971bd3e2cafecffe53ce38437af07ba73b449586bebb95e149933d3f7d3fb9"
+    },
+    {
+      "path": "src/client/LegacyPetAppearance.lua",
+      "originalSHA256": "80ddd62a31afb60db035139f1736482ed6ed6e99b0613f7df14cfd1b2d886b8a",
+      "sandboxSHA256": "793a903e731ede7eac6f369ba1f88d354b6ed27e97118cc31eec5730cfc5e692"
+    },
+    {
+      "path": "src/client/PetCharms.lua",
+      "originalSHA256": "b0db56c66bea2266701f0bb9a38216b5fb560f68cc9a5da6e54db65af7145b8b",
+      "sandboxSHA256": "b0db56c66bea2266701f0bb9a38216b5fb560f68cc9a5da6e54db65af7145b8b"
+    },
+    {
+      "path": "src/client/PetExpression.lua",
+      "originalSHA256": "6412b5e0497b50884c5de5aaff5157024827a9b17f89b31861d3dec50f140757",
+      "sandboxSHA256": "6412b5e0497b50884c5de5aaff5157024827a9b17f89b31861d3dec50f140757"
+    },
+    {
+      "path": "src/client/PetFace.lua",
+      "originalSHA256": "42399be02a298db59cb3dc619f02980922833a5e7e59abcd0ef58215ff6e7581",
+      "sandboxSHA256": "42399be02a298db59cb3dc619f02980922833a5e7e59abcd0ef58215ff6e7581"
+    },
+    {
+      "path": "src/client/PetFactory.lua",
+      "originalSHA256": "9b3430bc136b5780bafd78e02d56e42e69639d3d61d5e28d3023ccce36a4344d",
+      "sandboxSHA256": "9b3430bc136b5780bafd78e02d56e42e69639d3d61d5e28d3023ccce36a4344d"
+    },
+    {
+      "path": "src/client/PetIdleMotion.lua",
+      "originalSHA256": "da0df33d9a14934bfc765d1c3d64e7798e5d24241f0b682209e97d3e73161150",
+      "sandboxSHA256": "da0df33d9a14934bfc765d1c3d64e7798e5d24241f0b682209e97d3e73161150"
+    },
+    {
+      "path": "src/client/PetNightSurfaces.lua",
+      "originalSHA256": "2889bae7e0eab4f025cb4438ed2a2f8a3cb98abce098f2100dd2ae074921ee41",
+      "sandboxSHA256": "42c44442d80b3c3469ba010f90700daf9de15a8945a27e6790a67b14910bc0fb"
+    },
+    {
+      "path": "src/client/PetPoseSampler.lua",
+      "originalSHA256": "4762d43272a197ab319c68a7336c47406e22c71c4e5c5c5e4a9857a3e1545ea6",
+      "sandboxSHA256": "4762d43272a197ab319c68a7336c47406e22c71c4e5c5c5e4a9857a3e1545ea6"
+    },
+    {
+      "path": "src/client/PetPrestige.lua",
+      "originalSHA256": "98690f0e4c3134112a424400412bc26472bd561b271485a698560142c6f37bee",
+      "sandboxSHA256": "98690f0e4c3134112a424400412bc26472bd561b271485a698560142c6f37bee"
+    },
+    {
+      "path": "src/client/PetRigBounds.lua",
+      "originalSHA256": "a027dba689cd8511daa4db0c3e5b078907741ce2be161d0de23049be658a39f4",
+      "sandboxSHA256": "a027dba689cd8511daa4db0c3e5b078907741ce2be161d0de23049be658a39f4"
+    },
+    {
+      "path": "src/client/PipVisual.lua",
+      "originalSHA256": "2ea75064c4d81b05ab6fa61f4833d770751f8593e524f6d4138fdec3f30563d8",
+      "sandboxSHA256": "2ea75064c4d81b05ab6fa61f4833d770751f8593e524f6d4138fdec3f30563d8"
+    },
+    {
+      "path": "src/client/PuddleVisual.lua",
+      "originalSHA256": "2be54da62ea16901de0ef43a2766599053207750255cfb98e274fd61fb08943c",
+      "sandboxSHA256": "2be54da62ea16901de0ef43a2766599053207750255cfb98e274fd61fb08943c"
+    },
+    {
+      "path": "src/shared/EggCatalog.lua",
+      "originalSHA256": "57a914aa00ce7d9fa9cf2a502509a83c2dde4b4deae80fcf88506d22b3774997",
+      "sandboxSHA256": "57a914aa00ce7d9fa9cf2a502509a83c2dde4b4deae80fcf88506d22b3774997"
+    },
+    {
+      "path": "src/shared/HueCatalog.lua",
+      "originalSHA256": "962a07344108bab4909b819bbc46cf0ea41b42612ca90d0605038fc3c2a44247",
+      "sandboxSHA256": "962a07344108bab4909b819bbc46cf0ea41b42612ca90d0605038fc3c2a44247"
+    },
+    {
+      "path": "src/shared/PetCatalog.lua",
+      "originalSHA256": "d49a31808280803684d3ac7096429c6e04459c499fbff9126fabffdde4de58ae",
+      "sandboxSHA256": "d49a31808280803684d3ac7096429c6e04459c499fbff9126fabffdde4de58ae"
+    },
+    {
+      "path": "src/shared/PetPalette.lua",
+      "originalSHA256": "ca00134fdfa7ebc06ff13ecfec85f5d5303f5c14339d7f7f8680385b19e13990",
+      "sandboxSHA256": "ca00134fdfa7ebc06ff13ecfec85f5d5303f5c14339d7f7f8680385b19e13990"
+    },
+    {
+      "path": "src/shared/PetRigDefinitions.lua",
+      "originalSHA256": "4b88ffd31ca650f17e1d4fb9b221fdf4a8c9e024d021ee687f3bd6f683082305",
+      "sandboxSHA256": "4b88ffd31ca650f17e1d4fb9b221fdf4a8c9e024d021ee687f3bd6f683082305"
+    },
+    {
+      "path": "src/shared/PocketTrials.lua",
+      "originalSHA256": "05aa8ccf4bba8851444c62ad8f592c8f1cf10f75e1c386d3f3b5cae6f0016ec7",
+      "sandboxSHA256": "05aa8ccf4bba8851444c62ad8f592c8f1cf10f75e1c386d3f3b5cae6f0016ec7"
+    }
+  ]
+}

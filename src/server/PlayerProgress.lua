@@ -233,7 +233,7 @@ local function flush(profile)
 		local stored=type(result)=="table"and type(result.petAppearance)=="table"and result.petAppearance[id]
 		local current=profile.petAppearanceChanges[id]
 		if PetAppearance.matches(stored,candidate)then
-			profile.petAppearanceSaved[id]={charmVisible=stored.charmVisible,charmShape="dot",at=stored.at,writer=stored.writer}
+            profile.petAppearanceSaved[id]=table.clone(stored)
 			if current==candidate then profile.petAppearanceChanges[id]=nil end
 			if profile.onPetAppearanceSaved then profile.onPetAppearanceSaved(candidate)end
 		else
@@ -245,9 +245,9 @@ local function flush(profile)
 			elseif current then
 				if foreign and current.at<=foreign.at then
 					local at=math.max(profile.lastPetAppearanceAt or 0,foreign.at)+1
-					local rebased=table.freeze({petId=id,visible=current.visible,shape="dot",at=at,writer=current.writer,generation=current.generation})
+                    local rebased=table.freeze({petId=id,visible=current.visible,shape=current.shape or "dot",at=at,writer=current.writer,generation=current.generation})
 					profile.petAppearanceChanges[id]=rebased;profile.lastPetAppearanceAt=at
-					profile.petAppearance[id]={charmVisible=rebased.visible,charmShape="dot",at=at,writer=rebased.writer}
+                    profile.petAppearance[id]={charmVisible=rebased.visible,charmShape=rebased.shape,at=at,writer=rebased.writer}
 				end
 				setSaveFailed(profile,true)
 			end
@@ -292,12 +292,14 @@ function Progress.setSetting(profile, key, value)
 end
 
 function Progress.setPetAppearance(profile,petId,visible,shape)
-	if not PetAppearance.supported[petId]or type(visible)~="boolean"or(shape~=nil and shape~="dot")then return nil end
+    local Charms=require(game:GetService("ReplicatedStorage").Shared.PetCharmCatalog)
+    if not PetAppearance.supported[petId]or type(visible)~="boolean"or(shape~=nil and not Charms.known(shape))then return nil end
+    shape=shape or PetAppearance.shape(profile,petId)
 	profile.petAppearance=profile.petAppearance or {};profile.petAppearanceChanges=profile.petAppearanceChanges or {};profile.petAppearanceSaved=profile.petAppearanceSaved or {}
 	profile.petAppearanceGeneration=(profile.petAppearanceGeneration or 0)+1
 	local at=math.max(DateTime.now().UnixTimestampMillis,(profile.lastPetAppearanceAt or 0)+1)
-	local candidate=table.freeze({petId=petId,visible=visible,shape="dot",at=at,writer=writer,generation=profile.petAppearanceGeneration})
-	profile.lastPetAppearanceAt=at;profile.petAppearance[petId]={charmVisible=visible,charmShape="dot",at=at,writer=writer}
+    local candidate=table.freeze({petId=petId,visible=visible,shape=shape,at=at,writer=writer,generation=profile.petAppearanceGeneration})
+    profile.lastPetAppearanceAt=at;profile.petAppearance[petId]={charmVisible=visible,charmShape=shape,at=at,writer=writer}
 	profile.petAppearanceChanges[petId]=candidate;markDirty(profile);return candidate
 end
 

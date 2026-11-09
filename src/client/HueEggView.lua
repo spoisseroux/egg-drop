@@ -5,6 +5,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Hues=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Pets=require(Shared.PetCatalog)
+local CharmCatalog=require(Shared.PetCharmCatalog)
 local Palette=require(Shared.PetPalette)
 local Art=require(script.Parent.DeckArt)
 local EggArt=require(script.Parent.EggArt)
@@ -66,7 +67,9 @@ function View.new(parent,intent,options)
  self.empty=text(body,"EmptyInventory","No jars yet. Find fixed-color fruit in Hue Eggs.","Body")
  self.charmTitle=text(body,"CharmTitle","A floating Dot, colored by Secondary.","Body")
  self.charmToggle=button(body,"ShowCharm","Show charm",function()self:toggleCharm()end)
- self.dot=button(body,"Shape_dot","✓ Dot",function()self:selectDot()end)
+ self.shapes={}
+ for _,id in ipairs(CharmCatalog.Order)do self.shapes[id]=button(body,"Shape_"..id,CharmCatalog.ById[id].name,function()self:selectCharm(id)end)end
+ self.dot=self.shapes.dot
  self.receiptArt=Art.frame(body,"ResultJar","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(150,160),23);self.receiptArt.BackgroundTransparency=1
  self.itemReveal=ItemReveal.new(self.receiptArt,{audio=self.options.audio,reduceEffects=self.options.reduceEffects})
  self.receipt=text(body,"SavedReceipt","","Reward");self.receipt.TextXAlignment=Enum.TextXAlignment.Center
@@ -137,16 +140,21 @@ function View:cancelConfirmation()
  local pendingResult=self.confirmation and self.confirmation.pendingResultId
  self.confirmation=nil;self.selectTarget=false;if pendingResult then self.page="receipt"end;self:refresh();if self.confirmReturn then self.body.CanvasPosition=self.confirmReturn.scroll;GuiService.SelectedObject=self.confirmReturn.target;self.confirmReturn=nil end;self.epoch+=1;return true
 end
-function View:requestCharm(visible)
+function View:shapeSelectionsEnabled()
+ local remotes=game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+ return if self.options.shapeSelectionsEnabled then self.options.shapeSelectionsEnabled()==true else CharmCatalog.SelectionsEnabled==true and remotes~=nil and(remotes:GetAttribute("PetCharmVersion")or 0)>=CharmCatalog.Version
+end
+function View:requestCharm(visible,shape)
  local id=self.petId;local pending=self.charmRequests[id]
  if pending then
   if not pending.retry or not self.options.charm then return false end
-  pending.retry=false;self.options.charm(id,pending.visible,pending.shape,pending.seq)
+  pending.retry=false;self.options.charm(id,pending.visible,pending.shape,pending.seq,pending.shapeVersion)
  else
   if not self.options.charm then return false end
-  local operation=self.options.charm(id,visible,"dot")
+  local shapeVersion=if shape~=nil then CharmCatalog.Version else nil
+  local operation=self.options.charm(id,visible,shape,nil,shapeVersion)
   if type(operation)~="table"or type(operation.seq)~="number"then return false end
-  pending={petId=id,visible=visible,shape="dot",seq=operation.seq};self.charmRequests[id]=pending
+  pending={petId=id,visible=visible,shape=shape,shapeVersion=shapeVersion,expectedShape=shape or self:appearance().charmShape or "dot",seq=operation.seq};self.charmRequests[id]=pending
  end
  local captured=pending
  task.delay(2,function()
@@ -159,16 +167,17 @@ function View:toggleCharm()
  if self.intent.pending then return false end
  return self:requestCharm(self:appearance().charmVisible==false)
 end
-function View:selectDot()
- if self.intent.pending then return false end
- return self:requestCharm(self:appearance().charmVisible~=false)
+function View:selectCharm(shape)
+ if self.intent.pending or not self:shapeSelectionsEnabled()or not CharmCatalog.known(shape)then return false end
+ return self:requestCharm(self:appearance().charmVisible~=false,shape)
 end
+function View:selectDot()return self:selectCharm("dot")end
 function View:charmResult(packet)
  if type(packet)~="table"then return false end
  local pending=self.charmRequests[packet.petId]
  if not pending or packet.seq~=pending.seq then return false end
  if packet.status=="Saved"then
-  if packet.visible~=pending.visible or(packet.shape~=nil and packet.shape~=pending.shape)then return false end
+  if packet.visible~=pending.visible or(packet.shape~=nil and packet.shape~=pending.expectedShape)then return false end
   self.charmRequests[packet.petId]=nil;self.charmMessage="Charm saved"
  elseif packet.status=="Rejected"then
   self.charmRequests[packet.petId]=nil;self.charmMessage="Charm was not saved. Try again."
@@ -218,7 +227,7 @@ function View:refresh()
  for id,request in pairs(self.charmRequests)do
   if request.retry and self.options.appearance then
    local saved=self.options.appearance(id)
-   if saved and saved.charmVisible==request.visible and(saved.charmShape==nil or saved.charmShape==request.shape)then self.charmRequests[id]=nil end
+   if saved and saved.charmVisible==request.visible and(saved.charmShape==nil or saved.charmShape==request.expectedShape)then self.charmRequests[id]=nil end
   end
  end
  local receipt=self.intent.receipt
@@ -270,10 +279,16 @@ function View:refresh()
   j.button:SetAttribute("DisabledReason",self:reason(id));Art.control(j.button,false,j.button.Interactable)
  end
  self.empty.Visible=hue and not confirming and not self.assignment and stock==0
- self.charmTitle.Visible=charm and not confirming;self.charmToggle.Visible=charm and not confirming;self.dot.Visible=charm and not confirming
+ self.charmTitle.Visible=charm and not confirming;self.charmToggle.Visible=charm and not confirming
  local a=self:appearance();local charmPending=self.charmRequests[self.petId]
  self.charmToggle.Text=if charmPending and charmPending.retry then "Retry charm save"elseif charmPending then "Saving…"elseif a.charmVisible~=false then "✓ Show charm"else "Show charm"
- self.charmToggle.Interactable=not charmPending or charmPending.retry==true;self.dot.Interactable=not charmPending;Art.control(self.dot,true,self.dot.Interactable)
+ self.charmToggle.Interactable=not charmPending or charmPending.retry==true
+ local known=CharmCatalog.known(a.charmShape or "dot");local enabled=self:shapeSelectionsEnabled()
+ self.charmTitle.Text=if known then "A floating "..CharmCatalog.ById[a.charmShape or "dot"].name..", colored by Secondary."else "Your saved charm uses a Dot here. Its original shape is preserved."
+ for id,node in pairs(self.shapes)do
+  node.Visible=charm and not confirming and(enabled or id==CharmCatalog.renderShape(a.charmShape));node.Interactable=enabled and not charmPending
+  local selected=known and id==(a.charmShape or "dot");node.Text=(if selected then "✓ "else "")..CharmCatalog.ById[id].name;Art.control(node,selected,node.Interactable)
+ end
  self.receipt.Visible=self.page=="receipt";self.receiptArt.Visible=self.receipt.Visible;self.receiptDetail.Visible=self.receipt.Visible;self.useNow.Visible=self.receipt.Visible
  if r and self.receipt.Visible then
   self.receipt.Text=names[r.itemId].." · "..tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory"
@@ -413,7 +428,7 @@ function View:layout()
   place(b.row,4,y,w-8,h);place(b.label,8,3,w-84,h-25);place(b.value,w-74,3,54,h-25)
   local notchW=(w-32-16)/5;for i,tick in ipairs(b.ticks)do place(tick,8+(i-1)*(notchW+4),h-18,notchW,12)end;y+=h+6
  end end
- copy(self.charmTitle);row({self.charmToggle,self.dot},1)
+ copy(self.charmTitle);row({self.charmToggle},1);local shapeButtons={};for _,id in ipairs(CharmCatalog.Order)do table.insert(shapeButtons,self.shapes[id])end;row(shapeButtons,3)
  copy(self.legacyTitle);local redemption={};for _,id in ipairs(ids)do if self.legacyButtons[id]then table.insert(redemption,self.legacyButtons[id])end end;row(redemption,2)
  copy(self.presetTitle);local presets={};for _,n in pairs(self.presetButtons)do table.insert(presets,n)end;table.sort(presets,function(a,b)return a.Name<b.Name end);row(presets,2)
  if not self.confirmation then copy(self.quote,28)end

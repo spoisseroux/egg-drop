@@ -52,11 +52,11 @@ return function(client)
     sample.actionId=2;v:applyGardenPose(sample);assert(v.greeting==0)
    end)
   end
-  test("only common aliases switch rigs; seven identity bits, ordering and rarity remain intact",function()
+  test("all seven authored aliases retain identity bits, ordering and rarity",function()
    assert(Pets.byId.pip.name=="Zivvi"and Pets.byId.puddle.name=="Ovelle"and #Pets.collection==7)
    for i,pet in ipairs(Pets.collection)do
     assert(pet.index==i);local v=Factory.new(folder,Vector3.new(2000,4,0),pet,.72);table.insert(views,v)
-    assert((v.model:GetAttribute("RigId")~=nil)==(pet.id=="pip"or pet.id=="puddle"))
+    assert(v.model:GetAttribute("RigId")~=nil and v.definition.legacyId==pet.id)
    end
   end)
   test("a named but empty imported resource rejects the entire backend for a faithful native fallback",function()

@@ -1,0 +1,358 @@
+{
+  "asset": "nuum",
+  "displayName": "Nuum",
+  "legacyId": "orbit",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "neutralBoundsExcludingCharm": [
+    1.43,
+    1.22,
+    0.98
+  ],
+  "bodyHeightTarget": 1.22,
+  "triangles": 4988,
+  "meshCount": 16,
+  "fbxSha256": "944427ba71f400f29f7dcb7b670abf87955aff0aded331ca56bacde9fcc2a706",
+  "objects": [
+    {
+      "name": "Nuum__Head",
+      "channel": "Head",
+      "role": "Head",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.050919,
+        0.840417,
+        -0.013865
+      ],
+      "sizeRoblox": [
+        1.328162,
+        0.759167,
+        0.952269
+      ],
+      "triangles": 840,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__Body",
+      "channel": "Body",
+      "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.062394,
+        0.404711,
+        -0.066263
+      ],
+      "sizeRoblox": [
+        0.995674,
+        0.494303,
+        0.842918
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.566236,
+        0.411179,
+        0.027563
+      ],
+      "sizeRoblox": [
+        0.246675,
+        0.283062,
+        0.337749
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.340643,
+        0.107099,
+        0.102377
+      ],
+      "sizeRoblox": [
+        0.296667,
+        0.214198,
+        0.356112
+      ],
+      "triangles": 272,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.529049,
+        0.591586,
+        0.214728
+      ],
+      "sizeRoblox": [
+        0.26853,
+        0.288715,
+        0.344899
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.214597,
+        0.107099,
+        0.16115
+      ],
+      "sizeRoblox": [
+        0.299933,
+        0.214198,
+        0.404442
+      ],
+      "triangles": 272,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__CheekFold",
+      "channel": "Head",
+      "role": "CheekFold",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.537494,
+        0.785751,
+        0.096057
+      ],
+      "sizeRoblox": [
+        0.355012,
+        0.417273,
+        0.596519
+      ],
+      "triangles": 440,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__EyeL",
+      "channel": "Face",
+      "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.338449,
+        0.872293,
+        0.451271
+      ],
+      "sizeRoblox": [
+        0.143591,
+        0.095697,
+        0.068883
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__GlintL",
+      "channel": "Face",
+      "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.359543,
+        0.888224,
+        0.479748
+      ],
+      "sizeRoblox": [
+        0.034806,
+        0.035013,
+        0.020503
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__CheekL",
+      "channel": "Face",
+      "role": "CheekL",
+      "colorRole": "blush",
+      "centerRoblox": [
+        -0.451742,
+        0.802996,
+        0.413862
+      ],
+      "sizeRoblox": [
+        0.103472,
+        0.054307,
+        0.050941
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__EyeR",
+      "channel": "Face",
+      "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.241145,
+        0.866958,
+        0.438935
+      ],
+      "sizeRoblox": [
+        0.144471,
+        0.093583,
+        0.069018
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__GlintR",
+      "channel": "Face",
+      "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.220051,
+        0.882889,
+        0.467412
+      ],
+      "sizeRoblox": [
+        0.034806,
+        0.035013,
+        0.020503
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__CheekR",
+      "channel": "Face",
+      "role": "CheekR",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.348697,
+        0.775705,
+        0.400875
+      ],
+      "sizeRoblox": [
+        0.103452,
+        0.051294,
+        0.050892
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__MouthSmile",
+      "channel": "Face",
+      "role": "MouthSmile",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        -0.025463,
+        0.703106,
+        0.456535
+      ],
+      "sizeRoblox": [
+        0.184366,
+        0.048512,
+        0.047841
+      ],
+      "triangles": 416,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Nuum__MouthO",
+      "channel": "Face",
+      "role": "MouthO",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        -0.026159,
+        0.701785,
+        0.465647
+      ],
+      "sizeRoblox": [
+        0.092817,
+        0.121516,
+        0.047841
+      ],
+      "triangles": 256,
+      "exprKeys": []
+    },
+    {
+      "name": "Nuum__CharmDot",
+      "channel": "Charm",
+      "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.049737,
+        1.450471,
+        -0.030951
+      ],
+      "sizeRoblox": [
+        0.183525,
+        0.186393,
+        0.193643
+      ],
+      "triangles": 224,
+      "exprKeys": []
+    }
+  ]
+}

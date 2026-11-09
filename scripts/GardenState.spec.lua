@@ -4,17 +4,20 @@ return function(server)
     local Activity=require(game.ReplicatedStorage.Shared.GardenActivity)
     local Layout=require(game.ReplicatedStorage.Shared.GardenLayout)
     local cases={};local function test(name,run)run();table.insert(cases,name)end
-    local function fixture(count)
+    local function fixture(count,nearToy)
         local c={now=0,writes=0,inputs={}}
-        for id=1,count do c.inputs[id]={petId=if id%2==1 then "pip"else "puddle",owned=true,alive=true,characterId=1,mode="Room",
-            position=Vector3.new((id-1)*2,7,-2),anchor=Vector3.new((id-1)*2,4.025,-2),yaw=0,charmVisible=true}end
+        for id=1,count do
+            local at=if nearToy then Layout.Lawn+Vector3.new((id-1)*2,0,2)else Vector3.new((id-1)*2,4.025,-2)
+            c.inputs[id]={petId=if id%2==1 then "pip"else "puddle",owned=true,alive=true,characterId=1,mode="Room",
+                position=Vector3.new(at.X,if nearToy then at.Y+3 else 7,at.Z),anchor=at,yaw=0,charmVisible=true}
+        end
         c.garden=Garden.new({now=function()return c.now end,publish=function(snapshot)c.writes+=1;c.snapshot=snapshot end,
             validFocus=function()return true end,award=function()error("garden cannot award")end})
         function c:step(dt)self.now+=dt;self.garden:step(dt,self.inputs)end
         c:step(.5);return c
     end
     test("solo garden investigates, shoves twice, rests and returns without a reward path",function()
-        local c=fixture(1);local observed={};local positive,negative=false,false
+        local c=fixture(1,true);local observed={};local positive,negative=false,false
         for _=1,160 do
             c:step(.5);local actor=c.garden.actors[1];observed[actor.behavior]=true
             if actor.action=="shove"then
@@ -107,8 +110,9 @@ return function(server)
         stale.seq=21;assert(not c.garden:focus(1,stale))
     end)
     test("only one toy reservation exists and another waiting pet gets a turn",function()
-        local c=fixture(3);c.inputs[2].position=Vector3.new(11,7,-2);c.inputs[2].anchor=Vector3.new(11,4.025,-2)
-        c.inputs[3].position=Vector3.new(-11,7,-2);c.inputs[3].anchor=Vector3.new(-11,4.025,-2)
+        local c=fixture(3,true)
+        c.inputs[2].anchor=Layout.Lawn+Vector3.new(11,0,2);c.inputs[2].position=c.inputs[2].anchor+Vector3.new(0,3,0)
+        c.inputs[3].anchor=Layout.Lawn+Vector3.new(-11,0,2);c.inputs[3].position=c.inputs[3].anchor+Vector3.new(0,3,0)
         local owners={}
         for _=1,160 do
             c:step(.5);local playing=0
@@ -126,7 +130,7 @@ return function(server)
         assert(c.writes==writes)
     end)
     test("late join samples the current shared path, not a replayed beginning",function()
-        local c=fixture(1)
+        local c=fixture(1,true)
         while c.garden.actors[1].behavior~="investigate"do c:step(.5)end
         local snapshot=c.garden:snapshot();local a=snapshot.actors["1"]
         local now=(a.startTime+a.endTime)*.5

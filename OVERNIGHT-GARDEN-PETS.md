@@ -1,5 +1,7 @@
 # The social garden, its next five babies and two original scores
 
+**Implemented checkpoint · November 9, 6:10 AM Eastern:** the reviewed final toy sits on the bench apron at (−2, 4.025, 17.5), with paired slots at X = −4.4 and .4. The proposed trunk-side position below was rejected in actual two-client testing. Final joining uses a three-second window, bounded approaches, then a five-second exchange. Both pets returned the ball through ordinary Start/Join controls with no reward or inventory changes. The floor remains 160 × 128; five uploaded baby rigs, the supported bridge, rest nook, optional free charms and saturated hatch are complete in source. Publication is tracked in [the current verification](artifacts/aero-garden-2026-11-09/VERIFY.md). Geometry and timings farther down preserve the original design brief, not the final implementation contract.
+
 **Production brief · November 9, 2026.** Spencer authorized this work for the overnight pass after the item-egg candidate passes its native and visual gates. Use the existing private Egg Drop place and branch. Geometry dimensions, motion timings, colors and music parameters below are authoring targets until rendered or heard. [Current build handoff](PLAY-BUILD.md) · [Overnight scope and cutoff](OVERNIGHT-AERO.md) · [Prior concepts](CHAO-GARDEN-DIRECTION.md) · [Item-egg contract](ITEM-EGGS-AND-AERO.md)
 
 ## Build a place pets can actually use

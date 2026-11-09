@@ -1,0 +1,655 @@
+{
+  "schema": 1,
+  "id": "nolli",
+  "legacyId": "eclipse_orbit",
+  "axes": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "units": "studs at garden size",
+  "nativeScaleFactor": 1.3888888888888888,
+  "palette": {
+    "body": "#D3D3CC",
+    "secondary": "#9795AC",
+    "face": "#363448",
+    "mouth": "#645265",
+    "ivory": "#FFF4DB",
+    "blush": "#C5A6AF"
+  },
+  "anchors": {
+    "Root": [
+      0,
+      0,
+      0
+    ],
+    "EyeLine": [
+      -0.022337,
+      0.898214,
+      0.431406
+    ],
+    "Head": [
+      -0.026174,
+      0.866309,
+      -0.033027
+    ],
+    "Body": [
+      -0.014094,
+      0.403867,
+      -0.084966
+    ],
+    "HandL": [
+      -0.564765,
+      0.590899,
+      0.195056
+    ],
+    "HandR": [
+      0.464094,
+      0.410033,
+      0.00988
+    ],
+    "FootL": [
+      -0.278859,
+      0.106876,
+      0.083273
+    ],
+    "FootR": [
+      0.250671,
+      0.106876,
+      0.139729
+    ],
+    "CharmAnchor": [
+      -0.026174,
+      1.499342,
+      -0.049964
+    ],
+    "HandCatch": [
+      -0.050335,
+      0.500466,
+      0.302468
+    ]
+  },
+  "pieces": [
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.026174,
+        0.866309,
+        -0.033027
+      ],
+      "size": [
+        1.243289,
+        0.803623,
+        0.943946
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        -7
+      ],
+      "name": "Head",
+      "channel": "Head",
+      "colorRole": "body"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.014094,
+        0.403867,
+        -0.084966
+      ],
+      "size": [
+        0.950336,
+        0.493272,
+        0.835551
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "Body",
+      "channel": "Body",
+      "colorRole": "body"
+    },
+    {
+      "shape": "mitten",
+      "center": [
+        -0.564765,
+        0.590899,
+        0.195056
+      ],
+      "size": [
+        0.261745,
+        0.25794,
+        0.325187
+      ],
+      "xyzEulerDeg": [
+        -22,
+        -11,
+        -16
+      ],
+      "name": "HandL",
+      "channel": "HandL",
+      "colorRole": "body",
+      "fallbackParts": [
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0.08,
+            0.15,
+            -0.1
+          ],
+          "size": [
+            0.76,
+            0.73,
+            0.72
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            23
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            -0.14,
+            -0.05,
+            0.02
+          ],
+          "size": [
+            0.71,
+            0.65,
+            0.72
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0.08,
+            -0.23,
+            0.15
+          ],
+          "size": [
+            0.83,
+            0.52,
+            0.7
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.278859,
+        0.106876,
+        0.083273
+      ],
+      "size": [
+        0.274832,
+        0.213751,
+        0.350028
+      ],
+      "xyzEulerDeg": [
+        0,
+        -12,
+        0
+      ],
+      "name": "FootL",
+      "channel": "FootL",
+      "colorRole": "secondary"
+    },
+    {
+      "shape": "mitten",
+      "center": [
+        0.464094,
+        0.410033,
+        0.00988
+      ],
+      "size": [
+        0.22953,
+        0.266161,
+        0.325187
+      ],
+      "xyzEulerDeg": [
+        15,
+        11,
+        3
+      ],
+      "name": "HandR",
+      "channel": "HandR",
+      "colorRole": "body",
+      "fallbackParts": [
+        {
+          "shape": "ellipsoid",
+          "center": [
+            -0.08,
+            0.15,
+            -0.1
+          ],
+          "size": [
+            0.76,
+            0.73,
+            0.72
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            -23
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0.14,
+            -0.05,
+            0.02
+          ],
+          "size": [
+            0.71,
+            0.65,
+            0.72
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            -0.08,
+            -0.23,
+            0.15
+          ],
+          "size": [
+            0.83,
+            0.52,
+            0.7
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            -15
+          ]
+        }
+      ]
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        0.250671,
+        0.106876,
+        0.139729
+      ],
+      "size": [
+        0.274832,
+        0.213751,
+        0.399709
+      ],
+      "xyzEulerDeg": [
+        0,
+        12,
+        0
+      ],
+      "name": "FootR",
+      "channel": "FootR",
+      "colorRole": "secondary"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        0.0,
+        0.702913,
+        0.013267
+      ],
+      "size": [
+        1.5,
+        0.580622,
+        0.983466
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "Cowl",
+      "channel": "Head",
+      "colorRole": "secondary",
+      "fallbackParts": [
+        {
+          "shape": "ellipsoid",
+          "center": [
+            -0.38,
+            -0.04,
+            0.05
+          ],
+          "size": [
+            0.24,
+            0.62,
+            0.52
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            -18
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0,
+            0.13,
+            -0.24
+          ],
+          "size": [
+            0.96,
+            0.66,
+            0.52
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0.39,
+            0.1,
+            -0.02
+          ],
+          "size": [
+            0.22,
+            0.69,
+            0.6
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            17
+          ]
+        }
+      ]
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.251062,
+        0.964901,
+        0.429429
+      ],
+      "size": [
+        0.192282,
+        0.063714,
+        0.072264
+      ],
+      "xyzEulerDeg": [
+        0,
+        -11,
+        9
+      ],
+      "name": "LidFold",
+      "channel": "Head",
+      "colorRole": "body"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.256426,
+        0.920307,
+        0.427259
+      ],
+      "size": [
+        0.142953,
+        0.068853,
+        0.054198
+      ],
+      "xyzEulerDeg": [
+        0,
+        -15,
+        -12
+      ],
+      "name": "EyeL",
+      "channel": "Face",
+      "colorRole": "face"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.27656,
+        0.932012,
+        0.455487
+      ],
+      "size": [
+        0.033221,
+        0.03494,
+        0.020324
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "GlintL",
+      "channel": "Face",
+      "colorRole": "ivory"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.370053,
+        0.861038,
+        0.395896
+      ],
+      "size": [
+        0.103691,
+        0.051383,
+        0.035003
+      ],
+      "xyzEulerDeg": [
+        0,
+        -19,
+        -14
+      ],
+      "name": "CheekL",
+      "channel": "Face",
+      "colorRole": "blush"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        0.211752,
+        0.876122,
+        0.435554
+      ],
+      "size": [
+        0.142953,
+        0.124346,
+        0.054198
+      ],
+      "xyzEulerDeg": [
+        0,
+        15,
+        -2
+      ],
+      "name": "EyeR",
+      "channel": "Face",
+      "colorRole": "face"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        0.191618,
+        0.897261,
+        0.463782
+      ],
+      "size": [
+        0.033221,
+        0.03494,
+        0.020324
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "GlintR",
+      "channel": "Face",
+      "colorRole": "ivory"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        0.30624,
+        0.776273,
+        0.403722
+      ],
+      "size": [
+        0.103691,
+        0.051383,
+        0.035003
+      ],
+      "xyzEulerDeg": [
+        0,
+        19,
+        0
+      ],
+      "name": "CheekR",
+      "channel": "Face",
+      "colorRole": "blush"
+    },
+    {
+      "shape": "smile",
+      "center": [
+        -0.089408,
+        0.728496,
+        0.433261
+      ],
+      "size": [
+        0.176174,
+        0.045217,
+        0.047423
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        -7
+      ],
+      "name": "MouthSmile",
+      "channel": "Face",
+      "colorRole": "mouth",
+      "fallbackParts": [
+        {
+          "shape": "ellipsoid",
+          "center": [
+            -0.3,
+            0.13,
+            -0.04
+          ],
+          "size": [
+            0.42,
+            0.43,
+            0.82
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            -18
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0,
+            -0.16,
+            0.08
+          ],
+          "size": [
+            0.51,
+            0.45,
+            0.83
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "ellipsoid",
+          "center": [
+            0.3,
+            0.13,
+            -0.04
+          ],
+          "size": [
+            0.42,
+            0.43,
+            0.82
+          ],
+          "xyzEulerDeg": [
+            0,
+            0,
+            18
+          ]
+        }
+      ]
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.089408,
+        0.728496,
+        0.442294
+      ],
+      "size": [
+        0.088591,
+        0.121263,
+        0.047423
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "MouthO",
+      "channel": "Face",
+      "colorRole": "mouth"
+    },
+    {
+      "shape": "ellipsoid",
+      "center": [
+        -0.026174,
+        1.499342,
+        -0.049964
+      ],
+      "size": [
+        0.175168,
+        0.186005,
+        0.191951
+      ],
+      "xyzEulerDeg": [
+        0,
+        0,
+        0
+      ],
+      "name": "CharmDot",
+      "channel": "Charm",
+      "colorRole": "secondary"
+    }
+  ]
+}

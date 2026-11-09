@@ -1,7 +1,7 @@
 -- Authored cosmetics only. One caller-owned 12Hz sampler; no jobs/instances/rays.
 local Clock=require(script.Parent.HollowClock)
 local Ambience={};Ambience.__index=Ambience
-Ambience.Step=1/12;Ambience.Limit=18;Ambience.ViewDistance=80
+Ambience.Step=1/12;Ambience.Limit=18;Ambience.ActiveCap=3;Ambience.ViewDistance=80
 local kinds={water=true,leaf=true,firefly=true}
 local safetyProperties={"Anchored","CanCollide","CanTouch","CanQuery"}
 local attributes={"HollowAmbientKind","HollowAmbientPhase","HollowAmbientPeriod","HollowAmbientAmplitude","HollowRestCFrame","HollowRestTransparency"}
@@ -68,10 +68,19 @@ function Ambience:step(dt,camera,enabled,reduced)
  self.elapsed+=dt;if self.elapsed<Ambience.Step then return end;self.elapsed%=Ambience.Step
  local now=self.now();local daylight=self.daylight();local origin=camera.CFrame.Position
  self.ticks+=1
+ local eligible=self.eligible;table.clear(eligible)
+ for _,entry in ipairs(self.entries)do
+  entry.selected=false
+  if entry.valid and cosmetic(entry.part)then
+   entry.distance=(entry.rest.Position-origin).Magnitude
+   if entry.distance<=Ambience.ViewDistance and not(entry.kind=="firefly"and daylight>.3)and self.view(camera,entry.rest.Position)then table.insert(eligible,entry)end
+  end
+ end
+ table.sort(eligible,function(a,b)return if a.distance==b.distance then a.index<b.index else a.distance<b.distance end)
+ for i=1,math.min(Ambience.ActiveCap,#eligible)do eligible[i].selected=true end
  for _,entry in ipairs(self.entries)do
   if entry.valid and cosmetic(entry.part)then
-   local visible=(entry.rest.Position-origin).Magnitude<=Ambience.ViewDistance and self.view(camera,entry.rest.Position)
-   if not visible or (entry.kind=="firefly"and daylight>.3)then self:rest(entry)else
+   if not entry.selected then self:rest(entry)else
     local cycle=((now%entry.period)/entry.period+entry.phase)%1;local angle=cycle*math.pi*2
     local a=entry.amplitude;local offset=Vector3.new(a.X*math.sin(angle),a.Y*math.sin(angle*2),a.Z*math.cos(angle))
     local alpha=entry.transparency
@@ -86,8 +95,8 @@ function Ambience:step(dt,camera,enabled,reduced)
  end
 end
 function Ambience:stats()
- local valid=0;for _,e in ipairs(self.entries)do if e.valid then valid+=1 end end
- return{candidates=#self.entries,parts=valid,connections=#self.connections+#self.roomConnections+#self.entries*(#attributes+#safetyProperties),scans=self.scans,ticks=self.ticks,cframeWrites=self.cframeWrites,alphaWrites=self.alphaWrites}
+ local valid,active=0,0;for _,e in ipairs(self.entries)do if e.valid then valid+=1 end;if e.moving then active+=1 end end
+ return{candidates=#self.entries,parts=valid,active=active,connections=#self.connections+#self.roomConnections+#self.entries*(#attributes+#safetyProperties),scans=self.scans,ticks=self.ticks,cframeWrites=self.cframeWrites,alphaWrites=self.alphaWrites}
 end
 function Ambience:getStats()return self:stats()end
 function Ambience:destroy()
@@ -97,7 +106,7 @@ end
 function Ambience.new(options)
  options=options or {};local world=options.world or workspace
  local self=setmetatable({world=world,now=options.now or function()return workspace:GetServerTimeNow()end,view=options.view or inView,daylight=options.daylight or Clock.daylight,
-  records={},entries={},connections={},roomConnections={},elapsed=0,scans=0,ticks=0,cframeWrites=0,alphaWrites=0},Ambience)
+  records={},entries={},eligible={},connections={},roomConnections={},elapsed=0,scans=0,ticks=0,cframeWrites=0,alphaWrites=0},Ambience)
  table.insert(self.connections,world.ChildAdded:Connect(function(room)if not self.destroyed and room.Name=="EggDropLounge"then self:bind(room)end end))
  table.insert(self.connections,world.ChildRemoved:Connect(function(room)if not self.destroyed and self.room==room then self:bind(nil)end end))
  self:bind(world:FindFirstChild("EggDropLounge"));return self

@@ -32,9 +32,9 @@ function Night.paint(entry,visual,daylight)
  if entry.part.Material~=material then entry.part.Material=material end
  if not visual.worldContext then return end
  local groups=visual.nightGroups or prepare(visual)
- local colors=visual.colors or {};local charm=visual.charmVisible~=false
- if visual.nightDaylight==daylight and visual.nightColors==colors and visual.nightCharm==charm and visual.nightStyle==treatment then return end
- visual.nightDaylight,visual.nightColors,visual.nightCharm,visual.nightStyle=daylight,colors,charm,treatment
+ local colors=visual.colors or {};local charm=visual.charmVisible~=false;local charmShape=visual.renderCharmShape
+ if visual.nightDaylight==daylight and visual.nightColors==colors and visual.nightCharm==charm and visual.nightStyle==treatment and visual.nightCharmShape==charmShape then return end
+ visual.nightDaylight,visual.nightColors,visual.nightCharm,visual.nightStyle,visual.nightCharmShape=daylight,colors,charm,treatment,charmShape
  local active=if visual.nightFillActive then daylight<.48 else daylight<.44
  visual.nightFillActive=active
  for role,group in pairs(groups)do
@@ -43,7 +43,7 @@ function Night.paint(entry,visual,daylight)
   group.fill.FillColor=color;group.fill.FillTransparency=1-opacity*dusk;group.fill.Enabled=active and dusk>.001
  end
  for _,piece in ipairs(visual.pieces)do if piece.role=="charm"then
-  local parent=if charm then groups.secondary.model else visual.model
+  local parent=if charm and(piece.charmShape or "dot")==charmShape then groups.secondary.model else visual.model
   if piece.part.Parent~=parent then piece.part.Parent=parent end
  end end
 end

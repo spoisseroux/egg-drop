@@ -1,0 +1,430 @@
+{
+  "asset": "tikket",
+  "displayName": "Tikket",
+  "legacyId": "wick",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "neutralBoundsExcludingCharm": [
+    0.94,
+    1.52,
+    0.85
+  ],
+  "bodyHeightTarget": 1.52,
+  "triangles": 6108,
+  "meshCount": 19,
+  "fbxSha256": "2a5eb17cf1da9b73c44f4431272b51a489c360c18dc6267d267ca88382923b37",
+  "objects": [
+    {
+      "name": "Tikket__Head",
+      "channel": "Head",
+      "role": "Head",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.006392,
+        1.122865,
+        -0.019302
+      ],
+      "sizeRoblox": [
+        0.92056,
+        0.794268,
+        0.811395
+      ],
+      "triangles": 784,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__Body",
+      "channel": "Body",
+      "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.030025,
+        0.47682,
+        -0.037122
+      ],
+      "sizeRoblox": [
+        0.524654,
+        0.638065,
+        0.603497
+      ],
+      "triangles": 484,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.301175,
+        0.664537,
+        0.031421
+      ],
+      "sizeRoblox": [
+        0.33765,
+        0.293441,
+        0.475157
+      ],
+      "triangles": 500,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__MittenTipL",
+      "channel": "HandL",
+      "role": "MittenTipL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.293753,
+        0.556958,
+        0.154382
+      ],
+      "sizeRoblox": [
+        0.179465,
+        0.168184,
+        0.233554
+      ],
+      "triangles": 256,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.136175,
+        0.134358,
+        0.10412
+      ],
+      "sizeRoblox": [
+        0.281885,
+        0.268716,
+        0.470272
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__HipFlapL",
+      "channel": "Body",
+      "role": "HipFlapL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.244177,
+        0.426645,
+        -0.14151
+      ],
+      "sizeRoblox": [
+        0.315675,
+        0.30903,
+        0.375584
+      ],
+      "triangles": 360,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.344243,
+        0.612593,
+        -0.034152
+      ],
+      "sizeRoblox": [
+        0.251512,
+        0.508419,
+        0.230558
+      ],
+      "triangles": 500,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__MittenTipR",
+      "channel": "HandR",
+      "role": "MittenTipR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.324353,
+        0.413508,
+        0.099734
+      ],
+      "sizeRoblox": [
+        0.179465,
+        0.168184,
+        0.233554
+      ],
+      "triangles": 256,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.207237,
+        0.134358,
+        0.041169
+      ],
+      "sizeRoblox": [
+        0.254167,
+        0.268716,
+        0.409339
+      ],
+      "triangles": 288,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__HipFlapR",
+      "channel": "Body",
+      "role": "HipFlapR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.295755,
+        0.512869,
+        -0.140287
+      ],
+      "sizeRoblox": [
+        0.281419,
+        0.212213,
+        0.363043
+      ],
+      "triangles": 360,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__EyeL",
+      "channel": "Face",
+      "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.193786,
+        1.230977,
+        0.384608
+      ],
+      "sizeRoblox": [
+        0.12376,
+        0.152011,
+        0.068502
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__GlintL",
+      "channel": "Face",
+      "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.214536,
+        1.256909,
+        0.414308
+      ],
+      "sizeRoblox": [
+        0.034237,
+        0.034347,
+        0.021384
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__CheekL",
+      "channel": "Face",
+      "role": "CheekL",
+      "colorRole": "blush",
+      "centerRoblox": [
+        -0.318136,
+        1.178061,
+        0.340731
+      ],
+      "sizeRoblox": [
+        0.099285,
+        0.060386,
+        0.052389
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__EyeR",
+      "channel": "Face",
+      "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.186517,
+        1.145486,
+        0.384211
+      ],
+      "sizeRoblox": [
+        0.120868,
+        0.105067,
+        0.067876
+      ],
+      "triangles": 324,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__GlintR",
+      "channel": "Face",
+      "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.165767,
+        1.16266,
+        0.413911
+      ],
+      "sizeRoblox": [
+        0.034237,
+        0.034347,
+        0.021384
+      ],
+      "triangles": 100,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__CheekR",
+      "channel": "Face",
+      "role": "CheekR",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.274458,
+        1.044848,
+        0.337147
+      ],
+      "sizeRoblox": [
+        0.101813,
+        0.050982,
+        0.053106
+      ],
+      "triangles": 144,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__MouthSmile",
+      "channel": "Face",
+      "role": "MouthSmile",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.000977,
+        0.980452,
+        0.393802
+      ],
+      "sizeRoblox": [
+        0.232671,
+        0.052981,
+        0.049895
+      ],
+      "triangles": 416,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Tikket__MouthO",
+      "channel": "Face",
+      "role": "MouthO",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        -0.000391,
+        0.977372,
+        0.403306
+      ],
+      "sizeRoblox": [
+        0.0913,
+        0.119205,
+        0.049895
+      ],
+      "triangles": 256,
+      "exprKeys": []
+    },
+    {
+      "name": "Tikket__CharmDot",
+      "channel": "Charm",
+      "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.019975,
+        1.718875,
+        -0.037122
+      ],
+      "sizeRoblox": [
+        0.180525,
+        0.182848,
+        0.201958
+      ],
+      "triangles": 224,
+      "exprKeys": []
+    }
+  ]
+}

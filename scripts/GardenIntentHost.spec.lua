@@ -6,7 +6,7 @@ return function(server,hostSource)
  local last=assert(hostSource:find("for _, player in ipairs(Players:GetPlayers())",first,true))
  local source=hostSource:sub(first,last-1)
  local module=Instance.new("ModuleScript");module.Name="_GardenIntentHostListener";module.Parent=server
- module.Source="return function(e)local boards,os,gardenIntentRemote,garden,gardenInput=e.boards,e.os,e.remote,e.garden,e.input\n"..source.."\nend"
+ module.Source="return function(e)local boards,os,gardenIntentRemote,garden,gardenInput,gardenToyResult=e.boards,e.os,e.remote,e.garden,e.input,e.toyResult\n"..source.."\nend"
  local ok,install=pcall(require,module);module:Destroy();assert(ok,install)
  local now=0;local player={UserId=74001};local board={profile={companionId="pip"},mode="Room",characterGeneration=3,companionGeneration=4}
  local input={petId="pip",owned=true,alive=true,mode="Room",position=Vector3.new(0,7,0),anchor=Vector3.new(2,4.025,0),characterId=3,petGeneration=4,yaw=.4}

@@ -330,15 +330,20 @@ function Focus:layoutSaveHelper()
 	local value=if self.saveNotice then self.saveNotice.detail else self.helper.Text
 	local key=value..tostring(size)..GuiService.PreferredTextSize.Name..tostring(self.saveNotice~=nil)
 	if self.helperLayoutKey==key then return end;self.helperLayoutKey=key
-	if self.saveNotice then
-		self.helper.Text=value;Art.type(self.helper,"Supporting",size.Y<280)
-		local width=math.max(1,math.min(size.X-24,Art.textWidth(self.helper)+16))
-		self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+8)
-	else
-		Art.type(self.helper,"Supporting",true)
-		local width=math.max(1,math.min(size.X-24,Art.textWidth(self.helper)+16))
-		self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+8)
+	local topHint=not self.saveNotice and size.X>size.Y and size.Y<420
+	local available=size.X-24
+	if topHint then
+		-- CoreUISafeInsets already excludes system controls. Preserve the Back lane
+		-- symmetrically so the one existing lesson sits in sky, clear of the pet's feet.
+		local lane=self.back.Position.X.Offset+self.back.Size.X.Offset+12
+		available=size.X-lane*2
 	end
+	if self.saveNotice then self.helper.Text=value end
+	Art.type(self.helper,"Supporting",if self.saveNotice then size.Y<280 else true)
+	local width=math.max(1,math.min(available,Art.textWidth(self.helper)+16))
+	self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+8)
+	self.helper.AnchorPoint=Vector2.new(.5,if topHint then 0 else 1)
+	self.helper.Position=if topHint then UDim2.new(.5,0,0,8)else UDim2.new(.5,0,1,-14)
 end
 function Focus:setSaveNotice(notice)
 	if SaveNotice.key(self.saveNotice)==SaveNotice.key(notice)then return false end

@@ -1,0 +1,141 @@
+{
+  "package": "Sprout Hollow five-baby art source",
+  "axes": {
+    "gameUp": "+Y",
+    "gameFront": "+Z",
+    "right": "+X",
+    "heightUnits": "garden studs"
+  },
+  "blenderVersion": "5.1.0",
+  "source": "five-garden-babies.blend",
+  "nativeScaleFactor": 1.3888888888888888,
+  "families": [
+    {
+      "id": "wick",
+      "display": "Tikket",
+      "template": "tikket",
+      "fbx": "tikket.fbx",
+      "fbxSha256": "2a5eb17cf1da9b73c44f4431272b51a489c360c18dc6267d267ca88382923b37",
+      "native": "tikket-native.json",
+      "manifest": "tikket-mesh-manifest.json",
+      "threeViewsAndExpressions": "tikket-art-review.png",
+      "visibleBodyBoundsXYZ": [
+        0.94,
+        1.52,
+        0.85
+      ],
+      "meshObjectsIncludingCharmAndMouthO": 19,
+      "trianglesIncludingCharmAndMouthO": 6108,
+      "fallbackPrimitiveCountIncludingCharmAndMouthO": 27
+    },
+    {
+      "id": "orbit",
+      "display": "Nuum",
+      "template": "nuum",
+      "fbx": "nuum.fbx",
+      "fbxSha256": "944427ba71f400f29f7dcb7b670abf87955aff0aded331ca56bacde9fcc2a706",
+      "native": "nuum-native.json",
+      "manifest": "nuum-mesh-manifest.json",
+      "threeViewsAndExpressions": "nuum-art-review.png",
+      "visibleBodyBoundsXYZ": [
+        1.43,
+        1.22,
+        0.98
+      ],
+      "meshObjectsIncludingCharmAndMouthO": 16,
+      "trianglesIncludingCharmAndMouthO": 4988,
+      "fallbackPrimitiveCountIncludingCharmAndMouthO": 22
+    },
+    {
+      "id": "bloom_pip",
+      "display": "Vezzi",
+      "template": "vezzi",
+      "fbx": "vezzi.fbx",
+      "fbxSha256": "6817ec493f9c510ac5438208dbb3a4d5331b9d5ecdf9bee9f20f4299d5ddc10e",
+      "native": "vezzi-native.json",
+      "manifest": "vezzi-mesh-manifest.json",
+      "threeViewsAndExpressions": "vezzi-art-review.png",
+      "visibleBodyBoundsXYZ": [
+        1.4,
+        1.46,
+        0.94
+      ],
+      "meshObjectsIncludingCharmAndMouthO": 19,
+      "trianglesIncludingCharmAndMouthO": 6332,
+      "fallbackPrimitiveCountIncludingCharmAndMouthO": 24
+    },
+    {
+      "id": "foxfire_wick",
+      "display": "Kiprik",
+      "template": "kiprik",
+      "fbx": "kiprik.fbx",
+      "fbxSha256": "1983ef098d18a1b982f8ebb5e7ae4d0bb014fa4ee34bfb2dce662c185be4cf5a",
+      "native": "kiprik-native.json",
+      "manifest": "kiprik-mesh-manifest.json",
+      "threeViewsAndExpressions": "kiprik-art-review.png",
+      "visibleBodyBoundsXYZ": [
+        1.08,
+        1.56,
+        0.87
+      ],
+      "meshObjectsIncludingCharmAndMouthO": 20,
+      "trianglesIncludingCharmAndMouthO": 6732,
+      "fallbackPrimitiveCountIncludingCharmAndMouthO": 28
+    },
+    {
+      "id": "eclipse_orbit",
+      "display": "Nolli",
+      "template": "nolli",
+      "fbx": "nolli.fbx",
+      "fbxSha256": "1b60c344bc9982b60fff10e8e82ffe372fe820bf04c2019e55087db72a2cc2f8",
+      "native": "nolli-native.json",
+      "manifest": "nolli-mesh-manifest.json",
+      "threeViewsAndExpressions": "nolli-art-review.png",
+      "visibleBodyBoundsXYZ": [
+        1.5,
+        1.27,
+        1.01
+      ],
+      "meshObjectsIncludingCharmAndMouthO": 17,
+      "trianglesIncludingCharmAndMouthO": 5848,
+      "fallbackPrimitiveCountIncludingCharmAndMouthO": 25
+    }
+  ],
+  "reviews": [
+    "five-neutral-lineup.png",
+    "five-babies-gallery.png",
+    "five-babies-expressions.png",
+    "five-babies-hue-study.png",
+    "journal-portraits.png"
+  ],
+  "files": {
+    "five-garden-babies.blend": "3e678033ba4f356787ea2b208cfb8746c12918f7e1fd2b877629d97ad7e8b3e0",
+    "portraits.json": "ea918cfe4982bcf334671ed2e757eb27ce8e8d4645979cf4c9d4c7dcb2c047a8",
+    "fbx-verification.json": "0c41300909af3b534faaedf10d7597821af65bf7c50c3f63eafff142b8306c85",
+    "five-neutral-lineup.png": "a3443b9c9d59c8c9afa48531a2b8e4de2f770249c7c4645a292d7c3df389665a",
+    "five-babies-gallery.png": "ac83daee6b3e995982468c34b75378174deb3438c309c9f34ac464801628e90c",
+    "five-babies-expressions.png": "89a723a448b4d71ebf450e68968a1285ae5cdaaec9fbe71b6f1842a0a0c47b79",
+    "five-babies-hue-study.png": "c03c927331137cd306785eb80405064cbeb5b1e9a7d2e949a00a48784490d351",
+    "journal-portraits.png": "b29397758052f54be2055c708d9ea8f8f235cd9834f20f7c300850a41932b204",
+    "tikket.fbx": "2a5eb17cf1da9b73c44f4431272b51a489c360c18dc6267d267ca88382923b37",
+    "tikket-native.json": "d0ac5ce5fb34755cb5512407ae1039453e364e994ffe02b9ea87174416256df3",
+    "tikket-mesh-manifest.json": "64df048768a351b6b0c856930b6470f008e5699cef6af1b181619869cfd9d0d7",
+    "tikket-art-review.png": "ed74072868b781bd2c7eac9024e133adc5b3fa29c5215fa2adfadc37c694aded",
+    "nuum.fbx": "944427ba71f400f29f7dcb7b670abf87955aff0aded331ca56bacde9fcc2a706",
+    "nuum-native.json": "f228ee1116d30625ef4f47aac190ab017d6f507e60534c19026196ea688c72c3",
+    "nuum-mesh-manifest.json": "d83c7ced823009ac934870222d12305cdc1e37880ff3bcd3c26204639823939d",
+    "nuum-art-review.png": "12dc2cd6ef83f55698bde831975bd2e7638a1c7e2556bf319d315c28d336ac97",
+    "vezzi.fbx": "6817ec493f9c510ac5438208dbb3a4d5331b9d5ecdf9bee9f20f4299d5ddc10e",
+    "vezzi-native.json": "216b636b3d55d65dc6d38e825dde8d6cdc819ece9970b19e7f4906c93bfdf747",
+    "vezzi-mesh-manifest.json": "d33d5eb1a9ba8c19466ce37e1233be06a7d0b274d8c8a5816396b646d265f6da",
+    "vezzi-art-review.png": "3c644a6e0a68a315ebc382fbc13527fe3c3dc3c8ea2d68cc75951ec41c1823ba",
+    "kiprik.fbx": "1983ef098d18a1b982f8ebb5e7ae4d0bb014fa4ee34bfb2dce662c185be4cf5a",
+    "kiprik-native.json": "fe3d9513c047523cfda63bafbf2adea27d537f05ae3b47b51cbe065797a3d7a7",
+    "kiprik-mesh-manifest.json": "8d0a7f3e0d464f65e880fe682a35185b772b21096aa2b52ef17cddca3b68c4fd",
+    "kiprik-art-review.png": "373630ac0fb494b63a70b7fa9a58fb80eb27d601a24fa3a7482a1416309f38af",
+    "nolli.fbx": "1b60c344bc9982b60fff10e8e82ffe372fe820bf04c2019e55087db72a2cc2f8",
+    "nolli-native.json": "9a31e68b4a72e80a95564e5f68dd577b068a35a09221b5879c7de26cd594daa8",
+    "nolli-mesh-manifest.json": "f22bc0ff6c9eb4b1d8262e32f0cbfee971ea3e2641c30d8d62ea184077d9aab7",
+    "nolli-art-review.png": "11c41e9fe027f1def8cacce76f3656506e49dee398ee4dc78d5e9994afff025e"
+  }
+}

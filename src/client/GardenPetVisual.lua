@@ -6,6 +6,7 @@ local Expression=require(script.Parent.PetExpression)
 local Charms=require(script.Parent.PetCharms)
 local Face=require(script.Parent.PetFace)
 local Motion=require(script.Parent.PetIdleMotion)
+local ToyPose=require(script.Parent.PetToyPose)
 local Palette=require(ReplicatedStorage.Shared.PetPalette)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
@@ -19,10 +20,10 @@ local function configure(part,color)
 end
 local function add(self,part,def,frame,size)
  configure(part,self.colors[def.colorRole])
- if string.find(def.name,"Cheek")then part.Color=Color3.fromHex(self.definition.palette.body):Lerp(self.colors.blush,.82)end
+ if def.colorRole=="blush"then part.Color=Color3.fromHex(self.definition.palette.body):Lerp(self.colors.blush,.82)end
  part.Name=def.name;part.Size=size;part.Parent=self.model
  local role=if def.channel=="Charm"then "charm"else nil
- local entry={part=part,name=def.name,colorRole=def.colorRole,channel=def.channel,frame=frame,size=size,role=role,color=part.Color,faceRole=if string.find(def.name,"Cheek")then "cheek"elseif string.find(def.name,"Glint")then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material}
+ local entry={part=part,name=def.name,colorRole=def.colorRole,channel=def.channel,frame=frame,size=size,role=role,color=part.Color,faceRole=if def.colorRole=="blush"then "cheek"elseif string.find(def.name,"Glint")then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material}
  table.insert(self.pieces,entry)
  if def.name=="Body"then self.model.PrimaryPart=part;part.CanQuery=true end
  return entry
@@ -33,7 +34,14 @@ end
 local function native(self)
  for _,def in ipairs(self.definition.pieces)do
   local cf,size=authoredFrame(def,self.scale),v(def.size)*self.scale
-  if def.shape=="tooth"then
+  if def.fallbackParts then
+   -- Components retain the parent semantic name/channel; transforms are local to its size.
+   for _,component in ipairs(def.fallbackParts)do
+    local a=component.xyzEulerDeg
+    local frame=cf*CFrame.new(v(component.center)*size)*CFrame.Angles(math.rad(a[1]),math.rad(a[2]),math.rad(a[3]))
+    add(self,ellipsoid(),def,frame,v(component.size)*size)
+   end
+  elseif def.shape=="tooth"then
    -- Two wedges form one downward pointed tooth, with a real six-tip grin.
    for _,side in ipairs({-1,1})do
     local part=Instance.new("WedgePart")
@@ -53,7 +61,8 @@ local function native(self)
 end
 local function imported(self)
  local assets=ReplicatedStorage:FindFirstChild("PetAssets")
- local source=assets and assets:FindFirstChild(if self.definition.id=="zivvi"then "Zivvi"else "Ovelle")
+ local template=string.upper(string.sub(self.definition.id,1,1))..string.sub(self.definition.id,2)
+ local source=assets and assets:FindFirstChild(template)
  if not source or not source:IsA("Model")then return false end
  -- Templates are trusted authored assets. Their pivot is at the paws, import front -Z.
  local marker=source:FindFirstChild("PawsOrigin")
@@ -71,10 +80,18 @@ local function imported(self)
    -- Rojo can create named MeshParts without their immutable mesh resource.
    -- Never mistake checkerboard placeholders for the authored asset backend.
    if not part:IsA("MeshPart")or part.MeshId==""or part.MeshSize.X<=0 or part.MeshSize.Y<=0 or part.MeshSize.Z<=0 then return false end
+   if self.definition.id~="zivvi"and self.definition.id~="ovelle"then
+    -- New FBXs were imported at100x: only physical Size was normalized, resource bounds stay raw.
+    local resourceBounds=part.Size*100
+    if(part.MeshSize-resourceBounds).Magnitude>math.max(.001,resourceBounds.Magnitude*.00001)then return false end
+   end
    table.insert(pending,{part=part,def=def});present[def.name]=true
   end
  end end
  for _,name in ipairs({"Body","Head","HandL","HandR","FootL","FootR","EyeL","EyeR","MouthSmile","CharmDot"})do if not present[name]then return false end end
+ if self.definition.id~="zivvi"and self.definition.id~="ovelle"then
+  for _,def in ipairs(self.definition.pieces)do if def.name~="MouthO"and not present[def.name]then return false end end
+ end
  if self.definition.id=="zivvi"and not present.Teeth then return false end
  local rotation=CFrame.Angles(0,math.pi,0)
  for _,item in ipairs(pending)do
@@ -116,12 +133,15 @@ end
 function Visual:applyGardenPose(sample)
  self.gardenAction,self.actionPhase,self.expression=sample.action,sample.actionPhase or sample.phase or 0,sample.expression or "neutral"
  self.gardenFocus=sample.action=="focus"
+ self.toyRole,self.toyTime=sample.toyRole,sample.toyTime
  if sample.action=="greet"and(sample.actionId~=self.lastActionId or sample.generation~=self.lastGeneration)then self:greet()end
  self.lastActionId,self.lastGeneration=sample.actionId,sample.generation
 end
 function Visual:update(dt)
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
- local expression=Expression.name(self);local pose=Expression.get(expression);local reduced=self.reducedEffects==true
+ local reduced=self.reducedEffects==true;local toyReach,toyExpression=0,nil
+ if self.gardenAction=="toyReturn"then toyReach,toyExpression=ToyPose.sample(self.toyRole,self.toyTime,reduced)end
+ local expression=toyExpression or Expression.name(self);local pose=Expression.get(expression)
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
@@ -155,8 +175,8 @@ function Visual:update(dt)
    local side=if string.sub(name,-1)=="L"then -1 else 1
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
-   local fold=pose.hand+greet*.5+shove*.7
-   cf=upper*CFrame.new(0,hop,0)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
+   local fold=pose.hand+greet*.5+shove*.7+toyReach*.50
+   cf=upper*CFrame.new(0,hop+toyReach*.045*self.scale,toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale,step*side*.075*self.scale)*entry.frame
@@ -166,7 +186,7 @@ function Visual:update(dt)
    local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
    size=Vector3.new(size.X*(1+squash*.35),size.Y*(1+bodyStretch-squash),size.Z*(1+squash*.35))
   end
-  if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch)end
+  if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch,entry)end
   if string.find(name,"Eye")then size=Vector3.new(size.X*(if pose.mouth=="open"then 1.12 else 1),size.Y*pose.eye*blink,size.Z)
   elseif string.find(name,"Glint")then hidden=hidden or pose.eye*blink<.4
   elseif name=="MouthO"then hidden=hidden or pose.mouth~="open"

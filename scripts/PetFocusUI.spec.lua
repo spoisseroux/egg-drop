@@ -96,6 +96,25 @@ return function(client, _parent)
 			assert(ui:handleBack(Enum.UserInputState.Begin) == Enum.ContextActionResult.Sink and backs == 1)
 			ui:destroy(); ui = nil
 		end)
+		test("short landscape lesson uses safe sky above the feet and keeps portrait placement and retirement",function()
+			ui=Focus.new(host,{back=function()end,canReact=function()return true end})
+			local surface=Instance.new("Frame");surface.BackgroundTransparency=1;surface.Parent=host
+			local helper=ui.helper:Clone();helper.Text="Tap or rub "..utf8.char(0xB7).." hold E to pet";helper.Parent=surface
+			for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703)})do
+				surface.Size=UDim2.fromOffset(size.X,size.Y)
+				local fake={root={AbsoluteSize=size},helper=helper,back={Position=UDim2.fromOffset(12,12),Size=UDim2.fromOffset(44,44)}}
+				Focus.layoutSaveHelper(fake);for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end
+				assert(helper.TextFits,"preferred-size hint clipped")
+				if size.X>size.Y then
+					assert(helper.AnchorPoint.Y==0 and helper.Position.Y.Scale==0 and helper.Position.Y.Offset==8)
+					assert(size.X*.5-helper.Size.X.Offset*.5>=68 and size.X*.5+helper.Size.X.Offset*.5<=size.X-68,"hint overlaps Back/system-safe lane")
+				else assert(helper.AnchorPoint.Y==1 and helper.Position.Y.Scale==1 and helper.Position.Y.Offset==-14)end
+			end
+			local fake={root={AbsoluteSize=Vector2.new(733,307)},helper=helper,back={Position=UDim2.fromOffset(12,12),Size=UDim2.fromOffset(44,44)},saveNotice={detail="Saved appearance"}}
+			Focus.layoutSaveHelper(fake);assert(helper.AnchorPoint.Y==1 and helper.Position.Y.Scale==1,"save notice placement changed")
+			ui.active=true;ui.focusLessonStarted=true;ui.helper.Visible=true;ui:retireFocusHint();assert(ui.focusLessonRetired and not ui.helper.Visible)
+			surface:Destroy();ui:destroy();ui=nil
+		end)
 		local currentRoot = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		assert(currentRoot and workspace.CurrentCamera, "wait for the local character before running focus lifetime fixtures")
 		local function roomFixture(reduced)
@@ -181,11 +200,12 @@ return function(client, _parent)
 		test("viewport reframe preserves original restore shot without greet or recapture", function()
 			local camera = Instance.new("Camera")
 			camera.Parent = fixture
-			local updated, cancelled, pointerCancelled = 0, 0, 0
+			local updated, cancelled, pointerCancelled, characterMasked = 0, 0, 0, 0
 			local shot = { petOrigin = Vector3.new(2, 4, 3), transform = CFrame.new(3, 7, 12),
 				fov = 65, root = currentRoot }
 			local fake = { greetingCamera = shot, focusEpoch = 9,
 				pet = { update = function() updated += 1 end, greet = function() error("resize greeted pet") end },
+				hideFocusCharacter = function(_, character) assert(character == currentRoot.Parent); characterMasked += 1 end,
 				cancelCameraTween = function() cancelled += 1 end,
 				focusUI = { cancelPointer = function() pointerCancelled += 1 end },
 				audio = { play = function() error("resize played greeting audio") end },
@@ -195,7 +215,7 @@ return function(client, _parent)
 			Room.applyFocusPlan(fake, plan, camera)
 			assert(fake.greetingCamera == shot and shot.petOrigin == Vector3.new(2, 4, 3)
 				and shot.transform == CFrame.new(3, 7, 12) and shot.fov == 65 and fake.focusEpoch == 9)
-			assert(fake.pet.origin == plan.origin and fake.pet.yaw == plan.yaw and updated == 1 and cancelled == 1 and pointerCancelled == 1)
+			assert(fake.pet.origin == plan.origin and fake.pet.yaw == plan.yaw and updated == 1 and cancelled == 1 and pointerCancelled == 1 and characterMasked == 1)
 			assert(camera.CFrame == plan.camera and camera.FieldOfView == 43)
 			camera:Destroy()
 		end)

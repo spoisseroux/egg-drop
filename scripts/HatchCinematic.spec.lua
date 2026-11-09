@@ -109,7 +109,9 @@ return function(client,parent)
     c:play(packet(if rare then "foxfire_wick"else "puddle",rare),function()completed+=1 end,{onPresented=function()presented+=1 end})
     assert(presented==1 and c.active and c.connection and c.heroConnection==nil)
     local count=#c.frame:GetDescendants();advance(c,if rare then 2.05 else 1.45)
-    assert(c.liveBits<=24 and c.bits[13].Size.X.Offset>c.bits[1].Size.X.Offset*2,"shell plate breakup is not distinct from flecks")
+    assert(c.liveBits==(if rare then 20 else 12),"jewel droplets/rare prism count exceeded existing pool")
+    assert(c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible,"patterned shell halves missing at split")
+    assert(c.discoveryArt.top.Position.X.Offset<c.center.X and c.discoveryArt.bottom.Position.X.Offset>c.center.X,"patterned halves did not split outward")
     if rare then
      local center=c.outlineCenter or c.center
      for i=17,20 do
@@ -118,15 +120,13 @@ return function(client,parent)
       assert((node.Position.X.Offset-center.X)*math.cos(theta)>0 and(node.Position.Y.Offset-center.Y)*math.sin(theta)>0,"rare rays did not spread across quadrants")
      end
      assert(c.bits[17].BackgroundColor3~=c.bits[18].BackgroundColor3,"rare rays lost gold/family contrast")
-     assert(c.bits[13].Position.X.Offset<c.center.X and c.bits[14].Position.X.Offset>c.center.X,"shell plates did not split left/right")
-     assert(c.bits[13].Position.Y.Offset<c.bits[15].Position.Y.Offset and c.bits[13].BackgroundTransparency<.21)
     end
     for _,node in ipairs(c.bits)do if node.Visible then
      local angle=math.rad(node.Rotation);local ex=(math.abs(math.cos(angle))*node.Size.X.Offset+math.abs(math.sin(angle))*node.Size.Y.Offset)*.5
      local ey=(math.abs(math.sin(angle))*node.Size.X.Offset+math.abs(math.cos(angle))*node.Size.Y.Offset)*.5
      assert(node.Position.X.Offset-ex>=0 and node.Position.X.Offset+ex<=c.layoutWidth and node.Position.Y.Offset-ey>=0 and node.Position.Y.Offset+ey<=c.layoutHeight,"burst bit escapes stage")
     end end
-    advance(c,4-c.age);assert(completed==1 and not c.active and c.liveBits==(if rare then 8 else 6))
+    advance(c,4-c.age);assert(completed==1 and not c.active and c.liveBits==(if rare then 8 else 6)and not c.discoveryArt.top.Visible and not c.discoveryArt.bottom.Visible)
     local position=c.bits[1].Position;local cues=#sounds;advance(c,2)
     assert(c.bits[1].Position~=position and #sounds==cues and #c.frame:GetDescendants()==count)
     c:finishStatic();assert(completed==1);c:destroy()
