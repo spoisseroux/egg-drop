@@ -3,7 +3,7 @@ local Art = {}
 
 -- Stable default constants. Confirmed interface palettes are resolved only by
 -- explicit semantic bindings; species, status and hardware identity stay stable.
-Art.Type = { Reward = 32, Heading = 24, Action = 18, Body = 16, Supporting = 14, Counter = 18, Compact = 12 }
+Art.Type = { Reward = 32, Heading = 24, Action = 20, Body = 18, Supporting = 16, Counter = 18, Compact = 14 }
 Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.PatrickHand, Body=Enum.Font.PatrickHand, Supporting=Enum.Font.PatrickHand, Counter=Enum.Font.RobotoMono }
 Art.Space = { Small = 4, Related = 8, Group = 12, Panel = 20 }
 for name, hex in pairs({
@@ -126,12 +126,7 @@ function Art.tab(button,selected,enabled)
  Art.bind(button,{BackgroundColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tab or Color3.fromHex("#38B84A") else Art.surfaceColor(button,"raised")end,
  TextColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tabInk or Art.Ink else Art.surfaceColor(button,"text")end})
  button:SetAttribute("SelectedTab",selected)
- local glint=button:FindFirstChild("SelectedGlint")
- if not glint then glint=Art.frame(button,"SelectedGlint",Color3.new(1,1,1),UDim2.fromOffset(10,3),UDim2.fromOffset(22,2),button.ZIndex+2);Art.corner(glint,1)end
- glint.Visible=selected
- local edge=button:FindFirstChild("SelectedEdge")
- if not edge then edge=Art.frame(button,"SelectedEdge",Color3.new(1,1,1),UDim2.new(.5,-12,1,-4),UDim2.fromOffset(24,2),button.ZIndex+2);Art.corner(edge,1)end
- edge.Visible=selected
+
 end
 
 function Art.frame(parent,name,color,position,size,z)
@@ -177,7 +172,7 @@ end
 
 -- Functional text keeps a real size and preferred-text support. Layout owns wrapping.
 function Art.type(label, role, compact)
-	local sizes = { Reward = 26, Heading = 20, Action = 16, Body = 14, Supporting = 12, Counter = 12 }
+	local sizes = { Reward = 26, Heading = 20, Action = 18, Body = 16, Supporting = 14, Counter = 12 }
 	local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
 	if constraint then constraint:Destroy() end
 	local inset=label:FindFirstChildOfClass("UIPadding")
@@ -194,7 +189,7 @@ end
 -- Roomy sheets opt into larger roles through their own measured layout.
 function Art.roomyType(label,role,compact,roomy)
  Art.type(label,role,compact)
- if roomy then label.TextSize=({Heading=28,Action=20,Body=17,Supporting=16,Counter=20,Reward=32})[role]or label.TextSize end
+ if roomy then label.TextSize=({Heading=28,Action=22,Body=19,Supporting=18,Counter=20,Reward=32})[role]or label.TextSize end
  return label
 end
 
@@ -273,6 +268,36 @@ function Art.textWidth(label,content)
  return math.ceil(game:GetService("TextService"):GetTextSize(content or label.Text,measurementSize(label),label.Font,Vector2.new(10000,10000)).X)+8
 end
 function Art.actionHeight(label,width)return math.max(44,Art.textHeight(label,width,0)+12)end
+
+-- Manual scrolling layouts own their child rectangles. Budget the native window,
+-- optional content padding, scrollbar and selected-stroke clearance exactly once.
+function Art.scrollContentRect(scroller,plannedWidth)
+ local outer=math.max(1,math.floor(plannedWidth or scroller.AbsoluteSize.X))
+ local actual=scroller.AbsoluteSize.X;local window=scroller.AbsoluteWindowSize.X
+ -- A same-frame shell resize has not necessarily published AbsoluteWindowSize.
+ local measured=actual>0 and math.abs(actual-outer)<1 and window>0
+ local nativeInset=if measured then math.max(0,actual-window)else 0
+ local gutter=math.max(0,scroller.ScrollBarThickness-nativeInset)
+ local width=if measured then math.min(outer,window)else outer
+ local padding=scroller:FindFirstChildOfClass("UIPadding")
+ local left=if padding then padding.PaddingLeft.Offset+padding.PaddingLeft.Scale*outer else 0
+ local right=if padding then padding.PaddingRight.Offset+padding.PaddingRight.Scale*outer else 0
+ -- UIPadding shifts native child coordinates already; subtract its width here,
+ -- but do not add it again to the child origin.
+ local x=6
+ local edge=math.floor(width-left-right-gutter-6)
+ return {x=x,width=math.max(1,edge-x),right=math.max(x+1,edge),window=math.floor(width),gutter=gutter}
+end
+
+-- Cumulative boundaries distribute fractional pixels without right-edge drift.
+function Art.gridCell(width,index,columns,gap)
+ columns=math.max(1,columns);gap=gap or 8
+ local room=math.max(columns,math.floor(width)-(columns-1)*gap)
+ local first=math.floor(index*room/columns)
+ local last=math.floor((index+1)*room/columns)
+ return first+index*gap,math.max(1,last-first)
+end
+
 -- One invalidation listener per component; hidden sheets reflow on open.
 function Art.watchTextPreference(owner,visible,reflow)
 	local queued,alive=false,true
@@ -569,16 +594,7 @@ function Art.panel(parent, radius, accent)
 	Art.corner(parent, radius)
 	Art.surfaceGradient(parent,"panel")
 	Art.stroke(parent,"accent",0.08,3)
-	local highlight = Art.frame(parent, "MoldHighlight", Color3.new(1,1,1), UDim2.fromOffset(radius + 4, 3),
-		UDim2.new(1, -(radius + 4) * 2, 0, 1))
-	highlight.BackgroundTransparency = 0.35
- highlight.Size=UDim2.new(.30,0,0,4);Art.corner(highlight,8)
- local rim=Art.frame(parent,"GlassRim","line",UDim2.fromOffset(3,3),UDim2.new(1,-6,1,-6),parent.ZIndex)
- rim.BackgroundTransparency=1;Art.corner(rim,math.max(1,radius-3));Art.stroke(rim,"line",.65,1)
- local sheen=Art.frame(parent,"UpperSheen",Color3.new(1,1,1),UDim2.fromOffset(radius+6,5),UDim2.new(.23,0,0,8),parent.ZIndex)
- sheen.BackgroundTransparency=.90;Art.corner(sheen,10)
-	local mark = Art.frame(parent, "Accent", accent or "accent", UDim2.new(0.5, -13, 1, -5), UDim2.fromOffset(26, 2))
-	Art.corner(mark, 1)
+
 end
 
 function Art.button(button, radius)

@@ -36,11 +36,42 @@ return function(client,parent)
    assert(composite.BackgroundTransparency==0 and composite:FindFirstChild("CanopyArt")and composite:FindFirstChildOfClass("UIGradient"))
    home:Destroy()
   end)
-  test("absolute base transform returns exactly and never moves field or input targets",function()
+  test("only registered presentation roots move and return exactly",function()
    local j,shell,rim,field=make();local a,b,c=shell.Position,rim.Position,field.Position
    j:emit(1,1,5,1,false,0)
    for i=0,40 do j:update(i/200);assert(field.Position==c)end
    assert(shell.Position==a and rim.Position==b and j.offset==Vector2.zero)
+  end)
+  test("one device root carries hardware LCD HUD and hit targets with identical signed translation",function()
+   local root=Instance.new("Frame");root.Position=UDim2.fromOffset(13,17);root.Parent=folder
+   local children={}
+   for _,name in ipairs({"Shell","Tray","Hud","DropHitbox","AimRail"})do local c=Instance.new("Frame");c.Name=name;c.Position=UDim2.fromOffset(4,5);c.Parent=root;table.insert(children,c)end
+   local j=Jolt.new({root});table.insert(owners,j);j:setOwner(true,9,false);j:emit(9,1,5,2,true,0);j:update(.04)
+   -- UDim pixel offsets quantize each translated component. Compare the
+   -- observed signed displacement within one native pixel, not float equality.
+   local displacement=Vector2.new(root.Position.X.Offset-13,root.Position.Y.Offset-17)
+   assert(j.offset.Magnitude>0 and displacement.Magnitude>0 and(displacement-j.offset).Magnitude<1.5)
+   for _,child in ipairs(children)do assert(child.Parent==root and child.Position==UDim2.fromOffset(4,5))end
+   j:setOwner(true,9,true);assert(root.Position==UDim2.fromOffset(13,17))
+  end)
+  test("fixed screen X keeps logical aim through signed twelve pixel recoil and resize",function()
+   local pointer,left,width=170,100,280
+   local expected=(pointer-left)/width
+   for _,dx in ipairs({-12,-7.75,0,7.75,12})do
+    assert(math.abs(Jolt.normalizedAim(pointer,left+dx,width,dx)-expected)<.000001)
+   end
+   -- Resize changes only the authored tray rectangle, never the recoil bias.
+   left,width=80,420;expected=(pointer-left)/width
+   for _,dx in ipairs({-12,0,12})do assert(math.abs(Jolt.normalizedAim(pointer,left+dx,width,dx)-expected)<.000001)end
+   assert(Jolt.normalizedAim(-100,left+12,width,12)==0 and Jolt.normalizedAim(1000,left-12,width,-12)==1)
+  end)
+  test("pointer compensation follows quantized native root displacement and resets on rebase",function()
+   local j,shell=make();j:emit(1,42,5,3,true,0);j:update(.04)
+   local applied=j:appliedOffset();local left,width,pointer=100,280,170
+   assert(applied.X==shell.Position.X.Offset-j.nodes[1].base.X.Offset)
+   assert(math.abs(j:pointerAim(pointer,left+applied.X,width)-.25)<.000001)
+   j:reset();shell.Position=UDim2.fromOffset(122,98);j:rebase()
+   assert(j:appliedOffset()==Vector2.zero and math.abs(j:pointerAim(pointer,80,360)-.25)<.000001)
   end)
   test("mode overlay reduced and serial changes clear motion and scope duplicate IDs",function()
    local j,shell=make();local base=shell.Position;j:emit(1,1,4,1,false,0);j:update(.02)

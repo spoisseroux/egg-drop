@@ -103,9 +103,10 @@ safeOverlays.BackgroundTransparency = 1
 local backdrop = make("Frame", "Backdrop", {
 	BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
 }, gui)
+clientUI.deviceRoot=make("Frame","DevicePresentation",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},backdrop)
 local shell = make("Frame", "CartridgeShell", {
 	BackgroundColor3 = Palette.Shell, BorderSizePixel = 0,
-}, backdrop)
+}, clientUI.deviceRoot)
 make("UICorner", "ShellCurve", { CornerRadius = UDim.new(0, 18) }, shell)
 local rim = make("UIStroke", "ShellRim", { Color = Palette.Rim, Thickness = 3 }, shell)
 do
@@ -113,9 +114,6 @@ do
 	Art.corner(plate, 15)
 	Art.stroke(plate, Art.Ink, 0.6)
 	Art.shade(plate, 1, 0.84)
-	local bevel = Art.frame(plate, "UpperBevel", Art.Silver, UDim2.fromOffset(20, 3), UDim2.new(1, -40, 0, 2))
-	bevel.BackgroundTransparency = 0.38
-	Art.corner(bevel, 1)
 	for _, name in ipairs({ "AimSeat", "ActionSeat" }) do
 		local seat = Art.frame(plate, name, Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(0, 0))
 		seat.BackgroundTransparency = 0.89
@@ -131,26 +129,16 @@ do
 		Art.corner(band, 2)
 	end
 end
-local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Art.Ink, BorderSizePixel = 0 }, backdrop)
+local bezel = make("Frame", "LCDBezel", { BackgroundColor3 = Art.Ink, BorderSizePixel = 0 }, clientUI.deviceRoot)
 make("UICorner", "LensCurve", { CornerRadius = UDim.new(0, 12) }, bezel)
 local bezelRim = make("UIStroke", "InsetTrim", { Color = Palette.Rim, Thickness = 2 }, bezel)
 Art.deck(backing, shell, bezel)
-do
-	local trim = Art.frame(shell, "MicroTrim", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1))
-	trim.BackgroundTransparency = 1
-	for _, side in ipairs({ 0, 1 }) do
-		local shoulder = Art.frame(trim, "ShoulderTrim", Art.Silver,
-			UDim2.new(side, if side == 0 then 47 else -113, 0, 2), UDim2.fromOffset(66, 2))
-		shoulder.BackgroundTransparency = 0.64
-		Art.corner(shoulder, 1)
-	end
-end
 -- A viewport renders the board inside the HUD, using the same projection on desktop and phone.
 local viewport = make("ViewportFrame", "Tray", {
 	BackgroundColor3 = Art.LCD, BorderSizePixel = 0,
 	Ambient = Color3.fromRGB(180, 175, 190), LightColor = Color3.fromRGB(255, 239, 217),
 	LightDirection = Vector3.new(-1, -2, -3),
-}, backdrop)
+}, clientUI.deviceRoot)
 local scene = make("WorldModel", "Scene", {}, viewport)
 local trayCamera = make("Camera", "TrayCamera", {
 	FieldOfView = 35,
@@ -158,7 +146,7 @@ local trayCamera = make("Camera", "TrayCamera", {
 viewport.CurrentCamera = trayCamera
 local overlay = make("Frame", "TrayOverlay", {
 	BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 2,
-}, backdrop)
+}, clientUI.deviceRoot)
 local effects = make("Frame", "MergeEffects", {
 	BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4,
 }, overlay)
@@ -188,7 +176,7 @@ local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
 local pixelMerges = {}
 local rendererPresentation={visible=false,connections={}}
-rendererPresentation.jolt=require(script.DeckMergeJolt).new({shell,bezel})
+rendererPresentation.jolt=require(script.DeckMergeJolt).new({clientUI.deviceRoot})
 rendererPresentation.fx=require(script.FieldEffects).new(effects)
 rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
 rendererPresentation.setFieldOwner=function(visible,serial,reduced)
@@ -222,12 +210,12 @@ for _, sign in ipairs({ -1, 1 }) do
 			* CFrame.Angles(0, 0, sign * math.pi / 4), Palette.Rim)
 end
 
-local title = label("TextLabel", "Title", "", backdrop)
+local title = label("TextLabel", "Title", "", clientUI.deviceRoot)
 title.Font = Art.Font.Heading
 title.TextSize = 17
 title.TextColor3 = Art.Ink
 title.BackgroundTransparency=1
-clientUI.wordmark=Art.wordmark(backdrop,3)
+clientUI.wordmark=Art.wordmark(clientUI.deviceRoot,3)
 Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10)
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
@@ -238,7 +226,7 @@ Art.stroke(power, Art.Cyan, 0.65, 3)
 local deckSticker=Art.frame(shell.Faceplate,"DeckSticker",Art.Amber,UDim2.fromOffset(0,0),UDim2.fromOffset(84,84),shell.Faceplate.ZIndex+1)
 deckSticker.BackgroundTransparency=1;deckSticker.Active,deckSticker.Selectable=false,false
 shell.Faceplate.ClipsDescendants=true
-local rail = label("TextButton", "AimRail", "", backdrop, Art.Ink)
+local rail = label("TextButton", "AimRail", "", clientUI.deviceRoot, Art.Ink)
 rail.AutoButtonColor = false
 rail.Font = Art.Font.Counter
 rail.TextColor3 = Palette.Paper
@@ -253,7 +241,7 @@ readout:SetAttribute("TypeRole","Counter")
 make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 }, readout)
 readout.TextColor3 = Art.Silver
 readout.TextXAlignment = Enum.TextXAlignment.Left
-local queueHost=Art.frame(backdrop,"PieceQueue",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,64),4)
+local queueHost=Art.frame(clientUI.deviceRoot,"PieceQueue",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,64),4)
 Art.instrument(queueHost)
 local queuePieces={}
 for index,name in ipairs({"Dropping","Next"})do
@@ -267,7 +255,7 @@ for index,name in ipairs({"Dropping","Next"})do
 end
 local scoreCaption = Art.text(rail, "ScoreCaption", "SCORE", UDim2.new(0.5, -22, 0, 7),
 	UDim2.fromOffset(40, 12), Art.Muted, 10)
-local walletDrop=require(script.EggArt).nectar(backdrop,UDim2.fromOffset(0,0),UDim2.fromOffset(18,20),4)
+local walletDrop=require(script.EggArt).nectar(clientUI.deviceRoot,UDim2.fromOffset(0,0),UDim2.fromOffset(18,20),4)
 readout.ZIndex,scoreCaption.ZIndex=4,4
 local instrumentLayout,walletLayoutKey,walletCaptionKey,walletCaptionWidth,walletGeometry
 local function layoutWallet(l)
@@ -349,7 +337,7 @@ ghost.AnchorPoint = Vector2.new(0.5, 0.5)
 ghost.ZIndex = 4
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, ghost)
 
-local status = label("TextLabel", "Status", "", backdrop)
+local status = label("TextLabel", "Status", "", clientUI.deviceRoot)
 status.TextWrapped = true
 status.TextColor3 = Art.Silver
 status.TextScaled = false
@@ -357,7 +345,7 @@ status.BackgroundColor3 = Art.Ink
 Art.instrument(status)
 local meter = make("Frame", "HatchTrack", {
 	BackgroundColor3 = Art.Ink, BorderSizePixel = 0,
-}, backdrop)
+}, clientUI.deviceRoot)
 Art.instrument(meter)
 local segments = {}
 local maxCharge = 24
@@ -387,7 +375,7 @@ meterText.TextSize = 12
 meterText.TextColor3 = Palette.Paper
 meterText.TextStrokeColor3 = Palette.Ink
 meterText.TextStrokeTransparency = 0
-local rareGoal = Art.text(backdrop, "RareGoal", "", UDim2.fromOffset(0, 0),
+local rareGoal = Art.text(clientUI.deviceRoot, "RareGoal", "", UDim2.fromOffset(0, 0),
 	UDim2.fromOffset(0, 0), Art.Cyan, 12, Art.Font.Body)
 rareGoal.TextScaled = true
 rareGoal.TextWrapped = true
@@ -395,7 +383,7 @@ rareGoal.ClipsDescendants = true
 rareGoal.BackgroundColor3 = Art.Ink
 Art.corner(rareGoal, 5)
 make("UITextSizeConstraint", "ReadoutSize", { MinTextSize = 8, MaxTextSize = 12 }, rareGoal)
-local eggGoal = Art.frame(backdrop, "EggGoal", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(120, 70), 2)
+local eggGoal = Art.frame(clientUI.deviceRoot, "EggGoal", Art.Ink, UDim2.fromOffset(0, 0), UDim2.fromOffset(120, 70), 2)
 eggGoal.BackgroundTransparency = 1
 local goalEgg = Art.frame(eggGoal, "Egg", Art.Leaf, UDim2.fromOffset(8, 6), UDim2.fromOffset(25, 34), 2)
 Art.corner(goalEgg, 20); Art.stroke(goalEgg, Art.Silver, .3)
@@ -420,7 +408,7 @@ local targetRing = make("Frame", "MatchHint", {
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
 make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
 local function utilityButton(name, titleText)
-	local button = label("TextButton", name, "", backdrop)
+	local button = label("TextButton", name, "", clientUI.deviceRoot)
 	local well = Art.frame(button, "KeyWell", Art.Ink, UDim2.fromOffset(4, 5), UDim2.new(1, -8, 1, -7))
 	Art.corner(well, 12)
 	local cap = make("Frame", "Cap", {
@@ -452,7 +440,7 @@ end
 local customizeButton, customizeLip = utilityButton("Customize", "CUSTOMIZE")
 local roomButton, roomLip, roomCaption = utilityButton("VisitRoom", "LOUNGE")
 local eggButton = utilityButton("OpenEggs", "EGGS")
-local hardware = make("Frame", "DeckControls", { BackgroundTransparency = 1 }, backdrop)
+local hardware = make("Frame", "DeckControls", { BackgroundTransparency = 1 }, clientUI.deviceRoot)
 local function hardwareButton(name, text, parent, color, width)
 	local button = label("TextButton", name, text, parent, color)
 	button.Size = UDim2.fromOffset(width, width)
@@ -475,9 +463,6 @@ Art.corner(Art.frame(hardware, "DropWell", Art.Ink, UDim2.new(1, -51, 0, 1), UDi
 local action = hardwareButton("Drop", "A", hardware, Art.Amber, 48)
 action:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
 Art.stroke(action, Art.Ink, 0.14, 3)
-local aGlint = Art.frame(action, "Glint", Art.Silver, UDim2.fromScale(0.3, 0.16), UDim2.new(0.4, 0, 0, 3))
-aGlint.BackgroundTransparency = 0.50
-Art.corner(aGlint, 1)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
 dropCaption.Size = UDim2.fromOffset(48, 16)
 dropCaption.Visible=false
@@ -579,7 +564,7 @@ roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
 roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
 	triggered=ProximityPromptService.PromptTriggered,routes={
-		Customize=function()if openPicker()then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")elseif openJournal()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
+		Customize=function()if openPicker("Shell",nil,"workbench")then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
 	}})
 
 do
@@ -831,6 +816,11 @@ clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return 
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialIntent=clientUI.materialIntent,
+ canCustomize=function(petId)
+  local actor=roomView.care and roomView.care:actor()
+  petId=petId or(clientUI.hueView and clientUI.hueView.petId)
+  return roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy and actor~=nil and actor.care~=nil and actor.care.state=="Docked"and actor.petId==petId
+ end,
  appearance=nurseryView.appearanceFor,
  activePet=function()return board:GetAttribute("CompanionId")end,
  audio=audio,reduceEffects=reduceEffects,
@@ -879,6 +869,11 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   end
  end})
 clientUI.openHue=function(page,petId,back)
+ local purchasePage=page=="buy"or page=="materialBuy"
+ if not purchasePage then
+  local actor=roomView.care and roomView.care:actor()
+  if back~="machine"or not actor or not actor.care or actor.care.state~="Docked"or actor.petId~=petId then return false end
+ end
  if roomView.busy or not nurseryState then return false end
  if nurseryState.lastHatch then if openNursery then openNursery()end;return false end
  cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
@@ -1017,21 +1012,10 @@ nurseryRequest:FireServer("snapshot")
 gameMenu = DeckMenu.new(safeOverlays, {
 	close = function() closeMenu() end,
 	eggs = function() closeMenu(); visitEggs() end,
-	pets = function()
-		closeMenu(); cancelHatchNavigation()
-		local generation = hatchNavigation.generation
-		if board:GetAttribute("Mode") == "Room" and not roomView.busy then openJournal(); return end
-		request:FireServer("mode", "Room")
-		task.spawn(function()
-			local deadline=os.clock()+5
-			repeat task.wait(.1) until hatchNavigation.generation~=generation
-				or (board:GetAttribute("Mode")=="Room" and not roomView.busy) or os.clock()>deadline
-			if hatchNavigation.generation==generation and board:GetAttribute("Mode")=="Room" and not roomView.busy then openJournal() end
-		end)
-	end,
-	style=function()local target=gameMenu.destinations[3].button;local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=target};closeMenu();openPicker("Shell",back)end,
- trials=function()local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=gameMenu.destinations[4].button};closeMenu();openPicker("Trials",back)end,
- settings=function()local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=gameMenu.destinations[5].button};closeMenu();openPicker("Settings",back)end,
+	pets = function() end,
+	style = function() end,
+ trials=function()closeMenu();openPicker("Trials")end,
+ settings=function()closeMenu();openPicker("Settings")end,
 	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
 	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
 })
@@ -1098,7 +1082,9 @@ local function updateClub()
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
 end
 
-openPicker = function(mode,back)
+openPicker = function(mode,back,source)
+	mode=mode or "Shell"
+	if mode~="Settings"and mode~="Trials"and source~="workbench"then return false end
 	cancelHatchNavigation()
 	if isPickerOpen() or roomView.busy or clientUI.isHueOpen() or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
@@ -1108,6 +1094,7 @@ openPicker = function(mode,back)
 	local themeId, stickerId = equippedAppearance()
 	updateClub()
 	clientUI.pickerReturn=back
+ picker.customizationEntry=source=="workbench"
 	picker:open(themeId, stickerId,mode)
 	if isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs[picker.active]or (if picker.active=="Settings"then picker.sound else picker.cancel)
@@ -1116,7 +1103,7 @@ openPicker = function(mode,back)
 end
 openJournal = function()
 	cancelHatchNavigation()
- return clientUI.openHue("pet",board:GetAttribute("CompanionId"),"world")
+ return roomView.care and roomView.care:station()or false
 end
 -- The shared cache owns both native station visibility and final activation validation.
 for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,clientUI.hueView.shade})do
@@ -1536,7 +1523,6 @@ layout = function()
 	-- on layout/preferences only, retaining font11 and its original Y=3.
 	local warningBounds=TextService:GetTextSize(pressureText.Text,pressureText.TextSize,pressureText.Font,Vector2.new(math.max(1,math.floor(l.tray.w)-14),10000))
 	pressureText.Size=UDim2.new(1,-14,0,math.max(16,math.ceil(warningBounds.Y)+2))
-	shell.MicroTrim.Visible=l.lateral and l.left.w>=160
 	local showEtching=not l.lateral or (l.left.w>=160 and Art.textWidth(title)+40<=l.left.w)
 	for _,name in ipairs({"SproutLeaf","DropMark","ModelStamp"}) do
 		local etching=shell:FindFirstChild(name)
@@ -1716,10 +1702,10 @@ layout = function()
 end
 
 local function aimFromScreen(x)
-	local center = viewport.AbsolutePosition.X + viewport.AbsoluteSize.X / 2
-	local span = viewport.AbsoluteSize.X / 2
-	aim = math.clamp(0.5 + (x - center) / math.max(1, 2 * span), 0, 1)
-	drawAim()
+ -- Hardware/hit targets recoil visibly; normalized launch aim uses the logical
+ -- unjolted tray so motion under a stationary finger cannot steer the shot.
+ aim=rendererPresentation.jolt:pointerAim(x,viewport.AbsolutePosition.X,viewport.AbsoluteSize.X)
+ drawAim()
 end
 
 local function dropEgg()
@@ -1995,11 +1981,13 @@ pet.Activated:Connect(function()
 	end
 end)
 
+clientUI.boardContentGate=require(script.BoardContentGate)
+
 local function addView(source)
 	if rendererPresentation.destroyed then return end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
-	if not tier or not id then
+	if not tier or not id or source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then
 		return
 	end
 	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
@@ -2022,6 +2010,11 @@ local function removeView(source)
 		viewsById[view.id] = nil
 		eggViews[source] = nil
 	end
+end
+roomView.boardContentReady=function(previousSerial)
+ if not clientUI.boardContentGate.ready(board,previousSerial)then return false end
+ for _,source in ipairs(board:GetChildren())do if not eggViews[source]then addView(source)end end
+ return true
 end
 table.insert(rendererPresentation.connections,board.ChildAdded:Connect(addView))
 table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(removeView))
@@ -2107,6 +2100,7 @@ applySound()
 board:GetAttributeChangedSignal("SoundLevel"):Connect(applySound)
 gui.Destroying:Connect(function() audio:destroy() end)
 local function refreshMotion()
+ if rendererPresentation.jolt then rendererPresentation.jolt:setOwner(rendererPresentation.visible,board:GetAttribute("ResetId"),reduceEffects())end
 	nurseryView.cinematic:refreshOwner()
 	if reduceEffects() then
         if clientUI.hueView then clientUI.hueView.itemReveal:cancel()end
@@ -2151,6 +2145,8 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	roomView:setMode(mode)
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
+ for source in pairs(eggViews)do removeView(source)end
+ for _,source in ipairs(board:GetChildren())do addView(source)end
  rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	if recap.feedback then recap.feedback:cancel() end

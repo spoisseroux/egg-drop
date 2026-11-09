@@ -267,6 +267,7 @@ function Picker:activateTab(active)
  self:showTab(active);if self.onAccepted then self.onAccepted("tab")end;return true
 end
 function Picker:showTab(active)
+ if self.customizationEntry==false and active~="Settings"and active~="Trials"then return false end
  if active=="Club"then active="Trials"end -- Compatibility for old callers, never a public tab.
  if not self.tabs[active]and active~="Trials"and active~="Settings"then return end
  if not self.returningFromTrials and active~=self.active and active~="Trials"then self.inspectId,self.inspectSlot=nil,nil end
@@ -286,6 +287,7 @@ function Picker:showTab(active)
  end
 end
 function Picker:activateChoice(tab,id)
+ if self.customizationEntry==false then return false end
  local stroke=self.choices[tab]and self.choices[tab][id]
  if not self.shade.Visible or self.active~=tab or not stroke then return false end
  if not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then

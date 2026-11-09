@@ -445,8 +445,8 @@ function View:renderBody()
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100));left.BackgroundTransparency=1
  for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="Recipe_material"or child.Name=="DailyNectar")then child:Destroy()end end
- local width=math.max(1,self.body.AbsoluteSize.X);local w=width-8;local short=self.shade.AbsoluteSize.Y<280
- left.Size=UDim2.fromOffset(width,1);local y=4;local cols=if width>=280 then 2 else 1;local cw=(w-(cols-1)*8)/cols
+ local rect=Art.scrollContentRect(self.body,self.body.Size.X.Offset);local width=rect.width+8;local w=rect.width;local short=self.shade.AbsoluteSize.Y<280
+ left.Position=UDim2.fromOffset(rect.x-4,0);left.Size=UDim2.fromOffset(width,1);local y=6;local cols=if w>=264 then 2 else 1;local _,cw=Art.gridCell(w,0,cols,8)
  local cardH=short and 116 or 160
  for _,id in ipairs(liveOrder)do
   local recipe=shopRecipe(id);local n=left:FindFirstChild("Recipe_"..id)
@@ -463,7 +463,7 @@ function View:renderBody()
   local eggH=math.max(52,cardH-nh-ph-18);EggArt.create(n,id,UDim2.fromOffset((cw-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH),n.ZIndex+2)
   Art.control(n,self.selected==id,not self.pending);n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",self.selected==id)
  end
- for index,id in ipairs(liveOrder)do local n=left:FindFirstChild("Recipe_"..id);n.Position,n.Size=UDim2.fromOffset(4+((index-1)%cols)*(cw+8),y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cw,cardH)end
+ for index,id in ipairs(liveOrder)do local n=left:FindFirstChild("Recipe_"..id);local x,cellW=Art.gridCell(w,(index-1)%cols,cols,8);n.Position,n.Size=UDim2.fromOffset(4+x,y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cellW,cardH)end
  y+=math.ceil(#liveOrder/cols)*(cardH+8)
  local function copy(name,value,role,color)
   local n=Art.text(left,name,value,UDim2.fromOffset(4,y),UDim2.fromOffset(w,24),color or "text",16);Art.type(n,role or "Body",short);n.TextXAlignment=Enum.TextXAlignment.Left
@@ -488,7 +488,7 @@ function View:renderBody()
    if itemPool then JarArt.create(row,entry.id,UDim2.fromOffset(5,4),UDim2.fromOffset(34,42),row.ZIndex+2)else Portrait.create(row,Pets.byId[entry.id],2,UDim2.fromOffset(24,26),row.ZIndex+2,false,self.appearanceFor and self.appearanceFor(entry.id))end
    nodes[index]=row;local group=math.floor((index-1)/columns)+1;heights[group]=math.max(heights[group]or 0,h)
   end
-  for index,row in ipairs(nodes)do local group=math.floor((index-1)/columns)+1;local ry=y;for n=1,group-1 do ry+=heights[n]+8 end;row.Position,row.Size=UDim2.fromOffset(4+((index-1)%columns)*(rw+8),ry),UDim2.fromOffset(rw,heights[group])end
+  for index,row in ipairs(nodes)do local group=math.floor((index-1)/columns)+1;local ry=y;for n=1,group-1 do ry+=heights[n]+8 end;local x,cellW=Art.gridCell(w,(index-1)%columns,columns,8);row.Position,row.Size=UDim2.fromOffset(4+x,ry),UDim2.fromOffset(cellW,heights[group])end
   for _,h in ipairs(heights)do y+=h+8 end
  end
  if self.selected=="material"then

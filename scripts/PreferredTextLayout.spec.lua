@@ -41,11 +41,11 @@ return function(client,parent)
 						for _,row in ipairs(menu.dailyCards)do readable(row.title);readable(row.count);readable(row.reward)end
 						readable(menu.dailyHint)
 					else
-						readable(menu.playHint)
+						assert(not menu.playHint.Visible and menu.playHint.Size.Y.Offset==0)
 						for _,entry in ipairs(menu.destinations)do readable(entry.title);if entry.subtitle.Visible then readable(entry.subtitle)end;assert(entry.button.AbsoluteSize.Y>=44)end
 					end
 					menu.body.CanvasPosition=Vector2.new(0,math.max(0,menu.body.CanvasSize.Y.Offset-menu.body.AbsoluteSize.Y));settle()
-					local last=if page=="daily"then menu.dailyHint else menu.playHint
+					local last=if page=="daily"then menu.dailyHint else menu.destinations[#menu.destinations].button
 					assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=menu.body.AbsolutePosition.Y+menu.body.AbsoluteSize.Y+1,"final text cannot scroll into view")
 				end
 			end)

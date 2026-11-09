@@ -1,0 +1,143 @@
+{
+  "suites": {
+    "UsableSheetWidth": {
+      "ok": true,
+      "result": [
+        "scroll budget resolves padding and scrollbar only once with integer boundaries",
+        "1649, 971 four pet columns fill usable width with wrapped names and selectable borders",
+        "1649, 971 hue stock and confirmation remain inside real scrolling window",
+        "1649, 971 all egg cards and odds preserve clear right stroke gutter",
+        "1649, 971 Pocket menu contains only three requested routes and no bottom copy",
+        "900, 720 four pet columns fill usable width with wrapped names and selectable borders",
+        "900, 720 hue stock and confirmation remain inside real scrolling window",
+        "900, 720 all egg cards and odds preserve clear right stroke gutter",
+        "900, 720 Pocket menu contains only three requested routes and no bottom copy",
+        "390, 740 four pet columns fill usable width with wrapped names and selectable borders",
+        "390, 740 hue stock and confirmation remain inside real scrolling window",
+        "390, 740 all egg cards and odds preserve clear right stroke gutter",
+        "390, 740 Pocket menu contains only three requested routes and no bottom copy",
+        "350, 703 four pet columns fill usable width with wrapped names and selectable borders",
+        "350, 703 hue stock and confirmation remain inside real scrolling window",
+        "350, 703 all egg cards and odds preserve clear right stroke gutter",
+        "350, 703 Pocket menu contains only three requested routes and no bottom copy",
+        "749, 381 four pet columns fill usable width with wrapped names and selectable borders",
+        "749, 381 hue stock and confirmation remain inside real scrolling window",
+        "749, 381 all egg cards and odds preserve clear right stroke gutter",
+        "749, 381 Pocket menu contains only three requested routes and no bottom copy",
+        "568, 210 four pet columns fill usable width with wrapped names and selectable borders",
+        "568, 210 hue stock and confirmation remain inside real scrolling window",
+        "568, 210 all egg cards and odds preserve clear right stroke gutter",
+        "568, 210 Pocket menu contains only three requested routes and no bottom copy"
+      ]
+    },
+    "HueSwatchInspection": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": [
+          "zero through five exist and only the current saved dose is marked",
+          "every clicked reference notch confirms current two to three without spending or recoloring",
+          "No Items and Max do not send a use and zero never resets a full hue",
+          "cancelled Citrus art retires before any ordinary tab and never returns on reopen",
+          "committed Citrus use sends exactly once then retires all confirmation art and success copy",
+          "all six reference controls keep44px and the fixed saved portrait survives scroll"
+        ]
+      }
+    },
+    "PetCharmShapes": {
+      "ok": true,
+      "result": [
+        "Zivvi selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Ovelle selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Tikket selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Nuum selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Vezzi selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Kiprik selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "Nolli selected free form, opaque fallback, independent tint/hidden hull and bounded cache"
+      ]
+    },
+    "MenuPolish": {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": [
+          "one readable header and44px controls fit desktop portrait and shallow roots",
+          "page changes keep absolute header and tab positions stable",
+          "complete illustrated destinations start below the scroll clip",
+          "roomy destination text grows within measured cards and retired shortcuts refuse activation",
+          "all three shallow contracts show a complete44px first row and independent gift",
+          "claimed gift cannot claim again and earned contracts remain informational",
+          "fresh open and page entry reset scroll while snapshots retain reading position",
+          "scroll cue ends at reachable content and small pages end after content",
+          "retired mastery and egg goal leave only distinct Play and Daily destinations",
+          "hidden and unchanged snapshots perform no text measurement layout"
+        ]
+      },
+      "note": "Corrected constrained gift-row inset; separate native Largest rerun."
+    },
+    "HatchNavigation": {
+      "ok": true,
+      "result": {
+        "passed": 12,
+        "cases": [
+          "already equipped pet focuses without duplicate equip",
+          "rare-only companion waits for server equip acknowledgment",
+          "mode and local handoff must both finish before equip",
+          "manual cancellation prevents late equip and focus",
+          "overlay interruption cancels pending focus",
+          "unconfirmed equip never substitutes a local pet",
+          "Room replay delegates fresh entry to server without a deferred reset",
+          "replay preserves an unfinished board",
+          "already Board replay carries exactly the captured ended sequence",
+          "sequence changes while waiting cannot reset a newer field",
+          "cancelled Board replay cannot reset after its handoff",
+          "newer navigation wins over a stale mode wait"
+        ]
+      }
+    },
+    "DeckMergeJoltFinalSpec": {
+      "ok": true,
+      "result": {
+        "passed": 11,
+        "cases": [
+          "accepted serial and merge ID debounce a single bounded held curve",
+          "clear and chains cap at twelve pixels without adding or erasing stronger recoil",
+          "all tier peaks and durations match the accepted recipe",
+          "exterior tint and underlays flatten once while BoardBacking is transparent",
+          "only registered presentation roots move and return exactly",
+          "one device root carries hardware LCD HUD and hit targets with identical signed translation",
+          "fixed screen X keeps logical aim through signed twelve pixel recoil and resize",
+          "pointer compensation follows quantized native root displacement and resets on rebase",
+          "mode overlay reduced and serial changes clear motion and scope duplicate IDs",
+          "reflow captures a fresh authored base after reset without accumulated displacement",
+          "motif compositor preserves an opaque theme floor and intrinsic quieter marks"
+        ]
+      }
+    },
+    "ReceiptRouteGuard": {
+      "ok": true,
+      "result": [
+        "undocked ordinary editor refuses to open",
+        "saved result chooses only its exact owned recipient and Hue channel",
+        "lost or acknowledged receipt closes outside cradle instead of showing stock",
+        "stale material choice checks cradle at activation time",
+        "live cradle permission permits ordinary customization and its loss closes it"
+      ]
+    },
+    "BoardContentGate": {
+      "ok": true,
+      "result": {
+        "passed": 5,
+        "cases": [
+          "new reset serial alone cannot expose the prior pile",
+          "content waits for every exact serial-tagged ball and its tier",
+          "ended return requires a fresh serial even if old contents are complete",
+          "active field resume accepts its same exact pile without reset",
+          "extra duplicate or unlisted balls block first paint"
+        ]
+      }
+    }
+  },
+  "preference": "Enum.PreferredTextSize.Largest",
+  "menu": false
+}

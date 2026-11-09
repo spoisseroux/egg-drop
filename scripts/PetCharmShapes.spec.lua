@@ -13,6 +13,15 @@ return function(client)
     a.charmShape=shape;v:applyAppearance(a);v:update(0);local rendered=if shape=="future_spiral"then "dot"else shape;local live=0
     for _,e in ipairs(v.pieces)do if e.role=="charm"then
      assert(e.color==Hue.ById.tide.color and not e.part.CanQuery)
+     if e.charmShape=="ring"then
+      if e.charmBackend=="mask"then
+       assert(e.decals[1].Face==Enum.NormalId.Top and e.decals[2].Face==Enum.NormalId.Bottom)
+       assert(math.abs(e.size.X-e.size.Z)<.000001 and e.size.Y<e.size.X*.25)
+      else
+       assert(math.abs(e.size.X-e.size.Y)<.000001 and e.size.Z<e.size.X*.25)
+       assert(math.abs(e.frame.LookVector.Y)>.99,"torus normal must face up")
+      end
+     end
      local expected=(e.charmShape or "dot")==rendered
      local visible=if e.charmBackend=="mask"then e.decals[1].Transparency==0 else e.part.Transparency==0
      expected=expected and(e.charmBackend~="mask"or not v.charmRingBound)and(e.charmBackend~="mesh"or v.charmRingBound==true)

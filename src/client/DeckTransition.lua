@@ -63,6 +63,16 @@ function Transition.new(gui, tray, audio, reduceEffects)
 	return self
 end
 
+-- Data readiness covers even a reduced-motion handoff; animation policy cannot
+-- reveal an old generation while independent replication events are settling.
+function Transition:setContentCover(covered)
+ if not self.contentCover then
+  local node=Instance.new("Frame");node.Name="BoardContentBarrier";node.BackgroundColor3=Art.Backdrop;node.BorderSizePixel=0
+  node.Size=UDim2.fromScale(1,1);node.ZIndex=60;node.Active=true;node.Visible=false;node.Parent=self.shade.Parent;self.contentCover=node
+ end
+ self.contentCover.Visible=covered==true
+end
+
 function Transition:begin(toDeck, route)
 	self:hide()
 	return self.policy:begin(toDeck, route)

@@ -55,7 +55,7 @@ function View.new(parent,intent,options)
  self.petTab=button(card,"PetTab","Pet",function()self:setTab("pet")end)
  self.materialTab=button(card,"MaterialTab","Materials",function()self:setTab("materials")end)
  self.materialIntent=self.options.materialIntent
- self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
+ self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self:canCustomize()end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self:refresh()end})
  self.targetTitle=text(body,"TargetTitle","Choose a pet","Action")
  for _,pet in ipairs(Pets.collection)do local id=pet.id;self.targets[id]=button(body,"Target_"..id,pet.name,function()self:choosePet(id)end)end
@@ -80,7 +80,6 @@ function View.new(parent,intent,options)
    tick:SetAttribute("SwatchColor",Hues.ById[id].color)
    Art.bind(tick,{BackgroundColor3=function()return tick:GetAttribute("SwatchColor")end,TextColor3=function()return tick:GetAttribute("SwatchInk")or Art.Ink end})
    for _,child in ipairs(tick:GetChildren())do if child:IsA("UIGradient")then child:Destroy()end end
-   local mark=Art.frame(tick,"SavedMark",Art.Ink,UDim2.new(.5,-12,1,-5),UDim2.fromOffset(24,3),tick.ZIndex+1);mark.BackgroundTransparency=1;mark.Active=false;mark.Selectable=false
    local check=Art.frame(tick,"SavedCheck",Art.Ink,UDim2.fromOffset(3,7),UDim2.fromOffset(12,9),tick.ZIndex+1);check.BackgroundTransparency=1;check.Active=false;check.Selectable=false
    local a=Art.frame(check,"A",Art.Ink,UDim2.fromOffset(0,3),UDim2.fromOffset(5,2),check.ZIndex);a.Rotation=45
    local b=Art.frame(check,"B",Art.Ink,UDim2.fromOffset(3,2),UDim2.fromOffset(9,2),check.ZIndex);b.Rotation=-45
@@ -151,6 +150,20 @@ function View.new(parent,intent,options)
  shade.Destroying:Connect(function()self:destroy(true)end);return self
 end
 function View:isOpen()return self.shade.Visible end
+function View:canCustomize()
+ return not self.options.canCustomize or self.options.canCustomize(if self.machine then self.machine.petId else self.petId)==true
+end
+function View:hasHueAssignment()
+ local result=self.state.pendingHueResult;local draft=self.assignment or self.confirmation
+ if not draft or not draft.pendingResultId then return false end
+ if result and result.id==draft.pendingResultId and result.itemId==draft.itemId then return true end
+ local pending=self.intent.pending
+ return pending~=nil and pending.action=="hueUse"and pending.value.pendingResultId==draft.pendingResultId and pending.value.itemId==draft.itemId
+end
+function View:hasMaterialAssignment()
+ local result=self.state.pendingMaterialResult;local draft=self.materialAssignment
+ return result~=nil and draft~=nil and result.id==draft.resultId and result.finishId==draft.finishId
+end
 function View:owned(id)return Eggs.isOwned(self.state.inventoryMask or 0,id)end
 function View:counts()local p=self.state.petHues and self.state.petHues[self.petId];return countsCopy(p and p[self.channel])end
 function View:appearance()
@@ -163,12 +176,14 @@ end
 function View:activePet()return if self.machine then self.machine.petId elseif self.options.activePet then self.options.activePet()else self.state.companionId or self.petId end
 function View:choosePet(id)
  if self.intent.pending or self.machineSwitching or not self:owned(id)or not Hues.Supported[id]then return false end
+ if not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then return false end
  if self.materialAssignment then
   local result=self.materialAssignment;local pending=self.state.pendingMaterialResult
   if not pending or pending.id~=result.resultId or pending.finishId~=result.finishId then self.materialAssignment=nil
   else
    if not self.materialIntent or not self.materialIntent:equip(id,result.finishId,result.resultId)then return false end
    self.petId=id;self.tab="materials";self.materialAssignment=nil
+   if not self:canCustomize()then self.page="materialReceipt"end
    self:refresh();return true
   end
  end
@@ -218,6 +233,7 @@ function View:machineEquipFinished(status,binding)
  return true
 end
 function View:chooseChannel(channel)
+ if not self:canCustomize()and not self:hasHueAssignment()then return false end
  if self.intent.pending or(channel~="main"and channel~="secondary")then return false end;self.scrollPositions[self.tab..":"..self.channel]=self.body.CanvasPosition;self.channel=channel;self.inspected=nil
  if self.assignment then
   local assignment=self.assignment;local reason=self:reason(assignment.itemId)
@@ -228,6 +244,7 @@ function View:chooseChannel(channel)
  self:refresh();if not self.confirmation then self.body.CanvasPosition=self.scrollPositions[self.tab..":"..self.channel]or Vector2.zero end;return true
 end
 function View:setTab(tab)
+ if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not(self:hasMaterialAssignment()and tab=="pet")then return false end
  if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials")then return false end
  self.scrollPositions[self.tab..":"..self.channel]=self.body.CanvasPosition
  if tab~="pet"then self.materialAssignment=nil end
@@ -274,7 +291,6 @@ function View:paintSwatches(visible)
    tick:SetAttribute("SwatchInk",tick.TextColor3)
    tick.Text=tostring(stage)
    for _,part in ipairs(tick.SavedCheck:GetChildren())do part.Visible=stage==counts[id];part.BackgroundColor3=tick.TextColor3 end
-   tick.SavedMark.BackgroundColor3=Art.Ink;tick.SavedMark.BackgroundTransparency=if stage==counts[id]then 0 else 1
    if inspected then
     detail=(if stage==counts[id]then "Saved"else "Preview · Unapplied").." · "..names[id].." stage "..stage
      ..(if((self.state.hueInventory or {})[id]or 0)==0 then " · 0 in inventory"else " · Inspect only")
@@ -312,6 +328,7 @@ function View:reason(id)
  return if c[id]>=5 then "Max"else nil
 end
 function View:chooseItem(id)
+ if not self:canCustomize()then return false end
  if self.intent.pending or self:reason(id)then return false end
  local r=self.state.pendingHueResult
  if r then self.page="receipt";self.confirmation=nil;self:refresh();return false end
@@ -324,6 +341,7 @@ function View:useResult()
  self.assignment={itemId=r.itemId,pendingResultId=r.id};self.confirmation=nil;self:refresh();return true
 end
 function View:requestLegacy(id)
+ if not self:canCustomize()then return false end
  if self.intent.pending then return false end
  self.confirmation={legacyItem=id};self:refresh();return true
 end
@@ -339,6 +357,7 @@ function View:shapeSelectionsEnabled()
  return if self.options.shapeSelectionsEnabled then self.options.shapeSelectionsEnabled()==true else CharmCatalog.SelectionsEnabled==true and remotes~=nil and(remotes:GetAttribute("PetCharmVersion")or 0)>=CharmCatalog.Version
 end
 function View:requestCharm(visible,shape)
+ if not self:canCustomize()then return false end
  local id=self.petId;local pending=self.charmRequests[id]
  if pending then
   if not pending.retry or not self.options.charm then return false end
@@ -393,6 +412,7 @@ function View:activate()
  elseif self.tab=="materials"and self.materialIntent and self.materialIntent.status=="Retrying"then return self.materialIntent:retry()end
  if self.intent.status=="Retrying"then return self.intent:retry()end
  local q=self.confirmation
+ if q and not self:canCustomize()and not self:hasHueAssignment()then return false end
  if self.page=="migration"then
   local ok=self.intent:ackMigration();if ok then self.migrationOperation=self.intent.pending.value.id end;return ok
  elseif self.assignment and not q then
@@ -483,6 +503,9 @@ function View:refresh()
  if self.page=="materialReceipt"and not materialResult then self.page="palette";self.tab="materials"end
  if r and self.page=="buy"then self.page="receipt"end
  if self.page=="receipt"and not r then self.page="palette"end
+ if self.page=="palette"and not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then
+  self:close("receipt-finished");return
+ end
  local owned=self:owned(self.petId);if not owned then for _,p in ipairs(Pets.collection)do if self:owned(p.id)then self.petId=p.id;owned=true;break end end end
  local migration=self.page=="migration";local customization=self.page=="palette";local hue=customization and self.tab=="hue";local charm=customization and self.tab=="charm";local confirming=self.confirmation~=nil
  self.migrationText.Visible=migration
@@ -502,7 +525,10 @@ function View:refresh()
  if self.confirmation and self.confirmation.equipPetId then self.title.Text="Make "..Pets.byId[self.confirmation.equipPetId].name.." active?"end
  self.wallet.Text=tostring(self.state.nectar or 0).." Stars"
  local function visible(n,value)n.Visible=value end
- for _,n in ipairs({self.petTab,self.charmTab,self.hueTab,self.materialTab})do visible(n,customization and not confirming)end
+ for _,n in ipairs({self.petTab,self.charmTab,self.hueTab,self.materialTab})do
+  local routeAllowed=self:canCustomize()or(n==self.petTab and(self:hasHueAssignment()or self:hasMaterialAssignment()))or(n==self.hueTab and self:hasHueAssignment())
+  visible(n,customization and not confirming and routeAllowed)
+ end
  for _,n in ipairs({self.portrait,self.petName})do visible(n,customization and self.tab~="pet"and not confirming)end
  for _,n in ipairs({self.mainTab,self.secondaryTab,self.channelTitle,self.inventoryTitle})do visible(n,hue and not confirming)end
  if self.assignment then self.inventoryTitle.Visible=false end
@@ -540,7 +566,7 @@ function View:refresh()
   self.receipt.Text=names[r.itemId].." · "..tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory"
   self.itemReveal:show(r,self.purchaseInFlight==r.id);self.purchaseInFlight=nil
  end
- self.legacyTitle.Visible=self.state.legacyHueEgg~=nil and not confirming and self.tab=="hue"
+ self.legacyTitle.Visible=self:canCustomize()and self.state.legacyHueEgg~=nil and not confirming and self.tab=="hue"
  for _,n in pairs(self.legacyButtons)do n.Visible=self.legacyTitle.Visible;n.Interactable=not self.intent.pending end
  self.quote.Visible=confirming or self.assignment~=nil or self.page=="buy";self.resultSwatch.Visible=confirming and not(self.confirmation.legacyItem or self.confirmation.presetId or self.confirmation.equipPetId)
  local q=self.confirmation
@@ -580,7 +606,7 @@ function View:refresh()
  self.presetTitle.Visible=false
  for _,n in pairs(self.presetButtons)do n.Visible=false end
  local presets=self.state.legacyHuePresets and self.state.legacyHuePresets[self.petId];local p=self.state.petHues and self.state.petHues[self.petId]
- if hue and not confirming and presets and not(p and p.legacyLocked and p.legacyLocked[self.channel])then
+ if self:canCustomize()and hue and not confirming and presets and not(p and p.legacyLocked and p.legacyLocked[self.channel])then
   for _,preset in ipairs(presets[self.channel]or {})do
    self.presetTitle.Visible=true;local id=preset.id;local n=self.presetButtons[id]
    if not n then n=button(self.body,"Preset_"..id,preset.name,function()self.confirmation={presetId=id,name=preset.name};self:refresh()end);self.presetButtons[id]=n end
@@ -600,7 +626,7 @@ function View:refresh()
  local hasOwned=false;for id in pairs(self.targets)do if self:owned(id)then hasOwned=true;break end end
  self.targetTitle.Visible=customization and not confirming and self.tab=="pet"and(self.assignment~=nil or not hasOwned)
  if self.materialAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..MaterialCatalog.ById[self.materialAssignment.finishId].name end
- self.eggsButton.Visible=customization and self.tab=="pet"and not confirming
+ self.eggsButton.Visible=customization and self.tab=="pet"and not confirming and self:canCustomize()
  if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companions yet. Hatch a Companion Egg."end
  local materialMode=if self.page=="materialReceipt"then "receipt"elseif self.page=="materialBuy"then "buy"elseif customization and self.tab=="materials"and not confirming then "choices"else nil
  self.materialPanel:refresh(self.state,self.petId,materialMode,materialResult and self.materialPurchaseInFlight==materialResult.id)
@@ -703,7 +729,8 @@ function View:layout()
  self.title.Text=if self.assignment then "Jar recipient"else "Companions";style(self.title,if short then "Action"else "Heading")
  local titleH=math.max(44,Art.textHeight(self.title,w-52,24)+4)
  place(self.title,pad,0,w-52,titleH);place(self.closeButton,width-pad-44,0,44,44)
- local tabs={self.petTab,self.hueTab,self.charmTab,self.materialTab};local tabW=(w-12)/4;local tabH=44
+ local tabs={};for _,node in ipairs({self.petTab,self.hueTab,self.charmTab,self.materialTab})do if node.Visible then table.insert(tabs,node)end end
+ local tabW=(w-math.max(0,#tabs-1)*4)/math.max(1,#tabs);local tabH=44
  for _,node in ipairs(tabs)do node.Parent=self.card;style(node,"Action");tabH=math.max(tabH,Art.actionHeight(node,tabW))end
  for i,node in ipairs(tabs)do place(node,pad+(i-1)*(tabW+4),titleH,tabW,tabH)end
  local contentTop=titleH+tabH+4;local footer=0
@@ -752,7 +779,9 @@ function View:layout()
   if columns then listX,listW=pad+rail+12,w-rail-12 else local fixed=previewH+nameH+12;listY=contentTop+fixed;listH=math.max(1,available-fixed)end
  end
  place(self.body,listX,listY,listW,listH)
- local y=if grid then 8 else 0
+ local rect=Art.scrollContentRect(self.body,listW);local origin=rect.x-4
+ listW=rect.width+8
+ local y=if grid then 8 else 6
  local function copy(node)
   if not node.Visible then return end
   style(node,node:GetAttribute("TypeRole")or "Body");local h=Art.textHeight(node,listW-8,22);place(node,4,y,listW-8,h);y+=h+8
@@ -764,25 +793,27 @@ function View:layout()
  copy(self.targetTitle)
  if grid then
   copy(self.quote)
-  local count=math.max(1,math.floor((listW+8)/156));local cell=(listW-(count-1)*8-8)/count;local index=0
-  if height<420 then
-   local minimum=44
-   for _,entry in pairs(self.gridPreviews)do if entry.button.Visible then
-    style(entry.caption,"Action");style(entry.active,"Supporting")
-    minimum=math.max(minimum,44+Art.textHeight(entry.caption,cell-8,22)+Art.textHeight(entry.active,cell-8,20)+10)
-   end end
-   cell=math.min(cell,math.max(minimum,listH-y-8));count=math.max(1,math.floor((listW+4)/(cell+8)))
-  end
+  local count=math.min(4,math.max(1,math.floor((rect.width+8)/52)))
+  local index=0;local rowHeights={};local entries={}
   for _,pet in ipairs(Pets.collection)do local entry=self.gridPreviews[pet.id]
    if entry.button.Visible then
-    local x=4+(index%count)*(cell+8);local row=math.floor(index/count);place(entry.button,x,y+row*(cell+8),cell,cell)
+    local x,cell=Art.gridCell(rect.width,index%count,count,8)
     style(entry.caption,"Action");style(entry.active,"Supporting")
     local nh=Art.textHeight(entry.caption,cell-8,22);local ah=Art.textHeight(entry.active,cell-8,20)
-    place(entry.viewport,4,4,cell-8,math.max(1,cell-nh-ah-10));place(entry.caption,4,cell-nh-ah-4,cell-8,nh);place(entry.active,4,cell-ah-2,cell-8,ah)
+    local height=math.max(cell,44+nh+ah+10);local row=math.floor(index/count)+1
+    rowHeights[row]=math.max(rowHeights[row]or 0,height)
+    table.insert(entries,{entry=entry,x=x,width=cell,row=row,nameH=nh,activeH=ah})
     index+=1
    end
   end
-  y+=math.ceil(index/count)*(cell+8);action(self.eggsButton)
+  local rowTops={};for row,h in ipairs(rowHeights)do rowTops[row]=y;y+=h+8 end
+  for _,item in ipairs(entries)do
+   local entry=item.entry;local cell=item.width;local h=rowHeights[item.row];local nh,ah=item.nameH,item.activeH
+   place(entry.button,4+item.x,rowTops[item.row],cell,h)
+   place(entry.viewport,4,4,cell-8,math.max(1,h-nh-ah-10))
+   place(entry.caption,4,h-nh-ah-4,cell-8,nh);place(entry.active,4,h-ah-2,cell-8,ah)
+  end
+  action(self.eggsButton)
  else
   if self.materialPanel.root.Visible then place(self.materialPanel.root,4,y,listW-8,self.materialPanel:layout(listW-8,columns and height<420));y+=self.materialPanel.root.Size.Y.Offset+8 end
   copy(self.channelTitle);copy(self.inspection)
@@ -811,15 +842,16 @@ function View:layout()
   copy(self.quote);copy(self.inventoryTitle);copy(self.empty)
   for _,id in ipairs(ids)do local jar=self.jars[id]
    if jar.button.Visible then
-    local tw=math.max(1,listW-84);style(jar.label,"Body");style(jar.quantity,"Counter");style(jar.reason,"Supporting")
+    local rowW=listW-8;local tw=math.max(1,rowW-68);style(jar.label,"Body");style(jar.quantity,"Counter");style(jar.reason,"Supporting")
     local lh=Art.textHeight(jar.label,math.max(1,tw-40),22);local rh=Art.textHeight(jar.reason,tw,20);local h=math.max(72,lh+rh+14)
-    place(jar.button,4,y,listW-8,h);place(jar.art,6,(h-52)/2,44,52);place(jar.label,60,5,math.max(1,tw-40),lh);place(jar.quantity,listW-56,5,36,lh);place(jar.reason,60,lh+7,tw,rh);y+=h+8
+    place(jar.button,4,y,listW-8,h);place(jar.art,6,(h-52)/2,44,52);place(jar.label,60,5,math.max(1,tw-40),lh);place(jar.quantity,rowW-44,5,36,lh);place(jar.reason,60,lh+7,tw,rh);y+=h+8
    end
   end
  end
  copy(self.status)
- self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>listH
- self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+4-listH)))
+ for _,node in ipairs(self.body:GetChildren())do if node:IsA("GuiObject")and node.Visible then node.Position+=UDim2.fromOffset(origin,0)end end
+ self.body.CanvasSize=UDim2.fromOffset(0,y+6);self.body.ScrollingEnabled=y+6>listH
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+6-listH)))
  self.layingOut=false;self:fitPortrait()
 end
 function View:layoutTransaction()
@@ -864,13 +896,15 @@ function View:layoutTransaction()
   local ah=math.max(44,Art.actionHeight(self.action,side));local cancelH=math.max(44,Art.actionHeight(self.cancel,side))
   place(self.cancel,pad+fullW-side,header,side,cancelH);place(self.action,pad+fullW-side,header+cancelH+8,side,ah)
  end
- local y=0
+ local bodyW=w;local shellW=width-pad*2;local rect=Art.scrollContentRect(self.body,bodyW);local origin=rect.x-4
+ w=rect.width+8
+ local y=6
  local function copy(n,min)if not n.Visible then return end;Art.type(n,n:GetAttribute("TypeRole")or "Body",short);local h=Art.textHeight(n,w-8,min or 24);place(n,4,y,w-8,h);y+=h+8 end
  local function row(nodes,cols)
   local live={};for _,n in ipairs(nodes)do if n.Visible then table.insert(live,n)end end;if #live==0 then return end
-  local rw=(w-8-(cols-1)*8)/cols;local h=44
+  local _,rw=Art.gridCell(w-8,0,cols,8);local h=44
   for _,n in ipairs(live)do Art.type(n,"Action",short);h=math.max(h,Art.actionHeight(n,rw))end
-  for i,n in ipairs(live)do place(n,4+((i-1)%cols)*(rw+8),y+math.floor((i-1)/cols)*(h+8),rw,h)end;y+=math.ceil(#live/cols)*(h+8)
+  for i,n in ipairs(live)do local x,cellW=Art.gridCell(w-8,(i-1)%cols,cols,8);place(n,4+x,y+math.floor((i-1)/cols)*(h+8),cellW,h)end;y+=math.ceil(#live/cols)*(h+8)
  end
  copy(self.migrationText)
  if self.materialPanel.root.Visible then place(self.materialPanel.root,4,y,w-8,self.materialPanel:layout(w-8));y+=self.materialPanel.root.Size.Y.Offset+8 end
@@ -919,8 +953,8 @@ function View:layoutTransaction()
  copy(self.inventoryTitle);copy(self.empty)
  for _,id in ipairs(ids)do local j=self.jars[id];if j.button.Visible then
   Art.type(j.label,"Body",short);Art.type(j.quantity,"Counter",short);Art.type(j.reason,"Supporting",short)
-  local textW=w-84;local lh=Art.textHeight(j.label,textW,22);local rh=Art.textHeight(j.reason,textW,18);local h=math.max(68,lh+rh+12)
-  place(j.button,4,y,w-8,h);place(j.art,6,(h-52)/2,44,52);place(j.label,60,5,textW-40,lh);place(j.quantity,w-58,5,38,lh);place(j.reason,60,lh+7,textW,rh);y+=h+8
+  local textW=math.max(1,w-76);local lh=Art.textHeight(j.label,math.max(1,textW-40),22);local rh=Art.textHeight(j.reason,textW,18);local h=math.max(68,lh+rh+12)
+  place(j.button,4,y,w-8,h);place(j.art,6,(h-52)/2,44,52);place(j.label,60,5,textW-40,lh);place(j.quantity,w-56,5,38,lh);place(j.reason,60,lh+7,textW,rh);y+=h+8
  end end
  -- Docked Charm shares the compact landscape composition; desktop stays as authored.
  local compactCharm=self.machine~=nil and self.tab=="charm"and height<420
@@ -981,11 +1015,12 @@ function View:layoutTransaction()
  end
  if(self.confirmation or materialReceipt or hueReceipt)and not short then
   height=math.min(size.Y-16,header+y+footer+12);self.card.Size=UDim2.fromOffset(width,height)
-  bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,w,bodyH)
-  place(peer,pad,height-footer,(w-8)/2,footer-8);place(self.action,pad+(w+8)/2,height-footer,(w-8)/2,footer-8)
+  bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,bodyW,bodyH)
+  place(peer,pad,height-footer,(shellW-8)/2,footer-8);place(self.action,pad+(shellW+8)/2,height-footer,(shellW-8)/2,footer-8)
  end
- self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>bodyH
- self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+4-bodyH)));self.layingOut=false;self:fitPortrait()
+ for _,node in ipairs(self.body:GetChildren())do if node:IsA("GuiObject")and node.Visible then node.Position+=UDim2.fromOffset(origin,0)end end
+ self.body.CanvasSize=UDim2.fromOffset(0,y+6);self.body.ScrollingEnabled=y+6>bodyH
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+6-bodyH)));self.layingOut=false;self:fitPortrait()
 end
 function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)
@@ -1008,6 +1043,7 @@ function View:open(state,page,petId)
   if self.equipTargetId==self:activePet()then self.petId=self.equipTargetId;self.equipTargetId=nil;self.machineSwitching=nil
   else self.confirmation={equipPetId=self.equipTargetId};self.machineSwitching=nil end
  end
+ if self.page=="palette"and not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then return false end
  self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1;self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh();return true
 end
 function View:close(reason)

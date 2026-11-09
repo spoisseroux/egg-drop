@@ -13,7 +13,7 @@ return function(client,parent)
   view:open(state,"palette","pip");frames()
   test("zero through five exist and only the current saved dose is marked",function()
    for _,bar in pairs(view.bars)do assert(#bar.ticks==6 and bar.stages[0]and bar.stages[5])end
-   for stage=0,5 do local tick=view.bars.citrus.stages[stage];assert(tick:GetAttribute("SavedStage")== (stage==0));assert(tick.SavedMark.BackgroundTransparency==(if stage==0 then 0 else 1))end
+   for stage=0,5 do local tick=view.bars.citrus.stages[stage];assert(tick:GetAttribute("SavedStage")== (stage==0));assert(not tick:FindFirstChild("SavedMark"))end
    assert(view.bars.rose.stages[2]:GetAttribute("SavedStage")and view.bars.iris.stages[5]:GetAttribute("SavedStage"))
   end)
   test("every clicked reference notch confirms current two to three without spending or recoloring",function()

@@ -4,6 +4,21 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 
 ## Player feedback after v358 — private v370 Published
 
+### Next authorized pass — device, hatching and pet play
+
+- [ ] Move the entire device, screen, labels and controls together on merges; keep simulation and pointer mapping correct and Reduced Motion quiet.
+- [ ] Horizontal halo torus and matching top/bottom fallback; reset ended board render caches under cover before a fresh game appears, preserve suspended games.
+- [ ] Shared usable scrolling width, no right-edge cuts, four filled Pet columns, larger measured body/action text, no decorative button highlight lines.
+- [ ] Remove Pocket Menu footer and Companions/Deck Style shortcuts; customization and pet swap at cradle, styling at workbench.
+- [ ] Menu egg glints and more climactic original all-egg cracking with exact result/audio ownership, interruption/reopen/reduced safeguards.
+- [ ] Fruit-use preview feeding/eating animation only after the matching confirmed application.
+- [ ] Remove the old world ball/shared-return activity and its visible props/prompts; keep other care leases intact.
+- [ ] Toy Egg, permanent toy unlocks/per-pet selection and observer-visible idle play (Sparkler, Ball, Bone), separate from removed world activity.
+- [ ] Feature Egg, stored Horn/Claw/Wing items, exact one-item/per-pet next-notch application, earned maximum and selected visible sizes0–5, original models/animation.
+- [ ] Review actual desktop/phone-emulator layout, new assets/poses, transaction/replay/schema regressions; commit/push and private publication after passing.
+
+Asset research: [Kenney UI Pack](https://kenney.nl/assets/ui-pack) (CC0) and [Quaternius Ultimate Stylized Nature](https://quaternius.com/packs/ultimatestylizednature.html) (CC0) are optional sources for selected supporting assets. No third-party pack imported in this pass yet; original pets/device stay coherent. Packs do not replace layout correctness.
+
 Runtime97c64d0 is pushed; privatev370 Published is verified in refreshed native Version History. The current pass follows [Astra's plan](FOLLOWUP-PLAYFUL-CARE.md). Native evidence and release state are recorded in [verification](artifacts/playful-care-2026-11-09/VERIFY.md); final publication is recorded in PLAY-BUILD.md.
 
 - [x] Coalesced immediate exact charm-save flushing, without the12-second periodic delay. Actual isolated Studio Ring change: Applied65ms / durable Saved117ms; delayed/fenced transactions also tested. This is not live-service latency evidence.

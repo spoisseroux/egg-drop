@@ -154,7 +154,7 @@ local function validWander(input,target,from)
  elseif workspace:Raycast(from+lift,grounded-from,params)then return nil end
  return grounded
 end
-local garden = GardenState.new({now=function()return workspace:GetServerTimeNow()end,
+local garden = GardenState.new({sharedToyEnabled=false,now=function()return workspace:GetServerTimeNow()end,
 	publish=function(snapshot)
 		gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))
 		for player,board in pairs(boards)do local actor=snapshot.actors[tostring(player.UserId)];board.careHeld=actor~=nil and actor.care~=nil;board.folder:SetAttribute("CareMode",if actor and actor.care then actor.mode else nil)end
@@ -343,8 +343,10 @@ end
 
 local function syncVisuals(board)
 	local live = {}
+	local contentIds={}
 	for _, egg in ipairs(board.sim.eggs) do
 		live[egg.id] = true
+		table.insert(contentIds,egg.id)
 		local part = board.parts[egg.id]
 		if not part then
 			part = Instance.new("Part")
@@ -360,6 +362,7 @@ local function syncVisuals(board)
 			part.CastShadow = false
 			part:SetAttribute("Tier", egg.tier)
 			part:SetAttribute("EggId", egg.id)
+			part:SetAttribute("BoardSerial",board.sim.serial)
 			board.parts[egg.id] = part
 		end
 		local position = Vector3.new(egg.position.X, egg.position.Y, 0)
@@ -376,6 +379,12 @@ local function syncVisuals(board)
 			board.parts[id] = nil
 		end
 	end
+	table.sort(contentIds)
+	local signature=tostring(board.sim.serial)..":"..table.concat(contentIds,",")
+ if board.contentSignature~=signature then
+  board.contentSignature=signature
+  board.folder:SetAttribute("BoardContent",HttpService:JSONEncode({serial=board.sim.serial,ids=contentIds}))
+ end
 end
 
 local function reset(board, preset)
@@ -592,21 +601,7 @@ gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
 	local kind=packet.kind
 	if type(kind)=="string"and string.sub(kind,1,4)=="care"then gardenCareHost:request(board,packet);return end
 	if kind=="toyStart"or kind=="toyJoin"or kind=="toyCancel"then
-        local function rejected(reason)gardenToyResult:FireClient(player,{kind=kind,seq=packet.seq,status="Rejected",reason=reason,actionId=packet.actionId})end
-        if type(packet.seq)~="number"or packet.seq~=packet.seq or packet.seq%1~=0 or packet.seq<1 or packet.seq>2147483647 then return end
-        if packet.petId~=board.profile.companionId or board.mode~="Room"or packet.characterId~=(board.characterGeneration or 0)or packet.petGeneration~=(board.companionGeneration or 0)then rejected("IdentityChanged");return end
-        local replay=garden:toyReplay(player.UserId,packet)
-        if replay then gardenToyResult:FireClient(player,replay);return end
-        if now-(board.gardenToyAt or -math.huge)<.1 then rejected("Throttled");return end
-        board.gardenToyAt=now
-        garden:syncOne(player.UserId,gardenInput(board))
-        local action=garden.toy.returnAction
-        local peerId=if action then action.starterId else garden.toy.ownerId
-        if peerId and peerId~=player.UserId then
-            for owner,other in pairs(boards)do if owner.UserId==peerId then garden:syncOne(owner.UserId,gardenInput(other));break end end
-        end
-        local response=garden:toyRequest(player.UserId,packet)
-        garden:publish();gardenToyResult:FireClient(player,response);return
+        gardenToyResult:FireClient(player,{kind=kind,seq=packet.seq,status="Rejected",reason="ActivityRetired",actionId=packet.actionId});return
     end
 	if kind~="focus"and kind~="focusPulse"and kind~="focusEnd"then return end
 	board.gardenIntentAt=board.gardenIntentAt or {}
@@ -707,6 +702,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			or (value ~= "Board" and (value ~= "Room" or not hasPip(board))) then
 			return
 		end
+        if value=="Board"and board.round.over and hasPip(board)and RunReturn.classify(board,canProgress(board),true)=="Preserve"then return end
 		board.lastModeChange = now
 		if value=="Board"then
 			local actor=garden.actors[player.UserId]
@@ -716,7 +712,12 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 				gardenCareHost.care:follow(actor,input,point)
 			end
 		end
-		if value == "Board" then RunReturn.enter(board, canProgress(board), hasPip(board), reset) end
+		if value == "Board" then
+            local refreshed=RunReturn.enter(board,canProgress(board),hasPip(board),reset)
+            -- A completed field can leave Room only after exact saved payout
+            -- permits its fresh replacement. Active fields resume unchanged.
+            if board.round.over and hasPip(board)and not refreshed then return end
+        end
 		board.mode = value
 		board.menuPaused = false
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)

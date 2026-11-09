@@ -32,9 +32,13 @@ function Panel.new(parent,intent,options)
  self.shop=button(root,"MaterialEggShop","Material Egg · 16 Stars",function()if self.options.shop then self.options.shop()end end)
  for _,id in ipairs(Catalog.Order)do
   local finishId=id
-  self.rows[id]=button(root,"Finish_"..id,Catalog.ById[id].name,function()if self.intent then self.intent:equip(self.petId,finishId)end end)
+  self.rows[id]=button(root,"Finish_"..id,Catalog.ById[id].name,function()self:chooseFinish(finishId)end)
  end
  return self
+end
+function Panel:chooseFinish(finishId)
+ if self.options.canEquip and not self.options.canEquip()then return false end
+ return self.intent~=nil and self.intent:equip(self.petId,finishId)or false
 end
 function Panel:refresh(state,petId,mode,animate)
  self.state,self.petId,self.mode=state or {},petId,mode

@@ -102,11 +102,9 @@ function Menu.new(parent,callbacks)
 		local page=Art.frame(body,key,"panel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
 		page.BackgroundTransparency=1;self.pages[key]=page
 		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Daily",function()self:activatePage(key)end)
-        local marker=Art.frame(self.tabs[key],"SelectedEdge","text",UDim2.new(0,8,1,-5),UDim2.new(1,-16,0,3),self.tabs[key].ZIndex+2)
-        marker.Visible=false
         self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Daily contracts")
 	end
-	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Companions","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
+	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
 		local illustration=Art.frame(b,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
 		illustration.BackgroundTransparency=1;destinationArt(illustration,entry[3])
@@ -114,7 +112,7 @@ function Menu.new(parent,callbacks)
 		local subtitle=text(b,"Subtitle",entry[4],"Supporting","muted")
 		table.insert(self.destinations,{button=b,art=illustration,title=title,subtitle=subtitle,kind=entry[3]})
 	end
-	self.playHint=text(self.pages.play,"NectarPurpose","Complete both goals to earn Stars. Keep the pile low for +2.","Supporting","muted")
+	self.playHint=text(self.pages.play,"NectarPurpose","","Supporting","muted");self.playHint.Visible=false
 	for index=1,3 do
 		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),"raised",12)
 		local icon=Art.frame(panel,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
@@ -155,7 +153,7 @@ function Menu:activate(key,value)
  if not self:isLive()then return false end
 	if not self.shade.Visible then return false end
 	if key=="daily" and not self.dailyButton.Interactable then return false end
-	if key=="family"then return false end
+	if key=="family"or key=="pets"or key=="style"then return false end
 	local callback=self.callbacks[key];if not callback then return false end
 	local accepted=callback(value);if accepted==false then return false end;if self.onAccepted then self.onAccepted(if key=="close"then "back"else "confirm")end;return true
 end
@@ -203,8 +201,9 @@ function Menu:layoutContents(wanted)
 	self.pageHeights=self.pageHeights or {}
 	self.renderedSignatures=self.renderedSignatures or {}
 	local function styleType(n,r,c)return Art.roomyType(n,r,c,self.roomy)end
- local width=self.width-self.pad*2-8
-	local inset=if self.compact then 4 else 12
+ local rect=Art.scrollContentRect(self.body,self.width-self.pad*2)
+ local width=rect.width+8
+	local inset=4
 	local usable=width-inset*2
 	local short=self.compact
  for _,entry in ipairs({{self.playHint,"Supporting"},{self.dailyHint,"Supporting"}})do styleType(entry[1],entry[2],short)end
@@ -247,8 +246,8 @@ function Menu:layoutContents(wanted)
 		item.subtitle.Visible=not short;place(item.subtitle,tx,ty+item.titleH+6,w-tx-8,item.subH);item.subtitle.TextXAlignment=item.title.TextXAlignment
 	end
 	y+=if list then #self.destinations*(destinationHeight+8)-8 else math.ceil(#self.destinations/3)*(destinationHeight+8)-8
-	y+=12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)
-	self.pageHeights.play=y+hintH+inset
+	place(self.playHint,inset,y,usable,0)
+	self.pageHeights.play=y+inset
 	end
 	if not wanted or wanted=="daily" then
 	y=start
@@ -256,12 +255,13 @@ function Menu:layoutContents(wanted)
 	self.dailyButton.Parent=self.pages.daily
 	local giftW=math.min(usable,math.max(44,Art.textWidth(self.dailyButton)+16))
 	local giftH=Art.actionHeight(self.dailyButton,giftW)
+ if self.state.dailyAvailable and giftH+y>(self.bodyBudget or math.huge)then y=0 end
 	if self.state.dailyAvailable then place(self.dailyButton,inset,y,giftW,giftH);y+=giftH+8 end
 	local dailyH=if short then 44 elseif list then 96 else 176
 	for _,row in ipairs(self.dailyCards) do
 		local w=if list then usable else (usable-24)/3
 		styleType(row.title,"Action",short);styleType(row.count,"Counter",short);styleType(row.reward,"Supporting",short)
-		if short then row.title.TextSize=12;row.count.TextSize=14 end
+		if short then row.title.TextSize=14;row.count.TextSize=14 end
 		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..Stars.amount(row.amount))
 		local tw=if list and not short then w-72 else w-12
 		row.titleH=Art.textHeight(row.title,tw,if short then 18 else 28)
@@ -290,7 +290,8 @@ function Menu:layoutContents(wanted)
 	end
 	for key,page in pairs(self.pages) do
 		if not wanted or key==wanted then
-			page.Size=UDim2.fromOffset(width,self.pageHeights[key] or 0)
+			page.Position=UDim2.fromOffset(rect.x-4,0)
+   page.Size=UDim2.fromOffset(width,self.pageHeights[key] or 0)
 			self.renderedSignatures[key]=self.contentSignatures and self.contentSignatures[key] or ""
 		end
 	end
@@ -368,11 +369,9 @@ function Menu:setPage(key)
 	for name,page in pairs(self.pages) do page.Visible=name==key end
 	for name,tab in pairs(self.tabs)do
         local active=name==key
-        tab.SelectedEdge.Visible=active
         tab:SetAttribute("Selected",active)
         tab.Font=if active then Enum.Font.GothamBold else Enum.Font.GothamMedium
         Art.tab(tab,active,true)
-        tab.SelectedEdge.BackgroundColor3=Color3.new(1,1,1)
     end
 	self.dailyButton.Visible=key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()

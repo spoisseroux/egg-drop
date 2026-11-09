@@ -24,34 +24,18 @@ return function(server,hostSource)
   end
   return f
  end
- test("real host returns an owner-only response and exact retry does not replan",function()
-  local f=fixture();local response,packet=f:send(1,"toyStart",1);assert(response.status=="Started"and f.responses[1].owner==1)
-  local action=f.g.toy.returnAction;f.now=.01;f.callback(f.players[1],packet)
-  assert(f.responses[2].result==response and f.g.toy.returnAction==action)
+ test("retired production host rejects Start Join Cancel without reserving or moving pets",function()
+  local f=fixture();local a,b=f.g.actors[1],f.g.actors[2];local ga,gb=a.generation,b.generation
+  for index,kind in ipairs({"toyStart","toyJoin","toyCancel"})do
+   local response=f:send(1,kind,index,99)
+   assert(response.status=="Rejected"and response.reason=="ActivityRetired"and response.seq==index)
+   assert(f.responses[index].owner==1 and not f.g.toy.returnAction and not f.g.toy.ownerId)
+   assert(a.generation==ga and b.generation==gb)
+  end
  end)
- test("real host rejects forged identity and foreign cancellation",function()
-  local f=fixture();local response=f:send(1,"toyStart",1,nil,{petGeneration=0});assert(response.reason=="IdentityChanged"and not f.g.toy.returnAction)
-  f.now=.3;response=f:send(1,"toyStart",2);assert(response.status=="Started")
-  local id=response.actionId;f.now=.6;response=f:send(2,"toyCancel",1,id);assert(response.status=="Rejected"and f.g.toy.returnAction.id==id)
+ test("retirement never trusts a forged old-client identity",function()
+  local f=fixture();local response=f:send(1,"toyStart",1,nil,{petGeneration=0})
+  assert(response.reason=="ActivityRetired"and not f.g.toy.returnAction)
  end)
- test("join refreshes starter character facts before reserving the receiver",function()
-  local f=fixture();local response=f:send(1,"toyStart",1);local id=response.actionId
-  f.inputs[1].characterId=2;f.boards[f.players[1]].characterGeneration=2;f.now=.3
-  response=f:send(2,"toyJoin",1,id);assert(response.status=="Rejected"and not f.g.toy.returnAction)
- end)
- test("rate rejection carries the same request identity without executing a second action",function()
-  local f=fixture();local first=f:send(1,"toyStart",1)
-  f.now=.01;local second=f:send(1,"toyCancel",2,first.actionId)
-  assert(second.reason=="Throttled"and second.seq==2 and f.g.toy.returnAction.id==first.actionId)
- end)
- test("manual Start refreshes an autonomous owner's changed character before retirement",function()
-  local f=fixture();f.inputs[2].mode="Board";f.boards[f.players[2]].mode="Board";f.g:syncOne(2,f.inputs[2]);f.now=4;f.g:decide()
-  assert(f.g.toy.ownerId==1 and not f.g.toy.returnAction)
-  f.inputs[2].mode="Room";f.boards[f.players[2]].mode="Room";f.g:syncOne(2,f.inputs[2])
-  local replacement=table.clone(f.inputs[1]);replacement.characterId=2;f.inputs[1]=replacement;f.boards[f.players[1]].characterGeneration=2
-  f.now+=.2;local response=f:send(2,"toyStart",1)
-  assert(response.status=="Started"and f.g.actors[1].characterId==2 and f.g.toy.returnAction.starterId==2)
-  assert(not f.g.actors[1].toyReservation and not f.g.toy.returnAction.participants["1"])
- end)
- return{passed=#cases,cases=cases,realHostListener=true}
+ return {passed=#cases,cases=cases,realHostListener=true}
 end

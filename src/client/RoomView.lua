@@ -14,9 +14,6 @@ local HollowAmbience=require(script.Parent.HollowAmbience)
 local PetFactory=require(script.Parent.PetFactory)
 local GardenClient=require(script.Parent.GardenClient)
 local GardenActivity=require(ReplicatedStorage.Shared.GardenActivity)
-local GardenLayout=require(ReplicatedStorage.Shared.GardenLayout)
-local GardenToyVisual=require(script.Parent.GardenToyVisual)
-local GardenToyPrompt=require(script.Parent.GardenToyPrompt)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
@@ -89,7 +86,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	local self = setmetatable({
 		board = board, progress = progress, controls = controls, heading = heading,
 		welcome = welcome, greetButton = greet, menuButton = menu,
-		transition = DeckTransition.new(gui, board.Tray, audio, reduceEffects), audio = audio,
+		transition = DeckTransition.new(gui, board:FindFirstChild("Tray",true), audio, reduceEffects), audio = audio,
 		mode = "Board", target = "Board", lastSwitchAt = -math.huge,
 		shownPet = Pets[1], menuOpen = false, overlayOpen = overlayOpen,
 		companions = RoomCompanions.new(progress.Parent, createPet, reduceEffects),
@@ -98,14 +95,6 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	self.garden=GardenClient.new(progress.Parent)
  self.coos=require(script.Parent.PetCooScheduler).new(audio)
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
-	self.gardenToy=GardenToyVisual.new(workspace,GardenLayout.Toy)
-	self.toyPrompt=GardenToyPrompt.new(self.garden,self.gardenToy.part,{context=function()
-  local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart");local humanoid=character and character:FindFirstChildOfClass("Humanoid")
-  local enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter
-   and self.focusUI~=nil and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0
-   and not(self.stations and self.stations:inReach())and(not self.canRoam or self.canRoam())
-  return self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character),root and root.Position,enabled
- end})
  self.companions.garden=self.garden
 	self.ambience=HollowAmbience.new()
  self.affection=PetAffection.new(workspace,function(index)
@@ -191,12 +180,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id)else self.garden:focus(false)end
 		self.garden:step(dt)
 		if self.care then self.care:step()end
-        if self.toyPrompt then self.toyPrompt:step(dt)end
-		if self.gardenToy then
-			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
-			self.gardenToy:setVisible(visible)
-			if visible then self.gardenToy:update(GardenActivity.sampleToy(self.garden.snapshot and self.garden.snapshot.toy,serverNow),dt,self.reduceEffects())end
-		end
+
 		if self.pet then
 			local character = Players.LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -245,7 +229,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 end
 
 function Room:stationInReach()
-	return(self.stations~=nil and self.stations:inReach())or(self.toyPrompt~=nil and self.toyPrompt:inReach())
+	return self.stations~=nil and self.stations:inReach()
 end
 
 function Room:updateControls()
@@ -883,6 +867,7 @@ end
 function Room:show(mode, animate)
 	self.welcome.Visible = false
 	if mode == "Room" then
+        self.endedRoomSerial=if self.progress:GetAttribute("RoundOver")==true then self.progress:GetAttribute("ResetId")else nil
 		local meet = self.requestedPet ~= nil
 		self.welcomeNext = nil
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
@@ -942,12 +927,20 @@ function Room:driveModes(initial)
 					self.transition:cover(not first and self.mode=="Board",token)
 				end
 				if self.destroyed or self.switchEpoch~=epoch then return end
+                if destination=="Board"and self.boardContentReady then
+                    self.transition:setContentCover(true)
+                    while not self.destroyed and self.switchEpoch==epoch and self.target==destination
+                        and not self.boardContentReady(self.endedRoomSerial)do task.wait()end
+                    if self.destroyed or self.switchEpoch~=epoch then return end
+                end
 				-- A replicated destination can change while the curtain is moving.
 				if self.target==destination then
 					local changed=self.mode~=destination
 					if changed and self.mode=="Room" and destination=="Board" then self:captureReturnRoam() end
 					self.mode=destination
 					self:show(destination,token~=nil and self.transition:owns(token))
+                    self.transition:setContentCover(false)
+                    if destination=="Board"then self.endedRoomSerial=nil end
 					if changed and destination=="Room" and not self.overlayOpen() and not GuiService.MenuIsOpen then
 						self.audio:play(self.shownPet.cue)
 					end
@@ -957,12 +950,14 @@ function Room:driveModes(initial)
 						self.cameraTween.Completed:Wait()
 					end
 				else
+					self.transition:setContentCover(false)
 					self.transition:hide(token)
 				end
 				first=false
 			end
 		end)
 		if self.switchEpoch~=epoch or self.destroyed then return end
+		self.transition:setContentCover(false)
 		if token then self.transition:hide(token) end
 		self:setBusy(false)
 		self:updateControls()
@@ -1016,6 +1011,7 @@ function Room:destroy()
 	self.focusUI:destroy()
 	self.controls:Destroy()
 	self.transition:hide()
+	if self.transition.contentCover then self.transition.contentCover:Destroy()end
 	self.transition.shade:Destroy()
 end
 

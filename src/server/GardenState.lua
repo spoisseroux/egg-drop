@@ -259,7 +259,7 @@ function Garden:wander(actor,input,now)
 end
 function Garden:decide()
     local now=self.options.now();local ordered={}
-    ToyReturn.step(self,now)
+    if self.options.sharedToyEnabled==false then self:retireSharedToy()else ToyReturn.step(self,now)end
     -- Reservations bind both participant generations; any superseded half ends
     -- the pair before another action can observe or reuse its token.
     local retired={}
@@ -300,14 +300,14 @@ function Garden:decide()
             for _,waypoint in ipairs({Layout.Lawn,target,Layout.Rest})do
                 if distance(input.position,waypoint)>20 then reachable=false;break end
             end
-            local wanderTurn=self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
+            local wanderTurn=self.options.sharedToyEnabled==false or self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
             if now-actor.idleSince>=3.5 and now>=(actor.nextWanderAt or 0) and wanderTurn then
                 actor.nextWanderAt=now+7
                 if not self:wander(actor,input,now)then
                     actor.wanderCount=(actor.wanderCount or 0)+1
                     self:transition(actor,"rest",position,1.5,"wanderPause")
                 end
-            elseif now-actor.idleSince>=3 and not self.toy.ownerId and reachable and not wanderTurn then
+            elseif self.options.sharedToyEnabled~=false and now-actor.idleSince>=3 and not self.toy.ownerId and reachable and not wanderTurn then
                 local duration=math.clamp((position-Layout.Lawn).Magnitude/3+(Layout.Lawn-target).Magnitude/3,1.6,8)
                 self.toy={kind="solo",position=Activity.pack(Layout.Toy),ownerId=actor.ownerId,reservation=self:token()}
                 actor.toyReservation=self.toy.reservation
@@ -347,7 +347,22 @@ function Garden:remove(id)
     if self.care then self.care.requests[id]=nil;self.care.equips[id]=nil;self.care.equipProofs[id]=nil end
     return self:publish()
 end
-function Garden:toyRequest(id,packet)return ToyReturn.request(self,id,packet)end
+function Garden:retireSharedToy()
+ -- Retire only this activity; generic Garden:release also releases care bays.
+ for _,actor in pairs(self.actors)do
+  local retired=actor.toyReservation~=nil or actor.toyActionId~=nil or actor.action=="shove"or actor.action=="toyReturn"
+  actor.toyReservation,actor.toyActionId,actor.toyRole,actor.toyStartTime=nil,nil,nil,nil
+  if retired and not actor.care and actor.mode~="Focus"then
+   local input=self.inputs[actor.ownerId]
+   if input then actor.idleSince=self.options.now();self:transition(actor,if input.mode=="Board"then "rest"else "follow",input.anchor,.5)end
+  end
+ end
+ if self.toy.ownerId or self.toy.returnAction then self.toy={position=Activity.pack(Layout.Toy)};self.dirty=true end
+end
+function Garden:toyRequest(id,packet)
+ if self.options.sharedToyEnabled==false then return {kind=packet.kind,seq=packet.seq,status="Rejected",reason="ActivityRetired",actionId=packet.actionId}end
+ return ToyReturn.request(self,id,packet)
+end
 function Garden:toyReplay(id,packet)return ToyReturn.replay(self,id,packet)end
 function Garden:snapshot()
     local actors={}

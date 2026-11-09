@@ -1,4 +1,4 @@
--- Astra's single held recoil. Decorative nodes only; simulation/input are never transformed.
+-- One signed presentation translation. Input targets inherit it; simulation stays fixed.
 local Recipe=require(script.Parent.CareFeedbackData).jolt
 local Jolt={};Jolt.__index=Jolt
 local peak=0;for _,key in ipairs(Recipe.keys)do peak=math.max(peak,Vector2.new(key[2],key[3]).Magnitude)end
@@ -41,5 +41,21 @@ function Jolt:update(now)
  local offset=Vector2.new(x,y)*(active.amplitude/peak);self.offset=offset
  for _,entry in ipairs(self.nodes)do if entry.node.Parent then entry.node.Position=entry.base+UDim2.fromOffset(offset.X,offset.Y)end end
 end
+-- Native UDim pixel offsets quantize the curve. Compensate the displacement
+-- actually assigned to the root, so a still finger never changes launch aim.
+function Jolt:appliedOffset()
+ local entry=self.nodes[1]
+ if not entry or not entry.node.Parent then return Vector2.zero end
+ local current=entry.node.Position
+ return Vector2.new(current.X.Offset-entry.base.X.Offset,current.Y.Offset-entry.base.Y.Offset)
+end
+function Jolt.normalizedAim(screenX,visibleLeft,width,displacementX)
+ local logicalLeft=visibleLeft-(displacementX or 0)
+ return math.clamp((screenX-logicalLeft)/math.max(1,width),0,1)
+end
+function Jolt:pointerAim(screenX,visibleLeft,width)
+ return Jolt.normalizedAim(screenX,visibleLeft,width,self:appliedOffset().X)
+end
+
 function Jolt:destroy()if self.destroyed then return end;self:reset();self.destroyed=true;table.clear(self.nodes)end
 return Jolt

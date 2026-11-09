@@ -26,11 +26,11 @@ local function add(visual,shape,index,part,offset,size,rotation,backend)
  local scale=visual.scale or 1
  part.Name="Charm_"..shape..index;part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=backend~="mask"
  part.Material=Enum.Material.SmoothPlastic;part.Color=visual.secondaryColor;part.Size=size*scale;part.Transparency=1;part.Parent=visual.model
- local frame=dot.frame*CFrame.Angles(math.rad(12),0,0)*CFrame.new(offset*scale)*(rotation or CFrame.identity)
+ local frame=dot.frame*(if shape=="ring"then CFrame.identity else CFrame.Angles(math.rad(12),0,0))*CFrame.new(offset*scale)*(rotation or CFrame.identity)
  local entry={part=part,name=part.Name,channel="Charm",role="charm",charmShape=shape,charmBackend=backend,colorRole="secondary",color=part.Color,faceBaseColor=part.Color,faceBaseMaterial=part.Material,frame=frame,size=part.Size}
  if backend=="mask"then
   entry.baseTransparency=1;entry.decals={}
-  for _,face in ipairs({Enum.NormalId.Front,Enum.NormalId.Back})do
+  for _,face in ipairs({Enum.NormalId.Top,Enum.NormalId.Bottom})do
    local decal=Instance.new("Decal");decal.Name="ContinuousRing";decal.Face=face;decal.Texture=Charms.RingMask;decal.Color3=visual.secondaryColor;decal.Transparency=1;decal.Parent=part;table.insert(entry.decals,decal)
   end
  end
@@ -40,7 +40,7 @@ local function prepare(visual,shape)
  visual.charmFormsPrepared=visual.charmFormsPrepared or {dot=true}
  if visual.charmFormsPrepared[shape]then return end;visual.charmFormsPrepared[shape]=true
  if shape=="ring"then
-  add(visual,"ring","Mask",Instance.new("Part"),Vector3.zero,Vector3.new(.259,.195,.004),nil,"mask")
+  add(visual,"ring","Mask",Instance.new("Part"),Vector3.zero,Vector3.new(.259,.004,.259),nil,"mask")
   requestRing()
  else
   for i,spec in ipairs({{Vector3.new(-.025,-.015,0),Vector3.new(.205,.155,.15),.12},{Vector3.new(.057,.014,-.006),Vector3.new(.130,.125,.137),-.32}})do
@@ -53,7 +53,7 @@ function Charms.step(visual)
  if visual.destroyed or visual.renderCharmShape~="ring"or visual.charmRingBound then return end
  local mesh=requestRing();if not mesh then return end
  -- Commit on the visual's own update; callbacks never retain a visual.
- if add(visual,"ring","Mesh",mesh:Clone(),Vector3.zero,Vector3.new(.259,.195,.049),nil,"mesh")then visual.charmRingBound=true;visual.poseDirty=true end
+ if add(visual,"ring","Mesh",mesh:Clone(),Vector3.zero,Vector3.new(.259,.259,.049),CFrame.Angles(math.pi/2,0,0),"mesh")then visual.charmRingBound=true;visual.poseDirty=true end
 end
 function Charms.apply(visual,appearance)
  visual.charmVisible=type(appearance)~="table"or appearance.charmVisible~=false

@@ -16,17 +16,6 @@ function Art.build(room,part)
  for _,side in ipairs({-1,1})do
   box("BridgePaleSill",Vector3.new(17.6,4.42,-9.4+side*2.43),Vector3.new(10,.24,.24),"E7DFC8",false)
  end
- -- The arch lies in the YZ plane, so the west/east ball trajectory passes through it.
- local toy=Layout.Toy
- for _,side in ipairs({-1,1})do
-  local post=box("ReturnGateGlass",toy+Vector3.new(0,.515,side*1.35),Vector3.new(.20,1.08,.24),"45C5D0",false)
-  post.Material=Enum.Material.Glass;post.Transparency=.26;post.CastShadow=false
-  box("ReturnGateAmberFoot",toy+Vector3.new(0,.095,side*1.35),Vector3.new(.40,.22,.42),"E9AE64",false)
- end
- local edge=box("ReturnGateEdge",toy+Vector3.new(0,1.035,0),Vector3.new(.22,.16,2.94),"E9AE64",false);edge.CastShadow=false
- for _,slot in ipairs({Layout.ToyWest,Layout.ToyEast})do
-  local marker=box("ReturnSlotStone",slot-Vector3.new(0,.0125,0),Vector3.new(.75,.025,.75),"DDCFB2",false);marker.Transparency=.25
- end
  -- Low visual strata frame the lawn without occupying the bench sight corridor.
  for i,stone in ipairs({{-15,-10},{-14,-2},{-13,5},{10,-11},{10,1},{8,7}})do
   local p=box("LawnEdgeStone",Vector3.new(stone[1],4.11,stone[2]),Vector3.new(1.1,.22,.8),if i%2==0 then "B6CBAB"else "DECEAD",false)
