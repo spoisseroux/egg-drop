@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"GardenCareStartup\":{\"ok\":true,\"result\":{\"passed\":2,\"cases\":{\"1\":\"actual Care.new accepts production ScreenGui and owns a full safe Frame for notice and setdown\",\"2\":\"actual Room.new and render steps complete with production ScreenGui before any companion or profile action\"}}},\"GardenCareClient\":{\"ok\":true,\"result\":{\"passed\":10,\"cases\":{\"1\":\"captured request has exact identity claim revision and independent sequence\",\"3\":\"pending then saved invokes one captured completion and duplicate terminal is ignored\",\"2\":\"same-kind pending request cannot accumulate or become a second equip\",\"5\":\"an equip can stay unresolved while exact claim release is independently sent\",\"4\":\"stale character or mismatched packet cannot close another character focus\",\"7\":\"only accepted place opens the machine and no synthetic saved result mutates equipment\",\"6\":\"refused setdown preserves hold and gives a clear dry-space reason\",\"9\":\"board-first and snapshot-first equip replication preserve the exact current editor claim\",\"8\":\"destroyed transport ignores late callbacks and cannot send\",\"10\":\"teardown sends one best-effort exact release and retires all UI resources\"}}}}"
+    }
+  ],
+  "isError": false
+}

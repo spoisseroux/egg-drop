@@ -1,0 +1,31 @@
+{
+  "machineUI": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ok\":true,\"result\":{\"passed\":6,\"cases\":{\"1\":\"ordinary shortcut editor keeps its original target and has no machine actions\",\"3\":\"save pending does not replace portrait and failure keeps old pet and bay\",\"2\":\"machine switch requires an explicit activation confirmation and preserves saved old pet\",\"5\":\"desktop phone and short Largest geometry preserve pinned exit actions and first chip row\",\"4\":\"only confirmed new session identity selects the replacement saved pet\",\"6\":\"leaving machine scope restores shortcut controls without an equip or item request\"}}}"
+      }
+    ],
+    "isError": false
+  },
+  "transport": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"passed\":8,\"cases\":{\"1\":\"captured request has exact identity claim revision and independent sequence\",\"8\":\"destroyed transport ignores late callbacks and cannot send\",\"3\":\"pending then saved invokes one captured completion and duplicate terminal is ignored\",\"2\":\"same-kind pending request cannot accumulate or become a second equip\",\"5\":\"an equip can stay unresolved while exact claim release is independently sent\",\"4\":\"stale character or mismatched packet cannot close another character focus\",\"7\":\"only accepted place opens the machine and no synthetic saved result mutates equipment\",\"6\":\"refused setdown preserves hold and gives a clear dry-space reason\"}}"
+      }
+    ],
+    "isError": false
+  },
+  "poseFailure": {
+    "content": [
+      {
+        "type": "text",
+        "text": "sabuiltin_Assistant.rbxm.Assistant.Packages._Index.AssistantUI.AssistantUI.Tools.ExecuteLuauTool:125: sabuiltin_Assistant.rbxm.Assistant.Packages._Index.AssistantUI.AssistantUI.Util.CommandExecution:54: ReplicatedStorage._ItemEggsAeroQA.CarePose:60: ReplicatedStorage._ItemEggsAeroQA.CarePose:44: R6 Workspace.Folder._R6Care.Torso.Left Shoulder restore differs: position 0 angle 0; before 0, 0, 0, 0.999350131, -0.0199894253, 0.0299951211, 0.021181656, 0.99897629, -0.0399708487, -0.0291654207, 0.0405802168, 0.998750508 after 0, 0, 0, 0.999350131, -0.0199894235, 0.0299951173, 0.0211816542, 0.99897629, -0.039970845, -0.029165417, 0.0405802131, 0.998750508"
+      }
+    ],
+    "isError": true
+  },
+  "preferredText": "Medium; Largest native setting not exercised yet",
+  "kind": "Isolated synthetic client component suites; no real intents"
+}

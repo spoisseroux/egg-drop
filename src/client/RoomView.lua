@@ -123,11 +123,20 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
 		end,
 	})
+	self.care=require(script.Parent.GardenCareClient).new(self,gui)
+	self.careArms=require(script.Parent.AvatarCarePose).new()
 	local function watch(signal, callback)
 		local connection = signal:Connect(callback)
 		table.insert(self.connections, connection)
 		return connection
 	end
+	watch(RunService.PreAnimation,function()if self.careArms then self.careArms:restore()end end)
+	watch(RunService.PreSimulation,function()
+		if not self.careArms then return end
+		local pose=require(script.Parent.PetCarePose)
+		if self.pet and self.pet.careState=="Carried"then self.careArms:hold(Players.LocalPlayer.Character,pose.targets(self.pet))end
+		for _,entry in pairs(self.companions.active)do if entry.visual.careState=="Carried"and entry.root then self.careArms:hold(entry.root.Parent,pose.targets(entry.visual))end end
+	end)
 	watch(progress:GetAttributeChangedSignal("PetAppearance"),function()self:refreshPetAppearance()end)
 	local appearanceRemote=ReplicatedStorage.Remotes:FindFirstChild("PetAppearanceResult")
 	if appearanceRemote then watch(appearanceRemote.OnClientEvent,function(packet)
@@ -181,6 +190,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		local gardenFocus=self.focusing and self.mode=="Room"and not self.busy and not self.overlayOpen()and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and self.focusUI.windowActive~=false
 		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id)else self.garden:focus(false)end
 		self.garden:step(dt)
+		if self.care then self.care:step()end
         if self.toyPrompt then self.toyPrompt:step(dt)end
 		if self.gardenToy then
 			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
@@ -200,7 +210,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
 			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
-				local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
+				local actor=self.garden:renderActor(Players.LocalPlayer.UserId,self.shownPet.id,character)
 				if actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
@@ -245,8 +255,9 @@ function Room:updateControls()
 	if self.canRoam then unobscured=self.canRoam() end
 	self.controls.Visible = unobscured
 	if self.focusUI then self.focusUI:setActive(self.focusing and self.mode == "Room") end
-	if self.petPrompt then self.petPrompt.Enabled = unobscured and not self:stationInReach() end
-	if self.petClick then self.petClick.MaxActivationDistance = if unobscured then 9 else 0 end
+	local held=self.pet and(self.pet.careState=="Carried"or self.pet.careState=="Docked")
+	if self.petPrompt then self.petPrompt.Enabled = unobscured and not held and not self:stationInReach() end
+	if self.petClick then self.petClick.MaxActivationDistance = if unobscured and not held then 9 else 0 end
 end
 
 function Room:setMenuOpen(open)
@@ -272,7 +283,11 @@ function Room:interactPet()
 	return true
 end
 
-function Room:requestSwitch(callback)
+function Room:requestSwitch(callback,careReleased)
+	if not careReleased and self.care then
+		local actor=self.care:actor()
+		if actor and actor.care then self.care:release(function()self:requestSwitch(callback,true)end);return end
+	end
 	if self.busy or self.switchQueued then
 		return
 	end
@@ -308,9 +323,11 @@ function Room:showPet(pet)
 	if self.pet then self.pet.focusPose=false;self.pet:destroy() end
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
-	local position = oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
+	local rendered=self.garden:renderActor(Players.LocalPlayer.UserId,pet.id,character)
+	local dock=rendered and rendered.care and rendered.care.state=="Docked"
+	local position = if dock then GardenActivity.vector(rendered.to)else oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
 	local rank, legacy = PetPrestige.read(self.progress, pet)
-	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy,self.garden:appearance(self.progress,pet.id))
+	self.pet = (self.createPet or createPet)(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy,self.garden:appearance(self.progress,pet.id))
     self.pet.cosmeticSeed=Players.LocalPlayer.UserId
     local shown=self.pet
     shown.onRigChanged=function()
@@ -318,11 +335,12 @@ function Room:showPet(pet)
     end
     self.pet.cosmeticTime=workspace:GetServerTimeNow()
 	self.pet.focusPose=self.focusing==true;self.focusGeometry=nil
-	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
+	self.pet.origin = if dock then position else Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
 	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)
 	self.pet.model:SetAttribute("LocalCompanion", true)
  if self.affection then self.affection:setPet(self.pet)end
 	self.pet.yaw = if self.focusing and oldYaw then oldYaw elseif root then math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z) else 0
+	if dock then require(script.Parent.PetCarePose).set(self.pet,"Docked");self.pet.yaw=rendered.yaw or 0;self.pet:update(0)end
 	self.followState = nil
 	self:refreshPetAppearance()
 	local body = self.pet.model.PrimaryPart
@@ -340,7 +358,7 @@ function Room:showPet(pet)
 	click.MaxActivationDistance, click.Parent = 9, body
 	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then self:interactPet() end end)
 	self.petPrompt, self.petClick = prompt, click
-	if not self.reduceEffects() then self.pet:greet() end
+	if not self.reduceEffects()and not dock then self.pet:greet() end
 	self.heading.Text = "Sprout Hollow · "..pet.name.." · "..Pets.collectionSummary(owned,trials,self.progress:GetAttribute("InventoryMask"))
 	self:updateControls()
 end
@@ -971,6 +989,8 @@ end
 
 function Room:destroy()
 	if self.destroyed then return end
+ if self.care then self.care:destroy();self.care=nil end
+ if self.careArms then self.careArms:destroy();self.careArms=nil end
  if self.coos then self.coos:destroy();self.coos=nil end
 	self.destroyed = true
  if self.focusKey then self.focusKey:destroy();self.focusKey=nil end

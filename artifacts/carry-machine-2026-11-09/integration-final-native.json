@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"passed\":12,\"cases\":{\"1\":\"cheap malformed requests never scan actor input or consume the valid request lane\",\"3\":\"fresh intent flood is bounded before actor scans; later exact fresh retry can act\",\"2\":\"exact accepted replay and sequence conflict precede throttling and resampling\",\"5\":\"unsafe deliberate setdown keeps dock but system close releases it to safe held state\",\"4\":\"pulse rate has an independent bounded lane and cannot evict another claim\",\"7\":\"ordinary shortcut uses the same staged save and safe held fallback\",\"6\":\"late verified equip over unsafe ground cannot reclaim another owner's bay or use wet anchor\",\"9\":\"pending equip proof survives history compaction and remains replayable after its single commit\",\"8\":\"exact live bay keeps one actor through saved equip; uncommitted failure preserves original\",\"12\":\"actual wet enclosure cannot turn a safe stationary planner hold into placement across water\",\"11\":\"actual placement accepts a fully dry supported clear destination\",\"10\":\"replaced or closing board cannot publish a delayed profile callback into current actor\"}}"
+    }
+  ],
+  "isError": false
+}

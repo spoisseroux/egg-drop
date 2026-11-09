@@ -1,0 +1,16 @@
+{
+  "kind": "Native isolated GardenCare authority cases",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"passed\":12,\"cases\":{\"1\":\"forged character pet and actor generations reject without changing the actor\",\"3\":\"two-owner placement contention leaves losing pet held with independent controls\",\"2\":\"pickup preserves one actor and moving owner cannot reset a held pet\",\"5\":\"supported setdown is Placed until departure then resumes ordinary follow\",\"4\":\"unsafe set-down preflight makes no generation position or bay mutation\",\"7\":\"old claim release cannot evict the next occupant after a bay expires\",\"6\":\"exact replay returns original result and a conflicting same sequence cannot act\",\"9\":\"durable equip while exact live claim exists replaces just its one actor\",\"8\":\"late saved equip follows new truth without reclaiming a superseded bay\",\"12\":\"death character replacement and disconnect retire only owned reservation\",\"11\":\"closing during an unresolved equip releases bay but does not cancel committed truth\",\"10\":\"an uncommitted equip failure preserves old pet and exact dock session\"}}"
+      }
+    ],
+    "isError": false
+  },
+  "limitations": [
+    "Injected clock/support/equip completion; no real profiles or remote input.",
+    "Ordinary controls and two actual local clients remain pending."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "Native isolated current-source component suite",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"persistentWrites\":false,\"passed\":8,\"cases\":{\"1\":\"active equipment changes only on exact durable ID stamp writer proof\",\"8\":\"a foreign unknown or unowned selection cannot become public confirmed truth\",\"3\":\"legacy known owned newer winner terminates pending rather than blocking hydrate forever\",\"2\":\"ordinary dirty settings flush with stored companion stamp has no nil-stamp comparison\",\"5\":\"commit-then-error retries the same captured candidate and acknowledges once\",\"4\":\"legacy and staged APIs cannot interleave competing companion writes\",\"7\":\"proven newer owned foreign selection wins without rollback or candidate replay\",\"6\":\"expired and taken-over nursery lease cannot perform a new companion write\"}}"
+      }
+    ],
+    "isError": false
+  },
+  "limitations": [
+    "In-memory sandbox; no live datastore/profile write or rejoin proof.",
+    "Host/client carry assembly remains in progress."
+  ]
+}

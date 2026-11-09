@@ -1,0 +1,12 @@
+{
+  "kind": "Initial native isolated save suite failure; fixture used catalog root instead of byId",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "sabuiltin_Assistant.rbxm.Assistant.Packages._Index.AssistantUI.AssistantUI.Tools.ExecuteLuauTool:125: sabuiltin_Assistant.rbxm.Assistant.Packages._Index.AssistantUI.AssistantUI.Util.CommandExecution:54: ServerScriptService.Server._CareSaveSandbox:344: attempt to index nil with 'id'"
+      }
+    ],
+    "isError": true
+  }
+}

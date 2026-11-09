@@ -579,7 +579,7 @@ roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
 roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
 	triggered=ProximityPromptService.PromptTriggered,routes={
-		Customize=function()if openPicker()then clientUI.accepted("confirm")end end,Journal=function()if openJournal()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
+		Customize=function()if openPicker()then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")elseif openJournal()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
 	}})
 
 do
@@ -828,6 +828,11 @@ clientUI.hueIntent=clientUI.HueIntent.new({
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  appearance=nurseryView.appearanceFor,
  audio=audio,reduceEffects=reduceEffects,
+ careAction=function(kind)if roomView.care then roomView.care:request(kind)end end,
+ equipPet=function(id)
+  local binding=clientUI.hueView:machineBinding()
+  return roomView.care and roomView.care:request("careEquip",id,function(packet)clientUI.hueView:machineEquipFinished(packet.status,binding)end)or false
+ end,
  shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
  charm=function(petId,visible,shape,seq,shapeVersion)
   if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
@@ -838,6 +843,10 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  pendingHatch=function()if openNursery then openNursery()end end,
  closed=function(reason)
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
+  if back=="machine"then
+   clientUI.hueView:setMachineSession(nil)
+   if reason=="back"and roomView.care then roomView.care:release()end
+  end
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
    if back=="journal"and openJournal then openJournal();journal:restoreCustomization()elseif back=="eggs"and openNursery then openNursery()end
   end
@@ -848,7 +857,18 @@ clientUI.openHue=function(page,petId,back)
  cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
  if closeMenu then closeMenu()end
  clientUI.hueReturn=back or "eggs"
+ if back~="machine"then clientUI.hueView:setMachineSession(nil)end
  return clientUI.hueView:open(nurseryState,page,petId or board:GetAttribute("CompanionId"))
+end
+roomView.care.revision=function()return nurseryState and nurseryState.revision end
+roomView.care.isMachineOpen=function(claimId)return clientUI.hueReturn=="machine"and clientUI.hueView.shade.Visible and clientUI.hueView.machine and clientUI.hueView.machine.claimId==claimId end
+roomView.care.openMachine=function(actor)
+ if clientUI.hueView.shade.Visible and clientUI.hueReturn~="machine"then return end
+ if not clientUI.hueView.shade.Visible then clientUI.openHue("palette",actor.petId,"machine")end
+ clientUI.hueView:setMachineSession({claimId=actor.care.claimId,petId=actor.petId})
+end
+roomView.care.closeMachine=function()
+ if clientUI.hueReturn=="machine"then clientUI.hueView:close("care");clientUI.hueView:setMachineSession(nil)end
 end
 nurseryView.onOpenHue=function(purchase)
  if clientUI.openHue("buy",nil,"eggs")and purchase and not nurseryState.pendingHueResult then clientUI.hueIntent:hatch()end

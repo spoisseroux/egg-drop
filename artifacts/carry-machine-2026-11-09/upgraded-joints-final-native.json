@@ -1,0 +1,21 @@
+{
+  "native": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ok\":true,\"result\":{\"passed\":4,\"cases\":{\"1\":\"zero-Motor R15 AnimationConstraint shoulders and elbows receive a visible procedural transform\",\"4\":\"removed attachment and destroyed joint cannot transfer stale restore into a replacement\",\"3\":\"fresh animator base next frame is layered and restored rather than an old capture\",\"2\":\"repeated hold in one frame captures first base once and cannot accumulate its own overlay\"}}}"
+      }
+    ],
+    "isError": false
+  },
+  "diagnostic": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsAeroQA.CareAvatarJointsControl:82: ReplicatedStorage._ItemEggsAeroQA.CareAvatarJointsControl:58: Workspace.Folder.Model.LeftUpperArm.LeftShoulder original animator transform not restored: maxcomponent 7.82310962677e-07 position 0 angle 0; firstcapture maxcomponent 0 position 0 angle 0; native-noopsetter maxcomponent 7.82310962677e-07 position 0 angle 0; restore-vs-control maxcomponent 0 position 0 angle 0; initial 0.0299999993, 0.0199999996, -0.00999999978, 0.997951388, -0.0399392024, -0.0499789938, 0.0337233171, 0.99225384, -0.119562156, 0\"}"
+      }
+    ],
+    "isError": false
+  },
+  "limit": "Actual current avatar placement still pending."
+}

@@ -21,6 +21,7 @@ function Follow.rest(visual)
 end
 
 function Follow.step(visual, root, dt, state, reduced)
+ require(script.Parent.PetCarePose).set(visual,nil)
  visual.gardenPivot=false;visual.gardenPivotPhase=0;visual.gardenPivotTurn=0
 	if visual.gardenFocus or visual.gardenAction then
 		visual.gardenFocus=false
@@ -83,6 +84,15 @@ end
 -- Shared server-time paths move every rendered frame. The cosmetic renderer is
 -- free to sample its expression/limbs less often; it never owns root movement.
 function Follow.activity(visual,actor,now,dt,state,reduced)
+ local care=actor.care;local CarePose=require(script.Parent.PetCarePose)
+ CarePose.set(visual,care and care.state)
+ if care and(care.state=="Carried"or care.state=="Docked"or care.state=="Placed")then
+  visual.reducedEffects=reduced==true;Follow.rest(visual);visual.gardenPivot=false;visual.gardenFocus=false;visual.gardenAction=actor.action;visual.expression="pleased"
+  local holder=Players:GetPlayerByUserId(actor.ownerId);local character=holder and holder.Character
+  if care.state=="Carried"then CarePose.carried(visual,character,dt)
+  else visual.origin=CarePose.blend(visual,Activity.vector(actor.to)or visual.origin,dt);visual.yaw=actor.yaw or 0 end
+  return {generation=actor.generation,mode=actor.mode,actionId=actor.actionId}
+ end
 	-- A small shared presentation delay absorbs ordinary replication transit.
     -- Focus and Back share that history; private owner staging never enters it.
     local sampleTime=now-.12

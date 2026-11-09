@@ -5,6 +5,7 @@ local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
 local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 local Backgrounds = require(game:GetService("ReplicatedStorage").Shared.DeckBackgrounds)
 local PetAppearance=require(script.Parent.PetAppearance)
+local EggCatalog=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 
 local Progress = {}
 local pending = {}
@@ -81,6 +82,7 @@ local function decode(key, record, success)
 		background = if type(storedBackground(record))=="string" and Backgrounds.ById[storedBackground(record)] then storedBackground(record) else Backgrounds.Default,
 		petAppearance=petAppearance,petAppearanceSaved=if success then PetAppearance.decode(record.petAppearance)else {},
 		petAppearanceChanges={},petAppearanceGeneration=0,lastPetAppearanceAt=petAt,
+		lastCompanionAt=appearanceStamp(record.companionAt),companionGeneration=0,
 		appearanceFallbacks = fallbacks,
 		lastAppearanceAt = appearanceStamp(record.themeAt),
 		appearanceGeneration = 0,
@@ -132,7 +134,10 @@ local function flush(profile)
 	local appearance = profile.appearanceChange
 	local theme, sticker, themeAt = if appearance then appearance.theme else profile.theme,
 		if appearance then appearance.sticker else profile.sticker, if appearance then appearance.at else nil
-	local companionId, companionAt = profile.companionId, profile.companionAt
+	local companionChange=profile.companionChange
+	local companionId, companionAt = if companionChange then companionChange.petId else profile.companionId, if companionChange then companionChange.at else profile.companionAt
+	local companionWriter=if companionChange then companionChange.writer else writer
+	local companionFenced=true
 	local earnedTrials = profile.earnedTrials
 	local soundChange, motionChange = profile.soundChange, profile.motionChange
 	local function merge(previous)
@@ -171,9 +176,14 @@ local function flush(profile)
 		end
 		local previousCompanionTime = if type(record.companionAt) == "number" then record.companionAt else 0
 		local previousCompanionWriter = if type(record.companionWriter) == "string" then record.companionWriter else ""
-		if companionAt and (companionAt > previousCompanionTime
-			or (companionAt == previousCompanionTime and writer >= previousCompanionWriter)) then
-			record.companionId, record.companionAt, record.companionWriter = companionId, companionAt, writer
+		local exact=record.companionId==companionId and record.companionAt==companionAt and record.companionWriter==companionWriter
+		if companionChange and not exact then
+			local h=record.hatching;local f=companionChange.fence
+			companionFenced=type(h)=="table"and h.epoch==f.epoch and h.revision==f.revision and EggCatalog.isOwned(h.inventoryMask,companionId)and type(h.lease)=="table"and h.lease.token==f.token and h.lease.expiresAt>f.now()
+		end
+		if companionFenced and companionAt and (companionAt > previousCompanionTime
+			or (companionAt == previousCompanionTime and companionWriter >= previousCompanionWriter)) then
+			record.companionId, record.companionAt, record.companionWriter = companionId, companionAt, companionWriter
 		end
 		return record
 	end
@@ -253,8 +263,24 @@ local function flush(profile)
 			end
 		end
 	end
-	if companionAt == profile.companionAt then
-		profile.companionAt = nil
+	local companionProof=type(result)=="table"and result.companionId==companionId and result.companionAt==companionAt and result.companionWriter==companionWriter
+	if companionChange and profile.companionChange==companionChange then
+		if companionProof then
+			profile.companionId=companionId;profile.companionChange=nil;profile.lastCompanionAt=math.max(profile.lastCompanionAt or 0,companionAt)
+			if profile.onCompanionSaved then profile.onCompanionSaved(companionChange)end
+		elseif type(result)=="table"and Pets.byId[result.companionId]and type(result.hatching)=="table"and EggCatalog.isOwned(result.hatching.inventoryMask,result.companionId)and appearanceStamp(result.companionAt)==result.companionAt and type(result.companionWriter)=="string"and(result.companionAt>companionAt or(result.companionAt==companionAt and result.companionWriter>companionWriter))then
+			profile.companionId=result.companionId;profile.companionChange=nil;profile.lastCompanionAt=result.companionAt
+			if profile.onCompanionSuperseded then profile.onCompanionSuperseded(companionChange)end
+		elseif not companionFenced then
+			profile.companionChange=nil;if profile.onCompanionRejected then profile.onCompanionRejected(companionChange,"SessionLost")end
+		else setSaveFailed(profile,true)end
+	elseif not companionChange and companionAt~=nil and companionAt==profile.companionAt then
+		if companionProof then profile.companionAt=nil
+		elseif type(result)=="table"and Pets.byId[result.companionId]and type(result.companionAt)=="number"and type(result.companionWriter)=="string"
+			and(result.companionAt>companionAt or(result.companionAt==companionAt and result.companionWriter>companionWriter))
+			and(if type(result.hatching)=="table"then EggCatalog.isOwned(result.hatching.inventoryMask,result.companionId)else Pets.isUnlocked(Pets.byId[result.companionId],rankOf(result),trialsOf(result)))then
+			profile.companionId=result.companionId;profile.lastCompanionAt=math.max(profile.lastCompanionAt or 0,result.companionAt);profile.companionAt=nil
+		else setSaveFailed(profile,true)end
 	end
 	if earnedTrials == profile.earnedTrials then
 		profile.earnedTrials = nil
@@ -265,7 +291,7 @@ local function flush(profile)
 	if motionChange == profile.motionChange then
 		profile.motionChange = nil
 	end
-	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt
+	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt or profile.companionChange
 		or profile.earnedTrials or profile.soundChange or profile.motionChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
@@ -304,9 +330,19 @@ function Progress.setPetAppearance(profile,petId,visible,shape)
 end
 
 function Progress.equipCompanion(profile, pet)
+	if profile.companionChange then return false,"Busy"end
 	profile.companionId = pet.id
-	profile.companionAt = DateTime.now().UnixTimestampMillis
+	profile.companionAt = math.max(DateTime.now().UnixTimestampMillis,(profile.lastCompanionAt or 0)+1)
+	profile.lastCompanionAt=profile.companionAt
 	markDirty(profile)
+end
+function Progress.stageCompanion(profile,pet,operationId,fence)
+ if profile.loadFailed or profile.companionChange or profile.companionAt or type(operationId)~="string"or type(fence)~="table"then return nil,"Busy"end
+ profile.companionGeneration=(profile.companionGeneration or 0)+1
+ local at=math.max(DateTime.now().UnixTimestampMillis,(profile.lastCompanionAt or 0)+1)
+ local candidate=table.freeze({petId=pet.id,expectedOld=profile.companionId,id=operationId,at=at,writer=writer,generation=profile.companionGeneration,
+  fence=table.freeze({epoch=fence.epoch,token=fence.token,revision=fence.revision,now=fence.now})})
+ profile.lastCompanionAt=at;profile.companionChange=candidate;markDirty(profile);return candidate
 end
 
 function Progress.recordScore(profile, score)

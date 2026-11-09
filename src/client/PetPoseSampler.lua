@@ -9,13 +9,14 @@ local function footSide(entry)
  if channel=="FootR"or entry.role=="footRight"or entry.foot=="footRight"then return 1 end
  return nil
 end
-local function rootOf(v)return CFrame.new(v.origin)*CFrame.Angles(0,v.yaw or 0,0)end
+local function rootOf(v)return CFrame.new(v.origin)*CFrame.Angles(0,v.yaw or 0,0)*CFrame.Angles(v.carePitch or 0,0,0)end
 function Sampler.attach(visual)
  if visual.sampledPose then return visual end;visual.sampledPose=true;visual.poseCadence=Sampler.DefaultCadence
  local original=visual.update;local greet=visual.greet
  function visual:greet()self.poseDirty=true;return greet(self)end
  local function plant(self,slot,frame,root)
   local side=slot.side;if not side or not self.worldContext then return frame end
+  if self.careState=="Carried"or self.careState=="Docked"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
   local weight=self.gaitWeight or 0;local focus=self.focusPose or self.gardenFocus or self.gardenAction=="focus"
   local scale=self.worldScale or 1
   if focus or self.gardenAction=="greet"or self.gardenAction=="shove"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end

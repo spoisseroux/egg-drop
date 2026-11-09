@@ -15,13 +15,13 @@ Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO
 
 ## Approved pet-care expansion — work in progress, November 9
 
-The user authorized building the [Astra proposal](PET-CARE-EXPANSION.md) within the [architecture constraints](PET-CARE-ARCHITECTURE.md), starting with loading/feedback, then carry/machine/garden. The first reviewed care slice has passed native gates and awaits its private publication checkpoint. Remaining unchecked phases are not implemented. Illustrative prices, chances, XP curves and dimensions still require play tuning.
+The user authorized building the [Astra proposal](PET-CARE-EXPANSION.md) within the [architecture constraints](PET-CARE-ARCHITECTURE.md), starting with loading/feedback, then carry/machine/garden. The first reviewed care slice is private v326 Published / 3c6b61b, verified in native Version History. Carry and machine are planned in CARE-CARRY-MACHINE.md. Remaining unchecked phases are not implemented. Illustrative prices, chances, XP curves and dimensions still require play tuning.
 
 - [x] Complete-model loading/fallback before authored mesh reveal, bounded shared asset queue and owner/hatch priority; reviewed whole-rig handoff and stale-lifetime cases. [Care verification](CARE-LOADING-FEEDBACK.md).
 - [x] Exact conditional color swatches on the existing four hue rows; live muted Customize portrait; explicit one-channel Reset Main/Secondary confirmation. Actual Largest phone controls preserve a full first row.
 - [ ] Add dark-red/Garnet and black/Ink with historical data and receipts preserved.
 - [x] Tier-based device-art merge response, bounded existing effects and88%-opacity motifs over the opaque theme base. Earned low-tier and labeled injected-clear native recordings pass review.
-- [ ] Carry from petting, supported set-down, one physical care-machine bay and owned-pet switching; retain fast shortcuts during the prototype.
+- [x] Carry from petting, supported set-down, one physical care-machine bay and confirmed owned-pet switching; fast shortcuts retained. Astra accepted actual earned R15 motion and Largest phone UI; [verification](artifacts/carry-machine-2026-11-09/VERIFY.md) distinguishes isolated switch/contention tests from actual controls. Private publication is recorded in PLAY-BUILD.md.
 - [ ] Independent Skin FX gradients/finishes, original UV/material work and readable dark/night faces; restore the parked gloss work under review.
 - [ ] Feature Egg with horns/tail/wings, rarities, stored items and separate five-stage earned/visible feature sizes per pet.
 - [ ] Per-pet Movement/Swim XP levels, Stat Egg, meaningful practice, crawl/first-step and beginner/competent swimming animations with safe shores.
@@ -52,6 +52,7 @@ The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, in
 - [x] Record private v309 / pushed runtime b71c702 and refreshed native Version History proof. The browser connection failed on its new census refresh; the last census is v297's, with no claim of live v309 save/rejoin.
 - [x] Record private v297 / pushed runtime 2e9da43, refreshed Version History proof and the 6:11 AM post-publication census (one Team Create edit server, no gameplay writer).
 - [ ] Test physical-phone touch, sustained performance and controls; Studio landscape emulation is the current coverage.
+- [ ] Repeat actual two-client carry, visitor observation and bay contention after updating Studio: the November9 local-client launcher refused to start because Studio was out of date. Actual R6 controls also remain unverified; synthetic joint/geometry coverage is recorded separately.
 - [ ] Verify live save/rejoin, including shape/visibility pairs and hue inventory. The browser Play attempt reached Download Roblox while the standalone player was signed out; no live VM/profile test ran. Sign in to the standalone player before retrying. Isolated Studio receipts are not live persistence proof.
 - [ ] Run longer human play and service-scale multiplayer sessions; assess earning pace, repeated companion outcomes, time to a chosen hue and whether shared activities remain enjoyable.
 - [ ] Revisit flatter nighttime shading and weak individual Vezzi teeth if further art tuning is authorized; the proposed .60 brightness trial target was not met.

@@ -1,0 +1,1415 @@
+{
+  "status": "Component and regression checkpoint; ordinary controls and integration review pending",
+  "cases": 283,
+  "suites": 34,
+  "failed": [],
+  "compile": {
+    "count": 142,
+    "errors": 0
+  },
+  "rojo": "pass",
+  "preferredText": "Medium",
+  "server": {
+    "GardenWalkability": {
+      "ok": true,
+      "result": {
+        "passed": 11,
+        "cases": {
+          "1": "registered bridge gives4.5usable studs and an exact support top",
+          "2": "open creek or bridge underside is never admitted as a crossing",
+          "3": "both authored crossing directions reach their endpoint with safe full control hull",
+          "4": "control hull excursions reject even when the chord endpoints are supported",
+          "5": "dry existing movement retains its exact planner path and continuous entry velocity",
+          "6": "bridge landing and nook support do not admit a nearby unregistered strip",
+          "7": "inward near-bank velocity cannot escape the safety stop into unsupported water",
+          "8": "a rotated wet patch contained wholly inside a convex control hull rejects",
+          "9": "actual dry lateral endpoint still completes the full supported bridge exit",
+          "10": "a genuinely wet lateral follow goal projects onto the nearby deck",
+          "11": "far unsupported creek goals are not projected across the garden"
+        }
+      }
+    },
+    "HueHost": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "persistentWrites": false,
+        "cases": {
+          "1": "actual random buy reservation lost response preserves confirmed stock and same-quote throttle stays Retrying",
+          "2": "background retry held in storage preserves waiter and changed same-ID quote cannot replace candidate",
+          "3": "lost use event recovers committed vectors, replay never consumes later stock and altered pending ID conflicts",
+          "4": "private snapshot is owner-targeted and snapshot requests cannot select another profile"
+        },
+        "evidence": "actual host callbacks and retry coroutine; isolated durable reservation/store suspension"
+      }
+    },
+    "PetContact": {
+      "ok": true,
+      "result": {
+        "passed": 16,
+        "persistentWrites": false,
+        "cases": {
+          "1": "twelve continuous server seconds produce one roll and exact live Saved receipt",
+          "2": "negative outcome consumes opportunity without storage or a promised award",
+          "3": "idle focus stationary timeout and a tap cannot earn",
+          "4": "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+          "5": "restarting after a missed opportunity still requires a new full twelve seconds",
+          "6": "stale cross-player and replaced lease ids cannot extend a new contact",
+          "7": "duplicate begin reuses grant without refreshing its continuity clock",
+          "8": "room ownership pet root generation death movement conflict and epoch invalidate contact",
+          "9": "forged payload and unreachable anchor do no RNG or storage work",
+          "10": "same held context may receive retry or renew proof once but cannot draw while saving",
+          "11": "end or replacement while a commit is pending prevents any later glyph",
+          "12": "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+          "13": "cap mute and reduced effects are independent and capped draws stop",
+          "14": "destroy cancels display and future work while retained ledger work belongs elsewhere",
+          "15": "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+          "16": "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+        },
+        "evidence": "pure server contact continuity and live receipt broker; not proof of human touch"
+      }
+    },
+    "SessionHost": {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 2,
+        "cases": {
+          "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+          "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+        }
+      }
+    },
+    "GardenToyReturn": {
+      "ok": true,
+      "result": {
+        "passed": 23,
+        "cases": {
+          "1": "start reserves one identity and exact retry never replans it",
+          "2": "competing start or third participant cannot displace the reservation",
+          "3": "join binds identity generations and starts only when both validated approaches are ready",
+          "4": "join deadline expires into solo without creating rewards or a second action",
+          "5": "unrelated or stale cancellation cannot reset a current or reused return",
+          "6": "focus releases both toy participants while preserving unrelated actors",
+          "7": "leave, bench mode, equip and character replacement retire only their action",
+          "8": "late observer samples exact semantic travel even under reduced effects",
+          "9": "invalid reach and nonfinite commands cannot acquire the toy",
+          "10": "automatic solo and greeting decisions cannot steal the reserved toy actors",
+          "11": "a stale retired actor cannot release a newer shared return for the same owner",
+          "12": "validated manual Start preempts exact investigating or shoving solo and preserves both ball presentations",
+          "13": "failed incoming path or reach leaves autonomous reservation and actors untouched",
+          "14": "autonomous owner may start a manual return and another Start cannot replace it",
+          "15": "manual priority cannot cancel a greeting or borrow its participant",
+          "16": "stale solo completion and exact manual retry cannot reset or replan the new return",
+          "17": "a mismatched autonomous token or identity is never eligible for manual retirement",
+          "18": "handoff pickup ends at the regular rest position even for delayed observers",
+          "19": "a joining pet cannot tear down an unrelated greeting or the waiting manual return",
+          "20": "ready nearby partners start promptly without waiting the full solo join window",
+          "21": "a valid seven-stud solo approach waits for its pet instead of rejecting a normal start",
+          "22": "last-moment seven-stud join retimes both holds atomically with no root or ball jump",
+          "23": "join immediately before deadline preserves pickup pose while exact-deadline join rejects"
+        }
+      }
+    },
+    "GardenFocusReach": {
+      "ok": true,
+      "result": {
+        "plans": 72,
+        "cases": {
+          "1": "all seven production rigs and supported Dot states acquire and keep the public anchor independent of their private stage",
+          "2": "Dot and viewport reframe keeps the accepted stage while solving an independent lens",
+          "3": "same accepted target is rejected for stale pet or character generation",
+          "4": "the exact pre-focus camera survives staging and owner translation"
+        },
+        "passed": 4,
+        "metrics": {
+          "1": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "2": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "3": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "4": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "5": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "6": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "7": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "8": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "9": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "10": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "11": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "12": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "13": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "14": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "15": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "16": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "17": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "18": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "19": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "20": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "21": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "22": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "23": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "24": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "25": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "26": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "27": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "28": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "29": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "30": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "31": {
+            "dot": false,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "puddle",
+            "edge": false,
+            "bearing": 0
+          },
+          "32": {
+            "dot": false,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "puddle",
+            "edge": true,
+            "bearing": 3
+          },
+          "33": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "34": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "35": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "36": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "37": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "38": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "39": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "40": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "41": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "42": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "43": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "44": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "45": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "46": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "47": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "48": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "49": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "bloom_pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "50": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "bloom_pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "51": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "bloom_pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "52": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "bloom_pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "53": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "bloom_pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "54": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "bloom_pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "55": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "bloom_pip",
+            "edge": false,
+            "bearing": 0
+          },
+          "56": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "bloom_pip",
+            "edge": true,
+            "bearing": 3
+          },
+          "57": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "foxfire_wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "58": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "foxfire_wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "59": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "foxfire_wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "60": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "foxfire_wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "61": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "foxfire_wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "62": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "foxfire_wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "63": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "foxfire_wick",
+            "edge": false,
+            "bearing": 0
+          },
+          "64": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "foxfire_wick",
+            "edge": true,
+            "bearing": 3
+          },
+          "65": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "1649, 971",
+            "petId": "eclipse_orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "66": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "1649, 971",
+            "petId": "eclipse_orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "67": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "733, 307",
+            "petId": "eclipse_orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "68": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "733, 307",
+            "petId": "eclipse_orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "69": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "390, 740",
+            "petId": "eclipse_orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "70": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "390, 740",
+            "petId": "eclipse_orbit",
+            "edge": true,
+            "bearing": 3
+          },
+          "71": {
+            "dot": true,
+            "reach": 6.135041236877441,
+            "viewport": "568, 160",
+            "petId": "eclipse_orbit",
+            "edge": false,
+            "bearing": 0
+          },
+          "72": {
+            "dot": true,
+            "reach": 6.135042190551758,
+            "viewport": "568, 160",
+            "petId": "eclipse_orbit",
+            "edge": true,
+            "bearing": 3
+          }
+        }
+      }
+    },
+    "PetContactHost": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "persistentWrites": false,
+        "cases": {
+          "1": "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+          "2": "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+          "3": "wrong equipped pet is rejected through the real host before RNG or storage",
+          "4": "existing retry worker proves ended committed operation without a second glyph or second worker"
+        },
+        "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture"
+      }
+    },
+    "GardenToyHost": {
+      "ok": true,
+      "result": {
+        "realHostListener": true,
+        "passed": 5,
+        "cases": {
+          "1": "real host returns an owner-only response and exact retry does not replan",
+          "2": "real host rejects forged identity and foreign cancellation",
+          "3": "join refreshes starter character facts before reserving the receiver",
+          "4": "rate rejection carries the same request identity without executing a second action",
+          "5": "manual Start refreshes an autonomous owner's changed character before retirement"
+        }
+      }
+    },
+    "SessionRecovery": {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 8,
+        "cases": {
+          "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+          "2": "profile save failure times out without releasing the lease and later recovers",
+          "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+          "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+          "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+          "6": "a setting changed during an in-flight autosave drains before lease release",
+          "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+          "8": "the actual Studio store keeps both writers in one isolated cloned root"
+        }
+      }
+    },
+    "GardenState": {
+      "ok": true,
+      "result": {
+        "passed": 12,
+        "cases": {
+          "1": "solo garden investigates, shoves twice, rests and returns without a reward path",
+          "2": "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+          "3": "paired greeting is one atomic action and focus cancels both reservations",
+          "4": "Board is observable and cannot acquire focus, toy or an automatic reward",
+          "5": "focus is owner/pet/range/generation validated and its lease expires",
+          "6": "moved owners and replaced character cannot refresh a stale focus hold",
+          "7": "a superseded participant generation explicitly retires the paired greeting",
+          "8": "equip, character replacement and leave invalidate old generations exactly once",
+          "9": "a delayed first acquisition cannot revive the same alias after equip-away and back",
+          "10": "only one toy reservation exists and another waiting pet gets a turn",
+          "11": "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+          "12": "late join samples the current shared path, not a replayed beginning"
+        }
+      }
+    },
+    "HueProgress": {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 18,
+        "cases": {
+          "1": "fresh v6 has five private stacks and seven independent color capabilities",
+          "2": "each 20-percent server roll stores exactly one item, one debit and no companion pity change",
+          "3": "stored duplicates stack, pending results block new purchases and result use acknowledges once",
+          "4": "five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",
+          "5": "reservation and settlement retry the frozen draw before and after ambiguous writes",
+          "6": "durable reservation survives writer takeover and settles its original result once",
+          "7": "v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",
+          "8": "held legacy token redeems exactly once without roll/debit and original buy proof survives",
+          "9": "invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",
+          "10": "v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",
+          "11": "bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",
+          "12": "malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",
+          "13": "each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",
+          "14": "two uses of last jar at one revision have one winner and rejected request cannot strand next intent",
+          "15": "v5 zero-cost assignments retain their exact token proof after upgrade and later reset",
+          "16": "corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",
+          "17": "migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",
+          "18": "a sparse Ovelle-only veteran can buy and apply without owning the welcome pet"
+        }
+      }
+    },
+    "GardenIntentHost": {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "cases": {
+          "1": "actual host listener accepts position-free focus and retains sampled public position and facing",
+          "2": "client supplied stage is ignored; accepted focus still uses the authoritative actor",
+          "3": "host retains rate identity sequence pet mode and generation validation"
+        },
+        "realHostListener": true,
+        "passed": 3,
+        "realGardenState": true
+      }
+    }
+  },
+  "client": {
+    "PetCoos": {
+      "ok": true,
+      "result": {
+        "passed": 9,
+        "cases": {
+          "1": "one listener waits a full quiet interval and prefers its owner over visitors",
+          "2": "mute blur board menus and focus drop opportunities without a return burst",
+          "3": "ordinary walking and short pauses cannot starve room cadence; a moving due beat is skipped",
+          "4": "nearest eligible visible visitor attenuates and out-of-range preview never speaks",
+          "5": "generation character mode and model retirement cancel only the captured speaker",
+          "6": "a visitor entering Board cancels its active voice without affecting another owner's pet",
+          "7": "failed or unavailable approved voice skips a beat with no pose and no queued replay",
+          "8": "retained species reuse original family recipe and reduced overlay never moves head hands or root",
+          "9": "teardown stops one incidental owner and cannot speak after destruction"
+        }
+      }
+    },
+    "ItemPetVisuals": {
+      "ok": true,
+      "result": {
+        "1": "pip two mapped channels protected face/sculpt and independent reset/charm",
+        "2": "puddle two mapped channels protected face/sculpt and independent reset/charm",
+        "3": "wick two mapped channels protected face/sculpt and independent reset/charm",
+        "4": "orbit two mapped channels protected face/sculpt and independent reset/charm",
+        "5": "bloom_pip two mapped channels protected face/sculpt and independent reset/charm",
+        "6": "foxfire_wick two mapped channels protected face/sculpt and independent reset/charm",
+        "7": "eclipse_orbit two mapped channels protected face/sculpt and independent reset/charm"
+      }
+    },
+    "HueAppearance": {
+      "ok": true,
+      "result": {
+        "passed": 7,
+        "authorityMutation": false,
+        "cases": {
+          "1": "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+          "2": "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+          "3": "journal portrait recolors existing pixels using the same body and secondary roles",
+          "4": "same hatch ID appearance updates keep epoch hero viewport and static completion",
+          "5": "pixel hatch fallback updates palette without rebuilding the receipt scene",
+          "6": "confirmed peer token refresh updates the existing observer rig instead of only Dot",
+          "7": "bodyMix-only confirmation recolors the same visitor model and preserves shared activity state"
+        },
+        "liveCommands": 0
+      }
+    },
+    "GardenActivity": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "two viewer rates sample identical server-time positions",
+          "2": "movement advances every rendered frame",
+          "3": "reduced gait preserves shared gameplay position",
+          "4": "late and malformed snapshots are bounded"
+        }
+      }
+    },
+    "HueSwatchInspection": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "inspection changes no saved vectors stock portrait or spend intent",
+          "2": "zero-stock stages inspect but cannot consume, channels use their independent saved vectors",
+          "3": "all swatches retain 44px targets and readable stage text on phone, short landscape and desktop",
+          "4": "inspecting stage4 at saved2 still confirms only next3 and emits one unchanged dose quote"
+        }
+      }
+    },
+    "PetAssetReadiness": {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "two synchronous consumers share one family load and both wait for its whole result",
+          "2": "a denied required mesh cannot publish ready and one bounded retry is allowed",
+          "3": "timeout quarantines a late success while the underlying concurrency slot remains bounded",
+          "4": "queued owner and hatch work outrank visitors without exceeding two running jobs",
+          "5": "cancelled lifetime gets no notification while the shared family cache remains useful",
+          "6": "a new template signature cannot receive an old family completion",
+          "7": "expired queued visitor cannot build an unbounded late backlog",
+          "8": "fresh owner demand can rearm a never-started queued family after slots recover"
+        }
+      }
+    },
+    "GardenBabyMotion": {
+      "ok": true,
+      "result": {
+        "1": "seeded blinks close briefly, rest open and repeat without frame integration",
+        "2": "reduced motion is exactly static and sleep/contact retain expression eyelids",
+        "3": "pip imported Dot moves separately, feet stay planted and frames allocate no nodes",
+        "4": "pip native Dot moves separately, feet stay planted and frames allocate no nodes",
+        "5": "puddle imported Dot moves separately, feet stay planted and frames allocate no nodes",
+        "6": "puddle native Dot moves separately, feet stay planted and frames allocate no nodes",
+        "7": "all seven stable identities share the approved neutral reset palette including retained editions",
+        "8": "focus captures analytic extrema once and hidden Dot contributes no padding or points"
+      }
+    },
+    "DeckMergeJolt": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": {
+          "1": "accepted serial and merge ID debounce a single bounded held curve",
+          "2": "clear and chains cap at four pixels without adding or erasing stronger recoil",
+          "3": "absolute base transform returns exactly and never moves field or input targets",
+          "4": "mode overlay reduced and serial changes clear motion and scope duplicate IDs",
+          "5": "reflow captures a fresh authored base after reset without accumulated displacement",
+          "6": "motif compositor preserves an opaque theme floor and intrinsic quieter marks"
+        }
+      }
+    },
+    "GardenPetVisual": {
+      "ok": true,
+      "result": {
+        "1": "pip authored imported + native have proper size, forward face and bounded static allocation",
+        "2": "pip six expressions remain distinct with charms off and reduced static motion",
+        "3": "pip charm toggles framing without changing the body hit hull or authority",
+        "4": "pip action generations do not replay greetings or take pose ownership",
+        "5": "puddle authored imported + native have proper size, forward face and bounded static allocation",
+        "6": "puddle six expressions remain distinct with charms off and reduced static motion",
+        "7": "puddle charm toggles framing without changing the body hit hull or authority",
+        "8": "puddle action generations do not replay greetings or take pose ownership",
+        "9": "all seven authored aliases retain identity bits, ordering and rarity",
+        "10": "a named but empty imported resource rejects the entire backend for a faithful native fallback",
+        "11": "twenty complete create/update/destroy cycles release every model"
+      }
+    },
+    "HatchCinematic": {
+      "ok": true,
+      "result": {
+        "fixtureOnly": true,
+        "geometry": {
+          "1": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "full greeting",
+            "stageHeight": 360,
+            "bandHeight": 260,
+            "fraction": 0.4993142262200926,
+            "normalFitPixelBudget": 2,
+            "preparationMs": 3.7656999193131924,
+            "limited": true,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "2": {
+            "normalFitShortfallPixels": 1.3030691257503868,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "full greeting",
+            "stageHeight": 360,
+            "bandHeight": 260,
+            "fraction": 0.47638036353958224,
+            "normalFitPixelBudget": 2,
+            "preparationMs": 4.151699598878622,
+            "limited": true,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "3": {
+            "sweptPoints": 6272,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 260,
+            "fraction": 0.5160077668795036,
+            "pet": "wick",
+            "preparationMs": 4.472099710255861,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "4": {
+            "sweptPoints": 5096,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 260,
+            "fraction": 0.48130415285526096,
+            "pet": "orbit",
+            "preparationMs": 3.9649000391364098,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "5": {
+            "sweptPoints": 6272,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 260,
+            "fraction": 0.5156906769768717,
+            "pet": "bloom_pip",
+            "preparationMs": 4.974300041794777,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "6": {
+            "sweptPoints": 6664,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 260,
+            "fraction": 0.5175485587442793,
+            "pet": "foxfire_wick",
+            "preparationMs": 4.766399972140789,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "7": {
+            "sweptPoints": 5488,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 260,
+            "fraction": 0.4869672069822444,
+            "pet": "eclipse_orbit",
+            "preparationMs": 5.253300070762634,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "8": {
+            "sweptPoints": 5488,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5432099823713096,
+            "pet": "pip",
+            "preparationMs": 3.875900059938431,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "9": {
+            "sweptPoints": 5096,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5182599559386664,
+            "pet": "puddle",
+            "preparationMs": 4.480999894440174,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "10": {
+            "sweptPoints": 6272,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5613710870447347,
+            "pet": "wick",
+            "preparationMs": 4.246799740940332,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "11": {
+            "sweptPoints": 5096,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5236166058535257,
+            "pet": "orbit",
+            "preparationMs": 4.281399771571159,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "12": {
+            "sweptPoints": 6272,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5610261211067065,
+            "pet": "bloom_pip",
+            "preparationMs": 4.727200139313936,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "13": {
+            "sweptPoints": 6664,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5630473331393807,
+            "pet": "foxfire_wick",
+            "preparationMs": 4.516899585723877,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "14": {
+            "sweptPoints": 5488,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 330,
+            "fraction": 0.5131772796087176,
+            "pet": "eclipse_orbit",
+            "preparationMs": 4.382899962365627,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "15": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "target",
+            "stageHeight": 180,
+            "bandHeight": 164,
+            "fraction": 0.5899999741248487,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 3.8431999273598194,
+            "limited": false,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "16": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "target",
+            "stageHeight": 180,
+            "bandHeight": 164,
+            "fraction": 0.5899999927188303,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 4.185799974948168,
+            "limited": false,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "17": {
+            "sweptPoints": 6272,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999707884624,
+            "pet": "wick",
+            "preparationMs": 4.267000127583742,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "18": {
+            "sweptPoints": 5096,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999311664083,
+            "pet": "orbit",
+            "preparationMs": 3.7487996742129326,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "19": {
+            "sweptPoints": 6272,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999789518459,
+            "pet": "bloom_pip",
+            "preparationMs": 4.45799995213747,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "20": {
+            "sweptPoints": 6664,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999905354357,
+            "pet": "foxfire_wick",
+            "preparationMs": 5.395099986344576,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "21": {
+            "sweptPoints": 5488,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999630793071,
+            "pet": "eclipse_orbit",
+            "preparationMs": 4.1391002014279366,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          }
+        },
+        "cases": {
+          "1": "short-landscape484x203 keeps final name and caption inside host beside hero",
+          "2": "all seven real subjects fit the rectangular viewport through every greeting frame",
+          "3": "common and rare complete once and retain moving settled motes without replaying cues",
+          "4": "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+          "5": "covered first play defers marker while presented owner loss lands final and stops its clock",
+          "6": "resize keeps exact hero and epoch and device discontinuity settles only once",
+          "7": "candidate minimum height is independent of previous stage and painted text sizes",
+          "8": "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+        },
+        "passed": 8
+      }
+    },
+    "HueEggView": {
+      "ok": true,
+      "result": {
+        "1": "1649, 971 one saved pet, independent channels and four five-notch rows",
+        "2": "1649, 971 inventory selection asks exact item pet channel; cancel spends nothing",
+        "3": "1649, 971 reset names lost bars and original rejects without spend",
+        "4": "1649, 971 saved fixed jar receipt offers Store and Use now; no second grant",
+        "5": "350, 703 one saved pet, independent channels and four five-notch rows",
+        "6": "350, 703 inventory selection asks exact item pet channel; cancel spends nothing",
+        "7": "350, 703 reset names lost bars and original rejects without spend",
+        "8": "350, 703 saved fixed jar receipt offers Store and Use now; no second grant",
+        "9": "568, 210 one saved pet, independent channels and four five-notch rows",
+        "10": "568, 210 inventory selection asks exact item pet channel; cancel spends nothing",
+        "11": "568, 210 reset names lost bars and original rejects without spend",
+        "12": "568, 210 saved fixed jar receipt offers Store and Use now; no second grant",
+        "13": "confirm sends once to unequipped selected pet and preserves exact result association"
+      }
+    },
+    "NewBabyRigs": {
+      "ok": true,
+      "result": {
+        "1": "Tikket faithful asset-free silhouette, stable ID and independent saved channels",
+        "2": "Tikket six distinct reduced poses and production sampled semantic rig",
+        "3": "Nuum faithful asset-free silhouette, stable ID and independent saved channels",
+        "4": "Nuum six distinct reduced poses and production sampled semantic rig",
+        "5": "Vezzi faithful asset-free silhouette, stable ID and independent saved channels",
+        "6": "Vezzi six distinct reduced poses and production sampled semantic rig",
+        "7": "Kiprik faithful asset-free silhouette, stable ID and independent saved channels",
+        "8": "Kiprik six distinct reduced poses and production sampled semantic rig",
+        "9": "Nolli faithful asset-free silhouette, stable ID and independent saved channels",
+        "10": "Nolli six distinct reduced poses and production sampled semantic rig"
+      }
+    },
+    "PetCharmShapes": {
+      "ok": true,
+      "result": {
+        "1": "Zivvi selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "2": "Ovelle selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "3": "Tikket selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "4": "Nuum selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "5": "Vezzi selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "6": "Kiprik selected free form, opaque fallback, independent tint/hidden hull and bounded cache",
+        "7": "Nolli selected free form, opaque fallback, independent tint/hidden hull and bounded cache"
+      }
+    },
+    "LoungeStations": {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "rare-only inventory is browsable while an explicit empty mask overrides legacy rank",
+          "2": "missing mask rejects legacy prefix and trials until the loaded mask arrives",
+          "3": "committed pending ID recovery is separate from Ready-only browsing",
+          "4": "all presentation owners reject free roam without changing focus controls",
+          "5": "UI lifetime rejects detached destroyed disabled and missing presentation nodes",
+          "6": "new and late-tagged streamed prompts inherit the current overlay owner",
+          "7": "overlapping nest and journal radii expose only the nearest shared-key station",
+          "8": "dispatch rechecks local player enabled state distance and current ownership",
+          "9": "detached reinserted and invalid-parent prompts share the single cache",
+          "10": "destroy disconnects trigger stream and owner listeners and disables owned prompts"
+        }
+      }
+    },
+    "PetWholeRigGate": {
+      "ok": true,
+      "result": {
+        "passed": 5,
+        "cases": {
+          "1": "synchronous Factory exposes complete faithful native head body limbs face and hidden charm until ready",
+          "2": "whole swap preserves visual/model pose and petting identity while atomically rebinding prompts and Saved adornment",
+          "3": "destroying or equipping away before a delayed completion cannot resurrect geometry",
+          "4": "template revision changing during load keeps whole fallback until the new exact template succeeds",
+          "5": "lazy charm forms prepare against the new piece set after a whole swap, hidden and visible"
+        }
+      }
+    },
+    "HuePortraitLifecycle": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": {
+          "1": "one muted saved portrait uses production 15Hz sampler without camera or state drift",
+          "2": "inspection and stock-only refresh preserve visual identity phase and fixed framing",
+          "3": "confirmation and close retire their clock and cancel restores only one clock",
+          "4": "reduced motion is static and blur pauses without voice or a camera reframe",
+          "5": "pet swap and destroy cannot update the retired visual or retain a render connection",
+          "6": "reset quotes and consumes exactly one selected channel while preserving the other"
+        }
+      }
+    },
+    "HueSwatches": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "forty authored mixed chips match on all seven neutral saved identities",
+          "2": "all 1296 legal vectors preserve other pigments and current saved-stage color in both channels",
+          "3": "isolated full stage reaches exact existing anchors without altering the opposite channel",
+          "4": "invalid stage channel hue and unknown target cannot form a quote"
+        }
+      }
+    }
+  },
+  "careServer": {
+    "GardenCare": {
+      "ok": true,
+      "result": {
+        "passed": 15,
+        "cases": {
+          "1": "forged character pet and actor generations reject without changing the actor",
+          "2": "pickup preserves one actor and moving owner cannot reset a held pet",
+          "3": "two-owner placement contention leaves losing pet held with independent controls",
+          "4": "unsafe set-down preflight makes no generation position or bay mutation",
+          "5": "supported setdown is Placed until departure then resumes ordinary follow",
+          "6": "exact replay returns original result and a conflicting same sequence cannot act",
+          "7": "old claim release cannot evict the next occupant after a bay expires",
+          "8": "late saved equip follows new truth without reclaiming a superseded bay",
+          "9": "durable equip while exact live claim exists replaces just its one actor",
+          "10": "an uncommitted equip failure preserves old pet and exact dock session",
+          "11": "closing during an unresolved equip releases bay but does not cancel committed truth",
+          "12": "death character replacement and disconnect retire only owned reservation",
+          "13": "unsafe editor close frees its exact bay and keeps the pet safely held",
+          "14": "late saved equipment with no dry point stays safely carried and never uses arbitrary anchor",
+          "15": "lost carried UI lease releases on next supported point without stranding attachment"
+        }
+      }
+    },
+    "CareCompanionSave": {
+      "ok": true,
+      "result": {
+        "persistentWrites": false,
+        "passed": 8,
+        "cases": {
+          "1": "active equipment changes only on exact durable ID stamp writer proof",
+          "2": "ordinary dirty settings flush with stored companion stamp has no nil-stamp comparison",
+          "3": "legacy known owned newer winner terminates pending rather than blocking hydrate forever",
+          "4": "legacy and staged APIs cannot interleave competing companion writes",
+          "5": "commit-then-error retries the same captured candidate and acknowledges once",
+          "6": "expired and taken-over nursery lease cannot perform a new companion write",
+          "7": "proven newer owned foreign selection wins without rollback or candidate replay",
+          "8": "a foreign unknown or unowned selection cannot become public confirmed truth"
+        }
+      }
+    }
+  },
+  "careClient": {
+    "CarePose": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": {
+          "1": "R6 all seven held babies keep visible charm under chin without scaling or changing identity",
+          "2": "R15 all seven held babies keep visible charm under chin without scaling or changing identity",
+          "3": "carried feet move with holder and never retain world plant anchors",
+          "4": "both avatar joint adapters restore exact captured animation transforms on leave",
+          "5": "reduced hold transfer is immediate and release resets pose without touching palette",
+          "6": "dock pose changes upper body only and keeps fixed sole datum"
+        }
+      }
+    },
+    "GardenCareClient": {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "captured request has exact identity claim revision and independent sequence",
+          "2": "same-kind pending request cannot accumulate or become a second equip",
+          "3": "pending then saved invokes one captured completion and duplicate terminal is ignored",
+          "4": "stale character or mismatched packet cannot close another character focus",
+          "5": "an equip can stay unresolved while exact claim release is independently sent",
+          "6": "refused setdown preserves hold and gives a clear dry-space reason",
+          "7": "only accepted place opens the machine and no synthetic saved result mutates equipment",
+          "8": "destroyed transport ignores late callbacks and cannot send",
+          "9": "board-first and snapshot-first equip replication preserve the exact current editor claim",
+          "10": "teardown sends one best-effort exact release and retires all UI resources"
+        }
+      }
+    },
+    "CareMachineUI": {
+      "ok": true,
+      "result": {
+        "passed": 7,
+        "cases": {
+          "1": "ordinary shortcut editor keeps its original target and has no machine actions",
+          "2": "machine switch requires an explicit activation confirmation and preserves saved old pet",
+          "3": "save pending does not replace portrait and failure keeps old pet and bay",
+          "4": "only confirmed new session identity selects the replacement saved pet",
+          "5": "desktop phone and short Largest geometry preserve pinned exit actions and first chip row",
+          "6": "leaving machine scope restores shortcut controls without an equip or item request",
+          "7": "late old machine save cannot clear a new bay or an unrelated hue confirmation"
+        }
+      }
+    }
+  }
+}

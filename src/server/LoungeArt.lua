@@ -483,6 +483,7 @@ function Art.build(room, part)
 	end
 	local awning = box("CanvasAwning", -11, 7.55+serviceLift, -6.9, 5.65, 0.12, 2.35, Color3.fromHex("#EBDAAC"))
 	awning.CFrame *= CFrame.Angles(math.rad(-9), 0, 0)
+	require(script.Parent.LoungeCareArt)(room)
 	-- One readable journal station: a raised field guide and painted family seals.
 	-- These small decorations leave the existing table/prompt and paths intact.
 	for _, side in ipairs({ -1, 1 }) do

@@ -65,6 +65,18 @@ function Garden:appearance(board,petId)
     local item=cached.value[petId]
     return {mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
 end
+function Garden:renderActor(ownerId,petId,character)
+ local exact=self:get(ownerId,petId,character);if exact then return exact end
+ -- Board attributes and the JSON snapshot can arrive in either order. Only a
+ -- still-owned physical bay may bridge that cosmetic gap; intents use get().
+ local snapshot=self.snapshot;local actor=snapshot and snapshot.actors[tostring(ownerId)]
+ local bay=snapshot and snapshot.careBay;local board=self.boards:FindFirstChild(tostring(ownerId))
+ if not actor or not actor.care or actor.care.state~="Docked"or not bay or bay.id~=actor.care.claimId or bay.ownerId~=ownerId or bay.characterId~=actor.characterId
+  or not character or character:GetAttribute("GardenCharacterId")~=actor.characterId or not board or board:GetAttribute("Mode")~="Room"or board:GetAttribute("CompanionId")~=petId then return nil end
+ local generation=board:GetAttribute("CompanionGeneration");if type(generation)~="number"then return nil end
+ local rendered=table.clone(actor);rendered.previous=nil;rendered.petId=petId;rendered.petGeneration=generation;rendered.cosmeticCareGap=true
+ return rendered
+end
 function Garden:focus(active,petId,position,yaw)
     local remote=self.remote or ReplicatedStorage.Remotes:FindFirstChild("GardenIntent")
     if not remote then return end

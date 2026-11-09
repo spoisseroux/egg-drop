@@ -1,0 +1,21 @@
+{
+  "flow": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"limitations\":{\"1\":\"Arms neutral because real R15 uses AnimationConstraint; final repeat required\",\"3\":\"No physical phone or live save/rejoin proof\",\"2\":\"Trace duration capped600seconds; post-cap Room return separately queried\"},\"events\":{\"1\":{\"petId\":\"pip\",\"owner\":\"local\",\"mode\":\"Room\",\"t\":0.06547409994527698},\"3\":{\"petId\":\"pip\",\"owner\":\"local\",\"mode\":\"Carried\",\"t\":25.79842230025679},\"2\":{\"petId\":\"pip\",\"owner\":\"local\",\"mode\":\"Focus\",\"t\":16.214762500021608},\"5\":{\"petId\":\"pip\",\"owner\":\"local\",\"mode\":\"Placed\",\"t\":588.5414499999024},\"4\":{\"petId\":\"pip\",\"owner\":\"local\",\"mode\":\"Docked\",\"t\":234.47363540017978}},\"snapshot\":\"{\\\"petHues\\\":{\\\"pip\\\":{\\\"legacyLocked\\\":{\\\"main\\\":false,\\\"secondary\\\":false},\\\"main\\\":{\\\"rose\\\":0,\\\"tide\\\":0,\\\"citrus\\\":0,\\\"iris\\\":0},\\\"secondary\\\":{\\\"rose\\\":0,\\\"tide\\\":0,\\\"citrus\\\":0,\\\"iris\\\":0}}},\\\"revision\\\":3,\\\"hueInventory\\\":{\\\"rose\\\":0,\\\"citrus\\\":0,\\\"tide\\\":0,\\\"reset\\\":0,\\\"iris\\\":0},\\\"status\\\":\\\"Ready\\\",\\\"inventoryMask\\\":1,\\\"nectar\\\":6}\",\"elapsed\":600.0074128000997,\"kind\":\"Ordinary earned single-owner actual controls; pre-AnimationConstraint-fix pose\",\"samples\":8999,\"maxLocalVisuals\":1}"
+      }
+    ],
+    "isError": false
+  },
+  "walletBefore": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"petHues\":{\"pip\":{\"legacyLocked\":{\"main\":false,\"secondary\":false},\"main\":{\"rose\":0,\"tide\":0,\"citrus\":0,\"iris\":0},\"secondary\":{\"rose\":0,\"tide\":0,\"citrus\":0,\"iris\":0}}},\"revision\":3,\"hueInventory\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"reset\":0,\"iris\":0},\"status\":\"Ready\",\"inventoryMask\":1,\"nectar\":6}"
+      }
+    ],
+    "isError": false
+  },
+  "limit": "Source uses legacy joint adapter; actual arm pose failed, repeat required."
+}

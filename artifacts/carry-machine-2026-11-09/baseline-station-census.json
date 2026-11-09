@@ -1,0 +1,51 @@
+{
+  "kind": "Native production Studio Server read-only census before carry implementation",
+  "runtime": "3c6b61b",
+  "privateVersion": 326,
+  "place": 96451847774961,
+  "players": 1,
+  "station": {
+    "id": "Journal",
+    "position": [
+      11,
+      6.51,
+      -6.3
+    ],
+    "size": [
+      5.15,
+      0.24,
+      2.25
+    ],
+    "reach": 7
+  },
+  "downwardRayHits": [
+    {
+      "x": 11.75,
+      "z": -1.6,
+      "part": "Workspace.EggDropLounge.Floor",
+      "topY": 4
+    },
+    {
+      "x": 11.75,
+      "z": -4.2,
+      "part": "Workspace.EggDropLounge.Floor",
+      "topY": 4
+    },
+    {
+      "x": 10.25,
+      "z": -1.6,
+      "part": "Workspace.EggDropLounge.Floor",
+      "topY": 4
+    },
+    {
+      "x": 13.25,
+      "z": -1.6,
+      "part": "Workspace.EggDropLounge.Floor",
+      "topY": 4
+    }
+  ],
+  "limits": [
+    "Point support only; full hull, wet zone, path and avatar clearance remain required.",
+    "No carry runtime or live multiplayer was tested in this census."
+  ]
+}

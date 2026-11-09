@@ -87,7 +87,7 @@ local function petState(board)
 		alive=humanoid~=nil and humanoid.Health>0 and root~=nil and character:IsDescendantOf(workspace),
 		ready=canProgress(board)and not handle.busy and not handle.pending,
 		busy=handle.busy or board.nurseryBusy,pendingId=handle.pending and handle.pending.id,
-		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed,
+		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed or(board.careHeld==true),
 		lastPetAward=state.lastPetAward,capReached=tonumber(today)<tonumber(state.petDay)
 			or(today==state.petDay and state.petCount>=5)}
 end
@@ -152,7 +152,10 @@ local function validWander(input,target,from)
  return grounded
 end
 local garden = GardenState.new({now=function()return workspace:GetServerTimeNow()end,
-	publish=function(snapshot)gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))end,
+	publish=function(snapshot)
+		gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))
+		for player,board in pairs(boards)do local actor=snapshot.actors[tostring(player.UserId)];board.careHeld=actor~=nil and actor.care~=nil;board.folder:SetAttribute("CareMode",if actor and actor.care then actor.mode else nil)end
+	end,
     planPath=function(from,to,velocity,speed,minimum,yaw,via,terminal)
         local scene=gardenScene()
         return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,if scene then scene.wet else {})
@@ -192,7 +195,8 @@ local function gardenInput(board)
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
 	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues)
-	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),
+	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),root=root,character=character,
+		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
 		anchor=if root then petAnchor({root=root,position=position})or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
@@ -232,6 +236,22 @@ local function publishCompanion(board)
 	board.folder:SetAttribute("CompanionGeneration",board.companionGeneration or 0)
 	board.folder:SetAttribute("CompanionId",id)
 end
+local gardenCareHost=require(script.GardenCareHost).new({garden=garden,boards=boards,progress=Progress,remotes=remotes,
+ canProgress=canProgress,inventory=inventory,gardenInput=gardenInput,publishCompanion=publishCompanion,
+ place=function(input)
+  local scene=gardenScene();if not scene then return nil end
+  return require(script.GardenCarePlacement).find(input,scene.room,scene.wet,scene.solids)
+ end,
+ validDock=function()
+  local scene=gardenScene();local careLayout=require(ReplicatedStorage.Shared.GardenCareLayout)
+  local art=scene and scene.room:FindFirstChild("CareMachine");local support=art and art:FindFirstChild("PlinthSupport")
+  if not support or not support.CanCollide then return false end
+  local at=support.CFrame:PointToObjectSpace(careLayout.Dock)
+  if math.abs(at.X)>support.Size.X*.5 or math.abs(at.Z)>support.Size.Z*.5 or math.abs(at.Y-support.Size.Y*.5)>.08 then return false end
+  for _,dx in ipairs({-.95,0,.95})do for _,dz in ipairs({-.95,0,.95})do local p=careLayout.Dock+Vector3.new(dx,0,dz);if not GardenWalkability.segmentAllowed(p,p,scene.wet)then return false end end end
+  local overlap=OverlapParams.new();overlap.RespectCanCollide=true;overlap.FilterType=Enum.RaycastFilterType.Include;overlap.FilterDescendantsInstances={scene.room}
+  return #workspace:GetPartBoundsInBox(CFrame.new(careLayout.Dock+Vector3.new(0,1.53,0)),careLayout.Footprint,overlap)==0
+ end})
 
 local function sendHueResult(board,quote,status,reason,receipt)
 	if not quote then return end
@@ -559,6 +579,7 @@ gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
 	if not board or board.closing or type(packet)~="table" then return end
 	local now=os.clock()
 	local kind=packet.kind
+	if type(kind)=="string"and string.sub(kind,1,4)=="care"then gardenCareHost:request(board,packet);return end
 	if kind=="toyStart"or kind=="toyJoin"or kind=="toyCancel"then
         local function rejected(reason)gardenToyResult:FireClient(player,{kind=kind,seq=packet.seq,status="Rejected",reason=reason,actionId=packet.actionId})end
         if type(packet.seq)~="number"or packet.seq~=packet.seq or packet.seq%1~=0 or packet.seq<1 or packet.seq>2147483647 then return end
@@ -665,9 +686,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if board.mode == "Room" and pet and NurseryCatalog.isOwned(inventory(board), pet.id)
 			and value ~= board.profile.companionId and now - board.lastCompanionChange >= 0.35 then
 			board.lastCompanionChange = now
-			Progress.equipCompanion(board.profile, pet)
-			publishCompanion(board)
-			garden:sync(gardenInputs());garden:publish()
+			gardenCareHost:switch(board,pet.id)
 		end
 		return
 	end
@@ -677,6 +696,14 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			return
 		end
 		board.lastModeChange = now
+		if value=="Board"then
+			local actor=garden.actors[player.UserId]
+			if actor and actor.care then
+				local input=gardenInput(board);local point=gardenCareHost.d.place(input)
+				if not point then return end
+				gardenCareHost.care:follow(actor,input,point)
+			end
+		end
 		if value == "Board" then RunReturn.enter(board, canProgress(board), hasPip(board), reset) end
 		board.mode = value
 		board.menuPaused = false

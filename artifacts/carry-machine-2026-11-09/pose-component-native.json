@@ -1,0 +1,17 @@
+{
+  "kind": "Native isolated geometry/pose component suite",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"passed\":6,\"cases\":{\"1\":\"R6 all seven held babies keep visible charm under chin without scaling or changing identity\",\"3\":\"carried feet move with holder and never retain world plant anchors\",\"2\":\"R15 all seven held babies keep visible charm under chin without scaling or changing identity\",\"5\":\"reduced hold transfer is immediate and release resets pose without touching palette\",\"4\":\"both avatar joint adapters restore exact captured animation transforms on leave\",\"6\":\"dock pose changes upper body only and keeps fixed sole datum\"}}"
+      }
+    ],
+    "isError": false
+  },
+  "restoreTolerance": "Maximum CFrame component delta <=1e-7, after native float32 setter normalized by ~4e-9; unchanged captured-transform runtime.",
+  "limitations": [
+    "Synthetic anchored R6/R15 joints; ordinary avatar support and animation must still be filmed.",
+    "All seven native recipe shapes tested; actual carried asynchronous authored swap remains pending."
+  ]
+}

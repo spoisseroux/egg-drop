@@ -328,14 +328,14 @@ end
 function Focus:layoutSaveHelper()
 	local size=self.root.AbsoluteSize
 	local value=if self.saveNotice then self.saveNotice.detail else self.helper.Text
-	local key=value..tostring(size)..GuiService.PreferredTextSize.Name..tostring(self.saveNotice~=nil)
+	local key=value..tostring(size)..GuiService.PreferredTextSize.Name..tostring(self.saveNotice~=nil)..tostring(self.carePickupWidth)
 	if self.helperLayoutKey==key then return end;self.helperLayoutKey=key
 	local topHint=not self.saveNotice and size.X>size.Y and size.Y<420
 	local available=size.X-24
 	if topHint then
 		-- CoreUISafeInsets already excludes system controls. Preserve the Back lane
 		-- symmetrically so the one existing lesson sits in sky, clear of the pet's feet.
-		local lane=self.back.Position.X.Offset+self.back.Size.X.Offset+12
+		local lane=math.max(self.back.Position.X.Offset+self.back.Size.X.Offset+12,(self.carePickupWidth or 0)+24)
 		available=size.X-lane*2
 	end
 	if self.saveNotice then self.helper.Text=value end

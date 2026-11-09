@@ -54,6 +54,7 @@ function Garden:resume(actor,input,prior)
     else self:transition(actor,"follow",input.anchor,.5)end
 end
 function Garden:release(actor)
+    if self.care then self.care:release(actor)end
     actor.restAnchorId=nil
     if actor.toyActionId then ToyReturn.release(self,actor.toyActionId,actor.ownerId);actor.toyActionId=nil end
     if not self.toy.returnAction and self.toy.ownerId==actor.ownerId and actor.toyReservation==self.toy.reservation then
@@ -98,7 +99,7 @@ function Garden:sync(inputs,freshOwnerId)
                 startTime=now,endTime=now+.5,idleSince=now,lastOwner=input.position,yaw=input.yaw or 0}
             self.actors[id]=actor;self.dirty=true
             if input.mode=="Board" then self:reset(actor,input) end
-        elseif input.mode~=(if actor.mode=="Focus" then "Room" else actor.mode) then self:reset(actor,input) end
+        elseif input.mode~=(if actor.mode=="Focus"or(actor.care~=nil)then "Room"else actor.mode)then self:reset(actor,input)end
         if freshOwnerId==nil or freshOwnerId==id then
         local sampledAt=self.options.now()
         if actor.ownerSampleAt and sampledAt>actor.ownerSampleAt then
@@ -115,6 +116,7 @@ function Garden:sync(inputs,freshOwnerId)
             actor.wanderCount,actor.nextWanderAt=0,nil
             if actor.mode=="Room" and actor.behavior~="follow" then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
+        if actor.care and self.care then self.care:tick(actor,input)end
     end
 end
 function Garden:syncOne(id,input)
@@ -129,6 +131,7 @@ function Garden:focus(id,packet)
         or input.mode~="Room" or packet.petId~=actor.petId or input.petId~=actor.petId or input.characterId~=actor.characterId
         or(input.petGeneration or 0)~=actor.petGeneration or(packet.characterId~=nil and packet.characterId~=input.characterId)
         or(packet.petGeneration~=nil and packet.petGeneration~=actor.petGeneration)then return false end
+    if actor.mode=="Carried"or actor.mode=="Docked"then return false end
     local now=self.options.now()
     if packet.kind=="focusEnd" then
         if actor.focusSeq==packet.seq and actor.mode=="Focus" then self:reset(actor,input);return true end
@@ -279,6 +282,7 @@ function Garden:decide()
             if now>actor.focusUntil then self:reset(actor,input) end
             continue
         end
+        if actor.care then continue end
         if actor.mode=="Board" then
             if distance(self:position(actor,now),input.anchor)>.4 then self:transition(actor,"rest",input.anchor,.5) end
             continue
@@ -340,6 +344,7 @@ function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end
     if self.toyRequests then self.toyRequests[id]=nil end
+    if self.care then self.care.requests[id]=nil;self.care.equips[id]=nil;self.care.equipProofs[id]=nil end
     return self:publish()
 end
 function Garden:toyRequest(id,packet)return ToyReturn.request(self,id,packet)end
@@ -350,9 +355,9 @@ function Garden:snapshot()
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
-            toyRole=actor.toyRole,toyStartTime=actor.toyStartTime}
+            toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil}
     end
-    return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy)}
+    return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil}
 end
 function Garden:publish()
     if not self.dirty then return false end

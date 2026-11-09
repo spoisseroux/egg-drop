@@ -1,0 +1,297 @@
+{
+  "schema": "care-cradle-art-v1",
+  "coordinates": "Game studs, local to the pet sole position. +X right, +Y up, +Z toward the open player approach. Sizes are local AABB dimensions before listed XYZ Euler rotations.",
+  "station": {
+    "existingPrompt": "Journal",
+    "sole": [
+      11.75,
+      5.18,
+      -4.2
+    ],
+    "approach": [
+      11.75,
+      4.025,
+      -1.6
+    ],
+    "facing": [
+      0,
+      0,
+      1
+    ],
+    "existingTableFrontZ": -5.175,
+    "bodyMarginToGlassStud": 0.28
+  },
+  "render": {
+    "defaultMaterial": "SmoothPlastic",
+    "defaultTransparency": 0,
+    "defaultReflectance": 0.025,
+    "defaultCanCollide": false,
+    "defaultCanTouch": false,
+    "defaultCanQuery": false,
+    "defaultCastShadow": true,
+    "ellipsoid": "Use a Part sized to the authored XYZ bounds and an unscaled SpecialMesh of MeshType Sphere. The soft oval cushion peaks at the pet sole datum."
+  },
+  "parts": [
+    {
+      "name": "Foot",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -1.075,
+        0.01
+      ],
+      "size": [
+        2.83,
+        0.15,
+        1.56
+      ],
+      "color": "#266B75"
+    },
+    {
+      "name": "FootLip",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -0.975,
+        0.01
+      ],
+      "size": [
+        2.69,
+        0.07,
+        1.5
+      ],
+      "color": "#72BDB9"
+    },
+    {
+      "name": "Pedestal",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -0.637,
+        -0.014
+      ],
+      "size": [
+        2.25,
+        0.92,
+        1.48
+      ],
+      "color": "#298C9A"
+    },
+    {
+      "name": "PedestalFront",
+      "shape": "ellipsoid",
+      "center": [
+        0.05,
+        -0.602,
+        0.49
+      ],
+      "size": [
+        1.91,
+        0.71,
+        0.58
+      ],
+      "color": "#57B8BF"
+    },
+    {
+      "name": "Dish",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -0.166,
+        0
+      ],
+      "size": [
+        3,
+        0.3,
+        1.87
+      ],
+      "color": "#246B77"
+    },
+    {
+      "name": "EnamelRim",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -0.105,
+        0
+      ],
+      "size": [
+        2.74,
+        0.105,
+        1.7
+      ],
+      "color": "#FDFFEC"
+    },
+    {
+      "name": "Cushion",
+      "shape": "ellipsoid",
+      "center": [
+        0,
+        -0.045,
+        0.01
+      ],
+      "size": [
+        2.52,
+        0.09,
+        1.48
+      ],
+      "color": "#DDF1D9",
+      "occupiedColor": "#C6F2DF"
+    },
+    {
+      "name": "LeftStrap",
+      "shape": "ellipsoid",
+      "center": [
+        -1.277,
+        0.025,
+        -0.17
+      ],
+      "size": [
+        0.2,
+        0.47,
+        1.12
+      ],
+      "color": "#3EBDCC",
+      "rotation": [
+        0,
+        -9,
+        -13
+      ],
+      "material": "Glass",
+      "transparency": 0.24,
+      "reflectance": 0.055,
+      "castShadow": false
+    },
+    {
+      "name": "RightStrap",
+      "shape": "ellipsoid",
+      "center": [
+        1.277,
+        0.025,
+        -0.17
+      ],
+      "size": [
+        0.2,
+        0.47,
+        1.12
+      ],
+      "color": "#3EBDCC",
+      "rotation": [
+        0,
+        9,
+        13
+      ],
+      "material": "Glass",
+      "transparency": 0.24,
+      "reflectance": 0.055,
+      "castShadow": false
+    },
+    {
+      "name": "GaugeBezel",
+      "shape": "ellipsoid",
+      "center": [
+        0.07,
+        -0.553,
+        0.78
+      ],
+      "size": [
+        0.94,
+        0.22,
+        0.17
+      ],
+      "color": "#205764",
+      "castShadow": false
+    },
+    {
+      "name": "GaugeBar",
+      "shape": "ellipsoid",
+      "center": [
+        0.07,
+        -0.54,
+        0.861
+      ],
+      "size": [
+        0.65,
+        0.072,
+        0.036
+      ],
+      "color": "#80B6AE",
+      "occupiedColor": "#62DEDC",
+      "castShadow": false
+    },
+    {
+      "name": "ThumbDial",
+      "shape": "ellipsoid",
+      "center": [
+        1.115,
+        -0.008,
+        -0.36
+      ],
+      "size": [
+        0.31,
+        0.185,
+        0.36
+      ],
+      "color": "#E9B16F",
+      "rotation": [
+        0,
+        8,
+        -7
+      ],
+      "castShadow": false
+    },
+    {
+      "name": "ContactLeft",
+      "shape": "ellipsoid",
+      "center": [
+        -0.272,
+        -0.006,
+        0.1
+      ],
+      "size": [
+        0.2,
+        0.017,
+        0.23
+      ],
+      "color": "#B7D7BC",
+      "occupiedColor": "#95E0CE",
+      "castShadow": false
+    },
+    {
+      "name": "ContactRight",
+      "shape": "ellipsoid",
+      "center": [
+        0.272,
+        -0.006,
+        0.1
+      ],
+      "size": [
+        0.2,
+        0.017,
+        0.23
+      ],
+      "color": "#B7D7BC",
+      "occupiedColor": "#95E0CE",
+      "castShadow": false
+    },
+    {
+      "name": "PlinthSupport",
+      "shape": "block",
+      "center": [
+        0,
+        -0.591,
+        0.015
+      ],
+      "size": [
+        1.66,
+        1.125,
+        0.95
+      ],
+      "color": "#298C9A",
+      "transparency": 1,
+      "canCollide": true,
+      "canQuery": true,
+      "castShadow": false
+    }
+  ]
+}
