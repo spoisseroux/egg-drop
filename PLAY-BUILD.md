@@ -1,12 +1,26 @@
-# Egg Drop — complete pets and live Customize
+# Egg Drop â€” carry and care machine
 
-**Private v326 Published — Whole pets and live Customize - 3c6b61b.** Runtime is committed and pushed, verified in refreshed native Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/care-feedback-2026-11-09/private-published-v326-3c6b61b.png) · [Care gallery with recordings](artifacts/care-feedback-2026-11-09/GALLERY.html) · [Verification](artifacts/care-feedback-2026-11-09/VERIFY.md).
+**Private v344 Published â€” Carry and care machine - 5b829e6.** Runtime is committed and pushed; refreshed native Studio Version History shows Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) Â· [Publication proof](artifacts/carry-machine-2026-11-09/private-published-v344-5b829e6.png) Â· [Screenshots and walking film](artifacts/carry-machine-2026-11-09/GALLERY.html) Â· [Exact tests and limits](artifacts/carry-machine-2026-11-09/VERIFY.md).
+
+Tap your pet, choose **Pick up**, walk to the **Field journal** and use **Place [pet]**. The original cradle opens the live Hue/Charm editor. Pick up again, set down on clear dry ground, or close to resume following. Owned-pet switching asks for confirmation and changes the public pet only after exact saved proof; existing menu shortcuts remain.
+
+Astra accepted the earned R15/Zivvi walk-turn-stop and the actual Largest iPhone17Pro emulator editor. The arms remain a supported cradle while the legs walk. Compact Charm keeps the complete live pet and all three choices visible. Unsafe set-down preserves the hold; deck/close paths release their exact bay.
+
+**Verification:** prior full301-case/36-suite checkpoint retained; final145 server cases/15 suites and45 affected cases/7 suites at actual Largest pass (overlapping reruns, not new independent counts). All142 runtime sources match and compile; Rojo passes. Native controls covered earned pickup, walking, placement, Ring saving, pickup/set-down and close/deck interruptions. Medium/default viewport restored; clean Edit/production entries enabled; QA removed.
+
+**Open checks:** the separate two-player Studio launcher refused to start because Studio is out of date. Actual visitor carry, real R6 controls, physical phone and live-service save/rejoin remain unverified. Isolated two-owner/receipt/lease tests and synthetic R6 geometry are labeled separately. Owned-pet switching is verified through isolated exact-save/UI cases rather than a naturally earned second-pet walkthrough. Minor redundant Charm copy may stay hidden after size-only return to desktop until refresh. The larger textured garden and expanded item systems remain on TODO; no public release or economy changes.
+
+## Historical v326 â€” complete pets and live Customize
+
+# Egg Drop ï¿½ complete pets and live Customize
+
+**Private v326 Published ï¿½ Whole pets and live Customize - 3c6b61b.** Runtime is committed and pushed, verified in refreshed native Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) ï¿½ [Publication proof](artifacts/care-feedback-2026-11-09/private-published-v326-3c6b61b.png) ï¿½ [Care gallery with recordings](artifacts/care-feedback-2026-11-09/GALLERY.html) ï¿½ [Verification](artifacts/care-feedback-2026-11-09/VERIFY.md).
 
 Complete semantic pets remain visible while authored meshes load. Customize now idles, blinks and moves the charm, with exact five-notch result swatches. Reset consumes one jar for one explicitly confirmed Main or Secondary channel. Accepted merges nudge the device art while aim and hit targets stay fixed. Quieter coo poses use existing approved original family audio; four new original auditions remain local.
 
 181 native cases across 23 suites, 132 source matches and zero compile errors, Rojo build, actual earned controls and Largest phone-emulator customization pass. Six paired seven-rig performance rounds show no measured CPU regression in the isolated warmed Studio workload. Accelerated coo playback passed, but a 160-second ordinary roam produced no coo; normal frequency remains unverified. Physical phone, live-service rejoin and human fun remain open. Carry/machine and original garden are next, not included in v326.
 
-## Historical v316 — neutral companions
+## Historical v316 ï¿½ neutral companions
 
 # Egg Drop â€” neutral companions
 
