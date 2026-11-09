@@ -1,4 +1,14 @@
-# Egg Drop — Aero babies and shared garden
+# Egg Drop — Spring Meadow and Aero babies
+
+**Private v309 Published — Spring Meadow and shared resting - b71c702.** Runtime b71c702 is committed and pushed; refreshed native Studio Version History verifies Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Proof](artifacts/spring-meadow-2026-11-09/private-published-v309-b71c702.png) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md) · [Verification](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Morning handoff](MORNING-RUNDOWN.md).
+
+The garden now has **160 ×176 studs /37.5% more floor area**, a dry south loop, spring landmark and gathering lawn with two separate six-second pet resting spots. Existing shops, ten spawns, bridge, nook, shared return, all seven babies and item-egg rules remain. No client runtime, schema, economy or reward change in the extension. Astra art/motion/Largest-phone focus and independent Sol source review have GO.
+
+**124 native source matches/zero compile errors; Rojo;198 server cases/21 suites;91 focus cases/six suites;13 final geometry cases** pass. Actual local two-owner routes/rest/focus and unchanged wallets are recorded. Synthetic performance initially triggered a10.41% midnight rig-CPU increase; the declared repeat retained all six final rounds, combined+9.40% (~0.104ms). Phone/service-scale performance is unproved.
+
+Standalone Roblox Player still requires user sign-in for live rejoin; no live VM/profile test ran. The browser connection failed on the v309 census refresh, so no new server census is claimed. Publication itself is native-verified. Physical phone, longer human play, flatter night shading, narrow gray far horizon and old outer-boardwalk pet support remain limits. No access/security/public-release changes.
+
+## Historical v297 — Aero babies and shared garden
 
 **Private v297 Published — Aero babies and shared garden - `2e9da43`.** Runtime commit `2e9da43` is pushed; publication is verified in refreshed native Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png) · [Current gallery](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/aero-garden-2026-11-09/VERIFY.md).
 

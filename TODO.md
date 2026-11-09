@@ -6,11 +6,16 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 
 Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO.md): unified Companion / Hue shop, saved stacked hue/reset items, independent five-dose channels, migration of old purchases, per-pet customization, seven-ID color support, planted motion, faster aiming and themed supply balls.
 
-## Completed overnight build — private v297
+## Completed overnight builds — private v309 latest
+
+The newer **Spring Meadow continuation is private v309 Published / pushed runtime b71c702**. [Proof](artifacts/spring-meadow-2026-11-09/private-published-v309-b71c702.png) · [Verification](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md).
+
+- [x] Genuinely larger garden:160 ×176,37.5% more floor area, dry loop beyond the former south wall, volumetric spring landmark and two separate resting spaces. Two local owners and earned pets traversed/gathered/returned; Astra source/render/movement/phone gates pass. Existing hub and economy retained.
+- [x] Preserve below the separately verified v297 baby, expression, free charm, shared-return and hatch work. All bounded overnight original TODO slices are complete; verification/future scope remains explicit.
 
 The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, independently reviewed and published as **private v297 / 2e9da43**. Runtime is pushed; refreshed native Version History verifies **Aero babies and shared garden - 2e9da43**. [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png) · [Verification](artifacts/aero-garden-2026-11-09/VERIFY.md) · [Gallery](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Native test index](artifacts/aero-garden-2026-11-09/TEST-INDEX.md).
 
-- [x] Purposeful lawn, usable creek crossing, curved rest nook, clearer routes and bounded moving scenery. The existing main floor remains 160 × 128 studs; actual avatars and pets crossed both ways and the pet rested in the nook.
+- [x] Purposeful lawn, usable creek crossing, curved rest nook, clearer routes and bounded moving scenery. At v297 the main floor was 160 × 128 studs; actual avatars and pets crossed both ways and the pet rested in the nook. The v309 expansion above supersedes that footprint.
 - [x] Five original replacement babies: Tikket, Nuum, Vezzi, Kiprik and Nolli, with authored expressions, portraits, fallback forms and protected pigment roles. All seven saved identities and existing ownership remain stable; Zivvi and Ovelle retain their models.
 - [x] Free optional Dot / Ring / Pebble shapes with saved visibility, unknown-shape preservation, exact retries and old-client compatibility. Published source enables selections with `SelectionsEnabled=true` and `PetCharmVersion=2`; pre/post-publication censuses found no older gameplay writer.
 - [x] One shared two-pet return with ordinary Start / Join, exclusive generation-bound reservations, bounded approaches and interruption/retry guards. Final actual two-client film has visual GO; no rewards or currency were added.
@@ -20,6 +25,7 @@ The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, in
 
 ## Follow-up verification
 
+- [x] Record private v309 / pushed runtime b71c702 and refreshed native Version History proof. The browser connection failed on its new census refresh; the last census is v297's, with no claim of live v309 save/rejoin.
 - [x] Record private v297 / pushed runtime 2e9da43, refreshed Version History proof and the 6:11 AM post-publication census (one Team Create edit server, no gameplay writer).
 - [ ] Test physical-phone touch, sustained performance and controls; Studio landscape emulation is the current coverage.
 - [ ] Verify live save/rejoin, including shape/visibility pairs and hue inventory. The browser Play attempt reached Download Roblox while the standalone player was signed out; no live VM/profile test ran. Sign in to the standalone player before retrying. Isolated Studio receipts are not live persistence proof.
@@ -28,7 +34,7 @@ The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, in
 
 ## Future scope — separate design and review
 
-- [ ] A genuinely larger map footprint and additional social activities/minigames beyond the completed shared return. The bounded garden pass uses the existing floor.
+- [ ] Additional garden spaces and social activities/minigames beyond the completed shared return and Spring Meadow. The original larger-footprint requirement is now implemented; broader expansion needs a new bounded design/review.
 - [ ] Clothing eggs, stat eggs and battling. Nursery remains deferred.
 
 No paid luck, daily play caps, new currency or public release is authorized by this backlog.

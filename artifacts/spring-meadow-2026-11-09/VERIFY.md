@@ -1,6 +1,6 @@
-# Spring Meadow verification — accepted source, publication pending
+# Spring Meadow verification — private v309 Published
 
-November 9, 2026. Source, native, visual and bounded actual-control gates pass. Private **v297 / 2e9da43** remains the published fallback until a new Published version is recorded. [Approved scope](../../SPRING-MEADOW.md).
+November 9, 2026. **Private v309 Published / pushed runtime b71c702**, verified in refreshed native Studio Version History under “Spring Meadow and shared resting - b71c702.” [Publication proof](private-published-v309-b71c702.png). Source, native, visual and bounded actual-control gates pass. v297 remains historical fallback. [Approved scope](../../SPRING-MEADOW.md).
 
 The floor grows from160×128 to **160×176**: **37.5% more area**. Ten spawns, hub stations, bridge, nook and shared toy retain their coordinates. An eight-stud dry loop reaches lavender spring shelves, a cyan fall, lanterns and a second lawn with two separate resting positions. Final art adds **64 parts**, retaining **four managed lights**, eight lamp fixtures and at most three active ambient accents at12Hz.
 
@@ -46,3 +46,9 @@ Initial three final midnight rounds were **+10.41% rig CPU**, triggering investi
 First cuboids, large flat ovals, thin cyan strip and grass UV rings failed art review. Volumetric tilted lobes/matte caps replaced them. A later front-shoulder gap hid the fall landing; separated final shoulders expose3.46studs. Failed captures remain diagnostic. Narrow gray far-horizon sliver accepted as prototype art debt.
 
 Old outer boardwalk pet support remains unproved. Physical phone, live save/rejoin, service-scale latency and longer human play remain open. Standalone Roblox Player needs user sign-in; browser Play reached Download Roblox and no live VM/profile test ran. No security/account changes, paid luck, new currency, play caps, nursery or public release.
+
+## Private release
+
+Runtime **b71c702** was explicitly committed and pushed before publishing the existing private place. Native console reported publication at7:38AM Eastern; refreshed Version History independently showed **v309 Published** with the matching title. [Proof](private-published-v309-b71c702.png). The manifest's plan-era Git HEAD precedes that commit; its124 runtime hashes were rechecked unchanged before release. Seven templates/122 meshes and clean enabled Edit are recorded in [final-edit-cleanup.json](final-edit-cleanup.json).
+
+The existing authenticated Creator Dashboard tab could still be listed, but reload/rebind failed with **browser.user is unavailable** during the v309 census refresh. No restart or settings change was attempted. The last successful server census belongs to v297; **no fresh v309 census or live rejoin is claimed**. This world-only extension changes no client runtime, save schema, transaction contract or shape version. Native publication confirmation remains valid independently. Documentation-only follow-up does not require another Studio publication.

@@ -1,6 +1,6 @@
 # Spring Meadow — the larger-garden continuation
 
-November 9, 2026, 6:25 AM Eastern. The original user TODO calls for a larger, livelier garden. Private v297 / runtime 2e9da43 is a tested fallback, but its unchanged 160 × 128 floor does not prove that requirement. This is the next authorized slice, with a 9 AM cutoff; it is not published until the gates below pass.
+**Accepted and published:** private **v309 / pushed runtime b71c702**, verified in refreshed Studio Version History. [Evidence](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md). The plan below was written November9 at6:25AM Eastern because the original larger-world requirement was not satisfied by v297's unchanged160 ×128 floor. Its source, native, actual-control, visual and performance-investigation gates are complete; physical phone/live services remain separate.
 
 ## Player outcome and art
 
