@@ -76,6 +76,8 @@ function Sampler.attach(visual)
   slot.lastPlaced=position;return CFrame.new(position)*root.Rotation*rest.Rotation
  end
  function visual:update(dt)
+  if self.commitReadyRig then self:commitReadyRig()end
+  if self.sampledRigRevision~=self.rigRevision then self.poseSlots=nil;self.poseBucket=nil;self.poseStateKey=nil;self.pivotStartYaw=nil;self.sampledRigRevision=self.rigRevision end
   dt=if type(dt)=="number"and dt==dt and dt>=0 and dt<math.huge then dt else 0
   self.poseElapsed=(self.poseElapsed or 0)+dt;self.poseClock=(self.poseClock or 0)+dt
   local cadence=self.poseCadence or Sampler.DefaultCadence;local bucket=if cadence>0 then math.floor((self.cosmeticTime or self.poseClock)*cadence+1e-6)else -1

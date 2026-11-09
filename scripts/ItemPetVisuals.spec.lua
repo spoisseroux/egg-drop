@@ -1,5 +1,7 @@
 -- All seven existing silhouettes retain their face/sculpt identity through two channels.
 return function(client)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Factory=require(client.PetFactory);local H=require(game.ReplicatedStorage.Shared.HueCatalog);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog);local P=require(game.ReplicatedStorage.Shared.PetPalette)
  local cases={};local active={};local folder=Instance.new("Folder");folder.Name="_ItemPetVisuals";folder.Parent=workspace
  local ok,err=pcall(function()

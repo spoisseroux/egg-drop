@@ -33,6 +33,10 @@ function Affection:setPet(pet)
  if self.destroyed then return end
  self:clear();self.pet=pet;self.award.Adornee=pet and pet.model.PrimaryPart or nil
 end
+function Affection:rebind(pet)
+ -- A complete-rig swap changes only the attachment, never its Saved cue/clock.
+ if not self.destroyed and self.pet==pet then self.award.Adornee=pet.model.PrimaryPart end
+end
 function Affection:clear()
  if self.cleared then return end;self.cleared=true
  if self.pet then self.pet.affectionTilt,self.pet.affectionBlush=0,0 end

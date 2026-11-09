@@ -31,10 +31,15 @@ return function(server, hostSource, sessionSource)
 				local result=transform(copy(db[key]));if result~=nil then db[key]=copy(result)end;return copy(result)
 			end}
 		end
+		local key="player_"..id
+		-- Old Fivefold ownership is legitimate; it is not awarded by today's Meadow roll.
+		db[key]={rank=1,rareTrials=8}
 		local owner=ActualHatch.load(id,{rank=1},adapter())
 		assert(ActualHatch.award(owner,1,8));assert(ActualHatch.award(owner,2,8))
 		assert(ActualHatch.command(owner,"hatch","meadow",owner.state.revision))
-		local key="player_"..id;local hatchId=owner.state.lastHatch.id
+		local hatchId=owner.state.lastHatch.id
+		assert(owner.state.lastHatch.petId=="orbit"and not owner.state.lastHatch.rare)
+		assert(require(realGame.ReplicatedStorage.Shared.EggCatalog).isOwned(owner.state.inventoryMask,"foxfire_wick"))
 		db[key].companionId="foxfire_wick";db[key].theme="ice";db[key].sticker="star"
 		db[key].sound="Quiet";db[key].reduced=true
 		db[key].petAppearance={pip={charmVisible=false,at=12,writer="recovery-fixture"},puddle={charmVisible=true,at=12,writer="recovery-fixture"}}

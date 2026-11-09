@@ -1,5 +1,7 @@
 -- Production imported babies and exact no-dependency native recipe fallback.
 return function(client)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Factory=require(client.PetFactory);local Visual=require(client.GardenPetVisual)
  local Pets=require(game.ReplicatedStorage.Shared.PetCatalog);local Bounds=require(client.PetRigBounds)
  local folder=Instance.new("Folder");folder.Name="_GardenPetVisual";folder.Parent=workspace

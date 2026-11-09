@@ -1,0 +1,488 @@
+{
+  "schema": "care-feedback-art-v1",
+  "units": {
+    "audioTime": "seconds",
+    "frequency": "Hz",
+    "head": "degrees",
+    "hand": "studs at garden scale",
+    "mouth": "0 closed to 1 open",
+    "eye": "relative open height"
+  },
+  "sound": {
+    "sampleRate": 44100,
+    "channels": 1,
+    "format": "PCM16",
+    "peakDbFS": -5.5,
+    "stroke": "self-contained synthesized animal-like coos",
+    "timing": "35–75 eligible quiet seconds, one voice per listener"
+  },
+  "jolt": {
+    "motifOpacity": 0.88,
+    "tierII": [
+      1,
+      0.1
+    ],
+    "tierIII": [
+      2,
+      0.12
+    ],
+    "tierIV": [
+      3,
+      0.14
+    ],
+    "tierV": [
+      3.5,
+      0.16
+    ],
+    "clear": [
+      4,
+      0.18
+    ],
+    "chainScale": 1.1,
+    "peakPixels": 4,
+    "keyOrder": [
+      "timeFraction",
+      "x",
+      "y"
+    ],
+    "keys": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0.16,
+        -1,
+        0.35
+      ],
+      [
+        0.44,
+        0.48,
+        -0.17
+      ],
+      [
+        0.75,
+        -0.14,
+        0.05
+      ],
+      [
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  "poseColumns": [
+    "seconds",
+    "headRoll",
+    "headNod",
+    "handLift",
+    "mouth",
+    "eye"
+  ],
+  "soundColumns": [
+    "start",
+    "end",
+    "pitchStart",
+    "pitchMiddle",
+    "pitchEnd",
+    "relativeGain"
+  ],
+  "families": {
+    "pip": {
+      "display": "Zivvi",
+      "file": "coo-zivvi.wav",
+      "cueFallback": "pet",
+      "fallbackPitch": 0.85,
+      "related": [
+        "bloom_pip"
+      ],
+      "duration": 0.43,
+      "syllables": [
+        [
+          0.012,
+          0.17,
+          390,
+          490,
+          453,
+          0.8
+        ],
+        [
+          0.19,
+          0.382,
+          440,
+          522,
+          408,
+          1
+        ]
+      ],
+      "formants": [
+        [
+          820,
+          205,
+          0.72
+        ],
+        [
+          1610,
+          290,
+          0.3
+        ],
+        [
+          2490,
+          440,
+          0.12
+        ]
+      ],
+      "breath": 0.011,
+      "tilt": 1.48,
+      "vibrato": [
+        6,
+        0.0055
+      ],
+      "pose": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0.065,
+          -4,
+          2,
+          0.018,
+          0.65,
+          0.88
+        ],
+        [
+          0.16,
+          -2,
+          0,
+          0.012,
+          0.15,
+          0.78
+        ],
+        [
+          0.215,
+          1,
+          -2,
+          0.022,
+          0.3,
+          0.9
+        ],
+        [
+          0.285,
+          3,
+          -1,
+          0.029,
+          0.72,
+          0.86
+        ],
+        [
+          0.39,
+          0,
+          0,
+          0,
+          0.06,
+          0.97
+        ],
+        [
+          0.43,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    "puddle": {
+      "display": "Ovelle",
+      "file": "coo-ovelle.wav",
+      "cueFallback": "puddle",
+      "fallbackPitch": 0.88,
+      "related": [],
+      "duration": 0.52,
+      "syllables": [
+        [
+          0.014,
+          0.46,
+          297,
+          383,
+          281,
+          1
+        ]
+      ],
+      "formants": [
+        [
+          665,
+          185,
+          0.72
+        ],
+        [
+          1300,
+          260,
+          0.31
+        ],
+        [
+          2120,
+          390,
+          0.1
+        ]
+      ],
+      "breath": 0.009,
+      "tilt": 1.62,
+      "vibrato": [
+        5.1,
+        0.008
+      ],
+      "pose": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0.1,
+          2,
+          -1,
+          0.024,
+          0.22,
+          0.96
+        ],
+        [
+          0.22,
+          4,
+          -2,
+          0.048,
+          0.58,
+          0.84
+        ],
+        [
+          0.36,
+          2,
+          1,
+          0.025,
+          0.36,
+          0.9
+        ],
+        [
+          0.47,
+          0,
+          0,
+          0.005,
+          0.04,
+          0.98
+        ],
+        [
+          0.52,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    "wick": {
+      "display": "Tikket",
+      "file": "coo-tikket.wav",
+      "cueFallback": "wick",
+      "fallbackPitch": 0.9,
+      "related": [
+        "foxfire_wick"
+      ],
+      "duration": 0.39,
+      "syllables": [
+        [
+          0.01,
+          0.133,
+          359,
+          427,
+          366,
+          0.82
+        ],
+        [
+          0.163,
+          0.333,
+          384,
+          459,
+          344,
+          1
+        ]
+      ],
+      "formants": [
+        [
+          910,
+          230,
+          0.69
+        ],
+        [
+          1780,
+          290,
+          0.33
+        ],
+        [
+          2670,
+          450,
+          0.13
+        ]
+      ],
+      "breath": 0.013,
+      "tilt": 1.36,
+      "vibrato": [
+        6.4,
+        0.005
+      ],
+      "pose": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0.075,
+          -3,
+          2,
+          0.027,
+          0.52,
+          0.89
+        ],
+        [
+          0.145,
+          -1,
+          0,
+          0.008,
+          0,
+          0.94
+        ],
+        [
+          0.23,
+          3,
+          -2,
+          0.037,
+          0.63,
+          0.93
+        ],
+        [
+          0.32,
+          1,
+          1,
+          0.012,
+          0.18,
+          0.96
+        ],
+        [
+          0.39,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    "orbit": {
+      "display": "Nuum",
+      "file": "coo-nuum.wav",
+      "cueFallback": "orbit",
+      "fallbackPitch": 0.83,
+      "related": [
+        "eclipse_orbit"
+      ],
+      "duration": 0.6,
+      "syllables": [
+        [
+          0.02,
+          0.52,
+          240,
+          211,
+          251,
+          1
+        ]
+      ],
+      "formants": [
+        [
+          490,
+          160,
+          0.75
+        ],
+        [
+          1060,
+          235,
+          0.26
+        ],
+        [
+          1710,
+          335,
+          0.1
+        ]
+      ],
+      "breath": 0.008,
+      "tilt": 1.8,
+      "vibrato": [
+        4.5,
+        0.007
+      ],
+      "pose": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0.11,
+          2,
+          2,
+          0.01,
+          0.18,
+          0.77
+        ],
+        [
+          0.25,
+          4,
+          3,
+          0.016,
+          0.44,
+          0.48
+        ],
+        [
+          0.4,
+          3,
+          1,
+          0.01,
+          0.31,
+          0.67
+        ],
+        [
+          0.53,
+          0.5,
+          0,
+          0.002,
+          0.04,
+          0.94
+        ],
+        [
+          0.6,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ]
+    }
+  }
+}

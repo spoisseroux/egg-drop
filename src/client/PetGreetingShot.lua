@@ -71,7 +71,7 @@ end
 -- keeps its own swept box, so floating Dot headroom cannot invent near corners
 -- across the full width/depth of the body. Called only on focus/geometry changes.
 function Shot.captureFocusedSubject(pet)
- local key=tostring(IdleMotion.Version)..":"..tostring(pet.charmVisible~=false)..":"..tostring(pet.scale or pet.worldScale)..":"..#pet.pieces
+ local key=tostring(pet.rigRevision or 0)..":"..tostring(IdleMotion.Version)..":"..tostring(pet.charmVisible~=false)..":"..tostring(pet.scale or pet.worldScale)..":"..#pet.pieces
 	local cached=pet.focusEnvelopeCache and pet.focusEnvelopeCache[key]
 	if cached then
 		local body=CFrame.new(pet.origin)*CFrame.Angles(0,pet.yaw or 0,0)*CFrame.new(cached.center)

@@ -30,8 +30,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Room = {}
 Room.__index = Room
 
-local function createPet(parent,origin,pet,masteryMask,rank,legacy,appearance)
-	return PetFactory.create(parent,origin,pet,masteryMask,rank,legacy,appearance)
+local function createPet(parent,origin,pet,masteryMask,rank,legacy,appearance,options)
+	return PetFactory.create(parent,origin,pet,masteryMask,rank,legacy,appearance,options)
 end
 
 local function frame(parent, name, size, position, color, z)
@@ -96,6 +96,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
 	self.garden=GardenClient.new(progress.Parent)
+ self.coos=require(script.Parent.PetCooScheduler).new(audio)
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
 	self.gardenToy=GardenToyVisual.new(workspace,GardenLayout.Toy)
 	self.toyPrompt=GardenToyPrompt.new(self.garden,self.gardenToy.part,{context=function()
@@ -214,6 +215,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow)end
+  if self.coos then
+   local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+   local humanoid=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+   self.coos:step(serverNow,{enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0,listener=root and root.Position,identity=root,camera=workspace.CurrentCamera},self.pet,self.companions.active)
+  end
 		if not self.focusKey then self.focusKey=PetFocusKey.new()end
         self.focusKey:update(workspace.CurrentCamera,self.pet,gardenFocus)
 		if self.focusUI then self.focusUI:update(workspace.CurrentCamera, self.pet, self.petPrompt and self.petPrompt.Enabled) end
@@ -306,6 +312,10 @@ function Room:showPet(pet)
 	local rank, legacy = PetPrestige.read(self.progress, pet)
 	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy,self.garden:appearance(self.progress,pet.id))
     self.pet.cosmeticSeed=Players.LocalPlayer.UserId
+    local shown=self.pet
+    shown.onRigChanged=function()
+     if not self.destroyed and self.pet==shown and self.affection then self.affection:rebind(shown)end
+    end
     self.pet.cosmeticTime=workspace:GetServerTimeNow()
 	self.pet.focusPose=self.focusing==true;self.focusGeometry=nil
 	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
@@ -640,13 +650,13 @@ function Room:applyFocusPlan(plan, camera)
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame, camera.Focus, camera.FieldOfView = plan.camera, CFrame.new(plan.target), plan.fov
 	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
-	self.focusGeometry=Room.focusGeometryKey(camera)
+	self.focusGeometry=Room.focusGeometryKey(camera,self.pet.rigRevision)
 	if self.focusUI then self.focusUI:cancelPointer() end
 end
 
-function Room.focusGeometryKey(camera)
+function Room.focusGeometryKey(camera,rigRevision)
 	local top,bottom=GuiService:GetGuiInset()
-	return tostring(camera.ViewportSize)..":"..tostring(top)..":"..tostring(bottom)
+	return tostring(camera.ViewportSize)..":"..tostring(top)..":"..tostring(bottom)..":"..tostring(rigRevision or 0)
 end
 
 function Room:reframeFocus()
@@ -657,7 +667,7 @@ function Room:reframeFocus()
 		or shot.root ~= root or not root or self.mode ~= "Room" then return false end
 	local viewport = camera.ViewportSize
 	if viewport.X <= 0 or viewport.Y <= 0 then return false end
-	local geometry=Room.focusGeometryKey(camera)
+	local geometry=Room.focusGeometryKey(camera,self.pet.rigRevision)
 	if self.focusGeometry==geometry or self.focusTransitioning then return true end
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
@@ -961,6 +971,7 @@ end
 
 function Room:destroy()
 	if self.destroyed then return end
+ if self.coos then self.coos:destroy();self.coos=nil end
 	self.destroyed = true
  if self.focusKey then self.focusKey:destroy();self.focusKey=nil end
  if self.petContactIntent then self.petContactIntent:destroy()end

@@ -107,6 +107,15 @@ function Cinematic:createHero()
   if self.forceFallback then error("isolated pixel fallback fixture")end
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport
   local visual=Factory.new(world,Vector3.zero,self.pet,nil,self.appearance);self.heroVisual=visual
+  local epoch=self.epoch
+  visual.onRigChanged=function()
+   if self.destroyed or self.heroVisual~=visual or self.epoch~=epoch then return end
+   local body,size,points,envelope=Shot.captureFocusedSubject(visual)
+   self.neutralFrame,self.neutralSize,self.heroPoints=body,size,points
+   self.sweptPoints={};for _,point in ipairs(envelope.points)do table.insert(self.sweptPoints,point+body.Position)end
+   self.envelopeFrame,self.envelopeSize=CFrame.new(body.Position+envelope.center),envelope.size+Vector3.one*.10
+   self:layout()
+  end
   local idleFrozen=visual.idleMotionFrozen;visual.idleMotionFrozen=true;rest(visual,self.pet)
   Bounds.begin(visual);include(visual);Bounds.finish(visual);self.neutralFrame,self.neutralSize=Bounds.get(visual)
   self.heroPoints=Shot.captureSilhouette(visual,self.neutralFrame)

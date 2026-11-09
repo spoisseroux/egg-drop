@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Egg Drop · Care feedback gallery</title>
+<style>
+:root { color-scheme:light; --ink:#103e43; --muted:#475f61; --line:#a8c5bf; --paper:#fffef8; --wash:#e5f3ed; }
+* { box-sizing:border-box }
+body { margin:0; color:var(--ink); background:var(--wash); font:1rem/1.5 "Segoe UI",Arial,sans-serif; }
+main { max-width:1180px; margin:auto; padding:clamp(16px,4vw,52px); }
+header { background:#0c494f; color:white; padding:clamp(20px,4vw,40px); border-radius:20px; }
+h1,h2,h3,p { margin:0 }
+h1 { font-size:clamp(2rem,5vw,3.4rem); line-height:1.1; }
+header p { margin-top:.65rem; max-width:70ch; }
+nav { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 26px; }
+a { color:#075b68; text-underline-offset:.2em }
+nav a { display:flex; align-items:center; min-height:44px; padding:6px 14px; text-decoration:none; background:var(--paper); border:1px solid var(--line); border-radius:9px; }
+a:focus-visible { outline:3px solid #008d95; outline-offset:3px; }
+section { margin:24px 0 32px; }
+h2 { font-size:clamp(1.5rem,3vw,2.1rem); line-height:1.2; margin-bottom:.45rem; }
+section>p { max-width:86ch; color:var(--muted); margin-bottom:14px; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+figure { margin:0; min-width:0; background:var(--paper); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+figure img,figure video { width:100%; height:auto; display:block; background:#152b30; }
+figcaption { padding:12px 16px; }
+figcaption strong { display:block; font-size:1.06rem; }
+.asset { display:block; margin-top:.4rem; }
+.audio { padding:14px 16px; }
+.audio h3 { font-size:1.06rem; margin-bottom:.35rem; }
+audio { display:block; width:100%; }
+footer { border-top:1px solid var(--line); padding:18px 0; }
+@media(max-width:700px) { .grid { grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Care feedback</h1>
+<p>Egg Drop · November 9, 2026. Native Studio controls, controlled rendering studies and original local audio drafts.</p>
+</header>
+<nav aria-label="Gallery sections">
+<a href="#customize">Customize</a><a href="#loading">Whole pet loading</a><a href="#merges">Handheld merges</a><a href="#voices">Garden voices</a>
+</nav>
+<section id="customize">
+<h2>Customize a saved pet</h2>
+<p>The ordinary welcome board earned Zivvi and six Stars. Menu → Pet Journal → Customize opened the editor in Studio's phone emulator at Largest text. Inspecting Rose stage 4 showed #FF5989 while the saved Main coat stayed white. All five Rose targets fit above the fold.</p>
+<figure><a href="final-actual-customize-largest-phone.png"><img src="final-actual-customize-largest-phone.png" alt="Phone emulator showing white Zivvi, six Stars, Rose zero of five, and all five inspectable swatches."></a><figcaption><strong>Ordinary input · Studio phone emulation</strong>Capture from the earned profile. Physical touch and live-service rejoin remain untested.</figcaption></figure>
+<div class="grid" style="margin-top:16px">
+<figure><a href="hue-notches-main-inspected-FIXTURE.png"><img loading="lazy" src="hue-notches-main-inspected-FIXTURE.png" alt="Rose stage four is outlined beside the saved checks at Rose two and Tide one."></a><figcaption><strong>Mixed Main · seeded state, actual pointer input</strong>Saved Rose 2 + Tide 1 resolves to #E0A7E8. Inspecting Rose 4 shows #E55FC1.</figcaption></figure>
+<figure><a href="hue-jar-next-dose-confirmation-FIXTURE.png"><img loading="lazy" src="hue-jar-next-dose-confirmation-FIXTURE.png" alt="Use Rose fruit on Zivvi Main, Rose two to three and stock three to two."></a><figcaption><strong>Jar confirmation · seeded state</strong>The offer advances Rose 2 to 3, using one of three jars. Fixture transport recorded the interaction without writing a profile.</figcaption></figure>
+<figure><video controls preload="none" poster="live-customize-largest-desktop-FIXTURE.png" aria-label="Silent saved portrait and notch inspection fixture" src="live-customize-idle-inspection-FIXTURE.mp4"></video><figcaption><strong>Live saved portrait · controlled fixture</strong>Zivvi blinks and its charm moves while inspection leaves the saved coat and camera intact.<a class="asset" href="live-customize-idle-inspection-FIXTURE.mp4">Open portrait recording</a></figcaption></figure>
+<figure><a href="hue-notches-secondary-inspected-FIXTURE.png"><img loading="lazy" src="hue-notches-secondary-inspected-FIXTURE.png" alt="Secondary row checks at Citrus one and Iris two with Iris stage four inspected."></a><figcaption><strong>Independent Secondary · seeded state</strong>Saved Citrus 1 + Iris 2 resolves to #D190C4. Iris 4 previews #BF68DC.</figcaption></figure>
+</div>
+</section>
+<section id="loading">
+<h2>Whole pet loading</h2>
+<p>The matched views use the same framing for Zivvi, Tikket and retained Kiprik. The complete native shapes render first. Their authored meshes replace them when ready.</p>
+<div class="grid">
+<figure><a href="final-fallback-sensitive-fixture.png"><img loading="lazy" src="final-fallback-sensitive-fixture.png" alt="Three complete native pets with their faces, paws and ring charms visible."></a><figcaption><strong>Before · native shapes</strong>Zivvi's teeth and both tilted heads are visible before the mesh handoff.</figcaption></figure>
+<figure><a href="final-authored-sensitive-fixture.png"><img loading="lazy" src="final-authored-sensitive-fixture.png" alt="Same three pets and camera after authored meshes replace the native shapes."></a><figcaption><strong>After · authored meshes</strong>Head contours, curved mittens and teeth refine at the same positions.</figcaption></figure>
+<figure><video controls preload="none" poster="final-fallback-sensitive-fixture.png" aria-label="Three complete pets switch to authored meshes in a controlled load" src="final-three-pet-gated-upgrade-fixture.mp4"></video><figcaption><strong>Gated handoff · timing fixture</strong>All three switched once, approximately 2.02 seconds into the trace. The render trace has 1,114 samples; the recording has 556 encoded frames.<a class="asset" href="final-three-pet-gated-upgrade-fixture.mp4">Open handoff recording</a></figcaption></figure>
+<figure><video controls preload="none" poster="final-fallback-sensitive-fixture.png" aria-label="Complete native models remaining visible during a forced timeout" src="final-three-pet-timeout-hold-fixture.mp4"></video><figcaption><strong>Timeout hold · separate fixture</strong>The gated requests expired before completing in this take. The complete native pets remained visible throughout.<a class="asset" href="final-three-pet-timeout-hold-fixture.mp4">Open timeout recording</a></figcaption></figure>
+</div>
+</section>
+<section id="merges">
+<h2>Handheld merges</h2>
+<div class="grid">
+<figure><video controls preload="none" aria-label="Earned tier two and three merges in the tutorial board" src="actual-earned-merge-feedback.mp4"></video><figcaption><strong>Earned tier II/III merges · ordinary input</strong>Tutorial drops produced confirmed merges. The decorative case recoiled up to 2 px while the field and camera stayed fixed.<a class="asset" href="actual-earned-merge-feedback.mp4">Open earned merge recording</a></figcaption></figure>
+<figure><video controls preload="none" aria-label="Injected high-tier clear presentation fixture" src="high-tier-clear-presentation-FIXTURE.mp4"></video><figcaption><strong>Injected high-tier clear · presentation fixture</strong>A synthetic clear event reached 3.162 px of case displacement and returned to rest. Score and inventory were unchanged.<a class="asset" href="high-tier-clear-presentation-FIXTURE.mp4">Open injected clear recording</a></figcaption></figure>
+</div>
+</section>
+<section id="voices">
+<h2>Garden voices</h2>
+<p>The accelerated study used the four existing published family sounds with the new face and hand poses. A 160-second ordinary roaming observation produced no natural coo. Frequency during normal play remains unverified.</p>
+<figure><video controls preload="none" aria-label="Accelerated family voice and pose fixture with existing published sounds" src="coo-four-families-accelerated-FIXTURE.mp4"></video><figcaption><strong>Four families · accelerated, with existing audio</strong>QA shortened the wait to 1.6 seconds. Zivvi, Ovelle, Tikket and Nuum each showed a distinct response.<a class="asset" href="coo-four-families-accelerated-FIXTURE.mp4">Open accelerated recording</a></figcaption></figure>
+<h3 style="margin:20px 0 6px">Original local auditions</h3>
+<p>Four mono PCM drafts, 0.39–0.60 seconds each. These WAVs have no verified Roblox playback IDs in this slice.</p>
+<div class="grid">
+<figure class="audio"><h3>Zivvi</h3><audio controls preload="none" aria-label="Zivvi local original coo draft" src="../../assets/care-feedback-2026-11-09/coo-zivvi.wav"></audio><a class="asset" href="../../assets/care-feedback-2026-11-09/coo-zivvi.wav">Open Zivvi WAV</a></figure>
+<figure class="audio"><h3>Ovelle</h3><audio controls preload="none" aria-label="Ovelle local original coo draft" src="../../assets/care-feedback-2026-11-09/coo-ovelle.wav"></audio><a class="asset" href="../../assets/care-feedback-2026-11-09/coo-ovelle.wav">Open Ovelle WAV</a></figure>
+<figure class="audio"><h3>Tikket</h3><audio controls preload="none" aria-label="Tikket local original coo draft" src="../../assets/care-feedback-2026-11-09/coo-tikket.wav"></audio><a class="asset" href="../../assets/care-feedback-2026-11-09/coo-tikket.wav">Open Tikket WAV</a></figure>
+<figure class="audio"><h3>Nuum</h3><audio controls preload="none" aria-label="Nuum local original coo draft" src="../../assets/care-feedback-2026-11-09/coo-nuum.wav"></audio><a class="asset" href="../../assets/care-feedback-2026-11-09/coo-nuum.wav">Open Nuum WAV</a></figure>
+</div>
+</section>
+<footer><a href="../../CARE-FEEDBACK-ART.md">Creative brief and authored data</a> · <a href="../../PLAY-BUILD.md">Private build status</a></footer>
+</main>
+</body>
+</html>

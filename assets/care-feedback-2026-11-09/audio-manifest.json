@@ -1,0 +1,46 @@
+{
+  "scope": "Original authoring masters. No Roblox asset IDs assigned by this manifest.",
+  "render": "12 harmonic voiced source; smooth pitch interpolation at 46% of syllable, smoothstep onset/release, three Gaussian formant bands, seeded soft breath, mono PCM16. No external recordings.",
+  "files": [
+    {
+      "family": "pip",
+      "file": "coo-zivvi.wav",
+      "frames": 18963,
+      "sampleRate": 44100,
+      "seconds": 0.43,
+      "peakDbFS": -5.501,
+      "rmsDbFS": -14.041,
+      "sha256": "48dc6a95ae6fd5b1fc53b822d1ee89af07440a710f9c5d79832278d71c925c7b"
+    },
+    {
+      "family": "puddle",
+      "file": "coo-ovelle.wav",
+      "frames": 22932,
+      "sampleRate": 44100,
+      "seconds": 0.52,
+      "peakDbFS": -5.501,
+      "rmsDbFS": -12.201,
+      "sha256": "dd0633b94b523d50a8a0b78ecbc3e16294e10421e27412c68ce06ad1248d399d"
+    },
+    {
+      "family": "wick",
+      "file": "coo-tikket.wav",
+      "frames": 17199,
+      "sampleRate": 44100,
+      "seconds": 0.39,
+      "peakDbFS": -5.501,
+      "rmsDbFS": -15.288,
+      "sha256": "149bfcd392387f18458016de16dbc12d5684691f77fb11488741658acd091734"
+    },
+    {
+      "family": "orbit",
+      "file": "coo-nuum.wav",
+      "frames": 26460,
+      "sampleRate": 44100,
+      "seconds": 0.6,
+      "peakDbFS": -5.501,
+      "rmsDbFS": -11.855,
+      "sha256": "6aadc0ad5ba2a06661aa4f51d94c8f3011ae2e832a725889c19689cd54b33884"
+    }
+  ]
+}

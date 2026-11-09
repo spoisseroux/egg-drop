@@ -255,6 +255,14 @@ function Audio:stopField()
 		for _,voice in ipairs(self.voices[name]or {})do voice:Stop()end
 	end
 end
+function Audio:petSpeechBusy(exceptOwner)
+ for _,name in ipairs({"pet","puddle","wick","orbit","hatch","hatch_rise"})do
+  for _,voice in ipairs(self.voices[name]or {})do
+   if voice.IsPlaying and(not self.voiceOwners or self.voiceOwners[voice]~=exceptOwner)then return true end
+  end
+ end
+ return false
+end
 
 -- Only the accepted action owner calls this. The same token may cross widgets,
 -- but never hover/layout/server-ack handlers. Muted actions are consumed too.

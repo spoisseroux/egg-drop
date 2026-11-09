@@ -1,5 +1,7 @@
 -- Existing-owner analytic cosmetics, real imported/native rigs, no live authority.
 return function(client)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Motion=require(client.PetIdleMotion);local Visual=require(client.GardenPetVisual)
  local Shot=require(client.PetGreetingShot);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
  local folder=Instance.new("Folder");folder.Name="_GardenBabyMotion";folder.Parent=workspace
@@ -66,11 +68,15 @@ return function(client)
     visual:destroy()
    end)
   end end
-  test("common catalog and semantic palettes agree while rare identity colors remain exact",function()
-   local definitions=require(game.ReplicatedStorage.Shared.PetRigDefinitions)
-   for _,id in ipairs({"pip","puddle"})do assert(Pets.byId[id].color==Color3.fromHex(definitions[id].palette.body),"common portrait palette differs from rig")end
-   assert(Pets.byId.bloom_pip.color==Color3.fromHex("#F6A786"))
-   assert(Pets.byId.foxfire_wick.color==Color3.fromHex("#8EAEFF")and Pets.byId.eclipse_orbit.color==Color3.fromHex("#7162C8"))
+  test("all seven stable identities share the approved neutral reset palette including retained editions",function()
+   local Palette=require(game.ReplicatedStorage.Shared.PetPalette)
+   local order={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"}
+   for index,id in ipairs(order)do
+    local original=Palette.original(id)
+    assert(Pets.byId[id].index==index and Pets.byId[id].color==Color3.fromRGB(255,255,255))
+    assert(original.body==Color3.fromRGB(255,255,255)and original.secondary==Color3.fromRGB(200,200,200))
+    assert(Pets.isActive(id)==(index<=4),"retained edition silently reentered the active roster")
+   end
   end)
   test("focus captures analytic extrema once and hidden Dot contributes no padding or points",function()
    local visual=Visual.new(folder,Vector3.zero,Pets.byId.pip,.72,{charmVisible=true},{native=true})

@@ -1,5 +1,7 @@
 -- Authored five-family replacement keeps account IDs, channels and no-asset fallback.
 return function(client)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Visual=require(client.GardenPetVisual);local Factory=require(client.PetFactory)
  local Shared=game.ReplicatedStorage.Shared;local Pets=require(Shared.PetCatalog);local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
  local cases,views={},{};local folder=Instance.new("Folder");folder.Name="_NewBabyRigs";folder.Parent=workspace

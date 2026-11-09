@@ -125,6 +125,8 @@ return function(server, profileSource, sessionSource)
 	test("dirty outgoing profile drains before release and a stale reader hydrates the acquired root", function()
 		local id, key = 71001, "player_71001"
 		local original = initial()
+		-- A genuine prior-edition owner remains equipped while new paid rolls use the active four.
+		original.rareTrials = Pets.byId.foxfire_wick.trial.bit
 		local db, c, module, adapter, options = harness({ [key] = original })
 		local A, deferredA = module("A")
 		local B = module("B")
@@ -136,7 +138,8 @@ return function(server, profileSource, sessionSource)
 		assert(a.state.nectar == 20, "first clean win + chain/score contracts: welcome6 +8 +6")
 		db[key].hatching.innerSentinel = { intact = true }
 		command(a, "hatch", "meadow")
-		assert(a.state.lastHatch.petId == "foxfire_wick" and a.state.nectar == 2 and c.randomCalls == 1)
+		assert(a.state.lastHatch.petId == "orbit" and not a.state.lastHatch.rare and a.state.nectar == 2 and c.randomCalls == 1)
+		assert(Catalog.isOwned(a.state.inventoryMask,"foxfire_wick"),"migration lost the retained owner")
 		local revealId = a.state.lastHatch.id
 		A.setSetting(profileA, "sound", "Quiet"); A.setSetting(profileA, "reduced", true)
 		A.equip(profileA, "ice", "seed"); A.equipCompanion(profileA, Pets.byId.foxfire_wick); A.recordScore(profileA, 999)
@@ -167,7 +170,7 @@ return function(server, profileSource, sessionSource)
 		assert(sessionModule(B).hydrate(profileB, b) and profileB.onSaveFailed == callback)
 		assert(profileB.sound == "Quiet" and profileB.reduced and profileB.theme == "ice" and profileB.sticker == "seed"
 			and profileB.companionId == "foxfire_wick" and profileB.bestScore == 999)
-		assert(b.state.inventoryMask == Catalog.mask({ "pip", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.nectar == 14)
+		assert(b.state.inventoryMask == Catalog.mask({ "pip", "orbit", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "orbit" and b.state.nectar == 14)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
 		command(b, "ack", revealId)
 		local balance, marks = b.state.nectar, b.state.mastery.wick

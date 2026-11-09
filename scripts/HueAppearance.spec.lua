@@ -1,5 +1,7 @@
 -- Production renderer/portrait/replica palette parity; no commands, profile or camera mutation.
 return function(client,parent)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Shared=game.ReplicatedStorage.Shared;local Pets=require(Shared.PetCatalog);local Palette=require(Shared.PetPalette)
  local Visual=require(client.GardenPetVisual);local Factory=require(client.PetFactory);local Portrait=require(client.PetPortrait)
  local Cinematic=require(client.HatchCinematic);local Garden=require(client.GardenClient);local Companions=require(client.RoomCompanions)

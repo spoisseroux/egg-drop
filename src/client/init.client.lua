@@ -188,9 +188,11 @@ local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
 local pixelMerges = {}
 local rendererPresentation={visible=false,connections={}}
+rendererPresentation.jolt=require(script.DeckMergeJolt).new({shell,bezel})
 rendererPresentation.fx=require(script.FieldEffects).new(effects)
 rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
 rendererPresentation.setFieldOwner=function(visible,serial,reduced)
+ rendererPresentation.jolt:setOwner(visible,serial,reduced)
  if rendererPresentation.fx:setOwner(visible,serial,reduced)then audio:stopField();if rendererPresentation.dispenser then rendererPresentation.dispenser:cancel()end end
 end
 
@@ -1451,6 +1453,7 @@ updateHud = function()
 end
 
 layout = function()
+	if rendererPresentation.jolt then rendererPresentation.jolt:reset()end
 	clearPlayInputs()
 	local screen=backdrop.AbsoluteSize
 	local ratio=(Config.Width+.8)/(Config.Height+.8)
@@ -1660,6 +1663,7 @@ layout = function()
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
 	if refreshSaveNotice then refreshSaveNotice()end
+	if rendererPresentation.jolt then rendererPresentation.jolt:rebase()end
 end
 
 local function aimFromScreen(x)
@@ -2043,6 +2047,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
  rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared)
+ rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
 end))
 
 local function applySound()
@@ -2192,6 +2197,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	end
 	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
  rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
+ if audio.deviceActive==false then rendererPresentation.jolt:reset()else rendererPresentation.jolt:update(now)end
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
  rendererPresentation.fx:update(now)
 	if not rendererPresentation.visible then
@@ -2304,6 +2310,7 @@ gui.Destroying:Connect(function()
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	rendererPresentation.destroyed=true;rendererPresentation.visible=false
  rendererPresentation.fx:destroy()
+ rendererPresentation.jolt:destroy()
  if clientUI.clock then clientUI.clock:destroy();clientUI.clock=nil end
 	for _,connection in ipairs(rendererPresentation.connections)do connection:Disconnect()end
 	table.clear(rendererPresentation.connections)

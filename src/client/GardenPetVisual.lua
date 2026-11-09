@@ -8,6 +8,9 @@ local Face=require(script.Parent.PetFace)
 local Motion=require(script.Parent.PetIdleMotion)
 local ToyPose=require(script.Parent.PetToyPose)
 local Palette=require(ReplicatedStorage.Shared.PetPalette)
+local Readiness=require(script.Parent.PetAssetReadiness)
+local NativeArt=require(script.Parent.CareNativeOverrides)
+local CooPose=require(script.Parent.PetCooPose)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -34,9 +37,12 @@ end
 local function native(self)
  for _,def in ipairs(self.definition.pieces)do
   local cf,size=authoredFrame(def,self.scale),v(def.size)*self.scale
-  if def.fallbackParts then
+  local rule=NativeArt.byPet[self.petId]and NativeArt.byPet[self.petId][def.name]
+  if rule and rule.frameOffset then cf*=CFrame.new(v(rule.frameOffset)*self.scale)end
+  local components=rule and rule.fallbackParts or def.fallbackParts
+  if components then
    -- Components retain the parent semantic name/channel; transforms are local to its size.
-   for _,component in ipairs(def.fallbackParts)do
+   for _,component in ipairs(components)do
     local a=component.xyzEulerDeg
     local frame=cf*CFrame.new(v(component.center)*size)*CFrame.Angles(math.rad(a[1]),math.rad(a[2]),math.rad(a[3]))
     add(self,ellipsoid(),def,frame,v(component.size)*size)
@@ -58,8 +64,9 @@ local function native(self)
   end
  end
  self.backend="NativeRecipe"
+ self.model:SetAttribute("NativeArtVersion",NativeArt.version)
 end
-local function imported(self)
+local function imported(self,inspectOnly)
  local assets=ReplicatedStorage:FindFirstChild("PetAssets")
  local template=string.upper(string.sub(self.definition.id,1,1))..string.sub(self.definition.id,2)
  local source=assets and assets:FindFirstChild(template)
@@ -93,6 +100,7 @@ local function imported(self)
   for _,def in ipairs(self.definition.pieces)do if def.name~="MouthO"and not present[def.name]then return false end end
  end
  if self.definition.id=="zivvi"and not present.Teeth then return false end
+ if inspectOnly then return source,pending end
  local rotation=CFrame.Angles(0,math.pi,0)
  for _,item in ipairs(pending)do
   local localCF=rotation*sourcePivot:ToObjectSpace(item.part.CFrame)
@@ -105,17 +113,90 @@ local function imported(self)
  end
  self.backend="AuthoredMesh";return self.model.PrimaryPart~=nil
 end
+local function signature(source,pending)
+ local rows={tostring(source:GetAttribute("TemplateRevision")or 0)}
+ for _,item in ipairs(pending)do local p=item.part;table.insert(rows,p.Name..p.MeshId..tostring(p.MeshSize)..tostring(p.Size)..tostring(p.CFrame))end
+ table.sort(rows);return table.concat(rows,"|")
+end
+function Visual:requestAuthored()
+ if self.destroyed or self.nativeOnly or self.assetTicket then return end
+ local source,pending=imported(self,true)
+ if not source then self.assetStatus="TemplateUnavailable";return end
+ local hash=signature(source,pending);local parts={}
+ for _,item in ipairs(pending)do table.insert(parts,item.part)end
+ self.assetSource,self.assetSignature=source,hash;self.assetStatus="Loading"
+ local epoch=self.assetEpoch
+ self.assetTicket=self.readiness:request(self.petId,source,hash,parts,self.assetPriority,function(ready,reason)
+  if self.destroyed or self.assetEpoch~=epoch then return end
+  self.assetReady=ready;self.assetStatus=if ready then "ReadyToSwap"else reason or "Failed"
+  if ready then
+   self.poseDirty=true
+   if not self.readyFrame then self.readyFrame=game:GetService("RunService").PreRender:Once(function()
+    self.readyFrame=nil
+    if not self.destroyed and self.assetEpoch==epoch then self:commitReadyRig()end
+   end)end
+  end
+ end)
+end
+function Visual:commitReadyRig()
+ if self.destroyed or self.nativeOnly or self.rigSwapInProgress then return end
+ self.readiness:step()
+ if not self.assetTicket and os.clock()<(self.assetSearchUntil or 0)and os.clock()>=(self.assetProbeAt or 0)then
+  self.assetProbeAt=os.clock()+.5;self:requestAuthored()
+ end
+ if not self.assetReady or not self.model.Parent then return end
+ local source,pending=imported(self,true)
+ if not source or source~=self.assetSource or signature(source,pending)~=self.assetSignature then
+  self.assetTicket:cancel();self.assetTicket=nil;self.assetReady=false;self:requestAuthored();return
+ end
+ local candidate=setmetatable({},Visual)
+ for key,value in pairs(self)do candidate[key]=value end
+ candidate.model=Instance.new("Model");candidate.pieces={};candidate.bodyHull={};candidate.nativeOnly=true
+ -- Never run the facade's captured sampler against shared live fallback slots.
+ candidate.update=Visual.update;candidate.greet=Visual.greet;candidate.poseSlots=nil;candidate.poseBucket=nil;candidate.poseStateKey=nil;candidate.focusEnvelopeCache=nil
+ candidate.nightGroups=nil;candidate.nightDaylight=nil;candidate.nightColors=nil;candidate.charmFormsPrepared=nil
+ if not imported(candidate)then candidate.model:Destroy();self.assetReady=false;return end
+ candidate:applyAppearance(self.appearance)
+ self.rigSwapInProgress=true
+ local oldPieces,oldGroups,oldPrimary=self.pieces,self.nightGroups,self.model.PrimaryPart
+ local newPrimary=candidate.model.PrimaryPart
+ self.pieces,self.nightGroups,self.charmFormsPrepared=candidate.pieces,candidate.nightGroups,candidate.charmFormsPrepared
+ for _,child in ipairs(candidate.model:GetChildren())do child.Parent=self.model end
+ self.model.PrimaryPart=newPrimary
+ if oldPrimary then for _,child in ipairs(oldPrimary:GetChildren())do
+  if child:IsA("ProximityPrompt")or child:IsA("ClickDetector")then child.Parent=self.model.PrimaryPart end
+ end end
+ self.backend="AuthoredMesh";self.rigRevision=(self.rigRevision or 0)+1
+ self.model:SetAttribute("RigBackend",self.backend);self.model:SetAttribute("RigRevision",self.rigRevision)
+ self.poseSlots=nil;self.poseBucket=nil;self.poseStateKey=nil;self.focusEnvelopeCache=nil;self.pivotStartYaw=nil;self.bodyHull={};self.poseDirty=true
+ self.nightDaylight=nil;self.nightColors=nil
+ self.assetReady=false;self.assetStatus="AuthoredMesh";self.assetTicket:cancel();self.assetTicket=nil;self.nativeOnly=true
+ Visual.update(self,0)
+ -- Host-only interaction references move before any old geometry can retire.
+ if self.onRigChanged then self.onRigChanged(oldPrimary,self.model.PrimaryPart,self.rigRevision)end
+ for _,entry in ipairs(oldPieces)do entry.part:Destroy()end
+ for _,group in pairs(oldGroups or {})do group.fill:Destroy();group.model:Destroy()end
+ candidate.model:Destroy();self.rigSwapInProgress=false
+end
 function Visual.new(parent,origin,pet,worldScale,appearance,options)
  local definition=assert(Definitions[pet.id],"No authored garden rig for alias")
  local model=Instance.new("Model");model.Name=pet.name
  local cachedColors=Palette.resolve(pet.id,appearance)
  local self=setmetatable({petId=pet.id,nightTreatment=options and options.nightTreatment or "shadedHead",secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
- if(options and options.native==true)or not imported(self)then for _,entry in ipairs(self.pieces)do entry.part:Destroy()end;table.clear(self.pieces);native(self)end
+ self.readiness=options and options.readiness or Readiness.shared;self.nativeOnly=options and options.native==true
+ self.assetPriority=options and options.priority or(if worldScale==nil then 3 else 2);self.assetEpoch=1;self.rigRevision=0
+ local source,pending
+ if not self.nativeOnly then source,pending=imported(self,true)end
+ local already=source and self.readiness:ready(pet.id,source,signature(source,pending))
+ if not(already and imported(self))then native(self)end
  model:SetAttribute("PetFamily",pet.id);model:SetAttribute("RigId",definition.id);model:SetAttribute("RigBackend",self.backend)
- model.Parent=parent;self:applyAppearance(appearance);return self
+ model.Parent=parent;self:applyAppearance(appearance)
+ if self.backend~="AuthoredMesh"and not self.nativeOnly then self.assetSearchUntil=os.clock()+12;self:requestAuthored()else self.nativeOnly=true end
+ return self
 end
 function Visual:greet()self.greeting=0 end
 function Visual:applyAppearance(appearance)
+ self.appearance=appearance
  local colors=Palette.resolve(self.petId,appearance)
  self.colors,self.secondaryColor=colors,colors.secondary
  for _,entry in ipairs(self.pieces)do
@@ -138,10 +219,14 @@ function Visual:applyGardenPose(sample)
  self.lastActionId,self.lastGeneration=sample.actionId,sample.generation
 end
 function Visual:update(dt)
+ self:commitReadyRig()
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
  local reduced=self.reducedEffects==true;local toyReach,toyExpression=0,nil
  if self.gardenAction=="toyReturn"then toyReach,toyExpression=ToyPose.sample(self.toyRole,self.toyTime,reduced)end
  local expression=toyExpression or Expression.name(self);local pose=Expression.get(expression)
+ local cooRoll,cooNod,cooHand,cooMouth,cooEye=CooPose.sample(self)
+ local mouth=if cooMouth>.12 then "open"else pose.mouth
+ local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
@@ -164,7 +249,7 @@ function Visual:update(dt)
  local upper=root*CFrame.new(weightX,0,0)*CFrame.new(hipAnchor)*CFrame.Angles(0,0,weightRoll)*CFrame.new(-hipAnchor)
  local hop=(greet*.11+(self.movementBob or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch,headYaw,pose.tilt+(self.affectionTilt or 0)*.08)*CFrame.new(-headAnchor)
+ local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod,headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll)*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
@@ -176,7 +261,7 @@ function Visual:update(dt)
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
    local fold=pose.hand+greet*.5+shove*.7+toyReach*.50
-   cf=upper*CFrame.new(0,hop+toyReach*.045*self.scale,toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
+   cf=upper*CFrame.new(0,hop+cooHand+toyReach*.045*self.scale,toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale,step*side*.075*self.scale)*entry.frame
@@ -187,15 +272,15 @@ function Visual:update(dt)
    size=Vector3.new(size.X*(1+squash*.35),size.Y*(1+bodyStretch-squash),size.Z*(1+squash*.35))
   end
   if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch,entry)end
-  if string.find(name,"Eye")then size=Vector3.new(size.X*(if pose.mouth=="open"then 1.12 else 1),size.Y*pose.eye*blink,size.Z)
-  elseif string.find(name,"Glint")then hidden=hidden or pose.eye*blink<.4
-  elseif name=="MouthO"then hidden=hidden or pose.mouth~="open"
+  if string.find(name,"Eye")then size=Vector3.new(size.X*(if mouth=="open"then 1.12 else 1),size.Y*eye*blink,size.Z)
+  elseif string.find(name,"Glint")then hidden=hidden or eye*blink<.4
+  elseif name=="MouthO"then hidden=hidden or mouth~="open";if cooMouth>.12 then size*=.45+.55*cooMouth end
   elseif name=="MouthSmile"then
-   hidden=hidden or pose.mouth=="open"
-   if pose.mouth=="line"then size=Vector3.new(size.X*.5,size.Y*.24,size.Z)elseif pose.mouth=="soft"then size=Vector3.new(size.X*.82,size.Y*.75,size.Z)end
+   hidden=hidden or mouth=="open"
+   if mouth=="line"then size=Vector3.new(size.X*.5,size.Y*.24,size.Z)elseif mouth=="soft"then size=Vector3.new(size.X*.82,size.Y*.75,size.Z)end
   elseif name=="Teeth"or string.find(name,"^Teeth")then
-   hidden=hidden or pose.mouth=="open"or pose.mouth=="line"
-   if pose.mouth=="soft"then size*=.78 end
+   hidden=hidden or mouth=="open"or mouth=="line"
+   if mouth=="soft"then size*=.78 end
   end
   if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
   Face.paintSurface(entry,self,daylight)
@@ -215,5 +300,10 @@ function Visual:update(dt)
  Bounds.finish(self);Bounds.finish(self.bodyHull)
  self.bodyBoundsFrame,self.bodyBoundsSize=self.bodyHull.rigBoundsFrame,self.bodyHull.rigBoundsSize
 end
-function Visual:destroy()self.model:Destroy()end
+function Visual:destroy()
+ if self.destroyed then return end;self.destroyed=true;self.assetEpoch+=1
+ if self.assetTicket then self.assetTicket:cancel();self.assetTicket=nil end
+ if self.readyFrame then self.readyFrame:Disconnect();self.readyFrame=nil end
+ self.model:Destroy()
+end
 return Visual

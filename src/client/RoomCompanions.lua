@@ -56,7 +56,7 @@ function Companions:update(dt,serverNow)
 			local appearance=if self.garden then self.garden:appearance(item.board,item.pet.id)else nil
 			if not entry then
 				local position = item.root.Position + item.root.CFrame.RightVector * 2.2
-				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy,appearance)
+				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy,appearance,{priority=1})
 				visual.cosmeticSeed=item.player.UserId
                 visual.origin = Vector3.new(position.X, PetFollow.ground(position, visual), position.Z)
 				visual.model:SetAttribute("CompanionOwnerId", item.player.UserId)

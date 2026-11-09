@@ -1,6 +1,7 @@
 -- One bounded exterior/preview surface: 16 bands, no instance churn after new().
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
+Backdrop.MotifOpacity=.88
 local function frame(parent,name)
  local f=Instance.new("Frame");f.Name,f.BorderSizePixel,f.BackgroundTransparency=name,0,1
  f.Active,f.Selectable,f.ZIndex=false,false,parent.ZIndex+1;f.Parent=parent;return f
@@ -48,8 +49,8 @@ function Backdrop:configure(id,theme)
    assign(self,p.body,"Rotation",45,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(0,2),"styleWrites")
    assign(self,p.core,"Position",UDim2.fromScale(.25,.25),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.5,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(0,1),"styleWrites")
   end
-  assign(self,p.body,"BackgroundTransparency",if layer==1 then .34 else .55,"styleWrites")
-  assign(self,p.core,"BackgroundTransparency",if id=="creek"then .12 else .22,"styleWrites")
+  assign(self,p.body,"BackgroundTransparency",1-(if layer==1 then .66 else .45)*Backdrop.MotifOpacity,"styleWrites")
+  assign(self,p.core,"BackgroundTransparency",1-(if id=="creek"then .88 else .78)*Backdrop.MotifOpacity,"styleWrites")
  end end
  self.size=nil;self:colors(.2);return true
 end

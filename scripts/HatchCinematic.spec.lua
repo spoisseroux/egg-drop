@@ -1,5 +1,7 @@
 -- Isolated committed-result presentation fixtures. No purchases, profile writes or native input.
 return function(client,parent)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Cinematic=require(client.HatchCinematic)
  local Shot=require(client.PetGreetingShot)
  local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
@@ -63,7 +65,9 @@ return function(client,parent)
      assert(c.heroFraction>0 and c.heroFraction<=.63)
      if not c.fitLimited and size.Y>=300 then assert(c.heroFraction>=.48,"unconstrained subject did not fill its stage")end
      if (pet.id=="pip"or pet.id=="puddle")and size.X>=500 then
-      local textException=preference=="Largest"and size==Vector2.new(600,360)and not c.landscapeLayout and c.fitLimited and c.fitReason=="text reserve"
+      -- The two largest preferences have separately reviewed native 600x360
+      -- compositions; only an independently measured text reserve qualifies.
+      local textException=(preference=="Larger"or preference=="Largest")and size==Vector2.new(600,360)and not c.landscapeLayout and c.fitLimited and c.fitReason=="text reserve"
       if textException then
        local wrap=c.frame.AbsoluteSize.X-24
        local function canonical(node,fontSize,font,minimum)
@@ -72,8 +76,8 @@ return function(client,parent)
         local measuredSize=if offset>0 and probe<fontSize+offset-1 then fontSize+offset else fontSize
         local bounds=TextService:GetTextSize(node.Text,measuredSize,font,Vector2.new(wrap,10000))
         local required=math.max(minimum,math.ceil(bounds.Y)+4)
-        assert(node.TextFits and node.TextBounds.Y<=node.AbsoluteSize.Y+.5,"Largest exception hid canonical copy: "..node.Name)
-        assert(math.abs(node.AbsoluteSize.Y-required)<=1,"Largest label reservation differs from independent canonical measurement: "..node.Name)
+        assert(node.TextFits and node.TextBounds.Y<=node.AbsoluteSize.Y+.5,preference.." exception hid canonical copy: "..node.Name)
+        assert(math.abs(node.AbsoluteSize.Y-required)<=1,preference.." label reservation differs from independent canonical measurement: "..node.Name)
         return{required=required,height=node.AbsoluteSize.Y,width=node.AbsoluteSize.X,nativeHeight=node.TextBounds.Y}
        end
        local tag=canonical(c.tag,16,Art.Font.Supporting,18)
@@ -84,7 +88,7 @@ return function(client,parent)
        assert(c.tag.AbsolutePosition.Y+c.tag.AbsoluteSize.Y<=c.heroHost.AbsolutePosition.Y-5,"Largest tag crosses the hero")
        assert(c.heroHost.AbsolutePosition.Y+c.heroHost.AbsoluteSize.Y<=c.heading.AbsolutePosition.Y-7,"Largest name crosses the hero")
        assert(c.heading.AbsolutePosition.Y+c.heading.AbsoluteSize.Y<=c.caption.AbsolutePosition.Y-3 and c.caption.AbsolutePosition.Y+c.caption.AbsoluteSize.Y<=c.frame.AbsolutePosition.Y+c.frame.AbsoluteSize.Y-7,"Largest caption escapes its reserved stage")
-       row.exception="Largest600x360 canonical text budget; Medium normal48% floor retained"
+       row.exception=preference.."600x360 canonical text budget; Medium normal48% floor retained"
        row.canonicalLabels={tag=tag,name=name,caption=caption};row.independentBand=expectedBand
        local onePixel=1/math.max(1,c.frame.AbsoluteSize.Y)
        assert(c.heroFraction+onePixel>=.40,string.format("%s Largest text-constrained fraction%.6f below40%% beyondonepixel; band%.1f/%.1f labels%.1f/%.1f/%.1f",pet.id,c.heroFraction,expectedBand,c.frame.AbsoluteSize.Y,tag.required,name.required,caption.required))

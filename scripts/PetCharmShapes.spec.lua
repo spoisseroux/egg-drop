@@ -1,5 +1,7 @@
 -- No profile writes: retained forms, visibility, pigment and opaque future-ID fallbacks.
 return function(client)
+ local readyFixture=assert(script.Parent:FindFirstChild("PetAssetsReadyFixture"),"Install the real authored-readiness QA helper beside this spec")
+ require(readyFixture)(client)
  local Factory=require(client.PetFactory);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog);local Hue=require(game.ReplicatedStorage.Shared.HueCatalog)
  local folder=Instance.new("Folder");folder.Name="_CharmShapes";folder.Parent=workspace;local visuals,cases={},{}
  local ok,err=pcall(function()
