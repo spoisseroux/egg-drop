@@ -1,0 +1,142 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueIntent",
+    "result": {
+      "evidence": "pure client intent ordering with injected transport and confirmed snapshots",
+      "persistentWrites": false,
+      "passed": 11,
+      "cases": [
+        "duplicate clicks create one revision-prefixed quote and exact retries preserve every field",
+        "pending pet reveal, unavailable host and pending save status fence requests",
+        "wrong operation id, pet or action replies cannot terminate or prove the pending request",
+        "Saved before snapshot retains proof without changing confirmed palette or wallet",
+        "snapshot before event settles once and a late event cannot create another request",
+        "coalesced newer last result accepts older matching Saved without rewinding current colors",
+        "Saved proof survives late Rejected and Retrying until a newer snapshot crosses its revision",
+        "rejected rank or wallet quote never optimistically grants a color or permits retry",
+        "stale snapshots cannot roll back the confirmed revision, palette or wallet",
+        "body and secondary requests are independent; Original retains learned ranks and secondary",
+        "insufficient wallet, max rank, unsupported or unowned pet and unknown direction send nothing"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 measured header footer choices and matched static previews",
+        "749, 381 measured header footer choices and matched static previews",
+        "385, 703 measured header footer choices and matched static previews",
+        "568, 160 measured header footer choices and matched static previews",
+        "ordinary snapshots preserve target direction scroll focus and both rig identities",
+        "shortfall uses existing earning route while max and pending never spend or navigate",
+        "explicit free body and secondary preview independently and preserve Dot state",
+        "selected offer child name and grade keep composited contrast in all eight themes",
+        "unsupported Journal targets fall back safely and pending hatch preempts Hue"
+      ],
+      "passed": 9,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueAppearance",
+    "result": {
+      "liveCommands": 0,
+      "authorityMutation": false,
+      "passed": 6,
+      "cases": [
+        "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "journal portrait recolors existing pixels using the same body and secondary roles",
+        "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "confirmed peer token refresh updates the existing observer rig instead of only Dot"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "StarsPresentation",
+    "result": {
+      "cases": [
+        "single existing wallet uses correct singular plural and no value conversion",
+        "all currency illustrations are passive five-point gold Stars with a light glint",
+        "Saved historical receipt keeps exact amount while showing live Stars balance",
+        "accepted care award has single-Star accessibility and unchanged amount",
+        "rendered copy and accessibility contain no retired currency term"
+      ],
+      "currencyFieldsRenamed": false,
+      "passed": 5,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "SharedHeaders",
+    "result": {
+      "preference": "Medium",
+      "passed": 12,
+      "cases": [
+        "1649, 971 exact menu wallet and stable bare-X header",
+        "1649, 971 recipe prices and status stay independent of exact balance",
+        "733, 307 exact menu wallet and stable bare-X header",
+        "733, 307 recipe prices and status stay independent of exact balance",
+        "568, 160 exact menu wallet and stable bare-X header",
+        "568, 160 recipe prices and status stay independent of exact balance",
+        "385, 703 exact menu wallet and stable bare-X header",
+        "385, 703 recipe prices and status stay independent of exact balance",
+        "focused unselected recipe survives rebuild and rotation without changing selection",
+        "focused daily remains visible while disabled gift falls back to neutral X",
+        "X/footer survive rebuild and detached GUI cannot reclaim focus",
+        "two independent circle controls retain native names and preferred transparency"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactEggShop",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "160/198/236 roots retain measured choices exact wallet and pinned action",
+        "Sprout selection retains exact24price and6shortfall without purchasing",
+        "350x279 names and costs remain native readable and reachable",
+        "errors pending and terminal notices never replace authoritative wallet data",
+        "daily gift all odds and rare protection stay reachable",
+        "rotation preserves selection while unchanged snapshots preserve reading scroll",
+        "compact shop result transition preserves ID and both safe actions",
+        "reopening keeps selected recipe and explicit pinned price without sends"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompactRecap",
+    "result": {
+      "preference": "Medium",
+      "passed": 9,
+      "cases": [
+        "1649, 971 outcome earned nonzero breakdown and promotion preserve first view",
+        "1649, 971 details retain zeros history and both footer focuses after spend",
+        "733, 307 outcome earned nonzero breakdown and promotion preserve first view",
+        "733, 307 details retain zeros history and both footer focuses after spend",
+        "568, 160 outcome earned nonzero breakdown and promotion preserve first view",
+        "568, 160 details retain zeros history and both footer focuses after spend",
+        "385, 703 outcome earned nonzero breakdown and promotion preserve first view",
+        "385, 703 details retain zeros history and both footer focuses after spend",
+        "Details and rotation refit canonical chrome once without feedback replay or empty tail"
+      ]
+    }
+  }
+]

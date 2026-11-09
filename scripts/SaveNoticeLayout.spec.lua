@@ -84,7 +84,7 @@ return function(client,parent,rootSize)
 			test(tostring(size).." passive status belongs to each modal without covering pinned actions",function()
 				local menu=Menu.new(root,{});table.insert(views,menu);menu:update(state(),"pip","wick",0,0,0,"sprout");menu:open();settle()
 				cycle(menu,function(v,n)
-					assert(v.heading.Text==n.short or v.heading.Text==n.narrow);assert(v.nectar.Text=="24" and v.nectar:GetAttribute("AccessibleLabel")=="24 nectar");readable(v.nectar);readable(v.heading);assert(inside(v.heading,v.card) and not overlaps(v.heading,v.closeButton))
+					assert(v.heading.Text==n.short or v.heading.Text==n.narrow);assert(v.nectar.Text=="24" and v.nectar:GetAttribute("AccessibleLabel")=="24 Stars");readable(v.nectar);readable(v.heading);assert(inside(v.heading,v.card) and not overlaps(v.heading,v.closeButton))
 					assert(v.playHint.Text:find(n.detail,1,true));readable(v.playHint);reach(v.playHint,v.body)
 				end)
 				assert((menu.heading.Text=="Pocket menu" or menu.heading.Text=="Menu") and not menu.playHint.Text:find("retry",1,true));menu:close()
@@ -112,7 +112,7 @@ return function(client,parent,rootSize)
 				local starts,signature,oldSounds=recap.feedback.starts,recap.receiptSignature,sounds
 				for _,status in ipairs(statuses)do
 					recap:setSaveNotice(Notice.resolve(nil,status),"Both sides complete");settle();readable(recap.saveDetail);reach(recap.saveDetail,recap.fieldBody)
-					assert(recap.earnedGraphic.Text=="+14 nectar" and recap.bankGraphic.Text=="Nectar saved: 24" and recap.receiptSignature==signature)
+					assert(recap.earnedGraphic.Text=="+14 Stars" and recap.bankGraphic.Text=="Stars saved: 24" and recap.receiptSignature==signature)
 					assert(recap.feedback.starts==starts and sounds==oldSounds)
 				end
 				recap:setSaveNotice(nil,nil);assert(not recap.saveDetail.Visible);recap.frame.Visible=false
@@ -134,12 +134,12 @@ return function(client,parent,rootSize)
 				shop:open(state());shop:selectRecipe("sprout");settle()
 				local before=callbacks
 				cycle(shop,function(v,n)
-					readable(v.heading);assert((v.heading.Text==n.short or v.heading.Text==n.narrow) and not overlaps(v.heading,v.closeButton));assert(v.nectar.Visible and v.nectar.Text=="24" and v.nectar:GetAttribute("AccessibleLabel")=="24 nectar");readable(v.nectar)
+					readable(v.heading);assert((v.heading.Text==n.short or v.heading.Text==n.narrow) and not overlaps(v.heading,v.closeButton));assert(v.nectar.Visible and v.nectar.Text=="24" and v.nectar:GetAttribute("AccessibleLabel")=="24 Stars");readable(v.nectar)
 					assert(v.selected=="sprout" and v.state.nectar==24 and v.action.Interactable and v.action.Text:find("24",1,true))
 					assert(inside(v.closeButton,v.card) and inside(v.action,v.card) and not overlaps(v.body,v.action) and v.body.AbsoluteSize.Y>=44)
 					if v.notePinned then readable(v.note);assert(v.note.Visible and v.note.Text==n.detail)else local label=v.body.EggColumn.SaveInstruction;assert(label and label.Text==n.detail);readable(label);reach(label,v.body)end
 				end)
-				assert((shop.heading.Text=="Hatch eggs" or shop.heading.Text=="Eggs") and shop.nectar.Text=="24" and callbacks==before)
+				assert((shop.heading.Text=="Companion eggs"or shop.heading.Text=="Companions"or shop.heading.Text=="Eggs") and shop.nectar.Text=="24" and callbacks==before)
 				local result={id="save-notice-result-"..size.Y,petId="foxfire_wick",family="wick",rare=true}
 				shop:update(state(result));settle()
 				local epoch,viewport,ready=shop.cinematic.epoch,shop.cinematic.heroViewport,shop.ackReady
@@ -189,7 +189,7 @@ return function(client,parent,rootSize)
 			shop:setError("RevisionChanged");shop:setSaveNotice(Notice.resolve(nil,"Unavailable"));settle()
 			assert((shop.heading.Text=="Retrying load" or shop.heading.Text=="Load retry") and shop.errorMessage=="RevisionChanged" and shop.nectar.Text=="24")
 			local nextState=state();nextState.revision=21;shop:update(nextState);shop:setSaveNotice(nil);settle()
-			assert(shop.errorMessage==nil and (shop.heading.Text=="Hatch eggs" or shop.heading.Text=="Eggs") and not shop.note.Text:find("unavailable",1,true));shop:close()
+			assert(shop.errorMessage==nil and (shop.heading.Text=="Companion eggs"or shop.heading.Text=="Companions"or shop.heading.Text=="Eggs") and not shop.note.Text:find("unavailable",1,true));shop:close()
 		end)
 		end
 	end)

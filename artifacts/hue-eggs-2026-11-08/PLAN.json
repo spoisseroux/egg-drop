@@ -1,0 +1,46 @@
+{
+  "slice": "Hue Eggs and Stars",
+  "baseline": {
+    "runtime": "355fad7",
+    "docs": "4b832a9",
+    "privateVersion": 232,
+    "placeId": 96451847774961
+  },
+  "accepted": {
+    "directions": [
+      "rose",
+      "tide",
+      "citrus",
+      "iris"
+    ],
+    "costStars": 8,
+    "rankCap": 3,
+    "supportedPersistentIds": [
+      "pip",
+      "puddle"
+    ],
+    "linearTintWeights": [
+      0.12,
+      0.23,
+      0.35
+    ],
+    "currency": "Stars presentation of existing nectar balance",
+    "savedColorsOnly": true,
+    "independentSecondary": true
+  },
+  "gates": [
+    "Native isolated legacy/receipt/lease/timeout/rejoin/concurrency fixtures",
+    "Native shared linear-light palette protected-role parity",
+    "Actual desktop starter, earn route, Hue selection, explicit purchase, secondary equip, Original",
+    "Actual phone-emulator Medium/Largest layout and target clearance",
+    "Existing pending companion result retains exact ID and ack through Hue entry/reopen",
+    "Two local clients observe only confirmed palette without movement reset; Dot preserved",
+    "Console plus Rojo/source compile checks",
+    "Astra actual screenshot critique and independent code review before commit/push/private update"
+  ],
+  "limits": [
+    "Studio emulation is not a physical phone",
+    "Isolated rejoin fixtures are not private-client DataStore rejoin",
+    "No fun/retention or production readiness claim"
+  ]
+}

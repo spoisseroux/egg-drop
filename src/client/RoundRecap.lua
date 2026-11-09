@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 local Art = require(script.Parent.DeckArt)
 local Daily = require(game:GetService("ReplicatedStorage").Shared.DailyContracts)
 local Feedback = require(script.Parent.RecapFeedback)
@@ -53,11 +54,10 @@ function Recap.new(parent, audio, reduceEffects)
 	fitText(detail, 12)
 	local track = Art.frame(goal, "Track", "ink", UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
 	local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))
-	local nectarIcon = Art.frame(goal, "NectarIcon", Art.Amber, UDim2.fromOffset(7, 4), UDim2.fromOffset(14, 18))
-	Art.corner(nectarIcon, 8)
-	Art.leaf(nectarIcon, "Leaf", UDim2.fromOffset(6, -3), UDim2.fromOffset(8, 5), Art.Leaf, -25)
+    local nectarIcon=EggArt.stars(goal,UDim2.fromOffset(7,4),UDim2.fromOffset(14,18),goal.ZIndex+1)
+    nectarIcon.Name="NectarIcon"
 	nectarIcon.Visible = false
-	local earnedGraphic = Art.text(goal, "EarnedNectar", "+0 NECTAR", UDim2.fromOffset(27, 0), UDim2.new(.52, -28, 0, 26), Art.Amber, 26, Art.Font.Reward)
+	local earnedGraphic = Art.text(goal, "EarnedNectar", "+0 Stars", UDim2.fromOffset(27, 0), UDim2.new(.52, -28, 0, 26), Art.Amber, 26, Art.Font.Reward)
 	fitText(earnedGraphic, 26)
 	earnedGraphic.TextXAlignment = Enum.TextXAlignment.Left
 	local bankGraphic = Art.text(goal, "SavedEggBank", "", UDim2.new(.52, 0, 0, 0), UDim2.new(.48, -6, 0, 26), Art.Leaf, 13, Art.Font.Counter)
@@ -86,8 +86,8 @@ function Recap.new(parent, audio, reduceEffects)
 	transfer.BackgroundTransparency, transfer.Visible = 1, false
 	local chips = {}
 	for index = 1, 5 do
-		local chip = Art.frame(transfer, "Drop" .. index, Art.Amber, UDim2.fromOffset(0, 0), UDim2.fromOffset(7, 10))
-		Art.corner(chip, 5)
+		local chip = EggArt.stars(transfer,UDim2.fromOffset(0,0),UDim2.fromOffset(7,10),transfer.ZIndex+1)
+        chip.Name="Drop"..index
 		chip.Visible = false
 		chips[index] = chip
 	end
@@ -188,8 +188,8 @@ function Recap:paintFeedback(sample)
 		end
 	end
  if self.displayReward~=nil then
-  self.earnedGraphic.Text=string.format("+%d nectar",self.displayReward)
-  self.bankGraphic.Text=string.format("Nectar saved: %d",self.displayBalance)
+  self.earnedGraphic.Text=Stars.format("+%d Stars",self.displayReward)
+  self.bankGraphic.Text=Stars.format("Stars saved: %d",self.displayBalance)
  end
  if self.finalTitle then self.title.Text=self.finalTitle end
  self.bottleScale.Scale=1+(if sample then sample.pop or 0 else 0)*.10
@@ -215,7 +215,7 @@ function Recap:paintFeedback(sample)
   chip.Visible=self.transfer.Visible and index<=math.min(5,self.displayReward or 0)and phase>0 and phase<1
   if chip.Visible then
    local point=start:Lerp(destination,phase)+Vector2.new(0,-math.sin(phase*math.pi)*math.min(22,math.abs(destination.X-start.X)*.12+10))
-   chip.Position=UDim2.fromOffset(point.X-3,point.Y-5);chip.Rotation=-15+phase*30;chip.BackgroundTransparency=phase*.35
+   chip.Position=UDim2.fromOffset(point.X-3,point.Y-5);chip.Rotation=-15+phase*30;chip.GoldStar.TextTransparency=phase*.35;chip.StarGlint.BackgroundTransparency=phase*.35
   end
  end
 end
@@ -290,7 +290,7 @@ function Recap:buildDetails(result,reward,lines)
   card("chain","Longest chain","×"..self.statTargets[2],true)
   card("clears","Tier V clears",tostring(self.statTargets[3]),true)
  end
- card("source","Quest nectar","+"..(reward.base or 0),true)
+ card("source","Quest Stars","+"..(reward.base or 0),true)
  card("source","Daily contracts","+"..(reward.daily or 0),true)
  local skip=self.statTargets and 4 or 2
  local familyLines,unique={},{};local familyStarted=false
@@ -299,7 +299,7 @@ function Recap:buildDetails(result,reward,lines)
  for i=skip+1,math.max(skip,#lines-2)do
   local line=lines[i];local found
   for _,definition in ipairs(Daily.Definitions)do
-   if line==string.format("%s · %d nectar",definition.title,definition.reward)then card("contract",definition.title,"+"..definition.reward,true);found=true;break end
+   if line==Stars.format("%s · %d Stars",definition.title,definition.reward)then card("contract",definition.title,"+"..definition.reward,true);found=true;break end
   end
   if not found and not unique[line]then
    unique[line]=true
@@ -323,18 +323,18 @@ function Recap:updateField(result)
 	-- Publish all canonical display data before hasReceipt or any GuiObject writes.
 	self.displayRecipe,self.displayRecipeId,self.displayReward,self.displayBalance,self.displayCost=
 		result.recipe,recipeId,if reward then reward.total else nil,balance,cost
-	if reward then self.earnedGraphic.Text=string.format("+%d nectar",reward.total);self.bankGraphic.Text=string.format("Nectar saved: %d",balance)end
+	if reward then self.earnedGraphic.Text=Stars.format("+%d Stars",reward.total);self.bankGraphic.Text=Stars.format("Stars saved: %d",balance)end
  self.hasReceipt,self.fieldMode=reward~=nil,true
 	self.fieldHeading=Receipt.outcome(result)
 	self.promotionLabel.Text=Receipt.promotion(reward)or""
 	self.title.Text = if loading then "Loading receipt…"
 		elseif saving then (if result.status == "Saving" then "Saving your rewards…" else "Reward save delayed · retrying") else
-		string.format("Nectar +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
+		Stars.format("Stars +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
 	local egg = if balance >= cost then result.recipe.name .. " · ready to hatch"
-		else string.format("%s · %d/%d · need %d nectar", result.recipe.name, balance, cost, cost - balance)
+		else Stars.format("%s · %d/%d · need %d Stars", result.recipe.name, balance, cost, cost - balance)
  local hint=if result.reason=="Overflow"and(result.stage or 0)>=2 then "Both goals done · clear the overflow line"
   elseif result.reason=="Overflow"then "Merge below the line to clear its warning."
-  elseif result.success then "Both goals and 24 drops earn nectar for eggs."
+  elseif result.success then "Both goals and 24 drops earn Stars for eggs."
   else Receipt.questHint(result)
 	self.fullFieldDetail = if loading then "Waiting for this round's saved receipt."
 		elseif saving then "Rewards appear after saving. Please wait." else hint .. "\n" .. egg
@@ -350,8 +350,8 @@ function Recap:updateField(result)
 		self.componentLabels[2].Text = string.format("Daily +%d", reward.daily or 0)
 		self.eggGoal.Text = egg
 		-- The total and saved egg balance remain pinned while the receipt scrolls.
-		self.title.Text = string.format("Nectar +%d · Saved %d/%d", reward.total, balance, cost)
-		local lines = { string.format("Quest nectar +%d", reward.base or 0), string.format("Daily contracts total +%d", reward.daily or 0) }
+		self.title.Text = Stars.format("Stars +%d · Saved %d/%d", reward.total, balance, cost)
+		local lines = { Stars.format("Quest Stars +%d", reward.base or 0), string.format("Daily contracts total +%d", reward.daily or 0) }
 		if self.statTargets then
 			table.insert(lines,"Score "..self.statTargets[1].." · Personal best "..(self.statBest or 0))
 			table.insert(lines,"Longest chain ×"..self.statTargets[2].." · Tier V clears "..self.statTargets[3])
@@ -361,7 +361,7 @@ function Recap:updateField(result)
   if not result.success then table.insert(lines,Receipt.questHint(result))end
 		for _, id in ipairs(reward.contracts or {}) do
 			for _, contract in ipairs(Daily.Definitions) do
-				if contract.id == id then table.insert(lines, string.format("%s · %d nectar", contract.title, contract.reward)); break end
+				if contract.id == id then table.insert(lines, Stars.format("%s · %d Stars", contract.title, contract.reward)); break end
 			end
 		end
 		local family = Receipt.familyName(reward.family)
@@ -378,9 +378,9 @@ function Recap:updateField(result)
 			end
 			if mastery.rewardHint then table.insert(lines, mastery.rewardHint) end
 		end
-		table.insert(lines, result.recipe.name .. " · costs " .. cost .. " nectar")
-		table.insert(lines, if balance >= cost then "Ready to hatch · " .. balance .. "/" .. cost .. " nectar"
-			else string.format("%d/%d nectar · need %d more", balance, cost, cost - balance))
+		table.insert(lines, result.recipe.name .. " · costs " .. cost .. " Stars")
+		table.insert(lines, if balance >= cost then "Ready to hatch · " .. balance .. "/" .. cost .. " Stars"
+			else Stars.format("%d/%d Stars · need %d more", balance, cost, cost - balance))
 		local signature = table.concat(lines, "\n")
 		if self.receiptSignature ~= signature then
 			self.receiptSignature, self.receiptLines = signature, lines
@@ -513,7 +513,7 @@ function Recap:layoutField(height)
   self.eggGoal.Text=string.format("%s · %d/%d",name,self.displayBalance,self.displayCost)
   self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch"else string.format("%d more to hatch",self.displayCost-self.displayBalance)
   Art.bind(self.shortfall,{TextColor3=function()return if self.displayBalance>=self.displayCost then Art.Leaf else Art.paletteColor("muted")end})
-  self.bankGraphic.Text=string.format("Nectar saved: %d",self.displayBalance)
+  self.bankGraphic.Text=Stars.format("Stars saved: %d",self.displayBalance)
   local content=math.max(1,width-16);local gap=12
   local left=math.floor((content-gap)*.45);local right=content-gap-left
   self.twoColumn=content>=420 and left>44 and right>64

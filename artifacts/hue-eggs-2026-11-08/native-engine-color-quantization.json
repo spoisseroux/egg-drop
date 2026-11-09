@@ -1,0 +1,14 @@
+{
+  "scope": "Native pip body/head after Rose grade1; temporary diagnostic rig destroyed",
+  "expectedLinearResolver": [
+    0.892564058303833,
+    0.828302264213562,
+    0.7964538931846619
+  ],
+  "actualBasePartColor": [
+    0.8901960849761963,
+    0.8274509906768799,
+    0.7960784435272217
+  ],
+  "explanation": "BasePart.Color uses engine RGB8; shared resolver remains linear-light. Compare rendered parts within one RGB8 unit, while protected stored colors remain unchanged."
+}

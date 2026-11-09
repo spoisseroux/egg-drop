@@ -1,0 +1,70 @@
+{
+  "src/client/DeckArt.lua": {
+    "raw": "64a6ba21b1605c86f7f2dd78a0b1657dbd0ee539be9af50c4c66d6dcb6256fa3",
+    "LF": "76cf7bd070e0e651ce7fd455fb517f28b259dfaef77796140c60b3c4248bb4b0"
+  },
+  "src/client/DeckMenu.lua": {
+    "raw": "6b01078fb9f2286254e3260f822682947cb6b65929b4b565284ff14aea6e8858",
+    "LF": "38f6064d1fdb4b407e492e7b2aacc3b7585e20178aa533737c83f3fcd9a97793"
+  },
+  "src/client/EggArt.lua": {
+    "raw": "6ad1e567d221f06dca03974e9d53cb9da3177e5b09e70ba393c57dd3abe520a5",
+    "LF": "44f66e8d8723517f869b7c31b393b7eb20b90cea2567947932cbd81fb68716b0"
+  },
+  "src/client/EggHatchView.lua": {
+    "raw": "1bb35cd50416bbbd3b5dc4dd1bb44d2695dd98f5efd66abcd0cbbfd1520fe88c",
+    "LF": "85c1a2032bc513eb3fee97d238f6f363d5c50579498aa0f93aa2b16e11efe590"
+  },
+  "src/client/FieldQuestText.lua": {
+    "raw": "e7d929b2ad97c0891982a30652490d470d7d3039a8b06ae9bc26a7958131d6aa",
+    "LF": "190216998b837a9621b8ca623ca8a0074911f3c2030c15a65667728c54a3561a"
+  },
+  "src/client/GardenClient.lua": {
+    "raw": "ca289aa65bbba66aa9d760f5f3a22d53f7cf380c9993316c1f717e876c4e52f0",
+    "LF": "f0d80d4b53b4440f3c37f56fd26860e3f9e27faf819995988fa6a4d95650f878"
+  },
+  "src/client/GardenPetVisual.lua": {
+    "raw": "e5d82ec3d7e091367f153033a2db79c33ff8d387c35767fcbb25cd4d370cf2c3",
+    "LF": "5eb995f4cf67c05c18deeb93c487677d62e9ba7f0e0423ea870cf151a97c0c68"
+  },
+  "src/client/HatchCinematic.lua": {
+    "raw": "e5ce590f5e2520b6b62e306f8705d1e16ce7aee15acae8f4cb399b8dc3e1cb59",
+    "LF": "3ae915cbaa73fe161e06129c8523b85e15645b178113b524fa7391b9e104c09e"
+  },
+  "src/client/HueEggView.lua": {
+    "raw": "6cd3b1494735d7614f4cb3de8a1915ddd49914f783aa013cbc000010bbe94abc",
+    "LF": "a660ac97284e4e2299fc4458f389b834c6bcf9715bc4acf7a2f55212a61dff64"
+  },
+  "src/client/HueIntent.lua": {
+    "raw": "0363dd62aa933d12542cdcf17cd556a5c1fd7f01f97bdf41534636c7698e5cca",
+    "LF": "a7f3a9fb1b0cd17711935f524f59f66a3495b0a69d84a131e2ae0324dda1516d"
+  },
+  "src/client/PetAffection.lua": {
+    "raw": "b44815468d9987c23e5d8e391c2550fe8ec40b8929ab00311c020538bc7faf68",
+    "LF": "b9fe269634d7a2633dc7e6a91eece9b73b48b15cb0bbf25c0d9c7ae4ba39cf98"
+  },
+  "src/client/PetJournal.lua": {
+    "raw": "5aa5eac6e1dd6fd4fd968cc27fd2b249d7616a9f7bf70b61ab9d63e22f937fa9",
+    "LF": "e2344ae7c194461b97d2486e4b62d029e4fabcae46ff23899a4a56142c651549"
+  },
+  "src/client/PetPortrait.lua": {
+    "raw": "be40af5a9e0a137e88b6813251b8150d88c71a98166223b5ce7233e59bd1196c",
+    "LF": "f52245adb0467aa4d959d450330857d38691091f7a893851c3d99dbc5d374ca8"
+  },
+  "src/client/RoomCompanions.lua": {
+    "raw": "fe516bac530985c9fa3217bc5216d8924ec2394a56109ddf244a0e6cc1aca4e3",
+    "LF": "e572c08ae2950de7720fabf0e2e6891baa2d50e502559386c50b30fb0cb48d3f"
+  },
+  "src/client/RoundRecap.lua": {
+    "raw": "48b9af3c10c7a69915f4f5cc533211880a2752056b92ff96a4e237910c9ca534",
+    "LF": "f21cc0adba80f68089cc92bf2b0db615797f315828d4a3a370c31d01a41368bb"
+  },
+  "src/client/StarText.lua": {
+    "raw": "cdd7cb1ef8ee15b0974113e46986f36d5da89e4b703079d1446c150bfe996d25",
+    "LF": "f3720c3a9f2c9236a3294d31203d49c49f6d9dda5a2c0c64f112ed16bdb8a01e"
+  },
+  "src/client/init.client.lua": {
+    "raw": "51c7ce7ca420fb3e7dae69751caacafead8d0b77fda66aeb203009c936f63964",
+    "LF": "43e34e4710428fa1425c93f114867c960c5512a6e4119097e3a477bb0187f0cd"
+  }
+}

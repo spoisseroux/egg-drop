@@ -1,0 +1,81 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueIntent",
+    "result": {
+      "evidence": "pure client intent ordering with injected transport and confirmed snapshots",
+      "persistentWrites": false,
+      "passed": 11,
+      "cases": [
+        "duplicate clicks create one revision-prefixed quote and exact retries preserve every field",
+        "pending pet reveal, unavailable host and pending save status fence requests",
+        "wrong operation id, pet or action replies cannot terminate or prove the pending request",
+        "Saved before snapshot retains proof without changing confirmed palette or wallet",
+        "snapshot before event settles once and a late event cannot create another request",
+        "coalesced newer last result accepts older matching Saved without rewinding current colors",
+        "Saved proof survives late Rejected and Retrying until a newer snapshot crosses its revision",
+        "rejected rank or wallet quote never optimistically grants a color or permits retry",
+        "stale snapshots cannot roll back the confirmed revision, palette or wallet",
+        "body and secondary requests are independent; Original retains learned ranks and secondary",
+        "insufficient wallet, max rank, unsupported or unowned pet and unknown direction send nothing"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 measured header footer choices and matched static previews",
+        "749, 381 measured header footer choices and matched static previews",
+        "385, 703 measured header footer choices and matched static previews",
+        "568, 160 measured header footer choices and matched static previews",
+        "ordinary snapshots preserve target direction scroll focus and both rig identities",
+        "shortfall uses existing earning route while max and pending never spend or navigate",
+        "explicit free body and secondary preview independently and preserve Dot state",
+        "selected offer child name and grade keep composited contrast in all eight themes",
+        "unsupported Journal targets fall back safely and pending hatch preempts Hue"
+      ],
+      "passed": 9,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueAppearance",
+    "result": {
+      "liveCommands": 0,
+      "authorityMutation": false,
+      "passed": 6,
+      "cases": [
+        "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "journal portrait recolors existing pixels using the same body and secondary roles",
+        "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "confirmed peer token refresh updates the existing observer rig instead of only Dot"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "StarsPresentation",
+    "result": {
+      "cases": [
+        "single existing wallet uses correct singular plural and no value conversion",
+        "all currency illustrations are passive five-point gold Stars with a light glint",
+        "Saved historical receipt keeps exact amount while showing live Stars balance",
+        "accepted care award has single-Star accessibility and unchanged amount",
+        "rendered copy and accessibility contain no retired currency term"
+      ],
+      "currencyFieldsRenamed": false,
+      "passed": 5,
+      "actualWalletMutation": false
+    }
+  }
+]

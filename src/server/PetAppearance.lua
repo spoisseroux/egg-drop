@@ -1,5 +1,6 @@
 -- Per-owned-pet charm preference. No wallet, inventory or hatch mutation.
 local Appearance={Ids={"pip","puddle"}}
+local Hue=require(game:GetService("ReplicatedStorage").Shared.HueCatalog)
 local supported={pip=true,puddle=true}
 local function stamp(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=9007199254740000 then n else 0 end
 local function valid(entry)
@@ -17,13 +18,14 @@ function Appearance.visible(profile,id)
  local entry=profile.petAppearance and profile.petAppearance[id]
  return if entry then entry.charmVisible else true
 end
-function Appearance.public(profile)
+function Appearance.public(profile,hues)
  -- Public attributes and garden snapshots use only storage-confirmed choices.
  -- The desired map remains private while a write is pending or retrying.
  local result={}
  for _,id in ipairs(Appearance.Ids)do
   local entry=profile.petAppearanceSaved and profile.petAppearanceSaved[id]
-  result[id]={charmVisible=if valid(entry)then entry.charmVisible else true}
+  result[id]=Hue.appearance(hues,id)
+  result[id].charmVisible=if valid(entry)then entry.charmVisible else true
  end
  return result
 end

@@ -1,0 +1,32 @@
+[
+  {
+    "ok": true,
+    "name": "HueHost",
+    "result": {
+      "evidence": "actual host callbacks and retry coroutine; isolated DB with forced timeout/store suspension",
+      "persistentWrites": false,
+      "passed": 3,
+      "cases": [
+        "actual ambiguous write exposes old confirmed palette and throttled same quote stays Retrying",
+        "background retry held in storage preserves original waiter through manual Busy and conflicting quote",
+        "lost saved event remains recoverable from saved-only snapshot and exact request replay cannot spend twice"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "HueProgress",
+    "result": [
+      "absent v4 namespace stays sparse and purchases atomically preserve old facts",
+      "independent learned body and secondary persist without spending or losing Dot",
+      "paid old-ID replay returns original wallet facts after awards and equip without reverting selections",
+      "ambiguous before/after commit retries preserve one quote and a later reconnect proves the old purchase",
+      "a generic lastOperation ID collision cannot counterfeit paid Saved proof",
+      "free equip retry is CAS-bound and duplicate receipt cannot switch back after a newer equip",
+      "all 24 paid ranks cap exactly; new attempts and insufficient wallets do not spend",
+      "malformed present namespaces, arbitrary colors and stale rank/revision reject",
+      "pending pet reveal and expired or foreign leases fence every new hue operation",
+      "actual independent PlayerProgress Dot flush preserves atomic Hue namespace and receipts"
+    ]
+  }
+]

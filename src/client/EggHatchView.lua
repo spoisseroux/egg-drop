@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextService=game:GetService("TextService")
 local GuiService = game:GetService("GuiService")
@@ -64,12 +65,12 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	Art.panel(card, 16, "accent")
 	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
 	heading.Font = Art.Font.Heading
-	local nectar = label(card, "Nectar", "0 nectar", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
+	local nectar = label(card, "Nectar", "0 Stars", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
 	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
 	Art.corner(wallet, 10)
 	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), 23)
 	nectar.Parent=wallet;nectar.ZIndex = 25
-	local note = label(card, "Notice", "Earn nectar. Choose an egg. Meet a new friend.", UDim2.fromOffset(12, 29),
+	local note = label(card, "Notice", "Earn Stars. Choose an egg. Meet a new friend.", UDim2.fromOffset(12, 29),
 		UDim2.new(1, -24, 0, 16), "muted", 11)
 	local body = Instance.new("ScrollingFrame")
 	body.Name, body.Position, body.Size = "Body", UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
@@ -161,7 +162,7 @@ function View:recipeMetrics(columnWidth,compact,columns)
 	for _,id in ipairs(Catalog.Order)do
 		local option=Catalog.ById[id]
 		nameH=math.max(nameH,nativeHeight(option.name,if compact then 14 else 16,Art.Font.Body,textW))
-		costH=math.max(costH,nativeHeight(string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),12,Art.Font.Body,textW))
+		costH=math.max(costH,nativeHeight(string.format(if compact then "%d Stars"else "%d Stars per hatch",option.cost),12,Art.Font.Body,textW))
 	end
 	return{columns=columns,width=choiceW,textX=textX,textWidth=textW,nameH=nameH,costH=costH,height=math.max(if compact then 44 else 83,nameH+costH+3+8),artH=if compact then 32 else 66}
 end
@@ -177,14 +178,14 @@ function View:layoutShop()
 	self.meetButton.Visible,self.revealHost.Visible=false,false
 	self.headerPlan=Art.sheetHeader(cardW,self.heading,self.wallet,self.nectar,self.walletDrop,self.closeButton,{
 		pad=10,top=0,amount=self.state.nectar or 0,title=self.headerTitle,shortTitle=self.headerShortTitle,
-		accessibleTitle=if notice then notice.detail else self.statusText or "Hatch eggs",status=self.statusText~=nil})
+		accessibleTitle=if notice then notice.detail else self.statusText or "Companion eggs",status=self.statusText~=nil})
 	local bodyW=cardW-24;local roomyColumn=if bodyW>=470 then (bodyW-18)/2 else bodyW-6
 	local roomy=self:recipeMetrics(roomyColumn,false,1)
 	local roomyFooter=44;local oldText=self.action.Text
 	Art.type(self.action,"Action",cardW<400)
 	for _,id in ipairs(Catalog.Order)do
 		local recipe=Catalog.ById[id];local missing=math.max(0,recipe.cost-(self.state.nectar or 0))
-		self.action.Text=if missing>0 then string.format("Play for %s · need %d nectar",recipe.name,missing)else string.format("Hatch %s · %d nectar",recipe.name,recipe.cost)
+		self.action.Text=if missing>0 then Stars.format("Play for %s · need %d Stars",recipe.name,missing)else Stars.format("Hatch %s · %d Stars",recipe.name,recipe.cost)
 		roomyFooter=math.max(roomyFooter,Art.actionHeight(self.action,cardW-24))
 	end
 	self.action.Text=oldText
@@ -198,7 +199,7 @@ function View:layoutShop()
 	self.action.Position,self.action.Size=UDim2.new(0,12,1,-footerH-footerGap),UDim2.new(1,-24,0,footerH)
 	local top=self.headerPlan.height+(if short then 4 else 8)
 	Art.type(self.note,"Supporting",true)
-	self.note.Text=self.statusText or "Earn nectar. Choose an egg. Meet a new friend."
+	self.note.Text=self.statusText or "Earn Stars. Choose an egg. Meet a new friend."
 	local noteH=Art.textHeight(self.note,bodyW,0)
 	self.notePinned=self.statusText~=nil and self.card.Size.Y.Offset-top-footerH-footerGap-noteH-12>=44
 	self.note.Visible=self.notePinned
@@ -313,10 +314,10 @@ function View:refreshShopHeader()
 	local notice=self:getSaveNotice()
 	self.nectar.Text=tostring(self.state.nectar or 0)
 	self.statusText=if notice then notice.detail elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Finishing your last action…"else self.errorMessage or self.state.message
-	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Hatch eggs"
+	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Companion eggs"
 	self.headerShortTitle=if notice then notice.narrow elseif self.statusText then self.headerTitle else "Eggs"
 	if self.state.lastHatch then self.heading.Text=self.headerTitle end
-	self.note.Text=self.statusText or "Earn nectar. Choose an egg. Meet a new friend."
+	self.note.Text=self.statusText or "Earn Stars. Choose an egg. Meet a new friend."
 end
 
 function View:revokeIntent()
@@ -383,9 +384,9 @@ function View:refreshFooter()
 	else
 		local recipe = Catalog.ById[self.selected]
 		local missing = math.max(0, recipe.cost - (state.nectar or 0))
-		textValue = if missing > 0 then string.format("Play for %s · need %d nectar", recipe.name, missing)
-			else string.format("Hatch %s · %d nectar", recipe.name, recipe.cost)
-		if self.compactShop then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else string.format("Hatch · %d nectar",recipe.cost)end
+		textValue = if missing > 0 then Stars.format("Play for %s · need %d Stars", recipe.name, missing)
+			else Stars.format("Hatch %s · %d Stars", recipe.name, recipe.cost)
+		if self.compactShop then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else Stars.format("Hatch · %d Stars",recipe.cost)end
 		canAct = true
 	end
 	Art.type(self.action,"Action",self.compactShop or self.card.Size.X.Offset<400)
@@ -406,7 +407,7 @@ function View:refreshFooter()
 		local width=self.card.Size.X.Offset-24
 		if self:footerRowHeight(self.action,width)>budget then
 			local candidates=if missing>0 then {"Play · egg "..recipe.cost.." · need "..missing,"Play · egg "..recipe.cost.."\nNeed "..missing}
-				else {"Hatch · "..recipe.cost.." nectar","Hatch"}
+				else {"Hatch · "..recipe.cost.." Stars","Hatch"}
 			for _,caption in ipairs(candidates) do
 				self.action.Text=caption
 				if self:footerRowHeight(self.action,width)<=budget then break end
@@ -458,7 +459,7 @@ function View:renderBody()
 	local previous=GuiService.SelectedObject;local action
 	local owner=self.shade:GetAttribute("ControllerEpoch")
 	if previous and previous:IsDescendantOf(self.body)then
-		if previous.Name=="DailyNectar"then action="DailyNectar"
+		if previous.Name=="DailyNectar"or previous.Name=="HueEggs"then action=previous.Name
 		elseif previous.Name:match("^Recipe_")then action=self.refocusRecipeId and "Recipe_"..self.refocusRecipeId or previous.Name end
 	end
 	self.refocusRecipeId=nil
@@ -470,7 +471,7 @@ function View:renderBody()
 	for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
 	if left then
 		for _,child in ipairs(left:GetChildren())do
-			if not child:IsA("TextButton")or not(child.Name:match("^Recipe_")or child.Name=="DailyNectar")then child:Destroy()end
+			if not child:IsA("TextButton")or not(child.Name:match("^Recipe_")or child.Name=="DailyNectar"or child.Name=="HueEggs")then child:Destroy()end
 		end
 	end
 	local size = self.body.AbsoluteSize
@@ -483,7 +484,22 @@ function View:renderBody()
 	local recipe = Catalog.ById[self.selected]
 	local metrics=self:recipeMetrics(columnWidth,compact,self.recipeLayout and self.recipeLayout.columns)
 	self.recipeLayout=metrics
-	local startY=4
+    local startY=4
+    if self.onOpenHue then
+        local hueButton=left:FindFirstChild("HueEggs")
+        if not hueButton then
+            hueButton=button(left,"HueEggs","Hue Eggs · 8 Stars",UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,44),"raised")
+            hueButton.Activated:Connect(function()
+                if not self.shade.Visible or self.state.lastHatch or self.pending or not hueButton.Interactable then return end
+                self:close("hue");self.onOpenHue()
+            end)
+        end
+        Art.type(hueButton,"Action",compact)
+        local h=math.max(44,Art.actionHeight(hueButton,columnWidth-8))
+        hueButton.Position,hueButton.Size=UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,h)
+        hueButton.Interactable=not self.pending and (Catalog.isOwned(state.inventoryMask or 0,"pip")or Catalog.isOwned(state.inventoryMask or 0,"puddle"))
+        hueButton.Selectable=hueButton.Interactable;startY+=h+8
+    end
 	local notice=self:getSaveNotice()
 	if self.statusText and not self.notePinned then
 		local detail=Art.text(left,if notice then "SaveInstruction"else "ActionInstruction",self.statusText,UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,24),Art.Amber,14)
@@ -511,20 +527,20 @@ function View:renderBody()
 		EggArt.create(choice,id,UDim2.fromOffset(if compact then 6 else 12,(metrics.height-metrics.artH)/2),UDim2.fromOffset(if compact then 24 else 52,metrics.artH),choice.ZIndex+2)
 		local groupH=metrics.nameH+3+metrics.costH;local ty=(metrics.height-groupH)/2
 		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),"text",if compact then 14 else 16,Art.Font.Body)
-		local cost=Art.text(choice,"Cost",string.format(if compact then "%d nectar"else "%d nectar per hatch",option.cost),UDim2.fromOffset(metrics.textX,ty+metrics.nameH+3),UDim2.fromOffset(metrics.textWidth,metrics.costH),Art.Amber,12)
+		local cost=Art.text(choice,"Cost",string.format(if compact then "%d Stars"else "%d Stars per hatch",option.cost),UDim2.fromOffset(metrics.textX,ty+metrics.nameH+3),UDim2.fromOffset(metrics.textWidth,metrics.costH),Art.Amber,12)
 		name.TextXAlignment,cost.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
 		name.TextWrapped,cost.TextWrapped=true,true
 	end
 	local y=startY+math.ceil(#Catalog.Order/metrics.columns)*(metrics.height+8)
-	label(left, "NectarProgress", string.format("%d / %d nectar", state.nectar or 0, recipe.cost),
+	label(left, "NectarProgress", Stars.format("%d / %d Stars", state.nectar or 0, recipe.cost),
 		UDim2.fromOffset(3, y), UDim2.new(1, -9, 0, 21), Art.Leaf, 13)
 	local track = frame(left, "NectarTrack", "ink", UDim2.fromOffset(7, y + 24), UDim2.new(1, -18, 0, 6))
 	Art.corner(track, 3)
 	local fill = frame(track, "Fill", Art.Amber, UDim2.fromOffset(0, 0),
 		UDim2.fromScale(math.clamp((state.nectar or 0) / recipe.cost, 0, 1), 1))
 	Art.corner(fill, 3)
-	local dailyTitle = if state.dailyAvailable then string.format("Daily nectar +%d", state.dailyBonus or 6)
-		elseif state.dailyDay then "Daily nectar claimed" else "Daily nectar loading…"
+	local dailyTitle = if state.dailyAvailable then Stars.format("Daily Stars +%d", state.dailyBonus or 6)
+		elseif state.dailyDay then "Daily Stars claimed" else "Daily Stars loading…"
 	local daily=left:FindFirstChild("DailyNectar")
 	if not daily then
 		daily=button(left,"DailyNectar",dailyTitle,UDim2.fromOffset(3,y+41),UDim2.new(1,-9,0,44),"raised")
@@ -554,7 +570,7 @@ function View:renderBody()
 		if not pet then continue end
 		local row = frame(odds, "Outcome_" .. outcome.id, "raised", UDim2.fromOffset(2, 27 + (index - 1) * 29), UDim2.new(1, -7, 0, 26))
 		Art.corner(row, 6)
-		Portrait.create(row, pet, 1, UDim2.fromOffset(15, 13), 25)
+		Portrait.create(row, pet, 1, UDim2.fromOffset(15, 13), 25,false,self.appearanceFor and self.appearanceFor(pet.id))
 		local name = label(row, "Name", pet.name, UDim2.fromOffset(29, 0), UDim2.new(1, -77, 1, 0),
 			if pet.trial then Art.Amber else Art.Silver, 12)
 		name.TextXAlignment = Enum.TextXAlignment.Left
@@ -599,6 +615,7 @@ function View:update(state)
 	if self.errorMessage and self.errorRevision and self.state.status=="Ready" and (self.state.revision or 0)>self.errorRevision then self.errorMessage,self.errorRevision=nil,nil end
 	local intent = self.ackIntent
 	local result = self.state.lastHatch
+    if result and self.appearanceFor then self.cinematic:setAppearance(self.appearanceFor(result.petId))end
 	if result and self.shade.Visible and self.playingId ~= result.id then self.body.CanvasPosition = Vector2.zero end
 	if intent and result and result.id ~= intent.id then
 		self:revokeIntent()
@@ -614,7 +631,7 @@ function View:update(state)
 	end
 	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
 	self.nectar.Text = tostring(self.state.nectar or 0)
-	self.note.Text = self.errorMessage or self.state.message or "Earn nectar. Choose an egg. Meet a new friend."
+	self.note.Text = self.errorMessage or self.state.message or "Earn Stars. Choose an egg. Meet a new friend."
 	self:layout()
 	if self.shade.Visible then
 		if result then
@@ -639,7 +656,7 @@ function View:update(state)
 					local recipe = Catalog.ById[self.selected]
 					local balance = self.state.nectar or 0
 					presentation.starterGoal = if balance >= recipe.cost then recipe.name .. " ready · choose it in Menu"
-						else string.format("%s · %d/%d nectar · win quests", recipe.name, balance, recipe.cost)
+						else Stars.format("%s · %d/%d Stars · win quests", recipe.name, balance, recipe.cost)
 				end
 				local completed = false
 				self.cinematic:play(presentation, function()
@@ -650,7 +667,7 @@ function View:update(state)
 					self.ackReady = true
 					self:refreshFooter()
 					if self:ownsInput() then self:selectResultAction() end
-				end, { skipIntro = skipIntro, onPresented = function()
+				end, { appearance=self.appearanceFor and self.appearanceFor(result.petId),skipIntro = skipIntro, onPresented = function()
 					if self.presentationGeneration == generation and self.shade.Visible
 						and self.state.lastHatch and self.state.lastHatch.id == result.id then
 						-- One bounded session marker survives X; it never acknowledges a result.
@@ -683,7 +700,7 @@ function View:setError(message)
 	self.pending = self.ackIntent ~= nil or status == "Busy"
 	self.errorMessage = message
 	self.errorRevision=self.state.revision or 0
-	self.note.Text = message or "Earn nectar. Choose an egg. Meet a new friend."
+	self.note.Text = message or "Earn Stars. Choose an egg. Meet a new friend."
 	if message == "One moment…" or message == "Finishing your last save…"
 		or message == "Finishing your last hatch action…"
 		or message == "Retry the previous action while it saves." then self:retryAcknowledgement() end

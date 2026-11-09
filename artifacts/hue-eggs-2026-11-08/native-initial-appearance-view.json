@@ -1,0 +1,25 @@
+[
+  {
+    "ok": false,
+    "preference": "Medium",
+    "name": "HueAppearance",
+    "result": "Players.keehar01.PlayerScripts.Client.QAHueAppearance:81: Players.keehar01.PlayerScripts.Client.QAHueAppearance:13: pip palette mismatch Body"
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "733, 307 measured header footer choices and matched static previews",
+        "ordinary snapshots preserve target direction scroll focus and both rig identities",
+        "shortfall uses existing earning route while max and pending never spend or navigate",
+        "explicit free body and secondary preview independently and preserve Dot state",
+        "unsupported Journal targets fall back safely and pending hatch preempts Hue"
+      ],
+      "passed": 5,
+      "actualWalletMutation": false
+    }
+  }
+]

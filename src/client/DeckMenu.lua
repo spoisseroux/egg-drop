@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local Art = require(script.Parent.DeckArt)
@@ -88,7 +89,7 @@ function Menu.new(parent,callbacks)
 	self.heading=text(card,"Heading","Pocket menu","Heading")
 	self.wallet=decoration(card,"Wallet",UDim2.fromOffset(0,0),UDim2.fromOffset(180,28),"inset",8)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
-	self.nectar=text(self.wallet,"Nectar","0 nectar","Body",Art.Amber)
+	self.nectar=text(self.wallet,"Nectar","0 Stars","Body",Art.Amber)
 	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:activate("close")end))
 	self.dailyButton=button(card,"DailyBonus","Gift +6",function()self:activate("daily")end)
 	local body=Instance.new("ScrollingFrame")
@@ -117,15 +118,15 @@ function Menu.new(parent,callbacks)
 	end
 	self.recipePanel=decoration(self.pages.play,"EggGoalPanel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64),"inset",10)
 	EggArt.create(self.recipePanel,"meadow",UDim2.fromOffset(10,9),UDim2.fromOffset(34,44),self.recipePanel.ZIndex+1)
-	self.recipe=text(self.recipePanel,"EggGoal","Mixed Meadow · 0/18 nectar","Body")
-	self.playHint=text(self.pages.play,"NectarPurpose","Complete both goals to earn nectar. Keep the pile low for +2.","Supporting","muted")
+	self.recipe=text(self.recipePanel,"EggGoal","Mixed Meadow · 0/18 Stars","Body")
+	self.playHint=text(self.pages.play,"NectarPurpose","Complete both goals to earn Stars. Keep the pile low for +2.","Supporting","muted")
 	for index=1,3 do
 		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),"raised",12)
 		local icon=Art.frame(panel,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),panel.ZIndex+1)
 		Art.bind(icon,{BackgroundColor3="inset"});icon.BackgroundTransparency=0;Art.corner(icon,10);contractArt(icon,index)
 		local title=text(panel,"Title","Loading…","Action")
 		local count=text(panel,"Count","0/1","Counter")
-		local reward=text(panel,"Reward","+0 nectar","Supporting",Art.Amber)
+		local reward=text(panel,"Reward","+0 Stars","Supporting",Art.Amber)
 		local track=decoration(panel,"Track",UDim2.fromOffset(0,0),UDim2.fromOffset(100,5),"ink",3)
 		local fill=decoration(track,"Fill",UDim2.fromOffset(0,0),UDim2.fromScale(0,1),Art.Leaf,3)
 		self.daily[index]=title;self.dailyCards[index]={panel=panel,art=icon,title=title,count=count,reward=reward,fill=fill,complete=false,amount=0}
@@ -279,7 +280,7 @@ function Menu:layoutContents(wanted)
 		local w=if list then usable else (usable-24)/3
 		styleType(row.title,"Action",short);styleType(row.count,"Counter",short);styleType(row.reward,"Supporting",short)
 		if short then row.title.TextSize=12;row.count.TextSize=14 end
-		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..row.amount.." nectar")
+		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..Stars.amount(row.amount))
 		local tw=if list and not short then w-72 else w-12
 		row.titleH=Art.textHeight(row.title,tw,if short then 18 else 28)
 		row.countH=Art.textHeight(row.count,if short then w*.5-28 else tw,if short then 20 else 30)
@@ -354,7 +355,7 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
 	self.nectar.Text = tostring(state.nectar or 0)
 	local recipe = Catalog.ById[recipeId] or Catalog.ById.meadow
-	self.recipe.Text = recipe.name .. " · " .. (state.nectar or 0) .. "/" .. recipe.cost .. " nectar"
+	self.recipe.Text = recipe.name .. " · " .. (state.nectar or 0) .. "/" .. recipe.cost .. " Stars"
 	local egg = self.recipePanel:FindFirstChild("Egg")
 	if egg and egg:GetAttribute("RecipeId") ~= (recipeId or "meadow") then
 		egg:Destroy(); EggArt.create(self.recipePanel, recipeId or "meadow", UDim2.fromOffset(10, 9), UDim2.fromOffset(34, 44), self.recipePanel.ZIndex + 1)
@@ -373,7 +374,7 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 		row.complete, row.amount = contract and (contract.claimed or contract.complete) == true or false, if contract then contract.reward or 0 else 0
 		row.fill.Size = UDim2.fromScale(math.clamp(progress / math.max(1, target), 0, 1), 1)
 		row.fill.BackgroundColor3 = if row.complete then Art.Amber else Art.Leaf
-		row.reward.Text=if row.complete then "Earned" else (if self.compact then "+"..row.amount else "+"..row.amount.." nectar")
+		row.reward.Text=if row.complete then "Earned" else (if self.compact then "+"..row.amount else "+"..Stars.amount(row.amount))
 	end
 	for family, b in pairs(self.families) do
 		local owned = false
@@ -402,7 +403,7 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
 	if not self.shade.Visible then self.heading.Text=self.headerTitle end
 	local objective=if self.fieldObjective==nil then QuestCopy.legacy(0)elseif self.fieldObjective==false then nil else self.fieldObjective
- self.playHint.Text=QuestCopy.menu(objective,self.fieldPhase)..(if objective and objective.empty then "\nKeep the pile low for +2."else "\nComplete both goals and 24 drops to earn nectar. Keep the pile low for +2.")
+ self.playHint.Text=QuestCopy.menu(objective,self.fieldPhase)..(if objective and objective.empty then "\nKeep the pile low for +2."else "\nComplete both goals and 24 drops to earn Stars. Keep the pile low for +2.")
 	if self.saveNotice then
 		self.playHint.Text=self.saveNotice.detail.."\n"..self.playHint.Text
 		self.dailyHint.Text=self.saveNotice.detail.."\n"..self.dailyHint.Text

@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 local Art = {}
 
 -- Stable default constants. Confirmed interface palettes are resolved only by
@@ -243,7 +244,7 @@ function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 	Art.roomyType(heading,if options.status then "Body"else "Heading",true,options.roomy)
 	Art.roomyType(amount,"Counter",true,options.roomy);clearInset(heading);clearInset(amount)
 	amount.Text=tostring(options.amount or 0);amount.TextWrapped=false;amount.TextXAlignment=Enum.TextXAlignment.Left
-	amount:SetAttribute("AccessibleLabel",amount.Text.." nectar")
+	amount:SetAttribute("AccessibleLabel",Stars.amount(options.amount or 0))
 	wallet.BackgroundTransparency=1
 	local amountW=Art.textWidth(amount)+2;local glyphW,gap=18,4
 	local walletW=glyphW+gap+amountW

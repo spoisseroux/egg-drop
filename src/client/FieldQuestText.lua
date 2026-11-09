@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 -- Public, sequence-bound presentation only. Never creates/chooses a field.
 local HttpService=game:GetService("HttpService")
 local Objectives=require(game:GetService("ReplicatedStorage").Shared.FieldObjectives)
@@ -55,7 +56,7 @@ function Text.goal(goal,progress)
 end
 function Text.describe(view,phase)
  if not view then return{instruction="Field loading…",candidates={"Field loading…","Loading…"},ticker="",dynamics="",title="Field",zone="any",key="loading"}end
- if view.empty then return{instruction="Field rounds earn nectar",candidates={"Field rounds earn nectar","Earn nectar"},ticker="",dynamics="",title="Field rounds",zone="any",key="no-field"}end
+ if view.empty then return{instruction="Field rounds earn Stars",candidates={"Field rounds earn Stars","Earn Stars"},ticker="",dynamics="",title="Field rounds",zone="any",key="no-field"}end
  local full,candidates
  if phase=="Settling"then full="Settling · keep it low";candidates={"Settling…","Settling"}
  elseif view.complete then full="Both goals done · keep it low";candidates={"Goals done ✓","Done ✓","Done"}
@@ -69,7 +70,7 @@ end
 function Text.menu(view,phase)
  local copy=Text.describe(view,phase)
  if not view then return copy.instruction end
- if view.empty then return "Complete both goals and 24 drops to earn nectar for eggs."end
+ if view.empty then return "Complete both goals and 24 drops to earn Stars for eggs."end
  local first=Text.goal(view.goals[1]);local second=Text.goal(view.goals[2])
  return view.title..(if copy.dynamics~=""then " · "..copy.dynamics else "").."\n"..copy.instruction.."\n"..copy.ticker.."\n1. "..first.."\n2. "..second
 end

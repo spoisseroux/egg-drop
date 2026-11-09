@@ -1,0 +1,16 @@
+[
+  {
+    "ok": true,
+    "name": "HueHost",
+    "result": {
+      "evidence": "actual host callbacks and retry coroutine; isolated DB with forced timeout/store suspension",
+      "persistentWrites": false,
+      "passed": 3,
+      "cases": [
+        "actual ambiguous write exposes old confirmed palette and throttled same quote stays Retrying",
+        "background retry held in storage preserves original waiter through manual Busy and conflicting quote",
+        "lost saved event remains recoverable from saved-only snapshot and exact request replay cannot spend twice"
+      ]
+    }
+  }
+]

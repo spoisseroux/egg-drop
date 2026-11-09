@@ -1,0 +1,20 @@
+{
+  "revision": 4,
+  "score": 650,
+  "drops": 24,
+  "lastReward": {
+    "promotedTo": 0,
+    "daily": 6,
+    "sequence": 2,
+    "contracts": {
+      "1": "chain",
+      "2": "score"
+    },
+    "family": "pip",
+    "masteryPoints": 2,
+    "base": 8,
+    "total": 14
+  },
+  "roundOver": true,
+  "wallet": 20
+}

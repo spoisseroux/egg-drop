@@ -58,7 +58,7 @@ return function(client,parent)
 					shop:update(snapshot);settle()
 					readable(shop.heading);readable(shop.action)
 						assert(shop.action.Font==Art.Font.Action and shop.action.AbsoluteSize.Y>=44)
-					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." nectar")
+					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." Stars")
 					do
 						readable(shop.nectar)
 						assert(shop.nectar.AbsolutePosition.X>=shop.wallet.AbsolutePosition.X and shop.nectar.AbsolutePosition.X+shop.nectar.AbsoluteSize.X<=shop.wallet.AbsolutePosition.X+shop.wallet.AbsoluteSize.X,"amount exceeds its chip")

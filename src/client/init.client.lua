@@ -32,7 +32,9 @@ local RoundRecap = require(script.RoundRecap)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
-local clientUI={PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
+local Stars=require(script.StarText)
+local clientUI={HueIntent=require(script.HueIntent),HueEggView=require(script.HueEggView),PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
+function clientUI.isHueOpen()return clientUI.hueView~=nil and clientUI.hueView:isOpen()end
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -297,7 +299,7 @@ local function layoutWallet(l)
 	scoreCaption.BackgroundTransparency=1
 	readout.Position,readout.Size=UDim2.fromOffset(r.x-l.tray.x+g.pad+g.glyphW+g.gap,r.y-l.tray.y),UDim2.fromOffset(math.max(1,g.w-g.pad*2-g.glyphW-g.gap),r.h)
 	readout.BackgroundTransparency=1;readout.TextXAlignment=Enum.TextXAlignment.Right;readout.TextTruncate=Enum.TextTruncate.None
-	readout:SetAttribute("AccessibleLabel",readout.Text..(if nectar then " nectar"else " score"))
+	readout:SetAttribute("AccessibleLabel",readout.Text..(if nectar then " "..Stars.name(tonumber(readout.Text))else " score"))
 end
 local bestReadout = label("TextLabel", "BestReadout", "", rail)
 bestReadout.Font = Art.Font.Counter
@@ -535,7 +537,7 @@ end, function()
 end, function()
 	if openJournal()then clientUI.accepted("confirm")end
 end, function()
-	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
+	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
 clientUI.petContactRemote=remotes:WaitForChild("PetContact")
 roomView.petContactIntent=clientUI.PetContactIntent.new({now=os.clock,
@@ -552,12 +554,12 @@ local function stationContext()
 		and root~=nil and root.Parent==character and humanoid~=nil and humanoid.Health>0
 	return{uiReady=LoungeStations.uiLive(roomView,player:FindFirstChild("PlayerGui"),gui,overlayGui,
 			roomView.controls,roomView.transition.shade,modal,gameMenu and gameMenu.shade,
-			nurseryView and nurseryView.shade,journal and journal.shade,picker and picker.shade),
+			nurseryView and nurseryView.shade,journal and journal.shade,picker and picker.shade,clientUI.hueView and clientUI.hueView.shade),
 		mode=board:GetAttribute("Mode"),viewMode=roomView.mode,alive=alive,
 		position=if alive then root.Position else nil,busy=roomView.busy or roomView.transition.shade.Visible,
 		switchQueued=roomView.switchQueued,focusing=roomView.focusing,menuOpen=roomView.menuOpen,
 		overlay=(modal and modal.Visible) or isPickerOpen() or (journal and journal.shade.Visible)
-			or (nurseryView and nurseryView:isOpen()) or (gameMenu and gameMenu.shade.Visible),
+			or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible),
 		coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,
 		snapshot=nurseryState,rank=board:GetAttribute("OwnedPets") or 0,trials=board:GetAttribute("TrialMask") or 0}
 end
@@ -767,7 +769,7 @@ end
 local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible and not roomView.busy
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
-		and not (nurseryView and nurseryView:isOpen()) and board:GetAttribute("FieldPhase") ~= "Settling"
+		and not (nurseryView and nurseryView:isOpen()) and not clientUI.isHueOpen() and board:GetAttribute("FieldPhase") ~= "Settling"
 		and not board:GetAttribute("RoundOver")
 end
 
@@ -785,7 +787,7 @@ picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reaso
 	end
 	rail.Interactable = canAim()
  local back=clientUI.pickerReturn;clientUI.pickerReturn=nil
- if reason=="back"and back and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen()then
+ if reason=="back"and back and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()then
   openMenu();gameMenu:setPage(back.page);gameMenu.body.CanvasPosition=back.scroll
   if isGamepad(UserInputService:GetLastInputType())and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and clientUI.ControllerFocus.live(back.target,gameMenu.shade,player:FindFirstChild("PlayerGui"),true)then
    local y=back.target.AbsolutePosition.Y-gameMenu.body.AbsolutePosition.Y+gameMenu.body.CanvasPosition.Y
@@ -810,9 +812,46 @@ end)
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
+nurseryView.appearanceFor=function(petId)return roomView.garden:appearance(board,petId)end
+journal.appearanceFor=nurseryView.appearanceFor
+clientUI.hueIntent=clientUI.HueIntent.new({
+ id=function()return HttpService:GenerateGUID(false)end,
+ available=function()return currentSaveNotice==nil end,
+ send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
+ appearance=nurseryView.appearanceFor,
+ earn=function()if hatchNavigation then hatchNavigation:play()end end,
+ pendingHatch=function()if openNursery then openNursery()end end,
+ closed=function(reason)
+  local back=clientUI.hueReturn;clientUI.hueReturn=nil
+  if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
+   if back=="journal"and openJournal then openJournal()elseif back=="eggs"and openNursery then openNursery()end
+  end
+ end})
+clientUI.openHue=function(page,petId,back)
+ if roomView.busy or not nurseryState then return false end
+ if nurseryState.lastHatch then if openNursery then openNursery()end;return false end
+ cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
+ if closeMenu then closeMenu()end
+ clientUI.hueReturn=back or "eggs"
+ return clientUI.hueView:open(nurseryState,page,petId or board:GetAttribute("CompanionId"))
+end
+nurseryView.onOpenHue=function()clientUI.openHue("buy",nil,"eggs")end
+journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
+clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
+gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.hueView:destroy()end)
+board:GetAttributeChangedSignal("PetAppearance"):Connect(function()
+ if nurseryView.state.lastHatch then nurseryView.cinematic:setAppearance(nurseryView.appearanceFor(nurseryView.state.lastHatch.petId))elseif nurseryView:isOpen()then nurseryView:renderBody()end
+ if clientUI.isHueOpen()then clientUI.hueView:refresh()end
+ if journal.shade.Visible then for i,p in ipairs(journal.portraits)do if p.sprite then require(script.PetPortrait).apply(p.sprite,nurseryView.appearanceFor(Pets.collection[i].id))end end end
+end)
 nurseryView.ownsPresentation = function()
 	return not roomView.busy and not roomView.transition.shade.Visible and not modal.Visible
-		and not isPickerOpen() and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
+		and not isPickerOpen() and not journal.shade.Visible and not clientUI.isHueOpen() and not (gameMenu and gameMenu.shade.Visible)
+end
+nurseryView.cinematic.ownerState=function()
+ return{roomBusy=roomView.busy==true,transition=roomView.transition.shade.Visible,modal=modal.Visible,picker=isPickerOpen(),journal=journal.shade.Visible,hue=clientUI.isHueOpen(),menu=gameMenu and gameMenu.shade.Visible or false,shade=nurseryView.shade.Visible,revealHost=nurseryView.revealHost.Visible,body=nurseryView.body.Visible,ackReady=nurseryView.ackReady==true,viewOwnsInput=nurseryView:ownsInput()}
 end
 roomView.onPresentationOwnerChanged = function()
 	nurseryView.cinematic:refreshOwner()
@@ -821,6 +860,7 @@ openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
 	picker:close()
 	journal:close()
+    if clientUI.hueView then clientUI.hueView:close("forced")end
 	if nurseryState then nurseryView:open(nurseryState) end
 end
 hatchNavigation = HatchNavigation.new({
@@ -828,7 +868,7 @@ hatchNavigation = HatchNavigation.new({
 	send = function(actionName, value) request:FireServer(actionName, value) end,
 	ready = function() return not roomView.busy end,
 	blocked = function()
-		return isPickerOpen() or journal.shade.Visible or nurseryView:isOpen()
+		return isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
 			or (gameMenu and gameMenu.shade.Visible) or GuiService.MenuIsOpen
 	end,
 	present = function(petId)
@@ -855,7 +895,7 @@ visitEggs = function()
 		generation=function()return hatchNavigation.generation end,
 		identity=function()return player.Character,workspace.CurrentCamera end,
 		canEnterFromBoard=function()
-			return not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen()
+			return not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()
 				and not gameMenu.shade.Visible and (not modal.Visible or recap.frame.Visible)
 		end,
 		sendMode=function(mode)request:FireServer("mode",mode)end,open=openNursery})
@@ -869,6 +909,7 @@ local function refreshNursery()
 	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
 	if not ok or type(state) ~= "table" then return end
 	nurseryState = state
+    clientUI.hueIntent:update(state)
 	currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
 	if refreshSaveNotice then refreshSaveNotice()end
 	roomView.stations:refresh()
@@ -930,7 +971,7 @@ closeMenu = function()
 	end
 openMenu = function()
 	cancelHatchNavigation()
-	if roomView.busy or modal.Visible or nurseryView:isOpen() then return end
+	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
  gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"))
@@ -950,11 +991,11 @@ do
 	end
 	local function updateShade()
 		roomView.transition:refresh()
-		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible
+		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible
   if modalShade.Visible then rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())end
 		request:FireServer("pause", modalShade.Visible)
 	end
-	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade }) do
+	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade, clientUI.hueView.shade }) do
 		node:GetPropertyChangedSignal("Visible"):Connect(function()
 			updateShade()
 			if node ~= modal and updateHud then task.defer(updateHud) end
@@ -972,7 +1013,7 @@ end
 roomView.transition.presentationState = function()
 	return { mode=board:GetAttribute("Mode"), ended=board:GetAttribute("RoundOver")==true,
 		pendingHatch=hatchQueue[1]~=nil or (nurseryState and nurseryState.lastHatch~=nil),
-		overlay=modal.Visible or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen()
+		overlay=modal.Visible or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
 			or gameMenu.shade.Visible or GuiService.MenuIsOpen, reduced=reduceEffects() }
 end
 for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
@@ -990,7 +1031,7 @@ end
 
 openPicker = function(mode,back)
 	cancelHatchNavigation()
-	if isPickerOpen() or roomView.busy or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
+	if isPickerOpen() or roomView.busy or clientUI.isHueOpen() or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
 	end
 	clearPlayInputs()
@@ -1006,13 +1047,14 @@ openPicker = function(mode,back)
 end
 openJournal = function()
 	cancelHatchNavigation()
+    if clientUI.isHueOpen()then clientUI.hueView:close("forced")end
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
 		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"),
 		nurseryState and nurseryState.masteryRanks)
  return true
 end
 -- The shared cache owns both native station visibility and final activation validation.
-for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade})do
+for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,clientUI.hueView.shade})do
 	roomView.stations:watch(overlay:GetPropertyChangedSignal("Visible"))
 end
 roomView.stations:watch(GuiService.MenuOpened)
@@ -1026,11 +1068,12 @@ refreshSaveNotice=function()
 	if not gui.Parent or roomView.destroyed then return end
 	local owner=if currentSaveNotice then clientUI.SaveNotice.owner({
 		native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil or roomView.busy or roomView.transition.shade.Visible,
-		eggs=nurseryView:isOpen(),style=isPickerOpen(),journal=journal.shade.Visible,menu=gameMenu.shade.Visible,
+		eggs=nurseryView:isOpen() or clientUI.isHueOpen(),style=isPickerOpen(),journal=journal.shade.Visible,menu=gameMenu.shade.Visible,
 		modal=modal.Visible,recap=recap.frame.Visible,focusing=roomView.focusing,
 		mode=if board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"then "Room"else "Board"})else nil
 	saveNoticeOwner=owner
-	nurseryView:setSaveNotice(if owner=="eggs"then currentSaveNotice else nil)
+	nurseryView:setSaveNotice(if owner=="eggs"and not clientUI.isHueOpen()then currentSaveNotice else nil)
+    clientUI.hueView:setSaveNotice(if clientUI.isHueOpen()then currentSaveNotice else nil)
 	picker:setSaveNotice(if owner=="style"then currentSaveNotice else nil)
 	journal:setSaveNotice(if owner=="journal"then currentSaveNotice else nil)
 	gameMenu:setSaveNotice(if owner=="menu"then currentSaveNotice else nil)
@@ -1067,7 +1110,7 @@ local saveNoticeConnections={}
 local function watchSaveNotice(signal)
 	table.insert(saveNoticeConnections,signal:Connect(function()refreshSaveNotice()end))
 end
-for _,node in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,roomView.controls,roomView.focusUI.panel,roomView.transition.shade})do
+for _,node in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,clientUI.hueView.shade,roomView.controls,roomView.focusUI.panel,roomView.transition.shade})do
 	watchSaveNotice(node:GetPropertyChangedSignal("Visible"))
 end
 watchSaveNotice(GuiService.MenuOpened);watchSaveNotice(GuiService.MenuClosed)
@@ -1226,7 +1269,7 @@ updateHud = function()
 	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
-	eggGoalText.Text = string.format("MEADOW EGG\n%d/18 nectar", nurseryState and nurseryState.nectar or 0)
+	eggGoalText.Text = Stars.format("MEADOW EGG\n%d/18 Stars", nurseryState and nurseryState.nectar or 0)
 	rareGoal.Visible = false
 	local rareProgress = 0
 	if nextRare then
@@ -1260,7 +1303,7 @@ updateHud = function()
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
 	local wasRecap = recap.frame.Visible
-	modal.Visible = (over or showHatch) and not (isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible)
+	modal.Visible = (over or showHatch) and not (isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible)
 	if modal.Visible then
 		clearPlayInputs()
 		picker:close()
@@ -1278,7 +1321,7 @@ updateHud = function()
 	status.BackgroundTransparency = if lesson or fieldCoaching or fieldActive then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
 	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
-		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 nectar" else "Win quest +6 nectar\nLow pile +2 bonus")
+		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 Stars" else "Win quest +6 Stars\nLow pile +2 bonus")
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
 	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
@@ -1309,10 +1352,10 @@ updateHud = function()
 
 	end
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
-	scoreCaption.Text = if owned > 0 then "NECTAR" else "SCORE"
+	scoreCaption.Text = if owned > 0 then "Stars" else "SCORE"
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	layoutWallet(instrumentLayout)
-	bestReadout.Text = if owned > 0 then "NECTAR · eggs cost 18+" else "BEST " .. best
+	bestReadout.Text = if owned > 0 then "Stars · eggs from 8" else "BEST " .. best
 	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
 	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
 	modalAction.Text = if rewardPending then "Saving…" elseif over then "Try again" else "Meet " .. (hatchName or "")
@@ -1647,7 +1690,7 @@ action.Activated:Connect(dropEgg)
 
 local function recapOwnsInput()
 	return clientUI.PresentationPolicy.ownsRecap({modal=modal.Visible,recap=recap.frame.Visible,busy=roomView.busy,
-		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or gameMenu.shade.Visible,
+		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible,
 		coreMenu=GuiService.MenuIsOpen})
 end
 
@@ -1705,7 +1748,8 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		if roomView.destroyed or roomView.busy or roomView.switchQueued or roomView.transition.shade.Visible
 			or roomView.focusing or (hatchNavigation and hatchNavigation.active)then return{blocked=true}end
 		local owner
-		if nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
+		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
+        elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
 		elseif isPickerOpen()then owner=picker:getControllerFocus()
 		elseif journal.shade.Visible then owner=journal:getControllerFocus()
 		elseif gameMenu.shade.Visible then owner=gameMenu:getControllerFocus()end
@@ -1727,7 +1771,7 @@ controllerFocus:watch(UserInputService.InputBegan,function(input)
 	local key=input.KeyCode
 	if key==Enum.KeyCode.DPadUp or key==Enum.KeyCode.DPadDown or key==Enum.KeyCode.DPadLeft or key==Enum.KeyCode.DPadRight then controllerFocus:onNavigation(input)end
 end)
-for _,root in ipairs({gameMenu.shade,picker.shade,journal.shade,nurseryView.shade})do
+for _,root in ipairs({gameMenu.shade,picker.shade,journal.shade,nurseryView.shade,clientUI.hueView.shade})do
 	controllerFocus:watch(root:GetPropertyChangedSignal("Visible"))
 	controllerFocus:watch(root:GetAttributeChangedSignal("ControllerEpoch"))
 end
@@ -1761,6 +1805,10 @@ ContextActionService:BindActionAtPriority("EggDropDrop", handleControl, false, p
 	Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state)
 	if not clientUI.PresentationPolicy.canSheetBack({coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,busy=roomView.busy}) then return Enum.ContextActionResult.Pass end
+    if clientUI.isHueOpen()then
+        if state==Enum.UserInputState.Begin then clientUI.hueView:close("back")end
+        return Enum.ContextActionResult.Sink
+    end
 	if gameMenu and gameMenu.shade.Visible then
 		if state == Enum.UserInputState.Begin then gameMenu:activate("close") end
 		return Enum.ContextActionResult.Sink
@@ -1932,7 +1980,7 @@ rendererPresentation.canPresent=function(serial)
  return type(serial)=="number"and not rendererPresentation.destroyed and serial==board:GetAttribute("ResetId") and gui.Parent~=nil and gui.Enabled
   and board:GetAttribute("Mode")=="Board" and backdrop.Visible and not GuiService.MenuIsOpen
   and not UserInputService:GetFocusedTextBox() and not modal.Visible and not modalShade.Visible
-  and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not gameMenu.shade.Visible
+  and not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen() and not gameMenu.shade.Visible
   and not roomView.busy and not roomView.transition.shade.Visible
 end
 table.insert(rendererPresentation.connections,overlay:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()rendererPresentation.fx:clear()end))
@@ -2015,6 +2063,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	journal:close()
 	local mode = board:GetAttribute("Mode")
 	if nurseryView then nurseryView:close("forced") end
+    if clientUI.hueView then clientUI.hueView:close("forced")end
 	if closeMenu then closeMenu() end
 	if mode == "Room" then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
@@ -2089,7 +2138,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	firstHatchGuide:fieldStep(0, 1, false)
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
 	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
-	eggGoalText.Text = string.format("%s\n%d/%d nectar", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
+	eggGoalText.Text = Stars.format("%s\n%d/%d Stars", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
 	if canAim() and not isPickerOpen() and not drag and not UserInputService:GetFocusedTextBox() then
 		local direction = 0
 		for _, value in pairs(heldAim) do

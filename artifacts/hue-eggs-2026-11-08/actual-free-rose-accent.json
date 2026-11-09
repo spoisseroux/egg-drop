@@ -1,0 +1,41 @@
+{
+  "revision": 6,
+  "appearance": {
+    "puddle": {
+      "body": "original",
+      "charmVisible": true,
+      "bodyRank": 0,
+      "secondary": "default"
+    },
+    "pip": {
+      "body": "rose",
+      "charmVisible": true,
+      "bodyRank": 1,
+      "secondary": "rose"
+    }
+  },
+  "receipt": {
+    "revision": 6,
+    "action": "hueEquip",
+    "cost": 0,
+    "id": "5:4cdf89ab-8f15-47c2-91c6-d70b15c99359",
+    "balanceAfter": 12,
+    "body": "rose",
+    "balanceBefore": 12,
+    "petId": "pip",
+    "secondary": "rose"
+  },
+  "hues": {
+    "pip": {
+      "secondary": "rose",
+      "body": "rose",
+      "ranks": {
+        "rose": 1,
+        "iris": 0,
+        "citrus": 0,
+        "tide": 0
+      }
+    }
+  },
+  "wallet": 12
+}

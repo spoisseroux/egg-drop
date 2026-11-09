@@ -1,101 +1,83 @@
-# Egg Drop — nectar and egg loop
+# Egg Drop — Stars, companion eggs and Hue Eggs
 
-The active prototype now uses field runs and random egg hatches. The 2026-11-06 arcade pass adds family ranks, daily contracts, fair overflow pressure, and the unified menu described below. The physical
-nursery and staged care proposal is deferred in `assets/concepts/nursery/` and
-`OVERNIGHT-NURSERY-LOOP.md`; it is not included in the runtime Rojo tree.
+The current branch has one earned **Stars** wallet, three rotating field variations, companion hatches and deterministic Hue Eggs for Zivvi and Ovelle. Stars are the existing stored `nectar` balance presented one-for-one; this pass creates no second currency and changes no historical reward amount. [Accepted design and transaction contract](PET-SOFTENING-AND-HUE.md) · [Hue verification evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md).
+
+The last verified private publication is **v232**, runtime `355fad7`. The Stars/Hue slice described here passed final integration and is awaiting private publication; this document does not claim a newer private publication. [PLAY-BUILD.md](PLAY-BUILD.md) remains the publication handoff.
+
+The physical nursery, training eggs, supplies, additional base pets and broader progression proposals remain deferred. Their concepts are not enabled offers in this runtime.
 
 ## What to play
 
-1. A new player starts on the welcome board and earns guaranteed Pip. Existing
-   owned pets remain owned. Pip's reveal opens Sprout Hollow.
-2. Open the deck for a 24-drop field run. Make a tier-III-or-higher merge in the
-   illuminated left bank region, then the right region. Keep the pile low.
-3. The next drop becomes ready after the falling jelly first contacts the floor,
-   a bank or another jelly, or merges. A 1.8-second simulation-time fallback
-   prevents a stuck ready state. The minimum 0.35-second request cadence remains.
-4. After the final accepted drop, a four-second settlement window lets cascades
-   finish. Completing the route without overflow earns six nectar, plus two for
-   finishing below Y=7.5. Failed runs keep prior progress and can retry quickly. Their base payout is zero, but completed-budget failures can still finish daily skill contracts.
-5. Choose **Hatch eggs** on the recap, or **Menu → Hatch eggs** from the handheld or lounge. Spend nectar on one of two egg recipes.
-6. Watch the shell swell, crack, split and release its 3D pet with original synth
-   cues. The server commits the outcome before the reveal. Closing/reopening or
-   reconnecting cannot reroll or charge twice. **Meet [pet]** acknowledges and
-   equips that companion; **Play again** acknowledges and returns to play.
+1. A new player earns guaranteed **Zivvi** on the welcome board and receives its saved companion reveal. Zivvi opens Sprout Hollow. Returning ownership stays intact. Zivvi retains stored ID `pip`; Ovelle retains `puddle`.
+2. Open the deck for a **24-drop round**, with unlimited rounds. Completed rounds rotate **Bank pair**, **Creek crossing** and **Lantern chain**. Bank asks for a tier III-or-higher merge on each side; Creek asks for a tier II center merge and a tier III-or-higher merge at the indicated bank; Lantern asks for two merges and a chain of two. Read the actual goal and highlighted region before dropping.
+3. Mouse, touch, controller A and drag-release submit the same server-validated drop. The next drop becomes ready after the falling jelly first contacts the floor, bank or another jelly, or merges. A 1.8-second simulation fallback prevents a stuck ready state; the minimum request cadence remains 0.35 seconds.
+4. After the final accepted drop, a four-second settlement window lets cascades finish. Both goals without overflow earn **6 Stars**, or **8** when the pile stays below the clean-bonus height of 7.5. A failed completed-budget round has zero base reward but can still earn its chain/score daily contracts.
+5. **Menu → Hatch eggs** or the hatch tree opens the companion recipes and their actual odds. Selecting a recipe previews it; its explicit Hatch action spends Stars. A saved result remains the same across Close/reopen and reconnect. **Meet [pet]** acknowledges that result and equips the companion; **Play again** acknowledges and returns to play.
+6. **Menu → Hatch eggs → Hue Eggs** opens the color offers; the pet journal's **Body & accents** opens learned choices. Choose an owned Zivvi or Ovelle, compare its current and resulting colors, rank and wallet, then explicitly **Feed** one named Hue Egg for 8 Stars. Color changes become confirmed only after saving. Free learned-body and accent choices stay available afterward.
 
-Returning players start in the lounge. Leaving for the lounge pauses a current
-board; returning resumes it. An unfinished field run restarts on reconnect.
+Returning players start in the lounge. A lounge visit preserves an unfinished round; returning after a completed saved round starts a fresh field. An unfinished physical board restarts on reconnect. A pending companion reveal must be resolved before a new Hue purchase or color equip; Colors never acknowledges or replaces that reveal.
 
-## Rewards and odds
+Zivvi uses a warm porcelain body and dusty-rose accents. Ovelle uses pale cool stone and sage, with short attached mittens. Both have seeded blinks, gentle breathing and an optional floating Dot. The Dot has its own saved per-pet visibility and follows the selected secondary color. Reduced motion keeps a settled expression and still Dot. These neutral base colors do not replace the separate palettes or earned identities of the rare companions.
 
-One welcome credit gives six nectar. Remaining legacy hatch charge converts
-once at one nectar per charge. Thereafter, ordinary merges do not automatically
-grant post-Pip pets or nectar. Completed Pocket Trials remain achievements and
-cosmetic progression; they no longer bypass egg ownership.
+## One wallet, rewards and companion odds
 
-| Recipe | Cost | Outcomes |
+The welcome credit remains **6 Stars**. Remaining legacy hatch charge converts once at one Star per stored charge. Ordinary merges do not directly award Stars or later companions. Pocket Trials retain their achievements and cosmetic unlocks; they do not bypass inventory ownership.
+
+| Companion recipe | Cost | Outcomes |
 |---|---:|---|
-| Mixed Meadow | 18 nectar | Pip 35%, Puddle 25%, Wick 20%, Orbit 10%, Bloom Pip 5%, Foxfire Wick 3%, Eclipse Orbit 2% |
-| Sprout Focused | 24 nectar | Pip 80%, Bloom Pip 20% |
+| Mixed Meadow | 18 Stars | Zivvi 35%, Ovelle 25%, Wick 20%, Orbit 10%, Bloom Pip 5%, Foxfire Wick 3%, Eclipse Orbit 2% |
+| Sprout Focused | 24 Stars | Zivvi 80%, Bloom Pip 20% |
 
-After seven consecutive non-rare hatches, the next guarantees a rare. Mixed
-Meadow then shows Bloom Pip 50%, Foxfire Wick 30%, Eclipse Orbit 20%; focused
-shows Bloom Pip 100%. A rare resets the counter. This does not guarantee a
-missing common or a full collection. The UI displays the actual applicable pool.
+After seven consecutive non-rare companion hatches, the next companion hatch is rare-only. Meadow then gives Bloom Pip 50%, Foxfire Wick 30%, Eclipse Orbit 20%; Focused gives Bloom Pip 100%. A rare resets the counter. This does not guarantee a missing common or a complete collection. Hue Eggs do not roll rarity, advance/reset this counter, consume its guarantee, or add companion inventory bits.
 
-Duplicate hatches add one permanent family mastery mark. Successful runs train the family selected before that run: one mark, or two total for a clean win. Ranks I/II/III require 3/10/25 marks; III also requires a clean win, chain 3, and score 500 in successful runs. Rank I displays an original family crest; II adds an accent outline; III adds bounded bursts. Rare variants count toward their base family. Existing three-duplicate sparkle entitlements are preserved separately. Reduced effects keeps the static badge and disables bursts.
+Duplicate companions add one family mastery mark. A successful round gives the selected family one mark, or two total for a clean win. Ranks I/II/III require 3/10/25 marks; III also requires a clean win, chain 3 and score 500 in successful rounds. Rare editions share their base family track. Existing three-duplicate sparkle entitlements remain separate. Reduced effects retain static earned badges and disable bursts.
 
-An optional daily claim gives six nectar once per Hollow day (UTC−5). The
-migration day already receives the welcome credit, so it cannot also claim that
-day's daily bonus. There is **no daily play/drop limit** and no paid currency,
-paid egg, or luck product in this prototype.
+The optional daily gift remains **6 Stars**. Three contracts auto-award once per Hollow day: win two rounds **+4**, chain three merges in a completed-budget round **+3**, and score 500 in a completed-budget round **+3**. The Hollow day changes at fixed **05:00 UTC**, independent of local time or daylight saving. The welcome/migration day cannot claim a second daily gift.
+
+Eligible, server-validated petting keeps its existing saved +1-Star opportunities and five-award-per-Hollow-day limit. That limit caps incidental care rewards only. Idle focus, autonomous garden play and an AFK owner do not earn care awards. There is **no daily play/drop cap**, paid currency, paid egg, paid luck or attendance penalty in this prototype.
+
+## Four deterministic Hue Eggs
+
+Hue Eggs are earned color purchases for an exact owned Zivvi or Ovelle. Each costs **8 Stars** and advances one named direction by one rank, capped at three. There are no purchase odds.
+
+| Egg | Direction | Swatch | Body tint at ranks 1 / 2 / 3 |
+|---|---|---|---|
+| Rose Hue Egg | Rose | `#D988A1` | 12% / 23% / 35% |
+| Tide Hue Egg | Tide | `#77AAD3` | 12% / 23% / 35% |
+| Citrus Hue Egg | Citrus | `#E7C764` | 12% / 23% / 35% |
+| Iris Hue Egg | Iris | `#A994D4` | 12% / 23% / 35% |
+
+A purchase increments only the selected pet's selected rank, chooses that body direction, and unlocks that hue as a secondary on that pet. The prior secondary stays selected. Other directions and other pets retain their ranks. Rank three shows **Max rank** and cannot spend again. Preview and confirmed rendering use the same linear-light blend between the authored body and direction swatch. Eyes, blush, mouth and ivory keep their authored palette.
+
+**Original** restores the authored body for free while retaining all learned ranks. Any learned body direction can be selected again for free. Secondary selection is independent: **Default** restores the species' original secondary; learned accents recolor only feet, mitten details and the optional Dot. Hiding the Dot retains the selected secondary. Neither a new Hue purchase nor a pet switch erases an earlier unlock or independently confirmed Dot preference.
+
+For example, a Zivvi with Tide 2 and Rose 0 can buy one Rose Hue Egg: it spends 8 Stars, reaches Rose 1, selects Rose body and unlocks Rose accents while retaining Tide 2 and its previous accent selection. The player may then choose Tide body and Rose accents, or Original body and Rose accents, without another purchase.
 
 ## Data and authority
 
-`HatchProgress` uses a version-3 `hatching` subrecord inside the existing
-`EggDropProgressV1` profile. It preserves legacy fields and snapshots ownership
-into an explicit seven-bit inventory. Sparse ownership such as Pip + Orbit does
-not grant Puddle or Wick. Equip, journal, counts and Wick's sticker use actual
-inventory rather than treating inventory as a contiguous rank.
+`HatchProgress` keeps the **version-4** `hatching` subrecord in the existing `EggDropProgressV1` profile. Its optional sparse `hues` namespace is keyed by persistent `pip` / `puddle`, with four integer ranks and independent body/secondary selections. Absent Hue data means zero ranks, Original and Default; it grants no currency or unlock. Present Hue records and typed receipt data are strictly validated. No version bump is required for these additive fields.
 
-Nectar debits, random results, inventory/mastery updates and the rare counter are
-atomic. The result persists until its specific ID is acknowledged. Session
-leases use tokens and epochs; stale writers cannot renew or spend. Operations
-have monotonic sequences, and run awards are protected against replay. Both
-before-commit failures and ambiguous committed failures retry the same operation
-and RNG candidate. Background retry runs every two seconds; lease maintenance
-runs every twenty seconds. Failed loads cannot spend or overwrite a profile.
+The seven-bit companion inventory, all existing pet/result IDs, balances, prices, mastery, pity and pending companion receipts retain their meaning. Sparse ownership such as Zivvi + Orbit does not grant Ovelle or Wick. `nectar` remains the sole authoritative wallet field; Stars is its current presentation.
 
-## Verification performed
+A Hue purchase validates ownership, supported pet, exact quoted rank, wallet revision, cap and balance. Debit, rank increment, derived unlock, selected body and receipt commit together through the existing leased command lane. A stale preview refreshes without charging. Free color equips validate learned choices on that exact pet and use the same compare-and-save revision fence. Client-supplied RGB values cannot grant colors.
 
-- Rojo build and Studio Luau compilation of all runtime scripts.
-- Twenty-one transaction regression cases, including all advertised outcomes,
-  rare protection, seven-pet migration, credits, sparse inventory, stale writers,
-  daily boundaries, callback retries, pre-commit errors and ambiguous commits.
-- Current native solver comparisons are in `scripts/FieldPressureBenchmark-native.json`:
-  deliberate29/30 wins, fast random16/30, random15/30, center0/30; deliberate
-  nectar/minute1.86× fast random. Current boundaries are±2.6, width11,
-  overflow8.6 with2.4seconds grace after drop12 and an early spawn-jam guard.
-  Historical pre-pressure calibration remains in `scripts/FieldRunBenchmark-results.json`.
-  Solver strategies are automated models, not human enjoyment/retention evidence.
-- Real Studio drag-and-release runs earned nectar. At 22 nectar, an actual
-  Meadow purchase deducted eighteen and hatched Orbit, leaving four and an
-  inventory of Pip + Orbit. Reopening retained its result ID and balance.
-  Journal and equip checks kept Puddle locked and correctly selected Orbit.
-- All seven 3D hero models rendered; reduced-effects and cleanup checks passed.
-  Safe-content fixtures 844×300, 667×285, 568×198 and 390×740 retained 44px
-  footer controls and readable names. Seven-row odds lists scroll without
-  dropping the footer. A silent rare-reveal visual preview was recorded.
+Each client correlator binds its quoted revision (`revision:GUID`). The server creates a separate internal operation ID and retains full typed quote proof. Successful paid Hue receipts have a lifetime bound of **24** across two pets × four hues × three ranks; old exact paid retries return their original receipt even after later awards or equips, without spending or restoring an old selection. Conflicting action/pet/hue/rank/revision reuse rejects. Free equip retries retain the same captured quote; stale older equips cannot switch a newer selection back.
 
-## What still needs validation
+Only confirmed Hue choices and the latest saved Hue result are exposed to the client. The private paid receipt ledger is not replicated. Visitor appearance contains a compact confirmed body/rank/secondary token plus the independently saved Dot visibility. Pending, rejected or delayed operations retain the previous confirmed model palette. A Saved event and a later snapshot can arrive in either order; an older paid replay does not rewind the current wallet or latest result.
 
-Fresh physical-phone comfort, player understanding, voluntary replay, live
-DataStore networking, and shared live multiplayer remain separate checks. The
-benchmarks are provisional tuning evidence, not retention or revenue claims.
-The seven-species pool and capped mastery finishes are finite prototype content.
+Companion result acknowledgment and pity remain separate from Hue results. Existing random companion debits, outcomes, inventory/mastery and rare-counter updates stay atomic. Session leases retain token/epoch fencing, monotonic operation sequences and replay-protected run/care awards. Failed or ambiguous writes retry the same captured operation, not a new price, rank or random candidate. Background retries run every two seconds and lease maintenance every twenty seconds. Failed loads cannot spend or overwrite a profile. Independent profile/Dot flushes preserve the leased Hue state and receipts.
 
-Five-minute playtest: explain the two bank goals; finish or retry a field run;
-read an egg's odds and cost; hatch; select the companion; leave/rejoin; verify
-balance, ownership and any pending reveal; decide whether to play another run.
+## Current verification and limits
+
+[Hue build evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md) records native server/client suites, actual UI actions, desktop and phone-emulator captures, and Medium/Largest checks. Coverage includes atomic rank/Stars changes, caps, malformed data, exact replay after later operations, ambiguous writes, host retry overlap, lost Saved events, independent accents/Original and confirmed palette projection. Actual field controls earned Stars before the color purchase flow; preview and repeated selection were also checked without spending.
+
+The preceding soft-baby checkpoint is documented in [PLAY-BUILD.md](PLAY-BUILD.md) and the [pet-softening evidence](artifacts/pet-softening-2026-11-08/BUILD-EVIDENCE.md). The current Hue work has not acquired a new publication claim in this document. Native fixture counts and evidence labels belong to the current build evidence; historical counts below are not summed into new coverage.
+
+Physical-phone comfort, a real-account save/rejoin over live DataStore networking, and longer human play remain separate checks. Two-client Hue propagation remains a release check until its controls and results are recorded in the current evidence. Automated solvers and controlled UI traces do not establish enjoyment, difficulty for new players, retention or revenue. Training, nursery progression, new companion pools and additional base forms remain future scope.
+
+## Historical decisions and verification — 2026-11-06
+
+The dated sections below preserve the earlier design and test record. Their old **nectar** label, Pip/Puddle visuals, two-bank-only route, 112×96 lounge and earlier schema descriptions are historical. The active Stars/Hue and rotating-field sections above take precedence. Proposed rates, rewards and unfinished features in this archive are not enabled merely by appearing here.
 
 ## Proposed family prestige — scope only, 2026-11-06
 
@@ -196,7 +178,7 @@ This section supersedes scope-only proposals above. The nursery remains deferred
 - Rank I is a family badge, II a restrained outline finish, III a bounded five-particle flourish. Bodies stay shaded SmoothPlastic; these are Roblox effects rather than custom shader programs. Promotion recaps identify the new family rank. Marks and family challenges persist; no reset or paid luck.
 - The playable lounge floor is now 112×96 (previously 44×35), with paths, orchard, clearings, picnic spots, extended creek, and a second bridge. Pet follow position/heading updates every rendered frame; ground probes run at 10Hz. Click a pet or use E/ButtonX/touch prompt to greet. The greeting stages the pet and camera clear of the avatar.
 
-### Current evidence
+### Historical evidence
 
 - All runtime sources compile in Studio; Rojo builds. Native Studio passes 21 transaction regression cases, two closing-save cases, and field readiness/grace/rescue/spawn-jam checks.
 - Native production-solver benchmark, seeds 64001–64030: deliberate 29/30 successful rounds, fast random 16/30, random 15/30, center 0/30. Deliberate base nectar rate is 1.86× fast random. Every strategy encountered warning pressure; deliberate had zero overflows, random and fast random one each, center 28/30. Raw data: `scripts/FieldPressureBenchmark-native.json`. Portable calibration/rejected candidates are separately labeled in `FieldPressureBenchmark-results.json`.

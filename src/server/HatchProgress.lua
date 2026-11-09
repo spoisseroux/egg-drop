@@ -4,6 +4,7 @@ local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Mastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
+local HueState=require(script.Parent.HueState)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -114,7 +115,7 @@ local function canonicalDay(value)
 	return number~=nil and number==math.floor(number)and math.abs(number)<=1000000000 and tostring(number)==value
 end
 local function valid(state)
-	if not validBase(state,4)or not canonicalDay(state.petDay)or not integer(state.petCount,5)then return false end
+	if not validBase(state,4)or not canonicalDay(state.petDay)or not integer(state.petCount,5)or not HueState.valid(state)then return false end
 	local receipt=state.lastPetAward
 	if state.petCount==0 then return receipt==nil end
 	return type(receipt)=="table"and type(receipt.id)=="string"and #receipt.id>0 and #receipt.id<=100
@@ -227,6 +228,7 @@ function Hatching.public(handle)
 		contracts = Daily.public(state.contracts, dayOf(handle.adapter.now())), lastRunReward = clone(state.lastRunReward),
 		misses = state.misses, inventoryMask = state.inventoryMask, mastery = clone(state.mastery),
 		lastHatch = clone(state.lastHatch),
+		hues=clone(state.hues or {}),lastHueResult=HueState.publicReceipt(state.lastHueResult),
 		petDay = state.petDay, petCount = state.petCount, lastPetAward = clone(state.lastPetAward),
 		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
@@ -248,6 +250,7 @@ local function petProof(pending,state)
 end
 local function committed(pending,state)
 	if pending.kind=="pet"then return petProof(pending,state)end
+	if pending.kind=="hue"then return HueState.proof(state,pending.candidate)end
 	return state.lastOperation and state.lastOperation.id==pending.id
 end
 local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind)
@@ -277,10 +280,10 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		local state = root.hatching
 		if committed(pending,state)then return root end -- Proof precedes calendar expiry.
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
-			reason = "RevisionChanged"; return if pending.kind=="pet"then root else nil
+			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"then root else nil
 		end
 		local allowed, failure = pending.apply(state, pending.candidate)
-		if not allowed then reason = failure; return if pending.kind=="pet"then root else nil end
+		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"then root else nil end
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence }
@@ -294,7 +297,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		handle.status = "Ready"
 		return true, "Saved"
 	end
-	if ok and pending.kind=="pet"and record and fenced(handle,record.hatching,handle.adapter.now())then
+	if ok and(pending.kind=="pet"or pending.kind=="hue")and record and fenced(handle,record.hatching,handle.adapter.now())then
 		-- A fenced unchanged return proves that this operation did not commit.
 		-- Expired-day/revision refusals must not strand Retrying with no pending.
 		accept(handle,record);handle.pending=nil;handle.status="Ready"
@@ -316,6 +319,28 @@ function Hatching.retry(handle)
 	local pending = handle.pending
 	if not pending then return false, "NoPending" end
 	return transact(handle, pending.signature, pending.revision, pending.apply, pending.candidate)
+end
+
+function Hatching.hueCommand(handle,action,value,revision)
+	local quote=HueState.quote(action,value,revision)
+	if not quote then return false,"InvalidHue"end
+	if handle.status~="Ready"and handle.status~="Retrying"then return false,handle.status end
+	if handle.pending and handle.pending.kind=="hue"and handle.pending.candidate.quote.id==quote.id
+		and not HueState.same(handle.pending.candidate.quote,quote)then return false,"OperationConflict"end
+	if handle.busy then return false,"Busy"end
+	local receipt,same=HueState.find(handle.state,quote)
+	if receipt then
+		if not same then return false,"OperationConflict"end
+		return true,"AlreadySaved",HueState.publicReceipt(receipt)
+	end
+	local signature="hue:"..quote.id..":"..action..":"..quote.petId..":"..tostring(quote.hue or quote.body)..":"..tostring(quote.rank or quote.secondary)..":"..revision
+	local candidate=handle.pending and handle.pending.candidate
+	if not handle.pending then
+		candidate=table.freeze({quote=table.freeze(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1})
+	end
+	local ok,reason=transact(handle,signature,revision,HueState.apply,candidate,if not handle.pending then candidate.operationId else nil,"hue")
+	local result=if ok then HueState.find(handle.state,quote)else nil
+	return ok,reason,if result then HueState.publicReceipt(result)else nil
 end
 
 function Hatching.petCandidate(handle,leaseId,petId)

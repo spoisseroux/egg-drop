@@ -65,6 +65,14 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
 	self:layout();return self
 end
+function Journal:setColors(callback)
+ self.onColors=callback
+ if not self.colorsButton then self.colorsButton=button(self.card,"Colors","Body & accents",function()
+  if not self.shade.Visible or not self.colorsButton.Interactable then return end
+  local id=self.companionId;self:close("colors");if self.onColors then self.onColors(id)end
+ end)end
+ self.colorsButton.Visible=self.hasColorPets==true;self:layout()
+end
 function Journal:layout()
 	if self.layingOut then return end;self.layingOut=true
 	local size=self.shade.AbsoluteSize;local short=size.Y<220
@@ -73,11 +81,13 @@ function Journal:layout()
 	self.title.Text=if self.saveNotice then self.saveNotice.short else self.baseTitle
 	Art.type(self.title,if short or self.saveNotice then "Body"else "Heading",short)
 	local titleH=Art.textHeight(self.title,usable-56,28);local header=math.max(44,titleH)+8
-	local footerH=0
-	if self.goalsButton then
-		Art.type(self.goalsButton,if short then "Body"else "Action",short)
-		footerH=math.max(44,Art.textHeight(self.goalsButton,usable,0)+(if short then 8 else 12))
-	end
+    local footerH=0;local footerButtons={}
+    if self.goalsButton then table.insert(footerButtons,self.goalsButton)end
+    if self.colorsButton and self.colorsButton.Visible then table.insert(footerButtons,self.colorsButton)end
+    local footerColumns=if #footerButtons==2 and usable>=240 then 2 else 1
+    local footerWidth=(usable-(footerColumns-1)*8)/footerColumns;local footerRow=44
+    for _,n in ipairs(footerButtons)do Art.type(n,if short then "Body"else "Action",short);footerRow=math.max(footerRow,Art.actionHeight(n,footerWidth))end
+    if #footerButtons>0 then footerH=math.ceil(#footerButtons/footerColumns)*(footerRow+8)-8 end
 	local minColumn=240
 	for index,entry in ipairs(self.cards)do
 		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.FamilyRank,"Supporting",short);Art.type(entry.Track,"Supporting",short)
@@ -117,13 +127,13 @@ function Journal:layout()
 		end
 		y+=rowH+8;index+=group
 	end
-	local footer=if self.goalsButton then footerH+8 else 0
+	local footer=if #footerButtons>0 then footerH+8 else 0
 	local maximum=math.max(1,math.min(680,size.Y-(if short then 8 else 24)))
 	local height=math.min(maximum,header+y+footer+8)
 	self.card.Size=UDim2.fromOffset(width,height)
 	place(self.title,pad,4,usable-56,titleH);place(self.closeButton,width-pad-44,4,44,44)
 	place(self.scroll,pad,header,usable,math.max(44,height-header-footer-4))
-	if self.goalsButton then place(self.goalsButton,pad,height-footerH-4,usable,footerH)end
+	for i,n in ipairs(footerButtons)do place(n,pad+((i-1)%footerColumns)*(footerWidth+8),height-footerH-4+math.floor((i-1)/footerColumns)*(footerRow+8),footerWidth,footerRow)end
 	self.scroll.CanvasSize=UDim2.fromOffset(0,y)
 	place(self.moreCue,width-pad-12,header+self.scroll.Size.Y.Offset-20,12,20)
 	self.scroll.CanvasPosition=Vector2.new(0,math.clamp(self.scroll.CanvasPosition.Y,0,math.max(0,y-self.scroll.Size.Y.Offset)))
@@ -175,6 +185,9 @@ function Journal:getControllerFocus()
 		ensure=function(target)if target.Parent==self.scroll then self:ensureVisible(target)end end}
 end
 function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,masteryRanks)
+    self.companionId=companionId
+    self.hasColorPets=inventoryMask~=nil and (bit32.band(inventoryMask,3)~=0)
+    if self.colorsButton then self.colorsButton.Visible=self.hasColorPets;self.colorsButton.Interactable=self.hasColorPets end
 	self:bumpControllerEpoch()
 	self.baseTitle=string.format("Pet journal · %02d/%02d",Pets.ownedCount(owned,trials,inventoryMask),#Pets.collection)
 	local firstOwned,firstTrack
@@ -191,8 +204,9 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		Crest.update(entry.FamilyCrest,family,rank,not unlocked)
 		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
 			if self.portraits[index]then self.portraits[index].sprite:Destroy()end
-			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked)}
+			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked,self.appearanceFor and self.appearanceFor(pet.id))}
 		end
+        if self.appearanceFor and self.portraits[index]then Portrait.apply(self.portraits[index].sprite,self.appearanceFor(pet.id))end
 		entry.Interactable,entry.Selectable=unlocked or trackable,unlocked or trackable
 		entry:SetAttribute("ControllerOwned",unlocked)
 		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end

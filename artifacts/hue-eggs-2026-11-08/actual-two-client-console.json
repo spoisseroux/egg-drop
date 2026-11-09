@@ -1,0 +1,38 @@
+[
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "EditableImage is not accessible. Go to the Security Tab in Experience Settings to enable this API.\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nAssistantCommand:1: hidden FocusControls\nStack Begin\nScript 'AssistantCommand', Line 1\nStack End"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "EditableImage is not accessible. Go to the Security Tab in Experience Settings to enable this API.\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\n[Roblox][sabuiltin_Assistant.rbxm.Assistant.Packages._Index.AssistantUI.AssistantUI.Actions.ExecuteLuauActions] The execute_luau changed camera type. Resetting from Enum.CameraType.Scriptable back to Enum.CameraType.Custom\nAssistantCommand:1: hidden LoungeControls\nStack Begin\nScript 'AssistantCommand', Line 1\nStack End\nAssistantCommand:1: missing RoundRecap\nStack Begin\nScript 'AssistantCommand', Line 1\nStack End"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type"
+        }
+      ],
+      "isError": false
+    }
+  }
+]

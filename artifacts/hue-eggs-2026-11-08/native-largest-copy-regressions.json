@@ -1,0 +1,82 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "PreferredTextLayout",
+    "result": {
+      "preference": "Largest",
+      "passed": 9,
+      "cases": [
+        "680, 700 measured Daily and Mastery preserve tabs and readable full content",
+        "680, 700 measured shop header and pinned purchase route fit",
+        "680, 700 recap reward wallet and complete receipt stay readable",
+        "390, 740 measured Daily and Mastery preserve tabs and readable full content",
+        "390, 740 measured shop header and pinned purchase route fit",
+        "390, 740 recap reward wallet and complete receipt stay readable",
+        "568, 160 measured Daily and Mastery preserve tabs and readable full content",
+        "568, 160 measured shop header and pinned purchase route fit",
+        "568, 160 recap reward wallet and complete receipt stay readable"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "RecapFeedback",
+    "result": {
+      "passed": 24,
+      "cases": [
+        "feedback has a separate exact-value lane and bounded 1100ms four-stage sample",
+        "committed timeline uses two source notes five rising drops and one quiet cadence",
+        "owner loss or skipped resume lands final and cannot emit delayed cues",
+        "matching late receipt starts once while pending stale and repeated Saved packets cannot replay",
+        "cancel inside first render cannot install an inactive clock or emit a zero cue after close",
+        "zero is one quiet accent only while hidden reduced muted and background receipts stay quiet",
+        "owned pooled voices stop on cancel without stopping a newer ordinary or owned cue",
+        "matching committed receipt starts once and retains count through HUD refresh",
+        "count up lands on exact score chain clears and earned Stars",
+        "hide cancels immediately and reopening the same receipt cannot replay",
+        "hidden ancestor cancels and does not consume a future receipt",
+        "Saving delayed and pending states suppress old receipt and currency transfer",
+        "stale sequence cannot announce the previous reward",
+        "new receipt cancels the old animation and reinitializes every counter",
+        "daily only failure retains missed side quest zero and exact total",
+        "zero earned never invents Stars drops or transfer sounds",
+        "reduced effects shows final static values with no recap cues",
+        "audio remains routed through the muted shared audio group",
+        "short recap scrolls readable center while excluding pinned footer",
+        "roomy recap follows reward egg metrics details and keeps saved values",
+        "transfer uses visible measured anchors and hides every drop when Details scrolls them away",
+        "selected egg progress draws above its panel and retains partial or full saved balance",
+        "first Saved receipt survives synchronous resize during publication",
+        "destroying the component removes its animation connection"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "RewardPresentation",
+    "result": {
+      "passed": 10,
+      "cases": [
+        "all three contracts use canonical names and component rewards",
+        "daily-only failed quest grants no family marks",
+        "played family owns the next goal even after another family is selected",
+        "committed promotion is announced with its next goal",
+        "overflow after both goals explains survival without asking to redo goals",
+        "loading a matching receipt hides previous balances and promotions",
+        "an unresolved save cannot present an old receipt",
+        "compact center retains exact cost and complete readable receipt rows",
+        "receipt navigation reaches both bounds without moving footer selection",
+        "menu names missing win conditions and clamps completed rank III"
+      ]
+    }
+  },
+  {
+    "ok": false,
+    "preference": "Largest",
+    "name": "SaveNoticeLayout",
+    "result": "Players.keehar01.PlayerScripts.Client.QASaveNoticeLayout:205: Players.keehar01.PlayerScripts.Client.QASaveNoticeLayout:142: assertion failed!"
+  }
+]

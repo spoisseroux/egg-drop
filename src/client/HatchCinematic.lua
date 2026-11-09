@@ -11,6 +11,7 @@ local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
+local live=setmetatable({},{__mode="k"})
 local function frame(parent,name,color,z)
  local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),z);node.Active,node.Selectable=false,false;return node
 end
@@ -42,6 +43,7 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  root.Visible=false;root.ClipsDescendants=true;root.Active=false;Art.corner(root,14)
  local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
  local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
+ live[self]=true
  for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
  local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
  watch(root:GetPropertyChangedSignal("AbsoluteSize"),function()if self.result and not self.building then self:layout();self:refreshOwner()end end)
@@ -91,7 +93,7 @@ function Cinematic:cancel()
  self.quietPainted=nil
 end
 function Cinematic:destroy(fromSignal)
- if self.destroyed then return end;self:cancel();self.destroyed=true
+ if self.destroyed then return end;self:cancel();self.destroyed=true;live[self]=nil
  for _,c in ipairs(self.connections)do c:Disconnect()end;for _,c in ipairs(self.ancestorConnections)do c:Disconnect()end
  table.clear(self.connections);table.clear(self.ancestorConnections);if not fromSignal then self.frame:Destroy()end
 end
@@ -103,7 +105,7 @@ function Cinematic:createHero()
  local ok=pcall(function()
   if self.forceFallback then error("isolated pixel fallback fixture")end
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport
-  local visual=Factory.new(world,Vector3.zero,self.pet);self.heroVisual=visual
+  local visual=Factory.new(world,Vector3.zero,self.pet,nil,self.appearance);self.heroVisual=visual
   local idleFrozen=visual.idleMotionFrozen;visual.idleMotionFrozen=true;rest(visual,self.pet)
   Bounds.begin(visual);include(visual);Bounds.finish(visual);self.neutralFrame,self.neutralSize=Bounds.get(visual)
   self.heroPoints=Shot.captureSilhouette(visual,self.neutralFrame)
@@ -114,7 +116,7 @@ function Cinematic:createHero()
   visual.time,visual.greeting,visual.idleMotionFrozen=time,greeting,idleFrozen;visual:update(0);visual.rigBoundsFrame,visual.rigBoundsSize=self.neutralFrame,self.neutralSize
   local camera=Instance.new("Camera");camera.Name="HeroCamera";camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera;self.heroCamera=camera;self.renderMode="3D"
  end)
- if not ok then self:clearHero();self.renderMode="PixelFallback";self.portrait=Portrait.create(self.heroHost,self.pet,1,UDim2.fromScale(.5,.5),50)end
+ if not ok then self:clearHero();self.renderMode="PixelFallback";self.portrait=Portrait.create(self.heroHost,self.pet,1,UDim2.fromScale(.5,.5),50,false,self.appearance)end
  self.heroHost:SetAttribute("RenderMode",self.renderMode)
  self.heroPreparationMs=(os.clock()-preparationStarted)*1000
 end
@@ -351,11 +353,30 @@ function Cinematic:step(dt)
 end
 function Cinematic:play(result,onComplete,options)
  if self.destroyed then return end
- self:cancel();options=options or {};self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets[1]
+ self:cancel();options=options or {};self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets[1]
  self.duration=if result.rare then 3.1 else 2.5;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
  self.active=not options.skipIntro and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
  if not self.active then self.age=self.duration;self:paint()end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
-function Cinematic:getStats()return{allocatedBits=#self.bits,liveBits=self.liveBits or 0,clock=self.connection~=nil,active=self.active,age=self.age,epoch=self.epoch,renderMode=self.renderMode,heroFraction=self.heroFraction,fitLimited=self.fitLimited,fitReason=self.fitReason,sweptPoints=if self.sweptPoints then #self.sweptPoints else 0,writes=self.writes,heroPreparationMs=self.heroPreparationMs}end
+function Cinematic:setAppearance(appearance)
+ self.appearance=appearance
+ if self.heroVisual and self.heroVisual.applyAppearance then self.heroVisual:applyAppearance(appearance)end
+ if self.portrait then Portrait.apply(self.portrait,appearance)end
+end
+function Cinematic:getStats()
+ local hidden;local node=self.frame
+ while node do
+  if node:IsA("GuiObject")and not node.Visible or node:IsA("ScreenGui")and not node.Enabled then hidden=node:GetFullName();break end
+  node=node.Parent
+ end
+ local ownsCallback=not self.owns or self.owns()
+ local ownerState=if self.ownerState then self.ownerState()else nil
+ return{allocatedBits=#self.bits,liveBits=self.liveBits or 0,clock=self.connection~=nil,active=self.active,age=self.age,epoch=self.epoch,renderMode=self.renderMode,heroFraction=self.heroFraction,fitLimited=self.fitLimited,fitReason=self.fitReason,sweptPoints=if self.sweptPoints then #self.sweptPoints else 0,writes=self.writes,heroPreparationMs=self.heroPreparationMs,
+  resultId=self.result and self.result.id,building=self.building==true,presented=self.presented==true,owned=self:owned(),hiddenAncestor=hidden,windowActive=self.windowActive,coreMenu=GuiService.MenuIsOpen,textCapture=Input:GetFocusedTextBox()~=nil,ownsCallback=ownsCallback,audioDeviceActive=not self.audio or self.audio.deviceActive~=false,deviceEpoch=self.audio and self.audio.deviceEpoch,completionPending=self.onComplete~=nil,ownerState=ownerState}
+end
+-- Read-only QA getter: does not change visibility, ownership, time or receipts.
+function Cinematic.inspect()
+ local values={};for cinematic in pairs(live)do table.insert(values,cinematic:getStats())end;return values
+end
 return Cinematic

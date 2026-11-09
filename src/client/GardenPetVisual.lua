@@ -6,6 +6,7 @@ local Expression=require(script.Parent.PetExpression)
 local Charms=require(script.Parent.PetCharms)
 local Face=require(script.Parent.PetFace)
 local Motion=require(script.Parent.PetIdleMotion)
+local Palette=require(ReplicatedStorage.Shared.PetPalette)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -18,10 +19,10 @@ local function configure(part,color)
 end
 local function add(self,part,def,frame,size)
  configure(part,self.colors[def.colorRole])
- if string.find(def.name,"Cheek")then part.Color=self.colors.body:Lerp(self.colors.blush,.82)end
+ if string.find(def.name,"Cheek")then part.Color=Color3.fromHex(self.definition.palette.body):Lerp(self.colors.blush,.82)end
  part.Name=def.name;part.Size=size;part.Parent=self.model
  local role=if def.channel=="Charm"then "charm"else nil
- local entry={part=part,name=def.name,channel=def.channel,frame=frame,size=size,role=role,color=part.Color,faceRole=if string.find(def.name,"Cheek")then "cheek"elseif string.find(def.name,"Glint")then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material}
+ local entry={part=part,name=def.name,colorRole=def.colorRole,channel=def.channel,frame=frame,size=size,role=role,color=part.Color,faceRole=if string.find(def.name,"Cheek")then "cheek"elseif string.find(def.name,"Glint")then "spark"else nil,faceBaseColor=part.Color,faceBaseMaterial=part.Material}
  table.insert(self.pieces,entry)
  if def.name=="Body"then self.model.PrimaryPart=part;part.CanQuery=true end
  return entry
@@ -90,14 +91,28 @@ end
 function Visual.new(parent,origin,pet,worldScale,appearance,options)
  local definition=assert(Definitions[pet.id],"No authored garden rig for alias")
  local model=Instance.new("Model");model.Name=pet.name
- local cachedColors={};for role,hex in pairs(definition.palette)do cachedColors[role]=Color3.fromHex(hex)end
- local self=setmetatable({secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
+ local cachedColors=Palette.resolve(pet.id,appearance)
+ local self=setmetatable({petId=pet.id,secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
  if(options and options.native==true)or not imported(self)then for _,entry in ipairs(self.pieces)do entry.part:Destroy()end;table.clear(self.pieces);native(self)end
  model:SetAttribute("PetFamily",pet.id);model:SetAttribute("RigId",definition.id);model:SetAttribute("RigBackend",self.backend)
- model.Parent=parent;Charms.apply(self,appearance);self:update(0);return self
+ model.Parent=parent;self:applyAppearance(appearance);return self
 end
 function Visual:greet()self.greeting=0 end
-function Visual:applyAppearance(appearance)Charms.apply(self,appearance);self:update(0)end
+function Visual:applyAppearance(appearance)
+ local colors=Palette.resolve(self.petId,appearance)
+ self.colors,self.secondaryColor=colors,colors.secondary
+ for _,entry in ipairs(self.pieces)do
+  if entry.colorRole=="body"or entry.colorRole=="secondary"then
+   local color=colors[entry.colorRole]
+   if entry.part.Color~=color then entry.part.Color=color end
+   entry.color=color
+  end
+ end
+ self.model:SetAttribute("HueBody",appearance and appearance.body or "original")
+ self.model:SetAttribute("HueRank",appearance and appearance.bodyRank or 0)
+ self.model:SetAttribute("HueSecondary",appearance and appearance.secondary or "default")
+ Charms.apply(self,appearance);self:update(0)
+end
 function Visual:applyGardenPose(sample)
  self.gardenAction,self.actionPhase,self.expression=sample.action,sample.actionPhase or sample.phase or 0,sample.expression or "neutral"
  self.gardenFocus=sample.action=="focus"

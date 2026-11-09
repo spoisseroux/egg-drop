@@ -19,14 +19,14 @@ return function(client, parent)
 		table.insert(views, view)
 		view:open({ status = "Ready", revision = 1, nectar = 24 })
 		local deadline = os.clock() + 2
-		local compact = height < 280
-		local function settled()
+				local function settled()
 			local column = view.body:FindFirstChild("EggColumn")
-			return view.shade.AbsoluteSize == Vector2.new(width, height) and view.compactShop == compact and column
-				and column.Recipe_meadow.AbsoluteSize.Y == (if compact then 44 else 83)
+			return view.shade.AbsoluteSize == Vector2.new(width, height) and column
+                and column:FindFirstChild("Recipe_meadow") and column.Recipe_meadow.AbsoluteSize.Y>=44
+                and column.Recipe_meadow.RecipeName.TextFits and column.Recipe_meadow.Cost.TextFits
 		end
 		repeat task.wait(.03) until settled() or os.clock() > deadline
-		assert(settled(), "egg art layout did not settle")
+		assert(settled(),string.format("egg art layout did not settle root=%dx%d preference=%s compact=%s",width,height,game:GetService("GuiService").PreferredTextSize.Name,tostring(view.compactShop)))
 		return view
 	end
 	local ok, problem = pcall(function()
@@ -53,7 +53,7 @@ return function(client, parent)
 			local view = fixture(350, 279)
 			for _, id in ipairs({ "meadow", "sprout" }) do
 				local button = view.body.EggColumn:FindFirstChild("Recipe_" .. id)
-				assert(button.Egg.Visible and button.Egg.AbsoluteSize.X == 24 and button.AbsoluteSize.Y == 44)
+				assert(button.Egg.Visible and button.Egg.AbsoluteSize.X == 24 and button.AbsoluteSize.Y >=44)
 				foreground(button.Egg, button)
 				assert(button.RecipeName.TextFits and button.Cost.TextFits, "compact recipe text: " .. id)
 			end

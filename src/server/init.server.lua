@@ -18,6 +18,7 @@ local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
 local PetContactController = require(script.PetContact)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 local Nursery = require(script.HatchProgress)
+local HueState = require(script.HueState)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local CloseProgress = require(script.CloseProgress)
@@ -44,6 +45,7 @@ local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
+local hueResult = child("RemoteEvent", "HueResult", remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
@@ -115,7 +117,7 @@ local function gardenInput(board)
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
-	local preferences=PetAppearance.public(board.profile)
+	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
@@ -129,7 +131,7 @@ local function gardenInputs()
 	return inputs
 end
 local function publishPetAppearance(board)
-	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile)))
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues)))
 	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision)
 end
 
@@ -157,6 +159,15 @@ local function publishCompanion(board)
 	board.folder:SetAttribute("CompanionId",id)
 end
 
+local function sendHueResult(board,quote,status,reason,receipt)
+	if not quote then return end
+	hueResult:FireClient(board.player,{id=quote.id,action=quote.action,petId=quote.petId,status=status,reason=reason,
+		revision=board.nursery.state.revision,receipt=receipt})
+	local pending=board.nursery.pending
+	local awaiting=pending and pending.kind=="hue"and pending.candidate.quote.id==quote.id
+	if status~="Retrying"and not awaiting and board.hueWaiting and board.hueWaiting.id==quote.id then board.hueWaiting=nil end
+end
+
 local function publishNursery(board)
 	local state = Nursery.public(board.nursery)
 	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
@@ -168,6 +179,10 @@ local function publishNursery(board)
 	end
 	if board.nurseryBusy then state.status = "Busy" end
 	board.folder:SetAttribute("HatchState", HttpService:JSONEncode(state))
+	publishPetAppearance(board)
+	if board.hueWaiting and state.lastHueResult and state.lastHueResult.id==board.hueWaiting.id then
+		sendHueResult(board,board.hueWaiting,"Saved",nil,state.lastHueResult)
+	end
 	board.folder:SetAttribute("InventoryMask", state.inventoryMask)
 	board.folder:SetAttribute("HatchActive", true)
 	local masteryMask = state.masteryLegacyMask or 0
@@ -629,34 +644,58 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 end)
 
 local messages = {
-	NeedNectar = "Earn more nectar in a field run.", RevisionChanged = "Your hatch progress updated. Try again.",
+	NeedNectar = "Earn more Stars in a field run.", NeedStars="Earn more Stars in a field run.", RevisionChanged = "Your progress updated. Refresh your preview.",
 	Busy = "Finishing your last hatch action…", Pending = "Retry the previous action while it saves.",
 	Retrying = "Saving is delayed. Your result will stay the same when retried.",
 	SessionLost = "This hatch session moved to another server. Rejoin to continue.",
 	Locked = "Your previous session is closing. Please wait a moment.",
-	Temporary = "Loading your save. Please wait before spending nectar.",
+	Temporary = "Loading your save. Please wait before spending Stars.",
 }
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
 	if not board or board.closing or not board.profileReady or typeof(action) ~= "string" then return end
-	if action ~= "hatch" and action ~= "ack" and action ~= "daily" then return end
+	local isHue=action=="hue"or action=="hueEquip"
+	if action ~= "hatch" and action ~= "ack" and action ~= "daily" and not isHue then return end
+	local quote=if isHue and type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil
+	local pending=board.nursery.pending
+	local canonical=if isHue then HueState.quote(action,value,revision)else nil
+	local receipt,same
+	if canonical then receipt,same=HueState.find(board.nursery.state,canonical)end
+	if receipt and same then
+		-- Exact bounded saved proof is read-only; a queued duplicate cannot be
+		-- turned into a false failure by the request rate limit after commit.
+		publishNursery(board);sendHueResult(board,quote,"Saved","AlreadySaved",HueState.publicReceipt(receipt));return
+	end
+	local samePending=isHue and pending and pending.kind=="hue"and HueState.same(pending.candidate.quote,canonical)
+	if samePending and(board.nurseryBusy or board.nursery.busy or board.payoutPending or os.clock()-(board.lastHatchRequest or -math.huge)<.3)then
+		sendHueResult(board,quote,"Retrying","Busy");return
+	end
 	if os.clock() - (board.lastHatchRequest or -math.huge) < .3 then
+		if isHue then sendHueResult(board,quote,"Rejected","Throttled");return end
 		nurseryFeedback:FireClient(player, "error", "One moment…")
 		return
 	end
 	board.lastHatchRequest = os.clock()
 	if board.nurseryBusy or board.payoutPending then
+		if isHue then sendHueResult(board,quote,"Rejected","Busy");return end
 		nurseryFeedback:FireClient(player, "error", "Finishing your last save…")
 		return
 	end
 	board.nurseryBusy = true
 	publishNursery(board)
-	local ok, reason = Nursery.command(board.nursery, action, value, revision)
+	local ok, reason, receipt
+	if isHue then ok,reason,receipt=Nursery.hueCommand(board.nursery,action,value,revision)
+	else ok,reason=Nursery.command(board.nursery,action,value,revision)end
+	if isHue and reason=="Retrying"then board.hueWaiting=quote end
 	board.nurseryBusy = false
 	if boards[player] ~= board then return end
 	publishNursery(board)
 	publishState(board)
+	if isHue then
+		sendHueResult(board,quote,if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt)
+		return
+	end
 	if not ok then nurseryFeedback:FireClient(player, "error", messages[reason] or reason) end
 end)
 
@@ -804,8 +843,10 @@ task.spawn(function()
 			if not board.closing and board.nursery.status == "Retrying" and board.nursery.pending
 				and not board.nurseryBusy and not board.nursery.busy then
 				task.spawn(function()
-					Nursery.retry(board.nursery)
+					local pending=board.nursery.pending
+					local ok,reason=Nursery.retry(board.nursery)
 					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
+					if boards[player]==board and pending and pending.kind=="hue"and not ok and reason~="Retrying"then sendHueResult(board,pending.candidate.quote,"Rejected",reason)end
 				end)
 			end
 		end

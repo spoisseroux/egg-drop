@@ -1,0 +1,110 @@
+{
+  "totals": {
+    "client": 145,
+    "server": 59
+  },
+  "clientPreference": "Largest",
+  "client": {
+    "HueIntent": {
+      "passed": 11,
+      "file": "native-final-largest-hue-client.json"
+    },
+    "HueEggView": {
+      "passed": 9,
+      "file": "native-final-largest-hue-client.json"
+    },
+    "HueAppearance": {
+      "passed": 6,
+      "file": "native-final-largest-hue-client.json"
+    },
+    "StarsPresentation": {
+      "passed": 5,
+      "file": "native-final-largest-hue-client.json"
+    },
+    "SharedHeaders": {
+      "passed": 12,
+      "file": "native-final-largest-regressions.json"
+    },
+    "FieldQuestText": {
+      "passed": 8,
+      "file": "native-final-largest-regressions.json"
+    },
+    "JournalPurpose": {
+      "passed": 4,
+      "file": "native-final-largest-regressions.json"
+    },
+    "HatchCinematic": {
+      "passed": 7,
+      "file": "native-final-largest-regressions.json"
+    },
+    "PreferredTextLayout": {
+      "passed": 9,
+      "file": "native-largest-copy-regressions.json"
+    },
+    "RecapFeedback": {
+      "passed": 24,
+      "file": "native-largest-copy-regressions.json"
+    },
+    "RewardPresentation": {
+      "passed": 10,
+      "file": "native-largest-copy-regressions.json"
+    },
+    "CompactEggShop": {
+      "passed": 8,
+      "file": "native-largest-corrected-regressions.json"
+    },
+    "CompactRecap": {
+      "passed": 9,
+      "file": "native-largest-corrected-regressions.json"
+    },
+    "EggArt": {
+      "passed": 4,
+      "file": "native-largest-corrected-regressions.json"
+    },
+    "MenuPolish": {
+      "passed": 10,
+      "file": "native-largest-corrected-regressions.json"
+    },
+    "SaveNoticeLayout": {
+      "passed": 9,
+      "file": "native-largest-corrected-regressions.json"
+    }
+  },
+  "server": {
+    "HueProgress": {
+      "passed": 10,
+      "file": "native-final-server-regressions.json"
+    },
+    "HueHost": {
+      "passed": 3,
+      "file": "native-final-server-regressions.json"
+    },
+    "HuePalette": {
+      "passed": 3,
+      "file": "native-final-server-regressions.json"
+    },
+    "HatchProgress": {
+      "passed": 21,
+      "file": "native-final-server-regressions.json"
+    },
+    "PetAppearance": {
+      "passed": 8,
+      "file": "native-final-server-regressions.json"
+    },
+    "SessionRecovery": {
+      "passed": 8,
+      "file": "native-final-server-regressions.json"
+    },
+    "SessionHost": {
+      "passed": 2,
+      "file": "native-final-server-regressions.json"
+    },
+    "PetContactHost": {
+      "passed": 4,
+      "file": "native-final-server-regressions.json"
+    }
+  },
+  "mediumRepeated": 60,
+  "physicalPhone": false,
+  "privateClientRejoin": false
+}

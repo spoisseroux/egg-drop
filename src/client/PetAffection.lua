@@ -1,3 +1,4 @@
+local Stars=require(script.Parent.StarText)
 -- One Room-owned presentation pool, outside every pet's physical/framing hull.
 local GuiService=game:GetService("GuiService")
 local EggArt=require(script.Parent.EggArt)
@@ -14,7 +15,7 @@ function Affection.new(parent,onVariation)
  local plate=Instance.new("Frame");plate.Name="Plate";plate.BackgroundColor3=Color3.fromHex("#282722");plate.BackgroundTransparency=.18;plate.BorderSizePixel=0
  plate.Size=UDim2.fromScale(1,1);plate.Active=false;plate.Selectable=false;plate.Parent=award
  local glyph=EggArt.nectar(plate,UDim2.new(0,5,.5,-12),UDim2.fromOffset(20,24),2)
- local label=Instance.new("TextLabel");label.Name="Amount";label.Text="+1";label:SetAttribute("AccessibleLabel","1 nectar saved");label.Font=Enum.Font.GothamBold;label.TextSize=14
+ local label=Instance.new("TextLabel");label.Name="Amount";label.Text="+1";label:SetAttribute("AccessibleLabel","1 Star saved");label.Font=Enum.Font.GothamBold;label.TextSize=14
  label.TextColor3=Color3.fromHex("#FFBF50");label.BackgroundTransparency=1
  label.BorderSizePixel=0;label.Position=UDim2.fromOffset(29,0);label.Size=UDim2.new(1,-33,1,0);label.Active=false;label.Selectable=false;label.Parent=plate
  local round=Instance.new("UICorner");round.CornerRadius=UDim.new(0,8);round.Parent=plate

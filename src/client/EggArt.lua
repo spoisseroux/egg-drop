@@ -40,15 +40,24 @@ function Egg.create(parent, recipeId, position, size, z, name)
 	return host
 end
 
-function Egg.nectar(parent, position, size, z)
-	local host = Art.frame(parent, "NectarDrop", Art.Ink, position, size, z or parent.ZIndex + 1)
-	host.BackgroundTransparency, host.Active, host.Selectable = 1, false, false
-	shape(host, "RoundDrop", .20, .30, .60, .61, Art.Amber)
-	local tip = shape(host, "DropTip", .32, .14, .36, .44, Art.Amber, 45)
-	Art.corner(tip, 2)
-	local glint = shape(host, "DropGlint", .31, .43, .12, .22, Art.Silver, 25)
-	glint.ZIndex = host.ZIndex + 3
-	return host
+-- Legacy API/node name remains for existing wallet layout owners.
+function Egg.nectar(parent,position,size,z)
+ local host=Art.frame(parent,"NectarDrop",Art.Ink,position,size,z or parent.ZIndex+1)
+ host.BackgroundTransparency,host.Active,host.Selectable=1,false,false
+ host:SetAttribute("CurrencySymbol","Stars")
+ local glyph=Instance.new("TextLabel");glyph.Name="GoldStar";glyph.BackgroundTransparency=1;glyph.BorderSizePixel=0
+ glyph.Size=UDim2.fromScale(1,1);glyph.Text="★";glyph.Font=Enum.Font.SourceSans;glyph.TextColor3=Color3.fromHex("#FFD069")
+ glyph:SetAttribute("AccessibleLabel","Star")
+ glyph.TextSize=18;glyph.Active,glyph.Selectable=false,false;glyph.ZIndex=host.ZIndex+1;glyph.Parent=host
+ local glint=shape(host,"StarGlint",.37,.34,.12,.08,Color3.fromHex("#FFF6DA"),-20)
+ glint.ZIndex=host.ZIndex+2
+ local function fit()
+  local size=host.AbsoluteSize
+  glyph.TextSize=math.max(1,math.min(100,math.floor(math.min(size.X/.72,size.Y)*.88)))
+ end
+ host:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit);fit()
+ return host
 end
+Egg.stars=Egg.nectar
 
 return Egg

@@ -1,0 +1,30 @@
+{
+  "appearance": {
+    "puddle": {
+      "body": "original",
+      "charmVisible": true,
+      "bodyRank": 0,
+      "secondary": "default"
+    },
+    "pip": {
+      "body": "original",
+      "charmVisible": true,
+      "bodyRank": 0,
+      "secondary": "rose"
+    }
+  },
+  "revision": 7,
+  "hues": {
+    "pip": {
+      "secondary": "rose",
+      "body": "original",
+      "ranks": {
+        "rose": 1,
+        "iris": 0,
+        "citrus": 0,
+        "tide": 0
+      }
+    }
+  },
+  "wallet": 12
+}

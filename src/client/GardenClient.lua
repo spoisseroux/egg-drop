@@ -64,7 +64,7 @@ function Garden:appearance(board,petId)
         self.appearanceCache[board]=cached
     end
     local item=cached.value[petId]
-    return {charmVisible=not(type(item)=="table"and item.charmVisible==false)}
+    return {charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,secondary=type(item)=="table"and item.secondary or "default"}
 end
 function Garden:focus(active,petId,position,yaw)
     local remote=self.remote or ReplicatedStorage.Remotes:FindFirstChild("GardenIntent")
