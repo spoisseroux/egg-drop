@@ -1,3 +1,19 @@
+# Egg Drop — playful care and material eggs
+
+**Private v370 Published — runtime97c64d0, committed and pushed.** Refreshed native Version History verifies **Playful care and material eggs - 97c64d0**. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/playful-care-2026-11-09/private-published-v370-97c64d0.jpg) · [Screenshot gallery](artifacts/playful-care-2026-11-09/GALLERY.html) · [Verification](artifacts/playful-care-2026-11-09/VERIFY.md).
+
+Companions now has Pet / Hue / Charm / Materials tabs. Hue rows show0–5 with the saved dose checked; any notch offers exactly one next fruit, or explains no stock/max. Zero does not reset; Reset Hue still targets one confirmed channel. Confirmation art retires on every exit, and decisions omit routine Saved/Review use. The first Pet row has real top inset. Solid carry arrows and playful measured supporting type replace the older treatment. Short result cards show the item and both actions together.
+
+**Material Egg:16 earned Stars**, initially50/50 Gloss/Matte, then100% the remaining finish. Account unlocks are permanent; applying Standard/Gloss/Matte per pet is free and reversible. No duplicates or spending when complete. Metal is excluded because its native trial resembled Gloss; gradients also remain TODO. Existing pigments, facial roles and historical receipts are preserved.
+
+Charm changes request an immediate coalesced durable save instead of waiting for the periodic12s flush. One isolated actual Ring click reached durable confirmation in117ms; this is not live-service latency evidence. Daytime coats are brighter while accepted night emission remains unchanged. Device-art shake is stronger and tier/chain based, exterior backdrop has8% garden bleed, and three original egg images replace the capsule silhouettes. Ripple relay, Bank bounce and Mirror marks add compatible two-stage objective variety.
+
+**Passed:**219client cases/25suites at Medium;190cases/24suites at Largest, plus the29-case hatch suite at Medium;191server cases/19suites. Preference reruns overlap and must not be added.149exact source matches/compiles, cold Rojo/diff checks, independent Sol reviews and Astra rendered GO. Actual24-drop Bank/Creek rounds earned rewards; actual Stars purchased Gloss and selected it for Zivvi. Six-seed new-objective solver replay passed6/6,5/6,5/6; ordinary native completion of those new templates remains open. Final clean launch/5actualSpace presses earned the starter. QA removed,7unique native material profiles, production scripts enabled, Medium/Automatic/default viewport restored.
+
+**Still open:** physical phone/touch, live-service save/rejoin, real multi-owner carry/bay contention, R6 controls, lowest graphics and longer human play. Existing EditableImage-disabled/legacy asset-type notices remain; no security setting changed. Dark-red/black pigments, Metal/gradients, features/stats/training and the textured garden remain on TODO. No production-readiness or proven fun/retention claim.
+
+## Historical v358 — companion editor and luminous pets
+
 # Egg Drop — companion editor and luminous pets
 
 **Private v358 Published — runtime4bf7893, pushed.** Refreshed native Studio Version History marks v358 Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/companion-editor-2026-11-09/private-published-v358-4bf7893.jpg) · [Screenshot gallery](artifacts/companion-editor-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/companion-editor-2026-11-09/VERIFY.md).
