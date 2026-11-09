@@ -63,7 +63,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local card = frame(shade, "Card", "panel", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(560, 540), 21)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	Art.panel(card, 16, "accent")
-	local heading = label(card, "Heading", "EGG DROP • HATCH", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
+	local heading = label(card, "Heading", "Hatch eggs", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
 	heading.Font = Art.Font.Heading
 	local nectar = label(card, "Nectar", "0 Stars", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
 	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
@@ -314,8 +314,8 @@ function View:refreshShopHeader()
 	local notice=self:getSaveNotice()
 	self.nectar.Text=tostring(self.state.nectar or 0)
 	self.statusText=if notice then notice.detail elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Finishing your last action…"else self.errorMessage or self.state.message
-	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Companion eggs"
-	self.headerShortTitle=if notice then notice.narrow elseif self.statusText then self.headerTitle else "Eggs"
+	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Hatch eggs"
+	self.headerShortTitle=if notice then notice.narrow elseif self.statusText then self.headerTitle else "Hatch eggs"
 	if self.state.lastHatch then self.heading.Text=self.headerTitle end
 	self.note.Text=self.statusText or "Earn Stars. Choose an egg. Meet a new friend."
 end
@@ -471,7 +471,7 @@ function View:renderBody()
 	for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
 	if left then
 		for _,child in ipairs(left:GetChildren())do
-			if not child:IsA("TextButton")or not(child.Name:match("^Recipe_")or child.Name=="DailyNectar"or child.Name=="HueEggs")then child:Destroy()end
+			if not child:IsA("TextButton")or not(child.Name:match("^Recipe_")or child.Name=="DailyNectar"or child.Name=="HueEggs"or child.Name=="CompanionTab")then child:Destroy()end
 		end
 	end
 	local size = self.body.AbsoluteSize
@@ -488,7 +488,7 @@ function View:renderBody()
     if self.onOpenHue then
         local hueButton=left:FindFirstChild("HueEggs")
         if not hueButton then
-            hueButton=button(left,"HueEggs","Hue Eggs · 8 Stars",UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,44),"raised")
+            hueButton=button(left,"HueEggs","Hue Egg",UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,44),"raised")
             hueButton.Activated:Connect(function()
                 if not self.shade.Visible or self.state.lastHatch or self.pending or not hueButton.Interactable then return end
                 self:close("hue");self.onOpenHue()
@@ -496,7 +496,17 @@ function View:renderBody()
         end
         Art.type(hueButton,"Action",compact)
         local h=math.max(44,Art.actionHeight(hueButton,columnWidth-8))
-        hueButton.Position,hueButton.Size=UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,h)
+        local tabW=(columnWidth-16)/2
+        local companion=left:FindFirstChild("CompanionTab")
+        if not companion then companion=button(left,"CompanionTab","Companion eggs",UDim2.fromOffset(4,startY),UDim2.fromOffset(tabW,h),"raised")end
+        Art.type(companion,"Action",compact)
+        h=math.max(h,Art.actionHeight(companion,tabW),Art.actionHeight(hueButton,tabW))
+        companion.Position,companion.Size=UDim2.fromOffset(4,startY),UDim2.fromOffset(tabW,h)
+        companion:SetAttribute("SelectedTab",true);hueButton:SetAttribute("SelectedTab",false)
+        Art.control(companion,true,not self.pending);Art.control(hueButton,false,not self.pending)
+        local edge=companion:FindFirstChild("ActiveTabEdge")
+        if not edge then edge=Art.frame(companion,"ActiveTabEdge","accent",UDim2.new(0,4,1,-4),UDim2.new(1,-8,0,3),companion.ZIndex+2)end
+        hueButton.Position,hueButton.Size=UDim2.fromOffset(12+tabW,startY),UDim2.fromOffset(tabW,h)
         hueButton.Interactable=not self.pending and (Catalog.isOwned(state.inventoryMask or 0,"pip")or Catalog.isOwned(state.inventoryMask or 0,"puddle"))
         hueButton.Selectable=hueButton.Interactable;startY+=h+8
     end
@@ -555,8 +565,7 @@ function View:renderBody()
 		and (state.status == nil or state.status == "Ready")
 	daily.Selectable=daily.Interactable
 	daily.TextTransparency = if daily.Interactable then 0 else 0.4
-	eggGraphic(left, self.selected, recipe.color or Art.Leaf, y + 97)
-	local leftHeight = y + 215
+	local leftHeight = y + 93
 	left.Size = UDim2.fromOffset(columnWidth, leftHeight)
 	local rightY = if split then 0 else leftHeight + 10
 	local rightX = if split then columnWidth + 12 else 0
@@ -581,7 +590,7 @@ function View:renderBody()
 	local protection = if misses >= 7 then "Your next hatch is guaranteed rare"
 		else string.format("Rare protection  %d / 7\nAfter 7 non-rares, the next hatch is rare", misses)
 	label(odds, "RareProtection", protection, UDim2.fromOffset(2, protectionY), UDim2.new(1, -7, 0, 43), "muted", 11)
-	label(odds, "Duplicates", "Already owned? Gain family mastery.", UDim2.fromOffset(2, protectionY + 48),
+	label(odds, "Duplicates", "Already owned results grant nothing.", UDim2.fromOffset(2, protectionY + 48),
 		UDim2.new(1, -7, 0, 31), "muted", 11)
 	local rightHeight = protectionY + 84
 	odds.Size = UDim2.fromOffset(columnWidth, rightHeight)
@@ -644,14 +653,7 @@ function View:update(state)
 				local presentation = table.clone(result)
 				local pet = Pets.byId[result.petId]
 				local family = result.family or (pet and (pet.family or pet.id))
-				local mastery = self.state.masteryDetails and self.state.masteryDetails[family]
-				if result.duplicate and mastery then
-					presentation.masteryHint = if mastery.rank >= 3 then "+1 mark · family mastered"
-						elseif mastery.rank == 2 then string.format("+1 mark · %d/%d marks · %d/%d challenges for III",
-							mastery.points, mastery.nextPoints, mastery.challenges, mastery.challengeGoal)
-						else string.format("+1 mark · %d/%d marks for rank %s", mastery.points, mastery.nextPoints,
-							({ "I", "II", "III" })[mastery.rank + 1])
-				end
+
 				if result.starter then
 					local recipe = Catalog.ById[self.selected]
 					local balance = self.state.nectar or 0

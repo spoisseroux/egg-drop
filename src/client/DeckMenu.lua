@@ -29,13 +29,8 @@ local function button(parent,name,caption,action)
 	b.Activated:Connect(action)
 	return b
 end
-local function typeTab(tab,key,compact,width,roomy)
-	Art.roomyType(tab,"Action",compact,roomy)
-	if key~="mastery"then return end
-	tab.Text="Mastery";tab:SetAttribute("AccessibleLabel","Family mastery ranks")
-	local inset=tab:FindFirstChildOfClass("UIPadding")
-	local available=width-(if inset then inset.PaddingLeft.Offset+inset.PaddingRight.Offset else 0)
-	if Art.textWidth(tab,"Mastery")>available and Art.textWidth(tab,"Ranks")<=available then tab.Text="Ranks"end
+local function typeTab(tab,_key,compact,_width,roomy)
+    Art.roomyType(tab,"Action",compact,roomy)
 end
 local function place(node,x,y,w,h)
 	node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)
@@ -103,10 +98,13 @@ function Menu.new(parent,callbacks)
 		local bar=Art.frame(self.moreCue,"Chevron","accent",UDim2.fromOffset(entry[1],8),UDim2.fromOffset(7,2),41)
 		bar.Rotation=entry[2]
 	end
-	for _,key in ipairs({"play","daily","mastery"}) do
+	for _,key in ipairs({"play","daily"}) do
 		local page=Art.frame(body,key,"panel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
 		page.BackgroundTransparency=1;self.pages[key]=page
-		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Mastery",function()self:activatePage(key)end)
+		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Daily",function()self:activatePage(key)end)
+        local marker=Art.frame(self.tabs[key],"SelectedEdge","text",UDim2.new(0,8,1,-5),UDim2.new(1,-16,0,3),self.tabs[key].ZIndex+2)
+        marker.Visible=false
+        self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Daily contracts")
 	end
 	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
@@ -116,9 +114,6 @@ function Menu.new(parent,callbacks)
 		local subtitle=text(b,"Subtitle",entry[4],"Supporting","muted")
 		table.insert(self.destinations,{button=b,art=illustration,title=title,subtitle=subtitle,kind=entry[3]})
 	end
-	self.recipePanel=decoration(self.pages.play,"EggGoalPanel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,64),"inset",10)
-	EggArt.create(self.recipePanel,"meadow",UDim2.fromOffset(10,9),UDim2.fromOffset(34,44),self.recipePanel.ZIndex+1)
-	self.recipe=text(self.recipePanel,"EggGoal","Mixed Meadow · 0/18 Stars","Body")
 	self.playHint=text(self.pages.play,"NectarPurpose","Complete both goals to earn Stars. Keep the pile low for +2.","Supporting","muted")
 	for index=1,3 do
 		local panel=decoration(self.pages.daily,"Contract"..index,UDim2.fromOffset(0,0),UDim2.fromOffset(100,164),"raised",12)
@@ -132,18 +127,6 @@ function Menu.new(parent,callbacks)
 		self.daily[index]=title;self.dailyCards[index]={panel=panel,art=icon,title=title,count=count,reward=reward,fill=fill,complete=false,amount=0}
 	end
 	self.dailyHint=text(self.pages.daily,"GiftExplanation","Contracts pay automatically after a round. The daily gift above is separate.","Supporting","muted")
-	self.familyNote=text(self.pages.mastery,"FamilyNote","Pick a family for your next round.","Body","muted")
-	for _,family in ipairs(Catalog.Families) do
-		local panel=decoration(self.pages.mastery,"Card_"..family,UDim2.fromOffset(0,0),UDim2.fromOffset(100,120),"raised",12)
-		local b=button(panel,"Family_"..family,"",function()self:activate("family",family)end)
-		b.BackgroundTransparency=1;b.TextTransparency=1
-		local border=b:FindFirstChildOfClass("UIStroke");if border then border.Transparency=.65 end
-		FamilyCrest.create(b,family,0,UDim2.fromOffset(10,8),UDim2.fromOffset(30,30),b.ZIndex+2,true)
-		local caption=text(b,"FamilyName",familyName(family),"Action")
-		self.families[family],self.familyCards[family]=b,panel
-		self.familyText[family]=text(panel,"Progress_"..family,"Not discovered","Supporting")
-		self.familyHints[family]=text(panel,"Reward_"..family,"Hatch a member of this family to begin mastery.","Body","muted")
-	end
  local function watch(signal,callback)
   table.insert(self.connections,signal:Connect(function(...)if self:isLive()then callback(...)end end))
  end
@@ -172,7 +155,7 @@ function Menu:activate(key,value)
  if not self:isLive()then return false end
 	if not self.shade.Visible then return false end
 	if key=="daily" and not self.dailyButton.Interactable then return false end
-	if key=="family" and (not self.families[value] or not self.families[value].Interactable) then return false end
+	if key=="family"then return false end
 	local callback=self.callbacks[key];if not callback then return false end
 	local accepted=callback(value);if accepted==false then return false end;if self.onAccepted then self.onAccepted(if key=="close"then "back"else "confirm")end;return true
 end
@@ -193,7 +176,7 @@ function Menu:layout()
 		pad=pad,top=if self.compact then 0 else 8,amount=self.state.nectar or 0,title=self.headerTitle,
 		shortTitle=if notice then notice.narrow else "Menu",accessibleTitle=if notice then notice.detail else "Pocket menu",status=notice~=nil,roomy=self.roomy})
 	local tabH=44
-	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-12)/3,self.roomy);tabH=math.max(tabH,Art.actionHeight(tab,(usable-12)/3))end
+	for key,tab in pairs(self.tabs)do typeTab(tab,key,true,(usable-8)/2,self.roomy);tabH=math.max(tabH,Art.actionHeight(tab,(usable-8)/2))end
 	local tabY=self.headerPlan.height+(if self.compact then 4 else 8)
 	self.headerHeight=tabY+tabH+(if self.compact then 4 else 8)
 	local maximum=math.max(1,size.Y-(if self.compact then 8 else 24));local bottom=if self.compact then 4 else 8
@@ -206,7 +189,7 @@ function Menu:layout()
 		self.safeTop=math.max(0,(size.Y-math.min(maximum,self.headerHeight+tallest+bottom))/2);self.layoutRootSize=size
 	end
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
-	for index,key in ipairs({"play","daily","mastery"})do place(self.tabs[key],pad+(index-1)*usable/3,tabY,usable/3-4,tabH)end
+	for index,key in ipairs({"play","daily"})do place(self.tabs[key],pad+(index-1)*usable/2,tabY,usable/2-4,tabH)end
 	place(self.body,pad,self.headerHeight,usable,math.max(44,height-self.headerHeight-bottom))
 	place(self.moreCue,width-18,height-26,16,20)
 	self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,self.body.CanvasSize.Y.Offset-self.body.Size.Y.Offset)))
@@ -224,7 +207,7 @@ function Menu:layoutContents(wanted)
 	local inset=if self.compact then 4 else 12
 	local usable=width-inset*2
 	local short=self.compact
- for _,entry in ipairs({{self.recipe,"Body"},{self.playHint,"Supporting"},{self.dailyHint,"Supporting"},{self.familyNote,"Body"}})do styleType(entry[1],entry[2],short)end
+ for _,entry in ipairs({{self.playHint,"Supporting"},{self.dailyHint,"Supporting"}})do styleType(entry[1],entry[2],short)end
 	local list=usable<480
 	if short and not list then
 		local column=(usable-24)/3;local tallest=44
@@ -263,9 +246,7 @@ function Menu:layoutContents(wanted)
 		item.subtitle.Visible=not short;place(item.subtitle,tx,ty+item.titleH+6,w-tx-8,item.subH);item.subtitle.TextXAlignment=item.title.TextXAlignment
 	end
 	y+=if list then #self.destinations*(destinationHeight+8)-8 else math.ceil(#self.destinations/3)*(destinationHeight+8)-8
-	local recipeH=math.max(64,Art.textHeight(self.recipe,usable-64,48)+16)
-	y+=12;place(self.recipePanel,inset,y,usable,recipeH);place(self.recipe,54,8,usable-64,recipeH-16)
-	y+=recipeH+12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)
+	y+=12;local hintH=Art.textHeight(self.playHint,usable,40);place(self.playHint,inset,y,usable,hintH)
 	self.pageHeights.play=y+hintH+inset
 	end
 	if not wanted or wanted=="daily" then
@@ -306,35 +287,6 @@ function Menu:layoutContents(wanted)
 	y+=12;local hintH2=Art.textHeight(self.dailyHint,usable,44);place(self.dailyHint,inset,y,usable,hintH2)
 	self.pageHeights.daily=y+hintH2+inset
 	end
-	if not wanted or wanted=="mastery" then
-	y=if short then inset else start
-	local noteH=Art.textHeight(self.familyNote,usable,44)
-	if not short then place(self.familyNote,inset,y,usable,noteH);y+=noteH+12 end
-	local familyOrder=table.clone(Catalog.Families)
-	if short and self.selectedFamily then
-		local selected=table.find(familyOrder,self.selectedFamily)
-		if selected then table.remove(familyOrder,selected);table.insert(familyOrder,1,self.selectedFamily)end
-	end
-	for _,family in ipairs(familyOrder) do
-		local panel,b,hint=self.familyCards[family],self.families[family],self.familyHints[family]
-		styleType(hint,"Body",short)
-		local owned=b:GetAttribute("FamilyOwned")==true
-		styleType(b.FamilyName,"Action",short);styleType(self.familyText[family],"Supporting",short)
-		local buttonH=math.max(44,Art.textHeight(b.FamilyName,usable-62,0)+12)
-		local rankH=Art.textHeight(self.familyText[family],usable-24,24)
-		local hintY=buttonH+(if owned then rankH+8 else 8)
-		local hintH=Art.textHeight(hint,usable-24,if owned then 36 else 24)
-		local cardH=hintY+hintH+12
-		place(panel,inset,y,usable,cardH);place(b,0,0,usable,buttonH)
-		place(b.FamilyName,50,0,usable-62,buttonH)
-		self.familyText[family].Visible=owned
-		place(self.familyText[family],12,buttonH+4,usable-24,rankH)
-		place(hint,12,hintY,usable-24,hintH)
-		y+=cardH+12
-	end
-	if short then place(self.familyNote,inset,y,usable,noteH);y+=noteH+12 end
-	self.pageHeights.mastery=y+(if short then self.scrollChromeHeight or 0 else 0)
-	end
 	for key,page in pairs(self.pages) do
 		if not wanted or key==wanted then
 			page.Size=UDim2.fromOffset(width,self.pageHeights[key] or 0)
@@ -354,12 +306,6 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
  if not self:isLive()then return false end
 	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
 	self.nectar.Text = tostring(state.nectar or 0)
-	local recipe = Catalog.ById[recipeId] or Catalog.ById.meadow
-	self.recipe.Text = recipe.name .. " · " .. (state.nectar or 0) .. "/" .. recipe.cost .. " Stars"
-	local egg = self.recipePanel:FindFirstChild("Egg")
-	if egg and egg:GetAttribute("RecipeId") ~= (recipeId or "meadow") then
-		egg:Destroy(); EggArt.create(self.recipePanel, recipeId or "meadow", UDim2.fromOffset(10, 9), UDim2.fromOffset(34, 44), self.recipePanel.ZIndex + 1)
-	end
 	self.dailyButton.Text = if state.dailyAvailable then "Gift +" .. (state.dailyBonus or 6) else "Gift claimed"
 	self.dailyButton.Interactable = state.dailyAvailable == true and state.status == "Ready"
 	self.dailyButton.Selectable=self.dailyButton.Interactable
@@ -376,30 +322,6 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 		row.fill.BackgroundColor3 = if row.complete then Art.Amber else Art.Leaf
 		row.reward.Text=if row.complete then "Earned" else (if self.compact then "+"..row.amount else "+"..Stars.amount(row.amount))
 	end
-	for family, b in pairs(self.families) do
-		local owned = false
-		for _, pet in ipairs(Pets.collection) do if (pet.family or pet.id) == family and Catalog.isOwned(state.inventoryMask, pet.id) then owned = true end end
-		local points = state.mastery and state.mastery[family] or 0
-		local detail = state.masteryDetails and state.masteryDetails[family]
-		local rank = if detail then detail.rank else (state.masteryRanks and state.masteryRanks[family] or 0)
-		local missing = detail and detail.missingChallenges
-		self.familyHints[family].Text = if not owned then "Hatch a member of this family to begin mastery."
-			elseif rank >= 3 then "Family mastered\nBloom family effect unlocked"
-			elseif detail and detail.nextGoal then detail.nextGoal
-				.. (if rank == 2 and missing and #missing > 0 then "\nStill needed: " .. table.concat(missing, " · ") else "")
-				.. (if detail.rewardHint then "\n" .. detail.rewardHint:gsub("^Next: ","Unlocks ") else "")
-			else "Win rounds or hatch duplicates for family marks."
-		b.Interactable = owned and state.status == "Ready"
-		b.Selectable=owned;b:SetAttribute("FamilyOwned",owned)
-		b:FindFirstChildOfClass("UIStroke").Transparency=if owned then .22 else 1
-		Art.bind(self.familyCards[family],{BackgroundColor3=function()return if selected==family then Art.paletteColor("selected") else Art.paletteColor("raised") end})
-		FamilyCrest.update(b.FamilyCrest, family, rank, not owned)
-		b.FamilyName.Text = familyName(family) .. (if selected == family then " · Next round ✓" elseif not owned then " · Locked" else " · Choose")
-		self.familyText[family].Text = if not owned then "Discover a family member in eggs"
-			elseif rank >= 3 then string.format("Rank III · mastered · %d total marks", points)
-			else string.format("Rank %s · %d/%d marks", ({ [0] = "—", "I", "II", "III" })[rank] or "III", points, if rank == 0 then 3 elseif rank == 1 then 10 else 25)
-	end
-	self.familyNote.Text = "Next round: " .. familyName(selected) .. (if runFamily and runFamily ~= selected then " · Current run: " .. familyName(runFamily) else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
 	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
 	if not self.shade.Visible then self.heading.Text=self.headerTitle end
 	local objective=if self.fieldObjective==nil then QuestCopy.legacy(0)elseif self.fieldObjective==false then nil else self.fieldObjective
@@ -407,16 +329,11 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	if self.saveNotice then
 		self.playHint.Text=self.saveNotice.detail.."\n"..self.playHint.Text
 		self.dailyHint.Text=self.saveNotice.detail.."\n"..self.dailyHint.Text
-		self.familyNote.Text=self.saveNotice.detail.."\n"..self.familyNote.Text
 	end
 	self.card:SetAttribute("RunScore", score or 0); self.card:SetAttribute("RunChain", chain or 0); self.card:SetAttribute("PersonalBest", best or 0)
 	local dailySignature={self.dailyHint.Text}
 	for _,row in ipairs(self.dailyCards) do table.insert(dailySignature,row.title.Text) end
-	local familySignature={self.familyNote.Text}
-	for _,family in ipairs(Catalog.Families) do
-		table.insert(familySignature,self.familyHints[family].Text..tostring(self.families[family]:GetAttribute("FamilyOwned")))
-	end
-	self.contentSignatures={play=self.recipe.Text..self.playHint.Text,daily=table.concat(dailySignature,"|"),mastery=table.concat(familySignature,"|")}
+	self.contentSignatures={play=self.playHint.Text,daily=table.concat(dailySignature,"|")}
 	if self.shade.Visible then
 		local headerKey=table.concat({self.headerTitle,self.nectar.Text,self.dailyButton.Text},"|")
 		if self.headerLayoutKey~=headerKey then self:layout()
@@ -448,7 +365,14 @@ function Menu:setPage(key)
 	if not self.pages[key] then return end
 	self.page=key
 	for name,page in pairs(self.pages) do page.Visible=name==key end
-	for name,tab in pairs(self.tabs) do Art.bind(tab,{BackgroundColor3=function()return if name==key then Art.paletteColor("selected") else Art.paletteColor("raised") end,TextColor3="text"}) end
+	for name,tab in pairs(self.tabs)do
+        local active=name==key
+        tab.SelectedEdge.Visible=active
+        tab:SetAttribute("Selected",active)
+        tab.Font=if active then Enum.Font.GothamBold else Enum.Font.GothamMedium
+        Art.bind(tab,{BackgroundColor3=function()return Art.paletteColor(if active then "accent"elseif name=="daily"then "inset"else "raised")end,TextColor3=if active then "ink"else "text"})
+        Art.bind(tab.SelectedEdge,{BackgroundColor3="ink"})
+    end
 	self.dailyButton.Visible=key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()
 end

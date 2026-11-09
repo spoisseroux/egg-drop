@@ -77,7 +77,7 @@ function Surface:attachRegions(host,colors)
         self.static[i].ZIndex=if foreground then 4 else 2
     end
     host.Parent=self.root;host.ZIndex=3
-    for _,node in ipairs(host:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=3 end end
+    for _,node in ipairs(host:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=3 end end
 end
 function Surface:resize()
 	local w,h=self.root.AbsoluteSize.X,self.root.AbsoluteSize.Y

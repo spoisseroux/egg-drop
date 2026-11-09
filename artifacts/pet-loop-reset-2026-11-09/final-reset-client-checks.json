@@ -1,0 +1,105 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FocusCharacterVisibility",
+    "result": {
+      "passed": 3,
+      "cases": [
+        "local focus scope hides owner parts and restores exact prior modifiers",
+        "new accessories inherit the scope and removal restores their own previous value",
+        "releasing the old character never repaints a replacement or observer avatar"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetNightStudy",
+    "result": {
+      "passed": 2,
+      "cases": [
+        "pip shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry",
+        "puddle shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetLoopResetPresentation",
+    "result": {
+      "fixtureCleanup": [
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover\nHeartbeat observer disconnected\nRenderStepped observer disconnected\npath=Players.keehar01.PlayerGui.PetFocusTransition visible=false alpha=1 active=false epoch=2 destroyed=true",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=shaded night head and restrained torso restore palette and protect dark face\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\nnight material model destroyed\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\nnight material model destroyed"
+      ],
+      "passed": 3,
+      "cases": [
+        "reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover",
+        "authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "shaded night head and restrained torso restore palette and protect dark face"
+      ]
+    }
+  },
+  {
+    "ok": false,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": "Players.keehar01.PlayerScripts.Client.QAHueEggView:96: Players.keehar01.PlayerScripts.Client.QAHueEggView:83: attempt to compare UDim < UDim"
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueAppearance",
+    "result": {
+      "liveCommands": 0,
+      "authorityMutation": false,
+      "passed": 7,
+      "cases": [
+        "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "journal portrait recolors existing pixels using the same body and secondary roles",
+        "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "confirmed peer token refresh updates the existing observer rig instead of only Dot",
+        "bodyMix-only confirmation recolors the same visitor model and preserves shared activity state"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueIntent",
+    "result": {
+      "evidence": "pure client intent ordering with injected transport and confirmed snapshots",
+      "persistentWrites": false,
+      "passed": 12,
+      "cases": [
+        "duplicate clicks create one revision-prefixed quote and exact retries preserve every field",
+        "pending pet reveal, unavailable host and pending save status fence requests",
+        "wrong operation id, pet or action replies cannot terminate or prove the pending request",
+        "Saved before snapshot retains proof without changing confirmed palette or wallet",
+        "snapshot before event settles once and a late event cannot create another request",
+        "coalesced newer last result accepts older matching Saved without rewinding current colors",
+        "Saved proof survives late Rejected and Retrying until a newer snapshot crosses its revision",
+        "rejected rank or wallet quote never optimistically grants a color or permits retry",
+        "stale snapshots cannot roll back the confirmed revision, palette or wallet",
+        "body and secondary requests are independent; Original retains learned ranks and secondary",
+        "held stock, exhausted capacity and insufficient wallet fence purchase; assignment requires owned support",
+        "free reset and learned mix send exact canonical intent without spending stock"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HuePalette",
+    "result": [
+      "linear-light blend uses the standard independent black-white reference",
+      "every learned grade keeps protected facial roles exact and Original restores authored colors",
+      "sparse defaults and invalid tokens cannot add arbitrary colors or mutate rank maps",
+      "canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face"
+    ]
+  }
+]

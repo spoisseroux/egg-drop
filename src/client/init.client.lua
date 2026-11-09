@@ -171,13 +171,17 @@ local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),U
 zoneLayer.BackgroundTransparency=1;zoneLayer.ClipsDescendants=true
 for index,side in ipairs({-1,1})do
 	local tint=Color3.fromHex("#466853")
-	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),2)
-	zone.BackgroundTransparency=.94
+	local zone=Art.frame(zoneLayer,if side==-1 then "LeftThreshold"else"RightThreshold",tint,UDim2.fromScale(0,0),UDim2.new(0,2,1,-8),2)
+	zone.BackgroundTransparency=.35;zone.Active=false;zone.Selectable=false
 	fieldZones[index]={node=zone,side=side}
 end
 
 clientUI.centerZone=Art.frame(zoneLayer,"CenterGoalRegion",Color3.fromHex("#466853"),UDim2.fromScale(.4,.025),UDim2.fromScale(.2,.95),2)
-clientUI.centerZone.BackgroundTransparency=.79;clientUI.centerZone.Active=false;clientUI.centerZone.Selectable=false;clientUI.centerZone.Visible=false
+clientUI.centerZone.BackgroundTransparency=1;clientUI.centerZone.Active=false;clientUI.centerZone.Selectable=false;clientUI.centerZone.Visible=false
+for _,side in ipairs({"Min","Max"})do
+ local edge=Art.frame(clientUI.centerZone,side,Color3.fromHex("#466853"),UDim2.fromScale(if side=="Min"then 0 else 1,0),UDim2.new(0,2,1,0),2)
+ edge.AnchorPoint=Vector2.new(.5,0);edge.BackgroundTransparency=.35;edge.Active=false;edge.Selectable=false
+end
 Art.lcdCorners(overlay,bezel.BackgroundColor3)
 local lcd = JellyLCD.new(overlay)
 local lcdStep = 1 / 30
@@ -329,9 +333,15 @@ for row, pixels in ipairs({ "..+.+..", "...+...", "..###..", ".#####.", ".#o#o#.
 	end
 end
 local track = make("Frame", "Guide", {
-	BackgroundColor3 = Palette.Primary, BackgroundTransparency = 0.45, BorderSizePixel = 0,
-	Size = UDim2.new(0, 2, 1, 0), ZIndex = 3,
+	BackgroundTransparency = 1, BorderSizePixel = 0,
+	Size = UDim2.fromOffset(0,0), AnchorPoint=Vector2.new(.5,.5), ZIndex = 3,
 }, overlay)
+make("Frame","Tangent",{BackgroundColor3=Palette.Primary,BackgroundTransparency=.45,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Size=UDim2.fromOffset(2,1),ZIndex=3,Active=false,Selectable=false},track)
+local aimDots={}
+for index=1,Config.PreviewCount do
+ local dot=make("Frame","FlightDot"..index,{BackgroundColor3=Palette.Primary,BackgroundTransparency=.45,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(2,2),ZIndex=3,Active=false,Selectable=false},overlay)
+ aimDots[index]=dot
+end
 local ghost = label("TextLabel", "NextEgg", "", overlay, Palette.Primary)
 ghost.AnchorPoint = Vector2.new(0.5, 0.5)
 ghost.ZIndex = 4
@@ -603,13 +613,6 @@ end, function(pet)
 			request:FireServer("mode", "Board")
 		end
 	end)
-end, function()
-	-- This route only opens the existing goal picker. Selecting/equipping stays explicit.
-	openMenu()
-	if gameMenu.shade.Visible then
-		gameMenu:setPage("mastery")
-		if isGamepad(UserInputService:GetLastInputType()) then GuiService.SelectedObject = gameMenu.tabs.mastery end
-	end
 end)
 board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 	local pet = Pets.byId[board:GetAttribute("CompanionId")]
@@ -732,7 +735,8 @@ local function paintDeck(id, stickerId,backgroundId)
 	previewStickerId=stickerId
 	local theme = Themes.ById[id]
  if Art.applyTheme(theme)then
-  viewport.BackgroundColor3=theme.lcd.base;track.BackgroundColor3=theme.lcd.guide
+  viewport.BackgroundColor3=theme.lcd.base;track.Tangent.BackgroundColor3=theme.lcd.guide
+  for _,dot in ipairs(aimDots)do dot.BackgroundColor3=theme.lcd.guide end
   Sprite.setSurfacePalette(sprites,theme.lcd)
   if lcd and not lcd:setPalette(theme.lcd)then
    lcd:destroy();lcd=nil;sprites.Visible=rendererPresentation.visible
@@ -916,6 +920,7 @@ local function refreshNursery()
 	roomView.transition:refresh()
 	nurseryView:update(state)
 	local result = state.lastHatch
+ if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end
 	if result and result.id ~= shownNurseryHatch then
 		cancelHatchNavigation()
 		shownNurseryHatch = result.id
@@ -964,7 +969,6 @@ gameMenu = DeckMenu.new(safeOverlays, {
  settings=function()local back={page=gameMenu.page,scroll=gameMenu.body.CanvasPosition,target=gameMenu.destinations[5].button};closeMenu();openPicker("Settings",back)end,
 	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
 	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
-	family = function(family) request:FireServer("family", family) end,
 })
 closeMenu = function()
 	gameMenu:close(); roomView:setMenuOpen(false)
@@ -975,7 +979,7 @@ openMenu = function()
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
  gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"))
-	gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
+	gameMenu:update(nurseryState, nil, nil, board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
 	gameMenu:open();return true
 end
 roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end end
@@ -1049,8 +1053,7 @@ openJournal = function()
 	cancelHatchNavigation()
     if clientUI.isHueOpen()then clientUI.hueView:close("forced")end
 	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
-		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"),
-		nurseryState and nurseryState.masteryRanks)
+		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"))
  return true
 end
 -- The shared cache owns both native station visibility and final activation validation.
@@ -1164,10 +1167,14 @@ end
 
 local function drawAim()
 	local tier = nextTier()
-	local position, scale = project(Vector2.new(Config.aimX(aim, tier), Config.SpawnY))
+	local position, scale = project(Config.launchPosition())
 	local diameter = Config.Tiers[tier].radius * 2 * scale
-	track.Position = UDim2.fromOffset(position.X - 1, position.Y)
-	track.Size = UDim2.fromOffset(2, math.max(0, viewport.AbsoluteSize.Y - position.Y))
+	track.Position = UDim2.fromOffset(position.X, position.Y)
+ track.Tangent.Size = UDim2.fromOffset(2,Config.GuideLength*scale)
+ track.Rotation=-math.deg(Config.aimAngle(aim))
+ for index,dot in ipairs(aimDots)do
+  local point=project(Config.flightPoint(aim,index*Config.PreviewStep));dot.Position=UDim2.fromOffset(point.X,point.Y)
+ end
 	ghost.Position = UDim2.fromOffset(position.X, position.Y)
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
 	ghost.Text = Config.Tiers[tier].mark
@@ -1288,7 +1295,7 @@ updateHud = function()
  clientUI.fieldCopy=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase"))
  for _,item in ipairs(fieldZones)do
   item.node.Visible=nurseryActive and owned>0
-  item.node.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .79 else .86
+  item.node.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .15 else .45
  end
  clientUI.centerZone.Visible=nurseryActive and owned>0 and clientUI.fieldCopy.zone=="center"
  if clientUI.centerZone.Visible then
@@ -1341,7 +1348,6 @@ updateHud = function()
 				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
 				balance = nurseryState and nurseryState.nectar or 0,
 				reward = runReceipt, receiptPending = board:GetAttribute("RewardStatus") == "Saved" and not runReceipt,
-				mastery = runReceipt and nurseryState.masteryDetails and nurseryState.masteryDetails[runReceipt.family],
 				recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow })
 		end
 	end
@@ -1356,7 +1362,7 @@ updateHud = function()
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	layoutWallet(instrumentLayout)
 	bestReadout.Text = if owned > 0 then "Stars · eggs from 8" else "BEST " .. best
-	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, board:GetAttribute("SelectedFamily"), board:GetAttribute("RunFamily"), score, peakChain, best, nurseryView.selected) end
+	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, nil, nil, score, peakChain, best, nurseryView.selected) end
 	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
 	modalAction.Text = if rewardPending then "Saving…" elseif over then "Try again" else "Meet " .. (hatchName or "")
 	modalAction.Interactable = not rewardPending
@@ -1563,11 +1569,12 @@ layout = function()
 	hardware.MakerMark.Visible=false
 	shell.Faceplate.AimSeat.Visible,shell.Faceplate.ActionSeat.Visible=false,false
 	shell.Faceplate.AccentBands.Visible=false
-	local zoneWidth=math.max(0,(Config.Width/2-(board:GetAttribute("FieldZoneBound") or 2.6))/(Config.Width+.8))
-	for _,item in ipairs(fieldZones)do
-		item.node.Position=UDim2.fromScale(if item.side==-1 then .027 else 1-.027-zoneWidth,.025)
-		item.node.Size=UDim2.fromScale(zoneWidth,.95)
-	end
+ local zoneBound=board:GetAttribute("FieldZoneBound")or 2.6
+ for _,item in ipairs(fieldZones)do
+  item.node.AnchorPoint=Vector2.new(.5,0)
+  item.node.Position=UDim2.fromScale(.5+item.side*zoneBound/(Config.Width+.8),.025)
+  item.node.Size=UDim2.new(0,2,.95,0)
+ end
 	modal.Position=UDim2.fromScale(.5,.5)
 	restoreLegacySaveParents()
 	local modalSave=if saveNoticeOwner=="recap"or saveNoticeOwner=="welcome"then currentSaveNotice else nil
@@ -1645,7 +1652,7 @@ end
 
 local function aimFromScreen(x)
 	local center = viewport.AbsolutePosition.X + viewport.AbsoluteSize.X / 2
-	local span = viewport.AbsoluteSize.X * (Config.Width / 2 - Config.Tiers[nextTier()].radius) / (Config.Width + 0.8)
+	local span = viewport.AbsoluteSize.X / 2
 	aim = math.clamp(0.5 + (x - center) / math.max(1, 2 * span), 0, 1)
 	drawAim()
 end
@@ -2185,7 +2192,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local distance = math.huge
 	local tier = nextTier()
 	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and canPlay()
-	local aimX = Config.aimX(aim, tier)
+	local flightTarget = Config.flightPoint(aim,.8)
 	local drawLCD = false
 	local useLCD = lcdEnabled() and viewport.AbsoluteSize.X > 1
     local zoneBackend=if useLCD then lcd.backend else "sprite"
@@ -2194,7 +2201,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
         if useLCD and lcd.surface then lcd:attachRegions(zoneLayer)
         else
             zoneLayer.Parent=overlay;zoneLayer.ZIndex=2
-            for _,node in ipairs(zoneLayer:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=2 end end
+            for _,node in ipairs(zoneLayer:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=2 end end
         end
     end
     local zonesVisible=not(useLCD and lcd.backend=="image")and gui:GetAttribute("MeshPreview")~=true
@@ -2212,8 +2219,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			end
 			local radius = Config.Tiers[tier].radius * JellyLCD.Width / (Config.Width + 0.8)
 			local color = clientUI.JellyPalette.byTier[tier].body
-			local center = pixelPoint(Vector2.new(aimX, Config.SpawnY))
-			lcd:drawGuide(center)
+			local center = pixelPoint(Config.launchPosition())
+			lcd:drawGuide(aim)
 			lcd:draw(center, radius, radius, 0, color, 0)
 		end
 	elseif lcd then
@@ -2241,7 +2248,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
-			local delta = math.abs(position.X - aimX)
+			local delta = math.abs(position.X - flightTarget.X)
 			if delta < distance then
 				distance = delta
 				closest = point
@@ -2269,6 +2276,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local pixelVisible = lcd ~= nil and lcd.label.Visible
 	sprites.Visible = not pixelVisible
 	track.Visible = not pixelVisible
+ for _,dot in ipairs(aimDots)do dot.Visible=not pixelVisible end
 	overflowLine.Visible = true
 	ghost.BackgroundTransparency = if pixelVisible then 1 else 0
 	targetRing.Visible = closest ~= nil

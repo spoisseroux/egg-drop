@@ -1,0 +1,133 @@
+{
+  "lane": "B",
+  "files": [
+    {
+      "path": "src/client/RoomView.lua",
+      "sha256": "12fe477b549fa882a1bda9fe08193cc476193d5deb6604ad326849aaf71046de"
+    },
+    {
+      "path": "src/client/PetGreetingShot.lua",
+      "sha256": "06d23ba18981d546b4ff6e2c1b9d29e4f6b3ba77e32b1b803a4b9c658a80fa7f"
+    },
+    {
+      "path": "src/client/PetFocusUI.lua",
+      "sha256": "980d1c459b0db061d115d10a7d6b7f16ba5facb1ed34737d02c49a7026e35fad"
+    },
+    {
+      "path": "src/client/GardenClient.lua",
+      "sha256": "53ef92ecd1c8e18ccfab28a4a401221f940a0c225932ccfa12d250e4968acc83"
+    },
+    {
+      "path": "src/client/PetFollow.lua",
+      "sha256": "5858bffbee02aab5a926842a46ce0ec83ea085d76792466d83a0295be829760b"
+    },
+    {
+      "path": "src/client/GardenPetVisual.lua",
+      "sha256": "3dfe60f9c97ceda2529cef891434711e60d849d26cf40a110c2abd2b7dcf0d8b"
+    },
+    {
+      "path": "src/client/PetFace.lua",
+      "sha256": "c9135f8f929cde660083df609327d5d18331412c56fd35fd2a54139b8d6dc0d3"
+    },
+    {
+      "path": "src/client/PetPrestige.lua",
+      "sha256": "1e3532d177cd79917f8e333149081815a0330cd604b7053f11ba79e5ad7f9a3b"
+    },
+    {
+      "path": "src/client/PetJournal.lua",
+      "sha256": "029cfb2bbf5acb738444ed58c104b5472095e6dc8356bd09b3ed6d1f0bf6536c"
+    },
+    {
+      "path": "src/client/DeckMenu.lua",
+      "sha256": "8cac751fa79670d6aeb6d0fee54cca7cfcb547a5758f0fecf6f39ffd8bbfdd04"
+    },
+    {
+      "path": "src/client/RoundRecap.lua",
+      "sha256": "517ee022525412b5b2a3f2440c116f73258cedae517b7fc4522e6a98ce41e83b"
+    },
+    {
+      "path": "src/client/FocusTransition.lua",
+      "sha256": "2f04efc17801d1b636e8b910f37dedd51dabb3519647e99505164c47213bc340"
+    },
+    {
+      "path": "src/client/HatchCinematic.lua",
+      "sha256": "a9e7f3ac868df64d3e8695d61bc29e175e610afc055214618456feb4080b2aa9"
+    },
+    {
+      "path": "src/server/GardenState.lua",
+      "sha256": "da219997d311757d462f862eae62d1cb152583b68089cb078c3e1739abcdf523"
+    },
+    {
+      "path": "scripts/GardenState.spec.lua",
+      "sha256": "6b7c4be589b20b9bebc2195cf81e5bd686eacbc13c5fed0e507d2f697dde0b31"
+    },
+    {
+      "path": "scripts/GardenClient.spec.lua",
+      "sha256": "ff2c771ef1e7abd713797d0856a4966f22d74660e89b3f28c32433fb6eaa546e"
+    },
+    {
+      "path": "scripts/GardenFocusReach.spec.lua",
+      "sha256": "2e1f1407676d8a0f76eeff03e3f731deec3238e04a48f7b18956ec3802d030f1"
+    },
+    {
+      "path": "scripts/PetCharmFocus.spec.lua",
+      "sha256": "47a5849ac07349583bec27e64daa0a1a06884ad61b8f1813ef8cfad9fbecc05d"
+    },
+    {
+      "path": "scripts/CompanionCrest.spec.lua",
+      "sha256": "1c2974d4316ecdcf7eb6d569f850f4dc0c4b3f1833f19fa65362b7d4ba646a42"
+    },
+    {
+      "path": "scripts/MenuPolish.spec.lua",
+      "sha256": "e5e6ee4b1f1fde275bcd91c5d8788559ea81b9b43f3ef9afd8279ab371e1c83c"
+    },
+    {
+      "path": "scripts/JournalPurpose.spec.lua",
+      "sha256": "67ecbc7b741eae1372e3d63ed901d8f91c509dddca6304c82055570e9f55e6e0"
+    },
+    {
+      "path": "scripts/PetLoopResetGarden.spec.lua",
+      "sha256": "94f92701f0470a52ca5a522ab192aa9b05c87bc976793a6550aa6854a1ff254e"
+    },
+    {
+      "path": "scripts/PetLoopResetPresentation.spec.lua",
+      "sha256": "9b76ac13780c86682d939d5ec6b4024e3269827263d2a213f9fa3de5d99dc4fd"
+    },
+    {
+      "path": "src/client/RoomCompanions.lua",
+      "sha256": "202a8bef8ea7c73fae0a165cae074bef7eaa086413e5518a3ee64265f7876840"
+    },
+    {
+      "path": "scripts/HueAppearance.spec.lua",
+      "sha256": "a70c42e31895edb60a588d7bb4d4299dbc2d599828e6937e983c317a143c8b1e"
+    },
+    {
+      "path": "scripts/PetNightStudy.spec.lua",
+      "sha256": "b62dca7cd7370a7c098a377df2215f76f9ffefc67add0dc71b579757b23ff3a7"
+    },
+    {
+      "path": "src/client/FocusCharacterVisibility.lua",
+      "sha256": "efbe9a443ed40e927a79eb3b9acca6211211a0ed7b72354f1d3b743aadc30ef5"
+    },
+    {
+      "path": "scripts/FocusCharacterVisibility.spec.lua",
+      "sha256": "487e8d55c11aedfd9745254e01c73d1917d083a04567c200a558e8bf1f526841"
+    },
+    {
+      "path": "scripts/PetNightStudyFixture.lua",
+      "sha256": "92af4aa74885d376eccf123f753ef1f686b20973420faa224a1a2b7ea7fe1774"
+    }
+  ],
+  "checks": [
+    "rojo build default.project.json -o build/pet-loop-reset.rbxlx passed",
+    "git diff --check passed"
+  ],
+  "nativeTests": "Root reported passing PetCharmFocus3, GardenClient8, CompanionCrest7, MenuPolish9, JournalPurpose3, PetLoopResetGarden4, GardenState12, GardenMotion8, GardenFocusReach4. New HueAppearance observer case awaits root execution.",
+  "integrationTestCorrection": {
+    "path": "scripts/PocketDeckAim.spec.lua",
+    "sha256": "e4c5aee428a76af012d1b6940168f1f249b6368f8199c0c51915262f0691c96d"
+  },
+  "integrationFollowup": "RoomCompanions bodyMix key; HueAppearance mix-only and clear regression retains visitor model, actor, follow state and pose. Owner RoomView always applies all confirmed appearance tokens; its pet/charm key invalidates shot geometry only. Reviewer-owned FocusTransition and wander hardening retained verbatim.",
+  "nightStudy": "Astra GO after eight native matched study frames (reported by root): production defaults to shadedHead, Head-only Occluded Highlight .70 fill/invisible outline and restrained torso treatment. SelectiveNeon is retained only as fixture comparison. PetNightStudyFixture.lua owns temporary clock/GUI/camera state and restores it on destroy; color fixture is not purchase evidence.",
+  "avatarOcclusion": "Root actual focus revealed owner avatar projection intrusion. FocusCharacterVisibility now owns owner-local BasePart/Decal modifiers under the opaque shot; exact old modifiers, added/removed descendants, after-camera reassertion, respawn and idempotent cleanup. No replicated transparency or visitor avatar changes. New 3-case native mask spec awaits root execution."
+}

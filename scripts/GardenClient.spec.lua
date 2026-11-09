@@ -42,7 +42,7 @@ return function(client)
         end)
         test("one deliberate focus holds with bounded pulses and retirement ends that generation",function()
             g:focus(true,"pip",Vector3.new(2,4.025,0),0);g:focus(true,"pip",Vector3.new(2,4.025,0),0)
-            assert(#packets==1 and packets[1].kind=="focus")
+            assert(#packets==1 and packets[1].kind=="focus"and packets[1].position==nil and packets[1].yaw==nil)
             for _=1,31 do g:step(1/60)end
             assert(#packets==2 and packets[2].kind=="focusPulse"and packets[2].seq==packets[1].seq)
             g:focus(false);local count=#packets;assert(packets[count].kind=="focusEnd")

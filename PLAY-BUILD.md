@@ -1,47 +1,51 @@
-# Egg Drop — garden companions, Stars and Hue Eggs
+# Egg Drop — pet loop reset
+
+**Accepted repository runtime: [PET-LOOP-RESET.md](PET-LOOP-RESET.md). Publication of this reset is pending root verification.** The latest verified private publication remains **v241 (7145db9)**, the earlier Stars and Hue Eggs build. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop).
+
+[Reset gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Economy/save rules](HATCH-LOOP.md).
+
+## Current loop
+
+1. Aim and merge on the welcome board for guaranteed **Zivvi**, then Meet or explore Sprout Hollow. Zivvi/Ovelle retain stored IDs `pip`/`puddle`; sparse veteran ownership and pending receipts stay intact.
+2. Open the PocketDeck for unlimited **24-drop rounds**. Bank Pair, Creek Crossing and Lantern Chain rotate. Read the active goal, use the fixed center launch and keep the pile low. Aim maps symmetrically to **±35 degrees at speed 10**; all input paths use the same server-derived spawn/vector. Thin region-threshold lines replace filled/highlighted regions.
+3. Both goals earn **6 Stars**, or **8** with the low-pile bonus. Full-budget failed rounds may earn their eligible skill contracts. Recap shows the exact saved amount and selected egg progress. Unfinished rounds survive lounge visits; returning after a completed saved round starts a fresh field. Reconnect starts a new physical board.
+4. Hatch tree or Menu → Hatch eggs → **Companion eggs** offers Mixed Meadow (18 Stars) and Sprout Focused (24). Selection is free; only explicit Hatch spends. Close/reopen preserves the exact committed result. A duplicate says **Already owned**, grants nothing and does not change equip unless Meet is chosen. Rare duplicates still resolve the rare guarantee.
+5. **Hue Egg** costs **8 Stars** and creates one saved, unassigned held item. Close/reopen retains it. After hatching, choose an actually owned supported Zivvi/Ovelle and one hue, then explicitly **Apply to [pet]**. That exact token advances one hue grade, at most III, without a second debit. No second purchase while stock is held; no purchase when supported owned pets have no further eligible grade.
+6. **Colors** is free: learned Body and Accent picks, six two-base Mix recipes, Original body / Default accent, and **Reset to original colors**. Reset preserves grades, unlocks, held stock and charm visibility. Previewing never saves or spends. Body tint strengths are **.65 / .84 / 1.0**, with vivid Rose `#FF327A`, Tide `#008DFF`, Citrus `#FFCC00`, Iris `#9350FF`; protected face roles remain authored.
+
+## Collection and return goals
+
+Seven stable catalog identities remain. Meadow odds are **35/25/20/10/5/3/2%** for Zivvi, Ovelle, Wick, Orbit, Bloom Pip, Foxfire Wick and Eclipse Orbit. Focused is **80% Zivvi /20% Bloom Pip**. After seven non-rare companion hatches, the next is rare-only; this does not guarantee a missing common. Hue Eggs have no rarity roll, pity effect or companion inventory bit.
+
+**Family mastery is frozen.** No new round/hatch marks, challenges, promotions or overhead rank badges; no active Family goals route. Historical marks, receipts and cosmetic entitlements are retained. New saved-win cosmetic gates are **Gloaming at 3 wins**, **Copperleaf and Lantern background at 10**, with old earned entitlements still valid. Honey remains 1 saved win; independent Pocket Trials and other achievement cosmetics remain separate.
+
+Stars are the existing `nectar` wallet one-for-one. Welcome credit is 6; the optional daily gift is 6. Contracts are Win 2 rounds +4, Chain 3 +3 and Score 500 +3 under their valid completed-round rules. Hollow rollover is fixed **05:00 UTC**, with no daily play cap or paid luck.
+
+## Focus, motion and current evidence
+
+Pet focus pauses the server's sampled public actor; a covered owner-local shot never becomes public movement or reach proof. Back restores the current public actor and roaming view, not a stale staged root. The owner avatar is locally masked only for its private shot. Back and labeled Hide/Show charm retain independent targets. Walking drives visible gait; focus, rest and reduced motion suppress it. Night uses the reviewed shaded-head treatment with restrained torso lighting; source-rig comparisons are labeled separately.
+
+Fresh integration matched and compiled **104 sources**. Verified Largest Hue suites passed **13+12**, with fresh uncached presentation suites **13+3+2+3**. Native controls completed 24 drops, settled at **670 /+14 Stars**, then bought a held Hue Egg **20→12**. Actual buy/reopen/apply, independent accent, free mix and reset records are linked in VERIFY. The final ~14-second care input reacted but awarded **0 Stars**; do not count it as observed award proof.
+
+Actual two-client telemetry passed public-pose continuity and owner-only avatar masking through focus/Back. Walking samples showed about .13 studs vertical range over ~18 studs travel. These are pose/mask samples, **not a fixed-camera visual film**. The observed idle sample near the creek showed only rest/follow; safe wander has planner/host test coverage, not live proof from that sample. Physical phone comfort, live-service save/rejoin, latency and longer human play remain unverified. Nursery, additional base forms and public release remain deferred.
+
+## Historical publication records — superseded rules
+
+The records below describe older published builds. Their mastery, old directional Hue purchase and region-fill behavior do not override the accepted reset above.
+
+### Private v241 — 2026-11-08
 
 **Private v241 Published — Stars and Hue Eggs - 7145db9**, verified in refreshed Studio Version History after tests, reviewed commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/hue-eggs-2026-11-08/private-published-v241-7145db9.png) · [Hue gallery](artifacts/hue-eggs-2026-11-08/GALLERY.md).
+
+145unique Largest client cases and59isolated server cases passed;60Medium checks repeated successfully. Actual desktop earned purchases, duplicate-click single charging, independent free selections, fresh phone-emulator swipe/earn route and actual two-client same-rig palette propagation passed. Physical phone, private-client rejoin and live latency remain unverified. [Hue screenshots](artifacts/hue-eggs-2026-11-08/GALLERY.md) · [Exact Hue evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md).
+
+The v241 Hue flow selected pet/direction before purchase and used subtle 12%/23%/35% tints. That historical flow is replaced by the generic held Hue Egg and vivid .65/.84/1.0 grades above.
+
+### Private v232 — 2026-11-08
 
 Previous checkpoint: **private v232 — Softer babies and smooth movement - 355fad7**, confirmed in refreshed Studio Version History after tests, commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-softening-2026-11-08/private-published-v232-355fad7.png). This supersedes private v225. Nursery, paid products and public release remain deferred.
 
 The latest pass softens Zivvi and Ovelle into neutral porcelain/pebble babies, replaces Ovelle's suspended arms with attached mittens, and adds seeded blinks, breathing, slow gaze and a softly independent Dot bounce. Shared follow paths ease through turns and braking. The PocketDeck backdrop is stronger, its A-adjacent caption is removed, and both bank overlays sit behind the jelly colors. **114 unique native client /98 isolated server checks passed**, alongside actual desktop/phone-emulator controls and a two-client Studio session with saved charm propagation and leave cleanup. [Current screenshots](artifacts/pet-softening-2026-11-08/GALLERY.md) · [Exact evidence and live movement limits](artifacts/pet-softening-2026-11-08/BUILD-EVIDENCE.md).
-
-The repository now includes the accepted handheld, shared palette, recap and hatch polish, plus Astra's first two authored baby pets, implemented by Sol. **Zivvi replaces Pip's common visual/name; Ovelle replaces Puddle's.** Their original stored IDs remain stable, preserving earned ownership and pending receipts. The other five visuals are temporary legacy pets. Stars and Hue Eggs are now implemented. The remaining new base forms, random item pools and broader garden redesign remain planned.
-
-Companions can investigate and shove the shared wobble toy, rest, and greet a nearby pet. A saved per-pet control hides/shows the secondary-colored dot. A visitor can see a player holding the physical deck with their pet resting nearby. Focus preempts autonomy; petting remains the existing server-validated saved reward path. Actual two-client controls verified shared actions, charm propagation and leaving cleanup without idle currency awards.
-
-[Current garden gallery](artifacts/garden-vertical-2026-11-08/GALLERY.md) · [Exact garden tests](artifacts/garden-vertical-2026-11-08/BUILD-EVIDENCE.md) · [Garden slice and boundaries](GARDEN-VERTICAL-SLICE.md). The sections below describe the current arcade/economy rules. Stars are the existing wallet renamed one-for-one; internal compatibility storage still uses nectar.
-
-## Hue Eggs and Stars
-
-Menu → Hatch eggs → Hue Eggs shows matching Current/After previews. Choose an owned Zivvi/Ovelle and a hue, then explicitly Feed for8Stars. Purchase advances body grade and unlocks accents; it preserves the previous accent selection. Colors lets you choose Original or learned bodies and accents separately without spending. Grades use subtle12/23/35percent linear-light blends.
-
-145unique Largest client cases and59isolated server cases passed;60Medium checks repeated successfully. Actual desktop earned purchases, duplicate-click single charging, independent free selections, fresh phone-emulator swipe/earn route and actual two-client same-rig palette propagation passed. Physical phone, private-client rejoin and live latency remain unverified. [Hue screenshots](artifacts/hue-eggs-2026-11-08/GALLERY.md) · [Exact Hue evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md).
-
-## What changed
-
-- Larger Sprout Hollow: the112×96 footprint is now160×128, with an east lantern boardwalk/pool overlook and a west orchard loop. Eight new lanterns, water ripples, drifting leaves and evening fireflies animate the walks. Existing hatch tree, journal and workbench retain their fast menu shortcuts.
-- Pocket Deck: lower inset instruments, rounded pixel LCD, compact animated supply meter, subtle symmetric banks and brighter fixed-light procedural jelly. Chain/merge/impact effects and accepted-action synth ticks are pooled and respect sound/motion settings. The liked Pocket Apricot music stays the default. Three more energetic original music/cue drafts are saved locally for later listening; they are not uploaded or substituted.
-- Consistent shell/menu/LCD palettes; immediate unlocked style/sticker selection; large right-faceplate printed emblems. Shell, Stickers and Background are separate choices; Settings and Pocket Trials have their own menu entries. No redundant Resume/Equip button.
-- Three field variations rotate: Bank Pair, Creek Crossing and Lantern Chain. Coaching names the actual tier/area/progress. Bank and Creek reward placement under tested solver policies; Lantern is deliberately the forgiving chain variation.
-- Compact animated recap: exact earned Stars first, concise breakdown and egg progress; full score/chain/mastery details behind Details. An unfinished outing survives a lounge visit; returning after a completed saved outing starts a fresh field. Reconnect does not preserve an unfinished physical board.
-- Companions bob gently while following, stop their gait at rest and remain easier to read at night. Tap a pet to focus; rub it or hold E/X for purrs and a reaction every3–5 seconds. Back ends focus. Continuous eligible petting has a50% opportunity after12 seconds, repeating at least12 seconds apart, for saved+1 Stars up to5 per Hollow day. Mute/reduced effects keep reward eligibility. No reward for idle focus or a fabricated client claim.
-
-## A first session
-
-1. Aim and merge on the welcome board to earn guaranteed Zivvi, then Meet and Back to explore Hollow.
-2. Open the deck. You have24 drops **per round**, with unlimited rounds. Aim for the active goal and keep the pile low; impatient center spam can overflow and fail.
-3. Complete both goals for6Stars, or8with the low-pile bonus. A completed failed round can still earn its eligible skill contracts. The recap shows exact saved earnings and distance to the selected egg.
-4. Browse the hatch tree or Menu → Hatch eggs. Mixed Meadow costs18Stars; Sprout Focused costs24. Choosing or entering a station never spends; the explicit Hatch action does. Outcomes are random from displayed odds. Closing a purchased reveal preserves it until Meet; reopening cannot reroll it.
-5. Meet/equip a companion, work toward family mastery and trials, choose earned cosmetics, and try the next field variation.
-
-## Rewards and return goals
-
-Seven current catalog entries: porcelain/rose Zivvi and cool-stone/sage Ovelle; temporary legacy orange flame Wick, lavender ringed Orbit, rare peach flower Bloom Pip, blue/turquoise Foxfire Wick and violet/gold Eclipse Orbit. Meadow odds35/25/20/10/5/3/2%; Focused Zivvi80/Bloom20%. Seven consecutive non-rare hatches make the next rare-only; this does not guarantee an unowned common. Duplicates add one family mark. Hue Eggs now offer Rose, Tide, Citrus and Iris for Zivvi/Ovelle at8Stars per grade, capped atIII. Each first grade unlocks its independent secondary; Original/learned body and Default/learned accents select free, with optional Dot preserved. Other catalog entries retain temporary legacy visuals.
-
-Wins add1mark, clean wins2. Family ranks: I Sprout at3marks, II Grove at10, III Bloom at25 plus all three saved skill conditions (clean win, chain3, score500). Crests/effects progress with rank. The existing optional daily gift is6Stars; contracts are Win2+4, Chain3+3, Score500+3, automatically awarded through valid full rounds. New players start with6 instead of an extra first-day gift. Daily rollover is the Hollow's fixed05:00UTC boundary, not device time or DST. No daily play cap or paid luck.
-
-Earned cosmetics: Honey shell after1saved win; Gloaming at any owned rankI; Copperleaf and Lantern background at rankII. Creek background comes from High Roller250points; Lantern stamp from Triple Pop chain3. Existing free finishes/prints remain; Wick print requires Wick, Trial crest requires the three trials. Locked previews show their real condition and never equip themselves.
 
 ## Prior published v180 verification and limits
 

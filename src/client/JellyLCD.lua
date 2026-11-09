@@ -46,12 +46,8 @@ local function boardPixels(colors,regions)
 	local dither = rgba(colors.dither)
 	local rail = rgba(colors.rail)
 	local rim = rgba(colors.rim)
-    local tint=Color3.fromHex("#466853")
-    local zoneBase,zoneDither={},{}
-    for _,role in ipairs({"left","right","center"})do
-        local alpha=if regions and regions.active==role then .21 else .14
-        zoneBase[role],zoneDither[role]=rgba(colors.base:Lerp(tint,alpha)),rgba(colors.dither:Lerp(tint,alpha))
-    end
+    local threshold=rgba(colors.guide)
+
 	for y = 0, HEIGHT - 1 do
 		local inset = math.max(0, bank - (floor - (y + 0.5)))
 		for x = 0, WIDTH - 1 do
@@ -61,10 +57,11 @@ local function boardPixels(colors,regions)
 				local grain=y % 7 == 0 and x % 7 == (math.floor(y / 7) % 2) * 3
                 color=if grain then dither else background
                 if regions and regions.enabled and y>=ceiling then
-                    local worldX=((x+.5)/WIDTH-.5)*(Config.Width+.8)
-                    local role=if worldX< -regions.bound then "left"elseif worldX>regions.bound then "right"
-                        elseif regions.active=="center"and worldX>=regions.min and worldX<=regions.max then "center"else nil
-                    if role then color=if grain then zoneDither[role]else zoneBase[role]end
+                    local function boundary(worldX)
+                        return x==math.floor(WIDTH*(.5+worldX/(Config.Width+.8)))
+                    end
+                    if boundary(-regions.bound)or boundary(regions.bound)
+                        or(regions.active=="center"and(boundary(regions.min)or boundary(regions.max)))then color=threshold end
                 end
 			elseif edge > -1.8 then
 				color = if edge > -0.8 then rail else rim
@@ -151,7 +148,7 @@ function LCD:setPalette(colors)
   for y=0,HEIGHT-1 do for x=0,WIDTH-1 do
    local offset=(y*WIDTH+x)*4;local pixel=buffer.readu32(self.pixels,offset)
    if pixel==buffer.readu32(self.background,offset)then buffer.writeu32(self.pixels,offset,buffer.readu32(background,offset))
-   elseif pixel==oldGuide and x==self.guideX and y>=self.guideFirst and y<=self.guideLast and (y-self.guideFirst)%4==0 then buffer.writeu32(self.pixels,offset,newGuide)end
+   elseif pixel==oldGuide and self.guidePixels and self.guidePixels[offset]then buffer.writeu32(self.pixels,offset,newGuide)end
   end end
  end
  local ok=pcall(function()
@@ -183,18 +180,26 @@ function LCD:getStats()
 end
 
 function LCD:beginFrame()
- self.guideX=nil
+ self.guidePixels={}
 	self.rasterStarted=os.clock()
 	buffer.copy(self.pixels, 0, self.background)
 end
 
-function LCD:drawGuide(center)
-	local x = math.floor(center.X)
-	local limit = math.floor(floor - math.max(0, bank - (x + 0.5 - leftWall), bank - (rightWall - x - 0.5)))
-	self.guideX,self.guideFirst,self.guideLast=x,math.floor(center.Y)+1,limit
- for y = self.guideFirst, limit, 4 do
-		buffer.writeu32(self.pixels, (y * WIDTH + x) * 4, self.guideColor)
-	end
+function LCD:drawGuide(aim)
+ local origin=Config.launchPosition()
+ local tangent=origin+Config.launchVelocity(aim).Unit*Config.GuideLength
+ local function pixel(point)
+  return Vector2.new(WIDTH*(.5+point.X/(Config.Width+.8)),HEIGHT*(.5-(point.Y-Config.Height/2)/(Config.Height+.8)))
+ end
+ local function dot(point)
+  local p=pixel(point);local x,y=math.floor(p.X),math.floor(p.Y)
+  if x>=leftWall and x<rightWall and y>=ceiling and y<floor then
+   local offset=(y*WIDTH+x)*4
+   buffer.writeu32(self.pixels,offset,self.guideColor);self.guidePixels[offset]=true
+  end
+ end
+ for index=0,8 do dot(origin:Lerp(tangent,index/8))end
+ for index=1,Config.PreviewCount do dot(Config.flightPoint(aim,index*Config.PreviewStep))end
 end
 
 function LCD:draw(center, radiusX, radiusY, angleRadians, color, ripple)
@@ -288,7 +293,7 @@ function LCD:destroy()
 	self.failed = true
     if self.regionHost and self.regionHost.Parent==self.label then
         self.regionHost.Parent=self.label.Parent;self.regionHost.ZIndex=2
-        for _,node in ipairs(self.regionHost:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=2 end end
+        for _,node in ipairs(self.regionHost:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=2 end end
     end
 	if self.surface then self.surface:destroy()else self.label:Destroy();self.image:Destroy()end
 end

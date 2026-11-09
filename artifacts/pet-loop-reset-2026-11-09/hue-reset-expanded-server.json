@@ -1,0 +1,89 @@
+[
+  {
+    "ok": true,
+    "name": "HueProgress",
+    "result": {
+      "passed": 15,
+      "cases": [
+        "generic purchase creates durable unassigned stock without a pet, hue, pity or rank mutation",
+        "held item survives release/rejoin and assignment advances one chosen baby without another debit",
+        "before and after ambiguous purchase/apply writes retry captured identity exactly once",
+        "wrong token, stale grade, max grade and unsupported/unowned assignment retain stock",
+        "all six mixes are canonical free learned recipes; reset preserves grades, accent unlocks and held egg",
+        "single body clears mixing; independent accent retains mix; apply clears mix and preserves accent",
+        "v4 legacy paid receipts migrate verbatim, remain replayable, and new directional purchases close",
+        "full 24-slot historical records preserve paid grades and disallow buying exhausted stock",
+        "v2 and v3 upgrades twice preserve ownership, wallet, pending duplicate and mastery archive",
+        "malformed v4 fails closed without writing defaults over original fields",
+        "companion hatches coexist with held stock and duplicates grant no mastery; saved wins remain independent",
+        "later stock cannot be consumed by old apply replay or same-ID altered quote",
+        "new and legacy assignment slots share one 24-grade cap without fabricated old purchases",
+        "session takeover fences an uncommitted purchase without losing held stock committed before takeover",
+        "overlapping new quotes cannot replace a captured immutable buy or apply candidate"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "HueHost",
+    "result": {
+      "evidence": "actual host callbacks and retry coroutine; isolated DB with forced timeout/store suspension",
+      "persistentWrites": false,
+      "passed": 3,
+      "cases": [
+        "actual generic buy lost reply exposes old confirmed stock and same-quote throttle stays Retrying",
+        "background retry held in storage preserves purchase waiter through manual Busy and changed same-ID action",
+        "lost apply event recovers from saved-only snapshot; exact purchase/apply replay never spends or consumes later stock"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "HatchProgress",
+    "result": {
+      "passed": 21,
+      "cases": [
+        "all catalog outcomes and rare protection",
+        "legacy seven-pet migration and one-time credits",
+        "starter grant, persistent reveal, exact acknowledgement",
+        "ambiguous session acquire resumes the same lease",
+        "direct full-cost spending, stale commands and callback retries",
+        "ambiguous committed hatch cannot reroll or duplicate",
+        "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "monotonic payouts reject replay beyond receipt history",
+        "lease takeover fences stale commands and renewals",
+        "local overlap, sparse inventory and public isolation",
+        "failed legacy load cannot spend or overwrite",
+        "daily reward is once per Hollow day and survives callback retry",
+        "every advertised result grants once and rare protection resets",
+        "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "saved wins preserve archived mastery points challenges and rank without promotions",
+        "daily contracts and saved wins commit atomically once per run and day",
+        "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "compound award retries immutable stats and original day before or after commit",
+        "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "rare-only ownership earns saved wins and duplicate preserves archived marks"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "BackgroundAppearanceCatalog",
+    "result": {
+      "evidence": "fresh shared catalogs; derived facts only",
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": [
+        "five historic themes stay free while new themes require exact saved facts",
+        "unowned and legacy effects cannot manufacture new rank II eligibility",
+        "backgrounds and Lantern stamp distinguish High Roller from Triple Pop",
+        "existing Wick and complete-trial crest locks preserve sparse and legacy behavior",
+        "raw and public HatchState facts produce the same real mastery ranks",
+        "newly committed facts refresh eligibility without another purchase or grant",
+        "new saved-win thresholds replace active ranks while preserving historical eligibility",
+        "all eight themes expose complete semantic palettes and readable muted/text states"
+      ]
+    }
+  }
+]

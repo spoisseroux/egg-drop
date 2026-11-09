@@ -1,0 +1,187 @@
+{
+  "masteryRanks": {
+    "wick": 0,
+    "pip": 0,
+    "puddle": 0,
+    "orbit": 0
+  },
+  "masteryLegacyMask": 0,
+  "dailyDay": "20766",
+  "petDay": "20766",
+  "dailyBonus": 6,
+  "status": "Ready",
+  "masteryChallenges": {
+    "wick": 0,
+    "pip": 0,
+    "puddle": 0,
+    "orbit": 0
+  },
+  "nectar": 2,
+  "revision": 9,
+  "lastRunReward": {
+    "promotedTo": 0,
+    "daily": 6,
+    "sequence": 2,
+    "contracts": {
+      "1": "chain",
+      "2": "score"
+    },
+    "family": "pip",
+    "masteryPoints": 0,
+    "base": 6,
+    "total": 12
+  },
+  "hueLastPurchase": {
+    "action": "hueBuy",
+    "revision": 8,
+    "token": "b90dde77-2b57-4c27-b104-6994bd6793cb",
+    "cost": 8,
+    "id": "7:5d4c70c3-5594-4813-9c17-bcb14696746c",
+    "balanceAfter": 2,
+    "purchaseId": "7:5d4c70c3-5594-4813-9c17-bcb14696746c",
+    "balanceBefore": 10
+  },
+  "dailyAvailable": false,
+  "totalWins": 1,
+  "misses": 0,
+  "contracts": {
+    "1": {
+      "hint": "Complete both goals in 24 drops without overflow",
+      "claimed": false,
+      "target": 2,
+      "id": "runs",
+      "progress": 1,
+      "title": "Win 2 rounds",
+      "reward": 4
+    },
+    "2": {
+      "hint": "Build a chain of 3 in a full round",
+      "claimed": true,
+      "target": 3,
+      "id": "chain",
+      "progress": 3,
+      "title": "Chain 3 merges",
+      "reward": 3
+    },
+    "3": {
+      "hint": "Earn 500 points in a full round",
+      "claimed": true,
+      "target": 500,
+      "id": "score",
+      "progress": 500,
+      "title": "Score 500",
+      "reward": 3
+    }
+  },
+  "masteryDetails": {
+    "wick": {
+      "challengeGoal": 3,
+      "challenges": 0,
+      "nextRank": 1,
+      "rank": 0,
+      "rewardHint": "Next: family badge",
+      "nextPoints": 3,
+      "name": "Unranked",
+      "missingChallenges": {
+        "1": "Clean win",
+        "2": "Win with a chain of 3",
+        "3": "Win with 500 points"
+      },
+      "marksRemaining": 3,
+      "points": 0,
+      "hint": "Win rounds or hatch duplicates",
+      "nextGoal": "3 marks to rank I"
+    },
+    "pip": {
+      "challengeGoal": 3,
+      "challenges": 0,
+      "nextRank": 1,
+      "rank": 0,
+      "rewardHint": "Next: family badge",
+      "nextPoints": 3,
+      "name": "Unranked",
+      "missingChallenges": {
+        "1": "Clean win",
+        "2": "Win with a chain of 3",
+        "3": "Win with 500 points"
+      },
+      "marksRemaining": 3,
+      "points": 0,
+      "hint": "Win rounds or hatch duplicates",
+      "nextGoal": "3 marks to rank I"
+    },
+    "puddle": {
+      "challengeGoal": 3,
+      "challenges": 0,
+      "nextRank": 1,
+      "rank": 0,
+      "rewardHint": "Next: family badge",
+      "nextPoints": 3,
+      "name": "Unranked",
+      "missingChallenges": {
+        "1": "Clean win",
+        "2": "Win with a chain of 3",
+        "3": "Win with 500 points"
+      },
+      "marksRemaining": 3,
+      "points": 0,
+      "hint": "Win rounds or hatch duplicates",
+      "nextGoal": "3 marks to rank I"
+    },
+    "orbit": {
+      "challengeGoal": 3,
+      "challenges": 0,
+      "nextRank": 1,
+      "rank": 0,
+      "rewardHint": "Next: family badge",
+      "nextPoints": 3,
+      "name": "Unranked",
+      "missingChallenges": {
+        "1": "Clean win",
+        "2": "Win with a chain of 3",
+        "3": "Win with 500 points"
+      },
+      "marksRemaining": 3,
+      "points": 0,
+      "hint": "Win rounds or hatch duplicates",
+      "nextGoal": "3 marks to rank I"
+    }
+  },
+  "inventoryMask": 1,
+  "mastery": {
+    "wick": 0,
+    "pip": 0,
+    "puddle": 0,
+    "orbit": 0
+  },
+  "petCount": 0,
+  "hues": {
+    "pip": {
+      "body": "tide",
+      "secondary": "rose",
+      "ranks": {
+        "rose": 1,
+        "iris": 0,
+        "citrus": 0,
+        "tide": 1
+      }
+    }
+  },
+  "lastHueResult": {
+    "hue": "tide",
+    "revision": 9,
+    "action": "hueApply",
+    "cost": 0,
+    "id": "8:a9965fc8-6da3-4bd8-b504-bc411d69d798",
+    "balanceAfter": 2,
+    "secondaryUnlocked": true,
+    "body": "tide",
+    "balanceBefore": 2,
+    "purchaseId": "7:5d4c70c3-5594-4813-9c17-bcb14696746c",
+    "oldRank": 0,
+    "petId": "pip",
+    "newRank": 1,
+    "token": "b90dde77-2b57-4c27-b104-6994bd6793cb",
+    "secondary": "rose"
+  }
+}

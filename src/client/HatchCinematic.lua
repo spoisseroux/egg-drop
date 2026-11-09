@@ -215,12 +215,10 @@ function Cinematic:buildScene()
  self.resultRoot=Art.frame(self.frame,"Result","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),49);self.resultRoot.BackgroundTransparency=1
  self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
  local rare=self.result.rare==true
- local tag=if self.result.duplicate then(if rare then "RARE FAMILY DUPLICATE"else "FAMILY DUPLICATE")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
+ local tag=if self.result.duplicate then(if rare then "ALREADY OWNED"else "ALREADY OWNED")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
  self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then Art.Amber else "accent");self.heading=label(self.resultRoot,"PetName",self.pet.name,"Heading","text")
- local family=(self.result.family or self.pet.family or self.pet.id):gsub("^%l",string.upper)
- local detail=if self.result.duplicate then string.format("%s family  +1 mark  ·  %d total",family,self.result.mastery or 0)elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
- if self.result.duplicate and(self.result.promotedTo or 0)>0 then detail="+1 mark · "..family.." rank "..({"I","II","III"})[self.result.promotedTo].." unlocked!"elseif self.result.duplicate and self.result.masteryHint then detail=self.result.masteryHint end
- self.caption=label(self.resultRoot,"Mastery",detail,"Supporting","muted");self:createHero();self:layout()
+ local detail=if self.result.duplicate then "Already owned · no additional reward"elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
+ self.caption=label(self.resultRoot,"CollectionStatus",detail,"Supporting","muted");self:createHero();self:layout()
  self.anticipation=label(self.stage,"Anticipation","Something is stirring…","Body","muted")
  place(self.anticipation,12,math.max(0,self.layoutHeight-40),self.layoutWidth-24,30)
  self.beats={{.45,"charge",.92,.25},{.88,"merge_bubble",.92,.25},{if rare then 1.72 else 1.22,"hatch",if rare then .92 else 1.02,.65},{(if rare then 1.72 else 1.22)+.28,self.pet.cue,1,.5}}

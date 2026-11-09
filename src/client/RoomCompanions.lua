@@ -66,7 +66,7 @@ function Companions:update(dt,serverNow)
 			if entry.root~=item.root then entry.followState=nil;PetFollow.rest(entry.visual)end
 			entry.root,entry.actor = item.root,item.actor
 			entry.board=item.board
-			local appearanceKey=appearance and table.concat({tostring(appearance.charmVisible),appearance.body or "original",appearance.bodyRank or 0,appearance.secondary or "default"},":")
+			local appearanceKey=appearance and table.concat({tostring(appearance.charmVisible),appearance.body or "original",appearance.bodyRank or 0,appearance.bodyMix or "",appearance.secondary or "default"},":")
             if appearance and entry.visual.applyAppearance and entry.appearanceKey~=appearanceKey then
 				entry.visual:applyAppearance(appearance);entry.charmVisible=appearance.charmVisible;entry.appearanceKey=appearanceKey
 			end

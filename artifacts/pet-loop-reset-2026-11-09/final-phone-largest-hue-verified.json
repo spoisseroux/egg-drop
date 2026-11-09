@@ -1,0 +1,51 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 generic purchase exposes no target or direction before hatching",
+        "1649, 971 held assignment and colors use measured scroll choices and matched rigs",
+        "749, 381 generic purchase exposes no target or direction before hatching",
+        "749, 381 held assignment and colors use measured scroll choices and matched rigs",
+        "350, 703 generic purchase exposes no target or direction before hatching",
+        "350, 703 held assignment and colors use measured scroll choices and matched rigs",
+        "568, 210 generic purchase exposes no target or direction before hatching",
+        "568, 210 held assignment and colors use measured scroll choices and matched rigs",
+        "insufficient funds suppress purchase; max grade preserves held item and free Colors remains accessible",
+        "mix preview uses two learned bases while reset has an explicit independent action",
+        "Colors groups keep one choice set, reset and measured tabs without saving or moving portrait framing",
+        "applied result leads once, next paid action is explicit, and old Saved never masks exhausted or shortfall reasons",
+        "companion reveal preempts Hue without consuming or hiding committed held stock"
+      ],
+      "passed": 13,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueIntent",
+    "result": {
+      "evidence": "pure client intent ordering with injected transport and confirmed snapshots",
+      "persistentWrites": false,
+      "passed": 12,
+      "cases": [
+        "duplicate clicks create one revision-prefixed quote and exact retries preserve every field",
+        "pending pet reveal, unavailable host and pending save status fence requests",
+        "wrong operation id, pet or action replies cannot terminate or prove the pending request",
+        "Saved before snapshot retains proof without changing confirmed palette or wallet",
+        "snapshot before event settles once and a late event cannot create another request",
+        "coalesced newer last result accepts older matching Saved without rewinding current colors",
+        "Saved proof survives late Rejected and Retrying until a newer snapshot crosses its revision",
+        "rejected rank or wallet quote never optimistically grants a color or permits retry",
+        "stale snapshots cannot roll back the confirmed revision, palette or wallet",
+        "body and secondary requests are independent; Original retains learned ranks and secondary",
+        "held stock, exhausted capacity and insufficient wallet fence purchase; assignment requires owned support",
+        "free reset and learned mix send exact canonical intent without spending stock"
+      ]
+    }
+  }
+]

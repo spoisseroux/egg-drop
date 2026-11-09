@@ -1,0 +1,16 @@
+[
+  {
+    "ok": true,
+    "name": "PetLoopResetGarden",
+    "result": {
+      "passed": 5,
+      "cases": [
+        "focus freezes the exact sampled moving public root and yaw, ignoring forged stage",
+        "a near forged stage cannot grant care to a distant actual actor",
+        "nearby wander is bounded, pauses, shares a path and walking preempts it",
+        "free reachable toy alternates with nearby wander on the normal decision cadence",
+        "unsafe candidates are capped and fail to local rest without awards"
+      ]
+    }
+  }
+]

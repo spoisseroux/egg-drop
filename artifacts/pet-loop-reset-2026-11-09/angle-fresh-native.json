@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "result": {
+    "1": "normalized center angle is straight down; endpoints are symmetric 35 degrees at speed10",
+    "2": "every tier and angle begins at exactly the fixed origin with server-derived launch velocity",
+    "3": "invalid nonfinite or nonnormalized input rejects before consuming a drop",
+    "4": "short dotted preview equals the fresh uncollided production flight at every sample",
+    "5": "angle changes cannot dodge a blocked spawn or bypass contact gate and cap",
+    "6": "same seed and normalized angle trace remain deterministic"
+  }
+}

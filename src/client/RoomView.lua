@@ -5,6 +5,8 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local PetFocusUI = require(script.Parent.PetFocusUI)
+local FocusTransition=require(script.Parent.FocusTransition)
+local FocusCharacterVisibility=require(script.Parent.FocusCharacterVisibility)
 local PetAffection=require(script.Parent.PetAffection)
 local HollowAmbience=require(script.Parent.HollowAmbience)
 
@@ -92,6 +94,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
 	self.garden=GardenClient.new(progress.Parent)
+	self.focusTransition=FocusTransition.new(gui,reduceEffects)
 	self.gardenToy=GardenToyVisual.new(workspace,GardenLayout.Toy)
 	self.companions.garden=self.garden
 	self.ambience=HollowAmbience.new()
@@ -106,7 +109,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		charmToggle=function(visible)return self:setCharmVisible(visible)end,
 		canOwnInput = function() return not self.busy and not self.overlayOpen() end,
 		canReact = function()
-			return self.focusing and self.mode == "Room" and not self.busy and not self.overlayOpen()
+			return self.focusing and not self.focusTransitioning and self.mode == "Room" and not self.busy and not self.overlayOpen()
 				and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
 		end,
 	})
@@ -136,7 +139,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	leave.Activated:Connect(function()
 		if not self.busy and not overlayOpen() then self:requestSwitch(onReturn) end
 	end)
-	watch(Players.LocalPlayer.CharacterRemoving,function(character)self.removingCharacter=character;self.returnRoamShot=nil;if self.focusUI then self.focusUI:cancelPointer()end;self:setPetContact(false);if self.stations then self.stations:refresh()end end)
+	watch(Players.LocalPlayer.CharacterRemoving,function(character)if self.focusing then self:useRoomCamera(false)end;self.removingCharacter=character;self.returnRoamShot=nil;if self.focusUI then self.focusUI:cancelPointer()end;self:setPetContact(false);if self.stations then self.stations:refresh()end end)
 	watch(Players.LocalPlayer.CharacterAdded, function(character)
 		-- Cancel against the old character immediately; waiting for Humanoid must not retain a lock.
 		self.removingCharacter=nil
@@ -163,8 +166,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
   end
 		self:retryArrivalPlacement()
 		self:updateControls()
+        if self.focusing and not self.focusExiting and(self.focusUI.windowActive==false or GuiService.MenuIsOpen or self.overlayOpen()or self.menuOpen or self.target~="Room")then self:useRoomCamera(false)end
 		local gardenFocus=self.focusing and self.mode=="Room"and not self.busy and not self.overlayOpen()and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and self.focusUI.windowActive~=false
-		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id,self.pet.origin,self.pet.yaw)else self.garden:focus(false)end
+		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id)else self.garden:focus(false)end
 		self.garden:step(dt)
 		if self.gardenToy then
 			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
@@ -175,7 +179,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			local character = Players.LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-			if self.focusing then
+			if self.focusing and not self.focusTransitioning then
 				local shot = self.greetingCamera
 				if not root or not humanoid or humanoid.Health <= 0 or not shot or shot.root ~= root
 					or shot.camera ~= workspace.CurrentCamera then self:useRoomCamera(false)
@@ -217,7 +221,7 @@ end
 
 function Room:updateControls()
 	if self.stations then self.stations:refresh() end
-	local unobscured = self.mode == "Room" and not self.focusing and not self.busy
+	local unobscured = self.mode == "Room" and not self.focusing and not self.busy and not self.focusTransitioning
 		and not self.menuOpen and not self.overlayOpen() and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
 	if self.canRoam then unobscured=self.canRoam() end
 	self.controls.Visible = unobscured
@@ -272,6 +276,7 @@ function Room:choosePet(pet)
 end
 
 function Room:showPet(pet)
+    if self.focusing then self:useRoomCamera(false)end
 	if self.focusUI then self.focusUI:cancelPointer()end
 	self:setPetContact(false)
 	local owned = self.progress:GetAttribute("OwnedPets") or 0
@@ -368,7 +373,22 @@ function Room:captureReturnRoam()
 	return true
 end
 
-function Room:restoreCamera()
+function Room:hideFocusCharacter(character)
+    if self.focusVisibility and self.focusVisibility.character==character and not self.focusVisibility.released then return end
+    self:restoreFocusCharacter()
+    self.focusVisibility=FocusCharacterVisibility.acquire(character)
+end
+function Room:restoreFocusCharacter()
+    local scope=self.focusVisibility;self.focusVisibility=nil
+    if scope then scope:release()end
+end
+
+function Room:restoreCamera(keepFocusCover)
+    self:restoreFocusCharacter()
+    if not keepFocusCover then
+        if self.focusTransition and not self.focusTransition.destroyed then self.focusTransition:cancel()end
+        self.focusTransitioning,self.focusExiting=false,false
+    end
 	if self.pet then self.pet.focusPose=false;self.pet.focused=false end
 	if self.focusUI then self.focusUI:cancelPointer()end
 	self:setPetContact(false)
@@ -402,7 +422,27 @@ function Room:retryArrivalPlacement()
 	end
 end
 
-function Room:useRoomCamera(animate, arriving)
+function Room:useRoomCamera(animate,arriving)
+    if self.focusTransition and (self.focusing or self.greetingCamera or self.focusTransitioning)and not self.destroyed then
+        if self.focusExiting then return false end
+        self.focusExiting=true;self.focusTransitioning=true
+        self.focusEpoch=(self.focusEpoch or 0)+1
+        if self.focusUI then self.focusUI:cancelPointer()end
+        self:setPetContact(false)
+        local token=self.focusTransition:begin()
+        task.spawn(function()
+            if not self.focusTransition:cover(token)then return end
+            self:_useRoomCamera(false,arriving)
+            self.focusExiting=false
+            self.focusTransition:reveal(token)
+            if self.focusTransition:owns(token)then self.focusTransitioning=false;self:updateControls()end
+        end)
+        return true
+    end
+    return self:_useRoomCamera(animate,arriving)
+end
+function Room:_useRoomCamera(animate, arriving)
+    self:restoreFocusCharacter()
 	self.focusStageOrigin,self.focusStageBearing=nil,nil
 	if self.garden then self.garden:focus(false)end
 	if self.focusUI then self.focusUI:cancelPointer()end
@@ -418,14 +458,14 @@ function Room:useRoomCamera(animate, arriving)
 	local returning=if placing then self.returnRoamShot else nil
 	if placing then self.arrivalPlacementPending=nil;self.arrivalUnplaced=false;self.returnRoamShot=nil end
 	if not camera then
-		self:restoreCamera()
+		self:restoreCamera(true)
 		return
 	end
 	local greeting = self.greetingCamera
 	if self.viewportChanged then self.viewportChanged:Disconnect(); self.viewportChanged = nil end
 	self.focusAspect = nil
 	if not self.savedCamera or self.savedCamera.camera ~= camera then
-		self:restoreCamera()
+		self:restoreCamera(true)
 		self.savedCamera = {
 			camera = camera, type = camera.CameraType, transform = camera.CFrame,
 			focus = camera.Focus, fov = camera.FieldOfView,
@@ -446,15 +486,15 @@ function Room:useRoomCamera(animate, arriving)
 	local restored = PetGreetingShot.restore(greeting, camera, root)
 	if not restored and placing then restored=PetGreetingShot.restore(returning,camera,root) end
 	if greeting and self.pet and root then
-		local origin
-		if restored and greeting.pet == self.pet then
-			origin = greeting.petOrigin + root.Position - greeting.position
-			self.pet.yaw = greeting.petYaw
-		else
-			origin = root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6
-			self.pet.yaw = math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z)
-		end
-		self.pet.origin = Vector3.new(origin.X, PetFollow.ground(origin, self.pet, origin.Y), origin.Z)
+        -- The public actor kept moving independently of the private shot. Sample
+        -- its newest authoritative pose before revealing the roaming camera.
+        local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,root.Parent)
+        local sample=actor and GardenActivity.sample(actor,workspace:GetServerTimeNow())
+        local origin=sample and sample.position or self.focusPublicOrigin or self.pet.origin
+        self.pet.origin=origin
+        self.pet.yaw=sample and sample.yaw or self.focusPublicYaw or self.pet.yaw
+        self.pet.gardenFocus=false
+        if self.pet.applyGardenPose then self.pet:applyGardenPose(sample or {expression="neutral"})end
 		self.pet.lastFrame = -1
 		self.pet:update(0)
 	end
@@ -494,7 +534,7 @@ function Room:planGreeting(camera, root, floor)
 	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)
 	local crestReserve=PetPrestige.crestReserve(self.pet)
 	local topInset,bottomInset=GuiService:GetGuiInset()
-	local safeTop=topInset.Y
+	local safeTop=topInset.Y+(self.focusUI.controlHeight or 44)+24
 	local animationRise=.55*(self.pet.worldScale or 1)
 	local reach=PetGreetingShot.maximumReach(size,aspect,crestReserve,camera.ViewportSize.Y,safeTop,animationRise)
 	local visualBlocks={}
@@ -512,7 +552,7 @@ function Room:planGreeting(camera, root, floor)
 	local plan=PetGreetingShot.plan({
 		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,silhouette=silhouette,focusEnvelope=focusEnvelope,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=animationRise,
 		centerOffset=CFrame.Angles(0,self.pet.yaw or 0,0):VectorToObjectSpace(bounds.Position-self.pet.origin),
-		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},preferredBearing=self.focusStageBearing,preferredOrigin=self.focusStageOrigin,
+		actualOrigin=self.focusPublicOrigin or self.pet.origin,aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},preferredBearing=self.focusStageBearing,preferredOrigin=self.focusStageOrigin,
 		ground=function(position)
 			groundQueries += 1
 			local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
@@ -551,11 +591,15 @@ function Room:planGreeting(camera, root, floor)
 end
 
 function Room:applyFocusPlan(plan, camera)
+    -- Called only after an opaque rendered frame. The close-up owns this local
+    -- character mask; public avatars and the authoritative pet remain intact.
+    local shot=self.greetingCamera
+    self:hideFocusCharacter(shot and shot.root and shot.root.Parent)
 	self:cancelCameraTween()
 	self.pet.origin, self.pet.yaw = plan.origin, plan.yaw
 	self.focusStageOrigin,self.focusStageBearing=plan.origin,plan.bearing
 	if self.garden and self.focusing and self.focusUI.windowActive~=false and not self.overlayOpen()and not GuiService.MenuIsOpen then
-		self.garden:focus(true,self.shownPet.id,plan.origin,plan.yaw)
+		self.garden:focus(true,self.shownPet.id)
 	end
 	self.pet.focusPose=true
 	self.pet.lastFrame = -1
@@ -581,7 +625,7 @@ function Room:reframeFocus()
 	local viewport = camera.ViewportSize
 	if viewport.X <= 0 or viewport.Y <= 0 then return false end
 	local geometry=Room.focusGeometryKey(camera)
-	if self.focusGeometry==geometry then return true end
+	if self.focusGeometry==geometry or self.focusTransitioning then return true end
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
 	if not floor then self:useRoomCamera(false);return false end
@@ -589,8 +633,15 @@ function Room:reframeFocus()
 	if not plan then self:useRoomCamera(false);return false end
 	-- Resize changes only the geometry. The original pre-focus restore snapshot,
 	-- pet origin, root and generation remain untouched for Back/respawn handling.
-	self:applyFocusPlan(plan, camera)
-	return true
+	self.focusTransitioning=true
+    local epoch=self.focusEpoch;local token=self.focusTransition:begin()
+    task.spawn(function()
+        if not self.focusTransition:cover(token)then return end
+        if self.focusing and self.focusEpoch==epoch and workspace.CurrentCamera==camera then self:applyFocusPlan(plan,camera)end
+        self.focusTransition:reveal(token)
+        if self.focusTransition:owns(token)then self.focusTransitioning=false end
+    end)
+    return true
 end
 
 function Room:focusPet()
@@ -600,7 +651,13 @@ function Room:focusPet()
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
 	if self.focusing then return self:reactPet(false) end
-	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor then return false end
+	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor or self.focusTransitioning then return false end
+    local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
+    local public=actor and GardenActivity.sample(actor,workspace:GetServerTimeNow())
+    if public and(public.position-root.Position).Magnitude>7 then
+        self.focusUI:showFeedback("Let your pet come closer, then try again")
+        return false
+    end
 	local plan = self:planGreeting(camera, root, floor)
 	if not plan then return false end
 	self:cancelCameraTween()
@@ -616,32 +673,49 @@ function Room:focusPet()
 		self:useRoomCamera(false)
 		return false
 	end
-	-- Stage both in one callback. Only FOV settles; no lens path crosses the pet.
-	self.pet.origin,self.pet.yaw=plan.origin,plan.yaw
-	self.focusStageOrigin,self.focusStageBearing=plan.origin,plan.bearing
-	if self.garden then self.garden:focus(true,self.shownPet.id,plan.origin,plan.yaw)end
-	self.pet.focusPose=true
-	if self.pet.applyGardenPose then self.pet:applyGardenPose({action="focus",actionPhase=0,expression="curious",actionId="focus-"..self.focusEpoch,generation=self.focusEpoch})end
-	if not self.reduceEffects() then self.pet:greet() end
-	self.pet.lastFrame = -1
-	self.pet:update(0)
-	camera.CameraType=Enum.CameraType.Scriptable
-	camera.CFrame,camera.Focus=plan.camera,CFrame.new(plan.target)
-	camera.FieldOfView=if self.reduceEffects() then plan.fov else 48
-	self:updateControls()
-	self.audio:play(self.shownPet.cue)
-	if not self.reduceEffects() then self.cameraTween=tween(camera,.20,{FieldOfView=plan.fov}) end
-	if self.focusUI then self.focusUI:retireRoamHint()end
-	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
-	self.focusGeometry=Room.focusGeometryKey(camera)
-	if self.viewportChanged then self.viewportChanged:Disconnect() end
-	local epoch = self.focusEpoch
-	self.viewportChanged = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-		if not self.destroyed and self.focusing and self.focusEpoch == epoch and workspace.CurrentCamera == camera then
-			self:reframeFocus()
-		end
-	end)
-
+    self.focusPublicOrigin,self.focusPublicYaw=self.pet.origin,self.pet.yaw
+    self.focusTransitioning=true
+    if self.garden then self.garden:focus(true,self.shownPet.id)end
+    local epoch=self.focusEpoch;local token=self.focusTransition:begin()
+    task.spawn(function()
+        if not self.focusTransition:cover(token)then return end
+        if not self.focusing or self.focusEpoch~=epoch or self.destroyed or workspace.CurrentCamera~=camera
+            or Players.LocalPlayer.Character~=character or not self.greetingCamera or self.pet~=self.greetingCamera.pet then
+            if self.focusTransition:owns(token)then self:useRoomCamera(false)end
+            return
+        end
+        -- Keep the covered shot pending until the public pause is confirmed.
+        local deadline=os.clock()+.85;local accepted
+        repeat
+            local current=self.garden.snapshot and self.garden.snapshot.actors[tostring(Players.LocalPlayer.UserId)]
+            accepted=current and current.mode=="Focus"and current.requestGeneration==self.garden.focusSeq
+            if accepted or not self.focusTransition:owns(token)then break end
+            RunService.Heartbeat:Wait()
+        until os.clock()>=deadline
+        if not self.focusTransition:owns(token)or self.focusEpoch~=epoch then return end
+        if not accepted then
+            self:_useRoomCamera(false)
+            self.focusUI:showFeedback("Let your pet come closer, then try again")
+            self.focusTransition:reveal(token)
+            if self.focusTransition:owns(token)then self.focusTransitioning=false;self:updateControls()end
+            return
+        end
+        local current=self.garden.snapshot.actors[tostring(Players.LocalPlayer.UserId)]
+        local public=GardenActivity.sample(current,workspace:GetServerTimeNow())
+        if public then self.focusPublicOrigin,self.focusPublicYaw=public.position,public.yaw end
+        local confirmedPlan=self:planGreeting(camera,root,floor)
+        if not confirmedPlan then self:useRoomCamera(false);return end
+        self:applyFocusPlan(confirmedPlan,camera)
+        if self.pet.applyGardenPose then self.pet:applyGardenPose({action="focus",actionPhase=0,expression="curious",actionId="focus-"..epoch,generation=epoch})end
+        self.audio:play(self.shownPet.cue)
+        if self.focusUI then self.focusUI:retireRoamHint()end
+        self.focusTransition:reveal(token)
+        if self.focusTransition:owns(token)then self.focusTransitioning=false;self:updateControls()end
+    end)
+    if self.viewportChanged then self.viewportChanged:Disconnect()end
+    self.viewportChanged=camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+        if not self.destroyed and self.focusing and self.focusEpoch==epoch and workspace.CurrentCamera==camera then self:reframeFocus()end
+    end)
 	return true
 end
 
@@ -675,7 +749,7 @@ function Room:releaseFocusMovement()
 end
 
 function Room:setPetContact(active)
- if active and self.focusUI and self.focusUI.windowActive==false then return false end
+ if active and (self.focusTransitioning or(self.focusUI and self.focusUI.windowActive==false))then return false end
 	if not active then
 		if not self.petContactActive then return false end
 		self.petContactActive=false
@@ -691,7 +765,7 @@ function Room:setPetContact(active)
 	end
 	if self.petContactActive then return true end
 	local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if self.removingCharacter==Players.LocalPlayer.Character or not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
+	if self.removingCharacter==Players.LocalPlayer.Character or not self.focusing or self.mode~="Room"or self.busy or self.focusTransitioning or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
 		or not self.pet or not self.greetingCamera or self.greetingCamera.root~=root or self.greetingCamera.camera~=workspace.CurrentCamera then return false end
  self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
  if self.affection then self.affection:begin(self.reduceEffects())end
@@ -706,7 +780,7 @@ function Room:setPetContact(active)
 end
 
 function Room:contactEligible(context)
- if not context or self.destroyed or not self.petContactActive or not self.focusing or self.mode~="Room"or self.busy or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return false end
+ if not context or self.destroyed or not self.petContactActive or not self.focusing or self.mode~="Room"or self.busy or self.focusTransitioning or self.menuOpen or self.overlayOpen()or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return false end
  local root,humanoid
  local character=Players.LocalPlayer.Character
  if character then root=character:FindFirstChild("HumanoidRootPart");humanoid=character:FindFirstChildOfClass("Humanoid")end
@@ -721,6 +795,7 @@ function Room:updatePetContact(dt)
 end
 function Room:reactPet(petting)
  if self.focusUI and self.focusUI.windowActive==false then return false end
+	if self.focusTransitioning then return false end
 	if not self.focusing or self.mode ~= "Room" or self.busy or self.overlayOpen() or GuiService.MenuIsOpen
 		or self.menuOpen or UserInputService:GetFocusedTextBox()or not self.pet or not self.greetingCamera then return false end
 	local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -854,6 +929,7 @@ function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
  if self.petContactIntent then self.petContactIntent:destroy()end
+	if self.focusTransition then self.focusTransition:destroy()end
 	if self.garden then self.garden:destroy()end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end

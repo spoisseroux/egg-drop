@@ -64,11 +64,11 @@ function Follow.step(visual, root, dt, state, reduced)
 		if visual.gaitWeight==0 then visual.gaitPhase=0
 		else
 			-- Distance drives slow steps; fast following never aliases into a tremor.
-			local cycles=math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3.5)
+			local cycles=math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3)
 			visual.gaitPhase=((visual.gaitPhase or 0)+cycles*math.pi*2)%(math.pi*2)
 		end
 	end
- visual.movementBob=(1-math.cos(visual.gaitPhase or 0))*.025*(visual.gaitWeight or 0)
+ visual.movementBob=(1-math.cos(visual.gaitPhase or 0))*(if visual.petId=="puddle"then .055 else .065)*(visual.gaitWeight or 0)
 	local toward = if delta.Magnitude > 0.30 then delta else Vector3.new(root.Position.X - old.X, 0, root.Position.Z - old.Z)
 	if toward.Magnitude > 0.05 then
 		local wanted = math.atan2(toward.X, toward.Z) -- pet fronts face +Z
@@ -83,21 +83,22 @@ end
 -- free to sample its expression/limbs less often; it never owns root movement.
 function Follow.activity(visual,actor,now,dt,state,reduced)
 	-- A small shared presentation delay absorbs ordinary replication transit.
-    -- Identity/focus changes bypass history and retain their exact accepted pose.
-    local sampleTime=if actor.mode=="Focus"then now else now-.12
+    -- Focus and Back share that history; private owner staging never enters it.
+    local sampleTime=now-.12
     if actor.previous and sampleTime<actor.startTime then actor=actor.previous end
     local sample=Activity.sample(actor,sampleTime)
 	if not sample then return state end
 	state=state or {};local old=visual.origin
 	visual.origin,visual.yaw,visual.reducedEffects=sample.position,sample.yaw,reduced==true
 	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
-	if (state.mode and state.mode~=sample.mode)or reduced or dt<=0 or traveled>8 then
+	if sample.mode=="Focus" or reduced or dt<=0 or traveled>8 then
 		Follow.rest(visual)
 	else
 		local speed=traveled/math.max(.001,dt)
-		visual.gaitWeight=math.clamp((speed-.025)/3.5,0,1)
-		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3.5)*math.pi*2)%(math.pi*2)
-		visual.movementBob=(1-math.cos(visual.gaitPhase))*.025*visual.gaitWeight
+		state.travelSpeed=(state.travelSpeed or 0)+(speed-(state.travelSpeed or 0))*(1-math.exp(-12*dt))
+		visual.gaitWeight=math.clamp((state.travelSpeed-.025)/3.5,0,1)
+		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3)*math.pi*2)%(math.pi*2)
+		visual.movementBob=(1-math.cos(visual.gaitPhase))*(if visual.petId=="puddle"then .055 else .065)*visual.gaitWeight
 	end
 	state.generation,state.mode=sample.generation,sample.mode
 	visual.gardenFocus=sample.action=="focus"

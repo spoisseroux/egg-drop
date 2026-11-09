@@ -214,6 +214,7 @@ function Shot.plan(args)
 	local preferred=if type(args.preferredBearing)=="number"then math.floor(args.preferredBearing)%8 else 0
 	local nearEdge=not inside(args.rootPosition,args.floor,radius+5.4)
 	local towardCenter=Vector3.new(args.floor.cf.Position.X-args.rootPosition.X,0,args.floor.cf.Position.Z-args.rootPosition.Z)
+	for pass=1,2 do
 	for index = 0, 7 do
 		local bearing=(preferred+index)%8
 		local angle = bearing * math.pi/4
@@ -247,8 +248,9 @@ function Shot.plan(args)
 		local _,targetOffset=candidate(distance)
 		-- The pet's activity destination has its own reach budget. Lens distance
 		-- only frames the subject; a large rig or Dot cannot push it out of care.
-		local origin = args.rootPosition + direction*4.8 + right*2.4
-		if bearing==args.preferredBearing and typeof(args.preferredOrigin)=="Vector3"
+		local origin = if pass==1 then args.actualOrigin else args.rootPosition + direction*4.8 + right*2.4
+		if typeof(origin)~="Vector3"then continue end
+		if pass==2 and bearing==args.preferredBearing and typeof(args.preferredOrigin)=="Vector3"
 			and(args.preferredOrigin-args.rootPosition).Magnitude<=Shot.StageReach then origin=args.preferredOrigin end
 		if not inside(origin,args.floor,radius)then continue end
 		if nearEdge and(origin-args.rootPosition):Dot(towardCenter)<-.001 then continue end
@@ -269,6 +271,7 @@ function Shot.plan(args)
 			return {origin=origin,camera=camera,target=target,yaw=yaw,framingSize=if focusEnvelope then focusEnvelope.size else padded,fov=Shot.Fov,bearing=bearing,
 				bodyFraction=bodyFraction,fitLimited=bodyFraction~=nil and bodyFraction<.545,limitingPart=limitingPart,limitingEdge=limitingEdge}
 		end
+	end
 	end
 	return nil
 end

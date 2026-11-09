@@ -1,0 +1,17 @@
+[
+  {
+    "ok": true,
+    "name": "GardenIntentHost",
+    "result": {
+      "persistentWrites": false,
+      "cases": [
+        "actual host listener accepts position-free focus and retains sampled public position and facing",
+        "client supplied stage is ignored; accepted focus still uses the authoritative actor",
+        "host retains rate identity sequence pet mode and generation validation"
+      ],
+      "realHostListener": true,
+      "passed": 3,
+      "realGardenState": true
+    }
+  }
+]

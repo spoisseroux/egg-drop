@@ -1,0 +1,104 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PocketDeckAim",
+    "result": {
+      "persistentWrites": false,
+      "normalizedAim": 0.9088729040963309,
+      "tier": 1,
+      "pivot": {
+        "y": 56.686466217041016,
+        "x": 208.5
+      },
+      "passed": 3,
+      "cases": [
+        "actual nozzle and rotation center share the fixed launch projection",
+        "real fallback guide dots use the same gravity and launch direction at current angle",
+        "real objective markers are 2px thresholds with no left right or center fill"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyUnderlay",
+    "result": {
+      "spanPool": 1536,
+      "extraCanvases": 0,
+      "imageAvailable": false,
+      "actualRasterGate": "capture ball crossing active left/right region",
+      "passed": 3,
+      "cases": [
+        "thin span thresholds share the LCD subtree below every opaque gel row and existing rail masks",
+        "native and sprite threshold hosts retain 2px width at compact and roomy sizes",
+        "theme refresh retains underlay owner and the bounded pool; LCD release restores sprite underlay"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ThemeLCD",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "sherbet static roles preserve gel/pool/current owner",
+        "stone static roles preserve gel/pool/current owner",
+        "ice static roles preserve gel/pool/current owner",
+        "brick static roles preserve gel/pool/current owner",
+        "moss static roles preserve gel/pool/current owner",
+        "honey static roles preserve gel/pool/current owner",
+        "gloaming static roles preserve gel/pool/current owner",
+        "copperleaf static roles preserve gel/pool/current owner",
+        "failed repaint is explicit sticky failure for existing cheap-owner bridge"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompanionCrest",
+    "result": [
+      "pip ignores all archived rank and legacy FX inputs",
+      "puddle ignores all archived rank and legacy FX inputs",
+      "wick ignores all archived rank and legacy FX inputs",
+      "orbit ignores all archived rank and legacy FX inputs",
+      "bloom_pip ignores all archived rank and legacy FX inputs",
+      "foxfire_wick ignores all archived rank and legacy FX inputs",
+      "eclipse_orbit ignores all archived rank and legacy FX inputs"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "retired mastery and egg goal leave only distinct Play and Daily destinations",
+        "hidden and unchanged snapshots perform no text measurement layout"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JournalPurpose",
+    "result": {
+      "passed": 3,
+      "cases": [
+        "rare-only sparse inventory never unlocks base or displays archived ranks",
+        "body and accent shortcut appears only for owned supported pets",
+        "largest collection rows scroll on compact and portrait safe widths"
+      ]
+    }
+  }
+]

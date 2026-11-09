@@ -1,0 +1,8 @@
+[
+  {
+    "ok": false,
+    "preference": "Largest",
+    "name": "HueEggView",
+    "result": "Players.keehar01.PlayerScripts.Client.QAHueEggView:96: Players.keehar01.PlayerScripts.Client.QAHueEggView:40: desktop held swatches needlessly below Apply"
+  }
+]

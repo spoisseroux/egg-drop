@@ -16,7 +16,7 @@ function Catalog.facts(profile,hatch)
 		totalWins=hatch.totalWins or 0,masteryRanks=ranks}
 end
 local definitions={free={text="Available",target=1},firstWin={text="Win one saved field round",target=1},
-	rankI={text="Reach rank I with an owned family",target=1},rankII={text="Reach rank II with an owned family",target=2},
+	rankI={text="Win 3 saved field rounds",target=3},rankII={text="Win 10 saved field rounds",target=10},
 	highRoller={text="Complete High Roller: score 250 in one round",target=1},chain3={text="Complete Triple Pop: chain 3 merges",target=1},
 	wick={text="Own Wick",target=1},trials={text="Complete all three Pocket Trials",target=3}}
 local function maximumRank(facts)
@@ -41,7 +41,10 @@ function Catalog.describeRequirement(slot,id,facts)
 	local progress=1
 	if rule=="firstWin"then
 		local wins=facts.totalWins;progress=if type(wins)=="number"and wins==wins and wins>=0 and wins%1==0 then math.min(wins,1)else 0
-	elseif rule=="rankI"or rule=="rankII"then progress=maximumRank(facts)
+	elseif rule=="rankI"or rule=="rankII"then
+        local historical=maximumRank(facts)>=(if rule=="rankI"then 1 else 2)
+        local wins=facts.totalWins
+        progress=if historical then definition.target elseif type(wins)=="number"and wins==wins and wins>=0 and wins%1==0 then math.min(wins,definition.target)else 0
 	elseif rule=="highRoller"then progress=if bit32.band(trials,Trials.HighRoller.bit)~=0 then 1 else 0
 	elseif rule=="chain3"then progress=if bit32.band(trials,Trials.Goals[1].bit)~=0 then 1 else 0
 	elseif rule=="wick"then progress=if Stickers.canEquip(id,facts.rank or 0,trials,facts.inventoryMask)then 1 else 0

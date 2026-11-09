@@ -1,0 +1,43 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueIntent",
+    "result": {
+      "evidence": "pure client intent ordering with injected transport and confirmed snapshots",
+      "persistentWrites": false,
+      "passed": 12,
+      "cases": [
+        "duplicate clicks create one revision-prefixed quote and exact retries preserve every field",
+        "pending pet reveal, unavailable host and pending save status fence requests",
+        "wrong operation id, pet or action replies cannot terminate or prove the pending request",
+        "Saved before snapshot retains proof without changing confirmed palette or wallet",
+        "snapshot before event settles once and a late event cannot create another request",
+        "coalesced newer last result accepts older matching Saved without rewinding current colors",
+        "Saved proof survives late Rejected and Retrying until a newer snapshot crosses its revision",
+        "rejected rank or wallet quote never optimistically grants a color or permits retry",
+        "stale snapshots cannot roll back the confirmed revision, palette or wallet",
+        "body and secondary requests are independent; Original retains learned ranks and secondary",
+        "held stock, exhausted capacity and insufficient wallet fence purchase; assignment requires owned support",
+        "free reset and learned mix send exact canonical intent without spending stock"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HuePalette",
+    "result": [
+      "linear-light blend uses the standard independent black-white reference",
+      "every learned grade keeps protected facial roles exact and Original restores authored colors",
+      "sparse defaults and invalid tokens cannot add arbitrary colors or mutate rank maps",
+      "canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face"
+    ]
+  },
+  {
+    "ok": false,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": "Players.keehar01.PlayerScripts.Client.QAHueEggView:64: Players.keehar01.PlayerScripts.Client.QAHueEggView:40: assertion failed!"
+  }
+]

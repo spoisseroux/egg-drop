@@ -1,4 +1,72 @@
-# Egg Drop — Stars, companion eggs and Hue Eggs
+# Egg Drop — Stars, companion eggs and held Hue Eggs
+
+**Active accepted/runtime rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** These supersede earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. Latest verified private publication remains **v241 (7145db9)**; publication of this reset is pending root verification. [PLAY-BUILD.md](PLAY-BUILD.md) is the publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
+
+## Play, collect and return
+
+New players earn guaranteed Zivvi (`pip`) on the welcome board. Ovelle retains `puddle`; the seven catalog identities and sparse ownership remain stable. Unlimited 24-drop rounds rotate Bank Pair, Creek Crossing and Lantern Chain. Bank needs III-or-higher on each side; Creek needs exact II in the closed center, then III-or-higher at the indicated bank; Lantern needs two merges followed by two new merges in the same host chain. A stage-one merge cannot also satisfy stage two.
+
+The launch is always **(0, SpawnY)**. Normalized aim .5 points down; endpoints map symmetrically to **±35°**, speed **10** board units/second, velocity `(10*sin(angle), -10*cos(angle))`. Mouse/touch/keyboard/D-pad/A share this map. The server derives position and velocity; clients cannot submit their own. Thin 1–2px **threshold lines** replace region fills/highlights on all render paths; diagonal physical banks remain unchanged.
+
+Contact/merge readiness, the 1.8-second fallback, .35-second minimum cadence and four-second final settlement remain. Both goals without overflow pay **6 Stars**, or **8** below clean-bonus height 7.5. A completed-budget failure pays zero base but may earn its eligible chain/score contracts. Preserve an unfinished round through a lounge visit; Room→Board after a completed saved round starts fresh. Reconnect does not preserve the physical board. Pending rewards/results remain fenced and replay-safe.
+
+## One wallet and companion eggs
+
+Stars present the existing `nectar` balance one-for-one; no second currency. Welcome credit is 6. The optional daily gift remains 6; contracts auto-award Win 2 rounds +4, Chain 3 +3 and Score 500 +3 under their completed-round conditions. Hollow day changes at fixed **05:00 UTC**, independent of DST. The welcome/migration day cannot claim a second daily gift. There is no daily play/drop cap or paid luck.
+
+| Companion recipe | Cost | Outcomes |
+|---|---:|---|
+| Mixed Meadow | 18 Stars | Zivvi 35%, Ovelle 25%, Wick 20%, Orbit 10%, Bloom Pip 5%, Foxfire Wick 3%, Eclipse Orbit 2% |
+| Sprout Focused | 24 Stars | Zivvi 80%, Bloom Pip 20% |
+
+After seven consecutive non-rare companion hatches, the next is rare-only: Meadow Bloom Pip 50% /Foxfire Wick 30% /Eclipse Orbit 20%; Focused Bloom Pip 100%. A rare, including an owned rare duplicate, resolves the guarantee. It does not guarantee a missing common.
+
+A new result sets its exact ownership bit. An owned result shows **Already owned**, **grants nothing**, and leaves equip unchanged unless Meet is selected. Full normal price and pity effects still apply. Close/rejoin restores the exact committed reveal; acknowledgment cannot reroll or grant again. Pending historical receipts migrate verbatim without paying another reward.
+
+**Mastery is archived, not active progression.** Rounds/hatches no longer add marks/challenges or promote; rank badges, family routes and rank feedback are removed. Preserve frozen marks, challenges and entitlements. New Gloaming eligibility is 3 saved wins; Copperleaf and Lantern background are 10 saved wins. Each also accepts its old earned entitlement. Honey stays 1 saved win; independent trials, achievements and daily contracts retain their own rules. `totalWins` advances once per committed win.
+
+## One generic Hue Egg, then assignment
+
+Hatch eggs separates **Companion eggs** and **Hue Egg**. The single cream/banded Hue Egg costs **8 Stars**, has no target or color until assignment, and creates **one saved held token**. It does not roll rarity, change pity or add inventory. No second purchase while held, no purchase without an owned supported pet with remaining grade capacity, and no purchase over a pending companion reveal. Ordinary held stock does not prevent companion purchases; the companion reveal keeps priority.
+
+After the purchase commits, choose an actually owned Zivvi/Ovelle (including unequipped), hue and explicit **Apply to [pet]**. Both choices can change before Apply. Consume that exact held token to advance only that pet/hue by one grade, capped III; select the body, clear its active mix and unlock its accent at first grade. Preserve the chosen accent and charm visibility. Closing, reconnecting, invalid assignment, max grade or failed save retains stock. At III, the hue stays selectable as learned but shows **Already at grade III** and cannot consume stock.
+
+| Learned hue | Canonical swatch | Body strength I / II / III |
+|---|---|---|
+| Rose | `#FF327A` | .65 / .84 / 1.0 |
+| Tide | `#008DFF` | .65 / .84 / 1.0 |
+| Citrus | `#FFCC00` | .65 / .84 / 1.0 |
+| Iris | `#9350FF` | .65 / .84 / 1.0 |
+
+World, comparison and reveal share the resolver. Dark eyes/mouth, ivory, cheeks and teeth keep authored roles. Grade is paid pigment strength, not companion mastery. Confirmed saved choices alone repaint live owner/visitor rigs; previews never change authority.
+
+## Free Colors and mixing
+
+Colors stays available without Stars or stock. Learned **Body** and independent **Accent** choices are free. **Original body** and **Default accent** restore the authored neutral channels. **Reset to original colors** saves both neutral channels and clears mixing while retaining all grades/unlocks, held stock and charm visibility. A single-body or Original selection clears only the active body mix; accents stay independent.
+
+Mix body chooses two learned bases for free. Six unordered fixed recipes exist: Rose/Tide `#AC4BFA`, Rose/Citrus `#FF733A`, Rose/Iris `#E333BE`, Tide/Citrus `#00BE77`, Tide/Iris `#5859F1`, Citrus/Iris `#EE6997`. Store sorted IDs/canonical pair; use the lesser learned grade. No arbitrary RGB, recursive mix, new unlock, stock consumption or debit.
+
+## Persistence, retries and care authority
+
+The leased `HatchProgress` subrecord is now **version 5**. Validate v4 before upgrade; retain v2/v3 upgrades and make repeat acquisition a no-op. Preserve wallet, sparse inventory/equip, daily, pity, archived mastery, pending results, exact old receipts, ranks/colors and charm. Separate immutable legacy paid slots from new held purchases/assignment proofs; at most **24 acquired grades** across 2 pets ×4 hues ×3. Never fabricate old purchases. Malformed records fail closed.
+
+- **Purchase:** bind action/request ID, expected revision and immutable quote; deduct 8 and store held token/purchase proof atomically. Exact replay proves the old purchase before stale-revision/stock checks and never debits again.
+- **Apply:** validate exact token/pet/hue/prior grade; consume stock, increase one grade and record its assignment together. A stale or altered retry cannot consume a later egg.
+- **Free selections/mix/reset:** validate owned support and learned keys in the transaction, save selections only, and retain captured identity for genuine retries. No optimistic wallet/equip changes; no purchase on lost free-selection reply.
+
+Unseen legacy directional purchases reject; exact old saved receipts may replay without changing current selection. Bounded history plus original revision fences prevent evicted requests mutating twice. Ambiguous writes retry captured operations through existing lease/session fencing; invalid load cannot overwrite a profile. Saved event/snapshot ordering cannot rewind a later confirmed palette or wallet.
+
+Focus pauses the authoritative public actor at its sampled position. Owner-private framing is covered and locally masked, never client reach evidence or public staging. Back samples the current actor. Care remains server-validated: continuous qualified input has the existing 50% opportunity after 12 seconds, no sooner than 12 seconds apart, up to 5 saved +1-Star awards per Hollow day. Idle focus, wandering and toy actions earn nothing. A glyph requires an exact new Saved operation for the current lease/focus; historical wallet deltas cannot replay it.
+
+## Current evidence and limits
+
+The reset evidence records 104 exact compiling sources; Largest Hue13+Intent12 and fresh uncached Hue13/visibility3/night2/presentation3 pass. Native input completed a 24-drop round at settled 670/+14 Stars and the held purchase20→12. Saved buy/reopen/apply, independent accent, mix and neutral reset have separate records. Actual final 14-second care input reacted but its random opportunity awarded zero.
+
+Actual two-client sampled public pose and owner-only mask behavior passed through Focus/Back; gait samples cover about18studs of travel and .13stud vertical range. This is telemetry, not fixed-camera film. The live idle sample near the creek showed only rest/follow; native planner5/host-ground guards prove bounded decisions separately, not live wandering there. Physical hardware, real private-client save/rejoin, latency and long human play/balance remain separate gates. See VERIFY for exact files and superseded fixture failures.
+
+## Historical v241 contract and evidence — superseded
+
+The following preserved snapshot describes the **older v241 publication**, not the accepted reset. Every use of “current”, “shipped” or “no version bump” in this snapshot refers to that older build. Its Feed-named directional purchases, 12%/23%/35% tints and live mastery are historical only. The active sections above and PET-LOOP-RESET.md take precedence.
 
 The current branch has one earned **Stars** wallet, three rotating field variations, companion hatches and deterministic Hue Eggs for Zivvi and Ovelle. Stars are the existing stored `nectar` balance presented one-for-one; this pass creates no second currency and changes no historical reward amount. [Accepted design and transaction contract](PET-SOFTENING-AND-HUE.md) · [Hue verification evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md).
 
@@ -77,7 +145,7 @@ Physical-phone comfort, a real-account save/rejoin over live DataStore networkin
 
 ## Historical decisions and verification — 2026-11-06
 
-The dated sections below preserve the earlier design and test record. Their old **nectar** label, Pip/Puddle visuals, two-bank-only route, 112×96 lounge and earlier schema descriptions are historical. The active Stars/Hue and rotating-field sections above take precedence. Proposed rates, rewards and unfinished features in this archive are not enabled merely by appearing here.
+The dated sections below preserve the earlier design and test record. Their old **nectar** label, Pip/Puddle visuals, two-bank-only route, 112×96 lounge and earlier schema descriptions are historical. The active pet-loop-reset rules at the top of this document take precedence; all sections below this historical heading remain archival, including headings that say shipped or current. Proposed rates, rewards and unfinished features in this archive are not enabled merely by appearing here.
 
 ## Proposed family prestige — scope only, 2026-11-06
 

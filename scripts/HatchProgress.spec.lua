@@ -114,11 +114,11 @@ return function(Hatching, Catalog)
 		local revision = h.state.revision
 		command(h, "hatch", "meadow")
 		assert(h.state.nectar == 0 and h.state.lastHatch.petId == "pip" and h.state.lastHatch.duplicate)
-		assert(h.state.mastery.pip == 1 and c.randomCalls == 1)
+		assert(h.state.mastery.pip == 0 and c.randomCalls == 1)
 		writes = c.updateCalls
 		ok = Hatching.command(h, "hatch", "meadow", revision)
 		assert(not ok and h.state.nectar == 0 and c.randomCalls == 1 and c.updateCalls == writes)
-		assert(db.player_1.hatching.mastery.pip == 1)
+		assert(db.player_1.hatching.mastery.pip == 0)
 	end)
 
 	test("ambiguous committed hatch cannot reroll or duplicate", function()
@@ -134,7 +134,7 @@ return function(Hatching, Catalog)
 		c.sample = 0.999
 		ok = Hatching.command(h, "hatch", id, revision)
 		assert(ok and h.state.lastHatch.id == committed.id and h.state.lastHatch.petId == "pip")
-		assert(h.state.mastery.pip == 1 and c.randomCalls == 1)
+		assert(h.state.mastery.pip == 0 and c.randomCalls == 1)
 	end)
 
 	test("pre-commit hatch, acknowledgement and daily failures resume unchanged", function()
@@ -150,7 +150,7 @@ return function(Hatching, Catalog)
 		assert(Hatching.retry(h))
 		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == 0)
 		assert(h.state.lastOperation.id == pendingId and h.state.lastHatch.id == hatchId)
-		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 1 and c.randomCalls == 1)
+		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 0 and c.randomCalls == 1)
 		local ok, reason = Hatching.retry(h)
 		assert(not ok and reason == "NoPending" and h.state.nectar == 0)
 		c.failBeforeCommit = true
@@ -281,11 +281,11 @@ return function(Hatching, Catalog)
 		assert(Hatching.release(h))
 		local old = db.player_1.hatching
 		old.version, old.mastery.pip, old.mastery.wick = 2, 3, 2
-		old.petDay,old.petCount,old.lastPetAward=nil,nil,nil -- Authentic pre-pet v2 input.
+		old.hueAssignments=nil;old.petDay,old.petCount,old.lastPetAward=nil,nil,nil -- Authentic pre-pet v2 input.
 		old.masteryChallenges, old.masteryLegacyMask, old.contracts, old.totalWins = nil, nil, nil, nil
 		db.player_1.keep, old.nectar = "untouched", 47
 		h = Hatching.load(1, {}, adapter("b"))
-		assert(h.status == "Ready" and h.state.version == 4 and h.state.nectar == 47)
+		assert(h.status == "Ready" and h.state.version == 5 and h.state.nectar == 47)
 		assert(h.state.petCount==0 and h.state.petDay==Hatching.public(h).dailyDay)
 		local public = Hatching.public(h)
 		assert(public.mastery.pip == 3 and public.mastery.wick == 2 and public.masteryLegacyMask == 1)
@@ -296,40 +296,36 @@ return function(Hatching, Catalog)
 		assert(h.state.nectar == 47 and h.state.masteryLegacyMask == 1)
 	end)
 
-	test("mastery ranks need permanent points and three distinct successful challenges", function()
-		local db, _, adapter = fixture()
-		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-		assert(Hatching.award(h, 1, 8, runSummary(h)))
-		assert(h.state.mastery.pip == 2 and h.state.masteryChallenges.pip == 7 and Hatching.public(h).masteryRanks.pip == 0)
-		assert(Hatching.award(h, 2, 6, runSummary(h, { clean = false })))
-		assert(h.state.mastery.pip == 3 and Hatching.public(h).masteryRanks.pip == 1)
-		db.player_1.hatching.mastery.pip, db.player_1.hatching.masteryChallenges.pip = 24, 6
-		assert(Hatching.renew(h))
-		assert(Hatching.public(h).masteryRanks.pip == 2)
-		assert(Hatching.award(h, 3, 6, runSummary(h, { clean = false, chain = 1, score = 1 })))
-		assert(h.state.mastery.pip == 25 and Hatching.public(h).masteryRanks.pip == 2)
-		assert(Hatching.award(h, 4, 8, runSummary(h, { chain = 1, score = 1 })))
-		assert(h.state.masteryChallenges.pip == 7 and Hatching.public(h).masteryRanks.pip == 3)
-		assert(h.state.lastRunReward.promotedTo == 3)
-	end)
+	test("saved wins preserve archived mastery points challenges and rank without promotions", function()
+        local db, _, adapter = fixture()
+        local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+        assert(Hatching.award(h, 1, 8, runSummary(h)))
+        assert(h.state.mastery.pip == 0 and h.state.masteryChallenges.pip == 0 and h.state.totalWins == 1)
+        db.player_1.hatching.mastery.pip, db.player_1.hatching.masteryChallenges.pip = 24, 6
+        assert(Hatching.renew(h))
+        assert(Hatching.public(h).masteryRanks.pip == 2)
+        assert(Hatching.award(h, 2, 8, runSummary(h)))
+        assert(h.state.mastery.pip == 24 and h.state.masteryChallenges.pip == 6 and Hatching.public(h).masteryRanks.pip == 2)
+        assert(h.state.lastRunReward.promotedTo == 0 and h.state.lastRunReward.masteryPoints == 0)
+    end)
 
-	test("daily contracts and mastery pay atomically once per run and day", function()
+	test("daily contracts and saved wins commit atomically once per run and day", function()
 		local _, c, adapter = fixture()
 		c.replay = true
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
 		assert(h.state.nectar == 20 and h.state.lastRunReward.daily == 6 and h.state.lastRunReward.total == 14)
-		assert(h.state.mastery.pip == 2 and h.state.totalWins == 1)
+		assert(h.state.mastery.pip == 0 and h.state.totalWins == 1)
 		assert(Hatching.award(h, 2, 8, runSummary(h)))
 		assert(h.state.nectar == 32 and h.state.lastRunReward.daily == 4 and h.state.contracts.claimedMask == 7)
 		assert(Hatching.award(h, 3, 8, runSummary(h)))
 		assert(h.state.nectar == 40 and h.state.lastRunReward.daily == 0)
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
-		assert(h.state.nectar == 40 and h.state.mastery.pip == 6 and h.state.totalWins == 3)
+		assert(h.state.nectar == 40 and h.state.mastery.pip == 0 and h.state.totalWins == 3)
 		local public = Hatching.public(h)
 		assert(#public.contracts == 3 and public.contracts[1].claimed and public.contracts[1].progress == 2)
 		public.contracts[1].progress, public.masteryDetails.pip.points = 0, 0
-		assert(h.state.contracts.progress.runs == 2 and h.state.mastery.pip == 6)
+		assert(h.state.contracts.progress.runs == 2 and h.state.mastery.pip == 0)
 	end)
 
 	test("completed-budget failures can earn skill contracts but not mastery or free wins", function()
@@ -369,7 +365,7 @@ return function(Hatching, Catalog)
 			summary.family, summary.score = "orbit", 0
 			c.now += 15
 			assert(Hatching.retry(h))
-			assert(h.state.nectar == 20 and h.state.mastery.pip == 2 and h.state.mastery.orbit == 0)
+			assert(h.state.nectar == 20 and h.state.mastery.pip == 0 and h.state.mastery.orbit == 0)
 			assert(h.state.contracts.day == "20" and h.state.contracts.claimedMask == 6 and h.state.totalWins == 1)
 		end
 	end)
@@ -385,20 +381,20 @@ return function(Hatching, Catalog)
 		assert(c.updateCalls == writes and h.state.nectar == 6 and h.state.mastery.pip == 0)
 	end)
 
-	test("rare-only ownership trains its base family and duplicate marks continue beyond three", function()
+	test("rare-only ownership earns saved wins and duplicate preserves archived marks", function()
 		local db, c, adapter = fixture()
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		db.player_1.hatching.inventoryMask = Catalog.bit("bloom_pip")
 		assert(Hatching.renew(h))
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
-		assert(h.state.mastery.pip == 2 and h.state.mastery.wick == 0)
+		assert(h.state.mastery.pip == 0 and h.state.mastery.wick == 0)
 		-- Restore Pip solely to test a duplicate result; no rank-based ownership is used.
 		db.player_1.hatching.inventoryMask = bit32.bor(h.state.inventoryMask, Catalog.bit("pip"))
 		db.player_1.hatching.mastery.pip = 3
 		assert(Hatching.renew(h))
 		c.sample = 0
 		command(h, "hatch", "meadow")
-		assert(h.state.lastHatch.duplicate and h.state.mastery.pip == 4)
+		assert(h.state.lastHatch.duplicate and h.state.mastery.pip == 3)
 		assert(h.state.masteryLegacyMask == 0 and Hatching.public(h).masteryRanks.pip == 1)
 	end)
 

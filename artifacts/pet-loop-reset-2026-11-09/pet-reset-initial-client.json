@@ -1,0 +1,82 @@
+[
+  {
+    "ok": false,
+    "preference": "Medium",
+    "name": "PetLoopResetPresentation",
+    "result": "Requested module experienced an error while loading"
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetCharmFocus",
+    "result": [
+      "confirmed on/off/pending state and44px accessible control",
+      "toggling cancels active contact and relinquishes gamepad A to selected control",
+      "unsupported, hidden owner and inactive controls cannot send"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "GardenClient",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "joining replica receives current action and rejects stale or malformed replacement",
+        "a partial or superseded peer greeting is never presented as an agreed pair",
+        "character replacement fences a previously valid actor",
+        "an old same-alias snapshot is ignored after confirmed equip generation advances",
+        "one deliberate focus holds with bounded pulses and retirement ends that generation",
+        "quick end and reopen defers acquisition until the server focus cooldown passes",
+        "an unacknowledged current focus retries once and retiring it cancels all retry work",
+        "per-pet authoritative OFF is retained and unsupported peers default to visible"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompanionCrest",
+    "result": [
+      "pip ignores all archived rank and legacy FX inputs",
+      "puddle ignores all archived rank and legacy FX inputs",
+      "wick ignores all archived rank and legacy FX inputs",
+      "orbit ignores all archived rank and legacy FX inputs",
+      "bloom_pip ignores all archived rank and legacy FX inputs",
+      "foxfire_wick ignores all archived rank and legacy FX inputs",
+      "eclipse_orbit ignores all archived rank and legacy FX inputs"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "MenuPolish",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "one readable header and44px controls fit desktop portrait and shallow roots",
+        "page changes keep absolute header and tab positions stable",
+        "complete illustrated destinations start below the scroll clip",
+        "all three shallow contracts show a complete44px first row and independent gift",
+        "claimed gift cannot claim again and earned contracts remain informational",
+        "fresh open and page entry reset scroll while snapshots retain reading position",
+        "scroll cue ends at reachable content and small pages end after content",
+        "retired mastery and egg goal leave only distinct Play and Daily destinations",
+        "hidden and unchanged snapshots perform no text measurement layout"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JournalPurpose",
+    "result": {
+      "passed": 3,
+      "cases": [
+        "rare-only sparse inventory never unlocks base or displays archived ranks",
+        "body and accent shortcut appears only for owned supported pets",
+        "largest collection rows scroll on compact and portrait safe widths"
+      ]
+    }
+  }
+]

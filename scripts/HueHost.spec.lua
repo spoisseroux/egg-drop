@@ -76,44 +76,42 @@ return function(server,hostSource)
  local requests={};for _,event in ipairs(events)do requests[event.Name]=event end
  local board=replicated.EggDropBoards[tostring(id)];local cases={}
  local function test(name,f)f();table.insert(cases,name)end
- local function send(value,revision)requests.HatchRequest.OnServerEvent:Fire(player,"hue",value,revision);return c.packets[#c.packets]end
+ local function send(value,revision,action)requests.HatchRequest.OnServerEvent:Fire(player,action or"hueBuy",value,revision);return c.packets[#c.packets]end
  local function snapshot()return realGame.HttpService:JSONDecode(board:GetAttribute("HatchState"))end
- local revision=h.state.revision;local packet={id=tostring(revision)..":host-rose",petId="pip",hue="rose",rank=0}
- test("actual ambiguous write exposes old confirmed palette and throttled same quote stays Retrying",function()
+ local revision=h.state.revision;local packet={id=tostring(revision)..":host-egg"}
+ test("actual generic buy lost reply exposes old confirmed stock and same-quote throttle stays Retrying",function()
   c.now=1;c.failAfter=true;local response=send(packet,revision)
-  assert(response.status=="Retrying"and h.pending and h.state.nectar==before)
-  assert(snapshot().hues.pip==nil and snapshot().lastHueResult==nil)
+  assert(response.status=="Retrying"and h.pending and h.state.nectar==before and response.petId==nil)
+  assert(snapshot().heldHueEgg==nil and snapshot().lastHueResult==nil)
   local appearance=realGame.HttpService:JSONDecode(board:GetAttribute("PetAppearance"));assert(appearance.pip.body=="original")
   c.now=1.05;assert(send(packet,revision).status=="Retrying","same pending throttle must not be terminal")
  end)
- test("background retry held in storage preserves original waiter through manual Busy and conflicting quote",function()
+ test("background retry held in storage preserves purchase waiter through manual Busy and changed same-ID action",function()
   assert(#c.tasks==2,"only existing retry/renew workers")
   c.now=2;c.hold=true;resume(c.tasks[1]);assert(h.busy and c.blocked and h.pending)
   local pending=h.pending;c.now=2.4;assert(send(packet,revision).status=="Retrying")
-  local conflict=copy(packet);conflict.hue="tide";c.now=2.8
-  local rejected=send(conflict,revision);assert(rejected.status=="Rejected"and rejected.reason=="OperationConflict")
+  local conflict={id=packet.id,petId="pip",token="wrong",hue="tide",rank=0};c.now=2.8
+  local rejected=send(conflict,revision,"hueApply");assert(rejected.status=="Rejected"and rejected.reason=="OperationConflict")
   assert(h.pending==pending and h.state.nectar==before)
   c.now=3;resume(c.blocked)
   local saved=c.packets[#c.packets];assert(saved.status=="Saved"and saved.id==packet.id,"conflicting retry cleared original Hue waiter")
-  assert(h.status=="Ready"and not h.pending and h.state.nectar==before-8)
+  assert(h.status=="Ready"and not h.pending and h.state.nectar==before-8 and h.state.heldHueEgg)
   c.now=3.01;local queued=send(packet,revision)
-  assert(queued.status=="Saved"and queued.reason=="AlreadySaved"and h.state.nectar==before-8,"queued known receipt became a throttled false failure")
-  local receipts=0;for _ in pairs(db["player_"..id].hatching.hueReceipts)do receipts+=1 end
-  assert(receipts==1 and snapshot().hues.pip.ranks.rose==1 and snapshot().hues.pip.ranks.tide==0)
+  assert(queued.status=="Saved"and queued.reason=="AlreadySaved"and h.state.nectar==before-8)
+  assert(snapshot().hues.pip==nil and snapshot().heldHueEgg.token==saved.receipt.token)
  end)
- test("lost saved event remains recoverable from saved-only snapshot and exact request replay cannot spend twice",function()
-  assert(H.award(h,2,8));local balance=h.state.nectar
-  local rev=h.state.revision;local second={id=tostring(rev)..":host-tide",petId="pip",hue="tide",rank=0}
-  c.now=4;c.dropSaved=true;local count=#c.packets;send(second,rev);assert(#c.packets==count)
-  local current=snapshot();assert(current.lastHueResult.id==second.id and current.nectar==balance-8 and current.hues.pip.ranks.tide==1)
-  assert(current.hueReceipts==nil and current.lastHueResult.quote==nil)
-  c.dropSaved=false;c.now=4.5;local replay=send(second,rev)
-  assert(replay.status=="Saved"and replay.receipt.balanceAfter==balance-8 and h.state.nectar==balance-8)
-  assert(H.award(h,3,8));local currentBalance=h.state.nectar;c.now=5
-  local historical=send(packet,revision);local latest=snapshot()
-  assert(historical.status=="Saved"and historical.receipt.balanceAfter==before-8 and h.state.nectar==currentBalance)
-  assert(latest.lastHueResult.id==second.id and latest.hues.pip.body=="tide"and latest.nectar==currentBalance,
-   "old paid replay rewound the latest saved wallet or selection")
+ test("lost apply event recovers from saved-only snapshot; exact purchase/apply replay never spends or consumes later stock",function()
+  local balance=h.state.nectar;local rev=h.state.revision
+  local assignment={id=tostring(rev)..":host-apply",petId="pip",token=h.state.heldHueEgg.token,hue="rose",rank=0}
+  c.now=4;c.dropSaved=true;local count=#c.packets;send(assignment,rev,"hueApply");assert(#c.packets==count)
+  local current=snapshot();assert(current.lastHueResult.id==assignment.id and current.nectar==balance and current.hues.pip.ranks.rose==1 and not current.heldHueEgg)
+  assert(current.hueAssignments==nil and current.hueReceipts==nil and current.lastHueResult.quote==nil)
+  c.dropSaved=false;c.now=4.5;local replay=send(assignment,rev,"hueApply")
+  assert(replay.status=="Saved"and replay.receipt.cost==0 and h.state.nectar==balance)
+  assert(H.award(h,2,8));c.now=5;local secondRevision=h.state.revision
+  local second={id=tostring(secondRevision)..":host-next-egg"};send(second,secondRevision);local token=h.state.heldHueEgg.token;local currentBalance=h.state.nectar
+  c.now=5.5;local old=send(assignment,rev,"hueApply");assert(old.status=="Saved"and h.state.heldHueEgg.token==token and h.state.nectar==currentBalance)
+  c.now=6;local oldBuy=send(packet,revision);assert(oldBuy.status=="Rejected"and not(oldBuy.reason=="Retrying")and h.state.heldHueEgg.token==token and h.state.nectar==currentBalance)
  end)
  players.PlayerRemoving:Fire(player);fixture:Destroy()
  return{passed=#cases,cases=cases,persistentWrites=false,evidence="actual host callbacks and retry coroutine; isolated DB with forced timeout/store suspension"}

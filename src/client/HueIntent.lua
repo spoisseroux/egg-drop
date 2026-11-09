@@ -3,7 +3,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Hues=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Intent={};Intent.__index=Intent
-local messages={RevisionChanged="Your pet or Stars changed. Review the updated preview.",RankChanged="This baby’s rank changed. Review the updated preview.",RevealPending="Finish your pending companion hatch first.",NeedStars="You need more Stars.",Unowned="Choose a baby you own.",LockedHue="This color is not unlocked for this baby.",Stale="Your pet or Stars changed. Review the updated preview.",Insufficient="You need more Stars.",MaxRank="This direction is already max rank.",NotOwned="Choose a baby you own.",Unsupported="Hue Eggs are for Zivvi and Ovelle.",PendingHatch="Finish your pending companion hatch first.",Locked="This color is not unlocked for this baby.",Malformed="That choice could not be saved. Try again.",SessionLost="Reconnect to confirm your saved Stars and colors.",Unavailable="Saving is unavailable. Your confirmed colors are unchanged."}
+local messages={RevisionChanged="Your pet or Stars changed. Review the updated preview.",RankChanged="This baby’s grade changed. Review the updated preview.",RevealPending="Finish your pending companion hatch first.",NeedStars="You need more Stars.",Unowned="Choose a baby you own.",LockedHue="This color is not unlocked for this baby.",Stale="Your pet or Stars changed. Review the updated preview.",Insufficient="You need more Stars.",MaxRank="Already at grade III.",NotOwned="Choose a baby you own.",Unsupported="Hue Eggs are for Zivvi and Ovelle.",EggHeld="Your hatched Hue Egg is ready to apply.",NoCapacity="Every owned supported baby is already at grade III in all four hues.",WrongEgg="Your held egg changed. Review the current egg.",LegacyPurchaseClosed="Choose the generic Hue Egg to hatch first.",PendingHatch="Finish your pending companion hatch first.",Locked="This color is not unlocked for this baby.",Malformed="That choice could not be saved. Try again.",SessionLost="Reconnect to confirm your saved Stars and colors.",Unavailable="Saving is unavailable. Your confirmed colors are unchanged."}
 function Intent.new(d)return setmetatable({d=d,state={},status="Ready"},Intent)end
 function Intent:notify()if self.d.changed then self.d.changed(self)end end
 function Intent:record()return self.state.lastHueResult end
@@ -26,6 +26,7 @@ function Intent:ready(petId)
  if self.d.available and not self.d.available()then return false,"Wait for your saved progress to be ready."end
  if self.state.lastHatch then return false,messages.PendingHatch end
  if self.state.status and self.state.status~="Ready"then return false,"Wait for your current save to finish."end
+ if petId==nil then return true end
  if not Hues.Supported[petId]then return false,messages.Unsupported end
  if not Eggs.isOwned(self.state.inventoryMask or 0,petId)then return false,messages.NotOwned end
  return true
@@ -37,14 +38,29 @@ function Intent:begin(action,petId,values)
  self.pending={action=action,value=value,revision=revision};self.status="Pending";self.message="Saving this change…"
  self:notify();self.d.send(action,value,revision);return true
 end
-function Intent:buy(petId,hue)
- local record=Hues.get(self.state.hues,petId);local offer=Hues.ById[hue]
- if not offer then return false end
- local rank=record.ranks[hue]or 0
- if rank>=Hues.MaxRank then self.message=messages.MaxRank;self:notify();return false end
- if(self.state.nectar or 0)<offer.cost then self.message=messages.Insufficient;self:notify();return false end
- return self:begin("hue",petId,{hue=hue,rank=rank})
+function Intent:hatch()
+ local ready,reason=self:ready();if not ready then self.message=reason;self:notify();return false end
+ if self.state.heldHueEgg then self.message=messages.EggHeld;self:notify();return false end
+ if not Hues.capacity(self.state)then self.message=messages.NoCapacity;self:notify();return false end
+ if(self.state.nectar or 0)<Hues.Cost then self.message=messages.Insufficient;self:notify();return false end
+ return self:begin("hueBuy",nil,{})
 end
+function Intent:apply(petId,hue)
+ local record=Hues.get(self.state.hues,petId)
+ if not Hues.ById[hue]then return false end
+ if not self.state.heldHueEgg then self.message=messages.WrongEgg;self:notify();return false end
+ if record.ranks[hue]>=Hues.MaxRank then self.message="Already at grade III";self:notify();return false end
+ return self:begin("hueApply",petId,{token=self.state.heldHueEgg.token,hue=hue,rank=record.ranks[hue]})
+end
+function Intent:mix(petId,a,b)
+ local pair=Hues.pair(a,b);local record=Hues.get(self.state.hues,petId)
+ if not pair then return false end
+ if record.ranks[a]<1 or record.ranks[b]<1 then self.message=messages.Locked;self:notify();return false end
+ return self:begin("hueMix",petId,{pair=pair})
+end
+function Intent:reset(petId)return self:begin("hueReset",petId,{})end
+-- Older callers cannot accidentally revive directional purchases.
+function Intent:buy()return self:hatch()end
 function Intent:equip(petId,kind,id)
  if kind~="body"and kind~="secondary"then return false end
  local record=Hues.get(self.state.hues,petId)

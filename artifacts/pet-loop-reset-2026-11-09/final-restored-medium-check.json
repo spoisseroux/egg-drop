@@ -1,0 +1,27 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 generic purchase exposes no target or direction before hatching",
+        "1649, 971 held assignment and colors use measured scroll choices and matched rigs",
+        "749, 381 generic purchase exposes no target or direction before hatching",
+        "749, 381 held assignment and colors use measured scroll choices and matched rigs",
+        "350, 703 generic purchase exposes no target or direction before hatching",
+        "350, 703 held assignment and colors use measured scroll choices and matched rigs",
+        "568, 210 generic purchase exposes no target or direction before hatching",
+        "568, 210 held assignment and colors use measured scroll choices and matched rigs",
+        "insufficient funds suppress purchase; max grade preserves held item and free Colors remains accessible",
+        "mix preview uses two learned bases while reset has an explicit independent action",
+        "Colors groups keep one choice set, reset and measured tabs without saving or moving portrait framing",
+        "applied result leads once, next paid action is explicit, and old Saved never masks exhausted or shortfall reasons",
+        "companion reveal preempts Hue without consuming or hiding committed held stock"
+      ],
+      "passed": 13,
+      "actualWalletMutation": false
+    }
+  }
+]

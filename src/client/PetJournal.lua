@@ -3,10 +3,8 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Pets=require(ReplicatedStorage.Shared.PetCatalog)
 local Art=require(script.Parent.DeckArt)
 local Portrait=require(script.Parent.PetPortrait)
-local Crest=require(script.Parent.FamilyCrest)
 local SaveNotice=require(script.Parent.SaveNotice)
 local Journal={};Journal.__index=Journal
-local rankNames={[0]="Unranked","I","II","III"}
 local function visibleSelection(node)
 	if not node or not node.Parent or not node:IsA("GuiObject") or not node.Selectable then return nil end
 	local playerGui=game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
@@ -50,15 +48,13 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
 	self.closeButton=Art.close(button(card,"Close","×",function()self:close("back")end))
-	if onGoals then self.goalsButton=button(card,"FamilyGoals","Family goals",function()self:openFamilyGoals()end)end
 	for index,pet in ipairs(Pets.collection)do
 		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
 		local well=Art.frame(entry,"PortraitWell","inset",UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
 		text(entry,"Species",pet.name..(if pet.trial then " · Rare"else ""),"Action")
 		text(entry,"Status","Hatch from eggs","Body","muted")
-		text(entry,"FamilyRank","","Supporting","muted")
+		text(entry,"ColorHint","","Supporting","muted")
 		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
-		Crest.create(entry,pet.family or pet.id,0,UDim2.fromOffset(0,0),UDim2.fromOffset(36,36),entry.ZIndex+2,true)
 		self.cards[index]=entry
 	end
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
@@ -90,9 +86,9 @@ function Journal:layout()
     if #footerButtons>0 then footerH=math.ceil(#footerButtons/footerColumns)*(footerRow+8)-8 end
 	local minColumn=240
 	for index,entry in ipairs(self.cards)do
-		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.FamilyRank,"Supporting",short);Art.type(entry.Track,"Supporting",short)
+		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.ColorHint,"Supporting",short);Art.type(entry.Track,"Supporting",short)
 		if not Pets.collection[index].trial then
-			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+136,Art.textWidth(entry.FamilyRank)+136)
+			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+96,Art.textWidth(entry.ColorHint)+96)
 		end
 	end
 	local columns=if (bodyW-8)/2>=minColumn then 2 else 1
@@ -108,21 +104,20 @@ function Journal:layout()
 		local rowW=if group==2 then (bodyW-12)/2 else bodyW-8
 		local rowH=76
 		for slot=index,index+group-1 do
-			local entry=self.cards[slot];local textW=math.max(1,rowW-136)
+			local entry=self.cards[slot];local textW=math.max(1,rowW-96)
 			local nameH=Art.textHeight(entry.Species,textW,24);local statusH=Art.textHeight(entry.Status,textW,22)
-			local rankH=if entry.FamilyRank.Visible then Art.textHeight(entry.FamilyRank,textW,20)else 0
+			local rankH=if entry.ColorHint.Visible then Art.textHeight(entry.ColorHint,textW,20)else 0
 			local trackH=if entry.Track.Visible then Art.textHeight(entry.Track,textW,20)else 0
 			entry:SetAttribute("NameHeight",nameH);entry:SetAttribute("StatusHeight",statusH)
 			entry:SetAttribute("RankHeight",rankH);entry:SetAttribute("TrackHeight",trackH)
 			rowH=math.max(rowH,16+nameH+4+statusH+(if rankH>0 then rankH+4 else 0)+(if trackH>0 then trackH+4 else 0))
 		end
 		for slot=index,index+group-1 do
-			local entry=self.cards[slot];local x=4+(slot-index)*(rowW+8);local textW=math.max(1,rowW-136)
+			local entry=self.cards[slot];local x=4+(slot-index)*(rowW+8);local textW=math.max(1,rowW-96)
 			place(entry,x,y,rowW,rowH);place(entry.PortraitWell,8,8,60,60)
-			place(entry.FamilyCrest,rowW-48,8,36,36)
 			local sy=8;place(entry.Species,80,sy,textW,entry:GetAttribute("NameHeight"));sy+=entry:GetAttribute("NameHeight")+4
 			place(entry.Status,80,sy,textW,entry:GetAttribute("StatusHeight"));sy+=entry:GetAttribute("StatusHeight")+4
-			local rankH=entry:GetAttribute("RankHeight");place(entry.FamilyRank,80,sy,textW,rankH);sy+=if rankH>0 then rankH+4 else 0
+			local rankH=entry:GetAttribute("RankHeight");place(entry.ColorHint,80,sy,textW,rankH);sy+=if rankH>0 then rankH+4 else 0
 			place(entry.Track,80,sy,textW,entry:GetAttribute("TrackHeight"))
 		end
 		y+=rowH+8;index+=group
@@ -161,10 +156,6 @@ function Journal:activatePet(index)
 	local pet=Pets.collection[index];local tracking=entry.Track.Visible
 	if self.onAccepted then self.onAccepted("confirm")end;self:close();if tracking then self.onTrack(pet)else self.onVisit(pet)end;return true
 end
-function Journal:openFamilyGoals()
-	if not self.shade.Visible or not self.onGoals then return false end
-	if self.onAccepted then self.onAccepted("confirm")end;self:close();self.onGoals();return true
-end
 function Journal:bumpControllerEpoch()
 	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
 end
@@ -195,13 +186,12 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		local pet=Pets.collection[index];local unlocked=Pets.isUnlocked(pet,owned,trials,inventoryMask)
 		local equipped=unlocked and pet.id==companionId
 		local trackable=inventoryMask==nil and pet.trial~=nil and not unlocked
-		local family=pet.family or pet.id;local rank=math.clamp(math.floor(tonumber(masteryRanks and masteryRanks[family])or 0),0,3)
 		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
-		entry.FamilyRank.Text=(if Pets.byId[family]then Pets.byId[family].name else family).." · "..rankNames[rank];entry.FamilyRank.Visible=unlocked
+        entry.ColorHint.Text=if unlocked and(pet.id=="pip"or pet.id=="puddle")then "Body & accents in Colors"else ""
+        entry.ColorHint.Visible=entry.ColorHint.Text~=""
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
 		Art.bind(entry.Status,{TextColor3=function()return if equipped then Art.Leaf else Art.paletteColor("muted") end})
 		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Art.Amber elseif unlocked then Art.paletteColor("text") else Art.paletteColor("muted") end})
-		Crest.update(entry.FamilyCrest,family,rank,not unlocked)
 		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
 			if self.portraits[index]then self.portraits[index].sprite:Destroy()end
 			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked,self.appearanceFor and self.appearanceFor(pet.id))}

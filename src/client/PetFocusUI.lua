@@ -100,8 +100,8 @@ function Focus.new(parentGui, callbacks)
 		arm.Rotation=sign*45
 	end
  local charm=button(panel,"CharmToggle","",Vector2.new(1,0),UDim2.new(1,-12,0,12),"panel")
- charm.Size=UDim2.fromOffset(44,44);charm.Visible=false;charm:SetAttribute("AccessibleLabel","Hide charm")
- local charmDot=frame(charm,"SecondaryDot",UDim2.fromOffset(13,13),UDim2.fromOffset(18,18),Art.Amber,11)
+ charm.Size=UDim2.fromOffset(160,44);charm.Text="Hide charm";charm.TextXAlignment=Enum.TextXAlignment.Right;charm.TextSize=15;charm.Visible=false;charm:SetAttribute("AccessibleLabel","Hide charm")
+ local charmDot=frame(charm,"SecondaryDot",UDim2.fromOffset(13,13),UDim2.fromOffset(12,15),Art.Amber,11)
  Art.corner(charmDot,1000)
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
@@ -315,6 +315,18 @@ function Focus:setActive(active)
 	end
 end
 
+function Focus:layoutActions()
+    local key=GuiService.PreferredTextSize.Name..tostring(self.root.AbsoluteSize.X)..self.charm.Text
+    if key==self.actionLayoutKey then return end
+    self.actionLayoutKey=key
+    Art.type(self.charm,"Action",false)
+    local width=math.min(math.max(44,self.root.AbsoluteSize.X-92),math.max(160,Art.textWidth(self.charm)+48))
+    local height=math.max(44,Art.actionHeight(self.charm,math.max(44,width-32)))
+    self.charm.Size=UDim2.fromOffset(width,height)
+    self.charmDot.Position=UDim2.fromOffset(12,math.floor((height-13)/2))
+    self.controlHeight=height
+end
+
 function Focus:layoutRoamHint()
 	if self.destroyed then return end
 	local size=self.root.AbsoluteSize
@@ -358,12 +370,14 @@ end
 
 function Focus:update(camera, pet, roamHint)
 	if self.destroyed then return end
+	self:layoutActions()
 	local ownsInput = self:canOwnInput()
 	self.panel.Visible = self.active and ownsInput
 	self.gui.DisplayOrder = if self.panel.Visible then 40 else 9
-	self.hint.Visible = not self.active and ownsInput and ((roamHint==true and not self.roamHintRetired)or self.saveNotice~=nil)
+	local feedback=(self.feedbackUntil or 0)>os.clock()
+	self.hint.Visible = not self.active and ownsInput and (feedback or(roamHint==true and not self.roamHintRetired)or self.saveNotice~=nil)
 	local kind = UserInputService:GetLastInputType()
-	self.hint.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
+	self.hint.Text = if self.saveNotice then self.saveNotice.detail elseif feedback then self.feedbackText elseif string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
 		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
 	self:layoutRoamHint()
 	if not self.active then return end
@@ -379,7 +393,12 @@ function Focus:update(camera, pet, roamHint)
 	self.helper.Visible=self.saveNotice~=nil or(self.focusLessonStarted and not self.focusLessonRetired)
 	self:checkContactDeadline()
 	self.hit.Visible, self.hit.Interactable = position ~= nil and canReact, canReact
-	if position then self.hit.Position, self.hit.Size = UDim2.fromOffset(position.X, position.Y), UDim2.fromOffset(size.X, size.Y) end
+	if position then
+        local top=math.max(position.Y,(self.controlHeight or 44)+24)
+        local bottom=position.Y+size.Y
+        self.hit.Position,self.hit.Size=UDim2.fromOffset(position.X,top),UDim2.fromOffset(size.X,math.max(0,bottom-top))
+        if bottom-top<8 then self.hit.Visible=false;self.hit.Interactable=false end
+    end
 	if not canReact or not position then self:cancelPointer() end
 	if not ownsInput and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
 end
@@ -431,6 +450,10 @@ function Focus:handleMove(state,input)
 	return Enum.ContextActionResult.Sink
 end
 
+function Focus:showFeedback(message)
+    self.feedbackText=message;self.hint.Text=message;self.hint.Visible=true
+    self.feedbackUntil=os.clock()+3
+end
 function Focus:toggleCharm()
  if not self.active or not self:canOwnInput()or self.charmPending or self.charmVisible==nil or not self.callbacks.charmToggle then return false end
  self:cancelPointer();self.callbacks.charmToggle(not self.charmVisible);return true
@@ -442,7 +465,9 @@ function Focus:setCharmVisible(visible,pending,secondaryColor)
  self.charm.Interactable=not self.charmPending
  self.charmDot.BackgroundTransparency=if self.charmVisible==false then .75 else 0
  if typeof(secondaryColor)=="Color3"then self.charmDot.BackgroundColor3=secondaryColor end
- self.charm:SetAttribute("AccessibleLabel",if self.charmVisible then "Hide charm"else "Show charm")
+ self.charm.Text=if self.charmPending then "Saving…"elseif self.charmVisible then "Hide charm"else "Show charm"
+ self.charm:SetAttribute("AccessibleLabel",self.charm.Text)
+ self:layoutActions()
  self.charm:SetAttribute("CharmVisible",self.charmVisible);self.charm:SetAttribute("Pending",self.charmPending)
 end
 

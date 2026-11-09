@@ -1,9 +1,8 @@
 -- Pure production-solver experiment. No Workspace/profile/store mutation.
 -- Run 24 common seeds x 3 templates x 3 policies, or one template/policy chunk.
-local Benchmark={}
-local function aimAt(x,tier,Config)
-	local span=Config.Width/2-Config.Tiers[tier].radius
-	return math.clamp(.5+x/(2*span),0,1)
+local Benchmark={ControlVersion="center-angle-v1"}
+local function aimAt(x,tier,Config,y)
+ return Config.aimAt(x,y or Config.Tiers[tier].radius)
 end
 local function chooseAim(policy,sim,field,state,Simulation,Config)
 	local tier=Simulation.nextTier(sim)
@@ -36,7 +35,7 @@ local function chooseAim(policy,sim,field,state,Simulation,Config)
 			if score<value then chosen,value=egg,score end
 		end
 	end end
-	return aimAt(if chosen then chosen.position.X else desired,tier,Config)
+	return aimAt(if chosen then chosen.position.X else desired,tier,Config,chosen and chosen.position.Y)
 end
 local function runOne(d,id,seed,policy,options)
 	local Simulation,Round,Field,Config=d.Simulation,d.Round,d.FieldRun,d.Config
@@ -89,7 +88,7 @@ local function runOne(d,id,seed,policy,options)
 	end
 	local outcome=field.outcome
 	local success=outcome and outcome.success==true
-	return {template=id,seed=seed,policy=policy,success=success==true,timeout=outcome==nil,
+	return {controlVersion=Benchmark.ControlVersion,template=id,seed=seed,policy=policy,success=success==true,timeout=outcome==nil,
 		overflow=round.over,baseReward=outcome and outcome.reward or 0,drops=sim.drops,seconds=now,
 		score=round.score,firstStageDrop=firstStageDrop,stages=field.rootStage,merges=ordinal,
 		stage2CompletionDrop=stage2CompletionDrop,separationMisses=separationMisses,
@@ -101,7 +100,7 @@ function Benchmark.run(dependencies,options)
 	local count=options.count or 24
 	local templates=if options.templateId then {options.templateId}else dependencies.Objectives.Order
 	local policies=if options.policy then {options.policy}else {"naive_spread","fixed_bank","goal_aware"}
-	local result={count=count,firstSeed=options.firstSeed or 40001,cadence=options.cadence or 1.25,
+	local result={controlVersion=Benchmark.ControlVersion,count=count,firstSeed=options.firstSeed or 40001,cadence=options.cadence or 1.25,
 		separatedChain=options.separatedChain==true,
 		diagnosticAssumption=if options.separatedChain then "NONSHIPPING A/B; goal-aware assumes a visible fixed first-link anchor marker which runtime does not publish"else nil,
 		rows={},samples={},persistentWrites=false,liveState=false,
@@ -141,6 +140,7 @@ function Benchmark.separatedLanternSource(original)
 	return original:sub(1,first-1)..replacement..original:sub(last+1)
 end
 function Benchmark.replay(d,sample)
+ assert(sample.controlVersion==Benchmark.ControlVersion,"Legacy X-spawn traces cannot replay as center-angle controls")
 	assert(sample.success and type(sample.trace)=="table"and #sample.trace==24,"A successful 24-drop trace is required")
 	local descriptor=d.Objectives.create(sample.template,sample.seed)
 	local sim=d.Simulation.new("Springy",0,d.Objectives.simulationOptions(descriptor,"Springy"))

@@ -1,5 +1,6 @@
 -- Native draw-order ownership + exact raster pixels; no actual field requests.
 return function(client,parent)
+ local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
  local LCD=require(client.JellyLCD);local Palette=require(game.ReplicatedStorage.Shared.JellyPalette)
  local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
  local root=Instance.new("Frame");root.Size=UDim2.fromOffset(354,594);root.Parent=parent
@@ -7,7 +8,10 @@ return function(client,parent)
  local function test(name,run)run();table.insert(cases,name)end
  local function regions()
   local host=Instance.new("Frame");host.Name="TargetRegions";host.Size=UDim2.fromScale(1,1);host.BackgroundTransparency=1;host.ZIndex=2;host.Parent=root
-  for i=1,3 do local f=Instance.new("Frame");f.Name="Region"..i;f.Position=UDim2.fromScale((i-1)/3,0);f.Size=UDim2.fromScale(1/3,1);f.BackgroundColor3=Color3.fromHex("#466853");f.BackgroundTransparency=.79;f.ZIndex=2;f.Parent=host end
+  for i,x in ipairs({-2.6,2.6})do
+   local f=Instance.new("Frame");f.Name="Region"..i;f.Position=UDim2.fromScale(.5+x/(Config.Width+.8),.025);f.AnchorPoint=Vector2.new(.5,0)
+   f.Size=UDim2.new(0,2,.95,0);f.BackgroundColor3=Color3.fromHex("#466853");f.BackgroundTransparency=.35;f.ZIndex=2;f.Parent=host
+  end
   return host
  end
  local function draw(lcd)
@@ -18,14 +22,21 @@ return function(client,parent)
   local lcd=assert(LCD.new(root,{backend="span"}));table.insert(displays,lcd);local host=regions()
   local allocated=lcd.surface.stats.dynamicAllocated;local count=#lcd.label:GetDescendants()
   local before=draw(lcd)
-  test("span regions share the LCD subtree below every opaque gel row and existing rail masks",function()
+  test("thin span thresholds share the LCD subtree below every opaque gel row and existing rail masks",function()
    assert(lcd:attachRegions(host));assert(host.Parent==lcd.label and host.ZIndex==3)
    for _,row in ipairs(lcd.surface.rowHosts)do assert(row.ZIndex>host.ZIndex and row.Parent==lcd.label)end
-   assert(#lcd.label:GetDescendants()==count+4 and lcd.surface.stats.dynamicAllocated==allocated)
+   assert(#lcd.label:GetDescendants()==count+3 and lcd.surface.stats.dynamicAllocated==allocated)
    local foreground=0
    for _,f in ipairs(lcd.surface.static)do if f.ZIndex>host.ZIndex then foreground+=1 end end
    assert(foreground>0,"underlay no longer masked by existing outside/rail ink")
    lcd:setRegions(true,"left",2.6,-1.6,1.6);assert(draw(lcd)==before,"underlay changed opaque gel pixels")
+  end)
+  test("native and sprite threshold hosts retain 2px width at compact and roomy sizes",function()
+   for _,width in ipairs({172,354,560})do
+    root.Size=UDim2.fromOffset(width,width*(Config.Height+.8)/(Config.Width+.8))
+    game:GetService("RunService").Heartbeat:Wait();game:GetService("RunService").Heartbeat:Wait()
+    for _,line in ipairs(host:GetChildren())do assert(line.Size.X.Scale==0 and line.Size.X.Offset==2 and line.AbsoluteSize.X<=2.01)end
+   end
   end)
   test("theme refresh retains underlay owner and the bounded pool; LCD release restores sprite underlay",function()
    local pool=lcd.surface.pool[1].node
@@ -35,19 +46,33 @@ return function(client,parent)
   local image=LCD.new(root,{backend="image"})
   if image then
    table.insert(displays,image);optionalImage=true
-   test("opaque image tints background before raster and preserves every overlapping gel tone",function()
+   test("image background changes only the two exact one-cell threshold columns and keeps gel opaque",function()
     image:setRegions(false,"left",2.6,-1.6,1.6);local tone=draw(image)
-    local old=buffer.readu32(image.background,(35*LCD.Width+13)*4)
-    image:setRegions(true,"left",2.6,-1.6,1.6);assert(old~=buffer.readu32(image.background,(35*LCD.Width+13)*4),"empty side background did not change")
-    assert(draw(image)==tone,"highlight washed over the ball")
-    local first=buffer.fromstring(buffer.tostring(image.pixels))
-    image:setRegions(true,"right",2.6,-1.6,1.6);draw(image)
-    for y=38,51 do for x=6,20 do
+    local original=buffer.fromstring(buffer.tostring(image.background))
+    image:setRegions(true,"left",2.6,-1.6,1.6)
+    local expected={[math.floor(LCD.Width*(.5-2.6/(Config.Width+.8)))]=true,[math.floor(LCD.Width*(.5+2.6/(Config.Width+.8)))]=true}
+    local changed=0
+    for y=0,LCD.Height-1 do for x=0,LCD.Width-1 do
      local offset=(y*LCD.Width+x)*4
-     if buffer.readu32(image.pixels,offset)~=buffer.readu32(image.background,offset)then
-      assert(buffer.readu32(image.pixels,offset)==buffer.readu32(first,offset),"gel rim/light recolored")
+     if buffer.readu32(original,offset)~=buffer.readu32(image.background,offset)then
+      assert(expected[x],"region filled interior column "..x);changed+=1
      end
     end end
+    assert(changed>20 and changed<=LCD.Height*2,"threshold is missing or wider than one cell")
+    assert(draw(image)==tone,"threshold painted over an opaque gel")
+    local left=buffer.tostring(image.background)
+    image:setRegions(true,"right",2.6,-1.6,1.6)
+    assert(buffer.tostring(image.background)==left,"active side recolored a region fill")
+   end)
+   test("center objective adds only its two boundary columns",function()
+    image:setRegions(true,"left",2.6,-1.6,1.6);local original=buffer.fromstring(buffer.tostring(image.background))
+    image:setRegions(true,"center",2.6,-1.6,1.6)
+    local expected={[math.floor(LCD.Width*(.5-1.6/(Config.Width+.8)))]=true,[math.floor(LCD.Width*(.5+1.6/(Config.Width+.8)))]=true}
+    local changed=0
+    for y=0,LCD.Height-1 do for x=0,LCD.Width-1 do local offset=(y*LCD.Width+x)*4
+     if buffer.readu32(original,offset)~=buffer.readu32(image.background,offset)then assert(expected[x]);changed+=1 end
+    end end
+    assert(changed>20 and changed<=LCD.Height*2)
    end)
   end
  end)

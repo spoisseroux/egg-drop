@@ -1,0 +1,62 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetLoopResetPresentation",
+    "result": {
+      "fixtureCleanup": [
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover\nHeartbeat observer disconnected\nRenderStepped observer disconnected\npath=Players.keehar01.PlayerGui.PetFocusTransition visible=false alpha=1 active=false epoch=2 destroyed=true",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=selective night surfaces restore palette and never emit from dark face\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true"
+      ],
+      "passed": 3,
+      "cases": [
+        "reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover",
+        "authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "selective night surfaces restore palette and never emit from dark face"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueAppearance",
+    "result": {
+      "liveCommands": 0,
+      "authorityMutation": false,
+      "passed": 7,
+      "cases": [
+        "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "journal portrait recolors existing pixels using the same body and secondary roles",
+        "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "confirmed peer token refresh updates the existing observer rig instead of only Dot",
+        "bodyMix-only confirmation recolors the same visitor model and preserves shared activity state"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 generic purchase exposes no target or direction before hatching",
+        "1649, 971 held assignment and colors use measured scroll choices and matched rigs",
+        "749, 381 generic purchase exposes no target or direction before hatching",
+        "749, 381 held assignment and colors use measured scroll choices and matched rigs",
+        "350, 703 generic purchase exposes no target or direction before hatching",
+        "350, 703 held assignment and colors use measured scroll choices and matched rigs",
+        "568, 210 generic purchase exposes no target or direction before hatching",
+        "568, 210 held assignment and colors use measured scroll choices and matched rigs",
+        "insufficient funds suppress purchase; max grade preserves held item and free Colors remains accessible",
+        "mix preview uses two learned bases while reset has an explicit independent action",
+        "companion reveal preempts Hue without consuming or hiding committed held stock"
+      ],
+      "passed": 11,
+      "actualWalletMutation": false
+    }
+  }
+]

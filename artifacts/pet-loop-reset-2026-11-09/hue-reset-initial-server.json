@@ -1,0 +1,23 @@
+[
+  {
+    "ok": true,
+    "name": "HueProgress",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "generic purchase creates durable unassigned stock without a pet, hue, pity or rank mutation",
+        "held item survives release/rejoin and assignment advances one chosen baby without another debit",
+        "before and after ambiguous purchase/apply writes retry captured identity exactly once",
+        "wrong token, stale grade, max grade and unsupported/unowned assignment retain stock",
+        "all six mixes are canonical free learned recipes; reset preserves grades, accent unlocks and held egg",
+        "single body clears mixing; independent accent retains mix; apply clears mix and preserves accent",
+        "v4 legacy paid receipts migrate verbatim, remain replayable, and new directional purchases close",
+        "full 24-slot historical records preserve paid grades and disallow buying exhausted stock",
+        "v2 and v3 upgrades twice preserve ownership, wallet, pending duplicate and mastery archive",
+        "malformed v4 fails closed without writing defaults over original fields",
+        "companion hatches coexist with held stock and duplicates grant no mastery; saved wins remain independent",
+        "later stock cannot be consumed by old apply replay or same-ID altered quote"
+      ]
+    }
+  }
+]

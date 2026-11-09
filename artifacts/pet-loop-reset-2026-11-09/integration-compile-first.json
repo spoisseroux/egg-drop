@@ -1,0 +1,8 @@
+{
+  "place": 96451847774961,
+  "compileErrors": {
+    "1": "StarterPlayer.StarterPlayerScripts.Client.GardenClient [string \"return function(...)...\"]:21: Expected 'then' when parsing if statement, got 'actor'"
+  },
+  "checked": 103,
+  "mismatches": []
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "ok": false,
+    "preference": "Medium",
+    "name": "PetLoopResetPresentation",
+    "result": "Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation:14: cover must remain opaque across a complete rendered frame before returning"
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetNightStudy",
+    "result": {
+      "passed": 2,
+      "cases": [
+        "pip shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry",
+        "puddle shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 generic purchase exposes no target or direction before hatching",
+        "1649, 971 held assignment and colors use measured scroll choices and matched rigs",
+        "749, 381 generic purchase exposes no target or direction before hatching",
+        "749, 381 held assignment and colors use measured scroll choices and matched rigs",
+        "350, 703 generic purchase exposes no target or direction before hatching",
+        "350, 703 held assignment and colors use measured scroll choices and matched rigs",
+        "568, 210 generic purchase exposes no target or direction before hatching",
+        "568, 210 held assignment and colors use measured scroll choices and matched rigs",
+        "insufficient funds suppress purchase; max grade preserves held item and free Colors remains accessible",
+        "mix preview uses two learned bases while reset has an explicit independent action",
+        "companion reveal preempts Hue without consuming or hiding committed held stock"
+      ],
+      "passed": 11,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HueAppearance",
+    "result": {
+      "liveCommands": 0,
+      "authorityMutation": false,
+      "passed": 7,
+      "cases": [
+        "pip native and factory body accents Dot share resolver and preserve protected face geometry",
+        "puddle native and factory body accents Dot share resolver and preserve protected face geometry",
+        "journal portrait recolors existing pixels using the same body and secondary roles",
+        "same hatch ID appearance updates keep epoch hero viewport and static completion",
+        "pixel hatch fallback updates palette without rebuilding the receipt scene",
+        "confirmed peer token refresh updates the existing observer rig instead of only Dot",
+        "bodyMix-only confirmation recolors the same visitor model and preserves shared activity state"
+      ]
+    }
+  }
+]

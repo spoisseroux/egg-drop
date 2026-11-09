@@ -16,7 +16,7 @@ function Garden.new(boards,options)
                 if self.snapshot then
                     for id,actor in pairs(snapshot.actors)do
                         local prior=self.snapshot.actors[id]
-                        if prior and prior.characterId==actor.characterId and prior.petGeneration==actor.petGeneration and prior.mode==actor.mode and actor.mode~="Focus"then
+                        if prior and prior.characterId==actor.characterId and prior.petGeneration==actor.petGeneration then
                             actor.previous=prior;prior.previous=nil
                         end
                     end
@@ -41,7 +41,6 @@ end
 function Garden:get(ownerId,petId,character)
     local actor=self.snapshot and self.snapshot.actors[tostring(ownerId)]
     if not actor or actor.petId~=petId or not character then return nil end
-    if ownerId==self.playerId and actor.mode=="Focus"and not self.focusPet then return nil end
     local generation=character:GetAttribute("GardenCharacterId")
     if type(generation)~="number"or generation~=actor.characterId then return nil end
     local board=self.boards:FindFirstChild(tostring(ownerId))
@@ -64,7 +63,7 @@ function Garden:appearance(board,petId)
         self.appearanceCache[board]=cached
     end
     local item=cached.value[petId]
-    return {charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,secondary=type(item)=="table"and item.secondary or "default"}
+    return {charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
 end
 function Garden:focus(active,petId,position,yaw)
     local remote=self.remote or ReplicatedStorage.Remotes:FindFirstChild("GardenIntent")
@@ -73,7 +72,7 @@ function Garden:focus(active,petId,position,yaw)
         if self.focusPet then remote:FireServer({kind="focusEnd",seq=self.focusSeq,petId=self.focusPet,characterId=self.focusCharacter,petGeneration=self.focusPetGeneration});self.focusPet=nil end
         return
     end
-    if self.focusPet==petId and self.focusPosition and(position-self.focusPosition).Magnitude<.15 and math.abs((yaw or 0)-(self.focusYaw or 0))<.08 then return end
+    if self.focusPet==petId then return end
     local now=self.now()
     if now-(self.lastFocusChange or -math.huge)<.30 then return end
     self:focus(false)
@@ -81,7 +80,7 @@ function Garden:focus(active,petId,position,yaw)
     self.focusSeq=math.max(self.focusSeq+1,(actor and actor.requestGeneration or 0)+1)
     self.focusPet,self.focusPulse,self.focusPosition,self.focusYaw,self.lastFocusChange=petId,0,position,yaw,now
     self.focusAge,self.focusRetried,self.focusCharacter,self.focusPetGeneration=0,false,self.characterId(),self.petGeneration()
-    remote:FireServer({kind="focus",seq=self.focusSeq,petId=petId,position=Activity.pack(position),yaw=yaw,characterId=self.focusCharacter,petGeneration=self.focusPetGeneration})
+    remote:FireServer({kind="focus",seq=self.focusSeq,petId=petId,characterId=self.focusCharacter,petGeneration=self.focusPetGeneration})
 end
 function Garden:step(dt)
     if not self.focusPet then return end
@@ -91,7 +90,7 @@ function Garden:step(dt)
     if self.focusAge>=.75 and not self.focusRetried and not(actor and actor.mode=="Focus"and actor.requestGeneration==self.focusSeq)then
         self.focusRetried=true
         local remote=self.remote or ReplicatedStorage.Remotes:FindFirstChild("GardenIntent")
-        if remote then remote:FireServer({kind="focus",seq=self.focusSeq,petId=self.focusPet,position=Activity.pack(self.focusPosition),yaw=self.focusYaw,characterId=self.focusCharacter,petGeneration=self.focusPetGeneration})end
+        if remote then remote:FireServer({kind="focus",seq=self.focusSeq,petId=self.focusPet,characterId=self.focusCharacter,petGeneration=self.focusPetGeneration})end
     end
     if self.focusPulse>=.5 then
         self.focusPulse%=.5

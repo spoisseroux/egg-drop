@@ -11,7 +11,7 @@ function Palette.resolve(petId,appearance)
  local def=Definitions[petId];if not def then return nil end
  local result={};for role,hex in pairs(def.palette)do result[role]=Color3.fromHex(hex)end
  local token=if type(appearance)=="table"then appearance else {}
- local hue=Hue.ById[token.body];local rank=token.bodyRank
+ local hue=Hue.Mixes[token.bodyMix]or Hue.ById[token.body];local rank=token.bodyRank
  if hue and type(rank)=="number"and rank%1==0 and rank>=1 and rank<=3 then result.body=Palette.tint(result.body,hue.color,Hue.Weights[rank+1])end
  local secondary=Hue.ById[token.secondary];if secondary then result.secondary=secondary.color end
  return table.freeze(result)

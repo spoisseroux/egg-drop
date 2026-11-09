@@ -29,5 +29,19 @@ return function(shared)
   assert(invalid.body==base.body and invalid.secondary==base.secondary and invalid.face==base.face)
   assert(Palette.resolve("wick")==nil)
  end)
+ test("canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face",function()
+  for _,pet in ipairs({"pip","puddle"})do
+   local base=Palette.resolve(pet)
+   for _,h in ipairs(Hue.Order)do local full=Palette.resolve(pet,{body=h.id,bodyRank=3});assert(full.body==h.color)end
+   for _,key in ipairs(Hue.MixOrder)do
+    local mix=Hue.Mixes[key];local ranks={rose=3,tide=3,citrus=3,iris=3};ranks[mix.a]=1
+    local token=Hue.appearance({[pet]={ranks=ranks,body=mix.a,secondary="default",mix=key}},pet)
+    assert(token.bodyRank==1 and token.bodyMix==key)
+    local palette=Palette.resolve(pet,token);local expected=Palette.tint(base.body,mix.color,.65)
+    assert(close(palette.body.R,expected.R)and close(palette.body.G,expected.G)and close(palette.body.B,expected.B))
+    assert(palette.face==base.face and palette.secondary==base.secondary and palette.ivory==base.ivory)
+   end
+  end
+ end)
  return cases
 end

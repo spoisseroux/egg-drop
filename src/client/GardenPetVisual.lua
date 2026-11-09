@@ -92,7 +92,7 @@ function Visual.new(parent,origin,pet,worldScale,appearance,options)
  local definition=assert(Definitions[pet.id],"No authored garden rig for alias")
  local model=Instance.new("Model");model.Name=pet.name
  local cachedColors=Palette.resolve(pet.id,appearance)
- local self=setmetatable({petId=pet.id,secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
+ local self=setmetatable({petId=pet.id,nightTreatment=options and options.nightTreatment or "shadedHead",secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
  if(options and options.native==true)or not imported(self)then for _,entry in ipairs(self.pieces)do entry.part:Destroy()end;table.clear(self.pieces);native(self)end
  model:SetAttribute("PetFamily",pet.id);model:SetAttribute("RigId",definition.id);model:SetAttribute("RigBackend",self.backend)
  model.Parent=parent;self:applyAppearance(appearance);return self
@@ -151,7 +151,10 @@ function Visual:update(dt)
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale,step*side*.075*self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)
-  if channel=="Body"then size=Vector3.new(size.X,size.Y*(1+bodyStretch),size.Z)end
+  if channel=="Body"then
+   local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
+   size=Vector3.new(size.X*(1+squash*.35),size.Y*(1+bodyStretch-squash),size.Z*(1+squash*.35))
+  end
   if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch)end
   if string.find(name,"Eye")then size=Vector3.new(size.X*(if pose.mouth=="open"then 1.12 else 1),size.Y*pose.eye*blink,size.Z)
   elseif string.find(name,"Glint")then hidden=hidden or pose.eye*blink<.4
@@ -164,6 +167,7 @@ function Visual:update(dt)
    if pose.mouth=="soft"then size*=.78 end
   end
   if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
+  Face.paintSurface(entry,self,daylight)
   if entry.faceRole then
    local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)

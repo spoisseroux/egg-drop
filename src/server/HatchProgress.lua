@@ -63,7 +63,7 @@ local function migrate(record, now)
 	local mastery, challenges = {}, {}
 	for _, family in ipairs(Catalog.Families) do mastery[family], challenges[family] = 0, 0 end
 	return {
-		version = 4, migrated = true, welcomeCredited = true,
+		version = 5, hueAssignments = {}, migrated = true, welcomeCredited = true,
 		nectar = charge + 6, inventoryMask = mask, mastery = mastery, misses = 0,
 		masteryChallenges = challenges, masteryLegacyMask = 0, totalWins = 0,
 		contracts = Daily.empty(dayOf(now)),
@@ -114,8 +114,8 @@ local function canonicalDay(value)
 	local number=if type(value)=="string"then tonumber(value)else nil
 	return number~=nil and number==math.floor(number)and math.abs(number)<=1000000000 and tostring(number)==value
 end
-local function valid(state)
-	if not validBase(state,4)or not canonicalDay(state.petDay)or not integer(state.petCount,5)or not HueState.valid(state)then return false end
+local function validVersion(state,version,legacy)
+	if not validBase(state,version)or not canonicalDay(state.petDay)or not integer(state.petCount,5)or not(if legacy then HueState.validLegacy(state)else HueState.valid(state))then return false end
 	local receipt=state.lastPetAward
 	if state.petCount==0 then return receipt==nil end
 	return type(receipt)=="table"and type(receipt.id)=="string"and #receipt.id>0 and #receipt.id<=100
@@ -123,6 +123,8 @@ local function valid(state)
 		and receipt.day==state.petDay and Pets.byId[receipt.petId]~=nil
 		and (receipt.sequence~=state.operationSeq or (state.lastOperation and state.lastOperation.id==receipt.id))
 end
+
+local function valid(state)return validVersion(state,5,false)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -145,6 +147,11 @@ local function upgrade(state, now)
 		if not validBase(nextState,3)or nextState.petDay~=nil or nextState.petCount~=nil or nextState.lastPetAward~=nil then return state end
 		nextState=clone(nextState);nextState.version=4;nextState.petDay=dayOf(now);nextState.petCount=0
 	end
+	if nextState.version==4 then
+        -- Validate the complete historical record before adding any v5 namespace.
+        if not validVersion(nextState,4,true)or nextState.hueAssignments~=nil or nextState.heldHueEgg~=nil or nextState.hueLastPurchase~=nil then return state end
+        nextState=clone(nextState);nextState.version=5;nextState.hueAssignments={}
+    end
 	return nextState
 end
 
@@ -229,6 +236,7 @@ function Hatching.public(handle)
 		misses = state.misses, inventoryMask = state.inventoryMask, mastery = clone(state.mastery),
 		lastHatch = clone(state.lastHatch),
 		hues=clone(state.hues or {}),lastHueResult=HueState.publicReceipt(state.lastHueResult),
+        heldHueEgg=clone(state.heldHueEgg),hueLastPurchase=HueState.publicReceipt(state.hueLastPurchase),
 		petDay = state.petDay, petCount = state.petCount, lastPetAward = clone(state.lastPetAward),
 		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
@@ -333,7 +341,7 @@ function Hatching.hueCommand(handle,action,value,revision)
 		if not same then return false,"OperationConflict"end
 		return true,"AlreadySaved",HueState.publicReceipt(receipt)
 	end
-	local signature="hue:"..quote.id..":"..action..":"..quote.petId..":"..tostring(quote.hue or quote.body)..":"..tostring(quote.rank or quote.secondary)..":"..revision
+	local signature="hue:"..quote.id..":"..action..":"..tostring(quote.petId)..":"..tostring(quote.hue or quote.body or quote.pair)..":"..tostring(quote.rank or quote.secondary)..":"..tostring(quote.token)..":"..revision
 	local candidate=handle.pending and handle.pending.candidate
 	if not handle.pending then
 		candidate=table.freeze({quote=table.freeze(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1})
@@ -412,7 +420,7 @@ function Hatching.command(handle, action, value, expectedRevision)
 			local duplicate = Catalog.isOwned(state.inventoryMask, petId)
 			local previousRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family])
 			state.nectar -= recipe.cost
-			if duplicate then state.mastery[family] = math.min(Mastery.MaxPoints, state.mastery[family] + 1) end
+			-- A duplicate is collection status only. Frozen legacy marks remain intact.
 			state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(petId))
 			state.misses = if pet.trial then 0 else math.min(7, state.misses + 1)
 			state.lastHatch = { id = choice.id, petId = petId, duplicate = duplicate,
@@ -469,12 +477,7 @@ function Hatching.award(handle, runSequence, amount, summary)
 		if run then
 			if not Mastery.ownsFamily(state.inventoryMask, run.family) then return false, "FamilyChanged" end
 			if run.success then
-				local before = Mastery.rank(state.mastery[run.family], state.masteryChallenges[run.family])
-				marks = if run.clean then 2 else 1
-				state.mastery[run.family] = math.min(Mastery.MaxPoints, state.mastery[run.family] + marks)
-				state.masteryChallenges[run.family] = bit32.bor(state.masteryChallenges[run.family], Mastery.challengeMask(run))
-				local after = Mastery.rank(state.mastery[run.family], state.masteryChallenges[run.family])
-				promoted = if after > before then after else 0
+				-- Saved wins still unlock independent cosmetics; family facts are archived.
 				state.totalWins += 1
 			end
 			state.contracts, extra, completed = Daily.apply(state.contracts, run, captured.day)

@@ -1,0 +1,58 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PocketDeckAim",
+    "result": {
+      "persistentWrites": false,
+      "normalizedAim": 0,
+      "tier": 1,
+      "pivot": {
+        "y": 56.686466217041016,
+        "x": 208.5
+      },
+      "passed": 3,
+      "cases": [
+        "actual nozzle and rotation center share the fixed launch projection",
+        "real fallback guide dots use the same gravity and launch direction at current angle",
+        "real objective markers are 2px thresholds with no left right or center fill"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JellyUnderlay",
+    "result": {
+      "spanPool": 1536,
+      "extraCanvases": 0,
+      "imageAvailable": false,
+      "actualRasterGate": "capture ball crossing active left/right region",
+      "passed": 3,
+      "cases": [
+        "thin span thresholds share the LCD subtree below every opaque gel row and existing rail masks",
+        "native and sprite threshold hosts retain 2px width at compact and roomy sizes",
+        "theme refresh retains underlay owner and the bounded pool; LCD release restores sprite underlay"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "ThemeLCD",
+    "result": {
+      "passed": 9,
+      "cases": [
+        "sherbet static roles preserve gel/pool/current owner",
+        "stone static roles preserve gel/pool/current owner",
+        "ice static roles preserve gel/pool/current owner",
+        "brick static roles preserve gel/pool/current owner",
+        "moss static roles preserve gel/pool/current owner",
+        "honey static roles preserve gel/pool/current owner",
+        "gloaming static roles preserve gel/pool/current owner",
+        "copperleaf static roles preserve gel/pool/current owner",
+        "failed repaint is explicit sticky failure for existing cheap-owner bridge"
+      ]
+    }
+  }
+]

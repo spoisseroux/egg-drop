@@ -1,0 +1,17 @@
+[
+  {
+    "ok": true,
+    "name": "PetContactHost",
+    "result": {
+      "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture",
+      "persistentWrites": false,
+      "passed": 4,
+      "cases": [
+        "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+        "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+        "wrong equipped pet is rejected through the real host before RNG or storage",
+        "existing retry worker proves ended committed operation without a second glyph or second worker"
+      ]
+    }
+  }
+]

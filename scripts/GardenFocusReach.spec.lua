@@ -41,7 +41,7 @@ return function(server,client)
             end}
     end
     local ok,problem=pcall(function()
-        test("all seven production rigs and supported Dot states acquire and hold the exact staged target",function()
+        test("all seven production rigs and supported Dot states acquire and keep the public anchor independent of their private stage",function()
             for _,pet in ipairs(Pets.collection)do
                 local appearances=if pet.id=="pip"or pet.id=="puddle"then {true,false}else {true}
                 for _,visible in ipairs(appearances)do
@@ -86,14 +86,14 @@ return function(server,client)
                             assert(coordinator:focus(101,{kind="focus",seq=1,petId=pet.id,characterId=1,petGeneration=2,position=Activity.pack(plan.origin),yaw=plan.yaw}),"actual coordinator rejected legal planner target")
                             now=.5;assert(coordinator:focus(101,{kind="focusPulse",seq=1,petId=pet.id,characterId=1,petGeneration=2}))
                             local sample=Activity.sample(coordinator:snapshot().actors["101"],now)
-                            assert((sample.position-plan.origin).Magnitude<.0001 and math.abs(sample.yaw-plan.yaw)<.0001)
+                            assert((sample.position-input.anchor).Magnitude<.0001 and math.abs(sample.yaw-input.yaw)<.0001)
                             local anchor=coordinator:focusAnchor(101,pet.id,1,2,root)
-                            assert(anchor and(anchor-plan.origin).Magnitude<.0001,"care anchor differs from the visible/peer pet")
+                            assert(anchor and(anchor-input.anchor).Magnitude<.0001,"care anchor differs from the visible/peer pet")
                             local state={mode="Room",petId=pet.id,owned=true,alive=true,ready=true,status="Ready",position=root,character=avatar,root=parts[1],epoch=1}
                             local broker=Contact.new({now=function()return now end,guid=function()return "focus-care"end,read=function()return state end,
                                 anchor=function()return coordinator:focusAnchor(101,pet.id,1,2,root)end,emit=function()end,
                                 random=function()error("short focus fixture must not roll a reward")end})
-                            assert(broker:begin({requestGeneration=1,petId=pet.id})and(broker.lease.anchor-plan.origin).Magnitude<.0001)
+                            assert(broker:begin({requestGeneration=1,petId=pet.id})and(broker.lease.anchor-input.anchor).Magnitude<.0001)
                             broker:destroy();tested+=1
                             table.insert(metrics,{petId=pet.id,dot=visible,viewport=tostring(viewport),edge=root.X>70,reach=reach,bearing=plan.bearing})
                             avatar:Destroy()

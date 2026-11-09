@@ -10,7 +10,11 @@ return function(client,parent)
  local function token(body,rank,secondary,dot)return{body=body,bodyRank=rank,secondary=secondary,charmVisible=dot~=false}end
  local function expect(v,id,t)
   local colors=Palette.resolve(id,t)
-  for _,e in ipairs(v.pieces)do if e.colorRole=="body"or e.colorRole=="secondary"then local a,b=e.part.Color,colors[e.colorRole]
+  for _,e in ipairs(v.pieces)do if e.colorRole=="body"or e.colorRole=="secondary"then
+   -- Broad world surfaces intentionally use a dimmed night emission color;
+   -- compare their resolved source channel here, with material behavior covered
+   -- by PetLoopResetPresentation. All other parts compare rendered RGB directly.
+   local a,b=if e.nightSurface then e.color else e.part.Color,colors[e.colorRole]
    local delta=math.max(math.abs(a.R-b.R),math.abs(a.G-b.G),math.abs(a.B-b.B))
    assert(delta<=1/255+.000001,string.format("%s palette mismatch %s RGB8 delta=%.8f",id,e.name,delta))end end
   assert(v.secondaryColor==colors.secondary and v.charmVisible==t.charmVisible)
@@ -77,6 +81,43 @@ return function(client,parent)
    local visual=entry.visual;expect(visual,"pip",token("rose",1,"default",true))
    publish(token("tide",3,"rose",false));observer:update(.13,workspace:GetServerTimeNow())
    assert(observer.active[player].visual==visual);expect(visual,"pip",token("tide",3,"rose",false))
+   observer:clear();g:destroy()
+  end)
+  test("bodyMix-only confirmation recolors the same visitor model and preserves shared activity state",function()
+   local own=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart");assert(own,"live local avatar required")
+   local boards=Instance.new("Folder");boards.Parent=folder
+   local board=Instance.new("Folder");board.Name="90102";board:SetAttribute("CompanionId","pip");board:SetAttribute("Mode","Room")
+   board:SetAttribute("CompanionGeneration",2);board:SetAttribute("GardenCharacterId",1);board.Parent=boards
+   local f=Instance.new("Folder");f.Name="GardenState";f.Parent=folder
+   local g=Garden.new(boards,{folder=f,playerId=Players.LocalPlayer.UserId,remote={FireServer=function()error("appearance fixture cannot focus")end}})
+   local character=Instance.new("Model");character:SetAttribute("GardenCharacterId",1);character.Parent=folder
+   local root=Instance.new("Part");root.Name="HumanoidRootPart";root.Anchored=true;root.CanCollide=false;root.Position=own.Position+Vector3.new(6,0,0);root.Parent=character
+   local humanoid=Instance.new("Humanoid");humanoid.Parent=character
+   local player={UserId=90102,Character=character};local now=workspace:GetServerTimeNow()
+   local at={root.Position.X,4.025,root.Position.Z}
+   f:SetAttribute("Snapshot",Http:JSONEncode({version=1,revision=1,toy={},actors={["90102"]={ownerId=90102,petId="pip",characterId=1,petGeneration=2,generation=7,
+    mode="Room",behavior="rest",action="wanderPause",actionId=12,from=at,to=at,startTime=now,endTime=now+20,yaw=.7}}}))
+   Run.Heartbeat:Wait()
+   local function publish(t)board:SetAttribute("PetAppearance",Http:JSONEncode({pip=t}))end
+   local observer=Companions.new(boards,Factory.create,function()return true end,{garden=g,players=function()return{player}end})
+   local initial=token("rose",3,"iris",false);publish(initial);observer:update(.13,now)
+   local entry=assert(observer.active[player]);local visual,model,state,actor=entry.visual,entry.visual.model,entry.followState,entry.actor
+   assert(actor and state and actor.generation==7,"fixture must exercise authoritative activity")
+   expect(visual,"pip",initial)
+   local nodeCount=#model:GetDescendants();local position,yaw=visual.origin,visual.yaw;local before=visual.colors.body
+   local head=assert(model:FindFirstChild("Head"));local renderedBefore=head.Color
+   for _,pair in ipairs({"rose:tide","citrus:iris"})do
+    local mixed=token("rose",3,"iris",false);mixed.bodyMix=pair;publish(mixed);observer:update(.13,now)
+    assert(g:appearance(board,"pip").bodyMix==pair,"replica lost canonical mix")
+    assert(observer.active[player]==entry and entry.visual==visual and visual.model==model and #model:GetDescendants()==nodeCount,"mix rebuilt visitor rig")
+    assert(entry.actor==actor and entry.followState==state and visual.origin==position and visual.yaw==yaw,"mix reset shared activity")
+    expect(visual,"pip",mixed);assert(visual.colors.body~=before,"mix-only change did not repaint body")
+    assert(visual.secondaryColor==Palette.resolve("pip",initial).secondary and visual.charmVisible==false)
+    assert(head.Color~=renderedBefore,"mix-only change did not repaint rendered head")
+    before=visual.colors.body;renderedBefore=head.Color
+   end
+   publish(initial);observer:update(.13,now);expect(visual,"pip",initial)
+   assert(entry.visual==visual and entry.followState==state and entry.actor==actor,"clearing mix reset visitor state")
    observer:clear();g:destroy()
   end)
  end)

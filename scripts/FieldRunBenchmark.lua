@@ -22,8 +22,7 @@ local function matchingAim(sim, field, Simulation, Config)
 		end
 	end
 	local x = if best then best.position.X else target
-	local span = Config.Width / 2 - Config.Tiers[tier].radius
-	return math.clamp(0.5 + x / (2 * span), 0, 1)
+	return Config.aimAt(x,if best then best.position.Y else Config.Tiers[tier].radius)
 end
 
 local function rolloutAim(sim, field, Simulation, Round, FieldRun, Config, horizon)
@@ -32,11 +31,10 @@ local function rolloutAim(sim, field, Simulation, Round, FieldRun, Config, horiz
 	if target and target.tier == 3 then return matchingAim(sim, field, Simulation, Config) end
 	local candidates = { matchingAim(sim, field, Simulation, Config) }
 	if target then
-		local span = Config.Width / 2 - Config.Tiers[Simulation.nextTier(sim)].radius
 		local direction = target.side
 		for index = 0, 6 do
 			local x = direction * (FieldRun.ZoneBound + 1 + index * 0.4)
-			table.insert(candidates, math.clamp(0.5 + x / (span * 2), 0.02, 0.98))
+			table.insert(candidates, Config.aimAt(x,Config.Tiers[Simulation.nextTier(sim)].radius))
 		end
 	else
 		for index = 0, 10 do table.insert(candidates, 0.04 + index * 0.092) end

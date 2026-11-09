@@ -5,6 +5,12 @@ local Config = {
 	Height = 19,
 	SpawnY = 17.8,
 	Gravity = 32,
+	LaunchAngleDegrees = 35,
+	LaunchSpeed = 10,
+	MaxSpeed = 38,
+	GuideLength = 1.6,
+	PreviewStep = 0.075,
+	PreviewCount = 6,
 	Bank = 2.2,
 	MaxEggs = 32,
 	OverflowY = 14.6,
@@ -34,9 +40,48 @@ local Config = {
 	Queue = { 1, 1, 2, 1, 2, 1 },
 }
 
-function Config.aimX(aim, tier)
-	local span = Config.Width / 2 - Config.Tiers[tier].radius
-	return (aim * 2 - 1) * span
+-- The normalized input is an angle; the launch origin never depends on tier.
+function Config.validAim(aim)
+ return type(aim)=="number" and aim==aim and aim>=0 and aim<=1
 end
-
+function Config.aimAngle(aim)
+ return (aim*2-1)*math.rad(Config.LaunchAngleDegrees)
+end
+function Config.launchPosition()
+ return Vector2.new(0,Config.SpawnY)
+end
+function Config.launchVelocity(aim)
+ local angle=Config.aimAngle(aim)
+ return Vector2.new(math.sin(angle)*Config.LaunchSpeed,-math.cos(angle)*Config.LaunchSpeed)
+end
+-- Shared force integration keeps the dotted preview on the actual initial
+-- flight. Collisions are deliberately outside this short unobstructed preview.
+function Config.advanceFlight(position,velocity,dt)
+ velocity+=Vector2.new(0,-Config.Gravity*dt)
+ if velocity.Magnitude>Config.MaxSpeed then velocity=velocity.Unit*Config.MaxSpeed end
+ velocity*=1-dt*.85
+ return position+velocity*dt,velocity
+end
+function Config.flightPoint(aim,seconds)
+ local position,velocity=Config.launchPosition(),Config.launchVelocity(aim)
+ local steps=math.floor(seconds/Config.FixedStep+.5)
+ for _=1,steps do position,velocity=Config.advanceFlight(position,velocity,Config.FixedStep) end
+ return position
+end
+-- Solver policies invert the initial flight rather than treating angle as X.
+-- Search the bounded legal controls at the target's current height.
+function Config.aimAt(targetX,targetY)
+ local best,distance=.5,math.huge
+ for index=0,100 do
+  local candidate=index/100
+  local position,velocity=Config.launchPosition(),Config.launchVelocity(candidate)
+  for _=1,240 do
+   position,velocity=Config.advanceFlight(position,velocity,Config.FixedStep)
+   if position.Y<=targetY then break end
+  end
+  local delta=math.abs(position.X-targetX)
+  if delta<distance then best,distance=candidate,delta end
+ end
+ return best
+end
 return Config

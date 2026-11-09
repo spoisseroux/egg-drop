@@ -1,0 +1,34 @@
+{
+  "frozenAtUTC": "2026-11-09T04:46:04.289060+00:00",
+  "launchAngleDegrees": 35,
+  "launchSpeed": 10,
+  "controlVersion": "center-angle-v1",
+  "files": {
+    "src/client/init.client.lua": "ceb7f29f1cafe87e848690bb67304c7e1f5c5483859de6af1a823ef2101e8bd7",
+    "src/client/JellyLCD.lua": "d8bbe7a81fb43eb442b449d3991bdf942d8ae3356d027856ae455b43d04dace3",
+    "src/client/JellySpanSurface.lua": "15f43a6f65636077789ce262df76f79bae060df2b44722b6221e6e62a724991a",
+    "src/shared/BoardConfig.lua": "a5970fd82385acdfdb2edfd02d51192b31289a422d47acf1d71ccc7c9ae757c5",
+    "src/server/BoardSimulation.lua": "8e090b59810a475d1bbc3a78f2f96f0f619dac0c38dc4b574fd5411b905c21e9",
+    "scripts/BoardAngle.spec.lua": "9c850cae22088893cf10c65f819a589163705547874b14069588669e32ee3de2",
+    "scripts/PocketDeckAim.spec.lua": "e4c5aee428a76af012d1b6940168f1f249b6368f8199c0c51915262f0691c96d",
+    "scripts/JellyUnderlay.spec.lua": "3b6d9ebc1e6990a9828e2485d96efcf46cd1b86b7b3e2aeea6b198402f8fc427",
+    "scripts/ThemeLCD.spec.lua": "07989d5a6d8a476d99edcace9deeb6f29f3e862679aefb317204b8105511a3f8",
+    "scripts/FieldObjectiveBenchmark.lua": "dedc080644e64d4cc21862c1468f002a2e922eddf9adaf493146abe58d5b338d",
+    "scripts/FieldRunBenchmark.lua": "474ed52ecd874c61b6d3596b58e6968febbdede4baeed6b311c2742cb43c570c"
+  },
+  "localChecks": {
+    "luauCompile": "11 files passed",
+    "rojoBuild": "build/egg-drop-pivot-check.rbxlx passed"
+  },
+  "nativeChecksReportedByRoot": {
+    "BoardAngle": "6/6",
+    "goalAware": "12/12 wins",
+    "fastCenter": "0/12 wins;12 overflows",
+    "exactWinningReplays": "9/9",
+    "PocketDeckAim": "3/3 actual current GUI",
+    "JellyUnderlay": "3/3",
+    "ThemeLCD": "9/9"
+  },
+  "pending": [],
+  "finalIntegration": "104 runtime sources exact and compiled; final reset build passed"
+}

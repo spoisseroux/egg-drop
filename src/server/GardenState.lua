@@ -64,6 +64,7 @@ function Garden:release(actor)
 end
 function Garden:reset(actor,input)
     self:release(actor);actor.mode=input.mode;actor.focusUntil=nil
+    actor.wanderCount,actor.nextWanderAt,actor.idleSince=0,nil,self.options.now()
     self:transition(actor,if input.mode=="Board" then "rest" else "follow",input.anchor,.5)
 end
 function Garden:sync(inputs,freshOwnerId)
@@ -98,6 +99,7 @@ function Garden:sync(inputs,freshOwnerId)
         if actor.charmVisible~=input.charmVisible then actor.charmVisible=input.charmVisible;self.dirty=true end
         if distance(actor.lastOwner,input.position)>.65 then
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
+            actor.wanderCount,actor.nextWanderAt=0,nil
             if actor.mode=="Room" and actor.behavior~="follow" then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
     end
@@ -128,13 +130,14 @@ function Garden:focus(id,packet)
         return false
     end
     if packet.kind~="focus" or packet.seq<=(actor.lastFocusSeq or 0) or now-(actor.lastFocusAt or -math.huge)<.25 then return false end
-    local target=Activity.vector(packet.position)
+    local pose=Activity.sample(actor,now)
+    local target=pose and pose.position
     if not target or (target-input.position).Magnitude>7 or math.abs(target.Y-input.anchor.Y)>1
         or (self.options.validFocus and not self.options.validFocus(input,target)) then return false end
     self:release(actor);actor.lastFocusSeq,actor.focusSeq,actor.lastFocusAt=packet.seq,packet.seq,now
     actor.mode,actor.focusUntil="Focus",now+1.6
     self:transition(actor,"rest",target,.05,"focus")
-    actor.from=Activity.pack(target);actor.path=nil;actor.yaw=if type(packet.yaw)=="number" and packet.yaw==packet.yaw and math.abs(packet.yaw)<1000 then packet.yaw else input.yaw or 0
+    actor.from=Activity.pack(target);actor.to=Activity.pack(target);actor.path=nil;actor.yaw=pose.yaw
     return true
 end
 function Garden:focusAnchor(id,petId,characterId,petGeneration,position)
@@ -182,6 +185,25 @@ function Garden:greeting(now,ordered)
     end
 end
 
+-- Bounded authoritative choices reuse the same planner and decision cadence.
+function Garden:wander(actor,input,now)
+    if not self.options.validWander then return false end
+    local from=self:position(actor,now)
+    for attempt=1,6 do
+        local seed=(actor.ownerId*17+self.serial*37+attempt*101)%997
+        local angle=seed/997*math.pi*2
+        local radius=2+(seed%3)
+        local candidate=input.anchor+Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
+        if distance(candidate,Layout.Toy)<3 or distance(candidate,Layout.Rest)<2 then continue end
+        local target=self.options.validWander(input,candidate,from)
+        if typeof(target)=="Vector3"and distance(target,input.anchor)<=4.1 and math.abs(target.Y-input.anchor.Y)<=.7 then
+            self:transition(actor,"investigate",target,0,"wander")
+            actor.wanderCount=(actor.wanderCount or 0)+1
+            return true
+        end
+    end
+    return false
+end
 function Garden:decide()
     local now=self.options.now();local ordered={}
     -- Reservations bind both participant generations; any superseded half ends
@@ -222,20 +244,30 @@ function Garden:decide()
             for _,waypoint in ipairs({Layout.Lawn,target,Layout.Rest})do
                 if distance(input.position,waypoint)>20 then reachable=false;break end
             end
-            if now-actor.idleSince>=3 and not self.toy.ownerId and reachable then
+            local wanderTurn=self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
+            if now-actor.idleSince>=3.5 and now>=(actor.nextWanderAt or 0) and wanderTurn then
+                actor.nextWanderAt=now+7
+                if not self:wander(actor,input,now)then
+                    actor.wanderCount=(actor.wanderCount or 0)+1
+                    self:transition(actor,"rest",position,1.5,"wanderPause")
+                end
+            elseif now-actor.idleSince>=3 and not self.toy.ownerId and reachable and not wanderTurn then
                 local duration=math.clamp((position-Layout.Lawn).Magnitude/3+(Layout.Lawn-target).Magnitude/3,1.6,8)
                 self.toy={position=Activity.pack(Layout.Toy),ownerId=actor.ownerId,reservation=self:token()}
                 self:transition(actor,"investigate",target,duration,nil,nil,Layout.Lawn)
             elseif distance(Activity.vector(actor.to),input.anchor)>.2 then self:transition(actor,"follow",input.anchor,.5)
-            elseif not reachable and now-actor.idleSince>=5 then self:transition(actor,"rest",input.anchor,5)end
+            elseif not reachable and now-actor.idleSince>=5 then self:transition(actor,"rest",position,2,"wanderPause")end
         elseif now>=actor.endTime then
-            if actor.behavior=="investigate" and self.toy.ownerId==actor.ownerId then
+            if actor.action=="wander"then
+                self:transition(actor,"rest",position,1.5,"wanderPause")
+            elseif actor.behavior=="investigate" and self.toy.ownerId==actor.ownerId then
                 self:transition(actor,"play",position,2.8,"shove")
                 actor.yaw=math.atan2(Layout.Toy.X-position.X,Layout.Toy.Z-position.Z)
                 local axis=Vector3.new(Layout.Toy.X-position.X,0,Layout.Toy.Z-position.Z)
                 self.toy.axis=Activity.pack(if axis.Magnitude>.01 then axis.Unit else Vector3.new(0,0,1))
                 self.toy.actionId,self.toy.startTime,self.toy.endTime=actor.actionId,now,now+2.8;self.dirty=true
             elseif actor.behavior=="play" then
+                actor.wanderCount=(actor.wanderCount or 0)+1
                 self:release(actor);self:transition(actor,"rest",Layout.Rest,math.clamp(distance(position,Layout.Rest)/2.8,1,4),"settle")
             elseif actor.action=="settle" then self:transition(actor,"rest",position,5)
             else actor.idleSince=now;self:transition(actor,"follow",input.anchor,1) end

@@ -100,8 +100,37 @@ local function petAnchor(state)
 	return Vector3.new(position.X,hit.Position.Y+.025,position.Z)
 end
 
+-- Cache authored station/water geometry once per live lounge, never scan rigs.
+local wanderScene
+local function validWander(input,target,from)
+ local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
+ if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
+ if not wanderScene or wanderScene.room~=room then
+  wanderScene={room=room,wet={},stations={}}
+  for _,node in ipairs(room:GetDescendants())do
+   if node:IsA("BasePart")and(node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
+   elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
+  end
+ end
+ local at=floor.CFrame:PointToObjectSpace(target)
+ if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return nil end
+ for _,station in ipairs(wanderScene.stations)do if station.Parent and Vector2.new(target.X-station.Position.X,target.Z-station.Position.Z).Magnitude<3 then return nil end end
+ for _,wet in ipairs(wanderScene.wet)do if wet.Parent then
+  for i=0,4 do local point=wet.CFrame:PointToObjectSpace(from:Lerp(target,i/4))
+   if math.abs(point.X)<wet.Size.X*.5+.5 and math.abs(point.Z)<wet.Size.Z*.5+.5 then return nil end
+  end
+ end end
+ local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
+ local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
+ if not hit or hit.Material==Enum.Material.Water or math.abs(hit.Position.Y+.025-input.anchor.Y)>.7 then return nil end
+ local grounded=Vector3.new(target.X,hit.Position.Y+.025,target.Z)
+ local lift=Vector3.new(0,.7,0)
+ if workspace:Raycast(from+lift,grounded-from,params)then return nil end
+ return grounded
+end
 local garden = GardenState.new({now=function()return workspace:GetServerTimeNow()end,
 	publish=function(snapshot)gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))end,
+    validWander=validWander,
 	validFocus=function(input,target)
 		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
 		if not floor then return false end
@@ -280,7 +309,7 @@ local function reset(board, preset)
 		descriptor=FieldObjectives.create(FieldObjectives.next(count),Random.new():NextInteger(1,2147483646))
 		board.fieldCount=count+1
 	end
-	local selected = board.selectedFamily or NurseryCatalog.family(board.profile.companionId) or "pip"
+	local selected = NurseryCatalog.family(board.profile.companionId) or "pip"
 	board.runFamily = if FamilyMastery.ownsFamily(inventory(board), selected) then selected else "pip"
 	board.selectedFamily = board.runFamily
 	board.runDay = Nursery.public(board.nursery).dailyDay
@@ -492,7 +521,6 @@ gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
 	if kind=="focus"then
 		local actor=garden.actors[player.UserId]
 		if actor and packet.seq<=(actor.lastFocusSeq or 0)then return end
-		if not GardenActivity.vector(packet.position)then return end
 		-- A deliberate focus may precede first2Hz actor creation; refresh only it.
 		garden:syncOne(player.UserId,gardenInput(board))
 	else garden.inputs[player.UserId]=gardenInput(board)end
@@ -565,13 +593,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if typeof(value) == "boolean" then board.menuPaused = value end
 		return
 	end
-	if action == "family" then
-		if typeof(value) == "string" and FamilyMastery.ownsFamily(inventory(board), value) then
-			board.selectedFamily = value
-			board.folder:SetAttribute("SelectedFamily", value)
-		end
-		return
-	end
+	-- Retired progression request: no active family selection remains.
+	if action == "family" then return end
 	if action == "companion" then
 		local pet = if typeof(value) == "string" then Pets.byId[value] else nil
 		if board.mode == "Room" and pet and NurseryCatalog.isOwned(inventory(board), pet.id)
@@ -655,7 +678,7 @@ local messages = {
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
 	if not board or board.closing or not board.profileReady or typeof(action) ~= "string" then return end
-	local isHue=action=="hue"or action=="hueEquip"
+	local isHue=HueState.isAction(action)
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" and not isHue then return end
 	local quote=if isHue and type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil
 	local pending=board.nursery.pending

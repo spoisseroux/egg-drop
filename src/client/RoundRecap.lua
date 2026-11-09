@@ -4,7 +4,6 @@ local Daily = require(game:GetService("ReplicatedStorage").Shared.DailyContracts
 local Feedback = require(script.Parent.RecapFeedback)
 local EggArt = require(script.Parent.EggArt)
 local EggCatalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
-local FamilyCrest=require(script.Parent.FamilyCrest)
 
 local ranks = { "I", "II", "III" }
 
@@ -269,7 +268,6 @@ function Recap:buildDetails(result,reward,lines)
   Art.corner(frame,8);frame:SetAttribute("ReceiptSection",kind)
   local icon=Art.frame(frame,"Icon","accent",UDim2.fromOffset(10,10),UDim2.fromOffset(18,18),frame.ZIndex+1);Art.corner(icon,if kind=="contract"then 8 else 4)
   if kind=="contract"then icon.BackgroundTransparency=1;EggArt.nectar(icon,UDim2.fromOffset(2,0),UDim2.fromOffset(14,18),icon.ZIndex+1)
-  elseif kind=="mastery"then icon.BackgroundTransparency=1;FamilyCrest.create(icon,reward.family or "pip",if result.mastery then result.mastery.rank else reward.promotedTo or 0,UDim2.fromOffset(0,0),UDim2.fromOffset(20,20),icon.ZIndex+1,true)
   elseif kind=="score"or kind=="best"then icon.Rotation=45
   elseif kind=="chain"then Art.frame(icon,"Link","ink",UDim2.fromOffset(5,2),UDim2.fromOffset(8,14),icon.ZIndex+1)end
   local title=Art.text(frame,"Label",caption,UDim2.fromOffset(38,8),UDim2.fromOffset(1,1),"text",14)
@@ -293,7 +291,7 @@ function Recap:buildDetails(result,reward,lines)
  card("source","Quest Stars","+"..(reward.base or 0),true)
  card("source","Daily contracts","+"..(reward.daily or 0),true)
  local skip=self.statTargets and 4 or 2
- local familyLines,unique={},{};local familyStarted=false
+ local unique={}
  -- The last two canonical lines repeat the live egg facts already in summary.
  -- Keep them in receiptLines/signature for history/tests, omit the visual repeat.
  for i=skip+1,math.max(skip,#lines-2)do
@@ -303,11 +301,9 @@ function Recap:buildDetails(result,reward,lines)
   end
   if not found and not unique[line]then
    unique[line]=true
-   if line:find("mastery",1,true)or line:find("No family marks",1,true)then familyStarted=true end
-   if familyStarted then table.insert(familyLines,line)else card("fact",line,nil,false)end
+   card("fact",line,nil,false)
   end
  end
- if #familyLines>0 then card("mastery",table.concat(familyLines,"\n"),nil,false)end
 end
 
 function Recap:updateField(result)
@@ -326,7 +322,7 @@ function Recap:updateField(result)
 	if reward then self.earnedGraphic.Text=Stars.format("+%d Stars",reward.total);self.bankGraphic.Text=Stars.format("Stars saved: %d",balance)end
  self.hasReceipt,self.fieldMode=reward~=nil,true
 	self.fieldHeading=Receipt.outcome(result)
-	self.promotionLabel.Text=Receipt.promotion(reward)or""
+	self.promotionLabel.Text=""
 	self.title.Text = if loading then "Loading receipt…"
 		elseif saving then (if result.status == "Saving" then "Saving your rewards…" else "Reward save delayed · retrying") else
 		Stars.format("Stars +%d · quest %d + daily %d", result.award, math.max(0, result.award - result.daily), result.daily)
@@ -363,20 +359,6 @@ function Recap:updateField(result)
 			for _, contract in ipairs(Daily.Definitions) do
 				if contract.id == id then table.insert(lines, Stars.format("%s · %d Stars", contract.title, contract.reward)); break end
 			end
-		end
-		local family = Receipt.familyName(reward.family)
-		local marks = reward.masteryPoints or 0
-		table.insert(lines, if marks > 0 then string.format("%s mastery +%d %s", family, marks, if marks == 1 then "mark" else "marks")
-			else "No family marks · finish both goals and 24 drops")
-		if (reward.promotedTo or 0) > 0 then table.insert(lines, family .. " rank " .. (ranks[reward.promotedTo] or "III") .. " unlocked!") end
-		local mastery = result.mastery
-		if mastery then
-			table.insert(lines, family .. " next: " .. mastery.nextGoal)
-			if mastery.rank == 2 and mastery.missingChallenges and #mastery.missingChallenges > 0 then
-				table.insert(lines, "Rank III still needs:")
-				for _, condition in ipairs(mastery.missingChallenges) do table.insert(lines, condition) end
-			end
-			if mastery.rewardHint then table.insert(lines, mastery.rewardHint) end
 		end
 		table.insert(lines, result.recipe.name .. " · costs " .. cost .. " Stars")
 		table.insert(lines, if balance >= cost then "Ready to hatch · " .. balance .. "/" .. cost .. " Stars"

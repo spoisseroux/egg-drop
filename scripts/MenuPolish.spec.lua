@@ -63,7 +63,7 @@ return function(client, parent)
 		test("page changes keep absolute header and tab positions stable",function()
 			local menu=fixture();resize(menu,1649,971);menu:open();task.wait(.03)
 			local headerY,tabY=menu.heading.AbsolutePosition.Y,menu.tabs.play.AbsolutePosition.Y
-			for _,key in ipairs({"daily","mastery","play","mastery","daily"}) do
+			for _,key in ipairs({"daily","play","daily","play","daily"}) do
 				menu:setPage(key);task.wait(.03)
 				assert(menu.heading.AbsolutePosition.Y==headerY and menu.tabs.play.AbsolutePosition.Y==tabY,"tabs shifted on "..key)
 			end
@@ -120,7 +120,7 @@ return function(client, parent)
 			menu:close()
 		end)
 		test("fresh open and page entry reset scroll while snapshots retain reading position",function()
-			local menu=fixture();resize(menu,568,160);menu:setPage("mastery");task.wait(.03)
+			local menu=fixture();resize(menu,568,160);menu:setPage("play");task.wait(.03)
 			menu.body.CanvasPosition=Vector2.new(0,100);task.wait(.03)
 			local before=menu.body.CanvasPosition.Y
 			menu:update(snapshot(),"pip","wick",500,3,1000,"sprout");task.wait(.03)
@@ -154,42 +154,30 @@ return function(client, parent)
 			assert(bottomGap>=-.1 and bottomGap<=menu.pad+16,"card does not end after its final content: "..bottomGap)
 			menu:close()
 		end)
-		test("mastery cards wrap exact missing conditions at real body size",function()
-			local menu=fixture();resize(menu,350,279);menu:setPage("mastery");task.wait(.03)
-			assert(menu.familyHints.wick.Text:find("Win with a chain of 3",1,true) and not menu.familyHints.wick.Text:find("Clean win",1,true))
-			assert(menu.familyHints.pip.Text:find("Family mastered",1,true) and menu.families.pip.FamilyCrest:GetAttribute("Rank")==3)
-			for _,family in ipairs({"pip","wick"}) do
-				assert(menu.familyHints[family].TextFits and menu.familyHints[family].TextSize>=14 and not menu.familyHints[family].TextScaled,fitDiagnostic(menu.familyHints[family]))
-				assert(menu.families[family].AbsoluteSize.Y>=44 and menu.families[family].FamilyName.TextFits and inside(menu.families[family],menu.familyCards[family]),fitDiagnostic(menu.families[family].FamilyName))
-			end
-			menu:close()
-		end)
+        test("retired mastery and egg goal leave only distinct Play and Daily destinations",function()
+            local menu,calls=fixture();resize(menu,350,279)
+            assert(menu.tabs.mastery==nil and menu.pages.mastery==nil and menu.recipePanel==nil)
+            assert(not menu.card:FindFirstChild("EggGoalPanel",true)and not menu.card:FindFirstChild("FamilyNote",true))
+            menu:setPage("play");assert(menu.tabs.play.SelectedEdge.Visible and not menu.tabs.daily.SelectedEdge.Visible)
+            assert(menu.tabs.play.BackgroundColor3~=menu.tabs.daily.BackgroundColor3 and menu.tabs.play.TextColor3~=menu.tabs.daily.TextColor3)
+            menu:setPage("daily");assert(menu.tabs.daily.SelectedEdge.Visible and not menu.tabs.play.SelectedEdge.Visible)
+            assert(not menu:activate("family","pip")and #calls==0)
+            menu:close()
+        end)
 		test("hidden and unchanged snapshots perform no text measurement layout",function()
-			local menu=fixture();resize(menu,680,700);menu:setPage("mastery");task.wait(.03)
+			local menu=fixture();resize(menu,680,700);menu:setPage("play");task.wait(.03)
 			menu:close();local before=menu.layoutPasses
 			for i=1,12 do menu:update(snapshot(),"pip","wick",500+i,3,1000,"sprout") end
 			assert(menu.layoutPasses==before,"hidden update measured cards")
 			menu:open();before=menu.layoutPasses
 			for i=1,12 do menu:update(snapshot(),"pip","wick",500+i,3,1000,"sprout") end
 			assert(menu.layoutPasses==before,"unchanged visible update reflowed cards")
-			local changed=snapshot();changed.masteryDetails.wick.nextGoal="Complete the remaining exact challenge"
-			menu:update(changed,"pip","wick",500,3,1000,"sprout")
-			assert(menu.layoutPasses==before+1,"changed visible condition must resize its page")
+            local changed=snapshot();changed.masteryDetails.wick.nextGoal="Archived condition"
+            menu:update(changed,"pip","wick",500,3,1000,"sprout")
+            assert(menu.layoutPasses==before,"archived mastery must not measure live UI")
 			menu:close()
 		end)
-		test("locked family rows omit unused progress space and cannot select a family",function()
-			local menu,calls=fixture();resize(menu,680,700)
-			local state=snapshot();state.inventoryMask=1
-			menu:update(state,"pip","pip",0,0,0,"meadow");menu:setPage("mastery");task.wait(.03)
-			assert(not menu.families.wick.Interactable and not menu.families.wick.Selectable and not menu:activate("family","wick"))
-			assert(not menu.familyText.wick.Visible and menu.familyText.pip.Visible and #calls==0)
-			local hint,card=menu.familyHints.wick,menu.familyCards.wick
-			assert(hint.TextFits and inside(hint,card),fitDiagnostic(hint))
-			assert(hint.Position.Y.Offset<=menu.families.wick.AbsoluteSize.Y+16,"locked row reserves a hidden rank line")
-			local tail=card.AbsoluteSize.Y-hint.Position.Y.Offset-hint.AbsoluteSize.Y
-			assert(tail>=0 and tail<=16,"locked card stretches after its measured hint")
-			menu:close()
-		end)
+
 	end)
 	for _,menu in ipairs(views) do menu:close();menu.shade:Destroy() end
 	root:Destroy();assert(ok,problem)

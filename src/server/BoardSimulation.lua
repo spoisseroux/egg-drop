@@ -3,7 +3,6 @@ local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local Simulation = {}
 local halfWidth = Config.Width / 2
 local diagonal = 1 / math.sqrt(2)
-local maxSpeed = 38
 
 local function addEgg(board, position, tier, velocity)
 	board.serial += 1
@@ -62,17 +61,17 @@ function Simulation.canDrop(board)
 end
 
 function Simulation.drop(board, aim)
-	if #board.eggs >= Config.MaxEggs or not Simulation.canDrop(board) then
+	if not Config.validAim(aim) or #board.eggs >= Config.MaxEggs or not Simulation.canDrop(board) then
 		return false
 	end
 	local tier = Simulation.nextTier(board)
-	local position = Vector2.new(Config.aimX(aim, tier), Config.SpawnY)
+	local position = Config.launchPosition()
 	for _, egg in ipairs(board.eggs) do
 		if (egg.position - position).Magnitude < egg.radius + Config.Tiers[tier].radius then
 			return false
 		end
 	end
-	local dropped = addEgg(board, position, tier)
+	local dropped = addEgg(board, position, tier, Config.launchVelocity(aim))
 	board.fallingId, board.dropAge = dropped.id, 0
 	board.drops += 1
 	return true
@@ -176,12 +175,7 @@ function Simulation.step(board, dt, merged, impacts)
 	local preset = board.physics or Config.Presets[board.preset]
 	board.dropAge = (board.dropAge or 0) + dt
 	for _, egg in ipairs(board.eggs) do
-		local velocity = egg.velocity + Vector2.new(0, -Config.Gravity * dt)
-		if velocity.Magnitude > maxSpeed then
-			velocity = velocity.Unit * maxSpeed
-		end
-		egg.velocity = velocity * (1 - dt * 0.85)
-		egg.position += egg.velocity * dt
+		egg.position,egg.velocity=Config.advanceFlight(egg.position,egg.velocity,dt)
 		collideWithTray(egg, preset.bounce, impacts)
 	end
 	-- Each successful merge removes a pair before the next scan.

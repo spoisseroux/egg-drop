@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "result": {
+    "rows": {
+      "1": {
+        "seconds": 32.76666666666545,
+        "template": "bank_pair",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40001,
+        "merges": 18,
+        "matches": true,
+        "score": 640,
+        "reward": 8
+      },
+      "2": {
+        "seconds": 32.76666666666545,
+        "template": "bank_pair",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40002,
+        "merges": 19,
+        "matches": true,
+        "score": 700,
+        "reward": 6
+      },
+      "3": {
+        "seconds": 32.76666666666545,
+        "template": "bank_pair",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40003,
+        "merges": 18,
+        "matches": true,
+        "score": 670,
+        "reward": 8
+      },
+      "4": {
+        "seconds": 32.76666666666545,
+        "template": "creek_crossing",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40001,
+        "merges": 18,
+        "matches": true,
+        "score": 700,
+        "reward": 8
+      },
+      "5": {
+        "seconds": 32.76666666666545,
+        "template": "creek_crossing",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40002,
+        "merges": 19,
+        "matches": true,
+        "score": 700,
+        "reward": 6
+      },
+      "6": {
+        "seconds": 32.76666666666545,
+        "template": "creek_crossing",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40003,
+        "merges": 19,
+        "matches": true,
+        "score": 700,
+        "reward": 6
+      },
+      "7": {
+        "seconds": 32.41666666666547,
+        "template": "lantern_chain",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40001,
+        "merges": 19,
+        "matches": true,
+        "score": 690,
+        "reward": 6
+      },
+      "8": {
+        "seconds": 33.11666666666543,
+        "template": "lantern_chain",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40002,
+        "merges": 19,
+        "matches": true,
+        "score": 690,
+        "reward": 6
+      },
+      "9": {
+        "seconds": 32.40833333333214,
+        "template": "lantern_chain",
+        "drops": 24,
+        "policy": "goal_aware",
+        "persistentWrites": false,
+        "seed": 40003,
+        "merges": 19,
+        "matches": true,
+        "score": 650,
+        "reward": 6
+      }
+    },
+    "persistentWrites": false,
+    "passed": 9,
+    "evidence": "exact accepted aim/time/tier trace replay through the unchanged production solver"
+  }
+}

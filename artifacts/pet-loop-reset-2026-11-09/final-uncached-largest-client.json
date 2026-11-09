@@ -1,0 +1,70 @@
+[
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "HueEggView",
+    "result": {
+      "purchases": 0,
+      "cases": [
+        "1649, 971 generic purchase exposes no target or direction before hatching",
+        "1649, 971 held assignment and colors use measured scroll choices and matched rigs",
+        "749, 381 generic purchase exposes no target or direction before hatching",
+        "749, 381 held assignment and colors use measured scroll choices and matched rigs",
+        "350, 703 generic purchase exposes no target or direction before hatching",
+        "350, 703 held assignment and colors use measured scroll choices and matched rigs",
+        "568, 210 generic purchase exposes no target or direction before hatching",
+        "568, 210 held assignment and colors use measured scroll choices and matched rigs",
+        "insufficient funds suppress purchase; max grade preserves held item and free Colors remains accessible",
+        "mix preview uses two learned bases while reset has an explicit independent action",
+        "Colors groups keep one choice set, reset and measured tabs without saving or moving portrait framing",
+        "applied result leads once, next paid action is explicit, and old Saved never masks exhausted or shortfall reasons",
+        "companion reveal preempts Hue without consuming or hiding committed held stock"
+      ],
+      "passed": 13,
+      "actualWalletMutation": false
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "FocusCharacterVisibility",
+    "result": {
+      "passed": 3,
+      "cases": [
+        "local focus scope hides owner parts and restores exact prior modifiers",
+        "new accessories inherit the scope and removal restores their own previous value",
+        "releasing the old character never repaints a replacement or observer avatar"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "PetNightStudy",
+    "result": {
+      "passed": 2,
+      "cases": [
+        "pip shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry",
+        "puddle shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Largest",
+    "name": "PetLoopResetPresentation",
+    "result": {
+      "fixtureCleanup": [
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover\nHeartbeat observer disconnected\nRenderStepped observer disconnected\npath=Players.keehar01.PlayerGui.PetFocusTransition visible=false alpha=1 active=false epoch=2 destroyed=true",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "spec=Players.keehar01.PlayerScripts.Client.QAPetLoopResetPresentation\ncase=shaded night head and restrained torso restore palette and protect dark face\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\nnight material model destroyed\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\npart=Part destroyed=true\nnight material model destroyed"
+      ],
+      "passed": 3,
+      "cases": [
+        "reduced motion cover owns an opaque rendered frame and superseded reveal cannot uncover",
+        "authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",
+        "shaded night head and restrained torso restore palette and protect dark face"
+      ]
+    }
+  }
+]

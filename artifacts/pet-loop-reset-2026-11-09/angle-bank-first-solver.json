@@ -1,0 +1,353 @@
+{
+  "firstSeed": 40001,
+  "separatedChain": false,
+  "rows": {
+    "1": {
+      "meanFirstStageDrop": 12,
+      "threeDistinctWinningSeeds": false,
+      "successRate": 1,
+      "policy": "goal_aware",
+      "runs": 1,
+      "winningTraces": {
+        "1": {
+          "trace": {
+            "1": {
+              "at": 0,
+              "drop": 1,
+              "tier": 2,
+              "aim": 0.01
+            },
+            "2": {
+              "at": 1.249999999999998,
+              "drop": 2,
+              "tier": 2,
+              "aim": 0.01
+            },
+            "3": {
+              "at": 2.499999999999994,
+              "drop": 3,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "4": {
+              "at": 3.7499999999999893,
+              "drop": 4,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "5": {
+              "at": 5.000000000000038,
+              "drop": 5,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "6": {
+              "at": 6.2500000000001,
+              "drop": 6,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "7": {
+              "at": 7.5000000000001625,
+              "drop": 7,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "8": {
+              "at": 8.750000000000144,
+              "drop": 8,
+              "tier": 2,
+              "aim": 0.01
+            },
+            "9": {
+              "at": 10.000000000000073,
+              "drop": 9,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "10": {
+              "at": 11.250000000000002,
+              "drop": 10,
+              "tier": 2,
+              "aim": 0.01
+            },
+            "11": {
+              "at": 12.49999999999993,
+              "drop": 11,
+              "tier": 1,
+              "aim": 0.01
+            },
+            "12": {
+              "at": 13.74999999999986,
+              "drop": 12,
+              "tier": 1,
+              "aim": 0
+            },
+            "13": {
+              "at": 14.999999999999789,
+              "drop": 13,
+              "tier": 1,
+              "aim": 0.88
+            },
+            "14": {
+              "at": 16.24999999999972,
+              "drop": 14,
+              "tier": 2,
+              "aim": 0.99
+            },
+            "15": {
+              "at": 17.49999999999965,
+              "drop": 15,
+              "tier": 1,
+              "aim": 0.99
+            },
+            "16": {
+              "at": 18.749999999999577,
+              "drop": 16,
+              "tier": 1,
+              "aim": 0.99
+            },
+            "17": {
+              "at": 19.999999999999506,
+              "drop": 17,
+              "tier": 2,
+              "aim": 0.99
+            },
+            "18": {
+              "at": 21.249999999999435,
+              "drop": 18,
+              "tier": 1,
+              "aim": 0.99
+            },
+            "19": {
+              "at": 22.499999999999364,
+              "drop": 19,
+              "tier": 1,
+              "aim": 1
+            },
+            "20": {
+              "at": 23.749999999999293,
+              "drop": 20,
+              "tier": 2,
+              "aim": 0.99
+            },
+            "21": {
+              "at": 24.999999999999222,
+              "drop": 21,
+              "tier": 1,
+              "aim": 0.38
+            },
+            "22": {
+              "at": 26.24999999999915,
+              "drop": 22,
+              "tier": 1,
+              "aim": 0.79
+            },
+            "23": {
+              "at": 27.49999999999908,
+              "drop": 23,
+              "tier": 2,
+              "aim": 0.99
+            },
+            "24": {
+              "at": 28.74999999999901,
+              "drop": 24,
+              "tier": 1,
+              "aim": 0.1
+            }
+          },
+          "seed": 40001
+        }
+      },
+      "timeouts": 0,
+      "stages": 2,
+      "overflows": 0,
+      "firstStages": 1,
+      "meanReward": 8,
+      "wins": 1,
+      "meanStages": 2,
+      "firstStageRate": 1,
+      "template": "bank_pair",
+      "firstStageDropSum": 12,
+      "successfulSeeds": {
+        "1": 40001
+      },
+      "reward": 8
+    }
+  },
+  "persistentWrites": false,
+  "count": 1,
+  "evidence": "production solver; legal host cooldown/contact gate; goal-aware timing reacts only to public first-link events",
+  "liveState": false,
+  "cadence": 1.25,
+  "samples": {
+    "1": {
+      "controlVersion": "center-angle-v1",
+      "policy": "goal_aware",
+      "separationMisses": 0,
+      "stages": 2,
+      "trace": {
+        "1": {
+          "at": 0,
+          "drop": 1,
+          "tier": 2,
+          "aim": 0.01
+        },
+        "2": {
+          "at": 1.249999999999998,
+          "drop": 2,
+          "tier": 2,
+          "aim": 0.01
+        },
+        "3": {
+          "at": 2.499999999999994,
+          "drop": 3,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "4": {
+          "at": 3.7499999999999893,
+          "drop": 4,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "5": {
+          "at": 5.000000000000038,
+          "drop": 5,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "6": {
+          "at": 6.2500000000001,
+          "drop": 6,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "7": {
+          "at": 7.5000000000001625,
+          "drop": 7,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "8": {
+          "at": 8.750000000000144,
+          "drop": 8,
+          "tier": 2,
+          "aim": 0.01
+        },
+        "9": {
+          "at": 10.000000000000073,
+          "drop": 9,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "10": {
+          "at": 11.250000000000002,
+          "drop": 10,
+          "tier": 2,
+          "aim": 0.01
+        },
+        "11": {
+          "at": 12.49999999999993,
+          "drop": 11,
+          "tier": 1,
+          "aim": 0.01
+        },
+        "12": {
+          "at": 13.74999999999986,
+          "drop": 12,
+          "tier": 1,
+          "aim": 0
+        },
+        "13": {
+          "at": 14.999999999999789,
+          "drop": 13,
+          "tier": 1,
+          "aim": 0.88
+        },
+        "14": {
+          "at": 16.24999999999972,
+          "drop": 14,
+          "tier": 2,
+          "aim": 0.99
+        },
+        "15": {
+          "at": 17.49999999999965,
+          "drop": 15,
+          "tier": 1,
+          "aim": 0.99
+        },
+        "16": {
+          "at": 18.749999999999577,
+          "drop": 16,
+          "tier": 1,
+          "aim": 0.99
+        },
+        "17": {
+          "at": 19.999999999999506,
+          "drop": 17,
+          "tier": 2,
+          "aim": 0.99
+        },
+        "18": {
+          "at": 21.249999999999435,
+          "drop": 18,
+          "tier": 1,
+          "aim": 0.99
+        },
+        "19": {
+          "at": 22.499999999999364,
+          "drop": 19,
+          "tier": 1,
+          "aim": 1
+        },
+        "20": {
+          "at": 23.749999999999293,
+          "drop": 20,
+          "tier": 2,
+          "aim": 0.99
+        },
+        "21": {
+          "at": 24.999999999999222,
+          "drop": 21,
+          "tier": 1,
+          "aim": 0.38
+        },
+        "22": {
+          "at": 26.24999999999915,
+          "drop": 22,
+          "tier": 1,
+          "aim": 0.79
+        },
+        "23": {
+          "at": 27.49999999999908,
+          "drop": 23,
+          "tier": 2,
+          "aim": 0.99
+        },
+        "24": {
+          "at": 28.74999999999901,
+          "drop": 24,
+          "tier": 1,
+          "aim": 0.1
+        }
+      },
+      "attempts": 24,
+      "chainExpiries": 0,
+      "seconds": 32.76666666666545,
+      "template": "bank_pair",
+      "drops": 24,
+      "stage2CompletionDrop": 19,
+      "rejectedAttempts": 0,
+      "finalHeight": 5.573498106002807,
+      "firstStageDrop": 12,
+      "timeout": false,
+      "success": true,
+      "overflow": false,
+      "score": 640,
+      "seed": 40001,
+      "baseReward": 8,
+      "merges": 18
+    }
+  }
+}
