@@ -1,3 +1,20 @@
+# Egg Drop — item eggs and Aero companions
+
+**Private v274 Published — Item eggs and Aero companions — `bb8c60b`.** Verified in refreshed Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/item-eggs-aero-2026-11-09/private-published-v274-bb8c60b.png) · [Screenshots and walking films](artifacts/item-eggs-aero-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/item-eggs-aero-2026-11-09/VERIFY.md).
+
+1. Aim the welcome board for guaranteed Zivvi and6Stars. Then play unlimited24-drop field rounds: complete both goals for6Stars, or8 with the low-pile bonus; eligible contracts add their stated rewards.
+2. Hatch eggs is one grid: **Companion Egg18Stars** or **Hue Egg8Stars**. Companion odds remain35/25/20/10/5/3/2percent across the seven stable identities; after7common rolls the next is rare-only50/30/20. Duplicates say Already owned and grant nothing. Existing paid legacy receipts remain recoverable.
+3. A Hue Egg rolls Rose/Tide/Citrus/Iris/Reset at20%each. The exact jar and wallet debit save before reveal. Duplicate jars stack. Store, Use now and closing/reopening never reroll or charge twice.
+4. Journal → each pet's Customize icon → Hue has separate **Main/Secondary** targets, four0–5dose bars and counted jars. Five equal doses fully dye a channel; other hues mix using vivid authored anchors. Confirmation shows pet, channel, dose and stock changes. Reset consumes one jar and restores only the chosen channel. Original-color reset refuses without spending. Charm visibility/shape editing is in this page, not petting.
+5. All7identities display applied coats in world/portrait/hatch/visitors. Wallet, held stock, tokens and receipts are owner-private; applied doses are cosmetic public descriptors. Historical entitlements/tokens migrate without repeating grants.
+6. Roots and foot planting update smoothly; expressive poses sample15times/sec. Faster facing, anchored support feet, modest weight transfer and independent charm bounce replace sliding. Night is brighter without white clipping, but surfaces remain flatter than noon.
+
+Family mastery remains frozen. The optional daily gift is6Stars; contracts retain Win2rounds+4, Chain3+3, Score500+3. No play cap, paid luck, new currency, nursery or public release. The currently liked music stays default; two new original listening drafts are saved separately.
+
+**Evidence:**112source matches/compiles, Rojo build,102server cases and143client cases at actual Medium/Largest; these are repeated preferences, not extra independent cases. Actual earned Iris purchase/store/cancel/use and phone-emulator menu paths passed. Physical phone, fresh service-backed save/rejoin, live multiplayer/latency and long human play remain open. Current overnight work is [TODO](TODO.md) and [OVERNIGHT-AERO](OVERNIGHT-AERO.md).
+
+## Historical v250 handoff
+
 # Egg Drop — pet loop reset
 
 **Private v250 Published — Pet loop reset and angle aim - a3fce0c.** Confirmed in refreshed Studio Version History after reviewed commit/push and tests. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-loop-reset-2026-11-09/private-published-v250-a3fce0c.png). Accepted runtime: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).

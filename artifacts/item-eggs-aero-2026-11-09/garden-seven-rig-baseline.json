@@ -1,0 +1,573 @@
+{
+  "runtime": "bb8c60b",
+  "privateVersion": 274,
+  "scope": "Synthetic seven production rigs in production lounge; not seven live peers. 180 warmed frames and three180-frame trials per light condition. Frame cadence and measured seven-rig update CPU; not total GPU time.",
+  "day": [
+    {
+      "lights": 4,
+      "poseCpuP95": 1.2393002398312092,
+      "warmFrames": 180,
+      "frameP95": 17.787199467420578,
+      "samples": 180,
+      "frameP50": 16.739100217819214,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.7355997804552317,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 12,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    },
+    {
+      "lights": 4,
+      "poseCpuP95": 1.33980019018054,
+      "warmFrames": 180,
+      "frameP95": 17.8982000797987,
+      "samples": 180,
+      "frameP50": 16.69660024344921,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.26849936693906784,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 12,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    },
+    {
+      "lights": 4,
+      "poseCpuP95": 1.2473997194319963,
+      "warmFrames": 180,
+      "frameP95": 17.767800018191338,
+      "samples": 180,
+      "frameP50": 16.61200076341629,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.28329971246421337,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 12,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    }
+  ],
+  "night": [
+    {
+      "lights": 4,
+      "poseCpuP95": 1.3518999330699444,
+      "warmFrames": 180,
+      "frameP95": 18.138300627470016,
+      "samples": 180,
+      "frameP50": 16.634900122880936,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.6874008104205132,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 0,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0.12999999523162842,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    },
+    {
+      "lights": 4,
+      "poseCpuP95": 1.3538999482989311,
+      "warmFrames": 180,
+      "frameP95": 18.014099448919296,
+      "samples": 180,
+      "frameP50": 16.68969914317131,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.6892997771501541,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 0,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0.12999999523162842,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    },
+    {
+      "lights": 4,
+      "poseCpuP95": 1.245599938556552,
+      "warmFrames": 180,
+      "frameP95": 17.69080013036728,
+      "samples": 180,
+      "frameP50": 16.64539985358715,
+      "rigs": 7,
+      "fixture": true,
+      "highlights": 14,
+      "poseCpuP50": 0.2601000014692545,
+      "parts": 1789,
+      "settings": {
+        "origin": [
+          -45,
+          4.025000095367432,
+          30
+        ],
+        "cameraFrame": [
+          -43.79999923706055,
+          9.024999618530273,
+          49.599998474121094,
+          1,
+          0,
+          0,
+          0,
+          0.9798040390014648,
+          0.19995999336242676,
+          0,
+          -0.19995999336242676,
+          0.9798040390014648
+        ],
+        "cameraFov": 45,
+        "hour": 0,
+        "graphics": "Enum.SavedQualitySetting.Automatic",
+        "exposure": 0.12999999523162842,
+        "cadence": 15,
+        "appearance": {
+          "charmShape": "dot",
+          "mainDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          },
+          "charmVisible": true,
+          "secondaryDoses": {
+            "rose": 0,
+            "iris": 0,
+            "citrus": 0,
+            "tide": 0
+          }
+        },
+        "motion": "sequence",
+        "view": "lineup",
+        "ids": [
+          {
+            "id": "pip",
+            "backend": "AuthoredMesh",
+            "pieces": 17
+          },
+          {
+            "id": "puddle",
+            "backend": "AuthoredMesh",
+            "pieces": 16
+          },
+          {
+            "id": "wick",
+            "backend": "LegacyNative",
+            "pieces": 11
+          },
+          {
+            "id": "orbit",
+            "backend": "LegacyNative",
+            "pieces": 24
+          },
+          {
+            "id": "bloom_pip",
+            "backend": "LegacyNative",
+            "pieces": 37
+          },
+          {
+            "id": "foxfire_wick",
+            "backend": "LegacyNative",
+            "pieces": 13
+          },
+          {
+            "id": "eclipse_orbit",
+            "backend": "LegacyNative",
+            "pieces": 25
+          }
+        ]
+      }
+    }
+  ]
+}

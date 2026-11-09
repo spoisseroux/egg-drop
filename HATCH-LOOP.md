@@ -1,3 +1,13 @@
+# Current item-egg rules — private v274
+
+The current contract is [ITEM-EGGS-AND-AERO.md](ITEM-EGGS-AND-AERO.md), implemented in `bb8c60b`. [Play/build handoff](PLAY-BUILD.md) · [Exact tests](artifacts/item-eggs-aero-2026-11-09/VERIFY.md).
+
+Companion Egg18Stars retains35/25/20/10/5/3/2odds and the7-common rare guarantee. Sprout Focused is no longer offered for new purchases; old pending receipts remain valid. Companion duplicates award nothing. Hue Egg8Stars grants exactly one fixed random Rose/Tide/Citrus/Iris/Reset jar at20%each, stacked in saved inventory before its reveal. Each owned pet has independent Main/Secondary four-hue vectors with0–5doses per hue. Five equal doses fully dye the channel; other hue doses mix vividly. A Reset jar clears only the selected channel; original channels reject without spend. Every use confirms exact target, displayed revision/counts and stock change. Closing/reopening preserves fixed results and never repeats the debit/grant.
+
+Wallet and stock snapshots are owner-only. Applied doses are public appearance descriptions. Frozen pre-v6 validation and immutable migration proofs preserve old earned color libraries and held tokens; new pigment locks only its selected channel until a consumable Reset. Existing star/day/contract/round rules stay as documented in the v250 historical section. Mastery remains frozen; no new currency or paid luck.
+
+## Historical progression notes and superseded color flows
+
 # Egg Drop — Stars, companion eggs and held Hue Eggs
 
 **Active accepted/runtime rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** These supersede earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. Verified private publication is **v250 (a3fce0c)**, Pet loop reset and angle aim, confirmed in refreshed Studio Version History. [PLAY-BUILD.md](PLAY-BUILD.md) is the publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
