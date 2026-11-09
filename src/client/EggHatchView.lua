@@ -12,9 +12,13 @@ local EggArt = require(script.Parent.EggArt)
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 local JarArt=require(script.Parent.HueJarArt)
-local liveOrder={"meadow","hue","material"}
+local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog);local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
+local ShelfEffects=require(script.Parent.EggShelfEffects)
+local liveOrder={"meadow","hue","material","toy","feature"}
 local function shopRecipe(id)
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
+ if id=="toy"then return {id="toy",name="Toy Egg",cost=ToyCatalog.Cost}end
+ if id=="feature"then return {id="feature",name="Feature Egg",cost=FeatureCatalog.Cost}end
  if id=="material"then return {id="material",name="Material Egg",cost=MaterialCatalog.Cost}end
  local source=Catalog.ById[id]or Catalog.ById.meadow
  return {id=source.id,name=if id=="meadow"then "Companion Egg"else source.name,cost=source.cost}
@@ -103,6 +107,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
 		intentToken = 0, presentationGeneration = 0,
 	}, View)
+ self.shelfEffects=ShelfEffects.new(shade,{audio=audio,reduceEffects=reduceEffects,owns=function()return shade.Visible and not self.state.lastHatch and (not audio or audio.deviceActive~=false)end})
 	self.cinematic = HatchCinematic.new(revealHost, audio, reduceEffects, function()
 		return shade.Visible and (not self.ownsPresentation or self.ownsPresentation())
 	end)
@@ -128,12 +133,16 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 			self:chooseResult("play")
 		elseif current.pendingHueResult then
             if self.onOpenHue then self.onOpenHue(false)end
+        elseif current.pendingToyResult then
+            if self.onOpenToy then self.onOpenToy(false)end
+        elseif current.pendingFeatureResult then
+            if self.onOpenFeature then self.onOpenFeature(false)end
         elseif current.pendingMaterialResult then
             if self.onOpenMaterial then self.onOpenMaterial(false)end
         elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
 			self:close("earn")
 		else
-			if self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
+			if self.selected=="toy"then if self.onOpenToy then self.onOpenToy(true)end elseif self.selected=="feature"then if self.onOpenFeature then self.onOpenFeature(true)end elseif self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
 		end
 	end)
 	return self
@@ -307,6 +316,8 @@ function View:revokeIntent()
 end
 
 function View:chooseResult(intent)
+ if not self:ownsInput()then return false end
+ if self.cinematic:consumeSkipInput()or self.cinematic:skip()then return false end
 	local result = self.state.lastHatch
 	if (intent ~= "meet" and intent ~= "play") or not self.shade.Visible or not result
 		or not self.ackReady or self.pending or self.ackIntent
@@ -367,7 +378,11 @@ function View:refreshFooter()
 			else Stars.format("Hatch %s · %d Stars", recipe.name, recipe.cost)
 		if self.compactShop and not state.pendingHueResult then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else Stars.format("Hatch · %d Stars",recipe.cost)end
 		canAct = true
-  if state.pendingMaterialResult then textValue="Open saved material"
+  if state.pendingToyResult then textValue="Open saved toy"
+  elseif state.pendingFeatureResult then textValue="Open saved feature"
+  elseif state.pendingMaterialResult then textValue="Open saved material"
+  elseif self.selected=="toy"then if #ToyCatalog.remaining(state.toyUnlocks)==0 then textValue,canAct="All toys owned",false end
+  elseif self.selected=="feature"then if FeatureCatalog.full(state.featureStock or {})then textValue,canAct="All stacks full",false end
   elseif self.selected=="material"then
    if #MaterialCatalog.remaining(state.materialUnlocks)==0 then textValue,canAct="All materials owned",false
    elseif not state.materialAvailable then textValue,canAct="Materials not ready",false end
@@ -384,7 +399,7 @@ function View:refreshFooter()
 		end
 		if self:footerRowHeight(self.meetButton,width)>44 then self.meetButton.Text=if self.pending then "Saving" else "Meet" end
 	end
-	if self.compactShop and not state.lastHatch and not self.pending and canAct and not state.pendingMaterialResult then
+	if self.compactShop and not state.lastHatch and not self.pending and canAct and not state.pendingMaterialResult and not state.pendingToyResult and not state.pendingFeatureResult then
 		local recipe=shopRecipe(self.selected)
 		local missing=math.max(0,recipe.cost-(state.nectar or 0))
 		local budget=math.max(44,self.card.Size.Y.Offset-48-44-8)
@@ -444,9 +459,10 @@ function View:renderBody()
  local left=self.body:FindFirstChild("EggColumn")
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100));left.BackgroundTransparency=1
- for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="Recipe_material"or child.Name=="DailyNectar")then child:Destroy()end end
+ for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="Recipe_material"or child.Name=="Recipe_toy"or child.Name=="Recipe_feature"or child.Name=="DailyNectar")then child:Destroy()end end
  local rect=Art.scrollContentRect(self.body,self.body.Size.X.Offset);local width=rect.width+8;local w=rect.width;local short=self.shade.AbsoluteSize.Y<280
  left.Position=UDim2.fromOffset(rect.x-4,0);left.Size=UDim2.fromOffset(width,1);local y=6;local cols=if w>=264 then 2 else 1;local _,cw=Art.gridCell(w,0,cols,8)
+ local eggHosts={}
  local cardH=short and 116 or 160
  for _,id in ipairs(liveOrder)do
   local recipe=shopRecipe(id);local n=left:FindFirstChild("Recipe_"..id)
@@ -460,7 +476,7 @@ function View:renderBody()
   local nh=Art.textHeight(labelNode,cw-8,22);local ph=Art.textHeight(cost,cw-8,20);cardH=math.max(cardH,nh+ph+64)
   labelNode.Position,labelNode.Size=UDim2.fromOffset(4,cardH-nh-ph-10),UDim2.fromOffset(cw-8,nh)
   cost.Position,cost.Size=UDim2.fromOffset(4,cardH-ph-6),UDim2.fromOffset(cw-8,ph)
-  local eggH=math.max(52,cardH-nh-ph-18);EggArt.create(n,id,UDim2.fromOffset((cw-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH),n.ZIndex+2)
+  local eggH=math.max(52,cardH-nh-ph-18);local egg=EggArt.create(n,id,UDim2.fromOffset((cw-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH),n.ZIndex+2);table.insert(eggHosts,egg)
   Art.control(n,self.selected==id,not self.pending);n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",self.selected==id)
  end
  for index,id in ipairs(liveOrder)do local n=left:FindFirstChild("Recipe_"..id);local x,cellW=Art.gridCell(w,(index-1)%cols,cols,8);n.Position,n.Size=UDim2.fromOffset(4+x,y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cellW,cardH)end
@@ -491,7 +507,16 @@ function View:renderBody()
   for index,row in ipairs(nodes)do local group=math.floor((index-1)/columns)+1;local ry=y;for n=1,group-1 do ry+=heights[n]+8 end;local x,cellW=Art.gridCell(w,(index-1)%columns,columns,8);row.Position,row.Size=UDim2.fromOffset(4+x,ry),UDim2.fromOffset(cellW,heights[group])end
   for _,h in ipairs(heights)do y+=h+8 end
  end
- if self.selected=="material"then
+ if self.selected=="toy"then
+  copy("PoolHeading","New toys · no duplicates","Action")
+  local odds=ToyCatalog.odds(self.state.toyUnlocks)
+  if #odds==0 then copy("ToyCollection","All toys owned","Body")else for _,r in ipairs(odds)do copy("ToyOdds_"..r.id,ToyCatalog.ById[r.id].name.." · "..string.format("%.3g%%",r.probability*100),"Body")end end
+  copy("ToyRules","Unlock once for all your pets. Choose one owned toy or None per pet at the cradle for free. Garden play gives no rewards.","Body")
+ elseif self.selected=="feature"then
+  copy("PoolHeading","One stored feature item · fixed odds","Action")
+  for _,r in ipairs(FeatureCatalog.odds())do copy("FeatureOdds_"..r.id,FeatureCatalog.ById[r.id].name.." · "..r.rarity.." · "..string.format("%.0f%%",r.probability*100),"Body")end
+  copy("FeatureRules","Grow any owned pet one stage, up to 5. Freely show any earned size, or hide it. Stacks hold 99 each; a rolled full stack uses no Stars. Store items for other or future pets.","Body")
+ elseif self.selected=="material"then
   copy("PoolHeading","New materials · no duplicates","Action")
   local odds=MaterialCatalog.odds(self.state.materialUnlocks)
   if #odds==0 then copy("MaterialCollection","All materials owned","Body")
@@ -511,7 +536,7 @@ function View:renderBody()
  daily.Text=if self.state.dailyAvailable then "Daily Stars +"..(self.state.dailyBonus or 6)else "Daily Stars claimed"
  Art.type(daily,"Action",short);local dh=math.max(44,Art.actionHeight(daily,w));daily.Position,daily.Size=UDim2.fromOffset(4,y),UDim2.fromOffset(w,dh);daily.Interactable,daily.Selectable=self.state.dailyAvailable==true and not self.pending,self.state.dailyAvailable==true and not self.pending;Art.control(daily,false,daily.Interactable);y+=dh+8
  left.Size=UDim2.fromOffset(width,y);self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>self.body.AbsoluteSize.Y
- self.body.CanvasPosition=Vector2.new(0,math.clamp(canvas.Y,0,math.max(0,y+4-self.body.AbsoluteSize.Y)));self.renderingBody=false;self:restoreBodyFocus(previous,action,owner)
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(canvas.Y,0,math.max(0,y+4-self.body.AbsoluteSize.Y)));self.renderingBody=false;self.shelfEffects:setEggs(eggHosts);self:restoreBodyFocus(previous,action,owner)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(left)then self:queueSelectedRecipe()end
 end
 
@@ -670,6 +695,7 @@ function View:open(state)
 	self.errorMessage = nil
 	self.shade.Visible = true
 	self:update(state or self.state)
+ if not self.state.lastHatch then self:queueSelectedRecipe()end
 	if self:ownsInput() and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
 		GuiService.SelectedObject = self:openingFocusTarget()
 	end

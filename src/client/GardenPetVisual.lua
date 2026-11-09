@@ -11,6 +11,7 @@ local Palette=require(ReplicatedStorage.Shared.PetPalette)
 local Readiness=require(script.Parent.PetAssetReadiness)
 local NativeArt=require(script.Parent.CareNativeOverrides)
 local CooPose=require(script.Parent.PetCooPose)
+local PersonalPlay=require(script.Parent.PetPlayVisual)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -155,13 +156,17 @@ function Visual:commitReadyRig()
  -- Never run the facade's captured sampler against shared live fallback slots.
  candidate.update=Visual.update;candidate.greet=Visual.greet;candidate.poseSlots=nil;candidate.poseBucket=nil;candidate.poseStateKey=nil;candidate.focusEnvelopeCache=nil
  candidate.nightGroups=nil;candidate.nightDaylight=nil;candidate.nightColors=nil;candidate.charmFormsPrepared=nil;candidate.charmRingBound=nil
+ candidate.featureHandles=nil;candidate.featureSignature=nil;candidate.personalToy=nil;candidate.personalQuietSince=nil;candidate.personalPlayIdentity=nil
  if not imported(candidate)then candidate.model:Destroy();self.assetReady=false;return end
  candidate:applyAppearance(self.appearance)
  self.rigSwapInProgress=true
  local oldPieces,oldGroups,oldPrimary=self.pieces,self.nightGroups,self.model.PrimaryPart
+ local oldFeatures=self.featureHandles;PersonalPlay.cancel(self)
  local newPrimary=candidate.model.PrimaryPart
  self.pieces,self.nightGroups,self.charmFormsPrepared=candidate.pieces,candidate.nightGroups,candidate.charmFormsPrepared
  self.charmRingBound=candidate.charmRingBound
+ self.featureHandles,self.featureSignature,self.featureStages=candidate.featureHandles,candidate.featureSignature,candidate.featureStages
+ self.featureHaloLift,self.featureRevision=candidate.featureHaloLift,candidate.featureRevision;self.careBoundsKey=nil
  for _,child in ipairs(candidate.model:GetChildren())do child.Parent=self.model end
  self.model.PrimaryPart=newPrimary
  if oldPrimary then for _,child in ipairs(oldPrimary:GetChildren())do
@@ -176,6 +181,7 @@ function Visual:commitReadyRig()
  -- Host-only interaction references move before any old geometry can retire.
  if self.onRigChanged then self.onRigChanged(oldPrimary,self.model.PrimaryPart,self.rigRevision)end
  for _,entry in ipairs(oldPieces)do entry.part:Destroy()end
+ for _,handle in ipairs(oldFeatures or {})do handle:destroy()end
  for _,group in pairs(oldGroups or {})do group.fill:Destroy();group.model:Destroy()end
  candidate.model:Destroy();self.rigSwapInProgress=false
 end
@@ -212,11 +218,12 @@ function Visual:applyAppearance(appearance)
  self.model:SetAttribute("HueBody",appearance and appearance.body or "original")
  self.model:SetAttribute("HueRank",appearance and appearance.bodyRank or 0)
  self.model:SetAttribute("HueSecondary",appearance and appearance.secondary or "default")
- Charms.apply(self,appearance);self.poseDirty=true;self:update(0)
+ Charms.apply(self,appearance);PersonalPlay.apply(self,appearance);self.poseDirty=true;self:update(0)
 end
 function Visual:applyGardenPose(sample)
  self.gardenAction,self.actionPhase,self.expression=sample.action,sample.actionPhase or sample.phase or 0,sample.expression or "neutral"
  self.gardenFocus=sample.action=="focus"
+ self.gardenBehavior=sample.behavior
  self.toyRole,self.toyTime=sample.toyRole,sample.toyTime
  if sample.action=="greet"and(sample.actionId~=self.lastActionId or sample.generation~=self.lastGeneration)then self:greet()end
  self.lastActionId,self.lastGeneration=sample.actionId,sample.generation
@@ -227,11 +234,17 @@ function Visual:update(dt)
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
  local reduced=self.reducedEffects==true;local toyReach,toyExpression=0,nil
  if self.gardenAction=="toyReturn"then toyReach,toyExpression=ToyPose.sample(self.toyRole,self.toyTime,reduced)end
+ local personal=PersonalPlay.sample(self,self.cosmeticTime or self.time)
+ if personal then toyReach=personal.reach;toyExpression=personal.expression end
  local expression=toyExpression or Expression.name(self);local pose=Expression.get(expression)
  local cooRoll,cooNod,cooHand,cooMouth,cooEye=CooPose.sample(self)
  local mouth=if cooMouth>.12 then "open"else pose.mouth
+ if personal and self.personalToyId=="bone"and personal.phase>=.58 and personal.phase<=1.02 and not reduced then
+  mouth=if math.sin((personal.phase-.58)/.44*math.pi*4)>.25 then "open"else "soft"
+ end
  local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
+ if personal then headPitch-=math.sin(math.clamp(personal.phase/1.8,0,1)*math.pi)*.06 end
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
  local greet=wave*(if self.focusPose then .35 else 1)
@@ -275,7 +288,10 @@ function Visual:update(dt)
    local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
    size=Vector3.new(size.X*(1+squash*.35),size.Y*(1+bodyStretch-squash),size.Z*(1+squash*.35))
   end
-  if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch,entry)end
+  if entry.role=="charm"then
+   cf+=head:VectorToWorldSpace(Vector3.new(0,self.featureHaloLift or 0,0))
+   cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch,entry)
+  end
   if string.find(name,"Eye")then size=Vector3.new(size.X*(if mouth=="open"then 1.12 else 1),size.Y*eye*blink,size.Z)
   elseif string.find(name,"Glint")then hidden=hidden or eye*blink<.4
   elseif name=="MouthO"then hidden=hidden or mouth~="open";if cooMouth>.12 then size*=.45+.55*cooMouth end
@@ -306,10 +322,14 @@ function Visual:update(dt)
  Bounds.finish(self);Bounds.finish(self.bodyHull)
  self.bodyBoundsFrame,self.bodyBoundsSize=self.bodyHull.rigBoundsFrame,self.bodyHull.rigBoundsSize
 end
+function Visual:renderPersonalPlay(root)
+ PersonalPlay.sample(self,self.cosmeticTime or self.time)
+ PersonalPlay.render(self,root or CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0))
+end
 function Visual:destroy()
  if self.destroyed then return end;self.destroyed=true;self.assetEpoch+=1
  if self.assetTicket then self.assetTicket:cancel();self.assetTicket=nil end
  if self.readyFrame then self.readyFrame:Disconnect();self.readyFrame=nil end
- self.model:Destroy()
+ PersonalPlay.destroy(self);self.model:Destroy()
 end
 return Visual

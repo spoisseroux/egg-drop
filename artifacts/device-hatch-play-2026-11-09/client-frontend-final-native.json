@@ -1,0 +1,393 @@
+{
+  "textPreference": "Largest",
+  "fixtureOnly": true,
+  "passed": 81,
+  "suites": [
+    {
+      "ok": true,
+      "name": "HatchActions",
+      "result": {
+        "passed": 29,
+        "cases": [
+          "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "Replay never purchases and synchronous confirmation fires once",
+          "Retry and same-ID updates retain immutable choice",
+          "Pending feedback preserves choice before state catches up",
+          "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "Close cancels a scheduled pre-dispatch retry",
+          "Busy feedback queues a retry until Ready for the same result",
+          "A retry timer encountering Busy retains its work until Ready",
+          "Another pending transaction releases the captured ack on Ready",
+          "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "A changed result revokes old navigation",
+          "Close during retry cancels navigation without a second acknowledgement",
+          "Definitive rejection permits changing the action",
+          "First result action skips unfinished cinematic without acknowledging; fresh action confirms",
+          "Legacy duplicate receipt retains both choices without reviving removed mastery rewards",
+          "corner X dismisses and reopens the same committed result without acknowledgment",
+          "Mid-crack X and two reopens retain the result and show the quiet final scene",
+          "A stalled intro settles quietly without acknowledging or replaying its retained result",
+          "Hidden snapshots and a covered first paint do not reserve the presentation marker",
+          "A stale same-ID completion cannot unlock or steal focus after reopen",
+          "Fresh controller focus waits for Meet while a deliberate X remains selected",
+          "A covered intro completes without reclaiming the covering owner's focus",
+          "Same-ID save recovery preserves generation, hero and presentation history",
+          "Confirmed Ember themes the result shell and peach Meet action",
+          "Result layout measurement is independent of the previously painted text size",
+          "Short animated same-ID layout and notice reparent retain active ownership",
+          "Short result captions remain reachable in the single body without covering X",
+          "44px result actions fit short landscape safe areas and long names"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "DeviceItemFront",
+      "result": [
+        "1649, 971 all six tabs reachable both directions and active tab fully visible",
+        "1649, 971 five egg families disclose actual pool and full feature odds",
+        "390, 740 all six tabs reachable both directions and active tab fully visible",
+        "390, 740 five egg families disclose actual pool and full feature odds",
+        "733, 307 all six tabs reachable both directions and active tab fully visible",
+        "733, 307 five egg families disclose actual pool and full feature odds",
+        "600, 360 all six tabs reachable both directions and active tab fully visible",
+        "600, 360 five egg families disclose actual pool and full feature odds",
+        "568, 160 all six tabs reachable both directions and active tab fully visible",
+        "568, 160 five egg families disclose actual pool and full feature odds",
+        "private unselected pet preview uses its own toy and visible feature stages",
+        "stale Toy and Feature handlers check live cradle before mutation",
+        "Toy receipt only chooses its exact owned recipient outside cradle"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "ItemReceiptComposition",
+      "result": [
+        "1649, 971/hue one bounded stage one copy and pinned Use now Store",
+        "1649, 971/material one bounded stage one copy and pinned Use now Store",
+        "1649, 971/toy one bounded stage one copy and pinned Use now Store",
+        "1649, 971/feature one bounded stage one copy and pinned Use now Store",
+        "390, 740/hue one bounded stage one copy and pinned Use now Store",
+        "390, 740/material one bounded stage one copy and pinned Use now Store",
+        "390, 740/toy one bounded stage one copy and pinned Use now Store",
+        "390, 740/feature one bounded stage one copy and pinned Use now Store",
+        "733, 307/hue one bounded stage one copy and pinned Use now Store",
+        "733, 307/material one bounded stage one copy and pinned Use now Store",
+        "733, 307/toy one bounded stage one copy and pinned Use now Store",
+        "733, 307/feature one bounded stage one copy and pinned Use now Store",
+        "568, 160/hue one bounded stage one copy and pinned Use now Store",
+        "568, 160/material one bounded stage one copy and pinned Use now Store",
+        "568, 160/toy one bounded stage one copy and pinned Use now Store",
+        "568, 160/feature one bounded stage one copy and pinned Use now Store"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "ReceiptRouteGuard",
+      "result": [
+        "undocked ordinary editor refuses to open",
+        "saved result chooses only its exact owned recipient and Hue channel",
+        "lost or acknowledged receipt closes outside cradle instead of showing stock",
+        "stale material choice checks cradle at activation time",
+        "live cradle permission permits ordinary customization and its loss closes it"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "PetFruitEating",
+      "result": [
+        "Zivvi berry approaches shrinks and restores without cumulative head or eye change",
+        "Ovelle berry approaches shrinks and restores without cumulative head or eye change",
+        "Tikket berry approaches shrinks and restores without cumulative head or eye change",
+        "Nuum berry approaches shrinks and restores without cumulative head or eye change",
+        "Vezzi berry approaches shrinks and restores without cumulative head or eye change",
+        "Kiprik berry approaches shrinks and restores without cumulative head or eye change",
+        "Nolli berry approaches shrinks and restores without cumulative head or eye change",
+        "reduced motion shows a brief static berry then retires it",
+        "reset world actors and replaced rigs cannot keep a transient berry"
+      ]
+    },
+    {
+      "name": "HatchCinematic",
+      "ok": true,
+      "result": {
+        "fixtureOnly": true,
+        "geometry": [
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 344,
+            "fraction": 0.5899999918565658,
+            "stageHeight": 360,
+            "preparationMs": 5.6640999391674995,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 344,
+            "fraction": 0.5899999885476123,
+            "stageHeight": 360,
+            "preparationMs": 5.616099573671818,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999640402449,
+            "stageHeight": 360,
+            "preparationMs": 6.361600011587143,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999596288807,
+            "stageHeight": 360,
+            "preparationMs": 4.839400295168161,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999651732254,
+            "stageHeight": 360,
+            "preparationMs": 6.287400145083666,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999896504381,
+            "stageHeight": 360,
+            "preparationMs": 6.85900030657649,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999653971437,
+            "stageHeight": 360,
+            "preparationMs": 5.068600177764893,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4740741664331428,
+            "stageHeight": 420,
+            "preparationMs": 6.228900048881769,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4522995979101089,
+            "stageHeight": 420,
+            "preparationMs": 4.859100095927715,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4899238577844957,
+            "stageHeight": 420,
+            "preparationMs": 6.1599998734891415,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4569744923812588,
+            "stageHeight": 420,
+            "preparationMs": 5.358499940484762,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4896227966022165,
+            "stageHeight": 420,
+            "preparationMs": 5.839199759066105,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4913867634670959,
+            "stageHeight": 420,
+            "preparationMs": 6.281599868088961,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4623512822336913,
+            "stageHeight": 420,
+            "preparationMs": 4.783200100064278,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 164,
+            "fraction": 0.5899999741248487,
+            "stageHeight": 180,
+            "preparationMs": 5.484099965542555,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 164,
+            "fraction": 0.5899999927188303,
+            "stageHeight": 180,
+            "preparationMs": 5.274100229144096,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999707884624,
+            "stageHeight": 180,
+            "preparationMs": 5.642900243401527,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999311664083,
+            "stageHeight": 180,
+            "preparationMs": 4.703599959611893,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999789518459,
+            "stageHeight": 180,
+            "preparationMs": 6.050399970263243,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999905354357,
+            "stageHeight": 180,
+            "preparationMs": 5.6813000701367855,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999630793071,
+            "stageHeight": 180,
+            "preparationMs": 4.930499941110611,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          }
+        ],
+        "passed": 9,
+        "cases": [
+          "short-landscape484x203 keeps final name and caption inside host beside hero",
+          "all seven real subjects fit the rectangular viewport through every greeting frame",
+          "all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",
+          "common and rare split within1.5/1.7s and settle with no idle clock or audio replay",
+          "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+          "covered first play defers marker while presented owner loss lands final and stops its clock",
+          "resize keeps exact hero and epoch and device discontinuity settles only once",
+          "candidate minimum height is independent of previous stage and painted text sizes",
+          "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+        ]
+      }
+    }
+  ]
+}

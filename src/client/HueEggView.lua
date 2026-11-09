@@ -16,6 +16,11 @@ local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local MaterialCatalog=require(Shared.MaterialCatalog)
 local MaterialPanel=require(script.Parent.MaterialPanel)
+local ToyCatalog=require(Shared.ToyCatalog);local FeatureCatalog=require(Shared.FeatureCatalog)
+local ToyPanel=require(script.Parent.ToyPanel);local FeaturePanel=require(script.Parent.FeaturePanel)
+local TabRail=require(script.Parent.EditorTabRail)
+local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
+local EatingProof=require(script.Parent.HueEatingProof);local FruitEating=require(script.Parent.PetFruitEating)
 local View={};View.__index=View
 local ids={"rose","tide","citrus","iris","reset"}
 local names={rose="Rose fruit",tide="Tide fruit",citrus="Citrus fruit",iris="Iris fruit",reset="Reset Hue"}
@@ -54,9 +59,28 @@ function View.new(parent,intent,options)
  self.hueTab=button(card,"HueTab","Hue",function()self:setTab("hue")end)
  self.petTab=button(card,"PetTab","Pet",function()self:setTab("pet")end)
  self.materialTab=button(card,"MaterialTab","Materials",function()self:setTab("materials")end)
+ self.toyTab=button(card,"ToyTab","Toys",function()self:setTab("toys")end)
+ self.featureTab=button(card,"FeatureTab","Features",function()self:setTab("features")end)
+ self.editorTabs={pet=self.petTab,hue=self.hueTab,charm=self.charmTab,materials=self.materialTab,toys=self.toyTab,features=self.featureTab}
+ self.tabRail=TabRail.new(card,{self.petTab,self.hueTab,self.charmTab,self.materialTab,self.toyTab,self.featureTab})
+ self.eatingProof=EatingProof.new();self.fruitEating=FruitEating.new()
+ self.toyIntent=self.options.toyIntent;self.featureIntent=self.options.featureIntent
  self.materialIntent=self.options.materialIntent
- self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self:canCustomize()end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
+ self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self:refresh()end})
+ self.toyPanel=ToyPanel.new(body,self.toyIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
+  receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
+  shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
+  useNow=function(result)self.toyAssignment={resultId=result.id,toyId=result.toyId};self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self:refresh()end})
+ self.featurePanel=FeaturePanel.new(body,self.featureIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:canCustomize()end,
+  receiptOpen=function(result)return self.shade.Visible and self.page=="featureReceipt"and self.state.pendingFeatureResult and self.state.pendingFeatureResult.id==result.id end,
+  canAssignReceipt=function(resultId,featureId)return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:hasFeatureAssignment()and self.featureAssignment.resultId==resultId and self.featureAssignment.featureId==featureId end,
+  binding=function()return tostring(self.lifecycleEpoch)..":"..self.petId..":"..self.page..":"..self.tab end,
+  shop=function()self:close("shop");if self.options.featureShop then self.options.featureShop()end end,
+  changed=function()if self.shade.Visible then self:refresh()end end,
+  preview=function(id,stage)self.featurePreview={petId=self.petId,id=id,stage=stage}end,
+  cancelUse=function()if self.featureAssignment then self.tab="pet"end end,
+  useNow=function(result)self.featureAssignment={resultId=result.id,featureId=result.featureId};self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self:refresh()end})
  self.targetTitle=text(body,"TargetTitle","Choose a pet","Action")
  for _,pet in ipairs(Pets.collection)do local id=pet.id;self.targets[id]=button(body,"Target_"..id,pet.name,function()self:choosePet(id)end)end
  self.targetChange=button(body,"ChangePet","Change pet",function()if not self.intent.pending then self.selectTarget=not self.selectTarget;self:refresh()end end)
@@ -101,7 +125,6 @@ function View.new(parent,intent,options)
  self.charmOff=button(card,"HideCharm","Charm Off",function()if not self.intent.pending then self:requestCharm(false)end end)
  self.eggsButton=button(body,"FindEggs","Eggs",function()self:close("shop");local open=self.options.eggs or self.options.shop;if open then open()end end)
  self.shapes={};self.shapeIcons={};self.gridPreviews={};self.scrollPositions={}
-
  for _,id in ipairs(CharmCatalog.Order)do self.shapes[id]=button(body,"Shape_"..id,CharmCatalog.ById[id].name,function()self:selectCharm(id)end)end
  for id,node in pairs(self.shapes)do
   node.Text=""
@@ -160,6 +183,16 @@ function View:hasHueAssignment()
  local pending=self.intent.pending
  return pending~=nil and pending.action=="hueUse"and pending.value.pendingResultId==draft.pendingResultId and pending.value.itemId==draft.itemId
 end
+function View:hasToyAssignment()
+ local r=self.state.pendingToyResult;local q=self.toyAssignment
+ return r~=nil and q~=nil and r.id==q.resultId and r.toyId==q.toyId
+end
+function View:hasFeatureAssignment()
+ local r=self.state.pendingFeatureResult;local q=self.featureAssignment
+ return r~=nil and q~=nil and r.id==q.resultId and r.featureId==q.featureId
+end
+function View:hasReceiptAssignment()return self:hasHueAssignment()or self:hasMaterialAssignment()or self:hasToyAssignment()or self:hasFeatureAssignment()end
+function View:eatingBinding()return tostring(self.lifecycleEpoch)..":"..self.petId..":"..self.channel..":"..tostring(self.shade.AbsoluteSize)end
 function View:hasMaterialAssignment()
  local result=self.state.pendingMaterialResult;local draft=self.materialAssignment
  return result~=nil and draft~=nil and result.id==draft.resultId and result.finishId==draft.finishId
@@ -171,12 +204,28 @@ function View:appearance()
  local p=self.state.petHues and self.state.petHues[self.petId]
  if p then appearance.mainDoses=countsCopy(p.main);appearance.secondaryDoses=countsCopy(p.secondary)end
  appearance.finish=(self.state.petMaterials or {})[self.petId]or appearance.finish or MaterialCatalog.Default
+ appearance.toyId=(self.state.petToys or {})[self.petId]or ToyCatalog.Default
+ appearance.featureStages={};local features=(self.state.petFeatures or {})[self.petId]or FeatureCatalog.emptyRow()
+ for _,id in ipairs(FeatureCatalog.Order)do appearance.featureStages[id]=(features[id]or {}).visible or 0 end
+ if self.featurePreview and self.featurePreview.petId==self.petId then appearance.featureStages[self.featurePreview.id]=self.featurePreview.stage end
  return appearance
 end
 function View:activePet()return if self.machine then self.machine.petId elseif self.options.activePet then self.options.activePet()else self.state.companionId or self.petId end
 function View:choosePet(id)
+ if id~=self.petId then self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.featurePreview=nil end
  if self.intent.pending or self.machineSwitching or not self:owned(id)or not Hues.Supported[id]then return false end
- if not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then return false end
+ if not self:canCustomize()and not self:hasReceiptAssignment()then return false end
+ if self.toyAssignment then
+  local q=self.toyAssignment
+  if not self:hasToyAssignment()or not self.toyIntent or not self.toyIntent:equip(id,q.toyId,q.resultId)then return false end
+  self.petId=id;self.toyAssignment=nil;self.page="toyReceipt";self.tab="toys";self:refresh();return true
+ end
+ if self.featureAssignment then
+  if not self:hasFeatureAssignment()then return false end
+  self.petId=id;self.tab="features";self.featurePanel:refresh(self.state,id,"choices")
+  if not self.featurePanel:requestUse(self.featureAssignment.featureId,self.featureAssignment.resultId)then self.tab="pet";self:refresh();return false end
+  self:refresh();return true
+ end
  if self.materialAssignment then
   local result=self.materialAssignment;local pending=self.state.pendingMaterialResult
   if not pending or pending.id~=result.resultId or pending.finishId~=result.finishId then self.materialAssignment=nil
@@ -244,10 +293,11 @@ function View:chooseChannel(channel)
  self:refresh();if not self.confirmation then self.body.CanvasPosition=self.scrollPositions[self.tab..":"..self.channel]or Vector2.zero end;return true
 end
 function View:setTab(tab)
- if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not(self:hasMaterialAssignment()and tab=="pet")then return false end
- if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials")then return false end
+ if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not((self:hasMaterialAssignment()or self:hasToyAssignment()or self:hasFeatureAssignment())and tab=="pet")then return false end
+ if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials"and tab~="toys"and tab~="features")then return false end
  self.scrollPositions[self.tab..":"..self.channel]=self.body.CanvasPosition
- if tab~="pet"then self.materialAssignment=nil end
+ if tab~="pet"then self.materialAssignment=nil;self.toyAssignment=nil;self.featureAssignment=nil end
+ self.featurePreview=nil;self.fruitEating:cancel();self.eatingProof:cancel()
  self.tab=tab;self.inspected=nil;self.useMessage=nil;self.selectTarget=self.assignment~=nil and tab=="pet";self:refresh()
  self.body.CanvasPosition=if tab=="pet"then Vector2.zero else self.scrollPositions[self.tab..":"..self.channel]or Vector2.zero;return true
 end
@@ -335,6 +385,7 @@ function View:chooseItem(id)
  self.confirmReturn={scroll=self.body.CanvasPosition,target=self.jars[id].button};self.confirmation={itemId=id,petId=self.petId,channel=self.channel};self.body.CanvasPosition=Vector2.zero;self.epoch+=1;self:refresh();return true
 end
 function View:useResult()
+ if self.itemReveal:consumeSkipInput()or self.itemReveal:skip()then return false end
  self.itemReveal:clear()
  local r=self.state.pendingHueResult;if not r or self.intent.pending then return false end
  self.page="palette";self.tab="pet";self.selectTarget=true;self.body.CanvasPosition=Vector2.zero;self.epoch+=1
@@ -402,6 +453,12 @@ function View:charmResult(packet)
  if self.petId==packet.petId then self:refresh()end;return true
 end
 function View:activate()
+ if not self.shade.Visible or not self.action.Visible or not self.action.Interactable or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return false end
+ for _,reveal in ipairs({self.itemReveal,self.materialPanel.reveal,self.toyPanel.reveal,self.featurePanel.reveal})do if reveal:consumeSkipInput()or reveal:skip()then return false end end
+ if self.page=="toyReceipt"then local r=self.state.pendingToyResult;return self.toyIntent and r and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:ack(r.id))or false end
+ if self.page=="toyBuy"then return self.toyIntent and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:buy())or false end
+ if self.page=="featureReceipt"then local r=self.state.pendingFeatureResult;return self.featureIntent and r and(if self.featureIntent.status=="Retrying"then self.featureIntent:retry()else self.featureIntent:ack(r.id))or false end
+ if self.page=="featureBuy"then return self.featureIntent and(if self.featureIntent.status=="Retrying"then self.featureIntent:retry()else self.featureIntent:buy())or false end
  if not self.shade.Visible or not self.action.Visible or not self.action.Interactable then return false end
  self.itemReveal:cancel()
  if self.materialIntent and self.materialIntent.pending and self.materialIntent.status=="Retrying"and(self.page=="materialReceipt"or self.page=="materialBuy"or self.tab=="materials")then return self.materialIntent:retry()end
@@ -429,8 +486,8 @@ function View:activate()
   local ok
   if q.legacyItem then ok=self.intent:legacyRedeem(q.legacyItem)
   elseif q.presetId then ok=self.intent:legacyPreset(self.petId,self.channel,q.presetId)
-  else ok=self.intent:use(self.petId,self.channel,q.itemId,q.pendingResultId)end
-  if ok then self.submitted=self.intent.pending.value.id end;return ok
+  else self.eatArmed=q.itemId~="reset";ok=self.intent:use(self.petId,self.channel,q.itemId,q.pendingResultId);self.eatArmed=nil end
+  if ok then self.submitted=if self.intent.pending then self.intent.pending.value.id else self.submitted end;return ok
  elseif self.page=="receipt"then
   local r=self.state.pendingHueResult;if not r then return false end
   local ok=self.intent:store(r.id);if ok then self.storeOperation=self.intent.pending.value.id end;return ok
@@ -441,7 +498,7 @@ function View:activate()
 end
 function View:fitPortrait()
  if not self.visual then return end
- local key=tostring(self.viewport.AbsoluteSize)..":"..tostring(self.visual.rigRevision or 0)..":"..tostring(self.visual.charmVisible)..":"..tostring(self.visual.renderCharmShape)..":"..tostring(self.visual)
+ local key=tostring(self.viewport.AbsoluteSize)..":"..tostring(self.visual.rigRevision or 0)..":"..tostring(self.visual.featureRevision or 0)..":"..tostring(self.visual.charmVisible)..":"..tostring(self.visual.renderCharmShape)..":"..tostring(self.visual)
  if self.portraitCameraKey==key then return end;self.portraitCameraKey=key
  local box,size=Bounds.get(self.visual);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
  local distance=math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3
@@ -474,10 +531,24 @@ function View:syncPortraitClock()
   local reduced=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
   if visual.reducedEffects~=reduced then visual.reducedEffects=reduced;visual.poseDirty=true;visual:update(0)end
   if not reduced then visual.cosmeticTime=os.clock();visual:update(math.min(dt,.1))end
+  if self.fruitEating.active then
+   if self.fruitEating.token.binding~=self:eatingBinding()then self.fruitEating:cancel();if self.boundedEating then self:close("receipt-finished");return end end
+   if self.fruitEating.active and not self.fruitEating:step(math.min(dt,.1))and self.boundedEating then self:close("receipt-finished");return end
+  end
  end)
 end
 function View:refresh()
  self.state=self.intent.state or self.state
+ if self.shade.Visible and self.eatArmed and self.intent.pending then self.submitted=self.intent.pending.value.id;self.eatingProof:capture(self.intent.pending,self.state,self:eatingBinding())end
+ if self.shade.Visible then
+  local receipt=self.intent.receipt or self.state.lastHueResult
+  local token=self.eatingProof:take(receipt,self.state,self:eatingBinding())
+  if token then self.eatingReady=token;self.boundedEating=not self:canCustomize()end
+ end
+ if self.intent.status=="Rejected"then self.eatingProof:cancel()end
+ for _,entry in ipairs({{self.toyIntent,"toy"},{self.featureIntent,"feature"}})do local intent,kind=entry[1],entry[2]
+  if self.shade.Visible and intent and intent.pending and intent.pending.action==kind.."Buy"then self[kind.."PurchaseInFlight"]=intent.pending.value.id end
+ end
  if self.shade.Visible and self.materialIntent and self.materialIntent.pending and self.materialIntent.pending.action=="materialBuy"then self.materialPurchaseInFlight=self.materialIntent.pending.value.id end
  if self.shade.Visible and self.intent.pending and self.intent.pending.action=="hueBuy"then self.purchaseInFlight=self.intent.pending.value.id end
  for id,request in pairs(self.charmRequests)do
@@ -497,13 +568,19 @@ function View:refresh()
  end
  if not self.shade.Visible then return end
  local r=self.state.pendingHueResult
- local materialResult=self.state.pendingMaterialResult
+ local materialResult=self.state.pendingMaterialResult;local toyResult=self.state.pendingToyResult;local featureResult=self.state.pendingFeatureResult
+ if self.toyAssignment and not self:hasToyAssignment()then self.toyAssignment=nil end
+ if self.featureAssignment and not self:hasFeatureAssignment()then self.featureAssignment=nil end
+ for _,entry in ipairs({{"toy",toyResult,"toys"},{"feature",featureResult,"features"}})do
+  if entry[2]and self.page==entry[1].."Buy"then self.page=entry[1].."Receipt"end
+  if self.page==entry[1].."Receipt"and not entry[2]then self.page="palette";self.tab=entry[3]end
+ end
  if self.materialAssignment and(not materialResult or materialResult.id~=self.materialAssignment.resultId or materialResult.finishId~=self.materialAssignment.finishId)then self.materialAssignment=nil end
  if materialResult and self.page=="materialBuy"then self.page="materialReceipt"end
  if self.page=="materialReceipt"and not materialResult then self.page="palette";self.tab="materials"end
  if r and self.page=="buy"then self.page="receipt"end
  if self.page=="receipt"and not r then self.page="palette"end
- if self.page=="palette"and not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then
+ if self.page=="palette"and not self:canCustomize()and not self:hasReceiptAssignment()and not self.boundedEating then
   self:close("receipt-finished");return
  end
  local owned=self:owned(self.petId);if not owned then for _,p in ipairs(Pets.collection)do if self:owned(p.id)then self.petId=p.id;owned=true;break end end end
@@ -521,12 +598,17 @@ function View:refresh()
   self.migrationText.Text=table.concat(lines,"\n\n")
  end
  self.title.Text=if migration then "Your converted colors"elseif self.assignment then "Choose where to use"elseif confirming then if self.confirmation.itemId=="reset"then "Reset "..channelName(self.channel).." color?"elseif self.confirmation.itemId then "Use one "..names[self.confirmation.itemId].."?"else "Confirm choice"elseif self.page=="receipt"then "A jar for your garden"elseif self.page=="buy"then "Hue Egg"else "Companions"
+ if self.page=="receipt"and r then self.title.Text=names[r.itemId]
+ elseif self.page=="materialReceipt"and materialResult then self.title.Text=MaterialCatalog.ById[materialResult.finishId].name.." unlocked!"
+ elseif self.page=="toyBuy"then self.title.Text="Toy Egg"elseif self.page=="featureBuy"then self.title.Text="Feature Egg"
+ elseif self.page=="toyReceipt"and toyResult then self.title.Text=ToyCatalog.ById[toyResult.toyId].name.." unlocked!"
+ elseif self.page=="featureReceipt"and featureResult then self.title.Text=FeatureCatalog.ById[featureResult.featureId].name.." found!"end
  self.title:SetAttribute("AccessibleLabel",if customization then "Customize "..Pets.byId[self.petId].name else self.title.Text)
  if self.confirmation and self.confirmation.equipPetId then self.title.Text="Make "..Pets.byId[self.confirmation.equipPetId].name.." active?"end
  self.wallet.Text=tostring(self.state.nectar or 0).." Stars"
  local function visible(n,value)n.Visible=value end
- for _,n in ipairs({self.petTab,self.charmTab,self.hueTab,self.materialTab})do
-  local routeAllowed=self:canCustomize()or(n==self.petTab and(self:hasHueAssignment()or self:hasMaterialAssignment()))or(n==self.hueTab and self:hasHueAssignment())
+ for _,n in ipairs({self.petTab,self.charmTab,self.hueTab,self.materialTab,self.toyTab,self.featureTab})do
+  local routeAllowed=self:canCustomize()or(n==self.petTab and self:hasReceiptAssignment())or(n==self.hueTab and self:hasHueAssignment())
   visible(n,customization and not confirming and routeAllowed)
  end
  for _,n in ipairs({self.portrait,self.petName})do visible(n,customization and self.tab~="pet"and not confirming)end
@@ -536,7 +618,7 @@ function View:refresh()
  self.machinePickup.Visible=false;self.machineSetDown.Visible=false;self.wallet.Visible=false
  for id,n in pairs(self.targets)do n.Visible=customization and not confirming and (self.tab=="pet"or self.selectTarget==true)and self:owned(id);n.Interactable=not self.intent.pending;Art.tab(n,id==self:activePet(),n.Interactable)
   local preview=self.gridPreviews[id];preview.active.Text=if id==self:activePet()then "✓ Active"elseif self.assignment and id==self.petId then "✓ Recipient"else "";n:SetAttribute("AccessibleLabel",Pets.byId[id].name.." · "..(if id==self:activePet()then "Active"elseif self.assignment then "Choose jar recipient"else "Make active"))end
- Art.tab(self.petTab,self.tab=="pet",not self.intent.pending);Art.tab(self.charmTab,self.tab=="charm",not self.intent.pending);Art.tab(self.hueTab,self.tab=="hue",not self.intent.pending);Art.tab(self.materialTab,self.tab=="materials",not self.intent.pending)
+ Art.tab(self.petTab,self.tab=="pet",not self.intent.pending);Art.tab(self.charmTab,self.tab=="charm",not self.intent.pending);Art.tab(self.hueTab,self.tab=="hue",not self.intent.pending);Art.tab(self.materialTab,self.tab=="materials",not self.intent.pending);Art.tab(self.toyTab,self.tab=="toys",not self.intent.pending);Art.tab(self.featureTab,self.tab=="features",not self.intent.pending)
  Art.tab(self.mainTab,self.channel=="main",not self.intent.pending);Art.tab(self.secondaryTab,self.channel=="secondary",not self.intent.pending)
  self.targetChange.Text=Pets.byId[self.petId].name.." · Change pet";self.petName.Text=Pets.byId[self.petId].name;self.channelTitle.Text=channelName(self.channel)
  local counts=self:counts();local stock=0
@@ -563,7 +645,7 @@ function View:refresh()
  end
  self.receipt.Visible=self.page=="receipt";self.receiptArt.Visible=self.receipt.Visible;self.receiptDetail.Visible=self.receipt.Visible;self.useNow.Visible=self.receipt.Visible
  if r and self.receipt.Visible then
-  self.receipt.Text=names[r.itemId].." · "..tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory"
+  self.receipt.Text=tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory · choose a pet and channel"..(if r.itemId=="reset"then " to reset."else ".")
   self.itemReveal:show(r,self.purchaseInFlight==r.id);self.purchaseInFlight=nil
  end
  self.legacyTitle.Visible=self:canCustomize()and self.state.legacyHueEgg~=nil and not confirming and self.tab=="hue"
@@ -625,6 +707,8 @@ function View:refresh()
  self.targetTitle.Text=if self.assignment then "Choose the recipient for "..names[self.assignment.itemId]else "Your companions"
  local hasOwned=false;for id in pairs(self.targets)do if self:owned(id)then hasOwned=true;break end end
  self.targetTitle.Visible=customization and not confirming and self.tab=="pet"and(self.assignment~=nil or not hasOwned)
+ if self.toyAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..ToyCatalog.ById[self.toyAssignment.toyId].name end
+ if self.featureAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..FeatureCatalog.ById[self.featureAssignment.featureId].name end
  if self.materialAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..MaterialCatalog.ById[self.materialAssignment.finishId].name end
  self.eggsButton.Visible=customization and self.tab=="pet"and not confirming and self:canCustomize()
  if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companions yet. Hatch a Companion Egg."end
@@ -642,7 +726,35 @@ function View:refresh()
   if self.materialIntent and self.materialIntent.status=="Retrying"then self.action.Interactable=true end
   Art.control(self.action,true,self.action.Interactable)
  end
- self:layout();self:updateGrid(0);self:paintPortrait();self:syncPortraitClock()
+ for _,entry in ipairs({{self.toyPanel,self.toyIntent,"toy",toyResult,ToyCatalog},{self.featurePanel,self.featureIntent,"feature",featureResult,FeatureCatalog}})do
+  local panel,intent,kind,result,catalog=entry[1],entry[2],entry[3],entry[4],entry[5]
+  local mode=if self.page==kind.."Receipt"then "receipt"elseif self.page==kind.."Buy"then "buy"elseif customization and self.tab==kind.."s"and not confirming then "choices"else nil
+  -- Feature's plural is Features, Toy's is Toys.
+  panel:refresh(self.state,self.petId,mode,result and self[kind.."PurchaseInFlight"]==result.id)
+  if mode=="receipt"then self[kind.."PurchaseInFlight"]=nil end
+  if mode then
+   self.action.Visible=mode=="receipt"or mode=="buy"or(intent and intent.status=="Retrying")or false
+   self.action.Text=if intent and intent.status=="Retrying"then "Try again"elseif mode=="receipt"then "Store"else "Hatch · "..catalog.Cost.." Stars"
+   self.action.Interactable=intent~=nil and intent:ready()and(mode~="buy"or(self.state.nectar or 0)>=catalog.Cost)
+   if mode=="buy"and kind=="toy"and #catalog.remaining(self.state.toyUnlocks)==0 then self.action.Text="All toys owned";self.action.Interactable=false end
+   if mode=="buy"and kind=="feature"and catalog.full(self.state.featureStock or {})then self.action.Text="All stacks full";self.action.Interactable=false end
+   if intent and intent.status=="Retrying"then self.action.Interactable=true end
+   Art.control(self.action,true,self.action.Interactable)
+  end
+ end
+ if self.boundedEating then
+  for _,tab in pairs(self.editorTabs)do tab.Visible=false end
+  for _,node in ipairs({self.inventoryTitle,self.empty,self.channelTitle,self.inspection,self.legacyTitle,self.presetTitle,self.status,self.quote})do node.Visible=false end
+  for _,j in pairs(self.jars)do j.button.Visible=false end
+  for _,b in pairs(self.bars)do b.row.Visible=false end
+  self.mainTab.Visible=false;self.secondaryTab.Visible=false
+ end
+ self:layout();self:updateGrid(0);self:paintPortrait()
+ if self.eatingReady and self.visual and self.portrait.Visible then
+  self.fruitEating:start(self.visual,self.eatingReady,GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()))
+  self.eatingReady=nil
+ end
+ self:syncPortraitClock()
  if self.confirmation~=self.focusedConfirmation then
   self.focusedConfirmation=self.confirmation;self.epoch+=1
   if self.confirmation then
@@ -680,7 +792,7 @@ function View:updateGrid(dt)
     local visual=entry.visual
     local function fit()
      if entry.visual~=visual or visual.destroyed then return end
-     local geometry=tostring(entry.viewport.AbsoluteSize)..":"..tostring(visual.rigRevision)
+     local geometry=tostring(entry.viewport.AbsoluteSize)..":"..tostring(visual.rigRevision)..":"..tostring(visual.featureRevision or 0)
      if entry.geometry==geometry then return end;entry.geometry=geometry
      local box,size=Bounds.get(visual);local aspect=math.max(.1,entry.viewport.AbsoluteSize.X/math.max(1,entry.viewport.AbsoluteSize.Y))
      local half=math.tan(math.rad(entry.camera.FieldOfView/2));local distance=math.max(size.Y*.5/half,size.X*.5/(half*aspect))+size.Z*.5+.3
@@ -712,16 +824,18 @@ end
 function View:layout()
  self:retireTransientArt(false)
  self.materialPanel.useNow.Parent=if self.page=="materialReceipt"then self.card else self.materialPanel.root
+ self.toyPanel.useNow.Parent=if self.page=="toyReceipt"then self.card else self.toyPanel.root
+ self.featurePanel.useNow.Parent=if self.page=="featureReceipt"then self.card else self.featurePanel.root
  self.useNow.Parent=if self.page=="receipt"then self.card else self.body
  if self.page~="palette"or self.confirmation then
-  for _,node in ipairs({self.petTab,self.materialTab,self.charmTab,self.hueTab,self.portrait,self.petName,self.mainTab,self.secondaryTab,self.charmToggle,self.charmOff})do
-   if node==self.petTab or node==self.materialTab or node==self.charmOff then node.Visible=false else node.Parent=self.body end
+  for _,node in ipairs({self.petTab,self.materialTab,self.charmTab,self.hueTab,self.toyTab,self.featureTab,self.portrait,self.petName,self.mainTab,self.secondaryTab,self.charmToggle,self.charmOff})do
+   if node==self.petTab or node==self.materialTab or node==self.toyTab or node==self.featureTab or node==self.charmOff then node.Visible=false else node.Parent=self.body end
   end
-  self:layoutTransaction();return
+  self.tabRail.root.Visible=false;self:layoutTransaction();return
  end
  if self.layingOut then return end;self.layingOut=true
  local size=self.shade.AbsoluteSize;local short=size.Y<220;local pad=if short then 4 else 12
- local width=math.max(1,math.min(900,size.X-16));local height=math.max(1,math.min(760,size.Y-16));self.card.Size=UDim2.fromOffset(width,height)
+ local width=math.max(1,math.min(900,size.X-16));local height=math.max(1,math.min(760,size.Y-(if short then 8 else 16)));self.card.Size=UDim2.fromOffset(width,height)
  local w=width-pad*2
  self.wallet.Visible=false;self.targetChange.Visible=false;self.machinePickup.Visible=false;self.machineSetDown.Visible=false
  local roomy=height>=420 and width>=600
@@ -729,11 +843,9 @@ function View:layout()
  self.title.Text=if self.assignment then "Jar recipient"else "Companions";style(self.title,if short then "Action"else "Heading")
  local titleH=math.max(44,Art.textHeight(self.title,w-52,24)+4)
  place(self.title,pad,0,w-52,titleH);place(self.closeButton,width-pad-44,0,44,44)
- local tabs={};for _,node in ipairs({self.petTab,self.hueTab,self.charmTab,self.materialTab})do if node.Visible then table.insert(tabs,node)end end
- local tabW=(w-math.max(0,#tabs-1)*4)/math.max(1,#tabs);local tabH=44
- for _,node in ipairs(tabs)do node.Parent=self.card;style(node,"Action");tabH=math.max(tabH,Art.actionHeight(node,tabW))end
- for i,node in ipairs(tabs)do place(node,pad+(i-1)*(tabW+4),titleH,tabW,tabH)end
- local contentTop=titleH+tabH+4;local footer=0
+ self.tabRail.root.Visible=true
+ local tabH=self.tabRail:layout(pad,titleH,w,style,self.editorTabs[self.tab])
+ local contentTop=titleH+tabH+(if short then 0 else 4);local footer=0
  if self.action.Visible then Art.type(self.action,"Action",true);footer=math.max(44,Art.actionHeight(self.action,w))+4;place(self.action,pad,height-footer,w,footer-4)end
  local available=math.max(1,height-contentTop-footer-pad)
  local grid=self.tab=="pet";local columns=not grid and w>=500
@@ -744,7 +856,7 @@ function View:layout()
  local rail=if short and columns then math.min(356,w*.68)elseif columns then math.max(260,math.min(310,math.floor(w*.40)))else w
  local listX,listY,listW,listH=pad,contentTop,w,available
  for _,node in ipairs({self.portrait,self.petName,self.mainTab,self.secondaryTab,self.charmToggle,self.charmOff})do node.Parent=self.card end
- if not grid and self.tab~="materials"then
+ if not grid and self.tab~="materials"and self.tab~="toys"and self.tab~="features"then
   local controls=if self.tab=="hue"then {self.mainTab,self.secondaryTab}else {self.charmToggle,self.charmOff}
   for _,node in ipairs(controls)do style(node,"Action")end
   if short and columns then
@@ -771,7 +883,7 @@ function View:layout()
   if columns then listX,listW=pad+rail+12,w-rail-12
   else local fixed=previewH+nameH+controlH+10;listY=contentTop+fixed;listH=math.max(1,available-fixed)end
  end
- if self.tab=="materials"then
+ if self.tab=="materials"or self.tab=="toys"or self.tab=="features"then
   style(self.petName,"Action");local nameH=Art.textHeight(self.petName,rail,22)
   local previewH=if columns then math.min(260,math.max(1,available-nameH-8))else math.min(140,math.max(60,available*.36))
   if short and columns then self.petName.Visible=false;self.title.Text=Pets.byId[self.petId].name.." · Materials";previewH=available end
@@ -800,22 +912,30 @@ function View:layout()
     local x,cell=Art.gridCell(rect.width,index%count,count,8)
     style(entry.caption,"Action");style(entry.active,"Supporting")
     local nh=Art.textHeight(entry.caption,cell-8,22);local ah=Art.textHeight(entry.active,cell-8,20)
-    local height=math.max(cell,44+nh+ah+10);local row=math.floor(index/count)+1
-    rowHeights[row]=math.max(rowHeights[row]or 0,height)
+    local row=math.floor(index/count)+1
     table.insert(entries,{entry=entry,x=x,width=cell,row=row,nameH=nh,activeH=ah})
     index+=1
    end
+  end
+  local firstRowCopy=0
+  for _,item in ipairs(entries)do if item.row==1 then firstRowCopy=math.max(firstRowCopy,item.nameH+item.activeH)end end
+  -- Short landscape keeps the first row's names and Active state in view.
+  -- Column widths stay fixed; only the square preview shrinks and centers.
+  local previewCap=if height<420 then math.max(44,listH-y-firstRowCopy-16)else math.huge
+  for _,item in ipairs(entries)do
+   item.previewSide=math.min(item.width-8,previewCap)
+   rowHeights[item.row]=math.max(rowHeights[item.row]or 0,item.previewSide+item.nameH+item.activeH+10)
   end
   local rowTops={};for row,h in ipairs(rowHeights)do rowTops[row]=y;y+=h+8 end
   for _,item in ipairs(entries)do
    local entry=item.entry;local cell=item.width;local h=rowHeights[item.row];local nh,ah=item.nameH,item.activeH
    place(entry.button,4+item.x,rowTops[item.row],cell,h)
-   place(entry.viewport,4,4,cell-8,math.max(1,h-nh-ah-10))
+   place(entry.viewport,(cell-item.previewSide)/2,4,item.previewSide,item.previewSide)
    place(entry.caption,4,h-nh-ah-4,cell-8,nh);place(entry.active,4,h-ah-2,cell-8,ah)
   end
   action(self.eggsButton)
  else
-  if self.materialPanel.root.Visible then place(self.materialPanel.root,4,y,listW-8,self.materialPanel:layout(listW-8,columns and height<420));y+=self.materialPanel.root.Size.Y.Offset+8 end
+  for _,panel in ipairs({self.materialPanel,self.toyPanel,self.featurePanel})do if panel.root.Visible then place(panel.root,4,y,listW-8,panel:layout(listW-8,columns and height<420));y+=panel.root.Size.Y.Offset+8 end end
   copy(self.channelTitle);copy(self.inspection)
   for _,id in ipairs(ids)do local bar=self.bars[id];if bar and bar.row.Visible then y+=layoutBar(bar,4,y,listW-8,columns and height<420)+8 end end
   copy(self.charmTitle)
@@ -861,11 +981,11 @@ function View:layoutTransaction()
  self.channelTitle.Visible=self.page=="palette"and self.tab=="hue"and not self.confirmation and not self:compactSwatches()
  self:paintSwatches(self.inspection.Visible)
  if self.portrait.Visible then self.petName.Visible=true end
- local materialReceipt=self.page=="materialReceipt";local hueReceipt=self.page=="receipt";local paired=self.cancel.Visible or materialReceipt or hueReceipt
+ local materialReceipt=self.page=="materialReceipt";local toyReceipt=self.page=="toyReceipt";local featureReceipt=self.page=="featureReceipt";local hueReceipt=self.page=="receipt";local paired=self.cancel.Visible or materialReceipt or toyReceipt or featureReceipt or hueReceipt
  local size=self.shade.AbsoluteSize;local width=math.max(1,math.min(if materialReceipt or(self.confirmation and not(size.Y<280))then 470 else 640,size.X-16));local short=size.Y<280;local pad=if short then 8 else 16;local w=width-pad*2
  local inlineHue=hueReceipt and size.Y<420
- if hueReceipt then self.title.Text=if inlineHue and self.state.pendingHueResult then names[self.state.pendingHueResult.itemId]else "A jar for your garden"end
- self.receiptDetail.Visible=hueReceipt and not inlineHue;self.receipt.TextXAlignment=if inlineHue then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
+ if hueReceipt and self.state.pendingHueResult then self.title.Text=names[self.state.pendingHueResult.itemId]end
+ self.receiptDetail.Visible=false;self.receipt.TextXAlignment=if inlineHue then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
  Art.type(self.title,if short or inlineHue then "Body"else "Heading",short);Art.type(self.wallet,"Counter",short)
  local titleH=Art.textHeight(self.title,w-52,24);place(self.title,pad,5,w-52,titleH);place(self.closeButton,width-pad-44,4,44,44)
  local header=math.max(48,titleH+8);self.wallet.Visible=false
@@ -879,7 +999,7 @@ function View:layoutTransaction()
   else place(self.wallet,pad,header,w,walletH);header+=walletH+4 end
  end
  local footer=0
- local peer=if materialReceipt then self.materialPanel.useNow elseif hueReceipt then self.useNow else self.cancel
+ local peer=if materialReceipt then self.materialPanel.useNow elseif toyReceipt then self.toyPanel.useNow elseif featureReceipt then self.featurePanel.useNow elseif hueReceipt then self.useNow else self.cancel
  if self.action.Visible then Art.type(self.action,"Action",short);Art.type(peer,"Action",short);footer=math.max(44,Art.actionHeight(self.action,if paired then (w-8)/2 else w),if paired then Art.actionHeight(peer,(w-8)/2)else 44)+8 end
  if self.machinePickup.Visible then
   Art.type(self.machinePickup,"Action",short);Art.type(self.machineSetDown,"Action",short)
@@ -907,7 +1027,7 @@ function View:layoutTransaction()
   for i,n in ipairs(live)do local x,cellW=Art.gridCell(w-8,(i-1)%cols,cols,8);place(n,4+x,y+math.floor((i-1)/cols)*(h+8),cellW,h)end;y+=math.ceil(#live/cols)*(h+8)
  end
  copy(self.migrationText)
- if self.materialPanel.root.Visible then place(self.materialPanel.root,4,y,w-8,self.materialPanel:layout(w-8));y+=self.materialPanel.root.Size.Y.Offset+8 end
+ for _,panel in ipairs({self.materialPanel,self.toyPanel,self.featurePanel})do if panel.root.Visible then place(panel.root,4,y,w-8,panel:layout(w-8,size.Y<420,bodyH));y+=panel.root.Size.Y.Offset+8 end end
  if self.confirmation then
   local item=self.confirmation.itemId
   if item then
@@ -916,7 +1036,7 @@ function View:layoutTransaction()
    if not self.confirmJar then self.confirmJar=JarArt.create(self.body,item,UDim2.fromOffset(4,0),UDim2.fromOffset(76,88),25);self.confirmJarItem=item end
    place(self.confirmJar,4,0,if inset>4 then 76 else 44,if inset>4 then 88 else 52)
    for _,entry in ipairs({{self.confirmTarget,"Action",20},{self.confirmDelta,"Action",18},{self.confirmStock,"Body",16}})do
-    local node=entry[1];Art.type(node,entry[2],short);if not short then node.TextSize=entry[3]end
+    local node=entry[1];Art.type(node,entry[2],short)
     local chip=if node==self.confirmDelta then 32 else 0;local tw=w-inset-4-chip;local h=Art.textHeight(node,tw,24)
     place(node,inset,y,tw,h)
     if node==self.confirmDelta then place(self.resultSwatch,w-30,y+(h-24)/2,24,24)end
@@ -929,15 +1049,9 @@ function View:layoutTransaction()
  row({self.charmTab,self.hueTab},2)
  copy(self.targetTitle);local targets={};for _,pet in ipairs(Pets.collection)do table.insert(targets,self.targets[pet.id])end;row(targets,if w>=430 then 3 else 2)
  if self.targetChange.Visible then Art.type(self.targetChange,"Body",short);local tw=math.min(w-8,math.max(160,Art.textWidth(self.targetChange)+20));local th=math.max(44,Art.actionHeight(self.targetChange,tw));place(self.targetChange,4,y,tw,th);y+=th+8 end
- if inlineHue then
-  -- The shared reveal keeps its shell/jar generation; only its measured seat
-  -- changes. A 114px recipe seat gives its .56-width jar a readable 64px face.
-  place(self.receiptArt,4,y,114,80);Art.type(self.receipt,"Action",true)
-  local textW=math.max(1,w-134);local textH=Art.textHeight(self.receipt,textW,24)
-  place(self.receipt,130,y+math.max(0,(80-textH)/2),textW,textH);y+=math.max(80,textH)+8
- else
-  if self.receiptArt.Visible then place(self.receiptArt,(w-140)/2,y,140,160);y+=164 end
-  copy(self.receipt,36);copy(self.receiptDetail)
+ if hueReceipt then
+  local receiptH=ReceiptLayout.layout(self.receiptArt,self.receipt,w-8,bodyH,size.Y<420)
+  self.receiptArt.Position+=UDim2.fromOffset(4,y);self.receipt.Position+=UDim2.fromOffset(4,y);y+=receiptH
  end
  if self.portrait.Visible then local h=if short then 140 else 180;place(self.portrait,4,y,w-8,h);y+=h+4;copy(self.petName)end
  row({self.mainTab,self.secondaryTab},2);copy(self.channelTitle);copy(self.inspection)
@@ -1013,7 +1127,7 @@ function View:layoutTransaction()
   end
   y=math.max(ly,ry)
  end
- if(self.confirmation or materialReceipt or hueReceipt)and not short then
+ if(self.confirmation or materialReceipt or toyReceipt or featureReceipt or hueReceipt)and not short then
   height=math.min(size.Y-16,header+y+footer+12);self.card.Size=UDim2.fromOffset(width,height)
   bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,bodyW,bodyH)
   place(peer,pad,height-footer,(shellW-8)/2,footer-8);place(self.action,pad+(shellW+8)/2,height-footer,(shellW-8)/2,footer-8)
@@ -1024,13 +1138,14 @@ function View:layoutTransaction()
 end
 function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)
- self.materialAssignment=nil
+ self.materialAssignment=nil;self.toyAssignment=nil;self.featureAssignment=nil;self.featurePreview=nil
  self.intent:update(state);self.state=state or {}
  if self.materialIntent then self.materialIntent:update(self.state)end
+ if self.toyIntent then self.toyIntent:update(self.state)end;if self.featureIntent then self.featureIntent:update(self.state)end
  if self.state.lastHatch then if self.options.pendingHatch then self.options.pendingHatch()end;return false end
- self.page=if self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
+ self.page=if self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
- self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="pet"then "pet"else "hue";self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
+ self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue";self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
  local p=self.intent.pending
  if p and p.action=="hueUse"then self.page="palette";self.petId=p.value.petId;self.channel=p.value.channel;self.confirmation={itemId=p.value.itemId,petId=p.value.petId,channel=p.value.channel,pendingResultId=p.value.pendingResultId};self.submitted=p.value.id end
  local draft=self.resultDraft
@@ -1043,10 +1158,11 @@ function View:open(state,page,petId)
   if self.equipTargetId==self:activePet()then self.petId=self.equipTargetId;self.equipTargetId=nil;self.machineSwitching=nil
   else self.confirmation={equipPetId=self.equipTargetId};self.machineSwitching=nil end
  end
- if self.page=="palette"and not self:canCustomize()and not self:hasHueAssignment()and not self:hasMaterialAssignment()then return false end
+ if self.page=="palette"and not self:canCustomize()and not self:hasReceiptAssignment()then return false end
  self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1;self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh();return true
 end
 function View:close(reason)
+ self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
  self:stopPortraitClock()
  if not self.shade.Visible then return end
  if reason=="back"then
@@ -1076,6 +1192,7 @@ function View:close(reason)
  self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1
  self:retireTransientArt(true);self.purchaseInFlight=nil;self.shade.Visible=false;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)
  self.materialPanel.reveal:clear();self.materialPurchaseInFlight=nil
+ self.toyPanel.reveal:clear();self.toyPurchaseInFlight=nil;self.featurePanel.reveal:clear();self.featurePurchaseInFlight=nil
  self:updateGrid(0)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end
  if self.options.closed then self.options.closed(reason)end
@@ -1088,11 +1205,11 @@ function View:ensure(target)
 end
 function View:getControllerFocus()
  if not self.shade.Visible then return nil end
- return {root=self.shade,epoch=self.epoch,target=function()return if self.confirmation then self.cancel elseif self.action.Visible and self.action.Interactable then self.action else self.petTab end,fallback=self.closeButton,ensure=function(n)self:ensure(n)end}
+ return {root=self.shade,epoch=self.epoch,target=function()return if self.confirmation then self.cancel elseif self.action.Visible and self.action.Interactable then self.action else self.editorTabs[self.tab]or self.petTab end,fallback=self.closeButton,ensure=function(n)self:ensure(n)end}
 end
 function View:destroy(fromSignal)
  if self.destroyed then return end
  if self.materialPanel then self.materialPanel:destroy()end
- if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.itemReveal:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
+ if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.itemReveal:destroy();self.materialPanel:destroy();self.toyPanel:destroy();self.featurePanel:destroy();self.tabRail:destroy();self.fruitEating:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
 end
 return View

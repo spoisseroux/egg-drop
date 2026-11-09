@@ -1,30 +1,45 @@
--- Receipt FX cannot replay, delay an action, or repaint a later generation.
+-- All item kinds share one timeline and retire its exact owner on exit.
 return function(client,parent)
- local Reveal=require(client.HueItemReveal);local root=Instance.new("Frame");root.Size=UDim2.fromOffset(140,160);root.Parent=parent
- local queue={};local plays,stops=0,0;local reduced=false
- local reveal=Reveal.new(root,{delay=function(at,run)table.insert(queue,{at=at,run=run})end,reduceEffects=function()return reduced end,audio={play=function(_,name)assert(name=="hatch");plays+=1 end,stopOwner=function()stops+=1 end}})
- local cases={};local function result(id,item)return{id=id,itemId=item or "rose",revision=1}end
+ local Reveal=require(client.HueItemReveal);local Run=game:GetService("RunService")
+ local root=Instance.new("Frame");root.Size=UDim2.fromOffset(140,160);root.Parent=parent
+ local cases={};local reduced=false;local sounds={};local serial=tostring(os.clock())
+ local audio={play=function(_,name,pitch,gain,owner)table.insert(sounds,{name=name,owner=owner})end,stopOwner=function()end}
+ local reveal=Reveal.new(root,{reduceEffects=function()return reduced end,audio=audio})
+ local function settle()Run.Heartbeat:Wait();Run.Heartbeat:Wait()end
+ local function advance(c,t)c:disconnectClock();while t>.000001 do local dt=math.min(t,1/60);c:step(dt);t-=dt end end
+ local function test(n,f)f();table.insert(cases,n)end
+ local function result(id,item)return{id=serial..id,itemId=item or "rose",revision=1}end
  local ok,err=pcall(function()
-  assert(reveal:show(result("new"),true)and reveal.active and reveal.whole.Visible and not reveal.jar.Visible)
-  queue[1].run();assert(plays==1 and reveal.top.Visible and reveal.bottom.Visible);queue[2].run();assert(reveal.jar.Visible);queue[3].run();assert(not reveal.active and reveal.jar.Visible)
-  assert(not reveal:show(result("new"),true)and plays==1);table.insert(cases,"new paid result splits once and settles; same receipt does not replay")
-  queue={};assert(reveal:show(result("cancel"),true));local old=queue;reveal:cancel();assert(reveal.jar.Visible and not reveal.active)
-  reveal:show(result("later","tide"),false);for _,pending in ipairs(old)do pending.run()end
-  assert(reveal.resultId=="later"and not reveal.active and reveal.jar:GetAttribute("ItemId")=="tide"and plays==1);table.insert(cases,"action/close cancellation owns audio and invalidates deferred callbacks")
-  reduced=true;queue={};assert(not reveal:show(result("reduced","iris"),true));assert(reveal.jar.Visible and not reveal.active and #queue==0 and plays==1)
-  reduced=false;assert(not reveal:show(result("joined","reset"),false));assert(reveal.jar.Visible and not reveal.active and plays==1);table.insert(cases,"reduced motion and reopened/joined pending receipts are static")
-  local oldJar=reveal.jar;reveal:clear();assert(oldJar.Parent==nil and #root:GetChildren()==0 and not reveal.resultId and not reveal.active)
-  assert(not reveal:show(result("joined","reset"),true)and reveal.jar.Visible and plays==1)
-  table.insert(cases,"retiring receipt art unmounts its jar and same-receipt rebuild remains silent")
-  local materialRoot=Instance.new("Frame");materialRoot.Parent=root;local materialQueue={};local materialPlays=0
-  local material=Reveal.new(materialRoot,{recipeId="material",delay=function(at,run)assert(at<=.6);table.insert(materialQueue,run)end,
-   reduceEffects=function()return reduced end,audio={play=function()materialPlays+=1 end,stopOwner=function()end},
-   resultBuilder=function(parent,result,position,size,z)local node=Instance.new("Frame");node.Name=result.finishId;node.Position,node.Size,node.ZIndex,node.Parent=position,size,z,parent;return node end})
-  assert(material:show({id="material-new",finishId="gloss"},true)and material.whole:GetAttribute("RecipeId")=="material"and material.topArt:GetAttribute("RecipeId")=="material"and material.bottomArt:GetAttribute("RecipeId")=="material")
-  materialQueue[1]();assert(materialPlays==1);material:clear();for _,run in ipairs(materialQueue)do run()end
-  assert(not material:show({id="material-new",finishId="gloss"},true)and material.jar.Visible and materialPlays==1)
-  reduced=true;assert(not material:show({id="material-reduced",finishId="metal"},true)and material.jar.Visible and materialPlays==1)
-  material:destroy();materialRoot:Destroy();reduced=false;table.insert(cases,"Material uses the same bounded registered split once and reduced or reopened results stay silent")
+  settle()
+  test("new paid jar uses shared1.5s timeline and same receipt never replays",function()
+   assert(reveal:show(result("new"),true)and reveal.active and reveal.cinematic.active)
+   advance(reveal.cinematic,.80);assert(reveal.cinematic.resultRoot.Visible and reveal.cinematic.age>=.75)
+   advance(reveal.cinematic,1);assert(not reveal.active and not reveal.cinematic.connection and reveal.cinematic.liveBits==0)
+   local count=#sounds;assert(not reveal:show(result("new"),true)and #sounds==count)
+  end)
+  test("clear destroys transient scene and reopen stays static and silent",function()
+   local old=reveal.jar;local count=#sounds
+   local preceding=Instance.new("Frame");preceding.Name="PrecedingShopEgg";preceding.Parent=root
+   reveal:clear();assert(old.Parent==nil and #root:GetChildren()==0 and not reveal.resultId)
+   assert(not reveal:show(result("new"),true)and reveal.cinematic.resultRoot.Visible and not reveal.cinematic.connection and #sounds==count)
+  end)
+  test("reduced motion or saved joined result owns no animation clock",function()
+   reduced=true;local count=#sounds;assert(not reveal:show(result("reduced","iris"),true)and not reveal.cinematic.connection and #sounds==count)
+   reduced=false;assert(not reveal:show(result("joined","reset"),false)and not reveal.cinematic.connection and #sounds==count)
+  end)
+  test("skip settles but never performs a purchase store use or acknowledgment",function()
+   assert(reveal:show(result("skip"),true));local generation=reveal.generation
+   assert(reveal:skip()and not reveal:skip()and not reveal.active and not reveal.cinematic.connection and reveal.generation==generation)
+  end)
+  test("Material Toy and Feature adapters use the same registered kind and one owner clock",function()
+   for _,entry in ipairs({{"material","finishId","gloss"},{"toy","toyId","ball"},{"feature","featureId","wings"}})do
+    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(140,160);host.Parent=root
+    local r=Reveal.new(host,{recipeId=entry[1],audio=audio,resultBuilder=function(p,value,pos,size,z)local n=Instance.new("Frame");n.Name="Hero";n.Position,n.Size,n.ZIndex,n.Parent=pos,size,z,p;return n end})
+    local packet={id=serial..entry[1]};packet[entry[2]]=entry[3];assert(r:show(packet,true))
+    assert(r.cinematic.kind==entry[1]and r.topArt:GetAttribute("RecipeId")==entry[1]and r.bottomArt:GetAttribute("ShellSection")=="lower")
+    assert(r.cinematic.duration==(if entry[1]=="feature"then 1.7 else 1.5));r:destroy();assert(#host:GetChildren()==0);host:Destroy()
+   end
+  end)
  end)
  reveal:destroy();root:Destroy();assert(ok,err);return cases
 end

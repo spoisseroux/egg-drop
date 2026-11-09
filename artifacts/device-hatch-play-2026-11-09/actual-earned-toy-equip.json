@@ -1,0 +1,97 @@
+{
+  "input": "Earned 12 Stars through starter and actual 24-drop round, bought Toy Egg8; Use now then Zivvi card outside cradle",
+  "buy": {
+    "balanceBefore": 12,
+    "cost": 8,
+    "balanceAfter": 4,
+    "toyId": "bone"
+  },
+  "editorVisible": false,
+  "appearance": {
+    "orbit": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "bloom_pip": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "foxfire_wick": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "eclipse_orbit": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "pip": {
+      "featureStages": {
+        "horns": 0,
+        "claws": 0,
+        "wings": 0
+      },
+      "finish": "standard",
+      "bodyRank": 0,
+      "toyId": "bone",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "puddle": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    },
+    "wick": {
+      "bodyRank": 0,
+      "finish": "standard",
+      "charmShape": "dot",
+      "charmVisible": true,
+      "secondary": "default",
+      "body": "original"
+    }
+  },
+  "receipt": {
+    "revision": 6,
+    "action": "toyEquip",
+    "reason": "Saved",
+    "id": "5:toy-98c7c4b3-f184-4210-8b45-08e3d10f2943",
+    "petId": "pip",
+    "status": "Saved",
+    "receipt": {
+      "revision": 6,
+      "action": "toyEquip",
+      "cost": 0,
+      "id": "5:toy-98c7c4b3-f184-4210-8b45-08e3d10f2943",
+      "balanceAfter": 4,
+      "catalogVersion": 1,
+      "balanceBefore": 4,
+      "toyId": "bone",
+      "selectedAfter": "bone",
+      "petId": "pip",
+      "acknowledgedResultId": "4:toy-fc307e14-16b6-4aa0-93b6-6ce35312540d",
+      "selectedBefore": "none"
+    }
+  },
+  "liveService": false
+}

@@ -1,3 +1,21 @@
+# Egg Drop — device, hatching and personal play
+
+**Tested candidate; private publication pending.** Existing private v370 remains until the final publish is independently verified. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Current gallery](artifacts/device-hatch-play-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/device-hatch-play-2026-11-09/VERIFY.md).
+
+The complete handheld now recoils together, with correct touch/aim mapping. Ended runs clear under cover before a fresh board appears; active suspended games keep their state. Larger measured type, shared scroll bounds, four-column pet cards, a horizontal halo and plain action faces replace the reported layout defects. Companion customization/switching is at the care cradle; Deck style is at the workbench. Pocket Menu keeps Hatch eggs, Pocket Trials and Settings. Exact saved-item Use now remains available without granting general editor access.
+
+Five original patterned eggs share registered cracking halves, bounded rays/sparkles and one-shot audio; skip, repeat-open, Reduced Motion and interruption do not duplicate results. A matching saved fruit application starts a brief bite in the live preview. All hue/items, wallet and reward authority remain on the server.
+
+**Toy Egg: 8 earned Stars.** Unlocks one remaining Ball, Bone or Sparkler permanently; freely select a toy or None per pet at the cradle. Quiet grounded pets play briefly during ordinary garden idle, stopping for movement, carry, care or focus. Selected toys are public appearance data; visitor motion is rendered locally and is not frame-synchronized. The old shared world-ball activity and props are removed.
+
+**Feature Egg: 32 earned Stars.** Horn buds 50%, Claws 35%, Folded wings 15%. One stored item grows that feature on one pet by one stage through five. Freely show 0 through the earned stage; all three may coexist. Features are cosmetic. Full rolled stock refuses with no debit; odds do not silently change. The four-pet new-hatch pool and all seven retained owned IDs remain unchanged.
+
+**Verification:** 190 unique client cases/21 suites at Largest (182-case batch plus bounded shop-reopen 7 and first-row 1), backend 126/11 and affected garden 47/5 (13 overlap backend). All 169 runtime sources match native Studio and compile; final Rojo/diff checks pass. Astra asset/geometry/phone review and independent Sol source review pass. Actual earned controls covered 24-drop merging/rewards, zero-old-frame reset, Toy Egg buy/equip and full Sparkler episodes. iPhone Studio emulation covered actual Touch A/aim/Menu/hatch; seeded owner editor/feature/fruit fixtures are labeled separately.
+
+**Still open:** physical-phone performance, live-service save/rejoin, real multi-client visitor/carry/bay contention and longer human play. Feature purchases/growth and fruit animation use isolated exact transaction/presentation tests, not a naturally earned 32-Star walkthrough in this pass. Existing EditableImage-disabled and legacy wrong-asset-type notices remain. No account/security settings changed. Garnet/Ink, gradients/Metal, stats/training, textured larger garden and replacement retired-pet designs remain on TODO. No production-readiness or proven fun/retention claim.
+
+## Historical v370 — playful care and material eggs
+
 # Egg Drop — playful care and material eggs
 
 **Private v370 Published — runtime97c64d0, committed and pushed.** Refreshed native Version History verifies **Playful care and material eggs - 97c64d0**. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/playful-care-2026-11-09/private-published-v370-97c64d0.jpg) · [Screenshot gallery](artifacts/playful-care-2026-11-09/GALLERY.html) · [Verification](artifacts/playful-care-2026-11-09/VERIFY.md).

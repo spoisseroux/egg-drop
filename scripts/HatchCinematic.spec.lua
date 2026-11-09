@@ -13,7 +13,8 @@ return function(client,parent)
  local cases,views,geometry={},{},{}
  local function test(name,run)run();table.insert(cases,name)end
  local function settle()Run.Heartbeat:Wait();Run.Heartbeat:Wait()end
- local function packet(pet,rare)return table.freeze({id="cinematic-fixture-"..pet,petId=pet,rare=rare==true})end
+ local serial=0
+ local function packet(pet,rare)serial+=1;return table.freeze({id="cinematic-fixture-"..pet.."-"..tostring(os.clock()).."-"..serial,petId=pet,rare=rare==true})end
  local function make()
   local owner,reduced=true,false;local sounds={};local audio={deviceActive=true,deviceEpoch=0}
   local c;function audio:play(name,pitch,volume,token)table.insert(sounds,{name=name,age=c.age,pitch=pitch,owner=token})end
@@ -80,9 +81,9 @@ return function(client,parent)
         assert(math.abs(node.AbsoluteSize.Y-required)<=1,preference.." label reservation differs from independent canonical measurement: "..node.Name)
         return{required=required,height=node.AbsoluteSize.Y,width=node.AbsoluteSize.X,nativeHeight=node.TextBounds.Y}
        end
-       local tag=canonical(c.tag,16,Art.Font.Supporting,18)
-       local name=canonical(c.heading,26,Art.Font.Heading,24)
-       local caption=canonical(c.caption,16,Art.Font.Supporting,18)
+       local tag=canonical(c.tag,18,Art.Font.Supporting,18)
+       local name=canonical(c.heading,28,Art.Font.Heading,24)
+       local caption=canonical(c.caption,18,Art.Font.Supporting,18)
        local expectedBand=c.frame.AbsoluteSize.Y-tag.required-name.required-caption.required-30
        assert(expectedBand>0 and expectedBand<c.frame.AbsoluteSize.Y*.65 and math.abs(expectedBand-c.heroHost.AbsoluteSize.Y)<=1,"Largest text budget does not independently explain restricted hero band")
        assert(c.tag.AbsolutePosition.Y+c.tag.AbsoluteSize.Y<=c.heroHost.AbsolutePosition.Y-5,"Largest tag crosses the hero")
@@ -106,21 +107,32 @@ return function(client,parent)
     end
    end
   end)
-  test("common and rare complete once and retain moving settled motes without replaying cues",function()
+  test("all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",function()
+   root.Size=UDim2.fromOffset(484,203);settle()
+   for _,pet in ipairs(Pets.collection)do
+    local c=make();c.compactLandscape=true
+    c:play(packet(pet.id),nil,{skipIntro=true,appearance={charmVisible=true,charmShape="ring",featureStages={horns=5,claws=5,wings=5}}});c:disconnectClock();settle();c:disconnectClock()
+    assert(c.heroVisual.featureStages.horns==5 and c.heroVisual.featureStages.claws==5 and c.heroVisual.featureStages.wings==5)
+    visibleFit(c,pet.id.."/all-max/rest");c.heroVisual:greet()
+    for frame=1,90 do c.heroVisual:update(1/60);visibleFit(c,pet.id.."/all-max/greet@"..frame)end
+    c:destroy()
+   end
+  end)
+  test("common and rare split within1.5/1.7s and settle with no idle clock or audio replay",function()
    root.Size=UDim2.fromOffset(600,360);settle()
    for _,rare in ipairs({false,true})do
     local c,sounds=make();local completed,presented=0,0
     c:play(packet(if rare then "foxfire_wick"else "puddle",rare),function()completed+=1 end,{onPresented=function()presented+=1 end})
     assert(presented==1 and c.active and c.connection and c.heroConnection==nil)
-    local count=#c.frame:GetDescendants();advance(c,if rare then 2.05 else 1.45)
+    local count=#c.frame:GetDescendants();advance(c,c.splitAt+.25)
     assert(c.liveBits==(if rare then 20 else 12),"jewel droplets/rare prism count exceeded existing pool")
-    assert(c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible,"patterned shell halves missing at split")
-    assert(c.discoveryArt.top.Position.X.Offset<c.center.X and c.discoveryArt.bottom.Position.X.Offset>c.center.X,"patterned halves did not split outward")
+    assert((c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible)or c.shell.Visible,"neither loaded split nor complete unavailable-asset egg visible")
+    if c.discoveryArt.top.Visible then assert(c.discoveryArt.top.Position.X.Offset<c.center.X and c.discoveryArt.bottom.Position.X.Offset>c.center.X,"patterned halves did not split outward")end
     if rare then
      local center=c.outlineCenter or c.center
      for i=17,20 do
       local node=c.bits[i];local theta=math.rad(35+(i-17)*90)
-      assert(node.Size.Y.Offset>c.heroPixels*.2 and node.BackgroundTransparency<.21,"rare rays dim before the fade")
+      assert(node.Size.Y.Offset>c.heroPixels*.2 and node.BackgroundTransparency<.21,string.format("rare ray phase age%.6f paint~%.6f residual%.6f split%.2f length%.2f threshold%.2f alpha%.3f",c.age,c.age-(c.sampleAge or 0),c.sampleAge or 0,c.splitAt,node.Size.Y.Offset,c.heroPixels*.2,node.BackgroundTransparency))
       assert((node.Position.X.Offset-center.X)*math.cos(theta)>0 and(node.Position.Y.Offset-center.Y)*math.sin(theta)>0,"rare rays did not spread across quadrants")
      end
      assert(c.bits[17].BackgroundColor3~=c.bits[18].BackgroundColor3,"rare rays lost gold/family contrast")
@@ -130,9 +142,9 @@ return function(client,parent)
      local ey=(math.abs(math.sin(angle))*node.Size.X.Offset+math.abs(math.cos(angle))*node.Size.Y.Offset)*.5
      assert(node.Position.X.Offset-ex>=0 and node.Position.X.Offset+ex<=c.layoutWidth and node.Position.Y.Offset-ey>=0 and node.Position.Y.Offset+ey<=c.layoutHeight,"burst bit escapes stage")
     end end
-    advance(c,4-c.age);assert(completed==1 and not c.active and c.liveBits==(if rare then 8 else 6)and not c.discoveryArt.top.Visible and not c.discoveryArt.bottom.Visible)
+    advance(c,c.duration-c.age+.001);assert(completed==1 and not c.active and not c.connection and c.liveBits==0 and not c.discoveryArt.top.Visible and not c.discoveryArt.bottom.Visible,string.format("terminal age%.9f duration%.9f complete%d active%s clock%s bits%d",c.age,c.duration,completed,tostring(c.active),tostring(c.connection~=nil),c.liveBits))
     local position=c.bits[1].Position;local cues=#sounds;advance(c,2)
-    assert(c.bits[1].Position~=position and #sounds==cues and #c.frame:GetDescendants()==count)
+    assert(c.bits[1].Position==position and not c.connection and c.liveBits==0 and #sounds==cues and #c.frame:GetDescendants()==count)
     c:finishStatic();assert(completed==1);c:destroy()
    end
   end)
@@ -150,6 +162,7 @@ return function(client,parent)
    local c,sounds,owner=make();owner(false);local complete,presented=0,0
    c:play(packet("pip"),function()complete+=1 end,{onPresented=function()presented+=1 end})
    assert(presented==0 and #sounds==0 and not c.connection)
+   assert(not c:skip()and c.active and complete==0 and presented==0,"covered stale skip settled unseen result")
    owner(true);assert(presented==1 and c.connection and #sounds==1)
    advance(c,.6);owner(false);assert(complete==1 and not c.active and not c.connection and c.liveBits==0)
    local writes,cues=c.writes,#sounds;for _=1,20 do c:refreshOwner()end;assert(c.writes==writes and #sounds==cues)
@@ -162,7 +175,7 @@ return function(client,parent)
    root.Size=UDim2.fromOffset(420,260);settle();c:disconnectClock();c:layout()
    assert(c.heroViewport==viewport and c.heroVisual==visual and c.epoch==epoch)
    audio.deviceEpoch=2;c:step(.01);assert(complete==1 and not c.active and c.deviceEpoch==2)
-   local age,cues=c.age,#sounds;advance(c,.2);assert(c.age>age and #sounds==cues and complete==1)
+   local age,cues=c.age,#sounds;advance(c,.2);assert(c.age==age and not c.connection and #sounds==cues and complete==1)
    c:destroy()
   end)
   test("candidate minimum height is independent of previous stage and painted text sizes",function()

@@ -361,6 +361,9 @@ end
 local function syncVisuals(board)
 	local live = {}
 	local contentIds={}
+ -- Simulation.serial allocates ball IDs on drops/merges. ResetId alone is
+ -- the stable presentation generation of this run.
+ local runSerial=board.folder:GetAttribute("ResetId")
 	for _, egg in ipairs(board.sim.eggs) do
 		live[egg.id] = true
 		table.insert(contentIds,egg.id)
@@ -379,9 +382,9 @@ local function syncVisuals(board)
 			part.CastShadow = false
 			part:SetAttribute("Tier", egg.tier)
 			part:SetAttribute("EggId", egg.id)
-			part:SetAttribute("BoardSerial",board.sim.serial)
 			board.parts[egg.id] = part
 		end
+		if part:GetAttribute("BoardSerial")~=runSerial then part:SetAttribute("BoardSerial",runSerial)end
 		local position = Vector3.new(egg.position.X, egg.position.Y, 0)
 		if part.Position ~= position then
 			part.Position = position
@@ -397,10 +400,10 @@ local function syncVisuals(board)
 		end
 	end
 	table.sort(contentIds)
-	local signature=tostring(board.sim.serial)..":"..table.concat(contentIds,",")
+	local signature=tostring(runSerial)..":"..table.concat(contentIds,",")
  if board.contentSignature~=signature then
   board.contentSignature=signature
-  board.folder:SetAttribute("BoardContent",HttpService:JSONEncode({serial=board.sim.serial,ids=contentIds}))
+  board.folder:SetAttribute("BoardContent",HttpService:JSONEncode({serial=runSerial,ids=contentIds}))
  end
 end
 

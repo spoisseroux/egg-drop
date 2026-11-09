@@ -1,13 +1,15 @@
 local Data=require(game:GetService("ReplicatedStorage").Shared.GardenCarePoseData)
 local Pose={}
 local function extents(visual)
- local key=tostring(visual.rigRevision)..":"..tostring(visual.renderCharmShape)..":"..tostring(visual.charmVisible)
+ local key=tostring(visual.rigRevision)..":"..tostring(visual.renderCharmShape)..":"..tostring(visual.charmVisible)..":"..tostring(visual.featureRevision)
  if visual.careBoundsKey==key then return visual.careBounds end
  local low,high=Vector3.new(math.huge,math.huge,math.huge),Vector3.new(-math.huge,-math.huge,-math.huge)
  local rear,top=0,0;local tilt=CFrame.Angles(0,math.rad(Data.hold.facingYawToAvatarDegrees),0)*CFrame.Angles(math.rad(Data.families[visual.petId][1]),0,0)
  for _,e in ipairs(visual.pieces)do if e.part.Transparency<.99 then
   for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do
-   local p=e.frame:PointToWorldSpace(e.size*Vector3.new(x,y,z)*.5);local q=tilt:PointToWorldSpace(p)
+   local p=e.frame:PointToWorldSpace(e.size*Vector3.new(x,y,z)*.5)
+   if e.role=="charm"then p+=Vector3.new(0,visual.featureHaloLift or 0,0)end
+   local q=tilt:PointToWorldSpace(p)
    top=math.max(top,q.Y)
    if e.role~="charm"then
     rear=math.max(rear,-q.Z);low=Vector3.new(math.min(low.X,p.X),math.min(low.Y,p.Y),math.min(low.Z,p.Z));high=Vector3.new(math.max(high.X,p.X),math.max(high.Y,p.Y),math.max(high.Z,p.Z))

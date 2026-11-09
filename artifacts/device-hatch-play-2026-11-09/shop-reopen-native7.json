@@ -1,0 +1,14 @@
+{
+  "fixtureOnly": true,
+  "preference": "Largest",
+  "ok": true,
+  "cases": [
+    "733, 307 retained toy visible on same-size reopen before user scroll",
+    "733, 307 retained feature visible on same-size reopen before user scroll",
+    "568, 210 retained toy visible on same-size reopen before user scroll",
+    "568, 210 retained feature visible on same-size reopen before user scroll",
+    "350, 703 retained toy visible on same-size reopen before user scroll",
+    "350, 703 retained feature visible on same-size reopen before user scroll",
+    "close invalidates the queued opening scroll"
+  ]
+}

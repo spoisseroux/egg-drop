@@ -418,8 +418,6 @@ local function utilityButton(name, titleText)
 	Art.corner(cap, 11)
 	local edge = make("UIStroke", "Lip", { Color = Palette.Rim, Thickness = 1 }, cap)
 	Art.bind(cap,{BackgroundColor3="raised"});Art.surfaceGradient(cap,"raised");Art.bind(edge,{Color="accent"})
-	local inlay = Art.frame(cap, "Inlay", Art.Line, UDim2.fromOffset(9, 4), UDim2.new(1, -18, 0, 2))
-	Art.corner(inlay, 1);Art.bind(inlay,{BackgroundColor3="accent"})
 	local caption = label("TextLabel", "Caption", titleText, cap)
 	caption.Position = UDim2.fromOffset(0, 3)
 	caption.Size = UDim2.new(1, 0, 1, -3)
@@ -804,18 +802,39 @@ end)
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
-nurseryView.appearanceFor=function(petId)return roomView.garden:appearance(board,petId)end
+nurseryView.appearanceFor=function(petId)
+ local a=roomView.garden:appearance(board,petId)
+ local state=nurseryState
+ if state and EggCatalog.isOwned(state.inventoryMask or 0,petId)then
+  a.toyId=(state.petToys or {})[petId]or "none"
+  local row=(state.petFeatures or {})[petId]or {}
+  a.featureStages={horns=row.horns and row.horns.visible or 0,claws=row.claws and row.claws.visible or 0,wings=row.wings and row.wings.visible or 0}
+  a.appearanceGeneration=state.revision or a.appearanceGeneration
+ end
+ return a
+end
+clientUI.itemAvailable=function(own)
+ if currentSaveNotice~=nil then return false end
+ for _,kind in ipairs({"hue","material","toy","feature"})do local intent=clientUI[kind.."Intent"];if kind~=own and intent and intent.pending then return false end end
+ return true
+end
 journal.appearanceFor=nurseryView.appearanceFor
 clientUI.hueIntent=clientUI.HueIntent.new({
  id=function()return HttpService:GenerateGUID(false)end,
- available=function()return currentSaveNotice==nil end,
+ available=function()return clientUI.itemAvailable("hue")end,
  send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return currentSaveNotice==nil end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+clientUI.toyIntent=require(script.ToyIntent).new({id=function()return HttpService:GenerateGUID(false)end,
+ available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return HttpService:GenerateGUID(false)end,
+ available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
- materialIntent=clientUI.materialIntent,
+ materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
  canCustomize=function(petId)
   local actor=roomView.care and roomView.care:actor()
   petId=petId or(clientUI.hueView and clientUI.hueView.petId)
@@ -851,6 +870,8 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
  eggs=function()if openNursery then openNursery();nurseryView:selectRecipe("meadow")end end,
  materialShop=function()if openNursery then openNursery();nurseryView:selectRecipe("material")end end,
+ toyShop=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
+ featureShop=function()if openNursery then openNursery();nurseryView:selectRecipe("feature")end end,
  charm=function(petId,visible,shape,seq,shapeVersion)
   if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
   request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq})
@@ -869,7 +890,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   end
  end})
 clientUI.openHue=function(page,petId,back)
- local purchasePage=page=="buy"or page=="materialBuy"
+ local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
  if not purchasePage then
   local actor=roomView.care and roomView.care:actor()
   if back~="machine"or not actor or not actor.care or actor.care.state~="Docked"or actor.petId~=petId then return false end
@@ -898,11 +919,19 @@ end
 nurseryView.onOpenMaterial=function(purchase)
  if clientUI.openHue("materialBuy",nil,"eggs")and purchase and not nurseryState.pendingMaterialResult then clientUI.materialIntent:buy()end
 end
+nurseryView.onOpenToy=function(purchase)
+ if clientUI.openHue("toyBuy",nil,"eggs")and purchase and not nurseryState.pendingToyResult then clientUI.toyIntent:buy()end
+end
+nurseryView.onOpenFeature=function(purchase)
+ if clientUI.openHue("featureBuy",nil,"eggs")and purchase and not nurseryState.pendingFeatureResult then clientUI.featureIntent:buy()end
+end
 journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
 clientUI.materialResult=remotes:WaitForChild("MaterialResult").OnClientEvent:Connect(function(packet)clientUI.materialIntent:receive(packet)end)
-gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.charmResult:Disconnect();clientUI.materialResult:Disconnect();clientUI.materialIntent:destroy();clientUI.hueView:destroy()end)
+clientUI.toyResult=remotes:WaitForChild("ToyResult").OnClientEvent:Connect(function(packet)clientUI.toyIntent:receive(packet)end)
+clientUI.featureResult=remotes:WaitForChild("FeatureResult").OnClientEvent:Connect(function(packet)clientUI.featureIntent:receive(packet)end)
+gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.charmResult:Disconnect();clientUI.materialResult:Disconnect();clientUI.toyResult:Disconnect();clientUI.featureResult:Disconnect();clientUI.materialIntent:destroy();clientUI.toyIntent:destroy();clientUI.featureIntent:destroy();clientUI.hueView:destroy()end)
 board:GetAttributeChangedSignal("PetAppearance"):Connect(function()
  if nurseryView.state.lastHatch then nurseryView.cinematic:setAppearance(nurseryView.appearanceFor(nurseryView.state.lastHatch.petId))elseif nurseryView:isOpen()then nurseryView:renderBody()end
  if clientUI.isHueOpen()then clientUI.hueView:refresh()end
@@ -971,6 +1000,8 @@ local function refreshNursery(state)
  nurseryState = state
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
+    clientUI.toyIntent:update(state)
+    clientUI.featureIntent:update(state)
 	currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
 	if refreshSaveNotice then refreshSaveNotice()end
 	roomView.stations:refresh()

@@ -1,0 +1,33 @@
+{
+  "authorship": "Original Astra-directed egg surface tooling, extending existing original shell painter; no external downloaded image content.",
+  "studioPlaceId": 96451847774961,
+  "file": "registered-eggs-atlas.png",
+  "assetId": "118600059166599",
+  "sha256": "65072c9c220b10ac5f2ed064008d375ab9d387596d48d9d02780d7eba8d50641",
+  "source": "build_eggs.py",
+  "dimensions": [
+    2048,
+    2048
+  ],
+  "spritePixels": 384,
+  "columns": [
+    "companion",
+    "hue",
+    "material",
+    "toy",
+    "feature"
+  ],
+  "rows": [
+    "whole",
+    "upper",
+    "lower"
+  ],
+  "registration": "Each full-size 384px upper/lower sprite uses complementary jagged alpha; exact RGBA reconstruction verified by builder. Ground shadow separate.",
+  "review": "Astra GO for original source; primary native render GO verified all five whole and complementary jagged pieces with 192px served rectangles.",
+  "servedDimensions": [
+    1024,
+    1024
+  ],
+  "servedSpritePixels": 192,
+  "nativeEvidence": "../../artifacts/device-hatch-play-2026-11-09/atlas-native-registration-fixed192-FIXTURE.jpg"
+}

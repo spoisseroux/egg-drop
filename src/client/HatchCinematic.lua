@@ -12,7 +12,8 @@ local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
-local live=setmetatable({},{__mode="k"})
+local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
+Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
 local function frame(parent,name,color,z)
  local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),z);node.Active,node.Selectable=false,false;return node
 end
@@ -42,9 +43,10 @@ end
 function Cinematic.new(parent,audio,reduceEffects,owns)
  local root=Art.frame(parent,"HatchCinematic","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),42)
  root.Visible=false;root.ClipsDescendants=true;root.Active=false;Art.corner(root,14)
+ local skip=Instance.new("TextButton");skip.Name="SkipReveal";skip.Text="";skip.BackgroundTransparency=1;skip.BorderSizePixel=0;skip.Size=UDim2.fromScale(1,1);skip.ZIndex=60;skip:SetAttribute("AccessibleLabel","Skip hatch reveal");skip.Parent=root
  local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
  local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
- live[self]=true
+ live[self]=true;skip.Activated:Connect(function()self:skip()end)
  for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
  local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
  watch(root:GetPropertyChangedSignal("AbsoluteSize"),function()if self.result and not self.building then self:layout();self:refreshOwner()end end)
@@ -53,6 +55,12 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  watch(GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"),function()self:refreshOwner()end)
  watch(Input.WindowFocusReleased,function()self.windowActive=false;self:refreshOwner()end)
  watch(Input.WindowFocused,function()self.windowActive=true;self:refreshOwner()end)
+ watch(Input.InputBegan,function(input)
+  if self.active and self:owned()and(input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA)then
+   self.skipInput=input;drainInput=input;self:skip()
+  end
+ end)
+ watch(Input.InputEnded,function(input)if self.skipInput==input then task.defer(function()if self.skipInput==input then self.skipInput=nil end end)end end)
  watch(Input.TextBoxFocused,function()self:refreshOwner()end);watch(Input.TextBoxFocusReleased,function()self:refreshOwner()end)
  watch(root.Destroying,function()self:destroy(true)end);self:watchAncestors();return self
 end
@@ -90,7 +98,8 @@ end
 function Cinematic:cancel()
  self.epoch+=1;self:disconnectClock();self:stopAudio();self.active=false;self.onComplete=nil;self.onPresented=nil;self.presented=false
  self:clearHero();if self.stage then self.stage:Destroy();self.stage=nil end;if self.resultRoot then self.resultRoot:Destroy();self.resultRoot=nil end
- self.result=nil;self.liveBits=0;self.frame.Visible=false;for _,bit in ipairs(self.bits)do bit.Visible=false end
+ self.result=nil;self.liveBits=0;self.frame.Visible=false;self.heroGraphic=nil
+ if visibleOwner==self then visibleOwner=nil end;for _,bit in ipairs(self.bits)do bit.Visible=false end
  self.quietPainted=nil
 end
 function Cinematic:destroy(fromSignal)
@@ -101,6 +110,10 @@ end
 function Cinematic:complete()local callback=self.onComplete;self.onComplete=nil;if callback then callback()end end
 function Cinematic:createHero()
  local preparationStarted=os.clock()
+ if self.itemBuilder then
+  self.heroGraphic=self.itemBuilder(self.heroHost,self.result,UDim2.fromScale(.05,.05),UDim2.fromScale(.9,.9),50)
+  self.renderMode="Item";self.heroPreparationMs=(os.clock()-preparationStarted)*1000;return
+ end
  local viewport=Instance.new("ViewportFrame");viewport.Name="PetHero3D";viewport.Size=UDim2.fromScale(1,1);viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.ZIndex=50
  viewport.Ambient=Color3.fromRGB(190,204,178);viewport.LightColor=Color3.fromRGB(255,240,212);viewport.LightDirection=Vector3.new(-1,-1.4,-3);viewport.Parent=self.heroHost;self.heroViewport=viewport
  local ok=pcall(function()
@@ -169,34 +182,40 @@ function Cinematic:fitHero(width,height,stageHeight)
 
 end
 function Cinematic:minimumHeightForWidth(width,height)
+ if self.hideLabels then return 1 end
  if not self.caption then return 160 end
  -- Candidate geometry owns its font contract. Never read the last painted sizes:
  -- a narrow stacked stage may otherwise change the next full-width decision.
  height=height or 180
- local landscape=self.compactLandscape or(width>=360 and width/math.max(1,height)>=2)
+ local landscape=self.compactLandscape or(width>=360 and width/math.max(1,height)>=2)or(width>=540 and width/math.max(1,height)>=1.5)
  local roomy=not self.compactLandscape and((height>=300 and width>=360)or landscape)
  local share=if self.compactLandscape then .40 else .56
  local wrap=math.max(1,if landscape then width-math.floor(width*share)-24 else width-24)
  local function measured(value,size,font,minimum)
   return math.max(minimum or 0,math.ceil(Art.measureText(value,size,font,wrap).Y)+4)
  end
- local name=measured(self.pet.name,if roomy then 26 else 20,Art.Font.Heading,24)
- local tag=measured(self.tag.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
- local caption=measured(self.caption.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
+ local name=measured(self.displayName or self.pet.name,if roomy then 28 else 20,Art.Font.Heading,24)
+ local tag=measured(self.tag.Text,if roomy then 18 else 14,Art.Font.Supporting,18)
+ local caption=measured(self.caption.Text,if roomy then 18 else 14,Art.Font.Supporting,18)
  return math.max(if self.compactLandscape then 120 else 160,math.ceil(name+tag+caption+(if self.compactLandscape then 28 elseif landscape then 64 else 40)))
 end
 
 function Cinematic:layout()
  if not self.resultRoot then return end
  local w,h=math.max(1,self.frame.AbsoluteSize.X),math.max(1,self.frame.AbsoluteSize.Y);self.layoutWidth,self.layoutHeight=w,h
- self.landscapeLayout=self.compactLandscape or(w>=360 and w/h>=2)
+ self.landscapeLayout=self.compactLandscape or(w>=360 and w/h>=2)or(w>=540 and w/h>=1.5)
  local roomy=not self.compactLandscape and((h>=300 and w>=360)or self.landscapeLayout)
  Art.roomyType(self.caption,"Supporting",not roomy,roomy);Art.roomyType(self.heading,"Heading",not roomy,roomy);Art.roomyType(self.tag,"Supporting",not roomy,roomy)
- if roomy then self.heading.TextSize=26 end
  local short=h<140
- self.heading.Text=if short then (if self.result.rare then "Rare · "else "")..(if self.result.duplicate then "Duplicate · "else "")..self.pet.name else self.pet.name
+ self.heading.Text=if short then (if self.result.rare then "Rare · "else "")..(if self.result.duplicate then "Duplicate · "else "")..(self.displayName or self.pet.name)else(self.displayName or self.pet.name)
  local heroX,heroY,heroW,heroH,textX,textW=12,0,w-24,1,12,w-24
  if self.landscapeLayout then heroW=math.max(1,math.floor(w*(if self.compactLandscape then .40 else .56))-18);textX=heroW+30;textW=math.max(1,w-textX-12)end
+ if self.hideLabels then
+  self.heading.Visible=false;self.caption.Visible=false;self.tag.Visible=false
+  self.center,self.bandTop,self.bandHeight=Vector2.new(w*.5,h*.5),0,h
+  place(self.heroHost,0,0,w,h);self:fitHero(w,h,h);self.heroPixels=math.min(w,h)*.88;self.minimumHeight=1
+  self.discoveryArt:layout(0,0,w,h,self.center,self.heroPixels);self:paint();return
+ end
  local captionH=Art.textHeight(self.caption,textW,18);local nameH=Art.textHeight(self.heading,textW,24);local tagH=if not short then Art.textHeight(self.tag,textW,18)else 0
  self.tag.Visible=tagH>0
  local totalText=tagH+nameH+captionH+12
@@ -215,22 +234,21 @@ function Cinematic:layout()
 end
 
 function Cinematic:buildScene()
- self.pet=Pets.byId[self.result.petId]or Pets[1]
+ self.pet=Pets.byId[self.result.petId]or Pets.byId.pip
  self.stage=Art.frame(self.frame,"HatchStage","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),43);self.stage.BackgroundTransparency=1
- self.discoveryArt=CompanionArt.new(self.stage,self.result.rare==true)
+ self.discoveryArt=CompanionArt.new(self.stage,self.result.rare==true,self.recipeId)
  self.halo,self.haloStroke,self.cradle=self.discoveryArt.disc,self.discoveryArt.discStroke,self.discoveryArt.cradle
  self.shell,self.shellScale,self.crack=self.discoveryArt.shell,self.discoveryArt.shellScale,self.discoveryArt.crack
  self.resultRoot=Art.frame(self.frame,"Result","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),49);self.resultRoot.BackgroundTransparency=1
  self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
  local rare=self.result.rare==true
- local tag=if self.result.duplicate then(if rare then "ALREADY OWNED"else "ALREADY OWNED")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
- self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then "reward"else "text");self.heading=label(self.resultRoot,"PetName",self.pet.name,"Heading","text")
- local detail=if self.result.duplicate then "Already owned · no additional reward"elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
+ local tag=if self.kind~="companion"then "SAVED FOR YOUR GARDEN"elseif self.result.duplicate then(if rare then "ALREADY OWNED"else "ALREADY OWNED")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
+ self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then "reward"else "text");self.heading=label(self.resultRoot,"PetName",self.displayName or self.pet.name,"Heading","text")
+ local detail=if self.kind~="companion"then "Choose Store or Use now"elseif self.result.duplicate then "Already owned · no additional reward"elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
  self.caption=label(self.resultRoot,"CollectionStatus",detail,"Supporting","muted");self:createHero();self:layout()
  self.anticipation=label(self.stage,"Anticipation","Something is stirring…","Body","muted")
  place(self.anticipation,12,math.max(0,self.layoutHeight-40),self.layoutWidth-24,30)
- self.beats={{.45,"charge",.92,.25},{.88,"merge_bubble",.92,.25},{if rare then 1.72 else 1.22,"hatch",if rare then .92 else 1.02,.65},{(if rare then 1.72 else 1.22)+.28,self.pet.cue,1,.5}}
- if rare then table.insert(self.beats,{1.28,"charge",1.18,.26})end
+ self.beats={{.46,"merge_bubble",1,.22},{self.splitAt,"hatch",1.02,.52},{self.splitAt+.25,if self.kind=="companion"then self.pet.cue else "hatch_rise",1,.30}}
  for i,node in ipairs(self.bits)do
   local index=i
   Art.bind(node,{BackgroundColor3=function()
@@ -258,19 +276,20 @@ function Cinematic:publishDiagnostics(phase)
 end
 function Cinematic:paint()
  if not self.stage then return end
- local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22;local revealed=not self.active or self.age>=split
- self.resultRoot.Visible=revealed;self.shell.Visible=not revealed;self.crack.Visible=self.age>=.60 and not revealed
+ local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75);local revealed=not self.active or self.age>=split
+ self.resultRoot.Visible=revealed;self.shell.Visible=not revealed;self.crack.Visible=self.age>=.20 and not revealed
  if self.anticipation then
   self.anticipation.Visible=not revealed
   local value=if rare and self.age>1.15 then "A rare glow…"elseif self.age>.6 then "A little more…"else "Something is stirring…"
   if self.anticipation.Text~=value then self.anticipation.Text=value end
  end
- self.shell.Rotation=if self.active then math.sin(self.age*22)*math.min(8,self.age*7)else 0
- self.shellScale.Scale=if self.active then .88+math.min(1,self.age/.45)*.12+math.sin(self.age*12)*.025 else 1
- self.heroScale.Scale=if self.active and revealed then 1+math.sin(math.min(1,(self.age-split)/.48)*math.pi)*.07 else 1
+ local t=self.age
+ self.shell.Rotation=if not self.active or t<.20 or t>=.60 then 0 elseif t<.38 then -6*(t-.20)/.18 elseif t<.49 then -6+10*(t-.38)/.11 else 4*(1-(t-.49)/.11)
+ self.shellScale.Scale=if not self.active or t>=.20 then 1 elseif t<.12 then .90+.14*(1-(1-t/.12)^3)else 1.04-.04*(1-(1-(t-.12)/.08)^3)
+ self.heroScale.Scale=if self.active and revealed then (if t<split+.35 then .82+.215*(1-(1-math.clamp((t-split)/.35,0,1))^3)else 1.035-.035*math.clamp((t-split-.35)/.40,0,1))else 1
  local quiet=self:reduced()or not self:owned();self.halo.Rotation=0
  self.haloStroke.Transparency=if not revealed then .62-math.max(0,math.sin(self.age*12))*.15 elseif rare then .42 else .65
- self.discoveryArt:split(self.age-split,self.active and revealed and self.age-split<.42 and not quiet)
+ self.discoveryArt:split(self.age-split,self.active and revealed and self.age-split<.31 and not quiet)
  self:paintBits(revealed,quiet);self:publishDiagnostics("paint")
 end
 -- Every role has an authored trajectory; all reuse the same24 passive slots.
@@ -304,11 +323,11 @@ function Cinematic:burstBit(index,age,rare)
  return x,y,w,h,rotation,alpha,true
 end
 function Cinematic:paintBits(revealed,quiet)
- local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22
+ local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
  local count=if rare then 8 else 6;local burstAge=self.age-split;local burst=burstAge>=0 and burstAge<.75 and self.active
  self.liveBits=0
  for i,node in ipairs(self.bits)do
-  local show=not quiet and self.bandHeight>=20 and((burst and(i<=12 or(rare and i>=17)))or(revealed and i<=count)or(not revealed and i<=4))
+  local show=self.active and not quiet and self.bandHeight>=20 and((burst and(i<=12 or(rare and i>=17)))or(revealed and i<=count)or(not revealed and i<=4))
   local x,y,w,h,rotation,alpha
   if show and burst then x,y,w,h,rotation,alpha,show=self:burstBit(i,burstAge,rare)
   elseif show then
@@ -334,7 +353,7 @@ end
 
 function Cinematic:finishStatic()
  if not self.resultRoot then return end
- self.active=false;self.age=math.max(self.age,self.duration or 0);self:stopAudio()
+ self.active=false;self:disconnectClock();self.age=math.max(self.age,self.duration or 0);self:stopAudio()
  if self.heroVisual then self.heroVisual.reducedEffects=self:reduced();rest(self.heroVisual,self.pet)end
  self:paint();self.quietPainted=not self:owned()or self:reduced();self:complete()
 end
@@ -348,20 +367,24 @@ function Cinematic:refreshOwner()
  if not self.presented then
   self.presented=true;local callback=self.onPresented;self.onPresented=nil;if callback then callback()end
   if self.epoch~=epoch or not self.result then return end
-  if self.active and not self:reduced()then self:cue("hatch_rise",if self.result.rare then .82 else .94,.48)end
+  if self.receiptKey and not seen[self.receiptKey]then
+   seen[self.receiptKey]=true;table.insert(seenOrder,self.receiptKey);if #seenOrder>64 then seen[table.remove(seenOrder,1)]=nil end
+  end
+  if self.active and not self:reduced()then self:cue("charge",.92,.18)end
  end
  if self:reduced()then self:disconnectClock();if self.active or not self.quietPainted then self:finishStatic()end;return end
  self.quietPainted=nil
- if not self.active then self:complete();if self.epoch~=epoch or not self.result then return end end
+ if not self.active then self:disconnectClock();self:complete();return end
  if not self.connection then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)end
  self:publishDiagnostics("clockReady")
 end
 function Cinematic:step(dt)
+ if not self.active then self:disconnectClock();return end
  if not self.result or not self:owned()or self:reduced()then self:refreshOwner();return end
  if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self:finishStatic();return end
  local before=self.age;self.age+=math.max(0,dt);local epoch=self.epoch
  if self.active then
-  local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22
+  local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
   for _,beat in ipairs(self.beats)do
    if before<beat[1]and self.age>=beat[1]then self:cue(beat[2],beat[3],beat[4]);if self.epoch~=epoch then return end;if beat[1]==split and self.heroVisual then self.heroVisual:greet()end end
   end
@@ -375,12 +398,19 @@ function Cinematic:step(dt)
 end
 function Cinematic:play(result,onComplete,options)
  if self.destroyed then return end
- self:cancel();options=options or {};self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets[1]
- self.duration=if result.rare then 3.1 else 2.5;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
- self.active=not options.skipIntro and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
+ self:cancel();options=options or {}
+ if visibleOwner and visibleOwner~=self then visibleOwner:finishStatic()end;visibleOwner=self
+ self.kind=options.kind or "companion";self.recipeId=options.recipeId or "meadow";self.displayName=options.displayName;self.itemBuilder=options.resultBuilder;self.hideLabels=options.hideLabels==true
+ self.receiptKey=self.kind..":"..tostring(result.id);self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets.byId.pip
+ self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
+ self.active=not options.skipIntro and not seen[self.receiptKey]and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
  if not self.active then self.age=self.duration;self:paint()end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
+function Cinematic:skip()
+ if not self.active or not self:owned()then return false end;self:finishStatic();return true
+end
+function Cinematic:consumeSkipInput()return drainInput~=nil end
 function Cinematic:setAppearance(appearance)
  self.appearance=appearance
  if self.heroVisual and self.heroVisual.applyAppearance then self.heroVisual:applyAppearance(appearance)end

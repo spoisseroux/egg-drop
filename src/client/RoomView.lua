@@ -127,6 +127,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		for _,entry in pairs(self.companions.active)do if entry.visual.careState=="Carried"and entry.root then self.careArms:hold(entry.root.Parent,pose.targets(entry.visual))end end
 	end)
 	watch(progress:GetAttributeChangedSignal("PetAppearance"),function()self:refreshPetAppearance()end)
+ watch(progress:GetAttributeChangedSignal("PetAppearanceRevision"),function()self:refreshPetAppearance()end)
 	local appearanceRemote=ReplicatedStorage.Remotes:FindFirstChild("PetAppearanceResult")
 	if appearanceRemote then watch(appearanceRemote.OnClientEvent,function(packet)
 		local pending=self.charmPending
@@ -185,6 +186,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			local character = Players.LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+            self.pet.personalPlayEnabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not GuiService.MenuIsOpen and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and root~=nil and humanoid~=nil and humanoid.Health>0
 			if self.focusing and not self.focusTransitioning then
 				local shot = self.greetingCamera
 				if not root or not humanoid or humanoid.Health <= 0 or not shot or shot.root ~= root
@@ -195,6 +197,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			self.pet.reducedEffects=reduced
 			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
 				local actor=self.garden:renderActor(Players.LocalPlayer.UserId,self.shownPet.id,character)
+                self.pet.personalPlayEnabled=self.pet.personalPlayEnabled and actor~=nil and actor.mode=="Room"
+                self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
+                self.pet.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
 				if actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
@@ -354,7 +359,10 @@ function Room:refreshPetAppearance()
 		self.appearancePet,self.appearanceCharm=self.shownPet.id,appearance.charmVisible
 		self.focusGeometry=nil
 	end
-	if self.pet and self.pet.applyAppearance then self.pet:applyAppearance(appearance)end
+	if self.pet and self.pet.applyAppearance then
+  local before=self.pet.featureRevision;self.pet:applyAppearance(appearance)
+  if before~=self.pet.featureRevision then self.focusGeometry=nil end
+ end
 	if self.focusUI and self.focusUI.setCharmVisible then
 		local supported=self.shownPet.id=="pip"or self.shownPet.id=="puddle"
 		self.focusUI:setCharmVisible(if supported then appearance.charmVisible else nil,self.charmPending~=nil,self.pet and self.pet.secondaryColor)

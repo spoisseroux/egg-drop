@@ -1,3 +1,4 @@
+local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.MaterialCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
@@ -18,7 +19,7 @@ function Panel.new(parent,intent,options)
  self.art=Art.frame(root,"MaterialResultArt","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),root.ZIndex+1);self.art.BackgroundTransparency=1
  self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="material",resultBuilder=function(parent,result,position,size,z)
   local tile=Art.frame(parent,"UnlockedMaterial","raised",position,size,z);tile.BackgroundTransparency=1
-  local sample=Art.frame(tile,"FinishSample",Color3.fromHex("#69D7D5"),UDim2.new(.5,-32,.5,-32),UDim2.fromOffset(64,64),z+1);Art.corner(sample,32)
+  local sample=Art.frame(tile,"FinishSample",Color3.fromHex("#69D7D5"),UDim2.fromScale(.5,.5),UDim2.fromScale(.78,.78),z+1);sample.AnchorPoint=Vector2.new(.5,.5);Art.corner(sample,100)
   sample:SetAttribute("AccessibleLabel",Catalog.ById[result.finishId].name.." material")
   local shade=Instance.new("UIGradient");shade.Color=ColorSequence.new(Color3.fromHex("#A8EBDF"),Color3.fromHex("#3EAAA9"));shade.Rotation=70;shade.Parent=sample
   if result.finishId=="gloss"or result.finishId=="metal"then
@@ -28,7 +29,7 @@ function Panel.new(parent,intent,options)
  end})
  self.pool=label(root,"AvailableOdds","","Body")
  self.status=label(root,"Status","","Body")
- self.useNow=button(root,"UseNow","Use now",function()local result=self.state.pendingMaterialResult;if result and self.options.useNow then self.options.useNow(result)end end)
+ self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
  self.shop=button(root,"MaterialEggShop","Material Egg · 16 Stars",function()if self.options.shop then self.options.shop()end end)
  for _,id in ipairs(Catalog.Order)do
   local finishId=id
@@ -37,8 +38,15 @@ function Panel.new(parent,intent,options)
  return self
 end
 function Panel:chooseFinish(finishId)
+ if not self.root.Visible or self.mode~="choices"then return false end
  if self.options.canEquip and not self.options.canEquip()then return false end
  return self.intent~=nil and self.intent:equip(self.petId,finishId)or false
+end
+function Panel:useResult()
+ local result=self.state and self.state.pendingMaterialResult
+ if not result or not self.root.Visible or self.mode~="receipt"or(self.options.receiptOpen and not self.options.receiptOpen(result))then return false end
+ if self.reveal:consumeSkipInput()or self.reveal:skip()then return false end
+ if self.options.useNow then self.options.useNow(result);return true end;return false
 end
 function Panel:refresh(state,petId,mode,animate)
  self.state,self.petId,self.mode=state or {},petId,mode
@@ -48,7 +56,7 @@ function Panel:refresh(state,petId,mode,animate)
  if not mode then return end
  local result=self.state.pendingMaterialResult;local receipt=mode=="receipt";local buy=mode=="buy"
  self.title.Text=if receipt and result then Catalog.ById[result.finishId].name.." unlocked!"elseif buy then "Material Egg"else "Materials"
- self.note.Text=if receipt then "For all your pets."elseif buy then "16 Stars · one new material. No duplicates."else "Choose a material for this pet."
+ self.note.Text=if receipt then "Choose a pet for this material."elseif buy then "16 Stars · one new material. No duplicates."else "Choose a material for this pet."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("MaterialEgg")then
@@ -73,7 +81,13 @@ function Panel:refresh(state,petId,mode,animate)
  self.useNow.Interactable=self.intent~=nil and not self.intent.pending
  self.status.Text=self.intent and self.intent.message or "";self.status.Visible=self.status.Text~=""
 end
-function Panel:layout(width,compact)
+function Panel:layout(width,compact,availableHeight)
+ if self.mode=="receipt"then
+  self.title.Visible=false
+  local height=ReceiptLayout.layout(self.art,self.note,width,availableHeight,compact)
+  if self.status.Visible then Art.type(self.status,"Body",compact);local h=Art.textHeight(self.status,width-8,24);place(self.status,4,height,width-8,h);height+=h+8 end
+  self.root.Size=UDim2.fromOffset(width,height);return height
+ end
  local y=0
  local function copy(node,role)
   if not node.Visible then return end;Art.type(node,role);local h=Art.textHeight(node,math.max(1,width-8),24);place(node,4,y,width-8,h);y+=h+8

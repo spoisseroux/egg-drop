@@ -4,6 +4,7 @@ local Players=game:GetService("Players")
 local Http=game:GetService("HttpService")
 local Activity=require(ReplicatedStorage.Shared.GardenActivity)
 local Garden={};Garden.__index=Garden
+local function visibleStage(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=5 then n else 0 end
 function Garden.new(boards,options)
     local self=setmetatable({boards=boards,connections={},focusSeq=0,focusPulse=0,playerId=options and options.playerId or Players.LocalPlayer.UserId,remote=options and options.remote,now=options and options.now or function()return workspace:GetServerTimeNow()end,appearanceCache=setmetatable({},{__mode="k"})},Garden)
     local function bind(folder)
@@ -63,7 +64,13 @@ function Garden:appearance(board,petId)
         self.appearanceCache[board]=cached
     end
     local item=cached.value[petId]
-    return {finish=type(item)=="table"and item.finish or "standard",mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
+    local selected=board:GetAttribute("CompanionId")==petId
+    local toy=selected and type(item)=="table"and item.toyId or "none"
+    if toy~="ball"and toy~="bone"and toy~="sparkler"then toy="none"end
+    local features=selected and type(item)=="table"and type(item.featureStages)=="table"and item.featureStages or {}
+    local generation=board:GetAttribute("PetAppearanceRevision")
+    generation=if type(generation)=="number"and generation==generation and generation>=0 and generation<math.huge then generation else 0
+    return {toyId=toy,featureStages={horns=visibleStage(features.horns),claws=visibleStage(features.claws),wings=visibleStage(features.wings)},appearanceGeneration=generation,finish=type(item)=="table"and item.finish or "standard",mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
 end
 function Garden:renderActor(ownerId,petId,character)
  local exact=self:get(ownerId,petId,character);if exact then return exact end

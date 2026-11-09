@@ -1,0 +1,6 @@
+{
+  "datamodel": "Edit, fresh Shared/Server/Client namespaces",
+  "PersonalToyGardenTimeline": {"passed": 2, "productionGardenTimeline": true, "coverage": ["First toy before 3.5-second wander", "9–16-second intervals", "Movement cancellation and preserved deadline across arrival"]},
+  "BoardContentPublication": {"passed": 3, "realSimulationAndPublisher": true, "coverage": ["Eight real drops and merge allocations retain stable ResetId", "Existing mistags repaired without changing ball identity", "Fresh reset replaces old content; active serial resumes"]},
+  "liveService": false
+}

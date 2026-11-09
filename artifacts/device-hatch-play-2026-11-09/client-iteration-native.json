@@ -1,0 +1,61 @@
+{
+  "current": [
+    {
+      "ok": false,
+      "name": "HatchCinematic",
+      "result": "ReplicatedStorage._DeviceFinalQA.Repair2.HatchCinematic:201: ReplicatedStorage._DeviceFinalQA.Repair2.HatchCinematic:145: assertion failed!"
+    },
+    {
+      "ok": false,
+      "name": "HatchActions",
+      "result": "ReplicatedStorage._DeviceFinalQA.Repair2.HatchActions:429: ReplicatedStorage._DeviceFinalQA.Repair2.HatchActions:329: Accent is not a valid member of Frame \"Players.keehar01.PlayerGui._DeviceRepair2._HatchActionsSpec.EggHatchView.Card\""
+    }
+  ],
+  "done": true,
+  "repair": [
+    {
+      "ok": false,
+      "name": "HatchCinematic",
+      "result": "ReplicatedStorage._DeviceFinalQA.HatchCinematic:190: ReplicatedStorage._DeviceFinalQA.HatchCinematic:95: puddle Largest text-constrained fraction0.388433 below40% beyondonepixel; band212.0/360.0 labels36.0/46.0/36.0"
+    },
+    {
+      "ok": false,
+      "name": "HatchActions",
+      "result": "ReplicatedStorage._DeviceFinalQA.HatchActions:429: ReplicatedStorage._DeviceFinalQA.HatchActions:205: assertion failed!"
+    },
+    {
+      "ok": true,
+      "name": "PetFruitEating",
+      "result": [
+        "Zivvi berry approaches shrinks and restores without cumulative head or eye change",
+        "Ovelle berry approaches shrinks and restores without cumulative head or eye change",
+        "Tikket berry approaches shrinks and restores without cumulative head or eye change",
+        "Nuum berry approaches shrinks and restores without cumulative head or eye change",
+        "Vezzi berry approaches shrinks and restores without cumulative head or eye change",
+        "Kiprik berry approaches shrinks and restores without cumulative head or eye change",
+        "Nolli berry approaches shrinks and restores without cumulative head or eye change",
+        "reduced motion shows a brief static berry then retires it",
+        "reset world actors and replaced rigs cannot keep a transient berry"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "DeviceItemFront",
+      "result": [
+        "1649, 971 all six tabs reachable both directions and active tab fully visible",
+        "1649, 971 five egg families disclose actual pool and full feature odds",
+        "390, 740 all six tabs reachable both directions and active tab fully visible",
+        "390, 740 five egg families disclose actual pool and full feature odds",
+        "733, 307 all six tabs reachable both directions and active tab fully visible",
+        "733, 307 five egg families disclose actual pool and full feature odds",
+        "600, 360 all six tabs reachable both directions and active tab fully visible",
+        "600, 360 five egg families disclose actual pool and full feature odds",
+        "568, 160 all six tabs reachable both directions and active tab fully visible",
+        "568, 160 five egg families disclose actual pool and full feature odds",
+        "private unselected pet preview uses its own toy and visible feature stages",
+        "stale Toy and Feature handlers check live cradle before mutation",
+        "Toy receipt only chooses its exact owned recipient outside cradle"
+      ]
+    }
+  ]
+}

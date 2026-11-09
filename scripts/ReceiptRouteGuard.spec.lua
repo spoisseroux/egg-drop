@@ -32,7 +32,9 @@ return function(client,parent)
   test("stale material choice checks cradle at activation time",function()
    local panel=view.materialPanel;local count=0
    panel.intent={equip=function()count+=1;return true end}
-   allowed=true;assert(panel:chooseFinish("gloss")and count==1)
+   allowed=true;assert(view:open(snapshot(false),"materials","pip"));assert(panel:chooseFinish("gloss")and count==1)
+   assert(view:setTab("hue")and not panel:chooseFinish("matte")and count==1,"retained row mutated after tab switch")
+   assert(view:setTab("materials"));view:close();assert(not panel:chooseFinish("matte")and count==1,"retained row mutated after close while still docked")
    allowed=false;assert(not panel:chooseFinish("matte")and count==1)
    panel.intent=nil
   end)

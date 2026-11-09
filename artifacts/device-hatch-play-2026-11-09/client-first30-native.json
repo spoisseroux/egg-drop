@@ -1,0 +1,66 @@
+{
+  "fixtureOnly": true,
+  "textPreference": "Largest",
+  "suites": [
+    {
+      "ok": true,
+      "name": "ToyFeatureIntent",
+      "result": [
+        "Toy purchase uses sorted quote and waits for matching snapshot grant",
+        "Toy retries preserve exact quote and all-owned or cross-kind results block purchase",
+        "Feature growth requires exact stage stock visibility and committed snapshot",
+        "Feature hidden visibility preserves earned stage and caps never consume stock",
+        "Feature full rolled stack is a durable zero-debit refusal with no result"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "HueEatingProof",
+      "result": [
+        "saved receipt waits for exact durable snapshot, then presents once",
+        "snapshot can arrive first; unrelated receipt never completes it",
+        "wrong recipient, dose, stock, result ID or revision cannot start a bite",
+        "reset, capped, empty stock and page-open receipts never arm",
+        "cancel, layout or recipient generation replacement retires outstanding presentation"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "GardenItemAppearance",
+      "result": {
+        "passed": 3,
+        "cases": [
+          "stage validation",
+          "selected identity scope",
+          "unknown toy fallback"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "PetPersonalPlay",
+      "result": {
+        "passed": 17,
+        "cases": [
+          "shared hero handles have exact bounded lifetimes without physics queries lights or emitters",
+          "pip native stages grow from fixed roots and replace idempotently",
+          "puddle native stages grow from fixed roots and replace idempotently",
+          "wick native stages grow from fixed roots and replace idempotently",
+          "orbit native stages grow from fixed roots and replace idempotently",
+          "bloom_pip native stages grow from fixed roots and replace idempotently",
+          "foxfire_wick native stages grow from fixed roots and replace idempotently",
+          "eclipse_orbit native stages grow from fixed roots and replace idempotently",
+          "pip authored stages grow from fixed roots and replace idempotently",
+          "puddle authored stages grow from fixed roots and replace idempotently",
+          "wick authored stages grow from fixed roots and replace idempotently",
+          "orbit authored stages grow from fixed roots and replace idempotently",
+          "bloom_pip authored stages grow from fixed roots and replace idempotently",
+          "foxfire_wick authored stages grow from fixed roots and replace idempotently",
+          "eclipse_orbit authored stages grow from fixed roots and replace idempotently",
+          "each toy uses one prop and stops on every live interruption including reduced motion",
+          "matching owner and visitor seeds share phase without a prop network clock"
+        ]
+      }
+    }
+  ]
+}

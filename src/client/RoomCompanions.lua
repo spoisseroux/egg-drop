@@ -85,6 +85,9 @@ function Companions:update(dt,serverNow)
 	for _, entry in pairs(self.active) do
 		if not entry.root.Parent then continue end
 		local actor=self.garden and self.garden:renderActor(entry.visual.model:GetAttribute("CompanionOwnerId"),entry.pet.id,entry.root.Parent)
+		entry.visual.personalPlayEnabled=actor~=nil and actor.mode=="Room"and entry.board:GetAttribute("Mode")=="Room"
+        entry.visual.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
+        entry.visual.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
 		if actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,dt,entry.followState,self.reduceEffects())
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
 		else entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())end

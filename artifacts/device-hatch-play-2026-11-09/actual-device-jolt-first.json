@@ -1,0 +1,1196 @@
+{
+  "score": 690,
+  "drops": 24,
+  "content": {
+    "serial": 52,
+    "ids": [
+      34,
+      38,
+      39,
+      46,
+      49,
+      52
+    ]
+  },
+  "trace": [
+    {
+      "offsets": {
+        "button": [
+          -2,
+          0
+        ],
+        "text": [
+          -2,
+          0
+        ],
+        "tray": [
+          -2,
+          0
+        ],
+        "shell": [
+          -2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 3.2654719999991357,
+      "drops": 4
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 3.2992123002186418,
+      "drops": 4
+    },
+    {
+      "offsets": {
+        "button": [
+          -2,
+          0
+        ],
+        "text": [
+          -2,
+          0
+        ],
+        "tray": [
+          -2,
+          0
+        ],
+        "shell": [
+          -2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 5.167522000148892,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 5.199624500237405,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 5.215899100061506,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 5.233942899852991,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 5.248772900085896,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 6.0491023999638855,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 6.065411699935794,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 6.099184900056571,
+      "drops": 6
+    },
+    {
+      "offsets": {
+        "button": [
+          -5,
+          1
+        ],
+        "text": [
+          -5,
+          1
+        ],
+        "tray": [
+          -5,
+          1
+        ],
+        "shell": [
+          -5,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 7.149108100216836,
+      "drops": 7
+    },
+    {
+      "offsets": {
+        "button": [
+          -6,
+          2
+        ],
+        "text": [
+          -6,
+          2
+        ],
+        "tray": [
+          -6,
+          2
+        ],
+        "shell": [
+          -6,
+          2
+        ]
+      },
+      "serial": 10,
+      "time": 7.166451400145888,
+      "drops": 7
+    },
+    {
+      "offsets": {
+        "button": [
+          -1,
+          0
+        ],
+        "text": [
+          -1,
+          0
+        ],
+        "tray": [
+          -1,
+          0
+        ],
+        "shell": [
+          -1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 7.182392000220716,
+      "drops": 7
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          -1
+        ],
+        "text": [
+          2,
+          -1
+        ],
+        "tray": [
+          2,
+          -1
+        ],
+        "shell": [
+          2,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 7.199084099847823,
+      "drops": 7
+    },
+    {
+      "offsets": {
+        "button": [
+          3,
+          -1
+        ],
+        "text": [
+          3,
+          -1
+        ],
+        "tray": [
+          3,
+          -1
+        ],
+        "shell": [
+          3,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 7.217775800265372,
+      "drops": 8
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 9.116357100196183,
+      "drops": 9
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 9.131724500097334,
+      "drops": 9
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 9.165710700210184,
+      "drops": 9
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 27.932549099903554,
+      "drops": 12
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 27.9475648002699,
+      "drops": 12
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 27.96605780022219,
+      "drops": 12
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 27.981704799924046,
+      "drops": 12
+    },
+    {
+      "offsets": {
+        "button": [
+          -5,
+          1
+        ],
+        "text": [
+          -5,
+          1
+        ],
+        "tray": [
+          -5,
+          1
+        ],
+        "shell": [
+          -5,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 28.34806860005483,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -6,
+          2
+        ],
+        "text": [
+          -6,
+          2
+        ],
+        "tray": [
+          -6,
+          2
+        ],
+        "shell": [
+          -6,
+          2
+        ]
+      },
+      "serial": 10,
+      "time": 28.365934799890965,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -1,
+          0
+        ],
+        "text": [
+          -1,
+          0
+        ],
+        "tray": [
+          -1,
+          0
+        ],
+        "shell": [
+          -1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.382226100191474,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.398969700094312,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          3,
+          -1
+        ],
+        "text": [
+          3,
+          -1
+        ],
+        "tray": [
+          3,
+          -1
+        ],
+        "shell": [
+          3,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 28.415784399956465,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.431600200012326,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -5,
+          2
+        ],
+        "text": [
+          -5,
+          2
+        ],
+        "tray": [
+          -5,
+          2
+        ],
+        "shell": [
+          -5,
+          2
+        ]
+      },
+      "serial": 10,
+      "time": 28.615591499954462,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -9,
+          3
+        ],
+        "text": [
+          -9,
+          3
+        ],
+        "tray": [
+          -9,
+          3
+        ],
+        "shell": [
+          -9,
+          3
+        ]
+      },
+      "serial": 10,
+      "time": 28.631556400097907,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 28.649172800127417,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.664928100071847,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          4,
+          -1
+        ],
+        "text": [
+          4,
+          -1
+        ],
+        "tray": [
+          4,
+          -1
+        ],
+        "shell": [
+          4,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 28.681796099990606,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          3,
+          -1
+        ],
+        "text": [
+          3,
+          -1
+        ],
+        "tray": [
+          3,
+          -1
+        ],
+        "shell": [
+          3,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 28.698522800114006,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -1,
+          0
+        ],
+        "text": [
+          -1,
+          0
+        ],
+        "tray": [
+          -1,
+          0
+        ],
+        "shell": [
+          -1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.731613100040704,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -1,
+          0
+        ],
+        "text": [
+          -1,
+          0
+        ],
+        "tray": [
+          -1,
+          0
+        ],
+        "shell": [
+          -1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 28.75000589992851,
+      "drops": 13
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 31.282272099982947,
+      "drops": 15
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 31.298341399990022,
+      "drops": 15
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 31.314760600216687,
+      "drops": 15
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 31.33253620006144,
+      "drops": 15
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 35.78156490018591,
+      "drops": 19
+    },
+    {
+      "offsets": {
+        "button": [
+          -3,
+          1
+        ],
+        "text": [
+          -3,
+          1
+        ],
+        "tray": [
+          -3,
+          1
+        ],
+        "shell": [
+          -3,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 35.79802280012518,
+      "drops": 19
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          0
+        ],
+        "text": [
+          2,
+          0
+        ],
+        "tray": [
+          2,
+          0
+        ],
+        "shell": [
+          2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 35.83132950030267,
+      "drops": 19
+    },
+    {
+      "offsets": {
+        "button": [
+          -2,
+          0
+        ],
+        "text": [
+          -2,
+          0
+        ],
+        "tray": [
+          -2,
+          0
+        ],
+        "shell": [
+          -2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 37.215511800255626,
+      "drops": 21
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 37.24850520025939,
+      "drops": 21
+    },
+    {
+      "offsets": {
+        "button": [
+          -4,
+          1
+        ],
+        "text": [
+          -4,
+          1
+        ],
+        "tray": [
+          -4,
+          1
+        ],
+        "shell": [
+          -4,
+          1
+        ]
+      },
+      "serial": 10,
+      "time": 40.58202219987288,
+      "drops": 24
+    },
+    {
+      "offsets": {
+        "button": [
+          -6,
+          2
+        ],
+        "text": [
+          -6,
+          2
+        ],
+        "tray": [
+          -6,
+          2
+        ],
+        "shell": [
+          -6,
+          2
+        ]
+      },
+      "serial": 10,
+      "time": 40.598019800148904,
+      "drops": 24
+    },
+    {
+      "offsets": {
+        "button": [
+          -2,
+          0
+        ],
+        "text": [
+          -2,
+          0
+        ],
+        "tray": [
+          -2,
+          0
+        ],
+        "shell": [
+          -2,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 40.61546120001003,
+      "drops": 24
+    },
+    {
+      "offsets": {
+        "button": [
+          2,
+          -1
+        ],
+        "text": [
+          2,
+          -1
+        ],
+        "tray": [
+          2,
+          -1
+        ],
+        "shell": [
+          2,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 40.63130520004779,
+      "drops": 24
+    },
+    {
+      "offsets": {
+        "button": [
+          3,
+          -1
+        ],
+        "text": [
+          3,
+          -1
+        ],
+        "tray": [
+          3,
+          -1
+        ],
+        "shell": [
+          3,
+          -1
+        ]
+      },
+      "serial": 10,
+      "time": 40.647919500246644,
+      "drops": 24
+    },
+    {
+      "offsets": {
+        "button": [
+          1,
+          0
+        ],
+        "text": [
+          1,
+          0
+        ],
+        "tray": [
+          1,
+          0
+        ],
+        "shell": [
+          1,
+          0
+        ]
+      },
+      "serial": 10,
+      "time": 40.66433469997719,
+      "drops": 24
+    }
+  ],
+  "serial": 10,
+  "merges": 18,
+  "input": "Actual Studio keyboard Space; 24 drops, no solver or profile fixture",
+  "matchedOffsets": true,
+  "peak": 9.486832980505138,
+  "limitation": "Pre-final serial-tag regression discovered; shake match evidence only; final reset retest required"
+}

@@ -1,0 +1,114 @@
+{
+  "keyframes": [
+    {
+      "overlays": [
+        "EggHatchView"
+      ],
+      "drops": 24,
+      "deckVisible": false,
+      "t": 10.01426830003038,
+      "over": true,
+      "sceneBalls": [],
+      "handoffAlpha": 1,
+      "serial": 9,
+      "mode": "Room",
+      "handoff": false,
+      "content": "{\"serial\":9,\"ids\":[33,41,44,49,50,51]}",
+      "barrier": false
+    },
+    {
+      "overlays": [],
+      "drops": 24,
+      "deckVisible": false,
+      "t": 19.60007579997182,
+      "over": true,
+      "sceneBalls": [],
+      "handoffAlpha": 1,
+      "serial": 9,
+      "mode": "Room",
+      "handoff": false,
+      "content": "{\"serial\":9,\"ids\":[33,41,44,49,50,51]}",
+      "barrier": false
+    },
+    {
+      "overlays": [],
+      "drops": 0,
+      "deckVisible": false,
+      "t": 20.504583700094372,
+      "over": false,
+      "sceneBalls": [],
+      "handoffAlpha": 1,
+      "serial": 51,
+      "mode": "Room",
+      "handoff": false,
+      "content": "{\"serial\":9,\"ids\":[33,41,44,49,50,51]}",
+      "barrier": false
+    },
+    {
+      "overlays": [
+        "DeckHandoff"
+      ],
+      "drops": 0,
+      "deckVisible": false,
+      "t": 20.51723859971389,
+      "over": false,
+      "sceneBalls": [],
+      "handoffAlpha": 1,
+      "serial": 51,
+      "mode": "Board",
+      "handoff": true,
+      "content": "{\"serial\":51,\"ids\":[]}",
+      "barrier": false
+    },
+    {
+      "overlays": [
+        "DeckHandoff"
+      ],
+      "drops": 0,
+      "deckVisible": true,
+      "t": 20.699017399922013,
+      "over": false,
+      "sceneBalls": [],
+      "handoffAlpha": 0,
+      "serial": 51,
+      "mode": "Board",
+      "handoff": true,
+      "content": "{\"serial\":51,\"ids\":[]}",
+      "barrier": false
+    },
+    {
+      "overlays": [],
+      "drops": 0,
+      "deckVisible": true,
+      "t": 21.314034800045192,
+      "over": false,
+      "sceneBalls": [],
+      "handoffAlpha": 1,
+      "serial": 51,
+      "mode": "Board",
+      "handoff": false,
+      "content": "{\"serial\":51,\"ids\":[]}",
+      "barrier": false
+    }
+  ],
+  "limitation": "Attribute/control frame trace plus visible empty deck screenshot, not delayed network simulation",
+  "firstExposed": {
+    "overlays": [],
+    "drops": 0,
+    "deckVisible": true,
+    "t": 21.314034800045192,
+    "over": false,
+    "sceneBalls": [],
+    "handoffAlpha": 1,
+    "serial": 51,
+    "mode": "Board",
+    "handoff": false,
+    "content": "{\"serial\":51,\"ids\":[]}",
+    "barrier": false
+  },
+  "oldSerial": 9,
+  "input": "Actual24 keyboard drops, recap Hatch eggs, Close, Open deck",
+  "sampledFrames": 1800,
+  "oldContent": "{\"serial\":9,\"ids\":[33,41,44,49,50,51]}",
+  "exposedOldFrames": 0
+}

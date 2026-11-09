@@ -1,0 +1,19 @@
+{
+  "freshDiskSources": [
+    "GardenState",
+    "PetPlayVisual"
+  ],
+  "ok": true,
+  "result": {
+    "productionGardenTimeline": true,
+    "passed": 4,
+    "cases": [
+      "real wander timeline permits a first play before3.5s and spaced later opportunities",
+      "seven real Follow seeds finish full actions and preserve stationary wandering",
+      "unchanged follow retarget does not move the settled idle deadline",
+      "actual owner movement cancels prop and preserves deadline through the next arrival"
+    ]
+  },
+  "fixtureOnly": true,
+  "coverage": "Seven seeds ×90s with real PetFollow smoothing, full duration, cooldown and continued wandering"
+}

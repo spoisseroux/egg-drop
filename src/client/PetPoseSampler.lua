@@ -108,6 +108,7 @@ function Sampler.attach(visual)
    if part.Transparency<1 or(entry.decals and not entry.renderHidden)then Bounds.include(self,frame,part.Size);if entry.role~="charm"then Bounds.include(self.bodyHull,frame,part.Size)end end
   end
   Bounds.finish(self);Bounds.finish(self.bodyHull);self.bodyBoundsFrame,self.bodyBoundsSize=self.bodyHull.rigBoundsFrame,self.bodyHull.rigBoundsSize
+  if self.renderPersonalPlay then self:renderPersonalPlay(root)end
  end
  visual.poseDirty=true;visual:update(0);return visual
 end

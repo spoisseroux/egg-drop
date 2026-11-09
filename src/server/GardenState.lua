@@ -18,6 +18,7 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
     local now=self.options.now();local sample=Activity.sample(actor,now)
     local from=sample and sample.position or self.inputs[actor.ownerId].anchor
     local continuing=actor.behavior==behavior and actor.action==action and behavior=="follow"
+    local previousTarget=Activity.vector(actor.to)
     if not continuing then actor.generation+=1 end
     actor.behavior,actor.action=behavior,action
     if action~="nookApproach"and action~="nookRest"then actor.restAnchorId=nil end
@@ -42,6 +43,9 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
     if prepared then actor.path,duration=prepared.path,prepared.duration
     else actor.path,duration=planner(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)end
     actor.startTime,actor.endTime=now,now+duration
+    -- Travel back to the owner is not settled idle. Preserve the existing
+    -- deadline when an unchanged follow target is merely sampled again.
+    if behavior=="follow"and(not continuing or not previousTarget or(target-previousTarget).Magnitude>.2)then actor.idleSince=actor.endTime end
     actor.from,actor.to,actor.via=Activity.pack(from),Activity.pack(target),if via then Activity.pack(via)else nil
 
     actor.peerId=nil;self.dirty=true
@@ -96,7 +100,7 @@ function Garden:sync(inputs,freshOwnerId)
             local now=self.options.now()
             actor={ownerId=id,petId=input.petId,characterId=input.characterId,petGeneration=input.petGeneration or 0,generation=self:token(),mode=input.mode,
                 behavior="follow",actionId=self:token(),from=Activity.pack(input.anchor),to=Activity.pack(input.anchor),
-                startTime=now,endTime=now+.5,idleSince=now,lastOwner=input.position,yaw=input.yaw or 0}
+                startTime=now,endTime=now+.5,idleSince=now+.5,lastOwner=input.position,yaw=input.yaw or 0}
             self.actors[id]=actor;self.dirty=true
             if input.mode=="Board" then self:reset(actor,input) end
         elseif input.mode~=(if actor.mode=="Focus"or(actor.care~=nil)then "Room"else actor.mode)then self:reset(actor,input)end

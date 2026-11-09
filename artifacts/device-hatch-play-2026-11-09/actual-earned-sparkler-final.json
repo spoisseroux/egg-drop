@@ -1,0 +1,125 @@
+{
+  "input": "Earned starter and24 native Space drops; actual Toy Egg button, Use now and Zivvi recipient; no profile grants or pose overrides",
+  "receipt": {
+    "revision": 6,
+    "action": "toyEquip",
+    "reason": "Saved",
+    "id": "5:toy-6e4383c8-6d93-4821-85e0-80e71d494338",
+    "petId": "pip",
+    "status": "Saved",
+    "receipt": {
+      "revision": 6,
+      "action": "toyEquip",
+      "cost": 0,
+      "id": "5:toy-6e4383c8-6d93-4821-85e0-80e71d494338",
+      "balanceAfter": 4,
+      "catalogVersion": 1,
+      "balanceBefore": 4,
+      "toyId": "sparkler",
+      "selectedAfter": "sparkler",
+      "petId": "pip",
+      "acknowledgedResultId": "4:toy-bcc4c14e-471d-474a-a7ae-69007977bff2",
+      "selectedBefore": "none"
+    }
+  },
+  "motion": [
+    {
+      "parts": 8,
+      "t": 0.01510579977184534,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "PersonalToy_sparkler"
+    },
+    {
+      "parts": 0,
+      "t": 1.7147530997171998,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "none"
+    },
+    {
+      "parts": 8,
+      "t": 9.914111899677664,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "PersonalToy_sparkler"
+    },
+    {
+      "parts": 0,
+      "t": 11.71372599992901,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "none"
+    },
+    {
+      "parts": 8,
+      "t": 19.93030809983611,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "PersonalToy_sparkler"
+    },
+    {
+      "parts": 0,
+      "t": 21.729978799819946,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "none"
+    },
+    {
+      "parts": 8,
+      "t": 29.43117529992014,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "PersonalToy_sparkler"
+    },
+    {
+      "parts": 0,
+      "t": 31.24634139984846,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "none"
+    },
+    {
+      "parts": 8,
+      "t": 39.41291010007262,
+      "position": [
+        -13.595111846923828,
+        4.4670000076293945,
+        1.0039100646972656
+      ],
+      "prop": "PersonalToy_sparkler"
+    }
+  ],
+  "motionDone": true,
+  "observedFullEpisodesSeconds": [
+    1.7996141002513468,
+    1.7996706999838352,
+    1.8151660999283195
+  ],
+  "firstEpisodeLeftCensored": true,
+  "liveService": false
+}

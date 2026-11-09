@@ -1,0 +1,81 @@
+{
+  "freshNamespaces": true,
+  "fixtureOnly": true,
+  "suites": [
+    {
+      "ok": true,
+      "name": "GardenState",
+      "result": {
+        "passed": 12,
+        "cases": [
+          "solo garden investigates, shoves twice, rests and returns without a reward path",
+          "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+          "paired greeting is one atomic action and focus cancels both reservations",
+          "Board is observable and cannot acquire focus, toy or an automatic reward",
+          "focus is owner/pet/range/generation validated and its lease expires",
+          "moved owners and replaced character cannot refresh a stale focus hold",
+          "a superseded participant generation explicitly retires the paired greeting",
+          "equip, character replacement and leave invalidate old generations exactly once",
+          "a delayed first acquisition cannot revive the same alias after equip-away and back",
+          "only one toy reservation exists and another waiting pet gets a turn",
+          "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+          "late join samples the current shared path, not a replayed beginning"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "GardenCare",
+      "result": {
+        "passed": 15,
+        "cases": [
+          "forged character pet and actor generations reject without changing the actor",
+          "pickup preserves one actor and moving owner cannot reset a held pet",
+          "two-owner placement contention leaves losing pet held with independent controls",
+          "unsafe set-down preflight makes no generation position or bay mutation",
+          "supported setdown is Placed until departure then resumes ordinary follow",
+          "exact replay returns original result and a conflicting same sequence cannot act",
+          "old claim release cannot evict the next occupant after a bay expires",
+          "late saved equip follows new truth without reclaiming a superseded bay",
+          "durable equip while exact live claim exists replaces just its one actor",
+          "an uncommitted equip failure preserves old pet and exact dock session",
+          "closing during an unresolved equip releases bay but does not cancel committed truth",
+          "death character replacement and disconnect retire only owned reservation",
+          "unsafe editor close frees its exact bay and keeps the pet safely held",
+          "late saved equipment with no dry point stays safely carried and never uses arbitrary anchor",
+          "lost carried UI lease releases on next supported point without stranding attachment"
+        ]
+      }
+    },
+    {
+      "ok": false,
+      "name": "GardenCareIntegration",
+      "result": "ReplicatedStorage._DeviceFinalQA.GardenCareIntegration:5: pass current GardenCareHost.Source"
+    },
+    {
+      "ok": true,
+      "name": "BoardContentPublication",
+      "result": {
+        "realSimulationAndPublisher": true,
+        "passed": 3,
+        "cases": [
+          "real drops and merge allocations preserve one presentation reset serial",
+          "existing mistagged parts are repaired without changing ball identity",
+          "a fresh reset replaces old content while an active exact serial resumes"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "PersonalToyGardenTimeline",
+      "result": {
+        "productionGardenTimeline": true,
+        "passed": 2,
+        "cases": [
+          "real wander timeline permits a first play before3.5s and spaced later opportunities",
+          "actual owner movement cancels prop and preserves deadline through the next arrival"
+        ]
+      }
+    }
+  ]
+}
