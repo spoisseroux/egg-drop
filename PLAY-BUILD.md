@@ -1,3 +1,13 @@
+# Egg Drop — complete pets and live Customize
+
+**Private v326 Published — Whole pets and live Customize - 3c6b61b.** Runtime is committed and pushed, verified in refreshed native Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/care-feedback-2026-11-09/private-published-v326-3c6b61b.png) · [Care gallery with recordings](artifacts/care-feedback-2026-11-09/GALLERY.html) · [Verification](artifacts/care-feedback-2026-11-09/VERIFY.md).
+
+Complete semantic pets remain visible while authored meshes load. Customize now idles, blinks and moves the charm, with exact five-notch result swatches. Reset consumes one jar for one explicitly confirmed Main or Secondary channel. Accepted merges nudge the device art while aim and hit targets stay fixed. Quieter coo poses use existing approved original family audio; four new original auditions remain local.
+
+181 native cases across 23 suites, 132 source matches and zero compile errors, Rojo build, actual earned controls and Largest phone-emulator customization pass. Six paired seven-rig performance rounds show no measured CPU regression in the isolated warmed Studio workload. Accelerated coo playback passed, but a 160-second ordinary roam produced no coo; normal frequency remains unverified. Physical phone, live-service rejoin and human fun remain open. Carry/machine and original garden are next, not included in v326.
+
+## Historical v316 — neutral companions
+
 # Egg Drop â€” neutral companions
 
 **Private v316 Published â€” Neutral companions and four-pet pool - c549451.** Runtime c549451 is pushed and verified in refreshed native Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) Â· [Publication proof](artifacts/pet-materials-2026-11-09/private-published-v316-c549451.png) Â· [Scope and verification](NEUTRAL-ROSTER.md) Â· [Exact hue chart](artifacts/pet-materials-2026-11-09/current-hue-palette.png).
