@@ -33,3 +33,6 @@ Open: physical phone/touch/performance, live-service rejoin, real multi-owner ca
 Final Medium batch:25 suites/219cases, all pass (client-final-medium.json). Largest24-suites/190cases pass (client-final-largest.json);29-case HatchActions passes separately at Medium. Do not sum overlapping preference runs. All149 runtime sources match normalized filesystem SHA256 and compile with zero errors. Cold Rojo build and diff checks pass. Native material pack cleaned to7 unique profiles, Gloss/Matte verified and Metal unverified. QA driver/folders removed; production entries enabled. Medium/Automatic/default viewport restored. Fresh ordinary launch plus5 actualSpace presses earned the starter reveal; console contains only the pre-existing EditableImage/legacy asset-type notices, no new runtime errors. Final-native-audit.json records cleanup.
 
 The current seven-owned benchmark supersedes only the missing current-grid workload check, not a historicalv344 comparison. Test/helper failures remain diagnostic history; no failed run is presented as passing.
+
+
+Published privatev370/runtime97c64d0; refreshed native Version History proof: private-published-v370-97c64d0.jpg. Publication alone is not live play/rejoin evidence.
