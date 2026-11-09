@@ -20,7 +20,7 @@ return function(server,sources)
 		return field:observe({tier=tier,position=Vector2.new(x,2),id=nil},{sequence=sequence or 7,ordinal=ordinal,chain=chain or ordinal})
 	end
 	test("zero-based rotation and deep frozen descriptors have no mutable aliases",function()
-		assert(Objectives.next(0)=="bank_pair"and Objectives.next(1)=="creek_crossing"and Objectives.next(2)=="lantern_chain"and Objectives.next(3)=="bank_pair")
+		assert(Objectives.next(0)=="bank_pair"and Objectives.next(1)=="creek_crossing"and Objectives.next(2)=="lantern_chain"and Objectives.next(3)=="ripple_relay"and Objectives.next(4)=="bank_bounce"and Objectives.next(5)=="mirror_marks"and Objectives.next(6)=="bank_pair")
 		local descriptor=Objectives.create("creek_crossing",40001)
 		assert(table.isfrozen(descriptor)and table.isfrozen(descriptor.goals[1].zone)and table.isfrozen(descriptor.dynamics))
 		assert(not pcall(function()descriptor.goals[1].tier=3 end))
@@ -126,6 +126,39 @@ return function(server,sources)
 		local lantern=copy(fixture("lantern_chain"):public(7));lantern.goals[1].tier=2;assert(not Objectives.validatePublic(lantern,7))
 		lantern=copy(fixture("lantern_chain"):public(7));lantern.goals[1].zone={kind="left",min=-5.5,max=-2.6};assert(not Objectives.validatePublic(lantern,7))
 	end)
+ test("new bounded templates retain seed orientation, unique events and unchanged reward budget",function()
+  for _,seed in ipairs({40001,40002,40003,40004})do
+   local ripple=fixture("ripple_relay",seed)
+   assert(merge(ripple,2,-3,1)and merge(ripple,3,0,2)and ripple.rootStage==1)
+   assert(not merge(ripple,3,0,2)and ripple.rootStage==1)
+   assert(not merge(ripple,2,0,3));assert(merge(ripple,4,1.6,4)and ripple.rootStage==2)
+   local bounce=fixture("bank_bounce",seed);local zone=bounce:objective().zone;local x=(zone.min+zone.max)/2
+   assert(not merge(bounce,3,x,1));assert(merge(bounce,2,x,2)and bounce.rootStage==1)
+   assert(not merge(bounce,2,x,2));assert(merge(bounce,2,0,3,3)and bounce.goalProgress==1)
+   assert(merge(bounce,2,0,4,4)and bounce.rootStage==2)
+   local mirror=fixture("mirror_marks",seed);local first=mirror:objective().zone;local firstX=(first.min+first.max)/2
+   assert(merge(mirror,2,firstX,1)and mirror.rootStage==1)
+   assert(not merge(mirror,2,firstX,2));local opposite=mirror:objective().zone
+   assert(first.kind~=opposite.kind and merge(mirror,2,(opposite.min+opposite.max)/2,3)and mirror.rootStage==2)
+   for _,field in ipairs({ripple,bounce,mirror})do
+    assert(field.budget==24 and Objectives.validatePublic(field:public(7),7))
+    field:step({},0,24,false);local result=field:step({},4,24,false);assert(result.success and result.reward==8)
+   end
+  end
+ end)
+ test("strict public descriptors reject altered bounds goal IDs targets and mismatched mirrored banks",function()
+  local function mutable(t)if type(t)~="table"then return t end;local r={};for k,v in pairs(t)do r[k]=mutable(v)end;return r end
+  for _,id in ipairs(Objectives.Order)do
+   local original=fixture(id):public(7);assert(Objectives.validatePublic(original,7))
+   for _,mutate in ipairs({function(v)v.goals[1].id="unknown"end,function(v)v.goals[1].target=if v.goals[1].target==2 then 1 else 2 end,function(v)v.dynamics.label="incorrect"end})do
+    local invalid=mutable(original);mutate(invalid)
+    assert(not Objectives.validatePublic(invalid,7))
+   end
+   local invalid=mutable(original)
+   for _,goal in ipairs(invalid.goals)do if goal.zone.min then goal.zone.min+=.01;assert(not Objectives.validatePublic(invalid,7));break end end
+  end
+  local mirror=mutable(fixture("mirror_marks"):public(7));mirror.goals[2].zone=mirror.goals[1].zone;assert(not Objectives.validatePublic(mirror,7))
+ end)
 	shared:Destroy()
 	return{passed=#cases,cases=cases,persistentWrites=false,evidence="fresh pure solver sources and immutable catalog; no live state"}
 end

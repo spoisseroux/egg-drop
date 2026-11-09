@@ -53,5 +53,15 @@ return function(client)
   value.sequence=72;assert(Receipt.questDetails(value)==nil and not Receipt.questHint(value):find("Lantern",1,true))
   assert(Receipt.select({lastRunReward={sequence=71,total=8}},72,"Saved",true)==nil)
  end)
+ test("new objective current instructions and next hints come from immutable descriptor",function()
+  local ripple=Copy.describe(public("ripple_relay"));assert(ripple.instruction:find("0/2",1,true)and ripple.nextHint=="Next, make III+ in CENTER")
+  local bounce=Copy.describe(public("bank_bounce"));assert(bounce.instruction=="Make II on RIGHT"and bounce.zone=="right"and bounce.nextHint=="Next, link two new merges in one chain")
+  for _,seed in ipairs({16,17})do
+   local mirror=public("mirror_marks",1,0,71,seed);local copy=Copy.describe(mirror)
+   assert(copy.nextHint=="Next, make II on "..mirror.goals[2].zone.kind:upper())
+   assert(Copy.menu(mirror):find(copy.nextHint,1,true))
+  end
+  assert(Copy.describe(public("ripple_relay",2)).nextHint==""and Copy.describe(public("ripple_relay",3)).nextHint=="")
+ end)
  return cases
 end

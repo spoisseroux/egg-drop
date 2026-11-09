@@ -21,7 +21,7 @@ function Appearance.visible(profile,id)
  return if entry then entry.charmVisible else true
 end
 function Appearance.shape(profile,id)return shape(profile.petAppearance and profile.petAppearance[id])end
-function Appearance.public(profile,hues,petHues)
+function Appearance.public(profile,hues,petHues,petMaterials)
  -- Public attributes and garden snapshots use only storage-confirmed choices.
  -- The desired map remains private while a write is pending or retrying.
  local result={}
@@ -30,6 +30,7 @@ function Appearance.public(profile,hues,petHues)
   result[id]=Hue.appearance(hues,id,petHues)
   result[id].charmVisible=if valid(entry)then entry.charmVisible else true
   result[id].charmShape=if valid(entry)then shape(entry)else Charms.Default
+  result[id].finish=if type(petMaterials)=="table"then petMaterials[id]or "standard"else "standard"
  end
  return result
 end

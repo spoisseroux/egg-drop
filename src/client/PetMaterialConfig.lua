@@ -8,10 +8,11 @@ return table.freeze({
   "rbxassetid://101362074171738", -- roughness36/255
  }),
  Profiles=table.freeze({
-  Body=table.freeze({day=.12,night=.46}),
+  Body=table.freeze({day=.22,night=.46}),
   Eye=table.freeze({day=0,night=0}),
-  Charm=table.freeze({day=.25,night=.98}),
+  Charm=table.freeze({day=.38,night=.98}),
   Catchlight=table.freeze({day=.12,night=.48}),
  }),
+ FinishProfiles=table.freeze({standard="Body",gloss="BodyGloss",matte="BodyMatte",metal="BodyMetal"}),
  LoadTimeout=12,
 })

@@ -5,6 +5,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Mastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 local HueState=require(script.Parent.HueState)
+local MaterialState=require(script.Parent.MaterialState)
+local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -72,7 +74,7 @@ local function migrate(record, now)
 		petDay = dayOf(now), petCount = 0,
 		lease = { token = "", expiresAt = 0 },
 	}
-	return HueState.upgrade(state)
+	return MaterialState.upgrade(HueState.upgrade(state))
 end
 
 local function validBase(state,version)
@@ -125,7 +127,8 @@ local function validVersion(state,version,legacy)
 		and (receipt.sequence~=state.operationSeq or (state.lastOperation and state.lastOperation.id==receipt.id))
 end
 
-local function valid(state)return validVersion(state,6,false)end
+local function validV6(state)return validVersion(state,6,false)end
+local function valid(state)return validVersion(state,7,false)and MaterialState.valid(state)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -160,6 +163,11 @@ local function upgrade(state, now)
 		-- Validate the full old award namespace as well, before freezing its proofs.
 		if not validVersion(nextState,5,false)then return state end
 		nextState=HueState.upgrade(nextState)
+	end
+	if nextState.version==6 then
+		if not validV6(nextState)then return state end
+		for _,key in ipairs({"materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","materialReservation","pendingMaterialResult","lastMaterialResult"})do if nextState[key]~=nil then return state end end
+		nextState=MaterialState.upgrade(nextState)
 	end
 	return nextState
 end
@@ -221,6 +229,7 @@ function Hatching.load(userId, profile, adapter)
 		handle.epoch = handle.state.epoch
 		handle.status = "Ready"
 		if handle.state.hueReservation then Hatching.resumeHueReservation(handle) end
+		if handle.state.materialReservation then Hatching.resumeMaterialReservation(handle)end
 	else
 		handle.state = migrate(legacyRecord(profile), adapter.now())
 		handle.state.nectar = 0
@@ -252,6 +261,8 @@ function Hatching.public(handle)
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
 	}
 	for key,value in pairs(HueState.public(state))do public[key]=value end
+	for key,value in pairs(MaterialState.public(state))do public[key]=value end
+	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
 end
@@ -272,6 +283,7 @@ end
 local function committed(pending,state)
 	if pending.kind=="pet"then return petProof(pending,state)end
 	if pending.kind=="hue"then return HueState.proof(state,pending.candidate)end
+	if pending.kind=="material"then return MaterialState.proof(state,pending.candidate)end
 	return state.lastOperation and state.lastOperation.id==pending.id
 end
 local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind)
@@ -301,10 +313,10 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		local state = root.hatching
 		if committed(pending,state)then return root end -- Proof precedes calendar expiry.
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
-			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"then root else nil
+			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"then root else nil
 		end
 		local allowed, failure = pending.apply(state, pending.candidate)
-		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"then root else nil end
+		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"then root else nil end
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence }
@@ -319,7 +331,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		handle.status = "Ready"
 		return true, "Saved"
 	end
-	if ok and(pending.kind=="pet"or pending.kind=="hue")and record and fenced(handle,record.hatching,handle.adapter.now())then
+	if ok and(pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material")and record and fenced(handle,record.hatching,handle.adapter.now())then
 		-- A fenced unchanged return proves that this operation did not commit.
 		-- Expired-day/revision refusals must not strand Retrying with no pending.
 		accept(handle,record);handle.pending=nil;handle.status="Ready"
@@ -341,6 +353,7 @@ function Hatching.retry(handle)
 	local pending = handle.pending
 	if not pending then return false, "NoPending" end
 	if pending.phase=="reserve"then return Hatching.reserveHue(handle,pending.candidate)end
+	if pending.phase=="materialReserve"then return Hatching.reserveMaterial(handle,pending.candidate)end
 	return transact(handle, pending.signature, pending.revision, pending.apply, pending.candidate)
 end
 
@@ -419,6 +432,66 @@ function Hatching.hueCommand(handle,action,value,revision)
 	return ok,reason,if result then HueState.publicReceipt(result)else nil
 end
 
+function Hatching.resumeMaterialReservation(handle)
+ local candidate=handle.state.materialReservation;if not candidate then return false,"NoPending"end
+ handle.pending={kind="material",signature="material:"..candidate.quote.id,id=candidate.operationId,sequence=candidate.sequence,
+  revision=handle.state.revision,apply=MaterialState.apply,candidate=clone(candidate)}
+ handle.status="Retrying";return Hatching.retry(handle)
+end
+function Hatching.reserveMaterial(handle,candidate)
+ if handle.busy then return false,"Busy"end;handle.busy=true
+ local reason="Unavailable"
+ local ok,record=pcall(handle.adapter.update,handle.key,function(previous)
+  if type(previous)~="table"or not fenced(handle,previous.hatching,handle.adapter.now())then reason="SessionLost";return nil end
+  local root=clone(previous);local state=root.hatching
+  local receipt,same=MaterialState.find(state,candidate.quote)
+  if receipt then reason=if same then "AlreadySaved"else "OperationConflict";return root end
+  if state.materialReservation then
+   if not MaterialState.same(state.materialReservation,candidate)then reason="PurchasePending"end;return root
+  end
+  if state.revision~=candidate.quote.revision or state.operationSeq+1~=candidate.sequence then reason="RevisionChanged";return root end
+  local allowed,why=MaterialState.purchaseEligibility(state,candidate.quote);if not allowed then reason=why;return root end
+  state.materialReservation=clone(candidate)
+  if not valid(state)then reason="InvalidData";return previous end
+  return root
+ end)
+ handle.busy=false
+ if not ok then handle.status="Retrying";warn("Egg Drop Material reservation failed:",record);return false,"Retrying"end
+ if not record or not record.hatching or not fenced(handle,record.hatching,handle.adapter.now())then handle.pending=nil;handle.status="SessionLost";return false,"SessionLost"end
+ accept(handle,record)
+ if MaterialState.proof(handle.state,candidate)then handle.pending=nil;handle.status="Ready";return true,"AlreadySaved"end
+ if not MaterialState.same(handle.state.materialReservation,candidate)then handle.pending=nil;handle.status="Ready";return false,reason end
+ handle.pending.phase=nil;handle.pending.revision=handle.state.revision;return Hatching.retry(handle)
+end
+function Hatching.materialCommand(handle,action,value,revision)
+ local quote=MaterialState.quote(action,value,revision);if not quote then return false,"InvalidMaterial"end
+ if handle.status~="Ready"and handle.status~="Retrying"then return false,handle.status end
+ if handle.pending and handle.pending.kind=="material"and handle.pending.candidate.quote.id==quote.id and not MaterialState.same(handle.pending.candidate.quote,quote)then return false,"OperationConflict"end
+ if handle.busy then return false,"Busy"end
+ local receipt,same=MaterialState.find(handle.state,quote)
+ if receipt then return if same then true else false,if same then "AlreadySaved"else "OperationConflict",if same then MaterialState.publicReceipt(receipt)else nil end
+ local signature="material:"..quote.id;local candidate=handle.pending and handle.pending.candidate
+ if not handle.pending then
+  if revision~=handle.state.revision then return false,"RevisionChanged"end
+  candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
+  if action=="materialBuy"then
+   if quote.poolVersion~=MaterialCatalog.PoolVersion then return false,"LegacyPurchaseClosed"end
+   local allowed,why=MaterialState.purchaseEligibility(handle.state,quote);if not allowed then return false,why end
+   candidate.finishId=MaterialCatalog.roll(quote.eligible,handle.adapter.random());if not candidate.finishId then return false,"InvalidRoll"end
+   handle.pending={kind="material",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=MaterialState.apply,candidate=candidate,phase="materialReserve"}
+   local ok,why=Hatching.reserveMaterial(handle,candidate);local saved=if ok then MaterialState.find(handle.state,quote)else nil
+   return ok,why,if saved then MaterialState.publicReceipt(saved)else nil
+  end
+ elseif handle.pending.signature~=signature then return false,"Pending"
+ elseif handle.pending.phase=="materialReserve"then
+  local ok,why=Hatching.reserveMaterial(handle,candidate);local saved=if ok then MaterialState.find(handle.state,quote)else nil
+  return ok,why,if saved then MaterialState.publicReceipt(saved)else nil
+ end
+ local ok,reason=transact(handle,signature,revision,MaterialState.apply,candidate,if not handle.pending then candidate.operationId else nil,"material")
+ local saved=if ok then MaterialState.find(handle.state,quote)else nil
+ return ok,reason,if saved then MaterialState.publicReceipt(saved)else nil
+end
+
 function Hatching.petCandidate(handle,leaseId,petId)
 	return table.freeze({id=handle.adapter.guid(),day=dayOf(handle.adapter.now()),petId=petId,leaseId=leaseId,sequence=handle.state.operationSeq+1})
 end
@@ -459,7 +532,7 @@ function Hatching.command(handle, action, value, expectedRevision)
 		if handle.busy then return false, "Busy" end
 		if handle.status ~= "Ready" then return false, handle.status end
 		if expectedRevision ~= handle.state.revision then return false, "RevisionChanged" end
-		if handle.state.lastHatch or handle.state.pendingHueResult or handle.state.hueReservation then return false, "RevealPending" end
+		if handle.state.lastHatch or handle.state.pendingHueResult or handle.state.hueReservation or handle.state.pendingMaterialResult or handle.state.materialReservation then return false, "RevealPending" end
 		if not Catalog.isOwned(handle.state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 		if handle.state.nectar < recipe.cost then return false, "NeedNectar" end
 		candidate = { id = handle.adapter.guid(), unit = handle.adapter.random() }
@@ -481,7 +554,7 @@ function Hatching.command(handle, action, value, expectedRevision)
 			local recipe = Catalog.ById[value]
 			if not recipe then return false, "UnknownEgg" end
 			if recipe.retired then return false,"RetiredEgg"end
-			if state.lastHatch or state.pendingHueResult or state.hueReservation then return false, "RevealPending" end
+			if state.lastHatch or state.pendingHueResult or state.hueReservation or state.pendingMaterialResult or state.materialReservation then return false, "RevealPending" end
 			if not Catalog.isOwned(state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 			if state.nectar < recipe.cost then return false, "NeedNectar" end
 			local petId = Catalog.roll(value, state.misses, choice.unit)

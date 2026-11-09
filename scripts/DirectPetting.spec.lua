@@ -147,7 +147,8 @@ return function(client,parent)
   end
   test("only Back is selected and carried A drains before fresh native activation",function()
    local v,c=ui();v:setActive(true);Gui.SelectedObject=v.back;settle();assert(not v.greet and not v.panel:FindFirstChild("Greet")and v.back.AbsoluteSize.Y>=44)
-   assert(v.back.Text==""and v.back.AbsoluteSize.X>=44 and v.back:FindFirstChild("ArrowShaft")and v.back:GetAttribute("AccessibleLabel")=="Back to roaming")
+   local arrow=v.back:FindFirstChild("CarryArrow")
+   assert(v.back.Text==""and v.back.AbsoluteSize.X>=44 and arrow and arrow.Rotation==-90 and arrow.Stem.Size.X.Offset==4 and arrow.Head8.Size.X.Offset==16 and v.back:GetAttribute("AccessibleLabel")=="Back to roaming")
    local input={KeyCode=Enum.KeyCode.ButtonA,UserInputType=Enum.UserInputType.Gamepad1};v.openingADevice=input.UserInputType
    assert(v:handleMove(Enum.UserInputState.Begin,input)==Enum.ContextActionResult.Sink)
    assert(v:handleMove(Enum.UserInputState.End,input)==Enum.ContextActionResult.Sink and not v.openingADevice)

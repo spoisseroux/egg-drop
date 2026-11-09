@@ -1,0 +1,29 @@
+{
+  "sourceEquality": {
+    "runtimeSources": 149,
+    "mismatches": [],
+    "compileErrors": []
+  },
+  "cleanEdit": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"materials\":7,\"place\":96451847774961,\"clientEnabled\":true,\"serverEnabled\":true,\"qa\":[]}"
+      }
+    ],
+    "isError": false
+  },
+  "cleanConsole": {
+    "content": [
+      {
+        "type": "text",
+        "text": "EditableImage is not accessible. Go to the Security Tab in Experience Settings to enable this API.\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type\nContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type"
+      }
+    ],
+    "isError": false
+  },
+  "textPreference": "Medium",
+  "graphicsMode": "Automatic",
+  "viewport": "default desktop",
+  "coldRojoBuild": "pass"
+}

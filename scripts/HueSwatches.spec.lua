@@ -41,7 +41,8 @@ return function(client)
   end end
  end)
  test("invalid stage channel hue and unknown target cannot form a quote",function()
-  for _,stage in ipairs({0,6,1.5,math.huge})do assert(Swatches.at("pip",{},"main","rose",stage)==nil)end
+  for _,stage in ipairs({-1,6,1.5,math.huge})do assert(Swatches.at("pip",{},"main","rose",stage)==nil)end
+  assert(Swatches.at("pip",{},"main","rose",0)==require(game.ReplicatedStorage.Shared.PetPalette).resolve("pip",{mainDoses=H.emptyCounts(),secondaryDoses=H.emptyCounts()}).body)
   assert(Swatches.at("pip",{},"other","rose",2)==nil and Swatches.at("pip",{},"main","garnet",2)==nil and Swatches.at("unknown",{},"main","rose",2)==nil)
  end)
  return{passed=#cases,cases=cases}

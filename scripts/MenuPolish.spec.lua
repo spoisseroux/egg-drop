@@ -80,6 +80,23 @@ return function(client, parent)
 			assert(menu:activate("close") and #calls==6)
 			menu:close()
 		end)
+        test("roomy destination text grows within measured cards and Companions keeps its existing route",function()
+            local menu,calls=fixture();resize(menu,568,160);menu:setPage("play");task.wait(.03)
+            local compactTitle=menu.destinations[1].title.TextSize
+            local compactTab=menu.tabs.play.TextSize
+            resize(menu,1649,971);menu:setPage("play");task.wait(.03)
+            assert(menu.roomy and not menu.compact)
+            for _,item in ipairs(menu.destinations)do
+                assert(item.title.TextSize==22 and item.subtitle.TextSize==18 and item.title.TextFits and item.subtitle.TextFits,fitDiagnostic(item.title,item.subtitle))
+                assert(inside(item.title,item.button)and inside(item.subtitle,item.button),"larger text escaped its measured card")
+                assert(item.subtitle.AbsolutePosition.Y>=item.title.AbsolutePosition.Y+item.title.AbsoluteSize.Y+5.9,"roomy labels overlap")
+                if item.kind=="pets"then assert(item.title.Text=="Companions"and menu:activate("pets"))end
+            end
+            assert(#calls==1 and calls[1][1]=="pets")
+            resize(menu,568,160);menu:setPage("play");task.wait(.03)
+            assert(menu.destinations[1].title.TextSize==compactTitle and menu.tabs.play.TextSize==compactTab,"roomy-only change leaked into compact type")
+            menu:close()
+        end)
 		test("all three shallow contracts show a complete44px first row and independent gift",function()
 			local menu,calls=fixture();resize(menu,568,160);menu:setPage("daily");task.wait(.03)
 			assert(menu.dailyButton.Visible and menu.dailyButton.AbsoluteSize.Y>=44 and menu.dailyButton.TextFits and inside(menu.dailyButton,menu.card),fitDiagnostic(menu.dailyButton))

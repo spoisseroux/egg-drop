@@ -15,7 +15,7 @@ local function chooseAim(policy,sim,field,state,Simulation,Config)
 	elseif zone and zone.kind=="center"then
 		-- An incoming II cannot make the exact-II objective. Build the next bank
 		-- while the I pieces in the same untouched bag make the central II.
-		if tier==2 then desired=if field.descriptor.goals[2].zone.kind=="left"then -3.7 else 3.7;zone=nil end
+		if goal.tier==2 and tier==2 then desired=if field.descriptor.goals[2].zone.kind=="left"then -3.7 else 3.7;zone=nil end
 	elseif goal and goal.kind=="chain"and field.goalProgress==1 and state.lastMergeX then
 		desired=if state.separatedChain and state.linkAnchorX then state.linkAnchorX+(if state.linkAnchorX<0 then 2.8 else -2.8)else state.lastMergeX
 	else

@@ -1,0 +1,20 @@
+# Material client source review
+
+**GO for native verification.** Reviewed MaterialIntent, MaterialPanel, HueEggView/Intent, EggHatchView, HueItemReveal and init.client integration against the current typed Material backend. This review is independent of client implementation; the reviewer owns the backend, which the client worker separately reviewed.
+
+Two initial blockers were fixed:
+
+- Keep acknowledgement failure now retries its captured Material operation before the receipt branch can attempt another acknowledgement. The new reopen test checks the same quote object and revision are resent.
+- Use now target mode now requires the current pending result's exact ID and finish. Close, new open and leaving recipient mode retire the assignment; successful acknowledgement/result replacement cannot leave stale targeting that intercepts later ordinary pet selection. A new Use now→close→Keep→ordinary pet selection test covers that lifecycle.
+
+MaterialIntent confirms matching ID/action/pet/catalog/finish semantics and waits for the owner's snapshot revision before clearing pending state. Ordinary equip and material recipient targeting remain distinct. Free per-pet selections use the saved finish; they do not equip the recipient as active or optimistically grant an unlock. Keep and atomic Use now preserve exact result identity. Purchase eligibility/odds derive from the current catalog; unavailable/full collections cannot send another paid operation.
+
+The fresh Material receipt uses the existing generation-bound split owner, cancellation and audio policy. Closing or leaving its art retires transient nodes. Reopening and reduced-motion presentation remain static. The new fourth tab retains fixed-rail/right-scroller composition and existing machine-exit identity handling.
+
+Backend compatibility review separately approved pool2 Gloss/Matte sales while immutable pool1/Metal receipt and reservation validation remain supported. Known historical Metal ownership is independent of current sellability. Native reruns remain required for the new pool and client tests; the preceding pool3 backend run passed189 server cases.
+
+Also reviewed the HUD hint-footprint correction and QA MaterialFinishMatrix: descriptor-derived goal2 hint space remains constant through both stages; fixture-only unverified rendering is explicit and does not authorize purchases. Normal-client, Largest/focus/scroll, actual material/egg rendering and final release verification remain root-owned.
+
+Final bounded receipt/compact source review: **GO for native verification.** `HueEggView.lua:688` reparents each receipt's Use now action into the fixed card footer; `:832` selects the matching receipt peer and measures both actions, while `:982` fits the card to measured content. `MaterialPanel.lua:77` excludes a reparented action from scroll content. Material receipts use a maximum 470px card and a 64px round sample; short Hue receipts retain the existing reveal owner in a 114×80 seat with adjacent measured name/stock (`HueEggView.lua:898`). Resizing changes the seat without rebuilding the reveal or replaying audio. Leaving/closing still cancels the owned generation and retires art; unchanged seen IDs keep reopen static.
+
+One review finding was corrected before this GO: MaterialPanel's nil-mode early return previously left its Use now `Visible` flag true. The flag now resets before the return (`MaterialPanel.lua:42`), so receipt→recipient retires both art and the action explicitly. Compact Hue copy visibility is recalculated on every layout (`HueEggView.lua:713`), and panel headings restore for roomy/receipt modes (`MaterialPanel.lua:80`). New tests cover four Material receipt sizes, adjacent actions, sample/glint differences, close/use-now retirement, compact choices, compact→roomy Hue resizing, and Reset/Rose receipts above the fold at 733×307. These are source-reviewed assertions; final native compilation, text measurement, focus, rendered phone review and suite results remain release gates. No transaction/proof or backend edits were made in this review.

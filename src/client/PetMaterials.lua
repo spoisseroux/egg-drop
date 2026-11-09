@@ -40,14 +40,22 @@ function Owner:paint(entry,visual,daylight)
  end
  if not key or entry.materialFailure or not entry.part:IsA("MeshPart")then return false end
  local pack=if self.templates then self.templates else ReplicatedStorage:FindFirstChild("PetMaterials")
- local template=pack and pack:FindFirstChild(key)
+ local templateKey=key
+ if key=="Body"then
+  local finish=visual.appearance and visual.appearance.finish or "standard"
+  local candidate=Config.FinishProfiles[finish]
+  local selected=candidate and pack and pack:FindFirstChild(candidate)
+  if candidate~="Body"and selected and selected:IsA("SurfaceAppearance")and selected:GetAttribute("MaterialVersion")==Config.Version and selected:GetAttribute("MaterialProfile")==candidate and (selected:GetAttribute("NativeVerified")==true or visual.allowUnverifiedFinish==true)then templateKey=candidate end
+ end
+ local template=pack and pack:FindFirstChild(templateKey)
  if not template or not template:IsA("SurfaceAppearance")or template:GetAttribute("MaterialVersion")~=Config.Version then release(entry);return false end
  local surface=entry.materialSurface
+ if surface and entry.materialProfile~=templateKey then release(entry);surface=nil end
  if not surface or surface.Parent~=entry.part then
   surface=entry.part:FindFirstChildWhichIsA("SurfaceAppearance")
-  if surface and(surface:GetAttribute("MaterialProfile")~=key or surface:GetAttribute("MaterialVersion")~=Config.Version)then return false end
+  if surface and(surface:GetAttribute("MaterialProfile")~=templateKey or surface:GetAttribute("MaterialVersion")~=Config.Version)then return false end
   if not surface then surface=template:Clone();surface.Name="PetFinish";surface.Parent=entry.part end
-  entry.materialSurface=surface;entry.materialProfile=key
+  entry.materialSurface=surface;entry.materialProfile=templateKey
   entry.materialTint=nil;entry.materialStrength=nil;entry.materialPartColor=nil
  end
  local base=entry.color or entry.faceBaseColor or entry.part.Color

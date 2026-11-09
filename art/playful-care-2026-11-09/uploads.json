@@ -1,0 +1,9 @@
+{
+  "authorship": "Original ovoid silhouettes and pattern illustrations authored by Astra with build_eggs.py; no Sonic pixels or textures",
+  "studioPlaceId": 96451847774961,
+  "companion": {"file":"companion-egg.png","assetId":"89169181598002"},
+  "hue": {"file":"hue-egg.png","assetId":"117135267633368"},
+  "material": {"file":"material-egg.png","assetId":"138685700977802"},
+  "reference": "https://sonic.sega.jp/sonicadv2/0601/shots_e.html",
+  "scope": "Shared registered silhouette for shop, result and split-shell presentation; native rendering still requires verification"
+}

@@ -24,7 +24,7 @@ return function(client,parent)
  local function restored(rows)for _,r in ipairs(rows)do assert(r.node.ZIndex==r.z,"exterior depth not restored: "..r.node.Name)end end
  local ok,err=pcall(function()
   settle();Art.backdrop(home);Art.setBackground(home,"canopy",Theme);Art.updateBackdrop(home,0,true,true,false)
-  local canopy=home.PatternSurface;local layers=snapshot(canopy)
+  local composite=home.ExteriorComposite;local canopy=composite.PatternSurface;local layers=snapshot(canopy)
   test("Global confirmed Canopy is above opaque preview with exact relative order",function()
    Art.setBackgroundPreview(preview,"canopy",Theme,true);Art.updateBackdrop(home,1,false,true,true);settle()
    assert(canopy.Parent==preview);above(layers,preview)
@@ -34,7 +34,7 @@ return function(client,parent)
    local changes=0;local connections={};for _,r in ipairs(layers)do table.insert(connections,r.node:GetPropertyChangedSignal("ZIndex"):Connect(function()changes+=1 end))end
    Art.updateBackdrop(home,3,false,true,true);Art.updateBackdrop(home,4,false,true,true);assert(changes==0)
    for _,c in ipairs(connections)do c:Disconnect()end
-   Art.setBackgroundPreview(preview,nil,nil,false);Art.updateBackdrop(home,5,true,true,false);assert(canopy.Parent==home);restored(layers)
+   Art.setBackgroundPreview(preview,nil,nil,false);Art.updateBackdrop(home,5,true,true,false);assert(canopy.Parent==composite);restored(layers)
   end)
   surface=class.new(home);surface:configure("creek",Theme);surface:update(home,0,true,true);settle();surface:update(home,0,true,true)
   local rows=snapshot(surface.root);local first=surface.bands[1].host
@@ -55,11 +55,11 @@ return function(client,parent)
    Art.setBackgroundPreview(host,"creek",Theme,true);Art.updateBackdrop(home,6,false,true,true);local root=host.PatternSurface
    local count=#root:GetDescendants()+1
    Art.setBackgroundPreview(preview,"creek",Theme,true)
-   assert(root.Parent==home,"switch failed to return previous owner synchronously")
+   assert(root.Parent==composite,"switch failed to return previous owner synchronously")
    Art.updateBackdrop(home,7,false,true,true);assert(root.Parent==preview)
    Art.setBackgroundPreview(host,nil,nil,false);host:Destroy()
    assert(root.Parent==preview and Art.isBackgroundPreviewVisible(preview))
-   Art.setBackgroundPreview(preview,nil,nil,false);assert(root.Parent==home)
+   Art.setBackgroundPreview(preview,nil,nil,false);assert(root.Parent==composite)
    Art.updateBackdrop(home,8,true,true,false)
    Art.setBackgroundPreview(preview,"creek",Theme,true);Art.updateBackdrop(home,9,false,true,true)
    assert(root.Parent==preview and #root:GetDescendants()+1==count and count==545)

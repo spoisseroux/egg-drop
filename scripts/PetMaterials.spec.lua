@@ -33,7 +33,7 @@ return function(client)
    assert(owner:paint(e,v,0)and math.abs(e.materialSurface.EmissiveStrength-.98)<.00001)
    v.charmVisible=false;owner:paint(e,v,0);assert(e.materialSurface.EmissiveStrength==0)
    v.charmVisible=true;v.renderCharmShape="ring";owner:paint(e,v,0);assert(e.materialSurface.EmissiveStrength==0)
-   v.renderCharmShape="dot";owner:paint(e,v,1);assert(math.abs(e.materialSurface.EmissiveStrength-.25)<.00001)
+   v.renderCharmShape="dot";owner:paint(e,v,1);assert(math.abs(e.materialSurface.EmissiveStrength-.38)<.00001)
   end)
   test("emission-off retains exact same tinted surface and hidden pieces emit zero",function()
    local owner,e,v=make();assert(owner:paint(e,v,0));local surface=e.materialSurface
@@ -64,6 +64,38 @@ return function(client)
    local fill=Instance.new("Highlight");fill.Enabled=true;fill.Parent=v.model
    v.nightGroups={body={model=model,fill=fill}};e.part.Parent=model
    assert(owner:paint(e,v,0)and e.part.Parent==v.model and model.Parent==nil and fill.Parent==nil and not v.nightGroups.body)
+  end)
+  test("finish profile switches independently of hue and leaves charm and face protected",function()
+   local pack=source:Clone();pack.Parent=folder
+   for _,name in ipairs({"BodyGloss","BodyMatte","BodyMetal"})do
+    local template=pack:FindFirstChild(name)or pack.Body:Clone();template.Name=name;template:SetAttribute("MaterialProfile",name);template:SetAttribute("NativeVerified",true);template.Parent=pack
+   end
+   local owner,e,v=make(pack);local tint=e.color
+   for _,id in ipairs({"gloss","matte","metal","standard"})do
+    v.appearance={finish=id};assert(owner:paint(e,v,1))
+    assert(e.materialProfile==({gloss="BodyGloss",matte="BodyMatte",metal="BodyMetal",standard="Body"})[id])
+    assert(e.materialSurface.Color==tint and math.abs(e.materialSurface.EmissiveStrength-.22)<.00001 and #e.part:GetChildren()==1)
+   end
+   v.appearance={finish="metal"};e.role="charm";owner:paint(e,v,0);assert(e.materialProfile=="Charm"and math.abs(e.materialSurface.EmissiveStrength-.98)<.00001)
+   e.role=nil;e.name="EyeL";e.colorRole="face";owner:paint(e,v,0);assert(e.materialProfile=="Eye"and e.materialSurface.EmissiveStrength==0)
+  end)
+  test("missing unverified and unknown finishes safely fall back while explicit QA may bind candidate",function()
+   -- Build the unverified candidate from a fresh base in a private pack. This
+   -- case is independent of which production finishes have passed native QA.
+   local originalVerification={}
+   for _,name in ipairs({"BodyGloss","BodyMatte","BodyMetal"})do
+    local original=source:FindFirstChild(name)
+    if original then table.insert(originalVerification,{template=original,verified=original:GetAttribute("NativeVerified")})end
+   end
+   local pack=Instance.new("Folder");pack.Name="_UnverifiedFinishFixture";pack.Parent=folder
+   for _,name in ipairs({"Body","Eye","Charm","Catchlight"})do source[name]:Clone().Parent=pack end
+   local template=source.Body:Clone();template.Name="BodyGloss";template:SetAttribute("MaterialProfile","BodyGloss");template:SetAttribute("NativeVerified",false);template.Parent=pack
+   local owner,e,v=make(pack);v.appearance={finish="gloss"};assert(owner:paint(e,v,0)and e.materialProfile=="Body")
+   v.allowUnverifiedFinish=true;assert(owner:paint(e,v,0)and e.materialProfile=="BodyGloss")
+   v.allowUnverifiedFinish=nil;assert(owner:paint(e,v,0)and e.materialProfile=="Body")
+   v.appearance.finish="future";assert(owner:paint(e,v,0)and e.materialProfile=="Body")
+   template:Destroy();v.appearance.finish="gloss";assert(owner:paint(e,v,0)and e.materialProfile=="Body")
+   for _,original in ipairs(originalVerification)do assert(original.template:GetAttribute("NativeVerified")==original.verified,"fixture changed production verification")end
   end)
   test("model destruction owns all cloned surface cleanup",function()
    local owner,e,v=make();assert(owner:paint(e,v,0));local surface=e.materialSurface

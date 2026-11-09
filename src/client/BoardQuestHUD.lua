@@ -20,8 +20,10 @@ function Quest.new(parent)
  local title=Art.text(host,"Instruction","Match on LEFT",UDim2.fromOffset(4,1),UDim2.new(1,-8,0,21),Art.Silver,14)
  local progress=Art.text(host,"Steps","1 ○   2 ○",UDim2.fromOffset(4,25),UDim2.new(1,-8,0,18),Art.Muted,12)
  local dynamics=Art.text(host,"Dynamics","",UDim2.fromOffset(4,45),UDim2.new(1,-8,0,18),Art.Muted,12)
+ local nextHint=Art.text(host,"NextHint","",UDim2.fromOffset(4,65),UDim2.new(1,-8,0,18),Art.Muted,12)
+ Art.type(nextHint,"Supporting",true)
  Art.type(title,"Body");Art.type(progress,"Supporting",true);Art.type(dynamics,"Supporting",true)
- local self=setmetatable({host=host,title=title,progress=progress,dynamics=dynamics},Quest)
+ local self=setmetatable({host=host,title=title,progress=progress,dynamics=dynamics,nextHint=nextHint},Quest)
  host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:update(self.stage or 0,self.phase,self.visible,nil,self.objective)end)
  return self
 end
@@ -45,6 +47,8 @@ function Quest:preferredHeight(width,available,compact,objective)
  if not compact then
   h+=math.ceil(service:GetTextSize(copy.ticker,if self.roomy then 18 else 12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+10
   if copy.dynamics~=""then h+=math.ceil(service:GetTextSize(copy.dynamics,if self.roomy then 18 else 12,Art.Font.Body,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
+  local nextHint=if view and view.goals then Copy.nextGoalHint(view.goals[2])else ""
+  if nextHint~=""then h+=math.ceil(service:GetTextSize(nextHint,if self.roomy then 18 else 12,Art.Font.Supporting,Vector2.new(math.max(1,width-8),10000)).Y)+7 end
  end
  return math.min(available,math.max(20,h))
 end
@@ -62,13 +66,20 @@ function Quest:update(stage,phase,visible,compactHint,objective)
  Art.type(self.progress,"Supporting",true);Art.type(self.dynamics,"Supporting",true)
  if self.roomy then self.progress.TextSize,self.dynamics.TextSize=18,18 end
  local inner=math.max(1,width-8)
- self.progress.Text=copy.ticker;self.dynamics.Text=copy.dynamics
+ self.progress.Text=copy.ticker;self.dynamics.Text=copy.dynamics;self.nextHint.Text=copy.nextHint or ""
+ Art.type(self.nextHint,"Supporting",true);if self.roomy then self.nextHint.TextSize=18 end
  local line=math.max(22,math.ceil(game:GetService("TextService"):GetTextSize("M",self.title.TextSize,self.title.Font,Vector2.new(10000,10000)).Y)+4)
  local progressH=Art.textHeight(self.progress,inner,18);local dynamicsH=Art.textHeight(self.dynamics,inner,18)
  local progressVisible=not compact and copy.ticker~=""and height>=line+progressH+10
  local dynamicsVisible=not compact and copy.dynamics~=""and progressVisible and height>=line+progressH+dynamicsH+13
  local top=if compact then 0 else 4
  local titleH=math.max(1,height-top-(if compact then 0 else 3)-(if progressVisible then progressH+3 else 0)-(if dynamicsVisible then dynamicsH+3 else 0))
+ -- The current instruction always wins. Show the teaser only if its full
+ -- native preferred-size line fits after the current instruction and step count.
+ local nextH=Art.textHeight(self.nextHint,inner,18)
+ local currentH=Art.measureText(copy.instruction,self.title.TextSize,self.title.Font,inner).Y+4
+ local nextVisible=not compact and self.nextHint.Text~=""and titleH>=currentH+nextH+3
+ if nextVisible then titleH-=nextH+3 end
  local candidates=choices(copy,not dynamicsVisible,not progressVisible)
  local selected=candidates[#candidates]
  for _,caption in ipairs(candidates)do
@@ -78,8 +89,11 @@ function Quest:update(stage,phase,visible,compactHint,objective)
  end
  self.title.Text=selected;self.title:SetAttribute("AccessibleLabel",copy.title.." · "..copy.instruction..(if copy.dynamics~=""then " · "..copy.dynamics else ""))
  self.title.Position,self.title.Size=UDim2.fromOffset(4,top),UDim2.new(1,-8,0,titleH)
+ self.nextHint.Visible=nextVisible
  self.progress.Visible,self.dynamics.Visible=progressVisible,dynamicsVisible
  self.progress.Position,self.progress.Size=UDim2.fromOffset(4,top+titleH+3),UDim2.new(1,-8,0,progressH)
  self.dynamics.Position,self.dynamics.Size=UDim2.fromOffset(4,top+titleH+3+progressH+3),UDim2.new(1,-8,0,dynamicsH)
+ local nextY=top+titleH+3+(if progressVisible then progressH+3 else 0)+(if dynamicsVisible then dynamicsH+3 else 0)
+ self.nextHint.Position,self.nextHint.Size=UDim2.fromOffset(4,nextY),UDim2.new(1,-8,0,nextH)
 end
 return Quest

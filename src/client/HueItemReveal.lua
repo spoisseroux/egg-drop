@@ -20,6 +20,14 @@ function Reveal:cancel()
  if self.options.audio and self.options.audio.stopOwner then self.options.audio:stopOwner(self.owner)end
  self:finish()
 end
+-- Retire a receipt's illustration while retaining its seen ID history. Returning
+-- to the same unspent receipt rebuilds its jar without replaying reveal/audio.
+function Reveal:clear()
+ self:cancel()
+ for _,node in ipairs(self.parent:GetChildren())do node:Destroy()end
+ self.jar,self.whole,self.top,self.bottom,self.topArt,self.bottomArt=nil,nil,nil,nil,nil,nil
+ self.resultId=nil
+end
 function Reveal:later(seconds,generation,callback)
  (self.options.delay or task.delay)(seconds,function()
   if self.destroyed or generation~=self.generation or not self.parent.Parent then return end
@@ -31,18 +39,19 @@ function Reveal:tween(node,seconds,properties)
  table.insert(self.tweens,tween);tween:Play()
 end
 function Reveal:show(result,animate)
- if self.destroyed or not result or not result.id or not result.itemId then return false end
+ if self.destroyed or not result or not result.id or(not result.itemId and not result.finishId)then return false end
  if self.resultId==result.id then return false end
  self:cancel();self.resultId=result.id;local fresh=not self.seen[result.id]
  self.seen[result.id]=true;table.insert(self.seenOrder,result.id)
  if #self.seenOrder>32 then self.seen[table.remove(self.seenOrder,1)]=nil end
  for _,node in ipairs(self.parent:GetChildren())do node:Destroy()end
- self.jar=JarArt.create(self.parent,result.itemId,UDim2.fromScale(.22,.12),UDim2.fromScale(.56,.82),self.parent.ZIndex+3)
- self.whole=EggArt.create(self.parent,"hue",UDim2.fromScale(.20,.06),UDim2.fromScale(.60,.88),self.parent.ZIndex+4,"WholeShell")
+ self.jar=if self.options.resultBuilder then self.options.resultBuilder(self.parent,result,UDim2.fromScale(.22,.12),UDim2.fromScale(.56,.82),self.parent.ZIndex+3)else JarArt.create(self.parent,result.itemId,UDim2.fromScale(.22,.12),UDim2.fromScale(.56,.82),self.parent.ZIndex+3)
+ local recipe=self.options.recipeId or "hue"
+ self.whole=EggArt.create(self.parent,recipe,UDim2.fromScale(.20,.06),UDim2.fromScale(.60,.88),self.parent.ZIndex+4,"WholeShell")
  self.top=Art.frame(self.parent,"TopShellClip",Color3.new(1,1,1),UDim2.fromScale(.20,.06),UDim2.fromScale(.60,.44),self.parent.ZIndex+4);self.top.BackgroundTransparency=1;self.top.ClipsDescendants=true
- self.topArt=EggArt.create(self.top,"hue",UDim2.fromScale(0,0),UDim2.fromScale(1,2),self.top.ZIndex+1)
+ self.topArt=EggArt.create(self.top,recipe,UDim2.fromScale(0,0),UDim2.fromScale(1,2),self.top.ZIndex+1)
  self.bottom=Art.frame(self.parent,"BottomShellClip",Color3.new(1,1,1),UDim2.fromScale(.20,.50),UDim2.fromScale(.60,.44),self.parent.ZIndex+4);self.bottom.BackgroundTransparency=1;self.bottom.ClipsDescendants=true
- self.bottomArt=EggArt.create(self.bottom,"hue",UDim2.fromScale(0,-1),UDim2.fromScale(1,2),self.bottom.ZIndex+1)
+ self.bottomArt=EggArt.create(self.bottom,recipe,UDim2.fromScale(0,-1),UDim2.fromScale(1,2),self.bottom.ZIndex+1)
  -- Six small native teeth make one clean original split, with no particle burst.
  for i=0,5 do
   local tooth=Art.frame(self.bottom,"SeamTooth"..i,Color3.fromHex("#56D4DD"),UDim2.fromScale(.12+i*.13,-.035),UDim2.fromScale(.13,.12),self.bottom.ZIndex+3);tooth.Rotation=45
@@ -67,7 +76,6 @@ function Reveal:show(result,animate)
  return true
 end
 function Reveal:destroy()
- if self.destroyed then return end;self:cancel();self.destroyed=true
- for _,node in ipairs(self.parent:GetChildren())do node:Destroy()end
+ if self.destroyed then return end;self:clear();self.destroyed=true
 end
 return Reveal

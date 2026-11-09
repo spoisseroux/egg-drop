@@ -1,0 +1,940 @@
+{
+  "GardenWalkability": {
+    "ok": true,
+    "result": {
+      "passed": 11,
+      "cases": {
+        "1": "registered bridge gives4.5usable studs and an exact support top",
+        "2": "open creek or bridge underside is never admitted as a crossing",
+        "3": "both authored crossing directions reach their endpoint with safe full control hull",
+        "4": "control hull excursions reject even when the chord endpoints are supported",
+        "5": "dry existing movement retains its exact planner path and continuous entry velocity",
+        "6": "bridge landing and nook support do not admit a nearby unregistered strip",
+        "7": "inward near-bank velocity cannot escape the safety stop into unsupported water",
+        "8": "a rotated wet patch contained wholly inside a convex control hull rejects",
+        "9": "actual dry lateral endpoint still completes the full supported bridge exit",
+        "10": "a genuinely wet lateral follow goal projects onto the nearby deck",
+        "11": "far unsupported creek goals are not projected across the garden"
+      }
+    }
+  },
+  "SessionRecovery": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": {
+        "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+        "2": "profile save failure times out without releasing the lease and later recovers",
+        "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+        "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+        "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+        "6": "a setting changed during an in-flight autosave drains before lease release",
+        "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+        "8": "the actual Studio store keeps both writers in one isolated cloned root"
+      }
+    }
+  },
+  "GardenToyReturn": {
+    "ok": true,
+    "result": {
+      "passed": 23,
+      "cases": {
+        "1": "start reserves one identity and exact retry never replans it",
+        "2": "competing start or third participant cannot displace the reservation",
+        "3": "join binds identity generations and starts only when both validated approaches are ready",
+        "4": "join deadline expires into solo without creating rewards or a second action",
+        "5": "unrelated or stale cancellation cannot reset a current or reused return",
+        "6": "focus releases both toy participants while preserving unrelated actors",
+        "7": "leave, bench mode, equip and character replacement retire only their action",
+        "8": "late observer samples exact semantic travel even under reduced effects",
+        "9": "invalid reach and nonfinite commands cannot acquire the toy",
+        "10": "automatic solo and greeting decisions cannot steal the reserved toy actors",
+        "11": "a stale retired actor cannot release a newer shared return for the same owner",
+        "12": "validated manual Start preempts exact investigating or shoving solo and preserves both ball presentations",
+        "13": "failed incoming path or reach leaves autonomous reservation and actors untouched",
+        "14": "autonomous owner may start a manual return and another Start cannot replace it",
+        "15": "manual priority cannot cancel a greeting or borrow its participant",
+        "16": "stale solo completion and exact manual retry cannot reset or replan the new return",
+        "17": "a mismatched autonomous token or identity is never eligible for manual retirement",
+        "18": "handoff pickup ends at the regular rest position even for delayed observers",
+        "19": "a joining pet cannot tear down an unrelated greeting or the waiting manual return",
+        "20": "ready nearby partners start promptly without waiting the full solo join window",
+        "21": "a valid seven-stud solo approach waits for its pet instead of rejecting a normal start",
+        "22": "last-moment seven-stud join retimes both holds atomically with no root or ball jump",
+        "23": "join immediately before deadline preserves pickup pose while exact-deadline join rejects"
+      }
+    }
+  },
+  "PetContact": {
+    "ok": true,
+    "result": {
+      "passed": 16,
+      "persistentWrites": false,
+      "cases": {
+        "1": "twelve continuous server seconds produce one roll and exact live Saved receipt",
+        "2": "negative outcome consumes opportunity without storage or a promised award",
+        "3": "idle focus stationary timeout and a tap cannot earn",
+        "4": "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+        "5": "restarting after a missed opportunity still requires a new full twelve seconds",
+        "6": "stale cross-player and replaced lease ids cannot extend a new contact",
+        "7": "duplicate begin reuses grant without refreshing its continuity clock",
+        "8": "room ownership pet root generation death movement conflict and epoch invalidate contact",
+        "9": "forged payload and unreachable anchor do no RNG or storage work",
+        "10": "same held context may receive retry or renew proof once but cannot draw while saving",
+        "11": "end or replacement while a commit is pending prevents any later glyph",
+        "12": "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+        "13": "cap mute and reduced effects are independent and capped draws stop",
+        "14": "destroy cancels display and future work while retained ledger work belongs elsewhere",
+        "15": "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+        "16": "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+      },
+      "evidence": "pure server contact continuity and live receipt broker; not proof of human touch"
+    }
+  },
+  "GardenCareIntegration": {
+    "ok": true,
+    "result": {
+      "passed": 12,
+      "cases": {
+        "1": "cheap malformed requests never scan actor input or consume the valid request lane",
+        "2": "exact accepted replay and sequence conflict precede throttling and resampling",
+        "3": "fresh intent flood is bounded before actor scans; later exact fresh retry can act",
+        "4": "pulse rate has an independent bounded lane and cannot evict another claim",
+        "5": "unsafe deliberate setdown keeps dock but system close releases it to safe held state",
+        "6": "late verified equip over unsafe ground cannot reclaim another owner's bay or use wet anchor",
+        "7": "ordinary shortcut uses the same staged save and safe held fallback",
+        "8": "exact live bay keeps one actor through saved equip; uncommitted failure preserves original",
+        "9": "pending equip proof survives history compaction and remains replayable after its single commit",
+        "10": "replaced or closing board cannot publish a delayed profile callback into current actor",
+        "11": "actual placement accepts a fully dry supported clear destination",
+        "12": "actual wet enclosure cannot turn a safe stationary planner hold into placement across water"
+      }
+    }
+  },
+  "PreferenceFlush": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 6,
+      "cases": {
+        "1": "healthy preference gets deferred durable proof before retry UI without periodic sweep",
+        "2": "same-turn preferences and Applied replays coalesce into one writer",
+        "3": "new exact generation during an unrelated in-flight flush drains immediately afterward",
+        "4": "newer local choice during a save receives only its own later durable proof",
+        "5": "commit-then-error retries exact stamp once without duplicate acknowledgement",
+        "6": "real failures have three bounded backoffs and exact client retry can re-arm"
+      }
+    }
+  },
+  "MaterialHost": {
+    "ok": true,
+    "result": {
+      "passed": 5,
+      "persistentWrites": false,
+      "cases": {
+        "1": "unverified profiles reject new purchases before any roll write or debit",
+        "2": "durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+        "3": "background completion publishes unlock before receipt and conflict cannot clear waiter",
+        "4": "lost free-equip response reconciles exact selected finish without changing hues or charm",
+        "5": "owner snapshots contain no private grant proofs and another player cannot select this profile"
+      },
+      "evidence": "actual host callbacks/render gate/owner projection and retry coroutine; isolated store"
+    }
+  },
+  "HatchProgress": {
+    "ok": true,
+    "result": {
+      "passed": 22,
+      "cases": {
+        "1": "active four outcomes normalize safely even at the retained rare threshold",
+        "2": "legacy seven-pet migration and one-time credits",
+        "3": "starter grant, persistent reveal, exact acknowledgement",
+        "4": "ambiguous session acquire resumes the same lease",
+        "5": "direct full-cost spending, stale commands and callback retries",
+        "6": "ambiguous committed hatch cannot reroll or duplicate",
+        "7": "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "8": "monotonic payouts reject replay beyond receipt history",
+        "9": "lease takeover fences stale commands and renewals",
+        "10": "local overlap, sparse inventory and public isolation",
+        "11": "failed legacy load cannot spend or overwrite",
+        "12": "daily reward is once per Hollow day and survives callback retry",
+        "13": "every active outcome grants once and absent rare pool freezes earned misses",
+        "14": "paid retired outcome receipts survive reload and acknowledge without reroll or regrant",
+        "15": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "16": "saved wins preserve archived mastery points challenges and rank without promotions",
+        "17": "daily contracts and saved wins commit atomically once per run and day",
+        "18": "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "19": "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "20": "compound award retries immutable stats and original day before or after commit",
+        "21": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "22": "rare-only ownership earns saved wins and duplicate preserves archived marks"
+      }
+    }
+  },
+  "MaterialProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 11,
+      "cases": {
+        "1": "v6 migration preserves frozen Hue fields proofs and root siblings exactly",
+        "2": "v6 cannot smuggle a preexisting Material namespace into the v7 upgrade",
+        "3": "three sorted remaining-only rolls debit16 once each and exhausted pool never spends",
+        "4": "exact saved replay is read-only and same-ID changed quote is a conflict",
+        "5": "reserve and settlement ambiguous responses retain one winner and one debit",
+        "6": "durable reservation resumes after release/rejoin without another roll",
+        "7": "free whole-pet selections are independent and atomically acknowledge Use now",
+        "8": "stale selection unowned target and wrong result cannot mutate any pigment or charm",
+        "9": "lease expiry takeover and authoritative revision changes fence new purchases",
+        "10": "pending Material result blocks Hue/Companion purchases and compaction retains referenced proof",
+        "11": "UpdateAsync callback reentry never rerolls or duplicates unlocks"
+      }
+    }
+  },
+  "GardenIntentHost": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual host listener accepts position-free focus and retains sampled public position and facing",
+        "2": "client supplied stage is ignored; accepted focus still uses the authoritative actor",
+        "3": "host retains rate identity sequence pet mode and generation validation"
+      },
+      "realHostListener": true,
+      "passed": 3,
+      "realGardenState": true
+    }
+  },
+  "SessionHost": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 2,
+      "cases": {
+        "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+        "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+      }
+    }
+  },
+  "HueProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 18,
+      "cases": {
+        "1": "fresh v6 has five private stacks and seven independent color capabilities",
+        "2": "each 20-percent server roll stores exactly one item, one debit and no companion pity change",
+        "3": "stored duplicates stack, pending results block new purchases and result use acknowledges once",
+        "4": "five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",
+        "5": "reservation and settlement retry the frozen draw before and after ambiguous writes",
+        "6": "durable reservation survives writer takeover and settles its original result once",
+        "7": "v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",
+        "8": "held legacy token redeems exactly once without roll/debit and original buy proof survives",
+        "9": "invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",
+        "10": "v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",
+        "11": "bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",
+        "12": "malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",
+        "13": "each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",
+        "14": "two uses of last jar at one revision have one winner and rejected request cannot strand next intent",
+        "15": "v5 zero-cost assignments retain their exact token proof after upgrade and later reset",
+        "16": "corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",
+        "17": "migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",
+        "18": "a sparse Ovelle-only veteran can buy and apply without owning the welcome pet"
+      }
+    }
+  },
+  "GardenFocusReach": {
+    "ok": true,
+    "result": {
+      "plans": 72,
+      "cases": {
+        "1": "all seven production rigs and supported Dot states acquire and keep the public anchor independent of their private stage",
+        "2": "Dot and viewport reframe keeps the accepted stage while solving an independent lens",
+        "3": "same accepted target is rejected for stale pet or character generation",
+        "4": "the exact pre-focus camera survives staging and owner translation"
+      },
+      "passed": 4,
+      "metrics": {
+        "1": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "2": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "3": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "4": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "5": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "6": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "7": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "8": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "9": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "10": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "11": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "12": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "13": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "14": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "15": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "16": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "17": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "18": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "19": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "20": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "21": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "22": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "23": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "24": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "25": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "26": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "27": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "28": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "29": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "30": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "31": {
+          "dot": false,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": false,
+          "bearing": 0
+        },
+        "32": {
+          "dot": false,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": true,
+          "bearing": 3
+        },
+        "33": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "34": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "35": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "36": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "37": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "38": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "39": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "40": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "41": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "42": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "43": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "44": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "45": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "46": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "47": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "48": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "49": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "bloom_pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "50": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "bloom_pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "51": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "bloom_pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "52": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "bloom_pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "53": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "bloom_pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "54": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "bloom_pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "55": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "bloom_pip",
+          "edge": false,
+          "bearing": 0
+        },
+        "56": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "bloom_pip",
+          "edge": true,
+          "bearing": 3
+        },
+        "57": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "58": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "59": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "60": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "61": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "62": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "63": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "bearing": 0
+        },
+        "64": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "bearing": 3
+        },
+        "65": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "1649, 971",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "66": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "1649, 971",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "67": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "733, 307",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "68": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "733, 307",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "69": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "390, 740",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "70": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "390, 740",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "bearing": 3
+        },
+        "71": {
+          "dot": true,
+          "reach": 6.135041236877441,
+          "viewport": "568, 160",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "bearing": 0
+        },
+        "72": {
+          "dot": true,
+          "reach": 6.135042190551758,
+          "viewport": "568, 160",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "bearing": 3
+        }
+      }
+    }
+  },
+  "GardenState": {
+    "ok": true,
+    "result": {
+      "passed": 12,
+      "cases": {
+        "1": "solo garden investigates, shoves twice, rests and returns without a reward path",
+        "2": "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+        "3": "paired greeting is one atomic action and focus cancels both reservations",
+        "4": "Board is observable and cannot acquire focus, toy or an automatic reward",
+        "5": "focus is owner/pet/range/generation validated and its lease expires",
+        "6": "moved owners and replaced character cannot refresh a stale focus hold",
+        "7": "a superseded participant generation explicitly retires the paired greeting",
+        "8": "equip, character replacement and leave invalidate old generations exactly once",
+        "9": "a delayed first acquisition cannot revive the same alias after equip-away and back",
+        "10": "only one toy reservation exists and another waiting pet gets a turn",
+        "11": "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+        "12": "late join samples the current shared path, not a replayed beginning"
+      }
+    }
+  },
+  "GardenToyHost": {
+    "ok": true,
+    "result": {
+      "realHostListener": true,
+      "passed": 5,
+      "cases": {
+        "1": "real host returns an owner-only response and exact retry does not replan",
+        "2": "real host rejects forged identity and foreign cancellation",
+        "3": "join refreshes starter character facts before reserving the receiver",
+        "4": "rate rejection carries the same request identity without executing a second action",
+        "5": "manual Start refreshes an autonomous owner's changed character before retirement"
+      }
+    }
+  },
+  "HueHost": {
+    "ok": true,
+    "result": {
+      "passed": 4,
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual random buy reservation lost response preserves confirmed stock and same-quote throttle stays Retrying",
+        "2": "background retry held in storage preserves waiter and changed same-ID quote cannot replace candidate",
+        "3": "lost use event recovers committed vectors, replay never consumes later stock and altered pending ID conflicts",
+        "4": "private snapshot is owner-targeted and snapshot requests cannot select another profile"
+      },
+      "evidence": "actual host callbacks and retry coroutine; isolated durable reservation/store suspension"
+    }
+  },
+  "GardenCare": {
+    "ok": true,
+    "result": {
+      "passed": 15,
+      "cases": {
+        "1": "forged character pet and actor generations reject without changing the actor",
+        "2": "pickup preserves one actor and moving owner cannot reset a held pet",
+        "3": "two-owner placement contention leaves losing pet held with independent controls",
+        "4": "unsafe set-down preflight makes no generation position or bay mutation",
+        "5": "supported setdown is Placed until departure then resumes ordinary follow",
+        "6": "exact replay returns original result and a conflicting same sequence cannot act",
+        "7": "old claim release cannot evict the next occupant after a bay expires",
+        "8": "late saved equip follows new truth without reclaiming a superseded bay",
+        "9": "durable equip while exact live claim exists replaces just its one actor",
+        "10": "an uncommitted equip failure preserves old pet and exact dock session",
+        "11": "closing during an unresolved equip releases bay but does not cancel committed truth",
+        "12": "death character replacement and disconnect retire only owned reservation",
+        "13": "unsafe editor close frees its exact bay and keeps the pet safely held",
+        "14": "late saved equipment with no dry point stays safely carried and never uses arbitrary anchor",
+        "15": "lost carried UI lease releases on next supported point without stranding attachment"
+      }
+    }
+  },
+  "PetContactHost": {
+    "ok": true,
+    "result": {
+      "passed": 4,
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+        "2": "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+        "3": "wrong equipped pet is rejected through the real host before RNG or storage",
+        "4": "existing retry worker proves ended committed operation without a second glyph or second worker"
+      },
+      "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture"
+    }
+  },
+  "CareCompanionSave": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": {
+        "1": "active equipment changes only on exact durable ID stamp writer proof",
+        "2": "ordinary dirty settings flush with stored companion stamp has no nil-stamp comparison",
+        "3": "legacy known owned newer winner terminates pending rather than blocking hydrate forever",
+        "4": "legacy and staged APIs cannot interleave competing companion writes",
+        "5": "commit-then-error retries the same captured candidate and acknowledges once",
+        "6": "expired and taken-over nursery lease cannot perform a new companion write",
+        "7": "proven newer owned foreign selection wins without rollback or candidate replay",
+        "8": "a foreign unknown or unowned selection cannot become public confirmed truth"
+      }
+    }
+  }
+}

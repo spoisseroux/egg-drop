@@ -94,11 +94,7 @@ function Focus.new(parentGui, callbacks)
 	panel.BackgroundTransparency, panel.Visible = 1, false
 	local back = button(panel, "Back", "", Vector2.zero, UDim2.fromOffset(12, 12), "panel")
 	back.Size=UDim2.fromOffset(44,44);back:SetAttribute("AccessibleLabel","Back to roaming")
-	local shaft=frame(back,"ArrowShaft",UDim2.fromOffset(13,21),UDim2.fromOffset(20,3),"text",11)
-	for _,sign in ipairs({-1,1})do
-		local arm=frame(back,"ArrowArm",UDim2.fromOffset(11,if sign<0 then 16 else 24),UDim2.fromOffset(13,3),"text",11)
-		arm.Rotation=sign*45
-	end
+	Art.carryArrow(back,"back")
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
 	helper.AnchorPoint, helper.Position, helper.Size = Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -14), UDim2.fromOffset(230, 26)

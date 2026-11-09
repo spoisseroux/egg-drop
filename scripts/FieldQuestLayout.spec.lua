@@ -44,7 +44,7 @@ return function(client,parent,onlySize)
      if firstHeight then assert(h==firstHeight,"passive quest footprint moved across objective states")else firstHeight=h end
      host.Size=UDim2.fromOffset(l.quest.w,h);settle();quest:update(view.step-1,state[3],true,compact,view);settle()
      fit(quest.title);assert(inside(quest.title,host))
-     for _,node in ipairs({quest.progress,quest.dynamics})do if node.Visible then fit(node);assert(inside(node,host))end end
+     for _,node in ipairs({quest.progress,quest.dynamics,quest.nextHint})do if node.Visible then fit(node);assert(inside(node,host))end end
      local copy=Copy.describe(view,state[3]);local meaning=quest.title:GetAttribute("AccessibleLabel")
      assert(meaning:find(copy.instruction,1,true),"instruction lost in preferred fallback")
      if state[3]=="Playing"and state[1]<3 then

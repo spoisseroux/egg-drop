@@ -2,6 +2,25 @@
 
 Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## Player feedback after v358 — reviewed implementation
+
+The current pass follows [Astra's plan](FOLLOWUP-PLAYFUL-CARE.md). Native evidence and release state are recorded in [verification](artifacts/playful-care-2026-11-09/VERIFY.md); final publication is recorded in PLAY-BUILD.md.
+
+- [x] Coalesced immediate exact charm-save flushing, without the12-second periodic delay. Actual isolated Studio Ring change: Applied65ms / durable Saved117ms; delayed/fenced transactions also tested. This is not live-service latency evidence.
+- [x] Retire fruit art on confirmation/result exit and Pet/Hue/Charm transitions, including stale and repeated paths. Short item decisions omit routine Saved / Review use.
+- [x] Hue0–5, checked saved notch including0. Any notch offers one next relevant dose or no-stock/max explanation. Zero is not a reset; Reset remains one explicitly confirmed channel.
+- [x] Pet-grid8px top inset, shared solid carry/back arrows,44px controls; playful measured PatrickHand supporting/action type, FredokaOne headings and Mono counters.
+- [x] Brighter daytime pet emission with accepted nighttime strengths preserved; native neutral and dyed review. No global lighting change.
+- [x] Stronger bounded tier/chain device-art shake; actual24-drop round produced19 merges and9.49px peak movement. Input/aim stays stationary; Reduced Motion gets no translation.
+- [x] Exterior backdrop composited once at92% opacity; case, tray and controls stay opaque.
+- [x] Original tapered Companion/Hue/Material egg art across shop and hatch, with fallback silhouettes.
+- [x]16-earned-Star Material Egg: one permanent remaining Gloss/Matte unlock, initial50/50, then100%, no duplicates/debit when complete. Standard is free; finish selection is reversible per pet. Atomic exact proofs, replay/leases/migration and private/public payloads verified. Actual earned Gloss purchase and selection covered in Studio.
+- [x] Materials tab and compact receipt; fixed preview with scrolling choices, Use now/Keep adjacent. Hue receipts show Reset/fruit and both actions together on short landscape at Largest.
+- [x] Add Ripple relay, Bank bounce and Mirror marks after the existing three objectives. Each has a spatial goal and short next hint; six-seed production-solver trace replay gives6/6,5/6,5/6 respectively.
+- [ ] Complete each new objective through ordinary native controls and tune their difficulty with humans. Solver replay is not native-input completion or fun evidence. Bank pair and Creek crossing have earned24-drop control completions in this pass.
+- [ ] Metal: native trial resembled Gloss. Retain historical proof recovery, exclude from new egg pool until a distinct accepted render exists. White/black gradients also need dyed endpoint/UV/compositing proof.
+- [ ] Physical-phone touch/performance, live-service rejoin/persistence, real multi-owner carry/bay contention, lowest graphics quality and longer human play remain unverified. See broader backlog below.
+
 ## Companion editor, recap and materials â€” private v358
 
 [Astra's companion editor and recap scope](COMPANION-EDITOR-AND-RECAP.md) is implemented, verified and published as private v358 /runtime4bf7893. Final native tests and Astra actual-control visual review pass; [the candidate notes](COMPANION-EDITOR-AND-RECAP.md#candidate-status--november-9-2026) distinguish isolated fixtures, actual Studio controls and remaining coverage limits.
@@ -16,7 +35,7 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 - [x] Final [Medium](artifacts/companion-editor-2026-11-09/client-medium-final.json) and [Largest](artifacts/companion-editor-2026-11-09/client-largest-final.json) client batches each pass 161 cases/20 suites; [server fixtures](artifacts/companion-editor-2026-11-09/server-final.json) pass 145/15. [Astra visual GO](artifacts/companion-editor-2026-11-09/VISUAL-REVIEW.md) covers the corrected editor, actual earned recap and separate materials/halo matrix. Do not add overlapping preference reruns together.
 - [x] [Final native audit](artifacts/companion-editor-2026-11-09/native-final-audit.json): all 144 runtime sources match and compile with zero errors; Rojo/diff checks pass. QA driver/spec folder/import helper removed from Edit, Medium/Automatic/default viewport restored.
 - [x] Private v358 Published and runtime4bf7893 pushed; refreshed native Version History proof in PLAY-BUILD.md.
-- [ ] Dedicated seven-owned editor frame time, model/instance counts and repeated open/close comparison against v344 remain unmeasured; the completed six-round material benchmark is a separate workload. Test-enabled-session Focus interference has no established individual-fixture cause; ordinary earned controls pass in a clean session with the QA auto-driver disabled.
+- [x] Current seven-owned editor benchmark: three open/close cycles,7 models open and0 closed; six counterbalanced single/grid samples show17.65/17.88ms median frameP95. This is a current workload comparison, not the unmeasured historical v344 baseline. Test-enabled-session Focus interference has no established individual-fixture cause; ordinary earned controls pass in a clean session with the QA auto-driver disabled.
 
 ## Completed item-egg and Aero build
 
@@ -38,7 +57,8 @@ The user authorized building the [Astra proposal](PET-CARE-EXPANSION.md) within 
 - [ ] Add dark-red/Garnet and black/Ink with historical data and receipts preserved.
 - [x] Tier-based device-art merge response, bounded existing effects and88%-opacity motifs over the opaque theme base. Earned low-tier and labeled injected-clear native recordings pass review.
 - [x] Carry from petting, supported set-down, one physical care-machine bay and confirmed owned-pet switching; fast shortcuts retained. Astra accepted actual earned R15 motion and Largest phone UI; [verification](artifacts/carry-machine-2026-11-09/VERIFY.md) distinguishes isolated switch/contention tests from actual controls. Private publication is recorded in PLAY-BUILD.md.
-- [ ] Independent Skin FX gradients/finishes, original UV/material work and readable dark/night faces; restore the parked gloss work under review.
+- [x] Standard/Gloss/Matte finish ownership and per-pet selection, with native day/night facial review.
+- [ ] Metal and gradient-to-white/black Skin FX require accepted native rendering; UV/compositor work remains open.
 - [ ] Feature Egg with horns/tail/wings, rarities, stored items and separate five-stage earned/visible feature sizes per pet.
 - [ ] Per-pet Movement/Swim XP levels, Stat Egg, meaningful practice, crawl/first-step and beginner/competent swimming animations with safe shores.
 - [ ] Original textured basin, terrace, animated pond/waterfall and purposeful cave entrance inspired by the supplied garden's proportions. No Sonic mesh or textures imported into the game.

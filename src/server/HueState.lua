@@ -13,7 +13,7 @@ local function equal(a,b)
  for k,v in pairs(a)do if not equal(v,b[k])then return false end end
  for k in pairs(b)do if a[k]==nil then return false end end;return true
 end
-local function oldView(state)local v=table.clone(state);if state.version==6 then v.lastHueResult=state.legacyLastHueResult end;return v end
+local function oldView(state)local v=table.clone(state);if state.version==6 or state.version==7 then v.lastHueResult=state.legacyLastHueResult end;return v end
 function State.validLegacy(state)return Legacy.validLegacy(state)end
 function State.validV5(state)return Legacy.valid(state)end
 function State.row(state,petId)
@@ -129,6 +129,9 @@ local function validReceipt(r)
 end
 function State.valid(state)
  if type(state)~="table"then return false end
+ -- v7 adds an independent Material namespace; frozen v6 Hue rules validate
+ -- the same working fields without rewriting a historical quote or receipt.
+ if state.version==7 then state=table.clone(state);state.version=6 end
  if state.version~=6 then return Legacy.valid(state)end
  if not Legacy.valid(oldView(state))or not exact(state.hueInventory,{rose=true,tide=true,citrus=true,iris=true,reset=true})or type(state.petHues)~="table"
   or type(state.hueItemReceipts)~="table"or type(state.hueReceiptOrder)~="table"then return false end
@@ -198,7 +201,7 @@ local function saveReceipt(state,r)
  state.lastHueResult=r
 end
 function State.purchaseEligibility(state)
- if state.lastHatch or state.pendingHueResult then return false,"RevealPending"end
+ if state.lastHatch or state.pendingHueResult or state.pendingMaterialResult or state.materialReservation then return false,"RevealPending"end
  local owned=false;for pet in pairs(Hue.Supported)do if Eggs.isOwned(state.inventoryMask,pet)then owned=true;break end end
  if not owned then return false,"MeetPipFirst"end
  if state.nectar<Hue.Cost then return false,"NeedStars"end
@@ -208,7 +211,7 @@ function State.apply(state,candidate)
  local q=candidate.quote
  if q.catalogVersion~=Hue.CatalogVersion or not wire[q.action]then return false,"LegacyPurchaseClosed"end
  if state.hueReservation and not equal(state.hueReservation,candidate)then return false,"PurchasePending"end
- if state.lastHatch then return false,"RevealPending"end
+ if state.lastHatch or state.pendingMaterialResult or state.materialReservation then return false,"RevealPending"end
  local r={id=q.id,action=q.action,quote=copy(q),operationId=candidate.operationId,sequence=candidate.sequence,revision=state.revision+1,
   catalogVersion=Hue.CatalogVersion,cost=0,balanceBefore=state.nectar,balanceAfter=state.nectar,outcome="Applied"}
  if q.action=="hueBuy"or q.action=="hueLegacyRedeem"then

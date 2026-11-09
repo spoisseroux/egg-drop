@@ -1,8 +1,8 @@
 -- Separate charm writer: delayed responses cannot disable another pet or clear newer work.
 return function(client,parent)
  local View=require(client.HueEggView);local Intent=require(client.HueIntent);local H=require(game.ReplicatedStorage.Shared.HueCatalog)
- local serial=0;local sent={};local savedShape="dot";local shapesEnabled=false;local intent=Intent.new({id=function()return "unused"end,send=function()error("No pigment writes")end})
- local view=View.new(parent,intent,{appearance=function()return{charmVisible=true,charmShape=savedShape}end,shapeSelectionsEnabled=function()return shapesEnabled end,charm=function(id,visible,shape,seq,shapeVersion)
+ local serial=0;local sent={};local timeouts={};local savedShape="dot";local shapesEnabled=false;local intent=Intent.new({id=function()return "unused"end,send=function()error("No pigment writes")end})
+ local view=View.new(parent,intent,{delay=function(seconds,run)assert(seconds==8);table.insert(timeouts,run)end,appearance=function()return{charmVisible=true,charmShape=savedShape}end,shapeSelectionsEnabled=function()return shapesEnabled end,charm=function(id,visible,shape,seq,shapeVersion)
   if not seq then serial+=1;seq=serial end;local q={petId=id,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq};table.insert(sent,q);return q
  end})
  local s={revision=1,status="Ready",inventoryMask=127,hueInventory={},petHues={}}
@@ -31,6 +31,13 @@ return function(client,parent)
   savedShape="pebble";view:refresh();assert(view:toggleCharm());local visibility=sent[#sent]
   assert(visibility.shape==nil and visibility.shapeVersion==nil and visibility.visible==false)
   assert(view:charmResult({petId="pip",seq=visibility.seq,visible=false,shape="pebble",status="Saved"}));table.insert(cases,"modern visibility-only intent omits selection protocol and retains the saved nondefault pair")
+  assert(not view.status.Visible and not view.charmMessage,"successful charm left a Saved status")
+  assert(view:toggleCharm());local waiting=sent[#sent];local beforeApplied=timeouts[#timeouts]
+  assert(view:charmResult({petId="pip",seq=waiting.seq,status="Applied"}));local afterApplied=timeouts[#timeouts]
+  beforeApplied();assert(not view.charmRequests.pip.retry,"healthy Applied reused an expired retry timer")
+  afterApplied();assert(view.charmRequests.pip.retry and view:toggleCharm());assert(sent[#sent].seq==waiting.seq and sent[#sent].visible==waiting.visible)
+  assert(view:charmResult({petId="pip",seq=waiting.seq,visible=false,shape="pebble",status="Saved"}));timeouts[#timeouts]();assert(not view.charmRequests.pip and not view.status.Visible)
+  table.insert(cases,"healthy Applied extends bounded wait and actual timeout retries exact pair without success copy")
  end)
  view:destroy();assert(ok,err);return cases
 end

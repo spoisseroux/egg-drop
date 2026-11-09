@@ -102,8 +102,8 @@ return function(client,parent)
   test("Use now chooses recipient without equipping and retains pending result identity",function()
    state.pendingHueResult={id="jar-1",itemId="rose",inventoryAfter=3};view:open(state,"palette","pip");assert(view:useResult()and view.tab=="pet")
    local before=#calls;assert(view:choosePet("foxfire_wick")and view.petId=="foxfire_wick"and not view.confirmation and #calls==before and active=="puddle")
-   view:chooseChannel("secondary");assert(view:activate()and view.confirmation.pendingResultId=="jar-1"and view.confirmation.channel=="secondary")
-   assert(view:cancelConfirmation()and view.page=="receipt"and #sent==0);state.pendingHueResult=nil
+   assert(view:chooseChannel("secondary")and view.confirmation.pendingResultId=="jar-1"and view.confirmation.channel=="secondary"and view.action.Text=="Use one")
+   assert(view:cancelConfirmation()and view.page=="palette"and view.tab=="hue"and view.assignment.pendingResultId=="jar-1"and #sent==0);state.pendingHueResult=nil;view.assignment=nil
   end)
   test("old bay responses cannot clear new claim or unrelated item confirmation",function()
    view:setMachineSession({claimId="old",petId="pip"});local old=view:machineBinding()

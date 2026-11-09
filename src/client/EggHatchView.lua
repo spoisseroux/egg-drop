@@ -10,10 +10,12 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local EggArt = require(script.Parent.EggArt)
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
+local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 local JarArt=require(script.Parent.HueJarArt)
-local liveOrder={"meadow","hue"}
+local liveOrder={"meadow","hue","material"}
 local function shopRecipe(id)
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
+ if id=="material"then return {id="material",name="Material Egg",cost=MaterialCatalog.Cost}end
  local source=Catalog.ById[id]or Catalog.ById.meadow
  return {id=source.id,name=if id=="meadow"then "Companion Egg"else source.name,cost=source.cost}
 end
@@ -126,10 +128,12 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 			self:chooseResult("play")
 		elseif current.pendingHueResult then
             if self.onOpenHue then self.onOpenHue(false)end
+        elseif current.pendingMaterialResult then
+            if self.onOpenMaterial then self.onOpenMaterial(false)end
         elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
 			self:close("earn")
 		else
-			if current.pendingHueResult then if self.onOpenHue then self.onOpenHue(false)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
+			if self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
 		end
 	end)
 	return self
@@ -363,6 +367,11 @@ function View:refreshFooter()
 			else Stars.format("Hatch %s · %d Stars", recipe.name, recipe.cost)
 		if self.compactShop and not state.pendingHueResult then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else Stars.format("Hatch · %d Stars",recipe.cost)end
 		canAct = true
+  if state.pendingMaterialResult then textValue="Open saved material"
+  elseif self.selected=="material"then
+   if #MaterialCatalog.remaining(state.materialUnlocks)==0 then textValue,canAct="All materials owned",false
+   elseif not state.materialAvailable then textValue,canAct="Materials not ready",false end
+  end
 	end
 	Art.type(self.action,"Action",self.compactShop or self.card.Size.X.Offset<400)
 	Art.type(self.meetButton,"Action",self.card.Size.X.Offset<400)
@@ -375,7 +384,7 @@ function View:refreshFooter()
 		end
 		if self:footerRowHeight(self.meetButton,width)>44 then self.meetButton.Text=if self.pending then "Saving" else "Meet" end
 	end
-	if self.compactShop and not state.lastHatch and not self.pending then
+	if self.compactShop and not state.lastHatch and not self.pending and canAct and not state.pendingMaterialResult then
 		local recipe=shopRecipe(self.selected)
 		local missing=math.max(0,recipe.cost-(state.nectar or 0))
 		local budget=math.max(44,self.card.Size.Y.Offset-48-44-8)
@@ -435,7 +444,7 @@ function View:renderBody()
  local left=self.body:FindFirstChild("EggColumn")
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100));left.BackgroundTransparency=1
- for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="DailyNectar")then child:Destroy()end end
+ for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="Recipe_material"or child.Name=="DailyNectar")then child:Destroy()end end
  local width=math.max(1,self.body.AbsoluteSize.X);local w=width-8;local short=self.shade.AbsoluteSize.Y<280
  left.Size=UDim2.fromOffset(width,1);local y=4;local cols=if width>=280 then 2 else 1;local cw=(w-(cols-1)*8)/cols
  local cardH=short and 116 or 160
@@ -482,7 +491,14 @@ function View:renderBody()
   for index,row in ipairs(nodes)do local group=math.floor((index-1)/columns)+1;local ry=y;for n=1,group-1 do ry+=heights[n]+8 end;row.Position,row.Size=UDim2.fromOffset(4+((index-1)%columns)*(rw+8),ry),UDim2.fromOffset(rw,heights[group])end
   for _,h in ipairs(heights)do y+=h+8 end
  end
- if self.selected=="hue"then
+ if self.selected=="material"then
+  copy("PoolHeading","New materials · no duplicates","Action")
+  local odds=MaterialCatalog.odds(self.state.materialUnlocks)
+  if #odds==0 then copy("MaterialCollection","All materials owned","Body")
+  elseif not self.state.materialAvailable then copy("MaterialAvailability","Material Eggs are not ready yet.","Body")
+  else for _,entry in ipairs(odds)do copy("MaterialOdds_"..entry.id,MaterialCatalog.ById[entry.id].name.." · "..string.format("%.2g%%",entry.probability*100),"Body")end end
+  copy("MaterialRules","Unlock once for all your pets. Choose any owned material for free in Materials. Standard is always available.","Body")
+ elseif self.selected=="hue"then
   copy("PoolHeading","One saved jar · all possible items","Action")
   local pool={};for _,id in ipairs(HueCatalog.ItemOrder)do table.insert(pool,{id=id,weight=20})end;outcomes(pool,true)
   copy("ItemRules","Fixed colors stack in your inventory. Use one jar for one dose on one pet and channel. Reset Hue clears that channel; an original channel uses nothing. Store any result.","Body")

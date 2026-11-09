@@ -23,6 +23,8 @@ return function(client,parentGui)
    assert(care.gui:IsA("ScreenGui")and care.uiRoot:IsA("Frame")and care.uiRoot.Parent==gui)
    assert(care.notice.Parent==care.uiRoot and care.setDown.Parent==care.uiRoot and care.uiRoot.Size==UDim2.fromScale(1,1)and not care.uiRoot.Active)
    assert(care.pickup.Parent==focus.panel and not care.notice.Visible and not care.setDown.Visible)
+   assert(care.pickup.CarryArrow.Rotation==0 and care.setDown.CarryArrow.Rotation==180 and focus.back.CarryArrow.Rotation==-90)
+   for _,node in ipairs({care.pickup,care.setDown,focus.back})do assert(node.Size.X.Offset>=44 and node.Size.Y.Offset>=44 and node.CarryArrow.Stem.Size.X.Offset==4 and node.CarryArrow.Head8.Size.X.Offset==16)end
    focus.gui.Enabled=false;care:step();assert(care.uiRoot.Parent==gui,"carry controls borrowed the retiring focus GUI")
    care:destroy();assert(care.controls.Parent==nil and care.notice.Parent==nil and care.pickup.Parent==nil);focus:destroy()
   end)

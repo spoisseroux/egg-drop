@@ -9,11 +9,7 @@ local function button(parent,name,text,callback)
 end
 local function arrow(node,up,label)
  node.Text="";node.Size=UDim2.fromOffset(44,44);node:SetAttribute("AccessibleLabel",label)
- local shaft=Art.frame(node,"ArrowShaft","text",UDim2.fromOffset(21,12),UDim2.fromOffset(3,22),node.ZIndex+1)
- for _,side in ipairs({-1,1})do
-  local arm=Art.frame(node,"ArrowArm","text",UDim2.fromOffset(if side<0 then 13 else 22,if up then 14 else 26),UDim2.fromOffset(13,3),node.ZIndex+1)
-  arm.Rotation=if up then side*45 else -side*45
- end
+ Art.carryArrow(node,if up then "up"else "down")
 end
 function Client.new(room,gui)
  -- The ordinary ScreenGui already owns CoreUISafeInsets. Keep bottom controls

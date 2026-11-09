@@ -1,0 +1,294 @@
+{
+  "preferred": "Enum.PreferredTextSize.Medium",
+  "suites": {
+    "HueItemReveal": {
+      "ok": true,
+      "result": [
+        "new paid result splits once and settles; same receipt does not replay",
+        "action/close cancellation owns audio and invalidates deferred callbacks",
+        "reduced motion and reopened/joined pending receipts are static",
+        "retiring receipt art unmounts its jar and same-receipt rebuild remains silent"
+      ]
+    },
+    "HuePortraitLifecycle": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": [
+          "one muted saved portrait uses production 15Hz sampler without camera or state drift",
+          "inspection and stock-only refresh preserve visual identity phase and fixed framing",
+          "confirmation and close retire their clock and cancel restores only one clock",
+          "reduced motion is static and blur pauses without voice or a camera reframe",
+          "pet swap and destroy cannot update the retired visual or retain a render connection",
+          "reset quotes and consumes exactly one selected channel while preserving the other"
+        ]
+      }
+    },
+    "PetMaterials": {
+      "ok": true,
+      "result": [
+        "owned template clones once, tints once and leaves stable properties untouched",
+        "eyes stay nonemissive, pale catchlight keeps its own profile, mouth remains protected",
+        "hidden or unselected charm has zero emission while visible charm exceeds body",
+        "emission-off retains exact same tinted surface and hidden pieces emit zero",
+        "late pack profile binds, removal releases opaque surface, reappearance binds once",
+        "explicit fallback releases its owned opaque surface and can restore once",
+        "adopted authored clone avoids duplicate surface and primitive stays unsupported",
+        "late binding retires an emptied fallback group without scanning every pose",
+        "finish profile switches independently of hue and leaves charm and face protected",
+        "missing unverified and unknown finishes safely fall back while explicit QA may bind candidate",
+        "model destruction owns all cloned surface cleanup"
+      ]
+    },
+    "GardenCareStartup": {
+      "ok": true,
+      "result": {
+        "passed": 2,
+        "cases": [
+          "actual Care.new accepts production ScreenGui and owns a full safe Frame for notice and setdown",
+          "actual Room.new and render steps complete with production ScreenGui before any companion or profile action"
+        ]
+      }
+    },
+    "HueSwatchInspection": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": [
+          "zero through five exist and only the current saved dose is marked",
+          "every clicked reference notch confirms current two to three without spending or recoloring",
+          "No Items and Max do not send a use and zero never resets a full hue",
+          "cancelled Citrus art retires before any ordinary tab and never returns on reopen",
+          "committed Citrus use sends exactly once then retires all confirmation art and success copy",
+          "all six reference controls keep44px and the fixed saved portrait survives scroll"
+        ]
+      }
+    },
+    "DirectPetting": {
+      "ok": true,
+      "result": {
+        "passed": 23,
+        "cases": [
+          "press records candidate and release emits exactly one accepted tap",
+          "cumulative9px begins one rub with no release tap or repeated cue",
+          "inactivity suspends lease but same captured finger resumes only after new9px motion",
+          "paused mouse requires fresh motion and still retires on ownership loss",
+          "coalesced release motion is consumed without tap or purr onset",
+          "canceled short release is cleanup and never a tap",
+          "blur clears stale opener leases without resurrecting held contact",
+          "a stationary long hold does not become tap or rub",
+          "same held touch cannot begin again when GuiObject reentry repeats InputBegan",
+          "retired touch never overwrites or ends a different active finger",
+          "mouse primary stays retired across reentry and unrelated touch until button release",
+          "touch retirement survives blur and reframe until its matching physical end or cancel",
+          "unrelated pointer cannot adopt or end an owned touch",
+          "rejected rub never starts purr or synthesizes release tap",
+          "failed or muted purr attempt remains consumed through the same held gesture",
+          "opening touch and mouse are drained before a fresh press",
+          "modal/native ownership loss cancels contact before another reaction",
+          "Room contact owns one voice attempt and one held grin without state writes",
+          "reduced rub grants static affection without species audio or camera recapture",
+          "only Back is selected and carried A drains before fresh native activation",
+          "first shown lesson retires on exit and save recovery never resurrects it",
+          "projected small pet retains44px target without including crest or floor FX",
+          "all seven muted reduced faces hold a readable grin with no body movement"
+        ]
+      }
+    },
+    "DeckMergeJolt": {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": [
+          "accepted serial and merge ID debounce a single bounded held curve",
+          "clear and chains cap at twelve pixels without adding or erasing stronger recoil",
+          "all tier peaks and durations match the accepted recipe",
+          "exterior tint and underlays flatten once while BoardBacking is transparent",
+          "absolute base transform returns exactly and never moves field or input targets",
+          "mode overlay reduced and serial changes clear motion and scope duplicate IDs",
+          "reflow captures a fresh authored base after reset without accumulated displacement",
+          "motif compositor preserves an opaque theme floor and intrinsic quieter marks"
+        ]
+      }
+    },
+    "EggArt": {
+      "ok": true,
+      "result": [
+        "all three registered owned shells use square Fit with one continuous ovoid load fallback and detached shadow",
+        "all five jars carry readable distinct fruit silhouettes and no input"
+      ]
+    },
+    "HueEggView": {
+      "ok": true,
+      "result": [
+        "1649, 971 one saved pet, independent channels and four five-notch rows",
+        "1649, 971 inventory selection asks exact item pet channel; cancel spends nothing",
+        "1649, 971 reset names lost bars and original rejects without spend",
+        "1649, 971 saved fixed jar receipt offers Store and Use now; no second grant",
+        "350, 703 one saved pet, independent channels and four five-notch rows",
+        "350, 703 inventory selection asks exact item pet channel; cancel spends nothing",
+        "350, 703 reset names lost bars and original rejects without spend",
+        "350, 703 saved fixed jar receipt offers Store and Use now; no second grant",
+        "568, 210 one saved pet, independent channels and four five-notch rows",
+        "568, 210 inventory selection asks exact item pet channel; cancel spends nothing",
+        "568, 210 reset names lost bars and original rejects without spend",
+        "568, 210 saved fixed jar receipt offers Store and Use now; no second grant",
+        "confirm sends once to unequipped selected pet and preserves exact result association"
+      ]
+    },
+    "GardenClient": {
+      "ok": true,
+      "result": {
+        "passed": 9,
+        "cases": [
+          "joining replica receives current action and rejects stale or malformed replacement",
+          "a partial or superseded peer greeting is never presented as an agreed pair",
+          "character replacement fences a previously valid actor",
+          "an old same-alias snapshot is ignored after confirmed equip generation advances",
+          "one deliberate focus holds with bounded pulses and retirement ends that generation",
+          "quick end and reopen defers acquisition until the server focus cooldown passes",
+          "an unacknowledged current focus retries once and retiring it cancels all retry work",
+          "per-pet authoritative OFF is retained and unsupported peers default to visible",
+          "public appearance finish survives the client filter and missing older snapshots use Standard"
+        ]
+      }
+    },
+    "BackdropGlobal": {
+      "ok": true,
+      "result": {
+        "passed": 6,
+        "cases": [
+          "Global confirmed Canopy is above opaque preview with exact relative order",
+          "Canopy owner Z changes rebase once and restore original exterior depths",
+          "Global locked Creek borrows existing16 hosts above preview",
+          "pattern owner Z and exterior return keep order and reduced steady writes",
+          "explicit host switch release and same-step destroy retain borrowed roots",
+          "unexpected recursive host destruction repairs only missing renderers"
+        ]
+      }
+    },
+    "PlayfulPresentation": {
+      "ok": true,
+      "result": {
+        "evidence": "native family/glyph measurement; visual glyph judgment remains separate",
+        "rows": [
+          {
+            "role": "Body",
+            "family": "rbxasset://fonts/families/PatrickHand.json",
+            "height": 16,
+            "font": "PatrickHand",
+            "width": 157
+          },
+          {
+            "role": "Action",
+            "family": "rbxasset://fonts/families/PatrickHand.json",
+            "height": 18,
+            "font": "PatrickHand",
+            "width": 175
+          },
+          {
+            "role": "Supporting",
+            "family": "rbxasset://fonts/families/PatrickHand.json",
+            "height": 14,
+            "font": "PatrickHand",
+            "width": 138
+          },
+          {
+            "role": "Heading",
+            "family": "rbxasset://fonts/families/FredokaOne.json",
+            "height": 24,
+            "font": "FredokaOne",
+            "width": 334
+          },
+          {
+            "role": "Counter",
+            "family": "rbxasset://fonts/families/RobotoMono.json",
+            "height": 18,
+            "font": "RobotoMono",
+            "width": 294
+          }
+        ],
+        "passed": 6,
+        "preference": "Medium"
+      }
+    },
+    "DeckBackground": {
+      "ok": true,
+      "result": {
+        "passed": 8,
+        "cases": [
+          "one16-band545-instance surface includes256 actual motif frames",
+          "canopy full period is closed and covers edges",
+          "creek full period is closed and covers edges",
+          "lantern full period is closed and covers edges",
+          "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+          "reduced board preview resize and return recompose same16 hosts once",
+          "exterior phase pauses while independent inspected owner advances",
+          "destroy removes all bands and stays idempotent"
+        ]
+      }
+    },
+    "FieldQuestLayout": {
+      "ok": false,
+      "result": "ReplicatedStorage._PlayfulCareQA.FieldQuestLayout:75: ReplicatedStorage._PlayfulCareQA.FieldQuestLayout:44: passive quest footprint moved across objective states"
+    },
+    "CareMachineUI": {
+      "ok": true,
+      "result": {
+        "passed": 10,
+        "cases": [
+          "ordinary Pet selection confirms and marks Active only after authoritative commit",
+          "machine equip waits for saved proof and exact new actor identity in either order",
+          "ordinary late save survives timeout feedback and a reopened editor",
+          "explicit machine close coalesces pickup and keeps failure retryable",
+          "forced exit and cancelling a choice never request pickup",
+          "fixed tabs portrait and complete channel controls survive constrained layouts",
+          "every selected charm keeps its own check glyph clear of wrapped names at constrained size",
+          "owned live grid is bounded and closes visible model generations",
+          "Use now chooses recipient without equipping and retains pending result identity",
+          "old bay responses cannot clear new claim or unrelated item confirmation"
+        ]
+      }
+    },
+    "FieldQuestText": {
+      "ok": true,
+      "result": [
+        "Bank teaches minimum III without changing the two ordered locations",
+        "Creek exact II has center bounds and preserves the published seeded side",
+        "Lantern distinguishes two initial merges from two new linked merges",
+        "chain expiry changes displayed actual count back to zero",
+        "complete goals and settling never invent another active bank",
+        "public snapshot decoding is cached across HUD updates",
+        "missing metadata alone uses legacy Bank; malformed metadata fails closed",
+        "Menu and recap retain the completed field while stale receipt data stays rejected",
+        "new objective current instructions and next hints come from immutable descriptor"
+      ]
+    },
+    "HueSwatches": {
+      "ok": true,
+      "result": {
+        "passed": 4,
+        "cases": [
+          "forty authored mixed chips match on all seven neutral saved identities",
+          "all 1296 legal vectors preserve other pigments and current saved-stage color in both channels",
+          "isolated full stage reaches exact existing anchors without altering the opposite channel",
+          "invalid stage channel hue and unknown target cannot form a quote"
+        ]
+      }
+    },
+    "HandheldTextLayout": {
+      "ok": true,
+      "result": {
+        "preference": "Medium",
+        "passed": 5,
+        "cases": [
+          "568, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "480, 160 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "350, 279 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "844, 390 active LEFT RIGHT complete and exact wallet/drop count fit",
+          "390, 740 active LEFT RIGHT complete and exact wallet/drop count fit"
+        ]
+      }
+    }
+  }
+}

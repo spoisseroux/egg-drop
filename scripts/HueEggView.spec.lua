@@ -28,8 +28,8 @@ return function(client,parent,onlySize)
    test(tostring(size).." one saved pet, independent channels and four five-notch rows",function()
     view:open(state(i*1000),"palette","puddle");settle();check();assert(view.petId=="puddle"and view.channel=="main")
     assert(not view.body:FindFirstChild("Current")and not view.body:FindFirstChild("After"))
-    view:chooseChannel("secondary");settle();assert(view.bars.rose.value.Text=="2/5")
-    for _,bar in pairs(view.bars)do assert(#bar.ticks==5)end
+    view:chooseChannel("secondary");settle();assert(view.bars.rose.value.Text==(if size.Y<436 and size.X>=540 then "3 jars"else "2/5"))
+    for _,bar in pairs(view.bars)do assert(#bar.ticks==6 and bar.stages[0])end
    end)
    test(tostring(size).." inventory selection asks exact item pet channel; cancel spends nothing",function()
     local count=#sent;assert(view:chooseItem("rose"));settle();check()
@@ -42,9 +42,32 @@ return function(client,parent,onlySize)
    test(tostring(size).." saved fixed jar receipt offers Store and Use now; no second grant",function()
     local s=state(i*1000+100);s.pendingHueResult={id="receipt-"..i,itemId="rose",quantity=1,inventoryAfter=3,revision=s.revision,catalogVersion=H.CatalogVersion}
     view:open(s,"palette","puddle");settle();assert(view.page=="receipt"and view.receipt.Text:find("3 in inventory",1,true));assert(view.action.Text=="Store"and view.useNow.Visible)
-    assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:choosePet("puddle"));assert(view:activate());settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id);view:cancelConfirmation();assert(view.page=="receipt")
+    assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:choosePet("puddle")and view.action.Text=="Store");assert(view:chooseChannel("main"));settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id and view.action.Text=="Use one");view:cancelConfirmation();assert(view.page=="palette"and view.tab=="hue"and view.assignment.pendingResultId==s.pendingHueResult.id)
    end)
   end
+  test("short landscape right pane starts with stock and six full swatches without duplicated channel instructions",function()
+   root.Size=UDim2.fromOffset(749,381);view:open(state(4999),"palette","puddle");settle();check()
+   assert(not view.channelTitle.Visible and not view.inspection.Visible and view.bars.rose.value.Text=="3 jars")
+   assert(view.bars.rose.row.Position.Y.Offset==0 and view.bars.rose.stages[0]:GetAttribute("SavedStage"))
+   assert(view.bars.rose.row:GetAttribute("AccessibleLabel"):find("Current 0/5",1,true))
+   for _,tick in ipairs(view.bars.rose.ticks)do assert(tick.AbsolutePosition.Y>=view.body.AbsolutePosition.Y and tick.AbsolutePosition.Y+tick.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y)end
+   root.Size=UDim2.fromOffset(900,720);settle();assert(view.channelTitle.Visible and view.inspection.Visible and view.bars.rose.value.Text=="0/5","Resize did not restore roomy channel copy")
+  end)
+  test("short landscape Reset and fruit receipts keep name stock and adjacent Use now Store above the fold",function()
+   root.Size=UDim2.fromOffset(733,307)
+   for _,item in ipairs({"reset","rose"})do
+    local s=state(4999);s.pendingHueResult={id="compact-receipt-"..item,itemId=item,quantity=1,inventoryAfter=3,revision=s.revision,catalogVersion=H.CatalogVersion}
+    view:open(s,"palette","puddle");settle();check()
+    assert(view.title.Text==(if item=="reset"then "Reset Hue"else "Rose fruit")and not view.receiptDetail.Visible)
+    assert(view.receipt.Text:find("in inventory",1,true)and view.receipt.AbsolutePosition.X>view.receiptArt.AbsolutePosition.X+view.receiptArt.AbsoluteSize.X)
+    local jar=view.itemReveal.jar;assert(jar.AbsoluteSize.X>=63 and jar.AbsoluteSize.Y>=63)
+    assert(view.useNow.Parent==view.card and view.useNow.AbsolutePosition.Y==view.action.AbsolutePosition.Y)
+    assert(view.useNow.AbsolutePosition.X+view.useNow.AbsoluteSize.X+7<=view.action.AbsolutePosition.X)
+    assert(view.receipt.AbsolutePosition.Y+view.receipt.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y and not view.body.ScrollingEnabled)
+    for _,node in ipairs({view.useNow,view.action})do assert(node.TextFits and node.AbsoluteSize.Y>=44 and node.AbsolutePosition.Y+node.AbsoluteSize.Y<=view.card.AbsolutePosition.Y+view.card.AbsoluteSize.Y)end
+    assert(view.action.Text=="Store"and view:useResult());settle();assert(not jar.Parent and not view.itemReveal.resultId)
+   end
+  end)
   test("confirm sends once to unequipped selected pet and preserves exact result association",function()
    view:open(state(5000),"palette","puddle");view:chooseChannel("secondary");assert(view:chooseItem("rose"));assert(view:activate());assert(not view:activate())
    local v=sent[#sent].value;assert(v.petId=="puddle"and v.channel=="secondary"and v.itemId=="rose"and v.counts.rose==2 and not v.pendingResultId)
@@ -52,6 +75,7 @@ return function(client,parent,onlySize)
    assert(intent:receive({id=v.id,action="hueUse",petId="puddle",status="Saved",receipt=r}))
    local saved=state(5001);saved.lastHueResult=r;saved.petHues.puddle.secondary.rose=3;saved.hueInventory.rose=2;intent:update(saved)
    assert(not view.action.Visible and not view.action.Interactable and not view:activate()and #sent==count,"rapid second Confirm became a paid purchase")
+   assert(not view.confirmJar and not view.status.Visible,"durable use retained confirmation art or success copy")
   end)
  end)
  view:destroy();root:Destroy();assert(ok,err);return cases

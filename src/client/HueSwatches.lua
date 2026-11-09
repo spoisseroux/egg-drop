@@ -4,7 +4,7 @@ local Hue=require(Shared.HueCatalog)
 local Palette=require(Shared.PetPalette)
 local Swatches={}
 function Swatches.at(petId,appearance,channel,hue,stage)
- if(channel~="main"and channel~="secondary")or not Hue.ById[hue]or type(stage)~="number"or stage%1~=0 or stage<1 or stage>5 then return nil end
+ if(channel~="main"and channel~="secondary")or not Hue.ById[hue]or type(stage)~="number"or stage%1~=0 or stage<0 or stage>5 then return nil end
  local token=table.clone(appearance or {})
  local key=if channel=="main"then "mainDoses"else "secondaryDoses"
  local counts=if Hue.validCounts(token[key])then table.clone(token[key])else Hue.emptyCounts()

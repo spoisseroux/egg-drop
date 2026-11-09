@@ -1,54 +1,65 @@
+-- Real editor/reference colors. Notches choose one next dose, never their number.
 return function(client,parent)
- local View=require(client.HueEggView);local Intent=require(client.HueIntent);local Shared=game.ReplicatedStorage.Shared
- local H=require(Shared.HueCatalog);local Http=game:GetService("HttpService");local Run=game:GetService("RunService")
- local root=Instance.new("Frame");root.Size=UDim2.fromOffset(350,703);root.Parent=parent
- local sent,cases={},{};local view
- local intent=Intent.new({id=function()return "swatch-confirm"end,send=function(a,v,r)table.insert(sent,{action=a,value=v,revision=r})end,changed=function()if view then view:refresh()end end})
+ local View=require(client.HueEggView);local Intent=require(client.HueIntent);local H=require(game.ReplicatedStorage.Shared.HueCatalog)
+ local Run=game:GetService("RunService");local root=Instance.new("Frame");root.Size=UDim2.fromOffset(733,307);root.Parent=parent
+ local view;local sent,cases={},{};local serial=0
+ local intent=Intent.new({id=function()serial+=1;return "notch-"..serial end,send=function(action,value,revision)table.insert(sent,{action=action,value=value,revision=revision})end,changed=function()if view then view:refresh()end end})
  view=View.new(root,intent,{appearance=function()return{charmVisible=false}end})
- local row={main={rose=2,tide=1,citrus=0,iris=0},secondary={rose=0,tide=0,citrus=1,iris=2}}
+ local row={main={rose=2,tide=1,citrus=0,iris=5},secondary=H.emptyCounts()}
  local state={status="Ready",revision=1,nectar=24,inventoryMask=127,hues={},petHues={pip=row},hueInventory={rose=3,tide=0,citrus=2,iris=1,reset=1}}
- local function settle()for _=1,3 do Run.Heartbeat:Wait()end end
+ local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end
  local ok,problem=pcall(function()
-  view:open(state,"palette","pip");settle()
-  test("inspection changes no saved vectors stock portrait or spend intent",function()
-   local before=Http:JSONEncode(state);local visual=view.visual;local pieces=visual.pieces
-   local colors={};for _,e in ipairs(pieces)do colors[e.part]=e.part.Color end
-   assert(view:inspectHue("rose",4)and #sent==0 and Http:JSONEncode(state)==before and view.visual==visual and view.visual.pieces==pieces)
-   assert(not view.inspection.Text:find("#",1,true)and view.inspection.Text:find("Unapplied",1,true))
-   assert(view.bars.rose.ticks[4]:GetAttribute("Inspected")and view.bars.rose.ticks[2]:GetAttribute("SavedStage"))
-   for part,color in pairs(colors)do assert(part.Color==color,"inspection recolored saved portrait")end
+  view:open(state,"palette","pip");frames()
+  test("zero through five exist and only the current saved dose is marked",function()
+   for _,bar in pairs(view.bars)do assert(#bar.ticks==6 and bar.stages[0]and bar.stages[5])end
+   for stage=0,5 do local tick=view.bars.citrus.stages[stage];assert(tick:GetAttribute("SavedStage")== (stage==0));assert(tick.SavedMark.BackgroundTransparency==(if stage==0 then 0 else 1))end
+   assert(view.bars.rose.stages[2]:GetAttribute("SavedStage")and view.bars.iris.stages[5]:GetAttribute("SavedStage"))
   end)
-  test("zero-stock stages inspect but cannot consume, channels use their independent saved vectors",function()
-   assert(view:inspectHue("tide",5)and view.inspection.Text:find("0 in inventory",1,true)and not view:chooseItem("tide")and #sent==0)
-   view:chooseChannel("secondary");assert(view.inspected==nil and view:inspectHue("iris",4))
-   assert(view.inspection.Text:find("Iris fruit stage 4",1,true)and view.bars.iris.value.Text=="2/5")
+  test("every clicked reference notch confirms current two to three without spending or recoloring",function()
+   local visual=view.visual;local body=visual.colors.body
+   for stage=0,5 do
+    assert(view:chooseNotch("rose",stage)and view.confirmation.itemId=="rose")
+    assert(view.confirmDelta.Text=="Rose 2 → 3"and view.title.Text=="Use one Rose fruit?"and view.action.Text=="Use one"and #sent==0)
+    assert(view.visual==visual and visual.colors.body==body and state.petHues.pip.main.rose==2)
+    local illustration=view.confirmJar;assert(illustration and illustration.Parent==view.body)
+    assert(view:cancelConfirmation()and illustration.Parent==nil and not view.confirmJar)
+   end
   end)
-  test("all swatches retain 44px targets and readable stage text on phone, short landscape and desktop",function()
+  test("No Items and Max do not send a use and zero never resets a full hue",function()
+   assert(view.bars.tide.value.Text=="No Tide fruit"and view.bars.iris.value.Text=="Iris is maxed")
+   for stage=0,5 do assert(not view:chooseNotch("tide",stage)and not view:chooseNotch("iris",stage))end
+   assert(#sent==0 and state.petHues.pip.main.iris==5)
+  end)
+  test("cancelled Citrus art retires before any ordinary tab and never returns on reopen",function()
+   assert(view:chooseNotch("citrus",5));local illustration=view.confirmJar;assert(illustration)
+   assert(view:cancelConfirmation()and illustration.Parent==nil)
+   for _,tab in ipairs({"pet","hue","charm","hue"})do assert(view:setTab(tab));frames();assert(not view.confirmJar)end
+   view:close("forced");view:open(state,"palette","pip");assert(not view.confirmJar)
+  end)
+  test("committed Citrus use sends exactly once then retires all confirmation art and success copy",function()
+   assert(view:chooseNotch("citrus",0)and view:activate()and not view:activate());assert(#sent==1)
+   local packet=sent[1].value;local illustration=view.confirmJar
+   assert(packet.itemId=="citrus"and packet.counts.citrus==0 and packet.counts.rose==2 and packet.channel=="main")
+   local receipt={id=packet.id,petId="pip",action="hueUse",revision=2}
+   assert(intent:receive({id=packet.id,petId="pip",action="hueUse",status="Saved",receipt=receipt})and intent.pending)
+   state.revision=2;state.lastHueResult=receipt;state.petHues.pip.main.citrus=1;state.hueInventory.citrus=1;intent:update(state);frames()
+   assert(not intent.pending and not view.confirmation and not view.confirmJar and illustration.Parent==nil and not view.status.Visible)
+   for _,tab in ipairs({"pet","charm","hue"})do view:setTab(tab);frames();assert(not view.confirmJar and #view.receiptArt:GetChildren()==0)end
+   assert(#sent==1 and view.bars.citrus.stages[1]:GetAttribute("SavedStage"))
+  end)
+  test("all six reference controls keep44px and the fixed saved portrait survives scroll",function()
    for _,size in ipairs({Vector2.new(350,703),Vector2.new(568,160),Vector2.new(733,307),Vector2.new(1649,971)})do
-    root.Size=UDim2.fromOffset(size.X,size.Y);settle();view:layout();settle()
-    assert(view.title.TextFits and view.inspection.TextFits)
+    root.Size=UDim2.fromOffset(size.X,size.Y);frames();view:layout();frames();local position=view.portrait.AbsolutePosition
     for _,bar in pairs(view.bars)do for _,tick in ipairs(bar.ticks)do
      assert(tick.AbsoluteSize.X>=44 and tick.AbsoluteSize.Y>=44 and tick.TextFits)
-     assert(not tick:FindFirstChildWhichIsA("UIGradient"),"decoration tinted exact quoted chip")
      local function luminance(color)local function linear(v)return if v<=.04045 then v/12.92 else((v+.055)/1.055)^2.4 end;return .2126*linear(color.R)+.7152*linear(color.G)+.0722*linear(color.B)end
      local ink,fill=luminance(tick.TextColor3),luminance(tick.BackgroundColor3)
      assert((math.max(ink,fill)+.05)/(math.min(ink,fill)+.05)>=4.5,"stage text contrast below4.5:1")
     end end
-    if size==Vector2.new(733,307)then
-     local portrait=view.portrait.AbsolutePosition
-     view.body.CanvasPosition=Vector2.zero;assert(view:inspectHue("rose",4));settle()
-     assert(not view.inspection.Text:find("#",1,true)and view.inspection:GetAttribute("AccessibleLabel"):find("Unapplied",1,true))
-     view:ensure(view.bars.rose.ticks[5]);settle();assert(view.portrait.AbsolutePosition==portrait,"swatch scroll moved fixed portrait")
-    end
+    view:ensure(view.bars.rose.stages[5]);frames();assert(view.portrait.AbsolutePosition==position)
    end
   end)
-  test("inspecting stage4 at saved2 still confirms only next3 and emits one unchanged dose quote",function()
-   view:chooseChannel("main");assert(view:inspectHue("rose",4));assert(view:chooseItem("rose"))
-   assert(#sent==0 and view.quote.Text:find("2/5 → 3/5",1,true))
-   assert(view:activate()and not view:activate()and #sent==1)
-   assert(sent[1].value.counts.rose==2 and sent[1].value.counts.tide==1 and sent[1].value.channel=="main")
-  end)
  end)
- view:destroy();root:Destroy();assert(ok,problem);return{passed=#cases,cases=cases}
+ view:destroy();root:Destroy();assert(ok,problem);return {passed=#cases,cases=cases}
 end

@@ -1,5 +1,5 @@
 return function(client,parent)
- local Jolt=require(client.DeckMergeJolt);local Backdrop=require(client.DeckBackdrop)
+ local Jolt=require(client.DeckMergeJolt);local Backdrop=require(client.DeckBackdrop);local Art=require(client.DeckArt)
  local folder=Instance.new("Folder");folder.Parent=parent;local cases={};local owners={}
  local function test(name,run)run();table.insert(cases,name)end
  local function make()
@@ -11,13 +11,30 @@ return function(client,parent)
  local ok,problem=pcall(function()
   test("accepted serial and merge ID debounce a single bounded held curve",function()
    local j=make();assert(j:emit(1,10,4,1,false,0)and not j:emit(1,10,4,1,false,0))
-   for i=0,100 do j:update(i*.001);assert(j.offset.Magnitude<=3.000001)end
+   for i=0,100 do j:update(i*.001);assert(j.offset.Magnitude<=7.000001)end
    assert(not j:emit(0,11,5,2,true,.11))
   end)
-  test("clear and chains cap at four pixels without adding or erasing stronger recoil",function()
+  test("clear and chains cap at twelve pixels without adding or erasing stronger recoil",function()
    local j=make();assert(j:emit(1,1,5,5,true,0));assert(not j:emit(1,2,2,1,false,.01))
-   assert(j.active.amplitude==4);j:update(.18*.16);assert(math.abs(j.offset.Magnitude-4)<.00001)
-   assert(j:emit(1,3,5,2,true,.04)and j.active.amplitude==4)
+   assert(j.active.amplitude==12);j:update(.22*.16);assert(math.abs(j.offset.Magnitude-12)<.00001)
+   assert(j:emit(1,3,5,2,true,.04)and j.active.amplitude==12)
+  end)
+  test("all tier peaks and durations match the accepted recipe",function()
+   for _,recipe in ipairs({{2,false,3,.11},{3,false,5,.14},{4,false,7,.17},{5,false,9,.19},{5,true,12,.22}})do
+    local j,shell=make();local base=shell.Position
+    assert(j:emit(1,1,recipe[1],1,recipe[2],0))
+    assert(j.active.amplitude==recipe[3]and j.active.duration==recipe[4])
+    j:update(recipe[4]*.16);assert(math.abs(j.offset.Magnitude-recipe[3])<.00001)
+    j:update(recipe[4]);assert(shell.Position==base and j.offset==Vector2.zero)
+    j:emit(1,2,recipe[1],2,recipe[2],1);assert(math.abs(j.active.amplitude-math.min(12,recipe[3]*1.12))<.00001)
+   end
+  end)
+  test("exterior tint and underlays flatten once while BoardBacking is transparent",function()
+   local home=Instance.new("Frame");home.Parent=folder;Art.backdrop(home)
+   local composite=home.ExteriorComposite
+   assert(home.BackgroundTransparency==1 and composite:IsA("CanvasGroup")and math.abs(composite.GroupTransparency-.08)<.00001)
+   assert(composite.BackgroundTransparency==0 and composite:FindFirstChild("CanopyArt")and composite:FindFirstChildOfClass("UIGradient"))
+   home:Destroy()
   end)
   test("absolute base transform returns exactly and never moves field or input targets",function()
    local j,shell,rim,field=make();local a,b,c=shell.Position,rim.Position,field.Position

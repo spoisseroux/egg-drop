@@ -70,8 +70,8 @@
     "Body": {
       "roughness": "bodyRoughness",
       "emissionDayDuskNight": [
-        0.12,
-        0.29,
+        0.22,
+        0.34,
         0.46
       ]
     },
@@ -86,8 +86,8 @@
     "Charm": {
       "roughness": "bodyRoughness",
       "emissionDayDuskNight": [
-        0.25,
-        0.615,
+        0.38,
+        0.68,
         0.98
       ]
     },
@@ -100,7 +100,7 @@
       ]
     }
   },
-  "tintPolicy": "Opaque white albedo; runtime resolved role color applied once through SurfaceAppearance.Color. Trial EmissiveTint is white, subject to native hue probe.",
+  "tintPolicy": "Opaque white albedo; resolved role color applied once through SurfaceAppearance.Color; neutral emissive tint. Original four maps unchanged. Finish maps are native solid scalar Content profiles.",
   "normalMap": null,
   "uploadedIds": {
     "white": "rbxassetid://132217078330162",
@@ -110,8 +110,8 @@
   },
   "templatePack": {
     "file": "PetMaterials.rbxm",
-    "sha256": "231cb8df9d0b112dea49669bace4a6c933bde3f870d7054ab3ea21223324c0ff",
-    "provenance": "Native SerializationService Edit export; four profiles round-tripped with modern Content URLs."
+    "sha256": "4ab5bc8a7a26bd8662e61ee4981a5a2dce2a677963fb6b8fbf6c20dd80331abb",
+    "provenance": "Native SerializationService Edit export; seven modern Content profiles. Gloss and Matte accepted in native render review; Metal retained as unverified candidate and excluded from pool2."
   },
   "uploadPolicy": "Root uploads these four files, records returned owned asset IDs, then invokes the Edit-only template builder. This generator does not upload or modify mounted assets.",
   "uvCaveat": "Uniform maps minimize UV assumptions; original Zivvi/Ovelle native render validation remains required.",
@@ -126,5 +126,30 @@
     ],
     "provenance": "Original authored32x8torus; XML matches immutable MeshContent/InitialSize recipe used by the production rig pack. Native binary export retained as provenance; live Rojo sync may require original imported-resource clone refresh.",
     "nativeExport": "PetCharmAssets.rbxm"
+  },
+  "finishProfiles": {
+    "Standard": {
+      "template": "Body",
+      "nativeVerified": true
+    },
+    "Gloss": {
+      "template": "BodyGloss",
+      "roughnessByte": 36,
+      "metalnessByte": 0,
+      "nativeVerified": true
+    },
+    "Matte": {
+      "template": "BodyMatte",
+      "roughnessByte": 255,
+      "metalnessByte": 0,
+      "nativeVerified": true
+    },
+    "Metal": {
+      "template": "BodyMetal",
+      "roughnessByte": 82,
+      "metalnessByte": 255,
+      "nativeVerified": false,
+      "sellable": false
+    }
   }
 }

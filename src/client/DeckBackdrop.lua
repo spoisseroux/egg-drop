@@ -2,6 +2,7 @@
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
 Backdrop.MotifOpacity=.88
+Backdrop.ExteriorOpacity=.92 -- Applied once by DeckArt exterior CanvasGroup, never per motif.
 local function frame(parent,name)
  local f=Instance.new("Frame");f.Name,f.BorderSizePixel,f.BackgroundTransparency=name,0,1
  f.Active,f.Selectable,f.ZIndex=false,false,parent.ZIndex+1;f.Parent=parent;return f

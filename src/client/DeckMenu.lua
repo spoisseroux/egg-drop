@@ -106,7 +106,7 @@ function Menu.new(parent,callbacks)
         marker.Visible=false
         self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Daily contracts")
 	end
-	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Pet journal","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
+	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Pets","Companions","pets","Meet your collection"},{"Style","Deck style","style","Make it yours"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
 		local illustration=Art.frame(b,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
 		illustration.BackgroundTransparency=1;destinationArt(illustration,entry[3])
@@ -224,6 +224,7 @@ function Menu:layoutContents(wanted)
 	local destinationHeight=if short then (if self.shallow then 56 else 44) elseif list then 88 else 168
 	for _,item in ipairs(self.destinations) do
 		styleType(item.title,"Action",short);styleType(item.subtitle,"Supporting",short)
+		if self.roomy and not short then item.title.TextSize+=2;item.subtitle.TextSize+=2 end
 		local w=if list then usable else (usable-24)/3
 		local tx=if short then (if self.shallow then 58 else 46) elseif list then 78 else 8
 		local titleH=Art.textHeight(item.title,w-tx-8,if short then 24 else 26)

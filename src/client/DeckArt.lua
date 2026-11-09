@@ -4,7 +4,7 @@ local Art = {}
 -- Stable default constants. Confirmed interface palettes are resolved only by
 -- explicit semantic bindings; species, status and hardware identity stay stable.
 Art.Type = { Reward = 32, Heading = 24, Action = 18, Body = 16, Supporting = 14, Counter = 18, Compact = 12 }
-Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.Nunito, Body=Enum.Font.Nunito, Supporting=Enum.Font.Nunito, Counter=Enum.Font.RobotoMono }
+Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.PatrickHand, Body=Enum.Font.PatrickHand, Supporting=Enum.Font.PatrickHand, Counter=Enum.Font.RobotoMono }
 Art.Space = { Small = 4, Related = 8, Group = 12, Panel = 20 }
 for name, hex in pairs({
 	Backdrop = "#123C35", Ink = "#201D32", Surface = "#123C35", Raised = "#234A43", Inset = "#0F322C",
@@ -196,6 +196,23 @@ function Art.roomyType(label,role,compact,roomy)
  Art.type(label,role,compact)
  if roomy then label.TextSize=({Heading=28,Action=20,Body=17,Supporting=16,Counter=20,Reward=32})[role]or label.TextSize end
  return label
+end
+
+-- Shared passive 22x24 silhouette. The owning 44px button retains input/focus.
+function Art.carryArrow(button,direction)
+ local icon=button:FindFirstChild("CarryArrow")
+ if not icon then
+  icon=Art.frame(button,"CarryArrow",Art.Ink,UDim2.fromScale(.5,.5),UDim2.fromOffset(22,24),button.ZIndex+2)
+  icon.AnchorPoint=Vector2.new(.5,.5);icon.BackgroundTransparency=1
+  -- Horizontal strips make one broad, softly stepped head without hollow chevrons.
+  for row,width in ipairs({4,6,8,10,12,14,16,16})do
+   local strip=Art.frame(icon,"Head"..row,"text",UDim2.fromOffset((22-width)/2,row-1),UDim2.fromOffset(width,1),icon.ZIndex)
+   Art.corner(strip,1)
+  end
+  local stem=Art.frame(icon,"Stem","text",UDim2.fromOffset(9,7),UDim2.fromOffset(4,17),icon.ZIndex);Art.corner(stem,1)
+ end
+ icon.Rotation=if direction=="down"then 180 elseif direction=="back"then -90 else 0
+ button.Text="";return icon
 end
 
 function Art.close(button)
@@ -406,9 +423,13 @@ local function buildCanopy(parent,motion)
 end
 function Art.backdrop(parent)
  if backdropMotion[parent]then return end
- parent.BackgroundColor3=Art.Backdrop;parent.ClipsDescendants=true;Art.shade(parent,1,.76)
- local motion={entries={},layers={},resting=true,elapsed=0,phases=setmetatable({},{__mode="k"}),confirmed="canopy"}
- backdropMotion[parent]=motion;buildCanopy(parent,motion)
+ -- Every exterior pixel, tint and underlay is flattened exactly once. BoardBacking
+ -- itself is transparent so the remaining 8% really comes from the garden.
+ parent.BackgroundTransparency=1;parent.ClipsDescendants=true
+ local host=node("CanvasGroup",parent,{Name="ExteriorComposite",Size=UDim2.fromScale(1,1),BackgroundColor3=Art.Backdrop,BorderSizePixel=0,GroupTransparency=1-PatternBackdrop.ExteriorOpacity,ZIndex=parent.ZIndex,Active=false,Selectable=false})
+ Art.shade(host,1,.76)
+ local motion={host=host,entries={},layers={},resting=true,elapsed=0,phases=setmetatable({},{__mode="k"}),confirmed="canopy"}
+ backdropMotion[parent]=motion;buildCanopy(host,motion)
  parent.Destroying:Connect(function()
   motion.destroyed=true;backdropMotion[parent]=nil
   if motion.surface then motion.surface:destroy()end
@@ -433,7 +454,7 @@ local function returnPreview(host)
  -- before callers can destroy a temporary page under deferred signal delivery.
  for parent,motion in pairs(backdropMotion)do
   if not motion.destroyed and parent:IsDescendantOf(game)then
-   if motion.art and motion.art.Parent==host then canopyOwner(motion,parent,parent);motion.art.Visible=false end
+   if motion.art and motion.art.Parent==host then canopyOwner(motion,motion.host,motion.host);motion.art.Visible=false end
    if motion.surface and not motion.surface.destroyed and motion.surface.root.Parent==host then motion.surface:releaseOwner(host)end
   end
  end
@@ -465,7 +486,7 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
 	local motion=backdropMotion[parent]
 	if not motion or motion.destroyed or not parent:IsDescendantOf(game)then return end
  local preview=previewBackground and previewBackground.host.Parent and previewBackground.host.Visible and previewAllowed~=false
- local owner=if preview then previewBackground.host else parent
+ local owner=if preview then previewBackground.host else motion.host
  local id=if preview then previewBackground.id else motion.confirmed
  local theme=if preview then previewBackground.theme else motion.theme
  local wanted=preview or visible
@@ -473,18 +494,18 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
  local surfaceAlive=motion.surface and not motion.surface.destroyed and motion.surface.root.Parent~=nil
  if wanted then
   if motion.surface and not surfaceAlive then motion.surface:destroy();motion.surface=nil end
-  if id=="canopy"and not canopyAlive then buildCanopy(parent,motion);canopyAlive=true end
+  if id=="canopy"and not canopyAlive then buildCanopy(motion.host,motion);canopyAlive=true end
  end
- if not wanted and not canopyAlive then if surfaceAlive then motion.surface:update(parent,now,false,reduced)end;return end
+ if not wanted and not canopyAlive then if surfaceAlive then motion.surface:update(motion.host,now,false,reduced)end;return end
  if theme then
   if not wanted and not surfaceAlive then return end
-  if canopyAlive then if motion.art.Visible then motion.art.Visible=false end;canopyOwner(motion,parent,parent)end
-  if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(parent)end
+  if canopyAlive then if motion.art.Visible then motion.art.Visible=false end;canopyOwner(motion,motion.host,motion.host)end
+  if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(motion.host)end
   motion.surface:configure(id,theme);if motion.case then motion.surface:setCase(motion.case)end;motion.surface:update(owner,now,preview or visible,reduced)
   motion.lastTime=nil;return
  end
- if surfaceAlive then motion.surface:update(parent,now,false,reduced)end
- canopyOwner(motion,parent,owner);if not motion.art.Visible then motion.art.Visible=true end
+ if surfaceAlive then motion.surface:update(motion.host,now,false,reduced)end
+ canopyOwner(motion,motion.host,owner);if not motion.art.Visible then motion.art.Visible=true end
  visible=preview or visible
  if motion.owner~=owner then
   if motion.owner then motion.phases[motion.owner]=motion.elapsed end
@@ -642,8 +663,10 @@ function Art.deck(backdrop, shell, bezel)
 end
 
 function Art.tintBackdrop(parent,theme)
-	parent.BackgroundColor3=theme.backdrop or Art.Backdrop
-	local art=backdropMotion[parent]and backdropMotion[parent].art or parent:FindFirstChild("CanopyArt")
+	local motion=backdropMotion[parent]
+ local floor=if motion then motion.host else parent
+ floor.BackgroundColor3=theme.backdrop or Art.Backdrop
+	local art=motion and motion.art or parent:FindFirstChild("CanopyArt")
 	if not art then return end
 	for _,node in ipairs(art:GetChildren())do
 		if node:IsA("Frame")then

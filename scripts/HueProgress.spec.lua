@@ -39,7 +39,7 @@ return function(server)
  local function fund(h)for n=3,70 do assert(H.award(h,n,8))end end
  local function makeLegacy(db,mode,count)
   local state=db.player_1.hatching
-  state.version=5;for _,k in ipairs({"petHues","hueInventory","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyHueEgg","legacyHueRedemption","legacyLastHueResult","lastHueResult","pendingHueResult","hueReservation"})do state[k]=nil end
+  state.version=5;for _,k in ipairs({"materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","materialReservation","pendingMaterialResult","lastMaterialResult","petHues","hueInventory","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyHueEgg","legacyHueRedemption","legacyLastHueResult","lastHueResult","pendingHueResult","hueReservation"})do state[k]=nil end
   state.hues={};state.hueReceipts={};state.hueAssignments={};state.lease.expiresAt=0
   for n=1,count or 2 do
    local pet=if n<=12 then "pip"else "puddle";local hue=Hue.Order[math.floor(((n-1)%12)/3)+1].id;local rank=(n-1)%3
@@ -59,7 +59,7 @@ return function(server)
   assert(L.valid(state));return state
  end
  test("fresh v6 has five private stacks and seven independent color capabilities",function()
-  local h,db=fixture();assert(h.state.version==6 and S.valid(h.state));assert(db.player_1.custom=="kept"and not db.player_1.petAppearance.pip.charmVisible)
+  local h,db=fixture();assert(h.state.version==7 and S.valid(h.state));assert(db.player_1.custom=="kept"and not db.player_1.petAppearance.pip.charmVisible)
   for _,item in ipairs(Hue.ItemOrder)do assert(h.state.hueInventory[item]==0)end
   local p=H.public(h);assert(not p.hueReservation and not p.hueItemReceipts and not p.hueReceiptOrder)
   for pet in pairs(Hue.Supported)do assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end
@@ -106,7 +106,7 @@ return function(server)
  test("v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",function()
   local h,db,c,a=fixture();fund(h);assert(H.release(h));local old=makeLegacy(db,nil,5)
   old.hues.pip.mix="rose:tide";old.hues.pip.secondary="rose";local snapshot=copy(old)
-  h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==6 and h.state.petHues.pip.main.rose==3 and h.state.petHues.pip.main.tide==3 and h.state.petHues.pip.secondary.rose==5)
+  h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==7 and h.state.petHues.pip.main.rose==3 and h.state.petHues.pip.main.tide==3 and h.state.petHues.pip.secondary.rose==5)
   local before=Palette.resolve("pip",Hue.appearance(snapshot.hues,"pip"));local after=Palette.resolve("pip",Hue.appearance(h.state.hues,"pip",h.state.petHues))
   assert((Vector3.new(before.body.R,before.body.G,before.body.B)-Vector3.new(after.body.R,after.body.G,after.body.B)).Magnitude<.00001)
   command(h,"hueLegacyPreset",{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose",counts=S.row(h.state,"pip").main,locked=false})
@@ -137,7 +137,7 @@ return function(server)
    old.version=version;old.hueAssignments=nil;old.lastHatch={id="old-focused",petId="pip",duplicate=true,recipe="sprout",mastery=2}
    if version<4 then old.petDay=nil;old.petCount=nil;old.lastPetAward=nil end
    if version==2 then old.masteryChallenges=nil;old.masteryLegacyMask=nil;old.totalWins=nil;old.contracts=nil end
-   local balance=old.nectar;h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==6 and h.state.nectar==balance and h.state.lastHatch.id=="old-focused")
+   local balance=old.nectar;h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==7 and h.state.nectar==balance and h.state.lastHatch.id=="old-focused")
    assert(H.command(h,"ack","old-focused",h.state.revision));local ok,why=H.command(h,"hatch","sprout",h.state.revision);assert(not ok and why=="RetiredEgg")
   end
  end)

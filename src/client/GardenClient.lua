@@ -63,7 +63,7 @@ function Garden:appearance(board,petId)
         self.appearanceCache[board]=cached
     end
     local item=cached.value[petId]
-    return {mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
+    return {finish=type(item)=="table"and item.finish or "standard",mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=not(type(item)=="table"and item.charmVisible==false),body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
 end
 function Garden:renderActor(ownerId,petId,character)
  local exact=self:get(ownerId,petId,character);if exact then return exact end

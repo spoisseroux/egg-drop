@@ -4,6 +4,7 @@ local Hues=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Intent={};Intent.__index=Intent
 local messages={RevisionChanged="Your inventory changed. Review the updated counts.",Stale="Your inventory changed. Review the updated counts.",NeedStars="You need more Stars.",Insufficient="You need more Stars.",NotOwned="Choose a pet you own.",Unowned="Choose a pet you own.",Unsupported="This pet cannot use this item yet.",PendingHatch="Finish your pending companion hatch first.",RevealPending="Finish your pending companion hatch first.",PendingResult="Store or use your pending item first.",EmptyStock="There are no jars of this item left.",NoStock="There are no jars of this item left.",Capped="This hue is already 5/5 on this channel.",NoChange="This channel is already original.",SessionLost="Reconnect to confirm your saved items and colors.",Unavailable="Saving is unavailable. Your confirmed items are safe."}
+messages.EmptyStock,messages.NoStock,messages.Capped,messages.NoChange="No Items","No Items","Max","Original"
 function Intent.new(d)return setmetatable({d=d,state={},status="Ready"},Intent)end
 function Intent:notify()if self.d.changed then self.d.changed(self)end end
 function Intent:record()return self.state.lastHueResult end
@@ -11,7 +12,7 @@ function Intent:reconcile()
  local p=self.pending;if not p then return end
  local latest=self:record();local receipt=if latest and latest.id==p.value.id then latest else p.savedReceipt
  if receipt and type(receipt.revision)=="number"and(self.state.revision or -1)>=receipt.revision then
-  self.pending=nil;self.status=if receipt.outcome=="Refused"then "Rejected"else "Saved";self.message=if receipt.outcome=="Refused"then "This stack cannot hold another jar. No Stars were spent."else "Saved";self.receipt=receipt
+  self.pending=nil;self.status=if receipt.outcome=="Refused"then "Rejected"else "Saved";self.message=if receipt.outcome=="Refused"then "This stack is full. No Stars were used."else nil;self.receipt=receipt
  end
 end
 function Intent:update(state)
@@ -33,7 +34,7 @@ function Intent:begin(action,petId,values)
  local ready,reason=self:ready(petId);if not ready then self.message=reason;self:notify();return false end
  local revision=self.state.revision or 0;local value=table.clone(values)
  value.id=tostring(revision)..":"..self.d.id();value.petId=petId;value.catalogVersion=Hues.CatalogVersion
- self.pending={action=action,value=value,revision=revision};self.status="Pending";self.message="Saving this change…"
+ self.pending={action=action,value=value,revision=revision};self.status="Pending";self.message=nil
  self:notify();self.d.send(action,value,revision);return true
 end
 function Intent:hatch()
@@ -70,12 +71,12 @@ function Intent:receive(packet)
  elseif packet.status=="Saved"then
   local r=packet.receipt
   if type(r)~="table"or r.id~=p.value.id or r.action~=p.action or r.petId~=p.value.petId or type(r.revision)~="number"then return false end
-  p.savedReceipt=r;self.status="Saved";self.message="Saved. Updating your confirmed inventory…";self:reconcile()
+  p.savedReceipt=r;self.status="Saved";self.message=nil;self:reconcile()
  else return false end
  self:notify();return true
 end
 function Intent:retry()
  if not self.pending or self.status~="Retrying"then return false end
- local p=self.pending;self.status="Pending";self.message="Saving this change…";self:notify();self.d.send(p.action,p.value,p.revision);return true
+ local p=self.pending;self.status="Pending";self.message=nil;self:notify();self.d.send(p.action,p.value,p.revision);return true
 end
 return Intent

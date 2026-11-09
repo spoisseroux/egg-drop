@@ -1,5 +1,4 @@
--- Original, asset-free field-guide illustrations. Pure decoration: no input,
--- uploaded images, particles, runtime animation or inventory state.
+-- Shared original registered shell art. Passive shop/result/crack decoration.
 local Art = require(script.Parent.DeckArt)
 local Egg = {}
 
@@ -10,29 +9,47 @@ local function shape(parent, name, x, y, width, height, color, rotation)
 	return node
 end
 
-function Egg.create(parent, recipeId, position, size, z, name)
-	local host = Art.frame(parent, name or "Egg", Art.Ink, position, size, z or parent.ZIndex + 1)
-	host.BackgroundTransparency, host.Active, host.Selectable = 1, false, false
-	host:SetAttribute("RecipeId", recipeId)
- local hue=recipeId=="hue"
- local cream=Color3.fromHex("#FFF3B9")
- local tint=if hue then Color3.fromHex("#56D4DD")else cream
- local shadow=shape(host,"GroundShadow",.14,.87,.72,.10,Art.Ink);shadow.BackgroundTransparency=.70
- local shell=Art.frame(host,"Shell",tint,UDim2.fromScale(0,0),UDim2.fromScale(1,1),host.ZIndex+2);shell.BackgroundTransparency=1
- local lower=shape(shell,"LowerShell",if hue then .23 else .14,.28,if hue then .57 else .72,.63,tint)
- local crown=shape(shell,"Crown",if hue then .30 else .23,.07,if hue then .43 else .52,.66,tint)
- Art.shade(lower,1,.72);Art.shade(crown,1,.89)
- Art.stroke(lower,if hue then Color3.fromHex("#137C9D")else Color3.fromHex("#C9AF54"),.28,1)
- local motif=Art.frame(host,"Pattern",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),host.ZIndex+4);motif.BackgroundTransparency=1
- if hue then
-  for i,x in ipairs({.26,.39,.52,.65})do shape(motif,"ShoulderDrop"..i,x,.37,.09,.15,({Color3.fromHex("#FF327A"),Color3.fromHex("#008DFF"),Color3.fromHex("#FFCC00"),Color3.fromHex("#9350FF")})[i],-10)end
-  for i=0,3 do shape(motif,"Scallop"..i,.25+i*.13,.28,.18,.12,Color3.fromHex("#C8FAEC"),-10)end
- else
-  shape(motif,"CitronHalfBelt",.18,.65,.35,.07,Color3.fromHex("#A8C922"),-12)
-  for i,data in ipairs({{.28,.36,-24},{.58,.49,18},{.36,.70,-16}})do shape(motif,"CobaltRainSeed"..i,data[1],data[2],.13,.17,Color3.fromHex("#3355DA"),data[3])end
+local Assets=require(script.Parent.EggArtAssets)
+-- One connected ovoid fallback, drawn as adjacent horizontal strips rather than
+-- overlapping pills. Used while owned image content loads or when an ID is empty.
+local function fallback(parent,kind)
+ local host=Art.frame(parent,"FallbackOvoid",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),parent.ZIndex)
+ host.BackgroundTransparency=1
+ local tint=if kind=="hue"then Color3.fromHex("#56D4DD")elseif kind=="material"then Color3.fromHex("#DCD0EF")else Color3.fromHex("#FFF3B9")
+ for row=0,47 do
+  local t=(row+.5)/48
+  local width=.67*math.sin(math.pi*t)^.52*(.80+.30*t)
+  local strip=Art.frame(host,"ShellRow"..row,tint,UDim2.fromScale((1-width)/2,.07+row*.82/48),UDim2.fromScale(width,.82/48+.001),host.ZIndex+1)
+  strip.BackgroundColor3=tint:Lerp(Color3.fromHex("#8A8090"),t*.12)
  end
- local glint=shape(host,"ShellGlint",.31,.20,.10,.22,Color3.new(1,1,1),22);glint.ZIndex,glint.BackgroundTransparency=host.ZIndex+7,.14
-	return host
+ if kind=="hue"then
+  for i,data in ipairs({{.39,.39,"#FF327A"},{.52,.37,"#008DFF"},{.41,.52,"#FFCC00"},{.55,.50,"#9350FF"}})do shape(host,"FruitPetal"..i,data[1],data[2],.11,.14,Color3.fromHex(data[3]),-20)end
+ elseif kind=="material"then
+  shape(host,"FoldedRibbon",.30,.43,.39,.09,Color3.fromHex("#21B6AD"),-25)
+  shape(host,"RibbonFold",.45,.49,.24,.08,Color3.fromHex("#527BDC"),25)
+ else
+  for i,data in ipairs({{.33,.31,-24},{.57,.43,18},{.39,.64,-16}})do shape(host,"CobaltRainSeed"..i,data[1],data[2],.12,.16,Color3.fromHex("#3355DA"),data[3])end
+  shape(host,"CitronSprout",.23,.60,.29,.035,Color3.fromHex("#A8C922"),-7)
+ end
+ shape(host,"ShellGlint",.32,.23,.035,.14,Color3.new(1,1,1),25)
+ return host
+end
+function Egg.create(parent, recipeId, position, size, z, name)
+ local host=Art.frame(parent,name or "Egg",Art.Ink,position,size,z or parent.ZIndex+1)
+ host.BackgroundTransparency,host.Active,host.Selectable=1,false,false
+ host:SetAttribute("RecipeId",recipeId)
+ local kind=if recipeId=="hue"then "hue"elseif recipeId=="material"then "material"else "companion"
+ host:SetAttribute("EggAssetKind",kind)
+ local square=Art.frame(host,"RegisteredShell",Art.Ink,UDim2.fromScale(.5,.5),UDim2.fromScale(1,1),host.ZIndex+1)
+ square.AnchorPoint=Vector2.new(.5,.5);square.BackgroundTransparency=1
+ local aspect=Instance.new("UIAspectRatioConstraint");aspect.AspectRatio=1;aspect.DominantAxis=Enum.DominantAxis.Width;aspect.AspectType=Enum.AspectType.FitWithinMaxSize;aspect.Parent=square
+ local shadow=shape(square,"GroundShadow",.26,.925,.48,.035,Art.Ink);shadow.BackgroundTransparency=.73
+ local backup=fallback(square,kind)
+ local shell=Instance.new("ImageLabel");shell.Name="ShellImage";shell.BackgroundTransparency=1;shell.Size=UDim2.fromScale(1,1)
+ shell.Image=Assets[kind]or "";shell.ScaleType=Enum.ScaleType.Fit;shell.Active,shell.Selectable=false,false;shell.ZIndex=square.ZIndex+5;shell.Parent=square
+ local function loaded()backup.Visible=shell.Image==""or not shell.IsLoaded end
+ shell:GetPropertyChangedSignal("IsLoaded"):Connect(loaded);loaded()
+ return host
 end
 
 -- Legacy API/node name remains for existing wallet layout owners.
