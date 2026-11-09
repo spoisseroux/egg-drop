@@ -1,6 +1,7 @@
 -- Typed v7 permanent unlocks. Frozen Hue inventories/receipts remain separate.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.MaterialCatalog);local Eggs=require(Shared.EggCatalog)
+local Guard=require(script.Parent.HatchGuard)
 local State={ReceiptLimit=Catalog.ReceiptLimit}
 local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
 local function equal(a,b)
@@ -94,7 +95,7 @@ local function saveReceipt(state,receipt)
  state.lastMaterialResult=receipt
 end
 function State.purchaseEligibility(state,quote)
- if state.lastHatch or state.pendingHueResult or state.hueReservation or state.pendingMaterialResult then return false,"RevealPending"end
+ if Guard.other(state,"material")or state.pendingMaterialResult then return false,"RevealPending"end
  if state.materialReservation and(not quote or not equal(state.materialReservation.quote,quote))then return false,"PurchasePending"end
  local remaining=Catalog.remaining(state.materialUnlocks,quote and quote.poolVersion)
  if #remaining==0 then return false,"AllUnlocked"end
@@ -107,7 +108,7 @@ function State.apply(state,candidate)
  local q=candidate.quote
  if not quoteValid(q)then return false,"InvalidMaterial"end
  if state.materialReservation and not equal(state.materialReservation,candidate)then return false,"PurchasePending"end
- if state.lastHatch or state.hueReservation then return false,"RevealPending"end
+ if Guard.other(state,"material")then return false,"RevealPending"end
  local r={id=q.id,action=q.action,quote=copy(q),operationId=candidate.operationId,sequence=candidate.sequence,revision=state.revision+1,catalogVersion=Catalog.CatalogVersion,cost=0,balanceBefore=state.nectar,balanceAfter=state.nectar}
  if q.action=="materialBuy"then
   if not state.materialReservation or not equal(state.materialReservation,candidate)then return false,"MissingReservation"end

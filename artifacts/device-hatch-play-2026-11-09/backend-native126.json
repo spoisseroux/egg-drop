@@ -1,0 +1,228 @@
+{
+  "MaterialHost": {
+    "ok": true,
+    "result": {
+      "evidence": "actual host callbacks/render gate/owner projection and retry coroutine; isolated store",
+      "persistentWrites": false,
+      "passed": 5,
+      "cases": [
+        "unverified profiles reject new purchases before any roll write or debit",
+        "durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+        "background completion publishes unlock before receipt and conflict cannot clear waiter",
+        "lost free-equip response reconciles exact selected finish without changing hues or charm",
+        "owner snapshots contain no private grant proofs and another player cannot select this profile"
+      ]
+    }
+  },
+  "HatchProgress": {
+    "ok": true,
+    "result": {
+      "passed": 22,
+      "cases": [
+        "active four outcomes normalize safely even at the retained rare threshold",
+        "legacy seven-pet migration and one-time credits",
+        "starter grant, persistent reveal, exact acknowledgement",
+        "ambiguous session acquire resumes the same lease",
+        "direct full-cost spending, stale commands and callback retries",
+        "ambiguous committed hatch cannot reroll or duplicate",
+        "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "monotonic payouts reject replay beyond receipt history",
+        "lease takeover fences stale commands and renewals",
+        "local overlap, sparse inventory and public isolation",
+        "failed legacy load cannot spend or overwrite",
+        "daily reward is once per Hollow day and survives callback retry",
+        "every active outcome grants once and absent rare pool freezes earned misses",
+        "paid retired outcome receipts survive reload and acknowledge without reroll or regrant",
+        "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "saved wins preserve archived mastery points challenges and rank without promotions",
+        "daily contracts and saved wins commit atomically once per run and day",
+        "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "compound award retries immutable stats and original day before or after commit",
+        "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "rare-only ownership earns saved wins and duplicate preserves archived marks"
+      ]
+    }
+  },
+  "MaterialProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 13,
+      "cases": [
+        "v6 migration preserves frozen Hue fields proofs and root siblings exactly",
+        "v6 cannot smuggle a preexisting Material namespace into the v7 upgrade",
+        "two sorted remaining-only rolls debit16 once each and exhausted pool never spends",
+        "exact saved replay is read-only and same-ID changed quote is a conflict",
+        "reserve and settlement ambiguous responses retain one winner and one debit",
+        "durable reservation resumes after release/rejoin without another roll",
+        "free whole-pet selections are independent and atomically acknowledge Use now",
+        "stale selection unowned target and wrong result cannot mutate any pigment or charm",
+        "lease expiry takeover and authoritative revision changes fence new purchases",
+        "pending Material result blocks Hue/Companion purchases and compaction retains referenced proof",
+        "UpdateAsync callback reentry never rerolls or duplicates unlocks",
+        "historical v1 three-choice reservation can grant Metal after rejoin and replay its proof",
+        "new v1 buy and forged v2 Metal eligibility cannot roll write or debit"
+      ]
+    }
+  },
+  "ToyFeatureHostToy": {
+    "ok": true,
+    "result": {
+      "evidence": "actual typed host callbacks and retry coroutine; isolated store",
+      "persistentWrites": false,
+      "passed": 5,
+      "cases": [
+        "toy durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+        "toy background completion publishes private state before receipt and conflict cannot clear waiter",
+        "toy lost apply response reconciles exact confirmed appearance and historical replay preserves next result",
+        "toy exact acknowledgement stores result without spending or changing appearance",
+        "toy owner snapshots contain no private grant proofs and foreign player cannot operate profile"
+      ]
+    }
+  },
+  "SessionRecovery": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 8,
+      "cases": [
+        "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+        "profile save failure times out without releasing the lease and later recovers",
+        "failed initial load cannot write defaults or acquire a persistent hatch session",
+        "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+        "locked and unavailable sessions preserve provisional rare and sticker choices",
+        "a setting changed during an in-flight autosave drains before lease release",
+        "a temporary profile recovers through a fresh read and authoritative acquisition",
+        "the actual Studio store keeps both writers in one isolated cloned root"
+      ]
+    }
+  },
+  "HueProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 18,
+      "cases": [
+        "fresh v6 has five private stacks and seven independent color capabilities",
+        "each 20-percent server roll stores exactly one item, one debit and no companion pity change",
+        "stored duplicates stack, pending results block new purchases and result use acknowledges once",
+        "five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",
+        "reservation and settlement retry the frozen draw before and after ambiguous writes",
+        "durable reservation survives writer takeover and settles its original result once",
+        "v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",
+        "held legacy token redeems exactly once without roll/debit and original buy proof survives",
+        "invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",
+        "v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",
+        "bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",
+        "malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",
+        "each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",
+        "two uses of last jar at one revision have one winner and rejected request cannot strand next intent",
+        "v5 zero-cost assignments retain their exact token proof after upgrade and later reset",
+        "corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",
+        "migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",
+        "a sparse Ovelle-only veteran can buy and apply without owning the welcome pet"
+      ]
+    }
+  },
+  "ToyFeatureHostFeature": {
+    "ok": true,
+    "result": {
+      "evidence": "actual typed host callbacks and retry coroutine; isolated store",
+      "persistentWrites": false,
+      "passed": 5,
+      "cases": [
+        "feature durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+        "feature background completion publishes private state before receipt and conflict cannot clear waiter",
+        "feature lost apply response reconciles exact confirmed appearance and historical replay preserves next result",
+        "feature exact acknowledgement stores result without spending or changing appearance",
+        "feature owner snapshots contain no private grant proofs and foreign player cannot operate profile"
+      ]
+    }
+  },
+  "PreferenceFlush": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 6,
+      "cases": [
+        "healthy preference gets deferred durable proof before retry UI without periodic sweep",
+        "same-turn preferences and Applied replays coalesce into one writer",
+        "new exact generation during an unrelated in-flight flush drains immediately afterward",
+        "newer local choice during a save receives only its own later durable proof",
+        "commit-then-error retries exact stamp once without duplicate acknowledgement",
+        "real failures have three bounded backoffs and exact client retry can re-arm"
+      ]
+    }
+  },
+  "GardenCareIntegration": {
+    "ok": true,
+    "result": {
+      "passed": 13,
+      "cases": [
+        "cheap malformed requests never scan actor input or consume the valid request lane",
+        "exact accepted replay and sequence conflict precede throttling and resampling",
+        "fresh intent flood is bounded before actor scans; later exact fresh retry can act",
+        "pulse rate has an independent bounded lane and cannot evict another claim",
+        "unsafe deliberate setdown keeps dock but system close releases it to safe held state",
+        "late verified equip over unsafe ground cannot reclaim another owner's bay or use wet anchor",
+        "ordinary shortcut uses the same staged save and safe held fallback",
+        "exact live bay keeps one actor through saved equip; uncommitted failure preserves original",
+        "pending equip proof survives history compaction and remains replayable after its single commit",
+        "replaced or closing board cannot publish a delayed profile callback into current actor",
+        "actual placement accepts a fully dry supported clear destination",
+        "actual wet enclosure cannot turn a safe stationary planner hold into placement across water",
+        "new item results block direct and cradle companion selection before staging"
+      ]
+    }
+  },
+  "ToyFeatureProgress": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 21,
+      "cases": [
+        "catalog fixed boundaries remaining uniform odds and no stats",
+        "new v8 profile neutral state and permanent uniform toy exhaustion costs24",
+        "all seven pet toy choices are independent free and require exact result ownership",
+        "toy same ID exact replay no writes changed payload conflict and stripped private proof",
+        "both namespaces retain the exact roll across reservation and settlement reply loss",
+        "durable reservations rejoin without another roll in either namespace",
+        "feature full rolled stack durable refusal zero debit no reroll and all full disables",
+        "feature growth consumes one stock shows earned stage and supports simultaneous features",
+        "feature free hidden display preserves earned stage and exact stale stage protection",
+        "feature exact pending use clears only matching result and cap never consumes stock",
+        "toy and feature pending results block old Hue Material Companion routes symmetrically",
+        "new families respect existing Hue Material and Companion pending results",
+        "revision takeover expiry and callback reentry cannot double charge",
+        "new receipt eviction makes old ids stale without regrant and pending proof remains exact",
+        "public appearance exposes only selected toy and visible feature stages",
+        "malformed namespace quote unknown ids stages and unowned recipients reject without mutation",
+        "frozen actual v370 writer cannot renew write or release upgraded v8 root",
+        "frozen old writer rejects v8 even when supplied matching lease metadata",
+        "v7 durable Hue and historical Material reservations settle once after v8 acquisition",
+        "v7 upgrade refuses smuggled new namespaces and malformed historical proof",
+        "v7 migration preserves pending historical outcomes and exact receipts without reroll"
+      ]
+    }
+  },
+  "CareCompanionSave": {
+    "ok": true,
+    "result": {
+      "persistentWrites": false,
+      "passed": 10,
+      "cases": [
+        "active equipment changes only on exact durable ID stamp writer proof",
+        "ordinary dirty settings flush with stored companion stamp has no nil-stamp comparison",
+        "legacy known owned newer winner terminates pending rather than blocking hydrate forever",
+        "legacy and staged APIs cannot interleave competing companion writes",
+        "commit-then-error retries the same captured candidate and acknowledges once",
+        "expired and taken-over nursery lease cannot perform a new companion write",
+        "proven newer owned foreign selection wins without rollback or candidate replay",
+        "a foreign unknown or unowned selection cannot become public confirmed truth",
+        "new durable item reservation or result fences a staged companion write without revision change",
+        "exact lost companion commit proof remains read-only after a newer item reservation"
+      ]
+    }
+  }
+}

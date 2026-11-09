@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "result": {
+    "persistentWrites": false,
+    "passed": 21,
+    "cases": [
+      "catalog fixed boundaries remaining uniform odds and no stats",
+      "new v8 profile neutral state and permanent uniform toy exhaustion costs24",
+      "all seven pet toy choices are independent free and require exact result ownership",
+      "toy same ID exact replay no writes changed payload conflict and stripped private proof",
+      "both namespaces retain the exact roll across reservation and settlement reply loss",
+      "durable reservations rejoin without another roll in either namespace",
+      "feature full rolled stack durable refusal zero debit no reroll and all full disables",
+      "feature growth consumes one stock shows earned stage and supports simultaneous features",
+      "feature free hidden display preserves earned stage and exact stale stage protection",
+      "feature exact pending use clears only matching result and cap never consumes stock",
+      "toy and feature pending results block old Hue Material Companion routes symmetrically",
+      "new families respect existing Hue Material and Companion pending results",
+      "revision takeover expiry and callback reentry cannot double charge",
+      "new receipt eviction makes old ids stale without regrant and pending proof remains exact",
+      "public appearance exposes only selected toy and visible feature stages",
+      "malformed namespace quote unknown ids stages and unowned recipients reject without mutation",
+      "frozen actual v370 writer cannot renew write or release upgraded v8 root",
+      "frozen old writer rejects v8 even when supplied matching lease metadata",
+      "v7 durable Hue and historical Material reservations settle once after v8 acquisition",
+      "v7 upgrade refuses smuggled new namespaces and malformed historical proof",
+      "v7 migration preserves pending historical outcomes and exact receipts without reroll"
+    ]
+  },
+  "freshSharedAndServerNamespace": true
+}

@@ -3,6 +3,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Hue=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Legacy=require(script.Parent.LegacyHueState)
+local Guard=require(script.Parent.HatchGuard)
 local State={ReceiptLimit=64}
 local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
 local function integer(n,maximum)return type(n)=="number"and n==n and n%1==0 and n>=0 and n<=(maximum or 1000000000)end
@@ -13,7 +14,7 @@ local function equal(a,b)
  for k,v in pairs(a)do if not equal(v,b[k])then return false end end
  for k in pairs(b)do if a[k]==nil then return false end end;return true
 end
-local function oldView(state)local v=table.clone(state);if state.version==6 or state.version==7 then v.lastHueResult=state.legacyLastHueResult end;return v end
+local function oldView(state)local v=table.clone(state);if state.version==6 or state.version==7 or state.version==8 then v.lastHueResult=state.legacyLastHueResult end;return v end
 function State.validLegacy(state)return Legacy.validLegacy(state)end
 function State.validV5(state)return Legacy.valid(state)end
 function State.row(state,petId)
@@ -127,7 +128,7 @@ local function validReceipt(r)
  else return false end
  return true
 end
-function State.valid(state)
+function State.validHistorical(state)
  if type(state)~="table"then return false end
  -- v7 adds an independent Material namespace; frozen v6 Hue rules validate
  -- the same working fields without rewriting a historical quote or receipt.
@@ -192,6 +193,10 @@ function State.valid(state)
  end
  return true
 end
+function State.valid(state)
+ if state.version==8 then state=table.clone(state);state.version=7 end
+ return State.validHistorical(state)
+end
 local function saveReceipt(state,r)
  state.hueItemReceipts[r.id]=r;table.insert(state.hueReceiptOrder,r.id)
  while #state.hueReceiptOrder>State.ReceiptLimit do
@@ -201,7 +206,7 @@ local function saveReceipt(state,r)
  state.lastHueResult=r
 end
 function State.purchaseEligibility(state)
- if state.lastHatch or state.pendingHueResult or state.pendingMaterialResult or state.materialReservation then return false,"RevealPending"end
+ if Guard.other(state,"hue")or state.pendingHueResult then return false,"RevealPending"end
  local owned=false;for pet in pairs(Hue.Supported)do if Eggs.isOwned(state.inventoryMask,pet)then owned=true;break end end
  if not owned then return false,"MeetPipFirst"end
  if state.nectar<Hue.Cost then return false,"NeedStars"end
@@ -211,7 +216,7 @@ function State.apply(state,candidate)
  local q=candidate.quote
  if q.catalogVersion~=Hue.CatalogVersion or not wire[q.action]then return false,"LegacyPurchaseClosed"end
  if state.hueReservation and not equal(state.hueReservation,candidate)then return false,"PurchasePending"end
- if state.lastHatch or state.pendingMaterialResult or state.materialReservation then return false,"RevealPending"end
+ if Guard.other(state,"hue")then return false,"RevealPending"end
  local r={id=q.id,action=q.action,quote=copy(q),operationId=candidate.operationId,sequence=candidate.sequence,revision=state.revision+1,
   catalogVersion=Hue.CatalogVersion,cost=0,balanceBefore=state.nectar,balanceAfter=state.nectar,outcome="Applied"}
  if q.action=="hueBuy"or q.action=="hueLegacyRedeem"then

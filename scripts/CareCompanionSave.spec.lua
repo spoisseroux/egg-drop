@@ -62,5 +62,21 @@ return function(server,source)
   P.stageCompanion(p,pets.orbit,"no-foreign-grant",f);db().companionId="foxfire_wick";db().companionAt=5000;db().companionWriter="foreign";db().hatching.inventoryMask=15
   assert(not P.flushOnce(p)and published==0 and p.companionId=="pip"and p.companionChange and p.saveFailed)
  end)
+ test("new durable item reservation or result fences a staged companion write without revision change",function()
+  for _,key in ipairs({"hueReservation","pendingHueResult","materialReservation","pendingMaterialResult","toyReservation","pendingToyResult","featureReservation","pendingFeatureResult"})do
+   local P,p,pets,f,_,db=fixture();local rejected=0;p.onCompanionRejected=function()rejected+=1 end
+   local candidate=P.stageCompanion(p,pets.orbit,"race-"..key,f);assert(candidate and p.companionId=="pip")
+   -- Reservation commits leave the revision unchanged; checking only revision is unsafe.
+   db().hatching[key]={id="durable-other-kind"};local revision=db().hatching.revision
+   assert(P.flushOnce(p)and rejected==1 and p.companionId=="pip"and db().companionId=="pip"and db().hatching.revision==revision and db().hatching[key].id=="durable-other-kind")
+  end
+ end)
+ test("exact lost companion commit proof remains read-only after a newer item reservation",function()
+  local P,p,pets,f,control,db=fixture();local saved=0;p.onCompanionSaved=function()saved+=1 end
+  P.stageCompanion(p,pets.orbit,"committed-before-reservation",f);control.throwAfter=true
+  assert(not P.flushOnce(p)and p.companionId=="pip"and db().companionId=="orbit")
+  db().hatching.featureReservation={id="later-reservation"}
+  assert(P.flushOnce(p)and saved==1 and p.companionId=="orbit"and db().hatching.featureReservation.id=="later-reservation")
+ end)
  return {passed=#cases,cases=cases,persistentWrites=false}
 end

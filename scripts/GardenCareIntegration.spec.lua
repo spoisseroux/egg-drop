@@ -190,5 +190,12 @@ return function(server,hostSource)
    assert(Placement.find(input,room,wet,{})==nil,"a planner hold is not an arrival at the target")
   end)
  end)
+ test("new item results block direct and cradle companion selection before staging",function()
+  for _,key in ipairs({"toyReservation","pendingToyResult","featureReservation","pendingFeatureResult"})do
+   local f=fixture();local board=f.byId[1];board.nursery.state[key]={id="pending"}
+   local ok,reason=f.host:switch(board,"puddle")
+   assert(not ok and reason=="RevealPending"and f.stageCalls==0 and board.profile.companionId=="pip")
+  end
+ end)
  return {passed=#cases,cases=cases}
 end

@@ -5,6 +5,7 @@ local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
 local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 local Backgrounds = require(game:GetService("ReplicatedStorage").Shared.DeckBackgrounds)
 local PetAppearance=require(script.Parent.PetAppearance)
+local HatchGuard=require(script.Parent.HatchGuard)
 local EggCatalog=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 
 local Progress = {}
@@ -213,7 +214,7 @@ flush=function(profile)
 		local exact=record.companionId==companionId and record.companionAt==companionAt and record.companionWriter==companionWriter
 		if companionChange and not exact then
 			local h=record.hatching;local f=companionChange.fence
-			companionFenced=type(h)=="table"and h.epoch==f.epoch and h.revision==f.revision and EggCatalog.isOwned(h.inventoryMask,companionId)and type(h.lease)=="table"and h.lease.token==f.token and h.lease.expiresAt>f.now()
+			companionFenced=type(h)=="table"and not HatchGuard.other(h,"companion")and h.epoch==f.epoch and h.revision==f.revision and EggCatalog.isOwned(h.inventoryMask,companionId)and type(h.lease)=="table"and h.lease.token==f.token and h.lease.expiresAt>f.now()
 		end
 		if companionFenced and companionAt and (companionAt > previousCompanionTime
 			or (companionAt == previousCompanionTime and companionWriter >= previousCompanionWriter)) then

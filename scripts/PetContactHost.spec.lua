@@ -18,7 +18,7 @@ return function(server,hostSource)
 			if c.failAfter then c.failAfter=false;error("fixture committed pet write then timed out")end
 			return copy(value)
 		end}
-	local h=H.load(81001,{rank=1,companionId="pip"},adapter);assert(h.status=="Ready"and h.state.version==7)
+	local h=H.load(81001,{rank=1,companionId="pip"},adapter);assert(h.status=="Ready"and h.state.version==8)
 	local fixture=Instance.new("Folder");fixture.Name="_PetContactHostFixture";fixture.Parent=server
 	local replicated=Instance.new("Folder");replicated.Parent=fixture
 	local shared=realGame.ReplicatedStorage.Shared:Clone();shared.Parent=replicated

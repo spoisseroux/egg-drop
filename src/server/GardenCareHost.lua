@@ -1,6 +1,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Pets=require(Shared.PetCatalog);local Catalog=require(Shared.EggCatalog)
 local Care=require(script.Parent.GardenCare)
+local HatchGuard=require(script.Parent.HatchGuard)
 local Host={};Host.__index=Host
 function Host.new(d)
  local result=d.remotes:FindFirstChild("GardenCareResult")or Instance.new("RemoteEvent");result.Name="GardenCareResult";result.Parent=d.remotes
@@ -43,6 +44,7 @@ end
 function Host:switch(board,target,packet,entry)
  self:bind(board)
  if board.closing or board.mode~="Room"or not self.d.canProgress(board)or board.careEquip or board.profile.saving or board.nursery.busy or board.nursery.pending then return false,"Saving"end
+ if HatchGuard.other(board.nursery.state,"companion")then return false,"RevealPending"end
  if not Pets.byId[target]or not Catalog.isOwned(self.d.inventory(board),target)then return false,"NotOwned"end
  if target==board.profile.companionId then return false,"AlreadyActive"end
  if packet and packet.revision~=board.nursery.state.revision then return false,"RevisionChanged"end

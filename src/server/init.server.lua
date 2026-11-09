@@ -20,6 +20,8 @@ local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 local Nursery = require(script.HatchProgress)
 local HueState = require(script.HueState)
 local MaterialState=require(script.MaterialState)
+local ToyState=require(script.ToyState)
+local FeatureState=require(script.FeatureState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 local NurseryCatalog = require(ReplicatedStorage.Shared.EggCatalog)
 local FamilyMastery = require(ReplicatedStorage.Shared.FamilyMastery)
@@ -52,6 +54,8 @@ local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
 local nurserySnapshot = child("RemoteEvent", "NurserySnapshot", remotes)
 local hueResult = child("RemoteEvent", "HueResult", remotes)
 local materialResult=child("RemoteEvent","MaterialResult",remotes)
+local toyResult=child("RemoteEvent","ToyResult",remotes)
+local featureResult=child("RemoteEvent","FeatureResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
@@ -197,7 +201,7 @@ local function gardenInput(board)
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
-	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials)
+	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),root=root,character=character,
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
@@ -212,8 +216,8 @@ local function gardenInputs()
 	return inputs
 end
 local function publishPetAppearance(board)
-	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials)))
-	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision)
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId)))
+	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision+board.nursery.state.revision)
 end
 
 local function publishAppearance(board)
@@ -272,6 +276,15 @@ local function sendMaterialResult(board,quote,status,reason,receipt)
  if status~="Retrying"and not awaiting and board.materialWaiting and board.materialWaiting.id==quote.id then board.materialWaiting=nil end
 end
 
+local itemRemotes={toy=toyResult,feature=featureResult}
+local function sendItemResult(board,kind,quote,status,reason,receipt)
+ if not quote then return end
+ itemRemotes[kind]:FireClient(board.player,{id=quote.id,action=quote.action,petId=quote.petId,status=status,reason=reason,revision=board.nursery.state.revision,receipt=receipt})
+ local pending=board.nursery.pending;local awaiting=pending and pending.kind==kind and pending.candidate.quote.id==quote.id
+ local waiting=kind.."Waiting"
+ if status~="Retrying"and not awaiting and board[waiting]and board[waiting].id==quote.id then board[waiting]=nil end
+end
+
 local function publishNursery(board)
 	local state = Nursery.public(board.nursery)
 	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
@@ -291,6 +304,10 @@ local function publishNursery(board)
 		sendHueResult(board,board.hueWaiting,"Saved",nil,state.lastHueResult)
 	end
 	if board.materialWaiting and state.lastMaterialResult and state.lastMaterialResult.id==board.materialWaiting.id then sendMaterialResult(board,board.materialWaiting,"Saved",nil,state.lastMaterialResult)end
+	for _,kind in ipairs({"toy","feature"})do
+  local title=kind:sub(1,1):upper()..kind:sub(2);local waiting=board[kind.."Waiting"];local receipt=state["last"..title.."Result"]
+  if waiting and receipt and receipt.id==waiting.id then sendItemResult(board,kind,waiting,"Saved",nil,receipt)end
+ end
 	board.folder:SetAttribute("InventoryMask", state.inventoryMask)
 	board.folder:SetAttribute("HatchActive", true)
 	local masteryMask = state.masteryLegacyMask or 0
@@ -790,6 +807,25 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		nurserySnapshot:FireClient(player,state);return
 	end
 	if not board.profileReady then return end
+
+ local itemKind=if ToyState.isAction(action)then "toy"elseif FeatureState.isAction(action)then "feature"else nil
+ if itemKind then
+  local api=if itemKind=="toy"then ToyState else FeatureState
+  local quote=if type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil
+  local canonical=api.quote(action,value,revision);local receipt,same=api.find(board.nursery.state,canonical)
+  if receipt and same then publishNursery(board);sendItemResult(board,itemKind,quote,"Saved","AlreadySaved",api.publicReceipt(receipt));return end
+  local pending=board.nursery.pending;local samePending=pending and pending.kind==itemKind and api.same(pending.candidate.quote,canonical)
+  if samePending and(board.nurseryBusy or board.nursery.busy or board.payoutPending or os.clock()-(board.lastHatchRequest or -math.huge)<.3)then sendItemResult(board,itemKind,quote,"Retrying","Busy");return end
+  if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then sendItemResult(board,itemKind,quote,"Rejected","Throttled");return end
+  board.lastHatchRequest=os.clock()
+  if board.nurseryBusy or board.payoutPending then sendItemResult(board,itemKind,quote,"Rejected","Busy");return end
+  board.nurseryBusy=true;publishNursery(board)
+  local ok,reason,saved=Nursery[itemKind.."Command"](board.nursery,action,value,revision)
+  if reason=="Retrying"then board[itemKind.."Waiting"]=quote end
+  board.nurseryBusy=false;if boards[player]~=board then return end
+  publishNursery(board);publishState(board)
+  sendItemResult(board,itemKind,quote,if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,saved);return
+ end
 	if MaterialState.isAction(action)then
 		local quote=if type(value)=="table"and type(value.id)=="string"and #value.id<=100 then {id=value.id,action=action,petId=value.petId}else nil
 		local canonical=MaterialState.quote(action,value,revision)
@@ -1002,6 +1038,7 @@ task.spawn(function()
 					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
 					if boards[player]==board and pending and pending.kind=="hue"and not ok and reason~="Retrying"then sendHueResult(board,pending.candidate.quote,"Rejected",reason)end
 					if boards[player]==board and pending and pending.kind=="material"and not ok and reason~="Retrying"then sendMaterialResult(board,pending.candidate.quote,"Rejected",reason)end
+					if boards[player]==board and pending and(pending.kind=="toy"or pending.kind=="feature")and not ok and reason~="Retrying"then sendItemResult(board,pending.kind,pending.candidate.quote,"Rejected",reason)end
 				end)
 			end
 		end
