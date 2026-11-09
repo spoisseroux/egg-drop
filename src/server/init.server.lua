@@ -114,9 +114,10 @@ gardenScene=function()
  local room=workspace:FindFirstChild("EggDropLounge")
  if not room then return nil end
  if not wanderScene or wanderScene.room~=room then
-  wanderScene={room=room,wet={},stations={}}
+  wanderScene={room=room,wet={},stations={},solids={}}
   for _,node in ipairs(room:GetDescendants())do
-   if node:IsA("BasePart")and(node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
+   if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"then table.insert(wanderScene.solids,node)end
+   if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
  end
@@ -170,6 +171,9 @@ local garden = GardenState.new({now=function()return workspace:GetServerTimeNow(
     end,
     validToyPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenWalkability.pathAllowed(path,scene.wet)
+    end,
+    validRestPath=function(path)
+        local scene=gardenScene();return scene~=nil and GardenPathPlanner.restPathClear(path,scene.solids)
     end,
     validWander=validWander,
 	validFocus=function(input,target)

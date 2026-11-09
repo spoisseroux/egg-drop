@@ -1,4 +1,6 @@
--- One shared activity on the grass beyond the benches; no world expansion.
+-- Existing hub anchors remain fixed while a second dry rest lawn is added.
+local World=require(script.Parent.HollowWorldLayout)
+local nook=Vector3.new(26,4.175,-15.5)
 local Layout = {
     FloorY = 4.025,
     Toy = Vector3.new(-2, 4.025, 17.5),
@@ -6,7 +8,12 @@ local Layout = {
     ToyWest = Vector3.new(-4.4, 4.025, 17.5),
     ToyEast = Vector3.new(.4, 4.025, 17.5),
     Rest = Vector3.new(-5, 4.025, 11.5),
-    Nook = Vector3.new(26,4.175,-15.5),
+    Nook = nook,
+    RestAnchors = table.freeze({
+        table.freeze({id="creek_nook",position=nook}),
+        table.freeze({id="spring_meadow_west",position=World.Spring.RestWest,exclusive=true}),
+        table.freeze({id="spring_meadow_east",position=World.Spring.RestEast,exclusive=true}),
+    }),
     DecisionInterval = .5,
     WalkSpeed = 4,
     CatchupSpeed = 9,

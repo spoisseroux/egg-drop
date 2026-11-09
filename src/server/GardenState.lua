@@ -14,12 +14,13 @@ function Garden:token() self.serial+=1;return self.serial end
 function Garden:position(actor,now)
     local sample=Activity.sample(actor,now);return sample and sample.position or self.inputs[actor.ownerId].anchor
 end
-function Garden:transition(actor,behavior,target,duration,action,actionId,via)
+function Garden:transition(actor,behavior,target,duration,action,actionId,via,prepared)
     local now=self.options.now();local sample=Activity.sample(actor,now)
     local from=sample and sample.position or self.inputs[actor.ownerId].anchor
     local continuing=actor.behavior==behavior and actor.action==action and behavior=="follow"
     if not continuing then actor.generation+=1 end
     actor.behavior,actor.action=behavior,action
+    if action~="nookApproach"and action~="nookRest"then actor.restAnchorId=nil end
     actor.actionId=actionId or (continuing and actor.actionId)or self:token()
     local velocity=sample and sample.velocity or Vector3.zero
     local yaw=sample and sample.yaw or actor.yaw or 0
@@ -38,7 +39,8 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via)
         if resolved then target=resolved;if clamped then terminal=Vector3.zero end end
     end
     local planner=self.options.planPath or Activity.plan
-    actor.path,duration=planner(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)
+    if prepared then actor.path,duration=prepared.path,prepared.duration
+    else actor.path,duration=planner(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)end
     actor.startTime,actor.endTime=now,now+duration
     actor.from,actor.to,actor.via=Activity.pack(from),Activity.pack(target),if via then Activity.pack(via)else nil
 
@@ -46,10 +48,13 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via)
 end
 function Garden:resume(actor,input,prior)
     local now=self.options.now()
-    if prior and prior.behavior=="rest"and prior.endTime>now then self:transition(actor,"rest",Activity.vector(prior.to),prior.endTime-now)
+    -- Spring slots can be claimed by a third owner during a greeting. Resume
+    -- ordinary follow; any later rest requires a fresh free-slot preflight.
+    if prior and prior.behavior=="rest"and prior.endTime>now and not(prior.restAnchorId and prior.restAnchorId~="creek_nook")then self:transition(actor,"rest",Activity.vector(prior.to),prior.endTime-now)
     else self:transition(actor,"follow",input.anchor,.5)end
 end
 function Garden:release(actor)
+    actor.restAnchorId=nil
     if actor.toyActionId then ToyReturn.release(self,actor.toyActionId,actor.ownerId);actor.toyActionId=nil end
     if not self.toy.returnAction and self.toy.ownerId==actor.ownerId and actor.toyReservation==self.toy.reservation then
         self.toy={position=Activity.pack(Layout.Toy)};self.dirty=true
@@ -169,7 +174,7 @@ function Garden:greeting(now,ordered)
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
             local prior={}
-            for _,actor in ipairs({first,second})do prior[actor.ownerId]={behavior=actor.behavior,to=actor.to,endTime=actor.endTime}end
+            for _,actor in ipairs({first,second})do prior[actor.ownerId]={behavior=actor.behavior,to=actor.to,endTime=actor.endTime,restAnchorId=actor.restAnchorId}end
             local center=(a+b)*.5;local token=self:token()
             self:transition(first,"investigate",center+Vector3.new(-.9,0,0),2.6,"greet",token)
             self:transition(second,"investigate",center+Vector3.new(.9,0,0),2.6,"greet",token)
@@ -197,15 +202,41 @@ end
 function Garden:wander(actor,input,now)
     if not self.options.validWander then return false end
     local from=self:position(actor,now)
-    if distance(input.position,Layout.Nook)<=4 and math.abs(input.position.Y-Layout.Nook.Y)<=6 and(from-Layout.Nook).Magnitude<=8 and now>=(actor.nextNookAt or 0)then
-        local target=self.options.validWander(input,Layout.Nook,from)
-        if typeof(target)=="Vector3"then
-            self:transition(actor,"investigate",target,0,"nookApproach")
-            local last=actor.path and actor.path[#actor.path]
-            if last and not last.safetyStop and(Activity.vector(last.to)-target).Magnitude<.1 then
-                actor.nextNookAt=now+18;actor.wanderCount=(actor.wanderCount or 0)+1;return true
+    if now>=(actor.nextNookAt or 0)then
+        local eligible={}
+        for _,rest in ipairs(Layout.RestAnchors)do
+            local gap=distance(input.position,rest.position)
+            if gap<=4 and math.abs(input.position.Y-rest.position.Y)<=6 and(from-rest.position).Magnitude<=8 then
+                table.insert(eligible,{rest=rest,gap=gap})
             end
-            self:transition(actor,"follow",input.anchor,.5)
+        end
+        table.sort(eligible,function(a,b)return if a.gap==b.gap then a.rest.id<b.rest.id else a.gap<b.gap end)
+        for _,candidate in ipairs(eligible)do
+            local rest=candidate.rest
+            local occupied=false
+            if rest.exclusive then
+                for _,other in pairs(self.actors)do
+                    if other==actor then continue end
+                    if(other.restAnchorId==rest.id and(other.action=="nookApproach"or other.action=="nookRest"))
+                        or(other.mode=="Focus"and distance(self:position(other,now),rest.position)<2)then occupied=true;break end
+                end
+            end
+            if occupied then continue end
+            local target=self.options.validWander(input,rest.position,from)
+            if typeof(target)~="Vector3"or(target-rest.position).Magnitude>=.1 then continue end
+            -- Preflight before changing actor identity/state. A blocked rest
+            -- must not become a phantom arrival or consume its cooldown.
+            local sample=Activity.sample(actor,now)
+            local planner=self.options.planPath or Activity.plan
+            local path,seconds=planner(from,target,sample and sample.velocity or Vector3.zero,Layout.StrollSpeed,0,sample and sample.yaw or actor.yaw or 0,nil,Vector3.zero)
+            local last=path and path[#path];local valid=last~=nil and(Activity.vector(last.to)-target).Magnitude<.1
+            for _,leg in ipairs(path or {})do if leg.safetyStop then valid=false;break end end
+            if valid and rest.exclusive and self.options.validRestPath and not self.options.validRestPath(path)then valid=false end
+            if valid then
+                self:transition(actor,"investigate",target,0,"nookApproach",nil,nil,{path=path,duration=seconds})
+                actor.restAnchorId=rest.id;actor.nextNookAt=now+18
+                actor.wanderCount=(actor.wanderCount or 0)+1;return true
+            end
         end
     end
     for attempt=1,6 do

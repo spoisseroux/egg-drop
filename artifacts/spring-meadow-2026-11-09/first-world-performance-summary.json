@@ -1,0 +1,70 @@
+{
+  "scope": "same-current-rigs-changing-world",
+  "synthetic": true,
+  "physicalPhone": false,
+  "viewport": [
+    1626,
+    734
+  ],
+  "text": "Medium",
+  "runtimeBefore": "2e9da43",
+  "candidatePublished": false,
+  "lights": 4,
+  "fixtureActors": 7,
+  "fixtureToy": 1,
+  "roundsPerLightPerCohort": 3,
+  "warmupFrames": 180,
+  "measuredFrames": 180,
+  "groups": {
+    "Day": {
+      "valid": true,
+      "frameP95ms": {
+        "before": 17.68309995532036,
+        "after": 17.93929934501648,
+        "deltaPct": 1.4488375360850458
+      },
+      "rigP95ms": {
+        "before": 1.1579000856727362,
+        "after": 1.1440999805927277,
+        "deltaPct": -1.1918217513552265
+      },
+      "backgroundBefore": {
+        "nodes": 2922,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1456
+      },
+      "backgroundAfter": {
+        "nodes": 3015,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1508
+      }
+    },
+    "Night": {
+      "valid": true,
+      "frameP95ms": {
+        "before": 18.0307999253273,
+        "after": 17.76829920709133,
+        "deltaPct": -1.4558462149382723
+      },
+      "rigP95ms": {
+        "before": 1.1066000442951918,
+        "after": 1.20449997484684,
+        "deltaPct": 8.84691185910822
+      },
+      "backgroundBefore": {
+        "nodes": 2922,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1456
+      },
+      "backgroundAfter": {
+        "nodes": 3015,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1508
+      }
+    }
+  }
+}

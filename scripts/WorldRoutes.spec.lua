@@ -53,13 +53,13 @@ return function(server,artSource)
 	local success,problem=pcall(function()
 		art.build(room,part)
 		test("floor and four boundaries align with the expanded collision envelope",function()
-			local floor=room.Floor;assert(floor.CanCollide and floor.CanQuery and floor.Size==Vector3.new(160,1,128))
-			assert(floor.Position.Y+floor.Size.Y*.5==4 and floor:GetAttribute("PlayableWidth")==160 and floor:GetAttribute("PlayableDepth")==128)
+			local floor=room.Floor;assert(floor.CanCollide and floor.CanQuery and floor.Size==Vector3.new(160,1,176))
+			assert(floor.Position==Vector3.new(0,3.5,24)and floor.Position.Y+floor.Size.Y*.5==4 and floor:GetAttribute("PlayableWidth")==160 and floor:GetAttribute("PlayableDepth")==176)
 			local boundaries=0
 			for _,p in ipairs(parts)do if p.Name=="GardenBoundary"then
 				boundaries+=1;assert(p.CanCollide and p.Transparency==1)
-				if p.Size.X<1 then assert(math.abs(math.abs(p.Position.X)-79.6)<.001 and p.Size.Z==128)
-				else assert(math.abs(math.abs(p.Position.Z)-63.6)<.001 and p.Size.X==160)end
+				if p.Size.X<1 then assert(math.abs(math.abs(p.Position.X)-79.6)<.001 and p.Size.Z==176 and p.Position.Z==24)
+				else assert(math.abs(math.abs(p.Position.Z-24)-87.6)<.001 and p.Size.X==160)end
 			end end;assert(boundaries==4)
 		end)
 		test("boardwalk center and both shoulders have authored solids through former boundary and every joint",function()
@@ -155,7 +155,81 @@ return function(server,artSource)
 				if p:IsA("PointLight")then lights+=1;assert(p:GetAttribute("HollowLamp")and not p.Shadows)end
 			end;assert(lamps==8 and lights==4)
 		end)
-		test("seventeen stable-name ambient parts reuse budget including lawn glint and pennant",function()
+        test("south meadow crosses the former wall on two dry eight-stud walking lanes",function()
+            local walk=require(shared.GardenWalkability);local wet={}
+            for _,p in ipairs(parts)do if p:GetAttribute("GardenWetRegion")or p.Name=="Creek"or p.Name=="MeadowCreek"or p.Name=="OutlookPond"or p.Name=="LanternPool"then table.insert(wet,p)end end
+            local crossings=0
+            for _,route in ipairs({layout.Routes.SpringApproach,layout.Routes.SpringLoop})do for i=2,#route do
+                local a,b=route[i-1],route[i];local delta=b-a;local normal=Vector2.new(-delta.Y,delta.X).Unit
+                if(a.Y<64 and b.Y>64)or(b.Y<64 and a.Y>64)then crossings+=1 end
+                for step=0,math.ceil(delta.Magnitude*2)do
+                    local center=a:Lerp(b,math.min(1,step/(delta.Magnitude*2)))
+                    for _,side in ipairs({-4,0,4})do
+                        local point=center+normal*side;assert(contains(room.Floor,point))
+                        local position=Vector3.new(point.X,4.025,point.Y)
+                        assert(walk.segmentAllowed(position,position,wet),"wet walking shoulder")
+                        for _,p in ipairs(parts)do if p.CanCollide and p~=room.Floor then assert(not blocks(p,point),"spring lane blocked by "..p.Name.." at "..tostring(point))end end
+                    end
+                end
+            end end
+            assert(crossings==2,"both independent branches must cross old Z64")
+            assert(contains(room.Floor,Vector2.new(-10,110))and not contains(room.Floor,Vector2.new(-10,113)))
+        end)
+        test("spring lawn and rest remain supported and clear while the actual wet basin is behind them",function()
+            local spring=layout.Spring;local water=room.SpringWater
+            assert(water:GetAttribute("GardenWetRegion")==true and water.Position==spring.BasinCenter and water.Size==spring.BasinSize)
+            assert(water.Position.Z-water.Size.Z*.5>96,"basin must stay behind the dry lawn")
+            assert(near(gardenLayout.RestAnchors[2].position,spring.RestWest)and near(gardenLayout.RestAnchors[3].position,spring.RestEast))
+            assert((spring.RestWest-spring.RestEast).Magnitude==5)
+            for _,x in ipairs({-7,0,7})do for _,z in ipairs({-6,0,6})do
+                local point=spring.LawnCenter+Vector2.new(x,z);assert(contains(room.Floor,point))
+                for _,p in ipairs(parts)do if p.CanCollide and p~=room.Floor then assert(not blocks(p,point),"rest lawn blocked by "..p.Name)end end
+            end end
+        end)
+        test("spring endpoints and moving pet control hulls use actual dry authored geometry",function()
+            local planner=require(shared.GardenPathPlanner);local walk=require(shared.GardenWalkability);local A=require(shared.GardenActivity);local wet={}
+            for _,p in ipairs(parts)do if p:GetAttribute("GardenWetRegion")or p.Name=="Creek"or p.Name=="MeadowCreek"or p.Name=="OutlookPond"or p.Name=="LanternPool"then table.insert(wet,p)end end
+            local route=layout.Routes.SpringLoop
+            for _,direction in ipairs({1,-1})do for i=1,#route-1 do
+                local a,b=route[i],route[i+1];if direction<0 then a,b=b,a end
+                local from,to=Vector3.new(a.X,4.025,a.Y),Vector3.new(b.X,4.025,b.Y)
+                local velocity=(to-from).Unit*16
+                local path,seconds=planner.plan(from,to,velocity,18,0,math.atan2(velocity.X,velocity.Z),nil,velocity,wet)
+                assert(walk.pathAllowed(path,wet))
+                for _,leg in ipairs(path)do assert(not leg.safetyStop,"safe dry route unexpectedly held")end
+                local actor={path=path,from=A.pack(from),to=A.pack(to),startTime=0,endTime=seconds}
+                for step=0,100 do local pose=A.sample(actor,seconds*step/100);assert(math.abs(pose.position.Y-4.025)<.001 and pose.velocity.Magnitude<=18.001)end
+            end end
+        end)
+        test("bounded new parts and three asymmetric shelves add no light or interaction",function()
+            local count,shelves,prompts=0,{},0
+            for _,p in ipairs(parts)do if p:GetAttribute("SpringMeadowPart")then
+                count+=1
+                if p.Name=="SpringShelf"then table.insert(shelves,p.Size.Y)end
+                assert(#p:GetChildren()==0 or not p:FindFirstChildOfClass("PointLight"))
+                for _,node in ipairs(p:GetDescendants())do if node:IsA("ProximityPrompt")then prompts+=1 end end
+            end end
+            table.sort(shelves);assert(#shelves==3 and shelves[1]==4 and shelves[2]==7 and shelves[3]==11)
+            assert(count>30 and count<=65,"spring net part budget="..count);assert(prompts==0)
+        end)
+        test("rest preflight rejects the actual sill braking excursion that a dry chord misses",function()
+            local planner=require(shared.GardenPathPlanner);local walk=require(shared.GardenWalkability);local A=require(shared.GardenActivity)
+            local from=Vector3.new(-12.5,4.025,94.5);local target=layout.Spring.RestWest
+            local wet={room.SpringWater};local solids={}
+            for _,p in ipairs(parts)do if p.CanCollide and p.Name~="Floor"then table.insert(solids,p)end end
+            assert(walk.segmentAllowed(from,target,wet),"fixture chord must be dry")
+            local path=planner.plan(from,target,Vector3.new(0,0,18),3,0,0,nil,Vector3.zero,wet)
+            assert(walk.pathAllowed(path,wet),"fixture must expose solid clearance, not wet rejection")
+            assert(not planner.restPathClear(path,solids),"incoming brake crossed actual BasinSill")
+            local safe=planner.plan(target-Vector3.new(0,0,2),target,Vector3.zero,3,0,0,nil,Vector3.zero,wet)
+            assert(planner.restPathClear(safe,solids),"ordinary dry rest approach should remain eligible")
+            -- The wide Nuum/Nolli bodies need more than .6 horizontal radius.
+            local obstacle=Instance.new("Part");obstacle.Size=Vector3.new(.2,2,2);obstacle.CFrame=CFrame.new(.85,5,0);obstacle.Parent=room
+            local widePath=A.plan(Vector3.new(0,4.025,-1),Vector3.new(0,4.025,1),Vector3.zero,3,0,0)
+            local wideClear=planner.restPathClear(widePath,{obstacle});obstacle:Destroy()
+            assert(not wideClear,"1.6-stud body could clip a solid only .75 from its centerline")
+        end)
+		test("eighteen stable-name ambient parts retain one bounded glint in the new meadow",function()
 			local count=0
 			for _,p in ipairs(parts)do if p:GetAttribute("HollowAmbientKind")then
 				count+=1;assert(p.Name:sub(1,14)=="HollowAmbient_"and p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery,p.Name.." name/collision flags")
@@ -163,7 +237,7 @@ return function(server,artSource)
 				assert(p:GetAttribute("HollowRestTransparency")==p.Transparency,p.Name.." rest transparency mismatch: "..tostring(p:GetAttribute("HollowRestTransparency")).." actual="..tostring(p.Transparency))
 				assert(p:GetAttribute("HollowAmbientPeriod")>0 and typeof(p:GetAttribute("HollowAmbientAmplitude"))=="Vector3",p.Name.." period/amplitude")
 				local phase=p:GetAttribute("HollowAmbientPhase");assert(phase>=0 and phase<1,p.Name.." phase cycles")
-			end end;assert(count==17,"ambient count="..count)
+			end end;assert(count==18,"ambient count="..count)
 			assert(room:FindFirstChild("HollowAmbient_CreekLawnGlint")and room:FindFirstChild("HollowAmbient_BenchPennant"))
 		end)
 	end)

@@ -1,6 +1,7 @@
 local Lighting = game:GetService("Lighting")
 local WorldLayout=require(game:GetService("ReplicatedStorage").Shared.HollowWorldLayout)
 local GardenArt=require(script.Parent.LoungeGardenArt)
+local SpringArt=require(script.Parent.LoungeSpringArt)
 
 local Art = {}
 local grass = Color3.fromHex("#72B85B")
@@ -117,13 +118,13 @@ function Art.build(room, part)
 	grade.Saturation = 0.015
 	grade.TintColor = Color3.fromHex("#F1F7FF")
 
-	local ground = box("Floor", 0, WorldLayout.FloorTop-.5, 0, WorldLayout.Width, 1, WorldLayout.Depth, grass, true)
+	local ground = box("Floor", 0, WorldLayout.FloorTop-.5, WorldLayout.FloorCenterZ, WorldLayout.Width, 1, WorldLayout.Depth, grass, true)
 	ground:SetAttribute("PlayableWidth", WorldLayout.Width)
 	ground:SetAttribute("PlayableDepth", WorldLayout.Depth)
 	box("MeadowGround", 0, 2.85, -24, 400, 0.85, 280, grass)
 	for _, side in ipairs({ -1, 1 }) do
-		box("GardenBoundary", side * (WorldLayout.Width*.5-.4), 12, 0, 0.8, 16, WorldLayout.Depth, grass, true).Transparency = 1
-		box("GardenBoundary", 0, 12, side * (WorldLayout.Depth*.5-.4), WorldLayout.Width, 16, 0.8, grass, true).Transparency = 1
+		box("GardenBoundary", side * (WorldLayout.Width*.5-.4), 12, WorldLayout.FloorCenterZ, 0.8, 16, WorldLayout.Depth, grass, true).Transparency = 1
+		box("GardenBoundary", 0, 12, WorldLayout.FloorCenterZ+side * (WorldLayout.Depth*.5-.4), WorldLayout.Width, 16, 0.8, grass, true).Transparency = 1
 	end
 	for _, hill in ipairs({
 		{ -32, -21, 35, 11, 28 }, { -16, -31, 31, 14, 25 }, { 11, -34, 34, 12, 26 },
@@ -446,7 +447,7 @@ function Art.build(room, part)
 	end
 	for i = 0, 11 do
 		local angle = i * math.pi * 2 / 12
-		local x, z = math.cos(angle) * (WorldLayout.Width*.5-5), math.sin(angle) * (WorldLayout.Depth*.5-5)
+		local x, z = math.cos(angle) * (WorldLayout.Width*.5-5), WorldLayout.FloorCenterZ+math.sin(angle) * (WorldLayout.Depth*.5-5)
 		shrub(x, z, 2.3)
 		plant(x - 1.2, 4, z + 0.9, 2.1)
 		oval("BoundaryStone", x + 0.6, 4.4, z - 0.5, 2.5, 1.1, 1.7, stone:Lerp(moss, 0.2))
@@ -659,6 +660,7 @@ function Art.build(room, part)
 		bit:SetAttribute("HollowAmbientKind",kind) -- Complete metadata before eligibility.
 	end
 	GardenArt.build(room,part)
+    SpringArt.build(room,part)
 	for i=1,5 do
 		ambient("Water"..i,"water",Vector3.new(52+i*2.7,4.13,-25+(i%3)*5.0),Vector3.new(1.3,.025,.09),
 			Color3.fromHex("#D2EBDB"),(i-1)/6,7+i%3,Vector3.new(.35,0,0),.42)

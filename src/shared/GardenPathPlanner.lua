@@ -3,6 +3,27 @@ local A=require(script.Parent.GardenActivity)
 local Walk=require(script.Parent.GardenWalkability)
 local World=require(script.Parent.HollowWorldLayout)
 local Planner={}
+function Planner.restPathClear(path,solids)
+ -- A cubic stays inside its control hull. Reject a conservative body-sized
+ -- hull/solid overlap, including braking excursions missed by endpoint rays.
+ for _,leg in ipairs(path)do
+  local from,to=A.vector(leg.from),A.vector(leg.to)
+  local points={from,from+A.vector(leg.v0)*leg.duration/3,to-A.vector(leg.v1)*leg.duration/3,to}
+  for _,solid in ipairs(solids)do if solid.Parent and solid.CanCollide then
+   local cf=solid.CFrame
+   local function radius(axis)return math.abs(axis.X)*.8+math.abs(axis.Y)*.8+math.abs(axis.Z)*.8 end
+   local extent=solid.Size*.5+Vector3.new(radius(cf.RightVector),radius(cf.UpVector),radius(cf.LookVector))
+   local low,high=Vector3.new(math.huge,math.huge,math.huge),Vector3.new(-math.huge,-math.huge,-math.huge)
+   for _,point in ipairs(points)do
+    local p=cf:PointToObjectSpace(point+Vector3.new(0,.85,0))
+    low=Vector3.new(math.min(low.X,p.X),math.min(low.Y,p.Y),math.min(low.Z,p.Z))
+    high=Vector3.new(math.max(high.X,p.X),math.max(high.Y,p.Y),math.max(high.Z,p.Z))
+   end
+   if low.X<=extent.X and high.X>=-extent.X and low.Y<=extent.Y and high.Y>=-extent.Y and low.Z<=extent.Z and high.Z>=-extent.Z then return false end
+  end end
+ end
+ return true
+end
 function Planner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
  local direct,duration=A.plan(from,to,velocity,speed,minimum,yaw,via,terminal)
  if Walk.pathAllowed(direct,wet)then return direct,duration end

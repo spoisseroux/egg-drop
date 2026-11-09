@@ -1,0 +1,74 @@
+{
+  "scope": "same-current-rigs-changing-world",
+  "synthetic": true,
+  "physicalPhone": false,
+  "viewport": [
+    1626,
+    734
+  ],
+  "text": "Medium",
+  "runtimeBefore": "2e9da43",
+  "candidatePublished": false,
+  "lights": 4,
+  "fixtureActors": 7,
+  "fixtureToy": 1,
+  "warmupFrames": 180,
+  "measuredFrames": 180,
+  "groups": {
+    "Day": {
+      "beforeRounds": 3,
+      "afterRounds": 3,
+      "valid": true,
+      "frameP95ms": {
+        "before": 17.68309995532036,
+        "after": 18.012499436736107,
+        "deltaPct": 1.8627926226059799
+      },
+      "rigP95ms": {
+        "before": 1.1579000856727362,
+        "after": 1.1481998953968287,
+        "deltaPct": -0.8377398357537702
+      },
+      "backgroundBefore": {
+        "nodes": 2922,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1456
+      },
+      "backgroundAfter": {
+        "nodes": 3039,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1520
+      }
+    },
+    "Night": {
+      "beforeRounds": 3,
+      "afterRounds": 6,
+      "valid": true,
+      "frameP95ms": {
+        "before": 18.0307999253273,
+        "after": 17.789349891245365,
+        "deltaPct": -1.3390977387685354
+      },
+      "rigP95ms": {
+        "before": 1.1066000442951918,
+        "after": 1.2106000212952495,
+        "deltaPct": 9.398154060828423
+      },
+      "backgroundBefore": {
+        "nodes": 2922,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1456
+      },
+      "backgroundAfter": {
+        "nodes": 3039,
+        "highlights": 0,
+        "lights": 4,
+        "parts": 1520
+      }
+    }
+  },
+  "nightInvestigation": "Initial three exceeded 10% rig-update p95; one declared follow-up batch retained all six after rounds. No source edits between these six."
+}

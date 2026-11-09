@@ -1,0 +1,152 @@
+[
+  {
+    "file": "01-west-out.mp4",
+    "start": 0,
+    "duration": 28,
+    "bytes": 571418,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "28.000000"
+      }
+    }
+  },
+  {
+    "file": "02-separated-night-rests.mp4",
+    "start": 116,
+    "duration": 14,
+    "bytes": 154827,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "14.000000"
+      }
+    }
+  },
+  {
+    "file": "03-focus-light-change.mp4",
+    "start": 91,
+    "duration": 23,
+    "bytes": 351356,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "23.002000"
+      }
+    }
+  },
+  {
+    "file": "04-walk-interrupt-revisit.mp4",
+    "start": 143,
+    "duration": 20,
+    "bytes": 538785,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "20.000000"
+      }
+    }
+  },
+  {
+    "file": "05-rest-focus-interrupt.mp4",
+    "start": 166,
+    "duration": 24,
+    "bytes": 499881,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "24.001000"
+      }
+    }
+  },
+  {
+    "file": "06-return-to-hub.mp4",
+    "start": 194,
+    "duration": 28,
+    "bytes": 662765,
+    "speed": "1x",
+    "audio": "original audio transcoded AAC64kbps",
+    "verified": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 816,
+          "height": 448
+        },
+        {
+          "codec_name": "aac"
+        }
+      ],
+      "format": {
+        "duration": "28.000000"
+      }
+    }
+  }
+]
