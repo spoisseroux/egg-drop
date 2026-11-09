@@ -1,6 +1,6 @@
 # Egg Drop — device, hatching and personal play
 
-**Tested candidate; private publication pending.** Existing private v370 remains until the final publish is independently verified. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Current gallery](artifacts/device-hatch-play-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/device-hatch-play-2026-11-09/VERIFY.md).
+**Private v389 Published — runtime13afc44, committed and pushed.** Refreshed native Version History verifies **Personal toys, features and hatches - 13afc44**. [Publication proof](artifacts/device-hatch-play-2026-11-09/private-published-v389-13afc44.jpg). [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Current gallery](artifacts/device-hatch-play-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/device-hatch-play-2026-11-09/VERIFY.md).
 
 The complete handheld now recoils together, with correct touch/aim mapping. Ended runs clear under cover before a fresh board appears; active suspended games keep their state. Larger measured type, shared scroll bounds, four-column pet cards, a horizontal halo and plain action faces replace the reported layout defects. Companion customization/switching is at the care cradle; Deck style is at the workbench. Pocket Menu keeps Hatch eggs, Pocket Trials and Settings. Exact saved-item Use now remains available without granting general editor access.
 

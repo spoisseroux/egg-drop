@@ -4,7 +4,7 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 
 ## Player feedback after v358 — private v370 Published
 
-### Device, hatching and personal play — tested candidate
+### Device, hatching and personal play — private v389 Published
 
 - [x] Move the entire device, screen, labels and controls together on merges; keep simulation and pointer mapping correct and Reduced Motion quiet.
 - [x] Horizontal halo torus and matching top/bottom fallback; reset ended board render caches under cover before a fresh game appears, preserve suspended games.
@@ -15,7 +15,7 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 - [x] Remove the old world ball/shared-return activity and its visible props/prompts; keep other care leases intact.
 - [x] Toy Egg, permanent toy unlocks/per-pet selection and observer-visible idle play (Sparkler, Ball, Bone), separate from removed world activity.
 - [x] Feature Egg, stored Horn/Claw/Wing items, exact one-item/per-pet next-notch application, earned maximum and selected visible sizes0–5, original models/animation.
-- [ ] Finish final phone first-row labels, clean-source audit, commit/push and private publication after passing. All earlier visual and transaction gates pass; see current candidate verification.
+- [x] Final phone first-row labels, clean-source audit169/169, reviewed runtime13afc44 committed/pushed, privatev389 Published verified in refreshed Version History. [Exact evidence and limits](artifacts/device-hatch-play-2026-11-09/VERIFY.md).
 
 Asset research: [Kenney UI Pack](https://kenney.nl/assets/ui-pack) (CC0) and [Quaternius Ultimate Stylized Nature](https://quaternius.com/packs/ultimatestylizednature.html) (CC0) are optional sources for selected supporting assets. No third-party pack imported in this pass yet; original pets/device stay coherent. Packs do not replace layout correctness.
 
