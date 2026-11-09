@@ -13,6 +13,21 @@ Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO
 - [ ] Recheck actual pet-focus input with a clean keyboard/controller configuration; the ordinary welcome reveal passed but the later Meet/E attempt did not establish focus.
 - [ ] New replacement designs for the three retired pets require visual approval; no replacements were silently substituted.
 
+## Planned pet-care expansion — user scope, November 9
+
+The new [Astra proposal](PET-CARE-EXPANSION.md) and [architecture constraints](PET-CARE-ARCHITECTURE.md) are for feedback, **not implemented or published**. Illustrative prices, chances, XP curves and dimensions require acceptance and play tuning.
+
+- [ ] Complete-model loading/fallback before authored mesh reveal; avoid transient headless pets. Prioritize owner/hatch, then visitors.
+- [ ] Exact resolved color swatches on every hue notch; dark-red/Garnet and black/Ink expansion with historical data preserved.
+- [ ] Stronger tier-based device-art merge response, bounded audio/particles and slightly transparent motifs over the opaque theme base.
+- [ ] Carry from petting, supported set-down, one physical care-machine bay and owned-pet switching; retain fast shortcuts during the prototype.
+- [ ] Independent Skin FX gradients/finishes, original UV/material work and readable dark/night faces; restore the parked gloss work under review.
+- [ ] Feature Egg with horns/tail/wings, rarities, stored items and separate five-stage earned/visible feature sizes per pet.
+- [ ] Per-pet Movement/Swim XP levels, Stat Egg, meaningful practice, crawl/first-step and beginner/competent swimming animations with safe shores.
+- [ ] Original textured basin, terrace, animated pond/waterfall and purposeful cave entrance inspired by the supplied garden's proportions. No Sonic mesh or textures imported into the game.
+- [ ] Occasional original coos and saved-item sniff/bite/growth/training response with muted/reduced-motion alternatives.
+- [ ] Build one real activity behind the cave entrance before enabling its portal. Further stats, prestige resets and minigames need a purpose and a later bounded scope.
+
 ## Completed overnight builds — historical v309
 
 The newer **Spring Meadow continuation is private v309 Published / pushed runtime b71c702**. [Proof](artifacts/spring-meadow-2026-11-09/private-published-v309-b71c702.png) · [Verification](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md).
@@ -42,6 +57,6 @@ The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, in
 ## Future scope — separate design and review
 
 - [ ] Additional garden spaces and social activities/minigames beyond the completed shared return and Spring Meadow. The original larger-footprint requirement is now implemented; broader expansion needs a new bounded design/review.
-- [ ] Clothing eggs, stat eggs and battling. Nursery remains deferred.
+- [ ] Clothing eggs and battling. Stat Eggs are now part of the proposal above, not yet built. Nursery remains deferred.
 
 No paid luck, daily play caps, new currency or public release is authorized by this backlog.

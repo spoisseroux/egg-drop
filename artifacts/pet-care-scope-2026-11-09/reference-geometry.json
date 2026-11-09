@@ -1,0 +1,140 @@
+{
+  "sourceZip": "C:/Users/skunk/Downloads/chao-garden.zip",
+  "referenceOnly": true,
+  "worldUnits": "Unspecified OBJ units; cannot assert a Roblox-stud conversion without an avatar or camera reference.",
+  "vertices": 1454,
+  "faces": 1377,
+  "triangles": 1377,
+  "uvCoordinates": 1542,
+  "overall": {
+    "min": [
+      -627.264282,
+      -380.160767,
+      -627.264282
+    ],
+    "max": [
+      627.264282,
+      380.160767,
+      627.264709
+    ],
+    "size": [
+      1254.528564,
+      760.321534,
+      1254.5289910000001
+    ]
+  },
+  "groups": [
+    {
+      "name": "Mesh_0139",
+      "faces": 1377,
+      "min": [
+        -627.264282,
+        -380.160767,
+        -627.264282
+      ],
+      "max": [
+        627.264282,
+        380.160767,
+        627.264709
+      ],
+      "size": [
+        1254.528564,
+        760.321534,
+        1254.5289910000001
+      ]
+    }
+  ],
+  "materialNames": [
+    "Tex_0014_0_dds",
+    "Tex_0010_0_dds",
+    "Tex_0016_0_dds",
+    "None",
+    "Tex_0013_0_dds",
+    "Tex_0015_0_dds",
+    "Tex_0011_0_dds",
+    "Tex_0018_0_dds",
+    "Tex_0012_0_dds",
+    "Tex_0032_0_dds",
+    "Tex_0017_0_dds",
+    "Tex_0033_0_dds"
+  ],
+  "textures": [
+    {
+      "name": "textures/Tex_0010_0.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "name": "textures/Tex_0013_0.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "name": "textures/Tex_0012_0.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "name": "textures/Tex_0033_0.png",
+      "size": [
+        64,
+        64
+      ]
+    },
+    {
+      "name": "textures/Tex_0032_0.png",
+      "size": [
+        64,
+        64
+      ]
+    },
+    {
+      "name": "textures/Tex_0014_0.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "name": "textures/Tex_0017_0.png",
+      "size": [
+        64,
+        64
+      ]
+    },
+    {
+      "name": "textures/Tex_0011_0.png",
+      "size": [
+        64,
+        64
+      ]
+    },
+    {
+      "name": "textures/Tex_0009_0.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "name": "textures/Tex_0016_0.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "name": "textures/Tex_0015_0.png",
+      "size": [
+        256,
+        256
+      ]
+    }
+  ]
+}

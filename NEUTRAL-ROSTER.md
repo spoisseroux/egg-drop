@@ -16,7 +16,7 @@ Architecture review caught an empty rare-only pool at seven misses. Suspend rare
 
 Sol 6.1 High implements and independent Sol reviews source. Verify neutral defaults/reset, protected face roles, separate Main/Secondary hue counts and old colors; active pool and probability total; all roll samples/misses including seven; retained owned/equipped retired IDs and old pending results; journal attainable targets and no unavailable hatch promises. Run native client/server suites, compile and Rojo. Record actual results before calling the change tested or published.
 
-The material/gloss pass is a separate unfinished change in the same worktree. Its four newly uploaded images return failed callbacks through raw-URI preload, but an ordinary LocalScript successfully loads all four through ImageLabel-instance preload. The production raw-URI loader still fails; fix and render verification remain pending. Image loading does not prove processed shader rendering. No new private publication is authorized by an unverified texture candidate. Private v309 remains the verified fallback until the integrated release passes.
+The material/gloss pass is a separate unfinished candidate, safely parked as recorded in PET-MATERIAL-PASS.md. Its four newly uploaded images return failed callbacks through raw-URI preload, but an ordinary LocalScript successfully loads all four through ImageLabel-instance preload. The candidate raw-URI loader still fails; fix and render verification remain pending. Image loading does not prove processed shader rendering. An unverified texture candidate cannot be published. Private v316 is the released neutral-only baseline; none of the gloss experiment is included.
 
 ## Palette for critique
 

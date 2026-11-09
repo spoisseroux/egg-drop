@@ -1,0 +1,65 @@
+{
+  "scope": "Proposed isolated single-pigment examples on white, other counts zero; not current mixed-coat quotes.",
+  "weights": [
+    0.44,
+    0.65,
+    0.84,
+    0.93,
+    1
+  ],
+  "targets": {
+    "Rose": "#FF327A",
+    "Tide": "#008DFF",
+    "Citrus": "#FFCC00",
+    "Iris": "#9350FF",
+    "Garnet": "#8C1835",
+    "Ink": "#17171B"
+  },
+  "srgb8": {
+    "Rose": [
+      "#FFC7D2",
+      "#FFA4B8",
+      "#FF789A",
+      "#FF5989",
+      "#FF327A"
+    ],
+    "Tide": [
+      "#C5D7FF",
+      "#A0BFFF",
+      "#6FA6FF",
+      "#4B99FF",
+      "#008DFF"
+    ],
+    "Citrus": [
+      "#FFEAC5",
+      "#FFE0A0",
+      "#FFD56F",
+      "#FFD04B",
+      "#FFCC00"
+    ],
+    "Iris": [
+      "#D8CBFF",
+      "#C2AAFF",
+      "#AB83FF",
+      "#9E6AFF",
+      "#9350FF"
+    ],
+    "Garnet": [
+      "#D6C6C8",
+      "#BFA1A4",
+      "#A67279",
+      "#984F5A",
+      "#8C1835"
+    ],
+    "Ink": [
+      "#C6C6C6",
+      "#A1A1A1",
+      "#727272",
+      "#4F4F50",
+      "#17171B"
+    ]
+  },
+  "currentIllustrativeSavedState": "All Main counts zero; Secondary untreated #C8C8C8; placeholder silhouette only.",
+  "inspected": "Rose stage4, unapplied",
+  "confirmation": "Rose0\u21921; stock3\u21922; #FFC7D2"
+}
