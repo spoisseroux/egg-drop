@@ -34,4 +34,4 @@ Actual navigation and E first opened the nearby deck workbench, confirming stati
 
 Final client console contained only the known optional EditableImage and external asset203785492 warnings. All96 runtime sources matched the filesystem and compiled; Rojo build and scoped diff checks passed. Edit contains no temporary QA objects or import models. Original Medium text preference, desktop mode and Egg Drop Rojo34873 remain. Physical-phone comfort/performance, live-server save/rejoin, longer human play and garden-night palette tuning remain unverified. This is a private prototype, not production readiness or proven fun/retention.
 
-Reviewed commit and private publication are recorded separately after the publish action.
+Runtime commit **355fad7** was pushed to `feat/egg-drop-arcade-polish`. After the passed gates, the existing private place was updated and refreshed Version History confirmed **v232 Published**, labeled **Softer babies and smooth movement - 355fad7**. [Publication proof](private-published-v232-355fad7.png). Documentation-only follow-up commits require no Studio republish.
