@@ -178,4 +178,3 @@ end))
 remember(script.Destroying:Connect(cleanup))
 remember(screen.Destroying:Connect(cleanup))
 task.defer(refresh)
-
