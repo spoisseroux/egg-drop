@@ -9,6 +9,8 @@ local EggCatalog=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 
 local Progress = {}
 local pending = {}
+local flushRequested,flushQueued,flushAttempts={},{},{}
+local flush,scheduleFlush
 local store = require(script.Parent.ProgressStore)
 local writer = game.JobId
 local function appearanceStamp(value)
@@ -124,7 +126,39 @@ function Progress.hydrate(profile, record)
 	return true
 end
 
-local function flush(profile)
+local function finishFlush(profile,success)
+ if not pending[profile]then flushRequested[profile]=nil;flushAttempts[profile]=nil;return end
+ if not flushRequested[profile]then return end
+ if success then flushAttempts[profile]=0;scheduleFlush(profile,0)
+ else
+  local attempt=(flushAttempts[profile]or 0)+1;flushAttempts[profile]=attempt
+  if attempt<=3 then scheduleFlush(profile,({.5,1,2})[attempt])
+  else flushRequested[profile]=nil;flushAttempts[profile]=nil end
+ end
+end
+scheduleFlush=function(profile,delay)
+ if flushQueued[profile]or profile.saving then return end
+ local ticket={};flushQueued[profile]=ticket
+ local function run()
+  if flushQueued[profile]~=ticket then return end;flushQueued[profile]=nil
+  if profile.saving then return end -- Its completion owns the latched follow-up.
+  if not pending[profile]then finishFlush(profile,true);return end
+  flush(profile)
+ end
+ if delay>0 then task.delay(delay,run)else task.defer(run)end
+end
+
+-- User-facing preferences must not wait for the twelve-second safety sweep.
+-- One profile writer owns persistence; requests arriving during it only latch
+-- another drain. Retried candidates retain their exact stamps and proof rules.
+function Progress.requestFlush(profile)
+ if profile.loadFailed then return false,"Temporary"end
+ if not pending[profile]then return true end
+ if not flushRequested[profile]then flushAttempts[profile]=0 end
+ flushRequested[profile]=true;scheduleFlush(profile,0);return true
+end
+
+flush=function(profile)
 	if not pending[profile] then return true end
 	if profile.saving then return false, "Busy" end
 	if profile.loadFailed then return false, "Temporary" end
@@ -193,6 +227,7 @@ local function flush(profile)
 	if not success then
 		setSaveFailed(profile, true)
 		warn("Egg Drop could not save the player profile:", result)
+		finishFlush(profile,false)
 		return false, "Retrying"
 	end
 	setSaveFailed(profile, false)
@@ -295,6 +330,7 @@ local function flush(profile)
 		or profile.earnedTrials or profile.soundChange or profile.motionChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
+	finishFlush(profile,not profile.saveFailed)
 	return pending[profile] == nil
 end
 

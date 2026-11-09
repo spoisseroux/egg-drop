@@ -627,6 +627,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			function(petId)return NurseryCatalog.isOwned(inventory(board),petId)end,Progress.setPetAppearance)
 		if changed then publishPetAppearance(board)end
 		if packet then petAppearanceResult:FireClient(player,packet)end
+		if packet and packet.status=="Applied"then Progress.requestFlush(board.profile)end
 		return
 	end
 	if action=="appearanceSlot" then
