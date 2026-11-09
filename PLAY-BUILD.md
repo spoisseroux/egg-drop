@@ -1,4 +1,16 @@
-# Egg Drop — carry and care machine
+# Egg Drop — companion editor and luminous pets
+
+**Private v358 Published — runtime4bf7893, pushed.** Refreshed native Studio Version History marks v358 Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/companion-editor-2026-11-09/private-published-v358-4bf7893.jpg) · [Screenshot gallery](artifacts/companion-editor-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/companion-editor-2026-11-09/VERIFY.md).
+
+Round results use readable dark ink, a better Stars emblem and already-open scrolling details; the obsolete selected-egg progress area and Details button are gone. **Companions** replaces Journal entry routes with Pet / Hue / Charm tabs, square live owned-pet previews, a fixed live preview and independently scrolling choices. Main and Secondary remain separate, and item use still asks for confirmation. Charm On / Off is explicit; Ring is one original continuous torus. The editor has a bare X and no Stars/carry footer. Closing the physical machine returns the confirmed pet to your arms; the down arrow sets it down safely. Forced cleanup remains separate.
+
+Pets are brighter at night through pet-local emissive PBR surfaces, with darker eyes, visible catchlights and a more luminous charm. Day/night and the garden's global lighting are unchanged. All seven retained designs render with this treatment; the Companion Egg still offers four pets and preserves already-owned retired pets.
+
+**Passed:**161 client cases/20 suites at both Medium and Largest (overlapping preference runs),145 server cases/15 suites,144 exact native source matches and zero compile errors, Rojo build, independent Sol source review and Astra visual review. Ordinary earned Studio controls covered welcome, pickup, walking, placement, saved Ring, X→carry, set-down, overflow receipt and hatch route. Seven-owned previews/positive14-Star receipt and material lineups are labeled fixtures. Six paired seven-pet material rounds showed stable frame time and +0.132ms pet CPU p95. Test objects removed; Medium/Automatic/default viewport restored.
+
+**Still open:** physical phone, live-service save/rejoin, live visitor/bay contention, R6 owner controls, dedicated owned-editor baseline performance comparison and longer human play. Test-enabled-session Focus interference has no established cause; clean ordinary sessions pass. Existing EditableImage/legacy wrong-asset-type notices remain. No production-readiness or fun/retention claim.
+
+## Historical v344 — carry and care machine
 
 **Private v344 Published — Carry and care machine - 5b829e6.** Runtime is committed and pushed; refreshed native Studio Version History shows Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/carry-machine-2026-11-09/private-published-v344-5b829e6.png) · [Screenshots and walking film](artifacts/carry-machine-2026-11-09/GALLERY.html) · [Exact tests and limits](artifacts/carry-machine-2026-11-09/VERIFY.md).
 

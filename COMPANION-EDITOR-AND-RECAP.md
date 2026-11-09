@@ -1,6 +1,6 @@
 # Companion editor and round recap
 
-Implemented and verified candidate against private **v344 / 5b829e6**; publication is pending. The accepted scope below addresses the six player captures: pale recap lettering and an oversized egg progress area, unstable editor tabs and a pet which scrolls out of view. The halo and material work received separate visual review. The last published private build remains the baseline until [PLAY-BUILD.md](PLAY-BUILD.md) records a new verified publication.
+Published as **private v358 / runtime4bf7893** after verification against v344 /5b829e6. The accepted scope below addresses the six player captures: pale recap lettering and an oversized egg progress area, unstable editor tabs and a pet which scrolls out of view. The halo and material work received separate visual review. [PLAY-BUILD.md](PLAY-BUILD.md) records the verified private publication.
 
 ## Candidate status — November 9, 2026
 
@@ -28,7 +28,7 @@ The actual [Largest Charm overlap](artifacts/companion-editor-2026-11-09/actual-
 - [x] Corrected Charm bounds and first owned Pet-card visibility, with actual phone-emulator captures.
 - [x] Fresh ordinary final-source wheel input scrolls the options list without moving the world camera; explicit machine × confirms Carried.
 - [x] Exact native source equality, zero compile errors, Rojo/diff checks, QA removal and restored default Studio settings.
-- [ ] Record the new private publication and refreshed native Version History proof in PLAY-BUILD.md.
+- [x] Private v358 Published, refreshed native Version History proof in PLAY-BUILD.md; runtime4bf7893 pushed.
 
 A test-enabled session interfered with ordinary Focus entry; a clean session with the auto-driver disabled completed the earned welcome→Meet route. Inspection did not establish an individual fixture as the cause, so the test-enabled-session interference remains unexplained and actual-control evidence is collected separately from fixture execution. Physical-phone input/performance, live visitor/bay contention, actual R6 input and live save/rejoin remain outside this evidence. The six-round seven-rig material benchmark is a separate measured workload; a dedicated seven-owned editor versus v344 baseline performance comparison is not established. Do not add overlapping rerun totals together.
 

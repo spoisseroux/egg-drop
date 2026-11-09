@@ -1,6 +1,6 @@
 # Companion editor, recap and luminous materials
 
-Reviewed candidate for place **96451847774961**, based on private v344. Publication proof is recorded separately after publishing.
+Published **private v358**, runtime **4bf7893**, for place **96451847774961**, based on private v344. Refreshed native Version History verifies Published: [proof](private-published-v358-4bf7893.jpg). Runtime and evidence are committed/pushed.
 
 ## Passed
 
