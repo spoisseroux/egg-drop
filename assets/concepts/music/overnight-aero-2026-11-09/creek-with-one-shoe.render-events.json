@@ -1,0 +1,3291 @@
+[
+  {
+    "event": [
+      1,
+      0,
+      1.55,
+      "bulb_bass",
+      38,
+      0.16,
+      0
+    ],
+    "start_frame": 0,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      1,
+      0,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 0,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      1,
+      0,
+      0.33,
+      "cushion_kick",
+      36,
+      0.061,
+      0
+    ],
+    "start_frame": 0,
+    "voice_frames": 13020
+  },
+  {
+    "event": [
+      1,
+      0.014,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 403,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      1,
+      0.028,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 805,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      1,
+      0.042,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 1208,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      1,
+      0.55,
+      0.55,
+      "porcelain_lead",
+      62,
+      0.104,
+      0.1
+    ],
+    "start_frame": 15818,
+    "voice_frames": 24639
+  },
+  {
+    "event": [
+      1,
+      1.25,
+      0.38,
+      "porcelain_lead",
+      66,
+      0.104,
+      0.1
+    ],
+    "start_frame": 35951,
+    "voice_frames": 19750
+  },
+  {
+    "event": [
+      1,
+      2,
+      0.45,
+      "porcelain_lead",
+      69,
+      0.104,
+      0.1
+    ],
+    "start_frame": 57522,
+    "voice_frames": 21763
+  },
+  {
+    "event": [
+      1,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 58385,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      1,
+      2.25,
+      0.8,
+      "bulb_bass",
+      45,
+      0.097,
+      0
+    ],
+    "start_frame": 64712,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      1,
+      2.65,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 76216,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      1,
+      2.664,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 76619,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      1,
+      2.678,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 77022,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      1,
+      2.692,
+      1.1,
+      "porcelain_keys",
+      64,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 77424,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      1,
+      2.82,
+      0.8,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 81106,
+    "voice_frames": 31830
+  },
+  {
+    "event": [
+      2,
+      0,
+      1.55,
+      "bulb_bass",
+      43,
+      0.16,
+      0
+    ],
+    "start_frame": 115043,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      2,
+      0.58,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 131725,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      2,
+      0.594,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 132127,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      2,
+      0.608,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 132530,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      2,
+      0.622,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 132933,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      2,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 144667,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      2,
+      1.57,
+      0.35,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 160198,
+    "voice_frames": 14477
+  },
+  {
+    "event": [
+      2,
+      2.35,
+      0.51,
+      "gumdrop",
+      55,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 182632,
+    "voice_frames": 19079
+  },
+  {
+    "event": [
+      2,
+      2.5,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 186946,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      2,
+      2.514,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 187348,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      2,
+      2.528,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 187751,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      2,
+      2.542,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 188154,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      2,
+      2.625,
+      0.8,
+      "bulb_bass",
+      50,
+      0.097,
+      0
+    ],
+    "start_frame": 190541,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      3,
+      0,
+      1.55,
+      "bulb_bass",
+      40,
+      0.16,
+      0
+    ],
+    "start_frame": 230087,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      3,
+      0.04,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 231237,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      3,
+      0.054,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 231640,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      3,
+      0.068,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 232043,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      3,
+      0.082,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 232445,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      3,
+      0.57,
+      0.64,
+      "porcelain_lead",
+      67,
+      0.104,
+      0.1
+    ],
+    "start_frame": 246481,
+    "voice_frames": 27228
+  },
+  {
+    "event": [
+      3,
+      1.44,
+      0.41,
+      "porcelain_lead",
+      64,
+      0.104,
+      0.1
+    ],
+    "start_frame": 271503,
+    "voice_frames": 20613
+  },
+  {
+    "event": [
+      3,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 288472,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      3,
+      2.25,
+      0.8,
+      "bulb_bass",
+      47,
+      0.097,
+      0
+    ],
+    "start_frame": 294799,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      3,
+      2.52,
+      0.78,
+      "porcelain_lead",
+      62,
+      0.104,
+      0.1
+    ],
+    "start_frame": 302564,
+    "voice_frames": 31254
+  },
+  {
+    "event": [
+      3,
+      2.79,
+      1.1,
+      "porcelain_keys",
+      55,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 310330,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      3,
+      2.804,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 310732,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      3,
+      2.818,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 311135,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      3,
+      2.832,
+      1.1,
+      "porcelain_keys",
+      64,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 311538,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      3,
+      3.56,
+      0.27,
+      "bulb_bass",
+      52,
+      0.061,
+      0
+    ],
+    "start_frame": 332476,
+    "voice_frames": 13058
+  },
+  {
+    "event": [
+      4,
+      0,
+      1.55,
+      "bulb_bass",
+      45,
+      0.16,
+      0
+    ],
+    "start_frame": 345130,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      4,
+      0.31,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 354046,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      4,
+      0.324,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 354449,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      4,
+      0.338,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 354852,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      4,
+      0.352,
+      1.58,
+      "porcelain_keys",
+      66,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 355254,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      4,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 374754,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      4,
+      1.81,
+      0.28,
+      "gumdrop",
+      64,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 397188,
+    "voice_frames": 12464
+  },
+  {
+    "event": [
+      4,
+      2.54,
+      0.35,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 418183,
+    "voice_frames": 14477
+  },
+  {
+    "event": [
+      4,
+      3.05,
+      0.52,
+      "gumdrop",
+      57,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 432851,
+    "voice_frames": 19367
+  },
+  {
+    "event": [
+      5,
+      0,
+      1.55,
+      "bulb_bass",
+      42,
+      0.16,
+      0
+    ],
+    "start_frame": 460174,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      5,
+      0,
+      1.58,
+      "porcelain_keys",
+      50,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 460174,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      5,
+      0,
+      0.33,
+      "cushion_kick",
+      36,
+      0.061,
+      0
+    ],
+    "start_frame": 460174,
+    "voice_frames": 13020
+  },
+  {
+    "event": [
+      5,
+      0.014,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 460577,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      5,
+      0.028,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 460979,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      5,
+      0.042,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 461382,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      5,
+      0.56,
+      0.44,
+      "porcelain_lead",
+      62,
+      0.104,
+      0.1
+    ],
+    "start_frame": 476280,
+    "voice_frames": 21476
+  },
+  {
+    "event": [
+      5,
+      1.27,
+      0.41,
+      "porcelain_lead",
+      66,
+      0.104,
+      0.1
+    ],
+    "start_frame": 496700,
+    "voice_frames": 20613
+  },
+  {
+    "event": [
+      5,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 518558,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      5,
+      2.04,
+      0.4,
+      "porcelain_lead",
+      69,
+      0.104,
+      0.1
+    ],
+    "start_frame": 518846,
+    "voice_frames": 20325
+  },
+  {
+    "event": [
+      5,
+      2.25,
+      0.8,
+      "bulb_bass",
+      45,
+      0.097,
+      0
+    ],
+    "start_frame": 524886,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      5,
+      2.65,
+      1.1,
+      "porcelain_keys",
+      50,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 536390,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      5,
+      2.664,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 536793,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      5,
+      2.678,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 537196,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      5,
+      2.692,
+      1.1,
+      "porcelain_keys",
+      64,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 537598,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      5,
+      2.75,
+      0.55,
+      "porcelain_lead",
+      73,
+      0.104,
+      0.1
+    ],
+    "start_frame": 539266,
+    "voice_frames": 24639
+  },
+  {
+    "event": [
+      5,
+      3.55,
+      0.38,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 562275,
+    "voice_frames": 19750
+  },
+  {
+    "event": [
+      6,
+      0,
+      1.55,
+      "bulb_bass",
+      43,
+      0.16,
+      0
+    ],
+    "start_frame": 575217,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      6,
+      0.58,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 591899,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      6,
+      0.594,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 592301,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      6,
+      0.608,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 592704,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      6,
+      0.622,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 593107,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      6,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 604841,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      6,
+      1.55,
+      0.44,
+      "gumdrop",
+      62,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 619797,
+    "voice_frames": 17066
+  },
+  {
+    "event": [
+      6,
+      2.41,
+      0.39,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 644531,
+    "voice_frames": 15628
+  },
+  {
+    "event": [
+      6,
+      2.5,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 647120,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      6,
+      2.514,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 647522,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      6,
+      2.528,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 647925,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      6,
+      2.542,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 648328,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      6,
+      2.625,
+      0.8,
+      "bulb_bass",
+      50,
+      0.097,
+      0
+    ],
+    "start_frame": 650715,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      6,
+      3.12,
+      0.33,
+      "gumdrop",
+      55,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 664951,
+    "voice_frames": 13902
+  },
+  {
+    "event": [
+      6,
+      3.59,
+      0.12,
+      "paper_brush",
+      74,
+      0.025,
+      -0.14
+    ],
+    "start_frame": 678469,
+    "voice_frames": 5216
+  },
+  {
+    "event": [
+      7,
+      0,
+      1.55,
+      "bulb_bass",
+      40,
+      0.16,
+      0
+    ],
+    "start_frame": 690261,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      7,
+      0.04,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 691411,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      7,
+      0.054,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 691814,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      7,
+      0.068,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 692217,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      7,
+      0.082,
+      1.58,
+      "porcelain_keys",
+      66,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 692619,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      7,
+      0.12,
+      0.48,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 693712,
+    "voice_frames": 22626
+  },
+  {
+    "event": [
+      7,
+      0.93,
+      0.49,
+      "porcelain_lead",
+      67,
+      0.104,
+      0.1
+    ],
+    "start_frame": 717008,
+    "voice_frames": 22914
+  },
+  {
+    "event": [
+      7,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 748645,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      7,
+      2.19,
+      0.51,
+      "porcelain_lead",
+      66,
+      0.104,
+      0.1
+    ],
+    "start_frame": 753247,
+    "voice_frames": 23489
+  },
+  {
+    "event": [
+      7,
+      2.25,
+      0.8,
+      "bulb_bass",
+      47,
+      0.097,
+      0
+    ],
+    "start_frame": 754973,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      7,
+      2.79,
+      1.1,
+      "porcelain_keys",
+      55,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 770504,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      7,
+      2.804,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 770906,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      7,
+      2.818,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 771309,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      7,
+      2.832,
+      1.1,
+      "porcelain_keys",
+      66,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 771712,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      7,
+      3.56,
+      0.27,
+      "bulb_bass",
+      52,
+      0.061,
+      0
+    ],
+    "start_frame": 792650,
+    "voice_frames": 13058
+  },
+  {
+    "event": [
+      8,
+      0,
+      1.55,
+      "bulb_bass",
+      45,
+      0.16,
+      0
+    ],
+    "start_frame": 805304,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      8,
+      0.31,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 814220,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      8,
+      0.324,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 814623,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      8,
+      0.338,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 815026,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      8,
+      0.352,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 815428,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      8,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 834928,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      8,
+      1.78,
+      0.32,
+      "gumdrop",
+      62,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 856499,
+    "voice_frames": 13614
+  },
+  {
+    "event": [
+      8,
+      2.56,
+      0.7,
+      "gumdrop",
+      57,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 878932,
+    "voice_frames": 24544
+  },
+  {
+    "event": [
+      8,
+      3.49,
+      0.27,
+      "water_glass",
+      76,
+      0.034,
+      0.28
+    ],
+    "start_frame": 905680,
+    "voice_frames": 23642
+  },
+  {
+    "event": [
+      9,
+      0,
+      2.4,
+      "bulb_bass",
+      47,
+      0.135,
+      0
+    ],
+    "start_frame": 920348,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      9,
+      2.25,
+      1.05,
+      "bulb_bass",
+      54,
+      0.075,
+      0
+    ],
+    "start_frame": 985060,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      10,
+      0,
+      2.4,
+      "bulb_bass",
+      43,
+      0.135,
+      0
+    ],
+    "start_frame": 1035391,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      10,
+      1.58,
+      0.38,
+      "water_glass",
+      71,
+      0.055,
+      0.31
+    ],
+    "start_frame": 1080833,
+    "voice_frames": 26806
+  },
+  {
+    "event": [
+      10,
+      2.55,
+      0.55,
+      "water_glass",
+      69,
+      0.055,
+      0.31
+    ],
+    "start_frame": 1108732,
+    "voice_frames": 31695
+  },
+  {
+    "event": [
+      10,
+      2.625,
+      1.05,
+      "bulb_bass",
+      50,
+      0.075,
+      0
+    ],
+    "start_frame": 1110889,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      11,
+      0,
+      2.4,
+      "bulb_bass",
+      40,
+      0.135,
+      0
+    ],
+    "start_frame": 1150435,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      11,
+      2.25,
+      1.05,
+      "bulb_bass",
+      47,
+      0.075,
+      0
+    ],
+    "start_frame": 1215147,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      12,
+      0,
+      2.4,
+      "bulb_bass",
+      45,
+      0.135,
+      0
+    ],
+    "start_frame": 1265478,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      13,
+      0,
+      2.4,
+      "bulb_bass",
+      38,
+      0.135,
+      0
+    ],
+    "start_frame": 1380522,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      13,
+      0.52,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.03,
+      -0.232
+    ],
+    "start_frame": 1395477,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      13,
+      0.534,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0286,
+      -0.158
+    ],
+    "start_frame": 1395880,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      13,
+      0.548,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0273,
+      -0.082
+    ],
+    "start_frame": 1396283,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      13,
+      0.562,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0259,
+      -0.008
+    ],
+    "start_frame": 1396685,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      13,
+      2.25,
+      1.05,
+      "bulb_bass",
+      45,
+      0.075,
+      0
+    ],
+    "start_frame": 1445234,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      14,
+      0,
+      2.4,
+      "bulb_bass",
+      43,
+      0.135,
+      0
+    ],
+    "start_frame": 1495565,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      14,
+      1.58,
+      0.33,
+      "water_glass",
+      76,
+      0.051,
+      0.26
+    ],
+    "start_frame": 1541007,
+    "voice_frames": 25368
+  },
+  {
+    "event": [
+      14,
+      2.34,
+      0.48,
+      "water_glass",
+      74,
+      0.051,
+      0.26
+    ],
+    "start_frame": 1562866,
+    "voice_frames": 29682
+  },
+  {
+    "event": [
+      14,
+      2.625,
+      1.05,
+      "bulb_bass",
+      50,
+      0.075,
+      0
+    ],
+    "start_frame": 1571063,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      15,
+      0,
+      2.4,
+      "bulb_bass",
+      40,
+      0.135,
+      0
+    ],
+    "start_frame": 1610609,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      15,
+      0.52,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.03,
+      -0.232
+    ],
+    "start_frame": 1625564,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      15,
+      0.534,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0286,
+      -0.158
+    ],
+    "start_frame": 1625967,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      15,
+      0.548,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0273,
+      -0.082
+    ],
+    "start_frame": 1626370,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      15,
+      0.562,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0259,
+      -0.008
+    ],
+    "start_frame": 1626772,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      15,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 1668993,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      15,
+      2.25,
+      1.05,
+      "bulb_bass",
+      47,
+      0.075,
+      0
+    ],
+    "start_frame": 1675321,
+    "voice_frames": 35492
+  },
+  {
+    "event": [
+      16,
+      0,
+      2.4,
+      "bulb_bass",
+      45,
+      0.135,
+      0
+    ],
+    "start_frame": 1725652,
+    "voice_frames": 74319
+  },
+  {
+    "event": [
+      16,
+      0.52,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.03,
+      -0.232
+    ],
+    "start_frame": 1740608,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      16,
+      0.534,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0286,
+      -0.158
+    ],
+    "start_frame": 1741010,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      16,
+      0.548,
+      1.58,
+      "porcelain_keys",
+      61,
+      0.0273,
+      -0.082
+    ],
+    "start_frame": 1741413,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      16,
+      0.562,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0259,
+      -0.008
+    ],
+    "start_frame": 1741816,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      17,
+      0,
+      1.55,
+      "bulb_bass",
+      38,
+      0.16,
+      0
+    ],
+    "start_frame": 1840696,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      17,
+      0,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 1840696,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      17,
+      0,
+      0.33,
+      "cushion_kick",
+      36,
+      0.061,
+      0
+    ],
+    "start_frame": 1840696,
+    "voice_frames": 13020
+  },
+  {
+    "event": [
+      17,
+      0.014,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 1841098,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      17,
+      0.028,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 1841501,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      17,
+      0.042,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 1841904,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      17,
+      0.54,
+      0.55,
+      "porcelain_lead",
+      62,
+      0.104,
+      0.1
+    ],
+    "start_frame": 1856227,
+    "voice_frames": 24639
+  },
+  {
+    "event": [
+      17,
+      1.24,
+      0.38,
+      "porcelain_lead",
+      66,
+      0.104,
+      0.1
+    ],
+    "start_frame": 1876359,
+    "voice_frames": 19750
+  },
+  {
+    "event": [
+      17,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 1899080,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      17,
+      2.04,
+      0.42,
+      "porcelain_lead",
+      69,
+      0.104,
+      0.1
+    ],
+    "start_frame": 1899368,
+    "voice_frames": 20901
+  },
+  {
+    "event": [
+      17,
+      2.25,
+      0.8,
+      "bulb_bass",
+      45,
+      0.097,
+      0
+    ],
+    "start_frame": 1905408,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      17,
+      2.65,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 1916912,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      17,
+      2.664,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 1917315,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      17,
+      2.678,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 1917717,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      17,
+      2.692,
+      1.1,
+      "porcelain_keys",
+      64,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 1918120,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      17,
+      2.8,
+      0.86,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 1921226,
+    "voice_frames": 33555
+  },
+  {
+    "event": [
+      18,
+      0,
+      1.55,
+      "bulb_bass",
+      43,
+      0.16,
+      0
+    ],
+    "start_frame": 1955739,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      18,
+      0.58,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 1972420,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      18,
+      0.594,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 1972823,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      18,
+      0.608,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 1973226,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      18,
+      0.622,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 1973628,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      18,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 1985363,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      18,
+      1.8,
+      0.23,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2007509,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      18,
+      2.08,
+      0.24,
+      "gumdrop",
+      62,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2015562,
+    "voice_frames": 11314
+  },
+  {
+    "event": [
+      18,
+      2.5,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 2027641,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      18,
+      2.514,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 2028044,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      18,
+      2.528,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 2028447,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      18,
+      2.542,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 2028849,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      18,
+      2.625,
+      0.8,
+      "bulb_bass",
+      50,
+      0.097,
+      0
+    ],
+    "start_frame": 2031236,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      18,
+      2.89,
+      0.53,
+      "gumdrop",
+      55,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2038858,
+    "voice_frames": 19654
+  },
+  {
+    "event": [
+      18,
+      3.59,
+      0.12,
+      "paper_brush",
+      74,
+      0.025,
+      -0.14
+    ],
+    "start_frame": 2058991,
+    "voice_frames": 5216
+  },
+  {
+    "event": [
+      19,
+      0,
+      1.55,
+      "bulb_bass",
+      40,
+      0.16,
+      0
+    ],
+    "start_frame": 2070783,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      19,
+      0.04,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2071933,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      19,
+      0.054,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2072336,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      19,
+      0.068,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2072738,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      19,
+      0.082,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2073141,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      19,
+      0.23,
+      0.58,
+      "porcelain_lead",
+      67,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2077398,
+    "voice_frames": 25502
+  },
+  {
+    "event": [
+      19,
+      1.4,
+      0.4,
+      "porcelain_lead",
+      64,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2111048,
+    "voice_frames": 20325
+  },
+  {
+    "event": [
+      19,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 2129167,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      19,
+      2.25,
+      0.8,
+      "bulb_bass",
+      47,
+      0.097,
+      0
+    ],
+    "start_frame": 2135495,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      19,
+      2.66,
+      0.55,
+      "porcelain_lead",
+      59,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2147287,
+    "voice_frames": 24639
+  },
+  {
+    "event": [
+      19,
+      2.79,
+      1.1,
+      "porcelain_keys",
+      55,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 2151025,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      19,
+      2.804,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 2151428,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      19,
+      2.818,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 2151831,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      19,
+      2.832,
+      1.1,
+      "porcelain_keys",
+      64,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 2152233,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      19,
+      3.56,
+      0.27,
+      "bulb_bass",
+      52,
+      0.061,
+      0
+    ],
+    "start_frame": 2173171,
+    "voice_frames": 13058
+  },
+  {
+    "event": [
+      20,
+      0,
+      1.55,
+      "bulb_bass",
+      45,
+      0.16,
+      0
+    ],
+    "start_frame": 2185826,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      20,
+      0.31,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2194742,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      20,
+      0.324,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2195145,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      20,
+      0.338,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2195547,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      20,
+      0.352,
+      1.58,
+      "porcelain_keys",
+      66,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2195950,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      20,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 2215450,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      20,
+      1.56,
+      0.26,
+      "gumdrop",
+      64,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2230693,
+    "voice_frames": 11889
+  },
+  {
+    "event": [
+      20,
+      2.28,
+      0.28,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2251401,
+    "voice_frames": 12464
+  },
+  {
+    "event": [
+      20,
+      2.625,
+      0.8,
+      "bulb_bass",
+      52,
+      0.097,
+      0
+    ],
+    "start_frame": 2261323,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      20,
+      3.15,
+      0.48,
+      "gumdrop",
+      57,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2276423,
+    "voice_frames": 18216
+  },
+  {
+    "event": [
+      21,
+      0,
+      1.55,
+      "bulb_bass",
+      47,
+      0.16,
+      0
+    ],
+    "start_frame": 2300870,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      21,
+      0,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2300870,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      21,
+      0,
+      0.33,
+      "cushion_kick",
+      36,
+      0.061,
+      0
+    ],
+    "start_frame": 2300870,
+    "voice_frames": 13020
+  },
+  {
+    "event": [
+      21,
+      0.014,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2301272,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      21,
+      0.028,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2301675,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      21,
+      0.042,
+      1.58,
+      "porcelain_keys",
+      66,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2302078,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      21,
+      0.48,
+      0.49,
+      "porcelain_lead",
+      66,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2314675,
+    "voice_frames": 22914
+  },
+  {
+    "event": [
+      21,
+      1.25,
+      0.36,
+      "porcelain_lead",
+      69,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2336821,
+    "voice_frames": 19175
+  },
+  {
+    "event": [
+      21,
+      1.97,
+      0.52,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2357528,
+    "voice_frames": 23777
+  },
+  {
+    "event": [
+      21,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 2359254,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      21,
+      2.25,
+      0.8,
+      "bulb_bass",
+      54,
+      0.097,
+      0
+    ],
+    "start_frame": 2365582,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      21,
+      2.65,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 2377086,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      21,
+      2.664,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 2377489,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      21,
+      2.678,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 2377891,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      21,
+      2.692,
+      1.1,
+      "porcelain_keys",
+      66,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 2378294,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      21,
+      3.04,
+      0.4,
+      "porcelain_lead",
+      74,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2388303,
+    "voice_frames": 20325
+  },
+  {
+    "event": [
+      22,
+      0,
+      1.55,
+      "bulb_bass",
+      43,
+      0.16,
+      0
+    ],
+    "start_frame": 2415913,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      22,
+      0.58,
+      1.58,
+      "porcelain_keys",
+      54,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2432594,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      22,
+      0.594,
+      1.58,
+      "porcelain_keys",
+      57,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2432997,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      22,
+      0.608,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2433400,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      22,
+      0.622,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2433802,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      22,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 2445537,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      22,
+      1.33,
+      0.23,
+      "gumdrop",
+      62,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2454165,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      22,
+      2.11,
+      0.34,
+      "gumdrop",
+      59,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2476598,
+    "voice_frames": 14190
+  },
+  {
+    "event": [
+      22,
+      2.5,
+      1.1,
+      "porcelain_keys",
+      54,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 2487815,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      22,
+      2.514,
+      1.1,
+      "porcelain_keys",
+      57,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 2488218,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      22,
+      2.528,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 2488621,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      22,
+      2.542,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 2489023,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      22,
+      2.625,
+      0.8,
+      "bulb_bass",
+      50,
+      0.097,
+      0
+    ],
+    "start_frame": 2491410,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      22,
+      2.86,
+      0.44,
+      "gumdrop",
+      57,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2498169,
+    "voice_frames": 17066
+  },
+  {
+    "event": [
+      22,
+      3.59,
+      0.12,
+      "paper_brush",
+      74,
+      0.025,
+      -0.14
+    ],
+    "start_frame": 2519165,
+    "voice_frames": 5216
+  },
+  {
+    "event": [
+      23,
+      0,
+      1.55,
+      "bulb_bass",
+      40,
+      0.16,
+      0
+    ],
+    "start_frame": 2530957,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      23,
+      0.04,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2532107,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      23,
+      0.054,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2532510,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      23,
+      0.068,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2532912,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      23,
+      0.07,
+      0.42,
+      "porcelain_lead",
+      71,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2532970,
+    "voice_frames": 20901
+  },
+  {
+    "event": [
+      23,
+      0.082,
+      1.58,
+      "porcelain_keys",
+      66,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2533315,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      23,
+      0.92,
+      0.58,
+      "porcelain_lead",
+      67,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2557417,
+    "voice_frames": 25502
+  },
+  {
+    "event": [
+      23,
+      2.03,
+      0.2,
+      "paper_brush",
+      74,
+      0.038,
+      0.16
+    ],
+    "start_frame": 2589341,
+    "voice_frames": 7517
+  },
+  {
+    "event": [
+      23,
+      2.25,
+      0.8,
+      "bulb_bass",
+      47,
+      0.097,
+      0
+    ],
+    "start_frame": 2595668,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      23,
+      2.43,
+      0.79,
+      "porcelain_lead",
+      64,
+      0.104,
+      0.1
+    ],
+    "start_frame": 2600845,
+    "voice_frames": 31542
+  },
+  {
+    "event": [
+      23,
+      2.79,
+      1.1,
+      "porcelain_keys",
+      55,
+      0.0327,
+      -0.232
+    ],
+    "start_frame": 2611199,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      23,
+      2.804,
+      1.1,
+      "porcelain_keys",
+      59,
+      0.0312,
+      -0.158
+    ],
+    "start_frame": 2611602,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      23,
+      2.818,
+      1.1,
+      "porcelain_keys",
+      62,
+      0.0297,
+      -0.082
+    ],
+    "start_frame": 2612005,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      23,
+      2.832,
+      1.1,
+      "porcelain_keys",
+      66,
+      0.0283,
+      -0.008
+    ],
+    "start_frame": 2612407,
+    "voice_frames": 38694
+  },
+  {
+    "event": [
+      23,
+      3.56,
+      0.27,
+      "bulb_bass",
+      52,
+      0.061,
+      0
+    ],
+    "start_frame": 2633345,
+    "voice_frames": 13058
+  },
+  {
+    "event": [
+      24,
+      0,
+      1.55,
+      "bulb_bass",
+      45,
+      0.16,
+      0
+    ],
+    "start_frame": 2646000,
+    "voice_frames": 49872
+  },
+  {
+    "event": [
+      24,
+      0.31,
+      1.58,
+      "porcelain_keys",
+      55,
+      0.043,
+      -0.232
+    ],
+    "start_frame": 2654916,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      24,
+      0.324,
+      1.58,
+      "porcelain_keys",
+      59,
+      0.0411,
+      -0.158
+    ],
+    "start_frame": 2655319,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      24,
+      0.338,
+      1.58,
+      "porcelain_keys",
+      62,
+      0.0391,
+      -0.082
+    ],
+    "start_frame": 2655721,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      24,
+      0.352,
+      1.58,
+      "porcelain_keys",
+      64,
+      0.0372,
+      -0.008
+    ],
+    "start_frame": 2656124,
+    "voice_frames": 52499
+  },
+  {
+    "event": [
+      24,
+      0.83,
+      0.32,
+      "gumdrop",
+      64,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2669872,
+    "voice_frames": 13614
+  },
+  {
+    "event": [
+      24,
+      1.03,
+      0.21,
+      "paper_brush",
+      74,
+      0.045,
+      0.16
+    ],
+    "start_frame": 2675624,
+    "voice_frames": 7805
+  },
+  {
+    "event": [
+      24,
+      1.56,
+      0.4,
+      "gumdrop",
+      61,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2690867,
+    "voice_frames": 15915
+  },
+  {
+    "event": [
+      24,
+      2.39,
+      0.5,
+      "gumdrop",
+      57,
+      0.078,
+      -0.27
+    ],
+    "start_frame": 2714738,
+    "voice_frames": 18791
+  },
+  {
+    "event": [
+      24,
+      2.625,
+      0.8,
+      "bulb_bass",
+      52,
+      0.097,
+      0
+    ],
+    "start_frame": 2721497,
+    "voice_frames": 28302
+  },
+  {
+    "event": [
+      24,
+      3.68,
+      0.43,
+      "water_glass",
+      64,
+      0.034,
+      0.22
+    ],
+    "start_frame": 2751840,
+    "voice_frames": 28244
+  }
+]

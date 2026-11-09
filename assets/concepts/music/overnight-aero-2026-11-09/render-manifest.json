@@ -1,0 +1,218 @@
+{
+  "status": "ORIGINAL LOCAL LISTENING DRAFTS; no upload, runtime change or audible approval",
+  "renderer_sha256": "e6ef21aaff65bfcb47f2658c02465dd7626c61895648e3ed73cf832de87b3148",
+  "numpy_version": "2.4.3",
+  "ffmpeg_version": "ffmpeg version 8.0.1-full_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers",
+  "render_policy": "Exact written events; equal-power pan; fixed theoretical instrument normalization; finite tails and cross-channel FIR room circularly folded; one constant gain; no compressor, limiter, fades or per-note peak normalization.",
+  "default_preserved_sha256": {
+    "assets/audio/egg_drop_meadow_loop.wav": "78f854223825c31961ca3342d83af181edec32947aada34c6827e866cdb47b2a",
+    "assets/concepts/music/egg_drop_pocket_apricot_quirky.mp3": "a53cdf4237e3abdaafe3ae1ead31d2f00298d608f9bdd791215e8b7483a3b2bb"
+  },
+  "pieces": [
+    {
+      "title": "Creek With One Shoe",
+      "score_sha256": "5aafdcb9d7ac20220d2cb01495d41dec98610cdbda86c5b7200117d97b275f47",
+      "bpm": 92,
+      "bars": 24,
+      "event_count": 253,
+      "seed": 921109,
+      "constant_gain_db": 9.5,
+      "room_taps_seconds_gain": [
+        [
+          0.073,
+          0.09
+        ],
+        [
+          0.117,
+          0.065
+        ],
+        [
+          0.201,
+          0.035
+        ]
+      ],
+      "master": {
+        "file": "creek-with-one-shoe.wav",
+        "sha256": "a6552348d0c8057aadca575dcffadf7055cdca7944e66235f781283962e2a0be",
+        "bytes": 11044216,
+        "frames": 2761043,
+        "seconds": 62.60868480725624,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "sample_peak_dbfs": -5.268938288425184,
+        "stereo_loudness": {
+          "input_i": -18.0,
+          "input_tp": -5.27,
+          "input_lra": 4.8,
+          "input_thresh": -28.18
+        },
+        "mono_downmix_loudness": {
+          "input_i": -20.99,
+          "input_tp": -5.39,
+          "input_lra": 4.9,
+          "input_thresh": -31.2
+        },
+        "mono_rms_vs_stereo_db": -0.017757017875623785,
+        "channel_correlation": 0.9918425395391542,
+        "seam_step_per_channel": [
+          0.00018310546875,
+          0.000396728515625
+        ],
+        "incoming_slope": [
+          0.0001220703125,
+          0.00030517578125
+        ],
+        "outgoing_slope": [
+          0.000244140625,
+          0.00054931640625
+        ],
+        "seam_minus_incoming": [
+          6.103515625e-05,
+          9.1552734375e-05
+        ],
+        "outgoing_minus_seam": [
+          6.103515625e-05,
+          0.000152587890625
+        ],
+        "nearby_max_step_per_channel": [
+          0.016815185546875,
+          0.01702880859375
+        ],
+        "seam_step_vs_nearby_max": 0.023297491039426525,
+        "nearby_window_seconds_each_side": 0.5
+      },
+      "listening": [
+        {
+          "file": "creek-with-one-shoe.mp3",
+          "sha256": "690ee71c7647027159d96fa81d9a6798ecec4a92509a5be8e3edafb41de02909",
+          "bytes": 1504069,
+          "note": "Listening copy; PCM WAV alone defines exact loop frames; MP3 decoder padding can vary."
+        },
+        {
+          "file": "creek-with-one-shoe.two-laps.mp3",
+          "sha256": "f86ca7a179738c95c46718b9698127ab2380abcee4ff1a65f1e8bb4f5f736f81",
+          "bytes": 3006841,
+          "note": "Listening copy; PCM WAV alone defines exact loop frames; MP3 decoder padding can vary."
+        }
+      ],
+      "two_laps": {
+        "file": "creek-with-one-shoe.two-laps.wav",
+        "sha256": "a42d94d93a0372e39f6741fd2f7167dd52090f5f4af03f3a8140a891bb91a178",
+        "frames": 5522086,
+        "cycles_bit_identical": true
+      },
+      "event_frame_manifest": "creek-with-one-shoe.render-events.json"
+    },
+    {
+      "title": "Pocket Skip",
+      "score_sha256": "9b7298ea99dff841e9be970687ee784ded0b47b8554c1b04d117717741eb4c1d",
+      "bpm": 120,
+      "bars": 24,
+      "event_count": 464,
+      "seed": 1201109,
+      "constant_gain_db": 11.370000000000001,
+      "room_taps_seconds_gain": [
+        [
+          0.049,
+          0.055
+        ],
+        [
+          0.094,
+          0.035
+        ]
+      ],
+      "master": {
+        "file": "pocket-skip.wav",
+        "sha256": "48412e7cd064c39dd7de685468873a9d87f984bf5efc17258773829fde1a85b1",
+        "bytes": 8467244,
+        "frames": 2116800,
+        "seconds": 48.0,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "sample_peak_dbfs": -4.3384867927543755,
+        "stereo_loudness": {
+          "input_i": -18.0,
+          "input_tp": -4.34,
+          "input_lra": 2.6,
+          "input_thresh": -28.1
+        },
+        "mono_downmix_loudness": {
+          "input_i": -21.04,
+          "input_tp": -4.38,
+          "input_lra": 2.6,
+          "input_thresh": -31.11
+        },
+        "mono_rms_vs_stereo_db": -0.023568225398714025,
+        "channel_correlation": 0.9892014238899708,
+        "seam_step_per_channel": [
+          0.00189208984375,
+          0.00299072265625
+        ],
+        "incoming_slope": [
+          0.002471923828125,
+          0.00384521484375
+        ],
+        "outgoing_slope": [
+          0.001434326171875,
+          0.0023193359375
+        ],
+        "seam_minus_incoming": [
+          -0.000579833984375,
+          -0.0008544921875
+        ],
+        "outgoing_minus_seam": [
+          -0.000457763671875,
+          -0.00067138671875
+        ],
+        "nearby_max_step_per_channel": [
+          0.0250244140625,
+          0.025848388671875
+        ],
+        "seam_step_vs_nearby_max": 0.11570247933884298,
+        "nearby_window_seconds_each_side": 0.5
+      },
+      "listening": [
+        {
+          "file": "pocket-skip.mp3",
+          "sha256": "268d478d2c1aa540bd09a99fbf19fdb70f57a8ea439ded1efe69ed67e24cdee3",
+          "bytes": 1153610,
+          "note": "Listening copy; PCM WAV alone defines exact loop frames; MP3 decoder padding can vary."
+        },
+        {
+          "file": "pocket-skip.two-laps.mp3",
+          "sha256": "b3501435a03f14e9c52dd95f397d94d679702f324ef0d97f4119b8b17676b4db",
+          "bytes": 2305296,
+          "note": "Listening copy; PCM WAV alone defines exact loop frames; MP3 decoder padding can vary."
+        }
+      ],
+      "two_laps": {
+        "file": "pocket-skip.two-laps.wav",
+        "sha256": "c729cc031b66bc19f51b3116d42a3f462a74388c9e97960a940e5b730f0b14d5",
+        "frames": 4233600,
+        "cycles_bit_identical": true
+      },
+      "event_frame_manifest": "pocket-skip.render-events.json"
+    }
+  ],
+  "reference_measured_unchanged": {
+    "file": "assets/audio/egg_drop_meadow_loop.wav",
+    "stereo_loudness": {
+      "input_i": -21.88,
+      "input_tp": -6.3,
+      "input_lra": 3.0,
+      "input_thresh": -32.13
+    },
+    "mono_downmix_loudness": {
+      "input_i": -24.94,
+      "input_tp": -6.37,
+      "input_lra": 3.1,
+      "input_thresh": -35.17
+    },
+    "listening_copy": "pocket-apricot.reference-level-matched.mp3",
+    "listening_copy_sha256": "15b0bd4b9ce446a4046a08d0f8b228c15e8779a6414f643cd76fe765fc8a7f6b",
+    "listening_constant_gain_db": 3.879999999999999,
+    "note": "Derived level-matched reference only; original Pocket Apricot and runtime default remain unchanged."
+  }
+}

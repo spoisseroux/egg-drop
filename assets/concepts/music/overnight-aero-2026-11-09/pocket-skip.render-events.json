@@ -1,0 +1,6034 @@
+[
+  {
+    "event": [
+      1,
+      0,
+      0.51,
+      "thread_bass",
+      40,
+      0.161,
+      0
+    ],
+    "start_frame": 0,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      1,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 0,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      1,
+      0.25,
+      0.36,
+      "reed_button",
+      68,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 5513,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      1,
+      0.5,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 11025,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      0.514,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 11334,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      0.528,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 11642,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      0.542,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 11951,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      0.75,
+      0.16,
+      "thread_bass",
+      52,
+      0.0773,
+      0
+    ],
+    "start_frame": 16538,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      1,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 16538,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      1,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 22315,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      1,
+      1.18,
+      0.28,
+      "reed_button",
+      71,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 26019,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      1,
+      1.5,
+      0.34,
+      "thread_bass",
+      47,
+      0.1191,
+      0
+    ],
+    "start_frame": 33075,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      1,
+      1.75,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 38588,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      1,
+      1.764,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 38896,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      1,
+      1.778,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 39205,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      1,
+      1.792,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 39514,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      1,
+      2,
+      0.41,
+      "thread_bass",
+      40,
+      0.1417,
+      0
+    ],
+    "start_frame": 44100,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      1,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 44100,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      1,
+      2.44,
+      0.52,
+      "reed_button",
+      73,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 53802,
+    "voice_frames": 15436
+  },
+  {
+    "event": [
+      1,
+      2.75,
+      0.16,
+      "thread_bass",
+      40,
+      0.0805,
+      0
+    ],
+    "start_frame": 60638,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      1,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 60638,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      1,
+      3,
+      0.35,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 66150,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 66415,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      1,
+      3.014,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 66459,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      3.028,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 66767,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      3.042,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 67076,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      1,
+      3.25,
+      0.27,
+      "thread_bass",
+      47,
+      0.1047,
+      0
+    ],
+    "start_frame": 71663,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      1,
+      3.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 77175,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      2,
+      0,
+      0.52,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 88200,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      2,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 88200,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      2,
+      0.25,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 93713,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      2,
+      0.264,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 94021,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      2,
+      0.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 94330,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      2,
+      0.292,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 94639,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      2,
+      0.75,
+      0.19,
+      "thread_bass",
+      45,
+      0.0902,
+      0
+    ],
+    "start_frame": 104738,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      2,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 110515,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      2,
+      1.25,
+      0.34,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 115763,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      2,
+      1.5,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 121275,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      2,
+      1.514,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 121584,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      2,
+      1.528,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 121892,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      2,
+      1.542,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 122201,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      2,
+      2,
+      0.49,
+      "thread_bass",
+      45,
+      0.1401,
+      0
+    ],
+    "start_frame": 132300,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      2,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 132300,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      2,
+      2.38,
+      0.24,
+      "glass_button",
+      76,
+      0.08,
+      0.23
+    ],
+    "start_frame": 140679,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      2,
+      2.88,
+      0.3,
+      "glass_button",
+      73,
+      0.08,
+      0.23
+    ],
+    "start_frame": 151704,
+    "voice_frames": 12790
+  },
+  {
+    "event": [
+      2,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 154615,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      2,
+      3.5,
+      0.36,
+      "glass_button",
+      71,
+      0.08,
+      0.23
+    ],
+    "start_frame": 165375,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      3,
+      0,
+      0.51,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 176400,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      3,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 176400,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      3,
+      0.5,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 187425,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      0.514,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 187734,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      0.528,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 188042,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      0.542,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 188351,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      0.75,
+      0.16,
+      "thread_bass",
+      54,
+      0.0773,
+      0
+    ],
+    "start_frame": 192938,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      3,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 192938,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      3,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 198715,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      3,
+      1.5,
+      0.34,
+      "thread_bass",
+      49,
+      0.1191,
+      0
+    ],
+    "start_frame": 209475,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      3,
+      1.75,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 214988,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      3,
+      1.764,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 215296,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      3,
+      1.778,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 215605,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      3,
+      1.792,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 215914,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      3,
+      2,
+      0.41,
+      "thread_bass",
+      42,
+      0.1417,
+      0
+    ],
+    "start_frame": 220500,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      3,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 220500,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      3,
+      2.75,
+      0.16,
+      "thread_bass",
+      42,
+      0.0805,
+      0
+    ],
+    "start_frame": 237038,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      3,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 237038,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      3,
+      3,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 242550,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 242815,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      3,
+      3.014,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 242859,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      3.028,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 243167,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      3.042,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 243476,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      3,
+      3.25,
+      0.27,
+      "thread_bass",
+      49,
+      0.1047,
+      0
+    ],
+    "start_frame": 248063,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      4,
+      0,
+      0.52,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 264600,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      4,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 264600,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      4,
+      0.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 270113,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      4,
+      0.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 270421,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      4,
+      0.278,
+      0.35,
+      "rubber_chord",
+      63,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 270730,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      4,
+      0.292,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 271039,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      4,
+      0.75,
+      0.19,
+      "thread_bass",
+      47,
+      0.0902,
+      0
+    ],
+    "start_frame": 281138,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      4,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 286915,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      4,
+      1.25,
+      0.34,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 292163,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      4,
+      1.5,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 297675,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      4,
+      1.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 297984,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      4,
+      1.528,
+      0.28,
+      "rubber_chord",
+      63,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 298292,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      4,
+      1.542,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 298601,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      4,
+      1.75,
+      0.13,
+      "spring",
+      64,
+      0.06,
+      -0.27
+    ],
+    "start_frame": 303188,
+    "voice_frames": 4632
+  },
+  {
+    "event": [
+      4,
+      2,
+      0.49,
+      "thread_bass",
+      47,
+      0.1401,
+      0
+    ],
+    "start_frame": 308700,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      4,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 308700,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      4,
+      2.5,
+      0.22,
+      "glass_button",
+      66,
+      0.08,
+      0.23
+    ],
+    "start_frame": 319725,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      4,
+      2.86,
+      0.27,
+      "glass_button",
+      69,
+      0.08,
+      0.23
+    ],
+    "start_frame": 327663,
+    "voice_frames": 12129
+  },
+  {
+    "event": [
+      4,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 331015,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      4,
+      3.52,
+      0.33,
+      "glass_button",
+      75,
+      0.08,
+      0.23
+    ],
+    "start_frame": 342216,
+    "voice_frames": 13452
+  },
+  {
+    "event": [
+      5,
+      0,
+      0.51,
+      "thread_bass",
+      40,
+      0.161,
+      0
+    ],
+    "start_frame": 352800,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      5,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 352800,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      5,
+      0.25,
+      0.34,
+      "reed_button",
+      68,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 358313,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      5,
+      0.5,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 363825,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      0.514,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 364134,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      0.528,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 364442,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      0.542,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 364751,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      0.75,
+      0.16,
+      "thread_bass",
+      52,
+      0.0773,
+      0
+    ],
+    "start_frame": 369338,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      5,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 369338,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      5,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 375115,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      5,
+      1.18,
+      0.24,
+      "reed_button",
+      71,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 378819,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      5,
+      1.5,
+      0.34,
+      "thread_bass",
+      47,
+      0.1191,
+      0
+    ],
+    "start_frame": 385875,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      5,
+      1.75,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 391388,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      5,
+      1.764,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 391696,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      5,
+      1.778,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 392005,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      5,
+      1.792,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 392314,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      5,
+      2,
+      0.41,
+      "thread_bass",
+      40,
+      0.1417,
+      0
+    ],
+    "start_frame": 396900,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      5,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 396900,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      5,
+      2.44,
+      0.46,
+      "reed_button",
+      76,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 406602,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      5,
+      2.75,
+      0.16,
+      "thread_bass",
+      40,
+      0.0805,
+      0
+    ],
+    "start_frame": 413438,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      5,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 413438,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      5,
+      3,
+      0.35,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 418950,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 419215,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      5,
+      3.014,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 419259,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      3.028,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 419567,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      3.042,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 419876,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      5,
+      3.25,
+      0.27,
+      "thread_bass",
+      47,
+      0.1047,
+      0
+    ],
+    "start_frame": 424463,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      5,
+      3.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 429975,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      6,
+      0,
+      0.52,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 441000,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      6,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 441000,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      6,
+      0.25,
+      0.35,
+      "rubber_chord",
+      54,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 446513,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      6,
+      0.264,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 446821,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      6,
+      0.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 447130,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      6,
+      0.292,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 447439,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      6,
+      0.75,
+      0.19,
+      "thread_bass",
+      45,
+      0.0902,
+      0
+    ],
+    "start_frame": 457538,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      6,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 463315,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      6,
+      1.25,
+      0.34,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 468563,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      6,
+      1.5,
+      0.28,
+      "rubber_chord",
+      54,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 474075,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      6,
+      1.514,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 474384,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      6,
+      1.528,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 474692,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      6,
+      1.542,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 475001,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      6,
+      2,
+      0.49,
+      "thread_bass",
+      45,
+      0.1401,
+      0
+    ],
+    "start_frame": 485100,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      6,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 485100,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      6,
+      2.25,
+      0.29,
+      "glass_button",
+      71,
+      0.08,
+      0.23
+    ],
+    "start_frame": 490613,
+    "voice_frames": 12570
+  },
+  {
+    "event": [
+      6,
+      2.87,
+      0.23,
+      "glass_button",
+      73,
+      0.08,
+      0.23
+    ],
+    "start_frame": 504284,
+    "voice_frames": 11247
+  },
+  {
+    "event": [
+      6,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 507415,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      6,
+      3.5,
+      0.32,
+      "glass_button",
+      76,
+      0.08,
+      0.23
+    ],
+    "start_frame": 518175,
+    "voice_frames": 13231
+  },
+  {
+    "event": [
+      7,
+      0,
+      0.51,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 529200,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      7,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 529200,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      7,
+      0.5,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 540225,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      0.514,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 540534,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      0.528,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 540842,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      0.542,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 541151,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      0.75,
+      0.16,
+      "thread_bass",
+      54,
+      0.0773,
+      0
+    ],
+    "start_frame": 545738,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      7,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 545738,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      7,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 551515,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      7,
+      1.5,
+      0.34,
+      "thread_bass",
+      49,
+      0.1191,
+      0
+    ],
+    "start_frame": 562275,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      7,
+      1.75,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 567788,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      7,
+      1.764,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 568096,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      7,
+      1.778,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 568405,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      7,
+      1.792,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 568714,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      7,
+      2,
+      0.41,
+      "thread_bass",
+      42,
+      0.1417,
+      0
+    ],
+    "start_frame": 573300,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      7,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 573300,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      7,
+      2.75,
+      0.16,
+      "thread_bass",
+      42,
+      0.0805,
+      0
+    ],
+    "start_frame": 589838,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      7,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 589838,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      7,
+      3,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 595350,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 595615,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      7,
+      3.014,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 595659,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      3.028,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 595967,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      3.042,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 596276,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      7,
+      3.25,
+      0.27,
+      "thread_bass",
+      49,
+      0.1047,
+      0
+    ],
+    "start_frame": 600863,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      8,
+      0,
+      0.52,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 617400,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      8,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 617400,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      8,
+      0.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 622913,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      8,
+      0.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 623221,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      8,
+      0.278,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 623530,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      8,
+      0.292,
+      0.35,
+      "rubber_chord",
+      68,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 623839,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      8,
+      0.75,
+      0.19,
+      "thread_bass",
+      47,
+      0.0902,
+      0
+    ],
+    "start_frame": 633938,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      8,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 639715,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      8,
+      1.25,
+      0.34,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 644963,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      8,
+      1.5,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 650475,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      8,
+      1.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 650784,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      8,
+      1.528,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 651092,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      8,
+      1.542,
+      0.28,
+      "rubber_chord",
+      68,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 651401,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      8,
+      2,
+      0.49,
+      "thread_bass",
+      47,
+      0.1401,
+      0
+    ],
+    "start_frame": 661500,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      8,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 661500,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      8,
+      2.5,
+      0.22,
+      "glass_button",
+      76,
+      0.08,
+      0.23
+    ],
+    "start_frame": 672525,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      8,
+      2.89,
+      0.3,
+      "glass_button",
+      71,
+      0.08,
+      0.23
+    ],
+    "start_frame": 681125,
+    "voice_frames": 12790
+  },
+  {
+    "event": [
+      8,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 683815,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      8,
+      3.52,
+      0.33,
+      "glass_button",
+      68,
+      0.08,
+      0.23
+    ],
+    "start_frame": 695016,
+    "voice_frames": 13452
+  },
+  {
+    "event": [
+      9,
+      0,
+      0.55,
+      "thread_bass",
+      37,
+      0.161,
+      0
+    ],
+    "start_frame": 705600,
+    "voice_frames": 14995
+  },
+  {
+    "event": [
+      9,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 705600,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      9,
+      0.12,
+      0.32,
+      "reed_button",
+      59,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 708246,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      9,
+      0.75,
+      0.2,
+      "thread_bass",
+      49,
+      0.0934,
+      0
+    ],
+    "start_frame": 722138,
+    "voice_frames": 7278
+  },
+  {
+    "event": [
+      9,
+      0.75,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 722138,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      9,
+      0.764,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 722446,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      9,
+      0.778,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 722755,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      9,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.0574,
+      0.13
+    ],
+    "start_frame": 727915,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      9,
+      1.21,
+      0.43,
+      "reed_button",
+      64,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 732281,
+    "voice_frames": 13452
+  },
+  {
+    "event": [
+      9,
+      2.25,
+      0.39,
+      "thread_bass",
+      44,
+      0.1159,
+      0
+    ],
+    "start_frame": 755213,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      9,
+      2.5,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 760725,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      9,
+      2.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 760725,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      9,
+      2.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 761034,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      9,
+      2.528,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 761342,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      9,
+      2.75,
+      0.22,
+      "thread_bass",
+      37,
+      0.0837,
+      0
+    ],
+    "start_frame": 766238,
+    "voice_frames": 7718
+  },
+  {
+    "event": [
+      10,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 793800,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      10,
+      0.5,
+      0.62,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 804825,
+    "voice_frames": 16539
+  },
+  {
+    "event": [
+      10,
+      1.25,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 821363,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      10,
+      1.264,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 821671,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      10,
+      1.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 821980,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      10,
+      1.75,
+      0.23,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 832388,
+    "voice_frames": 7939
+  },
+  {
+    "event": [
+      10,
+      2.25,
+      0.3,
+      "glass_button",
+      64,
+      0.064,
+      0.23
+    ],
+    "start_frame": 843413,
+    "voice_frames": 12790
+  },
+  {
+    "event": [
+      10,
+      2.5,
+      0.28,
+      "thread_bass",
+      57,
+      0.0998,
+      0
+    ],
+    "start_frame": 848925,
+    "voice_frames": 9042
+  },
+  {
+    "event": [
+      10,
+      2.88,
+      0.23,
+      "glass_button",
+      73,
+      0.064,
+      0.23
+    ],
+    "start_frame": 857304,
+    "voice_frames": 11247
+  },
+  {
+    "event": [
+      10,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.05,
+      0.13
+    ],
+    "start_frame": 860215,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      10,
+      3.5,
+      0.34,
+      "glass_button",
+      71,
+      0.064,
+      0.23
+    ],
+    "start_frame": 870975,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      11,
+      0,
+      0.55,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 882000,
+    "voice_frames": 14995
+  },
+  {
+    "event": [
+      11,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 882000,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      11,
+      0.75,
+      0.2,
+      "thread_bass",
+      54,
+      0.0934,
+      0
+    ],
+    "start_frame": 898538,
+    "voice_frames": 7278
+  },
+  {
+    "event": [
+      11,
+      0.75,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 898538,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      11,
+      0.764,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 898846,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      11,
+      0.778,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 899155,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      11,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.0574,
+      0.13
+    ],
+    "start_frame": 904315,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      11,
+      2.25,
+      0.39,
+      "thread_bass",
+      49,
+      0.1159,
+      0
+    ],
+    "start_frame": 931613,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      11,
+      2.5,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 937125,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      11,
+      2.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 937125,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      11,
+      2.514,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 937434,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      11,
+      2.528,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 937742,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      11,
+      2.75,
+      0.22,
+      "thread_bass",
+      42,
+      0.0837,
+      0
+    ],
+    "start_frame": 942638,
+    "voice_frames": 7718
+  },
+  {
+    "event": [
+      12,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 970200,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      12,
+      0.5,
+      0.62,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 981225,
+    "voice_frames": 16539
+  },
+  {
+    "event": [
+      12,
+      1.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 997763,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      12,
+      1.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 998071,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      12,
+      1.278,
+      0.35,
+      "rubber_chord",
+      63,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 998380,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      12,
+      1.75,
+      0.23,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 1008788,
+    "voice_frames": 7939
+  },
+  {
+    "event": [
+      12,
+      1.75,
+      0.13,
+      "spring",
+      64,
+      0.06,
+      -0.27
+    ],
+    "start_frame": 1008788,
+    "voice_frames": 4632
+  },
+  {
+    "event": [
+      12,
+      2.5,
+      0.28,
+      "thread_bass",
+      59,
+      0.0998,
+      0
+    ],
+    "start_frame": 1025325,
+    "voice_frames": 9042
+  },
+  {
+    "event": [
+      12,
+      2.5,
+      0.21,
+      "glass_button",
+      78,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1025325,
+    "voice_frames": 10806
+  },
+  {
+    "event": [
+      12,
+      2.88,
+      0.28,
+      "glass_button",
+      75,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1033704,
+    "voice_frames": 12349
+  },
+  {
+    "event": [
+      12,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.05,
+      0.13
+    ],
+    "start_frame": 1036615,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      12,
+      3.49,
+      0.32,
+      "glass_button",
+      69,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1047155,
+    "voice_frames": 13231
+  },
+  {
+    "event": [
+      13,
+      0,
+      0.55,
+      "thread_bass",
+      44,
+      0.161,
+      0
+    ],
+    "start_frame": 1058400,
+    "voice_frames": 14995
+  },
+  {
+    "event": [
+      13,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1058400,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      13,
+      0.12,
+      0.32,
+      "reed_button",
+      64,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1061046,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      13,
+      0.75,
+      0.2,
+      "thread_bass",
+      56,
+      0.0934,
+      0
+    ],
+    "start_frame": 1074938,
+    "voice_frames": 7278
+  },
+  {
+    "event": [
+      13,
+      0.75,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1074938,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      13,
+      0.764,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1075246,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      13,
+      0.778,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1075555,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      13,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.0574,
+      0.13
+    ],
+    "start_frame": 1080715,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      13,
+      1.21,
+      0.32,
+      "reed_button",
+      59,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1085081,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      13,
+      2.25,
+      0.39,
+      "thread_bass",
+      47,
+      0.1159,
+      0
+    ],
+    "start_frame": 1108013,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      13,
+      2.44,
+      0.38,
+      "reed_button",
+      68,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1112202,
+    "voice_frames": 12349
+  },
+  {
+    "event": [
+      13,
+      2.5,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1113525,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      13,
+      2.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1113525,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      13,
+      2.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1113834,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      13,
+      2.528,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1114142,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      13,
+      2.75,
+      0.22,
+      "thread_bass",
+      44,
+      0.0837,
+      0
+    ],
+    "start_frame": 1119038,
+    "voice_frames": 7718
+  },
+  {
+    "event": [
+      14,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1146600,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      14,
+      0.5,
+      0.62,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 1157625,
+    "voice_frames": 16539
+  },
+  {
+    "event": [
+      14,
+      1.25,
+      0.35,
+      "rubber_chord",
+      54,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1174163,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      14,
+      1.264,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1174471,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      14,
+      1.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1174780,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      14,
+      1.75,
+      0.23,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 1185188,
+    "voice_frames": 7939
+  },
+  {
+    "event": [
+      14,
+      2.25,
+      0.25,
+      "glass_button",
+      73,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1196213,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      14,
+      2.5,
+      0.28,
+      "thread_bass",
+      57,
+      0.0998,
+      0
+    ],
+    "start_frame": 1201725,
+    "voice_frames": 9042
+  },
+  {
+    "event": [
+      14,
+      2.87,
+      0.22,
+      "glass_button",
+      71,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1209884,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      14,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.05,
+      0.13
+    ],
+    "start_frame": 1213015,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      14,
+      3.5,
+      0.41,
+      "glass_button",
+      64,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1223775,
+    "voice_frames": 15215
+  },
+  {
+    "event": [
+      15,
+      0,
+      0.55,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 1234800,
+    "voice_frames": 14995
+  },
+  {
+    "event": [
+      15,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1234800,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      15,
+      0.75,
+      0.2,
+      "thread_bass",
+      54,
+      0.0934,
+      0
+    ],
+    "start_frame": 1251338,
+    "voice_frames": 7278
+  },
+  {
+    "event": [
+      15,
+      0.75,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1251338,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      15,
+      0.764,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1251646,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      15,
+      0.778,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1251955,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      15,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.0574,
+      0.13
+    ],
+    "start_frame": 1257115,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      15,
+      2.25,
+      0.39,
+      "thread_bass",
+      49,
+      0.1159,
+      0
+    ],
+    "start_frame": 1284413,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      15,
+      2.5,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1289925,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      15,
+      2.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1289925,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      15,
+      2.514,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1290234,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      15,
+      2.528,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1290542,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      15,
+      2.75,
+      0.22,
+      "thread_bass",
+      42,
+      0.0837,
+      0
+    ],
+    "start_frame": 1295438,
+    "voice_frames": 7718
+  },
+  {
+    "event": [
+      16,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1323000,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      16,
+      0.5,
+      0.62,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 1334025,
+    "voice_frames": 16539
+  },
+  {
+    "event": [
+      16,
+      1.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1350563,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      16,
+      1.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1350871,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      16,
+      1.278,
+      0.35,
+      "rubber_chord",
+      63,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1351180,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      16,
+      1.75,
+      0.23,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 1361588,
+    "voice_frames": 7939
+  },
+  {
+    "event": [
+      16,
+      2.5,
+      0.28,
+      "thread_bass",
+      59,
+      0.0998,
+      0
+    ],
+    "start_frame": 1378125,
+    "voice_frames": 9042
+  },
+  {
+    "event": [
+      16,
+      2.5,
+      0.24,
+      "glass_button",
+      69,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1378125,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      16,
+      2.88,
+      0.27,
+      "glass_button",
+      66,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1386504,
+    "voice_frames": 12129
+  },
+  {
+    "event": [
+      16,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.05,
+      0.13
+    ],
+    "start_frame": 1389415,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      16,
+      3.5,
+      0.34,
+      "glass_button",
+      75,
+      0.064,
+      0.23
+    ],
+    "start_frame": 1400175,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      17,
+      0,
+      0.51,
+      "thread_bass",
+      40,
+      0.161,
+      0
+    ],
+    "start_frame": 1411200,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      17,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1411200,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      17,
+      0.25,
+      0.34,
+      "reed_button",
+      68,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1416713,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      17,
+      0.5,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1422225,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      0.514,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1422534,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      0.528,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1422842,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      0.542,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1423151,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      0.75,
+      0.16,
+      "thread_bass",
+      52,
+      0.0773,
+      0
+    ],
+    "start_frame": 1427738,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      17,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1427738,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      17,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1433515,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      17,
+      1.18,
+      0.28,
+      "reed_button",
+      71,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1437219,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      17,
+      1.5,
+      0.34,
+      "thread_bass",
+      47,
+      0.1191,
+      0
+    ],
+    "start_frame": 1444275,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      17,
+      1.75,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1449788,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      17,
+      1.764,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1450096,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      17,
+      1.778,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1450405,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      17,
+      1.792,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1450714,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      17,
+      2,
+      0.41,
+      "thread_bass",
+      40,
+      0.1417,
+      0
+    ],
+    "start_frame": 1455300,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      17,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1455300,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      17,
+      2.44,
+      0.49,
+      "reed_button",
+      73,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1465002,
+    "voice_frames": 14774
+  },
+  {
+    "event": [
+      17,
+      2.75,
+      0.16,
+      "thread_bass",
+      40,
+      0.0805,
+      0
+    ],
+    "start_frame": 1471838,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      17,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1471838,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      17,
+      3,
+      0.35,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1477350,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1477615,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      17,
+      3.014,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1477659,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      3.028,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1477967,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      3.042,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1478276,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      17,
+      3.25,
+      0.27,
+      "thread_bass",
+      47,
+      0.1047,
+      0
+    ],
+    "start_frame": 1482863,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      17,
+      3.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1488375,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      18,
+      0,
+      0.52,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 1499400,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      18,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1499400,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      18,
+      0.25,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1504913,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      18,
+      0.264,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1505221,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      18,
+      0.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1505530,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      18,
+      0.292,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1505839,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      18,
+      0.75,
+      0.19,
+      "thread_bass",
+      45,
+      0.0902,
+      0
+    ],
+    "start_frame": 1515938,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      18,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1521715,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      18,
+      1.25,
+      0.34,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 1526963,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      18,
+      1.5,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1532475,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      18,
+      1.514,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1532784,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      18,
+      1.528,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1533092,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      18,
+      1.542,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1533401,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      18,
+      2,
+      0.49,
+      "thread_bass",
+      45,
+      0.1401,
+      0
+    ],
+    "start_frame": 1543500,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      18,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1543500,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      18,
+      2.38,
+      0.24,
+      "glass_button",
+      76,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1551879,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      18,
+      2.88,
+      0.31,
+      "glass_button",
+      73,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1562904,
+    "voice_frames": 13011
+  },
+  {
+    "event": [
+      18,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1565815,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      18,
+      3.5,
+      0.34,
+      "glass_button",
+      71,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1576575,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      19,
+      0,
+      0.51,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 1587600,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      19,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1587600,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      19,
+      0.5,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1598625,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      0.514,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1598934,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      0.528,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1599242,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      0.542,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1599551,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      0.75,
+      0.16,
+      "thread_bass",
+      54,
+      0.0773,
+      0
+    ],
+    "start_frame": 1604138,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      19,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1604138,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      19,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1609915,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      19,
+      1.5,
+      0.34,
+      "thread_bass",
+      49,
+      0.1191,
+      0
+    ],
+    "start_frame": 1620675,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      19,
+      1.75,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1626188,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      19,
+      1.764,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1626496,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      19,
+      1.778,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1626805,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      19,
+      1.792,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1627114,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      19,
+      2,
+      0.41,
+      "thread_bass",
+      42,
+      0.1417,
+      0
+    ],
+    "start_frame": 1631700,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      19,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1631700,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      19,
+      2.75,
+      0.16,
+      "thread_bass",
+      42,
+      0.0805,
+      0
+    ],
+    "start_frame": 1648238,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      19,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1648238,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      19,
+      3,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1653750,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1654015,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      19,
+      3.014,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1654059,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      3.028,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1654367,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      3.042,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1654676,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      19,
+      3.25,
+      0.27,
+      "thread_bass",
+      49,
+      0.1047,
+      0
+    ],
+    "start_frame": 1659263,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      20,
+      0,
+      0.52,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 1675800,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      20,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1675800,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      20,
+      0.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1681313,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      20,
+      0.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1681621,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      20,
+      0.278,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1681930,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      20,
+      0.292,
+      0.35,
+      "rubber_chord",
+      68,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1682239,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      20,
+      0.75,
+      0.19,
+      "thread_bass",
+      47,
+      0.0902,
+      0
+    ],
+    "start_frame": 1692338,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      20,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1698115,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      20,
+      1.25,
+      0.34,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 1703363,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      20,
+      1.5,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1708875,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      20,
+      1.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1709184,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      20,
+      1.528,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1709492,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      20,
+      1.542,
+      0.28,
+      "rubber_chord",
+      68,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1709801,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      20,
+      1.75,
+      0.13,
+      "spring",
+      64,
+      0.06,
+      -0.27
+    ],
+    "start_frame": 1714388,
+    "voice_frames": 4632
+  },
+  {
+    "event": [
+      20,
+      2,
+      0.49,
+      "thread_bass",
+      47,
+      0.1401,
+      0
+    ],
+    "start_frame": 1719900,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      20,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1719900,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      20,
+      2.5,
+      0.22,
+      "glass_button",
+      66,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1730925,
+    "voice_frames": 11026
+  },
+  {
+    "event": [
+      20,
+      2.88,
+      0.28,
+      "glass_button",
+      68,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1739304,
+    "voice_frames": 12349
+  },
+  {
+    "event": [
+      20,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1742215,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      20,
+      3.53,
+      0.33,
+      "glass_button",
+      76,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1753637,
+    "voice_frames": 13452
+  },
+  {
+    "event": [
+      21,
+      0,
+      0.51,
+      "thread_bass",
+      37,
+      0.161,
+      0
+    ],
+    "start_frame": 1764000,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      21,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1764000,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      21,
+      0.25,
+      0.3,
+      "reed_button",
+      68,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1769513,
+    "voice_frames": 10585
+  },
+  {
+    "event": [
+      21,
+      0.5,
+      0.35,
+      "rubber_chord",
+      56,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1775025,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      0.514,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1775334,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      0.528,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1775642,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      0.542,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1775951,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      0.75,
+      0.16,
+      "thread_bass",
+      49,
+      0.0773,
+      0
+    ],
+    "start_frame": 1780538,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      21,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1780538,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      21,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1786315,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      21,
+      1.18,
+      0.25,
+      "reed_button",
+      64,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1790019,
+    "voice_frames": 9483
+  },
+  {
+    "event": [
+      21,
+      1.5,
+      0.34,
+      "thread_bass",
+      44,
+      0.1191,
+      0
+    ],
+    "start_frame": 1797075,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      21,
+      1.75,
+      0.28,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1802588,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      21,
+      1.764,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1802896,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      21,
+      1.778,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1803205,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      21,
+      1.792,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1803514,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      21,
+      2,
+      0.41,
+      "thread_bass",
+      37,
+      0.1417,
+      0
+    ],
+    "start_frame": 1808100,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      21,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1808100,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      21,
+      2.44,
+      0.45,
+      "reed_button",
+      71,
+      0.088,
+      -0.14
+    ],
+    "start_frame": 1817802,
+    "voice_frames": 13893
+  },
+  {
+    "event": [
+      21,
+      2.75,
+      0.16,
+      "thread_bass",
+      37,
+      0.0805,
+      0
+    ],
+    "start_frame": 1824638,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      21,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1824638,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      21,
+      3,
+      0.35,
+      "rubber_chord",
+      56,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1830150,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1830415,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      21,
+      3.014,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1830459,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      3.028,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1830767,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      3.042,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1831076,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      21,
+      3.25,
+      0.27,
+      "thread_bass",
+      44,
+      0.1047,
+      0
+    ],
+    "start_frame": 1835663,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      21,
+      3.5,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1841175,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      22,
+      0,
+      0.52,
+      "thread_bass",
+      45,
+      0.161,
+      0
+    ],
+    "start_frame": 1852200,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      22,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1852200,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      22,
+      0.25,
+      0.35,
+      "rubber_chord",
+      54,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1857713,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      22,
+      0.264,
+      0.35,
+      "rubber_chord",
+      59,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1858021,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      22,
+      0.278,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1858330,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      22,
+      0.292,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1858639,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      22,
+      0.75,
+      0.19,
+      "thread_bass",
+      45,
+      0.0902,
+      0
+    ],
+    "start_frame": 1868738,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      22,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1874515,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      22,
+      1.25,
+      0.34,
+      "thread_bass",
+      52,
+      0.1159,
+      0
+    ],
+    "start_frame": 1879763,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      22,
+      1.5,
+      0.28,
+      "rubber_chord",
+      54,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1885275,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      22,
+      1.514,
+      0.28,
+      "rubber_chord",
+      59,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1885584,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      22,
+      1.528,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1885892,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      22,
+      1.542,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1886201,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      22,
+      2,
+      0.49,
+      "thread_bass",
+      45,
+      0.1401,
+      0
+    ],
+    "start_frame": 1896300,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      22,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1896300,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      22,
+      2.25,
+      0.25,
+      "glass_button",
+      71,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1901813,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      22,
+      2.88,
+      0.24,
+      "glass_button",
+      73,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1915704,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      22,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 1918615,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      22,
+      3.5,
+      0.3,
+      "glass_button",
+      78,
+      0.08,
+      0.23
+    ],
+    "start_frame": 1929375,
+    "voice_frames": 12790
+  },
+  {
+    "event": [
+      23,
+      0,
+      0.51,
+      "thread_bass",
+      42,
+      0.161,
+      0
+    ],
+    "start_frame": 1940400,
+    "voice_frames": 14113
+  },
+  {
+    "event": [
+      23,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 1940400,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      23,
+      0.5,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 1951425,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      0.514,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 1951734,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      0.528,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 1952042,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      0.542,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 1952351,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      0.75,
+      0.16,
+      "thread_bass",
+      54,
+      0.0773,
+      0
+    ],
+    "start_frame": 1956938,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      23,
+      0.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 1956938,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      23,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 1962715,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      23,
+      1.5,
+      0.34,
+      "thread_bass",
+      49,
+      0.1191,
+      0
+    ],
+    "start_frame": 1973475,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      23,
+      1.75,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 1978988,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      23,
+      1.764,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 1979296,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      23,
+      1.778,
+      0.28,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 1979605,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      23,
+      1.792,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 1979914,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      23,
+      2,
+      0.41,
+      "thread_bass",
+      42,
+      0.1417,
+      0
+    ],
+    "start_frame": 1984500,
+    "voice_frames": 11908
+  },
+  {
+    "event": [
+      23,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 1984500,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      23,
+      2.75,
+      0.16,
+      "thread_bass",
+      42,
+      0.0805,
+      0
+    ],
+    "start_frame": 2001038,
+    "voice_frames": 6396
+  },
+  {
+    "event": [
+      23,
+      2.75,
+      0.1,
+      "paper_tick",
+      79,
+      0.033,
+      -0.21
+    ],
+    "start_frame": 2001038,
+    "voice_frames": 1280
+  },
+  {
+    "event": [
+      23,
+      3,
+      0.35,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 2006550,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 2006815,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      23,
+      3.014,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 2006859,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      3.028,
+      0.35,
+      "rubber_chord",
+      64,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 2007167,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      3.042,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 2007476,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      23,
+      3.25,
+      0.27,
+      "thread_bass",
+      49,
+      0.1047,
+      0
+    ],
+    "start_frame": 2012063,
+    "voice_frames": 8821
+  },
+  {
+    "event": [
+      24,
+      0,
+      0.52,
+      "thread_bass",
+      47,
+      0.161,
+      0
+    ],
+    "start_frame": 2028600,
+    "voice_frames": 14334
+  },
+  {
+    "event": [
+      24,
+      0,
+      0.3,
+      "button_kick",
+      36,
+      0.132,
+      0
+    ],
+    "start_frame": 2028600,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      24,
+      0.25,
+      0.35,
+      "rubber_chord",
+      57,
+      0.047,
+      -0.202
+    ],
+    "start_frame": 2034113,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      24,
+      0.264,
+      0.35,
+      "rubber_chord",
+      61,
+      0.0449,
+      -0.128
+    ],
+    "start_frame": 2034421,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      24,
+      0.278,
+      0.35,
+      "rubber_chord",
+      63,
+      0.0428,
+      -0.052
+    ],
+    "start_frame": 2034730,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      24,
+      0.292,
+      0.35,
+      "rubber_chord",
+      66,
+      0.0407,
+      0.022
+    ],
+    "start_frame": 2035039,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      24,
+      0.75,
+      0.19,
+      "thread_bass",
+      47,
+      0.0902,
+      0
+    ],
+    "start_frame": 2045138,
+    "voice_frames": 7057
+  },
+  {
+    "event": [
+      24,
+      1.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.07,
+      0.13
+    ],
+    "start_frame": 2050915,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      24,
+      1.25,
+      0.34,
+      "thread_bass",
+      54,
+      0.1159,
+      0
+    ],
+    "start_frame": 2056163,
+    "voice_frames": 10365
+  },
+  {
+    "event": [
+      24,
+      1.5,
+      0.28,
+      "rubber_chord",
+      57,
+      0.0376,
+      -0.202
+    ],
+    "start_frame": 2061675,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      24,
+      1.514,
+      0.28,
+      "rubber_chord",
+      61,
+      0.0359,
+      -0.128
+    ],
+    "start_frame": 2061984,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      24,
+      1.528,
+      0.28,
+      "rubber_chord",
+      63,
+      0.0342,
+      -0.052
+    ],
+    "start_frame": 2062292,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      24,
+      1.542,
+      0.28,
+      "rubber_chord",
+      66,
+      0.0325,
+      0.022
+    ],
+    "start_frame": 2062601,
+    "voice_frames": 10144
+  },
+  {
+    "event": [
+      24,
+      2,
+      0.49,
+      "thread_bass",
+      47,
+      0.1401,
+      0
+    ],
+    "start_frame": 2072700,
+    "voice_frames": 13672
+  },
+  {
+    "event": [
+      24,
+      2,
+      0.3,
+      "button_kick",
+      36,
+      0.099,
+      0
+    ],
+    "start_frame": 2072700,
+    "voice_frames": 9262
+  },
+  {
+    "event": [
+      24,
+      2.5,
+      0.24,
+      "glass_button",
+      69,
+      0.08,
+      0.23
+    ],
+    "start_frame": 2083725,
+    "voice_frames": 11467
+  },
+  {
+    "event": [
+      24,
+      3.012,
+      0.19,
+      "maple_rim",
+      72,
+      0.061,
+      0.13
+    ],
+    "start_frame": 2095015,
+    "voice_frames": 5514
+  },
+  {
+    "event": [
+      24,
+      3.12,
+      0.25,
+      "glass_button",
+      66,
+      0.08,
+      0.23
+    ],
+    "start_frame": 2097396,
+    "voice_frames": 11688
+  },
+  {
+    "event": [
+      24,
+      3.72,
+      0.37,
+      "glass_button",
+      75,
+      0.08,
+      0.23
+    ],
+    "start_frame": 2110626,
+    "voice_frames": 14334
+  }
+]

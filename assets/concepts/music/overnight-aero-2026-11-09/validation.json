@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "audio_files_byte_identical_after_second_render": 9,
+  "source_sha256": "e6ef21aaff65bfcb47f2658c02465dd7626c61895648e3ed73cf832de87b3148",
+  "checks": [
+    "exact loop frames",
+    "two-lap PCM bytes identical",
+    "target stereo LUFS",
+    "sample and true peak",
+    "seam and adjacent slopes bounded by local waveform steps",
+    "mono RMS cancellation below 1dB",
+    "default and scores unchanged"
+  ]
+}
