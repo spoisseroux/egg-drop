@@ -1,4 +1,25 @@
-# Garden direction concepts
+# Odd Little Friends · current garden direction
+
+Revised 8 November 2026 after Spencer chose one Stars wallet, optional pet-colored charms, and a completely new fictional roster. Astra planned and critiqued the direction. Images were made with the built-in image-generation tool. These are concept renders, not Studio screenshots, finished meshes, measured scale evidence, or proof of shader performance.
+
+- **odd-friends-v3.png:** current roster exploration. Zivvi the toothy trickster, Ovelle the gentle floaty baby, Nuum the sleepy squashy baby with charm off, and Tikket the awkward fidget. Names and silhouette choices remain reviewable.
+- **shared-garden-v3.png:** current environment exploration: shared play lawn, shallow creek, resting nook, training pads, egg kiosk, journal and physical handheld bench. The night strip studies warm lamps and readable pet colors. Perspective and pet scale need a real avatar comparison in Studio; painted motion marks are illustrative.
+- **garden-material-directions-v2.png:** retained as a material/palette reference only. Its old pets are retired from the creative direction.
+- **garden-babies-v1.png / pet-customization-v1.png:** archived early explorations. Old identities, default pearl charms and two-currency ideas are superseded.
+
+[Full current plan](../../../CHAO-GARDEN-DIRECTION.md) · [View the concept gallery](index.html) · [Archived V1/V2 prompt set](PROMPTS-V1-V2.md)
+
+## Current prompt set
+
+**V3 roster:** Four original fictional, abstract Y2K designer-toy babies on a chalk-white graphic sheet. Distinct profiles: low rounded-diamond lemon/magenta Zivvi with uneven stepped crown corners and a joyful grin of six small pointed ivory teeth; floating horizontal-lozenge sky/lime Ovelle with sheltering ribbon cuffs; broad indigo cushion-like Nuum with chalk slippers, asymmetric cheek fold and charm off; coral/cyan spindle-bodied Tikket with tilted rounded-rectangle head, long hinged elbows and folded hip sails. Small avatar scale key, secondary-tinted spike/ring/heart examples and one expressive action vignette each. Broad satin gradients, readable dark faces; material balls for Satin, Pearl Edge, Spectrum and Ink Chrome. Avoid old plant/animal/element anatomy, realistic fangs/gums, copied Chao/Sonic silhouettes, logos, fur and plush fabric.
+
+**V3 garden:** Use the new roster sheet as the character-identity reference. Vivid open lawn enclosed by staggered chalk/lilac cliffs; shallow curved cyan pool and low cascade; bridge to a shady nap nook; shared wobble toy; short stepping/chime practice route; approachable egg kiosk, journal and workbench/handheld bench. Two blocky avatars, one watching pets and one playing a horizontal handheld. New babies playing, resting or balancing, small secondary-color charms and Nuum charm off. Moving pinwheel, ribbon, glints and bubbles suggested by sparse motion marks. Daytime main image and night strip with deep blue sky, warm lantern pools and readable pet colors. Keep the center open, no crowded fantasy forest or HUD. Scale and cross-view framing are targets, not measurements.
+
+## Production interpretation
+
+Reduce broad gloss in the base satin material and size charms near20–25% of head width. Preserve faces in every finish. Charm off removes its art, interaction and camera headroom while retaining saved selection. Base/secondary colors are authored together; finishes remap the secondary coherently. The proposed Stars wallet replaces nectar one for one and removes Garden Buttons. No runtime changes are represented by these images.
+
+## Archived V1/V2 notes — superseded roster
 
 Design explorations generated with the built-in image-generation tool on 8 November 2026 and reviewed by Astra. These are concept renders, not screenshots, implemented meshes, or proof of Roblox shader performance.
 
