@@ -1,8 +1,8 @@
 # Egg Drop — garden companions, Stars and Hue Eggs
 
-The reviewed Stars/Hue slice passes its final gates and is awaiting private publication below. v232 is the preceding live checkpoint.
+**Private v241 Published — Stars and Hue Eggs - 7145db9**, verified in refreshed Studio Version History after tests, reviewed commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/hue-eggs-2026-11-08/private-published-v241-7145db9.png) · [Hue gallery](artifacts/hue-eggs-2026-11-08/GALLERY.md).
 
-**Private v232 Published — Softer babies and smooth movement - 355fad7**, confirmed in refreshed Studio Version History after tests, commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-softening-2026-11-08/private-published-v232-355fad7.png). This supersedes private v225. Nursery, paid products and public release remain deferred.
+Previous checkpoint: **private v232 — Softer babies and smooth movement - 355fad7**, confirmed in refreshed Studio Version History after tests, commit and push. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-softening-2026-11-08/private-published-v232-355fad7.png). This supersedes private v225. Nursery, paid products and public release remain deferred.
 
 The latest pass softens Zivvi and Ovelle into neutral porcelain/pebble babies, replaces Ovelle's suspended arms with attached mittens, and adds seeded blinks, breathing, slow gaze and a softly independent Dot bounce. Shared follow paths ease through turns and braking. The PocketDeck backdrop is stronger, its A-adjacent caption is removed, and both bank overlays sit behind the jelly colors. **114 unique native client /98 isolated server checks passed**, alongside actual desktop/phone-emulator controls and a two-client Studio session with saved charm propagation and leave cleanup. [Current screenshots](artifacts/pet-softening-2026-11-08/GALLERY.md) · [Exact evidence and live movement limits](artifacts/pet-softening-2026-11-08/BUILD-EVIDENCE.md).
 

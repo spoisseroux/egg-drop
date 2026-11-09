@@ -1,6 +1,6 @@
 # Hue Eggs and Stars — accepted build evidence
 
-Baseline: runtime `355fad7`, documentation `4b832a9`, private v232. Branch `feat/egg-drop-arcade-polish`; Egg Drop place **96451847774961** only. Runtime reviewed and verified; publication proof is recorded separately.
+Baseline: runtime `355fad7`, documentation `4b832a9`, private v232. Branch `feat/egg-drop-arcade-polish`; Egg Drop place **96451847774961** only. Runtime `7145db9` reviewed, committed and pushed; **private v241 Published**, label **Stars and Hue Eggs - 7145db9**, verified in refreshed native Studio Version History. [Publication proof](private-published-v241-7145db9.png). Documentation-only follow-up needs no republish.
 
 Astra designed the bounded progression and accepted the final desktop and Medium/Largest phone-emulator screenshots. Sol 6.1 High implemented production code; independent Sol review returned final GO with all 17 client manifest hashes matching. Root performed native integration and controls.
 

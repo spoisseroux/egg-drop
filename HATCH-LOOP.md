@@ -2,7 +2,7 @@
 
 The current branch has one earned **Stars** wallet, three rotating field variations, companion hatches and deterministic Hue Eggs for Zivvi and Ovelle. Stars are the existing stored `nectar` balance presented one-for-one; this pass creates no second currency and changes no historical reward amount. [Accepted design and transaction contract](PET-SOFTENING-AND-HUE.md) · [Hue verification evidence](artifacts/hue-eggs-2026-11-08/BUILD-EVIDENCE.md).
 
-The last verified private publication is **v232**, runtime `355fad7`. The Stars/Hue slice described here passed final integration and is awaiting private publication; this document does not claim a newer private publication. [PLAY-BUILD.md](PLAY-BUILD.md) remains the publication handoff.
+The verified private publication is **v241**, runtime `7145db9`, labeled **Stars and Hue Eggs** in refreshed Studio Version History after final integration, reviewed commit and push. [PLAY-BUILD.md](PLAY-BUILD.md) remains the publication handoff.
 
 The physical nursery, training eggs, supplies, additional base pets and broader progression proposals remain deferred. Their concepts are not enabled offers in this runtime.
 
