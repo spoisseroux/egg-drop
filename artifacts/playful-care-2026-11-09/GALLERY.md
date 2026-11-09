@@ -26,9 +26,9 @@ Actual Ring durable confirmation in117ms.
 
 ![Actual Ring durable confirmation in117ms.](C:/Users/skunk/Documents/Development/egg-drop/artifacts/playful-care-2026-11-09/actual-ring-saved.jpg)
 
-Final short landscape at Largest: seeded inventory, checked0–5, fixed portrait.
+Final short landscape at Largest: seeded inventory, checked0â€“5, fixed portrait.
 
-![Final short landscape at Largest: seeded inventory, checked0–5, fixed portrait.](C:/Users/skunk/Documents/Development/egg-drop/artifacts/playful-care-2026-11-09/hue-phone-largest-final-LAYOUT-FIXTURE.jpg)
+![Final short landscape at Largest: seeded inventory, checked0â€“5, fixed portrait.](C:/Users/skunk/Documents/Development/egg-drop/artifacts/playful-care-2026-11-09/hue-phone-largest-final-LAYOUT-FIXTURE.jpg)
 
 Final short landscape at Largest: seeded unlocked finishes.
 
