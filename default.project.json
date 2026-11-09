@@ -9,6 +9,9 @@
       },
       "Remotes": {
         "$className": "Folder"
+      },
+      "PetAssets": {
+        "$path": "assets/garden-babies/PetAssets.rbxmx"
       }
     },
     "ServerScriptService": {

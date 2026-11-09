@@ -1,0 +1,2 @@
+-- Authored thirteen-pixel silhouettes; common aliases only.
+return game:GetService("HttpService"):JSONDecode([=[{"zivvi":["...BB....BB..","..BMMB..BMMB.","..BMMBBBBMMB.",".BMMMMMMMMMMB","BHHMMMMMMMMMB","BMMFFMMMFFMMB","BDDMMMMMMMDDB",".BFIFIFIFIFB.",".BFFFFMFFFFB.","..BBMMMMMBB..","..LSBMMMBLS..","..LSBMMMBLS..",".BSSB...BSSB."],"ovelle":[".....BBB.....","..BBBHHMBBB..",".BHHMMMMMMMB.","BMMFFMMMFFMMB","BMMFIMMMFIMMB",".BDMMMFMMMDB.","..BBBMMMBBB..","...BMMMMMB...","..BSBHHHBSS..","..BSBMMMBSS..","...BSSSSSB...","....BSSSB....",".....S.S....."]}]=])

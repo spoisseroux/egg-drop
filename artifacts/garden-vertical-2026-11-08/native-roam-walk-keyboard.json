@@ -1,0 +1,40 @@
+{
+  "before": "-11, 6.998024940490723, 4",
+  "after": {
+    "camera": "Custom",
+    "input": "Keyboard",
+    "actor": {
+      "charmVisible": false,
+      "petGeneration": 1,
+      "to": {
+        "1": -4.400000095367432,
+        "2": 4.025000095367432,
+        "3": -7.699999809265137
+      },
+      "generation": 190,
+      "endTime": 1794186736.288741,
+      "characterId": 1,
+      "actionId": 231,
+      "via": {
+        "1": -2,
+        "2": 4.025000095367432,
+        "3": -4
+      },
+      "ownerId": 10716920546,
+      "mode": "Room",
+      "yaw": 2.067219125003267,
+      "requestGeneration": 0,
+      "from": {
+        "1": -18.80805015563965,
+        "2": 4.025000095367432,
+        "3": -22.70500373840332
+      },
+      "petId": "pip",
+      "startTime": 1794186728.288741,
+      "behavior": "investigate"
+    },
+    "pet": "-7.9990434646606445, 4.475325584411621, -10.676094055175781",
+    "root": "-23.29292106628418, 6.998024940490723, -25.509923934936523"
+  },
+  "evidence": "Actual Studio W down2s/up; no character teleport or injected movement state"
+}

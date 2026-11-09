@@ -1,0 +1,147 @@
+{
+  "asset": "ovelle",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "bodyHeightTarget": 1.5,
+  "objects": [
+    {
+      "name": "Ovelle__Head",
+      "channel": "Head",
+      "role": "Head",
+      "triangles": 1340,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__Body",
+      "channel": "Body",
+      "role": "Body",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__EyeL",
+      "channel": "Head",
+      "role": "EyeL",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Ovelle__GlintL",
+      "channel": "Head",
+      "role": "GlintL",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Ovelle__Cheeks",
+      "channel": "Head",
+      "role": "Cheeks",
+      "triangles": 240,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__CuffL",
+      "channel": "CuffL",
+      "role": "CuffL",
+      "triangles": 620,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__EyeR",
+      "channel": "Head",
+      "role": "EyeR",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Ovelle__GlintR",
+      "channel": "Head",
+      "role": "GlintR",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Ovelle__CuffR",
+      "channel": "CuffR",
+      "role": "CuffR",
+      "triangles": 620,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__Mouth",
+      "channel": "Head",
+      "role": "Mouth",
+      "triangles": 144,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Ovelle__CharmDot",
+      "channel": "CharmAnchor",
+      "role": "CharmDot",
+      "triangles": 324,
+      "exprKeys": []
+    }
+  ]
+}

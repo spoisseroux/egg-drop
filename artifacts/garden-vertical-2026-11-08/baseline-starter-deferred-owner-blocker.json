@@ -1,0 +1,16 @@
+{
+  "runtime": "1366c31 / HatchCinematic583272a9 / source83 matched",
+  "evidence": "Actual desktop controls: fresh Play, two welcome pointer drops, Ready starter rev2; Meet remained disabled after two separate >3second waits and a real foreground click. All cinematic ancestors visible; Core menu false; no ordinary runtime errors. A native desktop-to-phone viewport change immediately produced the final pet and enabled Meet.",
+  "before": {
+    "id": "19b546b1-b04f-4834-b90f-db0513ea832b",
+    "revision": 2,
+    "nectar": 6,
+    "mode": "Room",
+    "meet": false
+  },
+  "after": {
+    "meet": true
+  },
+  "hypothesis": "Initial presentation deferred while Room transition owns input, but sibling ownership predicate changes do not signal refreshOwner. Sol to investigate event-driven unblock.",
+  "limitations": "Before screenshot was inspected live but not saved as a standalone file. No claim that private v180 has this newer-source issue."
+}

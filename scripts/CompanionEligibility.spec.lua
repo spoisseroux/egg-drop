@@ -19,6 +19,9 @@ return function(client)
  local cases={};local function count()local n=0;for _ in pairs(c.active)do n+=1 end;return n end
  local ok,err=pcall(function()
   c:update(.12);assert(count()==6 and c.active[peers[2]]and not c.active[peers[8]]);table.insert(cases,"nearest six live peers remain the presentation cap")
+  boards[tostring(peers[2].UserId)]:SetAttribute("Mode","Board");c.refreshIn=0;c:update(.12)
+  assert(count()==6 and c.active[peers[2]],"a live handheld owner must keep its nearby companion visible")
+  table.insert(cases,"a nearby Board owner retains its companion within the same nearest-six budget")
   peers[2].Character.Humanoid.Health=0;c.refreshIn=0;c:update(.12)
   assert(count()==6 and not c.active[peers[2]]and c.active[peers[8]]);table.insert(cases,"dead nearer humanoid yields to next live peer")
   local peer=peers[3];local old=peer.Character.HumanoidRootPart;old.Name="OldRoot"

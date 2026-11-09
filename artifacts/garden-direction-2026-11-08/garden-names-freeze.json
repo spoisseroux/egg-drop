@@ -1,0 +1,30 @@
+[
+  {
+    "path": "src/client/FirstHatchGuide.lua",
+    "sha256": "5cfa4230d92cfd4d264561a09fb13f5620b1130afb28c1845471e7e86ffa48e2"
+  },
+  {
+    "path": "src/client/DeckMenu.lua",
+    "sha256": "4457f5fa4ac8044cc52031416206e886faf36b4ecf03ae5fda87b6a7c185949c"
+  },
+  {
+    "path": "src/client/PetJournal.lua",
+    "sha256": "8493de0d904553847082e794946e58ae498be69fe0dd74a6f144a0e36fa32f55"
+  },
+  {
+    "path": "src/client/init.client.lua",
+    "sha256": "a0eb3be5e4fa1c36df7f27865cdc6639193c6b11f77a62ebfd94d7e311fe61cb"
+  },
+  {
+    "path": "scripts/WelcomeCoaching.spec.lua",
+    "sha256": "2a6a76b07227d4bd62284fe4e5bb8e11924a0a70bb58d3e23d2e0e430e0263f3"
+  },
+  {
+    "path": "scripts/JournalPurpose.spec.lua",
+    "sha256": "103045c81f1e98a3a913b0007bee8cc253bbcca555852b16ee7f31bc0aafac76"
+  },
+  {
+    "path": "scripts/Onboarding.spec.lua",
+    "sha256": "7f2b3304067c206be06dcc447a79a0b3587fbb79a695fc5ce5f9d629d705faf0"
+  }
+]

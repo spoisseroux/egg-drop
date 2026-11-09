@@ -1,0 +1,30 @@
+[
+  {
+    "path": "src/client/PetGreetingShot.lua",
+    "sha256": "7518dcf3ae95fac52a3bfe273a90a9793744ac599f00f9c937554f631f305602"
+  },
+  {
+    "path": "src/client/RoomView.lua",
+    "sha256": "682a034ae9116ce31f823e0aae60403626e8a0887bdc8f2a5469c18e8f9685e1"
+  },
+  {
+    "path": "src/server/GardenState.lua",
+    "sha256": "ce31e24596a921f8dfd0f088235e5dd2dd8ab4369d369a399072f9dbad345553"
+  },
+  {
+    "path": "src/server/init.server.lua",
+    "sha256": "56221adf68ba19a5a35b7821558f34ad6129afc286866f69c2e59cc185ae010a"
+  },
+  {
+    "path": "scripts/PetGreetingShot.spec.lua",
+    "sha256": "50e89b76bbb77fbea0def8ae632542511541d12fee44b9341e123d7d805def32"
+  },
+  {
+    "path": "scripts/GardenFocusReach.spec.lua",
+    "sha256": "9c9851bf992490530b0728c350c4a0789be6de33f473c91f22985fdab2dfce55"
+  },
+  {
+    "path": "scripts/GardenState.spec.lua",
+    "sha256": "b9546ac6be280c1ce3290087576e227320debb86166f24d643166d8c3c8c895a"
+  }
+]

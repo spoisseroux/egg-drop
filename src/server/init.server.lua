@@ -26,6 +26,10 @@ local RunReturn = require(script.RunReturn)
 local AppearanceIntent = require(script.AppearanceIntent)
 local AppearanceCatalog = require(ReplicatedStorage.Shared.AppearanceCatalog)
 local Backgrounds = require(ReplicatedStorage.Shared.DeckBackgrounds)
+local GardenState = require(script.GardenState)
+local GardenLayout = require(ReplicatedStorage.Shared.GardenLayout)
+local GardenActivity = require(ReplicatedStorage.Shared.GardenActivity)
+local PetAppearance = require(script.PetAppearance)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -42,6 +46,9 @@ local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
+local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
+local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
+local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
 local loading = {}
@@ -91,6 +98,41 @@ local function petAnchor(state)
 	return Vector3.new(position.X,hit.Position.Y+.025,position.Z)
 end
 
+local garden = GardenState.new({now=function()return workspace:GetServerTimeNow()end,
+	publish=function(snapshot)gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))end,
+	validFocus=function(input,target)
+		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
+		if not floor then return false end
+		local at=floor.CFrame:PointToObjectSpace(target)
+		if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return false end
+		local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
+		local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
+		return hit~=nil and math.abs(hit.Position.Y+.025-target.Y)<.3
+	end})
+local function gardenInput(board)
+	local character=board.player.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+	local petId=board.profile.companionId
+	local position=root and root.Position or Vector3.zero
+	local preferences=PetAppearance.public(board.profile)
+	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),
+		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
+		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
+		anchor=if root then petAnchor({root=root,position=position})or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
+		yaw=if root then math.atan2(root.CFrame.LookVector.X,root.CFrame.LookVector.Z)else 0,
+		charmVisible=not preferences[petId] or preferences[petId].charmVisible~=false}
+end
+local function gardenInputs()
+	local inputs={}
+	for player,board in pairs(boards)do inputs[player.UserId]=gardenInput(board)end
+	return inputs
+end
+local function publishPetAppearance(board)
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile)))
+	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision)
+end
+
 local function publishAppearance(board)
 	board.folder:SetAttribute("DeckThemeId",board.profile.theme)
 	board.folder:SetAttribute("DeckStickerId",board.profile.sticker)
@@ -105,12 +147,22 @@ local function validateAppearance(board,slot,id)
 	return if description.rule=="invalid"then "Invalid"elseif description.unlocked then nil else "Locked"
 end
 
+local function publishCompanion(board)
+	local id=board.profile.companionId
+	if board.publishedCompanionId~=id then
+		board.publishedCompanionId=id
+		board.companionGeneration=(board.companionGeneration or 0)+1
+	end
+	board.folder:SetAttribute("CompanionGeneration",board.companionGeneration or 0)
+	board.folder:SetAttribute("CompanionId",id)
+end
+
 local function publishNursery(board)
 	local state = Nursery.public(board.nursery)
 	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
 		if not NurseryCatalog.isOwned(state.inventoryMask, board.profile.companionId) then
 			Progress.equipCompanion(board.profile, Pets.byId.pip)
-			board.folder:SetAttribute("CompanionId", "pip")
+			publishCompanion(board)
 		end
 		if board.firstSession then board.firstSession:advance(4) end
 	end
@@ -147,7 +199,7 @@ local function publishState(board)
 	end
 	board.folder:SetAttribute("OwnedPets", prefix)
 	board.folder:SetAttribute("InventoryMask", inventory(board))
-	board.folder:SetAttribute("CompanionId", board.profile.companionId)
+	publishCompanion(board)
 	board.folder:SetAttribute("RoundOver", board.round.over)
 	board.folder:SetAttribute("RunFamily", board.runFamily or "pip")
 	board.folder:SetAttribute("SelectedFamily", board.selectedFamily or "pip")
@@ -264,6 +316,7 @@ local function addPlayer(player)
 	local board = {
 		player = player,
 		appearance = AppearanceIntent.new(),
+		petPreferences = PetAppearance.new(),
 		folder = folder,
 		parts = {},
 		impacts = {},
@@ -283,6 +336,7 @@ local function addPlayer(player)
 	boards[player] = board
 	reset(board, Config.DefaultPreset)
 	publishNursery(board)
+	publishPetAppearance(board)
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
@@ -319,9 +373,26 @@ local function addPlayer(player)
 		publishAppearance(board)
 		for _,result in ipairs(results)do appearanceResult:FireClient(player,result) end
 	end
+	profile.onPetAppearanceSaved=function(candidate)
+		if boards[player]~=board or board.closing then return end
+		publishPetAppearance(board)
+		for _,packet in ipairs(PetAppearance.saved(board.petPreferences,profile,candidate))do petAppearanceResult:FireClient(player,packet)end
+	end
+	profile.onPetAppearanceSuperseded=function(candidate)
+		if boards[player]~=board or board.closing then return end
+		for _,packet in ipairs(PetAppearance.superseded(board.petPreferences,profile,candidate))do petAppearanceResult:FireClient(player,packet)end
+		publishPetAppearance(board)
+	end
 	local affectionRandom=Random.new()
 	board.petContact=PetContactController.new({now=os.clock,guid=function()return HttpService:GenerateGUID(false)end,
-		random=function()return affectionRandom:NextNumber()end,read=function()return petState(board)end,anchor=petAnchor,
+		random=function()return affectionRandom:NextNumber()end,read=function()return petState(board)end,
+		anchor=function(state)
+			local actor=garden.actors[player.UserId]
+			if actor and actor.mode=="Focus"then
+				return garden:focusAnchor(player.UserId,state.petId,board.characterGeneration or 0,board.companionGeneration or 0,state.position)
+			end
+			return petAnchor(state)
+		end,
 		candidate=function(lease)return Nursery.petCandidate(board.nursery,lease.id,lease.petId)end,
 		award=function(candidate)
 			if boards[player]~=board or board.closing then return end
@@ -338,6 +409,9 @@ local function addPlayer(player)
 		board.firstSession:advance(1)
 	end
 	local function spawn(character)
+		board.characterGeneration=(board.characterGeneration or 0)+1
+		character:SetAttribute("GardenCharacterId",board.characterGeneration)
+		board.folder:SetAttribute("GardenCharacterId",board.characterGeneration)
 		Lounge.spawn(character, slot, player, function()
 			return board.mode, profile.theme, profile.sticker
 		end)
@@ -352,6 +426,7 @@ local function closeBoard(board)
 	if board.closing then return end
 	closing[board] = true
 	board.closing = true
+	garden:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
@@ -369,6 +444,8 @@ Players.PlayerRemoving:Connect(function(player)
 		board.profile.onAppearanceSaved = nil
 		board.profile.onAppearanceSuperseded = nil
 		board.profile.resolveAppearance = nil
+		board.profile.onPetAppearanceSaved = nil
+		board.profile.onPetAppearanceSuperseded = nil
 		board.characterConnection:Disconnect()
 		board.folder:Destroy()
 		if board.petContact then board.petContact:destroy()end
@@ -385,6 +462,28 @@ petContactRemote.OnServerEvent:Connect(function(player,action,payload)
 	elseif action=="end"then board.petContact:finish(payload)end
 end)
 
+gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
+	local board=boards[player]
+	if not board or board.closing or type(packet)~="table" then return end
+	local now=os.clock()
+	local kind=packet.kind
+	if kind~="focus"and kind~="focusPulse"and kind~="focusEnd"then return end
+	board.gardenIntentAt=board.gardenIntentAt or {}
+	if now-(board.gardenIntentAt[kind]or -math.huge)<.1 then return end
+	board.gardenIntentAt[kind]=now
+	if type(packet.seq)~="number"or packet.seq~=packet.seq or packet.seq%1~=0 or packet.seq<1 or packet.seq>2147483647
+		or type(packet.petId)~="string"or packet.petId~=board.profile.companionId or board.mode~="Room"
+		or packet.characterId~=(board.characterGeneration or 0)or packet.petGeneration~=(board.companionGeneration or 0)then return end
+	if kind=="focus"then
+		local actor=garden.actors[player.UserId]
+		if actor and packet.seq<=(actor.lastFocusSeq or 0)then return end
+		if not GardenActivity.vector(packet.position)then return end
+		-- A deliberate focus may precede first2Hz actor creation; refresh only it.
+		garden:syncOne(player.UserId,gardenInput(board))
+	else garden.inputs[player.UserId]=gardenInput(board)end
+	if garden:focus(player.UserId,packet)then garden:publish()end
+end)
+
 for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(addPlayer, player)
 end
@@ -393,6 +492,14 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
 	if not board then return end
 	local now = os.clock()
+	if action=="petAppearance" then
+		local usable=if board.closing then "Closing"else canProgress(board)
+		local packet,changed=PetAppearance.request(board.petPreferences,board.profile,value,now,usable,
+			function(petId)return NurseryCatalog.isOwned(inventory(board),petId)end,Progress.setPetAppearance)
+		if changed then publishPetAppearance(board)end
+		if packet then petAppearanceResult:FireClient(player,packet)end
+		return
+	end
 	if action=="appearanceSlot" then
 		local usable=if board.closing then "Closing" else canProgress(board)
 		local result,changed=AppearanceIntent.request(board.appearance,board.profile,value,now,usable,
@@ -456,7 +563,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			and value ~= board.profile.companionId and now - board.lastCompanionChange >= 0.35 then
 			board.lastCompanionChange = now
 			Progress.equipCompanion(board.profile, pet)
-			board.folder:SetAttribute("CompanionId", pet.id)
+			publishCompanion(board)
+			garden:sync(gardenInputs());garden:publish()
 		end
 		return
 	end
@@ -471,6 +579,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.menuPaused = false
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
 		board.folder:SetAttribute("Mode", value)
+		garden:sync(gardenInputs());garden:publish()
 		if value == "Room" and board.firstSession then
 			board.firstSession:record("FirstSessionLoungeVisit")
 		end
@@ -599,7 +708,7 @@ local function grantWelcome(player, board)
 				publishState(board)
 				if ok then
 					board.profile.companionId = "pip"
-					board.folder:SetAttribute("CompanionId", "pip")
+					publishCompanion(board)
 					if board.firstSession then board.firstSession:advance(4) end
 					break
 				end
@@ -613,6 +722,7 @@ end
 local accumulator = 0
 local merged = {}
 RunService.Heartbeat:Connect(function(dt)
+	garden:step(dt,gardenInputs)
 	accumulator = math.min(accumulator + dt, Config.FixedStep * 8)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
@@ -718,6 +828,7 @@ task.spawn(function()
 						board.nurseryBusy = false
 						board.profileReady = SessionProfile.hydrate(board.profile, replacement)
 						if board.profileReady then
+							publishPetAppearance(board)
 							board.folder:SetAttribute("SaveStatus", nil)
 							board.firstSession = FirstSession.new(player, board.profile)
 							board.selectedFamily = NurseryCatalog.family(board.profile.companionId) or "pip"

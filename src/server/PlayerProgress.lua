@@ -4,6 +4,7 @@ local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
 local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 local Backgrounds = require(game:GetService("ReplicatedStorage").Shared.DeckBackgrounds)
+local PetAppearance=require(script.Parent.PetAppearance)
 
 local Progress = {}
 local pending = {}
@@ -61,6 +62,8 @@ local function decode(key, record, success)
 	local rank = rankOf(record)
 	local trials = trialsOf(record)
 	local companion = Pets.byId[record.companionId]
+	local petAppearance=PetAppearance.decode(record.petAppearance)
+	local petAt=0;for _,entry in pairs(petAppearance)do petAt=math.max(petAt,entry.at)end
 	local fallbacks={}
 	for slot,collection in pairs({theme=Themes,sticker=Stickers,background=Backgrounds})do
 		if record[slot]~=nil and not collection.ById[record[slot]]then fallbacks[slot]="Unknown"end
@@ -76,6 +79,8 @@ local function decode(key, record, success)
 		theme = if type(record.theme) == "string" and Themes.ById[record.theme] then record.theme else Themes.Default,
 		sticker = if type(record.sticker) == "string" and Stickers.ById[record.sticker] then record.sticker else Stickers.Default,
 		background = if type(storedBackground(record))=="string" and Backgrounds.ById[storedBackground(record)] then storedBackground(record) else Backgrounds.Default,
+		petAppearance=petAppearance,petAppearanceSaved=if success then PetAppearance.decode(record.petAppearance)else {},
+		petAppearanceChanges={},petAppearanceGeneration=0,lastPetAppearanceAt=petAt,
 		appearanceFallbacks = fallbacks,
 		lastAppearanceAt = appearanceStamp(record.themeAt),
 		appearanceGeneration = 0,
@@ -123,6 +128,7 @@ local function flush(profile)
 	if profile.loadFailed then return false, "Temporary" end
 	profile.saving = true
 	local rank, charge, best = profile.earnedRank, profile.earnedCharge, profile.earnedBest
+	local petChanges=table.clone(profile.petAppearanceChanges or {})
 	local appearance = profile.appearanceChange
 	local theme, sticker, themeAt = if appearance then appearance.theme else profile.theme,
 		if appearance then appearance.sticker else profile.sticker, if appearance then appearance.at else nil
@@ -156,6 +162,7 @@ local function flush(profile)
 		end
 		mergeSetting("sound", soundChange)
 		mergeSetting("reduced", motionChange)
+		if next(petChanges)then record.petAppearance=PetAppearance.merge(record.petAppearance,petChanges)end
 		local previousTime = appearanceStamp(record.themeAt)
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
 		if themeAt and (themeAt > previousTime or (themeAt == previousTime and writer >= previousWriter)) then
@@ -222,6 +229,30 @@ local function flush(profile)
 			end
 		end
 	end
+	for id,candidate in pairs(petChanges)do
+		local stored=type(result)=="table"and type(result.petAppearance)=="table"and result.petAppearance[id]
+		local current=profile.petAppearanceChanges[id]
+		if PetAppearance.matches(stored,candidate)then
+			profile.petAppearanceSaved[id]={charmVisible=stored.charmVisible,at=stored.at,writer=stored.writer}
+			if current==candidate then profile.petAppearanceChanges[id]=nil end
+			if profile.onPetAppearanceSaved then profile.onPetAppearanceSaved(candidate)end
+		else
+			local foreign=PetAppearance.newer(stored,candidate)
+			if current==candidate and foreign then
+				profile.petAppearance[id],profile.petAppearanceSaved[id]=foreign,table.clone(foreign)
+				profile.petAppearanceChanges[id]=nil;profile.lastPetAppearanceAt=math.max(profile.lastPetAppearanceAt or 0,foreign.at)
+				if profile.onPetAppearanceSuperseded then profile.onPetAppearanceSuperseded(candidate)end
+			elseif current then
+				if foreign and current.at<=foreign.at then
+					local at=math.max(profile.lastPetAppearanceAt or 0,foreign.at)+1
+					local rebased=table.freeze({petId=id,visible=current.visible,at=at,writer=current.writer,generation=current.generation})
+					profile.petAppearanceChanges[id]=rebased;profile.lastPetAppearanceAt=at
+					profile.petAppearance[id]={charmVisible=rebased.visible,at=at,writer=rebased.writer}
+				end
+				setSaveFailed(profile,true)
+			end
+		end
+	end
 	if companionAt == profile.companionAt then
 		profile.companionAt = nil
 	end
@@ -235,7 +266,7 @@ local function flush(profile)
 		profile.motionChange = nil
 	end
 	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt
-		or profile.earnedTrials or profile.soundChange or profile.motionChange) then
+		or profile.earnedTrials or profile.soundChange or profile.motionChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
 	return pending[profile] == nil
@@ -258,6 +289,16 @@ function Progress.setSetting(profile, key, value)
 	profile[key] = value
 	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }
 	markDirty(profile)
+end
+
+function Progress.setPetAppearance(profile,petId,visible)
+	if not PetAppearance.supported[petId]or type(visible)~="boolean"then return nil end
+	profile.petAppearance=profile.petAppearance or {};profile.petAppearanceChanges=profile.petAppearanceChanges or {};profile.petAppearanceSaved=profile.petAppearanceSaved or {}
+	profile.petAppearanceGeneration=(profile.petAppearanceGeneration or 0)+1
+	local at=math.max(DateTime.now().UnixTimestampMillis,(profile.lastPetAppearanceAt or 0)+1)
+	local candidate=table.freeze({petId=petId,visible=visible,at=at,writer=writer,generation=profile.petAppearanceGeneration})
+	profile.lastPetAppearanceAt=at;profile.petAppearance[petId]={charmVisible=visible,at=at,writer=writer}
+	profile.petAppearanceChanges[petId]=candidate;markDirty(profile);return candidate
 end
 
 function Progress.equipCompanion(profile, pet)

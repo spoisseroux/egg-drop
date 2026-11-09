@@ -1,5 +1,6 @@
 local Art = require(script.Parent.DeckArt)
 local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local TextService = game:GetService("TextService")
 local GuiService = game:GetService("GuiService")
 
@@ -88,7 +89,8 @@ function Guide:fitStep(step, inputType, mark, compact)
 		candidates=if compact then {"Match "..mark.." + "..mark,mark.."+"..mark}
 			else {"2/3  MATCH MARKS\nDrop "..mark.." onto "..mark,"Match "..mark.." + "..mark,mark.."+"..mark}
 	else
-		candidates=if compact then {"Merge for Pip"}else {"3/3  HATCH PIP\nMerge to fill charge","Merge for Pip"}
+		local name=Pets.byId.pip.name
+		candidates=if compact then {"Merge for "..name,"HATCH "..name:upper()}else {"3/3  HATCH "..name:upper().."\nMerge to fill charge","Merge for "..name,"HATCH "..name:upper()}
 	end
 	local label=self.status
 	if not label or label.AbsoluteSize.X<=0 or label.AbsoluteSize.Y<=0 then return candidates[1] end

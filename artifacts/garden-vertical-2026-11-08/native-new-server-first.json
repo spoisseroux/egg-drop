@@ -1,0 +1,125 @@
+[
+  {
+    "ok": true,
+    "name": "GardenState",
+    "result": {
+      "passed": 11,
+      "cases": [
+        "solo garden investigates, shoves twice, rests and returns without a reward path",
+        "paired greeting is one atomic action and focus cancels both reservations",
+        "Board is observable and cannot acquire focus, toy or an automatic reward",
+        "focus is owner/pet/range/generation validated and its lease expires",
+        "moved owners and replaced character cannot refresh a stale focus hold",
+        "a superseded participant generation explicitly retires the paired greeting",
+        "equip, character replacement and leave invalidate old generations exactly once",
+        "a delayed first acquisition cannot revive the same alias after equip-away and back",
+        "only one toy reservation exists and another waiting pet gets a turn",
+        "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+        "late join samples the current shared path, not a replayed beginning"
+      ]
+    }
+  },
+  {
+    "ok": false,
+    "name": "PetAppearance",
+    "result": "The current thread cannot read 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": true,
+    "name": "HatchProgress",
+    "result": {
+      "passed": 21,
+      "cases": [
+        "all catalog outcomes and rare protection",
+        "legacy seven-pet migration and one-time credits",
+        "starter grant, persistent reveal, exact acknowledgement",
+        "ambiguous session acquire resumes the same lease",
+        "direct full-cost spending, stale commands and callback retries",
+        "ambiguous committed hatch cannot reroll or duplicate",
+        "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+        "monotonic payouts reject replay beyond receipt history",
+        "lease takeover fences stale commands and renewals",
+        "local overlap, sparse inventory and public isolation",
+        "failed legacy load cannot spend or overwrite",
+        "daily reward is once per Hollow day and survives callback retry",
+        "every advertised result grants once and rare protection resets",
+        "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+        "mastery ranks need permanent points and three distinct successful challenges",
+        "daily contracts and mastery pay atomically once per run and day",
+        "completed-budget failures can earn skill contracts but not mastery or free wins",
+        "run start-day lock, daily rollover and rollback cannot reassign a contract",
+        "compound award retries immutable stats and original day before or after commit",
+        "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+        "rare-only ownership trains its base family and duplicate marks continue beyond three"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "PetContact",
+    "result": {
+      "evidence": "pure server contact continuity and live receipt broker; not proof of human touch",
+      "persistentWrites": false,
+      "passed": 16,
+      "cases": [
+        "twelve continuous server seconds produce one roll and exact live Saved receipt",
+        "negative outcome consumes opportunity without storage or a promised award",
+        "idle focus stationary timeout and a tap cannot earn",
+        "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+        "restarting after a missed opportunity still requires a new full twelve seconds",
+        "stale cross-player and replaced lease ids cannot extend a new contact",
+        "duplicate begin reuses grant without refreshing its continuity clock",
+        "room ownership pet root generation death movement conflict and epoch invalidate contact",
+        "forged payload and unreachable anchor do no RNG or storage work",
+        "same held context may receive retry or renew proof once but cannot draw while saving",
+        "end or replacement while a commit is pending prevents any later glyph",
+        "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+        "cap mute and reduced effects are independent and capped draws stop",
+        "destroy cancels display and future work while retained ledger work belongs elsewhere",
+        "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+        "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "PetAward",
+    "result": {
+      "evidence": "isolated fenced v4 adapter transactions, clocks and exact commit receipts",
+      "persistentWrites": false,
+      "passed": 15,
+      "cases": [
+        "one exact pet operation adds one once, independent of field reward and hatch state",
+        "four to five is atomic and further candidates do no storage work",
+        "immutable captured candidate survives mutation and repeated store callbacks",
+        "forged amount unknown pet and missing lease are rejected before a write",
+        "commit-before-error is proved by exact receipt before midnight expiry",
+        "precommit midnight expiry clears only proved noncommit and restores Ready",
+        "a newer day resets allowance only in its admitted award; rollback never resets it",
+        "a second epoch fences the old writer and awards exactly once",
+        "pending field or hatch operations retain their sole owner",
+        "close drains retained pet proof before releasing without a second award",
+        "authentic v3 upgrades preserve every old nested fact and sibling",
+        "future and malformed persisted schemas are not overwritten",
+        "A then B then replay A cannot reuse an old admitted operation sequence",
+        "A followed by a non-pet operation retains exact A proof without a second award",
+        "renew may prove and clear a committed pet pending operation exactly once"
+      ]
+    }
+  },
+  {
+    "ok": false,
+    "name": "SessionRecovery",
+    "result": "The current thread cannot read 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": false,
+    "name": "SessionHost",
+    "result": "The current thread cannot read 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": false,
+    "name": "PetContactHost",
+    "result": "The current thread cannot read 'Source' (lacking capability PluginOrOpenCloud)"
+  }
+]

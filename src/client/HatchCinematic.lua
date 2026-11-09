@@ -7,6 +7,7 @@ local Art=require(script.Parent.DeckArt)
 local Portrait=require(script.Parent.PetPortrait)
 local Bounds=require(script.Parent.PetRigBounds)
 local Shot=require(script.Parent.PetGreetingShot)
+local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
 local function frame(parent,name,color,z)
@@ -93,9 +94,7 @@ function Cinematic:createHero()
  local ok=pcall(function()
   if self.forceFallback then error("isolated pixel fallback fixture")end
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport
-  local family=self.pet.family or self.pet.id
-  local module=if family=="pip"then script.Parent.PipVisual elseif family=="puddle"then script.Parent.PuddleVisual else script.Parent.BonusPetVisual
-  local visual=require(module).new(world,Vector3.zero,self.pet);self.heroVisual=visual;rest(visual,self.pet)
+  local visual=Factory.new(world,Vector3.zero,self.pet);self.heroVisual=visual;rest(visual,self.pet)
   Bounds.begin(visual);include(visual);Bounds.finish(visual);self.neutralFrame,self.neutralSize=Bounds.get(visual)
   self.heroPoints=Shot.captureSilhouette(visual,self.neutralFrame)
   -- Bounded authored animation sample, once per result. Relayout reuses it.

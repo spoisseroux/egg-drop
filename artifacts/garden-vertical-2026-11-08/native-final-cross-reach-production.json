@@ -1,0 +1,591 @@
+{
+  "ok": true,
+  "result": {
+    "plans": 72,
+    "cases": {
+      "1": "all seven production rigs and supported Dot states acquire and hold the exact staged target",
+      "2": "Dot and viewport reframe keeps the accepted stage while solving an independent lens",
+      "3": "same accepted target is rejected for stale pet or character generation",
+      "4": "the exact pre-focus camera survives staging and owner translation"
+    },
+    "passed": 4,
+    "metrics": {
+      "1": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "2": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "3": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "4": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "5": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "6": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "7": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "8": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "9": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "10": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "11": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "12": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "13": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "14": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "15": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "16": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "17": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "18": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "19": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "20": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "21": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "22": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "23": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "24": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "25": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "26": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "27": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "28": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "29": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "30": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "31": {
+        "dot": false,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "puddle",
+        "edge": false,
+        "bearing": 0
+      },
+      "32": {
+        "dot": false,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "puddle",
+        "edge": true,
+        "bearing": 3
+      },
+      "33": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "34": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "35": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "36": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "37": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "38": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "39": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "40": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "41": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "42": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "43": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "44": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "45": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "46": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "47": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "48": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "49": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "bloom_pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "50": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "bloom_pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "51": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "bloom_pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "52": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "bloom_pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "53": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "bloom_pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "54": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "bloom_pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "55": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "bloom_pip",
+        "edge": false,
+        "bearing": 0
+      },
+      "56": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "bloom_pip",
+        "edge": true,
+        "bearing": 3
+      },
+      "57": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "foxfire_wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "58": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "foxfire_wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "59": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "foxfire_wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "60": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "foxfire_wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "61": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "foxfire_wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "62": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "foxfire_wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "63": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "foxfire_wick",
+        "edge": false,
+        "bearing": 0
+      },
+      "64": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "foxfire_wick",
+        "edge": true,
+        "bearing": 3
+      },
+      "65": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "1649, 971",
+        "petId": "eclipse_orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "66": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "1649, 971",
+        "petId": "eclipse_orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "67": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "733, 307",
+        "petId": "eclipse_orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "68": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "733, 307",
+        "petId": "eclipse_orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "69": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "390, 740",
+        "petId": "eclipse_orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "70": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "390, 740",
+        "petId": "eclipse_orbit",
+        "edge": true,
+        "bearing": 3
+      },
+      "71": {
+        "dot": true,
+        "reach": 6.135041236877441,
+        "viewport": "568, 160",
+        "petId": "eclipse_orbit",
+        "edge": false,
+        "bearing": 0
+      },
+      "72": {
+        "dot": true,
+        "reach": 6.135042190551758,
+        "viewport": "568, 160",
+        "petId": "eclipse_orbit",
+        "edge": true,
+        "bearing": 3
+      }
+    }
+  }
+}

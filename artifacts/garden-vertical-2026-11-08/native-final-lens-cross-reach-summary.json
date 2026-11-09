@@ -1,0 +1,6 @@
+{
+  "passed": 4,
+  "plans": 72,
+  "sourceManifest": "focus-lens-freeze.json",
+  "evidence": "Native tool executed updated GardenFocusReach; full metrics returned in tool output. Actual acquisition/pulse/care anchor, all7rigs and Dot states; no actual player mutation."
+}

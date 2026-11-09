@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"pets\":{\"1\":{\"owner\":-2,\"backend\":\"AuthoredMesh\",\"body\":{\"1\":-5,\"3\":-3,\"2\":4.455000400543213}},\"2\":{\"owner\":-1,\"backend\":\"AuthoredMesh\",\"body\":{\"1\":-13.595111846923829,\"3\":1.0039100646972657,\"2\":4.455000400543213}}},\"actor\":{\"petGeneration\":1,\"to\":{\"1\":-13.595111846923829,\"3\":1.0039100646972657,\"2\":4.025000095367432},\"charmVisible\":true,\"endTime\":1794187894.625623,\"characterId\":1,\"actionId\":84,\"generation\":39,\"ownerId\":-1,\"mode\":\"Board\",\"yaw\":-2.067219125003267,\"requestGeneration\":1,\"from\":{\"1\":-13.537891387939454,\"3\":0.979216456413269,\"2\":4.025000095367432},\"petId\":\"pip\",\"startTime\":1794187894.125623,\"behavior\":\"rest\"},\"avatarVisible\":true,\"mode\":\"Board\",\"evidence\":\"Two real Studio clients; client2 observes client1 after actual OpenHandheld button\",\"physicalDeck\":true}"
+    }
+  ],
+  "isError": false
+}

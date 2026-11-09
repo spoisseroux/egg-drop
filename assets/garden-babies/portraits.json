@@ -1,0 +1,46 @@
+{
+  "size": 13,
+  "roles": {
+    ".": "transparent",
+    "B": "outline",
+    "H": "body highlight",
+    "M": "body",
+    "D": "blush",
+    "F": "face",
+    "I": "ivory",
+    "S": "secondary",
+    "L": "secondary shadow"
+  },
+  "maps": {
+    "zivvi": [
+      "...BB....BB..",
+      "..BMMB..BMMB.",
+      "..BMMBBBBMMB.",
+      ".BMMMMMMMMMMB",
+      "BHHMMMMMMMMMB",
+      "BMMFFMMMFFMMB",
+      "BDDMMMMMMMDDB",
+      ".BFIFIFIFIFB.",
+      ".BFFFFMFFFFB.",
+      "..BBMMMMMBB..",
+      "..LSBMMMBLS..",
+      "..LSBMMMBLS..",
+      ".BSSB...BSSB."
+    ],
+    "ovelle": [
+      ".....BBB.....",
+      "..BBBHHMBBB..",
+      ".BHHMMMMMMMB.",
+      "BMMFFMMMFFMMB",
+      "BMMFIMMMFIMMB",
+      ".BDMMMFMMMDB.",
+      "..BBBMMMBBB..",
+      "...BMMMMMB...",
+      "..BSBHHHBSS..",
+      "..BSBMMMBSS..",
+      "...BSSSSSB...",
+      "....BSSSB....",
+      ".....S.S....."
+    ]
+  }
+}

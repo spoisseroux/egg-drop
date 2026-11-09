@@ -1,0 +1,295 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "FocusFraming",
+    "result": {
+      "cases": [
+        "749x381 factory body fills55to65percent with Dot ON and OFF while every focused pose fits",
+        "capture is independent of world yaw and restores an in-flight contact exactly",
+        "a reduced first capture reserves motion and restoring contact pose does not animate it",
+        "greeting preserves curious eyes while actual contact remains affectionate",
+        "badge and other viewports keep a fully safe envelope and expose actual size limits"
+      ],
+      "passed": 5,
+      "metrics": [
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.5799998922093473,
+          "pet": "pip",
+          "pose": "neutral"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.6346891169257005,
+          "pet": "pip",
+          "pose": "curious"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.5986158045439937,
+          "pet": "pip",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.5836296780031903,
+          "pet": "pip",
+          "pose": "neutral"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.6307778380003868,
+          "pet": "pip",
+          "pose": "curious"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": true,
+          "part": "FootR",
+          "bodyFraction": 0.595395837164127,
+          "pet": "pip",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootR",
+          "bodyFraction": 0.579999810997393,
+          "pet": "pip",
+          "pose": "neutral"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootR",
+          "bodyFraction": 0.634494173920843,
+          "pet": "pip",
+          "pose": "curious"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootR",
+          "bodyFraction": 0.5985499891022767,
+          "pet": "pip",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootL",
+          "bodyFraction": 0.5836161557985323,
+          "pet": "pip",
+          "pose": "neutral"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootL",
+          "bodyFraction": 0.6305957364944086,
+          "pet": "pip",
+          "pose": "curious"
+        },
+        {
+          "edge": "bottom",
+          "limited": false,
+          "dot": false,
+          "part": "FootL",
+          "bodyFraction": 0.5953399195196061,
+          "pet": "pip",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.5799998540601693,
+          "pet": "puddle",
+          "pose": "neutral"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.6451990267734802,
+          "pet": "puddle",
+          "pose": "curious"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.60243028757338,
+          "pet": "puddle",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.584274161096666,
+          "pet": "puddle",
+          "pose": "neutral"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.6404157891182151,
+          "pet": "puddle",
+          "pose": "curious"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": true,
+          "part": "CharmDot",
+          "bodyFraction": 0.5985565885089169,
+          "pet": "puddle",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.5800000216849338,
+          "pet": "puddle",
+          "pose": "neutral"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.6444532333212742,
+          "pet": "puddle",
+          "pose": "curious"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.6021747597064699,
+          "pet": "puddle",
+          "pose": "affectionate"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.5842253603592339,
+          "pet": "puddle",
+          "pose": "neutral"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.6397243690148733,
+          "pet": "puddle",
+          "pose": "curious"
+        },
+        {
+          "edge": "top",
+          "limited": false,
+          "dot": false,
+          "part": "Head",
+          "bodyFraction": 0.5983446830399998,
+          "pet": "puddle",
+          "pose": "affectionate"
+        },
+        {
+          "badge": 32,
+          "edge": "bottom",
+          "part": "FootR",
+          "dot": true,
+          "viewport": "1649, 971",
+          "bodyFraction": 0.5799998390477356,
+          "pet": "pip",
+          "limited": false
+        },
+        {
+          "badge": 32,
+          "edge": "left",
+          "part": "Head",
+          "dot": true,
+          "viewport": "390, 740",
+          "bodyFraction": 0.41967402551951605,
+          "pet": "pip",
+          "limited": true
+        },
+        {
+          "badge": 32,
+          "edge": "bottom",
+          "part": "FootR",
+          "dot": true,
+          "viewport": "568, 160",
+          "bodyFraction": 0.4005594677557495,
+          "pet": "pip",
+          "limited": true
+        },
+        {
+          "badge": 32,
+          "edge": "top",
+          "part": "CharmDot",
+          "dot": true,
+          "viewport": "1649, 971",
+          "bodyFraction": 0.5800000569208542,
+          "pet": "puddle",
+          "limited": false
+        },
+        {
+          "badge": 32,
+          "edge": "left",
+          "part": "Head",
+          "dot": true,
+          "viewport": "390, 740",
+          "bodyFraction": 0.3750728291649177,
+          "pet": "puddle",
+          "limited": true
+        },
+        {
+          "badge": 32,
+          "edge": "bottom",
+          "part": "FootR",
+          "dot": true,
+          "viewport": "568, 160",
+          "bodyFraction": 0.4012487754580768,
+          "pet": "puddle",
+          "limited": true
+        }
+      ]
+    }
+  }
+]

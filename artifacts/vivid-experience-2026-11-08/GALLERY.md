@@ -1,6 +1,6 @@
 # Egg Drop — working gallery
 
-Open [GALLERY.html](C:/Users/skunk/Documents/Development/egg-drop/artifacts/vivid-experience-2026-11-08/GALLERY.html) if your Markdown viewer hides local images. Accepted slices1–4 are below; the complete release is still in progress. Privatev180 remains published.
+Open [GALLERY.html](C:/Users/skunk/Documents/Development/egg-drop/artifacts/vivid-experience-2026-11-08/GALLERY.html) if your Markdown viewer hides local images. This is the earlier vivid UI checkpoint; its old companion visuals and publication status are historical. The current companion build is in [the garden gallery](C:/Users/skunk/Documents/Development/egg-drop/artifacts/garden-vertical-2026-11-08/GALLERY.md) and [PLAY-BUILD.md](C:/Users/skunk/Documents/Development/egg-drop/PLAY-BUILD.md).
 
 ## Companion focus
 

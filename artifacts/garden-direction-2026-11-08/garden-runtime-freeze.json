@@ -1,0 +1,66 @@
+[
+  {
+    "path": "src/server/GardenState.lua",
+    "sha256": "7653cf716486f34683a8eb878ad931d0ea38d20916af10b271f5a4dec043a6fa"
+  },
+  {
+    "path": "src/server/init.server.lua",
+    "sha256": "d866ec53b91ad944b24282ba4baf44c19f43e132a850c3745631bb6a22ea1621"
+  },
+  {
+    "path": "src/shared/GardenActivity.lua",
+    "sha256": "05d6845e9b65bdf785b91773e369a988d0a28e643d13dc841fb3449516fcd255"
+  },
+  {
+    "path": "src/shared/GardenLayout.lua",
+    "sha256": "e26f5575342f306a890cd5d171189963dc49405545c616dcc8ad7223357738ad"
+  },
+  {
+    "path": "src/client/GardenClient.lua",
+    "sha256": "7b8a3c77c8b099864331b674727659577980c37f4051045dcc382fa6b2dc3e04"
+  },
+  {
+    "path": "src/client/PetFollow.lua",
+    "sha256": "b3ed948acd8db1f244e16a236f20e32b9ce3a5c7ba0223f95bb4524333ef4ae7"
+  },
+  {
+    "path": "src/client/RoomCompanions.lua",
+    "sha256": "e70220d4ed090bd969a95953a649d4c6f084fdee652d88887cc53e686697e147"
+  },
+  {
+    "path": "src/client/RoomView.lua",
+    "sha256": "a006bd29a16089401a2d221cc5d2685da5d6ad5b1c13462a815abca655aaf827"
+  },
+  {
+    "path": "src/client/init.client.lua",
+    "sha256": "f91810b28b65ae5e2a4d5274423d229924ca7b4f78677588b2b068ed57c1658c"
+  },
+  {
+    "path": "scripts/GardenState.spec.lua",
+    "sha256": "e9def2f6b53c3616b1cba2c1081050b5614eba1a26dd200b42901fd45352208f"
+  },
+  {
+    "path": "scripts/GardenActivity.spec.lua",
+    "sha256": "a29ba2316f3ccdbd6eef35ccaedbf6bc4784ef1448ebca8724d573a1e554525f"
+  },
+  {
+    "path": "scripts/GardenClient.spec.lua",
+    "sha256": "4dff20656ed7932919f48dbccd7c3300c7ff21d68eae35e637b826634efc840f"
+  },
+  {
+    "path": "scripts/CompanionEligibility.spec.lua",
+    "sha256": "bc5f8a660eea5d6b7c85687f4b975cf9f1384564d771597d9a0034adebee8924"
+  },
+  {
+    "path": "scripts/HatchOwnerTransition.spec.lua",
+    "sha256": "c4a78f3a678993c1f0f792688def2db16bcc3f12a2c14e4d84da37dfa7d94b40"
+  },
+  {
+    "path": "scripts/PetContactHost.spec.lua",
+    "sha256": "06123fd5fb18d771d2e86cfd223da3a8dd8f65095f525e1aeb9a59afb9cace25"
+  },
+  {
+    "path": "scripts/SessionHost.spec.lua",
+    "sha256": "7302fb78fb6abd589d17b8602a70796e050b1fd98f83eb129759185c3cc52711"
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "evidence": "Three short full Studio desktop client samples; fixed client-only hub camera, no player teleport or physical-phone claim",
+  "camera": [
+    0,
+    19,
+    28,
+    1,
+    0,
+    0,
+    0,
+    0.9405539035797119,
+    0.3396444618701935,
+    0,
+    -0.3396444618701935,
+    0.9405539035797119
+  ],
+  "clock": 16.309999465942383,
+  "label": "garden-baseline-1366-desktop",
+  "viewport": "1626, 994",
+  "fov": 65,
+  "counts": {
+    "nodes": 2951,
+    "lights": 4,
+    "ambient": 18,
+    "parts": 1618
+  },
+  "runs": [
+    {
+      "p50": 16.637299209833145,
+      "max": 18.200600519776344,
+      "frames": 180,
+      "p95": 17.649399116635323
+    },
+    {
+      "p50": 16.67170040309429,
+      "max": 18.869999796152115,
+      "frames": 180,
+      "p95": 17.78459921479225
+    },
+    {
+      "p50": 16.664400696754456,
+      "max": 20.125800743699074,
+      "frames": 180,
+      "p95": 17.709799110889435
+    }
+  ]
+}

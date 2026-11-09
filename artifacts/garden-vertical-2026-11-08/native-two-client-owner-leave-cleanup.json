@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"players\":1,\"snapshot\":\"{\\\"actors\\\":{\\\"-2\\\":{\\\"petGeneration\\\":1,\\\"behavior\\\":\\\"rest\\\",\\\"yaw\\\":2.067219125003267,\\\"petId\\\":\\\"pip\\\",\\\"to\\\":[-5,4.025000095367432,-3],\\\"endTime\\\":1794187970.438027,\\\"characterId\\\":1,\\\"actionId\\\":112,\\\"ownerId\\\":-2,\\\"requestGeneration\\\":1,\\\"startTime\\\":1794187965.438027,\\\"generation\\\":55,\\\"from\\\":[-5,4.025000095367432,-3],\\\"charmVisible\\\":true,\\\"mode\\\":\\\"Room\\\"}},\\\"revision\\\":86,\\\"version\\\":1,\\\"toy\\\":{\\\"position\\\":[-2,4.025000095367432,-9]}}\",\"evidence\":\"Actual owner client window closed with Alt+F4; remaining real client observed cleanup\",\"peers\":{\"1\":-2}}"
+    }
+  ],
+  "isError": false
+}

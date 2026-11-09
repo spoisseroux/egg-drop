@@ -1,0 +1,29 @@
+[
+  {
+    "ok": true,
+    "suite": "PetContactHost",
+    "result": {
+      "passed": 4,
+      "persistentWrites": false,
+      "cases": {
+        "1": "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+        "2": "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+        "3": "wrong equipped pet is rejected through the real host before RNG or storage",
+        "4": "existing retry worker proves ended committed operation without a second glyph or second worker"
+      },
+      "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture"
+    }
+  },
+  {
+    "ok": true,
+    "suite": "SessionHost",
+    "result": {
+      "persistentWrites": false,
+      "passed": 2,
+      "cases": {
+        "1": "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+        "2": "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+      }
+    }
+  }
+]

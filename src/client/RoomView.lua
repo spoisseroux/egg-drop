@@ -8,9 +8,11 @@ local PetFocusUI = require(script.Parent.PetFocusUI)
 local PetAffection=require(script.Parent.PetAffection)
 local HollowAmbience=require(script.Parent.HollowAmbience)
 
-local PipVisual = require(script.Parent.PipVisual)
-local PuddleVisual = require(script.Parent.PuddleVisual)
-local BonusPetVisual = require(script.Parent.BonusPetVisual)
+local PetFactory=require(script.Parent.PetFactory)
+local GardenClient=require(script.Parent.GardenClient)
+local GardenActivity=require(ReplicatedStorage.Shared.GardenActivity)
+local GardenLayout=require(ReplicatedStorage.Shared.GardenLayout)
+local GardenToyVisual=require(script.Parent.GardenToyVisual)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
@@ -24,17 +26,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Room = {}
 Room.__index = Room
 
-local visuals = { pip = PipVisual, puddle = PuddleVisual }
-
-local function createPet(parent, origin, pet, masteryMask, rank, legacy)
-	local visual = visuals[pet.family or pet.id] or BonusPetVisual
-	local result = visual.new(parent, origin, pet, .72)
-	if legacy == nil then
-		local index = table.find({ "pip", "puddle", "wick", "orbit" }, pet.family or pet.id)
-		legacy = index and bit32.band(masteryMask or 0, bit32.lshift(1, index - 1)) ~= 0
-	end
-	PetPrestige.attach(result, pet, rank or 0, legacy)
-	return result
+local function createPet(parent,origin,pet,masteryMask,rank,legacy,appearance)
+	return PetFactory.create(parent,origin,pet,masteryMask,rank,legacy,appearance)
 end
 
 local function frame(parent, name, size, position, color, z)
@@ -98,6 +91,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		companions = RoomCompanions.new(progress.Parent, createPet, reduceEffects),
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
+	self.garden=GardenClient.new(progress.Parent)
+	self.gardenToy=GardenToyVisual.new(workspace,GardenLayout.Toy)
+	self.companions.garden=self.garden
 	self.ambience=HollowAmbience.new()
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
@@ -107,6 +103,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		greet = function()return self:reactPet(false)end,
 		pet = function()return self:reactPet(true)end,
 		petContact=function(active)return self:setPetContact(active)end,
+		charmToggle=function(visible)return self:setCharmVisible(visible)end,
 		canOwnInput = function() return not self.busy and not self.overlayOpen() end,
 		canReact = function()
 			return self.focusing and self.mode == "Room" and not self.busy and not self.overlayOpen()
@@ -118,6 +115,15 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		table.insert(self.connections, connection)
 		return connection
 	end
+	watch(progress:GetAttributeChangedSignal("PetAppearance"),function()self:refreshPetAppearance()end)
+	local appearanceRemote=ReplicatedStorage.Remotes:FindFirstChild("PetAppearanceResult")
+	if appearanceRemote then watch(appearanceRemote.OnClientEvent,function(packet)
+		local pending=self.charmPending
+		if type(packet)=="table"and type(packet.lastSeq)=="number"then self.charmSeq=math.max(self.charmSeq or 0,packet.lastSeq)end
+		if pending and type(packet)=="table"and packet.petId==pending.petId and packet.seq==pending.seq and packet.status~="Applied"then
+			self.charmPending=nil;self:refreshPetAppearance()
+		end
+	end)end
 	watch(GuiService:GetPropertyChangedSignal("PreferredTransparency"),function()
 		menu.BackgroundTransparency,leave.BackgroundTransparency=Art.dockTransparency(GuiService.PreferredTransparency),Art.dockTransparency(GuiService.PreferredTransparency)
 	end)
@@ -156,6 +162,14 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
   end
 		self:retryArrivalPlacement()
 		self:updateControls()
+		local gardenFocus=self.focusing and self.mode=="Room"and not self.busy and not self.overlayOpen()and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and self.focusUI.windowActive~=false
+		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id,self.pet.origin,self.pet.yaw)else self.garden:focus(false)end
+		self.garden:step(dt)
+		if self.gardenToy then
+			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
+			self.gardenToy:setVisible(visible)
+			if visible then self.gardenToy:update(GardenActivity.sampleToy(self.garden.snapshot and self.garden.snapshot.toy,workspace:GetServerTimeNow()),dt,self.reduceEffects())end
+		end
 		if self.pet then
 			local character = Players.LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -168,7 +182,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			end
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
-			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)
+			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
+				local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
+				if actor then self.followState=PetFollow.activity(self.pet,actor,workspace:GetServerTimeNow(),dt,self.followState,reduced)
+				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
 				self:cancelCameraTween()
@@ -177,8 +194,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			self.pet:update(dt)
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
-			self.companions:update(dt)
 		end
+		if self.mode=="Room"then self.companions:update(dt)end
 		if self.focusUI then self.focusUI:update(workspace.CurrentCamera, self.pet, self.petPrompt and self.petPrompt.Enabled) end
   self:updatePetContact(dt)
 	end)
@@ -265,7 +282,7 @@ function Room:showPet(pet)
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local position = oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
 	local rank, legacy = PetPrestige.read(self.progress, pet)
-	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy)
+	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy,self.garden:appearance(self.progress,pet.id))
 	self.pet.focusPose=self.focusing==true;self.focusGeometry=nil
 	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
 	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)
@@ -273,6 +290,7 @@ function Room:showPet(pet)
  if self.affection then self.affection:setPet(self.pet)end
 	self.pet.yaw = if self.focusing and oldYaw then oldYaw elseif root then math.atan2(root.CFrame.LookVector.X, root.CFrame.LookVector.Z) else 0
 	self.followState = nil
+	self:refreshPetAppearance()
 	local body = self.pet.model.PrimaryPart
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name, prompt.ActionText, prompt.ObjectText = "PetInteraction", "Say hi", pet.name
@@ -292,6 +310,30 @@ function Room:showPet(pet)
 	self.heading.Text = string.format("Sprout Hollow · %s · %d/%d", pet.name,
 		Pets.ownedCount(owned, trials, self.progress:GetAttribute("InventoryMask")), #Pets.collection)
 	self:updateControls()
+end
+
+function Room:refreshPetAppearance()
+	if not self.garden or not self.shownPet then return end
+	local appearance=self.garden:appearance(self.progress,self.shownPet.id)
+	if self.appearancePet~=self.shownPet.id or self.appearanceCharm~=appearance.charmVisible then
+		self.appearancePet,self.appearanceCharm=self.shownPet.id,appearance.charmVisible
+		self.focusGeometry=nil
+	end
+	if self.pet and self.pet.applyAppearance then self.pet:applyAppearance(appearance)end
+	if self.focusUI and self.focusUI.setCharmVisible then
+		local supported=self.shownPet.id=="pip"or self.shownPet.id=="puddle"
+		self.focusUI:setCharmVisible(if supported then appearance.charmVisible else nil,self.charmPending~=nil,self.pet and self.pet.secondaryColor)
+	end
+end
+function Room:setCharmVisible(visible)
+	if type(visible)~="boolean"or self.charmPending or not self.focusing or self.mode~="Room"or self.busy or self.overlayOpen()then return false end
+	if self.shownPet.id~="pip"and self.shownPet.id~="puddle"then return false end
+	self:setPetContact(false)
+	self.charmSeq=(self.charmSeq or 0)+1
+	self.charmPending={petId=self.shownPet.id,seq=self.charmSeq}
+	self:refreshPetAppearance()
+	ReplicatedStorage.Remotes.BoardRequest:FireServer("petAppearance",{petId=self.shownPet.id,visible=visible,seq=self.charmSeq})
+	return true
 end
 
 function Room:cancelCameraTween()
@@ -356,6 +398,8 @@ function Room:retryArrivalPlacement()
 end
 
 function Room:useRoomCamera(animate, arriving)
+	self.focusStageOrigin,self.focusStageBearing=nil,nil
+	if self.garden then self.garden:focus(false)end
 	if self.focusUI then self.focusUI:cancelPointer()end
 	self:setPetContact(false)
 	self:releaseFocusMovement()
@@ -420,6 +464,8 @@ function Room:useRoomCamera(animate, arriving)
 end
 
 function Room.captureFocusSubject(pet,family)
+	local rig=pet.model:GetAttribute("RigId")
+	if rig=="zivvi"or rig=="ovelle"then return PetGreetingShot.captureFocusedSubject(pet)end
 	local fields={"greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame"}
 	local saved={};for i,key in ipairs(fields)do saved[i]=pet[key]end
 	pet.greeting=if family=="pip"or family=="puddle"then 2 else 0
@@ -435,7 +481,7 @@ end
 function Room:planGreeting(camera, root, floor)
 	local started=os.clock()
 	local lounge = floor.Parent
-	local bounds,size,silhouette=Room.captureFocusSubject(self.pet,self.shownPet.family or self.shownPet.id)
+	local bounds,size,silhouette,focusEnvelope,sweepCached=Room.captureFocusSubject(self.pet,self.shownPet.family or self.shownPet.id)
 	local exclude = {self.pet.model}
 	for _, player in ipairs(Players:GetPlayers()) do if player.Character then table.insert(exclude,player.Character) end end
 	local params=RaycastParams.new()
@@ -447,6 +493,11 @@ function Room:planGreeting(camera, root, floor)
 	local animationRise=.55*(self.pet.worldScale or 1)
 	local reach=PetGreetingShot.maximumReach(size,aspect,crestReserve,camera.ViewportSize.Y,safeTop,animationRise)
 	local visualBlocks={}
+	local ownerParts={}
+	local owner=root.Parent
+	if owner then for _,part in ipairs(owner:GetDescendants())do
+		if part:IsA("BasePart")and part.Transparency<.99 then table.insert(ownerParts,part)end
+	end end
 	for _, part in ipairs(lounge:GetChildren()) do
 		if part:IsA("BasePart") and part~=floor and part.Transparency<.9
 			and (part.Size.Magnitude>=2 or part.Name:find("Sign") or part.Name:find("FieldGuide"))
@@ -454,9 +505,9 @@ function Room:planGreeting(camera, root, floor)
 	end
 	local groundQueries,candidates=0,0
 	local plan=PetGreetingShot.plan({
-		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,silhouette=silhouette,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=animationRise,
+		rootPosition=root.Position,forward=root.CFrame.LookVector,size=size,silhouette=silhouette,focusEnvelope=focusEnvelope,crestPixelReserve=crestReserve,viewportHeight=camera.ViewportSize.Y,safeTopInset=safeTop,safeBottomInset=bottomInset.Y,safeLeftInset=topInset.X,safeRightInset=bottomInset.X,animationTopReserve=animationRise,
 		centerOffset=CFrame.Angles(0,self.pet.yaw or 0,0):VectorToObjectSpace(bounds.Position-self.pet.origin),
-		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},
+		aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},preferredBearing=self.focusStageBearing,preferredOrigin=self.focusStageOrigin,
 		ground=function(position)
 			groundQueries += 1
 			local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
@@ -469,7 +520,8 @@ function Room:planGreeting(camera, root, floor)
 			local right=CFrame.lookAt(position,target).RightVector*math.max(size.X,size.Z)*.5
 			for _,point in ipairs({target,origin+Vector3.new(0,.25,0),target+Vector3.new(0,size.Y*.5,0),target-right,target+right,origin+Vector3.new(0,.12,0)-right,origin+Vector3.new(0,.12,0)+right})do
 				if workspace:Raycast(position,point-position,params)
-					or PetGreetingShot.segmentBlocked(position,point,visualBlocks) then return false end
+					or PetGreetingShot.segmentBlocked(position,point,visualBlocks)
+					or PetGreetingShot.segmentBlocked(position,point,ownerParts)then return false end
 			end
 			return true
 		end,
@@ -480,6 +532,15 @@ function Room:planGreeting(camera, root, floor)
 	self.pet.model:SetAttribute("GreetingGroundQueries", groundQueries)
 	self.pet.model:SetAttribute("GreetingVisualBlockers", #visualBlocks)
 	self.pet.model:SetAttribute("GreetingAccepted", plan ~= nil)
+	self.pet.model:SetAttribute("GreetingSweepPoints",if focusEnvelope then #focusEnvelope.points else 0)
+	self.pet.model:SetAttribute("GreetingSweepSamples",if focusEnvelope then focusEnvelope.sweepSamples else 0)
+	self.pet.model:SetAttribute("GreetingSweepCached",sweepCached==true)
+	self.pet.model:SetAttribute("GreetingOwnerDistance",if plan then(plan.origin-root.Position).Magnitude else nil)
+	self.pet.model:SetAttribute("GreetingStageBearing",if plan then plan.bearing else nil)
+	self.pet.model:SetAttribute("GreetingBodyFraction",if plan then plan.bodyFraction else nil)
+	self.pet.model:SetAttribute("GreetingFitLimited",if plan then plan.fitLimited else nil)
+	self.pet.model:SetAttribute("GreetingLimitingPart",if plan then plan.limitingPart else nil)
+	self.pet.model:SetAttribute("GreetingLimitingEdge",if plan then plan.limitingEdge else nil)
 	-- Missing/blocked/streamed scenery leaves roaming and interaction usable.
 	return plan
 end
@@ -487,6 +548,10 @@ end
 function Room:applyFocusPlan(plan, camera)
 	self:cancelCameraTween()
 	self.pet.origin, self.pet.yaw = plan.origin, plan.yaw
+	self.focusStageOrigin,self.focusStageBearing=plan.origin,plan.bearing
+	if self.garden and self.focusing and self.focusUI.windowActive~=false and not self.overlayOpen()and not GuiService.MenuIsOpen then
+		self.garden:focus(true,self.shownPet.id,plan.origin,plan.yaw)
+	end
 	self.pet.focusPose=true
 	self.pet.lastFrame = -1
 	self.pet:update(0)
@@ -548,7 +613,10 @@ function Room:focusPet()
 	end
 	-- Stage both in one callback. Only FOV settles; no lens path crosses the pet.
 	self.pet.origin,self.pet.yaw=plan.origin,plan.yaw
+	self.focusStageOrigin,self.focusStageBearing=plan.origin,plan.bearing
+	if self.garden then self.garden:focus(true,self.shownPet.id,plan.origin,plan.yaw)end
 	self.pet.focusPose=true
+	if self.pet.applyGardenPose then self.pet:applyGardenPose({action="focus",actionPhase=0,expression="curious",actionId="focus-"..self.focusEpoch,generation=self.focusEpoch})end
 	if not self.reduceEffects() then self.pet:greet() end
 	self.pet.lastFrame = -1
 	self.pet:update(0)
@@ -606,7 +674,10 @@ function Room:setPetContact(active)
 	if not active then
 		if not self.petContactActive then return false end
 		self.petContactActive=false
-		if self.contactPet then self.contactPet.petting=false end
+		if self.contactPet then
+			self.contactPet.petting=false
+			if self.contactPet.applyGardenPose then self.contactPet.affection=0 end
+		end
 		self.contactPet=nil;self.contactContext=nil
   if self.petContactIntent then self.petContactIntent:cancel()end
   if self.affection then self.affection:clear()end
@@ -657,7 +728,7 @@ function Room:reactPet(petting)
 	self.lastReactionAt = now
 	-- Reactions stay in the already accepted camera shot. No replanning, movement,
 	-- persistence mutation or reward event is involved in greeting/petting.
-	self.pet.affection=.9
+	if not self.pet.applyGardenPose then self.pet.affection=.9 end
 	if not petting and not self.reduceEffects() then self.pet:greet() end
 	if self.focusUI and self.focusUI.retireFocusHint then self.focusUI:retireFocusHint()end
 	if not petting and now - (self.lastReactionAudioAt or -math.huge) >= 0.7 then
@@ -706,12 +777,17 @@ function Room:show(mode, animate)
 	end
 end
 
+function Room:setBusy(value)
+	if self.busy==value then return end
+	self.busy=value
+	if self.onPresentationOwnerChanged then self.onPresentationOwnerChanged()end
+end
 -- Initial entry and replicated mode changes share one runner/input lock.
 function Room:driveModes(initial)
 	if self.busy or self.destroyed then return end
 	self.switchEpoch=(self.switchEpoch or 0)+1
 	local epoch=self.switchEpoch
-	self.busy=true
+	self:setBusy(true)
 	task.spawn(function()
 		local token
 		local ok,problem=pcall(function()
@@ -746,7 +822,7 @@ function Room:driveModes(initial)
 		end)
 		if self.switchEpoch~=epoch or self.destroyed then return end
 		if token then self.transition:hide(token) end
-		self.busy=false
+		self:setBusy(false)
 		self:updateControls()
 		if not ok then warn("Pocket Deck presentation:",problem) end
 	end)
@@ -773,6 +849,8 @@ function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
  if self.petContactIntent then self.petContactIntent:destroy()end
+	if self.garden then self.garden:destroy()end
+	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end
 	self.arrivalUnplaced=nil

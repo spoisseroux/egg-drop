@@ -1,0 +1,615 @@
+[
+  {
+    "ok": true,
+    "name": "GardenFocusReach",
+    "result": {
+      "plans": 72,
+      "cases": [
+        "all seven production rigs and supported Dot states acquire and hold the exact staged target",
+        "Dot and viewport reframe keeps the accepted stage while solving an independent lens",
+        "same accepted target is rejected for stale pet or character generation",
+        "the exact pre-focus camera survives staging and owner translation"
+      ],
+      "passed": 4,
+      "metrics": [
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "1649, 971",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "733, 307",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "390, 740",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "568, 160",
+          "petId": "pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "1649, 971",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "733, 307",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "390, 740",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": false,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": false,
+          "viewport": "568, 160",
+          "petId": "puddle",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "bloom_pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "bloom_pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "bloom_pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "bloom_pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "bloom_pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "bloom_pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "bloom_pip",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "bloom_pip",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "foxfire_wick",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "foxfire_wick",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "1649, 971",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "733, 307",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "390, 740",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        },
+        {
+          "bearing": 0,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "eclipse_orbit",
+          "edge": false,
+          "reach": 6.135041236877441
+        },
+        {
+          "bearing": 3,
+          "dot": true,
+          "viewport": "568, 160",
+          "petId": "eclipse_orbit",
+          "edge": true,
+          "reach": 6.135042190551758
+        }
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "name": "GardenState",
+    "result": {
+      "passed": 12,
+      "cases": [
+        "solo garden investigates, shoves twice, rests and returns without a reward path",
+        "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+        "paired greeting is one atomic action and focus cancels both reservations",
+        "Board is observable and cannot acquire focus, toy or an automatic reward",
+        "focus is owner/pet/range/generation validated and its lease expires",
+        "moved owners and replaced character cannot refresh a stale focus hold",
+        "a superseded participant generation explicitly retires the paired greeting",
+        "equip, character replacement and leave invalidate old generations exactly once",
+        "a delayed first acquisition cannot revive the same alias after equip-away and back",
+        "only one toy reservation exists and another waiting pet gets a turn",
+        "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+        "late join samples the current shared path, not a replayed beginning"
+      ]
+    }
+  }
+]

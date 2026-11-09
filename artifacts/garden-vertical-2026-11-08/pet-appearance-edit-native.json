@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "evidence": "Isolated persistence/protocol fixture executed with native Engine APIs in Edit; no live profile writes",
+  "result": {
+    "1": "strict owned aliases and booleans reject forged shapes without a progression mutation",
+    "2": "duplicate and stale requests cannot reapply, and independent pets save exact preferences",
+    "3": "A B A same-value intent settles against the pending per-pet generation",
+    "4": "a newer local toggle during save remains pending and cannot receive the old receipt",
+    "5": "foreign newer same-pet intent supersedes explicitly while other pet and wallet survive",
+    "6": "invalid stored entries default safely and independent per-pet merge retains future fields"
+  }
+}

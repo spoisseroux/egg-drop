@@ -1,0 +1,146 @@
+{
+  "asset": "zivvi",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "right": "+X"
+  },
+  "sourceUnits": "studs at garden size",
+  "bodyHeightTarget": 1.535,
+  "objects": [
+    {
+      "name": "Zivvi__Head",
+      "channel": "Head",
+      "role": "Head",
+      "triangles": 1988,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__Body",
+      "channel": "Body",
+      "role": "Body",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__FootL",
+      "channel": "FootL",
+      "role": "FootL",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__FootR",
+      "channel": "FootR",
+      "role": "FootR",
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__HandL",
+      "channel": "HandL",
+      "role": "HandL",
+      "triangles": 648,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__HandR",
+      "channel": "HandR",
+      "role": "HandR",
+      "triangles": 648,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__EyeL",
+      "channel": "Head",
+      "role": "EyeL",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__GlintL",
+      "channel": "Head",
+      "role": "GlintL",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__Cheeks",
+      "channel": "Head",
+      "role": "Cheeks",
+      "triangles": 240,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__EyeR",
+      "channel": "Head",
+      "role": "EyeR",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__GlintR",
+      "channel": "Head",
+      "role": "GlintR",
+      "triangles": 120,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__Mouth",
+      "channel": "Head",
+      "role": "Mouth",
+      "triangles": 144,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__Teeth",
+      "channel": "Head",
+      "role": "Teeth",
+      "triangles": 48,
+      "exprKeys": [
+        "curious",
+        "startled",
+        "pleased",
+        "sleepy",
+        "affectionate"
+      ]
+    },
+    {
+      "name": "Zivvi__CharmDot",
+      "channel": "CharmAnchor",
+      "role": "CharmDot",
+      "triangles": 324,
+      "exprKeys": []
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "evidence": "Native server isolated fixture executed through plugin-capable QA host; no production profile writes",
+  "result": {
+    "1": "strict owned aliases and booleans reject forged shapes without a progression mutation",
+    "2": "duplicate and stale requests cannot reapply, and independent pets save exact preferences",
+    "3": "A B A same-value intent settles against the pending per-pet generation",
+    "4": "a newer local toggle during save remains pending and cannot receive the old receipt",
+    "5": "Applied and failed writes retain the previous confirmed public projection",
+    "6": "A commit cannot expose B created while A's write is in flight",
+    "7": "foreign newer same-pet intent supersedes explicitly while other pet and wallet survive",
+    "8": "invalid stored entries default safely and independent per-pet merge retains future fields"
+  }
+}

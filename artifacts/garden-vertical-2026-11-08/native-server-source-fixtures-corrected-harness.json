@@ -1,0 +1,22 @@
+[
+  {
+    "ok": false,
+    "name": "PetAppearance",
+    "result": "The current thread cannot write 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": false,
+    "name": "SessionRecovery",
+    "result": "The current thread cannot write 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": false,
+    "name": "SessionHost",
+    "result": "The current thread cannot write 'Source' (lacking capability PluginOrOpenCloud)"
+  },
+  {
+    "ok": false,
+    "name": "PetContactHost",
+    "result": "The current thread cannot write 'Source' (lacking capability PluginOrOpenCloud)"
+  }
+]

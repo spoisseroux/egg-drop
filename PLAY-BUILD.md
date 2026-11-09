@@ -1,6 +1,12 @@
-# Egg Drop — living Hollow and arcade play build
+# Egg Drop — garden companions and arcade play build
 
-**Private v180 Published**, confirmed in refreshed Studio Version History: **Living Hollow and arcade - 7910cf8**. All eight bounded slices were reviewed by Astra, implemented by Sol, tested and pushed on `feat/egg-drop-arcade-polish`; runtime commit `7910cf8`. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/living-world-2026-11-07/private-published-v180-7910cf8.png). This supersedes private v125. Nursery, paid products and public release remain deferred.
+**Garden companion checkpoint: verified, publication pending.** The published private place is still v180/runtime7910cf8 until the new publication is verified. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop). Nursery, paid products and public release remain deferred.
+
+The repository now includes the accepted handheld, shared palette, recap and hatch polish, plus Astra's first two authored baby pets, implemented by Sol. **Zivvi replaces Pip's common visual/name; Ovelle replaces Puddle's.** Their original stored IDs remain stable, preserving earned ownership and pending receipts. The other five visuals are temporary legacy pets. Stars, the remaining two new base forms, egg-item pools and the broader garden redesign are planned, not implemented in this checkpoint.
+
+Companions can investigate and shove the shared wobble toy, rest, and greet a nearby pet. A saved per-pet control hides/shows the secondary-colored dot. A visitor can see a player holding the physical deck with their pet resting nearby. Focus preempts autonomy; petting remains the existing server-validated saved reward path. Actual two-client controls verified shared actions, charm propagation and leaving cleanup without idle currency awards.
+
+[Current garden gallery](artifacts/garden-vertical-2026-11-08/GALLERY.md) · [Exact garden tests](artifacts/garden-vertical-2026-11-08/BUILD-EVIDENCE.md) · [Garden slice and boundaries](GARDEN-VERTICAL-SLICE.md). The sections below retain the full existing arcade/economy rules; the old currency name remains nectar until the complete Stars presentation migration.
 
 ## What changed
 
@@ -13,7 +19,7 @@
 
 ## A first session
 
-1. Aim and merge on the welcome board to earn guaranteed Pip, then Meet and Back to explore Hollow.
+1. Aim and merge on the welcome board to earn guaranteed Zivvi, then Meet and Back to explore Hollow.
 2. Open the deck. You have24 drops **per round**, with unlimited rounds. Aim for the active goal and keep the pile low; impatient center spam can overflow and fail.
 3. Complete both goals for6nectar, or8with the low-pile bonus. A completed failed round can still earn its eligible skill contracts. The recap shows exact saved earnings and distance to the selected egg.
 4. Browse the hatch tree or Menu → Hatch eggs. Mixed Meadow costs18nectar; Sprout Focused costs24. Choosing or entering a station never spends; the explicit Hatch action does. Outcomes are random from displayed odds. Closing a purchased reveal preserves it until Meet; reopening cannot reroll it.
@@ -21,13 +27,13 @@
 
 ## Rewards and return goals
 
-Seven pets: cream sprout Pip, blue Puddle, orange flame Wick, lavender ringed Orbit; rare peach flower Bloom Pip, blue/turquoise Foxfire Wick and violet/gold Eclipse Orbit. Meadow odds35/25/20/10/5/3/2%; Focused Pip80/Bloom20%. Seven consecutive non-rare hatches make the next rare-only; this does not guarantee an unowned common. Duplicates add one family mark.
+Seven current catalog entries: lemon/magenta Zivvi and sky/lime Ovelle; temporary legacy orange flame Wick, lavender ringed Orbit, rare peach flower Bloom Pip, blue/turquoise Foxfire Wick and violet/gold Eclipse Orbit. Meadow odds35/25/20/10/5/3/2%; Focused Zivvi80/Bloom20%. Seven consecutive non-rare hatches make the next rare-only; this does not guarantee an unowned common. Duplicates add one family mark.
 
 Wins add1mark, clean wins2. Family ranks: I Sprout at3marks, II Grove at10, III Bloom at25 plus all three saved skill conditions (clean win, chain3, score500). Crests/effects progress with rank. The existing optional daily gift is6nectar; contracts are Win2+4, Chain3+3, Score500+3, automatically awarded through valid full rounds. New players start with6 instead of an extra first-day gift. Daily rollover is the Hollow's fixed05:00UTC boundary, not device time or DST. No daily play cap or paid luck.
 
 Earned cosmetics: Honey shell after1saved win; Gloaming at any owned rankI; Copperleaf and Lantern background at rankII. Creek background comes from High Roller250points; Lantern stamp from Triple Pop chain3. Existing free finishes/prints remain; Wick print requires Wick, Trial crest requires the three trials. Locked previews show their real condition and never equip themselves.
 
-## Verification and limits
+## Prior published v180 verification and limits
 
 Final:81runtime sources matched/compiled, Rojo build and diff check passed. Companion client61 and isolated server69 passed; completed/live-return regression21 passed. Earlier slices have their own named layout, appearance, solver, audio and lifecycle suites in the evidence. These repeats are not summed as new coverage.
 

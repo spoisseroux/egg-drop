@@ -8,7 +8,7 @@ local Companions = {}
 Companions.__index = Companions
 
 function Companions.new(boards, createPet, reduceEffects, options)
-	return setmetatable({ players=options and options.players or function()return Players:GetPlayers()end,boards = boards, createPet = createPet, reduceEffects = reduceEffects, active = {}, refreshIn = 0 }, Companions)
+	return setmetatable({ players=options and options.players or function()return Players:GetPlayers()end,boards = boards, createPet = createPet, reduceEffects = reduceEffects, garden=options and options.garden,active = {}, refreshIn = 0 }, Companions)
 end
 
 function Companions:clear()
@@ -34,10 +34,12 @@ function Companions:update(dt)
     local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 				local board = self.boards:FindFirstChild(tostring(player.UserId))
 				local pet = board and Pets.byId[board:GetAttribute("CompanionId")]
-				if root and humanoid and humanoid.Health>0 and pet and board:GetAttribute("Mode") == "Room" and (root.Position - ownRoot.Position).Magnitude <= 72 then
+				local mode=board and board:GetAttribute("Mode")
+				local actor=pet and self.garden and self.garden:get(player.UserId,pet.id,player.Character)
+				if root and humanoid and humanoid.Health>0 and pet and (mode=="Room"or mode=="Board") and (root.Position - ownRoot.Position).Magnitude <= 72 then
 					local rank, legacy = PetPrestige.read(board, pet)
 					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0, rank = rank, legacy = legacy,
-						distance = (root.Position - ownRoot.Position).Magnitude })
+						actor=actor,board=board,distance = (root.Position - ownRoot.Position).Magnitude })
 				end
 			end
 		end
@@ -50,16 +52,21 @@ function Companions:update(dt)
 				entry.visual:destroy()
 				entry = nil
 			end
+			local appearance=if self.garden then self.garden:appearance(item.board,item.pet.id)else nil
 			if not entry then
 				local position = item.root.Position + item.root.CFrame.RightVector * 2.2
-				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy)
+				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy,appearance)
 				visual.origin = Vector3.new(position.X, PetFollow.ground(position, visual), position.Z)
 				visual.model:SetAttribute("CompanionOwnerId", item.player.UserId)
 				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask, rank = item.rank, legacy = item.legacy }
 				self.active[item.player] = entry
 			end
 			if entry.root~=item.root then entry.followState=nil;PetFollow.rest(entry.visual)end
-			entry.root = item.root
+			entry.root,entry.actor = item.root,item.actor
+			entry.board=item.board
+			if appearance and entry.visual.applyAppearance and entry.charmVisible~=appearance.charmVisible then
+				entry.visual:applyAppearance(appearance);entry.charmVisible=appearance.charmVisible
+			end
 			visible[item.player] = true
 		end
 		for player, entry in pairs(self.active) do
@@ -71,7 +78,10 @@ function Companions:update(dt)
 	end
 	for _, entry in pairs(self.active) do
 		if not entry.root.Parent then continue end
-		entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())
+		local actor=self.garden and self.garden:get(entry.visual.model:GetAttribute("CompanionOwnerId"),entry.pet.id,entry.root.Parent)
+		if actor then entry.followState=PetFollow.activity(entry.visual,actor,workspace:GetServerTimeNow(),dt,entry.followState,self.reduceEffects())
+		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
+		else entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())end
 		entry.visual:update(dt)
 		PetPrestige.update(entry.visual, dt, self.reduceEffects())
 	end

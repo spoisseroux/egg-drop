@@ -30,6 +30,7 @@ return function(server,hostSource)
 	local floor={Size=Vector3.new(160,1,128),CFrame=CFrame.new(0,3.5,0)}
 	local room={FindFirstChild=function(_,name)return if name=="Floor"then floor else nil end}
 	local world={EggDropLounge=room}
+	function world:GetServerTimeNow()return 1700000000+c.now end
 	function world:FindFirstChild(name)return if name=="EggDropLounge"then room else nil end
 	function world:Raycast(origin,direction,params)
 		c.groundCalls+=1
@@ -37,7 +38,8 @@ return function(server,hostSource)
 		assert(math.abs(origin.X-2.6)<.0001 and math.abs(origin.Z-3)<.0001,"Anchor must derive from normal server companion offset")
 		return{Position=Vector3.new(origin.X,4,origin.Z)}
 	end
-	local character={}
+	local character={attributes={}}
+	function character:SetAttribute(key,value)self.attributes[key]=value end
 	function character:FindFirstChild(name)return if name=="HumanoidRootPart"then root else nil end
 	function character:FindFirstChildOfClass(name)return if name=="Humanoid"then humanoid else nil end
 	function character:IsDescendantOf(parent)return parent==world end

@@ -1,0 +1,176 @@
+{
+  "valid": 33,
+  "remaining": 0,
+  "complete": true,
+  "repaired": 0,
+  "attempted": 0,
+  "failures": [],
+  "expected": 33,
+  "parts": {
+    "1": {
+      "valid": true,
+      "name": "Zivvi__Body",
+      "mesh": "rbxassetid://101744911812859"
+    },
+    "2": {
+      "valid": true,
+      "name": "Zivvi__CharmDot",
+      "mesh": "rbxassetid://110307091587010"
+    },
+    "3": {
+      "valid": true,
+      "name": "Zivvi__FootL",
+      "mesh": "rbxassetid://132619926689641"
+    },
+    "4": {
+      "valid": true,
+      "name": "Zivvi__FootR",
+      "mesh": "rbxassetid://130872625091974"
+    },
+    "5": {
+      "valid": true,
+      "name": "Zivvi__HandL",
+      "mesh": "rbxassetid://99533724168974"
+    },
+    "6": {
+      "valid": true,
+      "name": "Zivvi__HandR",
+      "mesh": "rbxassetid://77393504339291"
+    },
+    "7": {
+      "valid": true,
+      "name": "Zivvi__Cheeks",
+      "mesh": "rbxassetid://124546489202664"
+    },
+    "8": {
+      "valid": true,
+      "name": "Zivvi__EyeL",
+      "mesh": "rbxassetid://87089896433313"
+    },
+    "9": {
+      "valid": true,
+      "name": "Zivvi__EyeR",
+      "mesh": "rbxassetid://78534872131515"
+    },
+    "10": {
+      "valid": true,
+      "name": "Zivvi__GlintL",
+      "mesh": "rbxassetid://138728932402251"
+    },
+    "11": {
+      "valid": true,
+      "name": "Zivvi__GlintR",
+      "mesh": "rbxassetid://115058347829717"
+    },
+    "12": {
+      "valid": true,
+      "name": "Zivvi__Head",
+      "mesh": "rbxassetid://72493624428113"
+    },
+    "13": {
+      "valid": true,
+      "name": "Zivvi__Mouth",
+      "mesh": "rbxassetid://87760086069523"
+    },
+    "14": {
+      "valid": true,
+      "name": "Zivvi__Teeth",
+      "mesh": "rbxassetid://79606368127779"
+    },
+    "15": {
+      "valid": true,
+      "name": "Zivvi__CuffTrimL",
+      "mesh": "rbxassetid://113875857934512"
+    },
+    "16": {
+      "valid": true,
+      "name": "Zivvi__CuffTrimR",
+      "mesh": "rbxassetid://131703383336296"
+    },
+    "17": {
+      "valid": true,
+      "name": "Ovelle__Body",
+      "mesh": "rbxassetid://136931485133107"
+    },
+    "18": {
+      "valid": true,
+      "name": "Ovelle__CharmDot",
+      "mesh": "rbxassetid://136501904883745"
+    },
+    "19": {
+      "valid": true,
+      "name": "Ovelle__CuffL",
+      "mesh": "rbxassetid://93761802109739"
+    },
+    "20": {
+      "valid": true,
+      "name": "Ovelle__CuffR",
+      "mesh": "rbxassetid://133577426773720"
+    },
+    "21": {
+      "valid": true,
+      "name": "Ovelle__FootL",
+      "mesh": "rbxassetid://79191599828881"
+    },
+    "22": {
+      "valid": true,
+      "name": "Ovelle__FootR",
+      "mesh": "rbxassetid://98207904192401"
+    },
+    "23": {
+      "valid": true,
+      "name": "Ovelle__HandL",
+      "mesh": "rbxassetid://75207025874170"
+    },
+    "24": {
+      "valid": true,
+      "name": "Ovelle__HandR",
+      "mesh": "rbxassetid://113813878429737"
+    },
+    "25": {
+      "valid": true,
+      "name": "Ovelle__Cheeks",
+      "mesh": "rbxassetid://91540540154468"
+    },
+    "26": {
+      "valid": true,
+      "name": "Ovelle__EyeL",
+      "mesh": "rbxassetid://74340840307496"
+    },
+    "27": {
+      "valid": true,
+      "name": "Ovelle__EyeR",
+      "mesh": "rbxassetid://77322688780626"
+    },
+    "28": {
+      "valid": true,
+      "name": "Ovelle__GlintL",
+      "mesh": "rbxassetid://94776935908864"
+    },
+    "29": {
+      "valid": true,
+      "name": "Ovelle__GlintR",
+      "mesh": "rbxassetid://118434971397639"
+    },
+    "30": {
+      "valid": true,
+      "name": "Ovelle__Head",
+      "mesh": "rbxassetid://118081868538500"
+    },
+    "31": {
+      "valid": true,
+      "name": "Ovelle__Mouth",
+      "mesh": "rbxassetid://97664255468192"
+    },
+    "32": {
+      "valid": true,
+      "name": "Ovelle__CuffTrimL",
+      "mesh": "rbxassetid://85374189867055"
+    },
+    "33": {
+      "valid": true,
+      "name": "Ovelle__CuffTrimR",
+      "mesh": "rbxassetid://138582020914315"
+    }
+  }
+}

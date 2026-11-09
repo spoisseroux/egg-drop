@@ -1,5 +1,6 @@
 -- Every-frame position and heading; only ground sampling is throttled.
 local Players = game:GetService("Players")
+local Activity=require(game:GetService("ReplicatedStorage").Shared.GardenActivity)
 local Follow = {}
 
 function Follow.ground(position, visual, fallback)
@@ -19,6 +20,11 @@ function Follow.rest(visual)
 end
 
 function Follow.step(visual, root, dt, state, reduced)
+	if visual.gardenFocus or visual.gardenAction then
+		visual.gardenFocus=false
+		if visual.applyGardenPose then visual:applyGardenPose({expression="neutral",actionPhase=0})end
+		visual.gardenAction=nil
+	end
 	state = state or {}
 	local changedRoot=state.root~=root
 	state.root=root
@@ -59,6 +65,33 @@ function Follow.step(visual, root, dt, state, reduced)
 		local angle = math.atan2(math.sin(wanted - yaw), math.cos(wanted - yaw))
 		visual.yaw = yaw + angle * (1 - math.exp(-11 * dt))
 	end
+	return state
+end
+
+-- Shared server-time paths move every rendered frame. The cosmetic renderer is
+-- free to sample its expression/limbs less often; it never owns root movement.
+function Follow.activity(visual,actor,now,dt,state,reduced)
+	local sample=Activity.sample(actor,now)
+	if not sample then return state end
+	state=state or {};local old=visual.origin
+	visual.origin,visual.yaw,visual.reducedEffects=sample.position,sample.yaw,reduced==true
+	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
+	if state.generation~=sample.generation or reduced or dt<=0 or traveled>8 then
+		Follow.rest(visual)
+	else
+		local speed=traveled/math.max(.001,dt)
+		visual.gaitWeight=math.clamp((speed-.025)/3.5,0,1)
+		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3.5)*math.pi*2)%(math.pi*2)
+		visual.movementBob=(1-math.cos(visual.gaitPhase))*.025*visual.gaitWeight
+	end
+	state.generation=sample.generation
+	visual.gardenFocus=sample.action=="focus"
+	if visual.applyGardenPose then visual:applyGardenPose(sample)
+	else
+		visual.gardenAction,visual.actionPhase,visual.expression=sample.action,sample.actionPhase,sample.expression
+		if sample.action=="greet"and state.actionId~=sample.actionId and not reduced then visual:greet()end
+	end
+	state.actionId=sample.actionId
 	return state
 end
 

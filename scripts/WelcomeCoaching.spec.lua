@@ -4,6 +4,7 @@ return function(client,parent)
 	assert(parent:IsA("ScreenGui"),"welcome fixture requires a real ScreenGui host")
 	local Art,Layout,Guide=require(client.DeckArt),require(client.DeckLayout),require(client.FirstHatchGuide)
 	local TextService,GuiService=game:GetService("TextService"),game:GetService("GuiService")
+	local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
 	local root=Instance.new("Frame");root.Name="_WelcomeCoaching";root.BackgroundTransparency=1;root.Parent=parent
 	local cases={}
 	local function settle()for _=1,2 do game:GetService("RunService").Heartbeat:Wait()end end
@@ -35,7 +36,7 @@ return function(client,parent)
 		elseif phase==2 then
 			local first,last=value:find(mark,1,true);assert(first,value);assert(value:find(mark,last+1,true),"both exact marks required: "..value)
 			assert(not value:find("Space",1,true) and not value:find("Aim",1,true),"wrong phase fallback: "..value)
-		else assert(value:lower():find("pip",1,true) and (value:find("Merge",1,true) or value:find("HATCH",1,true)),value)end
+		else assert(value:lower():find(Pets.byId.pip.name:lower(),1,true) and (value:find("Merge",1,true) or value:find("HATCH",1,true)),value)end
 	end
 	local function show(guide,label,compact,phase,input,mark)
 		label.Text=guide:step(if phase==1 then 0 else 1,if phase==3 then 1 else 0,if phase==3 then 1 else 0,0,input,mark,true,compact)

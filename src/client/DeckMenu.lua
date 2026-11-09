@@ -10,7 +10,10 @@ local SaveNotice=require(script.Parent.SaveNotice)
 local QuestCopy=require(script.Parent.FieldQuestText)
 local Menu = {}
 Menu.__index = Menu
-local names = { pip = "Pip", puddle = "Puddle", wick = "Wick", orbit = "Orbit" }
+local function familyName(id)
+	local pet=Pets.byId[id or "pip"]
+	return if pet then pet.name else id
+end
 local function text(parent,name,content,role,color)
 	local node=Art.text(parent,name,content,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or "text",16)
 	Art.type(node,role or "Body")
@@ -135,7 +138,7 @@ function Menu.new(parent,callbacks)
 		b.BackgroundTransparency=1;b.TextTransparency=1
 		local border=b:FindFirstChildOfClass("UIStroke");if border then border.Transparency=.65 end
 		FamilyCrest.create(b,family,0,UDim2.fromOffset(10,8),UDim2.fromOffset(30,30),b.ZIndex+2,true)
-		local caption=text(b,"FamilyName",names[family],"Action")
+		local caption=text(b,"FamilyName",familyName(family),"Action")
 		self.families[family],self.familyCards[family]=b,panel
 		self.familyText[family]=text(panel,"Progress_"..family,"Not discovered","Supporting")
 		self.familyHints[family]=text(panel,"Reward_"..family,"Hatch a member of this family to begin mastery.","Body","muted")
@@ -390,12 +393,12 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 		b:FindFirstChildOfClass("UIStroke").Transparency=if owned then .22 else 1
 		Art.bind(self.familyCards[family],{BackgroundColor3=function()return if selected==family then Art.paletteColor("selected") else Art.paletteColor("raised") end})
 		FamilyCrest.update(b.FamilyCrest, family, rank, not owned)
-		b.FamilyName.Text = names[family] .. (if selected == family then " · Next round ✓" elseif not owned then " · Locked" else " · Choose")
+		b.FamilyName.Text = familyName(family) .. (if selected == family then " · Next round ✓" elseif not owned then " · Locked" else " · Choose")
 		self.familyText[family].Text = if not owned then "Discover a family member in eggs"
 			elseif rank >= 3 then string.format("Rank III · mastered · %d total marks", points)
 			else string.format("Rank %s · %d/%d marks", ({ [0] = "—", "I", "II", "III" })[rank] or "III", points, if rank == 0 then 3 elseif rank == 1 then 10 else 25)
 	end
-	self.familyNote.Text = "Next round: " .. (names[selected] or "Pip") .. (if runFamily and runFamily ~= selected then " · Current run: " .. (names[runFamily] or "Pip") else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
+	self.familyNote.Text = "Next round: " .. familyName(selected) .. (if runFamily and runFamily ~= selected then " · Current run: " .. familyName(runFamily) else "") .. "\nWins +1 mark · low-pile wins +2 · duplicates +1"
 	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
 	if not self.shade.Visible then self.heading.Text=self.headerTitle end
 	local objective=if self.fieldObjective==nil then QuestCopy.legacy(0)elseif self.fieldObjective==false then nil else self.fieldObjective

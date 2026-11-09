@@ -843,6 +843,9 @@ nurseryView.ownsPresentation = function()
 	return not roomView.busy and not roomView.transition.shade.Visible and not modal.Visible
 		and not isPickerOpen() and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 end
+roomView.onPresentationOwnerChanged = function()
+	nurseryView.cinematic:refreshOwner()
+end
 openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
 	picker:close()
@@ -1250,7 +1253,7 @@ updateHud = function()
 	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	for _,cell in ipairs(segments)do cell.Visible=false end
 	meterText.Visible=owned==0
-	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("Pip %d/%d", charge, nextPet and nextPet.charge or 6)
+	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
 	eggGoalText.Text = string.format("MEADOW EGG\n%d/18 nectar", nurseryState and nurseryState.nectar or 0)
 	rareGoal.Visible = false

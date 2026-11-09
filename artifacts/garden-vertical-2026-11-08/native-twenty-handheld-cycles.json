@@ -1,0 +1,204 @@
+{
+  "before": {
+    "pets": 1,
+    "revision": 3,
+    "wallet": 6,
+    "camera": "Custom",
+    "mode": "Room",
+    "guiNodes": 4628,
+    "workspaceNodes": 3307
+  },
+  "after": {
+    "pets": 1,
+    "revision": 3,
+    "wallet": 6,
+    "camera": "Custom",
+    "mode": "Room",
+    "guiNodes": 4628,
+    "workspaceNodes": 3307
+  },
+  "rows": [
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    },
+    {
+      "pets": 1,
+      "revision": 3,
+      "wallet": 6,
+      "camera": "Custom",
+      "mode": "Room",
+      "guiNodes": 4628,
+      "workspaceNodes": 3307
+    }
+  ],
+  "cycles": 20,
+  "evidence": "Actual OpenHandheld and Lounge pointer controls, one warmup trip, twenty measured round trips. Instance counts only, not a proof of Lua heap or physical-device performance."
+}

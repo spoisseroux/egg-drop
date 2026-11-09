@@ -1,0 +1,854 @@
+{
+  "start": {
+    "masteryRanks": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "masteryLegacyMask": 0,
+    "dailyDay": "20765",
+    "petDay": "20765",
+    "dailyBonus": 6,
+    "status": "Ready",
+    "masteryChallenges": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "nectar": 6,
+    "revision": 3,
+    "petCount": 0,
+    "misses": 0,
+    "masteryDetails": {
+      "wick": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "pip": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "puddle": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "orbit": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      }
+    },
+    "inventoryMask": 1,
+    "mastery": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "contracts": [
+      {
+        "hint": "Complete both goals in 24 drops without overflow",
+        "claimed": false,
+        "target": 2,
+        "progress": 0,
+        "title": "Win 2 rounds",
+        "id": "runs",
+        "reward": 4
+      },
+      {
+        "hint": "Build a chain of 3 in a full round",
+        "claimed": false,
+        "target": 3,
+        "progress": 0,
+        "title": "Chain 3 merges",
+        "id": "chain",
+        "reward": 3
+      },
+      {
+        "hint": "Earn 500 points in a full round",
+        "claimed": false,
+        "target": 500,
+        "progress": 0,
+        "title": "Score 500",
+        "id": "score",
+        "reward": 3
+      }
+    ],
+    "totalWins": 0,
+    "dailyAvailable": false
+  },
+  "samples": [
+    {
+      "revision": 96,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 115,
+      "toyTilt": 0
+    },
+    {
+      "revision": 96,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 115,
+      "toyTilt": 0
+    },
+    {
+      "revision": 96,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 115,
+      "toyTilt": 0
+    },
+    {
+      "revision": 96,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 115,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-5.349427223205566, 4.4828290939331055, -2.837224245071411",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-10.783060073852539, 4.455165863037109, -0.30604416131973267",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 97,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 116,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-13.547151565551758, 4.455166339874268, 0.9832128286361694",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-12.96905517578125, 4.475955009460449, 0.7337334156036377",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-11.839176177978516, 4.465807914733887, 0.24613021314144135",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-10.223321914672852, 4.504950523376465, -0.4511973261833191",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-8.358264923095703, 4.4814019203186035, -1.2560689449310303",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-6.269536018371582, 4.457067012786865, -2.1574671268463135",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-4.149945259094238, 4.462850093841553, -3.072183609008789",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-2.190095901489258, 4.497646808624268, -3.9179635047912598",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-2.9380812644958496, 4.49894380569458, -5.446208953857422",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-3.761138916015625, 4.462038516998291, -6.715088844299316",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-4.261828899383545, 4.46454381942749, -7.48698616027832",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 98,
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "investigate",
+      "actionId": 118,
+      "toyTilt": 0
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": 0.13882292881038705
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": -0.16321114677502915
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": -0.10879844462822086
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": 0.31116454346902656
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": -0.17355026465954887
+    },
+    {
+      "revision": 99,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 119,
+      "toyTilt": 0
+    },
+    {
+      "revision": 100,
+      "action": "settle",
+      "origin": "-4.474761009216309, 4.493782997131348, -7.1143717765808105",
+      "behavior": "rest",
+      "actionId": 120,
+      "toyTilt": 0
+    },
+    {
+      "revision": 100,
+      "action": "settle",
+      "origin": "-4.713881492614746, 4.479515075683594, -5.241263389587402",
+      "behavior": "rest",
+      "actionId": 120,
+      "toyTilt": 0
+    },
+    {
+      "revision": 100,
+      "action": "settle",
+      "origin": "-4.949242115020752, 4.456511497497559, -3.397602081298828",
+      "behavior": "rest",
+      "actionId": 120,
+      "toyTilt": 0
+    },
+    {
+      "revision": 100,
+      "action": "settle",
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 120,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 101,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 121,
+      "toyTilt": 0
+    },
+    {
+      "revision": 102,
+      "origin": "-9.141855239868164, 4.503833770751953, -1.0705757141113281",
+      "behavior": "follow",
+      "actionId": 122,
+      "toyTilt": 0
+    },
+    {
+      "revision": 102,
+      "origin": "-13.595111846923828, 4.456221103668213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 122,
+      "toyTilt": 0
+    },
+    {
+      "revision": 102,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 122,
+      "toyTilt": 0
+    },
+    {
+      "revision": 102,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 122,
+      "toyTilt": 0
+    },
+    {
+      "revision": 102,
+      "origin": "-13.595111846923828, 4.455000400543213, 1.0039100646972656",
+      "behavior": "follow",
+      "actionId": 122,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-13.592966079711914, 4.455000400543213, 1.0029839277267456",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-13.176450729370117, 4.476293087005615, 0.8232355713844299",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-12.134810447692871, 4.493312358856201, 0.3737120032310486",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-10.664924621582031, 4.456460475921631, -0.26062196493148804",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-8.803439140319824, 4.463563919067383, -1.0639526844024658",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-6.809144496917725, 4.4990081787109375, -1.9245972633361816",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-4.748296737670898, 4.496315956115723, -2.813962936401367",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-2.6900434494018555, 4.467867374420166, -3.70220947265625",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-2.6895482540130615, 4.455255031585693, -5.063053607940674",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-3.5784759521484375, 4.492953300476074, -6.433483600616455",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-4.162802696228027, 4.476256847381592, -7.334320545196533",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 103,
+      "origin": "-4.399458408355713, 4.455002307891846, -7.699164390563965",
+      "behavior": "investigate",
+      "actionId": 124,
+      "toyTilt": 0
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": 0.061975287227474064
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": -0.00574092575469457
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": -0.29956267176768525
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": 0.3709931733654198
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": -0.12340211797560273
+    },
+    {
+      "revision": 104,
+      "action": "shove",
+      "origin": "-4.400000095367432, 4.455000400543213, -7.699999809265137",
+      "behavior": "play",
+      "actionId": 125,
+      "toyTilt": -0.008130906117969239
+    },
+    {
+      "revision": 105,
+      "action": "settle",
+      "origin": "-4.431668758392334, 4.467267990112305, -7.45192813873291",
+      "behavior": "rest",
+      "actionId": 126,
+      "toyTilt": 0
+    },
+    {
+      "revision": 105,
+      "action": "settle",
+      "origin": "-4.650709629058838, 4.4678730964660645, -5.736108779907227",
+      "behavior": "rest",
+      "actionId": 126,
+      "toyTilt": 0
+    },
+    {
+      "revision": 105,
+      "action": "settle",
+      "origin": "-4.89963436126709, 4.499630451202393, -3.7861971855163574",
+      "behavior": "rest",
+      "actionId": 126,
+      "toyTilt": 0
+    },
+    {
+      "revision": 105,
+      "action": "settle",
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 126,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    },
+    {
+      "revision": 106,
+      "origin": "-5, 4.455000400543213, -3",
+      "behavior": "rest",
+      "actionId": 127,
+      "toyTilt": 0
+    }
+  ],
+  "finish": {
+    "masteryRanks": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "masteryLegacyMask": 0,
+    "dailyDay": "20765",
+    "petDay": "20765",
+    "dailyBonus": 6,
+    "status": "Ready",
+    "masteryChallenges": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "nectar": 6,
+    "revision": 3,
+    "petCount": 0,
+    "misses": 0,
+    "masteryDetails": {
+      "wick": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "pip": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "puddle": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      },
+      "orbit": {
+        "challengeGoal": 3,
+        "challenges": 0,
+        "nextRank": 1,
+        "rank": 0,
+        "nextPoints": 3,
+        "missingChallenges": [
+          "Clean win",
+          "Win with a chain of 3",
+          "Win with 500 points"
+        ],
+        "name": "Unranked",
+        "hint": "Win rounds or hatch duplicates",
+        "marksRemaining": 3,
+        "points": 0,
+        "rewardHint": "Next: family badge",
+        "nextGoal": "3 marks to rank I"
+      }
+    },
+    "inventoryMask": 1,
+    "mastery": {
+      "wick": 0,
+      "pip": 0,
+      "puddle": 0,
+      "orbit": 0
+    },
+    "contracts": [
+      {
+        "hint": "Complete both goals in 24 drops without overflow",
+        "claimed": false,
+        "target": 2,
+        "progress": 0,
+        "title": "Win 2 rounds",
+        "id": "runs",
+        "reward": 4
+      },
+      {
+        "hint": "Build a chain of 3 in a full round",
+        "claimed": false,
+        "target": 3,
+        "progress": 0,
+        "title": "Chain 3 merges",
+        "id": "chain",
+        "reward": 3
+      },
+      {
+        "hint": "Earn 500 points in a full round",
+        "claimed": false,
+        "target": 500,
+        "progress": 0,
+        "title": "Score 500",
+        "id": "score",
+        "reward": 3
+      }
+    ],
+    "totalWins": 0,
+    "dailyAvailable": false
+  }
+}

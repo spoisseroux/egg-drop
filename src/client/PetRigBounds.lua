@@ -21,4 +21,8 @@ function Bounds.get(visual)
  if visual.rigBoundsFrame and visual.rigBoundsSize then return visual.rigBoundsFrame,visual.rigBoundsSize end
  return visual.model:GetBoundingBox()
 end
+function Bounds.getBody(visual)
+ if visual.bodyBoundsFrame and visual.bodyBoundsSize then return visual.bodyBoundsFrame,visual.bodyBoundsSize end
+ return Bounds.get(visual)
+end
 return Bounds

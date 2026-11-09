@@ -1,0 +1,151 @@
+{
+  "trace": [
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186160.459954,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186160.9608,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186161.460549,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186161.961058,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186162.461376,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186162.960091,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186163.460756,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186163.961139,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186164.460565,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186164.960291,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186165.460707,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    },
+    {
+      "packet": {
+        "petGeneration": 1,
+        "petId": "pip",
+        "characterId": 1,
+        "seq": 1,
+        "kind": "focusPulse"
+      },
+      "time": 1794186165.959836,
+      "root": "-10.995112419128418, 6.991202354431152, 4.003910064697266"
+    }
+  ],
+  "probe": {
+    "retried": true,
+    "character": 1,
+    "petGeneration": 1,
+    "position": "-11, 4.025000095367432, 11.704286575317383",
+    "focusPet": "pip",
+    "yaw": -3.141592653589793,
+    "seq": 1,
+    "age": 98.4124877275899
+  },
+  "root": "-11,6.998,4",
+  "observedPetOrigin": "-11,4.025,11.704",
+  "horizontalDistance": 7.704,
+  "expectedMaximum": 7,
+  "evidence": "Actual native Meet and pet click. Local focus staged beyond authoritative range; server stayed Room with requestGeneration0. No synthetic acquisition."
+}

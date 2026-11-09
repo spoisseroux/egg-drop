@@ -6,7 +6,6 @@ local Portrait=require(script.Parent.PetPortrait)
 local Crest=require(script.Parent.FamilyCrest)
 local SaveNotice=require(script.Parent.SaveNotice)
 local Journal={};Journal.__index=Journal
-local familyNames={pip="Pip",puddle="Puddle",wick="Wick",orbit="Orbit"}
 local rankNames={[0]="Unranked","I","II","III"}
 local function visibleSelection(node)
 	if not node or not node.Parent or not node:IsA("GuiObject") or not node.Selectable then return nil end
@@ -185,7 +184,7 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		local trackable=inventoryMask==nil and pet.trial~=nil and not unlocked
 		local family=pet.family or pet.id;local rank=math.clamp(math.floor(tonumber(masteryRanks and masteryRanks[family])or 0),0,3)
 		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
-		entry.FamilyRank.Text=(familyNames[family]or family).." · "..rankNames[rank];entry.FamilyRank.Visible=unlocked
+		entry.FamilyRank.Text=(if Pets.byId[family]then Pets.byId[family].name else family).." · "..rankNames[rank];entry.FamilyRank.Visible=unlocked
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
 		Art.bind(entry.Status,{TextColor3=function()return if equipped then Art.Leaf else Art.paletteColor("muted") end})
 		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Art.Amber elseif unlocked then Art.paletteColor("text") else Art.paletteColor("muted") end})

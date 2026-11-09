@@ -1,0 +1,85 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "GardenPetVisual",
+    "result": [
+      "pip authored imported + native have proper size, forward face and bounded static allocation",
+      "pip six expressions remain distinct with charms off and reduced static motion",
+      "pip charm toggles framing without changing the body hit hull or authority",
+      "pip action generations do not replay greetings or take pose ownership",
+      "puddle authored imported + native have proper size, forward face and bounded static allocation",
+      "puddle six expressions remain distinct with charms off and reduced static motion",
+      "puddle charm toggles framing without changing the body hit hull or authority",
+      "puddle action generations do not replay greetings or take pose ownership",
+      "only common aliases switch rigs; seven identity bits, ordering and rarity remain intact",
+      "a named but empty imported resource rejects the entire backend for a faithful native fallback",
+      "twenty complete create/update/destroy cycles release every model"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "GardenActivity",
+    "result": {
+      "passed": 4,
+      "cases": [
+        "two viewer rates sample identical server-time positions",
+        "movement advances every rendered frame",
+        "reduced gait preserves shared gameplay position",
+        "late and malformed snapshots are bounded"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "GardenClient",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "joining replica receives current action and rejects stale or malformed replacement",
+        "a partial or superseded peer greeting is never presented as an agreed pair",
+        "character replacement fences a previously valid actor",
+        "an old same-alias snapshot is ignored after confirmed equip generation advances",
+        "one deliberate focus holds with bounded pulses and retirement ends that generation",
+        "quick end and reopen defers acquisition until the server focus cooldown passes",
+        "an unacknowledged current focus retries once and retiring it cancels all retry work",
+        "per-pet authoritative OFF is retained and unsupported peers default to visible"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetCharmFocus",
+    "result": [
+      "confirmed on/off/pending state and44px accessible control",
+      "toggling cancels active contact and relinquishes gamepad A to selected control",
+      "unsupported, hidden owner and inactive controls cannot send"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchOwnerTransition",
+    "result": {
+      "passed": 1,
+      "cases": [
+        "mode runner publishes busy owner edges and wakes deferred first hatch once"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompanionEligibility",
+    "result": [
+      "nearest six live peers remain the presentation cap",
+      "a nearby Board owner retains its companion within the same nearest-six budget",
+      "dead nearer humanoid yields to next live peer",
+      "nearby replacement root resets gait and bob generation",
+      "repeated owner cycles destroy every old remote rig"
+    ]
+  }
+]

@@ -1,0 +1,369 @@
+{
+  "before": {
+    "attrs": {
+      "PetFamily": "pip",
+      "GreetingGroundQueries": 1,
+      "GreetingVisualBlockers": 79,
+      "GreetingPlanMs": 2.259999979287386,
+      "RigBackend": "AuthoredMesh",
+      "CompanionOwnerId": 10716920546,
+      "RigId": "zivvi",
+      "LegacyMasteryFinish": false,
+      "GreetingSweepCached": true,
+      "GreetingOwnerDistance": 6.1350531578063965,
+      "GreetingLimitingPart": "FootL",
+      "GreetingStageBearing": 3,
+      "GreetingCandidates": 1,
+      "GreetingLimitingEdge": "bottom",
+      "MasteryRank": 0,
+      "GreetingFitLimited": false,
+      "GreetingBodyFraction": 0.5800001065339152,
+      "LocalCompanion": true,
+      "GreetingAccepted": true,
+      "CharmVisible": true,
+      "GreetingSweepPoints": 128,
+      "GreetingSweepSamples": 17
+    },
+    "camera": "Scriptable",
+    "viewport": {
+      "1": 749,
+      "2": 381
+    },
+    "stage": {
+      "charmVisible": true,
+      "petGeneration": 1,
+      "to": {
+        "1": -5.9088311195373535,
+        "2": 4.025000095367432,
+        "3": 2.302943706512451
+      },
+      "generation": 14,
+      "endTime": 1794188978.366355,
+      "characterId": 1,
+      "actionId": 18,
+      "mode": "Focus",
+      "ownerId": 10716920546,
+      "startTime": 1794188978.316355,
+      "from": {
+        "1": -5.9088311195373535,
+        "2": 4.025000095367432,
+        "3": 2.302943706512451
+      },
+      "requestGeneration": 2,
+      "yaw": -0.7853981633974483,
+      "petId": "pip",
+      "action": "focus",
+      "behavior": "rest"
+    },
+    "before": {
+      "masteryRanks": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryLegacyMask": 0,
+      "dailyDay": "20765",
+      "petDay": "20765",
+      "dailyBonus": 6,
+      "status": "Ready",
+      "masteryChallenges": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "nectar": 6,
+      "revision": 3,
+      "petCount": 0,
+      "misses": 0,
+      "masteryDetails": {
+        "wick": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "pip": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "puddle": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "orbit": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        }
+      },
+      "inventoryMask": 1,
+      "mastery": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "contracts": {
+        "1": {
+          "hint": "Complete both goals in 24 drops without overflow",
+          "claimed": false,
+          "target": 2,
+          "id": "runs",
+          "progress": 0,
+          "title": "Win 2 rounds",
+          "reward": 4
+        },
+        "2": {
+          "hint": "Build a chain of 3 in a full round",
+          "claimed": false,
+          "target": 3,
+          "id": "chain",
+          "progress": 0,
+          "title": "Chain 3 merges",
+          "reward": 3
+        },
+        "3": {
+          "hint": "Earn 500 points in a full round",
+          "claimed": false,
+          "target": 500,
+          "id": "score",
+          "progress": 0,
+          "title": "Score 500",
+          "reward": 3
+        }
+      },
+      "totalWins": 0,
+      "dailyAvailable": false
+    }
+  },
+  "after": {
+    "attrs": {
+      "PetFamily": "pip",
+      "GreetingGroundQueries": 1,
+      "GreetingVisualBlockers": 79,
+      "GreetingPlanMs": 2.259999979287386,
+      "RigBackend": "AuthoredMesh",
+      "CompanionOwnerId": 10716920546,
+      "RigId": "zivvi",
+      "LegacyMasteryFinish": false,
+      "GreetingSweepCached": true,
+      "GreetingOwnerDistance": 6.1350531578063965,
+      "GreetingLimitingPart": "FootL",
+      "GreetingStageBearing": 3,
+      "GreetingCandidates": 1,
+      "GreetingLimitingEdge": "bottom",
+      "MasteryRank": 0,
+      "GreetingFitLimited": false,
+      "GreetingBodyFraction": 0.5800001065339152,
+      "LocalCompanion": true,
+      "GreetingAccepted": true,
+      "CharmVisible": true,
+      "GreetingSweepPoints": 128,
+      "GreetingSweepSamples": 17
+    },
+    "camera": "Scriptable",
+    "eyes": {
+      "EyeL": {
+        "1": 0.1679999977350235,
+        "2": 0.22654804587364197,
+        "3": 0.11012250185012817
+      },
+      "EyeR": {
+        "1": 0.1679999977350235,
+        "2": 0.22654804587364197,
+        "3": 0.11012250185012817
+      }
+    },
+    "evidence": "Actual held E13.5seconds in phone emulator then release; saved rewards retain natural RNG",
+    "state": {
+      "masteryRanks": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "masteryLegacyMask": 0,
+      "dailyDay": "20765",
+      "petDay": "20765",
+      "dailyBonus": 6,
+      "status": "Ready",
+      "masteryChallenges": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "nectar": 6,
+      "revision": 3,
+      "petCount": 0,
+      "misses": 0,
+      "masteryDetails": {
+        "wick": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "pip": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "puddle": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        },
+        "orbit": {
+          "challengeGoal": 3,
+          "challenges": 0,
+          "nextRank": 1,
+          "rank": 0,
+          "rewardHint": "Next: family badge",
+          "nextPoints": 3,
+          "name": "Unranked",
+          "missingChallenges": {
+            "1": "Clean win",
+            "2": "Win with a chain of 3",
+            "3": "Win with 500 points"
+          },
+          "marksRemaining": 3,
+          "points": 0,
+          "hint": "Win rounds or hatch duplicates",
+          "nextGoal": "3 marks to rank I"
+        }
+      },
+      "inventoryMask": 1,
+      "mastery": {
+        "wick": 0,
+        "pip": 0,
+        "puddle": 0,
+        "orbit": 0
+      },
+      "contracts": {
+        "1": {
+          "hint": "Complete both goals in 24 drops without overflow",
+          "claimed": false,
+          "target": 2,
+          "id": "runs",
+          "progress": 0,
+          "title": "Win 2 rounds",
+          "reward": 4
+        },
+        "2": {
+          "hint": "Build a chain of 3 in a full round",
+          "claimed": false,
+          "target": 3,
+          "id": "chain",
+          "progress": 0,
+          "title": "Chain 3 merges",
+          "reward": 3
+        },
+        "3": {
+          "hint": "Earn 500 points in a full round",
+          "claimed": false,
+          "target": 500,
+          "id": "score",
+          "progress": 0,
+          "title": "Score 500",
+          "reward": 3
+        }
+      },
+      "totalWins": 0,
+      "dailyAvailable": false
+    }
+  }
+}

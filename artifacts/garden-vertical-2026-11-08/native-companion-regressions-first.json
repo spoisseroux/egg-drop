@@ -1,0 +1,525 @@
+[
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetGreetingShot",
+    "result": {
+      "projectionChecks": 3831,
+      "models": 7,
+      "passed": 60,
+      "cases": [
+        "representative rest silhouette occupies55to65percent of post-inset safe height",
+        "actual Pip and Wick close focus fills safe height on desktop and portrait",
+        "piece capture excludes ripple and glints and near-plane projection fails closed",
+        "pip ordinary complete greeting fits landscape",
+        "pip ordinary complete greeting fits portrait",
+        "pip ordinary complete greeting fits wide",
+        "pip focused complete greeting fits landscape",
+        "pip focused complete greeting fits portrait",
+        "pip focused complete greeting fits wide",
+        "puddle ordinary complete greeting fits landscape",
+        "puddle ordinary complete greeting fits portrait",
+        "puddle ordinary complete greeting fits wide",
+        "puddle focused complete greeting fits landscape",
+        "puddle focused complete greeting fits portrait",
+        "puddle focused complete greeting fits wide",
+        "wick ordinary complete greeting fits landscape",
+        "wick ordinary complete greeting fits portrait",
+        "wick ordinary complete greeting fits wide",
+        "wick focused complete greeting fits landscape",
+        "wick focused complete greeting fits portrait",
+        "wick focused complete greeting fits wide",
+        "orbit ordinary complete greeting fits landscape",
+        "orbit ordinary complete greeting fits portrait",
+        "orbit ordinary complete greeting fits wide",
+        "orbit focused complete greeting fits landscape",
+        "orbit focused complete greeting fits portrait",
+        "orbit focused complete greeting fits wide",
+        "bloom_pip ordinary complete greeting fits landscape",
+        "bloom_pip ordinary complete greeting fits portrait",
+        "bloom_pip ordinary complete greeting fits wide",
+        "bloom_pip focused complete greeting fits landscape",
+        "bloom_pip focused complete greeting fits portrait",
+        "bloom_pip focused complete greeting fits wide",
+        "foxfire_wick ordinary complete greeting fits landscape",
+        "foxfire_wick ordinary complete greeting fits portrait",
+        "foxfire_wick ordinary complete greeting fits wide",
+        "foxfire_wick focused complete greeting fits landscape",
+        "foxfire_wick focused complete greeting fits portrait",
+        "foxfire_wick focused complete greeting fits wide",
+        "eclipse_orbit ordinary complete greeting fits landscape",
+        "eclipse_orbit ordinary complete greeting fits portrait",
+        "eclipse_orbit ordinary complete greeting fits wide",
+        "eclipse_orbit focused complete greeting fits landscape",
+        "eclipse_orbit focused complete greeting fits portrait",
+        "eclipse_orbit focused complete greeting fits wide",
+        "rest subject capture restores in-flight greeting fields and every visible pose",
+        "edges and corners keep the complete greeting footprint on supported floor",
+        "missing floor or invalid viewport fails before world queries",
+        "no ground falls back after bounded world queries",
+        "high ground falls back after bounded world queries",
+        "blocked falls back after bounded world queries",
+        "a rotated non-query sign occludes a finite camera segment",
+        "parallel misses and padded grazes are distinguished",
+        "blockers behind the camera or beyond the target do not occlude",
+        "lower-body and side occluders can block while the center ray remains clear",
+        "a blocked first candidate falls back to a clear shot within the query budget",
+        "every visually blocked candidate yields a bounded roam fallback",
+        "restore keeps the original shot and focus translated by player motion",
+        "replacement camera or root cannot receive an old greeting restoration",
+        "a root reparented into another character or detached invalidates the snapshot"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "HatchCinematic",
+    "result": {
+      "fixtureOnly": true,
+      "geometry": [
+        {
+          "sweptPoints": 5488,
+          "pet": "pip",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5214640274425572,
+          "stageHeight": 360,
+          "preparationMs": 4.295299993827939,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 5880,
+          "pet": "puddle",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.49920678966002635,
+          "stageHeight": 360,
+          "preparationMs": 5.031700013205409,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5568284994405702,
+          "stageHeight": 360,
+          "preparationMs": 2.7469999622553587,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.46278080722263126,
+          "stageHeight": 360,
+          "preparationMs": 6.042799912393093,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5431471104203737,
+          "stageHeight": 360,
+          "preparationMs": 12.487699976190925,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.5504667576279939,
+          "stageHeight": 360,
+          "preparationMs": 2.7278000488877296,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "full greeting",
+          "bandHeight": 260,
+          "fraction": 0.46278080722263126,
+          "stageHeight": 360,
+          "preparationMs": 5.370700033381581,
+          "limited": true,
+          "preference": "Medium",
+          "size": "600, 360"
+        },
+        {
+          "sweptPoints": 5488,
+          "pet": "pip",
+          "reason": "full greeting",
+          "bandHeight": 330,
+          "fraction": 0.5673070188660787,
+          "stageHeight": 420,
+          "preparationMs": 4.574599908664823,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 5880,
+          "pet": "puddle",
+          "reason": "full greeting",
+          "bandHeight": 330,
+          "fraction": 0.5430931008389297,
+          "stageHeight": 420,
+          "preparationMs": 5.15310000628233,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999940314162,
+          "stageHeight": 420,
+          "preparationMs": 2.15999991632998,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "swept width",
+          "bandHeight": 330,
+          "fraction": 0.4920470789957318,
+          "stageHeight": 420,
+          "preparationMs": 4.403699887916446,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999465077901,
+          "stageHeight": 420,
+          "preparationMs": 10.369099909439683,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "target",
+          "bandHeight": 330,
+          "fraction": 0.5899999825155837,
+          "stageHeight": 420,
+          "preparationMs": 2.7083000168204308,
+          "limited": false,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "swept width",
+          "bandHeight": 330,
+          "fraction": 0.4920470789957318,
+          "stageHeight": 420,
+          "preparationMs": 5.113799823448062,
+          "limited": true,
+          "preference": "Medium",
+          "size": "338, 420"
+        },
+        {
+          "sweptPoints": 5488,
+          "pet": "pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999629520563,
+          "stageHeight": 180,
+          "preparationMs": 3.721199929714203,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 5880,
+          "pet": "puddle",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999541538341,
+          "stageHeight": 180,
+          "preparationMs": 3.8268999196588993,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 3920,
+          "pet": "wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999843055449,
+          "stageHeight": 180,
+          "preparationMs": 1.9781999289989471,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9016,
+          "pet": "orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 4.307999974116683,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 13328,
+          "pet": "bloom_pip",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999845886932,
+          "stageHeight": 180,
+          "preparationMs": 9.575200034305453,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 4704,
+          "pet": "foxfire_wick",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5899999956499742,
+          "stageHeight": 180,
+          "preparationMs": 2.3538998793810606,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        },
+        {
+          "sweptPoints": 9408,
+          "pet": "eclipse_orbit",
+          "reason": "target",
+          "bandHeight": 164,
+          "fraction": 0.5838157875731655,
+          "stageHeight": 180,
+          "preparationMs": 4.826399963349104,
+          "limited": false,
+          "preference": "Medium",
+          "size": "500, 180"
+        }
+      ],
+      "passed": 7,
+      "cases": [
+        "all seven real subjects fit the rectangular viewport through every greeting frame",
+        "common and rare complete once and retain moving settled motes without replaying cues",
+        "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+        "covered first play defers marker while presented owner loss lands final and stops its clock",
+        "resize keeps exact hero and epoch and device discontinuity settles only once",
+        "candidate minimum height is independent of previous stage and painted text sizes",
+        "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetHeldContact",
+    "result": [
+      "short E tap greets once without opening a reward contact",
+      "same held E crosses threshold once and remains deliberate until release",
+      "controller X uses identical held admission and matching release",
+      "carried opener E and X drain without greeting or later idle admission",
+      "cancel blur and owner loss end once without a release tap",
+      "background rejects fresh keys and pointer while muted foreground stays eligible",
+      "blurred held gesture drains its release and refocus cannot auto restart",
+      "no key press or mere focused time can open contact"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetContactIntentClient",
+    "result": [
+      "begin has only generation and current pet; no amount or clock",
+      "grant admits string-only pulses at bounded three per second",
+      "no grant produces no pulses and no auto retries",
+      "late grant is immediately ended and cannot acquire a new gesture",
+      "owner loss ends once and never resumes without a fresh begin",
+      "only current saved receipt shows one glyph",
+      "wrong pet lease generation and malformed receipt never display",
+      "saved after contact timeout or close never replays on return",
+      "denied contact keeps visual eligibility but has no pulse/retry",
+      "historical hatch balance/receipt-shaped snapshots are ignored",
+      "different granted lease cannot overwrite current one",
+      "destroy ends once disconnects intent and rejects late delivery"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetAffection",
+    "result": [
+      "three passive pooled petals and depth-respecting saved glyph",
+      "qualified start shows pooled petals immediately with a cooldown and static reduced cheeks",
+      "continuous contact rotates bounded variations at three-to-five seconds without allocations",
+      "ending contact clears poses and stops hidden petal motion",
+      "exact saved glyph fixture floats and fades then ends",
+      "reduced contact has static cheeks and glyph without moving petals",
+      "all seven body bobs preserve planted feet or Puddle skirt and hatch scale stays default",
+      "pet swap teardown and late calls never retain a glyph or revive pool"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "RoamReturnCamera",
+    "result": {
+      "passed": 15,
+      "cases": [
+        "initial Board presentation does not capture a return roam shot",
+        "actual Room exit captures before the separate pre-Room restore",
+        "repeated Deck trips restore exact roam transform Focus and FOV once per trip",
+        "the same root translates the return transform and Focus together",
+        "active greeting restores underlying roam before capturing the Deck return",
+        "Scriptable camera without an accepted greeting and dead root are never captured",
+        "replaced root character or camera rejects old shot and seeds a clear angle",
+        "consumed or missing shots seed arrival even after previous roaming",
+        "ordinary free-roam updates never force the arrival angle or consume a pending shot",
+        "missing camera defers arrival without consuming the shot or marking first roam",
+        "staggered root availability retries once then ordinary roaming retains its angle",
+        "missing humanoid also defers placement until its live subject is available",
+        "Board cancellation clears a pending placement so late roots cannot move the camera",
+        "forced busy Board departure cannot capture an unplaced arrival when root appears during cover",
+        "teardown invalidates return shot before camera and UI cleanup"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "GreetingLifecycle",
+    "result": {
+      "passed": 4,
+      "cases": [
+        "blocked shot propagates false without spending interaction cooldown",
+        "accepted greeting starts one cooldown and rejects immediate repeat",
+        "menus and transitions cannot enter a second shot",
+        "focused greeting delegates reaction without camera recapture or cooldown reset"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "CompanionScale",
+    "result": {
+      "passed": 17,
+      "cases": [
+        "pip authored default1 and world.72 stay uniform through animated poses",
+        "pip travel gait rests snaps turns and respects reduced effects",
+        "puddle authored default1 and world.72 stay uniform through animated poses",
+        "puddle travel gait rests snaps turns and respects reduced effects",
+        "wick authored default1 and world.72 stay uniform through animated poses",
+        "wick travel gait rests snaps turns and respects reduced effects",
+        "orbit authored default1 and world.72 stay uniform through animated poses",
+        "orbit travel gait rests snaps turns and respects reduced effects",
+        "bloom_pip authored default1 and world.72 stay uniform through animated poses",
+        "bloom_pip travel gait rests snaps turns and respects reduced effects",
+        "foxfire_wick authored default1 and world.72 stay uniform through animated poses",
+        "foxfire_wick travel gait rests snaps turns and respects reduced effects",
+        "eclipse_orbit authored default1 and world.72 stay uniform through animated poses",
+        "eclipse_orbit travel gait rests snaps turns and respects reduced effects",
+        "ground sampling stays10Hz without per-foot queries",
+        "normal16stud movement is bounded to3.5cycles at15/30/60Hz",
+        "stride advances by rendered horizontal distance rather than wall clock"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "PetNightFace",
+    "result": [
+      "pip bounded night face blush and exact day restoration",
+      "puddle bounded night face blush and exact day restoration",
+      "wick bounded night face blush and exact day restoration",
+      "orbit bounded night face blush and exact day restoration",
+      "bloom_pip bounded night face blush and exact day restoration",
+      "foxfire_wick bounded night face blush and exact day restoration",
+      "eclipse_orbit bounded night face blush and exact day restoration",
+      "default-scale cinematic faces ignore the world night treatment"
+    ]
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "WelcomeCoaching",
+    "result": {
+      "preference": "Medium",
+      "passed": 6,
+      "cases": [
+        "1649, 971 all phases and keyboard controller touch controls fit",
+        "733, 307 all phases and keyboard controller touch controls fit",
+        "568, 160 all phases and keyboard controller touch controls fit",
+        "385, 703 all phases and keyboard controller touch controls fit",
+        "observed 179x104 desktop well measures true padding before optional headings",
+        "phase mark input resize and Ready restoration retain current semantic instruction"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "JournalPurpose",
+    "result": {
+      "passed": 4,
+      "cases": [
+        "a rare-only inventory inherits its family rank without unlocking the base pet",
+        "family goals routes once after closing and issues no equip or track action",
+        "legacy constructor preserves pinned close and optional rank arguments",
+        "compact and portrait journal shows complete rows and 44px footer controls"
+      ]
+    }
+  },
+  {
+    "ok": true,
+    "preference": "Medium",
+    "name": "Onboarding",
+    "result": {
+      "passed": 8,
+      "cases": [
+        "daily-only failed quest remains a failure with committed balance",
+        "right target and overflow explanations use terminal state",
+        "transient save error never displays old balance as a receipt",
+        "selected recipe uses saved balance without adding the payout twice",
+        "compact pending recap keeps readable status out of pinned footer",
+        "shallow welcome coaching preserves each input and semantic phase",
+        "first field coaching responds to stage, overlays, first win and compact height",
+        "starter reveal receives a copy with the correct egg goal"
+      ]
+    }
+  }
+]

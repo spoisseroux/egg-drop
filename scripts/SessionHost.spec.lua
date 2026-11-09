@@ -37,6 +37,7 @@ return function(server, hostSource, sessionSource)
 		local key="player_"..id;local hatchId=owner.state.lastHatch.id
 		db[key].companionId="foxfire_wick";db[key].theme="ice";db[key].sticker="star"
 		db[key].sound="Quiet";db[key].reduced=true
+		db[key].petAppearance={pip={charmVisible=false,at=12,writer="recovery-fixture"},puddle={charmVisible=true,at=12,writer="recovery-fixture"}}
 		if initialFailure=="Temporary"then assert(ActualHatch.release(owner))end
 		local trace={loads=0,dirty=0,releases=0,appearance=0,mode=0};local heart=signal()
 		local players={PlayerAdded=signal(),PlayerRemoving=signal()}
@@ -107,6 +108,8 @@ return function(server, hostSource, sessionSource)
 		assert(board:GetAttribute("SelectedFamily")=="wick"and board:GetAttribute("DeckThemeId")=="ice")
 		assert(board:GetAttribute("DeckStickerId")=="star"and board:GetAttribute("SoundLevel")=="Quiet")
 		assert(board:GetAttribute("ReducedEffects")==true and board:GetAttribute("SaveStatus")==nil)
+		local petAppearance=game.HttpService:JSONDecode(board:GetAttribute("PetAppearance"))
+		assert(petAppearance.pip.charmVisible==false and petAppearance.puddle.charmVisible==true,"retry hydration must republish confirmed per-pet Dot OFF")
 		assert(trace.appearance==1 and trace.mode==1 and trace.dirty==0)
 		requests[1].OnServerEvent:Fire(player,"mode","Board")
 		requests[1].OnServerEvent:Fire(player,"drop",.1)

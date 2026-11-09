@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"appearance\":\"{\\\"puddle\\\":{\\\"charmVisible\\\":true},\\\"pip\\\":{\\\"charmVisible\\\":true}}\",\"snapshot\":{\"charmVisible\":true,\"petGeneration\":1,\"to\":{\"1\":-12.69705581665039,\"3\":-1.091168999671936,\"2\":4.025000095367432},\"generation\":42,\"endTime\":1794187916.306913,\"characterId\":1,\"actionId\":94,\"mode\":\"Focus\",\"ownerId\":-1,\"startTime\":1794187916.256913,\"from\":{\"1\":-12.69705581665039,\"3\":-1.091168999671936,\"2\":4.025000095367432},\"requestGeneration\":2,\"yaw\":0.7853980791037498,\"petId\":\"pip\",\"action\":\"focus\",\"behavior\":\"rest\"},\"pet\":{\"attrs\":{\"PetFamily\":\"pip\",\"RigBackend\":\"AuthoredMesh\",\"CompanionOwnerId\":-1,\"RigId\":\"zivvi\",\"LegacyMasteryFinish\":false,\"CharmVisible\":true,\"MasteryRank\":0},\"body\":{\"1\":-12.69705581665039,\"3\":-1.0911691188812256,\"2\":4.455000400543213}},\"time\":1794187930.122859}"
+    }
+  ],
+  "isError": false
+}

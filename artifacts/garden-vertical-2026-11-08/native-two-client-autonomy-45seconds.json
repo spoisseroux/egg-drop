@@ -1,0 +1,6651 @@
+{
+  "before": {
+    "-1": {
+      "inventory": 1,
+      "revision": 3,
+      "nectar": 6
+    },
+    "-2": {
+      "inventory": 1,
+      "revision": 3,
+      "nectar": 6
+    }
+  },
+  "rows": {
+    "1": {
+      "time": 1794187824.261311,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187818.927911,
+            "characterId": 1,
+            "actionId": 34,
+            "generation": 16,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.663001537322998,
+              "2": 4.025000095367432,
+              "3": -4.856488227844238
+            },
+            "petId": "pip",
+            "startTime": 1794187818.427911,
+            "behavior": "follow"
+          }
+        },
+        "revision": 27,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "2": {
+      "time": 1794187824.777135,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 28,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "3": {
+      "time": 1794187825.278327,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 28,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "4": {
+      "time": 1794187825.793883,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 28,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "5": {
+      "time": 1794187826.31009,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 28,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "6": {
+      "time": 1794187826.827249,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187826.483929,
+            "characterId": 1,
+            "actionId": 38,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187823.927175,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 28,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "7": {
+      "time": 1794187827.344266,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 29,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "8": {
+      "time": 1794187827.860775,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 29,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "9": {
+      "time": 1794187828.377581,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 29,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "10": {
+      "time": 1794187828.878408,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 17,
+            "endTime": 1794187828.526627,
+            "characterId": 1,
+            "actionId": 40,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187824.427248,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 29,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "11": {
+      "time": 1794187829.393069,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "12": {
+      "time": 1794187829.893284,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "13": {
+      "time": 1794187830.393447,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "14": {
+      "time": 1794187830.894142,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "15": {
+      "time": 1794187831.394324,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "16": {
+      "time": 1794187831.894442,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 18,
+            "endTime": 1794187831.728292,
+            "characterId": 1,
+            "actionId": 42,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187828.928292,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 30,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 39,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187831.728281,
+          "startTime": 1794187828.928281,
+          "actionId": 42,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "17": {
+      "time": 1794187832.410407,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187831.928109,
+            "characterId": 1,
+            "actionId": 41,
+            "generation": 20,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187826.928109,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187833.619535,
+            "characterId": 1,
+            "actionId": 43,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187831.927341,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          }
+        },
+        "revision": 31,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "18": {
+      "time": 1794187832.927247,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187833.619535,
+            "characterId": 1,
+            "actionId": 43,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187831.927341,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          }
+        },
+        "revision": 32,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "19": {
+      "time": 1794187833.427478,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 19,
+            "endTime": 1794187833.619535,
+            "characterId": 1,
+            "actionId": 43,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187831.927341,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          }
+        },
+        "revision": 32,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "20": {
+      "time": 1794187833.944629,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 33,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "21": {
+      "time": 1794187834.45957,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 33,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "22": {
+      "time": 1794187834.960441,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 33,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "23": {
+      "time": 1794187835.477907,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187833.426703,
+            "characterId": 1,
+            "actionId": 44,
+            "generation": 21,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187832.426703,
+            "behavior": "follow"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 33,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "24": {
+      "time": 1794187835.994542,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "25": {
+      "time": 1794187836.494641,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "26": {
+      "time": 1794187837.009806,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "27": {
+      "time": 1794187837.510874,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "28": {
+      "time": 1794187838.026654,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "29": {
+      "time": 1794187838.527001,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "30": {
+      "time": 1794187839.027175,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187838.927145,
+            "characterId": 1,
+            "actionId": 45,
+            "generation": 20,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187833.927145,
+            "behavior": "rest"
+          }
+        },
+        "revision": 34,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "31": {
+      "time": 1794187839.544504,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 35,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "32": {
+      "time": 1794187840.059759,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 35,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "33": {
+      "time": 1794187840.576692,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 35,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "34": {
+      "time": 1794187841.092649,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 35,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "35": {
+      "time": 1794187841.593573,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187841.6069508,
+            "characterId": 1,
+            "actionId": 47,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -13.595111846923828,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187835.92729,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 35,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "36": {
+      "time": 1794187842.109846,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "37": {
+      "time": 1794187842.611046,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "38": {
+      "time": 1794187843.126022,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "39": {
+      "time": 1794187843.643832,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "40": {
+      "time": 1794187844.159877,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "41": {
+      "time": 1794187844.660351,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187844.726604,
+            "characterId": 1,
+            "actionId": 49,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187841.926604,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 36,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 46,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187844.726585,
+          "startTime": 1794187841.926585,
+          "actionId": 49,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "42": {
+      "time": 1794187845.175848,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187840.427291,
+            "characterId": 1,
+            "actionId": 48,
+            "generation": 21,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187839.427291,
+            "behavior": "follow"
+          }
+        },
+        "revision": 37,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "43": {
+      "time": 1794187845.676175,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 38,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "44": {
+      "time": 1794187846.193347,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 38,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "45": {
+      "time": 1794187846.710422,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 38,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "46": {
+      "time": 1794187847.22603,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 38,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "47": {
+      "time": 1794187847.726195,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 24,
+            "endTime": 1794187847.4834938,
+            "characterId": 1,
+            "actionId": 50,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187844.92674,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 38,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "48": {
+      "time": 1794187848.226361,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 39,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "49": {
+      "time": 1794187848.744103,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 39,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "50": {
+      "time": 1794187849.24435,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 39,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "51": {
+      "time": 1794187849.759256,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 22,
+            "endTime": 1794187849.525432,
+            "characterId": 1,
+            "actionId": 52,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": 2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187845.426053,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 39,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "52": {
+      "time": 1794187850.276176,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "53": {
+      "time": 1794187850.776655,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "54": {
+      "time": 1794187851.292987,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "55": {
+      "time": 1794187851.810642,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "56": {
+      "time": 1794187852.326207,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "57": {
+      "time": 1794187852.84358,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187852.926249,
+            "characterId": 1,
+            "actionId": 53,
+            "generation": 25,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187847.926249,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 23,
+            "endTime": 1794187852.726498,
+            "characterId": 1,
+            "actionId": 54,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187849.926498,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 40,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 51,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187852.7264879,
+          "startTime": 1794187849.926488,
+          "actionId": 54,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "58": {
+      "time": 1794187853.35926,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "59": {
+      "time": 1794187853.859629,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "60": {
+      "time": 1794187854.376496,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "61": {
+      "time": 1794187854.892222,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "62": {
+      "time": 1794187855.39253,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "63": {
+      "time": 1794187855.909746,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": 1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.5254428,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -1,
+            "mode": "Room",
+            "peerId": -2,
+            "generation": 26,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925443
+          },
+          "-2": {
+            "petGeneration": 1,
+            "action": "greet",
+            "behavior": "investigate",
+            "yaw": -1.5707963267948966,
+            "petId": "pip",
+            "to": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "endTime": 1794187855.525445,
+            "characterId": 1,
+            "actionId": 56,
+            "ownerId": -2,
+            "mode": "Room",
+            "peerId": -1,
+            "generation": 25,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "charmVisible": true,
+            "requestGeneration": 1,
+            "startTime": 1794187852.925445
+          }
+        },
+        "revision": 41,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "64": {
+      "time": 1794187856.425499,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187858.6771443,
+            "characterId": 1,
+            "actionId": 60,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925472,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 42,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "65": {
+      "time": 1794187856.926098,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187858.6771443,
+            "characterId": 1,
+            "actionId": 60,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925472,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 42,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "66": {
+      "time": 1794187857.426502,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187858.6771443,
+            "characterId": 1,
+            "actionId": 60,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925472,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 42,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "67": {
+      "time": 1794187857.926586,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187858.6771443,
+            "characterId": 1,
+            "actionId": 60,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925472,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 42,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "68": {
+      "time": 1794187858.443593,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.4000000059604645,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187858.6771443,
+            "characterId": 1,
+            "actionId": 60,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": 1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5.599999904632568,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925472,
+            "behavior": "investigate"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 42,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "69": {
+      "time": 1794187858.959034,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "70": {
+      "time": 1794187859.4594,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "71": {
+      "time": 1794187859.959865,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "72": {
+      "time": 1794187860.476029,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "73": {
+      "time": 1794187860.99185,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "74": {
+      "time": 1794187861.492132,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 29,
+            "endTime": 1794187861.725466,
+            "characterId": 1,
+            "actionId": 61,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187858.925466,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 43,
+        "version": 1,
+        "toy": {
+          "ownerId": -1,
+          "reservation": 59,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187861.725452,
+          "startTime": 1794187858.925452,
+          "actionId": 61,
+          "axis": {
+            "1": -0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "75": {
+      "time": 1794187861.992569,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "petGeneration": 1,
+            "to": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "charmVisible": true,
+            "endTime": 1794187856.425466,
+            "characterId": 1,
+            "actionId": 58,
+            "generation": 26,
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -3.799999713897705,
+              "2": 4.025000095367432,
+              "3": -5.349999904632568
+            },
+            "petId": "pip",
+            "startTime": 1794187855.925466,
+            "behavior": "follow"
+          }
+        },
+        "revision": 44,
+        "version": 1,
+        "toy": {
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "76": {
+      "time": 1794187862.508501,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 45,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "77": {
+      "time": 1794187863.008779,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 45,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "78": {
+      "time": 1794187863.525364,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 45,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "79": {
+      "time": 1794187864.025807,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 45,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "80": {
+      "time": 1794187864.525927,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "generation": 30,
+            "endTime": 1794187864.4821649,
+            "characterId": 1,
+            "actionId": 62,
+            "mode": "Room",
+            "ownerId": -1,
+            "startTime": 1794187861.925411,
+            "from": {
+              "1": 0.40000009536743164,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": -2.067219125003267,
+            "petId": "pip",
+            "action": "settle",
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 45,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "81": {
+      "time": 1794187865.041571,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 46,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "82": {
+      "time": 1794187865.542535,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 46,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "83": {
+      "time": 1794187866.059536,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 46,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "84": {
+      "time": 1794187866.559819,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 27,
+            "endTime": 1794187866.52651,
+            "characterId": 1,
+            "actionId": 64,
+            "via": {
+              "1": -2,
+              "2": 4.025000095367432,
+              "3": -4
+            },
+            "ownerId": -2,
+            "mode": "Room",
+            "yaw": -1.5707963267948966,
+            "requestGeneration": 1,
+            "from": {
+              "1": -8.097556114196777,
+              "2": 4.025000095367432,
+              "3": 1.0039100646972656
+            },
+            "petId": "pip",
+            "startTime": 1794187862.427131,
+            "behavior": "investigate"
+          }
+        },
+        "revision": 46,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          }
+        }
+      }
+    },
+    "85": {
+      "time": 1794187867.0757,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "86": {
+      "time": 1794187867.575813,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "87": {
+      "time": 1794187868.093063,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "88": {
+      "time": 1794187868.593169,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "89": {
+      "time": 1794187869.109301,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    },
+    "90": {
+      "time": 1794187869.625122,
+      "snapshot": {
+        "actors": {
+          "-1": {
+            "petGeneration": 1,
+            "to": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "charmVisible": true,
+            "endTime": 1794187869.925969,
+            "characterId": 1,
+            "actionId": 65,
+            "generation": 31,
+            "ownerId": -1,
+            "mode": "Room",
+            "yaw": -2.067219125003267,
+            "requestGeneration": 1,
+            "from": {
+              "1": -5,
+              "2": 4.025000095367432,
+              "3": -3
+            },
+            "petId": "pip",
+            "startTime": 1794187864.925969,
+            "behavior": "rest"
+          },
+          "-2": {
+            "charmVisible": true,
+            "petGeneration": 1,
+            "to": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "generation": 28,
+            "endTime": 1794187869.725856,
+            "characterId": 1,
+            "actionId": 66,
+            "mode": "Room",
+            "ownerId": -2,
+            "startTime": 1794187866.925856,
+            "from": {
+              "1": -4.400000095367432,
+              "2": 4.025000095367432,
+              "3": -7.699999809265137
+            },
+            "requestGeneration": 1,
+            "yaw": 2.067219125003267,
+            "petId": "pip",
+            "action": "shove",
+            "behavior": "play"
+          }
+        },
+        "revision": 47,
+        "version": 1,
+        "toy": {
+          "ownerId": -2,
+          "reservation": 63,
+          "position": {
+            "1": -2,
+            "2": 4.025000095367432,
+            "3": -9
+          },
+          "endTime": 1794187869.7258449,
+          "startTime": 1794187866.925845,
+          "actionId": 66,
+          "axis": {
+            "1": 0.8792919516563416,
+            "2": 0,
+            "3": -0.4762831926345825
+          }
+        }
+      }
+    }
+  },
+  "after": {
+    "-1": {
+      "inventory": 1,
+      "revision": 3,
+      "nectar": 6
+    },
+    "-2": {
+      "inventory": 1,
+      "revision": 3,
+      "nectar": 6
+    }
+  }
+}
