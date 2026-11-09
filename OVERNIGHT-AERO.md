@@ -2,6 +2,8 @@
 
 ## Current checkpoint — private v297 published
 
+**6:17 AM continuation audit:** v297 remains the safe published checkpoint. The original larger-world TODO is not satisfied by the unchanged floor. Astra is scoping a coherent geographic/scale expansion, with Sol checking layout, support and mobile-budget constraints before any new runtime edits. This continues the original authorized TODO; it adds no economy or minigame. Finish and review the next slice before publication; after 9 AM start no new changes. Current runtime remains frozen while that plan is pending.
+
 The bounded garden / five babies / charms / shared return build is **private v297 Published**, titled **Aero babies and shared garden - 2e9da43**, verified in refreshed native Version History. Runtime commit **2e9da43** is pushed on **feat/egg-drop-arcade-polish**, Egg Drop place **96451847774961**. [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png). This supersedes private v274 / bb8c60b. Do not target the collector project.
 
 [Current verification](artifacts/aero-garden-2026-11-09/VERIFY.md) · [Gallery and listening drafts](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Exact native test index](artifacts/aero-garden-2026-11-09/TEST-INDEX.md) · [Remaining work](TODO.md) · [Published build record](PLAY-BUILD.md).
@@ -30,7 +32,7 @@ Astra scores rendered by Sol: **Creek With One Shoe**, 92 BPM / 24 bars / 62.61 
 
 The user authorized autonomous work through **9 AM America/New_York, November 9**. Existing heartbeat: `egg-drop-aero-and-garden-overnight-through-9-am`, every 30 minutes. At/after 9 AM start no new changes, finish a safe checkpoint, provide the self-contained morning rundown and pause that heartbeat.
 
-Astra owns creative assets and visual critique; Sol 6.1 High implements and peer-reviews; root owns Studio, actual control evidence, integration and reviewed commit/push/private publication. Work only in C:/Users/skunk/Documents/Development/egg-drop. Published components are frozen; do not introduce new runtime changes during the final handoff.
+Astra owns creative assets and visual critique; Sol 6.1 High implements and peer-reviews; root owns Studio, actual control evidence, integration and reviewed commit/push/private publication. Work only in C:/Users/skunk/Documents/Development/egg-drop. Published components remain the safe fallback. Any remaining original-TODO slice needs its own plan/source/render review and actual traversal gates before replacing that checkpoint.
 
 Commit/push, private publication and post-publication census are verified. The authenticated browser Play attempt reached Download Roblox while the standalone player remained signed out; no live VM/profile test ran. [Sign-in-required evidence](artifacts/aero-garden-2026-11-09/live-rejoin-client-signin-required.png). Sign in to the standalone player before retrying live save/rejoin; this is not a DataStore failure or game bug. Keep larger map expansion, additional social minigames, nursery, battling and clothing/stat economies distinct future scope. No paid luck, daily caps, new currency, public release or account/privacy changes.
 

@@ -1,0 +1,9 @@
+# Spring Meadow world-render baseline
+
+Native Studio capture before any Spring Meadow runtime edits, accepted runtime 2e9da43 / private v297 source. Studio itself reports PlaceVersion 0; this is not a live published game VM. Existing reviewed ItemEggsVisualStudy / RigOnlyComparison harness SHA256 2b6ca18e57a2c2c123c5a3ff2c2ee56605dfdab705b1bbe68961d86645640bc1 performs bounded per-round capture only. Its historical `rig-only-current-world` label is retained in the raw records; this new comparison holds rigs fixed and changes the world, not rig implementations.
+
+Seven current production rigs plus one synthetic toy, 15 Hz expressive poses and smooth roots; sequence motion, neutral pigments, no markers, UI hidden. No earned ownership, purchases, inventory edits or player rewards. Origin (-10,4.025,88), camera target (-10,7,88), offset (22,10,-24), 45° FOV. This deliberately looks into the proposed extension and places synthetic figures beyond the old boundary. It is performance evidence only, not traversal, physical grounding, ordinary multiplayer or physical-phone evidence.
+
+Viewport 1626 × 734; actual Medium text; Automatic graphics. Measured controlled noon and midnight, three rounds each, 180 warmup and 180 measured frames per round. All six rounds validate stable world/UI/graphics and 180 controlled light/camera frames. Background counts: 1456 parts, 2922 nodes, four lights, zero background Highlights. Median per-round p95 elapsed frame: noon 17.68310 ms; midnight 18.03080 ms. Median per-round rig-update p95: noon 1.15790 ms; midnight 1.10660 ms.
+
+Native QA folders and synthetic actors were removed after capture. Both production entries remain enabled. Repeat this same fixture, camera, viewport, quality and lighting after the source freezes; compare world changes without claiming a historical full-place or phone benchmark.
