@@ -1,6 +1,6 @@
 # Egg Drop — pet loop reset
 
-**Accepted repository runtime: [PET-LOOP-RESET.md](PET-LOOP-RESET.md). Publication of this reset is pending root verification.** The latest verified private publication remains **v241 (7145db9)**, the earlier Stars and Hue Eggs build. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop).
+**Private v250 Published — Pet loop reset and angle aim - a3fce0c.** Confirmed in refreshed Studio Version History after reviewed commit/push and tests. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-loop-reset-2026-11-09/private-published-v250-a3fce0c.png). Accepted runtime: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).
 
 [Reset gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Economy/save rules](HATCH-LOOP.md).
 

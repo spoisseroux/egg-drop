@@ -1,6 +1,6 @@
 # Egg Drop — Stars, companion eggs and held Hue Eggs
 
-**Active accepted/runtime rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** These supersede earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. Latest verified private publication remains **v241 (7145db9)**; publication of this reset is pending root verification. [PLAY-BUILD.md](PLAY-BUILD.md) is the publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
+**Active accepted/runtime rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** These supersede earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. Verified private publication is **v250 (a3fce0c)**, Pet loop reset and angle aim, confirmed in refreshed Studio Version History. [PLAY-BUILD.md](PLAY-BUILD.md) is the publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
 
 ## Play, collect and return
 

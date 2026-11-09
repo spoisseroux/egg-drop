@@ -1,6 +1,6 @@
 # Pet loop reset — verification record
 
-2026-11-09 · Scope: [PET-LOOP-RESET.md](../../PET-LOOP-RESET.md). [Visual gallery](GALLERY.md). This record separates actual Studio input, isolated tests, source rigs and read-only layout fixtures. **Latest published private build: v241 (7145db9); no newer publication is claimed.**
+2026-11-09 · Scope: [PET-LOOP-RESET.md](../../PET-LOOP-RESET.md). [Visual gallery](GALLERY.md). This record separates actual Studio input, isolated tests, source rigs and read-only layout fixtures. **Published private build: v250 (a3fce0c), confirmed in refreshed Studio Version History after tests, reviewed commit and push.** [Publication proof](private-published-v250-a3fce0c.png).
 
 ## Final checks
 

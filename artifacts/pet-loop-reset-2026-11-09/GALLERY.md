@@ -1,6 +1,6 @@
 # Pet loop reset — visual evidence
 
-2026-11-09 · Studio candidate evidence for [PET-LOOP-RESET.md](../../PET-LOOP-RESET.md). **Private v241 remains the latest publication.** These captures do not establish a newer published build. See [VERIFY.md](VERIFY.md) for test results and limitations.
+2026-11-09 · Studio candidate evidence for [PET-LOOP-RESET.md](../../PET-LOOP-RESET.md). **Private v250 Published — a3fce0c.** [Verified publication](private-published-v250-a3fce0c.png). Individual image captions distinguish actual input from fixtures. See [VERIFY.md](VERIFY.md) for test results and limitations.
 
 ## Focus: before / after
 
