@@ -99,10 +99,6 @@ function Focus.new(parentGui, callbacks)
 		local arm=frame(back,"ArrowArm",UDim2.fromOffset(11,if sign<0 then 16 else 24),UDim2.fromOffset(13,3),"text",11)
 		arm.Rotation=sign*45
 	end
- local charm=button(panel,"CharmToggle","",Vector2.new(1,0),UDim2.new(1,-12,0,12),"panel")
- charm.Size=UDim2.fromOffset(160,44);charm.Text="Hide charm";charm.TextXAlignment=Enum.TextXAlignment.Right;charm.TextSize=15;charm.Visible=false;charm:SetAttribute("AccessibleLabel","Hide charm")
- local charmDot=frame(charm,"SecondaryDot",UDim2.fromOffset(13,13),UDim2.fromOffset(12,15),Art.Amber,11)
- Art.corner(charmDot,1000)
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
 	helper.AnchorPoint, helper.Position, helper.Size = Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -14), UDim2.fromOffset(230, 26)
@@ -129,12 +125,9 @@ function Focus.new(parentGui, callbacks)
 	thumb.Rotation = -38
 	Art.corner(thumb, 0.5)
 	Art.corner(frame(glove, "Cuff", UDim2.fromOffset(7, 27), UDim2.fromOffset(16, 5), Art.Leaf, 7), 0.3)
-	local self = setmetatable({ gui = gui, root = root, panel = panel, back = back, charm=charm,charmDot=charmDot,
+	local self = setmetatable({ gui = gui, root = root, panel = panel, back = back,
 		hit = hit, glove = glove, helper = helper, hint = hint, callbacks = callbacks, connections = {},
 		actionPrefix = "EggDropPetFocus" .. serial, active = false, windowActive=true, heldTouches={},retiredTouches=setmetatable({},{__mode="k"}),retiredMouse=false, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
- table.insert(self.connections,charm.Activated:Connect(function()
-  self:toggleCharm()
- end))
 	table.insert(self.connections, back.Activated:Connect(function()if self.active and self:canOwnInput()then callbacks.back()end end))
 	table.insert(self.connections,UserInputService.TouchStarted:Connect(function(input)self.heldTouches[input]=true end))
 	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil;self:endPointer(input)end))
@@ -217,7 +210,7 @@ end
 function Focus:inside(point)
 	local at,size=self.hit.Position,self.hit.Size
 	if point.X<at.X.Offset or point.Y<at.Y.Offset or point.X>at.X.Offset+size.X.Offset or point.Y>at.Y.Offset+size.Y.Offset then return false end
-	for _,node in ipairs({self.back,self.helper,self.charm})do
+	for _,node in ipairs({self.back,self.helper})do
 		if node and node.Visible then
 			local p,s=node.AbsolutePosition-self.root.AbsolutePosition,node.AbsoluteSize
 			if point.X>=p.X and point.X<=p.X+s.X and point.Y>=p.Y and point.Y<=p.Y+s.Y then return false end
@@ -315,17 +308,7 @@ function Focus:setActive(active)
 	end
 end
 
-function Focus:layoutActions()
-    local key=GuiService.PreferredTextSize.Name..tostring(self.root.AbsoluteSize.X)..self.charm.Text
-    if key==self.actionLayoutKey then return end
-    self.actionLayoutKey=key
-    Art.type(self.charm,"Action",false)
-    local width=math.min(math.max(44,self.root.AbsoluteSize.X-92),math.max(160,Art.textWidth(self.charm)+48))
-    local height=math.max(44,Art.actionHeight(self.charm,math.max(44,width-32)))
-    self.charm.Size=UDim2.fromOffset(width,height)
-    self.charmDot.Position=UDim2.fromOffset(12,math.floor((height-13)/2))
-    self.controlHeight=height
-end
+function Focus:layoutActions()self.controlHeight=44 end
 
 function Focus:layoutRoamHint()
 	if self.destroyed then return end
@@ -445,7 +428,7 @@ function Focus:handleMove(state,input)
 			if state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel then self.openingADevice=nil end
 			return Enum.ContextActionResult.Sink
 		end
-		if GuiService.SelectedObject==self.back or GuiService.SelectedObject==self.charm then return Enum.ContextActionResult.Pass end
+		if GuiService.SelectedObject==self.back then return Enum.ContextActionResult.Pass end
 	end
 	return Enum.ContextActionResult.Sink
 end
@@ -454,22 +437,8 @@ function Focus:showFeedback(message)
     self.feedbackText=message;self.hint.Text=message;self.hint.Visible=true
     self.feedbackUntil=os.clock()+3
 end
-function Focus:toggleCharm()
- if not self.active or not self:canOwnInput()or self.charmPending or self.charmVisible==nil or not self.callbacks.charmToggle then return false end
- self:cancelPointer();self.callbacks.charmToggle(not self.charmVisible);return true
-end
--- The confirmed server value owns this icon; an optimistic request never repaints it.
-function Focus:setCharmVisible(visible,pending,secondaryColor)
- self.charmVisible=if type(visible)=="boolean"then visible else nil
- self.charmPending=pending==true;self.charm.Visible=self.charmVisible~=nil
- self.charm.Interactable=not self.charmPending
- self.charmDot.BackgroundTransparency=if self.charmVisible==false then .75 else 0
- if typeof(secondaryColor)=="Color3"then self.charmDot.BackgroundColor3=secondaryColor end
- self.charm.Text=if self.charmPending then "Saving…"elseif self.charmVisible then "Hide charm"else "Show charm"
- self.charm:SetAttribute("AccessibleLabel",self.charm.Text)
- self:layoutActions()
- self.charm:SetAttribute("CharmVisible",self.charmVisible);self.charm:SetAttribute("Pending",self.charmPending)
-end
+-- Charm editing lives in each Journal row's customization page.
+function Focus:setCharmVisible()end
 
 function Focus:destroy()
 	if self.destroyed then return end

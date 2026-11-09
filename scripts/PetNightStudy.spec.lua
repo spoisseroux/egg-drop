@@ -1,38 +1,30 @@
--- Astra-approved shaded-head production material; old Neon remains a fixture comparison.
--- No Lighting, saved colors, or authored geometry mutation.
+-- Current grouped role fill regression. Historical screenshots remain controls.
 return function(client)
  local Visual=require(client.GardenPetVisual);local Face=require(client.PetFace)
  local Pets=require(game.ReplicatedStorage.Shared.PetCatalog);local Palette=require(game.ReplicatedStorage.Shared.PetPalette)
  local folder=Instance.new("Folder");folder.Name="_PetNightStudy";folder.Parent=workspace
- local cases={};local function near(a,b)return math.max(math.abs(a.R-b.R),math.abs(a.G-b.G),math.abs(a.B-b.B))<1/255+.000001 end
+ local cases={};local active={};local function near(a,b)return math.max(math.abs(a.R-b.R),math.abs(a.G-b.G),math.abs(a.B-b.B))<.005 end
  local ok,problem=pcall(function()
   for _,id in ipairs({"pip","puddle"})do
-   local v=Visual.new(folder,Vector3.new(2000,4.025,0),Pets.byId[id],.72,nil,{native=true})
-   assert(v.nightTreatment=="shadedHead","approved default must use the shaded head")
-   local head,body,protected
-   for _,entry in ipairs(v.pieces)do
-    if entry.name=="Head"then head=entry elseif entry.name=="Body"then body=entry elseif entry.name=="EyeL"then protected=entry end
-   end
-   local protectedColor,frame,size=protected.part.Color,head.part.CFrame,head.part.Size
+   local v=Visual.new(folder,Vector3.new(2000,4.025,0),Pets.byId[id],.72,nil,{native=true});table.insert(active,v)
+   local head,body,eye
+   for _,e in ipairs(v.pieces)do if e.name=="Head"then head=e elseif e.name=="Body"then body=e elseif e.name=="EyeL"then eye=e end end
+   local protected,frame,size=eye.part.Color,head.part.CFrame,head.part.Size
    for _,appearance in ipairs({{body="original",bodyRank=0},{body="rose",bodyRank=3,secondary="tide"},{body="rose",bodyRank=2,bodyMix="rose:tide"}})do
-    v:applyAppearance(appearance)
-    local palette=Palette.resolve(id,appearance)
-    Face.paintSurface(head,v,0);Face.paintSurface(body,v,0)
-    local lift=head.nightHeadLift
-    assert(lift and lift.Parent==v.model and lift.Adornee==head.part and lift.Enabled)
-    assert(lift.DepthMode==Enum.HighlightDepthMode.Occluded and math.abs(lift.FillTransparency-.70)<.000001 and lift.OutlineTransparency==1)
-    assert(near(lift.FillColor,palette.body)and near(head.part.Color,palette.body)and head.part.Material==Enum.Material.SmoothPlastic)
-    assert(body.part.Material==Enum.Material.Neon and not body.nightHeadLift)
-    assert(protected.part.Color==protectedColor and head.part.CFrame==frame and head.part.Size==size)
-    Face.paintSurface(head,v,.29);assert(lift.Enabled,"night material hysteresis must be shared")
-    Face.paintSurface(head,v,1);assert(not lift.Enabled and head.part.Material==Enum.Material.SmoothPlastic and near(head.part.Color,palette.body))
+    v:applyAppearance(appearance);local palette=Palette.resolve(id,appearance);Face.paintSurface(head,v,0);Face.paintSurface(body,v,0)
+    assert(v.nightGroups and v.nightGroups.body.fill.Enabled and v.nightGroups.secondary.fill.Enabled)
+    assert(near(v.nightGroups.body.fill.FillColor,palette.body)and near(v.nightGroups.secondary.fill.FillColor,palette.secondary))
+    assert(head.part.Material==Enum.Material.SmoothPlastic and body.part.Material==Enum.Material.SmoothPlastic and not head.nightHeadLift)
+    assert(eye.part.Parent==v.model and eye.part.Color==protected and head.part.CFrame==frame and head.part.Size==size)
+    Face.paintSurface(head,v,.30);assert(v.nightGroups.body.fill.Enabled)
+    Face.paintSurface(head,v,1);assert(not v.nightGroups.body.fill.Enabled and near(head.part.Color,palette.body))
    end
-   v.nightTreatment="selectiveNeon";Face.paintSurface(head,v,0)
-   assert(head.part.Material==Enum.Material.Neon and not head.nightHeadLift.Enabled)
+   local preview=Visual.new(folder,Vector3.zero,Pets.byId[id],nil,nil,{native=true});table.insert(active,preview)
+   for _,entry in ipairs(preview.pieces)do Face.paintSurface(entry,preview,0)end
+   assert(not preview.nightGroups and not preview.model:FindFirstChildWhichIsA("Highlight",true),"viewport uses independent lighting")
    assert(not v.model:FindFirstChildWhichIsA("Light",true))
-   local model=v.model;v:destroy();assert(model.Parent==nil)
-   table.insert(cases,id.." shaded candidate owns one head lift and preserves neutral vivid mixed day/night geometry")
+   table.insert(cases,id.." grouped colored fills preserve shaded geometry/face and bypass viewport")
   end
  end)
- folder:Destroy();assert(ok,problem);return{passed=#cases,cases=cases}
+ for _,v in ipairs(active)do v:destroy()end;folder:Destroy();assert(ok,problem);return{passed=#cases,cases=cases}
 end

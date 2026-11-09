@@ -49,7 +49,7 @@ return function(client,parent)
   local newer=cut:begin();assert(not cut:reveal(token)and cut.shade.Visible and cut.shade.BackgroundTransparency==0)
   assert(cut:cover(newer));cut:reveal(newer);assert(not cut.shade.Visible and not cut.shade.Active)
  end)
- test("authoritative gait covers .10-.15 studs and suppresses rest Focus and reduced motion",function()
+ test("authoritative gait covers .10-.15 studs and suppresses rest/Focus gait and reduced body bounce",function()
   for _,petId in ipairs({"pip","puddle"})do
    local visual={petId=petId,worldScale=1,origin=Vector3.zero,yaw=0}
    local actor={from={0,0,0},to={10,0,0},startTime=0,endTime=2.5,mode="Room",behavior="follow"}
@@ -59,32 +59,24 @@ return function(client,parent)
    for i=1,120 do state=Follow.activity(visual,actor,10+i/120,1/120,state,false)end
    assert(visual.gaitWeight==0 and visual.movementBob==0)
    actor.mode="Focus";Follow.activity(visual,actor,1,1/60,state,false);assert(visual.gaitWeight==0 and visual.movementBob==0)
-   actor.mode="Room";Follow.activity(visual,actor,1,1/60,state,true);assert(visual.gaitWeight==0 and visual.movementBob==0)
+   actor.mode="Room";Follow.activity(visual,actor,1,1/60,state,true);assert(visual.reducedEffects and visual.movementBob==0)
   end
  end)
- test("shaded night head and restrained torso restore palette and protect dark face",function()
-  for _,id in ipairs({"zivvi","ovelle"})do
-   local model=Instance.new("Model")
-   defer(function()model:Destroy();return "night material model destroyed"end)
-   local visual={worldContext=true,definition={id=id},nightTreatment="shadedHead",model=model}
-   for _,name in ipairs({"Head","Body","EyeL","HandL"})do
-    local part=Instance.new("Part");part.Material=Enum.Material.SmoothPlastic;local base=Color3.fromRGB(255,50,122);part.Color=base;part.Parent=model
-    defer(function()local path=part:GetFullName();part:Destroy();return "part="..path.." destroyed=true"end)
-    local entry={name=name,part=part,color=base}
-    Face.paintSurface(entry,visual,0)
-    assert((part.Material==Enum.Material.Neon)==(name=="Body"))
-    if name=="Head"then
-     assert(entry.nightHeadLift and entry.nightHeadLift.Adornee==part and entry.nightHeadLift.Enabled)
-     assert(math.abs(entry.nightHeadLift.FillTransparency-.70)<.000001 and entry.nightHeadLift.OutlineTransparency==1)
-    end
-    Face.paintSurface(entry,visual,.29)
-    if name=="Body"then assert(part.Material==Enum.Material.Neon)elseif name=="Head"then assert(part.Material==Enum.Material.SmoothPlastic and entry.nightHeadLift.Enabled)end
-    Face.paintSurface(entry,visual,1)
-    if name=="Head"then assert(not entry.nightHeadLift.Enabled)end
-    assert(part.Material==Enum.Material.SmoothPlastic and math.abs(part.Color.R-base.R)<.005 and math.abs(part.Color.G-base.G)<.005 and math.abs(part.Color.B-base.B)<.005)
-    part:Destroy()
-   end
+ test("grouped night fills preserve shaded materials and protected dark face",function()
+  local model=Instance.new("Model");defer(function()model:Destroy();return "night material model destroyed"end)
+  local rose=Color3.fromRGB(255,50,122);local tide=Color3.fromRGB(0,141,255);local ink=Color3.fromRGB(45,39,49)
+  local visual={worldContext=true,model=model,pieces={},colors={body=rose,secondary=tide},charmVisible=true}
+  for _,name in ipairs({"Head","Body","EyeL","HandL","FootL"})do
+   local role=if name=="EyeL"then "face"elseif name=="FootL"then "secondary"else "body"
+   local part=Instance.new("Part");part.Name=name;part.Material=Enum.Material.SmoothPlastic;part.Color=if role=="face"then ink elseif role=="secondary"then tide else rose;part.Parent=model
+   table.insert(visual.pieces,{name=name,part=part,colorRole=role,color=part.Color,faceBaseMaterial=part.Material})
   end
+  for _,entry in ipairs(visual.pieces)do Face.paintSurface(entry,visual,0);assert(entry.part.Material==Enum.Material.SmoothPlastic)end
+  assert(visual.nightGroups.body.fill.Enabled and visual.nightGroups.secondary.fill.Enabled)
+  assert(math.abs(visual.nightGroups.body.fill.FillTransparency-.68)<.000001 and math.abs(visual.nightGroups.secondary.fill.FillTransparency-.64)<.000001)
+  local eye=visual.pieces[3].part;assert(eye.Parent==model and eye.Color==ink)
+  Face.paintSurface(visual.pieces[1],visual,1);assert(not visual.nightGroups.body.fill.Enabled and not visual.nightGroups.secondary.fill.Enabled)
  end)
+
  return{passed=#cases,cases=cases,fixtureCleanup=fixtureDiagnostics}
 end

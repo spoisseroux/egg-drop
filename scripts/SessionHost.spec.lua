@@ -80,7 +80,9 @@ return function(server, hostSource, sessionSource)
 		local nativeInstance=Instance
 		local instanceShim={new=function(class)
 			if class~="RemoteEvent"then return nativeInstance.new(class)end
-			local event={OnServerEvent=signal(),FireClient=function()end};requests[#requests+1]=event
+			local event={OnServerEvent=signal()}
+			function event:FireClient(who,packet)assert(who==player);if self.Name=="NurserySnapshot"then trace.snapshot=packet end end
+			requests[#requests+1]=event
 			return event
 		end}
 		-- RemoteEvent substitutes need no real parenting; folders/parts are isolated.
@@ -92,7 +94,7 @@ return function(server, hostSource, sessionSource)
 			return realRequire(module)
 		end},"entry")
 		local board=replicated.EggDropBoards[tostring(id)]
-		assert(game.HttpService:JSONDecode(board:GetAttribute("HatchState")).status==initialFailure)
+		assert(trace.snapshot.status==initialFailure and board:GetAttribute("HatchState")==nil)
 		assert(not board:GetAttribute("FieldReady"))
 		for _,args in ipairs({{"appearance","sherbet","none"},{"sound"},{"motion"},{"companion","pip"},{"family","pip"},{"drop",.5}})do
 			requests[1].OnServerEvent:Fire(player,table.unpack(args))
@@ -102,7 +104,7 @@ return function(server, hostSource, sessionSource)
 		if initialFailure=="Locked"then assert(ActualHatch.release(owner))end
 		-- The host registered retry and maintenance loops in this order.
 		assert(#tasks==2);resume(tasks[2])
-		local snapshot=game.HttpService:JSONDecode(board:GetAttribute("HatchState"))
+		local snapshot=trace.snapshot
 		assert(snapshot.status=="Ready"and snapshot.lastHatch.id==hatchId)
 		assert(board:GetAttribute("Mode")=="Room"and board:GetAttribute("CompanionId")=="foxfire_wick")
 		assert(board:GetAttribute("SelectedFamily")=="wick"and board:GetAttribute("DeckThemeId")=="ice")

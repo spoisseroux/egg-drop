@@ -36,7 +36,18 @@ local panels={sherbet="#123C35",stone="#293D39",ice="#143B50",brick="#49242D",mo
 local dark=Color3.new(0,0,0)
 for id,values in pairs(palettes)do
  local theme=Themes.ById[id];local panel=Color3.fromHex(panels[id]);theme.lcd={}
- theme.ui={panel=panel,raised=panel:Lerp(Color3.new(1,1,1),.07),inset=panel:Lerp(dark,.17),ink=Color3.fromHex("#201D32"),text=Color3.fromHex("#FFF6E4"),muted=Color3.fromHex("#E0DCE8"),line=theme.highlight,selected=panel:Lerp(Color3.new(1,1,1),.09),focus=Color3.fromHex("#A3F4FF"),accent=theme.buttons}
+ local saturated={sherbet="#12644A",stone="#2E5B47",ice="#075C82",brick="#902B4B",moss="#1A5C35",honey="#694618",gloaming="#45458B",copperleaf="#743A4A"}
+ local shell=Color3.fromHex(saturated[id]);local white=Color3.fromHex("#F8F8EA")
+ theme.ui={panel=shell,raised=shell:Lerp(white,.07),inset=shell:Lerp(dark,.40),ink=Color3.fromHex("#062417"),text=white,muted=Color3.fromHex("#E2EEE3"),line=theme.highlight,selected=shell:Lerp(white,.09),focus=Color3.fromHex("#FFFFFF"),accent=theme.buttons}
+ theme.ui.tab=({sherbet=Color3.fromHex("#38B84A"),stone=Color3.fromHex("#B8DD9D"),ice=Color3.fromHex("#069FC3"),brick=Color3.fromHex("#CB1E61"),moss=Color3.fromHex("#80CB32"),honey=Color3.fromHex("#F8C944"),gloaming=Color3.fromHex("#7543CF"),copperleaf=Color3.fromHex("#E59843")})[id]
+ theme.ui.tabInk=if id=="brick"or id=="gloaming"then white else Color3.fromHex("#062417")
+ theme.ui.contentPanel=Color3.fromHex("#F8F8EA")
+ theme.ui.contentRaised=theme.highlight:Lerp(Color3.fromHex("#FFFFFF"),.77)
+ theme.ui.contentInset=theme.face:Lerp(Color3.fromHex("#FFFFFF"),.86)
+ theme.ui.contentText=Color3.fromHex("#10382E");theme.ui.contentMuted=Color3.fromHex("#36554B")
+ theme.ui.contentLine=theme.shell:Lerp(Color3.fromHex("#10382E"),.35)
+ theme.ui.contentSelected=theme.highlight:Lerp(Color3.fromHex("#FFFFFF"),.59)
+ theme.ui.contentFocus=Color3.fromHex("#075F8A");theme.ui.contentReward=Color3.fromHex("#87500F")
  -- Three authored stops are reused by worn hardware and isolated Style previews.
  theme.shellGradient=ColorSequence.new({ColorSequenceKeypoint.new(0,theme.highlight),ColorSequenceKeypoint.new(.34,theme.face),ColorSequenceKeypoint.new(1,theme.shell)})
  theme.faceGradient=theme.shellGradient

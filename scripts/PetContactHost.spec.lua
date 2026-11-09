@@ -18,7 +18,7 @@ return function(server,hostSource)
 			if c.failAfter then c.failAfter=false;error("fixture committed pet write then timed out")end
 			return copy(value)
 		end}
-	local h=H.load(81001,{rank=1,companionId="pip"},adapter);assert(h.status=="Ready"and h.state.version==5)
+	local h=H.load(81001,{rank=1,companionId="pip"},adapter);assert(h.status=="Ready"and h.state.version==6)
 	local fixture=Instance.new("Folder");fixture.Name="_PetContactHostFixture";fixture.Parent=server
 	local replicated=Instance.new("Folder");replicated.Parent=fixture
 	local shared=realGame.ReplicatedStorage.Shared:Clone();shared.Parent=replicated
@@ -75,10 +75,11 @@ return function(server,hostSource)
 		local event={OnServerEvent=signal()}
 		function event:FireClient(who,packet)
 			assert(who==player)
+			if self.Name=="NurserySnapshot"then c.snapshot=copy(packet)end
 			if self.Name=="PetContact"then
 				if packet.status=="Saved"then
 					local board=replicated.EggDropBoards[tostring(player.UserId)]
-					local public=realGame.HttpService:JSONDecode(board:GetAttribute("HatchState"))
+					assert(board:GetAttribute("HatchState")==nil);local public=c.snapshot
 					assert(public.lastPetAward.id==packet.receipt.id and public.nectar==h.state.nectar,"Balance/receipt must publish before glyph wire")
 				end
 				table.insert(c.packets,packet)

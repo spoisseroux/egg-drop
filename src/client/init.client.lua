@@ -825,12 +825,19 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  appearance=nurseryView.appearanceFor,
+ audio=audio,reduceEffects=reduceEffects,
+ shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
+ charm=function(petId,visible,shape,seq)
+  if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
+  request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,seq=seq})
+  return {petId=petId,visible=visible,shape=shape,seq=seq}
+ end,
  earn=function()if hatchNavigation then hatchNavigation:play()end end,
  pendingHatch=function()if openNursery then openNursery()end end,
  closed=function(reason)
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
-   if back=="journal"and openJournal then openJournal()elseif back=="eggs"and openNursery then openNursery()end
+   if back=="journal"and openJournal then openJournal();journal:restoreCustomization()elseif back=="eggs"and openNursery then openNursery()end
   end
  end})
 clientUI.openHue=function(page,petId,back)
@@ -841,10 +848,13 @@ clientUI.openHue=function(page,petId,back)
  clientUI.hueReturn=back or "eggs"
  return clientUI.hueView:open(nurseryState,page,petId or board:GetAttribute("CompanionId"))
 end
-nurseryView.onOpenHue=function()clientUI.openHue("buy",nil,"eggs")end
+nurseryView.onOpenHue=function(purchase)
+ if clientUI.openHue("buy",nil,"eggs")and purchase and not nurseryState.pendingHueResult then clientUI.hueIntent:hatch()end
+end
 journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
-gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.hueView:destroy()end)
+clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
+gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.charmResult:Disconnect();clientUI.hueView:destroy()end)
 board:GetAttributeChangedSignal("PetAppearance"):Connect(function()
  if nurseryView.state.lastHatch then nurseryView.cinematic:setAppearance(nurseryView.appearanceFor(nurseryView.state.lastHatch.petId))elseif nurseryView:isOpen()then nurseryView:renderBody()end
  if clientUI.isHueOpen()then clientUI.hueView:refresh()end
@@ -907,12 +917,10 @@ end
 
 eggButton.Visible = false
 local shownNurseryHatch
-local function refreshNursery()
-	local encoded = board:GetAttribute("HatchState")
-	if typeof(encoded) ~= "string" then return end
-	local ok, state = pcall(HttpService.JSONDecode, HttpService, encoded)
-	if not ok or type(state) ~= "table" then return end
-	nurseryState = state
+local function refreshNursery(state)
+ if type(state)~="table"then return end
+ if nurseryState and type(state.revision)=="number"and type(nurseryState.revision)=="number"and state.revision<nurseryState.revision then return end
+ nurseryState = state
     clientUI.hueIntent:update(state)
 	currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),state)
 	if refreshSaveNotice then refreshSaveNotice()end
@@ -942,12 +950,15 @@ local function refreshNursery()
 		end)
 	end
 end
-board:GetAttributeChangedSignal("HatchState"):Connect(refreshNursery)
+clientUI.ownerSnapshot=require(script.OwnerSnapshot)
+clientUI.stopSnapshot=clientUI.ownerSnapshot.subscribe(refreshNursery)
+clientUI.nurserySnapshot=remotes:WaitForChild("NurserySnapshot").OnClientEvent:Connect(clientUI.ownerSnapshot.receive)
+gui.Destroying:Connect(function()clientUI.nurserySnapshot:Disconnect();clientUI.stopSnapshot()end)
 nurseryFeedback.OnClientEvent:Connect(function(kind, message)
 	if kind == "open" then openNursery()
 	elseif kind == "error" then nurseryView:setError(message) end
 end)
-refreshNursery()
+nurseryRequest:FireServer("snapshot")
 
 gameMenu = DeckMenu.new(safeOverlays, {
 	close = function() closeMenu() end,
@@ -1271,6 +1282,7 @@ updateHud = function()
 		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
 	end
 	layoutDropMeter()
+	dispenser:setTheme(Themes.ById[board:GetAttribute("DeckThemeId")]or Themes.ById[Themes.Default])
 	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	for _,cell in ipairs(segments)do cell.Visible=false end
 	meterText.Visible=owned==0
@@ -2043,6 +2055,7 @@ gui.Destroying:Connect(function() audio:destroy() end)
 local function refreshMotion()
 	nurseryView.cinematic:refreshOwner()
 	if reduceEffects() then
+        if clientUI.hueView then clientUI.hueView.itemReveal:cancel()end
 		reveal:cancel()
 		rendererPresentation.fx:clear()
 		table.clear(pixelMerges)
@@ -2152,7 +2165,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			direction += value
 		end
 		if direction ~= 0 then
-			moveAim(math.sign(direction) * 0.62 * dt)
+			moveAim(math.sign(direction) * 1.0 * dt)
 		end
 	else
 		table.clear(heldAim)

@@ -55,6 +55,10 @@ local function colorsFor(pet,locked,appearance)
 		o = color, O = if locked then Art.Line else Art.Amber,
 	}
  local definition=Definitions[pet.id]
+ if not definition and not locked then
+  local resolved=Palette.resolve(pet.id,appearance)
+  if resolved then color=resolved.body;accent=resolved.secondary;colors.M=color;colors.H=color:Lerp(Art.Silver,.45);colors.D=color:Lerp(Art.Ink,.38);colors.l=accent;colors.L=accent:Lerp(Art.Ink,.25)end
+ end
  if definition then
   local p=definition.palette;local resolved=Palette.resolve(pet.id,appearance);local secondary=resolved.secondary
   if not locked then color=resolved.body end

@@ -1,18 +1,19 @@
 -- Actual handheld GUI contract. Client-local attributes are restored; no requests or avatar movement.
 -- Run from a real LocalScript (same calling convention as CompactDeck) at Medium and Largest.
 return function(gui,board)
+ local Snapshot=require(game.Players.LocalPlayer.PlayerScripts.Client.OwnerSnapshot)
 	local Http=game:GetService("HttpService")
 	local client=game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("Client")
 	local SaveNotice=require(client:WaitForChild("SaveNotice"))
 	local b=gui.Backdrop;local cases={}
-	local previous={size=b.Size,position=b.Position,ready=board:GetAttribute("FieldReady"),phase=board:GetAttribute("FieldPhase"),state=board:GetAttribute("HatchState")}
-	local state=Http:JSONDecode(previous.state)
+	local previous={size=b.Size,position=b.Position,ready=board:GetAttribute("FieldReady"),phase=board:GetAttribute("FieldPhase"),state=Snapshot.read()}
+	local state=previous.state
 	assert(not state.lastHatch,"run caption fixture after pending-result QA is acknowledged")
 	assert(SaveNotice.resolve(board:GetAttribute("SaveStatus"),{status="Ready"})==nil,"run caption fixture after profile load/retry settles")
 	local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
 	local function test(name,run)run();table.insert(cases,name)end
 	local function snapshot(status)
-		local copy=table.clone(state);copy.status=status;board:SetAttribute("HatchState",Http:JSONEncode(copy))
+		local copy=table.clone(state);copy.status=status;Snapshot.receive(copy)
 	end
 	local caption=b.DeckControls.DropCaption
 	local function expectBlocked(word,saveCode)
@@ -63,7 +64,7 @@ return function(gui,board)
 			board:SetAttribute("FieldReady",true);expectReady()
 		end)
 	end)
-	board:SetAttribute("HatchState",previous.state);board:SetAttribute("FieldReady",previous.ready);board:SetAttribute("FieldPhase",previous.phase)
+	Snapshot.receive(previous.state);board:SetAttribute("FieldReady",previous.ready);board:SetAttribute("FieldPhase",previous.phase)
 	b.Size,b.Position=previous.size,previous.position;settle();assert(ok,problem)
 	return{passed=#cases,cases=cases,persistentWrites=false}
 end

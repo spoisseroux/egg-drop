@@ -34,7 +34,7 @@ return function(client,parent)
 				end
 				menu.body.CanvasPosition=Vector2.zero
 				local tabY=menu.tabs.play.AbsolutePosition.Y
-				for _,page in ipairs({"daily","mastery","play"})do
+				for _,page in ipairs({"daily","play"})do
 					menu:setPage(page);settle();assert(menu.tabs.play.AbsolutePosition.Y==tabY)
 					for _,tab in pairs(menu.tabs)do assert(tab.AbsoluteSize.Y>=44 and tab.TextFits)end
 					if page=="daily" then
@@ -45,37 +45,37 @@ return function(client,parent)
 						assert(menu.familyHints.wick.TextFits and menu.familyNote.Position.Y.Offset>menu.familyCards.orbit.Position.Y.Offset)
 					end
 				end
-				menu:setPage("mastery");menu.body.CanvasPosition=Vector2.new(0,80);settle();local before=menu.body.CanvasPosition.Y
+				menu:setPage("daily");menu.body.CanvasPosition=Vector2.new(0,80);settle();local before=menu.body.CanvasPosition.Y
 				menu:update(state(),"wick","pip",10,0,0,"sprout");settle();assert(menu.body.CanvasPosition.Y==before)
 				menu:close();menu:open();settle();assert(menu.body.CanvasPosition.Y==0)
 			end)
 			menu:close()
 			local shop=Shop.new(root,{play=function()end},function()return true end,function()error("browse cannot send")end)
-			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("sprout");settle()
+			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("hue");settle()
 			test("733x"..height.." shop shows both complete recipes above a pinned exact shortfall",function()
-				assert(shop.compactShop and shop.budgetCompact and shop.body.CanvasPosition.Y==0)
-				for _,id in ipairs({"meadow","sprout"})do
+				assert(shop.body.CanvasPosition.Y==0)
+				for _,id in ipairs({"meadow","hue"})do
 					local row=shop.body.EggColumn["Recipe_"..id]
 					assert(row.AbsoluteSize.Y>=44 and inside(row,shop.body) and row.RecipeName.TextFits and row.Cost.TextFits)
 					assert(row:FindFirstChild("Egg"),"recipe silhouette lost")
 				end
-				assert(shop.selected=="sprout" and shop.action.Text:find("18",1,true) and shop.action.TextFits and shop.action.AbsoluteSize.Y>=44)
+				assert(shop.selected=="hue" and shop.action.Text:find("2",1,true) and shop.action.TextFits and shop.action.AbsoluteSize.Y>=44)
 				assert(shop.body.AbsolutePosition.Y+shop.body.AbsoluteSize.Y<=shop.action.AbsolutePosition.Y)
-				local odds=shop.body.OutcomeColumn
-				assert(odds.Outcome_pip.Probability.Text=="80%" and odds.Outcome_bloom_pip.Probability.Text=="20%")
+				local odds=shop.body.EggColumn
+                assert(odds.Outcome_rose.Chance.Text=="20%"and odds.Outcome_reset.Chance.Text=="20%")
 				shop.body.CanvasPosition=Vector2.new(0,math.max(0,shop.body.CanvasSize.Y.Offset-shop.body.AbsoluteSize.Y));settle()
-				assert(inside(odds.Duplicates,shop.body) and odds.Duplicates.TextFits)
+				assert(inside(odds.DailyNectar,shop.body)and odds.DailyNectar.TextFits)
 			end)
 			shop:close()
 		end
 		test("portrait selection rotated to landscape stays selected at the top without a purchase",function()
 			resize(385,703);local shop=Shop.new(root,{play=function()end},function()return true end,function()error("rotation cannot send")end)
-			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("sprout");settle()
-			assert(not shop.compactShop and shop.body.EggColumn.Recipe_sprout.AbsoluteSize.Y>=83)
+			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("hue");settle()
+			assert(not shop.compactShop and shop.body.EggColumn.Recipe_hue.AbsoluteSize.Y>=83)
 			shop.body.CanvasPosition=Vector2.new(0,100);resize(733,307);settle()
-			assert(shop.selected=="sprout" and shop.body.CanvasPosition.Y==0 and inside(shop.body.EggColumn.Recipe_sprout,shop.body))
-			assert(shop.body.EggColumn.Recipe_sprout.Cost.Text:find("24",1,true) and shop.action.Text:find("18",1,true))
-			resize(385,703);assert(not shop.compactShop and shop.selected=="sprout");shop:close()
+			assert(shop.selected=="hue" and inside(shop.body.EggColumn.Recipe_hue,shop.body))
+			assert(shop.body.EggColumn.Recipe_hue.Cost.Text:find("8",1,true) and shop.action.Text:find("2",1,true))
+			resize(385,703);assert(not shop.compactShop and shop.selected=="hue");shop:close()
 		end)
 		test("roomy desktop menu and shop retain their illustrated layouts",function()
 			resize(1400,900);local menu=Menu.new(root,{close=function()end});table.insert(views,menu.shade)

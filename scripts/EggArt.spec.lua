@@ -1,74 +1,14 @@
--- Native Client art fixtures; no audio assets, transactions or uploaded images.
-return function(client, parent)
-	local Egg = require(client.EggArt)
-	local View = require(client.EggHatchView)
-	local root = Instance.new("Frame")
-	root.Name, root.Size, root.BackgroundTransparency, root.Parent = "_EggArtSpec", UDim2.fromOffset(568, 390), 1, parent
-	local cases, views = {}, {}
-	local function test(name, run) run(); table.insert(cases, name) end
-	local function foreground(host, button)
-		assert(host.ZIndex > button.ZIndex)
-		for _, node in ipairs(host:GetDescendants()) do
-			assert(not node:IsA("ImageLabel") and not node:IsA("ImageButton") and not node:IsA("TextLabel"))
-			if node:IsA("GuiObject") then assert(node.ZIndex > button.ZIndex and not node.Active and not node.Selectable) end
-		end
-	end
-	local function fixture(width, height)
-		root.Size = UDim2.fromOffset(width, height); task.wait(.04)
-		local view = View.new(root, { play = function() end }, function() return true end, function() error("art fixture must never send") end)
-		table.insert(views, view)
-		view:open({ status = "Ready", revision = 1, nectar = 24 })
-		local deadline = os.clock() + 2
-				local function settled()
-			local column = view.body:FindFirstChild("EggColumn")
-			return view.shade.AbsoluteSize == Vector2.new(width, height) and column
-                and column:FindFirstChild("Recipe_meadow") and column.Recipe_meadow.AbsoluteSize.Y>=44
-                and column.Recipe_meadow.RecipeName.TextFits and column.Recipe_meadow.Cost.TextFits
-		end
-		repeat task.wait(.03) until settled() or os.clock() > deadline
-		assert(settled(),string.format("egg art layout did not settle root=%dx%d preference=%s compact=%s",width,height,game:GetService("GuiService").PreferredTextSize.Name,tostring(view.compactShop)))
-		return view
-	end
-	local ok, problem = pcall(function()
-		test("original Meadow and Sprout silhouettes have distinct motifs and no input capture", function()
-			local meadow = Egg.create(root, "meadow", UDim2.fromOffset(0, 0), UDim2.fromOffset(64, 82), 10)
-			local sprout = Egg.create(root, "sprout", UDim2.fromOffset(80, 0), UDim2.fromOffset(64, 82), 10)
-			assert(meadow.Pattern:FindFirstChild("MeadowSpot") and not meadow.Pattern:FindFirstChild("SproutStem"))
-			assert(sprout.Pattern:FindFirstChild("SproutStem") and sprout.Pattern:FindFirstChild("LeafLeft") and not sprout.Pattern:FindFirstChild("MeadowSpot"))
-			assert(not meadow.Active and not meadow.Selectable and not sprout.Active)
-			meadow:Destroy(); sprout:Destroy()
-		end)
-		test("wide recipe eggs render above their buttons with full names and prices", function()
-			local view = fixture(568, 390)
-			for _, id in ipairs({ "meadow", "sprout" }) do
-				local button = view.body.EggColumn:FindFirstChild("Recipe_" .. id)
-				assert(button.Egg.Visible and button.Egg:GetAttribute("RecipeId") == id)
-				foreground(button.Egg, button)
-				assert(button.RecipeName.TextFits and button.Cost.TextFits)
-			end
-			assert(view.wallet.Visible and view.wallet.NectarDrop.Visible)
-			view:close()
-		end)
-		test("350px compact recipes retain 24px foreground artwork and complete text", function()
-			local view = fixture(350, 279)
-			for _, id in ipairs({ "meadow", "sprout" }) do
-				local button = view.body.EggColumn:FindFirstChild("Recipe_" .. id)
-				assert(button.Egg.Visible and button.Egg.AbsoluteSize.X == 24 and button.AbsoluteSize.Y >=44)
-				foreground(button.Egg, button)
-				assert(button.RecipeName.TextFits and button.Cost.TextFits, "compact recipe text: " .. id)
-			end
-			view:close()
-		end)
-		test("the egg stand follows recipe selection without rebuilding transactions", function()
-			local view = fixture(568, 390)
-			assert(view:selectRecipe("sprout"))
-			local scene = view.body.EggColumn.EggStand
-			assert(scene.Egg:GetAttribute("RecipeId") == "sprout" and scene.Egg.Pattern:FindFirstChild("LeafLeft"))
-			assert(scene.Egg.ZIndex > scene.ZIndex and view.selected == "sprout")
-			view:close()
-		end)
-	end)
-	for _, view in ipairs(views) do view:close(); view.shade:Destroy() end
-	root:Destroy(); assert(ok, problem)
-	return { passed = #cases, cases = cases }
+-- Original native egg + jar motifs, small enough to inspect at actual 44px stock size.
+return function(client,parent)
+ local Egg=require(client.EggArt);local Jar=require(client.HueJarArt);local cases={};local nodes={}
+ local function add(n)table.insert(nodes,n);return n end
+ local companion=add(Egg.create(parent,"meadow",UDim2.fromOffset(0,0),UDim2.fromOffset(48,62),10))
+ local hue=add(Egg.create(parent,"hue",UDim2.fromOffset(60,0),UDim2.fromOffset(48,62),10))
+ assert(companion.Pattern:FindFirstChild("CobaltRainSeed1")and companion.Pattern:FindFirstChild("CitronHalfBelt"));assert(hue.Pattern:FindFirstChild("Scallop0")and hue.Pattern:FindFirstChild("ShoulderDrop4"));table.insert(cases,"Companion and Hue use distinct original large motifs")
+ for i,id in ipairs({"rose","tide","citrus","iris","reset"})do
+  local n=add(Jar.create(parent,id,UDim2.fromOffset(i*50,80),UDim2.fromOffset(44,52),10));assert(n:FindFirstChild("Rim1")and n:FindFirstChild("Rim2")and n:FindFirstChild("ShoulderReflection")and n.Fruit)
+  for _,d in ipairs(n:GetDescendants())do if d:IsA("GuiObject")then assert(not d.Active and not d.Selectable)end end
+ end
+ table.insert(cases,"all five jars carry readable distinct fruit silhouettes and no input")
+ for _,n in ipairs(nodes)do n:Destroy()end;return cases
 end

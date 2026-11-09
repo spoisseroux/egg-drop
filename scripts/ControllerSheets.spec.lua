@@ -53,9 +53,9 @@ return function(client,parent)
 		view:open({status="Ready",revision=4,nectar=24,inventoryMask=Catalog.bit("pip")});return view
 	end
 	local ok,problem=pcall(function()
-		test("pointer-open Menu seeds current Daily or Mastery tab without routing",function()
+		test("pointer-open Menu seeds current Play or Daily tab without routing",function()
 			local view=menu()
-			for _,page in ipairs({"daily","mastery"})do
+			for _,page in ipairs({"daily","play"})do
 				view:setPage(page);local f=coordinator(view);local before=total();f:pad();f:flush()
 				assert(GuiService.SelectedObject==view.tabs[page] and f.writes==1 and total()==before,page)
 				f.co:destroy()

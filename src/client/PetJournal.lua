@@ -19,7 +19,7 @@ local function visibleSelection(node)
 end
 local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,value,role,color)
-	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or "text",16)
+	local node=Art.text(parent,name,value,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),if color==Art.Amber then "reward"elseif color==Art.Leaf then "text"else color or "text",16)
 	Art.type(node,role);node.TextXAlignment=Enum.TextXAlignment.Left;return node
 end
 local function button(parent,name,value,action)
@@ -36,7 +36,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,22
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
-	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
+	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},customizeButtons={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
 	self.title=text(card,"Title","Pet journal · 00/07","Heading")
 	self.baseTitle=self.title.Text
 	self.saveDetail=text(scroll,"SaveInstruction","","Body",Art.Amber);self.saveDetail.Visible=false
@@ -47,7 +47,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	end
 	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
-	self.closeButton=Art.close(button(card,"Close","×",function()self:close("back")end))
+	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:close("back")end))
 	for index,pet in ipairs(Pets.collection)do
 		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
 		local well=Art.frame(entry,"PortraitWell","inset",UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
@@ -56,18 +56,29 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 		text(entry,"ColorHint","","Supporting","muted")
 		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
 		self.cards[index]=entry
+        local customize=button(scroll,"Customize_"..pet.id,"",function()self:customizePet(index)end)
+        customize:SetAttribute("AccessibleLabel","Customize "..pet.name)
+        -- A separate sibling hit region never equips or visits the pet.
+        for _,arm in ipairs({{-8,45},{8,-45}})do local line=Art.frame(customize,"HangerArm","text",UDim2.new(.5,arm[1]-9,.5,-2),UDim2.fromOffset(19,2),customize.ZIndex+1);line.Rotation=arm[2]end
+        Art.frame(customize,"HangerBase","text",UDim2.new(.5,-15,.5,7),UDim2.fromOffset(30,2),customize.ZIndex+1)
+        local neck=Art.text(customize,"Hook","?",UDim2.new(.5,-6,.5,-18),UDim2.fromOffset(13,18),"text",16,Art.Font.Action);neck.Rotation=180
+        self.customizeButtons[index]=customize
 	end
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
 	self:layout();return self
 end
-function Journal:setColors(callback)
- self.onColors=callback
- if not self.colorsButton then self.colorsButton=button(self.card,"Colors","Body & accents",function()
-  if not self.shade.Visible or not self.colorsButton.Interactable then return end
-  local id=self.companionId;self:close("colors");if self.onColors then self.onColors(id)end
- end)end
- self.colorsButton.Visible=self.hasColorPets==true;self:layout()
+function Journal:setColors(callback)self.onColors=callback end
+function Journal:customizePet(index)
+ local pet=Pets.collection[index];local n=self.customizeButtons[index]
+ if not self.shade.Visible or not n or not n.Interactable or not self.onColors then return false end
+ self.customizeReturn={index=index,scroll=self.scroll.CanvasPosition,target=n}
+ self:close("customize");self.onColors(pet.id);return true
+end
+function Journal:restoreCustomization()
+ local back=self.customizeReturn;if not back then return end
+ self.customizeReturn=nil;self.scroll.CanvasPosition=back.scroll
+ if visibleSelection(back.target)then GuiService.SelectedObject=back.target end
 end
 function Journal:layout()
 	if self.layingOut then return end;self.layingOut=true
@@ -88,7 +99,7 @@ function Journal:layout()
 	for index,entry in ipairs(self.cards)do
 		Art.type(entry.Species,"Action",short);Art.type(entry.Status,"Body",short);Art.type(entry.ColorHint,"Supporting",short);Art.type(entry.Track,"Supporting",short)
 		if not Pets.collection[index].trial then
-			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+96,Art.textWidth(entry.ColorHint)+96)
+			minColumn=math.max(minColumn,Art.textWidth(entry.Species)+148,Art.textWidth(entry.ColorHint)+148)
 		end
 	end
 	local columns=if (bodyW-8)/2>=minColumn then 2 else 1
@@ -104,7 +115,7 @@ function Journal:layout()
 		local rowW=if group==2 then (bodyW-12)/2 else bodyW-8
 		local rowH=76
 		for slot=index,index+group-1 do
-			local entry=self.cards[slot];local textW=math.max(1,rowW-96)
+			local entry=self.cards[slot];local textW=math.max(1,rowW-148)
 			local nameH=Art.textHeight(entry.Species,textW,24);local statusH=Art.textHeight(entry.Status,textW,22)
 			local rankH=if entry.ColorHint.Visible then Art.textHeight(entry.ColorHint,textW,20)else 0
 			local trackH=if entry.Track.Visible then Art.textHeight(entry.Track,textW,20)else 0
@@ -113,8 +124,9 @@ function Journal:layout()
 			rowH=math.max(rowH,16+nameH+4+statusH+(if rankH>0 then rankH+4 else 0)+(if trackH>0 then trackH+4 else 0))
 		end
 		for slot=index,index+group-1 do
-			local entry=self.cards[slot];local x=4+(slot-index)*(rowW+8);local textW=math.max(1,rowW-96)
-			place(entry,x,y,rowW,rowH);place(entry.PortraitWell,8,8,60,60)
+			local entry=self.cards[slot];local x=4+(slot-index)*(rowW+8);local textW=math.max(1,rowW-148)
+			place(entry,x,y,rowW-52,rowH);place(entry.PortraitWell,8,8,60,60)
+            place(self.customizeButtons[slot],x+rowW-48,y+(rowH-44)/2,44,44)
 			local sy=8;place(entry.Species,80,sy,textW,entry:GetAttribute("NameHeight"));sy+=entry:GetAttribute("NameHeight")+4
 			place(entry.Status,80,sy,textW,entry:GetAttribute("StatusHeight"));sy+=entry:GetAttribute("StatusHeight")+4
 			local rankH=entry:GetAttribute("RankHeight");place(entry.ColorHint,80,sy,textW,rankH);sy+=if rankH>0 then rankH+4 else 0
@@ -187,11 +199,11 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		local equipped=unlocked and pet.id==companionId
 		local trackable=inventoryMask==nil and pet.trial~=nil and not unlocked
 		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif inventoryMask~=nil then "Hatch from eggs"elseif pet.trial then pet.trial.hint else pet.charge.." charge to hatch"
-        entry.ColorHint.Text=if unlocked and(pet.id=="pip"or pet.id=="puddle")then "Body & accents in Colors"else ""
+        entry.ColorHint.Text=if unlocked then "Customize with the hanger"else ""
         entry.ColorHint.Visible=entry.ColorHint.Text~=""
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
-		Art.bind(entry.Status,{TextColor3=function()return if equipped then Art.Leaf else Art.paletteColor("muted") end})
-		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Art.Amber elseif unlocked then Art.paletteColor("text") else Art.paletteColor("muted") end})
+		Art.bind(entry.Status,{TextColor3=function()return if equipped then Color3.fromHex("#197038")else Art.surfaceColor(entry.Status,"muted") end})
+		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Color3.fromHex("#8B4B14")elseif unlocked then Art.surfaceColor(entry.Species,"text")else Art.surfaceColor(entry.Species,"muted") end})
 		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
 			if self.portraits[index]then self.portraits[index].sprite:Destroy()end
 			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked,self.appearanceFor and self.appearanceFor(pet.id))}
@@ -199,6 +211,10 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
         if self.appearanceFor and self.portraits[index]then Portrait.apply(self.portraits[index].sprite,self.appearanceFor(pet.id))end
 		entry.Interactable,entry.Selectable=unlocked or trackable,unlocked or trackable
 		entry:SetAttribute("ControllerOwned",unlocked)
+        local customize=self.customizeButtons[index];customize.Interactable,customize.Selectable=unlocked,unlocked
+        customize:SetAttribute("AcquisitionCondition",if unlocked then "Owned"else "Hatch from Companion Eggs")
+        customize:SetAttribute("DisabledReason",if unlocked then nil else "Hatch from Companion Eggs")
+        Art.control(customize,false,unlocked)
 		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end
 	end
 	self.previousSelection=GuiService.SelectedObject;self.shade.Visible=true;self.scroll.CanvasPosition=Vector2.zero;self:layout()

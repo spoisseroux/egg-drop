@@ -4,7 +4,7 @@ local Catalog = {
 	DailyBonus = 6,
 	DayOffsetSeconds = -5 * 3600,
 	RareGuarantee = 7,
-	Order = { "meadow", "sprout" },
+	Order = { "meadow" },
 	ById = {
 		meadow = {
 			name = "Mixed Meadow", cost = 18, color = Color3.fromHex("#C2EC74"),
@@ -16,6 +16,7 @@ local Catalog = {
 			},
 		},
 		sprout = {
+			retired = true,
 			name = "Sprout Focused", cost = 24, color = Color3.fromHex("#FFB77A"),
 			weights = { { id = "pip", weight = 80 }, { id = "bloom_pip", weight = 20 } },
 		},

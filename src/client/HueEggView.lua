@@ -1,5 +1,6 @@
--- One explicit saved-color shop. Two stopped rigs; no render clock or hatch ack.
+-- Pet-specific customization and saved item receipts. Exactly one portrait.
 local GuiService=game:GetService("GuiService")
+local UserInputService=game:GetService("UserInputService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Hues=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
@@ -7,11 +8,13 @@ local Pets=require(Shared.PetCatalog)
 local Palette=require(Shared.PetPalette)
 local Art=require(script.Parent.DeckArt)
 local EggArt=require(script.Parent.EggArt)
+local JarArt=require(script.Parent.HueJarArt)
+local ItemReveal=require(script.Parent.HueItemReveal)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
-local Stars=require(script.Parent.StarText)
 local View={};View.__index=View
-local function direction(id)return Hues.ById[id].direction end
+local ids={"rose","tide","citrus","iris","reset"}
+local names={rose="Rose fruit",tide="Tide fruit",citrus="Citrus fruit",iris="Iris fruit",reset="Reset Hue"}
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,copy,role)
  local n=Art.text(parent,name,copy,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16)
@@ -19,429 +22,473 @@ local function text(parent,name,copy,role)
 end
 local function button(parent,name,copy,callback)
  local n=Instance.new("TextButton");n.Name,n.Text,n.Parent=name,copy,parent;n.BorderSizePixel=0;n.ZIndex=parent.ZIndex+1
- Art.bind(n,{BackgroundColor3="raised",TextColor3="text"});Art.button(n,8);Art.type(n,"Action");n.Activated:Connect(callback);return n
+ Art.bind(n,{BackgroundColor3="raised",TextColor3="text"});Art.button(n,10);Art.type(n,"Action");n.Activated:Connect(callback);return n
 end
-local function preview(parent,name)
- local host=Art.frame(parent,name,"inset",UDim2.fromOffset(0,0),UDim2.fromOffset(180,180),parent.ZIndex+1);Art.corner(host,10)
- local title=text(host,"Label",name,"Supporting");title.TextXAlignment=Enum.TextXAlignment.Center
- local viewport=Instance.new("ViewportFrame");viewport.Name="Pet";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.ZIndex=host.ZIndex+1;viewport.Parent=host
- viewport.Ambient=Color3.fromRGB(96,96,96);viewport.LightColor=Color3.fromRGB(168,168,168);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
- local world=Instance.new("WorldModel");world.Parent=viewport
- local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
- local swatch=Art.frame(host,"BodySwatch",Art.Silver,UDim2.fromOffset(0,0),UDim2.fromOffset(14,14),host.ZIndex+2);Art.corner(swatch,3)
- return {host=host,title=title,viewport=viewport,world=world,camera=camera,swatch=swatch}
-end
+local function channelName(channel)return if channel=="main"then "Main"else "Secondary"end
+local function nonzero(counts)for _,id in ipairs(ids)do if(counts[id]or 0)>0 then return true end end;return false end
+local function countsCopy(counts)local r=Hues.emptyCounts();for _,id in ipairs(ids)do if id~="reset"then r[id]=counts and counts[id]or 0 end end;return r end
 function View.new(parent,intent,options)
  local shade=Art.frame(parent,"HueEggView","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),20);shade.Visible=false;shade.Active=true;shade.BackgroundTransparency=1
- local card=Art.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(680,580),21);card.AnchorPoint=Vector2.new(.5,.5);Art.panel(card,16)
+ local card=Art.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(640,640),21);card.AnchorPoint=Vector2.new(.5,.5);Art.panel(card,18)
  local body=Instance.new("ScrollingFrame");body.Name,body.Parent="Body",card;body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ZIndex=22
  body.ScrollingDirection,body.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never;body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
- local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId="pip",hue="rose",page="buy",paletteKind="body",paletteChoice="original",targets={},offers={},bodyChoices={},secondaryChoices={},previewKey=nil,epoch=0},View)
- self.title=text(card,"Title","Hue Egg","Heading");self.wallet=text(card,"Wallet","0 Stars","Counter")
- self.walletHost=Art.frame(card,"WalletHost","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(120,44),22)
- self.wallet.Parent=self.walletHost
- self.walletStar=EggArt.stars(self.walletHost,UDim2.fromOffset(0,0),UDim2.fromOffset(18,24),23)
+ local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId="pip",page="palette",tab="hue",channel="main",targets={},jars={},bars={},charmRequests={},epoch=0},View)
+ self.title=text(card,"Title","Customize","Heading");self.wallet=text(card,"Wallet","0 Stars","Counter")
  self.closeButton=Art.bareClose(button(card,"Close","×",function()self:close("back")end))
- self.action=button(card,"Action","Hatch Hue Egg - 8 Stars",function()self:activate()end)
- self.mixChip=Art.frame(self.action,"MixResultSwatch",Art.Silver,UDim2.new(0,10,.5,0),UDim2.fromOffset(22,22),self.action.ZIndex+2)
- self.mixChip.AnchorPoint=Vector2.new(0,.5);self.mixChip.Visible=false;Art.corner(self.mixChip,5)
- for i,id in ipairs({"pip","puddle"})do self.targets[i]=button(body,"Target_"..id, Pets.byId[id].name,function()self:choosePet(id)end)end
- self.buyTab=button(body,"BuyTab","Hue Egg",function()self:setPage("buy")end)
- self.paletteTab=button(body,"PaletteTab","Colors",function()self:setPage("palette")end)
- self.paletteGroup="body";self.colorTabs={}
- for _,item in ipairs({{"body","Body"},{"secondary","Accents"},{"mix","Mix"}})do
-  local key=item[1];self.colorTabs[key]=button(body,"ColorsTab_"..key,item[2],function()self:setColorsGroup(key)end)
+ self.action=button(card,"Action","Confirm",function()self:activate()end)
+ self.cancel=button(card,"Cancel","Cancel",function()self:cancelConfirmation()end)
+ self.charmTab=button(body,"CharmTab","Charm",function()self:setTab("charm")end)
+ self.hueTab=button(body,"HueTab","Hue",function()self:setTab("hue")end)
+ self.targetTitle=text(body,"TargetTitle","Choose a pet","Action")
+ for _,pet in ipairs(Pets.collection)do local id=pet.id;self.targets[id]=button(body,"Target_"..id,pet.name,function()self:choosePet(id)end)end
+ self.targetChange=button(body,"ChangePet","Change pet",function()if not self.intent.pending then self.selectTarget=not self.selectTarget;self:refresh()end end)
+ self.mainTab=button(body,"MainTab","Main",function()self:chooseChannel("main")end)
+ self.secondaryTab=button(body,"SecondaryTab","Secondary",function()self:chooseChannel("secondary")end)
+ self.portrait=Art.frame(body,"PetPortrait","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(240,170),23);Art.corner(self.portrait,16)
+ self.viewport=Instance.new("ViewportFrame");self.viewport.Name="SavedPet";self.viewport.BackgroundTransparency=1;self.viewport.Size=UDim2.fromScale(1,1);self.viewport.ZIndex=24;self.viewport.Parent=self.portrait
+ self.viewport.Ambient=Color3.fromRGB(175,184,183);self.viewport.LightColor=Color3.fromRGB(255,250,231);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
+ self.petName=text(body,"PetName","Zivvi","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center
+ self.channelTitle=text(body,"ChannelTitle","Main · saved doses","Action")
+ for _,id in ipairs(ids)do if id~="reset"then
+  local row=Art.frame(body,"Dose_"..id,"inset",UDim2.fromOffset(0,0),UDim2.fromOffset(200,44),23);Art.corner(row,8)
+  local label=text(row,"Label",names[id],"Body");local value=text(row,"Count","0/5","Counter");value.TextXAlignment=Enum.TextXAlignment.Right
+  local ticks={};for notch=1,5 do local tick=Art.frame(row,"Notch"..notch,Hues.ById[id].color,UDim2.fromOffset(0,0),UDim2.fromOffset(20,12),24);Art.corner(tick,3);Art.stroke(tick,"line",0,1);ticks[notch]=tick end
+  self.bars[id]={row=row,label=label,value=value,ticks=ticks}
+ end end
+ self.inventoryTitle=text(body,"InventoryTitle","Your jars","Action")
+ for _,id in ipairs(ids)do
+  local n=button(body,"Item_"..id,"",function()self:chooseItem(id)end)
+  local art=JarArt.create(n,id,UDim2.fromOffset(6,4),UDim2.fromOffset(44,52),n.ZIndex+1)
+  local label=text(n,"ItemName",names[id],"Body");local quantity=text(n,"Quantity","×0","Counter");local reason=text(n,"Reason","","Supporting")
+  self.jars[id]={button=n,art=art,label=label,quantity=quantity,reason=reason}
  end
- self.current=preview(body,"Current");self.after=preview(body,"After")
- self.currentText=text(body,"CurrentPalette","","Body");self.quote=text(body,"Quote","","Body")
- self.offerTitle=text(body,"OfferTitle","Choose a direction","Action")
- for _,offer in ipairs(Hues.Order)do
-  local id=offer.id;local n=button(body,"Offer_"..id,"",function()self:chooseHue(id)end)
-  local icon=Art.frame(n,"HueSwatch",offer.color,UDim2.fromOffset(8,8),UDim2.fromOffset(32,36),n.ZIndex+2);Art.corner(icon,7);local title=text(n,"Name",offer.name,"Action");local rank=text(n,"Grades","○○○","Supporting")
-  local swatch=Art.frame(n,"Swatch",offer.color,UDim2.fromOffset(0,0),UDim2.fromOffset(14,14),n.ZIndex+2);Art.corner(swatch,3)
-  self.offers[id]={button=n,title=title,rank=rank,icon=icon,swatch=swatch}
-  self.offers[id].ink=function()
-   return Art.paletteColor(if n:GetAttribute("PrimaryAction")and n:GetAttribute("ActionEnabled")then "ink"elseif n:GetAttribute("ActionEnabled")==false then "muted"else "text")
-  end
- end
- self.bodyTitle=text(body,"BodyTitle","Body · free saved choice","Action")
- self.secondaryTitle=text(body,"SecondaryTitle","Accents · independent free choice","Action")
- local function choice(kind,id,name)
-  return button(body,kind.."_"..id,name,function()self:choosePalette(kind,id)end)
- end
- self.bodyChoices.original=choice("body","original","Original body")
- self.secondaryChoices.default=choice("secondary","default","Default accents")
- for _,offer in ipairs(Hues.Order)do self.bodyChoices[offer.id]=choice("body",offer.id,offer.direction.." body");self.secondaryChoices[offer.id]=choice("secondary",offer.id,offer.direction.." accents")end
- self.mixTitle=text(body,"MixTitle","Mix body - choose two learned bases","Action")
- self.mixChoices={};self.mixBases={}
- for _,offer in ipairs(Hues.Order)do
-  local id=offer.id;self.mixChoices[id]=button(body,"Mix_"..id,offer.direction,function()self:chooseMix(id)end)
- end
- self.resetAction=button(body,"ResetColors","Reset to original colors",function()
-  if self.resetAction.Interactable then self.intent:reset(self.petId)end
- end)
- self.generic=Art.frame(body,"GenericHueEgg","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(120,140),23);self.generic.BackgroundTransparency=1
- self.genericEgg=EggArt.create(self.generic,"meadow",UDim2.new(.5,-42,0,4),UDim2.fromOffset(84,108),24);self.genericEgg.Pattern:Destroy()
- for i,offer in ipairs(Hues.Order)do
-  Art.frame(self.genericEgg,"Band_"..offer.id,offer.color,UDim2.fromScale(.19+(i-1)*.155,.51),UDim2.fromScale(.155,.16),29)
- end
- self.eggCaption=text(self.generic,"EggCaption","Hue Egg - 8 Stars","Body");self.eggCaption.TextXAlignment=Enum.TextXAlignment.Center
- self.receipt=text(body,"SavedReceipt","","Body")
- self.equipAccent=button(body,"EquipAccents","Equip accents",function()
-  local r=self.intent.receipt
-  if r and r.petId==self.petId and r.hue then self.intent:equip(self.petId,"secondary",r.hue)end
- end)
+ self.empty=text(body,"EmptyInventory","No jars yet. Find fixed-color fruit in Hue Eggs.","Body")
+ self.charmTitle=text(body,"CharmTitle","A floating Dot, colored by Secondary.","Body")
+ self.charmToggle=button(body,"ShowCharm","Show charm",function()self:toggleCharm()end)
+ self.dot=button(body,"Shape_dot","✓ Dot",function()self:selectDot()end)
+ self.receiptArt=Art.frame(body,"ResultJar","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(150,160),23);self.receiptArt.BackgroundTransparency=1
+ self.itemReveal=ItemReveal.new(self.receiptArt,{audio=self.options.audio,reduceEffects=self.options.reduceEffects})
+ self.receipt=text(body,"SavedReceipt","","Reward");self.receipt.TextXAlignment=Enum.TextXAlignment.Center
+ self.receiptDetail=text(body,"ReceiptDetail","Already saved in your inventory.","Body")
+ self.useNow=button(body,"UseNow","Use now",function()self:useResult()end)
+ self.quote=text(body,"Confirmation","","Body")
+ self.confirmTarget=text(body,"ConfirmTarget","","Action")
+ self.confirmDelta=text(body,"ConfirmDelta","","Action")
+ self.confirmStock=text(body,"ConfirmStock","","Body")
+ self.confirmWarning=text(body,"ConfirmWarning","","Body")
+ self.resultSwatch=Art.frame(body,"ResultSwatch",Art.Silver,UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),24);Art.corner(self.resultSwatch,8);Art.stroke(self.resultSwatch,"line",0,1)
  self.status=text(body,"Status","","Body")
+ self.migrationText=text(body,"MigrationReceipt","","Body")
+ self.legacyTitle=text(body,"LegacyTitle","Your carried Hue Egg: choose its fixed fruit once.","Body")
+ self.legacyButtons={};for _,id in ipairs(ids)do if id~="reset"then self.legacyButtons[id]=button(body,"Redeem_"..id,names[id],function()self:requestLegacy(id)end)end end
+ self.presetTitle=text(body,"LegacyPresetsTitle","Previous colors · available until the first new dose","Supporting");self.presetButtons={}
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if shade.Visible then self:layout()end end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
- shade.Destroying:Connect(function()self:destroy(true)end)
- return self
+ shade.Destroying:Connect(function()self:destroy(true)end);return self
 end
 function View:isOpen()return self.shade.Visible end
 function View:owned(id)return Eggs.isOwned(self.state.inventoryMask or 0,id)end
+function View:counts()local p=self.state.petHues and self.state.petHues[self.petId];return countsCopy(p and p[self.channel])end
+function View:appearance()
+ local appearance=table.clone(self.options.appearance and self.options.appearance(self.petId)or {})
+ local p=self.state.petHues and self.state.petHues[self.petId]
+ if p then appearance.mainDoses=countsCopy(p.main);appearance.secondaryDoses=countsCopy(p.secondary)end
+ return appearance
+end
 function View:choosePet(id)
- if self.intent.pending or not Hues.Supported[id]or not self:owned(id)then return false end
- self.petId=id;self.mixBases={};self.paletteKind,self.paletteGroup="body","body";self.paletteChoice=if self.paletteKind=="body"then Hues.get(self.state.hues,id).body else Hues.get(self.state.hues,id).secondary
+ if self.intent.pending or not self:owned(id)or not Hues.Supported[id]then return false end
+ self.petId=id;self.selectTarget=false;if self.confirmation then self.confirmation.petId=id;self.confirmation.channel=self.channel end;self:refresh();return true
+end
+function View:chooseChannel(channel)
+ if self.intent.pending then return false end;self.channel=channel
+ if self.confirmation then self.confirmation.channel=channel end;self:refresh();return true
+end
+function View:setTab(tab)
+ if self.intent.pending or self.confirmation then return false end
+ self.tab=tab;self:refresh();return true
+end
+function View:reason(id)
+ local count=(self.state.hueInventory or {})[id]or 0
+ if count<1 then return "No jars"end
+ if not self:owned(self.petId)then return "Choose an owned pet"end
+ local c=self:counts()
+ if id=="reset"then return if nonzero(c)then nil else "Already original"end
+ return if c[id]>=5 then "Already 5/5"else nil
+end
+function View:chooseItem(id)
+ if self.intent.pending or self:reason(id)then return false end
+ local r=self.state.pendingHueResult
+ if r then self.page="receipt";self.confirmation=nil;self:refresh();return false end
+ self.confirmReturn={scroll=self.body.CanvasPosition,target=self.jars[id].button};self.confirmation={itemId=id,petId=self.petId,channel=self.channel};self.body.CanvasPosition=Vector2.zero;self.epoch+=1;self:refresh();return true
+end
+function View:useResult()
+ self.itemReveal:cancel()
+ local r=self.state.pendingHueResult;if not r or self.intent.pending then return false end
+ self.page="palette";self.tab="hue";self.selectTarget=true;self.body.CanvasPosition=Vector2.zero;self.epoch+=1
+ self.assignment={itemId=r.itemId,pendingResultId=r.id};self.confirmation=nil;self:refresh();return true
+end
+function View:requestLegacy(id)
+ if self.intent.pending then return false end
+ self.confirmation={legacyItem=id};self:refresh();return true
+end
+function View:cancelConfirmation()
+ if self.intent.pending then return false end
+ local pendingResult=self.confirmation and self.confirmation.pendingResultId
+ self.confirmation=nil;self.selectTarget=false;if pendingResult then self.page="receipt"end;self:refresh();if self.confirmReturn then self.body.CanvasPosition=self.confirmReturn.scroll;GuiService.SelectedObject=self.confirmReturn.target;self.confirmReturn=nil end;self.epoch+=1;return true
+end
+function View:requestCharm(visible)
+ local id=self.petId;local pending=self.charmRequests[id]
+ if pending then
+  if not pending.retry or not self.options.charm then return false end
+  pending.retry=false;self.options.charm(id,pending.visible,pending.shape,pending.seq)
+ else
+  if not self.options.charm then return false end
+  local operation=self.options.charm(id,visible,"dot")
+  if type(operation)~="table"or type(operation.seq)~="number"then return false end
+  pending={petId=id,visible=visible,shape="dot",seq=operation.seq};self.charmRequests[id]=pending
+ end
+ local captured=pending
+ task.delay(2,function()
+  if self.destroyed or self.charmRequests[id]~=captured then return end
+  captured.retry=true;self:refresh()
+ end)
  self:refresh();return true
 end
-function View:chooseHue(id)if self.intent.pending or not Hues.ById[id]then return false end;self.hue=id;self:refresh();return true end
-function View:setPage(page)if self.intent.pending then return false end;self.page=page;self:refresh();return true end
-function View:choosePalette(kind,id)
+function View:toggleCharm()
  if self.intent.pending then return false end
- local r=Hues.get(self.state.hues,self.petId)
- if id~="original"and id~="default"and(r.ranks[id]or 0)<1 then return false end
- self.paletteKind,self.paletteGroup,self.paletteChoice=kind,kind,id;self:refresh();return true
+ return self:requestCharm(self:appearance().charmVisible==false)
 end
-function View:setColorsGroup(group)
- if self.intent.pending or not self.colorTabs[group]then return false end
- local record=Hues.get(self.state.hues,self.petId)
- self.paletteGroup,self.paletteKind=group,group
- if group=="mix"then
-  local mix=Hues.Mixes[record.mix];self.mixBases=if mix then{mix.a,mix.b}else{}
- else self.paletteChoice=record[group]end
- self.body.CanvasPosition=Vector2.zero;self:refresh();return true
+function View:selectDot()
+ if self.intent.pending then return false end
+ return self:requestCharm(self:appearance().charmVisible~=false)
 end
-function View:chooseMix(id)
- local record=Hues.get(self.state.hues,self.petId)
- if self.intent.pending or(record.ranks[id]or 0)<1 then return false end
- local at=table.find(self.mixBases,id)
- if at then table.remove(self.mixBases,at)
- else if #self.mixBases==2 then table.remove(self.mixBases,1)end;table.insert(self.mixBases,id)end
- self.paletteKind,self.paletteGroup="mix","mix";self:refresh();return true
+function View:charmResult(packet)
+ if type(packet)~="table"then return false end
+ local pending=self.charmRequests[packet.petId]
+ if not pending or packet.seq~=pending.seq then return false end
+ if packet.status=="Saved"then
+  if packet.visible~=pending.visible or(packet.shape~=nil and packet.shape~=pending.shape)then return false end
+  self.charmRequests[packet.petId]=nil;self.charmMessage="Charm saved"
+ elseif packet.status=="Rejected"then
+  self.charmRequests[packet.petId]=nil;self.charmMessage="Charm was not saved. Try again."
+ elseif packet.status~="Applied"then return false end
+ if self.petId==packet.petId then self:refresh()end;return true
 end
 function View:activate()
- if not self.shade.Visible or not self.action.Interactable then return false end
+ if not self.shade.Visible or not self.action.Visible or not self.action.Interactable then return false end
+ self.itemReveal:cancel()
  if self.intent.status=="Retrying"then return self.intent:retry()end
- if self.page=="buy"then
-  if self.state.heldHueEgg then return self.intent:apply(self.petId,self.hue)end
-  local play=self.options.play or self.options.earn
-  local ready=self.intent:ready()
-  if ready and Hues.capacity(self.state)and(self.state.nectar or 0)<Hues.Cost and type(play)=="function"then
-   self:close("earn");play();return true
-  end
-  return self.intent:hatch()
+ local q=self.confirmation
+ if self.page=="migration"then
+  local ok=self.intent:ackMigration();if ok then self.migrationOperation=self.intent.pending.value.id end;return ok
+ elseif self.assignment and not q then
+  local assignment=self.assignment
+  self.confirmation={itemId=assignment.itemId,petId=self.petId,channel=self.channel,pendingResultId=assignment.pendingResultId}
+  self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero;self.epoch+=1;self:refresh();return true
+ elseif q then
+  local ok
+  if q.legacyItem then ok=self.intent:legacyRedeem(q.legacyItem)
+  elseif q.presetId then ok=self.intent:legacyPreset(self.petId,self.channel,q.presetId)
+  else ok=self.intent:use(self.petId,self.channel,q.itemId,q.pendingResultId)end
+  if ok then self.submitted=self.intent.pending.value.id end;return ok
+ elseif self.page=="receipt"then
+  local r=self.state.pendingHueResult;if not r then return false end
+  local ok=self.intent:store(r.id);if ok then self.storeOperation=self.intent.pending.value.id end;return ok
+ elseif self.page=="buy"then
+  self:close("shop");if self.options.shop then self.options.shop()end;return true
  end
- if self.paletteKind=="mix"then return self.intent:mix(self.petId,self.mixBases[1],self.mixBases[2])end
- return self.intent:equip(self.petId,self.paletteKind,self.paletteChoice)
+ return false
 end
-function View:appearance(after)
- local token=Hues.appearance(self.state.hues,self.petId)
- local base=self.options.appearance and self.options.appearance(self.petId)
- token=table.clone(token);token.charmVisible=not(base and base.charmVisible==false)
- local record=Hues.get(self.state.hues,self.petId)
- if after then
-  if self.page=="buy"and self.state.heldHueEgg then token.body=self.hue;token.bodyMix=nil;token.bodyRank=math.min(Hues.MaxRank,record.ranks[self.hue]+1)
-  elseif self.page=="palette"then
-   if self.paletteKind=="body"then token.body=self.paletteChoice;token.bodyMix=nil;token.bodyRank=record.ranks[token.body]or 0
-   elseif self.paletteKind=="secondary"then token.secondary=self.paletteChoice
-   elseif self.paletteKind=="mix"then
-    local pair=Hues.pair(self.mixBases[1],self.mixBases[2]);local mix=Hues.Mixes[pair]
-    if mix then token.bodyMix=pair;token.bodyRank=math.min(record.ranks[mix.a],record.ranks[mix.b])end
-   end
-  end
- end
- return token
+function View:fitPortrait()
+ if not self.visual then return end
+ local box,size=Bounds.get(self.visual);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
+ local distance=math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3
+ local center=box.Position;self.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.12,distance*1.10),center)
 end
-function View:paintPreview()
- for _,item in ipairs({self.current,self.after})do
-  local token=self:appearance(item==self.after)
-  if item.petId~=self.petId then
-   if item.visual then item.visual:destroy()end
-   item.visual=Factory.new(item.world,Vector3.zero,Pets.byId[self.petId],nil,token)
-   item.visual.idleMotionFrozen=true;item.visual.reducedEffects=true;item.visual.time=0;item.visual.greeting=2;item.visual.expression="neutral";item.petId=self.petId
-  end
-  item.visual:applyAppearance(token);item.visual:update(0)
-  item.swatch.BackgroundColor3=Palette.resolve(self.petId,token).body
- end
- self:fitPreviews()
-end
-function View:fitPreviews()
- local item=self.current;if not item.visual then return end
- local key=item.petId..":"..tostring(item.visual.charmVisible)..":"..tostring(item.viewport.Size)
- if self.fitKey==key then return end;self.fitKey=key
- local cf,size=Bounds.getBody(item.visual);local center=cf.Position
- local full,body={},{}
- for _,entry in ipairs(item.visual.pieces)do if entry.part.Transparency<1 then
-  for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do
-   local point=entry.part.CFrame:PointToWorldSpace(entry.part.Size*Vector3.new(x,y,z)*.5)
-   table.insert(full,point);if entry.role~="charm"then table.insert(body,point)end
-  end end end
- end end
- local aspect=math.max(.1,item.viewport.Size.X.Offset/math.max(1,item.viewport.Size.Y.Offset));local tan=math.tan(math.rad(15))
- local function projected(distance)
-  local camera=CFrame.lookAt(center+Vector3.new(0,0,distance),center)
-  local minimum,maximum=math.huge,-math.huge
-  for _,point in ipairs(body)do local p=camera:PointToObjectSpace(point);local depth=-p.Z;if depth<=.01 then return math.huge,false end;local y=p.Y/(depth*tan);minimum,maximum=math.min(minimum,y),math.max(maximum,y)end
-  for _,point in ipairs(full)do local p=camera:PointToObjectSpace(point);local depth=-p.Z
-   if depth<=.01 or math.abs(p.X)/(depth*tan*aspect)>.92 or math.abs(p.Y)/(depth*tan)>.92 then return(maximum-minimum)*.5,false end
-  end
-  return(maximum-minimum)*.5,true
- end
- local low,high=.05,math.max(size.Magnitude,1)
- for _=1,16 do local fraction,safe=projected(high);if safe and fraction<=.64 then break end;high*=2 end
- for _=1,24 do local middle=(low+high)*.5;local fraction,safe=projected(middle);if safe and fraction<=.64 then high=middle else low=middle end end
- self.previewBodyFraction,self.previewContained=projected(high)
- self.current.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,0,high),center);self.after.camera.CFrame=self.current.camera.CFrame
-end
-local function bodyName(token)
- local mix=Hues.Mixes[token.bodyMix]
- return if mix then mix.name.." "..token.bodyRank elseif token.body=="original"then "Original"else direction(token.body).." "..token.bodyRank
+function View:paintPortrait()
+ if not self.portrait.Visible then return end
+ local a=self:appearance();local key=self.petId
+ if not self.visual or self.visualId~=key then if self.visual then self.visual:destroy()end;self.visual=Factory.new(self.world,Vector3.zero,Pets.byId[self.petId],nil,a);self.visualId=key end
+ if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual.reducedEffects=true;self.visual:update(0);self:fitPortrait()
 end
 function View:refresh()
  self.state=self.intent.state or self.state
- local pending=self.intent.pending~=nil
- if self.pendingEpoch~=pending then self.pendingEpoch=pending;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)end
+ if self.shade.Visible and self.intent.pending and self.intent.pending.action=="hueBuy"then self.purchaseInFlight=self.intent.pending.value.id end
+ for id,request in pairs(self.charmRequests)do
+  if request.retry and self.options.appearance then
+   local saved=self.options.appearance(id)
+   if saved and saved.charmVisible==request.visible and(saved.charmShape==nil or saved.charmShape==request.shape)then self.charmRequests[id]=nil end
+  end
+ end
+ local receipt=self.intent.receipt
+ if not self.intent.pending and receipt then
+  if self.submitted==receipt.id then
+   self.confirmation=nil;self.selectTarget=false;self.submitted=nil
+   if receipt.action=="hueLegacyRedeem"then self.page="receipt"end
+  end
+  if self.migrationOperation==receipt.id then self.migrationOperation=nil;self.page=if self.state.pendingHueResult then "receipt"else self.afterMigrationPage or "palette"end
+  if self.storeOperation==receipt.id then self.storeOperation=nil;self:close("stored");return end
+ end
  if not self.shade.Visible then return end
- if self.state.lastHatch then self:close("pendingHatch");if self.options.pendingHatch then self.options.pendingHatch()end;return end
- local held=self.state.heldHueEgg;local assigning=self.page=="buy"and held~=nil
- local desktop=self.shade.AbsoluteSize.X>=760 and self.shade.AbsoluteSize.Y>=560
- local showPet=self.page=="palette"or assigning;local owned=self:owned(self.petId)
- local record=Hues.get(self.state.hues,self.petId);local rank=record.ranks[self.hue]
- self.wallet.Text=Stars.amount(self.state.nectar or 0);self.wallet:SetAttribute("AccessibleLabel",self.wallet.Text)
- local secondary=if record.secondary=="default"then "Default"else direction(record.secondary)
- self.current.title.Text="Current - "..bodyName(self:appearance(false)).." / "..secondary
- local afterToken=self:appearance(true)
- self.after.title.Text="Preview - "..bodyName(afterToken).." / "..(if afterToken.secondary=="default"then "Default"else direction(afterToken.secondary))
- self.currentText.Text="Saved body: "..bodyName(self:appearance(false)).." / Accent: "..secondary
- if self.page=="buy"then
-  self.quote.Text=if assigning then(if rank>=3 then "Already at grade III. Your egg stays held."else direction(self.hue).." "..rank.." to "..(rank+1).." - uses your held egg, no more Stars. Accent stays "..secondary..".")
-   else "Hatch first, then choose a hue and an owned baby. One use stays saved until you apply it."
- else
-  local pair=Hues.pair(self.mixBases[1],self.mixBases[2]);local mix=Hues.Mixes[pair]
-  self.quote.Text=if self.paletteKind=="mix"then(if mix then mix.name.." - equal parts - grade "..math.min(record.ranks[mix.a],record.ranks[mix.b]).." - free"else "Choose two different learned bases to preview a mix.")else "Preview a learned body or independent accent, then save for free."
- end
- self.generic.Visible=self.page=="buy";self.eggCaption.Text=if held then "Hatched - choose hue and baby"else "Hue Egg - 8 Stars"
- local crown=self.genericEgg.Shell.Crown;crown.Position=if held then UDim2.fromScale(.29,-.04)else UDim2.fromScale(.25,.08);crown.Rotation=if held then 14 else 0
- self.genericEgg.ShellGlint.Visible=not held
- self.current.host.Visible,self.after.host.Visible=showPet and owned,showPet and owned;self.currentText.Visible=showPet and owned and not desktop
- for i,id in ipairs({"pip","puddle"})do
-  local n=self.targets[i];n.Visible=showPet and self:owned(id);n.Interactable=n.Visible and not pending;n.Selectable=n.Interactable;Art.control(n,id==self.petId,n.Interactable)
- end
- for id,entry in pairs(self.offers)do
-  local grade=record.ranks[id];entry.button.Visible=assigning;entry.title.Text=Hues.ById[id].direction
-  entry.rank.Text=grade.." / III learned"
-  entry.button:SetAttribute("AccessibleLabel",Hues.ById[id].direction..", grade "..grade.." of 3")
-  entry.button.Interactable=not pending;entry.button.Selectable=entry.button.Interactable;Art.control(entry.button,id==self.hue,entry.button.Interactable)
-  Art.bind(entry.title,{TextColor3=entry.ink});Art.bind(entry.rank,{TextColor3=entry.ink})
- end
- for kind,choices in pairs({body=self.bodyChoices,secondary=self.secondaryChoices})do for id,n in pairs(choices)do
-  n.Visible=self.page=="palette"and self.paletteGroup==kind;local unlocked=id=="original"or id=="default"or(record.ranks[id]or 0)>0
-  n.Interactable=owned and unlocked and not pending;n.Selectable=n.Interactable
-  n:SetAttribute("SavedSelection",record[kind]==id and(kind~="body"or not record.mix))
-  Art.control(n,self.paletteKind==kind and self.paletteChoice==id,n.Interactable)
- end end
- self.mixTitle.Visible=self.page=="palette"and self.paletteGroup=="mix"
- for id,n in pairs(self.mixChoices)do n.Visible=self.page=="palette"and self.paletteGroup=="mix";n.Interactable=owned and record.ranks[id]>0 and not pending;n.Selectable=n.Interactable;Art.control(n,self.paletteKind=="mix"and table.find(self.mixBases,id)~=nil,n.Interactable)end
- self.resetAction.Visible=self.page=="palette";self.resetAction.Interactable=owned and not pending and(record.body~="original"or record.secondary~="default"or record.mix~=nil)
- self.resetAction.Selectable=self.resetAction.Interactable;Art.control(self.resetAction,false,self.resetAction.Interactable)
- self.buyTab.Interactable,self.paletteTab.Interactable=not pending,not pending
- for _,entry in ipairs({{self.buyTab,"buy"},{self.paletteTab,"palette"}})do
-  local tab,key=entry[1],entry[2];local active=self.page==key;tab:SetAttribute("SelectedTab",active);Art.control(tab,active,not pending)
-  local edge=tab:FindFirstChild("ActiveTabEdge");if not edge then edge=Art.frame(tab,"ActiveTabEdge","accent",UDim2.new(0,4,1,-4),UDim2.new(1,-8,0,3),tab.ZIndex+2)end;edge.Visible=active
- end
- self.offerTitle.Visible=assigning;self.bodyTitle.Visible=self.page=="palette"and self.paletteGroup=="body";self.secondaryTitle.Visible=self.page=="palette"and self.paletteGroup=="secondary"
- local receipt=self.intent.receipt;local hasReceipt=receipt~=nil
- self.receipt.Visible=self.page=="buy"and not held and hasReceipt and receipt.action~="hueBuy";self.equipAccent.Visible=self.page=="buy"and not held and hasReceipt and receipt.petId==self.petId and(receipt.action=="hueApply"or receipt.action=="hue")and receipt.secondaryUnlocked==true
- if hasReceipt then
-  self.receipt.Text=if receipt.action=="hueBuy"then "Saved - Hue Egg hatched - 8 Stars spent"elseif receipt.action=="hueApply"or receipt.action=="hue"then direction(receipt.hue).." "..({"I","II","III"})[receipt.newRank].." applied to "..Pets.byId[receipt.petId].name else "Colors saved for "..(Pets.byId[receipt.petId]and Pets.byId[receipt.petId].name or "your baby")
-  if self.equipAccent.Visible then self.equipAccent.Text="Equip "..direction(receipt.hue).." accents";self.equipAccent.Interactable=not pending and record.secondary~=receipt.hue;self.equipAccent.Selectable=self.equipAccent.Interactable end
- end
- self.status.Text=if self.saveNotice then self.saveNotice.detail elseif self.intent.status=="Saved"or self.intent.message=="Saved"then ""else self.intent.message or "";self.status.Visible=self.status.Text~=""
- self.resultLead=self.page=="buy"and not held and self.receipt.Visible
- self.quote.TextXAlignment=if self.page=="buy"and not held then Enum.TextXAlignment.Center else Enum.TextXAlignment.Left
- if self.resultLead then self.quote.Text="Another egg adds one grade to a hue you choose."end
- local ready,reason=self.intent:ready(if self.page=="buy"and not held then nil else self.petId)
- if self.intent.status=="Retrying"and pending then self.action.Text="Retry same save";self.action.Interactable=true
- elseif pending then self.action.Text="Saving...";self.action.Interactable=false
- elseif self.page=="buy"then
-  if held then self.action.Text=if rank>=3 then "Already at grade III"else "Apply to "..Pets.byId[self.petId].name;self.action.Interactable=ready and owned and rank<3
-  else
-   local another=self.state.hueLastPurchase~=nil
-   self.action.Text=if another then "Hatch another Hue Egg - 8 Stars"else "Hatch Hue Egg - 8 Stars"
-   local capacity=Hues.capacity(self.state);local shortfall=math.max(0,Hues.Cost-(self.state.nectar or 0));local play=self.options.play or self.options.earn
-   self.action.Interactable=ready and capacity and(shortfall==0 or type(play)=="function")
-   if ready and capacity and shortfall>0 and type(play)=="function"then self.action.Text="Earn "..shortfall.." more "..Stars.name(shortfall)end
-   if ready then
-    if not capacity then reason="No owned supported baby can learn another grade."elseif shortfall>0 then reason="Earn "..Stars.amount(shortfall).." in a field round."end
+ local r=self.state.pendingHueResult
+ if r and self.page=="buy"then self.page="receipt"end
+ if self.page=="receipt"and not r then self.page="palette"end
+ local owned=self:owned(self.petId);if not owned then for _,p in ipairs(Pets.collection)do if self:owned(p.id)then self.petId=p.id;owned=true;break end end end
+ local migration=self.page=="migration";local customization=self.page=="palette";local hue=customization and self.tab=="hue";local charm=customization and self.tab=="charm";local confirming=self.confirmation~=nil
+ self.migrationText.Visible=migration
+ if migration then
+  local lines={"Your previous colors are safe. Your saved Stars, pets and purchases are unchanged."}
+  for _,pet in ipairs(Pets.collection)do local row=self.state.petHues and self.state.petHues[pet.id];local presets=self.state.legacyHuePresets and self.state.legacyHuePresets[pet.id]
+   if row and presets and(#(presets.main or {})>0 or #(presets.secondary or {})>0)then
+    table.insert(lines,pet.name..": Main Rose "..row.main.rose.."/5 · Tide "..row.main.tide.."/5 · Citrus "..row.main.citrus.."/5 · Iris "..row.main.iris.."/5")
+    table.insert(lines,"Previously earned choices: "..#(presets.main or {}).." Main · "..#(presets.secondary or {}).." Secondary. The first new fruit locks exchanges on that channel until a Reset Hue.")
    end
   end
- elseif self.paletteKind=="mix"then
-  local pair=Hues.pair(self.mixBases[1],self.mixBases[2]);self.action.Text=if pair and record.mix==pair then Hues.Mixes[pair].name.." applied"elseif pair then "Apply "..Hues.Mixes[pair].name.." - free"else "Choose two bases";self.action.Interactable=ready and pair~=nil and record.mix~=pair
- else
-  local same=record[self.paletteKind]==self.paletteChoice and(self.paletteKind~="body"or not record.mix)
-  self.action.Text=if same then "Equipped"else "Apply "..(if self.paletteChoice=="original"then "Original body"elseif self.paletteChoice=="default"then "Default accent"else direction(self.paletteChoice).." "..self.paletteKind).." - free"
-  self.action.Interactable=ready and not same
+  if self.state.legacyHueEgg then table.insert(lines,"Your carried Hue Egg still lets you choose one fixed fruit, with no charge.")end
+  self.migrationText.Text=table.concat(lines,"\n\n")
  end
- -- A previous success must never mask why this next purchase is unavailable.
- if reason and not pending and(self.page=="buy"and not held or not self.action.Interactable)then
-  if self.saveNotice then self.status.Text=self.saveNotice.detail else self.status.Text=reason end
-  self.status.Visible=true
+ self.title.Text=if migration then "Your converted colors"elseif self.assignment then "Choose where to use"elseif confirming then if self.confirmation.itemId then "Use "..names[self.confirmation.itemId].."?"else "Confirm choice"elseif self.page=="receipt"then "A jar for your garden"elseif self.page=="buy"then "Hue Egg"else "Customize"
+ self.title:SetAttribute("AccessibleLabel",if customization then "Customize "..Pets.byId[self.petId].name else self.title.Text)
+ self.wallet.Text=tostring(self.state.nectar or 0).." Stars"
+ local function visible(n,value)n.Visible=value end
+ for _,n in ipairs({self.charmTab,self.hueTab,self.portrait,self.petName})do visible(n,customization and not confirming)end
+ for _,n in ipairs({self.mainTab,self.secondaryTab,self.channelTitle,self.inventoryTitle})do visible(n,hue and not confirming)end
+ if self.assignment then self.inventoryTitle.Visible=false end
+ self.mainTab.Visible=hue and not confirming;self.secondaryTab.Visible=hue and not confirming;self.targetChange.Visible=false;self.targetTitle.Visible=customization and not confirming and self.selectTarget==true
+ for id,n in pairs(self.targets)do n.Visible=customization and not confirming and self.selectTarget==true and self:owned(id);n.Interactable=not self.intent.pending;Art.control(n,id==self.petId,n.Interactable)end
+ Art.tab(self.charmTab,self.tab=="charm",not self.intent.pending);Art.tab(self.hueTab,self.tab=="hue",not self.intent.pending)
+ Art.tab(self.mainTab,self.channel=="main",not self.intent.pending);Art.tab(self.secondaryTab,self.channel=="secondary",not self.intent.pending)
+ self.targetChange.Text=Pets.byId[self.petId].name.." · Change pet";self.petName.Text=Pets.byId[self.petId].name.." · saved appearance";self.channelTitle.Text=channelName(self.channel).." · saved doses"
+ local counts=self:counts();local stock=0
+ for id,bar in pairs(self.bars)do
+  bar.row.Visible=hue and not confirming;bar.value.Text=tostring(counts[id]).."/5"
+  for i,tick in ipairs(bar.ticks)do tick.BackgroundTransparency=if i<=counts[id]then 0 else 1;tick:SetAttribute("Filled",i<=counts[id])end
  end
- for key,tab in pairs(self.colorTabs)do
-  tab.Visible=self.page=="palette";tab.Interactable=not pending;tab.Selectable=tab.Visible and not pending
-  local selected=self.paletteGroup==key;tab:SetAttribute("SelectedTab",selected);Art.control(tab,selected,not pending)
+ for _,id in ipairs(ids)do local j=self.jars[id];local quantity=(self.state.hueInventory or {})[id]or 0;stock+=quantity
+  j.button.Visible=hue and not confirming and not self.assignment and quantity>0;j.quantity.Text="×"..quantity;j.reason.Text=self:reason(id)or "Choose to use";j.button.Interactable=not self.intent.pending and self:reason(id)==nil and not confirming
+  j.button:SetAttribute("DisabledReason",self:reason(id));Art.control(j.button,false,j.button.Interactable)
  end
- local pair=if self.page=="palette"and self.paletteGroup=="mix"then Hues.pair(self.mixBases[1],self.mixBases[2])else nil
- self.mixChip.Visible=pair~=nil
- if pair then self.mixChip.BackgroundColor3=Palette.resolve(self.petId,afterToken).body end
- local inset=self.action:FindFirstChildOfClass("UIPadding")
- if inset then inset.PaddingLeft=UDim.new(0,if pair then 38 else 8)end
- Art.control(self.action,true,self.action.Interactable);self.action:SetAttribute("AccessibleLabel",self.action.Text);self.action.Selectable=self.action.Interactable
- self:layout();if showPet and owned then self:paintPreview()end
+ self.empty.Visible=hue and not confirming and not self.assignment and stock==0
+ self.charmTitle.Visible=charm and not confirming;self.charmToggle.Visible=charm and not confirming;self.dot.Visible=charm and not confirming
+ local a=self:appearance();local charmPending=self.charmRequests[self.petId]
+ self.charmToggle.Text=if charmPending and charmPending.retry then "Retry charm save"elseif charmPending then "Saving…"elseif a.charmVisible~=false then "✓ Show charm"else "Show charm"
+ self.charmToggle.Interactable=not charmPending or charmPending.retry==true;self.dot.Interactable=not charmPending;Art.control(self.dot,true,self.dot.Interactable)
+ self.receipt.Visible=self.page=="receipt";self.receiptArt.Visible=self.receipt.Visible;self.receiptDetail.Visible=self.receipt.Visible;self.useNow.Visible=self.receipt.Visible
+ if r and self.receipt.Visible then
+  self.receipt.Text=names[r.itemId].." · "..tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory"
+  self.itemReveal:show(r,self.purchaseInFlight==r.id);self.purchaseInFlight=nil
+ end
+ self.legacyTitle.Visible=self.state.legacyHueEgg~=nil and not confirming
+ for _,n in pairs(self.legacyButtons)do n.Visible=self.legacyTitle.Visible;n.Interactable=not self.intent.pending end
+ self.quote.Visible=confirming or self.assignment~=nil or self.page=="buy";self.resultSwatch.Visible=confirming and not(self.confirmation.legacyItem or self.confirmation.presetId)
+ local q=self.confirmation
+ if q then
+  if q.legacyItem then self.quote.Text="Exchange your carried Hue Egg for one "..names[q.legacyItem].."? This choice is saved once."
+  elseif q.presetId then self.quote.Text="Restore "..q.name.." on "..Pets.byId[self.petId].name.."'s "..channelName(self.channel).."? This uses your previous-color exchange, with no jar cost."
+  else
+   local nextCounts=countsCopy(counts);local item=q.itemId;local quantity=(self.state.hueInventory or {})[item]or 0
+   if item=="reset"then
+    nextCounts=Hues.emptyCounts();local erased={};for _,hue in ipairs(Hues.Order)do if counts[hue.id]>0 then table.insert(erased,hue.name.." "..counts[hue.id].."/5")end end
+    self.quote.Text=Pets.byId[self.petId].name.." · "..channelName(self.channel).."\nUse Reset Hue?\nErase "..table.concat(erased," and ").."\n1 of "..quantity.." jars · stock "..quantity.." → "..math.max(0,quantity-1)
+   else
+    nextCounts[item]=math.min(5,nextCounts[item]+1);self.quote.Text=Pets.byId[self.petId].name.." · "..channelName(self.channel).."\nUse "..names[item].."?\n"..Hues.ById[item].direction.." "..counts[item].."/5 → "..nextCounts[item].."/5\n1 of "..quantity.." jars · stock "..quantity.." → "..math.max(0,quantity-1)
+   end
+   local proposed=table.clone(a);proposed[if self.channel=="main"then "mainDoses"else "secondaryDoses"]=nextCounts
+   local resolved=Palette.resolve(self.petId,proposed);self.resultSwatch.BackgroundColor3=resolved[if self.channel=="main"then "body"else "secondary"]
+   local prior=self.state.legacyHuePresets and self.state.legacyHuePresets[self.petId]
+   local row=self.state.petHues and self.state.petHues[self.petId]
+   if item~="reset"and prior and #(prior[self.channel]or {})>0 and not(row and row.legacyLocked and row.legacyLocked[self.channel])then
+    self.quote.Text..="\nThis first new fruit locks previously earned exchanges on this channel until Reset Hue."
+   end
+  end
+ elseif self.assignment then self.quote.Text="Choose a pet and channel for "..names[self.assignment.itemId]..". Review the exact change before using one jar."
+ elseif self.page=="buy"then self.quote.Text="8 Stars · one saved jar\nRose fruit 20% · Tide fruit 20% · Citrus fruit 20% · Iris fruit 20% · Reset Hue 20%\nReset clears one channel. Store any result. Duplicate jars stack. Companion rare protection is unchanged."end
+ local decision=confirming and q.itemId~=nil
+ for _,node in ipairs({self.confirmTarget,self.confirmDelta,self.confirmStock,self.confirmWarning})do node.Visible=decision end
+ if decision then
+  local lines=string.split(self.quote.Text,"\n")
+  self.confirmTarget.Text=lines[1];self.confirmTarget:SetAttribute("AccessibleLabel",self.quote.Text)
+  self.confirmDelta.Text=if q.itemId=="reset"then "Restore original colors"else lines[3]or ""
+  self.confirmStock.Text=tostring((self.state.hueInventory or {})[q.itemId]or 0).." jars → "..math.max(0,((self.state.hueInventory or {})[q.itemId]or 0)-1)
+  self.confirmWarning.Text=if q.itemId=="reset"then lines[3]or ""else lines[5]or ""
+  self.confirmWarning.Visible=self.confirmWarning.Text~="";self.quote.Visible=false
+ end
+ self.presetTitle.Visible=false
+ for _,n in pairs(self.presetButtons)do n.Visible=false end
+ local presets=self.state.legacyHuePresets and self.state.legacyHuePresets[self.petId];local p=self.state.petHues and self.state.petHues[self.petId]
+ if hue and not confirming and presets and not(p and p.legacyLocked and p.legacyLocked[self.channel])then
+  for _,preset in ipairs(presets[self.channel]or {})do
+   self.presetTitle.Visible=true;local id=preset.id;local n=self.presetButtons[id]
+   if not n then n=button(self.body,"Preset_"..id,preset.name,function()self.confirmation={presetId=id,name=preset.name};self:refresh()end);self.presetButtons[id]=n end
+   n.Visible=true;n.Interactable=not self.intent.pending
+  end
+ end
+ self.status.Text=if self.saveNotice then self.saveNotice.detail elseif self.charmMessage and charm then self.charmMessage else self.intent.message or "";self.status.Visible=self.status.Text~=""
+ self.action.Visible=migration or self.assignment~=nil or confirming or self.page=="receipt"or self.page=="buy"or self.intent.status=="Retrying"
+ self.cancel.Visible=confirming
+ self.action.Text=if migration and not self.intent.pending then "Continue"elseif self.intent.status=="Retrying"then "Retry save"elseif self.intent.pending then "Saving…"elseif confirming then if q.itemId=="reset"then "Reset "..channelName(self.channel)elseif q.itemId then "Use fruit"else "Confirm"elseif self.assignment then "Review use"elseif self.page=="receipt"then "Store"elseif self.page=="buy"then "Back to Hue Egg"else ""
+ local reason=(q and q.itemId and self:reason(q.itemId))or(self.assignment and self:reason(self.assignment.itemId))
+ self.action.Interactable=self.action.Visible and(if self.intent.status=="Retrying"then true else not self.intent.pending and not reason and self.intent:ready(if confirming and not q.legacyItem then self.petId else nil))
+ self.cancel.Interactable=not self.intent.pending;self.useNow.Interactable=not self.intent.pending
+ Art.control(self.action,true,self.action.Interactable);Art.control(self.cancel,false,self.cancel.Interactable)
+ self:layout();self:paintPortrait()
+ if self.confirmation~=self.focusedConfirmation then
+  self.focusedConfirmation=self.confirmation;self.epoch+=1
+  if self.confirmation then
+   local generation=self.epoch;local decision=self.confirmation
+   if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end
+   if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then
+    task.defer(function()game:GetService("RunService").Heartbeat:Wait()
+     if not self.destroyed and self.shade.Visible and self.epoch==generation and self.confirmation==decision and not GuiService.MenuIsOpen then GuiService.SelectedObject=self.cancel end
+    end)
+   end
+  end
+ end
+ self.shade:SetAttribute("ControllerEpoch",self.epoch)
 end
 function View:layout()
  if self.layingOut then return end;self.layingOut=true
- local size=self.shade.AbsoluteSize;local short=size.Y<390
- local desktop=size.X>=760 and size.Y>=560
- local contentSized=desktop and self.page=="buy"and not self.state.heldHueEgg
- local heldDesktop=desktop and self.page=="buy"and self.state.heldHueEgg~=nil
- local width=math.max(1,math.min(if contentSized then 540 else 720,size.X-16))
- local height=math.max(1,math.min(700,size.Y-(if short then 8 else 16)));local pad=12;local usable=width-24
- self.card.Size=UDim2.fromOffset(width,height)
- local header=Art.sheetHeader(width,self.title,self.walletHost,self.wallet,self.walletStar,self.closeButton,{pad=12,top=0,amount=self.state.nectar or 0,title="Hue Egg",shortTitle="Hue Egg"});self.headerPlan=header
- Art.type(self.action,"Action",short);local footer=math.max(44,Art.actionHeight(self.action,usable));place(self.action,pad,height-footer-(if short then 4 else 8),usable,footer)
- local top=header.height+4;local viewH=math.max(1,height-top-footer-(if short then 8 else 12));place(self.body,pad,top,usable,viewH)
- local w=usable-10;local y=0;local gap=8
- local function row(nodes,columns)
-  if #nodes==0 then return end
-  local cw=(w-(columns-1)*gap)/columns;local h=44
-  for _,n in ipairs(nodes)do Art.type(n,"Action",short);h=math.max(h,Art.actionHeight(n,cw))end
-  for i,n in ipairs(nodes)do place(n,((i-1)%columns)*(cw+gap),y+math.floor((i-1)/columns)*(h+gap),cw,h)end
-  y+=math.ceil(#nodes/columns)*(h+gap)
+ if self.portrait.Visible then self.petName.Visible=true end
+ local size=self.shade.AbsoluteSize;local width=math.max(1,math.min(if self.confirmation and not(size.Y<280)then 470 else 640,size.X-16));local short=size.Y<280;local pad=if short then 8 else 16;local w=width-pad*2
+ Art.type(self.title,if short then "Body"else "Heading",short);Art.type(self.wallet,"Counter",short)
+ local titleH=Art.textHeight(self.title,w-52,24);place(self.title,pad,5,w-52,titleH);place(self.closeButton,width-pad-44,4,44,44)
+ local header=math.max(48,titleH+8);self.wallet.Visible=self.confirmation==nil
+ if self.wallet.Visible then
+  local walletH=Art.textHeight(self.wallet,w,22)
+  if self.page=="palette"and width>=580 and size.Y<420 then
+   local walletW=Art.textWidth(self.wallet)+4;local titleW=w-walletW-64
+   self.title.Text=Pets.byId[self.petId].name.." · "..(if self.tab=="hue"then channelName(self.channel)else "Charm");Art.type(self.title,"Body",false)
+   local compactH=Art.textHeight(self.title,titleW,24);header=math.max(44,compactH+8,walletH+8)
+   place(self.title,pad,4,titleW,header-8);place(self.wallet,width-pad-44-walletW-8,4,walletW,header-8)
+  else place(self.wallet,pad,header,w,walletH);header+=walletH+4 end
  end
- local function copy(n)
-  if not n.Visible then return end
-  Art.type(n,if n==self.offerTitle or n==self.bodyTitle or n==self.secondaryTitle or n==self.mixTitle or(n==self.receipt and self.resultLead)then "Action"else "Body",short)
-  local h=Art.textHeight(n,w,20);place(n,0,y,w,h);y+=h+8
+ local footer=0
+ if self.action.Visible then Art.type(self.action,"Action",short);Art.type(self.cancel,"Action",short);footer=math.max(44,Art.actionHeight(self.action,if self.cancel.Visible then (w-8)/2 else w),if self.cancel.Visible then Art.actionHeight(self.cancel,(w-8)/2)else 44)+8 end
+ local height=math.max(1,math.min(if self.confirmation then 420 else 760,size.Y-16));self.card.Size=UDim2.fromOffset(width,height)
+ local bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,w,bodyH)
+ if self.cancel.Visible then place(self.cancel,pad,height-footer,(w-8)/2,footer-8);place(self.action,pad+(w+8)/2,height-footer,(w-8)/2,footer-8)else place(self.action,pad,height-footer,w,footer-8)end
+ if short and self.confirmation then
+  local side=math.max(112,math.min(144,w*.26));local gap=8;local fullW=w
+  w=math.max(1,w-side-gap);bodyH=math.max(1,height-header-8)
+  place(self.body,pad,header,w,bodyH)
+  local ah=math.max(44,Art.actionHeight(self.action,side));local cancelH=math.max(44,Art.actionHeight(self.cancel,side))
+  place(self.cancel,pad+fullW-side,header,side,cancelH);place(self.action,pad+fullW-side,header+cancelH+8,side,ah)
  end
- row({self.buyTab,self.paletteTab},2)
- if self.resultLead then copy(self.receipt)end
- if self.generic.Visible then
-  Art.type(self.eggCaption,"Body",short)
-  local gh
-  if heldDesktop then
-   place(self.genericEgg,0,0,52,64);self.eggCaption.TextXAlignment=Enum.TextXAlignment.Left
-   local captionH=Art.textHeight(self.eggCaption,w-72,24);gh=math.max(64,captionH)
-   place(self.eggCaption,72,(gh-captionH)/2,w-72,captionH)
-  else
-   local eggW,eggH=if contentSized then 72 else 84,if contentSized then 92 else 108
-   self.genericEgg.Position,self.genericEgg.Size=UDim2.new(.5,-eggW/2,0,4),UDim2.fromOffset(eggW,eggH)
-   self.eggCaption.TextXAlignment=Enum.TextXAlignment.Center
-   local captionH=Art.textHeight(self.eggCaption,w,24);local captionY=eggH+8;gh=captionY+captionH
-   place(self.eggCaption,0,captionY,w,captionH)
+ local y=0
+ local function copy(n,min)if not n.Visible then return end;Art.type(n,n:GetAttribute("TypeRole")or "Body",short);local h=Art.textHeight(n,w-8,min or 24);place(n,4,y,w-8,h);y+=h+8 end
+ local function row(nodes,cols)
+  local live={};for _,n in ipairs(nodes)do if n.Visible then table.insert(live,n)end end;if #live==0 then return end
+  local rw=(w-8-(cols-1)*8)/cols;local h=44
+  for _,n in ipairs(live)do Art.type(n,"Action",short);h=math.max(h,Art.actionHeight(n,rw))end
+  for i,n in ipairs(live)do place(n,4+((i-1)%cols)*(rw+8),y+math.floor((i-1)/cols)*(h+8),rw,h)end;y+=math.ceil(#live/cols)*(h+8)
+ end
+ copy(self.migrationText)
+ if self.confirmation then
+  local item=self.confirmation.itemId
+  if self.confirmJar then self.confirmJar:Destroy();self.confirmJar=nil end
+  if item then
+   local inset=if w>=260 then 90 else 4
+   self.confirmJar=JarArt.create(self.body,item,UDim2.fromOffset(4,0),UDim2.fromOffset(if inset>4 then 76 else 44,if inset>4 then 88 else 52),25)
+   for _,entry in ipairs({{self.confirmTarget,"Action",20},{self.confirmDelta,"Action",18},{self.confirmStock,"Body",16}})do
+    local node=entry[1];Art.type(node,entry[2],short);if not short then node.TextSize=entry[3]end
+    local chip=if node==self.confirmDelta then 32 else 0;local tw=w-inset-4-chip;local h=Art.textHeight(node,tw,24)
+    place(node,inset,y,tw,h)
+    if node==self.confirmDelta then place(self.resultSwatch,w-30,y+(h-24)/2,24,24)end
+    y+=h+6
+   end
+   y=math.max(if inset>4 then 92 else 56,y)
+   copy(self.confirmWarning,24)
+  else copy(self.quote,28)end
+ elseif self.confirmJar then self.confirmJar:Destroy();self.confirmJar=nil end
+ row({self.charmTab,self.hueTab},2)
+ copy(self.targetTitle);local targets={};for _,pet in ipairs(Pets.collection)do table.insert(targets,self.targets[pet.id])end;row(targets,if w>=430 then 3 else 2)
+ if self.targetChange.Visible then Art.type(self.targetChange,"Body",short);local tw=math.min(w-8,math.max(160,Art.textWidth(self.targetChange)+20));local th=math.max(44,Art.actionHeight(self.targetChange,tw));place(self.targetChange,4,y,tw,th);y+=th+8 end
+ if self.receiptArt.Visible then place(self.receiptArt,(w-140)/2,y,140,160);y+=164 end
+ copy(self.receipt,36);copy(self.receiptDetail);row({self.useNow},1)
+ if self.portrait.Visible then local h=if short then 140 else 180;place(self.portrait,4,y,w-8,h);y+=h+4;copy(self.petName)end
+ row({self.mainTab,self.secondaryTab},2);copy(self.channelTitle)
+ for _,id in ipairs(ids)do local b=self.bars[id];if b and b.row.Visible then
+  Art.type(b.label,"Body",short);Art.type(b.value,"Counter",short);local h=math.max(48,Art.textHeight(b.label,w-76,22)+24)
+  place(b.row,4,y,w-8,h);place(b.label,8,3,w-84,h-25);place(b.value,w-74,3,54,h-25)
+  local notchW=(w-32-16)/5;for i,tick in ipairs(b.ticks)do place(tick,8+(i-1)*(notchW+4),h-18,notchW,12)end;y+=h+6
+ end end
+ copy(self.charmTitle);row({self.charmToggle,self.dot},1)
+ copy(self.legacyTitle);local redemption={};for _,id in ipairs(ids)do if self.legacyButtons[id]then table.insert(redemption,self.legacyButtons[id])end end;row(redemption,2)
+ copy(self.presetTitle);local presets={};for _,n in pairs(self.presetButtons)do table.insert(presets,n)end;table.sort(presets,function(a,b)return a.Name<b.Name end);row(presets,2)
+ if not self.confirmation then copy(self.quote,28)end
+ copy(self.status)
+ -- Stock remains the last section; confirmation/footer stays reachable while it scrolls.
+ copy(self.inventoryTitle);copy(self.empty)
+ for _,id in ipairs(ids)do local j=self.jars[id];if j.button.Visible then
+  Art.type(j.label,"Body",short);Art.type(j.quantity,"Counter",short);Art.type(j.reason,"Supporting",short)
+  local textW=w-84;local lh=Art.textHeight(j.label,textW,22);local rh=Art.textHeight(j.reason,textW,18);local h=math.max(68,lh+rh+12)
+  place(j.button,4,y,w-8,h);place(j.art,6,(h-52)/2,44,52);place(j.label,60,5,textW-40,lh);place(j.quantity,w-58,5,38,lh);place(j.reason,60,lh+7,textW,rh);y+=h+8
+ end end
+ -- Roomy customization gives the saved pet its own generous column.
+ if self.page=="palette"and self.tab=="hue"and not self.confirmation and not self.assignment and w>=560 and(height>=500 or height<420)then
+  local gap=16;local compactLandscape=height<420;local lw=math.floor(w*.40);local rx=lw+gap;local rw=w-rx-4;local tabH=math.max(self.charmTab.Size.Y.Offset,self.hueTab.Size.Y.Offset);local ly=tabH+8;local ry=tabH+8
+  local portraitH=if compactLandscape then 100 else 210;place(self.portrait,4,ly,lw-4,portraitH);ly+=portraitH+4
+  self.petName.Text=Pets.byId[self.petId].name;self.petName.Visible=not compactLandscape
+  if self.petName.Visible then Art.type(self.petName,"Action");local nh=Art.textHeight(self.petName,lw-4,24);place(self.petName,4,ly,lw-4,nh);ly+=nh+12 end
+  local half=(lw-12)/2;local ch=math.max(44,Art.actionHeight(self.mainTab,half),Art.actionHeight(self.secondaryTab,half))
+  place(self.mainTab,4,ly,half,ch);place(self.secondaryTab,12+half,ly,half,ch);ly+=ch+12
+  if self.status.Visible then local sh=Art.textHeight(self.status,lw-4,24);place(self.status,4,ly,lw-4,sh);ly+=sh+8 end
+  Art.type(self.channelTitle,"Action");local chh=Art.textHeight(self.channelTitle,rw,24);place(self.channelTitle,rx,ry,rw,chh);ry+=chh+8
+  for _,id in ipairs(ids)do local b=self.bars[id];if b and b.row.Visible then
+   local bh=math.max(52,Art.textHeight(b.label,rw-76,24)+24);place(b.row,rx,ry,rw,bh);place(b.label,8,3,rw-76,bh-25);place(b.value,rw-64,3,54,bh-25)
+   local tickW=(rw-32)/5;for i,tick in ipairs(b.ticks)do place(tick,8+(i-1)*(tickW+4),bh-18,tickW,12)end;ry+=bh+7
+  end end
+  if self.presetTitle.Visible then local ph=Art.textHeight(self.presetTitle,rw,24);place(self.presetTitle,rx,ry,rw,ph);ry+=ph+6
+   for _,n in ipairs(presets)do if n.Visible then local h=math.max(44,Art.actionHeight(n,rw));place(n,rx,ry,rw,h);ry+=h+8 end end
   end
-  place(self.generic,0,y,w,gh);y+=gh+8
- end
- local targets={};for _,n in ipairs(self.targets)do if n.Visible then table.insert(targets,n)end end;row(targets,math.max(1,#targets))
- if self.current.host.Visible then
-  local previewH=if short then 140 elseif desktop then 160 else 190
-  local stacked=GuiService.PreferredTextSize==Enum.PreferredTextSize.Largest and w<400
-  local pw=if stacked then w else(w-gap)/2
-  for i,item in ipairs({self.current,self.after})do
-   place(item.host,if stacked then 0 else(i-1)*(pw+gap),y+(if stacked then(i-1)*(previewH+gap)else 0),pw,previewH)
-   Art.type(item.title,"Supporting",short);local th=Art.textHeight(item.title,pw-20,20)
-   place(item.title,8,2,pw-16,th);place(item.viewport,4,th+4,pw-8,math.max(36,previewH-th-8));place(item.swatch,pw-24,th+8,14,14)
+  local ih=Art.textHeight(self.inventoryTitle,rw,24);place(self.inventoryTitle,rx,ry,rw,ih);ry+=ih+8
+  if self.empty.Visible then local eh=Art.textHeight(self.empty,rw,24);place(self.empty,rx,ry,rw,eh);ry+=eh+8 end
+  for _,id in ipairs(ids)do local j=self.jars[id];if j.button.Visible then
+   local tw=rw-80;local lh=Art.textHeight(j.label,tw-38,22);local rh=Art.textHeight(j.reason,tw,18);local h=math.max(72,lh+rh+12)
+   place(j.button,rx,ry,rw,h);place(j.art,6,(h-52)/2,44,52);place(j.label,60,5,tw-38,lh);place(j.quantity,rw-48,5,38,lh);place(j.reason,60,lh+7,tw,rh);ry+=h+8
+  end end
+  if self.legacyTitle.Visible then local lh=Art.textHeight(self.legacyTitle,lw-4,24);place(self.legacyTitle,4,ly,lw-4,lh);ly+=lh+8
+   for _,n in ipairs(redemption)do if n.Visible then local rh=math.max(44,Art.actionHeight(n,lw-4));place(n,4,ly,lw-4,rh);ly+=rh+8 end end
   end
-  y+=(if stacked then previewH*2+gap else previewH)+8
+  y=math.max(ly,ry)
  end
- copy(self.currentText)
- if self.page=="palette"then row({self.colorTabs.body,self.colorTabs.secondary,self.colorTabs.mix},3)end
- copy(self.quote)
- if self.page=="buy"and self.state.heldHueEgg then
-  copy(self.offerTitle)
-  local columns=if w>=450 then 2 else 1;local cw=(w-(columns-1)*gap)/columns;local rh=58
-  for _,offer in ipairs(Hues.Order)do local e=self.offers[offer.id];Art.type(e.title,"Action",short);Art.type(e.rank,"Supporting",short);rh=math.max(rh,Art.textHeight(e.title,cw-88,20)+Art.textHeight(e.rank,cw-62,18)+12)end
-  for i,offer in ipairs(Hues.Order)do local e=self.offers[offer.id]
-   place(e.button,((i-1)%columns)*(cw+gap),y+math.floor((i-1)/columns)*(rh+gap),cw,rh)
-   place(e.title,52,4,cw-80,rh*.5-4);place(e.rank,52,rh*.5,cw-58,rh*.5-4);place(e.swatch,cw-24,8,14,14)
-  end
-  y+=math.ceil(4/columns)*(rh+gap)
- elseif self.page=="palette"then
-  local nodes={};local columns=if w>=450 then 2 else 1
-  if self.paletteGroup=="body"then
-   copy(self.bodyTitle);nodes={self.bodyChoices.original};for _,offer in ipairs(Hues.Order)do table.insert(nodes,self.bodyChoices[offer.id])end;row(nodes,columns)
-  elseif self.paletteGroup=="secondary"then
-   copy(self.secondaryTitle);nodes={self.secondaryChoices.default};for _,offer in ipairs(Hues.Order)do table.insert(nodes,self.secondaryChoices[offer.id])end;row(nodes,columns)
-  else
-   copy(self.mixTitle);for _,offer in ipairs(Hues.Order)do table.insert(nodes,self.mixChoices[offer.id])end;row(nodes,2)
-  end
-  row({self.resetAction},1)
+ if self.confirmation and not short then
+  height=math.min(size.Y-16,header+y+footer+12);self.card.Size=UDim2.fromOffset(width,height)
+  bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,w,bodyH)
+  place(self.cancel,pad,height-footer,(w-8)/2,footer-8);place(self.action,pad+(w+8)/2,height-footer,(w-8)/2,footer-8)
  end
- if self.receipt.Visible and not self.resultLead then copy(self.receipt)end
- if self.equipAccent.Visible then row({self.equipAccent},1)end
- if self.status.Visible then copy(self.status)end
- if contentSized or heldDesktop then
-  height=math.min(size.Y-16,math.max(if contentSized then 320 else 620,top+y+4+footer+16))
-  self.card.Size=UDim2.fromOffset(width,height)
-  place(self.action,pad,height-footer-8,usable,footer)
-  viewH=math.max(44,height-top-footer-16);place(self.body,pad,top,usable,viewH)
- end
- self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>viewH
- self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+4-viewH)))
- self.layingOut=false;self:fitPreviews()
+ self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>bodyH
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+4-bodyH)));self.layingOut=false;self:fitPortrait()
 end
-function View:setSaveNotice(notice)
- self.saveNotice=notice;if self.shade.Visible then self:refresh()end
-end
+function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)
  self.intent:update(state);self.state=state or {}
  if self.state.lastHatch then if self.options.pendingHatch then self.options.pendingHatch()end;return false end
- local pending=self.intent.pending
- if pending then
-  petId=pending.value.petId;page=if pending.action=="hueBuy"or pending.action=="hueApply"or pending.action=="hue"then "buy"else "palette"
-  if pending.value.hue then self.hue=pending.value.hue end
- end
- self.page=page or "buy"
- local eligible=if petId and Hues.Supported[petId]and self:owned(petId)then petId elseif Hues.Supported[self.petId]and self:owned(self.petId)then self.petId elseif self:owned("pip")then "pip"elseif self:owned("puddle")then "puddle"else nil
- if not eligible and self.page=="palette"then return false end
- self.petId=eligible or "pip"
- if pending and pending.action=="hueMix"then
-  local mix=Hues.Mixes[pending.value.pair];self.paletteKind,self.paletteGroup="mix","mix";self.mixBases={mix.a,mix.b}
- elseif pending and pending.action=="hueEquip"then
-  self.paletteKind=if pending.value.body then "body"else "secondary";self.paletteGroup=self.paletteKind;self.paletteChoice=pending.value[self.paletteKind]
- else self.paletteKind,self.paletteGroup="body","body";self.paletteChoice=Hues.get(self.state.hues,self.petId).body;self.mixBases={}end
+ self.page=if self.state.pendingHueResult then "receipt"elseif page=="buy"then "buy"else "palette"
+ if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
+ self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"else "hue";self.channel="main";self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
+ local p=self.intent.pending
+ if p and p.action=="hueUse"then self.page="palette";self.petId=p.value.petId;self.channel=p.value.channel;self.confirmation={itemId=p.value.itemId,petId=p.value.petId,channel=p.value.channel,pendingResultId=p.value.pendingResultId};self.submitted=p.value.id end
  self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh();return true
 end
 function View:close(reason)
  if not self.shade.Visible then return end
- self.shade.Visible=false;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)
+ self.itemReveal:cancel();self.purchaseInFlight=nil;self.shade.Visible=false;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end
  if self.options.closed then self.options.closed(reason)end
 end
 function View:ensure(target)
  if not target:IsDescendantOf(self.body)then return end
- local y=target.AbsolutePosition.Y-self.body.AbsolutePosition.Y+self.body.CanvasPosition.Y
- local scroll=self.body.CanvasPosition.Y;local h=self.body.Size.Y.Offset
+ local y=target.AbsolutePosition.Y-self.body.AbsolutePosition.Y+self.body.CanvasPosition.Y;local scroll=self.body.CanvasPosition.Y;local h=self.body.Size.Y.Offset
  if y<scroll then scroll=y elseif y+target.AbsoluteSize.Y>scroll+h then scroll=y+target.AbsoluteSize.Y-h end
  self.body.CanvasPosition=Vector2.new(0,math.clamp(scroll,0,math.max(0,self.body.CanvasSize.Y.Offset-h)))
 end
 function View:getControllerFocus()
  if not self.shade.Visible then return nil end
- return{root=self.shade,epoch=self.epoch,target=function()return if self.action.Interactable then self.action else self.closeButton end,fallback=self.closeButton,ensure=function(n)self:ensure(n)end}
+ return {root=self.shade,epoch=self.epoch,target=function()return if self.confirmation then self.cancel elseif self.action.Visible and self.action.Interactable then self.action else self.hueTab end,fallback=self.closeButton,ensure=function(n)self:ensure(n)end}
 end
 function View:destroy(fromSignal)
- if self.destroyed then return end;self.destroyed=true
- for _,item in ipairs({self.current,self.after})do if item.visual then item.visual:destroy();item.visual=nil end end
- if not fromSignal then self.shade:Destroy()end
+ if self.destroyed then return end;self.destroyed=true;self.itemReveal:destroy();if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
 end
 return View

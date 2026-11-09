@@ -163,32 +163,34 @@ function Cinematic:minimumHeightForWidth(width,height)
  -- Candidate geometry owns its font contract. Never read the last painted sizes:
  -- a narrow stacked stage may otherwise change the next full-width decision.
  height=height or 180
- local landscape=width>=360 and width/math.max(1,height)>=2
- local roomy=(height>=300 and width>=360)or landscape
- local wrap=math.max(1,if landscape then width-math.floor(width*.56)-24 else width-24)
+ local landscape=self.compactLandscape or(width>=360 and width/math.max(1,height)>=2)
+ local roomy=not self.compactLandscape and((height>=300 and width>=360)or landscape)
+ local share=if self.compactLandscape then .40 else .56
+ local wrap=math.max(1,if landscape then width-math.floor(width*share)-24 else width-24)
  local function measured(value,size,font,minimum)
-  return math.max(minimum or 0,math.ceil(TextService:GetTextSize(value,size,font,Vector2.new(wrap,10000)).Y)+4)
+  return math.max(minimum or 0,math.ceil(Art.measureText(value,size,font,wrap).Y)+4)
  end
  local name=measured(self.pet.name,if roomy then 26 else 20,Art.Font.Heading,24)
  local tag=measured(self.tag.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
  local caption=measured(self.caption.Text,if roomy then 16 else 12,Art.Font.Supporting,18)
- return math.max(160,math.ceil(name+tag+caption+(if landscape then 64 else 40)))
+ return math.max(if self.compactLandscape then 120 else 160,math.ceil(name+tag+caption+(if self.compactLandscape then 28 elseif landscape then 64 else 40)))
 end
 
 function Cinematic:layout()
  if not self.resultRoot then return end
  local w,h=math.max(1,self.frame.AbsoluteSize.X),math.max(1,self.frame.AbsoluteSize.Y);self.layoutWidth,self.layoutHeight=w,h
- self.landscapeLayout=w>=360 and w/h>=2
- local roomy=(h>=300 and w>=360)or self.landscapeLayout
+ self.landscapeLayout=self.compactLandscape or(w>=360 and w/h>=2)
+ local roomy=not self.compactLandscape and((h>=300 and w>=360)or self.landscapeLayout)
  Art.roomyType(self.caption,"Supporting",not roomy,roomy);Art.roomyType(self.heading,"Heading",not roomy,roomy);Art.roomyType(self.tag,"Supporting",not roomy,roomy)
  if roomy then self.heading.TextSize=26 end
  local short=h<140
  self.heading.Text=if short then (if self.result.rare then "Rare · "else "")..(if self.result.duplicate then "Duplicate · "else "")..self.pet.name else self.pet.name
  local heroX,heroY,heroW,heroH,textX,textW=12,0,w-24,1,12,w-24
- if self.landscapeLayout then heroW=math.max(1,math.floor(w*.56)-18);textX=heroW+30;textW=math.max(1,w-textX-12)end
+ if self.landscapeLayout then heroW=math.max(1,math.floor(w*(if self.compactLandscape then .40 else .56))-18);textX=heroW+30;textW=math.max(1,w-textX-12)end
  local captionH=Art.textHeight(self.caption,textW,18);local nameH=Art.textHeight(self.heading,textW,24);local tagH=if not short then Art.textHeight(self.tag,textW,18)else 0
  self.tag.Visible=tagH>0
- local tagY=if self.landscapeLayout then 44 else 4
+ local totalText=tagH+nameH+captionH+12
+ local tagY=if self.compactLandscape then math.max(8,(h-totalText)/2)elseif self.landscapeLayout then 44 else 4
  place(self.tag,textX,tagY,textW,math.max(1,tagH))
  local nameY=if self.landscapeLayout then tagY+tagH+6 else math.max(tagH+8,h-captionH-nameH-12)
  place(self.heading,textX,nameY,textW,nameH);place(self.caption,textX,nameY+nameH+4,textW,captionH)
@@ -216,7 +218,7 @@ function Cinematic:buildScene()
  self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
  local rare=self.result.rare==true
  local tag=if self.result.duplicate then(if rare then "ALREADY OWNED"else "ALREADY OWNED")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
- self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then Art.Amber else "accent");self.heading=label(self.resultRoot,"PetName",self.pet.name,"Heading","text")
+ self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then "reward"else "text");self.heading=label(self.resultRoot,"PetName",self.pet.name,"Heading","text")
  local detail=if self.result.duplicate then "Already owned · no additional reward"elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
  self.caption=label(self.resultRoot,"CollectionStatus",detail,"Supporting","muted");self:createHero();self:layout()
  self.anticipation=label(self.stage,"Anticipation","Something is stirring…","Body","muted")
@@ -235,6 +237,18 @@ function Cinematic:buildScene()
   end})
  end
 end
+function Cinematic:publishDiagnostics(phase)
+ if not self.frame or not self.frame.Parent then return end
+ local stats=self:getStats()
+ local data={QAStage=phase,QAAge=self.age or 0,QABuilding=self.building==true,QAPresented=self.presented==true,QAActive=self.active==true,
+  QAClock=self.connection~=nil,QAOwned=stats.owned,QACallbackOwned=stats.ownsCallback,QAWindowActive=self.windowActive==true,QACoreMenu=stats.coreMenu,
+  QATextCapture=stats.textCapture,QAAudioActive=stats.audioDeviceActive,QAResultId=stats.resultId or "",QARenderMode=self.renderMode or "",
+  QAResultVisible=self.resultRoot and self.resultRoot.Visible or false,QAShellVisible=self.shell and self.shell.Visible or false,QAHiddenAncestor=stats.hiddenAncestor or ""}
+ for name,value in pairs(data)do if self.frame:GetAttribute(name)~=value then self.frame:SetAttribute(name,value)end end
+ for name,value in pairs(stats.ownerState or {})do if type(value)=="boolean"or type(value)=="number"or type(value)=="string"then
+  if self.frame:GetAttribute("QAOwner_"..name)~=value then self.frame:SetAttribute("QAOwner_"..name,value)end
+ end end
+end
 function Cinematic:paint()
  if not self.stage then return end
  local rare=self.result.rare==true;local split=if rare then 1.72 else 1.22;local revealed=not self.active or self.age>=split
@@ -249,7 +263,7 @@ function Cinematic:paint()
  self.heroScale.Scale=if self.active and revealed then 1+math.sin(math.min(1,(self.age-split)/.48)*math.pi)*.07 else 1
  local quiet=self:reduced()or not self:owned();self.halo.Rotation=if rare and not quiet then self.age*8 else 0
  self.haloStroke.Transparency=if not revealed then .72-math.max(0,math.sin(self.age*12))*.45 elseif rare then .70 else .84
- self:paintBits(revealed,quiet)
+ self:paintBits(revealed,quiet);self:publishDiagnostics("paint")
 end
 -- Every role has an authored trajectory; all reuse the same24 passive slots.
 function Cinematic:burstBit(index,age,rare)
@@ -317,6 +331,7 @@ function Cinematic:finishStatic()
  self:paint();self.quietPainted=not self:owned()or self:reduced();self:complete()
 end
 function Cinematic:refreshOwner()
+ self:publishDiagnostics("refreshOwner")
  if self.destroyed or not self.result or self.building then return end
  if not self:owned()then
   self:disconnectClock();self:stopAudio();if self.presented and self.active then self:finishStatic()elseif self.resultRoot and not self.quietPainted then self:paint();self.quietPainted=true end;return
@@ -331,6 +346,7 @@ function Cinematic:refreshOwner()
  self.quietPainted=nil
  if not self.active then self:complete();if self.epoch~=epoch or not self.result then return end end
  if not self.connection then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)end
+ self:publishDiagnostics("clockReady")
 end
 function Cinematic:step(dt)
  if not self.result or not self:owned()or self:reduced()then self:refreshOwner();return end

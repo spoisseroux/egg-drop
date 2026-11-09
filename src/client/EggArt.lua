@@ -14,29 +14,24 @@ function Egg.create(parent, recipeId, position, size, z, name)
 	local host = Art.frame(parent, name or "Egg", Art.Ink, position, size, z or parent.ZIndex + 1)
 	host.BackgroundTransparency, host.Active, host.Selectable = 1, false, false
 	host:SetAttribute("RecipeId", recipeId)
-	local sprout = recipeId == "sprout"
-	local cream = Color3.fromHex("#FFF0C8")
-	local tint = if sprout then Color3.fromHex("#E1EDAD") else cream
-	local shadow = shape(host, "GroundShadow", .14, .87, .72, .10, Art.Ink)
-	shadow.BackgroundTransparency = .65
-	local shell = Art.frame(host, "Shell", tint, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), host.ZIndex + 2)
-	shell.BackgroundTransparency = 1
-	shape(shell, "LowerShell", .17, .26, .66, .65, tint)
-	shape(shell, "Crown", .25, .08, .50, .65, tint)
-	local motif = Art.frame(host, "Pattern", Art.Ink, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), host.ZIndex + 4)
-	motif.BackgroundTransparency = 1
-	if sprout then
-		shape(motif, "SproutStem", .47, .42, .07, .26, Art.Canopy)
-		shape(motif, "LeafLeft", .28, .40, .23, .13, Art.Canopy, 32)
-		shape(motif, "LeafRight", .50, .30, .23, .14, Art.Canopy, -34)
-		shape(motif, "SeedDot", .44, .73, .12, .09, Art.Leaf)
-	else
-		shape(motif, "MeadowSpot", .28, .38, .15, .12, Art.Leaf:Lerp(Art.Canopy, .25), -25)
-		shape(motif, "MeadowSpot", .55, .57, .16, .12, Art.Canopy, 22)
-		shape(motif, "MeadowSpot", .35, .73, .14, .11, Art.Leaf:Lerp(Art.Canopy, .25), -18)
-	end
-	local glint = shape(host, "ShellGlint", .31, .23, .09, .15, Color3.new(1, 1, 1), 24)
-	glint.ZIndex, glint.BackgroundTransparency = host.ZIndex + 7, .18
+ local hue=recipeId=="hue"
+ local cream=Color3.fromHex("#FFF3B9")
+ local tint=if hue then Color3.fromHex("#56D4DD")else cream
+ local shadow=shape(host,"GroundShadow",.14,.87,.72,.10,Art.Ink);shadow.BackgroundTransparency=.70
+ local shell=Art.frame(host,"Shell",tint,UDim2.fromScale(0,0),UDim2.fromScale(1,1),host.ZIndex+2);shell.BackgroundTransparency=1
+ local lower=shape(shell,"LowerShell",if hue then .23 else .14,.28,if hue then .57 else .72,.63,tint)
+ local crown=shape(shell,"Crown",if hue then .30 else .23,.07,if hue then .43 else .52,.66,tint)
+ Art.shade(lower,1,.72);Art.shade(crown,1,.89)
+ Art.stroke(lower,if hue then Color3.fromHex("#137C9D")else Color3.fromHex("#C9AF54"),.28,1)
+ local motif=Art.frame(host,"Pattern",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),host.ZIndex+4);motif.BackgroundTransparency=1
+ if hue then
+  for i,x in ipairs({.26,.39,.52,.65})do shape(motif,"ShoulderDrop"..i,x,.37,.09,.15,({Color3.fromHex("#FF327A"),Color3.fromHex("#008DFF"),Color3.fromHex("#FFCC00"),Color3.fromHex("#9350FF")})[i],-10)end
+  for i=0,3 do shape(motif,"Scallop"..i,.25+i*.13,.28,.18,.12,Color3.fromHex("#C8FAEC"),-10)end
+ else
+  shape(motif,"CitronHalfBelt",.18,.65,.35,.07,Color3.fromHex("#A8C922"),-12)
+  for i,data in ipairs({{.28,.36,-24},{.58,.49,18},{.36,.70,-16}})do shape(motif,"CobaltRainSeed"..i,data[1],data[2],.13,.17,Color3.fromHex("#3355DA"),data[3])end
+ end
+ local glint=shape(host,"ShellGlint",.31,.20,.10,.22,Color3.new(1,1,1),22);glint.ZIndex,glint.BackgroundTransparency=host.ZIndex+7,.14
 	return host
 end
 

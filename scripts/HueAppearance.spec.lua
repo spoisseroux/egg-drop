@@ -105,7 +105,7 @@ return function(client,parent)
    assert(actor and state and actor.generation==7,"fixture must exercise authoritative activity")
    expect(visual,"pip",initial)
    local nodeCount=#model:GetDescendants();local position,yaw=visual.origin,visual.yaw;local before=visual.colors.body
-   local head=assert(model:FindFirstChild("Head"));local renderedBefore=head.Color
+   local head=assert(model:FindFirstChild("Head",true));local renderedBefore=head.Color
    for _,pair in ipairs({"rose:tide","citrus:iris"})do
     local mixed=token("rose",3,"iris",false);mixed.bodyMix=pair;publish(mixed);observer:update(.13,now)
     assert(g:appearance(board,"pip").bodyMix==pair,"replica lost canonical mix")

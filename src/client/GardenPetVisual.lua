@@ -111,7 +111,7 @@ function Visual:applyAppearance(appearance)
  self.model:SetAttribute("HueBody",appearance and appearance.body or "original")
  self.model:SetAttribute("HueRank",appearance and appearance.bodyRank or 0)
  self.model:SetAttribute("HueSecondary",appearance and appearance.secondary or "default")
- Charms.apply(self,appearance);self:update(0)
+ Charms.apply(self,appearance);self.poseDirty=true;self:update(0)
 end
 function Visual:applyGardenPose(sample)
  self.gardenAction,self.actionPhase,self.expression=sample.action,sample.actionPhase or sample.phase or 0,sample.expression or "neutral"
@@ -131,13 +131,24 @@ function Visual:update(dt)
  local shove=if self.gardenAction=="shove"then math.sin(math.clamp(self.actionPhase or 0,0,1)*math.pi*4)else 0
  local daylight=Face.daylight()
  local root=CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0)
+ local u=((self.gaitPhase or 0)/(math.pi*2))%1;local support=0
+ if not reduced and not self.focusPose and not self.gardenFocus then
+  if u>.08 and u<.50 then support=-math.sin((u-.08)/.42*math.pi)
+  elseif u>.58 then support=math.sin((u-.58)/.42*math.pi)end
+ end
+ support*=gait
+ local weightX=support*.045*math.min(1,(self.worldScale or .72)/.72)
+ local weightRoll=support*math.rad(3)
+ self.weightShift,self.weightRoll=weightX,weightRoll
+ local hipAnchor=v(self.definition.anchors.Body)*self.scale
+ local upper=root*CFrame.new(weightX,0,0)*CFrame.new(hipAnchor)*CFrame.Angles(0,0,weightRoll)*CFrame.new(-hipAnchor)
  local hop=(greet*.11+(self.movementBob or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=root*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch,headYaw,pose.tilt+(self.affectionTilt or 0)*.08)*CFrame.new(-headAnchor)
+ local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch,headYaw,pose.tilt+(self.affectionTilt or 0)*.08)*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
-  local cf=root*CFrame.new(0,hop,0)*entry.frame
+  local cf=upper*CFrame.new(0,hop,0)*entry.frame
   local isFace=channel=="Face"or string.find(name,"Eye")or string.find(name,"Glint")or string.find(name,"Mouth")or string.find(name,"Teeth")or string.find(name,"Cheek")
   if channel=="Head"or isFace or channel=="Charm"then cf=head*entry.frame end
   if channel=="HandL"or channel=="HandR"or channel=="CuffL"or channel=="CuffR"or channel=="Hand"then
@@ -145,7 +156,7 @@ function Visual:update(dt)
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
    local fold=pose.hand+greet*.5+shove*.7
-   cf=root*CFrame.new(0,hop,0)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
+   cf=upper*CFrame.new(0,hop,0)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale,step*side*.075*self.scale)*entry.frame

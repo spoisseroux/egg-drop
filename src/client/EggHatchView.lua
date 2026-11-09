@@ -9,6 +9,14 @@ local HatchCinematic = require(script.Parent.HatchCinematic)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local EggArt = require(script.Parent.EggArt)
+local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
+local JarArt=require(script.Parent.HueJarArt)
+local liveOrder={"meadow","hue"}
+local function shopRecipe(id)
+ if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
+ local source=Catalog.ById[id]or Catalog.ById.meadow
+ return {id=source.id,name=if id=="meadow"then "Companion Egg"else source.name,cost=source.cost}
+end
 
 local SaveNotice=require(script.Parent.SaveNotice)
 local View = {}
@@ -19,7 +27,7 @@ local function frame(parent, name, color, position, size, z)
 end
 
 local function label(parent, name, content, position, size, color, maximum)
-	local node = Art.text(parent, name, content, position, size, color or "text", maximum or 14,
+	local node = Art.text(parent, name, content, position,size,if color==Art.Amber then "reward"else color or "text",maximum or 14,
 		Art.Font.Body)
 	Art.fitText(node, maximum or 14, 10, 4, true)
 	return node
@@ -116,10 +124,12 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 		local current = self.state
 		if current.lastHatch then
 			self:chooseResult("play")
-		elseif (current.nectar or 0) < Catalog.ById[self.selected].cost then
+		elseif current.pendingHueResult then
+            if self.onOpenHue then self.onOpenHue(false)end
+        elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
 			self:close("earn")
 		else
-			self:send("hatch", self.selected)
+			if current.pendingHueResult then if self.onOpenHue then self.onOpenHue(false)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
 		end
 	end)
 	return self
@@ -159,70 +169,34 @@ function View:recipeMetrics(columnWidth,compact,columns)
 	local textX=if compact then 38 else 76
 	local textW=math.max(1,choiceW-textX-8)
 	local nameH,costH=0,0
-	for _,id in ipairs(Catalog.Order)do
-		local option=Catalog.ById[id]
+	for _,id in ipairs(liveOrder)do
+		local option=shopRecipe(id)
 		nameH=math.max(nameH,nativeHeight(option.name,if compact then 14 else 16,Art.Font.Body,textW))
 		costH=math.max(costH,nativeHeight(string.format(if compact then "%d Stars"else "%d Stars per hatch",option.cost),12,Art.Font.Body,textW))
 	end
 	return{columns=columns,width=choiceW,textX=textX,textWidth=textW,nameH=nameH,costH=costH,height=math.max(if compact then 44 else 83,nameH+costH+3+8),artH=if compact then 32 else 66}
 end
 function View:layoutShop()
-	if self.layingOut then return end;self.layingOut=true
-	self.bodyFocusFallback=false
-	self:restoreRevealParent();self:refreshShopHeader()
-	local size=self.shade.AbsoluteSize;local cardW=math.clamp(size.X-32,1,560)
-	local short=size.Y<280
-	local notice=self:getSaveNotice()
-	self.wallet.Parent,self.nectar.Parent=self.card,self.wallet
-	self.wallet.Visible,self.heading.Visible,self.nectar.Visible,self.body.Visible=true,true,true,true
-	self.meetButton.Visible,self.revealHost.Visible=false,false
-	self.headerPlan=Art.sheetHeader(cardW,self.heading,self.wallet,self.nectar,self.walletDrop,self.closeButton,{
-		pad=10,top=0,amount=self.state.nectar or 0,title=self.headerTitle,shortTitle=self.headerShortTitle,
-		accessibleTitle=if notice then notice.detail else self.statusText or "Companion eggs",status=self.statusText~=nil})
-	local bodyW=cardW-24;local roomyColumn=if bodyW>=470 then (bodyW-18)/2 else bodyW-6
-	local roomy=self:recipeMetrics(roomyColumn,false,1)
-	local roomyFooter=44;local oldText=self.action.Text
-	Art.type(self.action,"Action",cardW<400)
-	for _,id in ipairs(Catalog.Order)do
-		local recipe=Catalog.ById[id];local missing=math.max(0,recipe.cost-(self.state.nectar or 0))
-		self.action.Text=if missing>0 then Stars.format("Play for %s · need %d Stars",recipe.name,missing)else Stars.format("Hatch %s · %d Stars",recipe.name,recipe.cost)
-		roomyFooter=math.max(roomyFooter,Art.actionHeight(self.action,cardW-24))
-	end
-	self.action.Text=oldText
-	local roomyBudget=math.min(580,size.Y-32)-self.headerPlan.height-8-roomyFooter-18
-	self.compactShop=short or roomyBudget<roomy.height*2+16
-	self.budgetCompact=self.compactShop and not short
-	self.card.Size=UDim2.fromOffset(cardW,math.clamp(size.Y-(if self.compactShop then 16 else 32),1,580))
-	Art.type(self.action,"Action",self.compactShop or cardW<400)
-	local footerH=math.max(44,self:footerRowHeight(self.action,cardW-24));self.footerHeight=footerH
-	local footerGap=if self.compactShop then 4 else 12
-	self.action.Position,self.action.Size=UDim2.new(0,12,1,-footerH-footerGap),UDim2.new(1,-24,0,footerH)
-	local top=self.headerPlan.height+(if short then 4 else 8)
-	Art.type(self.note,"Supporting",true)
-	self.note.Text=self.statusText or "Earn Stars. Choose an egg. Meet a new friend."
-	local noteH=Art.textHeight(self.note,bodyW,0)
-	self.notePinned=self.statusText~=nil and self.card.Size.Y.Offset-top-footerH-footerGap-noteH-12>=44
-	self.note.Visible=self.notePinned
-	if self.notePinned then
-		self.note.Position,self.note.Size=UDim2.fromOffset(12,top),UDim2.fromOffset(bodyW,noteH)
-		top+=noteH+6
-	end
-	local bodyH=math.max(44,self.card.Size.Y.Offset-top-footerH-footerGap-4)
-	self.body.Position,self.body.Size=UDim2.fromOffset(12,top),UDim2.fromOffset(bodyW,bodyH)
-	local metrics=self:recipeMetrics(if self.compactShop then bodyW-6 else roomyColumn,self.compactShop)
-	if self.compactShop and metrics.height+8>bodyH then
-		local single=self:recipeMetrics(bodyW-6,true,1)
-		if single.height<metrics.height then metrics=single end
-	end
-	self.recipeLayout=metrics
-	local arrangement=tostring(self.compactShop)..":"..metrics.columns..":"..cardW
-	local changed=self.recipeArrangement~=arrangement;self.recipeArrangement=arrangement
-	self.layoutHeaderKey=self:headerKey();self.layingOut=false
-	if self.shade.Visible then
-		self:renderBody()
-		if changed and not self.bodyFocusFallback then self:ensureSelectedRecipe();self:queueSelectedRecipe()end
-	end
-	if not self.refreshingFooterLayout then self.refreshingFooterLayout=true;self:refreshFooter();self.refreshingFooterLayout=nil end
+ if self.layingOut then return end;self.layingOut=true
+ self.bodyFocusFallback=false;self:restoreRevealParent();self:refreshShopHeader()
+ local size=self.shade.AbsoluteSize;local width=math.max(1,math.min(640,size.X-16));local short=size.Y<280
+ self.compactShop=short;self.budgetCompact=short;self.card.Size=UDim2.fromOffset(width,math.max(1,math.min(720,size.Y-16)))
+ self.wallet.Parent,self.nectar.Parent=self.card,self.wallet
+ self.wallet.Visible,self.heading.Visible,self.nectar.Visible,self.body.Visible=true,true,true,true
+ self.meetButton.Visible,self.revealHost.Visible=false,false
+ self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.walletDrop,self.closeButton,{pad=12,top=0,amount=self.state.nectar or 0,title=self.headerTitle or "Hatch eggs",shortTitle=self.headerShortTitle or "Hatch eggs",accessibleTitle=self.statusText or "Choose an egg",status=self.statusText~=nil})
+ Art.type(self.action,"Action",short)
+ local footerH=self:footerRowHeight(self.action,width-24);self.footerHeight=footerH
+ local edgeGap=if short then 4 else 8
+ self.action.Position,self.action.Size=UDim2.fromOffset(12,self.card.Size.Y.Offset-footerH-edgeGap),UDim2.fromOffset(width-24,footerH)
+ local top=self.headerPlan.height+(if short then 0 else 4)
+ self.note.Visible=false;self.notePinned=false
+ self.body.Position,self.body.Size=UDim2.fromOffset(12,top),UDim2.fromOffset(width-24,math.max(1,self.card.Size.Y.Offset-top-footerH-edgeGap-4))
+ local signature=width..":"..self.card.Size.Y.Offset..":"..GuiService.PreferredTextSize.Name
+ local reflowed=self.shopReflowSignature~=signature;self.shopReflowSignature=signature
+ self.layoutHeaderKey=self:headerKey();self.layingOut=false
+ if self.shade.Visible then self:renderBody();if reflowed then self:ensureSelectedRecipe();self:queueSelectedRecipe()end end
+ if not self.refreshingFooterLayout then self.refreshingFooterLayout=true;self:refreshFooter();self.refreshingFooterLayout=nil end
 end
 function View:queueSelectedRecipe()
 	if self.bodyFocusFallback then return end
@@ -251,6 +225,7 @@ function View:layout()
 	local notice = self:getSaveNotice()
 	self.compactShop, self.budgetCompact = false, false
 	self.card.Size = UDim2.fromOffset(math.clamp(size.X-32,1,560), math.clamp(size.Y-(if size.Y<200 then 16 else 32),1,580))
+	self.cinematic.compactLandscape=self.card.Size.X.Offset>=480 and self.card.Size.Y.Offset<400
 	self.closeButton.Position, self.closeButton.Size = UDim2.new(1,-56,0,6), UDim2.fromOffset(44,44)
 	self.wallet.Visible, self.heading.Visible, self.nectar.Visible, self.note.Visible = false, false, false, false
 	self.meetButton.Visible = true
@@ -382,11 +357,11 @@ function View:refreshFooter()
 		local pet = Pets.byId[state.lastHatch.petId]
 		self.meetButton.Text = if self.pending then "Saving…" elseif self.shade.AbsoluteSize.Y<200 or self.card.Size.X.Offset<400 then "Meet" else "Meet " .. (if pet then pet.name else "friend")
 	else
-		local recipe = Catalog.ById[self.selected]
+		local recipe = shopRecipe(self.selected)
 		local missing = math.max(0, recipe.cost - (state.nectar or 0))
-		textValue = if missing > 0 then Stars.format("Play for %s · need %d Stars", recipe.name, missing)
+		textValue = if state.pendingHueResult then "Open saved jar"elseif missing > 0 then Stars.format("Play for %s · need %d Stars", recipe.name, missing)
 			else Stars.format("Hatch %s · %d Stars", recipe.name, recipe.cost)
-		if self.compactShop then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else Stars.format("Hatch · %d Stars",recipe.cost)end
+		if self.compactShop and not state.pendingHueResult then textValue=if missing>0 then string.format("Play · egg %d · need %d",recipe.cost,missing)else Stars.format("Hatch · %d Stars",recipe.cost)end
 		canAct = true
 	end
 	Art.type(self.action,"Action",self.compactShop or self.card.Size.X.Offset<400)
@@ -401,7 +376,7 @@ function View:refreshFooter()
 		if self:footerRowHeight(self.meetButton,width)>44 then self.meetButton.Text=if self.pending then "Saving" else "Meet" end
 	end
 	if self.compactShop and not state.lastHatch and not self.pending then
-		local recipe=Catalog.ById[self.selected]
+		local recipe=shopRecipe(self.selected)
 		local missing=math.max(0,recipe.cost-(state.nectar or 0))
 		local budget=math.max(44,self.card.Size.Y.Offset-48-44-8)
 		local width=self.card.Size.X.Offset-24
@@ -453,157 +428,78 @@ function View:restoreBodyFocus(previous,action,epoch)
 	if liveShopTarget(target,self.shade)then GuiService.SelectedObject=target;if target.Parent==column then self:queueSelectedRecipe()end end
 end
 function View:renderBody()
-	if self.state.lastHatch or self.renderingBody then return end
-	self.renderingBody = true
-	local canvasPosition = self.body.CanvasPosition
-	local previous=GuiService.SelectedObject;local action
-	local owner=self.shade:GetAttribute("ControllerEpoch")
-	if previous and previous:IsDescendantOf(self.body)then
-		if previous.Name=="DailyNectar"or previous.Name=="HueEggs"then action=previous.Name
-		elseif previous.Name:match("^Recipe_")then action=self.refocusRecipeId and "Recipe_"..self.refocusRecipeId or previous.Name end
-	end
-	self.refocusRecipeId=nil
-	self.revealHost.Visible = false
-	self:restoreRevealParent()
-	-- Keep interactive identities and their parent alive: destroying a focused
-	-- button makes native navigation move to Body before a replacement exists.
-	local left=self.body:FindFirstChild("EggColumn")
-	for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
-	if left then
-		for _,child in ipairs(left:GetChildren())do
-			if not child:IsA("TextButton")or not(child.Name:match("^Recipe_")or child.Name=="DailyNectar"or child.Name=="HueEggs"or child.Name=="CompanionTab")then child:Destroy()end
-		end
-	end
-	local size = self.body.AbsoluteSize
-	local compact = self.compactShop == true
-	local split = not compact and size.X >= 470
-	local columnWidth = if split then (size.X - 18) / 2 else math.max(1, size.X - 6)
-	left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(columnWidth,0))
-	left.Size=UDim2.fromOffset(columnWidth,0);left.BackgroundTransparency=1
-	local state = self.state
-	local recipe = Catalog.ById[self.selected]
-	local metrics=self:recipeMetrics(columnWidth,compact,self.recipeLayout and self.recipeLayout.columns)
-	self.recipeLayout=metrics
-    local startY=4
-    if self.onOpenHue then
-        local hueButton=left:FindFirstChild("HueEggs")
-        if not hueButton then
-            hueButton=button(left,"HueEggs","Hue Egg",UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,44),"raised")
-            hueButton.Activated:Connect(function()
-                if not self.shade.Visible or self.state.lastHatch or self.pending or not hueButton.Interactable then return end
-                self:close("hue");self.onOpenHue()
-            end)
-        end
-        Art.type(hueButton,"Action",compact)
-        local h=math.max(44,Art.actionHeight(hueButton,columnWidth-8))
-        local tabW=(columnWidth-16)/2
-        local companion=left:FindFirstChild("CompanionTab")
-        if not companion then companion=button(left,"CompanionTab","Companion eggs",UDim2.fromOffset(4,startY),UDim2.fromOffset(tabW,h),"raised")end
-        Art.type(companion,"Action",compact)
-        h=math.max(h,Art.actionHeight(companion,tabW),Art.actionHeight(hueButton,tabW))
-        companion.Position,companion.Size=UDim2.fromOffset(4,startY),UDim2.fromOffset(tabW,h)
-        companion:SetAttribute("SelectedTab",true);hueButton:SetAttribute("SelectedTab",false)
-        Art.control(companion,true,not self.pending);Art.control(hueButton,false,not self.pending)
-        local edge=companion:FindFirstChild("ActiveTabEdge")
-        if not edge then edge=Art.frame(companion,"ActiveTabEdge","accent",UDim2.new(0,4,1,-4),UDim2.new(1,-8,0,3),companion.ZIndex+2)end
-        hueButton.Position,hueButton.Size=UDim2.fromOffset(12+tabW,startY),UDim2.fromOffset(tabW,h)
-        hueButton.Interactable=not self.pending and (Catalog.isOwned(state.inventoryMask or 0,"pip")or Catalog.isOwned(state.inventoryMask or 0,"puddle"))
-        hueButton.Selectable=hueButton.Interactable;startY+=h+8
-    end
-	local notice=self:getSaveNotice()
-	if self.statusText and not self.notePinned then
-		local detail=Art.text(left,if notice then "SaveInstruction"else "ActionInstruction",self.statusText,UDim2.fromOffset(4,startY),UDim2.fromOffset(columnWidth-8,24),Art.Amber,14)
-		Art.type(detail,"Body",true);local h=Art.textHeight(detail,columnWidth-8,24)
-		detail.Size=UDim2.fromOffset(columnWidth-8,h);startY+=h+8
-	end
-	for index,id in ipairs(Catalog.Order)do
-		local option=Catalog.ById[id]
-		local y=startY+math.floor((index-1)/metrics.columns)*(metrics.height+8)
-		local x=4+((index-1)%metrics.columns)*(metrics.width+8)
-		local choice=left:FindFirstChild("Recipe_"..id)
-		if not choice then
-			choice=button(left,"Recipe_"..id,"",UDim2.fromOffset(x,y),UDim2.fromOffset(metrics.width,metrics.height),"panel")
-			choice.Activated:Connect(function()
-				if liveShopTarget(choice,self.shade)and not self.state.lastHatch then self:selectRecipe(id)end
-			end)
-			local outline=Art.stroke(choice,Art.Amber,0,2);outline.Name="SelectedOutline"
-		end
-		for _,child in ipairs(choice:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
-		choice.Position,choice.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(metrics.width,metrics.height)
-		Art.bind(choice,{BackgroundColor3=function()return if self.selected==id then Art.paletteColor("selected") else Art.paletteColor("panel") end})
-		choice.Interactable,choice.Selectable=not self.pending,not self.pending
-		choice.SelectedOutline.Enabled=self.selected==id
-		local padding=choice:FindFirstChildOfClass("UIPadding");if padding then padding:Destroy()end
-		EggArt.create(choice,id,UDim2.fromOffset(if compact then 6 else 12,(metrics.height-metrics.artH)/2),UDim2.fromOffset(if compact then 24 else 52,metrics.artH),choice.ZIndex+2)
-		local groupH=metrics.nameH+3+metrics.costH;local ty=(metrics.height-groupH)/2
-		local name=Art.text(choice,"RecipeName",option.name,UDim2.fromOffset(metrics.textX,ty),UDim2.fromOffset(metrics.textWidth,metrics.nameH),"text",if compact then 14 else 16,Art.Font.Body)
-		local cost=Art.text(choice,"Cost",string.format(if compact then "%d Stars"else "%d Stars per hatch",option.cost),UDim2.fromOffset(metrics.textX,ty+metrics.nameH+3),UDim2.fromOffset(metrics.textWidth,metrics.costH),Art.Amber,12)
-		name.TextXAlignment,cost.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
-		name.TextWrapped,cost.TextWrapped=true,true
-	end
-	local y=startY+math.ceil(#Catalog.Order/metrics.columns)*(metrics.height+8)
-	label(left, "NectarProgress", Stars.format("%d / %d Stars", state.nectar or 0, recipe.cost),
-		UDim2.fromOffset(3, y), UDim2.new(1, -9, 0, 21), Art.Leaf, 13)
-	local track = frame(left, "NectarTrack", "ink", UDim2.fromOffset(7, y + 24), UDim2.new(1, -18, 0, 6))
-	Art.corner(track, 3)
-	local fill = frame(track, "Fill", Art.Amber, UDim2.fromOffset(0, 0),
-		UDim2.fromScale(math.clamp((state.nectar or 0) / recipe.cost, 0, 1), 1))
-	Art.corner(fill, 3)
-	local dailyTitle = if state.dailyAvailable then Stars.format("Daily Stars +%d", state.dailyBonus or 6)
-		elseif state.dailyDay then "Daily Stars claimed" else "Daily Stars loading…"
-	local daily=left:FindFirstChild("DailyNectar")
-	if not daily then
-		daily=button(left,"DailyNectar",dailyTitle,UDim2.fromOffset(3,y+41),UDim2.new(1,-9,0,44),"raised")
-		daily.Activated:Connect(function()
-			local current=self.state
-			if liveShopTarget(daily,self.shade)and not current.lastHatch and not self.pending and current.dailyAvailable==true and current.dailyDay~=nil
-				and(current.status==nil or current.status=="Ready")then self:send("daily",current.dailyDay)end
-		end)
-	end
-	daily.Text,daily.Position,daily.Size=dailyTitle,UDim2.fromOffset(3,y+41),UDim2.new(1,-9,0,44)
-	daily.Interactable = state.dailyAvailable == true and state.dailyDay ~= nil and not self.pending
-		and (state.status == nil or state.status == "Ready")
-	daily.Selectable=daily.Interactable
-	daily.TextTransparency = if daily.Interactable then 0 else 0.4
-	local leftHeight = y + 93
-	left.Size = UDim2.fromOffset(columnWidth, leftHeight)
-	local rightY = if split then 0 else leftHeight + 10
-	local rightX = if split then columnWidth + 12 else 0
-	local odds = frame(self.body, "OutcomeColumn", "ink", UDim2.fromOffset(rightX, rightY), UDim2.fromOffset(columnWidth, 20))
-	odds.BackgroundTransparency = 1
-	label(odds, "OddsHeading", "POSSIBLE HATCHES", UDim2.fromOffset(0, 1), UDim2.new(1, -2, 0, 22), Art.Leaf, 12)
-	local misses = state.misses or 0
-	local rows = Catalog.odds(self.selected, misses)
-	for index, outcome in ipairs(rows) do
-		local pet = Pets.byId[outcome.id]
-		if not pet then continue end
-		local row = frame(odds, "Outcome_" .. outcome.id, "raised", UDim2.fromOffset(2, 27 + (index - 1) * 29), UDim2.new(1, -7, 0, 26))
-		Art.corner(row, 6)
-		Portrait.create(row, pet, 1, UDim2.fromOffset(15, 13), 25,false,self.appearanceFor and self.appearanceFor(pet.id))
-		local name = label(row, "Name", pet.name, UDim2.fromOffset(29, 0), UDim2.new(1, -77, 1, 0),
-			if pet.trial then Art.Amber else Art.Silver, 12)
-		name.TextXAlignment = Enum.TextXAlignment.Left
-		label(row, "Probability", string.format("%.0f%%", outcome.weight), UDim2.new(1, -47, 0, 0),
-			UDim2.fromOffset(44, 26), "text", 12)
-	end
-	local protectionY = 31 + #rows * 29
-	local protection = if misses >= 7 then "Your next hatch is guaranteed rare"
-		else string.format("Rare protection  %d / 7\nAfter 7 non-rares, the next hatch is rare", misses)
-	label(odds, "RareProtection", protection, UDim2.fromOffset(2, protectionY), UDim2.new(1, -7, 0, 43), "muted", 11)
-	label(odds, "Duplicates", "Already owned results grant nothing.", UDim2.fromOffset(2, protectionY + 48),
-		UDim2.new(1, -7, 0, 31), "muted", 11)
-	local rightHeight = protectionY + 84
-	odds.Size = UDim2.fromOffset(columnWidth, rightHeight)
-	local canvasHeight = if split then math.max(leftHeight, rightHeight) else rightY + rightHeight
-	self.body.CanvasSize = UDim2.fromOffset(0, canvasHeight + 6)
-	self.body.ScrollingEnabled = canvasHeight + 6 > size.Y
-	self.body.CanvasPosition = Vector2.new(0, math.clamp(canvasPosition.Y, 0, math.max(0, canvasHeight + 6 - size.Y)))
-	self.renderingBody = false
-	self:restoreBodyFocus(previous,action,owner)
+ if self.state.lastHatch or self.renderingBody then return end;self.renderingBody=true
+ local previous=GuiService.SelectedObject;local action=previous and previous:IsDescendantOf(self.body)and previous.Name or nil
+ local owner=self.shade:GetAttribute("ControllerEpoch");local canvas=self.body.CanvasPosition
+ self.revealHost.Visible=false;self:restoreRevealParent()
+ local left=self.body:FindFirstChild("EggColumn")
+ for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
+ left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100));left.BackgroundTransparency=1
+ for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="DailyNectar")then child:Destroy()end end
+ local width=math.max(1,self.body.AbsoluteSize.X);local w=width-8;local short=self.shade.AbsoluteSize.Y<280
+ left.Size=UDim2.fromOffset(width,1);local y=4;local cols=if width>=280 then 2 else 1;local cw=(w-(cols-1)*8)/cols
+ local cardH=short and 116 or 160
+ for _,id in ipairs(liveOrder)do
+  local recipe=shopRecipe(id);local n=left:FindFirstChild("Recipe_"..id)
+  if not n then
+   n=button(left,"Recipe_"..id,"",UDim2.fromOffset(0,0),UDim2.fromOffset(cw,cardH),"raised")
+   n.Activated:Connect(function()if liveShopTarget(n,self.shade)then self:selectRecipe(id)end end)
+  end
+  for _,child in ipairs(n:GetChildren())do if child:IsA("GuiObject")or child:IsA("UIPadding")then child:Destroy()end end
+  local labelNode=Art.text(n,"RecipeName",recipe.name,UDim2.fromOffset(4,0),UDim2.fromOffset(cw-8,24),"text",16);Art.type(labelNode,"Action",short)
+  local cost=Art.text(n,"Cost",recipe.cost.." Stars",UDim2.fromOffset(4,0),UDim2.fromOffset(cw-8,22),"text",14);Art.type(cost,"Body",short)
+  local nh=Art.textHeight(labelNode,cw-8,22);local ph=Art.textHeight(cost,cw-8,20);cardH=math.max(cardH,nh+ph+64)
+  labelNode.Position,labelNode.Size=UDim2.fromOffset(4,cardH-nh-ph-10),UDim2.fromOffset(cw-8,nh)
+  cost.Position,cost.Size=UDim2.fromOffset(4,cardH-ph-6),UDim2.fromOffset(cw-8,ph)
+  local eggH=math.max(52,cardH-nh-ph-18);EggArt.create(n,id,UDim2.fromOffset((cw-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH),n.ZIndex+2)
+  Art.control(n,self.selected==id,not self.pending);n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",self.selected==id)
+ end
+ for index,id in ipairs(liveOrder)do local n=left:FindFirstChild("Recipe_"..id);n.Position,n.Size=UDim2.fromOffset(4+((index-1)%cols)*(cw+8),y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cw,cardH)end
+ y+=math.ceil(#liveOrder/cols)*(cardH+8)
+ local function copy(name,value,role,color)
+  local n=Art.text(left,name,value,UDim2.fromOffset(4,y),UDim2.fromOffset(w,24),color or "text",16);Art.type(n,role or "Body",short);n.TextXAlignment=Enum.TextXAlignment.Left
+  local h=Art.textHeight(n,w,24);n.Size=UDim2.fromOffset(w,h);y+=h+8;return n
+ end
+ local recipe=shopRecipe(self.selected)
+ copy("SelectedRecipe",recipe.name.." · "..recipe.cost.." Stars","Action")
+ if self.statusText then copy(if self:getSaveNotice()then "SaveInstruction"else "ActionInstruction",self.statusText,"Body")end
+ local function outcomes(rows,itemPool)
+  local columns=if w>=540 then 2 else 1;local rw=(w-(columns-1)*8)/columns;local heights={};local nodes={}
+  for index,entry in ipairs(rows)do
+   local name=if itemPool then HueCatalog.Items[entry.id].name else Pets.byId[entry.id].name
+   local owned=not itemPool and Catalog.isOwned(self.state.inventoryMask or 0,entry.id)
+   local row=frame(left,"Outcome_"..entry.id,"inset",UDim2.fromOffset(0,0),UDim2.fromOffset(rw,52));Art.corner(row,9)
+   local label=Art.text(row,"Name",name,UDim2.fromOffset(48,6),UDim2.fromOffset(rw-112,24),"text",16);Art.type(label,"Body",short);label.TextXAlignment=Enum.TextXAlignment.Left
+   local chance=Art.text(row,"Chance",string.format("%.0f%%",entry.weight),UDim2.fromOffset(rw-62,6),UDim2.fromOffset(54,24),"text",18);Art.type(chance,"Action",short);chance.TextXAlignment=Enum.TextXAlignment.Right
+   local nh=Art.textHeight(label,rw-112,24);label.Size=UDim2.fromOffset(rw-112,nh)
+   local h=math.max(52,nh+12)
+   if owned then local ownedText=Art.text(row,"Owned","Already owned · no reward",UDim2.fromOffset(48,nh+8),UDim2.fromOffset(rw-56,20),"muted",14);Art.type(ownedText,"Supporting",short);ownedText.TextXAlignment=Enum.TextXAlignment.Left;local oh=Art.textHeight(ownedText,rw-56,20);ownedText.Size=UDim2.fromOffset(rw-56,oh);h+=oh+4 end
+   if itemPool then JarArt.create(row,entry.id,UDim2.fromOffset(5,4),UDim2.fromOffset(34,42),row.ZIndex+2)else Portrait.create(row,Pets.byId[entry.id],2,UDim2.fromOffset(24,26),row.ZIndex+2,false,self.appearanceFor and self.appearanceFor(entry.id))end
+   nodes[index]=row;local group=math.floor((index-1)/columns)+1;heights[group]=math.max(heights[group]or 0,h)
+  end
+  for index,row in ipairs(nodes)do local group=math.floor((index-1)/columns)+1;local ry=y;for n=1,group-1 do ry+=heights[n]+8 end;row.Position,row.Size=UDim2.fromOffset(4+((index-1)%columns)*(rw+8),ry),UDim2.fromOffset(rw,heights[group])end
+  for _,h in ipairs(heights)do y+=h+8 end
+ end
+ if self.selected=="hue"then
+  copy("PoolHeading","One saved jar · all possible items","Action")
+  local pool={};for _,id in ipairs(HueCatalog.ItemOrder)do table.insert(pool,{id=id,weight=20})end;outcomes(pool,true)
+  copy("ItemRules","Fixed colors stack in your inventory. Use one jar for one dose on one pet and channel. Reset Hue clears that channel; an original channel uses nothing. Store any result. Companion rare protection is unchanged.","Body")
+ else
+  copy("PoolHeading","Possible companions","Action");outcomes(Catalog.odds("meadow",self.state.misses or 0),false)
+  local misses=self.state.misses or 0
+  copy("RareProtection",if misses>=7 then "Your next Companion Egg is rare-only · 50% / 30% / 20%"else "Rare protection "..misses.." / 7 · after 7 common rolls, the next Companion Egg is rare-only.","Supporting")
+ end
+ local daily=left:FindFirstChild("DailyNectar")
+ if not daily then daily=button(left,"DailyNectar","",UDim2.fromOffset(4,y),UDim2.fromOffset(w,44),"raised");daily.Activated:Connect(function()local state=self.state;if liveShopTarget(daily,self.shade)and state.dailyAvailable and state.dailyDay and not self.pending then self:send("daily",state.dailyDay)end end)end
+ daily.Text=if self.state.dailyAvailable then "Daily Stars +"..(self.state.dailyBonus or 6)else "Daily Stars claimed"
+ Art.type(daily,"Action",short);local dh=math.max(44,Art.actionHeight(daily,w));daily.Position,daily.Size=UDim2.fromOffset(4,y),UDim2.fromOffset(w,dh);daily.Interactable,daily.Selectable=self.state.dailyAvailable==true and not self.pending,self.state.dailyAvailable==true and not self.pending;Art.control(daily,false,daily.Interactable);y+=dh+8
+ left.Size=UDim2.fromOffset(width,y);self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>self.body.AbsoluteSize.Y
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(canvas.Y,0,math.max(0,y+4-self.body.AbsoluteSize.Y)));self.renderingBody=false;self:restoreBodyFocus(previous,action,owner)
+ if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(left)then self:queueSelectedRecipe()end
 end
 
 function View:selectRecipe(id)
-	if self.pending or self.state.lastHatch or not Catalog.ById[id] then return false end
+	if self.pending or self.state.lastHatch or not table.find(liveOrder,id) then return false end
  if id==self.selected then return true end
 	self.bodyFocusFallback=false
 	local focused=GuiService.SelectedObject
@@ -655,7 +551,7 @@ function View:update(state)
 				local family = result.family or (pet and (pet.family or pet.id))
 
 				if result.starter then
-					local recipe = Catalog.ById[self.selected]
+					local recipe = shopRecipe(self.selected)
 					local balance = self.state.nectar or 0
 					presentation.starterGoal = if balance >= recipe.cost then recipe.name .. " ready · choose it in Menu"
 						else Stars.format("%s · %d/%d Stars · win quests", recipe.name, balance, recipe.cost)

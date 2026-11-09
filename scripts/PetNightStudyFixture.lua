@@ -18,7 +18,7 @@ return function(client,options)
  local owner={folder=folder,gui=gui,visuals={},connections={},savedGui={},destroyed=false}
  local origin=options.origin or Vector3.new(-40,4.025,12)
  local bindName="PetNightStudy_"..Http:GenerateGUID(false)
- local state={hour=12,treatment="selectiveNeon",view="front",body="original"}
+ local state={hour=12,treatment="groupedRoleFill",view="front",body="original"}
  local function hide(item)
   if item:IsA("ScreenGui")and item~=gui and owner.savedGui[item]==nil then
    owner.savedGui[item]=item.Enabled;item.Enabled=false
@@ -78,7 +78,7 @@ return function(client,options)
   if self.destroyed then return false,"destroyed"end
   hour=if hour==nil then state.hour else hour;treatment=treatment or state.treatment;view=view or state.view;body=body or state.body
   if hour~=12 and hour~=18 and hour~=0 then return reject("Hour must be 12, 18 or 0")end
-  if treatment~="selectiveNeon"and treatment~="shadedHead"then return reject("Unknown treatment")end
+  if treatment~="groupedRoleFill"then return reject("Historical material labels require an explicitly injected frozen source control")end
   if view~="front"and view~="rear"and view~="close"then return reject("Unknown view")end
   if body~="original"and body~="rose"and body~="mix"then return reject("Unknown appearance")end
   state.hour,state.treatment,state.view,state.body=hour,treatment,view,body
@@ -141,7 +141,7 @@ return function(client,options)
    if workspace.CurrentCamera~=camera then owner:destroy();return end
    camera.CameraType=Enum.CameraType.Scriptable;camera.CFrame=owner.cameraFrame;camera.Focus=owner.cameraFocus;camera.FieldOfView=owner.cameraFov
   end)
-  owner:set(options.hour or 12,options.treatment or "selectiveNeon",options.view or "front",options.body or "original")
+  owner:set(options.hour or 12,options.treatment or "groupedRoleFill",options.view or "front",options.body or "original")
  end)
  if not ok then owner:destroy();error(problem)end
  return owner

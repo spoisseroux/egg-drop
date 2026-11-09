@@ -27,7 +27,7 @@ return function(shared)
   for _,hue in ipairs(Hue.Order)do assert(row.ranks[hue.id]==0)end
   local base=Palette.resolve("pip");local invalid=Palette.resolve("pip",{body="rose",bodyRank=99,secondary="unknown",face=Color3.new(1,0,0)})
   assert(invalid.body==base.body and invalid.secondary==base.secondary and invalid.face==base.face)
-  assert(Palette.resolve("wick")==nil)
+  assert(Palette.resolve("unknown-pet")==nil and Palette.resolve("wick")~=nil)
  end)
  test("canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face",function()
   for _,pet in ipairs({"pip","puddle"})do
@@ -42,6 +42,35 @@ return function(shared)
     assert(palette.face==base.face and palette.secondary==base.secondary and palette.ivory==base.ivory)
    end
   end
+ end)
+ test("all 1296 legal dose combinations resolve finite colors and preserve authored protected roles on all seven pets",function()
+  local combinations=0
+  for rose=0,5 do for tide=0,5 do for citrus=0,5 do for iris=0,5 do
+   local counts={rose=rose,tide=tide,citrus=citrus,iris=iris};assert(Hue.validCounts(counts));combinations+=1
+   local target=Hue.resolveTarget(counts);local total=rose+tide+citrus+iris
+   assert((target==nil)==(total==0))
+   if target then for _,n in ipairs({target.R,target.G,target.B})do assert(n==n and n>=0 and n<=1.000001)end end
+   for pet in pairs(Hue.Supported)do
+    local original=Palette.resolve(pet);local main=Palette.resolve(pet,{mainDoses=counts,secondaryDoses=Hue.emptyCounts()})
+    local secondary=Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=counts})
+    assert(main.secondary==original.secondary and secondary.body==original.body)
+    for _,role in ipairs({"face","mouth","ivory","blush"})do assert(main[role]==original[role]and secondary[role]==original[role])end
+   end
+  end end end end
+  assert(combinations==1296)
+ end)
+ test("layered mixture uses pigment mass in linear light and equal bars hit exact shared anchors",function()
+  local mixed=Hue.resolveTarget({rose=3,tide=1,citrus=0,iris=0})
+  local expected=Palette.tint(Hue.ById.rose.color,Hue.Mixes["rose:tide"].color,.5)
+  assert(close(mixed.R,expected.R)and close(mixed.G,expected.G)and close(mixed.B,expected.B))
+  mixed=Hue.resolveTarget({rose=5,tide=1,citrus=0,iris=0});expected=Palette.tint(Hue.ById.rose.color,Hue.Mixes["rose:tide"].color,2/6)
+  assert(close(mixed.R,expected.R)and close(mixed.G,expected.G)and close(mixed.B,expected.B))
+  for _,key in ipairs(Hue.MixOrder)do local pair=Hue.Mixes[key]
+   for n=1,5 do local counts=Hue.emptyCounts();counts[pair.a],counts[pair.b]=n,n;local actual=Hue.resolveTarget(counts)
+    assert(close(actual.R,pair.color.R)and close(actual.G,pair.color.G)and close(actual.B,pair.color.B))
+   end
+  end
+  for _,bad in ipairs({{rose=6,tide=0,citrus=0,iris=0},{rose=1/0,tide=0,citrus=0,iris=0},{rose=0,tide=0,citrus=0,iris=0,unknown=0}})do assert(not Hue.validCounts(bad)and Hue.resolveTarget(bad)==nil)end
  end)
  return cases
 end

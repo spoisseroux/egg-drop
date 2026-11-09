@@ -16,7 +16,7 @@ local function familyName(id)
 	return if pet then pet.name else id
 end
 local function text(parent,name,content,role,color)
-	local node=Art.text(parent,name,content,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),color or "text",16)
+	local node=Art.text(parent,name,content,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),if color==Art.Amber then "reward"elseif color==Art.Leaf then "text"else color or "text",16)
 	Art.type(node,role or "Body")
 	node.TextXAlignment,node.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Center
 	return node
@@ -370,8 +370,8 @@ function Menu:setPage(key)
         tab.SelectedEdge.Visible=active
         tab:SetAttribute("Selected",active)
         tab.Font=if active then Enum.Font.GothamBold else Enum.Font.GothamMedium
-        Art.bind(tab,{BackgroundColor3=function()return Art.paletteColor(if active then "accent"elseif name=="daily"then "inset"else "raised")end,TextColor3=if active then "ink"else "text"})
-        Art.bind(tab.SelectedEdge,{BackgroundColor3="ink"})
+        Art.tab(tab,active,true)
+        tab.SelectedEdge.BackgroundColor3=Color3.new(1,1,1)
     end
 	self.dailyButton.Visible=key=="daily"
 	self.body.CanvasPosition=Vector2.zero;self:layout()

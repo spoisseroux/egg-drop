@@ -1,0 +1,13 @@
+{
+  "environment": "Fresh native Studio Client VM, actual Largest text preference; isolated layout stores; no live DataStore writes",
+  "results": {
+    "HueEggView": 13,
+    "PetNightSurfaces": 7,
+    "ItemPetVisuals": 7,
+    "PetPlantedMotion": 13,
+    "HueAppearance": 7,
+    "GardenActivity": 4
+  },
+  "status": "All passed before subsequent compact phone/result refinements. These are assertion results, not overall visual acceptance.",
+  "remaining": "Phone first-fold customization and starter name clipping reproduced; fixes in progress. Night color/readability accepted, dimensionality refinement pending; 15Hz real-rendered gait selected with bounded body weight-shift requested."
+}

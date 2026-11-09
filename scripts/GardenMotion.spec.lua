@@ -24,10 +24,12 @@ return function(server)
  end)
  test("closed chord via is finite and the Lawn join has exact shared velocity",function()
   local a,duration=actor(Vector3.zero,Vector3.zero,Vector3.zero,3,Vector3.new(0,0,4))
-  assert(duration<20 and #a.path==2)
+  assert(duration<20 and #a.path>=2)
   for i=0,240 do local s=A.sample(a,duration*i/240);assert(s.position.X==s.position.X and s.velocity.Magnitude<=3.001)end
   local b=actor(Vector3.zero,Vector3.new(4,0,4),Vector3.zero,3,Vector3.new(0,0,4))
-  local join=b.path[1].duration;local before,after=A.sample(b,join-1e-6),A.sample(b,join+1e-6)
+  local join=0
+  for _,leg in ipairs(b.path)do join+=leg.duration;if not leg.pivot and(A.vector(leg.to)-Vector3.new(0,0,4)).Magnitude<.0001 then break end end
+  local before,after=A.sample(b,join-1e-6),A.sample(b,join+1e-6)
   assert((before.position-after.position).Magnitude<.0001 and(before.velocity-after.velocity).Magnitude<.0001,"Lawn velocity corner")
  end)
  test("opposed outgoing Lawn tangent falls back to a stopped join without throwing",function()
@@ -73,7 +75,7 @@ return function(server)
    end
   end
   local final=A.sample(c.g.actors[1],c.now)
-  assert(speed<=18.001 and gap<16 and(final.position-c.input[1].anchor).Magnitude<.1)
+  assert(speed<=18.001 and gap<16 and(final.position-c.input[1].anchor).Magnitude<.1,string.format("walk16 maxSpeed=%.6f maxGap=%.6f finalGap=%.6f finalX=%.6f targetX=%.6f behavior=%s action=%s pathLegs=%d start=%.6f end=%.6f",speed,gap,(final.position-c.input[1].anchor).Magnitude,final.position.X,c.input[1].anchor.X,tostring(c.g.actors[1].behavior),tostring(c.g.actors[1].action),#(c.g.actors[1].path or{}),c.g.actors[1].startTime,c.g.actors[1].endTime))
   metrics.walk16={seconds=60,maxSpeed=speed,maxGap=gap,finalGap=(final.position-c.input[1].anchor).Magnitude,maxReplacementYaw=turn}
  end)
  test("2Hz reversals preserve position velocity heading and finite JSON-safe paths",function()
@@ -98,6 +100,34 @@ return function(server)
   a.action="shove";a.yaw=-1.4
   local first,last=A.sample(a,0),A.sample(a,10)
   assert(math.abs(first.yaw-.7)<1e-5 and math.abs(last.yaw-a.yaw)<1e-5)
+ end)
+ test("90 and 180 degree pivots complete on the spot before accelerating",function()
+  for _,degrees in ipairs({90,180})do
+   local theta=math.rad(degrees);local target=Vector3.new(math.sin(theta)*4,0,math.cos(theta)*4)
+   local path,duration=A.plan(Vector3.zero,target,Vector3.zero,4,0,0)
+   local pivot=path[1];assert(pivot.pivot)
+   assert(pivot.duration>=(if degrees==90 then .15 else .28)and pivot.duration<=(if degrees==90 then .24 else .40))
+   local a={from={0,0,0},to=A.pack(target),startTime=0,endTime=duration,path=path}
+   for frame=0,60 do local s=A.sample(a,pivot.duration*frame/60);assert(s.position.Magnitude<.000001 and s.velocity.Magnitude==0 and s.pivot and math.abs(s.pivotPhase-frame/60)<.00001 and math.abs(s.pivotTurn-theta)<.00001)end
+   local final=A.sample(a,pivot.duration);assert(math.abs(math.atan2(math.sin(final.yaw-theta),math.cos(final.yaw-theta)))<.00001)
+  end
+ end)
+ test("reversal publishes brake then in-place pivot; moving curve heading follows its actual tangent",function()
+  local path,duration=A.plan(Vector3.zero,Vector3.new(0,0,-5),Vector3.new(0,0,4),4,0,0)
+  assert(not path[1].pivot and path[2].pivot and path[1].duration<=.251)
+  local a={from={0,0,0},to={0,0,-5},startTime=0,endTime=duration,path=path}
+  local before=A.sample(a,0);assert((before.velocity-Vector3.new(0,0,4)).Magnitude<.00001)
+  local elapsed=0
+  for _,leg in ipairs(path)do
+   if not leg.pivot then for frame=1,60 do local t=leg.duration*frame/60
+    if t>.121 then local s=A.sample(a,elapsed+t);local velocity=s.velocity
+     if Vector2.new(velocity.X,velocity.Z).Magnitude>.001 then local expected=math.atan2(velocity.X,velocity.Z)
+      assert(math.abs(math.atan2(math.sin(s.yaw-expected),math.cos(s.yaw-expected)))<.0001)
+     end
+    end
+   end end
+   elapsed+=leg.duration
+  end
  end)
  return {passed=#cases,cases=cases,metrics=metrics}
 end

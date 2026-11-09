@@ -1,3 +1,4 @@
+local PetFocusKey=require(script.Parent.PetFocusKey)
 local Players = game:GetService("Players")
 local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -156,6 +157,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		end
 	end)
 	watch(workspace:GetPropertyChangedSignal("CurrentCamera"), function()
+        if self.focusKey then self.focusKey:disable()end
 		self.returnRoamShot=nil
 		if self.mode == "Room" then self:useRoomCamera(false) end
 	end)
@@ -203,6 +205,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow)end
+		if not self.focusKey then self.focusKey=PetFocusKey.new()end
+        self.focusKey:update(workspace.CurrentCamera,self.pet,gardenFocus)
 		if self.focusUI then self.focusUI:update(workspace.CurrentCamera, self.pet, self.petPrompt and self.petPrompt.Enabled) end
   self:updatePetContact(dt)
 	end)
@@ -928,6 +932,7 @@ end
 function Room:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+ if self.focusKey then self.focusKey:destroy();self.focusKey=nil end
  if self.petContactIntent then self.petContactIntent:destroy()end
 	if self.focusTransition then self.focusTransition:destroy()end
 	if self.garden then self.garden:destroy()end

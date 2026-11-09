@@ -1,187 +1,214 @@
--- Isolated v5 stock/assignment ledger and historical migration. No live stores.
+-- v6 item inventory, immutable legacy rights, durable roll reservation. Isolated stores only.
 return function(server)
- local H=require(server.HatchProgress);local HS=require(server.HueState)
- local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Eggs=require(Shared.EggCatalog)
- local Appearance=require(server.PetAppearance)
- local cases={};local function test(name,run)run();table.insert(cases,name)end
- local function copy(x)if type(x)~="table"then return x end;local out={};for k,v in pairs(x)do out[k]=copy(v)end;return out end
+ local H=require(server.HatchProgress);local S=require(server.HueState);local L=require(server.LegacyHueState)
+ local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
+ local cases={};local function test(name,f)f();table.insert(cases,name)end
+ local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end
  local function fixture(rank)
-  local db={player_1={rank=rank or 2,custom="preserved",petAppearance={pip={charmVisible=false,at=1,writer="old"}}}}
-  local c={now=1000,serial=0,writes=0};local adapter={now=function()return c.now end,guid=function()c.serial+=1;return"server-"..c.serial end,random=function()return .1 end,wait=function()end}
-  adapter.update=function(key,transform)
-   c.writes+=1;if c.before then c.before=false;error("Expected fixture: before commit")end
-   local result=transform(copy(db[key]));if c.replay then result=transform(copy(db[key]))end
-   if result then db[key]=copy(result)end
-   if c.after then c.after=false;error("Expected fixture: after commit")end
-   return copy(result)
+  local db={player_1={rank=rank or 4,trials=31,custom="kept",petAppearance={pip={charmVisible=false,at=1,writer="old"}}}}
+  local c={now=1000,n=0,rolls=0,unit=.01,updates=0}
+  local a={now=function()return c.now end,guid=function()c.n+=1;return"server-"..c.n end,random=function()c.rolls+=1;return c.unit end,wait=function()end}
+  a.update=function(key,transform)
+   c.updates+=1
+   if c.before then c.before=false;error("Expected fixture: before write")end
+   local output=transform(copy(db[key]))
+   if c.callbackReplay then output=transform(copy(db[key]))end
+   if output then db[key]=copy(output)end
+   if c.after then c.after=false;error("Expected fixture: after write")end
+   if c.failSettlement and db[key].hatching.hueReservation then c.failSettlement=false;c.before=true end
+   return copy(output)
   end
-  local h=H.load(1,{},adapter);assert(h.status=="Ready");assert(H.award(h,1,8));assert(H.award(h,2,8))
-  return h,db,c,adapter
+  local h=H.load(1,{},a);assert(h.status=="Ready");assert(H.award(h,1,8));assert(H.award(h,2,8))
+  return h,db,c,a
  end
  local function request(h,fields,revision)
-  revision=revision or h.state.revision;local p=copy(fields);p.id=p.id or(tostring(revision)..":request-"..tostring(h.state.operationSeq+1))
-  return p,revision
+  local r=revision or h.state.revision;local v=copy(fields or{});v.id=v.id or(tostring(r)..":test-"..tostring(h.state.operationSeq+1));v.catalogVersion=Hue.CatalogVersion;return v,r
  end
  local function command(h,action,fields)
-  local p,r=request(h,fields);local ok,why,receipt=H.hueCommand(h,action,p,r);assert(ok,why);assert(HS.valid(h.state));return p,r,receipt
+  local q,r=request(h,fields);local ok,why,receipt=H.hueCommand(h,action,q,r);assert(ok,why);assert(S.valid(h.state),"invalid state after "..action);return q,r,receipt
  end
- local function buy(h)return command(h,"hueBuy",{})end
- local function apply(h,hue,pet)
-  pet=pet or"pip";return command(h,"hueApply",{token=h.state.heldHueEgg.token,petId=pet,hue=hue or"rose",rank=Hue.get(h.state.hues,pet).ranks[hue or"rose"]})
+ local function store(h)return command(h,"hueStore",{resultId=h.state.pendingHueResult.id})end
+ local function buy(h,c,id)
+  local index=table.find(Hue.ItemOrder,id or"rose");c.unit=(index-.5)/5
+  local q,r,receipt=command(h,"hueBuy",{});assert(receipt.itemId==(id or"rose"));return q,r,receipt
  end
- local function feed(h,hue,pet)buy(h);return apply(h,hue,pet)end
- local function fund(h)for i=3,35 do assert(H.award(h,i,8))end end
- local function legacy(h,db,count)
-  assert(H.release(h));local state=db.player_1.hatching
-  state.version=4;state.hueAssignments=nil;state.hueLastPurchase=nil;state.heldHueEgg=nil;state.nectar=300
-  state.hues={};state.hueReceipts={};local n=0
-  for _,pet in ipairs({"pip","puddle"})do for _,offer in ipairs(Hue.Order)do for rank=0,2 do
-   if n>=count then return state end;n+=1
-   local q={id=tostring(state.revision)..":legacy-"..n,action="hue",petId=pet,hue=offer.id,rank=rank,revision=state.revision}
-   local row=Hue.get(state.hues,pet);row.ranks[offer.id]=rank+1;row.body=offer.id;state.hues[pet]=row
-   state.operationSeq+=1;state.revision+=1
-   local r={id=q.id,action="hue",petId=pet,quote=q,operationId="legacy-op-"..n,sequence=state.operationSeq,revision=state.revision,
-    balanceBefore=state.nectar,balanceAfter=state.nectar-8,cost=8,hue=offer.id,oldRank=rank,newRank=rank+1,secondaryUnlocked=rank==0,body=offer.id,secondary=row.secondary}
-   state.nectar-=8;state.hueReceipts[q.id]=r;state.lastHueResult=copy(r);state.lastOperation={id=r.operationId,sequence=r.sequence}
-  end end end
-  return state
+ local function use(h,item,pet,channel,pending)
+  pet,channel=pet or"pip",channel or"main"
+  return command(h,"hueUse",{itemId=item,petId=pet,channel=channel,counts=S.row(h.state,pet)[channel],pendingResultId=if pending then h.state.pendingHueResult.id else nil})
  end
- test("generic purchase creates durable unassigned stock without a pet, hue, pity or rank mutation",function()
-  local h,db,c=fixture();local old=copy(h.state);c.replay=true;local p,r,receipt=buy(h)
-  assert(h.state.version==5 and receipt.action=="hueBuy"and receipt.petId==nil and receipt.hue==nil)
-  assert(h.state.nectar==old.nectar-8 and h.state.hues==nil and h.state.heldHueEgg.token==receipt.token)
-  assert(h.state.inventoryMask==old.inventoryMask and h.state.misses==old.misses and h.state.totalWins==old.totalWins)
-  assert(db.player_1.custom=="preserved"and not db.player_1.petAppearance.pip.charmVisible)
-  local before=h.state.nectar;assert(H.hueCommand(h,"hueBuy",p,r));assert(h.state.nectar==before)
-  local x,v=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",x,v);assert(not ok and why=="EggHeld"and h.state.heldHueEgg)
+ local function fund(h)for n=3,70 do assert(H.award(h,n,8))end end
+ local function makeLegacy(db,mode,count)
+  local state=db.player_1.hatching
+  state.version=5;for _,k in ipairs({"petHues","hueInventory","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyHueEgg","legacyHueRedemption","legacyLastHueResult","lastHueResult","pendingHueResult","hueReservation"})do state[k]=nil end
+  state.hues={};state.hueReceipts={};state.hueAssignments={};state.lease.expiresAt=0
+  for n=1,count or 2 do
+   local pet=if n<=12 then "pip"else "puddle";local hue=Hue.Order[math.floor(((n-1)%12)/3)+1].id;local rank=(n-1)%3
+   local q={id=tostring(state.revision)..":old-"..n,action="hue",petId=pet,hue=hue,rank=rank,revision=state.revision}
+   local row=Hue.get(state.hues,pet);row.ranks[hue]=rank+1;row.body=hue;state.hues[pet]=row
+   state.revision+=1;state.operationSeq+=1
+   local receipt={id=q.id,action="hue",petId=pet,quote=q,operationId="old-op-"..n,sequence=state.operationSeq,revision=state.revision,cost=8,
+    balanceBefore=state.nectar,balanceAfter=state.nectar-8,hue=hue,oldRank=rank,newRank=rank+1,secondaryUnlocked=rank==0,body=hue,secondary="default"}
+   state.nectar-=8;state.hueReceipts[q.id]=receipt;state.lastHueResult=copy(receipt);state.lastOperation={id=receipt.operationId,sequence=receipt.sequence}
+  end
+  if mode=="held"then
+   local q={id=tostring(state.revision)..":old-buy",action="hueBuy",revision=state.revision}
+   state.revision+=1;state.operationSeq+=1
+   local receipt={id=q.id,action="hueBuy",quote=q,operationId="old-held-token",sequence=state.operationSeq,revision=state.revision,cost=8,balanceBefore=state.nectar,balanceAfter=state.nectar-8,token="old-held-token",purchaseId=q.id}
+   state.nectar-=8;state.hueLastPurchase=receipt;state.heldHueEgg={token=receipt.token,purchaseId=q.id};state.lastHueResult=copy(receipt);state.lastOperation={id=receipt.operationId,sequence=receipt.sequence}
+  end
+  assert(L.valid(state));return state
+ end
+ test("fresh v6 has five private stacks and seven independent color capabilities",function()
+  local h,db=fixture();assert(h.state.version==6 and S.valid(h.state));assert(db.player_1.custom=="kept"and not db.player_1.petAppearance.pip.charmVisible)
+  for _,item in ipairs(Hue.ItemOrder)do assert(h.state.hueInventory[item]==0)end
+  local p=H.public(h);assert(not p.hueReservation and not p.hueItemReceipts and not p.hueReceiptOrder)
+  for pet in pairs(Hue.Supported)do assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end
  end)
- test("held item survives release/rejoin and assignment advances one chosen baby without another debit",function()
-  local h,db,_,adapter=fixture();buy(h);local held=copy(h.state.heldHueEgg);assert(H.release(h));h=H.load(1,{},adapter)
-  assert(h.status=="Ready"and h.state.heldHueEgg.token==held.token)
-  local balance=h.state.nectar;local p,r,receipt=apply(h,"tide","puddle")
-  assert(not h.state.heldHueEgg and h.state.nectar==balance and receipt.cost==0 and receipt.oldRank==0 and receipt.newRank==1)
-  assert(Hue.get(h.state.hues,"puddle").ranks.tide==1 and Hue.get(h.state.hues,"pip").ranks.tide==0)
-  assert(H.hueCommand(h,"hueApply",p,r));assert(Hue.get(h.state.hues,"puddle").ranks.tide==1)
-  local public=Appearance.public({petAppearanceSaved=db.player_1.petAppearance},h.state.hues);assert(not public.pip.charmVisible)
+ test("each 20-percent server roll stores exactly one item, one debit and no companion pity change",function()
+  local h,_,c=fixture();fund(h);c.callbackReplay=true
+  for _,item in ipairs(Hue.ItemOrder)do local before=h.state.nectar;local misses=h.state.misses;local _,_,r=buy(h,c,item)
+   assert(h.state.nectar==before-8 and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
+  end
+  assert(c.rolls==5)
  end)
- test("before and after ambiguous purchase/apply writes retry captured identity exactly once",function()
-  for _,action in ipairs({"hueBuy","hueApply"})do for _,failure in ipairs({"before","after"})do
-   local h,_,c=fixture();if action=="hueApply"then buy(h)end
-   local fields=if action=="hueBuy"then {}else{petId="pip",hue="rose",rank=0,token=h.state.heldHueEgg.token}
-   local p,r=request(h,fields);local balance=h.state.nectar;c[failure]=true
-   local ok,why=H.hueCommand(h,action,p,r);assert(not ok and why=="Retrying")
-   local captured=h.pending;local changed=copy(p);if action=="hueBuy"then changed.petId="pip"else changed.hue="tide"end
-   assert(not H.hueCommand(h,action,changed,r));assert(h.pending==captured)
-   assert(H.retry(h));assert(HS.valid(h.state));assert(h.state.nectar==balance-(if action=="hueBuy"then 8 else 0))
-   assert(H.hueCommand(h,action,p,r));assert(h.state.nectar==balance-(if action=="hueBuy"then 8 else 0))
+ test("stored duplicates stack, pending results block new purchases and result use acknowledges once",function()
+  local h,_,c=fixture();buy(h,c,"rose");local pending=h.state.pendingHueResult.id
+  local q,r=request(h,{});assert(not H.hueCommand(h,"hueBuy",q,r));store(h);buy(h,c,"rose");assert(h.state.hueInventory.rose==2)
+  local before=h.state.nectar;local useQ,useRev=use(h,"rose","puddle","secondary",true)
+  assert(h.state.hueInventory.rose==1 and h.state.petHues.puddle.secondary.rose==1 and h.state.nectar==before and not h.state.pendingHueResult)
+  assert(H.hueCommand(h,"hueUse",useQ,useRev));assert(h.state.hueInventory.rose==1)
+  local altered=copy(useQ);altered.pendingResultId=pending;local ok,why=H.hueCommand(h,"hueUse",altered,useRev);assert(not ok and why=="OperationConflict")
+ end)
+ test("five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",function()
+  local h,_,c=fixture();fund(h)
+  for _=1,5 do buy(h,c,"rose");use(h,"rose","pip","main",true)end
+  buy(h,c,"rose");store(h);local q,r=request(h,{itemId="rose",petId="pip",channel="main",counts=S.row(h.state,"pip").main});local stock=h.state.hueInventory.rose
+  local ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="MaxDose"and h.state.hueInventory.rose==stock)
+  buy(h,c,"tide");use(h,"tide","pip","secondary",true);buy(h,c,"reset");use(h,"reset","pip","main",true)
+  assert(Hue.doseStrength(h.state.petHues.pip.main)==0 and h.state.petHues.pip.secondary.tide==1 and h.state.hueInventory.rose==stock)
+  buy(h,c,"reset");store(h);q,r=request(h,{itemId="reset",petId="pip",channel="main",counts=Hue.emptyCounts()});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="AlreadyOriginal"and h.state.hueInventory.reset==1)
+ end)
+ test("reservation and settlement retry the frozen draw before and after ambiguous writes",function()
+  for _,phase in ipairs({"before","after","settlement"})do local h,_,c=fixture();local balance=h.state.nectar
+   if phase=="settlement"then c.failSettlement=true else c[phase]=true end
+   local q,r=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",q,r);assert(not ok and why=="Retrying")
+   local rollCount=c.rolls;c.unit=.99;assert(H.retry(h));assert(c.rolls==rollCount and h.state.hueInventory.rose==1 and h.state.nectar==balance-8 and not h.state.hueReservation)
+   assert(H.hueCommand(h,"hueBuy",q,r));assert(c.rolls==rollCount and h.state.nectar==balance-8)
+  end
+ end)
+ test("durable reservation survives writer takeover and settles its original result once",function()
+  local h,db,c,a=fixture();c.failSettlement=true;local q,r=request(h,{});local balance=h.state.nectar
+  assert(not H.hueCommand(h,"hueBuy",q,r));assert(db.player_1.hatching.hueReservation and db.player_1.hatching.hueInventory.rose==0)
+  c.now+=100;c.unit=.99;local joined=H.load(1,{},a);assert(joined.status=="Ready"and joined.state.hueInventory.rose==1 and joined.state.nectar==balance-8 and c.rolls==1)
+  assert(H.hueCommand(joined,"hueBuy",q,r));assert(joined.state.hueInventory.rose==1)
+  assert(not H.retry(h));assert(h.status=="SessionLost")
+ end)
+ test("v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",function()
+  local h,db,c,a=fixture();fund(h);assert(H.release(h));local old=makeLegacy(db,nil,5)
+  old.hues.pip.mix="rose:tide";old.hues.pip.secondary="rose";local snapshot=copy(old)
+  h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==6 and h.state.petHues.pip.main.rose==3 and h.state.petHues.pip.main.tide==3 and h.state.petHues.pip.secondary.rose==5)
+  local before=Palette.resolve("pip",Hue.appearance(snapshot.hues,"pip"));local after=Palette.resolve("pip",Hue.appearance(h.state.hues,"pip",h.state.petHues))
+  assert((Vector3.new(before.body.R,before.body.G,before.body.B)-Vector3.new(after.body.R,after.body.G,after.body.B)).Magnitude<.00001)
+  command(h,"hueLegacyPreset",{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose",counts=S.row(h.state,"pip").main,locked=false})
+  buy(h,c,"tide");use(h,"tide","pip","main",true)
+  local q,r=request(h,{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose:tide",counts=S.row(h.state,"pip").main,locked=true});local ok,why=H.hueCommand(h,"hueLegacyPreset",q,r);assert(not ok and why=="LegacyLocked")
+  buy(h,c,"reset");use(h,"reset","pip","main",true)
+  command(h,"hueLegacyPreset",{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose:tide",counts=S.row(h.state,"pip").main,locked=false})
+  for _,receipt in pairs(snapshot.hueReceipts)do local quote=receipt.quote;assert(H.hueCommand(h,"hue",{id=quote.id,petId=quote.petId,hue=quote.hue,rank=quote.rank},quote.revision))end
+  assert(S.valid(h.state)and Hue.equalCounts(h.state.petHues.pip.main,{rose=3,tide=3,citrus=0,iris=0}))
+ end)
+ test("held legacy token redeems exactly once without roll/debit and original buy proof survives",function()
+  local h,db,c,a=fixture();assert(H.release(h));local old=copy(makeLegacy(db,"held",1));h=H.load(1,{},a)
+  local balance=h.state.nectar;local q,r=command(h,"hueLegacyRedeem",{migrationId=h.state.hueMigrationId,token=h.state.legacyHueEgg.token,purchaseId=h.state.legacyHueEgg.purchaseId,itemId="iris"})
+  assert(h.state.hueInventory.iris==1 and not h.state.legacyHueEgg and h.state.nectar==balance and c.rolls==0)
+  assert(H.hueCommand(h,"hueLegacyRedeem",q,r));assert(h.state.hueInventory.iris==1)
+  local oldQ=old.hueLastPurchase.quote;assert(H.hueCommand(h,"hueBuy",{id=oldQ.id},oldQ.revision));assert(h.state.hueInventory.iris==1)
+ end)
+ test("invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",function()
+  for _,bad in ipairs({"missing","wick"})do local h,db,_,a=fixture();fund(h);assert(H.release(h));local old=makeLegacy(db,nil,1)
+   if bad=="missing"then old.hueReceipts={}else old.hues.wick=copy(old.hues.pip)end
+   h=H.load(1,{},a);assert(h.status=="InvalidData"and db.player_1.hatching.version==5)
+  end
+  local h,db,_,a=fixture();fund(h);assert(H.release(h));makeLegacy(db,nil,24);h=H.load(1,{},a);assert(h.status=="Ready"and S.valid(h.state))
+  assert(H.release(h));local original=copy(db.player_1.hatching.petHues);h=H.load(1,{},a);for pet,row in pairs(original)do assert(Hue.equalCounts(row.main,h.state.petHues[pet].main))end
+ end)
+ test("v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",function()
+  for _,version in ipairs({2,3,4})do local h,db,_,a=fixture(1);assert(H.release(h));local old=makeLegacy(db,nil,0)
+   old.version=version;old.hueAssignments=nil;old.lastHatch={id="old-focused",petId="pip",duplicate=true,recipe="sprout",mastery=2}
+   if version<4 then old.petDay=nil;old.petCount=nil;old.lastPetAward=nil end
+   if version==2 then old.masteryChallenges=nil;old.masteryLegacyMask=nil;old.totalWins=nil;old.contracts=nil end
+   local balance=old.nectar;h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==6 and h.state.nectar==balance and h.state.lastHatch.id=="old-focused")
+   assert(H.command(h,"ack","old-focused",h.state.revision));local ok,why=H.command(h,"hatch","sprout",h.state.revision);assert(not ok and why=="RetiredEgg")
+  end
+ end)
+ test("bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",function()
+  local h,_,c=fixture();fund(h);buy(h,c,"rose");store(h)
+  for _=1,40 do buy(h,c,"tide");store(h)end
+  assert(#h.state.hueReceiptOrder==S.ReceiptLimit and S.valid(h.state))
+  h.state.hueInventory.iris=Hue.StackLimit -- next write uses fixture DB below in separate case
+  local h2,db,c2=fixture();db.player_1.hatching.hueInventory.iris=Hue.StackLimit;h2.state.hueInventory.iris=Hue.StackLimit;c2.unit=.7
+  local balance=h2.state.nectar;local q,r,receipt=command(h2,"hueBuy",{})
+  assert(receipt.outcome=="Refused"and receipt.reason=="StackLimit"and h2.state.nectar==balance and not h2.state.pendingHueResult)
+  local rolls=c2.rolls;assert(H.hueCommand(h2,"hueBuy",q,r));assert(c2.rolls==rolls and h2.state.nectar==balance)
+ end)
+ test("malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",function()
+  local h,_,c=fixture();buy(h,c,"rose");store(h)
+  for _,bad in ipairs({{rose=-1,tide=0,citrus=0,iris=0},{rose=0/0,tide=0,citrus=0,iris=0},{rose=.5,tide=0,citrus=0,iris=0}})do
+   local q,r=request(h,{itemId="rose",petId="pip",channel="main",counts=bad});assert(not H.hueCommand(h,"hueUse",q,r)and not h.pending)
+  end
+  local q,r=request(h,{itemId="rose",petId="pip",channel="main",counts={rose=1,tide=0,citrus=0,iris=0}});assert(not H.hueCommand(h,"hueUse",q,r));use(h,"rose")
+ end)
+ test("each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",function()
+  local h,db,c=fixture();fund(h);local mask=h.state.inventoryMask
+  for pet in pairs(Hue.Supported)do for _,channel in ipairs({"main","secondary"})do
+   buy(h,c,"iris");use(h,"iris",pet,channel,true)
+   assert(S.row(h.state,pet)[channel].iris==1 and h.state.inventoryMask==mask and db.player_1.petAppearance.pip.charmVisible==false)
   end end
  end)
- test("wrong token, stale grade, max grade and unsupported/unowned assignment retain stock",function()
-  local h=fixture(1);fund(h);for _=1,3 do feed(h,"rose")end;buy(h)
-  for _,case in ipairs({{petId="pip",hue="rose",rank=3},{petId="pip",hue="tide",rank=1},{petId="puddle",hue="tide",rank=0},{petId="wick",hue="tide",rank=0}})do
-   case.token=h.state.heldHueEgg.token;local p,r=request(h,case);local before=h.state.nectar;assert(not H.hueCommand(h,"hueApply",p,r));assert(h.state.heldHueEgg and h.state.nectar==before)
+ test("two uses of last jar at one revision have one winner and rejected request cannot strand next intent",function()
+  local h,_,c=fixture();buy(h,c,"rose");store(h)
+  local first,revision=request(h,{itemId="rose",petId="pip",channel="main",counts=Hue.emptyCounts()})
+  local second=copy(first);second.id=tostring(revision)..":other-use";second.petId="puddle"
+  assert(H.hueCommand(h,"hueUse",first,revision));local ok,why=H.hueCommand(h,"hueUse",second,revision)
+  assert(not ok and why=="RevisionChanged"and h.state.hueInventory.rose==0 and S.row(h.state,"puddle").main.rose==0 and not h.pending)
+  buy(h,c,"tide");use(h,"tide","puddle","secondary",true)
+ end)
+ test("v5 zero-cost assignments retain their exact token proof after upgrade and later reset",function()
+  local h,db,c,a=fixture();fund(h);assert(H.release(h));local old=makeLegacy(db,nil,0)
+  local function legacyCommand(action,fields)
+   local revision=old.revision;fields.id=tostring(revision)..":old-"..action
+   local q=L.quote(action,fields,revision);local candidate={quote=q,operationId="legacy-"..action,sequence=old.operationSeq+1}
+   assert(L.apply(old,candidate));old.revision+=1;old.operationSeq+=1;old.lastOperation={id=candidate.operationId,sequence=candidate.sequence};assert(L.valid(old));return copy(fields),revision
   end
-  local p,r=request(h,{petId="pip",hue="tide",rank=0,token="wrong"});assert(not H.hueCommand(h,"hueApply",p,r));assert(h.state.heldHueEgg)
+  legacyCommand("hueBuy",{});local payload,revision=legacyCommand("hueApply",{token=old.heldHueEgg.token,petId="pip",hue="tide",rank=0})
+  h=H.load(1,{},a);assert(h.status=="Ready"and S.row(h.state,"pip").main.tide==2)
+  buy(h,c,"reset");use(h,"reset","pip","main",true);local stock=copy(h.state.hueInventory)
+  assert(H.hueCommand(h,"hueApply",payload,revision));assert(S.row(h.state,"pip").main.tide==0 and h.state.hueInventory.reset==stock.reset)
  end)
- test("all six mixes are canonical free learned recipes; reset preserves grades, accent unlocks and held egg",function()
-  local h,db=fixture();fund(h);for _,offer in ipairs(Hue.Order)do feed(h,offer.id)end
-  command(h,"hueEquip",{petId="pip",secondary="iris"});buy(h);local held=h.state.heldHueEgg.token;local balance=h.state.nectar
-  for _,key in ipairs(Hue.MixOrder)do local mix=Hue.Mixes[key]
-   assert(Hue.pair(mix.a,mix.b)==key and Hue.pair(mix.b,mix.a)==key)
-   command(h,"hueMix",{petId="pip",pair=key});assert(Hue.appearance(h.state.hues,"pip").bodyMix==key)
-   assert(Hue.appearance(h.state.hues,"pip").bodyRank==1 and Hue.get(h.state.hues,"pip").secondary=="iris")
-  end
-  command(h,"hueReset",{petId="pip"});local row=Hue.get(h.state.hues,"pip")
-  assert(row.body=="original"and row.secondary=="default"and not row.mix and row.ranks.rose==1 and row.ranks.iris==1)
-  assert(h.state.nectar==balance and h.state.heldHueEgg.token==held and not db.player_1.petAppearance.pip.charmVisible)
-  command(h,"hueEquip",{petId="pip",secondary="iris"});assert(Hue.get(h.state.hues,"pip").secondary=="iris")
- end)
- test("single body clears mixing; independent accent retains mix; apply clears mix and preserves accent",function()
-  local h=fixture();fund(h);feed(h,"rose");feed(h,"tide")
-  command(h,"hueMix",{petId="pip",pair=Hue.pair("rose","tide")});command(h,"hueEquip",{petId="pip",secondary="rose"});assert(Hue.get(h.state.hues,"pip").mix)
-  command(h,"hueEquip",{petId="pip",body="original"});assert(not Hue.get(h.state.hues,"pip").mix)
-  command(h,"hueMix",{petId="pip",pair=Hue.pair("rose","tide")});feed(h,"tide");local row=Hue.get(h.state.hues,"pip")
-  assert(not row.mix and row.body=="tide"and row.secondary=="rose"and row.ranks.tide==2)
-  local p,r=request(h,{petId="puddle",pair=Hue.pair("rose","tide")});assert(not H.hueCommand(h,"hueMix",p,r))
- end)
- test("v4 legacy paid receipts migrate verbatim, remain replayable, and new directional purchases close",function()
-  local h,db,_,adapter=fixture();local state=legacy(h,db,2);local original=copy(state);assert(HS.validLegacy(state))
-  h=H.load(1,{},adapter);assert(h.status=="Ready"and h.state.version==5 and HS.valid(h.state))
-  for id,r in pairs(original.hueReceipts)do
-   local saved=h.state.hueReceipts[id];assert(saved.balanceBefore==r.balanceBefore and saved.operationId==r.operationId and HS.same(saved.quote,r.quote))
-   local fields={id=r.id,petId=r.petId,hue=r.hue,rank=r.oldRank};local balance=h.state.nectar;assert(H.hueCommand(h,"hue",fields,r.quote.revision));assert(h.state.nectar==balance)
-  end
-  local p,r=request(h,{petId="pip",hue="tide",rank=0});local ok,why=H.hueCommand(h,"hue",p,r);assert(not ok and why=="LegacyPurchaseClosed")
-  feed(h,"tide");assert(HS.valid(h.state));assert(H.release(h));h=H.load(1,{},adapter);assert(h.status=="Ready"and HS.valid(h.state))
- end)
- test("full 24-slot historical records preserve paid grades and disallow buying exhausted stock",function()
-  local h,db,_,adapter=fixture();legacy(h,db,24);h=H.load(1,{},adapter);assert(h.status=="Ready"and HS.valid(h.state)and not Hue.capacity(h.state))
-  local p,r=request(h,{});local balance=h.state.nectar;local ok,why=H.hueCommand(h,"hueBuy",p,r);assert(not ok and why=="NoCapacity"and h.state.nectar==balance)
- end)
- test("v2 and v3 upgrades twice preserve ownership, wallet, pending duplicate and mastery archive",function()
-  for _,version in ipairs({2,3})do
-   local h,db,_,adapter=fixture();assert(H.release(h));local state=db.player_1.hatching
-   state.version=version;state.hueAssignments=nil;state.petDay=nil;state.petCount=nil;state.lastPetAward=nil
-   state.lastHatch={id="historical-pending",petId="pip",duplicate=true,mastery=2,recipe="meadow"};state.mastery.pip=2
-   if version==2 then state.masteryChallenges=nil;state.masteryLegacyMask=nil;state.totalWins=nil;state.contracts=nil end
-   local balance,mask=state.nectar,state.inventoryMask
-   h=H.load(1,{},adapter);assert(h.status=="Ready"and h.state.version==5 and h.state.mastery.pip==2 and h.state.nectar==balance and h.state.inventoryMask==mask)
-   assert(h.state.lastHatch.id=="historical-pending"and h.state.lastHatch.mastery==2)
-   assert(H.release(h));h=H.load(1,{},adapter);assert(h.status=="Ready"and h.state.nectar==balance and h.state.mastery.pip==2)
+ test("corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",function()
+  local h=fixture();local good=copy(h.state)
+  for _,bad in ipairs({"fractional","foreign","negative-stock","sparse-vector","unreserved-roll"})do local state=copy(good)
+   if bad=="fractional"then state.petHues.pip={main={rose=.5,tide=0,citrus=0,iris=0},secondary=Hue.emptyCounts(),legacyLocked={main=false,secondary=false}}
+   elseif bad=="foreign"then state.inventoryMask=1;state.petHues.wick={main=Hue.emptyCounts(),secondary=Hue.emptyCounts(),legacyLocked={main=false,secondary=false}}
+   elseif bad=="negative-stock"then state.hueInventory.reset=-1
+   elseif bad=="sparse-vector"then state.petHues.pip={main={},secondary=Hue.emptyCounts(),legacyLocked={main=false,secondary=false}}
+   else state.hueReservation={quote={action="hueBuy",id="bad",revision=state.revision,catalogVersion=Hue.CatalogVersion},operationId="bad-op",sequence=state.operationSeq+1,itemId="unknown"}end
+   assert(not S.valid(state),bad)
   end
  end)
- test("malformed v4 fails closed without writing defaults over original fields",function()
-  for _,kind in ipairs({"missing-proof","bad-stock-namespace","bad-ranks"})do
-   local h,db,_,adapter=fixture();local state=legacy(h,db,1)
-   if kind=="missing-proof"then state.hueReceipts={}elseif kind=="bad-stock-namespace"then state.heldHueEgg={}else state.hues.pip.ranks.rose=4 end
-   local before=copy(state);h=H.load(1,{},adapter);assert(h.status=="InvalidData"and db.player_1.hatching.version==4 and db.player_1.hatching.nectar==before.nectar)
+ test("migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",function()
+  local h,db,_,a=fixture();assert(H.release(h));makeLegacy(db,"held",1);h=H.load(1,{},a)
+  assert(not H.public(h).hueMigrationAcknowledged)
+  local q,r=command(h,"hueMigrationAck",{migrationId=h.state.hueMigrationId});assert(H.public(h).hueMigrationAcknowledged)
+  assert(H.hueCommand(h,"hueMigrationAck",q,r));assert(H.release(h));h=H.load(1,{},a);assert(H.public(h).hueMigrationAcknowledged)
+  for _,kind in ipairs({"marker","row","token"})do local bad=copy(h.state)
+   if kind=="marker"then bad.hueMigrationId=nil elseif kind=="row"then bad.petHues.pip=nil else bad.legacyHueEgg=nil end
+   assert(not S.valid(bad),kind)
   end
  end)
- test("companion hatches coexist with held stock and duplicates grant no mastery; saved wins remain independent",function()
-  local h=fixture();fund(h);buy(h);local token=h.state.heldHueEgg.token;local marks=h.state.mastery.pip
-  local ok,why=H.command(h,"hatch","sprout",h.state.revision);assert(ok,why)
-  assert(h.state.lastHatch.duplicate and h.state.mastery.pip==marks and h.state.heldHueEgg.token==token)
-  local p,r=request(h,{token=token,petId="pip",hue="rose",rank=0});assert(not H.hueCommand(h,"hueApply",p,r));assert(h.state.heldHueEgg)
-  assert(H.command(h,"ack",h.state.lastHatch.id,h.state.revision));apply(h,"rose")
-  local oldWins=h.state.totalWins;local summary={family="pip",day=h.state.dailyClaimDay,success=true,clean=true,score=600,chain=4,clears=1,drops=24}
-  assert(H.award(h,36,8,summary));assert(h.state.mastery.pip==marks and h.state.masteryChallenges.pip==0 and h.state.totalWins==oldWins+1 and h.state.lastRunReward.masteryPoints==0)
-  assert(H.award(h,36,8,summary));assert(h.state.totalWins==oldWins+1)
+ test("a sparse Ovelle-only veteran can buy and apply without owning the welcome pet",function()
+  local h,db,c,a=fixture();assert(H.release(h));db.player_1.hatching.inventoryMask=require(Shared.EggCatalog).bit("puddle")
+  h=H.load(1,{},a);assert(h.status=="Ready");buy(h,c,"tide");use(h,"tide","puddle","main",true);assert(S.row(h.state,"puddle").main.tide==1)
  end)
- test("later stock cannot be consumed by old apply replay or same-ID altered quote",function()
-  local h=fixture();fund(h);local p,r=feed(h,"rose");buy(h);local token=h.state.heldHueEgg.token
-  assert(H.hueCommand(h,"hueApply",p,r));assert(h.state.heldHueEgg.token==token and Hue.get(h.state.hues,"pip").ranks.rose==1)
-  local altered=copy(p);altered.hue="tide";local ok,why=H.hueCommand(h,"hueApply",altered,r);assert(not ok and why=="OperationConflict"and h.state.heldHueEgg.token==token)
- end)
- test("new and legacy assignment slots share one 24-grade cap without fabricated old purchases",function()
-  local h,db,_,adapter=fixture();legacy(h,db,23);h=H.load(1,{},adapter);assert(h.status=="Ready")
-  local oldCount=0;for _ in pairs(h.state.hueReceipts)do oldCount+=1 end
-  feed(h,"iris","puddle");assert(HS.valid(h.state)and not Hue.capacity(h.state))
-  local newCount=0;for _ in pairs(h.state.hueAssignments)do newCount+=1 end
-  assert(oldCount==23 and newCount==1)
-  h=fixture();fund(h)
-  for _,pet in ipairs({"pip","puddle"})do for _,hue in ipairs(Hue.Order)do for _=1,3 do feed(h,hue.id,pet)end end end
-  local count=0;for _ in pairs(h.state.hueAssignments)do count+=1 end
-  assert(count==24 and h.state.hueReceipts==nil and HS.valid(h.state)and not Hue.capacity(h.state))
- end)
- test("session takeover fences an uncommitted purchase without losing held stock committed before takeover",function()
-  for _,failure in ipairs({"before","after"})do
-   local h,db,c,adapter=fixture();local p,r=request(h,{});local balance=h.state.nectar;c[failure]=true
-   assert(not H.hueCommand(h,"hueBuy",p,r));local saved=db.player_1.hatching
-   saved.epoch+=1;saved.lease={token="other-session",expiresAt=c.now+90}
-   local ok,why=H.retry(h);assert(not ok and why=="SessionLost")
-   c.now+=100;local joined=H.load(1,{},adapter);assert(joined.status=="Ready")
-   assert(joined.state.nectar==balance-(if failure=="after"then 8 else 0))
-   assert((joined.state.heldHueEgg~=nil)==(failure=="after"))
-   if failure=="after"then assert(H.hueCommand(joined,"hueBuy",p,r))end
-  end
- end)
- test("overlapping new quotes cannot replace a captured immutable buy or apply candidate",function()
-  local h,_,c=fixture();local p,r=request(h,{});c.before=true;assert(not H.hueCommand(h,"hueBuy",p,r));local pending=h.pending
-  local other=copy(p);other.id=tostring(r)..":other-buy"
-  assert(not H.hueCommand(h,"hueBuy",other,r)and h.pending==pending);assert(H.retry(h))
-  p,r=request(h,{petId="pip",hue="rose",rank=0,token=h.state.heldHueEgg.token});c.before=true;assert(not H.hueCommand(h,"hueApply",p,r));pending=h.pending
-  other=copy(p);other.petId="puddle";assert(not H.hueCommand(h,"hueApply",other,r)and h.pending==pending)
-  assert(H.retry(h)and Hue.get(h.state.hues,"pip").ranks.rose==1 and Hue.get(h.state.hues,"puddle").ranks.rose==0)
- end)
- return{passed=#cases,cases=cases}
+ return{passed=#cases,cases=cases,persistentWrites=false}
 end

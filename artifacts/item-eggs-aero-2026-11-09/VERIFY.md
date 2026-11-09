@@ -1,0 +1,18 @@
+# Item eggs and Aero companions — verification
+
+Accepted private candidate, November 9. Publication version and commit are recorded in PLAY-BUILD.md only after verification. Astra reviewed architecture, source, actual native renders and motion; Sol 6.1 High implemented with independent peer source reviews.
+
+- All112 normalized runtime sources match Studio exactly and compile. Rojo build passed. Temporary QA folders removed; both production entries enabled. Desktop viewport and original Medium text preference restored.
+- All102 server cases across12 suites pass: HueProgress18, HueHost4, HuePalette6, HatchProgress21, PetAppearance9, SessionRecovery8, SessionHost2, PetContactHost4, GardenIntentHost3, GardenState12, PetLoopResetGarden5, GardenMotion10. Coverage includes durable debit/grant/results, legacy entitlements/token migration, stale/cross-owner use, independent channels/reset, session fences and owner-only wallet/stock snapshots. Palette tests exercise1296 legal dose combinations per channel across7 identities.
+- All143 client cases across23 suites pass at actual Largest and Medium. Do not sum reruns as new coverage. Original failures are preserved; final-largest-reflow-superseding.json replaces SharedHeaders/EmulatorSafeArea failures and final-medium-hatch-superseding.json replaces the Medium fit assertion. Full-greeting subject target permits at most2 stage pixels of measured Medium shortfall; all text/swept bounds remain enforced.
+- Sustained follow gate:60seconds at16stud/sec owner travel, max gap13.32324<16, max speed17.59996<=18, final gap0. Smooth roots/planting with15Hz expressive poses; stationary90/180pivots, reversal/braking and reduced planting pass.
+- Actual controls earned Zivvi, finished24drops/600score/+14Stars (6→20), bought natural Iris20→12, closed/reopened the exact saved result, stored it, canceled use without mutation and confirmed Main Iris0→1 with stock1→0 and balance12. See actual-earned-iris-store-cancel-and-use.json. These are disposable Studio in-memory saves, not live DataStore proof.
+- Final foreground Space controls earned Zivvi and completed its cinematic. Meet returned to roaming. A native walking approach clear of stations plus E entered ordinary pet focus: GreetingAccepted=true, about58% framing and5.21stud owner distance. Nearby stations correctly take E priority.
+
+Astra visual GO covers desktop palette/confirmation, Studio iPhone17Pro Largest menu/unified eggs, compact safe733×307 customization/reset/short-result fixtures and the actual F12 walking comparisons/final two-pet15Hz weight transfer. FIXTURE filenames identify injected snapshots or controlled render paths, not live rewards or two-player camera recordings.
+
+Night LIMITED GO: faces/feet and two vivid channels remain readable without white clipping; one bounded viewer-local range14/.6-brightness raking key serves close interaction. World bodies remain flatter at midnight than noon, especially Ovelle mouth at distance. Residual material polish remains.
+
+MCP execution can release window focus or restore a Scriptable camera to Custom. A real foreground return resumed the initial paused hatch without reward mutation; read-only cinematic attributes exposed ownership. The final29-second care attempt observed0Stars and ended outside focus, so it is not continuous-contact award proof. Server care/lease tests pass; a fresh end-to-end care award observation remains open.
+
+No physical phone, new live multiplayer/latency, service-backed rejoin, long human balance or retention proof is claimed. Earlier two-client evidence is historical, not current private-inventory observation. Current liked music stays default. Nursery, new economies, paid luck, play caps and public release remain deferred.

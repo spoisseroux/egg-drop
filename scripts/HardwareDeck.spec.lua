@@ -1,9 +1,10 @@
 -- Actual enabled GUI layout with temporary LOCAL presentation attributes only.
 -- No requests, awards, purchases or acknowledgements. Run after Ready load on Board with no pending reveal.
 return function(gui,board)
+ local Snapshot=require(game.Players.LocalPlayer.PlayerScripts.Client.OwnerSnapshot)
 	local RunService,HttpService=game:GetService("RunService"),game:GetService("HttpService")
 	assert(gui:IsA("ScreenGui") and gui.Enabled and board:GetAttribute("Mode")=="Board","ready enabled Board GUI required")
-	local raw=board:GetAttribute("HatchState");local state=HttpService:JSONDecode(raw)
+	local raw=Snapshot.read();local state=raw
 	assert(state.status=="Ready" and state.lastHatch==nil,"Ready snapshot without pending result required")
 	local b=gui.Backdrop;local size,position=b.Size,b.Position
 	local attrs={};for _,key in ipairs({"OwnedPets","HatchActive","FieldStage","FieldPhase","FieldObjective","Score"})do attrs[key]={board:GetAttribute(key)}end
@@ -20,7 +21,7 @@ return function(gui,board)
 				local controls={b.Customize,b.VisitRoom,b.DeckControls.DPad.Left,b.DeckControls.DPad.Right,b.DeckControls.Drop}
 				local seats={};for _,n in ipairs(controls)do seats[n]={n.Position,n.Size};assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44)end
 				for _,amount in ipairs({0,20,1000000})do
-					local snapshot=table.clone(state);snapshot.nectar=amount;board:SetAttribute("HatchState",HttpService:JSONEncode(snapshot));settle()
+					local snapshot=table.clone(state);snapshot.nectar=amount;Snapshot.receive(snapshot);settle()
 					local value,face=b.AimRail.GameReadout,b.AimRail.WalletInstrument
 					assert(value.Text==tostring(amount) and value.TextXAlignment==Enum.TextXAlignment.Right);readable(value)
 					assert(value.AbsolutePosition.X>=face.AbsolutePosition.X and value.AbsolutePosition.X+value.AbsoluteSize.X<=face.AbsolutePosition.X+face.AbsoluteSize.X-1.9)
@@ -62,7 +63,7 @@ return function(gui,board)
 	-- Restore Ready snapshot and all local model fields even on assertion failure.
 	board:SetAttribute("OwnedPets",attrs.OwnedPets[1]);settle()
 	for _,key in ipairs({"HatchActive","FieldStage","FieldPhase","FieldObjective","Score"})do board:SetAttribute(key,attrs[key][1])end
-	board:SetAttribute("HatchState",raw);b.Size,b.Position=size,position;settle()
+	Snapshot.receive(raw);b.Size,b.Position=size,position;settle()
 	assert(ok,problem)
 	return{passed=#cases,cases=cases,localPresentationOnly=true}
 end

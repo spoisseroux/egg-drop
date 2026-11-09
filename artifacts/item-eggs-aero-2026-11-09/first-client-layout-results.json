@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"HueIntent\":{\"ok\":true,\"result\":{\"1\":\"Hue purchase captures catalog and one operation without client-selected roll\",\"8\":\"legacy redemption binds migration and exact paid token and purchase\",\"3\":\"Use binds pet channel counts and exact pending result without mutating snapshot\",\"2\":\"pending result routes to exact acknowledgment and prevents another purchase\",\"5\":\"snapshot before reply resolves exact committed operation\",\"4\":\"reply before snapshot stays pending; matching saved revision resolves\",\"7\":\"ordinary inventory operation omits pending receipt association\",\"6\":\"retry reuses complete original payload; rejection releases next genuine operation\"}},\"HueEggView\":{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsUIQA.HueEggView:53: ReplicatedStorage._ItemEggsUIQA.HueEggView:35: assertion failed!\\nReplicatedStorage._ItemEggsUIQA.HueEggView:53\\nAssistantCommand:1\\nAssistantCommand:1\\n\"},\"PetCharmFocus\":{\"ok\":true,\"result\":{\"1\":\"petting has no charm control or binding\",\"3\":\"Back retains native controller activation\",\"2\":\"removed charm reserves no extra headroom\"}}}"
+    }
+  ],
+  "isError": false
+}

@@ -43,8 +43,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={},Background={}},rows={},
 		onPreview=onPreview,onClose=onClose,onApply=onApply,available={},confirmed={},onSetting=onSetting,active="Shell"},Picker)
 	self.heading=text(card,"Heading","Deck style","Heading")
-	self.saveMarker=text(card,"SaveStatus","","Supporting");Art.bind(self.saveMarker,{TextColor3=function()return Art.Amber end});self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
-	self.saveDetail=text(scroll,"SaveInstruction","","Body");Art.bind(self.saveDetail,{TextColor3=function()return Art.Amber end});self.saveDetail.Visible=false
+	self.saveMarker=text(card,"SaveStatus","","Supporting");Art.bind(self.saveMarker,{TextColor3="reward"});self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
+	self.saveDetail=text(scroll,"SaveInstruction","","Body");Art.bind(self.saveDetail,{TextColor3="reward"});self.saveDetail.Visible=false
 	self.moreCue=Art.frame(card,"MoreBelow","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(12,20),40)
 	self.moreCue.BackgroundTransparency=1;self.moreCue.Active=false;self.moreCue.Selectable=false
 	for _,entry in ipairs({{1,45},{5,-45}})do
@@ -133,15 +133,18 @@ function Picker:layout()
 	self.heading.Visible=not short or self.active=="Trials"or self.active=="Settings"
 	local headingH=Art.textHeight(self.heading,usable-56,32)
 	local tabsY=if short then 4 else math.max(44,headingH)+12
-	local tabW=if short then (usable-56)/3 else (usable-12)/3
-	local tabH=44
-	for key,tab in pairs(self.tabs)do
-		styleType(tab,if short then "Body" else "Action",short)
-		if key=="Background"then tab.Text="Background";tab:SetAttribute("AccessibleLabel","Background patterns");if Art.textWidth(tab)>tabW-12 then tab.Text="Scenes"end end
-		tabH=math.max(tabH,Art.textHeight(tab,tabW,0)+(if short then 8 else 12))
-	end
+ local tabAvailable=usable-(if short then 56 else 0)
+ local baseTabW=(tabAvailable-12)/3;local minTab=88
+ for key,tab in pairs(self.tabs)do
+  styleType(tab,if short then "Body"else "Action",short)
+  if key=="Background"then tab.Text="Background";tab:SetAttribute("AccessibleLabel","Background patterns");if Art.textWidth(tab)>baseTabW-12 then tab.Text="Scenes"end end
+  minTab=math.max(minTab,Art.textWidth(tab)+16)
+ end
+ local tabColumns=math.max(1,math.min(3,math.floor((tabAvailable+6)/(minTab+6))))
+ local tabRows=math.ceil(3/tabColumns);local tabW=(tabAvailable-(tabColumns-1)*6)/tabColumns;local tabH=44
+ for _,tab in pairs(self.tabs)do tabH=math.max(tabH,Art.textHeight(tab,tabW-12,0)+12)end
 	local leaf=self.active=="Trials"or self.active=="Settings"
- local header=if leaf then (if short then math.max(44,headingH)+4 else math.max(44,headingH)+12)else tabsY+tabH+4
+ local header=if leaf then (if short then math.max(44,headingH)+4 else math.max(44,headingH)+12)else tabsY+tabRows*(tabH+6)-6+4
  local footerH,footer=0,0
 	local maximum=math.max(1,size.Y-(if short then 8 else 24))
 	local bodyBudget=math.max(44,maximum-header-4)
@@ -225,7 +228,7 @@ function Picker:layout()
 	local height=math.min(maximum,math.max(1,size.Y-self.safeTop-4),header+y+footer+8)
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
 	place(self.heading,pad,4,usable-56,headingH);place(self.cancel,width-pad-44,4,44,44)
-	for index,tab in ipairs({"Shell","Sticker","Background"})do place(self.tabs[tab],pad+(index-1)*(tabW+6),tabsY,tabW,tabH)end
+	for index,tab in ipairs({"Shell","Sticker","Background"})do place(self.tabs[tab],pad+((index-1)%tabColumns)*(tabW+6),tabsY+math.floor((index-1)/tabColumns)*(tabH+6),tabW,tabH)end
 	self.saveMarker.Visible=markerW>0;self.saveDetail.Visible=self.saveNotice~=nil
 	place(self.saveMarker,pad,header,markerW,math.max(44,height-header-footer-4))
 	place(self.scroll,pad+(if markerW>0 then markerW+12 else 0),header,scrollW,math.max(44,height-header-footer-4))
@@ -273,7 +276,7 @@ function Picker:showTab(active)
  self.clubHeader.Visible,self.reward.Visible=trials,trials
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
  for _,row in ipairs(self.rows)do row.frame.Visible=trials end
- for tab,control in pairs(self.tabs)do control.Visible=style;Art.bind(control,{BackgroundColor3=function()return if tab==active then Art.paletteColor("selected") else Art.paletteColor("raised") end,TextColor3="text"}) end
+ for tab,control in pairs(self.tabs)do control.Visible=style;Art.tab(control,tab==active,true) end
  for tab,choices in pairs(self.choices)do for _,stroke in pairs(choices)do stroke.Parent.Visible=tab==active end end
  self:refreshAppearance();self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
@@ -360,7 +363,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
 		row.status:SetAttribute("ExactCounter",not done)
 		row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
-		Art.bind(row.status,{TextColor3=function()return if done then Art.Leaf else Art.paletteColor("muted") end})
+		Art.bind(row.status,{TextColor3=function()return if done then Color3.fromHex("#197038")else Art.surfaceColor(row.status,"muted") end})
 		row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf
 		count+=if done then 1 else 0
 	end
@@ -369,7 +372,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 	for id,stroke in pairs(self.choices.Sticker)do
 		local available=Stickers.canEquip(id,owned,mask,inventoryMask);local swatch=stroke.Parent;local option=Stickers.ById[id]
 		self.available[id]=available;swatch.Interactable,swatch.Selectable=true,true
-  Art.bind(swatch.Caption,{TextColor3=function()return if available then Art.paletteColor("text") else Art.paletteColor("muted") end})
+  Art.bind(swatch.Caption,{TextColor3=function()return if available then Art.surfaceColor(swatch.Caption,"text")else Art.surfaceColor(swatch.Caption,"muted") end})
 	end
 	self:refreshAppearance()
 	local signature={self.sound.Text,self.music.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}

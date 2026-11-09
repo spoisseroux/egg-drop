@@ -1,0 +1,57 @@
+{
+  "scope": "Actual native controls in Studio. ProgressStore is in-memory in Studio; this is not live-service persistence or physical-phone proof.",
+  "round": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"revision\":4,\"score\":600,\"drops\":24,\"phase\":\"Complete\",\"award\":14,\"balance\":20,\"contracts\":{\"1\":{\"reward\":4,\"claimed\":false,\"title\":\"Win 2 rounds\",\"id\":\"runs\",\"progress\":1,\"target\":2,\"hint\":\"Complete both goals in 24 drops without overflow\"},\"3\":{\"reward\":3,\"claimed\":true,\"title\":\"Score 500\",\"id\":\"score\",\"progress\":500,\"target\":500,\"hint\":\"Earn 500 points in a full round\"},\"2\":{\"reward\":3,\"claimed\":true,\"title\":\"Chain 3 merges\",\"id\":\"chain\",\"progress\":3,\"target\":3,\"hint\":\"Build a chain of 3 in a full round\"}},\"buttons\":{\"1\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.AimRail\",\"text\":\"\"},\"3\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.VisitRoom\",\"text\":\"\"},\"2\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.Customize\",\"text\":\"\"},\"5\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.DeckControls.DPad.Right\",\"text\":\"▶\"},\"4\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.DeckControls.DPad.Left\",\"text\":\"◀\"},\"7\":{\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.RoundCard.Recap.FieldBody.Goal.Details\",\"text\":\"Details\"},\"6\":{\"path\":\"Players.keehar01.PlayerGui.EggDrop.Backdrop.DeckControls.Drop\",\"text\":\"A\"},\"9\":{\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.RoundCard.KeepPlaying\",\"text\":\"Hatch eggs\"},\"8\":{\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.RoundCard.Continue\",\"text\":\"Try again\"}},\"reward\":\"Saved\"}"
+      }
+    ],
+    "isError": false
+  },
+  "purchase": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"inventory\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"iris\":1,\"reset\":0},\"revision\":5,\"pending\":{\"quantity\":1,\"itemId\":\"iris\",\"inventoryAfter\":1,\"revision\":5,\"id\":\"4:749a85f8-7aed-4fe5-b9e8-9fab6ac1fa02\",\"catalogVersion\":\"hue-items-v1\"},\"balance\":12}"
+      }
+    ],
+    "isError": false
+  },
+  "stored": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"inventory\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"iris\":1,\"reset\":0},\"balance\":12,\"revision\":6,\"buttons\":{\"1\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Zivvi\",\"size\":\"262, 90\"},\"3\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Ovelle\",\"size\":\"262, 90\"},\"2\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_pip\",\"size\":\"44, 44\"},\"5\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Wick\",\"size\":\"262, 76\"},\"4\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_puddle\",\"size\":\"44, 44\"},\"7\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Orbit\",\"size\":\"262, 76\"},\"6\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_wick\",\"size\":\"44, 44\"},\"9\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Bloom Pip\",\"size\":\"580, 76\"},\"8\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_orbit\",\"size\":\"44, 44\"},\"15\":{\"text\":\"×\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Close\",\"size\":\"44, 44\"},\"14\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_eclipse_orbit\",\"size\":\"44, 44\"},\"13\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Eclipse Orbit\",\"size\":\"580, 76\"},\"12\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_foxfire_wick\",\"size\":\"44, 44\"},\"11\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Foxfire Wick\",\"size\":\"580, 76\"},\"10\":{\"text\":\"\",\"path\":\"Players.keehar01.PlayerGui.EggDropOverlays.SafeContent.PetJournal.Card.Scroll.Customize_bloom_pip\",\"size\":\"44, 44\"}}}"
+      }
+    ],
+    "isError": false
+  },
+  "dialog": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"interactable\":true,\"copy\":{\"ChannelTitle\":\"Main · saved doses\",\"Status\":\"Saved\",\"InventoryTitle\":\"Your jars\",\"Confirmation\":\"Use Iris fruit on Zivvi's Main?\\nIris 0/5 → 1/5\\n1 of 1 jars · 0 remaining\",\"PetName\":\"Zivvi · saved appearance\"},\"action\":\"Confirm\",\"stock\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"iris\":1,\"reset\":0}}"
+      }
+    ],
+    "isError": false
+  },
+  "canceled": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"inventory\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"iris\":1,\"reset\":0},\"balance\":12,\"row\":{\"legacyLocked\":{\"main\":false,\"secondary\":false},\"main\":{\"rose\":0,\"iris\":0,\"citrus\":0,\"tide\":0},\"secondary\":{\"rose\":0,\"iris\":0,\"citrus\":0,\"tide\":0}},\"revision\":6}"
+      }
+    ],
+    "isError": false
+  },
+  "applied": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"inventory\":{\"rose\":0,\"citrus\":0,\"tide\":0,\"iris\":0,\"reset\":0},\"revision\":7,\"public\":{\"bodyRank\":0,\"secondaryDoses\":{\"rose\":0,\"iris\":0,\"citrus\":0,\"tide\":0},\"body\":\"original\",\"mainDoses\":{\"rose\":0,\"iris\":1,\"citrus\":0,\"tide\":0},\"charmVisible\":true,\"secondary\":\"default\"},\"balance\":12,\"row\":{\"legacyLocked\":{\"main\":true,\"secondary\":false},\"main\":{\"rose\":0,\"iris\":1,\"citrus\":0,\"tide\":0},\"secondary\":{\"rose\":0,\"iris\":0,\"citrus\":0,\"tide\":0}},\"receipt\":{\"countsBefore\":{\"rose\":0,\"iris\":0,\"citrus\":0,\"tide\":0},\"action\":\"hueUse\",\"cost\":0,\"inventoryAfter\":0,\"balanceAfter\":12,\"inventoryBefore\":1,\"catalogVersion\":\"hue-items-v1\",\"id\":\"6:c2ae29be-0446-4c43-997a-08c1b4ce2909\",\"balanceBefore\":12,\"outcome\":\"Applied\",\"channel\":\"main\",\"countsAfter\":{\"rose\":0,\"iris\":1,\"citrus\":0,\"tide\":0},\"petId\":\"pip\",\"revision\":7,\"itemId\":\"iris\"}}"
+      }
+    ],
+    "isError": false
+  }
+}

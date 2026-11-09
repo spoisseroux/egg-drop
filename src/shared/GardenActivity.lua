@@ -33,7 +33,7 @@ function Activity.leg(from,to,v0,v1,speed,minimum,yaw)
     local heading=if delta.Magnitude>.02 then math.atan2(delta.X,delta.Z)else yaw
     local turn=angle(yaw,heading)
     return {from=Activity.pack(from),to=Activity.pack(to),v0=Activity.pack(v0),v1=Activity.pack(v1),duration=duration,
-        yaw=yaw,turn=turn,turnDuration=math.max(.25,math.abs(turn)*1.5/2.8)}
+        yaw=yaw,turn=turn,turnDuration=math.max(.12,math.abs(turn)*1.5/12)}
 end
 local function legSample(leg,elapsed)
     local duration=leg.duration;local t=math.clamp(elapsed/duration,0,1);local u=1-t
@@ -45,20 +45,65 @@ local function legSample(leg,elapsed)
     local position=a+v0*(duration*u*u*t)+(delta-v1*duration/3)*(3*u*t*t)+delta*(t*t*t)
     local velocity=if elapsed>=duration then v1 else v0*(u*u-2*u*t)+v1*(t*t-2*u*t)+delta*(6*u*t/duration)
     local turn=math.clamp(elapsed/leg.turnDuration,0,1)
-    return position,velocity,leg.yaw+leg.turn*turn*turn*(3-2*turn)
+    if leg.pivot then return position,velocity,leg.yaw+leg.turn*turn*turn*(3-2*turn)end
+    -- Heading follows the actual curve, including an incoming/outgoing tangent.
+    -- At a stopped endpoint use its limiting tangent, then retain that heading.
+    local tangent=velocity
+    if Vector2.new(tangent.X,tangent.Z).Magnitude<.00001 and delta.Magnitude>.00001 then
+        local near=if t>=1 then .9999 else .0001;local back=1-near
+        tangent=v0*(back*back-2*back*near)+v1*(near*near-2*back*near)+delta*(6*back*near/duration)
+    end
+    local heading=if Vector2.new(tangent.X,tangent.Z).Magnitude>.00001 then math.atan2(tangent.X,tangent.Z)else leg.yaw
+    local align=math.clamp(elapsed/.12,0,1)
+    return position,velocity,leg.yaw+angle(leg.yaw,heading)*align*align*(3-2*align)
 end
 function Activity.plan(from,to,velocity,speed,minimum,yaw,via,terminalVelocity)
     local path={};local total=0
+    local function pivot(target)
+        local delta=target-from
+        if velocity.Magnitude>.001 or Vector2.new(delta.X,delta.Z).Magnitude<.001 then return end
+        local heading=math.atan2(delta.X,delta.Z);local turn=angle(yaw,heading)
+        if math.abs(turn)<.12 then return end
+        local duration=math.max(.12,math.abs(turn)*1.5/12)
+        table.insert(path,{from=Activity.pack(from),to=Activity.pack(from),v0=Activity.pack(ZERO),v1=Activity.pack(ZERO),duration=duration,
+            yaw=yaw,turn=turn,turnDuration=duration,pivot=true})
+        total+=duration;yaw+=turn
+    end
+    local function brake()
+        local stop=from+velocity*.125
+        local leg=assert(Activity.leg(from,stop,velocity,ZERO,math.max(speed,velocity.Magnitude),.25,yaw))
+        table.insert(path,leg);total+=leg.duration
+        from,velocity,yaw=stop,ZERO,select(3,legSample(leg,leg.duration))
+    end
+    local function accelerate(target)
+        -- A moving owner's look-ahead target can be a long chord. Spreading
+        -- initial acceleration over that whole chord adds several studs of lag
+        -- after a stationary pivot. Publish a short, velocity-continuous launch
+        -- first; its derivative control hull still obeys the existing speed cap.
+        if not terminalVelocity or terminalVelocity.Magnitude<.1 or velocity.Magnitude>=speed*.8 then return end
+        local delta=target-from;if delta.Magnitude<.001 then return end
+        local outgoing=delta.Unit*speed;local duration=.30
+        local offset=(velocity+outgoing)*(duration*.5)
+        if offset.Magnitude+.25>=delta.Magnitude or offset:Dot(delta)<=0 then return end
+        local leg=Activity.leg(from,from+offset,velocity,outgoing,speed,duration,yaw)
+        if not leg or leg.duration>duration+.0001 then return end
+        table.insert(path,leg);total+=leg.duration
+        from,velocity,yaw=from+offset,outgoing,select(3,legSample(leg,leg.duration))
+    end
     local function append(target,v1,hold)
+        local delta=target-from
+        if velocity.Magnitude>.001 and delta.Magnitude>.001 then
+            local horizontal=Vector2.new(velocity.X,velocity.Z);local desired=Vector2.new(delta.X,delta.Z)
+            if horizontal.Magnitude>.001 and desired.Magnitude>.001 and horizontal:Dot(desired)/(horizontal.Magnitude*desired.Magnitude)<.5 then brake()end
+        end
+        pivot(target)
+        accelerate(target)
         local leg=Activity.leg(from,target,velocity,v1,speed,hold,yaw)
         if not leg then
             -- An about-turn cannot preserve incoming velocity while staying on
             -- the new chord. Brake over a bounded quarter-second first; never
             -- inflate a duration until its control points escape the garden.
-            local stop=from+velocity*.125
-            local brake=assert(Activity.leg(from,stop,velocity,ZERO,math.max(speed,velocity.Magnitude),.25,yaw))
-            table.insert(path,brake);total+=brake.duration
-            from,velocity,yaw=stop,ZERO,select(3,legSample(brake,brake.duration))
+            brake();pivot(target)
             leg=Activity.leg(from,target,velocity,v1,speed,hold,yaw)
             if not leg then v1=ZERO;leg=assert(Activity.leg(from,target,velocity,v1,speed,hold,yaw))end
         end
@@ -96,7 +141,7 @@ function Activity.sample(actor,now)
             direction=if firstLeg then via-from else to-via
         end
     end
-    local yaw=actor.yaw or 0
+    local yaw=actor.yaw or 0;local pivoting,pivotPhase,pivotTurn=false,0,0
     local delta=direction
     if actor.action~="focus" and delta.Magnitude>.05 then
         local moving=math.atan2(delta.X,delta.Z)
@@ -108,12 +153,16 @@ function Activity.sample(actor,now)
     if actor.path and actor.action~="focus" then
         local elapsed=math.max(0,now-actor.startTime)
         for i,leg in ipairs(actor.path)do
-            if elapsed<=leg.duration or i==#actor.path then position,velocity,yaw=legSample(leg,elapsed);break end
+            if elapsed<=leg.duration or i==#actor.path then
+                position,velocity,yaw=legSample(leg,elapsed);pivoting=leg.pivot==true
+                if pivoting then pivotPhase=math.clamp(elapsed/leg.duration,0,1);pivotTurn=leg.turn end
+                break
+            end
             elapsed-=leg.duration
         end
         if actor.action=="greet"or actor.action=="shove"then
             local target=actor.yaw or yaw
-            local settle=if actor.action=="shove"then math.clamp((now-actor.startTime)/math.max(.25,math.abs(angle(yaw,target))*1.5/2.8),0,1)else math.clamp((now-actor.startTime-(actor.endTime-actor.startTime)*.65)/math.max(.1,(actor.endTime-actor.startTime)*.35),0,1)
+            local settle=if actor.action=="shove"then math.clamp((now-actor.startTime)/math.max(.12,math.abs(angle(yaw,target))*1.5/12),0,1)else math.clamp((now-actor.startTime-(actor.endTime-actor.startTime)*.65)/math.max(.1,(actor.endTime-actor.startTime)*.35),0,1)
             yaw+=angle(yaw,target)*settle*settle*(3-2*settle)
         end
     end
@@ -121,7 +170,7 @@ function Activity.sample(actor,now)
         elseif actor.behavior=="rest" then "sleepy" elseif actor.behavior=="investigate" then "curious"
         elseif actor.behavior=="play" then (if phase>.43 and phase<.62 then "startled" else "pleased") else "neutral"
     return {position=position,velocity=velocity,yaw=yaw,phase=phase,actionPhase=phase,behavior=actor.behavior,action=actor.action,
-        expression=expression,generation=actor.generation,actionId=actor.actionId,peerId=actor.peerId,mode=actor.mode}
+        expression=expression,generation=actor.generation,actionId=actor.actionId,peerId=actor.peerId,mode=actor.mode,pivot=pivoting,pivotPhase=pivotPhase,pivotTurn=pivotTurn}
 end
 function Activity.sampleToy(toy,now)
     if type(toy)~="table" then return nil end

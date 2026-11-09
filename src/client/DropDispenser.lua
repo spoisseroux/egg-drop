@@ -10,6 +10,7 @@ function Dispenser.new(parent,reduceEffects)
 	for i=1,8 do
 		local ball=Art.frame(channel,"Ball"..i,Art.Leaf,UDim2.fromOffset(0,4),UDim2.fromOffset(16,16),channel.ZIndex+1)
 		Art.corner(ball,20);Art.shade(ball,1,.65)
+  local rim=Art.frame(ball,"InsetRim",Art.Ink,UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-4),ball.ZIndex+1);rim.BackgroundTransparency=1;Art.corner(rim,20);Art.stroke(rim,Art.Silver,.25,1)
 		Art.corner(Art.frame(ball,"Glint",Art.Silver,UDim2.fromOffset(4,3),UDim2.fromOffset(5,2),ball.ZIndex+1),2)
 		balls[i]=ball
 	end
@@ -22,6 +23,16 @@ function Dispenser.new(parent,reduceEffects)
 	local self=setmetatable({nozzle=nozzle,nozzleStroke=nozzleStroke,host=host,channel=channel,balls=balls,label=label,rolling=rolling,reduce=reduceEffects or function()return false end,pulses=0},Dispenser)
 	host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:cancel();self:layout()end)
 	return self
+end
+function Dispenser:setTheme(theme)
+ if self.theme==theme then return end;self.theme=theme
+ local balls=table.clone(self.balls);table.insert(balls,self.rolling)
+ for _,ball in ipairs(balls)do
+  ball.BackgroundColor3=Color3.new(1,1,1);local gradient=ball:FindFirstChildOfClass("UIGradient");if gradient then gradient.Color=theme.shellGradient end
+  local glint=ball:FindFirstChild("Glint");if glint then glint.BackgroundColor3=theme.highlight end
+  local rim=ball:FindFirstChild("InsetRim");local stroke=rim and rim:FindFirstChildOfClass("UIStroke");if stroke then stroke.Color=theme.trim end
+ end
+ self.nozzleStroke.Color=theme.highlight
 end
 function Dispenser:cancel()
 	if self.motion then self.motion:Cancel();self.motion=nil end

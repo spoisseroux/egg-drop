@@ -62,7 +62,7 @@ local function migrate(record, now)
 		then math.min(record.hatchCharge, nextPet.charge - 1) else 0
 	local mastery, challenges = {}, {}
 	for _, family in ipairs(Catalog.Families) do mastery[family], challenges[family] = 0, 0 end
-	return {
+	local state = {
 		version = 5, hueAssignments = {}, migrated = true, welcomeCredited = true,
 		nectar = charge + 6, inventoryMask = mask, mastery = mastery, misses = 0,
 		masteryChallenges = challenges, masteryLegacyMask = 0, totalWins = 0,
@@ -72,6 +72,7 @@ local function migrate(record, now)
 		petDay = dayOf(now), petCount = 0,
 		lease = { token = "", expiresAt = 0 },
 	}
+	return HueState.upgrade(state)
 end
 
 local function validBase(state,version)
@@ -124,7 +125,7 @@ local function validVersion(state,version,legacy)
 		and (receipt.sequence~=state.operationSeq or (state.lastOperation and state.lastOperation.id==receipt.id))
 end
 
-local function valid(state)return validVersion(state,5,false)end
+local function valid(state)return validVersion(state,6,false)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -152,6 +153,14 @@ local function upgrade(state, now)
         if not validVersion(nextState,4,true)or nextState.hueAssignments~=nil or nextState.heldHueEgg~=nil or nextState.hueLastPurchase~=nil then return state end
         nextState=clone(nextState);nextState.version=5;nextState.hueAssignments={}
     end
+	if nextState.version==5 then
+		if not validBase(nextState,5)or not canonicalDay(nextState.petDay)or not integer(nextState.petCount,5)or not HueState.validV5(nextState)
+			or nextState.hueInventory~=nil or nextState.petHues~=nil or nextState.hueItemReceipts~=nil or nextState.hueReceiptOrder~=nil
+			or nextState.hueReservation~=nil or nextState.pendingHueResult~=nil or nextState.hueMigrationId~=nil or nextState.hueMigrationAcknowledged~=nil or nextState.legacyHueEgg~=nil or nextState.legacyHueRedemption~=nil or nextState.legacyLastHueResult~=nil then return state end
+		-- Validate the full old award namespace as well, before freezing its proofs.
+		if not validVersion(nextState,5,false)then return state end
+		nextState=HueState.upgrade(nextState)
+	end
 	return nextState
 end
 
@@ -211,6 +220,7 @@ function Hatching.load(userId, profile, adapter)
 		accept(handle, record, true)
 		handle.epoch = handle.state.epoch
 		handle.status = "Ready"
+		if handle.state.hueReservation then Hatching.resumeHueReservation(handle) end
 	else
 		handle.state = migrate(legacyRecord(profile), adapter.now())
 		handle.state.nectar = 0
@@ -228,7 +238,7 @@ function Hatching.public(handle)
 		ranks[family] = Mastery.rank(state.mastery[family], state.masteryChallenges[family])
 		details[family] = Mastery.describe(state.mastery[family], state.masteryChallenges[family])
 	end
-	return {
+	local public = {
 		status = handle.status, revision = state.revision, nectar = state.nectar,
 		masteryRanks = ranks, masteryDetails = details, masteryChallenges = clone(state.masteryChallenges),
 		masteryLegacyMask = state.masteryLegacyMask, totalWins = state.totalWins,
@@ -241,6 +251,9 @@ function Hatching.public(handle)
 		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
 	}
+	for key,value in pairs(HueState.public(state))do public[key]=value end
+	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
+	return public
 end
 
 local function fenced(handle, state, now)
@@ -296,6 +309,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence }
 		state.lease.expiresAt = handle.adapter.now() + Hatching.LeaseSeconds
+		if not valid(state)then reason="InvalidData";return previous end
 		return root
 	end)
 	handle.busy = false
@@ -326,7 +340,47 @@ end
 function Hatching.retry(handle)
 	local pending = handle.pending
 	if not pending then return false, "NoPending" end
+	if pending.phase=="reserve"then return Hatching.reserveHue(handle,pending.candidate)end
 	return transact(handle, pending.signature, pending.revision, pending.apply, pending.candidate)
+end
+
+-- A durable private candidate closes the retry/reconnect RNG gap. Reservation
+-- changes neither revision nor wallet; settlement alone is a visible operation.
+function Hatching.resumeHueReservation(handle)
+	local candidate=handle.state.hueReservation
+	if not candidate then return false,"NoPending"end
+	handle.pending={kind="hue",signature="hue:"..candidate.quote.id,id=candidate.operationId,sequence=candidate.sequence,
+		revision=handle.state.revision,apply=HueState.apply,candidate=clone(candidate)}
+	handle.status="Retrying"
+	return Hatching.retry(handle)
+end
+function Hatching.reserveHue(handle,candidate)
+	if handle.busy then return false,"Busy"end
+	handle.busy=true
+	local reason="Unavailable"
+	local ok,record=pcall(handle.adapter.update,handle.key,function(previous)
+		if type(previous)~="table"or not fenced(handle,previous.hatching,handle.adapter.now())then reason="SessionLost";return nil end
+		local root=clone(previous);local state=root.hatching
+		local receipt,same=HueState.find(state,candidate.quote)
+		if receipt then reason=if same then "AlreadySaved"else "OperationConflict";return root end
+		if state.hueReservation then
+			if not HueState.same(state.hueReservation,candidate)then reason="PurchasePending"end
+			return root
+		end
+		if state.revision~=candidate.quote.revision or state.operationSeq+1~=candidate.sequence then reason="RevisionChanged";return root end
+		local allowed,why=HueState.purchaseEligibility(state);if not allowed then reason=why;return root end
+		state.hueReservation=clone(candidate);return root
+	end)
+	handle.busy=false
+	if not ok then handle.status="Retrying";warn("Egg Drop Hue reservation failed:",record);return false,"Retrying"end
+	if not record or not record.hatching or not fenced(handle,record.hatching,handle.adapter.now())then
+		handle.pending=nil;handle.status="SessionLost";return false,"SessionLost"
+	end
+	accept(handle,record)
+	if HueState.proof(handle.state,candidate)then handle.pending=nil;handle.status="Ready";return true,"AlreadySaved"end
+	if not HueState.same(handle.state.hueReservation,candidate)then handle.pending=nil;handle.status="Ready";return false,reason end
+	handle.pending.phase=nil;handle.pending.revision=handle.state.revision
+	return Hatching.retry(handle)
 end
 
 function Hatching.hueCommand(handle,action,value,revision)
@@ -341,10 +395,24 @@ function Hatching.hueCommand(handle,action,value,revision)
 		if not same then return false,"OperationConflict"end
 		return true,"AlreadySaved",HueState.publicReceipt(receipt)
 	end
-	local signature="hue:"..quote.id..":"..action..":"..tostring(quote.petId)..":"..tostring(quote.hue or quote.body or quote.pair)..":"..tostring(quote.rank or quote.secondary)..":"..tostring(quote.token)..":"..revision
+	local signature="hue:"..quote.id
 	local candidate=handle.pending and handle.pending.candidate
 	if not handle.pending then
-		candidate=table.freeze({quote=table.freeze(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1})
+		if revision~=handle.state.revision then return false,"RevisionChanged"end
+		if quote.catalogVersion==nil then return false,"LegacyPurchaseClosed"end
+		candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
+		if action=="hueBuy"then
+			local allowed,why=HueState.purchaseEligibility(handle.state);if not allowed then return false,why end
+			candidate.itemId=require(ReplicatedStorage.Shared.HueCatalog).roll(handle.adapter.random());if not candidate.itemId then return false,"InvalidRoll"end
+			handle.pending={kind="hue",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=HueState.apply,candidate=candidate,phase="reserve"}
+			local ok,why=Hatching.reserveHue(handle,candidate)
+			local saved=if ok then HueState.find(handle.state,quote)else nil
+			return ok,why,if saved then HueState.publicReceipt(saved)else nil
+		end
+	elseif handle.pending.signature~=signature then return false,"Pending"
+	elseif handle.pending.phase=="reserve"then
+		local ok,why=Hatching.reserveHue(handle,candidate);local saved=if ok then HueState.find(handle.state,quote)else nil
+		return ok,why,if saved then HueState.publicReceipt(saved)else nil
 	end
 	local ok,reason=transact(handle,signature,revision,HueState.apply,candidate,if not handle.pending then candidate.operationId else nil,"hue")
 	local result=if ok then HueState.find(handle.state,quote)else nil
@@ -387,10 +455,11 @@ function Hatching.command(handle, action, value, expectedRevision)
 	if action == "hatch" and not handle.pending then
 		local recipe = Catalog.ById[value]
 		if not recipe then return false, "UnknownEgg" end
+		if recipe.retired then return false,"RetiredEgg"end
 		if handle.busy then return false, "Busy" end
 		if handle.status ~= "Ready" then return false, handle.status end
 		if expectedRevision ~= handle.state.revision then return false, "RevisionChanged" end
-		if handle.state.lastHatch then return false, "RevealPending" end
+		if handle.state.lastHatch or handle.state.pendingHueResult or handle.state.hueReservation then return false, "RevealPending" end
 		if not Catalog.isOwned(handle.state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 		if handle.state.nectar < recipe.cost then return false, "NeedNectar" end
 		candidate = { id = handle.adapter.guid(), unit = handle.adapter.random() }
@@ -411,7 +480,8 @@ function Hatching.command(handle, action, value, expectedRevision)
 		elseif action == "hatch" then
 			local recipe = Catalog.ById[value]
 			if not recipe then return false, "UnknownEgg" end
-			if state.lastHatch then return false, "RevealPending" end
+			if recipe.retired then return false,"RetiredEgg"end
+			if state.lastHatch or state.pendingHueResult or state.hueReservation then return false, "RevealPending" end
 			if not Catalog.isOwned(state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 			if state.nectar < recipe.cost then return false, "NeedNectar" end
 			local petId = Catalog.roll(value, state.misses, choice.unit)

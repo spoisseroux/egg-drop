@@ -1,16 +1,16 @@
 -- Per-owned-pet charm preference. No wallet, inventory or hatch mutation.
-local Appearance={Ids={"pip","puddle"}}
+local Appearance={Ids={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"}}
 local Hue=require(game:GetService("ReplicatedStorage").Shared.HueCatalog)
-local supported={pip=true,puddle=true}
+local supported=Hue.Supported
 local function stamp(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=9007199254740000 then n else 0 end
 local function valid(entry)
- return type(entry)=="table"and type(entry.charmVisible)=="boolean"and stamp(entry.at)==entry.at and type(entry.writer)=="string"and #entry.writer<=128
+ return type(entry)=="table"and type(entry.charmVisible)=="boolean"and(entry.charmShape==nil or entry.charmShape=="dot")and stamp(entry.at)==entry.at and type(entry.writer)=="string"and #entry.writer<=128
 end
 function Appearance.decode(value)
  local result={}
  for _,id in ipairs(Appearance.Ids)do
   local entry=type(value)=="table"and value[id]
-  if valid(entry)then result[id]={charmVisible=entry.charmVisible,at=entry.at,writer=entry.writer}end
+  if valid(entry)then result[id]={charmVisible=entry.charmVisible,charmShape="dot",at=entry.at,writer=entry.writer}end
  end
  return result
 end
@@ -18,14 +18,15 @@ function Appearance.visible(profile,id)
  local entry=profile.petAppearance and profile.petAppearance[id]
  return if entry then entry.charmVisible else true
 end
-function Appearance.public(profile,hues)
+function Appearance.public(profile,hues,petHues)
  -- Public attributes and garden snapshots use only storage-confirmed choices.
  -- The desired map remains private while a write is pending or retrying.
  local result={}
  for _,id in ipairs(Appearance.Ids)do
   local entry=profile.petAppearanceSaved and profile.petAppearanceSaved[id]
-  result[id]=Hue.appearance(hues,id)
+  result[id]=Hue.appearance(hues,id,petHues)
   result[id].charmVisible=if valid(entry)then entry.charmVisible else true
+  result[id].charmShape="dot"
  end
  return result
 end
@@ -34,26 +35,26 @@ function Appearance.merge(previous,changes)
  for id,candidate in pairs(changes)do
   local old=result[id]
   if supported[id]and(not valid(old)or candidate.at>old.at or(candidate.at==old.at and candidate.writer>=old.writer))then
-   result[id]={charmVisible=candidate.visible,at=candidate.at,writer=candidate.writer}
+   result[id]={charmVisible=candidate.visible,charmShape="dot",at=candidate.at,writer=candidate.writer}
   end
  end
  return result
 end
 function Appearance.matches(entry,candidate)
- return valid(entry)and entry.charmVisible==candidate.visible and entry.at==candidate.at and entry.writer==candidate.writer
+ return valid(entry)and(candidate.shape==nil or candidate.shape=="dot")and entry.charmVisible==candidate.visible and entry.at==candidate.at and entry.writer==candidate.writer
 end
 function Appearance.newer(entry,candidate)
  if valid(entry)and(entry.at>candidate.at or(entry.at==candidate.at and entry.writer>candidate.writer))then
-  return{charmVisible=entry.charmVisible,at=entry.at,writer=entry.writer}
+  return{charmVisible=entry.charmVisible,charmShape="dot",at=entry.at,writer=entry.writer}
  end
  return nil
 end
 function Appearance.new()return{revision=0,requests={},lastAt=-math.huge,lastMalformed=-math.huge}end
 local function packet(state,profile,id,seq,status,reason)
- return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else true,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
+ return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else true,shape="dot",seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
 end
 function Appearance.request(state,profile,value,now,usable,owns,apply)
- if type(value)~="table"or not supported[value.petId]or type(value.visible)~="boolean"or type(value.seq)~="number"or value.seq~=value.seq or value.seq%1~=0 or value.seq<1 or value.seq>2147483647 then
+ if type(value)~="table"or not supported[value.petId]or type(value.visible)~="boolean"or(value.shape~=nil and value.shape~="dot")or type(value.seq)~="number"or value.seq~=value.seq or value.seq%1~=0 or value.seq<1 or value.seq>2147483647 then
   if now-state.lastMalformed<.25 then return nil,false end;state.lastMalformed=now
   return packet(state,profile,"",0,"Rejected","Malformed"),false
  end
@@ -66,7 +67,7 @@ function Appearance.request(state,profile,value,now,usable,owns,apply)
  if not reason and now-state.lastAt<.25 then local result=packet(state,profile,id,seq,"Rejected","Throttled");result.retryAfter=.25-(now-state.lastAt);return result,false end
  local changed=false
  if not reason then
-  if Appearance.visible(profile,id)~=value.visible then apply(profile,id,value.visible);state.revision+=1;changed=true end
+  if Appearance.visible(profile,id)~=value.visible then apply(profile,id,value.visible,"dot");state.revision+=1;changed=true end
   state.lastAt=now
  end
  local pending=profile.petAppearanceChanges and profile.petAppearanceChanges[id]

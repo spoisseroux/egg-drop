@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"preference\":\"Largest\",\"tests\":{\"HueEggView\":{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsUIQA.HueEggView:57: ReplicatedStorage._ItemEggsUIQA.HueEggView:15: Players.keehar01.PlayerGui._LargestAeroQA._HueLayout.HueEggView.Card.Title text does not fit: Customize Ovelle\\nReplicatedStorage._ItemEggsUIQA.HueEggView:57\\nAssistantCommand:1\\nAssistantCommand:1\\n\"},\"AppearancePalette\":{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsUIQA.AppearancePalette:82: ReplicatedStorage._ItemEggsUIQA.AppearancePalette:12: Players.keehar01.PlayerGui._LargestAeroQA.Frame.DeckPicker.Card.BackgroundTab Background 105, 44 102, 32\\nReplicatedStorage._ItemEggsUIQA.AppearancePalette:82\\nAssistantCommand:1\\nAssistantCommand:1\\n\"},\"CompactEggShop\":{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsUIQA.CompactEggShop:19: ReplicatedStorage._ItemEggsUIQA.CompactEggShop:10: assertion failed!\\nReplicatedStorage._ItemEggsUIQA.CompactEggShop:19\\nAssistantCommand:1\\nAssistantCommand:1\\n\"},\"JournalPurpose\":{\"ok\":false,\"result\":\"ReplicatedStorage._ItemEggsUIQA.JournalPurpose:46: ReplicatedStorage._ItemEggsUIQA.JournalPurpose:38: assertion failed!\\nReplicatedStorage._ItemEggsUIQA.JournalPurpose:46\\nAssistantCommand:1\\nAssistantCommand:1\\n\"}}}"
+    }
+  ],
+  "isError": false
+}

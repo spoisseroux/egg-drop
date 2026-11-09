@@ -45,6 +45,7 @@ local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
 local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
+local nurserySnapshot = child("RemoteEvent", "NurserySnapshot", remotes)
 local hueResult = child("RemoteEvent", "HueResult", remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
@@ -146,7 +147,7 @@ local function gardenInput(board)
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
-	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues)
+	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
@@ -160,7 +161,7 @@ local function gardenInputs()
 	return inputs
 end
 local function publishPetAppearance(board)
-	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues)))
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues)))
 	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision)
 end
 
@@ -207,7 +208,10 @@ local function publishNursery(board)
 		if board.firstSession then board.firstSession:advance(4) end
 	end
 	if board.nurseryBusy then state.status = "Busy" end
-	board.folder:SetAttribute("HatchState", HttpService:JSONEncode(state))
+	-- Inventory, wallet and operation tokens are owner-private. Replicated board
+	-- attributes carry only appearance/roster; never publish the full profile there.
+	board.folder:SetAttribute("HatchState", nil)
+	nurserySnapshot:FireClient(board.player,state)
 	publishPetAppearance(board)
 	if board.hueWaiting and state.lastHueResult and state.lastHueResult.id==board.hueWaiting.id then
 		sendHueResult(board,board.hueWaiting,"Saved",nil,state.lastHueResult)
@@ -677,7 +681,14 @@ local messages = {
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
-	if not board or board.closing or not board.profileReady or typeof(action) ~= "string" then return end
+	if not board or board.closing or typeof(action) ~= "string" then return end
+	if action=="snapshot"then
+		if os.clock()-(board.lastNurserySnapshot or -math.huge)<.3 then return end
+		board.lastNurserySnapshot=os.clock()
+		local state=Nursery.public(board.nursery);if board.nurseryBusy then state.status="Busy"end
+		nurserySnapshot:FireClient(player,state);return
+	end
+	if not board.profileReady then return end
 	local isHue=HueState.isAction(action)
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" and not isHue then return end
 	local quote=if isHue and type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil

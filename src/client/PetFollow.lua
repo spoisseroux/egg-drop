@@ -21,6 +21,7 @@ function Follow.rest(visual)
 end
 
 function Follow.step(visual, root, dt, state, reduced)
+ visual.gardenPivot=false;visual.gardenPivotPhase=0;visual.gardenPivotTurn=0
 	if visual.gardenFocus or visual.gardenAction then
 		visual.gardenFocus=false
 		if visual.applyGardenPose then visual:applyGardenPose({expression="neutral",actionPhase=0})end
@@ -54,7 +55,7 @@ function Follow.step(visual, root, dt, state, reduced)
     visual.origin=if far then target else old+velocity*dt
     if far then state.velocity=Vector3.zero end
 	local traveled=Vector3.new(visual.origin.X-old.X,0,visual.origin.Z-old.Z).Magnitude
-	if changedRoot or far or reduced then
+	if changedRoot or far then
 		Follow.rest(visual);state.travelSpeed=0
 	else
 		local speed=if dt>0 then traveled/dt else 0
@@ -68,13 +69,13 @@ function Follow.step(visual, root, dt, state, reduced)
 			visual.gaitPhase=((visual.gaitPhase or 0)+cycles*math.pi*2)%(math.pi*2)
 		end
 	end
- visual.movementBob=(1-math.cos(visual.gaitPhase or 0))*(if visual.petId=="puddle"then .055 else .065)*(visual.gaitWeight or 0)
-	local toward = if delta.Magnitude > 0.30 then delta else Vector3.new(root.Position.X - old.X, 0, root.Position.Z - old.Z)
+ visual.movementBob=(if reduced then 0 else 1-math.cos(visual.gaitPhase or 0))*(if visual.petId=="puddle"then .055 else .065)*(visual.gaitWeight or 0)
+	local toward=Vector3.new(velocity.X,0,velocity.Z)
 	if toward.Magnitude > 0.05 then
 		local wanted = math.atan2(toward.X, toward.Z) -- pet fronts face +Z
 		local yaw = visual.yaw or wanted
 		local angle = math.atan2(math.sin(wanted - yaw), math.cos(wanted - yaw))
-		visual.yaw = yaw + angle * (1 - math.exp(-11 * dt))
+		visual.yaw = yaw + angle * (1 - math.exp(-18 * dt))
 	end
 	return state
 end
@@ -89,16 +90,18 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
     local sample=Activity.sample(actor,sampleTime)
 	if not sample then return state end
 	state=state or {};local old=visual.origin
-	visual.origin,visual.yaw,visual.reducedEffects=sample.position,sample.yaw,reduced==true
+	visual.origin,visual.reducedEffects=sample.position,reduced==true
+    visual.yaw=sample.yaw;visual.gardenPivot=sample.pivot==true;visual.gardenPivotPhase=sample.pivotPhase or 0;visual.gardenPivotTurn=sample.pivotTurn or 0
+    state.travelYaw=visual.yaw
 	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
-	if sample.mode=="Focus" or reduced or dt<=0 or traveled>8 then
+	if sample.mode=="Focus"or dt<=0 or traveled>8 then
 		Follow.rest(visual)
 	else
 		local speed=traveled/math.max(.001,dt)
 		state.travelSpeed=(state.travelSpeed or 0)+(speed-(state.travelSpeed or 0))*(1-math.exp(-12*dt))
 		visual.gaitWeight=math.clamp((state.travelSpeed-.025)/3.5,0,1)
 		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3)*math.pi*2)%(math.pi*2)
-		visual.movementBob=(1-math.cos(visual.gaitPhase))*(if visual.petId=="puddle"then .055 else .065)*visual.gaitWeight
+		visual.movementBob=(if reduced then 0 else 1-math.cos(visual.gaitPhase))*(if visual.petId=="puddle"then .055 else .065)*visual.gaitWeight
 	end
 	state.generation,state.mode=sample.generation,sample.mode
 	visual.gardenFocus=sample.action=="focus"

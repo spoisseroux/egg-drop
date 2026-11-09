@@ -38,7 +38,7 @@ return function(client,parent)
   end)
   test("shop selection and submit each notify once; pending and reflow do not",function()
    shop:open({status="Ready",revision=1,nectar=100,inventoryMask=1});local n=#heard
-   assert(shop:selectRecipe("sprout"));assert(#heard==n+1);assert(shop:selectRecipe("sprout"));assert(#heard==n+1)
+   assert(shop:selectRecipe("hue"));assert(#heard==n+1);assert(shop:selectRecipe("hue"));assert(#heard==n+1)
    shop:send("hatch","sprout");assert(#heard==n+2);shop:send("hatch","sprout");shop:layout();assert(#heard==n+2)
    shop:close("forced");assert(#heard==n+2)
   end)

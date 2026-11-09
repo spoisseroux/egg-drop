@@ -19,13 +19,24 @@ Art.Cyan = Art.Leaf
 
 -- Explicit semantic bindings; no RGB inference or GUI discovery. The registry
 -- owns one destroy connection per node and paints only on a confirmed theme change.
-local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="Silver",muted="Muted",line="Line",selected="Selected",focus="Focus",accent="Accent"}
+local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="Silver",muted="Muted",line="Line",selected="Selected",focus="Focus",accent="Accent",reward="Amber"}
 Art.Selected,Art.Accent=Art.Inset,Color3.fromHex("#76F6B0")
 local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,writes=0}
 function Art.paletteColor(role)return (currentTheme and currentTheme.ui and currentTheme.ui[role])or Art[roleNames[role]or role]end
+local contentDefaults={contentPanel=Color3.fromHex("#F8F8EA"),contentRaised=Color3.fromHex("#E2F5DA"),contentInset=Color3.fromHex("#E5F3EB"),contentText=Color3.fromHex("#10382E"),contentMuted=Color3.fromHex("#36554B"),contentLine=Color3.fromHex("#37694F"),contentSelected=Color3.fromHex("#C9EDB7"),contentFocus=Color3.fromHex("#075F8A"),contentReward=Color3.fromHex("#87500F")}
+local scoped={panel="contentPanel",raised="contentRaised",inset="contentInset",text="contentText",muted="contentMuted",line="contentLine",selected="contentSelected",focus="contentFocus",reward="contentReward"}
+local function contentOwner(object)
+ local n=object
+ while n do if n:GetAttribute("ContentSurface")==true then return true end;n=n.Parent end
+ return false
+end
+function Art.surfaceColor(object,role)
+ local mapped=contentOwner(object)and scoped[role]
+ return if mapped then currentTheme and currentTheme.ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
+end
 local function paintBinding(node,entry)
  for property,role in pairs(entry.properties)do
-  local value=if type(role)=="function"then role()else Art.paletteColor(role)
+  local value=if type(role)=="function"then role()else Art.surfaceColor(node,role)
   if node[property]~=value then node[property]=value;paletteStats.writes+=1 end
  end
 end
@@ -78,7 +89,7 @@ function Art.shade(parent, top, bottom)
 end
 
 local surfaceGradients={}
-for role,stops in pairs({panel={1,.84},raised={1,.93},selected={1,.93},inset={.93,1},ink={.93,1},primary={1,.88}})do
+for role,stops in pairs({panel={1,.96},raised={1,.97},selected={1,.97},inset={.96,1},ink={.96,1},primary={1,.96}})do
  surfaceGradients[role]=ColorSequence.new(Color3.new(stops[1],stops[1],stops[1]),Color3.new(stops[2],stops[2],stops[2]))
 end
 function Art.surfaceGradient(parent,role)
@@ -105,11 +116,22 @@ end
 function Art.control(button,primary,enabled)
  primary,enabled=primary==true,enabled~=false
  if button:GetAttribute("PrimaryAction")==primary and button:GetAttribute("ActionEnabled")==enabled then return end
- button:SetAttribute("PrimaryAction",primary)
- button:SetAttribute("ActionEnabled",enabled)
- Art.bind(button,{BackgroundColor3=function()return Art.paletteColor(if primary and enabled~=false then "accent"else "raised")end,
-  TextColor3=function()return Art.paletteColor(if enabled==false then "muted"elseif primary then "ink"else "text")end})
- Art.surfaceGradient(button,if primary and enabled~=false then "primary"else "raised")
+ button:SetAttribute("PrimaryAction",primary);button:SetAttribute("ActionEnabled",enabled)
+ Art.bind(button,{BackgroundColor3=function()return if primary and enabled then Art.paletteColor("accent")else Art.surfaceColor(button,"raised")end,
+  TextColor3=function()return if primary then Art.paletteColor("ink")else Art.surfaceColor(button,if enabled then "text"else "muted")end})
+ Art.surfaceGradient(button,if primary and enabled then "primary"else "raised")
+end
+function Art.tab(button,selected,enabled)
+ Art.control(button,false,enabled)
+ Art.bind(button,{BackgroundColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tab or Color3.fromHex("#38B84A") else Art.surfaceColor(button,"raised")end,
+ TextColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tabInk or Art.Ink else Art.surfaceColor(button,"text")end})
+ button:SetAttribute("SelectedTab",selected)
+ local glint=button:FindFirstChild("SelectedGlint")
+ if not glint then glint=Art.frame(button,"SelectedGlint",Color3.new(1,1,1),UDim2.fromOffset(10,3),UDim2.fromOffset(22,2),button.ZIndex+2);Art.corner(glint,1)end
+ glint.Visible=selected
+ local edge=button:FindFirstChild("SelectedEdge")
+ if not edge then edge=Art.frame(button,"SelectedEdge",Color3.new(1,1,1),UDim2.new(.5,-12,1,-4),UDim2.fromOffset(24,2),button.ZIndex+2);Art.corner(edge,1)end
+ edge.Visible=selected
 end
 
 function Art.frame(parent,name,color,position,size,z)
@@ -187,18 +209,53 @@ function Art.close(button)
 	return button
 end
 
+-- Measure the native preferred-size glyph without changing authored TextSize.
+-- Offset cache is bounded by preference, font face and authored role size.
+local preferenceMeasurement={key=nil,entries={},lastOffset=nil}
+local function measurementSize(label)
+ if label.TextScaled then return label.TextSize end
+ local preference=game:GetService("GuiService").PreferredTextSize.Name
+ if preferenceMeasurement.key~=preference then preferenceMeasurement={key=preference,entries={},lastOffset=nil}end
+ local face=label.FontFace
+ local key=face.Family..":"..tostring(face.Weight)..":"..tostring(face.Style)..":"..label.TextSize
+ local entry=preferenceMeasurement.entries[key]
+ if entry and entry.size then return entry.size end
+ local service=game:GetService("TextService");local now=os.clock()
+ if not entry then entry={};preferenceMeasurement.entries[key]=entry end
+ local offset=preferenceMeasurement.lastOffset or 0;local confirmed=false
+ if not entry.loading and(not entry.retryAt or now>=entry.retryAt)then
+  entry.loading=true
+  local ok,value=pcall(function()return service:GetTextSizeOffsetAsync(label.TextSize,face)end)
+  entry.loading=false
+  if ok and type(value)=="number"and value==value and value>=0 and value<100 then
+   offset=value;preferenceMeasurement.lastOffset=value;entry.retryAt=nil;confirmed=true
+  else
+   -- A transient failure uses the last known preference offset and retries on
+   -- the next layout after this bounded backoff; zero is never cached as proof.
+   entry.retryAt=now+1
+  end
+ end
+ local size=label.TextSize
+ if offset>0 then
+  local native=service:GetTextSize("Mg",size,label.Font,Vector2.new(10000,10000)).Y
+  if native<size+offset-1 then size+=offset end
+ end
+ if confirmed then entry.size=size end;return size
+end
+function Art.measureText(content,size,font,width)
+ local probe={TextScaled=false,TextSize=size,Font=font,FontFace=Font.fromEnum(font)}
+ return game:GetService("TextService"):GetTextSize(content,measurementSize(probe),font,Vector2.new(math.max(1,width),10000))
+end
 function Art.textHeight(label,width,minimum)
-	local inset=label:FindFirstChildOfClass("UIPadding")
-	local horizontal=if inset then inset.PaddingLeft.Offset+inset.PaddingRight.Offset+(inset.PaddingLeft.Scale+inset.PaddingRight.Scale)*width else 0
-	local measured=game:GetService("TextService"):GetTextSize(label.Text,label.TextSize,label.Font,Vector2.new(math.max(1,width-horizontal),10000))
-	return math.max(minimum or 0,math.ceil(measured.Y)+4)
+ local inset=label:FindFirstChildOfClass("UIPadding")
+ local horizontal=if inset then inset.PaddingLeft.Offset+inset.PaddingRight.Offset+(inset.PaddingLeft.Scale+inset.PaddingRight.Scale)*width else 0
+ local measured=game:GetService("TextService"):GetTextSize(label.Text,measurementSize(label),label.Font,Vector2.new(math.max(1,width-horizontal),10000))
+ return math.max(minimum or 0,math.ceil(measured.Y)+4)
 end
 function Art.textWidth(label,content)
-	return math.ceil(game:GetService("TextService"):GetTextSize(content or label.Text,label.TextSize,label.Font,Vector2.new(10000,10000)).X)+8
+ return math.ceil(game:GetService("TextService"):GetTextSize(content or label.Text,measurementSize(label),label.Font,Vector2.new(10000,10000)).X)+8
 end
-function Art.actionHeight(label,width)
-	return math.max(44,Art.textHeight(label,width,0)+12)
-end
+function Art.actionHeight(label,width)return math.max(44,Art.textHeight(label,width,0)+12)end
 -- One invalidation listener per component; hidden sheets reflow on open.
 function Art.watchTextPreference(owner,visible,reflow)
 	local queued,alive=false,true
@@ -243,6 +300,7 @@ function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 	options=options or {};local pad=options.pad or 10;local top=options.top or 0
 	Art.roomyType(heading,if options.status then "Body"else "Heading",true,options.roomy)
 	Art.roomyType(amount,"Counter",true,options.roomy);clearInset(heading);clearInset(amount)
+	Art.bind(amount,{TextColor3="reward"})
 	amount.Text=tostring(options.amount or 0);amount.TextWrapped=false;amount.TextXAlignment=Enum.TextXAlignment.Left
 	amount:SetAttribute("AccessibleLabel",Stars.amount(options.amount or 0))
 	wallet.BackgroundTransparency=1
@@ -485,13 +543,19 @@ function Art.insignia(parent, unit, position, tint, z)
 end
 
 function Art.panel(parent, radius, accent)
+ parent:SetAttribute("ContentSurface",true)
 	Art.bind(parent,{BackgroundColor3="panel"})
 	Art.corner(parent, radius)
 	Art.surfaceGradient(parent,"panel")
-	Art.stroke(parent,"line",0.28,2)
-	local highlight = Art.frame(parent, "MoldHighlight", "text", UDim2.fromOffset(radius + 4, 3),
+	Art.stroke(parent,"accent",0.08,3)
+	local highlight = Art.frame(parent, "MoldHighlight", Color3.new(1,1,1), UDim2.fromOffset(radius + 4, 3),
 		UDim2.new(1, -(radius + 4) * 2, 0, 1))
-	highlight.BackgroundTransparency = 0.77
+	highlight.BackgroundTransparency = 0.35
+ highlight.Size=UDim2.new(.30,0,0,4);Art.corner(highlight,8)
+ local rim=Art.frame(parent,"GlassRim","line",UDim2.fromOffset(3,3),UDim2.new(1,-6,1,-6),parent.ZIndex)
+ rim.BackgroundTransparency=1;Art.corner(rim,math.max(1,radius-3));Art.stroke(rim,"line",.65,1)
+ local sheen=Art.frame(parent,"UpperSheen",Color3.new(1,1,1),UDim2.fromOffset(radius+6,5),UDim2.new(.23,0,0,8),parent.ZIndex)
+ sheen.BackgroundTransparency=.90;Art.corner(sheen,10)
 	local mark = Art.frame(parent, "Accent", accent or "accent", UDim2.new(0.5, -13, 1, -5), UDim2.fromOffset(26, 2))
 	Art.corner(mark, 1)
 end
@@ -504,16 +568,16 @@ function Art.button(button, radius)
  local keyline=Art.frame(button,"FocusKeyline",Art.Ink,UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-4),button.ZIndex)
  keyline.BackgroundTransparency=1;keyline.Active,keyline.Selectable=false,false;Art.corner(keyline,math.max(1,radius-2))
  local inner=Art.stroke(keyline,"ink",1,1)
- Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.paletteColor("focus") else Art.paletteColor("line") end})
+ Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Art.surfaceColor(button,"line") end})
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
-			border.Color = Art.paletteColor("focus")
+			border.Color = Art.surfaceColor(button,"focus")
    border.Thickness=button:GetAttribute("FocusThickness")or 2;inner.Transparency=0
 		end
 	end)
 	local function focusPaint(focused)
   border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2 else 1;inner.Transparency=if focused then 0 else 1
-		border.Color = if focused then Art.paletteColor("focus") else Art.paletteColor("line")
+		border.Color = if focused then Art.surfaceColor(button,"focus")else Art.surfaceColor(button,"line")
 	end
 	local function restore()focusPaint(button==game:GetService("GuiService").SelectedObject)end
  button.MouseButton1Up:Connect(restore)
