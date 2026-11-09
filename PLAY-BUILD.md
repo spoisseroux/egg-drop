@@ -1,4 +1,12 @@
-# Egg Drop — Spring Meadow and Aero babies
+# Egg Drop — neutral companions
+
+**Private v316 Published — Neutral companions and four-pet pool - c549451.** Runtime c549451 is pushed and verified in refreshed native Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/pet-materials-2026-11-09/private-published-v316-c549451.png) · [Scope and verification](NEUTRAL-ROSTER.md) · [Exact hue chart](artifacts/pet-materials-2026-11-09/current-hue-palette.png).
+
+Undyed bodies start white; paws, charms and secondary accents start light grey. Existing Main/Secondary hue items and doses remain; hands/cuffs now follow Secondary. New Companion Eggs offer Zivvi, Ovelle, Tikket and Nuum. Vezzi/Kiprik/Nolli remain usable if already owned, with preserved stable IDs and receipts. The absent rare pool suspends the rare guarantee without erasing saved progress.
+
+125 native source matches / zero compile errors, isolated Rojo build and148 native fixture cases across15 suites pass. Ordinary welcome controls earned the white Zivvi reveal. An actual follow-up focus attempt did not establish focus with the controller emulator visible; do not count it as passed. Physical-phone and live-rejoin limits remain. The separate gloss/night-material experiment is preserved locally and **not included in v316**.
+
+## Historical v309 — Spring Meadow and Aero babies
 
 **Private v309 Published — Spring Meadow and shared resting - b71c702.** Runtime b71c702 is committed and pushed; refreshed native Studio Version History verifies Published. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Proof](artifacts/spring-meadow-2026-11-09/private-published-v309-b71c702.png) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md) · [Verification](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Morning handoff](MORNING-RUNDOWN.md).
 

@@ -6,7 +6,14 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 
 Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO.md): unified Companion / Hue shop, saved stacked hue/reset items, independent five-dose channels, migration of old purchases, per-pet customization, seven-ID color support, planted motion, faster aiming and themed supply balls.
 
-## Completed overnight builds — private v309 latest
+## Current palette and roster — private v316
+
+- [x] White Main / light-grey Secondary, unchanged hue anchors and independently saved doses. New hatches offer four pets; already-owned Vezzi, Kiprik and Nolli remain usable. Retained rare progress freezes safely. [Scope and148-case verification](NEUTRAL-ROSTER.md).
+- [ ] Finish the separate glossy/luminous night-material pass. Candidate source is safely parked in stash7f72106e5d3a9444c6ae4b03be975f637e2c0505; [resume notes](PET-MATERIAL-PASS.md). v316 includes none of that experiment.
+- [ ] Recheck actual pet-focus input with a clean keyboard/controller configuration; the ordinary welcome reveal passed but the later Meet/E attempt did not establish focus.
+- [ ] New replacement designs for the three retired pets require visual approval; no replacements were silently substituted.
+
+## Completed overnight builds — historical v309
 
 The newer **Spring Meadow continuation is private v309 Published / pushed runtime b71c702**. [Proof](artifacts/spring-meadow-2026-11-09/private-published-v309-b71c702.png) · [Verification](artifacts/spring-meadow-2026-11-09/VERIFY.md) · [Gallery](artifacts/spring-meadow-2026-11-09/GALLERY.md).
 

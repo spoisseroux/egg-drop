@@ -2,6 +2,8 @@
 
 User direction, November 9, 2026: every companion starts with a white body and light-grey secondary areas, including paws and matching floating charm. Players use the existing separate Main/Secondary hue items to supply color. The current exact Rose/Tide/Citrus/Iris anchors and 0–5 dose math remain pending user critique.
 
+**Released privately as v316 / runtime c549451**, committed and pushed. Refreshed native Version History confirms **Neutral companions and four-pet pool - c549451 / Published**. [Proof](artifacts/pet-materials-2026-11-09/private-published-v316-c549451.png). No public/access settings changed.
+
 ## Reviewed plan
 
 Astra creative direction and independent Sol architecture review approved a neutral baseline. Honor the user's white body (`#FFFFFF`); use achromatic light grey (`#C8C8C8`) for Secondary. Protect dark eyes, mouth, blush, ivory and pale catchlights. Do not regenerate geometry or overwrite saved hue counts.
