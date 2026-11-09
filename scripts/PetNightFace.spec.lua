@@ -21,14 +21,15 @@ return function(client)
    for _,entry in ipairs(v.pieces)do if entry.faceRole then
     Face.paint(entry,true,nil,1);assert(entry.part.Material==entry.faceBaseMaterial and near(entry.part.Color,entry.faceBaseColor))
     Face.paint(entry,true,nil,0)
-    local base=entry.faceBaseColor;local expected=if entry.faceRole=="cheek"then Color3.new(base.R*.55,base.G*.55,base.B*.55)else base
-    assert(entry.part.Material==Enum.Material.Neon and near(entry.part.Color,expected))
+    local base=entry.faceBaseColor;local expected=base
+    local expectedMaterial=if entry.faceRole=="spark"and not entry.materialSurface then Enum.Material.Neon else entry.faceBaseMaterial
+    assert(entry.part.Material==expectedMaterial and near(entry.part.Color,expected))
     local once=entry.part.Color
     for _=1,100 do Face.paint(entry,true,nil,0)end
-    assert(entry.part.Color==once and entry.part.Material==Enum.Material.Neon,"repeated night paint compounded or drifted")
+    assert(entry.part.Color==once and entry.part.Material==expectedMaterial,"repeated night paint compounded or drifted")
     if entry.faceRole=="cheek"then
      cheeks+=1;local blush=base:Lerp(Color3.fromRGB(239,156,175),.5)
-     Face.paint(entry,true,blush,0);assert(near(entry.part.Color,Color3.new(blush.R*.55,blush.G*.55,blush.B*.55)))
+     Face.paint(entry,true,blush,0);assert(near(entry.part.Color,blush))
     end
     Face.paint(entry,true,nil,1);assert(entry.part.Material==entry.faceBaseMaterial and near(entry.part.Color,base))
    end end

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "materialVersion": 1,
+  "authorship": "Original deterministic constant maps; no external imagery or mesh changes.",
+  "generator": "scripts/build_pet_material_maps.py",
+  "maps": {
+    "white": {
+      "file": "white-opaque.png",
+      "width": 32,
+      "height": 32,
+      "channels": 4,
+      "pixel": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "purpose": "Opaque albedo and full emissive mask",
+      "targetScalar": 1.0,
+      "encodedScalar": 1.0,
+      "sha256": "245a82e115217ea58a29329710f13d48617347f30d71db98f8c7657ad7b696d5"
+    },
+    "metalness": {
+      "file": "metalness-zero.png",
+      "width": 32,
+      "height": 32,
+      "channels": 3,
+      "pixel": [
+        0,
+        0,
+        0
+      ],
+      "purpose": "Nonmetal for every profile",
+      "targetScalar": 0.0,
+      "encodedScalar": 0.0,
+      "sha256": "31e579b975d3f691455245c2140e8f911d2f5d0afc09de2c264c9c0f423a90c9"
+    },
+    "bodyRoughness": {
+      "file": "roughness-body-032.png",
+      "width": 32,
+      "height": 32,
+      "channels": 3,
+      "pixel": [
+        82,
+        82,
+        82
+      ],
+      "purpose": "Body, ordinary Secondary and charm roughness",
+      "targetScalar": 0.32,
+      "encodedScalar": 0.3215686274509804,
+      "sha256": "811572dc38b8dc3580a9a32d1260ba2ad60dcf4bf737835103479b04d4519759"
+    },
+    "eyeRoughness": {
+      "file": "roughness-eye-014.png",
+      "width": 32,
+      "height": 32,
+      "channels": 3,
+      "pixel": [
+        36,
+        36,
+        36
+      ],
+      "purpose": "Protected glossy eye roughness",
+      "targetScalar": 0.14,
+      "encodedScalar": 0.1411764705882353,
+      "sha256": "6c111763aad4df876dd32e7cc6a4d6c85d4baac34e4a2ec7b4b087b44490217a"
+    }
+  },
+  "profiles": {
+    "Body": {
+      "roughness": "bodyRoughness",
+      "emissionDayDuskNight": [
+        0.12,
+        0.29,
+        0.46
+      ]
+    },
+    "Eye": {
+      "roughness": "eyeRoughness",
+      "emissionDayDuskNight": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Charm": {
+      "roughness": "bodyRoughness",
+      "emissionDayDuskNight": [
+        0.25,
+        0.615,
+        0.98
+      ]
+    },
+    "Catchlight": {
+      "roughness": "eyeRoughness",
+      "emissionDayDuskNight": [
+        0.12,
+        0.3,
+        0.48
+      ]
+    }
+  },
+  "tintPolicy": "Opaque white albedo; runtime resolved role color applied once through SurfaceAppearance.Color. Trial EmissiveTint is white, subject to native hue probe.",
+  "normalMap": null,
+  "uploadedIds": {
+    "white": "rbxassetid://132217078330162",
+    "metalness": "rbxassetid://114363080604088",
+    "bodyRoughness": "rbxassetid://90822949282078",
+    "eyeRoughness": "rbxassetid://101362074171738"
+  },
+  "templatePack": {
+    "file": "PetMaterials.rbxm",
+    "sha256": "231cb8df9d0b112dea49669bace4a6c933bde3f870d7054ab3ea21223324c0ff",
+    "provenance": "Native SerializationService Edit export; four profiles round-tripped with modern Content URLs."
+  },
+  "uploadPolicy": "Root uploads these four files, records returned owned asset IDs, then invokes the Edit-only template builder. This generator does not upload or modify mounted assets.",
+  "uvCaveat": "Uniform maps minimize UV assumptions; original Zivvi/Ovelle native render validation remains required.",
+  "torus": {
+    "file": "PetCharmAssets.rbxmx",
+    "meshId": "rbxassetid://138583256075565",
+    "maskId": "rbxassetid://102662383486040",
+    "size": [
+      0.259,
+      0.195,
+      0.049
+    ],
+    "provenance": "Original authored32x8torus; XML matches immutable MeshContent/InitialSize recipe used by the production rig pack. Native binary export retained as provenance; live Rojo sync may require original imported-resource clone refresh.",
+    "nativeExport": "PetCharmAssets.rbxm"
+  }
+}

@@ -154,13 +154,14 @@ function Visual:commitReadyRig()
  candidate.model=Instance.new("Model");candidate.pieces={};candidate.bodyHull={};candidate.nativeOnly=true
  -- Never run the facade's captured sampler against shared live fallback slots.
  candidate.update=Visual.update;candidate.greet=Visual.greet;candidate.poseSlots=nil;candidate.poseBucket=nil;candidate.poseStateKey=nil;candidate.focusEnvelopeCache=nil
- candidate.nightGroups=nil;candidate.nightDaylight=nil;candidate.nightColors=nil;candidate.charmFormsPrepared=nil
+ candidate.nightGroups=nil;candidate.nightDaylight=nil;candidate.nightColors=nil;candidate.charmFormsPrepared=nil;candidate.charmRingBound=nil
  if not imported(candidate)then candidate.model:Destroy();self.assetReady=false;return end
  candidate:applyAppearance(self.appearance)
  self.rigSwapInProgress=true
  local oldPieces,oldGroups,oldPrimary=self.pieces,self.nightGroups,self.model.PrimaryPart
  local newPrimary=candidate.model.PrimaryPart
  self.pieces,self.nightGroups,self.charmFormsPrepared=candidate.pieces,candidate.nightGroups,candidate.charmFormsPrepared
+ self.charmRingBound=candidate.charmRingBound
  for _,child in ipairs(candidate.model:GetChildren())do child.Parent=self.model end
  self.model.PrimaryPart=newPrimary
  if oldPrimary then for _,child in ipairs(oldPrimary:GetChildren())do
@@ -184,6 +185,8 @@ function Visual.new(parent,origin,pet,worldScale,appearance,options)
  local cachedColors=Palette.resolve(pet.id,appearance)
  local self=setmetatable({petId=pet.id,nightTreatment=options and options.nightTreatment or "shadedHead",secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
  self.readiness=options and options.readiness or Readiness.shared;self.nativeOnly=options and options.native==true
+ self.materialsEnabled=not options or options.materialsEnabled~=false
+ self.emissionEnabled=not options or options.emissionEnabled~=false
  self.assetPriority=options and options.priority or(if worldScale==nil then 3 else 2);self.assetEpoch=1;self.rigRevision=0
  local source,pending
  if not self.nativeOnly then source,pending=imported(self,true)end
@@ -220,6 +223,7 @@ function Visual:applyGardenPose(sample)
 end
 function Visual:update(dt)
  self:commitReadyRig()
+ Charms.step(self)
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
  local reduced=self.reducedEffects==true;local toyReach,toyExpression=0,nil
  if self.gardenAction=="toyReturn"then toyReach,toyExpression=ToyPose.sample(self.toyRole,self.toyTime,reduced)end
@@ -283,12 +287,14 @@ function Visual:update(dt)
    if mouth=="soft"then size*=.78 end
   end
   if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
+  entry.renderHidden=hidden
   Face.paintSurface(entry,self,daylight)
   if entry.faceRole then
    local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)
   end
-  local transparency=if hidden then 1 else 0
+  if entry.role=="charm"then Charms.paintVisibility(entry,hidden,self.secondaryColor)end
+  local transparency=if hidden then 1 else entry.baseTransparency or 0
   if entry.lastSize~=size then part.Size=size;entry.lastSize=size end
   if entry.lastFrame~=cf then part.CFrame=cf;entry.lastFrame=cf end
   if entry.lastTransparency~=transparency then part.Transparency=transparency;entry.lastTransparency=transparency end

@@ -1,6 +1,36 @@
 # Companion editor and round recap
 
-Proposed next pass against private **v344 / 5b829e6**. The six player captures show two separate problems. The recap puts pale gold and green lettering on cream, and spends half its body on an egg progress card. The companion editor changes the width and position of its tabs between Hue and Charm. Scrolling can carry the pet out of view. Address the two screens first. Review the physical halo and pet materials separately in the garden.
+Implemented and verified candidate against private **v344 / 5b829e6**; publication is pending. The accepted scope below addresses the six player captures: pale recap lettering and an oversized egg progress area, unstable editor tabs and a pet which scrolls out of view. The halo and material work received separate visual review. The last published private build remains the baseline until [PLAY-BUILD.md](PLAY-BUILD.md) records a new verified publication.
+
+## Candidate status — November 9, 2026
+
+- The recap now opens its one scrolling receipt immediately. The Stars amount, Quest/Daily credit, run metrics and pending instructions use deep green ink; the Details control and selected-egg/progress/transfer presentation are hidden. Canonical receipt matching and feedback cancellation still own credited values and audio.
+- Journal entry routes now open the Pet tab of one Pet / Hue / Charm editor. Owned square previews use a visible-only pool bounded by seven identities and one scheduler. The saved pet/channel or charm controls remain fixed while options scroll. Explicit equip confirmation, jar recipient selection, legacy choices and migration acknowledgement retain separate state.
+- Machine dismissal waits for the exact pickup confirmation, including an authoritative Carried snapshot arriving before its remote result. A queued machine dismissal waits for both saved equipment and the new actor identity. Ordinary equip can reconcile a late commit after retry feedback or reopening. Forced cleanup still releases its lifecycle claim. World pickup/set-down controls use arrows.
+- The Ring candidate uses one continuous torus with a two-sided alpha fallback. Authored material binding and pet-local emission have native fixture evidence; the garden's global light, exposure and bloom remain under their existing owners. This does not establish physical-device or live-service coverage.
+
+| Evidence so far | Scope and limit |
+|---|---|
+| [Independent UI source review](artifacts/companion-editor-2026-11-09/SOURCE-REVIEW.md) and [Astra visual review](artifacts/companion-editor-2026-11-09/VISUAL-REVIEW.md) | Final source GO and visual GO, including corrected Charm rows, first owned Pet card, actual recap and separate Ring/material review. |
+| [Server fixture batch](artifacts/companion-editor-2026-11-09/server-final.json) | 145 passing cases across 15 suites; isolated persistence, ownership, lease and placement fixtures. |
+| [Final Medium client batch](artifacts/companion-editor-2026-11-09/client-medium-final.json) and [final Largest client batch](artifacts/companion-editor-2026-11-09/client-largest-final.json) | Each passes 161 cases across 20 suites. Includes separate Charm icon/name/check bounds at an exact 233 px row, all three selected shapes at 568 × 160, compact Pet-card visibility and native scroller input ownership. These are repeated preference runs, not 322 independent cases. |
+| [Earned pickup](artifacts/companion-editor-2026-11-09/actual-earned-pickup-arrow.jpg), [Largest phone pickup](artifacts/companion-editor-2026-11-09/actual-largest-phone-up-arrow.jpg), [final machine × to carry](artifacts/companion-editor-2026-11-09/actual-largest-phone-x-carried-final.jpg) | Actual local Studio controls; phone emulator, one naturally owned pet. Final-source explicit × confirmed Carried. Not a physical phone or live contention test. |
+| [Largest Hue at top](artifacts/companion-editor-2026-11-09/actual-largest-phone-hue-top.jpg), [scrolled](artifacts/companion-editor-2026-11-09/actual-largest-phone-hue-scrolled.jpg) and [final Hue](artifacts/companion-editor-2026-11-09/actual-largest-phone-hue-final.jpg) | The pet/controls stay fixed during a real options scroll. Before correction, 400 px of list movement changed camera position by 11.7923 studs. Fresh ordinary final-source verification has Body.Active=true, list movement 200→100 and zero camera displacement. |
+| [Emission on](artifacts/companion-editor-2026-11-09/candidate-midnight-emission-on-FIXTURE.jpg) / [off](artifacts/companion-editor-2026-11-09/candidate-midnight-emission-off-FIXTURE.jpg), [continuous torus](artifacts/companion-editor-2026-11-09/torus-native-midnight-FIXTURE.jpg) | Matched native material fixtures and separate halo review. Uploaded-map availability alone is not treated as proof of rendered emission. |
+| [Final native audit](artifacts/companion-editor-2026-11-09/native-final-audit.json) and [source manifest](artifacts/companion-editor-2026-11-09/source-manifest.json) | All 144 runtime sources match native Studio and compile with zero errors; equality includes corrected Unicode-byte chunks and a full length audit. Rojo and diff checks pass. QA driver, fixture folder and import helper removed from Edit; Medium, Automatic graphics and the default viewport restored. |
+
+The actual [Largest Charm overlap](artifacts/companion-editor-2026-11-09/actual-largest-phone-charm-overlap.jpg) is retained as a failed visual checkpoint. Its correction replaces padded button text with separate measured icon, name and selected-mark rectangles. Disjoint-bound/TextFits assertions now pass, including an exact 233 px row; the [corrected actual-control capture](artifacts/companion-editor-2026-11-09/actual-largest-phone-charm-final.jpg) shows distinct icons and names. The [earned Medium phone Pet capture](artifacts/companion-editor-2026-11-09/actual-medium-phone-pet-final.jpg) shows the complete first square, name and Active mark without scrolling.
+
+### Candidate verification checklist
+
+- [x] Final Medium and Largest client suites, server suites, independent source review and Astra visual review.
+- [x] Actual earned overflow recap with pinned outcome/actions; positive +14 Stars receipt separately labeled as a local production-component fixture which grants nothing.
+- [x] Corrected Charm bounds and first owned Pet-card visibility, with actual phone-emulator captures.
+- [x] Fresh ordinary final-source wheel input scrolls the options list without moving the world camera; explicit machine × confirms Carried.
+- [x] Exact native source equality, zero compile errors, Rojo/diff checks, QA removal and restored default Studio settings.
+- [ ] Record the new private publication and refreshed native Version History proof in PLAY-BUILD.md.
+
+A test-enabled session interfered with ordinary Focus entry; a clean session with the auto-driver disabled completed the earned welcome→Meet route. Inspection did not establish an individual fixture as the cause, so the test-enabled-session interference remains unexplained and actual-control evidence is collected separately from fixture execution. Physical-phone input/performance, live visitor/bay contention, actual R6 input and live save/rejoin remain outside this evidence. The six-round seven-rig material benchmark is a separate measured workload; a dedicated seven-owned editor versus v344 baseline performance comparison is not established. Do not add overlapping rerun totals together.
 
 ## Round complete
 

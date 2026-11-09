@@ -1,50 +1,39 @@
--- Two grouped occluded fills retain the shaded material under each saved channel.
--- No per-part Highlights, lights, geometry clones, exposure or palette mutation.
-local Palette=require(game:GetService("ReplicatedStorage").Shared.PetPalette)
-local Night={DefaultTreatment="tonalRoleFill"}
-local function prepare(visual)
- local groups={}
- for _,role in ipairs({"body","secondary"})do
-  local model=Instance.new("Model");model.Name=if role=="body"then "MainSurfaces"else "SecondarySurfaces";model.Parent=visual.model
-  local fill=Instance.new("Highlight");fill.Name="Night"..model.Name;fill.Adornee=model;fill.DepthMode=Enum.HighlightDepthMode.Occluded;fill.OutlineTransparency=1;fill.FillTransparency=1;fill.Enabled=false;fill.Parent=visual.model
-  groups[role]={model=model,fill=fill}
- end
- for _,entry in ipairs(visual.pieces)do
-  if entry.nightHeadLift then entry.nightHeadLift:Destroy();entry.nightHeadLift=nil end
-  local group=groups[entry.colorRole]
-  if group then entry.part.Parent=group.model end
- end
- visual.nightGroups=groups;return groups
+-- PBR owns bound MeshParts; unsupported/native surfaces use bounded role fills.
+local Materials=require(script.Parent.PetMaterials)
+local Night={DefaultTreatment="luminousVinyl"}
+local function groupFor(visual,role)
+ local groups=visual.nightGroups
+ if not groups then groups={};visual.nightGroups=groups end
+ local group=groups[role];if group then return group end
+ local model=Instance.new("Model");model.Name=if role=="body"then "MainSurfaces"else "SecondarySurfaces";model.Parent=visual.model
+ local fill=Instance.new("Highlight");fill.Name="Night"..model.Name;fill.Adornee=model;fill.DepthMode=Enum.HighlightDepthMode.Occluded
+ fill.OutlineTransparency=1;fill.FillTransparency=1;fill.Enabled=false;fill.Parent=visual.model
+ group={model=model,fill=fill};groups[role]=group;return group
 end
 function Night.paint(entry,visual,daylight)
- if entry.colorRole~="body"and entry.colorRole~="secondary"then return end
+ if Materials.paint(entry,visual,daylight)then return true end
+ if entry.colorRole~="body"and entry.colorRole~="secondary"then return false end
  local base=entry.color or entry.originalColor or entry.part.Color
- local treatment=if visual.nightTreatment=="groupedRoleFill"then "groupedRoleFill"else Night.DefaultTreatment
- local dusk=math.clamp((.50-daylight)/.50,0,1);dusk=dusk*dusk*(3-2*dusk)
- local tone=1
- if visual.worldContext and treatment=="tonalRoleFill"and visual.definition then
-  if entry.name=="Body"then tone=1-.26*dusk
-  elseif entry.name=="HandL"or entry.name=="HandR"then tone=1-.12*dusk end
- end
- local rendered=if tone<1 then Palette.tint(base,Color3.new(0,0,0),1-tone)else base
- local material=entry.faceBaseMaterial or Enum.Material.SmoothPlastic
+ local dusk=Materials.dusk(daylight)
+ local selected=entry.renderHidden~=true and(entry.role~="charm"or(visual.charmVisible~=false and(entry.charmShape or "dot")==visual.renderCharmShape))
+ local neon=visual.worldContext and entry.role=="charm"and selected and dusk>.001
+ local rendered=if neon then Color3.new(base.R*(1-.60*dusk),base.G*(1-.60*dusk),base.B*(1-.60*dusk))else base
+ local material=if neon then Enum.Material.Neon else entry.faceBaseMaterial or Enum.Material.SmoothPlastic
  if entry.part.Color~=rendered then entry.part.Color=rendered end
  if entry.part.Material~=material then entry.part.Material=material end
- if not visual.worldContext then return end
- local groups=visual.nightGroups or prepare(visual)
- local colors=visual.colors or {};local charm=visual.charmVisible~=false;local charmShape=visual.renderCharmShape
- if visual.nightDaylight==daylight and visual.nightColors==colors and visual.nightCharm==charm and visual.nightStyle==treatment and visual.nightCharmShape==charmShape then return end
- visual.nightDaylight,visual.nightColors,visual.nightCharm,visual.nightStyle,visual.nightCharmShape=daylight,colors,charm,treatment,charmShape
- local active=if visual.nightFillActive then daylight<.48 else daylight<.44
- visual.nightFillActive=active
- for role,group in pairs(groups)do
-  local color=colors[role]or base
-  local opacity=if treatment=="groupedRoleFill"then (if role=="body"then .55 else .42)else (if role=="body"then .32 else .36)
-  group.fill.FillColor=color;group.fill.FillTransparency=1-opacity*dusk;group.fill.Enabled=active and dusk>.001
+ if not visual.worldContext or entry.role=="charm"then
+  if entry.part.Parent~=visual.model then entry.part.Parent=visual.model end
+  return false
  end
- for _,piece in ipairs(visual.pieces)do if piece.role=="charm"then
-  local parent=if charm and(piece.charmShape or "dot")==charmShape then groups.secondary.model else visual.model
-  if piece.part.Parent~=parent then piece.part.Parent=parent end
- end end
+ local group=groupFor(visual,entry.colorRole)
+ if entry.part.Parent~=group.model then entry.part.Parent=group.model end
+ local color=(visual.colors or {})[entry.colorRole]or base
+ local opacity=if entry.colorRole=="body"then .30 else .28
+ if group.fill.FillColor~=color then group.fill.FillColor=color end
+ local transparency=1-opacity*dusk
+ if group.fill.FillTransparency~=transparency then group.fill.FillTransparency=transparency end
+ local enabled=dusk>.001
+ if group.fill.Enabled~=enabled then group.fill.Enabled=enabled end
+ return false
 end
 return Night

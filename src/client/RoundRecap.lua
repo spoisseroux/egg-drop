@@ -50,6 +50,7 @@ function Recap.new(parent, audio, reduceEffects)
 		Art.Cyan, 13, Art.Font.Heading)
 	fitText(title, 13)
 	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), "text", 12)
+	Art.bind(title,{TextColor3=function()return Color3.fromHex("#173D36")end});Art.bind(detail,{TextColor3=function()return Color3.fromHex("#173D36")end})
 	fitText(detail, 12)
 	local track = Art.frame(goal, "Track", "ink", UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
 	local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))
@@ -132,7 +133,7 @@ function Recap.new(parent, audio, reduceEffects)
 	Art.watchTextPreference(frame,function()return self:isVisible()end,function()if self.onPreferredLayout then self.onPreferredLayout() else self:layoutField(frame.AbsoluteSize.Y) end end)
 	self.saveDetail=Art.text(body,"SaveInstruction","",UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Amber,14)
 	self.saveDetail.TextXAlignment,self.saveDetail.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Top
-	self.saveDetail.Visible=false
+	Art.bind(self.saveDetail,{TextColor3=function()return Color3.fromHex("#173D36")end});self.saveDetail.Visible=false
 	self.feedback = Feedback.new(function(sample) self:paintFeedback(sample) end, audio, reduceEffects,function()return self:isVisible()and(not self.ownsFeedback or self.ownsFeedback())end)
  body:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:paintFeedback(self.presentation)end)
 	-- Any hidden ancestor also ends the sequence; returning to this receipt shows
@@ -204,6 +205,7 @@ function Recap:paintFeedback(sample)
  end
  local anchors=self.fieldMode==true and self.hasReceipt==true and self:isVisible()and self.fieldBody.AbsoluteSize.Y>0
   and within(self.nectarIcon,self.fieldBody)and within(self.fill.Parent,self.fieldBody)
+ anchors=false -- Receipt feedback has no egg-progress transfer destination.
  self.transferAnchorsVisible=anchors
  self.transfer.Visible=anchors and sample~=nil and(self.displayReward or 0)>0 and(sample.transfer or 0)>0 and(sample.transfer or 0)<1
  local origin=self.transfer.AbsolutePosition
@@ -265,7 +267,7 @@ function Recap:buildDetails(result,reward,lines)
  self.detailCards,self.receiptRows={},{}
  local function card(kind,caption,value,pair)
   local frame=Art.frame(self.detailsContent,"Detail_"..(#self.detailCards+1),"raised",UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),self.detailsContent.ZIndex+1)
-  Art.corner(frame,8);frame:SetAttribute("ReceiptSection",kind)
+  Art.corner(frame,8);Art.bind(frame,{BackgroundColor3=function()return Color3.fromHex("#F5EFD9")end});frame:SetAttribute("ReceiptSection",kind)
   local icon=Art.frame(frame,"Icon","accent",UDim2.fromOffset(10,10),UDim2.fromOffset(18,18),frame.ZIndex+1);Art.corner(icon,if kind=="contract"then 8 else 4)
   if kind=="contract"then icon.BackgroundTransparency=1;EggArt.nectar(icon,UDim2.fromOffset(2,0),UDim2.fromOffset(14,18),icon.ZIndex+1)
   elseif kind=="score"or kind=="best"then icon.Rotation=45
@@ -279,6 +281,7 @@ function Recap:buildDetails(result,reward,lines)
    Art.type(counter,"Counter");counter.TextSize=18;counter.TextXAlignment=Enum.TextXAlignment.Left
    table.insert(self.receiptRows,counter)
   end
+  Art.bind(title,{TextColor3=function()return Color3.fromHex("#173D36")end});if counter then Art.bind(counter,{TextColor3=function()return Color3.fromHex("#173D36")end})end
   local entry={frame=frame,title=title,value=counter,pair=pair==true,kind=kind}
   table.insert(self.detailCards,entry);return entry
  end
@@ -341,7 +344,7 @@ function Recap:updateField(result)
 	self.detail.Visible,self.receiptScroll.Visible=not self.hasReceipt,false
 	self.nectarIcon.Visible = self.hasReceipt
 	if reward then
-		if self.detailsSequence ~= reward.sequence then self.detailsOpen = false; self.detailsSequence = reward.sequence;self.fieldBody.CanvasPosition=Vector2.zero end
+		if self.detailsSequence ~= reward.sequence then self.detailsOpen = true; self.detailsSequence = reward.sequence;self.fieldBody.CanvasPosition=Vector2.zero end
 		self.componentLabels[1].Text = string.format("Quest +%d", reward.base or 0)
 		self.componentLabels[2].Text = string.format("Daily +%d", reward.daily or 0)
 		self.eggGoal.Text = egg
@@ -378,7 +381,7 @@ function Recap:updateField(result)
 	self.displayReward, self.displayBalance, self.displayCost = if reward then reward.total else nil, balance, cost
 	-- This bar always represents the committed snapshot, even while decorative
 	-- earned drops travel towards the bank. No transient balance is invented.
-	self.fill.Parent.Visible = self.hasReceipt
+	self.fill.Parent.Visible = false
 	self.fill.Size = UDim2.fromScale(math.clamp(balance / cost, 0, 1), 1)
 	self.updatingField=false
 	local height=self.pendingFieldHeight or self.frame.AbsoluteSize.Y
@@ -390,51 +393,17 @@ end
 
 function Recap:scrollReceipt(direction)
 	if not self.hasReceipt or not self:isVisible() or type(direction)~="number" or direction==0 then return false end
-	if not self.detailsOpen then self:setDetails(true);return true end
-	local scroll=self.fieldBody
+		local scroll=self.fieldBody
 	local page=math.max(28,math.floor(scroll.AbsoluteSize.Y/28)*28)
 	local maximum=math.max(0,scroll.CanvasSize.Y.Offset-scroll.AbsoluteSize.Y)
 	local before=scroll.CanvasPosition.Y
 	scroll.CanvasPosition=Vector2.new(0,math.clamp(before+(if direction>0 then page else -page),0,maximum))
 	return scroll.CanvasPosition.Y~=before
 end
-function Recap:activateDetails()
- if not self.hasReceipt or not self:isVisible()or not self.detailsButton.Visible or not self.detailsButton.Interactable then return false end
- self:setDetails(not self.detailsOpen)
- if self.onAccepted then self.onAccepted("tab")end
- return true
-end
-function Recap:revealFirstDetail()
- if not self.detailsOpen or self.detailsRevealOrigin==nil then return end
- local first=self.detailCards[1];if not first then return end
- local viewport=self.fieldBody.Size.Y.Offset
- local top=(self.noticeInset or 0)+(self.detailsTop or 0)+first.frame.Position.Y.Offset
- local bottom=top+first.frame.Size.Y.Offset
- local target=self.detailsRevealOrigin
- if first.frame.Size.Y.Offset>viewport then target=top
- elseif top<target then target=top
- elseif bottom>target+viewport then target=bottom-viewport end
- self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(target,0,math.max(0,self.fieldBody.CanvasSize.Y.Offset-viewport)))
-end
-function Recap:setDetails(open)
- local was=self.detailsOpen==true;local wanted=open==true
- if wanted and not was then self.collapsedOffset=self.fieldBody.CanvasPosition.Y;self.detailsRevealOrigin=self.collapsedOffset end
- if not wanted then self.detailsRevealOrigin=nil end
- self.detailsOpen=wanted
- self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)
- local maximum=math.max(0,self.fieldBody.CanvasSize.Y.Offset-self.fieldBody.AbsoluteSize.Y)
- if self.detailsOpen then
-  self:revealFirstDetail()
-  if not self.onContentLayout then self.detailsRevealOrigin=nil end
- else
-  local target=self.collapsedOffset or 0
-  if game:GetService("GuiService").SelectedObject==self.detailsButton then
-   target=math.max(0,self.detailsButton.Position.Y.Offset+(self.noticeInset or 0)+self.detailsButton.Size.Y.Offset-self.fieldBody.AbsoluteSize.Y)
-  end
-  self.fieldBody.CanvasPosition=Vector2.new(0,math.clamp(target,0,maximum))
- end
- self:paintFeedback(self.presentation)
-end
+-- Compatibility entry points keep controller callers on the always-open receipt.
+function Recap:activateDetails()return false end
+function Recap:revealFirstDetail()end
+function Recap:setDetails()self.detailsOpen=true;self:layoutField(self.layoutHeight or self.frame.AbsoluteSize.Y)end
 local function place(node,x,y,w,h)
 	node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)
 end
@@ -469,7 +438,7 @@ function Recap:layoutField(height)
  local viewport=math.max(1,height-top-bottom)
  place(self.fieldBody,pad,top,width+8,viewport)
  self.fieldBody.Visible=true;self.goal.Parent=self.fieldBody;self.goal.BackgroundTransparency=1
- self.receiptScroll.Visible=false;self.detailsContent.Visible=self.hasReceipt==true and self.detailsOpen==true
+ self.receiptScroll.Visible=false;self.detailsOpen=true;self.detailsContent.Visible=self.hasReceipt==true
  local noticeInset=0;self.saveDetail.Visible=self.saveNotice~=nil
  if self.saveNotice then
   Art.type(self.saveDetail,"Body",true);self.saveDetail.Text=(if self.saveOutcome then self.saveOutcome.."\n"else "")..self.saveNotice.detail
@@ -480,7 +449,7 @@ function Recap:layoutField(height)
  self.title.Visible,self.detail.Visible=not self.hasReceipt,not self.hasReceipt
  self.earnedGraphic.Visible,self.nectarIcon.Visible=self.hasReceipt,self.hasReceipt
  self.bankGraphic.Visible=false
- self.eggPanel.Visible,self.detailsButton.Visible=self.hasReceipt,self.hasReceipt
+ self.eggPanel.Visible,self.detailsButton.Visible=false,false
  self.stats.Visible,self.bestMetric.Visible=false,false
  self.promotionLabel.Visible=false
  Art.type(self.title,"Body",true);Art.type(self.detail,"Body",true)
@@ -490,67 +459,23 @@ function Recap:layoutField(height)
  self.twoColumn=false
  if self.hasReceipt then
   Art.type(self.earnedGraphic,"Reward",true);self.earnedGraphic.TextXAlignment=Enum.TextXAlignment.Left
-  Art.type(self.eggGoal,"Body",true);Art.type(self.bankGraphic,"Counter",true);Art.type(self.shortfall,"Supporting",true)
-  local name=if self.displayRecipeId=="meadow"then "Meadow"elseif self.displayRecipeId=="sprout"then "Sprout"else self.displayRecipe.name
-  self.eggGoal.Text=string.format("%s · %d/%d",name,self.displayBalance,self.displayCost)
-  self.shortfall.Text=if self.displayBalance>=self.displayCost then "Ready to hatch"else string.format("%d more to hatch",self.displayCost-self.displayBalance)
-  Art.bind(self.shortfall,{TextColor3=function()return if self.displayBalance>=self.displayCost then Art.Leaf else Art.paletteColor("muted")end})
-  self.bankGraphic.Text=Stars.format("Stars saved: %d",self.displayBalance)
-  local content=math.max(1,width-16);local gap=12
-  local left=math.floor((content-gap)*.45);local right=content-gap-left
-  self.twoColumn=content>=420 and left>44 and right>64
-   and Art.textWidth(self.earnedGraphic)<=left-32 and Art.textWidth(self.eggGoal)<=right-48
-  if not self.twoColumn then left,right=content,content end
-  local leftX=8;local rightX=if self.twoColumn then leftX+left+gap else leftX
-  local heroH=Art.textHeight(self.earnedGraphic,math.max(1,left-32),28)
-  place(self.nectarIcon,leftX,math.max(2,(heroH-24)/2),18,24)
-  place(self.earnedGraphic,leftX+30,0,math.max(1,left-30),heroH)
-  local y=heroH+4;local sourceCount=0
-  for _,label in ipairs(self.componentLabels)do
-   label.Parent=self.goal;Art.type(label,"Counter",true);label.TextSize=14;label.TextXAlignment=Enum.TextXAlignment.Left
-   label.Visible=not label.Text:match("%+0$");if label.Visible then sourceCount+=1 end
-  end
-  local sourceWidth=(left-(if sourceCount>1 then 8 else 0))/math.max(1,sourceCount)
-  local sourceH=0
-  for _,label in ipairs(self.componentLabels)do if label.Visible then sourceH=math.max(sourceH,Art.textHeight(label,sourceWidth,18))end end
-  local index=0
+  local ink=Color3.fromHex("#173D36")
+  Art.bind(self.earnedGraphic,{TextColor3=function()return ink end})
+  local content=math.max(1,width-16)
+  local heroH=Art.textHeight(self.earnedGraphic,math.max(1,content-34),28)
+  place(self.nectarIcon,8,math.max(2,(heroH-24)/2),24,24)
+  place(self.earnedGraphic,42,0,math.max(1,content-34),heroH)
+  local y=heroH+8
   for i,label in ipairs(self.componentLabels)do
-   local h=if label.Visible then sourceH else Art.textHeight(label,left,18)
-   place(label,leftX+index*(sourceWidth+8),y,if label.Visible then sourceWidth else left,h)
-   place(self.sourceGlows[i],label.Position.X.Offset-2,y-2,label.Size.X.Offset+4,h+4)
-   if label.Visible then index+=1 end
+   label.Parent=self.goal;Art.type(label,"Counter",true);label.TextXAlignment=Enum.TextXAlignment.Left
+   label.Visible=true;Art.bind(label,{TextColor3=function()return ink end})
+   local h=Art.textHeight(label,content,22);place(label,8,y,content,h)
+   place(self.sourceGlows[i],6,y-2,content+4,h+4);y+=h+4
   end
-  if sourceCount>0 then y+=sourceH+8 end
-  self.promotionLabel.Visible=self.promotionLabel.Text~=""
-  if self.promotionLabel.Visible then
-   Art.type(self.promotionLabel,"Supporting",true);local h=Art.textHeight(self.promotionLabel,left,18)
-   place(self.promotionLabel,leftX,y,left,h);y+=h+8
-  end
-  Art.type(self.detailsButton,"Action",true)
-  self.detailsButton.Text=if self.detailsOpen then "Hide details"else "Details"
-  self.detailsButton:SetAttribute("AccessibleLabel",if self.detailsOpen then "Hide round details"else "Show round details")
-  local detailsW=math.min(left,math.max(44,Art.textWidth(self.detailsButton)+16))
-  local detailsH=Art.actionHeight(self.detailsButton,detailsW)
-  place(self.detailsButton,leftX,y,detailsW,detailsH);local earnedH=y+detailsH
-  local eggY=if self.twoColumn then 0 else earnedH+12
-  self.eggPanel.BackgroundTransparency=.05
-  self.eggGoal.Parent,self.bankGraphic.Parent=self.eggPanel,self.eggPanel
-  self.eggGoal.ZIndex,self.bankGraphic.ZIndex,self.shortfall.ZIndex=self.eggPanel.ZIndex+2,self.eggPanel.ZIndex+2,self.eggPanel.ZIndex+2
-  local textW=math.max(1,right-52)
-  local eggTitleH=Art.textHeight(self.eggGoal,textW,20);local shortH=Art.textHeight(self.shortfall,textW,18)
-  local eggH=math.max(66,eggTitleH+4+shortH+18)
-  place(self.eggPanel,rightX,eggY,right,eggH)
-  place(self.eggGoal,44,8,textW,eggTitleH);place(self.shortfall,44,12+eggTitleH,textW,shortH)
-  place(self.bankGraphic,44,8,textW,Art.textHeight(self.bankGraphic,textW,18))
-  self.eggGoal.TextXAlignment,self.bankGraphic.TextXAlignment,self.shortfall.TextXAlignment=Enum.TextXAlignment.Left,Enum.TextXAlignment.Left,Enum.TextXAlignment.Left
-  self.fill.Parent.Parent=self.eggPanel;self.fill.Parent.ZIndex=self.eggPanel.ZIndex+1;self.fill.ZIndex=self.eggPanel.ZIndex+2
-  place(self.fill.Parent,8,eggH-6,right-16,4)
-  place(self.eggDrawing,8,math.max(8,(eggH-40)/2),28,40)
-  local recipeId=self.displayRecipeId or "meadow"
-  if self.drawnRecipe~=recipeId then self.eggDrawing:ClearAllChildren();self.drawnRecipe=recipeId;EggArt.create(self.eggDrawing,recipeId,UDim2.fromOffset(2,4),UDim2.fromOffset(24,32),self.eggDrawing.ZIndex+1)end
-  total=if self.twoColumn then math.max(earnedH,eggH)else eggY+eggH
-  self.summaryLayout={earned={x=leftX,y=0,w=left,h=earnedH},egg={x=rightX,y=eggY,w=right,h=eggH},gap=gap,twoColumn=self.twoColumn}
-  self.detailsTop=total+12
+  self.eggPanel.Visible,self.detailsButton.Visible,self.eggGoal.Visible,self.shortfall.Visible=false,false,false,false
+  self.fill.Parent.Visible=false;self.transfer.Visible=false
+  self.summaryLayout={earned={x=8,y=0,w=content,h=y},twoColumn=false}
+  self.detailsTop=y+4
   local detailsWidth=content;local pairW=(detailsWidth-8)/2
   local pairsFit=detailsWidth>=280
   local rowY=0;local cardIndex=1
@@ -589,7 +514,7 @@ function Recap:layoutField(height)
    rowY+=rowH+8;cardIndex+=count
   end
   place(self.detailsContent,8,noticeInset+self.detailsTop,detailsWidth,math.max(0,rowY-8))
-  if self.detailsOpen then total=self.detailsTop+math.max(0,rowY-8)end
+  total=self.detailsTop+math.max(0,rowY-8)
  else
   for _,label in ipairs(self.componentLabels)do label.Visible=false end
  end

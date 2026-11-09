@@ -223,68 +223,13 @@ return function(client, parent)
 			show(result(26)); recap.feedback:step(2)
 			assert(#sounds == count and recap.earnedGraphic.Text == "+14 Stars")
 		end)
-		test("short recap scrolls readable center while excluding pinned footer",function()
-			reduced=true
-			for _,height in ipairs({128,166,198,236}) do
-				root.Size=UDim2.fromOffset(360,height);task.wait(.06);show(result(30+height));task.wait(.06)
-				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
-				assert(recap.earnedGraphic.TextFits and recap.bankGraphic.TextFits and recap.eggGoal.TextFits,fitDiagnostic(recap.earnedGraphic,recap.bankGraphic,recap.eggGoal))
-				assert(not recap.earnedGraphic.TextScaled and recap.earnedGraphic.TextSize>=20)
-				assert(recap.detailsButton.Visible and not recap.detailsContent.Visible and not recap.receiptScroll.Visible)
-				recap:setDetails(true)
-				game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
-				for _,row in ipairs(recap.receiptRows) do assert(row.TextFits and row.TextSize>=14 and not row.TextScaled,fitDiagnostic(row)) end
-			end
-		end)
-		test("roomy recap follows reward egg metrics details and keeps saved values",function()
-			root.Size=UDim2.fromOffset(600,500);task.wait(.06);show(result(450));task.wait(.06)
-			assert(recap.detailsButton.Visible and recap.detailsButton.AbsoluteSize.Y>=44 and recap.detailsButton.TextFits,fitDiagnostic(recap.detailsButton))
-			assert(not recap.detailsContent.Visible and not recap.receiptScroll.Visible and not recap.stats.Visible)
-			local summary=recap.summaryLayout
-			assert(recap.twoColumn and summary.twoColumn and summary.egg.x>=summary.earned.x+summary.earned.w+11.9 and summary.egg.y==summary.earned.y)
-			assert(recap.values[1].Text=="630" and recap.receiptSignature:find("Personal best 700",1,true)and recap.receiptSignature:find("Longest chain ×4",1,true))
-			assert(recap.componentLabels[1].Text=="Quest +8" and recap.componentLabels[2].Text=="Daily +6")
-			assert(recap:scrollReceipt(1) and recap.detailsOpen and recap.detailsContent.Visible and not recap.receiptScroll.Visible)
-			local signature=recap.receiptSignature;show(result(450));assert(recap.detailsOpen and recap.receiptSignature==signature)
-			recap:setDetails(false);assert(not recap.detailsContent.Visible and not recap.receiptScroll.Visible)
-			show(result(451));assert(not recap.detailsOpen and recap.shortfall.Text=="Ready to hatch")
-		end)
-		test("transfer uses visible measured anchors and hides every drop when Details scrolls them away",function()
-			reduced=false;root.Size=UDim2.fromOffset(600,500);task.wait(.06);show(result(452));task.wait(.06)
-			recap.fieldBody.CanvasPosition=Vector2.zero
-			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
-			advance(recap.feedback,.62)
-			assert(recap.transferAnchorsVisible and recap.transfer.Visible,"roomy visible summary did not own measured transfer")
-			assert(#recap.chips==5 and recap.earnedGraphic.Text=="+14 Stars"and recap.bankGraphic.Text=="Stars saved: 20")
-			local savedHeader,savedFooter,savedWidth=recap.headerInset,recap.footerInset,recap.layoutWidth
-			root.Size=UDim2.fromOffset(600,220);recap.headerInset,recap.footerInset,recap.layoutWidth=30,60,600
-			recap:layoutField(220);recap:setDetails(true)
-			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
-			assert(recap.fieldBody.CanvasSize.Y.Offset>recap.fieldBody.AbsoluteSize.Y+1,"clip fixture needs actual expanded overflow")
-			recap.fieldBody.CanvasPosition=Vector2.new(0,math.max(0,recap.fieldBody.CanvasSize.Y.Offset-recap.fieldBody.AbsoluteSize.Y))
-			game:GetService("RunService").RenderStepped:Wait();game:GetService("RunService").RenderStepped:Wait()
-			local function physicallyInside(node)
-				local p,s,q,v=node.AbsolutePosition,node.AbsoluteSize,recap.fieldBody.AbsolutePosition,recap.fieldBody.AbsoluteSize
-				return p.X>=q.X-.5 and p.Y>=q.Y-.5 and p.X+s.X<=q.X+v.X+.5 and p.Y+s.Y<=q.Y+v.Y+.5
-			end
-			assert(not physicallyInside(recap.nectarIcon)or not physicallyInside(recap.fill.Parent),"scroll fixture left both measured anchors inside the viewport")
-			recap:paintFeedback(Feedback.sample(.62))
-			assert(not recap.transferAnchorsVisible and not recap.transfer.Visible,"clipped bottle or meter kept a travel lane")
-			for _,chip in ipairs(recap.chips)do assert(not chip.Visible)end
-			recap.feedback:cancel()
-			recap.headerInset,recap.footerInset,recap.layoutWidth=savedHeader,savedFooter,savedWidth
-			root.Size=UDim2.fromOffset(600,500);recap:layoutField(500)
-		end)
-		test("selected egg progress draws above its panel and retains partial or full saved balance",function()
-			reduced=true
-			for _,balance in ipairs({9,18,25}) do
-				show(result(600+balance,{balance=balance}))
-				assert(recap.fill.Parent.ZIndex>recap.eggPanel.ZIndex and recap.fill.ZIndex>recap.fill.Parent.ZIndex)
-				assert(math.abs(recap.fill.Size.X.Scale-math.clamp(balance/18,0,1))<.00001)
-				assert(recap.bankGraphic.Text=="Stars saved: "..balance)
-				for _,label in ipairs({recap.eggGoal,recap.bankGraphic,recap.shortfall}) do assert(label.TextXAlignment==Enum.TextXAlignment.Left) end
-			end
-		end)
+		test("receipt details stay open and never retain an egg transfer destination",function()
+   reduced=true;root.Size=UDim2.fromOffset(360,198);task.wait(.06);show(result(400));task.wait(.06)
+   assert(recap.detailsContent.Visible and not recap.detailsButton.Visible and not recap.eggPanel.Visible and not recap.fill.Parent.Visible)
+   local starts=recap.feedback.starts;recap:setDetails(false);assert(recap.detailsContent.Visible)
+   for _,row in ipairs(recap.receiptRows)do assert(row.TextFits and not row.TextScaled,fitDiagnostic(row))end
+   recap:scrollReceipt(1);show(result(400));assert(recap.feedback.starts==starts and not recap.transfer.Visible)
+  end)
 		test("first Saved receipt survives synchronous resize during publication",function()
 			local isolated=Recap.new(root,nil,true);isolated.frame.Visible=true
 			local title=isolated.title;local calls=0
@@ -310,7 +255,7 @@ return function(client, parent)
 			isolated.title=title
 			assert(passed,problem);assert(calls>0 and isolated.hasReceipt and isolated.updatingField==false)
 			isolated:layoutField(500)
-			assert(isolated.eggGoal.Text:find("20/18",1,true) and isolated.bankGraphic.Text=="Stars saved: 20")
+			assert(isolated.displayBalance==20 and isolated.bankGraphic.Text=="Stars saved: 20"and isolated.detailsContent.Visible and not isolated.eggPanel.Visible)
 			isolated.frame:Destroy()
 		end)
 		test("destroying the component removes its animation connection", function()

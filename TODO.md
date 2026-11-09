@@ -2,15 +2,21 @@
 
 Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
-## Next UI and material pass — planned against private v344
+## Companion editor, recap and materials — candidate against private v344
 
-[Astra's companion editor and recap plan](COMPANION-EDITOR-AND-RECAP.md) covers the latest six player captures. These changes are planned, not shipped.
+[Astra's companion editor and recap scope](COMPANION-EDITOR-AND-RECAP.md) is implemented and verified as an unpublished candidate. Final native tests and Astra actual-control visual review pass. Private v344 remains the published baseline; [the candidate notes](COMPANION-EDITOR-AND-RECAP.md#candidate-status--november-9-2026) distinguish isolated fixtures, actual Studio controls and remaining coverage limits.
 
-- [ ] Readable round recap with a consistent Stars emblem, default-visible scrolling details and no selected-egg progress area.
-- [ ] One Pet / Hue / Charm editor replacing the separate Journal UI, with square live owned-pet cards, fixed preview/channel controls and independently scrolling options. Preserve ownership, legacy colors, inventory and exact item/equip confirmations.
-- [ ] Consistent full-width tabs, bare X, no editor wallet/hex values/carry footer, illustrated charm rows and mutually exclusive Charm On / Off controls. Prevent header overlap at Largest text and small viewports.
-- [ ] Explicit machine X returns the pet to the owner's arms after confirmed pickup; forced cleanup remains separate. Use up/down-arrow world carry controls.
-- [ ] Replace the segmented Ring with a continuous halo, preserving its saved shape ID; review brighter pet-local materials and stronger charm emission separately in daylight and at night.
+- [x] Candidate recap with a consistent Stars emblem, deep ink, default-visible scrolling details and no selected-egg progress area. Matching receipt and audio ownership remain intact.
+- [x] Candidate Pet / Hue / Charm editor replacing Journal routes, with square live owned-pet cards, fixed preview/channel controls and independently scrolling options. Preserve ownership, legacy colors, inventory and exact item/equip confirmations; keep jar recipient selection distinct from equip.
+- [x] Candidate full-width tabs, bare X, no editor wallet/hex values/carry footer, illustrated charm rows and mutually exclusive Charm On / Off controls. Larger text uses measured layout; swatch stage lettering chooses real-sRGB contrast against its actual fill.
+- [x] Candidate machine X returns the pet after exact pickup proof; snapshot/result ordering and late equipment are reconciled. Forced cleanup remains separate. Up/down-arrow world carry controls have actual earned Studio evidence.
+- [x] Candidate continuous torus preserves the saved Ring ID and has a deliberate two-sided fallback. Native material fixtures compare brighter pet-local emission and stronger charm emission without changing the garden's global lighting.
+- [x] Verify separate Charm icon/name/selected-mark rectangles at Largest: exact 233 px rows, all three selected shapes at 568 × 160 and [corrected actual-control capture](artifacts/companion-editor-2026-11-09/actual-largest-phone-charm-final.jpg). The [earned Pet card](artifacts/companion-editor-2026-11-09/actual-medium-phone-pet-final.jpg) includes the complete live pet, name and Active mark in the first view.
+- [x] Fresh ordinary final-source wheel verification: Body.Active=true, options list 200→100, zero camera displacement. Final actual machine × confirms Carried. The earlier regression moved the camera 11.7923 studs and remains recorded as failed evidence.
+- [x] Final [Medium](artifacts/companion-editor-2026-11-09/client-medium-final.json) and [Largest](artifacts/companion-editor-2026-11-09/client-largest-final.json) client batches each pass 161 cases/20 suites; [server fixtures](artifacts/companion-editor-2026-11-09/server-final.json) pass 145/15. [Astra visual GO](artifacts/companion-editor-2026-11-09/VISUAL-REVIEW.md) covers the corrected editor, actual earned recap and separate materials/halo matrix. Do not add overlapping preference reruns together.
+- [x] [Final native audit](artifacts/companion-editor-2026-11-09/native-final-audit.json): all 144 runtime sources match and compile with zero errors; Rojo/diff checks pass. QA driver/spec folder/import helper removed from Edit, Medium/Automatic/default viewport restored.
+- [ ] Record private publication and refreshed native Version History proof in PLAY-BUILD.md.
+- [ ] Dedicated seven-owned editor frame time, model/instance counts and repeated open/close comparison against v344 remain unmeasured; the completed six-round material benchmark is a separate workload. Test-enabled-session Focus interference has no established individual-fixture cause; ordinary earned controls pass in a clean session with the QA auto-driver disabled.
 
 ## Completed item-egg and Aero build
 
@@ -19,7 +25,7 @@ Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO
 ## Current palette and roster — private v316
 
 - [x] White Main / light-grey Secondary, unchanged hue anchors and independently saved doses. New hatches offer four pets; already-owned Vezzi, Kiprik and Nolli remain usable. Retained rare progress freezes safely. [Scope and148-case verification](NEUTRAL-ROSTER.md).
-- [ ] Finish the separate glossy/luminous night-material pass. Candidate source is safely parked in stash7f72106e5d3a9444c6ae4b03be975f637e2c0505; [resume notes](PET-MATERIAL-PASS.md). v316 includes none of that experiment.
+- [x] Complete native visual/verification gates for the new luminous material candidate above, including a separate six-round seven-rig comparison and Astra GO. Publication remains pending. The older experiment stays parked in stash7f72106e5d3a9444c6ae4b03be975f637e2c0505 and was inspected selectively rather than restored wholesale; [trial history](PET-MATERIAL-PASS.md). Published v316 includes none of that experiment.
 - [x] Rechecked actual welcome→Meet→E petting→Back with the virtual controller disconnected. Ordinary native input works; loading and affection lifetime regressions also pass in the care slice.
 - [ ] New replacement designs for the three retired pets require visual approval; no replacements were silently substituted.
 

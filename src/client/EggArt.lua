@@ -43,8 +43,9 @@ function Egg.nectar(parent,position,size,z)
  local glyph=Instance.new("TextLabel");glyph.Name="GoldStar";glyph.BackgroundTransparency=1;glyph.BorderSizePixel=0
  glyph.Size=UDim2.fromScale(1,1);glyph.Text="★";glyph.Font=Enum.Font.SourceSans;glyph.TextColor3=Color3.fromHex("#FFD069")
  glyph:SetAttribute("AccessibleLabel","Star")
+ local edge=Instance.new("UIStroke");edge.Name="AmberEdge";edge.Color=Color3.fromHex("#A75C0A");edge.Thickness=1;edge.Transparency=0;edge.Parent=glyph
  glyph.TextSize=18;glyph.Active,glyph.Selectable=false,false;glyph.ZIndex=host.ZIndex+1;glyph.Parent=host
- local glint=shape(host,"StarGlint",.37,.34,.12,.08,Color3.fromHex("#FFF6DA"),-20)
+ local glint=shape(host,"StarGlint",.37,.34,.16,.065,Color3.fromHex("#FFF6DA"),-28)
  glint.ZIndex=host.ZIndex+2
  local function fit()
   local size=host.AbsoluteSize

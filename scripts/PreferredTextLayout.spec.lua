@@ -29,9 +29,9 @@ return function(client,parent)
 			root.Size=UDim2.fromOffset(size.X,size.Y);settle()
 			local menu=Menu.new(root,{close=function()end});table.insert(views,menu.shade)
 			menu:update(state(),"pip","wick",500,3,700,"meadow");menu:open();settle()
-			test(tostring(size).." measured Daily and Mastery preserve tabs and readable full content",function()
+			test(tostring(size).." measured Daily and destinations preserve tabs and readable full content",function()
 				local tabY=menu.tabs.play.AbsolutePosition.Y
-				for _,page in ipairs({"daily","mastery","daily"})do
+				for _,page in ipairs({"daily","play","daily"})do
 					menu:setPage(page);settle();assert(menu.tabs.play.AbsolutePosition.Y==tabY)
 					readable(menu.heading);readable(menu.nectar)
 					assert(menu.nectar.Font==Art.Font.Counter)
@@ -41,11 +41,11 @@ return function(client,parent)
 						for _,row in ipairs(menu.dailyCards)do readable(row.title);readable(row.count);readable(row.reward)end
 						readable(menu.dailyHint)
 					else
-						readable(menu.familyNote)
-						for family,b in pairs(menu.families)do readable(b.FamilyName);readable(menu.familyHints[family]);if b:GetAttribute("FamilyOwned")then readable(menu.familyText[family])end;assert(b.AbsoluteSize.Y>=44)end
+						readable(menu.playHint)
+						for _,entry in ipairs(menu.destinations)do readable(entry.title);if entry.subtitle.Visible then readable(entry.subtitle)end;assert(entry.button.AbsoluteSize.Y>=44)end
 					end
 					menu.body.CanvasPosition=Vector2.new(0,math.max(0,menu.body.CanvasSize.Y.Offset-menu.body.AbsoluteSize.Y));settle()
-					local last=if page=="daily"then menu.dailyHint else menu.familyHints.orbit
+					local last=if page=="daily"then menu.dailyHint else menu.playHint
 					assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=menu.body.AbsolutePosition.Y+menu.body.AbsoluteSize.Y+1,"final text cannot scroll into view")
 				end
 			end)
@@ -77,7 +77,7 @@ return function(client,parent)
 				reward={sequence=1,total=8,base=8,daily=0,family="wick",masteryPoints=1,contracts={}},mastery=Mastery.describe(25,0)})
 			settle()
 			test(tostring(size).." recap reward wallet and complete receipt stay readable",function()
-				for _,label in ipairs({recap.earnedGraphic,recap.bankGraphic,recap.eggGoal,recap.shortfall,recap.detailsButton})do readable(label)end
+				for _,label in ipairs({recap.earnedGraphic,recap.componentLabels[1],recap.componentLabels[2]})do readable(label)end
 				assert(recap.earnedGraphic.Font==Art.Font.Reward)
 				for _,label in ipairs(recap.componentLabels)do readable(label);assert(label.Font==Art.Font.Counter)end
 				recap:setDetails(true);settle();for _,row in ipairs(recap.receiptRows)do readable(row)end

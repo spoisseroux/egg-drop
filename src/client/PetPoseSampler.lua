@@ -103,7 +103,9 @@ function Sampler.attach(visual)
   for _,slot in ipairs(self.poseSlots)do
    local entry=slot.entry;local part=entry.part;local frame=root*slot.localFrame
    frame=plant(self,slot,frame,root);part.CFrame=frame
-   if part.Transparency<1 then Bounds.include(self,frame,part.Size);if entry.role~="charm"then Bounds.include(self.bodyHull,frame,part.Size)end end
+   -- A temporary alpha ring uses a transparent carrier with visible decals.
+   -- Its semantic visibility still contributes to the portrait bounds.
+   if part.Transparency<1 or(entry.decals and not entry.renderHidden)then Bounds.include(self,frame,part.Size);if entry.role~="charm"then Bounds.include(self.bodyHull,frame,part.Size)end end
   end
   Bounds.finish(self);Bounds.finish(self.bodyHull);self.bodyBoundsFrame,self.bodyBoundsSize=self.bodyHull.rigBoundsFrame,self.bodyHull.rigBoundsSize
  end

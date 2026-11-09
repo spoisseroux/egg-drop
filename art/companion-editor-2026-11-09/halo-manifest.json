@@ -1,0 +1,35 @@
+{
+  "savedShapeId": "ring",
+  "units": "Pet-local before visual.scale; validate imported bounds in Studio.",
+  "axes": "X right, Y up, +Z front; origin at center; apply existing dock/float frame and +12deg X tilt once.",
+  "sizeXYZ": [
+    0.259,
+    0.195,
+    0.049
+  ],
+  "profile": {
+    "centerlineRadiusX": 0.105,
+    "centerlineRadiusY": 0.073,
+    "tubeRadius": 0.0245
+  },
+  "triangles": 512,
+  "segments": [
+    32,
+    8
+  ],
+  "topology": "Closed genus-one surface; two opposite incidences on every welded edge, winding verified.",
+  "render": "One opaque smooth MeshPart; Secondary tint; preserve visibility, bob and head-relative frame.",
+  "fallback": {
+    "silhouette": "care-halo-ring-mask.png",
+    "planeSides": [
+      "Front",
+      "Back"
+    ],
+    "shape": "Single continuous alpha-cut band with clear center. Near edge-on intentionally thin.",
+    "artInset": "6 px horizontal margin inside 256x192 image. Fit visible ink to mesh XY bounds."
+  },
+  "assetHashes": {
+    "care-halo-ring.glb": "65eae4be4df186ba09e52697518634dd07ae59e5801c9cea4db043dd34c2aa9a",
+    "care-halo-ring-mask.png": "cbd04a4cf60e3630aa6ecfb0c5ad70944391db6e4da14d0f1775848f18c9554a"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "source": {
+    "matched": 144,
+    "files": 144,
+    "unicodeByteCorrection": true,
+    "recheckedChunks": 51,
+    "failures": []
+  },
+  "compile": {
+    "count": 144,
+    "errors": []
+  },
+  "lengthAudit": [
+    {
+      "type": "text",
+      "text": "{\"count\":144,\"failures\":[]}"
+    }
+  ],
+  "placeId": 96451847774961,
+  "originalTextPreference": "Medium",
+  "quality": "Automatic",
+  "qaRemoved": true
+}

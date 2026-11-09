@@ -15,14 +15,14 @@ return function(client,parent)
    local before=Http:JSONEncode(state);local visual=view.visual;local pieces=visual.pieces
    local colors={};for _,e in ipairs(pieces)do colors[e.part]=e.part.Color end
    assert(view:inspectHue("rose",4)and #sent==0 and Http:JSONEncode(state)==before and view.visual==visual and view.visual.pieces==pieces)
-   assert(view.inspection.Text:find("#E55FC1",1,true)and view.inspection.Text:find("Unapplied",1,true))
+   assert(not view.inspection.Text:find("#",1,true)and view.inspection.Text:find("Unapplied",1,true))
    assert(view.bars.rose.ticks[4]:GetAttribute("Inspected")and view.bars.rose.ticks[2]:GetAttribute("SavedStage"))
    for part,color in pairs(colors)do assert(part.Color==color,"inspection recolored saved portrait")end
   end)
   test("zero-stock stages inspect but cannot consume, channels use their independent saved vectors",function()
    assert(view:inspectHue("tide",5)and view.inspection.Text:find("0 in inventory",1,true)and not view:chooseItem("tide")and #sent==0)
    view:chooseChannel("secondary");assert(view.inspected==nil and view:inspectHue("iris",4))
-   assert(view.inspection.Text:find("#BF68DC",1,true)and view.bars.iris.value.Text=="2/5")
+   assert(view.inspection.Text:find("Iris fruit stage 4",1,true)and view.bars.iris.value.Text=="2/5")
   end)
   test("all swatches retain 44px targets and readable stage text on phone, short landscape and desktop",function()
    for _,size in ipairs({Vector2.new(350,703),Vector2.new(568,160),Vector2.new(733,307),Vector2.new(1649,971)})do
@@ -31,13 +31,15 @@ return function(client,parent)
     for _,bar in pairs(view.bars)do for _,tick in ipairs(bar.ticks)do
      assert(tick.AbsoluteSize.X>=44 and tick.AbsoluteSize.Y>=44 and tick.TextFits)
      assert(not tick:FindFirstChildWhichIsA("UIGradient"),"decoration tinted exact quoted chip")
+     local function luminance(color)local function linear(v)return if v<=.04045 then v/12.92 else((v+.055)/1.055)^2.4 end;return .2126*linear(color.R)+.7152*linear(color.G)+.0722*linear(color.B)end
+     local ink,fill=luminance(tick.TextColor3),luminance(tick.BackgroundColor3)
+     assert((math.max(ink,fill)+.05)/(math.min(ink,fill)+.05)>=4.5,"stage text contrast below4.5:1")
     end end
     if size==Vector2.new(733,307)then
+     local portrait=view.portrait.AbsolutePosition
      view.body.CanvasPosition=Vector2.zero;assert(view:inspectHue("rose",4));settle()
-     assert(not view.channelTitle.Visible and view.inspection.Text=="Preview Rose 4 · #EE58A6")
-     assert(view.inspection:GetAttribute("AccessibleLabel"):find("Unapplied",1,true))
-     local bottom=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y
-     for _,tick in ipairs(view.bars.rose.ticks)do assert(tick.AbsolutePosition.Y+tick.AbsoluteSize.Y<=bottom+.5,"first swatch row clipped at the short-landscape fold")end
+     assert(not view.inspection.Text:find("#",1,true)and view.inspection:GetAttribute("AccessibleLabel"):find("Unapplied",1,true))
+     view:ensure(view.bars.rose.ticks[5]);settle();assert(view.portrait.AbsolutePosition==portrait,"swatch scroll moved fixed portrait")
     end
    end
   end)

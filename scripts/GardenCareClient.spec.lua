@@ -29,6 +29,21 @@ return function(client)
   local c,_,sent=fixture();c:request("careEquip","puddle");assert(c:release()and #sent==2 and sent[2].kind=="careRelease"and sent[2].claimId=="bay-A")
   assert(c.operations[1]and c.operations[2]and c.releasing)
  end)
+ test("exact carried snapshot confirms pending pickup before generic dock cleanup and late receipt is inert",function()
+  local c,actor,sent=fixture();local done,closed=0,0
+  c.closeMachine=function()closed+=1 end
+  c:request("carePickup",nil,function(packet)assert(packet.status=="Accepted");done+=1 end)
+  actor.care={state="Carried"};actor.mode="Carried";actor.generation=4
+  assert(c:reconcilePickup(actor)and done==1 and closed==1 and not c.operations[1]and not c.wantMachine)
+  c:receive({kind="carePickup",seq=1,status="Accepted"});assert(done==1 and closed==1 and #sent==1 and not c:reconcilePickup(actor))
+ end)
+ test("pickup receipt first and wrong-generation snapshots cannot manufacture a second confirmation",function()
+  local c,actor=fixture();local done=0
+  c:request("carePickup",nil,function()done+=1 end)
+  actor.care={state="Carried"};actor.generation=5
+  assert(not c:reconcilePickup(actor)and done==0)
+  c:receive({kind="carePickup",seq=1,status="Accepted"});assert(done==1 and not c:reconcilePickup(actor))
+ end)
  test("refused setdown preserves hold and gives a clear dry-space reason",function()
   local c,actor=fixture();actor.mode="Carried";actor.care={state="Carried"};c:request("careSetDown")
   c:receive({kind="careSetDown",seq=1,status="Rejected",reason="NoDrySpace"});assert(actor.mode=="Carried"and c.notice.Text:find("dry",1,true)and not c.operations[1])

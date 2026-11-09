@@ -457,7 +457,7 @@ function Art.build(room, part)
 	local serviceLift=1.10
 	for _, station in ipairs({
 		{ x = -11, id = "Customize", title = "Deck workbench", action = "Style deck" },
-		{ x = 11, id = "Journal", title = "Field journal", action = "Open journal" },
+		{ x = 11, id = "Journal", title = "Care machine", action = "Open companions" },
 	}) do
 		local x, id = station.x, station.id
 		for _, side in ipairs({ -1, 1 }) do

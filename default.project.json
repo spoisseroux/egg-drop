@@ -12,6 +12,12 @@
       },
       "PetAssets": {
         "$path": "assets/garden-babies/PetAssets.rbxmx"
+      },
+      "PetMaterials": {
+        "$path": "assets/pet-materials/PetMaterials.rbxm"
+      },
+      "PetCharmAssets": {
+        "$path": "assets/pet-materials/PetCharmAssets.rbxmx"
       }
     },
     "ServerScriptService": {

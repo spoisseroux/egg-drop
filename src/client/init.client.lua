@@ -622,6 +622,7 @@ board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 		roomView:showPet(pet)
 		audio:play(pet.cue)
 	end
+ if clientUI.hueView then clientUI.hueView:syncActive();if clientUI.hueView:isOpen()then clientUI.hueView:refresh()end end
 end)
 roomButton.Activated:Connect(function()
 	cancelHatchNavigation()
@@ -827,13 +828,34 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  appearance=nurseryView.appearanceFor,
+ activePet=function()return board:GetAttribute("CompanionId")end,
  audio=audio,reduceEffects=reduceEffects,
  careAction=function(kind)if roomView.care then roomView.care:request(kind)end end,
  equipPet=function(id)
+  if not clientUI.hueView.machine then
+   request:FireServer("companion",id)
+   local view=clientUI.hueView;local decision=view.confirmation
+   task.delay(3,function()
+    if view.shade.Visible and view.confirmation==decision and view.machineSwitching and not view.machine then
+     view:syncActive()
+     if view.machineSwitching then view.machineSwitching=nil;view.exitMessage="Pet save is still pending. Try Make active again.";view:refresh()end
+    end
+   end)
+   return true
+  end
   local binding=clientUI.hueView:machineBinding()
   return roomView.care and roomView.care:request("careEquip",id,function(packet)clientUI.hueView:machineEquipFinished(packet.status,binding)end)or false
  end,
+ dismissMachine=function(binding,done)
+  local care=roomView.care;local actor=care and care:actor()
+  if not actor or not actor.care or actor.petId~=binding.petId or actor.characterId~=binding.characterId or actor.petGeneration~=binding.petGeneration then return false end
+  if actor.care.state=="Carried"and actor.generation==binding.actorGeneration+1 then done({status="Accepted"});return true end
+  if actor.care.claimId~=binding.claimId then return false end
+  if actor.care.state~="Docked"then return false end
+  return care:request("carePickup",nil,done)
+ end,
  shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
+ eggs=function()if openNursery then openNursery();nurseryView:selectRecipe("meadow")end end,
  charm=function(petId,visible,shape,seq,shapeVersion)
   if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
   request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq})
@@ -845,10 +867,10 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
   if back=="machine"then
    clientUI.hueView:setMachineSession(nil)
-   if reason=="back"and roomView.care then roomView.care:release()end
+   if reason~="picked-up"and roomView.care then roomView.care:release()end
   end
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
-   if back=="journal"and openJournal then openJournal();journal:restoreCustomization()elseif back=="eggs"and openNursery then openNursery()end
+   if back=="eggs"and openNursery then openNursery()end
   end
  end})
 clientUI.openHue=function(page,petId,back)
@@ -865,7 +887,7 @@ roomView.care.isMachineOpen=function(claimId)return clientUI.hueReturn=="machine
 roomView.care.openMachine=function(actor)
  if clientUI.hueView.shade.Visible and clientUI.hueReturn~="machine"then return end
  if not clientUI.hueView.shade.Visible then clientUI.openHue("palette",actor.petId,"machine")end
- clientUI.hueView:setMachineSession({claimId=actor.care.claimId,petId=actor.petId})
+ clientUI.hueView:setMachineSession({claimId=actor.care.claimId,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,actorGeneration=actor.generation})
 end
 roomView.care.closeMachine=function()
  if clientUI.hueReturn=="machine"then clientUI.hueView:close("care");clientUI.hueView:setMachineSession(nil)end
@@ -1084,10 +1106,7 @@ openPicker = function(mode,back)
 end
 openJournal = function()
 	cancelHatchNavigation()
-    if clientUI.isHueOpen()then clientUI.hueView:close("forced")end
-	journal:open(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0, board:GetAttribute("CompanionId"),
-		isGamepad(UserInputService:GetLastInputType()), trackedRare, board:GetAttribute("InventoryMask"))
- return true
+ return clientUI.openHue("pet",board:GetAttribute("CompanionId"),"world")
 end
 -- The shared cache owns both native station visibility and final activation validation.
 for _,overlay in ipairs({modal,picker.shade,journal.shade,nurseryView.shade,gameMenu.shade,clientUI.hueView.shade})do

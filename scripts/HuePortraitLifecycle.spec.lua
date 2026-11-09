@@ -4,10 +4,10 @@ return function(client,parent)
  local View=require(client.HueEggView);local Intent=require(client.HueIntent)
  local Run=game:GetService("RunService");local Http=game:GetService("HttpService")
  local root=Instance.new("Frame");root.Size=UDim2.fromOffset(900,720);root.Parent=parent
- local sent,cases={},{};local reduced=false;local view;local audio={deviceActive=true,plays=0}
+ local sent,cases={},{};local active="pip";local reduced=false;local view;local audio={deviceActive=true,plays=0}
  function audio:play()self.plays+=1;return true end
  local intent=Intent.new({id=function()return "portrait-reset"end,send=function(a,v)table.insert(sent,{action=a,value=v})end,changed=function()if view then view:refresh()end end})
- view=View.new(root,intent,{audio=audio,reduceEffects=function()return reduced end,appearance=function()return {charmVisible=true,charmShape="ring"}end})
+ view=View.new(root,intent,{activePet=function()return active end,equipPet=function(id)active=id;return true end,audio=audio,reduceEffects=function()return reduced end,appearance=function()return {charmVisible=true,charmShape="ring"}end})
  local counts={main={rose=2,tide=1,citrus=0,iris=0},secondary={rose=0,tide=0,citrus=1,iris=2}}
  local state={status="Ready",revision=1,nectar=24,inventoryMask=127,hues={},petHues={pip=counts,puddle=counts},hueInventory={rose=3,tide=1,citrus=2,iris=2,reset=2}}
  local function frames(n)for _=1,n or 3 do Run.RenderStepped:Wait()end end
@@ -41,7 +41,7 @@ return function(client,parent)
    audio.deviceActive=true;frames();assert(visual.cosmeticTime>=t and audio.plays==0)
   end)
   test("pet swap and destroy cannot update the retired visual or retain a render connection",function()
-   local old=view.visual;view:choosePet("puddle");frames();assert(old.destroyed and view.visual~=old and view.portraitClock)
+   local old=view.visual;assert(view:choosePet("puddle")and view:activate());view:syncActive();frames();assert(old.destroyed and view.visual~=old and view.portraitClock)
    local now=view.visual;view:destroy();assert(view.portraitClock==nil and now.destroyed);frames(4);assert(view.destroyed)
   end)
  end)

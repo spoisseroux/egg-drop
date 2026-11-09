@@ -1,6 +1,6 @@
 -- Injected mesh outcomes prove lifetime/whole-swap logic; actual native asset download is separate.
 return function(client)
- local Factory=require(client.PetFactory);local Readiness=require(client.PetAssetReadiness);local Affection=require(client.PetAffection)
+ local Factory=require(client.PetFactory);local Readiness=require(client.PetAssetReadiness);local Affection=require(client.PetAffection);local Charms=require(client.PetCharms)
  local Shot=require(client.PetGreetingShot);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
  local folder=Instance.new("Folder");folder.Name="_WholeRigGate";folder.Parent=workspace
  local views,cases={},{};local function test(name,run)run();table.insert(cases,name)end
@@ -55,8 +55,17 @@ return function(client)
    assert(slots[1].entry.part.Parent==nil,"old sampler entry survived")
    for _,visible in ipairs({true,false,true})do for _,shape in ipairs({"dot","ring","pebble","dot"})do
     v:applyAppearance({charmVisible=visible,charmShape=shape});local count=0
-    for _,e in ipairs(v.pieces)do if e.role=="charm"and e.part.Transparency==0 then count+=1;assert((e.charmShape or "dot")==shape)end end
-    assert(count==(if not visible then 0 elseif shape=="ring"then 8 elseif shape=="pebble"then 2 else 1),"prepared flag refers to old geometry")
+    for _,e in ipairs(v.pieces)do if e.role=="charm"then
+     local showing=Charms.isVisible(v,e)
+     if showing then
+      count+=1;assert((e.charmShape or "dot")==shape and e.part:IsDescendantOf(v.model),"prepared flag refers to old geometry")
+      if e.decals then assert(#e.decals==2 and e.decals[1].Transparency==0 and e.decals[2].Transparency==0,"ring fallback lost a face")else assert(e.part.Transparency==0,"selected charm lost visible geometry")end
+     else
+      assert(e.part.Transparency==1,"inactive geometry survived whole swap")
+      for _,decal in ipairs(e.decals or {})do assert(decal.Transparency==1,"inactive alpha geometry survived whole swap")end
+     end
+    end end
+    assert(count==(if not visible then 0 elseif shape=="pebble"then 2 else 1),"prepared flag refers to old geometry")
    end end
   end)
  end)

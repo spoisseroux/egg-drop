@@ -14,12 +14,12 @@ return function(client,parent,onlySize)
  local function visible(n)while n and n~=root do if n:IsA("GuiObject")and not n.Visible then return false end;n=n.Parent end;return n==root end
  local function fit(n)assert(n.TextFits,n:GetFullName().." text does not fit: "..n.Text)end
  local function check()
-  fit(view.title);fit(view.wallet);assert(view.closeButton.AbsoluteSize.X>=44 and view.closeButton.AbsoluteSize.Y>=44)
+  fit(view.title);assert(view.closeButton.AbsoluteSize.X>=44 and view.closeButton.AbsoluteSize.Y>=44)
   for _,n in ipairs(view.shade:GetDescendants())do if n:IsA("GuiObject")and visible(n)then
    if n:IsA("TextLabel")then fit(n)end
    if n:IsA("TextButton")then fit(n);assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44,"small action "..n.Name)end
   end end
-  assert(#view.world:GetChildren()==1,"Only one pet portrait")
+  assert(#view.world:GetChildren()<=(if view.tab=="pet"then 0 else 1),"Retired single portrait exceeded shared preview budget")
  end
  local function test(n,f)f();table.insert(cases,n)end
  local ok,err=pcall(function()
@@ -42,7 +42,7 @@ return function(client,parent,onlySize)
    test(tostring(size).." saved fixed jar receipt offers Store and Use now; no second grant",function()
     local s=state(i*1000+100);s.pendingHueResult={id="receipt-"..i,itemId="rose",quantity=1,inventoryAfter=3,revision=s.revision,catalogVersion=H.CatalogVersion}
     view:open(s,"palette","puddle");settle();assert(view.page=="receipt"and view.receipt.Text:find("3 in inventory",1,true));assert(view.action.Text=="Store"and view.useNow.Visible)
-    assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:activate());settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id);view:cancelConfirmation();assert(view.page=="receipt")
+    assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:choosePet("puddle"));assert(view:activate());settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id);view:cancelConfirmation();assert(view.page=="receipt")
    end)
   end
   test("confirm sends once to unequipped selected pet and preserves exact result association",function()
