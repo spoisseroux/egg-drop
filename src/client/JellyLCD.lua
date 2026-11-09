@@ -38,7 +38,7 @@ end
 
 local defaultBoard={outside=Color3.fromHex("#2C4D30"),base=Color3.fromHex("#C6DFA0"),dither=Color3.fromHex("#BBD395"),rail=Color3.fromHex("#749154"),rim=Color3.fromHex("#385632"),guide=Color3.fromHex("#54783E")}
 local boardRoles={"outside","base","dither","rail","rim"}
-local function boardPixels(colors)
+local function boardPixels(colors,regions)
  colors=colors or defaultBoard
 	local pixels = buffer.create(WIDTH * HEIGHT * 4)
 	local outside = rgba(colors.outside)
@@ -46,13 +46,26 @@ local function boardPixels(colors)
 	local dither = rgba(colors.dither)
 	local rail = rgba(colors.rail)
 	local rim = rgba(colors.rim)
+    local tint=Color3.fromHex("#466853")
+    local zoneBase,zoneDither={},{}
+    for _,role in ipairs({"left","right","center"})do
+        local alpha=if regions and regions.active==role then .21 else .14
+        zoneBase[role],zoneDither[role]=rgba(colors.base:Lerp(tint,alpha)),rgba(colors.dither:Lerp(tint,alpha))
+    end
 	for y = 0, HEIGHT - 1 do
 		local inset = math.max(0, bank - (floor - (y + 0.5)))
 		for x = 0, WIDTH - 1 do
 			local edge = math.min(x + 0.5 - leftWall - inset, rightWall - inset - x - 0.5, floor - y - 0.5)
 			local color = outside
 			if edge > 0 then
-				color = if y % 7 == 0 and x % 7 == (math.floor(y / 7) % 2) * 3 then dither else background
+				local grain=y % 7 == 0 and x % 7 == (math.floor(y / 7) % 2) * 3
+                color=if grain then dither else background
+                if regions and regions.enabled and y>=ceiling then
+                    local worldX=((x+.5)/WIDTH-.5)*(Config.Width+.8)
+                    local role=if worldX< -regions.bound then "left"elseif worldX>regions.bound then "right"
+                        elseif regions.active=="center"and worldX>=regions.min and worldX<=regions.max then "center"else nil
+                    if role then color=if grain then zoneDither[role]else zoneBase[role]end
+                end
 			elseif edge > -1.8 then
 				color = if edge > -0.8 then rail else rim
 			end
@@ -133,7 +146,7 @@ function LCD:setPalette(colors)
   replacements[rgba(self.boardPalette[role])]=value
  end
  if typeof(colors.guide)~="Color3"then return false end
- local background=boardPixels(colors);local oldGuide,newGuide=self.guideColor,rgba(colors.guide)
+ local background=boardPixels(colors,if self.backend=="image"then self.regions else nil);local oldGuide,newGuide=self.guideColor,rgba(colors.guide)
  if not self.painted then buffer.copy(self.pixels,0,background)else
   for y=0,HEIGHT-1 do for x=0,WIDTH-1 do
    local offset=(y*WIDTH+x)*4;local pixel=buffer.readu32(self.pixels,offset)
@@ -147,7 +160,23 @@ function LCD:setPalette(colors)
   else self.image:WritePixelsBuffer(Vector2.zero,SIZE,self.pixels)end
  end)
  if not ok then self.failed=true;self.label.Visible=false;return false end
- self.background,self.boardPalette,self.guideColor=background,colors,newGuide;return true
+ self.background,self.boardPalette,self.guideColor=background,colors,newGuide
+ if self.regionHost and self.surface then self.surface:attachRegions(self.regionHost,{outside=rgba(colors.outside),rail=rgba(colors.rail),rim=rgba(colors.rim)})end
+ return true
+end
+-- Called only when the quest/appearance changes; gel pixels are drawn later.
+function LCD:setRegions(enabled,active,bound,minX,maxX)
+    local key=tostring(enabled)..":"..tostring(active)..":"..tostring(bound)..":"..tostring(minX)..":"..tostring(maxX)
+    if self.regionKey==key then return end
+    self.regionKey=key;self.regions={enabled=enabled==true,active=active,bound=bound or 2.6,min=minX or -1,max=maxX or 1}
+    if self.backend=="image"then self.background=boardPixels(self.boardPalette,self.regions)end
+end
+function LCD:attachRegions(host)
+    if not self.surface then return false end
+    self.regionHost=host
+    local c=self.boardPalette
+    self.surface:attachRegions(host,{outside=rgba(c.outside),rail=rgba(c.rail),rim=rgba(c.rim)})
+    return true
 end
 function LCD:getStats()
 	return if self.surface then self.surface.stats else{backend=self.backend,failed=self.failed}
@@ -257,6 +286,10 @@ function LCD:destroy()
 	if self.destroyed then return end
 	self.destroyed=true
 	self.failed = true
+    if self.regionHost and self.regionHost.Parent==self.label then
+        self.regionHost.Parent=self.label.Parent;self.regionHost.ZIndex=2
+        for _,node in ipairs(self.regionHost:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=2 end end
+    end
 	if self.surface then self.surface:destroy()else self.label:Destroy();self.image:Destroy()end
 end
 

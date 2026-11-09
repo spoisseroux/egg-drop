@@ -41,7 +41,7 @@ return function(gui,board)
 			end)
 		end
 		test("qualified bank regions use only faint phase-owned fill; score refresh preserves pulses",function()
-			local regions=b.TrayOverlay.TargetRegions;local left,right=regions.LeftRootPatch,regions.RightRootPatch
+			local regions=b.TrayOverlay:FindFirstChild("TargetRegions",true);local left,right=regions.LeftRootPatch,regions.RightRootPatch
 			for _,zone in ipairs({left,right})do
 				assert(#zone:GetChildren()==0 and not zone.Active and not zone.Selectable,"bank owns competing decoration/input")
 				assert(zone.Size.X.Scale>0 and zone.Size.X.Scale<.5)

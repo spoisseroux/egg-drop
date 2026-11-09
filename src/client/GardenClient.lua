@@ -12,7 +12,17 @@ function Garden.new(boards,options)
         local function read()
             local raw=folder:GetAttribute("Snapshot");if type(raw)~="string"then return end
             local ok,snapshot=pcall(Http.JSONDecode,Http,raw)
-            if ok and Activity.validSnapshot(snapshot)and(not self.snapshot or snapshot.revision>=self.snapshot.revision)then self.snapshot=snapshot end
+            if ok and Activity.validSnapshot(snapshot)and(not self.snapshot or snapshot.revision>=self.snapshot.revision)then
+                if self.snapshot then
+                    for id,actor in pairs(snapshot.actors)do
+                        local prior=self.snapshot.actors[id]
+                        if prior and prior.characterId==actor.characterId and prior.petGeneration==actor.petGeneration and prior.mode==actor.mode and actor.mode~="Focus"then
+                            actor.previous=prior;prior.previous=nil
+                        end
+                    end
+                end
+                self.snapshot=snapshot
+            end
         end
         table.insert(self.connections,folder:GetAttributeChangedSignal("Snapshot"):Connect(read));read()
     end

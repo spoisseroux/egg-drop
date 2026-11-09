@@ -1,0 +1,44 @@
+[
+  {
+    "models": {
+      "1": {
+        "visible": true,
+        "dotTransparency": 0,
+        "nodes": 20,
+        "owner": -2,
+        "rig": "zivvi"
+      },
+      "2": {
+        "visible": false,
+        "dotTransparency": 1,
+        "nodes": 18,
+        "owner": -1,
+        "rig": "zivvi"
+      }
+    },
+    "appearance": "{\"puddle\":{\"charmVisible\":true},\"pip\":{\"charmVisible\":false}}",
+    "viewer": "Player2",
+    "appearanceRevision": 1
+  },
+  {
+    "models": {
+      "1": {
+        "visible": false,
+        "dotTransparency": 1,
+        "nodes": 20,
+        "owner": -1,
+        "rig": "zivvi"
+      },
+      "2": {
+        "visible": true,
+        "dotTransparency": 0,
+        "nodes": 18,
+        "owner": -2,
+        "rig": "zivvi"
+      }
+    },
+    "appearance": "{\"puddle\":{\"charmVisible\":true},\"pip\":{\"charmVisible\":false}}",
+    "viewer": "Player1",
+    "appearanceRevision": 1
+  }
+]

@@ -19,7 +19,8 @@ function Companions:clear()
 	self.refreshIn = 0
 end
 
-function Companions:update(dt)
+function Companions:update(dt,serverNow)
+    serverNow=serverNow or workspace:GetServerTimeNow()
 	self.refreshIn -= dt
 	if self.refreshIn <= 0 then
 		self.refreshIn = 0.12
@@ -56,7 +57,8 @@ function Companions:update(dt)
 			if not entry then
 				local position = item.root.Position + item.root.CFrame.RightVector * 2.2
 				local visual = self.createPet(workspace, Vector3.new(position.X, 4.025, position.Z), item.pet, item.masteryMask, item.rank, item.legacy,appearance)
-				visual.origin = Vector3.new(position.X, PetFollow.ground(position, visual), position.Z)
+				visual.cosmeticSeed=item.player.UserId
+                visual.origin = Vector3.new(position.X, PetFollow.ground(position, visual), position.Z)
 				visual.model:SetAttribute("CompanionOwnerId", item.player.UserId)
 				entry = { visual = visual, pet = item.pet, masteryMask = item.masteryMask, rank = item.rank, legacy = item.legacy }
 				self.active[item.player] = entry
@@ -79,10 +81,11 @@ function Companions:update(dt)
 	for _, entry in pairs(self.active) do
 		if not entry.root.Parent then continue end
 		local actor=self.garden and self.garden:get(entry.visual.model:GetAttribute("CompanionOwnerId"),entry.pet.id,entry.root.Parent)
-		if actor then entry.followState=PetFollow.activity(entry.visual,actor,workspace:GetServerTimeNow(),dt,entry.followState,self.reduceEffects())
+		if actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,dt,entry.followState,self.reduceEffects())
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
 		else entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())end
-		entry.visual:update(dt)
+		entry.visual.cosmeticTime=serverNow
+        entry.visual:update(dt)
 		PetPrestige.update(entry.visual, dt, self.reduceEffects())
 	end
 end

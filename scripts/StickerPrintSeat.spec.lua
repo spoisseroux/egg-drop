@@ -1,6 +1,5 @@
 -- Real LocalScript text metrics, pure solved casing + passive print. No sends.
--- Capture normal phone DROP below A and its newly freed print gap; dense roots
--- retain the original caption order and every existing input rectangle.
+-- Every phone/state has no A-adjacent caption; input rectangles stay fixed.
 return function(client,parent,onlySize)
  local Layout=require(client.DeckLayout);local Dispenser=require(client.DropDispenser);local Art=require(client.DeckArt)
  local Shared=game.ReplicatedStorage.Shared;local Stickers=require(Shared.DeckStickers);local Config=require(Shared.BoardConfig)
@@ -24,16 +23,7 @@ return function(client,parent,onlySize)
    label.Text=word;Art.type(label,"Supporting",l.short);label.Font=Art.Font.Action
    local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(label)+8));local height=Art.textHeight(label,width,16)
    local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
-   local caption
-   if word~="SETTLE"and(not l.short or word~="DROP")then
-    local belowFirst=l.lateral and not l.roomy and not l.short and not l.dense
-    local candidates=if belowFirst then {l.drop.y+l.dropSize+4,l.drop.y-height-4,l.queue.y+l.queue.h+4}else {l.drop.y-height-4,l.drop.y+l.dropSize+4,l.queue.y+l.queue.h+4}
-    for _,y in ipairs(candidates)do
-     local r={x=x,y=y,w=width,h=height};local free=y>=l.shell.y+8 and y+height<=l.shell.y+l.shell.h-8
-     for _,o in ipairs({l.queue,l.meter,l.menu,l.lounge,l.dpad,l.drop,l.bezel,l.walletVisual or l.wallet,l.quest,l.tray})do if overlaps(r,o)then free=false end end
-     if free then caption=r;break end
-    end
-   end
+   local caption=nil -- Status owns blocked-state copy; no print-seat reservation.
    local seat=Stickers.layoutPrint(host,l,caption)
    assert(seat and seat.w>=16,string.format("no lower casing patch %s %s",tostring(size),word))
    assert(seat.x>=l.shell.x+9 and seat.x+seat.w<=l.shell.x+l.shell.w-9 and seat.y>=l.shell.y+9 and seat.y+seat.h<=l.shell.y+l.shell.h-9)

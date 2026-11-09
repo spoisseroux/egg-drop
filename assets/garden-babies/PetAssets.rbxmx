@@ -30,25 +30,25 @@
         <Properties>
           <string name="Name">Zivvi__Body</string>
           <Content name="MeshId">
-            <url>rbxassetid://101744911812859</url>
+            <url>rbxassetid://99727956905421</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.8975480198860168</X>
-            <Y>0.7699999809265137</Y>
-            <Z>0.7490717172622681</Z>
+            <X>0.8240317702293396</X>
+            <Y>0.8300000429153442</Y>
+            <Z>0.710462212562561</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.8975480198860168</X>
-            <Y>0.7699999809265137</Y>
-            <Z>0.7490717172622681</Z>
+            <X>0.8240317702293396</X>
+            <Y>0.8300000429153442</Y>
+            <Z>0.710462212562561</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>0.43000030517578125</Y>
-            <Z>1.1920928955078125e-07</Z>
+            <Y>0.4419999122619629</Y>
+            <Z>0</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -69,25 +69,25 @@
         <Properties>
           <string name="Name">Zivvi__CharmDot</string>
           <Content name="MeshId">
-            <url>rbxassetid://110307091587010</url>
+            <url>rbxassetid://132222252481225</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.2954423129558563</X>
-            <Y>0.2999999523162842</Y>
-            <Z>0.2909539043903351</Z>
+            <X>0.21665771305561066</X>
+            <Y>0.2200000286102295</Y>
+            <Z>0.21336621046066284</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.2954423129558563</X>
-            <Y>0.2999999523162842</Y>
-            <Z>0.2909539043903351</Z>
+            <X>0.21665771305561066</X>
+            <Y>0.2200000286102295</Y>
+            <Z>0.21336621046066284</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>1.8100051879882812</Y>
-            <Z>3.5762786865234375e-07</Z>
+            <Y>1.7519999742507935</Y>
+            <Z>-0.00499725341796875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -106,27 +106,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi2">
         <Properties>
-          <string name="Name">Zivvi__FootL</string>
+          <string name="Name">Zivvi__Cheeks</string>
           <Content name="MeshId">
-            <url>rbxassetid://132619926689641</url>
+            <url>rbxassetid://139896070606974</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.48359110951423645</X>
-            <Y>0.25999999046325684</Y>
-            <Z>0.4870062470436096</Z>
+            <X>0.9900000095367432</X>
+            <Y>0.07600003480911255</Y>
+            <Z>0.09532701969146729</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.48359110951423645</X>
-            <Y>0.25999999046325684</Y>
-            <Z>0.4870062470436096</Z>
+            <X>0.9900000095367432</X>
+            <Y>0.07600003480911255</Y>
+            <Z>0.09532701969146729</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.30000001192092896</X>
-            <Y>0.12999725341796875</Y>
-            <Z>-0.11000001430511475</Z>
+            <X>0</X>
+            <Y>0.9160000085830688</Y>
+            <Z>-0.36011505126953125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -145,27 +145,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi3">
         <Properties>
-          <string name="Name">Zivvi__FootR</string>
+          <string name="Name">Zivvi__CuffTrimL</string>
           <Content name="MeshId">
-            <url>rbxassetid://130872625091974</url>
+            <url>rbxassetid://117469657174909</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.48359110951423645</X>
-            <Y>0.25999999046325684</Y>
-            <Z>0.4870062470436096</Z>
+            <X>0.14858439564704895</X>
+            <Y>0.1019035279750824</Y>
+            <Z>0.14829565584659576</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.48359110951423645</X>
-            <Y>0.25999999046325684</Y>
-            <Z>0.4870062470436096</Z>
+            <X>0.14858439564704895</X>
+            <Y>0.1019035279750824</Y>
+            <Z>0.14829565584659576</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.30000001192092896</X>
-            <Y>0.12999725341796875</Y>
-            <Z>-0.11000001430511475</Z>
+            <X>0.397003173828125</X>
+            <Y>0.5260000228881836</Y>
+            <Z>-0.2389984130859375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -184,27 +184,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi4">
         <Properties>
-          <string name="Name">Zivvi__HandL</string>
+          <string name="Name">Zivvi__CuffTrimR</string>
           <Content name="MeshId">
-            <url>rbxassetid://99533724168974</url>
+            <url>rbxassetid://108278463516833</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.24673016369342804</X>
-            <Y>0.26999998092651367</Y>
-            <Z>0.23376299440860748</Z>
+            <X>0.14858439564704895</X>
+            <Y>0.1019035279750824</Y>
+            <Z>0.14829565584659576</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.24673016369342804</X>
-            <Y>0.26999998092651367</Y>
-            <Z>0.23376299440860748</Z>
+            <X>0.14858439564704895</X>
+            <Y>0.1019035279750824</Y>
+            <Z>0.14829565584659576</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.3100000023841858</X>
-            <Y>0.6099929809570312</Y>
-            <Z>-0.3199998140335083</Z>
+            <X>-0.397003173828125</X>
+            <Y>0.5260000228881836</Y>
+            <Z>-0.2389984130859375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -223,27 +223,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi5">
         <Properties>
-          <string name="Name">Zivvi__HandR</string>
+          <string name="Name">Zivvi__EyeL</string>
           <Content name="MeshId">
-            <url>rbxassetid://77393504339291</url>
+            <url>rbxassetid://96648191548397</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.24673016369342804</X>
-            <Y>0.26999998092651367</Y>
-            <Z>0.23376299440860748</Z>
+            <X>0.17800000309944153</X>
+            <Y>0.18599998950958252</Y>
+            <Z>0.062029749155044556</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.24673016369342804</X>
-            <Y>0.26999998092651367</Y>
-            <Z>0.23376299440860748</Z>
+            <X>0.17800000309944153</X>
+            <Y>0.18599998950958252</Y>
+            <Z>0.062029749155044556</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.3100000023841858</X>
-            <Y>0.6099929809570312</Y>
-            <Z>-0.3199998140335083</Z>
+            <X>0.25800323486328125</X>
+            <Y>0.9889998435974121</Y>
+            <Z>-0.4539642333984375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -262,27 +262,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi6">
         <Properties>
-          <string name="Name">Zivvi__Cheeks</string>
+          <string name="Name">Zivvi__EyeR</string>
           <Content name="MeshId">
-            <url>rbxassetid://124546489202664</url>
+            <url>rbxassetid://87544918202515</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>1.284000039100647</X>
-            <Y>0.10999995470046997</Y>
-            <Z>0.12005305290222168</Z>
+            <X>0.17800000309944153</X>
+            <Y>0.18599998950958252</Y>
+            <Z>0.062029749155044556</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>1.284000039100647</X>
-            <Y>0.10999995470046997</Y>
-            <Z>0.12005305290222168</Z>
+            <X>0.17800000309944153</X>
+            <Y>0.18599998950958252</Y>
+            <Z>0.062029749155044556</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>0.9099960327148438</Y>
-            <Z>-0.34803450107574463</Z>
+            <X>-0.25800323486328125</X>
+            <Y>0.9889998435974121</Y>
+            <Z>-0.4539642333984375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -301,27 +301,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi7">
         <Properties>
-          <string name="Name">Zivvi__EyeL</string>
+          <string name="Name">Zivvi__FootL</string>
           <Content name="MeshId">
-            <url>rbxassetid://87089896433313</url>
+            <url>rbxassetid://70974133898127</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.1679999977350235</X>
-            <Y>0.19530004262924194</Y>
-            <Z>0.11012250185012817</Z>
+            <X>0.33473214507102966</X>
+            <Y>0.24000000953674316</Y>
+            <Z>0.37703925371170044</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.1679999977350235</X>
-            <Y>0.19530004262924194</Y>
-            <Z>0.11012250185012817</Z>
+            <X>0.33473214507102966</X>
+            <Y>0.24000000953674316</Y>
+            <Z>0.37703925371170044</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.31700000166893005</X>
-            <Y>1.0270004272460938</Y>
-            <Z>-0.4090327024459839</Z>
+            <X>0.23999786376953125</X>
+            <Y>0.1199999451637268</Y>
+            <Z>-0.0800018310546875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -340,27 +340,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi8">
         <Properties>
-          <string name="Name">Zivvi__EyeR</string>
+          <string name="Name">Zivvi__FootR</string>
           <Content name="MeshId">
-            <url>rbxassetid://78534872131515</url>
+            <url>rbxassetid://126865480422267</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.1679999977350235</X>
-            <Y>0.19530004262924194</Y>
-            <Z>0.11012250185012817</Z>
+            <X>0.33473214507102966</X>
+            <Y>0.24000000953674316</Y>
+            <Z>0.37703925371170044</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.1679999977350235</X>
-            <Y>0.19530004262924194</Y>
-            <Z>0.11012250185012817</Z>
+            <X>0.33473214507102966</X>
+            <Y>0.24000000953674316</Y>
+            <Z>0.37703925371170044</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.31700000166893005</X>
-            <Y>1.0270004272460938</Y>
-            <Z>-0.4090327024459839</Z>
+            <X>-0.23999786376953125</X>
+            <Y>0.1199999451637268</Y>
+            <Z>-0.0800018310546875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -381,25 +381,25 @@
         <Properties>
           <string name="Name">Zivvi__GlintL</string>
           <Content name="MeshId">
-            <url>rbxassetid://138728932402251</url>
+            <url>rbxassetid://84785772315480</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.041999995708465576</X>
-            <Y>0.03915679454803467</Y>
-            <Z>0.029163658618927002</Z>
+            <X>0.044499993324279785</X>
+            <Y>0.037199974060058594</Y>
+            <Z>0.014782339334487915</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.041999995708465576</X>
-            <Y>0.03915679454803467</Y>
-            <Z>0.029163658618927002</Z>
+            <X>0.044499993324279785</X>
+            <Y>0.037199974060058594</Y>
+            <Z>0.014782339334487915</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.3354800045490265</X>
-            <Y>1.0669631958007812</Y>
-            <Z>-0.43031609058380127</Z>
+            <X>0.27758026123046875</X>
+            <Y>1.024999976158142</Y>
+            <Z>-0.47983551025390625</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -420,25 +420,25 @@
         <Properties>
           <string name="Name">Zivvi__GlintR</string>
           <Content name="MeshId">
-            <url>rbxassetid://115058347829717</url>
+            <url>rbxassetid://111669294653763</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.041999995708465576</X>
-            <Y>0.03915679454803467</Y>
-            <Z>0.025582045316696167</Z>
+            <X>0.04450000822544098</X>
+            <Y>0.037199974060058594</Y>
+            <Z>0.012487947940826416</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.041999995708465576</X>
-            <Y>0.03915679454803467</Y>
-            <Z>0.025582045316696167</Z>
+            <X>0.04450000822544098</X>
+            <Y>0.037199974060058594</Y>
+            <Z>0.012487947940826416</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2985199987888336</X>
-            <Y>1.0612411499023438</Y>
-            <Z>-0.4466625452041626</Z>
+            <X>-0.2384185791015625</X>
+            <Y>1.0236800909042358</Y>
+            <Z>-0.49163055419921875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -457,27 +457,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi11">
         <Properties>
-          <string name="Name">Zivvi__Head</string>
+          <string name="Name">Zivvi__HandL</string>
           <Content name="MeshId">
-            <url>rbxassetid://72493624428113</url>
+            <url>rbxassetid://138522973430765</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>1.6346789598464966</X>
-            <Y>0.9389916062355042</Y>
-            <Z>0.9231194257736206</Z>
+            <X>0.254669189453125</X>
+            <Y>0.28615260124206543</Y>
+            <Z>0.2529749274253845</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>1.6346789598464966</X>
-            <Y>0.9389916062355042</Y>
-            <Z>0.9231194257736206</Z>
+            <X>0.254669189453125</X>
+            <Y>0.28615260124206543</Y>
+            <Z>0.2529749274253845</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>1.0644912719726562</Y>
-            <Z>-0.015999794006347656</Z>
+            <X>0.365997314453125</X>
+            <Y>0.5859999656677246</Y>
+            <Z>-0.1999969482421875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -496,27 +496,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi12">
         <Properties>
-          <string name="Name">Zivvi__Mouth</string>
+          <string name="Name">Zivvi__HandR</string>
           <Content name="MeshId">
-            <url>rbxassetid://87760086069523</url>
+            <url>rbxassetid://125186969339894</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.7879999876022339</X>
-            <Y>0.22840553522109985</Y>
-            <Z>0.13872411847114563</Z>
+            <X>0.254669189453125</X>
+            <Y>0.28615260124206543</Y>
+            <Z>0.2529749274253845</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.7879999876022339</X>
-            <Y>0.22840553522109985</Y>
-            <Z>0.13872411847114563</Z>
+            <X>0.254669189453125</X>
+            <Y>0.28615260124206543</Y>
+            <Z>0.2529749274253845</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>0.8062057495117188</Y>
-            <Z>-0.42367660999298096</Z>
+            <X>-0.365997314453125</X>
+            <Y>0.5859999656677246</Y>
+            <Z>-0.1999969482421875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -535,27 +535,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi13">
         <Properties>
-          <string name="Name">Zivvi__Teeth</string>
+          <string name="Name">Zivvi__Head</string>
           <Content name="MeshId">
-            <url>rbxassetid://79606368127779</url>
+            <url>rbxassetid://72749804215974</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.6339460015296936</X>
-            <Y>0.12401032447814941</Y>
-            <Z>0.048030585050582886</Z>
+            <X>1.3201158046722412</X>
+            <Y>0.9349315762519836</Y>
+            <Z>0.9288089275360107</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.6339460015296936</X>
-            <Y>0.12401032447814941</Y>
-            <Z>0.048030585050582886</Z>
+            <X>1.3201158046722412</X>
+            <Y>0.9349315762519836</Y>
+            <Z>0.9288089275360107</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>0.8545150756835938</Y>
-            <Z>-0.4780217409133911</Z>
+            <Y>1.055465817451477</Y>
+            <Z>-0.01599884033203125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -574,27 +574,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi14">
         <Properties>
-          <string name="Name">Zivvi__CuffTrimL</string>
+          <string name="Name">Zivvi__Mouth</string>
           <Content name="MeshId">
-            <url>rbxassetid://113875857934512</url>
+            <url>rbxassetid://76596974443543</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.30529043078422546</X>
-            <Y>0.3400000035762787</Y>
-            <Z>0.32974773645401</Z>
+            <X>0.3880000114440918</X>
+            <Y>0.10518181324005127</Y>
+            <Z>0.04152396321296692</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.30529043078422546</X>
-            <Y>0.3400000035762787</Y>
-            <Z>0.32974773645401</Z>
+            <X>0.3880000114440918</X>
+            <Y>0.10518181324005127</Y>
+            <Z>0.04152396321296692</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.3799999952316284</X>
-            <Y>0.5799942016601562</Y>
-            <Z>-0.2049999237060547</Z>
+            <X>0</X>
+            <Y>0.8645908832550049</Y>
+            <Z>-0.46227264404296875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -613,27 +613,27 @@
       </Item>
       <Item class="MeshPart" referent="Zivvi15">
         <Properties>
-          <string name="Name">Zivvi__CuffTrimR</string>
+          <string name="Name">Zivvi__Teeth</string>
           <Content name="MeshId">
-            <url>rbxassetid://131703383336296</url>
+            <url>rbxassetid://134078461020210</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.30529043078422546</X>
-            <Y>0.3400000035762787</Y>
-            <Z>0.32974773645401</Z>
+            <X>0.31214600801467896</X>
+            <Y>0.044441163539886475</Y>
+            <Z>0.020180195569992065</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.30529043078422546</X>
-            <Y>0.3400000035762787</Y>
-            <Z>0.32974773645401</Z>
+            <X>0.31214600801467896</X>
+            <Y>0.044441163539886475</Y>
+            <Z>0.020180195569992065</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.3799999952316284</X>
-            <Y>0.5799942016601562</Y>
-            <Z>-0.2049999237060547</Z>
+            <X>0</X>
+            <Y>0.8942955732345581</Y>
+            <Z>-0.47900390625</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -678,25 +678,25 @@
         <Properties>
           <string name="Name">Ovelle__Body</string>
           <Content name="MeshId">
-            <url>rbxassetid://136931485133107</url>
+            <url>rbxassetid://74387490054284</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.6706952452659607</X>
-            <Y>0.6799999475479126</Y>
-            <Z>0.57396399974823</Z>
+            <X>0.693092405796051</X>
+            <Y>0.7039999961853027</Y>
+            <Z>0.6290450096130371</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.6706952452659607</X>
-            <Y>0.6799999475479126</Y>
-            <Z>0.57396399974823</Z>
+            <X>0.693092405796051</X>
+            <Y>0.7039999961853027</Y>
+            <Z>0.6290450096130371</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>0.550018310546875</Y>
-            <Z>1.1920928955078125e-07</Z>
+            <Y>0.4660000801086426</Y>
+            <Z>0</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -717,25 +717,25 @@
         <Properties>
           <string name="Name">Ovelle__CharmDot</string>
           <Content name="MeshId">
-            <url>rbxassetid://136501904883745</url>
+            <url>rbxassetid://80244780607428</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.2954423129558563</X>
-            <Y>0.2999999523162842</Y>
-            <Z>0.29095393419265747</Z>
+            <X>0.21665771305561066</X>
+            <Y>0.2200000286102295</Y>
+            <Z>0.21336619555950165</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.2954423129558563</X>
-            <Y>0.2999999523162842</Y>
-            <Z>0.29095393419265747</Z>
+            <X>0.21665771305561066</X>
+            <Y>0.2200000286102295</Y>
+            <Z>0.21336619555950165</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>1.780029296875</Y>
-            <Z>2.384185791015625e-07</Z>
+            <Y>1.738999843597412</Y>
+            <Z>0</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -754,27 +754,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle2">
         <Properties>
-          <string name="Name">Ovelle__CuffL</string>
+          <string name="Name">Ovelle__Cheeks</string>
           <Content name="MeshId">
-            <url>rbxassetid://93761802109739</url>
+            <url>rbxassetid://129648440295691</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.608527421951294</X>
-            <Y>0.45766374468803406</Y>
-            <Z>0.4020000100135803</Z>
+            <X>1.003999948501587</X>
+            <Y>0.07599997520446777</Y>
+            <Z>0.10259529948234558</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.608527421951294</X>
-            <Y>0.45766374468803406</Y>
-            <Z>0.4020000100135803</Z>
+            <X>1.003999948501587</X>
+            <Y>0.07599997520446777</Y>
+            <Z>0.10259529948234558</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.43162623047828674</X>
-            <Y>0.5758285522460938</Y>
-            <Z>-0.1399998664855957</Z>
+            <X>0</X>
+            <Y>0.9419999122619629</Y>
+            <Z>-0.339019775390625</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -793,27 +793,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle3">
         <Properties>
-          <string name="Name">Ovelle__CuffR</string>
+          <string name="Name">Ovelle__CuffTrimL</string>
           <Content name="MeshId">
-            <url>rbxassetid://133577426773720</url>
+            <url>rbxassetid://137971460586725</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.608527421951294</X>
-            <Y>0.45766374468803406</Y>
-            <Z>0.4020000100135803</Z>
+            <X>0.11120244860649109</X>
+            <Y>0.08206135034561157</Y>
+            <Z>0.1289106011390686</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.608527421951294</X>
-            <Y>0.45766374468803406</Y>
-            <Z>0.4020000100135803</Z>
+            <X>0.11120244860649109</X>
+            <Y>0.08206135034561157</Y>
+            <Z>0.1289106011390686</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.43162623047828674</X>
-            <Y>0.5758285522460938</Y>
-            <Z>-0.1399998664855957</Z>
+            <X>0.35700225830078125</X>
+            <Y>0.45399999618530273</Y>
+            <Z>-0.18199920654296875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -832,27 +832,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle4">
         <Properties>
-          <string name="Name">Ovelle__FootL</string>
+          <string name="Name">Ovelle__CuffTrimR</string>
           <Content name="MeshId">
-            <url>rbxassetid://79191599828881</url>
+            <url>rbxassetid://92297229166696</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.18258033692836761</X>
-            <Y>0.18000000715255737</Y>
-            <Z>0.21428275108337402</Z>
+            <X>0.11120244860649109</X>
+            <Y>0.08206135034561157</Y>
+            <Z>0.1289106011390686</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.18258033692836761</X>
-            <Y>0.18000000715255737</Y>
-            <Z>0.21428275108337402</Z>
+            <X>0.11120244860649109</X>
+            <Y>0.08206135034561157</Y>
+            <Z>0.1289106011390686</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.13499999046325684</X>
-            <Y>0.1900177001953125</Y>
-            <Z>-0.011999964714050293</Z>
+            <X>-0.35700225830078125</X>
+            <Y>0.45399999618530273</Y>
+            <Z>-0.18199920654296875</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -871,27 +871,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle5">
         <Properties>
-          <string name="Name">Ovelle__FootR</string>
+          <string name="Name">Ovelle__EyeL</string>
           <Content name="MeshId">
-            <url>rbxassetid://98207904192401</url>
+            <url>rbxassetid://131772866819568</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.18258032202720642</X>
-            <Y>0.18000000715255737</Y>
-            <Z>0.21428275108337402</Z>
+            <X>0.16599999368190765</X>
+            <Y>0.19343996047973633</Y>
+            <Z>0.05650177597999573</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.18258032202720642</X>
-            <Y>0.18000000715255737</Y>
-            <Z>0.21428275108337402</Z>
+            <X>0.16599999368190765</X>
+            <Y>0.19343996047973633</Y>
+            <Z>0.05650177597999573</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.13499999046325684</X>
-            <Y>0.1900177001953125</Y>
-            <Z>-0.011999964714050293</Z>
+            <X>0.2649993896484375</X>
+            <Y>1.0109996795654297</Y>
+            <Z>-0.4304962158203125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -910,27 +910,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle6">
         <Properties>
-          <string name="Name">Ovelle__HandL</string>
+          <string name="Name">Ovelle__EyeR</string>
           <Content name="MeshId">
-            <url>rbxassetid://75207025874170</url>
+            <url>rbxassetid://75240324405539</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.23192636668682098</X>
-            <Y>0.2149999737739563</Y>
-            <Z>0.2045426219701767</Z>
+            <X>0.16599999368190765</X>
+            <Y>0.19343996047973633</Y>
+            <Z>0.06554880738258362</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.23192636668682098</X>
-            <Y>0.2149999737739563</Y>
-            <Z>0.2045426219701767</Z>
+            <X>0.16599999368190765</X>
+            <Y>0.19343996047973633</Y>
+            <Z>0.06554880738258362</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.1850000023841858</X>
-            <Y>0.7550201416015625</Y>
-            <Z>-0.29999983310699463</Z>
+            <X>-0.2649993896484375</X>
+            <Y>1.0109996795654297</Y>
+            <Z>-0.42020416259765625</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -949,27 +949,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle7">
         <Properties>
-          <string name="Name">Ovelle__HandR</string>
+          <string name="Name">Ovelle__FootL</string>
           <Content name="MeshId">
-            <url>rbxassetid://113813878429737</url>
+            <url>rbxassetid://138061065297446</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.23192636668682098</X>
-            <Y>0.2149999737739563</Y>
-            <Z>0.2045426219701767</Z>
+            <X>0.23234347999095917</X>
+            <Y>0.18800000846385956</Y>
+            <Z>0.25491344928741455</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.23192636668682098</X>
-            <Y>0.2149999737739563</Y>
-            <Z>0.2045426219701767</Z>
+            <X>0.23234347999095917</X>
+            <Y>0.18800000846385956</Y>
+            <Z>0.25491344928741455</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.1850000023841858</X>
-            <Y>0.7550201416015625</Y>
-            <Z>-0.29999983310699463</Z>
+            <X>0.141998291015625</X>
+            <Y>0.1820002794265747</Y>
+            <Z>-0.052001953125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -988,27 +988,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle8">
         <Properties>
-          <string name="Name">Ovelle__Cheeks</string>
+          <string name="Name">Ovelle__FootR</string>
           <Content name="MeshId">
-            <url>rbxassetid://91540540154468</url>
+            <url>rbxassetid://72334766316266</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>1.0700000524520874</X>
-            <Y>0.11000001430511475</Y>
-            <Z>0.06342768669128418</Z>
+            <X>0.23234347999095917</X>
+            <Y>0.18800000846385956</Y>
+            <Z>0.25491344928741455</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>1.0700000524520874</X>
-            <Y>0.11000001430511475</Y>
-            <Z>0.06342768669128418</Z>
+            <X>0.23234347999095917</X>
+            <Y>0.18800000846385956</Y>
+            <Z>0.25491344928741455</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>1.0840301513671875</Y>
-            <Z>-0.36158835887908936</Z>
+            <X>-0.141998291015625</X>
+            <Y>0.1820002794265747</Y>
+            <Z>-0.052001953125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1027,27 +1027,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle9">
         <Properties>
-          <string name="Name">Ovelle__EyeL</string>
+          <string name="Name">Ovelle__GlintL</string>
           <Content name="MeshId">
-            <url>rbxassetid://74340840307496</url>
+            <url>rbxassetid://103303995730465</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17399999499320984</X>
-            <Y>0.22133994102478027</Y>
-            <Z>0.07549425959587097</Z>
+            <X>0.04150000214576721</X>
+            <Y>0.038687944412231445</Y>
+            <Z>0.009795963764190674</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.17399999499320984</X>
-            <Y>0.22133994102478027</Y>
-            <Z>0.07549425959587097</Z>
+            <X>0.04150000214576721</X>
+            <Y>0.038687944412231445</Y>
+            <Z>0.009795963764190674</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.28600001335144043</X>
-            <Y>1.176025390625</Y>
-            <Z>-0.39396727085113525</Z>
+            <X>0.28325653076171875</X>
+            <Y>1.0484132766723633</Y>
+            <Z>-0.46114349365234375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1066,27 +1066,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle10">
         <Properties>
-          <string name="Name">Ovelle__EyeR</string>
+          <string name="Name">Ovelle__GlintR</string>
           <Content name="MeshId">
-            <url>rbxassetid://77322688780626</url>
+            <url>rbxassetid://138262140364015</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17399999499320984</X>
-            <Y>0.22133994102478027</Y>
-            <Z>0.07549425959587097</Z>
+            <X>0.04150000214576721</X>
+            <Y>0.038687944412231445</Y>
+            <Z>0.009709984064102173</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.17399999499320984</X>
-            <Y>0.22133994102478027</Y>
-            <Z>0.07549425959587097</Z>
+            <X>0.04150000214576721</X>
+            <Y>0.038687944412231445</Y>
+            <Z>0.009709984064102173</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.28600001335144043</X>
-            <Y>1.176025390625</Y>
-            <Z>-0.39396727085113525</Z>
+            <X>-0.24674224853515625</X>
+            <Y>1.047093391418457</Y>
+            <Z>-0.46437835693359375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1105,27 +1105,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle11">
         <Properties>
-          <string name="Name">Ovelle__GlintL</string>
+          <string name="Name">Ovelle__HandL</string>
           <Content name="MeshId">
-            <url>rbxassetid://94776935908864</url>
+            <url>rbxassetid://95796551392683</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.04350000619888306</X>
-            <Y>0.044268012046813965</Y>
-            <Z>0.017687439918518066</Z>
+            <X>0.2052539438009262</X>
+            <Y>0.2893354296684265</Y>
+            <Z>0.22486662864685059</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.04350000619888306</X>
-            <Y>0.044268012046813965</Y>
-            <Z>0.017687439918518066</Z>
+            <X>0.2052539438009262</X>
+            <Y>0.2893354296684265</Y>
+            <Z>0.22486662864685059</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.3051399886608124</X>
-            <Y>1.2196197509765625</Y>
-            <Z>-0.4171403646469116</Z>
+            <X>0.33300018310546875</X>
+            <Y>0.5520000457763672</Y>
+            <Z>-0.14599609375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1144,27 +1144,27 @@
       </Item>
       <Item class="MeshPart" referent="Ovelle12">
         <Properties>
-          <string name="Name">Ovelle__GlintR</string>
+          <string name="Name">Ovelle__HandR</string>
           <Content name="MeshId">
-            <url>rbxassetid://118434971397639</url>
+            <url>rbxassetid://125242695220955</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.04350000619888306</X>
-            <Y>0.044268012046813965</Y>
-            <Z>0.01632702350616455</Z>
+            <X>0.2052539587020874</X>
+            <Y>0.2893354296684265</Y>
+            <Z>0.22486662864685059</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.04350000619888306</X>
-            <Y>0.044268012046813965</Y>
-            <Z>0.01632702350616455</Z>
+            <X>0.2052539587020874</X>
+            <Y>0.2893354296684265</Y>
+            <Z>0.22486662864685059</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2668600082397461</X>
-            <Y>1.2165374755859375</Y>
-            <Z>-0.4256953001022339</Z>
+            <X>-0.33300018310546875</X>
+            <Y>0.5520000457763672</Y>
+            <Z>-0.14599609375</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1185,25 +1185,25 @@
         <Properties>
           <string name="Name">Ovelle__Head</string>
           <Content name="MeshId">
-            <url>rbxassetid://118081868538500</url>
+            <url>rbxassetid://84031791566219</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>1.655747413635254</X>
-            <Y>0.7630000114440918</Y>
-            <Z>0.8112310171127319</Z>
+            <X>1.4731732606887817</X>
+            <Y>0.8349999785423279</Y>
+            <Z>0.8656086921691895</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>1.655747413635254</X>
-            <Y>0.7630000114440918</Y>
-            <Z>0.8112310171127319</Z>
+            <X>1.4731732606887817</X>
+            <Y>0.8349999785423279</Y>
+            <Z>0.8656086921691895</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>1.1185302734375</Y>
-            <Z>-0.015999794006347656</Z>
+            <X>0.00601959228515625</X>
+            <Y>1.0924997329711914</Y>
+            <Z>-0.01599884033203125</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -1224,103 +1224,25 @@
         <Properties>
           <string name="Name">Ovelle__Mouth</string>
           <Content name="MeshId">
-            <url>rbxassetid://97664255468192</url>
+            <url>rbxassetid://135651809721076</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.21799999475479126</X>
-            <Y>0.08702075481414795</Y>
-            <Z>0.011334031820297241</Z>
+            <X>0.18199999630451202</X>
+            <Y>0.058017849922180176</Y>
+            <Z>0.01818910241127014</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>0.21799999475479126</X>
-            <Y>0.08702075481414795</Y>
-            <Z>0.011334031820297241</Z>
+            <X>0.18199999630451202</X>
+            <Y>0.058017849922180176</Y>
+            <Z>0.01818910241127014</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>1.0605316162109375</Y>
-            <Z>-0.4271615743637085</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>0</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="Ovelle15">
-        <Properties>
-          <string name="Name">Ovelle__CuffTrimL</string>
-          <Content name="MeshId">
-            <url>rbxassetid://85374189867055</url>
-          </Content>
-          <Content name="TextureID">
-            <url />
-          </Content>
-          <Vector3 name="Size">
-            <X>0.46673399209976196</X>
-            <Y>0.30081549286842346</Y>
-            <Z>0.2275465428829193</Z>
-          </Vector3>
-          <Vector3 name="InitialSize">
-            <X>0.46673399209976196</X>
-            <Y>0.30081549286842346</Y>
-            <Z>0.2275465428829193</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.40020760893821716</X>
-            <Y>0.6046524047851562</Y>
-            <Z>-0.2321760654449463</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>0</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="Ovelle16">
-        <Properties>
-          <string name="Name">Ovelle__CuffTrimR</string>
-          <Content name="MeshId">
-            <url>rbxassetid://138582020914315</url>
-          </Content>
-          <Content name="TextureID">
-            <url />
-          </Content>
-          <Vector3 name="Size">
-            <X>0.4950927197933197</X>
-            <Y>0.3172574043273926</Y>
-            <Z>0.2275465726852417</Z>
-          </Vector3>
-          <Vector3 name="InitialSize">
-            <X>0.4950927197933197</X>
-            <Y>0.3172574043273926</Y>
-            <Z>0.2275465726852417</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-0.40649133920669556</X>
-            <Y>0.5914230346679688</Y>
-            <Z>-0.2321760654449463</Z>
+            <Y>0.9340085983276367</Y>
+            <Z>-0.44097900390625</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>

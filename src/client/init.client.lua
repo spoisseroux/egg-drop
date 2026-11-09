@@ -165,16 +165,16 @@ local sprites = make("Frame", "Sprites", {
 }, overlay)
 Sprite.texture(sprites)
 local fieldZones = {}
-local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),6)
+local zoneLayer=Art.frame(overlay,"TargetRegions",Art.Ink,UDim2.fromScale(0,0),UDim2.fromScale(1,1),2)
 zoneLayer.BackgroundTransparency=1;zoneLayer.ClipsDescendants=true
 for index,side in ipairs({-1,1})do
 	local tint=Color3.fromHex("#466853")
-	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),6)
+	local zone=Art.frame(zoneLayer,if side==-1 then "LeftRootPatch"else"RightRootPatch",tint,UDim2.fromScale(0,0),UDim2.fromScale(.2,1),2)
 	zone.BackgroundTransparency=.94
 	fieldZones[index]={node=zone,side=side}
 end
 
-clientUI.centerZone=Art.frame(zoneLayer,"CenterGoalRegion",Color3.fromHex("#466853"),UDim2.fromScale(.4,.025),UDim2.fromScale(.2,.95),6)
+clientUI.centerZone=Art.frame(zoneLayer,"CenterGoalRegion",Color3.fromHex("#466853"),UDim2.fromScale(.4,.025),UDim2.fromScale(.2,.95),2)
 clientUI.centerZone.BackgroundTransparency=.79;clientUI.centerZone.Active=false;clientUI.centerZone.Selectable=false;clientUI.centerZone.Visible=false
 Art.lcdCorners(overlay,bezel.BackgroundColor3)
 local lcd = JellyLCD.new(overlay)
@@ -466,6 +466,7 @@ aGlint.BackgroundTransparency = 0.50
 Art.corner(aGlint, 1)
 local dropCaption = label("TextLabel", "DropCaption", "DROP", hardware)
 dropCaption.Size = UDim2.fromOffset(48, 16)
+dropCaption.Visible=false
 dropCaption.Font = Art.Font.Action
 dropCaption.TextColor3 = Art.Silver
 dropCaption.TextSize = 11
@@ -474,41 +475,11 @@ local dropCaptionLayout,captionStatusQueued
 local function layoutDropCaption(l)
 	if not l then return end
 	dropCaptionLayout=l
-	Art.type(dropCaption,"Supporting",l.short);dropCaption.Font=Art.Font.Action;if l.roomy then dropCaption.TextSize=20 end
-	local width=math.min(l.right.w-8,l.shell.w-16,math.max(l.dropSize,Art.textWidth(dropCaption)+8))
-	local height=Art.textHeight(dropCaption,width,16)
-	local x=math.clamp(l.drop.x+l.dropSize/2-width/2,l.shell.x+8,l.shell.x+l.shell.w-width-8)
-	local function free(y)
-		if y<l.shell.y+8 or y+height>l.shell.y+l.shell.h-8 then return false end
-		for _,r in ipairs({l.queue,l.meter,l.menu,l.lounge,l.dpad,l.drop,l.bezel,l.walletVisual or l.wallet,l.quest,l.tray})do
-			if x<r.x+r.w and x+width>r.x and y<r.y+r.h and y+height>r.y then return false end
-		end
-		return true
-	end
-	local top
-	-- The selected phone print owns the gap above A; its passive caption
- -- can use the existing lower seat without moving any interaction rectangle.
- local stickerId=deckSticker:GetAttribute("StickerArtId")
- local belowFirst=l.lateral and not l.roomy and not l.short and not l.dense and stickerId~=nil and stickerId~="none"
- local candidates=if belowFirst then {l.drop.y+l.dropSize+4,l.drop.y-height-4,l.queue.y+l.queue.h+4}else {l.drop.y-height-4,l.drop.y+l.dropSize+4,l.queue.y+l.queue.h+4}
- for _,y in ipairs(candidates)do
-		if free(y)then top=y;break end
-	end
-	-- The DROP etching may yield, while transient blocking states remain readable.
-	local meaningful=dropCaption.Text~="DROP"
-	-- Settling already owns the quest's status line; keep one visible explanation.
-	if dropCaption.Text=="SETTLE" then top=nil end
-	dropCaption.Visible=top~=nil and (not l.short or meaningful)
-	if not top and meaningful then
-		-- During a blocked drop the existing status line owns the explanation;
-		-- retain the label next to A only when it has an independent safe slot.
-		dropCaption:SetAttribute("BlockedCaption",dropCaption.Text)
-	else dropCaption:SetAttribute("BlockedCaption",nil)end
-	if top then
-		dropCaption.Position=UDim2.fromOffset(x-l.shell.x,top-l.shell.y)
-		dropCaption.Size=UDim2.fromOffset(width,height)
-	end
- Stickers.layoutPrint(deckSticker,l,if top and dropCaption.Visible then {x=x,y=top,w=width,h=height}else nil)
+    dropCaption.Visible=false
+    local blocked=if dropCaption.Text~="DROP"then dropCaption.Text else nil
+    dropCaption:SetAttribute("BlockedCaption",blocked)
+    action:SetAttribute("AccessibleLabel",if blocked then "Drop jelly · "..string.lower(blocked)else "Drop jelly")
+    Stickers.layoutPrint(deckSticker,l,nil)
 end
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(57, 28), BackgroundTransparency = 1 }, hardware)
 for row = 0, 2 do
@@ -1281,6 +1252,10 @@ updateHud = function()
   clientUI.centerZone.Position=UDim2.fromScale(.5+clientUI.fieldCopy.goal.zone.min/(Config.Width+.8),.025)
   clientUI.centerZone.Size=UDim2.fromScale((clientUI.fieldCopy.goal.zone.max-clientUI.fieldCopy.goal.zone.min)/(Config.Width+.8),.95)
  end
+    if lcd then
+        local region=clientUI.fieldCopy.goal and clientUI.fieldCopy.goal.zone
+        lcd:setRegions(nurseryActive and owned>0,clientUI.fieldCopy.zone,board:GetAttribute("FieldZoneBound")or 2.6,region and region.min,region and region.max)
+    end
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
@@ -2164,6 +2139,17 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local aimX = Config.aimX(aim, tier)
 	local drawLCD = false
 	local useLCD = lcdEnabled() and viewport.AbsoluteSize.X > 1
+    local zoneBackend=if useLCD then lcd.backend else "sprite"
+    if rendererPresentation.zoneBackend~=zoneBackend then
+        rendererPresentation.zoneBackend=zoneBackend
+        if useLCD and lcd.surface then lcd:attachRegions(zoneLayer)
+        else
+            zoneLayer.Parent=overlay;zoneLayer.ZIndex=2
+            for _,node in ipairs(zoneLayer:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=2 end end
+        end
+    end
+    local zonesVisible=not(useLCD and lcd.backend=="image")and gui:GetAttribute("MeshPreview")~=true
+    if zoneLayer.Visible~=zonesVisible then zoneLayer.Visible=zonesVisible end
 	if useLCD then
 		lcdElapsed += dt
 		drawLCD = lcdElapsed >= lcdStep

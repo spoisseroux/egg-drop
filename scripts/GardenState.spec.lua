@@ -36,7 +36,10 @@ return function(server)
             c:step(.5);local actor=c.garden.actors[1]
             assert(actor.behavior~="investigate"and actor.behavior~="play"and not c.garden.toy.ownerId)
             rested=rested or actor.behavior=="rest"
-            if c.now>=3 then
+            -- The old3s deadline assumed a .6s unbounded dash. Smooth recovery
+            -- must be inside the22stud leash after this finite planned trip,
+            -- and may not start an unreachable toy while closing the gap.
+            if c.now>=3.5 then
                 local position=c.garden:position(actor,c.now)
                 assert(Vector2.new(position.X-c.inputs[1].position.X,position.Z-c.inputs[1].position.Z).Magnitude<=22)
             end

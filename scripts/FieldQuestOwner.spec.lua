@@ -26,7 +26,7 @@ return function(gui,board,onlySize)
     for _,id in ipairs(Catalog.Order)do for _,step in ipairs({1,2,3})do
      local view=public(id,step,if id=="lantern_chain"and step==2 then 1 else 0);publish(view)
      local quest=root.Status.ActiveQuest;assert(quest.Visible and counter.Visible);fit(quest.Instruction)
-     local region=root.TrayOverlay.TargetRegions;local zone=if step==3 then "any"else view.goals[step].zone.kind
+     local region=root.TrayOverlay:FindFirstChild("TargetRegions",true);local zone=if step==3 then "any"else view.goals[step].zone.kind
      assert(region.LeftRootPatch.Visible and region.RightRootPatch.Visible)
      assert(math.abs(region.LeftRootPatch.BackgroundTransparency-(if zone=="left"then .79 else .86))<.001)
      assert(math.abs(region.RightRootPatch.BackgroundTransparency-(if zone=="right"then .79 else .86))<.001)

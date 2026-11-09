@@ -1,0 +1,99 @@
+{
+  "files": {
+    "src/shared/GardenActivity.lua": {
+      "raw": "ccfed85f432525d2deb62b3915ac11f74d54d10a660b2a4b7939a7bce05ff966",
+      "LF": "a2110c5153737bb975dc7d6191ce059cb9ef069fb52fb90a1561f46c4d89e467"
+    },
+    "src/shared/GardenLayout.lua": {
+      "raw": "8066158547016b020fd63612f3ca87d0195c8b70232e291d4c69bc008728ca0f",
+      "LF": "1b2dbda60b75b86cf6a5eb1afe0b94ad20b972c6b715afecc7a34d7763ef0327"
+    },
+    "src/server/GardenState.lua": {
+      "raw": "2e50e80ece9f28741cbcafb0998b4eff4416b66af6bf6717cc91c8b26cbd469e",
+      "LF": "595602ae1b0b6394e119ca48ed36dd3311a9001247e532638d84c30e09cb0e77"
+    },
+    "src/client/GardenClient.lua": {
+      "raw": "271cabddecd13efe0a7bd5dca5839ee14a828ddbedc05261ef6684b684ad3b1d",
+      "LF": "5e8f1f2bf1754a5306e0e562b4b2913e6c788fb2ca95c4fd23705dbf7611a1f7"
+    },
+    "src/client/PetFollow.lua": {
+      "raw": "b527ba33071b2d4442b53b881c3cd640160b808f3f189dbc228464ec9e007af4",
+      "LF": "ba45081c3c82dd1562cefcc39ffc8c9a62bd40133a21389eaa99851629ada13d"
+    },
+    "src/client/RoomView.lua": {
+      "raw": "5a9fe8d7fb18357b6e0127cb97f538327e17827d7e7e739fdf035e1999f6e193",
+      "LF": "2ab989fe5589347bb0790917d96ecc1bd72368065d903b6bc58564e81bfe994a"
+    },
+    "src/client/RoomCompanions.lua": {
+      "raw": "b7f69ebce2f380f94230234809be09a646a538b5f072bdb32696901b570f1759",
+      "LF": "eae459df8772498360c5fa88a6858df7771b4bfef6d567af4950d3481fb32d5d"
+    },
+    "src/client/DeckBackdrop.lua": {
+      "raw": "b2993bce175b0d5ca5bd508ede80754b3a6347cd8ffe81e820e751bd9c3593f5",
+      "LF": "bc9e83d85e2d82e341cd886c3e890e00a5ad04b0510b608d428fd4e53525426c"
+    },
+    "src/client/init.client.lua": {
+      "raw": "7fccbe93a23b8b14ca25f2f21567bc92ad38889f90c726cd88c9a636316c15f1",
+      "LF": "ebb3d78b167a508aa0e69d5ba6b124657ab75045fa476cedd0b5c913c60b5197"
+    },
+    "src/client/JellyLCD.lua": {
+      "raw": "f5d943ad20859dc04a225e28b412750524faf82015c9adb001fa1fa02f86c604",
+      "LF": "58d420bf08b3547332b34c654b83c2312a2aac9fe435958456266d70e4edbef3"
+    },
+    "src/client/JellySpanSurface.lua": {
+      "raw": "5137ec681fe210cb764f7ca155207a2871850e5c0ae8cbcb928c44eef77aede9",
+      "LF": "873ab8e77d2ebba8f4ef10fc42166771e7280d07b53c601bcf0cf7c548dee018"
+    },
+    "scripts/GardenMotion.spec.lua": {
+      "raw": "bd600fa61cbdef83d5634230d1e5b79c15f9d85d48ab9835342e3d07a706b150",
+      "LF": "8e60bbea343b49ec7dd4bd9682de1d5b47fa13f9f1bdbf6e93d8e0132557b3ab"
+    },
+    "scripts/JellyUnderlay.spec.lua": {
+      "raw": "256258ae31747e7a603223881829f079168eaa594c2b11ffcac68154d8a7e840",
+      "LF": "70e59d5b6122eae57ca7f4d496bacd4eac8ee53675da1dd698c115c2696a2d04"
+    },
+    "scripts/GardenState.spec.lua": {
+      "raw": "bbdcfbc43159407c2b5a5f3b06a76341e3de433b39a863fa7b211afa211761f9",
+      "LF": "369511d1379544401ef1f07dbc775726d2d62308289bec77991fe49c4aba8744"
+    },
+    "scripts/DeckBackground.spec.lua": {
+      "raw": "c701985ddd0b3333ea0ed6f32b469f62f13d976085382fb63f5eed1b2584d887",
+      "LF": "07553df0e4fd89a81daae98a98d928953f7b3d2526bfe4d9682d8a92ff40d1f9"
+    },
+    "scripts/DropCaption.spec.lua": {
+      "raw": "502e7993f076fb8f7a4defb89621fefad63fe5421210f8ae7a404de5c304d408",
+      "LF": "049932dec7bc471d3ee7f08b7eb5108a51fe196efd8d0e745b6664f099477d58"
+    },
+    "scripts/CompactDeck.spec.lua": {
+      "raw": "de575498b85b5d20054bf76b1114869b21dd6e136a942ef7d9eb4b5b4fc6a40f",
+      "LF": "8c1e18e94484d5637bb0ad21b10de54cc3eb083cbfd633a60378e240848233e2"
+    },
+    "scripts/StickerPrintSeat.spec.lua": {
+      "raw": "59b0f686e1c6bcdc7c70b37212f25f3edfd2ba666928c636aaaee83d8a137789",
+      "LF": "862adb9a4ad60c9b1971eeb6f3afa1db7a5209986bfcf0f57f61484dfbb0644e"
+    },
+    "scripts/HardwareDeck.spec.lua": {
+      "raw": "3f866e59b43e77a73205e4ee4ada70966d604e5ae3084249d2e1fb64da9d6bcf",
+      "LF": "4a59770b86617c81bf4280593a699e06c71b6b64c4a2e0e2d7df39cfd842dcb0"
+    },
+    "scripts/FieldQuestOwner.spec.lua": {
+      "raw": "35b19d1ee8bfded04afad1ddee8323f6848d0d4312d5b8094e8e656887a39259",
+      "LF": "9bc54564d997c833eac56062456f7e569a4201a2d9d64c5615bc1a8ba01d6338"
+    }
+  },
+  "native": [
+    "GardenMotion(server) 8",
+    "JellyUnderlay(client,ScreenGui) 2+optionalimage1",
+    "GardenActivity(client) 4",
+    "GardenState(server) 15",
+    "GardenClient(client)",
+    "CompanionScale(client)",
+    "DeckBackground(client,ScreenGui) 8",
+    "DropCaption(gui,board) 4",
+    "StickerPrintSeat(client,ScreenGui)16",
+    "HardwareDeck(gui,board)",
+    "FieldQuestOwner(gui,board)",
+    "CompactDeck(gui,board)"
+  ],
+  "portable": "8 exact native-math cases+5000 adversarial plans pass; owner16/stop maxgap14.897 maxspeed17.244 final0"
+}

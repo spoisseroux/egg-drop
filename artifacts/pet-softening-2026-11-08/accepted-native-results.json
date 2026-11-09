@@ -1,0 +1,1742 @@
+{
+  "totals": {
+    "client": 114,
+    "server": 98
+  },
+  "results": {
+    "server": {
+      "GardenFocusReach": {
+        "ok": true,
+        "name": "GardenFocusReach",
+        "result": {
+          "plans": 72,
+          "cases": [
+            "all seven production rigs and supported Dot states acquire and hold the exact staged target",
+            "Dot and viewport reframe keeps the accepted stage while solving an independent lens",
+            "same accepted target is rejected for stale pet or character generation",
+            "the exact pre-focus camera survives staging and owner translation"
+          ],
+          "passed": 4,
+          "metrics": [
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "1649, 971",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "1649, 971",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "733, 307",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "733, 307",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "390, 740",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "390, 740",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "568, 160",
+              "petId": "pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "568, 160",
+              "petId": "pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "1649, 971",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "1649, 971",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "733, 307",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "733, 307",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "390, 740",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "390, 740",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": false,
+              "viewport": "568, 160",
+              "petId": "puddle",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": false,
+              "viewport": "568, 160",
+              "petId": "puddle",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "bloom_pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "bloom_pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "bloom_pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "bloom_pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "bloom_pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "bloom_pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "bloom_pip",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "bloom_pip",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "foxfire_wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "foxfire_wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "foxfire_wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "foxfire_wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "foxfire_wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "foxfire_wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "foxfire_wick",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "foxfire_wick",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "eclipse_orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "1649, 971",
+              "petId": "eclipse_orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "eclipse_orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "733, 307",
+              "petId": "eclipse_orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "eclipse_orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "390, 740",
+              "petId": "eclipse_orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            },
+            {
+              "bearing": 0,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "eclipse_orbit",
+              "edge": false,
+              "reach": 6.135041236877441
+            },
+            {
+              "bearing": 3,
+              "dot": true,
+              "viewport": "568, 160",
+              "petId": "eclipse_orbit",
+              "edge": true,
+              "reach": 6.135042190551758
+            }
+          ]
+        }
+      },
+      "PetAppearance": {
+        "ok": true,
+        "name": "PetAppearance",
+        "result": [
+          "strict owned aliases and booleans reject forged shapes without a progression mutation",
+          "duplicate and stale requests cannot reapply, and independent pets save exact preferences",
+          "A B A same-value intent settles against the pending per-pet generation",
+          "a newer local toggle during save remains pending and cannot receive the old receipt",
+          "Applied and failed writes retain the previous confirmed public projection",
+          "A commit cannot expose B created while A's write is in flight",
+          "foreign newer same-pet intent supersedes explicitly while other pet and wallet survive",
+          "invalid stored entries default safely and independent per-pet merge retains future fields"
+        ]
+      },
+      "PetContact": {
+        "ok": true,
+        "name": "PetContact",
+        "result": {
+          "evidence": "pure server contact continuity and live receipt broker; not proof of human touch",
+          "persistentWrites": false,
+          "passed": 16,
+          "cases": [
+            "twelve continuous server seconds produce one roll and exact live Saved receipt",
+            "negative outcome consumes opportunity without storage or a promised award",
+            "idle focus stationary timeout and a tap cannot earn",
+            "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+            "restarting after a missed opportunity still requires a new full twelve seconds",
+            "stale cross-player and replaced lease ids cannot extend a new contact",
+            "duplicate begin reuses grant without refreshing its continuity clock",
+            "room ownership pet root generation death movement conflict and epoch invalidate contact",
+            "forged payload and unreachable anchor do no RNG or storage work",
+            "same held context may receive retry or renew proof once but cannot draw while saving",
+            "end or replacement while a commit is pending prevents any later glyph",
+            "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+            "cap mute and reduced effects are independent and capped draws stop",
+            "destroy cancels display and future work while retained ledger work belongs elsewhere",
+            "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+            "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+          ]
+        }
+      },
+      "PetAward": {
+        "ok": true,
+        "name": "PetAward",
+        "result": {
+          "evidence": "isolated fenced v4 adapter transactions, clocks and exact commit receipts",
+          "persistentWrites": false,
+          "passed": 15,
+          "cases": [
+            "one exact pet operation adds one once, independent of field reward and hatch state",
+            "four to five is atomic and further candidates do no storage work",
+            "immutable captured candidate survives mutation and repeated store callbacks",
+            "forged amount unknown pet and missing lease are rejected before a write",
+            "commit-before-error is proved by exact receipt before midnight expiry",
+            "precommit midnight expiry clears only proved noncommit and restores Ready",
+            "a newer day resets allowance only in its admitted award; rollback never resets it",
+            "a second epoch fences the old writer and awards exactly once",
+            "pending field or hatch operations retain their sole owner",
+            "close drains retained pet proof before releasing without a second award",
+            "authentic v3 upgrades preserve every old nested fact and sibling",
+            "future and malformed persisted schemas are not overwritten",
+            "A then B then replay A cannot reuse an old admitted operation sequence",
+            "A followed by a non-pet operation retains exact A proof without a second award",
+            "renew may prove and clear a committed pet pending operation exactly once"
+          ]
+        }
+      },
+      "PetContactHost": {
+        "ok": true,
+        "name": "PetContactHost",
+        "result": {
+          "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture",
+          "persistentWrites": false,
+          "passed": 4,
+          "cases": [
+            "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+            "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+            "wrong equipped pet is rejected through the real host before RNG or storage",
+            "existing retry worker proves ended committed operation without a second glyph or second worker"
+          ]
+        }
+      },
+      "HatchProgress": {
+        "ok": true,
+        "name": "HatchProgress",
+        "result": {
+          "passed": 21,
+          "cases": [
+            "all catalog outcomes and rare protection",
+            "legacy seven-pet migration and one-time credits",
+            "starter grant, persistent reveal, exact acknowledgement",
+            "ambiguous session acquire resumes the same lease",
+            "direct full-cost spending, stale commands and callback retries",
+            "ambiguous committed hatch cannot reroll or duplicate",
+            "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+            "monotonic payouts reject replay beyond receipt history",
+            "lease takeover fences stale commands and renewals",
+            "local overlap, sparse inventory and public isolation",
+            "failed legacy load cannot spend or overwrite",
+            "daily reward is once per Hollow day and survives callback retry",
+            "every advertised result grants once and rare protection resets",
+            "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+            "mastery ranks need permanent points and three distinct successful challenges",
+            "daily contracts and mastery pay atomically once per run and day",
+            "completed-budget failures can earn skill contracts but not mastery or free wins",
+            "run start-day lock, daily rollover and rollback cannot reassign a contract",
+            "compound award retries immutable stats and original day before or after commit",
+            "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+            "rare-only ownership trains its base family and duplicate marks continue beyond three"
+          ]
+        }
+      },
+      "SessionRecovery": {
+        "ok": true,
+        "name": "SessionRecovery",
+        "result": {
+          "persistentWrites": false,
+          "passed": 8,
+          "cases": [
+            "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+            "profile save failure times out without releasing the lease and later recovers",
+            "failed initial load cannot write defaults or acquire a persistent hatch session",
+            "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+            "locked and unavailable sessions preserve provisional rare and sticker choices",
+            "a setting changed during an in-flight autosave drains before lease release",
+            "a temporary profile recovers through a fresh read and authoritative acquisition",
+            "the actual Studio store keeps both writers in one isolated cloned root"
+          ]
+        }
+      },
+      "SessionHost": {
+        "ok": true,
+        "name": "SessionHost",
+        "result": {
+          "persistentWrites": false,
+          "passed": 2,
+          "cases": [
+            "Temporary host gates progress, hydrates all attrs, resumes field and closes once",
+            "Locked host gates progress, hydrates all attrs, resumes field and closes once"
+          ]
+        }
+      },
+      "GardenMotion": {
+        "ok": true,
+        "name": "GardenMotion",
+        "result": {
+          "cases": [
+            "reverse nearly-opposed perpendicular and tight turns have finite bounded control hulls",
+            "closed chord via is finite and the Lawn join has exact shared velocity",
+            "opposed outgoing Lawn tangent falls back to a stopped join without throwing",
+            "a missing follow snapshot finishes its published braking tail and holds forever",
+            "one sender focus sync cannot advance another owner's cached observation time",
+            "sustained16 owner travel has bounded recovery and settles after stopping without teleports",
+            "2Hz reversals preserve position velocity heading and finite JSON-safe paths",
+            "stationary shove turns toward the shared toy instead of discarding its authored heading"
+          ],
+          "passed": 8,
+          "metrics": {
+            "walk16": {
+              "maxGap": 14.89737319946289,
+              "seconds": 60,
+              "maxSpeed": 17.244394302368164,
+              "maxReplacementYaw": 0,
+              "finalGap": 0
+            }
+          }
+        }
+      },
+      "GardenState": {
+        "ok": true,
+        "name": "GardenState",
+        "result": {
+          "passed": 12,
+          "cases": [
+            "solo garden investigates, shoves twice, rests and returns without a reward path",
+            "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+            "paired greeting is one atomic action and focus cancels both reservations",
+            "Board is observable and cannot acquire focus, toy or an automatic reward",
+            "focus is owner/pet/range/generation validated and its lease expires",
+            "moved owners and replaced character cannot refresh a stale focus hold",
+            "a superseded participant generation explicitly retires the paired greeting",
+            "equip, character replacement and leave invalidate old generations exactly once",
+            "a delayed first acquisition cannot revive the same alias after equip-away and back",
+            "only one toy reservation exists and another waiting pet gets a turn",
+            "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+            "late join samples the current shared path, not a replayed beginning"
+          ]
+        }
+      }
+    },
+    "client": {
+      "GardenBabyMotion": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "GardenBabyMotion",
+        "result": [
+          "seeded blinks close briefly, rest open and repeat without frame integration",
+          "reduced motion is exactly static and sleep/contact retain expression eyelids",
+          "pip imported Dot moves separately, feet stay planted and frames allocate no nodes",
+          "pip native Dot moves separately, feet stay planted and frames allocate no nodes",
+          "puddle imported Dot moves separately, feet stay planted and frames allocate no nodes",
+          "puddle native Dot moves separately, feet stay planted and frames allocate no nodes",
+          "common catalog and semantic palettes agree while rare identity colors remain exact",
+          "focus captures analytic extrema once and hidden Dot contributes no padding or points"
+        ]
+      },
+      "GardenPetVisual": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "GardenPetVisual",
+        "result": [
+          "pip authored imported + native have proper size, forward face and bounded static allocation",
+          "pip six expressions remain distinct with charms off and reduced static motion",
+          "pip charm toggles framing without changing the body hit hull or authority",
+          "pip action generations do not replay greetings or take pose ownership",
+          "puddle authored imported + native have proper size, forward face and bounded static allocation",
+          "puddle six expressions remain distinct with charms off and reduced static motion",
+          "puddle charm toggles framing without changing the body hit hull or authority",
+          "puddle action generations do not replay greetings or take pose ownership",
+          "only common aliases switch rigs; seven identity bits, ordering and rarity remain intact",
+          "a named but empty imported resource rejects the entire backend for a faithful native fallback",
+          "twenty complete create/update/destroy cycles release every model"
+        ]
+      },
+      "FocusFraming": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "FocusFraming",
+        "result": {
+          "cases": [
+            "both backends keep long idle, gaze, blink and independent Dot inside the focused envelope",
+            "749x381 factory body fills55to65percent with Dot ON and OFF while every focused pose fits",
+            "capture is independent of world yaw and restores an in-flight contact exactly",
+            "a reduced first capture reserves motion and restoring contact pose does not animate it",
+            "greeting preserves curious eyes while actual contact remains affectionate",
+            "badge and other viewports keep a fully safe envelope and expose actual size limits"
+          ],
+          "passed": 6,
+          "metrics": [
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5799998385466633,
+              "pet": "pip",
+              "pose": "neutral"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.6300467835564841,
+              "pet": "pip",
+              "pose": "curious"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5830238015860879,
+              "pet": "pip",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5858157293150301,
+              "pet": "pip",
+              "pose": "neutral"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.6167141157723784,
+              "pet": "pip",
+              "pose": "curious"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5867964415104128,
+              "pet": "pip",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5799997544801293,
+              "pet": "pip",
+              "pose": "neutral"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.6298549749074316,
+              "pet": "pip",
+              "pose": "curious"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5841336464864384,
+              "pet": "pip",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5858697372446657,
+              "pet": "pip",
+              "pose": "neutral"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.6167837428348183,
+              "pet": "pip",
+              "pose": "curious"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5819309014209477,
+              "pet": "pip",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5764003123375584,
+              "pet": "puddle",
+              "pose": "neutral"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.6318658260269142,
+              "pet": "puddle",
+              "pose": "curious"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5941813577933794,
+              "pet": "puddle",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.5758899044858503,
+              "pet": "puddle",
+              "pose": "neutral"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.6410468193399819,
+              "pet": "puddle",
+              "pose": "curious"
+            },
+            {
+              "edge": "bottom",
+              "limited": false,
+              "dot": true,
+              "part": "Body",
+              "bodyFraction": 0.587307521645889,
+              "pet": "puddle",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5659920269791436,
+              "pet": "puddle",
+              "pose": "neutral"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.631864292873803,
+              "pet": "puddle",
+              "pose": "curious"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5880478413648429,
+              "pet": "puddle",
+              "pose": "affectionate"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.5721730162499674,
+              "pet": "puddle",
+              "pose": "neutral"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.6407663117553896,
+              "pet": "puddle",
+              "pose": "curious"
+            },
+            {
+              "edge": "top",
+              "limited": false,
+              "dot": false,
+              "part": "Head",
+              "bodyFraction": 0.587273266123189,
+              "pet": "puddle",
+              "pose": "affectionate"
+            },
+            {
+              "badge": 32,
+              "edge": "bottom",
+              "part": "Body",
+              "dot": true,
+              "viewport": "1649, 971",
+              "bodyFraction": 0.5799997882366483,
+              "pet": "pip",
+              "limited": false
+            },
+            {
+              "badge": 32,
+              "edge": "right",
+              "part": "Head",
+              "dot": true,
+              "viewport": "390, 740",
+              "bodyFraction": 0.4556205868185192,
+              "pet": "pip",
+              "limited": true
+            },
+            {
+              "badge": 32,
+              "edge": "bottom",
+              "part": "Body",
+              "dot": true,
+              "viewport": "568, 160",
+              "bodyFraction": 0.39319581942433623,
+              "pet": "pip",
+              "limited": true
+            },
+            {
+              "badge": 32,
+              "edge": "bottom",
+              "part": "Body",
+              "dot": true,
+              "viewport": "1649, 971",
+              "bodyFraction": 0.579999958756122,
+              "pet": "puddle",
+              "limited": false
+            },
+            {
+              "badge": 32,
+              "edge": "left",
+              "part": "Head",
+              "dot": true,
+              "viewport": "390, 740",
+              "bodyFraction": 0.3903905621962125,
+              "pet": "puddle",
+              "limited": true
+            },
+            {
+              "badge": 32,
+              "edge": "bottom",
+              "part": "Body",
+              "dot": true,
+              "viewport": "568, 160",
+              "bodyFraction": 0.3881993411658316,
+              "pet": "puddle",
+              "limited": true
+            }
+          ]
+        }
+      },
+      "HatchCinematic": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HatchCinematic",
+        "result": {
+          "fixtureOnly": true,
+          "geometry": [
+            {
+              "sweptPoints": 5488,
+              "pet": "pip",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.4993142262200926,
+              "stageHeight": 360,
+              "preparationMs": 3.8655998650938272,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 5096,
+              "pet": "puddle",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.4871386620258353,
+              "stageHeight": 360,
+              "preparationMs": 3.6512999795377254,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 3920,
+              "pet": "wick",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.5568284994405702,
+              "stageHeight": 360,
+              "preparationMs": 2.0778998732566833,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 9016,
+              "pet": "orbit",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.46278080722263126,
+              "stageHeight": 360,
+              "preparationMs": 6.024300120770931,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 13328,
+              "pet": "bloom_pip",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.5431471104203737,
+              "stageHeight": 360,
+              "preparationMs": 13.253599870949984,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 4704,
+              "pet": "foxfire_wick",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.5504667576279939,
+              "stageHeight": 360,
+              "preparationMs": 2.5194999761879444,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 9408,
+              "pet": "eclipse_orbit",
+              "reason": "full greeting",
+              "bandHeight": 260,
+              "fraction": 0.46278080722263126,
+              "stageHeight": 360,
+              "preparationMs": 6.476700073108077,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            {
+              "sweptPoints": 5488,
+              "pet": "pip",
+              "reason": "full greeting",
+              "bandHeight": 330,
+              "fraction": 0.5432099823713096,
+              "stageHeight": 420,
+              "preparationMs": 3.751999931409955,
+              "limited": true,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 5096,
+              "pet": "puddle",
+              "reason": "full greeting",
+              "bandHeight": 330,
+              "fraction": 0.5299640389072274,
+              "stageHeight": 420,
+              "preparationMs": 4.713299917057157,
+              "limited": true,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 3920,
+              "pet": "wick",
+              "reason": "target",
+              "bandHeight": 330,
+              "fraction": 0.5899999940314162,
+              "stageHeight": 420,
+              "preparationMs": 2.0025998819619417,
+              "limited": false,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 9016,
+              "pet": "orbit",
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.4920470789957318,
+              "stageHeight": 420,
+              "preparationMs": 5.112499929964542,
+              "limited": true,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 13328,
+              "pet": "bloom_pip",
+              "reason": "target",
+              "bandHeight": 330,
+              "fraction": 0.5899999465077901,
+              "stageHeight": 420,
+              "preparationMs": 11.02009997703135,
+              "limited": false,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 4704,
+              "pet": "foxfire_wick",
+              "reason": "target",
+              "bandHeight": 330,
+              "fraction": 0.5899999825155837,
+              "stageHeight": 420,
+              "preparationMs": 4.011600045487285,
+              "limited": false,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 9408,
+              "pet": "eclipse_orbit",
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.4920470789957318,
+              "stageHeight": 420,
+              "preparationMs": 4.8819000367075205,
+              "limited": true,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            {
+              "sweptPoints": 5488,
+              "pet": "pip",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999741248487,
+              "stageHeight": 180,
+              "preparationMs": 3.8783999625593424,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 5096,
+              "pet": "puddle",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999669279721,
+              "stageHeight": 180,
+              "preparationMs": 3.6510000936686993,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 3920,
+              "pet": "wick",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999843055449,
+              "stageHeight": 180,
+              "preparationMs": 2.0124001894146204,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 9016,
+              "pet": "orbit",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5838157875731655,
+              "stageHeight": 180,
+              "preparationMs": 5.161900073289871,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 13328,
+              "pet": "bloom_pip",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999845886932,
+              "stageHeight": 180,
+              "preparationMs": 10.493899928405881,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 4704,
+              "pet": "foxfire_wick",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999956499742,
+              "stageHeight": 180,
+              "preparationMs": 2.545800060033798,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            {
+              "sweptPoints": 9408,
+              "pet": "eclipse_orbit",
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5838157875731655,
+              "stageHeight": 180,
+              "preparationMs": 4.803100135177374,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            }
+          ],
+          "passed": 7,
+          "cases": [
+            "all seven real subjects fit the rectangular viewport through every greeting frame",
+            "common and rare complete once and retain moving settled motes without replaying cues",
+            "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+            "covered first play defers marker while presented owner loss lands final and stops its clock",
+            "resize keeps exact hero and epoch and device discontinuity settles only once",
+            "candidate minimum height is independent of previous stage and painted text sizes",
+            "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+          ]
+        }
+      },
+      "JellyUnderlay": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "JellyUnderlay",
+        "result": {
+          "spanPool": 1536,
+          "extraCanvases": 0,
+          "imageAvailable": false,
+          "actualRasterGate": "capture ball crossing active left/right region",
+          "passed": 2,
+          "cases": [
+            "span regions share the LCD subtree below every opaque gel row and existing rail masks",
+            "theme refresh retains underlay owner and the bounded pool; LCD release restores sprite underlay"
+          ]
+        }
+      },
+      "GardenActivity": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "GardenActivity",
+        "result": {
+          "passed": 4,
+          "cases": [
+            "two viewer rates sample identical server-time positions",
+            "movement advances every rendered frame",
+            "reduced gait preserves shared gameplay position",
+            "late and malformed snapshots are bounded"
+          ]
+        }
+      },
+      "GardenClient": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "GardenClient",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "joining replica receives current action and rejects stale or malformed replacement",
+            "a partial or superseded peer greeting is never presented as an agreed pair",
+            "character replacement fences a previously valid actor",
+            "an old same-alias snapshot is ignored after confirmed equip generation advances",
+            "one deliberate focus holds with bounded pulses and retirement ends that generation",
+            "quick end and reopen defers acquisition until the server focus cooldown passes",
+            "an unacknowledged current focus retries once and retiring it cancels all retry work",
+            "per-pet authoritative OFF is retained and unsupported peers default to visible"
+          ]
+        }
+      },
+      "CompanionScale": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompanionScale",
+        "result": {
+          "passed": 17,
+          "cases": [
+            "pip authored default1 and world.72 stay uniform through animated poses",
+            "pip travel gait rests snaps turns and respects reduced effects",
+            "puddle authored default1 and world.72 stay uniform through animated poses",
+            "puddle travel gait rests snaps turns and respects reduced effects",
+            "wick authored default1 and world.72 stay uniform through animated poses",
+            "wick travel gait rests snaps turns and respects reduced effects",
+            "orbit authored default1 and world.72 stay uniform through animated poses",
+            "orbit travel gait rests snaps turns and respects reduced effects",
+            "bloom_pip authored default1 and world.72 stay uniform through animated poses",
+            "bloom_pip travel gait rests snaps turns and respects reduced effects",
+            "foxfire_wick authored default1 and world.72 stay uniform through animated poses",
+            "foxfire_wick travel gait rests snaps turns and respects reduced effects",
+            "eclipse_orbit authored default1 and world.72 stay uniform through animated poses",
+            "eclipse_orbit travel gait rests snaps turns and respects reduced effects",
+            "ground sampling stays10Hz without per-foot queries",
+            "normal16stud movement is bounded to3.5cycles at15/30/60Hz",
+            "stride advances by rendered horizontal distance rather than wall clock"
+          ]
+        }
+      },
+      "DeckBackground": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "DeckBackground",
+        "result": {
+          "passed": 8,
+          "cases": [
+            "one16-band545-instance surface includes256 actual motif frames",
+            "canopy full period is closed and covers edges",
+            "creek full period is closed and covers edges",
+            "lantern full period is closed and covers edges",
+            "same-clock updates cap15Hz and hidden/reduced steady writes are zero",
+            "reduced board preview resize and return recompose same16 hosts once",
+            "exterior phase pauses while independent inspected owner advances",
+            "destroy removes all bands and stays idempotent"
+          ]
+        }
+      },
+      "StickerPrintSeat": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "StickerPrintSeat",
+        "result": {
+          "cases": [
+            "1649, 971 DROP independent count/caption and fixed inputs",
+            "1649, 971 FALLING independent count/caption and fixed inputs",
+            "1649, 971 SETTLE independent count/caption and fixed inputs",
+            "1649, 971 SAVING independent count/caption and fixed inputs",
+            "733, 307 DROP independent count/caption and fixed inputs",
+            "733, 307 FALLING independent count/caption and fixed inputs",
+            "733, 307 SETTLE independent count/caption and fixed inputs",
+            "733, 307 SAVING independent count/caption and fixed inputs",
+            "568, 160 DROP independent count/caption and fixed inputs",
+            "568, 160 FALLING independent count/caption and fixed inputs",
+            "568, 160 SETTLE independent count/caption and fixed inputs",
+            "568, 160 SAVING independent count/caption and fixed inputs",
+            "385, 703 DROP independent count/caption and fixed inputs",
+            "385, 703 FALLING independent count/caption and fixed inputs",
+            "385, 703 SETTLE independent count/caption and fixed inputs",
+            "385, 703 SAVING independent count/caption and fixed inputs"
+          ],
+          "glyphMeasurements": [
+            {
+              "state": "DROP",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "1649, 971",
+              "nativeBounds": "214, 316",
+              "print": 239,
+              "grip": 315.6541414141414
+            },
+            {
+              "state": "FALLING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "1649, 971",
+              "nativeBounds": "214, 316",
+              "print": 239,
+              "grip": 315.6541414141414
+            },
+            {
+              "state": "SETTLE",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "1649, 971",
+              "nativeBounds": "214, 316",
+              "print": 239,
+              "grip": 315.6541414141414
+            },
+            {
+              "state": "SAVING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "1649, 971",
+              "nativeBounds": "214, 316",
+              "print": 239,
+              "grip": 315.6541414141414
+            },
+            {
+              "state": "DROP",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "733, 307",
+              "nativeBounds": "41, 60",
+              "print": 46,
+              "grip": 110
+            },
+            {
+              "state": "FALLING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "733, 307",
+              "nativeBounds": "41, 60",
+              "print": 46,
+              "grip": 110
+            },
+            {
+              "state": "SETTLE",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "733, 307",
+              "nativeBounds": "41, 60",
+              "print": 46,
+              "grip": 110
+            },
+            {
+              "state": "SAVING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "733, 307",
+              "nativeBounds": "41, 60",
+              "print": 46,
+              "grip": 110
+            },
+            {
+              "state": "DROP",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "568, 160",
+              "nativeBounds": "18, 25",
+              "print": 19,
+              "grip": 102
+            },
+            {
+              "state": "FALLING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "568, 160",
+              "nativeBounds": "18, 25",
+              "print": 19,
+              "grip": 102
+            },
+            {
+              "state": "SETTLE",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "568, 160",
+              "nativeBounds": "18, 25",
+              "print": 19,
+              "grip": 102
+            },
+            {
+              "state": "SAVING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "568, 160",
+              "nativeBounds": "18, 25",
+              "print": 19,
+              "grip": 102
+            },
+            {
+              "state": "DROP",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "385, 703",
+              "nativeBounds": "48, 70",
+              "print": 53,
+              "grip": 341
+            },
+            {
+              "state": "FALLING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "385, 703",
+              "nativeBounds": "48, 70",
+              "print": 53,
+              "grip": 341
+            },
+            {
+              "state": "SETTLE",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "385, 703",
+              "nativeBounds": "48, 70",
+              "print": 53,
+              "grip": 341
+            },
+            {
+              "state": "SAVING",
+              "captionBelowA": false,
+              "dense": false,
+              "rotation": -15,
+              "root": "385, 703",
+              "nativeBounds": "48, 70",
+              "print": 53,
+              "grip": 341
+            }
+          ],
+          "passed": 16,
+          "measurement": "native TextBounds plus outline; actual ink visibility needs capture"
+        }
+      },
+      "DropCaption": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "DropCaption",
+        "result": {
+          "persistentWrites": false,
+          "passed": 4,
+          "cases": [
+            "568, 160 drop states stay readable and restore objective without moving controls",
+            "480, 160 drop states stay readable and restore objective without moving controls",
+            "385, 703 drop states stay readable and restore objective without moving controls",
+            "resizing while falling transfers status ownership and restores readiness"
+          ]
+        }
+      },
+      "HardwareDeck": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "HardwareDeck",
+        "result": {
+          "localPresentationOnly": true,
+          "passed": 6,
+          "cases": [
+            "1649, 971 exact wallets inset queue count and targets fit",
+            "733, 307 exact wallets inset queue count and targets fit",
+            "568, 160 exact wallets inset queue count and targets fit",
+            "385, 703 exact wallets inset queue count and targets fit",
+            "350, 279 exact wallets inset queue count and targets fit",
+            "qualified bank regions use only faint phase-owned fill; score refresh preserves pulses"
+          ]
+        }
+      },
+      "CompactDeck": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "CompactDeck",
+        "result": {
+          "persistentWrites": false,
+          "passed": 12,
+          "cases": [
+            "568, 160 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 198 safe tray and44px controls; readable queue and stable dispenser",
+            "350, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 279 safe tray and44px controls; readable queue and stable dispenser",
+            "568, 280 safe tray and44px controls; readable queue and stable dispenser",
+            "667, 285 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 300 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 330 safe tray and44px controls; readable queue and stable dispenser",
+            "844, 390 safe tray and44px controls; readable queue and stable dispenser",
+            "390, 740 safe tray and44px controls; readable queue and stable dispenser",
+            "385, 703 safe tray and44px controls; readable queue and stable dispenser",
+            "733, 307 safe tray and44px controls; readable queue and stable dispenser"
+          ]
+        }
+      },
+      "FieldQuestOwner": {
+        "ok": true,
+        "preference": "Medium",
+        "name": "FieldQuestOwner",
+        "result": [
+          "1649, 971 active public zones/counts preserve all input seats and exact remaining counter",
+          "733, 307 active public zones/counts preserve all input seats and exact remaining counter",
+          "568, 160 active public zones/counts preserve all input seats and exact remaining counter",
+          "385, 703 active public zones/counts preserve all input seats and exact remaining counter",
+          "same current chain progress returns after save notice without a reset or callback"
+        ]
+      }
+    }
+  },
+  "notes": "Unique passing suites only; later relevant suite replaces earlier name. Isolated fixtures and actual controls are separately described in BUILD-EVIDENCE."
+}

@@ -68,6 +68,17 @@ function Surface:setBackground(background,replacements)
  for i,r in ipairs(self.rectangles)do r.c=replacements[r.c];self.static[i].BackgroundColor3=color(r.c)end
  self.background=background;return true
 end
+-- Reuse the actual quest underlay. Existing outside/rail rectangles mask it;
+-- existing opaque gel spans stay above it. No pool, span or canvas is added.
+function Surface:attachRegions(host,colors)
+    self.root.ZIndex=3
+    for i,r in ipairs(self.rectangles)do
+        local foreground=r.c==colors.outside or r.c==colors.rail or r.c==colors.rim
+        self.static[i].ZIndex=if foreground then 4 else 2
+    end
+    host.Parent=self.root;host.ZIndex=3
+    for _,node in ipairs(host:GetChildren())do if node:IsA("GuiObject")then node.ZIndex=3 end end
+end
 function Surface:resize()
 	local w,h=self.root.AbsoluteSize.X,self.root.AbsoluteSize.Y
 	for x=0,self.width do self.edgesX[x]=math.floor(x*w/self.width+.5)end

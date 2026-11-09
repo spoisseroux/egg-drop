@@ -7,6 +7,10 @@ local Layout = {
     ToyEast = Vector3.new(.4, 4.025, -7.7),
     Rest = Vector3.new(-5, 4.025, -3),
     DecisionInterval = .5,
+    WalkSpeed = 4,
+    CatchupSpeed = 9,
+    LeashSpeed = 18,
+    StrollSpeed = 3,
     ObserverDistance = 72,
     ObserverCap = 6,
 }

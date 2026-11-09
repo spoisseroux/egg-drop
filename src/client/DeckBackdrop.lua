@@ -48,22 +48,22 @@ function Backdrop:configure(id,theme)
    assign(self,p.body,"Rotation",45,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(0,2),"styleWrites")
    assign(self,p.core,"Position",UDim2.fromScale(.25,.25),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.5,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(0,1),"styleWrites")
   end
-  assign(self,p.body,"BackgroundTransparency",if layer==1 then .72 else .86,"styleWrites")
-  assign(self,p.core,"BackgroundTransparency",if id=="creek"then .12 else .38,"styleWrites")
+  assign(self,p.body,"BackgroundTransparency",if layer==1 then .34 else .55,"styleWrites")
+  assign(self,p.core,"BackgroundTransparency",if id=="creek"then .12 else .22,"styleWrites")
  end end
  self.size=nil;self:colors(.2);return true
 end
 function Backdrop:colors(phase)
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true
  for _,b in ipairs(self.bands)do
-  local tone=if self.id=="lantern"then self.theme.buttons:Lerp(self.theme.trim,(math.sin(phase*math.pi*2*b.layer)+1)/2)else self.theme.band:Lerp(self.theme.trim,if b.layer==1 then .4 else .72)
+  local tone=if self.id=="lantern"then self.theme.buttons:Lerp(self.theme.trim,(math.sin(phase*math.pi*2*b.layer)+1)/2)else self.theme.face:Lerp(self.theme.highlight,if b.layer==1 then .55 else .9)
   for _,p in ipairs(b.pieces)do assign(self,p.body,"BackgroundColor3",tone,"colorWrites");assign(self,p.core,"BackgroundColor3",if self.id=="creek"then self.theme.backdrop else self.theme.trim,"colorWrites") end
  end
 end
 function Backdrop:resize()
  local size=self.root.AbsoluteSize;if self.size==size then return end;self.size=size;self.resting=false
  local pitch=if size.X>=1000 then 64 else 46
- local motif=if size.X>=1000 then 24 else 18
+ local motif=if size.X>=1000 then 28 else 22
  self.stats.pitch,self.stats.motifWidth=pitch,motif
  -- Reuse 64 motifs per layer: 32 at the side gutters, 16 above and
  -- 16 below the actual case. Large displays relax pitch instead of adding nodes.
@@ -107,10 +107,10 @@ end
 function Backdrop:pose(phase)
  local size=self.size
  for _,b in ipairs(self.bands)do
-  local amplitude=if b.layer==1 then 5 else 8
+  local amplitude=if b.layer==1 then 13 else 20
   local direction=if self.id=="lantern"and b.row%2==0 then -1 else 1
   local offset=math.sin(phase*math.pi*2*b.layer+b.row*.56)*amplitude*direction
-  assign(self,b.canvas,"Position",UDim2.fromOffset(offset,math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 3 else 5)),"poseWrites")
+  assign(self,b.canvas,"Position",UDim2.fromOffset(offset,math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 8 else 12)),"poseWrites")
  end
  self.stats.ticks+=1
 end

@@ -7,6 +7,7 @@ local Art=require(script.Parent.DeckArt)
 local Portrait=require(script.Parent.PetPortrait)
 local Bounds=require(script.Parent.PetRigBounds)
 local Shot=require(script.Parent.PetGreetingShot)
+local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
@@ -23,6 +24,14 @@ local function include(visual,points)
  for _,entry in ipairs(visual.pieces)do local p=entry.part
   if entry.role~="ripple"and entry.faceRole~="spark"and p.Transparency<.99 then
    local cf,size=p.CFrame,p.Size
+   if visual.definition then
+    local pad=IdleMotion.padding(visual,entry)
+    local r,u,l=cf.RightVector,cf.UpVector,cf.LookVector
+    size=Vector3.new(math.abs(r.X)*size.X+math.abs(u.X)*size.Y+math.abs(l.X)*size.Z,
+     math.abs(r.Y)*size.X+math.abs(u.Y)*size.Y+math.abs(l.Y)*size.Z,
+     math.abs(r.Z)*size.X+math.abs(u.Z)*size.Y+math.abs(l.Z)*size.Z)+pad*2
+    cf=CFrame.new(cf.Position)
+   end
    Bounds.include(visual,cf,size)
    if points then for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do table.insert(points,cf:PointToWorldSpace(size*Vector3.new(x,y,z)*.5))end end end end
   end
@@ -94,14 +103,15 @@ function Cinematic:createHero()
  local ok=pcall(function()
   if self.forceFallback then error("isolated pixel fallback fixture")end
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport
-  local visual=Factory.new(world,Vector3.zero,self.pet);self.heroVisual=visual;rest(visual,self.pet)
+  local visual=Factory.new(world,Vector3.zero,self.pet);self.heroVisual=visual
+  local idleFrozen=visual.idleMotionFrozen;visual.idleMotionFrozen=true;rest(visual,self.pet)
   Bounds.begin(visual);include(visual);Bounds.finish(visual);self.neutralFrame,self.neutralSize=Bounds.get(visual)
   self.heroPoints=Shot.captureSilhouette(visual,self.neutralFrame)
   -- Bounded authored animation sample, once per result. Relayout reuses it.
   local time,greeting=visual.time,visual.greeting;self.sweptPoints={};Bounds.begin(visual);include(visual,self.sweptPoints);visual:greet()
   for _=1,48 do visual:update(1/30);include(visual,self.sweptPoints)end
   Bounds.finish(visual);self.envelopeFrame,self.envelopeSize=Bounds.get(visual);self.envelopeSize+=Vector3.one*.10
-  visual.time,visual.greeting=time,greeting;visual:update(0);visual.rigBoundsFrame,visual.rigBoundsSize=self.neutralFrame,self.neutralSize
+  visual.time,visual.greeting,visual.idleMotionFrozen=time,greeting,idleFrozen;visual:update(0);visual.rigBoundsFrame,visual.rigBoundsSize=self.neutralFrame,self.neutralSize
   local camera=Instance.new("Camera");camera.Name="HeroCamera";camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera;self.heroCamera=camera;self.renderMode="3D"
  end)
  if not ok then self:clearHero();self.renderMode="PixelFallback";self.portrait=Portrait.create(self.heroHost,self.pet,1,UDim2.fromScale(.5,.5),50)end

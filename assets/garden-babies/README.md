@@ -1,14 +1,14 @@
 # Zivvi and Ovelle
 
-These are the first two authored garden babies. The original Blender scene contains both rigs and their neutral, curious, startled, pleased, sleepy and affectionate faces. Each family has an FBX for the Studio importer and a GLB with named expression morphs. The three PNGs are actual Blender renders.
+These revised Blender rigs give Zivvi a warm porcelain body, two low crown bumps and six small milk teeth. Ovelle has a cool stone body, an asymmetric pebble head, two attached mittens and a gentle hover. Each source rig contains a neutral basis plus curious, startled, pleased, sleepy and affectionate expression morphs. The Studio renderer poses the semantic MeshParts directly.
 
-| Asset | Body at garden size | Original FBX | Imported color correction |
-|---|---|---|---|
-| Zivvi | 1.534 studs tall, 1.635 wide | 14 meshes, 5,492 triangles | Replace the two mixed-material hand meshes with four single-color pieces. |
-| Ovelle | 1.400 studs tall, 1.656 wide, hovering 0.10 studs above the origin | 15 meshes, 5,388 triangles | Replace the two mixed-material cuff meshes with four single-color pieces. |
+![The v225 and revised geometry rendered in one scene](softening-comparison.png)
 
-**Source coordinates.** The JSON recipes use Roblox axes with +Y up, +Z forward and the ground origin beneath the paws. Head, hands, feet, Ovelle’s cuffs, eye line, catch point and charm have named anchors. The meshes use the same physical proportions. The frozen Studio import faces −Z, so its presentation adapter applies one half-turn. Exclude the optional dot from body size and contact bounds. Include it in camera clearance while visible.
+| Revised FBX | Template meshes | Triangles | Body bounds, width × height × depth | Feet above origin |
+|---|---:|---:|---|---:|
+| Zivvi | 16 | 6,308 | 1.320 × 1.523 × 0.946 studs | 0.000 studs |
+| Ovelle | 15 | 5,612 | 1.473 × 1.422 × 0.886 studs | 0.088 studs |
 
-**Material splits.** The Studio importer produced gray MeshParts. Use the role colors from the family’s native JSON. [The supplemental FBX](garden-material-splits.fbx) contains only the affected pieces. [Its manifest](garden-material-splits.json) gives their original paw-space centers, sizes, materials and animation channels. Use those centers when positioning the pieces. Rescaling the supplemental group to its own bounding box would change the hand and cuff proportions.
+The two FBXs include their own separated, single-material mitten tip meshes. Each family’s mesh manifest gives the exact object name, animation channel, color role, paw-relative center and size. Each native recipe provides the fallback primitives, palette and pivots. Both formats use Roblox +Y up and authored +Z front. The Studio FBX import faces −Z and the adapter applies the existing half-turn. Ovelle’s cuff and hand pivots coincide so its accent moves with the mitten. The floating dot is optional and contributes only to visible camera clearance. [Validated import hashes and bounds](softening-import.json) · [Studio workflow](IMPORT.md)
 
-**Fallback.** The native JSON files describe approximate primitive rigs for clients without the imported template. [The portrait map](portraits.json) provides a 13×13 fallback. [The expression render](garden-babies-expressions.png) shows the intended mouth, gaze, head tilt and hand poses. The Studio adapter drives these through named pieces.
+The front, 35° three-quarter, 80° profile and expression sheet are genuine Blender renders of the revised geometry. [Front](garden-babies-front.png) · [Three-quarter](garden-babies-three-quarter.png) · [Profile](garden-babies-profile.png) · [Expressions](garden-babies-expressions.png)

@@ -1,0 +1,1518 @@
+{
+  "evidence": "Actual two-client Studio session,45server observations during naturalactivity and real focus controls; no injectedpeers orrewardrolls",
+  "rows": [
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 63,
+          "x": -4.936626434326172,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3.0551586151123047,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 65,
+          "x": -1.9246363639831543,
+          "yaw": -3.586283428676785,
+          "mode": "Room",
+          "z": -4.328324317932129,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 0.000040499959141016006,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 65,
+          "x": -2.394407272338867,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -5.630421161651611,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 1.0157226000446826,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 65,
+          "x": -3.4206860065460205,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -6.833482265472412,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 2.016338499961421,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 65,
+          "x": -4.277490615844727,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -7.602032661437988,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 3.031405500136316,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 67,
+          "x": -4.400000095367432,
+          "yaw": -2.81516003281224,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 4.031907099997625,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 67,
+          "x": -4.400000095367432,
+          "yaw": -4.215966182176319,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 5.0482457999605685,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 66,
+          "x": -5,
+          "yaw": 11.711776143500309,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 67,
+          "x": -4.400000095367432,
+          "yaw": -4.215966182176319,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 6.048568099969998,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 68,
+          "x": -5.858686923980713,
+          "yaw": 11.431518878545548,
+          "mode": "Room",
+          "z": -2.5999927520751953,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 69,
+          "x": -4.4048309326171875,
+          "yaw": -4.471289935185127,
+          "mode": "Room",
+          "z": -7.662160396575928,
+          "behavior": "rest"
+        }
+      ],
+      "t": 7.0651331001427025,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 68,
+          "x": -8.742079734802246,
+          "yaw": 11.431518878545548,
+          "mode": "Room",
+          "z": -1.2568057775497437,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 69,
+          "x": -4.503252983093262,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -6.891185760498047,
+          "behavior": "rest"
+        }
+      ],
+      "t": 8.06530090002343,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 68,
+          "x": -11.229531288146973,
+          "yaw": 12.082531635988019,
+          "mode": "Room",
+          "z": 0.827405571937561,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 69,
+          "x": -4.680555820465088,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -5.502312183380127,
+          "behavior": "rest"
+        }
+      ],
+      "t": 9.081889900146052,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 68,
+          "x": -7.01983642578125,
+          "yaw": 13.775745341216878,
+          "mode": "Room",
+          "z": 2.3293919563293457,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 69,
+          "x": -4.8624138832092285,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -4.077760696411133,
+          "behavior": "rest"
+        }
+      ],
+      "t": 10.08237860002555,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 68,
+          "x": -6.622225761413574,
+          "yaw": 13.775745341216878,
+          "mode": "Room",
+          "z": 2.5603344440460205,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 69,
+          "x": -4.984405040740967,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3.122159719467163,
+          "behavior": "rest"
+        }
+      ],
+      "t": 11.097500700037926,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -6.59856653213501,
+          "yaw": 14.240747490262534,
+          "mode": "Room",
+          "z": 2.5271310806274414,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 12.098674000008032,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -6.181968688964844,
+          "yaw": 15.094175640259316,
+          "mode": "Room",
+          "z": 1.9417989253997803,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 13.099175699986517,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -5.361791610717773,
+          "yaw": 15.094175640259316,
+          "mode": "Room",
+          "z": 0.7870569825172424,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 14.115369100123644,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -4.3368096351623535,
+          "yaw": 15.094175640259316,
+          "mode": "Room",
+          "z": -0.6605134010314941,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 15.115641199983656,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -3.2510998249053955,
+          "yaw": 15.094175640259316,
+          "mode": "Room",
+          "z": -2.201554298400879,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 16.131882900139317,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -2.2991347312927246,
+          "yaw": 15.094175640259316,
+          "mode": "Room",
+          "z": -3.565622329711914,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 70,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 17.14787030010484,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -1.4887847900390625,
+          "yaw": 15.132538575736396,
+          "mode": "Room",
+          "z": -4.766328811645508,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -5.523209571838379,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": -2.323697566986084,
+          "behavior": "follow"
+        }
+      ],
+      "t": 18.165826000040397,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": -0.4775693118572235,
+          "yaw": 15.132538575736396,
+          "mode": "Room",
+          "z": -6.326394081115723,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -6.884588241577148,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": -0.5639756321907043,
+          "behavior": "follow"
+        }
+      ],
+      "t": 19.180779800051823,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 72,
+          "x": 0.2831031084060669,
+          "yaw": 15.132538575736396,
+          "mode": "Room",
+          "z": -7.516139507293701,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -7.984803199768066,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": 0.8581655025482178,
+          "behavior": "follow"
+        }
+      ],
+      "t": 20.198656500084326,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "shove",
+          "id": "-1",
+          "actionId": 74,
+          "x": 0.40000009536743164,
+          "yaw": 15.83877021118335,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -8.097556114196777,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": 1.0039100646972656,
+          "behavior": "follow"
+        }
+      ],
+      "t": 21.214247700059786,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "shove",
+          "id": "-1",
+          "actionId": 74,
+          "x": 0.40000009536743164,
+          "yaw": 16.782336796535493,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -8.097556114196777,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": 1.0039100646972656,
+          "behavior": "follow"
+        }
+      ],
+      "t": 22.230980900116265,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "shove",
+          "id": "-1",
+          "actionId": 74,
+          "x": 0.40000009536743164,
+          "yaw": 16.782336796535493,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -8.097556114196777,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": 1.0039100646972656,
+          "behavior": "follow"
+        }
+      ],
+      "t": 23.23123270017095,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": 0.3432915210723877,
+          "yaw": 17.678763432700023,
+          "mode": "Room",
+          "z": -7.650642395019531,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 73,
+          "x": -8.097556114196777,
+          "yaw": -6.941640637298811,
+          "mode": "Room",
+          "z": 1.0039100646972656,
+          "behavior": "follow"
+        }
+      ],
+      "t": 24.24716000002809,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -0.16211049258708954,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -7.210755825042725,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -7.747145175933838,
+          "yaw": -5.066073121410196,
+          "mode": "Room",
+          "z": 0.8055652976036072,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 25.247302200179547,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -1.0471211671829224,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -6.4404683113098145,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -6.762872695922852,
+          "yaw": -4.025187628827796,
+          "mode": "Room",
+          "z": 0.21487392485141754,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 26.247744800057262,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -2.1535682678222656,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -5.477449893951416,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -5.394742965698242,
+          "yaw": -4.025187628827796,
+          "mode": "Room",
+          "z": -0.6836225986480713,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 27.26479070005007,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -3.282871723175049,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -4.494537830352783,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -3.9453768730163574,
+          "yaw": -4.025187628827796,
+          "mode": "Room",
+          "z": -1.7749282121658325,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 28.28109070006758,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -4.250469207763672,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3.652369260787964,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -2.7029919624328613,
+          "yaw": -4.025187628827796,
+          "mode": "Room",
+          "z": -2.952569007873535,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 29.2974740001373,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -4.864736557006836,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3.1177291870117188,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -1.9659702777862549,
+          "yaw": -3.9787029250128905,
+          "mode": "Room",
+          "z": -4.093627452850342,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 30.297960700001568,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "action": "settle",
+          "id": "-1",
+          "actionId": 75,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -2.2322838306427,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -5.368411064147949,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 31.31417730008252,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 78,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -3.2065131664276123,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -6.6169939041137695,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 32.315280199982226,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 78,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "id": "-2",
+          "actionId": 77,
+          "x": -4.160282135009766,
+          "yaw": -2.5661679613772237,
+          "mode": "Room",
+          "z": -7.50503396987915,
+          "behavior": "investigate"
+        }
+      ],
+      "t": 33.33141480013728,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 78,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 79,
+          "x": -4.400000095367432,
+          "yaw": -2.5730435853635294,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 34.34748230013065,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 78,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 79,
+          "x": -4.400000095367432,
+          "yaw": -4.215966182176319,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 35.347743400139734,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 78,
+          "x": -5,
+          "yaw": 17.994961450679895,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        },
+        {
+          "action": "shove",
+          "id": "-2",
+          "actionId": 79,
+          "x": -4.400000095367432,
+          "yaw": -4.215966182176319,
+          "mode": "Room",
+          "z": -7.699999809265137,
+          "behavior": "play"
+        }
+      ],
+      "t": 36.36385200009681,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 80,
+          "x": -5.114129066467285,
+          "yaw": 18.565685302945198,
+          "mode": "Room",
+          "z": -2.6088125705718994,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 81,
+          "x": -4.400207042694092,
+          "yaw": -4.22797463034843,
+          "mode": "Room",
+          "z": -7.698381423950195,
+          "behavior": "rest"
+        }
+      ],
+      "t": 37.364396300166845,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 80,
+          "x": -5.71760892868042,
+          "yaw": 18.565685302945198,
+          "mode": "Room",
+          "z": -0.5403270721435547,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 81,
+          "x": -4.4775590896606445,
+          "yaw": -6.357428643843365,
+          "mode": "Room",
+          "z": -7.09245491027832,
+          "behavior": "rest"
+        }
+      ],
+      "t": 38.380310900043696,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 80,
+          "x": -6.388377666473389,
+          "yaw": 18.565685302945198,
+          "mode": "Room",
+          "z": 1.7587978839874268,
+          "behavior": "follow"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 81,
+          "x": -4.645927429199219,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -5.773569107055664,
+          "behavior": "rest"
+        }
+      ],
+      "t": 39.39645740017295,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 83,
+          "x": -6.620190143585205,
+          "yaw": 18.589876616721394,
+          "mode": "Room",
+          "z": 2.557478427886963,
+          "behavior": "investigate"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 81,
+          "x": -4.8315582275390625,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -4.319460868835449,
+          "behavior": "rest"
+        }
+      ],
+      "t": 40.39676839997992,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 83,
+          "x": -6.292575836181641,
+          "yaw": 20.874018933889367,
+          "mode": "Room",
+          "z": 2.0972955226898193,
+          "behavior": "investigate"
+        },
+        {
+          "action": "settle",
+          "id": "-2",
+          "actionId": 81,
+          "x": -4.970378875732422,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3.2320311069488525,
+          "behavior": "rest"
+        }
+      ],
+      "t": 41.41456239996478,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 83,
+          "x": -5.531396865844727,
+          "yaw": 21.377360947438902,
+          "mode": "Room",
+          "z": 1.0260887145996094,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 84,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 42.430988300126046,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 83,
+          "x": -4.515188217163086,
+          "yaw": 21.377360947438902,
+          "mode": "Room",
+          "z": -0.4081772565841675,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 84,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 43.44801610009745,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    },
+    {
+      "actors": [
+        {
+          "id": "-1",
+          "actionId": 83,
+          "x": -3.425536632537842,
+          "yaw": 21.377360947438902,
+          "mode": "Room",
+          "z": -1.953221321105957,
+          "behavior": "investigate"
+        },
+        {
+          "id": "-2",
+          "actionId": 84,
+          "x": -5,
+          "yaw": -6.410158081925692,
+          "mode": "Room",
+          "z": -3,
+          "behavior": "rest"
+        }
+      ],
+      "t": 44.46345590008423,
+      "wallets": {
+        "-1": {
+          "revision": 3,
+          "wallet": 6
+        },
+        "-2": {
+          "revision": 3,
+          "wallet": 6
+        }
+      }
+    }
+  ]
+}

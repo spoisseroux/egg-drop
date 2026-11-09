@@ -1,0 +1,166 @@
+{
+  "valid": 31,
+  "remaining": 0,
+  "complete": true,
+  "repaired": 0,
+  "attempted": 0,
+  "failures": [],
+  "expected": 31,
+  "parts": {
+    "1": {
+      "valid": true,
+      "name": "Zivvi__Body",
+      "mesh": "rbxassetid://99727956905421"
+    },
+    "2": {
+      "valid": true,
+      "name": "Zivvi__CharmDot",
+      "mesh": "rbxassetid://132222252481225"
+    },
+    "3": {
+      "valid": true,
+      "name": "Zivvi__Cheeks",
+      "mesh": "rbxassetid://139896070606974"
+    },
+    "4": {
+      "valid": true,
+      "name": "Zivvi__CuffTrimL",
+      "mesh": "rbxassetid://117469657174909"
+    },
+    "5": {
+      "valid": true,
+      "name": "Zivvi__CuffTrimR",
+      "mesh": "rbxassetid://108278463516833"
+    },
+    "6": {
+      "valid": true,
+      "name": "Zivvi__EyeL",
+      "mesh": "rbxassetid://96648191548397"
+    },
+    "7": {
+      "valid": true,
+      "name": "Zivvi__EyeR",
+      "mesh": "rbxassetid://87544918202515"
+    },
+    "8": {
+      "valid": true,
+      "name": "Zivvi__FootL",
+      "mesh": "rbxassetid://70974133898127"
+    },
+    "9": {
+      "valid": true,
+      "name": "Zivvi__FootR",
+      "mesh": "rbxassetid://126865480422267"
+    },
+    "10": {
+      "valid": true,
+      "name": "Zivvi__GlintL",
+      "mesh": "rbxassetid://84785772315480"
+    },
+    "11": {
+      "valid": true,
+      "name": "Zivvi__GlintR",
+      "mesh": "rbxassetid://111669294653763"
+    },
+    "12": {
+      "valid": true,
+      "name": "Zivvi__HandL",
+      "mesh": "rbxassetid://138522973430765"
+    },
+    "13": {
+      "valid": true,
+      "name": "Zivvi__HandR",
+      "mesh": "rbxassetid://125186969339894"
+    },
+    "14": {
+      "valid": true,
+      "name": "Zivvi__Head",
+      "mesh": "rbxassetid://72749804215974"
+    },
+    "15": {
+      "valid": true,
+      "name": "Zivvi__Mouth",
+      "mesh": "rbxassetid://76596974443543"
+    },
+    "16": {
+      "valid": true,
+      "name": "Zivvi__Teeth",
+      "mesh": "rbxassetid://134078461020210"
+    },
+    "17": {
+      "valid": true,
+      "name": "Ovelle__Body",
+      "mesh": "rbxassetid://74387490054284"
+    },
+    "18": {
+      "valid": true,
+      "name": "Ovelle__CharmDot",
+      "mesh": "rbxassetid://80244780607428"
+    },
+    "19": {
+      "valid": true,
+      "name": "Ovelle__Cheeks",
+      "mesh": "rbxassetid://129648440295691"
+    },
+    "20": {
+      "valid": true,
+      "name": "Ovelle__CuffTrimL",
+      "mesh": "rbxassetid://137971460586725"
+    },
+    "21": {
+      "valid": true,
+      "name": "Ovelle__CuffTrimR",
+      "mesh": "rbxassetid://92297229166696"
+    },
+    "22": {
+      "valid": true,
+      "name": "Ovelle__EyeL",
+      "mesh": "rbxassetid://131772866819568"
+    },
+    "23": {
+      "valid": true,
+      "name": "Ovelle__EyeR",
+      "mesh": "rbxassetid://75240324405539"
+    },
+    "24": {
+      "valid": true,
+      "name": "Ovelle__FootL",
+      "mesh": "rbxassetid://138061065297446"
+    },
+    "25": {
+      "valid": true,
+      "name": "Ovelle__FootR",
+      "mesh": "rbxassetid://72334766316266"
+    },
+    "26": {
+      "valid": true,
+      "name": "Ovelle__GlintL",
+      "mesh": "rbxassetid://103303995730465"
+    },
+    "27": {
+      "valid": true,
+      "name": "Ovelle__GlintR",
+      "mesh": "rbxassetid://138262140364015"
+    },
+    "28": {
+      "valid": true,
+      "name": "Ovelle__HandL",
+      "mesh": "rbxassetid://95796551392683"
+    },
+    "29": {
+      "valid": true,
+      "name": "Ovelle__HandR",
+      "mesh": "rbxassetid://125242695220955"
+    },
+    "30": {
+      "valid": true,
+      "name": "Ovelle__Head",
+      "mesh": "rbxassetid://84031791566219"
+    },
+    "31": {
+      "valid": true,
+      "name": "Ovelle__Mouth",
+      "mesh": "rbxassetid://135651809721076"
+    }
+  }
+}

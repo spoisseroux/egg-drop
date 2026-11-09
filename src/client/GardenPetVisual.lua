@@ -5,6 +5,7 @@ local Bounds=require(script.Parent.PetRigBounds)
 local Expression=require(script.Parent.PetExpression)
 local Charms=require(script.Parent.PetCharms)
 local Face=require(script.Parent.PetFace)
+local Motion=require(script.Parent.PetIdleMotion)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -61,7 +62,7 @@ local function imported(self)
  for _,part in ipairs(source:GetDescendants())do if part:IsA("BasePart")then
   local name=string.gsub(part.Name,"^.-__","")
   local def=lookup[name]
-  if string.find(name,"^CuffTrim")then def={name=name,channel=(if self.definition.id=="zivvi"then "Hand"else "Cuff")..string.sub(name,-1),colorRole="secondary"}end
+  if not def and string.find(name,"^CuffTrim")then def={name=name,channel=(if self.definition.id=="zivvi"then "Hand"else "Cuff")..string.sub(name,-1),colorRole="secondary"}end
   if not def and name=="Teeth"then def={name=name,channel="Face",colorRole="ivory"}end
   if not def and name=="Mouth"then def=lookup.MouthSmile end
   if not def and name=="Cheeks"then def={name=name,channel="Face",colorRole="blush"}end
@@ -105,19 +106,19 @@ function Visual:applyGardenPose(sample)
 end
 function Visual:update(dt)
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
- local pose=Expression.get(Expression.name(self));local reduced=self.reducedEffects==true
+ local expression=Expression.name(self);local pose=Expression.get(expression);local reduced=self.reducedEffects==true
+ local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
  local greet=wave*(if self.focusPose then .35 else 1)
  local gait=if reduced then 0 else(self.gaitWeight or 0)
  local step=math.sin(self.gaitPhase or 0)*gait
- local sway=if reduced then 0 else math.sin(self.time*2)*.012
  local shove=if self.gardenAction=="shove"then math.sin(math.clamp(self.actionPhase or 0,0,1)*math.pi*4)else 0
  local daylight=Face.daylight()
  local root=CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0)
  local hop=(greet*.11+(self.movementBob or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=root*CFrame.new(0,hop+pose.head*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15,0,pose.tilt+sway+(self.affectionTilt or 0)*.08)*CFrame.new(-headAnchor)
+ local head=root*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch,headYaw,pose.tilt+(self.affectionTilt or 0)*.08)*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
@@ -135,8 +136,10 @@ function Visual:update(dt)
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale,step*side*.075*self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)
-  if string.find(name,"Eye")then size=Vector3.new(size.X*(if pose.mouth=="open"then 1.12 else 1),size.Y*pose.eye,size.Z)
-  elseif string.find(name,"Glint")then hidden=hidden or pose.eye<.4
+  if channel=="Body"then size=Vector3.new(size.X,size.Y*(1+bodyStretch),size.Z)end
+  if entry.role=="charm"then cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch)end
+  if string.find(name,"Eye")then size=Vector3.new(size.X*(if pose.mouth=="open"then 1.12 else 1),size.Y*pose.eye*blink,size.Z)
+  elseif string.find(name,"Glint")then hidden=hidden or pose.eye*blink<.4
   elseif name=="MouthO"then hidden=hidden or pose.mouth~="open"
   elseif name=="MouthSmile"then
    hidden=hidden or pose.mouth=="open"

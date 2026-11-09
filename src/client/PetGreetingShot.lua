@@ -1,5 +1,6 @@
 -- Pure bounded framing and greeting-camera lifetime helpers.
 local Shot = { Fov = 43, StageReach = 6.7 }
+local IdleMotion=require(script.Parent.PetIdleMotion)
 local function inside(point, floor, margin)
 	local p = floor.cf:PointToObjectSpace(point)
 	return math.abs(p.X) <= floor.size.X * .5 - margin and math.abs(p.Z) <= floor.size.Z * .5 - margin
@@ -70,15 +71,16 @@ end
 -- keeps its own swept box, so floating Dot headroom cannot invent near corners
 -- across the full width/depth of the body. Called only on focus/geometry changes.
 function Shot.captureFocusedSubject(pet)
-	local key=tostring(pet.charmVisible~=false)..":"..tostring(pet.scale or pet.worldScale)..":"..#pet.pieces
+ local key=tostring(IdleMotion.Version)..":"..tostring(pet.charmVisible~=false)..":"..tostring(pet.scale or pet.worldScale)..":"..#pet.pieces
 	local cached=pet.focusEnvelopeCache and pet.focusEnvelopeCache[key]
 	if cached then
 		local body=CFrame.new(pet.origin)*CFrame.Angles(0,pet.yaw or 0,0)*CFrame.new(cached.center)
 		return body,cached.size,cached.body,cached.envelope,true
 	end
-	local keys={"reducedEffects","origin","yaw","time","greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame","expression","petting","affection","gardenAction","actionPhase"}
+ local keys={"reducedEffects","idleMotionFrozen","origin","yaw","time","greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame","expression","petting","affection","gardenAction","actionPhase"}
 	local saved={};for _,key in ipairs(keys)do saved[key]=pet[key]end
 	pet.reducedEffects=false
+ pet.idleMotionFrozen=true
 	pet.origin,pet.yaw,pet.time=Vector3.zero,0,0
 	pet.greeting,pet.focusPose,pet.gaitWeight,pet.movementBob,pet.affectionTilt=2,true,0,0,0
 	pet.expression,pet.petting,pet.affection,pet.gardenAction,pet.actionPhase="neutral",false,0,nil,0
@@ -116,7 +118,8 @@ function Shot.captureFocusedSubject(pet)
 	local padding=Vector3.one*.012*(pet.scale or pet.worldScale or 1)
 	for _,entry in ipairs(pet.pieces)do
 		local box=boxes[entry];if not box then continue end
-		box.min-=padding;box.max+=padding
+  local motionPadding=IdleMotion.padding(pet,entry)
+  box.min-=padding+motionPadding;box.max+=padding+motionPadding
 		low=Vector3.new(math.min(low.X,box.min.X),math.min(low.Y,box.min.Y),math.min(low.Z,box.min.Z))
 		high=Vector3.new(math.max(high.X,box.max.X),math.max(high.Y,box.max.Y),math.max(high.Z,box.max.Z))
 		for x=0,1 do for y=0,1 do for z=0,1 do
@@ -127,7 +130,7 @@ function Shot.captureFocusedSubject(pet)
 	for _,key in ipairs(keys)do pet[key]=saved[key]end
 	pet:update(0)
 	local worldBody=CFrame.new(saved.origin)*CFrame.Angles(0,saved.yaw or 0,0)*CFrame.new(bodyCenter)
-	local envelope={points=points,names=names,center=(low+high)*.5,size=high-low,targetFraction=.58,sweepSamples=17}
+ local envelope={points=points,names=names,center=(low+high)*.5,size=high-low,targetFraction=.58,sweepSamples=17,motionBoundsVersion=IdleMotion.Version}
 	pet.focusEnvelopeCache=pet.focusEnvelopeCache or {}
 	pet.focusEnvelopeCache[key]={center=bodyCenter,size=bodySize,body=bodyPoints,envelope=envelope}
 	return worldBody,bodySize,bodyPoints,envelope,false

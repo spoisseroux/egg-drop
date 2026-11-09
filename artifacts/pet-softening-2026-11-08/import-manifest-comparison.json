@@ -1,0 +1,201 @@
+{
+  "source": "artifacts\\pet-softening-2026-11-08\\studio-import-local.json",
+  "sourceSha256": "E5D180998FA6800CE50257C8F04DAE7406FC336F5E77000B52C8FBF5F27AC72E",
+  "expectedParts": 31,
+  "models": {
+    "Zivvi": 16,
+    "Ovelle": 15
+  },
+  "toleranceStuds": 1e-05,
+  "mismatches": [],
+  "maximumCenterErrorStuds": 3.906249999990896e-06,
+  "maximumSizeErrorStuds": 1.5558776855773004e-07,
+  "parts": [
+    {
+      "name": "Zivvi__Body",
+      "centerMaxErrorStuds": 8.77380371133718e-08,
+      "sizeMaxErrorStuds": 4.291534427824928e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__CharmDot",
+      "centerMaxErrorStuds": 2.746582031250104e-06,
+      "sizeMaxErrorStuds": 2.8610229491077277e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__Cheeks",
+      "centerMaxErrorStuds": 3.4512695312738373e-06,
+      "sizeMaxErrorStuds": 3.4809112550715504e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__CuffTrimL",
+      "centerMaxErrorStuds": 3.17382812498046e-06,
+      "sizeMaxErrorStuds": 4.415340423835623e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__CuffTrimR",
+      "centerMaxErrorStuds": 3.17382812498046e-06,
+      "sizeMaxErrorStuds": 4.415340423835623e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__EyeL",
+      "centerMaxErrorStuds": 3.2348632812428946e-06,
+      "sizeMaxErrorStuds": 4.9155044555548866e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__EyeR",
+      "centerMaxErrorStuds": 3.2348632812428946e-06,
+      "sizeMaxErrorStuds": 4.9155044555548866e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__FootL",
+      "centerMaxErrorStuds": 2.1362304687411182e-06,
+      "sizeMaxErrorStuds": 4.628829958219782e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__FootR",
+      "centerMaxErrorStuds": 2.1362304687411182e-06,
+      "sizeMaxErrorStuds": 4.628829958219782e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__GlintL",
+      "centerMaxErrorStuds": 1.689746093769262e-06,
+      "sizeMaxErrorStuds": 3.9334487915085314e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__GlintR",
+      "centerMaxErrorStuds": 2.8458007812481867e-06,
+      "sizeMaxErrorStuds": 4.794082641632058e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__HandL",
+      "centerMaxErrorStuds": 3.0517578125111022e-06,
+      "sizeMaxErrorStuds": 2.7425384518942053e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__HandR",
+      "centerMaxErrorStuds": 3.0517578125111022e-06,
+      "sizeMaxErrorStuds": 2.7425384518942053e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__Head",
+      "centerMaxErrorStuds": 1.159667968750333e-06,
+      "sizeMaxErrorStuds": 2.7536010693829382e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__Mouth",
+      "centerMaxErrorStuds": 1.4440429687567757e-06,
+      "sizeMaxErrorStuds": 3.678703307946618e-08,
+      "matches": true
+    },
+    {
+      "name": "Zivvi__Teeth",
+      "centerMaxErrorStuds": 2.7937500000074778e-06,
+      "sizeMaxErrorStuds": 6.353988647733733e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__Body",
+      "centerMaxErrorStuds": 8.010864255281192e-08,
+      "sizeMaxErrorStuds": 9.613037144085013e-09,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__CharmDot",
+      "centerMaxErrorStuds": 1.5640258799187734e-07,
+      "sizeMaxErrorStuds": 2.8610229491077277e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__Cheeks",
+      "centerMaxErrorStuds": 1.8246093749785253e-06,
+      "sizeMaxErrorStuds": 4.8501586968896504e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__CuffTrimL",
+      "centerMaxErrorStuds": 2.258300781265987e-06,
+      "sizeMaxErrorStuds": 4.9654388434294816e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__CuffTrimR",
+      "centerMaxErrorStuds": 2.258300781265987e-06,
+      "sizeMaxErrorStuds": 4.9654388434294816e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__EyeL",
+      "centerMaxErrorStuds": 1.7841796874917826e-06,
+      "sizeMaxErrorStuds": 3.952026367270989e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__EyeR",
+      "centerMaxErrorStuds": 1.4625976562654408e-06,
+      "sizeMaxErrorStuds": 3.952026367270989e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__FootL",
+      "centerMaxErrorStuds": 1.953125000002387e-06,
+      "sizeMaxErrorStuds": 4.92874145385791e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__FootR",
+      "centerMaxErrorStuds": 1.953125000002387e-06,
+      "sizeMaxErrorStuds": 4.92874145385791e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__GlintL",
+      "centerMaxErrorStuds": 3.4692382812617772e-06,
+      "sizeMaxErrorStuds": 1.5558776855773004e-07,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__GlintR",
+      "centerMaxErrorStuds": 3.0430664062497392e-06,
+      "sizeMaxErrorStuds": 1.5558776855773004e-07,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__HandL",
+      "centerMaxErrorStuds": 3.906249999990896e-06,
+      "sizeMaxErrorStuds": 5.619907378351385e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__HandR",
+      "centerMaxErrorStuds": 3.906249999990896e-06,
+      "sizeMaxErrorStuds": 4.12979125896662e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__Head",
+      "centerMaxErrorStuds": 3.007714843750349e-06,
+      "sizeMaxErrorStuds": 3.9311218280602134e-08,
+      "matches": true
+    },
+    {
+      "name": "Ovelle__Mouth",
+      "centerMaxErrorStuds": 1.2039062500246445e-06,
+      "sizeMaxErrorStuds": 4.992218017446648e-08,
+      "matches": true
+    }
+  ]
+}

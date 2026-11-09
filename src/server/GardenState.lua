@@ -14,10 +14,28 @@ function Garden:position(actor,now)
     local sample=Activity.sample(actor,now);return sample and sample.position or self.inputs[actor.ownerId].anchor
 end
 function Garden:transition(actor,behavior,target,duration,action,actionId,via)
-    local now=self.options.now();local from=self:position(actor,now)
-    actor.generation+=1;actor.behavior,actor.action=behavior,action
-    actor.actionId=actionId or self:token();actor.startTime,actor.endTime=now,now+math.max(.05,duration)
-    actor.from,actor.to,actor.via=Activity.pack(from),Activity.pack(target),if via then Activity.pack(via) else nil
+    local now=self.options.now();local sample=Activity.sample(actor,now)
+    local from=sample and sample.position or self.inputs[actor.ownerId].anchor
+    local continuing=actor.behavior==behavior and actor.action==action and behavior=="follow"
+    if not continuing then actor.generation+=1 end
+    actor.behavior,actor.action=behavior,action
+    actor.actionId=actionId or (continuing and actor.actionId)or self:token()
+    local velocity=sample and sample.velocity or Vector3.zero
+    local yaw=sample and sample.yaw or actor.yaw or 0
+    local separation=(target-from).Magnitude
+    local speed=if behavior=="follow"then Layout.WalkSpeed+math.clamp((separation-4)/8,0,1)*(Layout.CatchupSpeed-Layout.WalkSpeed)else Layout.StrollSpeed
+    -- A continuously walking16stud/s avatar outruns a9stud/s pet. Only the
+    -- sustained outer leash uses gradual18 recovery; near walking stays4.
+    if behavior=="follow"and separation>16 then speed=Layout.CatchupSpeed+math.clamp((separation-16)/14,0,1)*(Layout.LeashSpeed-Layout.CatchupSpeed)end
+    local terminal=if behavior=="follow"then actor.ownerVelocity or Vector3.zero else Vector3.zero
+    if terminal.Magnitude>.1 then
+        speed=math.min(Layout.LeashSpeed,math.max(speed,terminal.Magnitude+math.clamp(separation/10,0,1)*2))
+        target+=terminal*.5
+    end
+    actor.path,duration=Activity.plan(from,target,velocity,speed,if separation<.01 or action=="greet"then duration else 0,yaw,via,terminal)
+    actor.startTime,actor.endTime=now,now+duration
+    actor.from,actor.to,actor.via=Activity.pack(from),Activity.pack(target),if via then Activity.pack(via)else nil
+
     actor.peerId=nil;self.dirty=true
 end
 function Garden:resume(actor,input,prior)
@@ -48,7 +66,7 @@ function Garden:reset(actor,input)
     self:release(actor);actor.mode=input.mode;actor.focusUntil=nil
     self:transition(actor,if input.mode=="Board" then "rest" else "follow",input.anchor,.5)
 end
-function Garden:sync(inputs)
+function Garden:sync(inputs,freshOwnerId)
     self.inputs=inputs
     for id,actor in pairs(self.actors) do
         local input=inputs[id]
@@ -67,6 +85,16 @@ function Garden:sync(inputs)
             self.actors[id]=actor;self.dirty=true
             if input.mode=="Board" then self:reset(actor,input) end
         elseif input.mode~=(if actor.mode=="Focus" then "Room" else actor.mode) then self:reset(actor,input) end
+        if freshOwnerId==nil or freshOwnerId==id then
+        local sampledAt=self.options.now()
+        if actor.ownerSampleAt and sampledAt>actor.ownerSampleAt then
+            local moved=input.position-actor.ownerSample
+            moved=Vector3.new(moved.X,0,moved.Z)/(sampledAt-actor.ownerSampleAt)
+            -- Teleport observations are discontinuities, never predicted travel.
+            actor.ownerVelocity=if moved.Magnitude<=20 and moved.Magnitude>.001 then moved.Unit*math.min(moved.Magnitude,Layout.LeashSpeed)else Vector3.zero
+        end
+        actor.ownerSample,actor.ownerSampleAt=input.position,sampledAt
+        end
         if actor.charmVisible~=input.charmVisible then actor.charmVisible=input.charmVisible;self.dirty=true end
         if distance(actor.lastOwner,input.position)>.65 then
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
@@ -76,7 +104,7 @@ function Garden:sync(inputs)
 end
 function Garden:syncOne(id,input)
     -- Other participants retain their last2Hz sample; focus never raycasts them.
-    local cached=table.clone(self.inputs);cached[id]=input;self:sync(cached)
+    local cached=table.clone(self.inputs);cached[id]=input;self:sync(cached,id)
 end
 
 function Garden:focus(id,packet)
@@ -106,7 +134,7 @@ function Garden:focus(id,packet)
     self:release(actor);actor.lastFocusSeq,actor.focusSeq,actor.lastFocusAt=packet.seq,packet.seq,now
     actor.mode,actor.focusUntil="Focus",now+1.6
     self:transition(actor,"rest",target,.05,"focus")
-    actor.from=Activity.pack(target);actor.yaw=if type(packet.yaw)=="number" and packet.yaw==packet.yaw and math.abs(packet.yaw)<1000 then packet.yaw else input.yaw or 0
+    actor.from=Activity.pack(target);actor.path=nil;actor.yaw=if type(packet.yaw)=="number" and packet.yaw==packet.yaw and math.abs(packet.yaw)<1000 then packet.yaw else input.yaw or 0
     return true
 end
 function Garden:focusAnchor(id,petId,characterId,petGeneration,position)
@@ -134,6 +162,17 @@ function Garden:greeting(now,ordered)
             local center=(a+b)*.5;local token=self:token()
             self:transition(first,"investigate",center+Vector3.new(-.9,0,0),2.6,"greet",token)
             self:transition(second,"investigate",center+Vector3.new(.9,0,0),2.6,"greet",token)
+            local finish=math.max(first.endTime,second.endTime)
+            for _,actor in ipairs({first,second})do
+                local remaining=finish-actor.endTime
+                if remaining>.0001 then
+                    local target=Activity.vector(actor.to);local last=actor.path[#actor.path]
+                    local hold=assert(Activity.leg(target,target,Vector3.zero,Vector3.zero,Layout.StrollSpeed,remaining,last.yaw+last.turn))
+                    -- A hold can be shorter than the moving-leg minimum.
+                    hold.duration=remaining;table.insert(actor.path,hold)
+                end
+                actor.endTime=finish
+            end
             first.peerId,second.peerId=second.ownerId,first.ownerId;first.pairId,second.pairId=token,token
             first.yaw,second.yaw=math.pi*.5,-math.pi*.5
             self.pairs[token]={id=token,owners={first.ownerId,second.ownerId},generations={first.generation,second.generation},prior=prior}
@@ -176,7 +215,7 @@ function Garden:decide()
             continue
         end
         local position=self:position(actor,now)
-        if distance(position,input.position)>22 then self:release(actor);self:transition(actor,"follow",input.anchor,.6)
+        if distance(position,input.position)>22 and(actor.behavior~="follow"or distance(Activity.vector(actor.to),input.anchor)>.2)then self:release(actor);self:transition(actor,"follow",input.anchor,.6)
         elseif actor.behavior=="follow" then
             local target=if actor.ownerId%2==0 then Layout.ToyWest else Layout.ToyEast
             local reachable=true
@@ -214,7 +253,7 @@ function Garden:snapshot()
     for id,actor in pairs(self.actors) do
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
-            from=actor.from,to=actor.to,via=actor.via,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0}
+            from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0}
     end
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy)}
 end

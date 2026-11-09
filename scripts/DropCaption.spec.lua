@@ -16,7 +16,8 @@ return function(gui,board)
 	end
 	local caption=b.DeckControls.DropCaption
 	local function expectBlocked(word,saveCode)
-		settle()
+		settle();assert(not caption.Visible,"A-adjacent blocked caption returned")
+        assert(b.DeckControls.Drop:GetAttribute("AccessibleLabel")~=nil,"A lost accessible action description")
 		if saveCode then
 			local notice=SaveNotice.resolve(board:GetAttribute("SaveStatus"),{status=saveCode})
 			assert(caption.Text==word and not caption.Visible,"persistent save notice must own the blocked explanation")
@@ -33,7 +34,8 @@ return function(gui,board)
 		assert(b.PieceQueue.Dropping.Caption.TextFits and b.PieceQueue.Next.Caption.TextFits)
 	end
 	local function expectReady()
-		settle();assert(caption.Text=="DROP" and not caption:GetAttribute("BlockedCaption"))
+		settle();assert(caption.Text=="DROP" and not caption:GetAttribute("BlockedCaption")and not caption.Visible)
+        assert(b.DeckControls.Drop:GetAttribute("AccessibleLabel")=="Drop jelly")
 		assert(gui:GetAttribute("SaveNoticeOwner")=="" and gui:GetAttribute("SaveNoticeCode")=="","Ready retained obsolete save ownership")
 		if (board:GetAttribute("OwnedPets") or 0)>0 then assert(b.Status.ActiveQuest.Visible and b.Status.ActiveQuest.Instruction.TextFits,"objective did not restore")
 		else assert(b.Status.Text~="" and b.Status.TextFits,"welcome instruction did not restore")end

@@ -1,6 +1,7 @@
 -- Every-frame position and heading; only ground sampling is throttled.
 local Players = game:GetService("Players")
 local Activity=require(game:GetService("ReplicatedStorage").Shared.GardenActivity)
+local Layout=require(game:GetService("ReplicatedStorage").Shared.GardenLayout)
 local Follow = {}
 
 function Follow.ground(position, visual, fallback)
@@ -33,7 +34,8 @@ function Follow.step(visual, root, dt, state, reduced)
 	dt = math.clamp(dt, 0, 0.1)
 	local desired = root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6
 	state.groundIn = (state.groundIn or 0) - dt
-	local far = (visual.origin - desired).Magnitude > 40
+	local far=state.ownerPosition~=nil and (root.Position-state.ownerPosition).Magnitude>40
+    state.ownerPosition=root.Position
 	if state.groundIn <= 0 or far then
 		state.groundIn = 0.10
 		state.groundY = Follow.ground(desired, visual, state.groundY)
@@ -41,7 +43,16 @@ function Follow.step(visual, root, dt, state, reduced)
 	local target = Vector3.new(desired.X, state.groundY or visual.origin.Y, desired.Z)
 	local delta = Vector3.new(target.X - visual.origin.X, 0, target.Z - visual.origin.Z)
 	local old = visual.origin
-	visual.origin = if far then target else old:Lerp(target, 1 - math.exp(-10 * dt))
+	local gap=(target-old).Magnitude
+    local speed=Layout.WalkSpeed+math.clamp((gap-4)/8,0,1)*(Layout.CatchupSpeed-Layout.WalkSpeed)
+    if gap>16 then speed=Layout.CatchupSpeed+math.clamp((gap-16)/14,0,1)*(Layout.LeashSpeed-Layout.CatchupSpeed)end
+    local wanted=if gap>.01 then (target-old).Unit*math.min(speed,gap*2)else Vector3.zero
+    local velocity=state.velocity or Vector3.zero
+    local change=wanted-velocity;local maxChange=12*dt
+    velocity+=if change.Magnitude>maxChange then change.Unit*maxChange else change
+    state.velocity=velocity
+    visual.origin=if far then target else old+velocity*dt
+    if far then state.velocity=Vector3.zero end
 	local traveled=Vector3.new(visual.origin.X-old.X,0,visual.origin.Z-old.Z).Magnitude
 	if changedRoot or far or reduced then
 		Follow.rest(visual);state.travelSpeed=0
@@ -71,12 +82,16 @@ end
 -- Shared server-time paths move every rendered frame. The cosmetic renderer is
 -- free to sample its expression/limbs less often; it never owns root movement.
 function Follow.activity(visual,actor,now,dt,state,reduced)
-	local sample=Activity.sample(actor,now)
+	-- A small shared presentation delay absorbs ordinary replication transit.
+    -- Identity/focus changes bypass history and retain their exact accepted pose.
+    local sampleTime=if actor.mode=="Focus"then now else now-.12
+    if actor.previous and sampleTime<actor.startTime then actor=actor.previous end
+    local sample=Activity.sample(actor,sampleTime)
 	if not sample then return state end
 	state=state or {};local old=visual.origin
 	visual.origin,visual.yaw,visual.reducedEffects=sample.position,sample.yaw,reduced==true
 	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
-	if state.generation~=sample.generation or reduced or dt<=0 or traveled>8 then
+	if (state.mode and state.mode~=sample.mode)or reduced or dt<=0 or traveled>8 then
 		Follow.rest(visual)
 	else
 		local speed=traveled/math.max(.001,dt)
@@ -84,7 +99,7 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
 		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3.5)*math.pi*2)%(math.pi*2)
 		visual.movementBob=(1-math.cos(visual.gaitPhase))*.025*visual.gaitWeight
 	end
-	state.generation=sample.generation
+	state.generation,state.mode=sample.generation,sample.mode
 	visual.gardenFocus=sample.action=="focus"
 	if visual.applyGardenPose then visual:applyGardenPose(sample)
 	else

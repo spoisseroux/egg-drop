@@ -157,6 +157,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.mode == "Room" then self:useRoomCamera(false) end
 	end)
 	watch(RunService.RenderStepped, function(dt)
+        local serverNow=workspace:GetServerTimeNow()
   if self.ambience then
    self.ambience:step(dt,workspace.CurrentCamera,self.mode=="Room"and self.target=="Room"and not self.busy and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox(),self.reduceEffects())
   end
@@ -168,7 +169,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.gardenToy then
 			local visible=self.mode=="Room"and self.target=="Room"and not self.busy and not self.overlayOpen()and self.focusUI.windowActive~=false
 			self.gardenToy:setVisible(visible)
-			if visible then self.gardenToy:update(GardenActivity.sampleToy(self.garden.snapshot and self.garden.snapshot.toy,workspace:GetServerTimeNow()),dt,self.reduceEffects())end
+			if visible then self.gardenToy:update(GardenActivity.sampleToy(self.garden.snapshot and self.garden.snapshot.toy,serverNow),dt,self.reduceEffects())end
 		end
 		if self.pet then
 			local character = Players.LocalPlayer.Character
@@ -184,18 +185,20 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			self.pet.reducedEffects=reduced
 			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
 				local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
-				if actor then self.followState=PetFollow.activity(self.pet,actor,workspace:GetServerTimeNow(),dt,self.followState,reduced)
+				if actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
 				self:cancelCameraTween()
 				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
 			end
-			self.pet:update(dt)
+			self.pet.cosmeticSeed=Players.LocalPlayer.UserId
+            self.pet.cosmeticTime=serverNow
+            self.pet:update(dt)
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 		end
-		if self.mode=="Room"then self.companions:update(dt)end
+		if self.mode=="Room"then self.companions:update(dt,serverNow)end
 		if self.focusUI then self.focusUI:update(workspace.CurrentCamera, self.pet, self.petPrompt and self.petPrompt.Enabled) end
   self:updatePetContact(dt)
 	end)
@@ -283,6 +286,8 @@ function Room:showPet(pet)
 	local position = oldOrigin or (if root then root.Position - root.CFrame.LookVector * 3 + root.CFrame.RightVector * 2.6 else Vector3.new(0, 4.025, -5))
 	local rank, legacy = PetPrestige.read(self.progress, pet)
 	self.pet = createPet(workspace, position, pet, self.progress:GetAttribute("MasteryMask"), rank, legacy,self.garden:appearance(self.progress,pet.id))
+    self.pet.cosmeticSeed=Players.LocalPlayer.UserId
+    self.pet.cosmeticTime=workspace:GetServerTimeNow()
 	self.pet.focusPose=self.focusing==true;self.focusGeometry=nil
 	self.pet.origin = Vector3.new(position.X, PetFollow.ground(position, self.pet, oldOrigin and oldOrigin.Y), position.Z)
 	self.pet.model:SetAttribute("CompanionOwnerId", Players.LocalPlayer.UserId)

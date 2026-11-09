@@ -30,6 +30,25 @@ return function(client)
         assert(fits,tostring(part).." crosses "..tostring(edge))
     end
     local ok,problem=pcall(function()
+        test("both backends keep long idle, gaze, blink and independent Dot inside the focused envelope",function()
+            local Visual=require(client.GardenPetVisual)
+            for _,id in ipairs({"pip","puddle"})do for _,native in ipairs({false,true})do for _,dot in ipairs({true,false})do
+                local visual=Visual.new(folder,Vector3.new(0,4.025,0),Pets.byId[id],.72,{charmVisible=dot},{native=native})
+                visual.focusPose=true;visual.cosmeticSeed=823
+                local argument=args(visual,Pets.byId[id],Vector3.new(-11,6.998,4),Vector2.new(749,381),0)
+                assert(argument.focusEnvelope.motionBoundsVersion==require(client.PetIdleMotion).Version)
+                local plan=assert(Shot.plan(argument));visual.origin,visual.yaw=plan.origin,plan.yaw
+                for _,expression in ipairs({"neutral","curious","affectionate"})do
+                    visual.expression=expression;visual.greeting=2
+                    for i=0,120 do
+                        visual.cosmeticTime=i*.2;visual:update(0);contained(visual,plan,argument)
+                        local fraction=bodyFraction(visual,plan,argument)
+                        assert(fraction>=.55 and fraction<=.65,string.format("idle %s native=%s Dot=%s %s time=%g body=%g",id,tostring(native),tostring(dot),expression,visual.cosmeticTime,fraction))
+                    end
+                end
+                visual:destroy()
+            end end end
+        end)
         test("749x381 factory body fills55to65percent with Dot ON and OFF while every focused pose fits",function()
             for _,id in ipairs({"pip","puddle"})do for _,dot in ipairs({true,false})do
                 local visual=Factory.new(folder,Vector3.new(0,4.025,0),Pets.byId[id],.72,{charmVisible=dot});visual.focusPose=true

@@ -6,19 +6,41 @@
     "right": "+X"
   },
   "sourceUnits": "studs at garden size",
-  "bodyHeightTarget": 1.535,
+  "bodyHeightTarget": 1.526,
   "objects": [
     {
       "name": "Zivvi__Head",
       "channel": "Head",
       "role": "Head",
-      "triangles": 1988,
+      "colorRole": "body",
+      "centerRoblox": [
+        0.0,
+        1.0554658,
+        0.016
+      ],
+      "sizeRoblox": [
+        1.3201158,
+        0.9349316,
+        0.9288089
+      ],
+      "triangles": 2804,
       "exprKeys": []
     },
     {
       "name": "Zivvi__Body",
       "channel": "Body",
       "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.0,
+        0.442,
+        0.0
+      ],
+      "sizeRoblox": [
+        0.8240318,
+        0.83,
+        0.7104622
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -26,6 +48,17 @@
       "name": "Zivvi__FootL",
       "channel": "FootL",
       "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.24,
+        0.12,
+        0.08
+      ],
+      "sizeRoblox": [
+        0.3347321,
+        0.24,
+        0.3770393
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -33,6 +66,17 @@
       "name": "Zivvi__FootR",
       "channel": "FootR",
       "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.24,
+        0.12,
+        0.08
+      ],
+      "sizeRoblox": [
+        0.3347321,
+        0.24,
+        0.3770393
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -40,20 +84,89 @@
       "name": "Zivvi__HandL",
       "channel": "HandL",
       "role": "HandL",
-      "triangles": 648,
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.366,
+        0.586,
+        0.2
+      ],
+      "sizeRoblox": [
+        0.2546692,
+        0.2861526,
+        0.2529749
+      ],
+      "triangles": 324,
       "exprKeys": []
     },
     {
       "name": "Zivvi__HandR",
       "channel": "HandR",
       "role": "HandR",
-      "triangles": 648,
+      "colorRole": "body",
+      "centerRoblox": [
+        0.366,
+        0.586,
+        0.2
+      ],
+      "sizeRoblox": [
+        0.2546692,
+        0.2861526,
+        0.2529749
+      ],
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__CuffTrimL",
+      "channel": "HandL",
+      "role": "CuffTrimL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.397,
+        0.526,
+        0.239
+      ],
+      "sizeRoblox": [
+        0.1485844,
+        0.1019035,
+        0.1482957
+      ],
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Zivvi__CuffTrimR",
+      "channel": "HandR",
+      "role": "CuffTrimR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.397,
+        0.526,
+        0.239
+      ],
+      "sizeRoblox": [
+        0.1485844,
+        0.1019035,
+        0.1482957
+      ],
+      "triangles": 324,
       "exprKeys": []
     },
     {
       "name": "Zivvi__EyeL",
       "channel": "Head",
       "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.258,
+        0.989,
+        0.4539626
+      ],
+      "sizeRoblox": [
+        0.178,
+        0.186,
+        0.0620297
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -67,6 +180,17 @@
       "name": "Zivvi__GlintL",
       "channel": "Head",
       "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.27758,
+        1.025,
+        0.4798372
+      ],
+      "sizeRoblox": [
+        0.0445,
+        0.0372,
+        0.0147823
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -80,6 +204,17 @@
       "name": "Zivvi__Cheeks",
       "channel": "Head",
       "role": "Cheeks",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.0,
+        0.916,
+        0.3601116
+      ],
+      "sizeRoblox": [
+        0.99,
+        0.076,
+        0.095327
+      ],
       "triangles": 240,
       "exprKeys": []
     },
@@ -87,6 +222,17 @@
       "name": "Zivvi__EyeR",
       "channel": "Head",
       "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.258,
+        0.989,
+        0.4539626
+      ],
+      "sizeRoblox": [
+        0.178,
+        0.186,
+        0.0620297
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -100,6 +246,17 @@
       "name": "Zivvi__GlintR",
       "channel": "Head",
       "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.23842,
+        1.02368,
+        0.4916334
+      ],
+      "sizeRoblox": [
+        0.0445,
+        0.0372,
+        0.0124879
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -113,6 +270,17 @@
       "name": "Zivvi__Mouth",
       "channel": "Head",
       "role": "Mouth",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.0,
+        0.8645909,
+        0.4622712
+      ],
+      "sizeRoblox": [
+        0.388,
+        0.1051818,
+        0.041524
+      ],
       "triangles": 144,
       "exprKeys": [
         "curious",
@@ -126,6 +294,17 @@
       "name": "Zivvi__Teeth",
       "channel": "Head",
       "role": "Teeth",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.0,
+        0.8942955,
+        0.4790067
+      ],
+      "sizeRoblox": [
+        0.312146,
+        0.0444411,
+        0.0201802
+      ],
       "triangles": 48,
       "exprKeys": [
         "curious",
@@ -139,6 +318,17 @@
       "name": "Zivvi__CharmDot",
       "channel": "CharmAnchor",
       "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.0,
+        1.752,
+        0.005
+      ],
+      "sizeRoblox": [
+        0.2166577,
+        0.22,
+        0.2133662
+      ],
       "triangles": 324,
       "exprKeys": []
     }

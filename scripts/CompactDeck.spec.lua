@@ -57,6 +57,7 @@ return function(gui,board)
 			assert(inside(count,dispenser) and (not channel.Visible or inside(channel,dispenser)),"dispenser outside meter")
 			assert(not channel.Visible or channel.AbsolutePosition.Y+channel.AbsoluteSize.Y<=count.AbsolutePosition.Y+.1,"dispenser covers remaining count")
 			local caption=b.DeckControls.DropCaption
+            assert(not caption.Visible,"A-adjacent caption must stay absent")
 			if caption.Visible then
 				local a=b.DeckControls.Drop
 				local offset=math.abs(caption.AbsolutePosition.X+caption.AbsoluteSize.X/2-a.AbsolutePosition.X-a.AbsoluteSize.X/2)

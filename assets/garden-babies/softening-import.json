@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "units": "garden studs",
+  "basis": "Roblox +Y up, authored +Z front, source positions measured from paw pivot",
+  "axesNote": "Imported Studio template uses -Z front. Apply one shared Y-axis half-turn in existing renderer.",
+  "imports": {
+    "zivvi": {
+      "file": "zivvi.fbx",
+      "sha256": "92c5287052df491e40402bbb90f427479923e355cf3f7aa519e2568e25f39028",
+      "meshParts": 16,
+      "triangles": 6308,
+      "bodyMin": [
+        -0.66006,
+        0.0,
+        -0.4484
+      ],
+      "bodyMax": [
+        0.66006,
+        1.52293,
+        0.49788
+      ],
+      "bodySize": [
+        1.32012,
+        1.52293,
+        0.94628
+      ],
+      "manifest": "zivvi-mesh-manifest.json",
+      "validatedBothExports": true
+    },
+    "ovelle": {
+      "file": "ovelle.fbx",
+      "sha256": "5e5a7a0f089bbc4b2e55dc71388a0978171d3c0c379c3d5d3ece3d172bac710f",
+      "meshParts": 15,
+      "triangles": 5612,
+      "bodyMin": [
+        -0.74261,
+        0.088,
+        -0.4168
+      ],
+      "bodyMax": [
+        0.73056,
+        1.51,
+        0.46924
+      ],
+      "bodySize": [
+        1.47317,
+        1.422,
+        0.88604
+      ],
+      "manifest": "ovelle-mesh-manifest.json",
+      "validatedBothExports": true
+    }
+  },
+  "changes": {
+    "zivvi": "New body/head/eyes/smile/teeth/feet/hands/dot. CuffTrimL/R are separate secondary pads on the attached hands.",
+    "ovelle": "New asymmetrical pebble crown and two attached mittens. CuffL/R tube meshes removed. CuffTrimL/R are colored pads on the mittens. CuffL/R anchor channels remain at matching HandL/R pivots.",
+    "oldMaterialPatch": "Historical v225 patch file is unnecessary for these FBXs. Each revised object has exactly one material."
+  }
+}

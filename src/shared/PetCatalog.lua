@@ -1,8 +1,8 @@
 local Trials = require(script.Parent.PocketTrials)
 
 local Pets = {
-	{ id = "pip", name = "Zivvi", charge = 6, cue = "pet", color = Color3.fromHex("#E6EE25") },
-	{ id = "puddle", name = "Ovelle", charge = 12, cue = "puddle", color = Color3.fromHex("#BFDDF5") },
+	{ id = "pip", name = "Zivvi", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
+	{ id = "puddle", name = "Ovelle", charge = 12, cue = "puddle", color = Color3.fromHex("#D3DBD9") },
 	{ id = "wick", name = "Wick", charge = 24, cue = "wick", color = Color3.fromHex("#F79860") },
 	{ id = "orbit", name = "Orbit", charge = 36, cue = "orbit", color = Color3.fromHex("#C7AEF3") },
 }

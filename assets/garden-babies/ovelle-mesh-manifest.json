@@ -6,19 +6,41 @@
     "right": "+X"
   },
   "sourceUnits": "studs at garden size",
-  "bodyHeightTarget": 1.5,
+  "bodyHeightTarget": 1.422,
   "objects": [
     {
       "name": "Ovelle__Head",
       "channel": "Head",
       "role": "Head",
-      "triangles": 1340,
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.0060226,
+        1.0925,
+        0.016
+      ],
+      "sizeRoblox": [
+        1.4731733,
+        0.835,
+        0.8656087
+      ],
+      "triangles": 2156,
       "exprKeys": []
     },
     {
       "name": "Ovelle__Body",
       "channel": "Body",
       "role": "Body",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.0,
+        0.466,
+        0.0
+      ],
+      "sizeRoblox": [
+        0.6930924,
+        0.704,
+        0.629045
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -26,6 +48,17 @@
       "name": "Ovelle__FootL",
       "channel": "FootL",
       "role": "FootL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.142,
+        0.182,
+        0.052
+      ],
+      "sizeRoblox": [
+        0.2323435,
+        0.188,
+        0.2549134
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -33,6 +66,17 @@
       "name": "Ovelle__FootR",
       "channel": "FootR",
       "role": "FootR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.142,
+        0.182,
+        0.052
+      ],
+      "sizeRoblox": [
+        0.2323435,
+        0.188,
+        0.2549134
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -40,6 +84,17 @@
       "name": "Ovelle__HandL",
       "channel": "HandL",
       "role": "HandL",
+      "colorRole": "body",
+      "centerRoblox": [
+        -0.333,
+        0.552,
+        0.146
+      ],
+      "sizeRoblox": [
+        0.205254,
+        0.2893354,
+        0.2248666
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -47,6 +102,53 @@
       "name": "Ovelle__HandR",
       "channel": "HandR",
       "role": "HandR",
+      "colorRole": "body",
+      "centerRoblox": [
+        0.333,
+        0.552,
+        0.146
+      ],
+      "sizeRoblox": [
+        0.205254,
+        0.2893354,
+        0.2248666
+      ],
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__CuffTrimL",
+      "channel": "CuffL",
+      "role": "CuffTrimL",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        -0.357,
+        0.454,
+        0.182
+      ],
+      "sizeRoblox": [
+        0.1112024,
+        0.0820614,
+        0.1289106
+      ],
+      "triangles": 324,
+      "exprKeys": []
+    },
+    {
+      "name": "Ovelle__CuffTrimR",
+      "channel": "CuffR",
+      "role": "CuffTrimR",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.357,
+        0.454,
+        0.182
+      ],
+      "sizeRoblox": [
+        0.1112024,
+        0.0820614,
+        0.1289106
+      ],
       "triangles": 324,
       "exprKeys": []
     },
@@ -54,6 +156,17 @@
       "name": "Ovelle__EyeL",
       "channel": "Head",
       "role": "EyeL",
+      "colorRole": "face",
+      "centerRoblox": [
+        -0.265,
+        1.011,
+        0.430498
+      ],
+      "sizeRoblox": [
+        0.166,
+        0.19344,
+        0.0565018
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -67,6 +180,17 @@
       "name": "Ovelle__GlintL",
       "channel": "Head",
       "role": "GlintL",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        -0.28326,
+        1.0484136,
+        0.4611456
+      ],
+      "sizeRoblox": [
+        0.0415,
+        0.0386881,
+        0.009796
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -80,20 +204,35 @@
       "name": "Ovelle__Cheeks",
       "channel": "Head",
       "role": "Cheeks",
+      "colorRole": "blush",
+      "centerRoblox": [
+        0.0,
+        0.942,
+        0.3390216
+      ],
+      "sizeRoblox": [
+        1.0039999,
+        0.076,
+        0.1025953
+      ],
       "triangles": 240,
-      "exprKeys": []
-    },
-    {
-      "name": "Ovelle__CuffL",
-      "channel": "CuffL",
-      "role": "CuffL",
-      "triangles": 620,
       "exprKeys": []
     },
     {
       "name": "Ovelle__EyeR",
       "channel": "Head",
       "role": "EyeR",
+      "colorRole": "face",
+      "centerRoblox": [
+        0.265,
+        1.011,
+        0.4202027
+      ],
+      "sizeRoblox": [
+        0.166,
+        0.19344,
+        0.0655488
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -107,6 +246,17 @@
       "name": "Ovelle__GlintR",
       "channel": "Head",
       "role": "GlintR",
+      "colorRole": "ivory",
+      "centerRoblox": [
+        0.24674,
+        1.0470936,
+        0.4643814
+      ],
+      "sizeRoblox": [
+        0.0415,
+        0.0386881,
+        0.00971
+      ],
       "triangles": 120,
       "exprKeys": [
         "curious",
@@ -117,16 +267,20 @@
       ]
     },
     {
-      "name": "Ovelle__CuffR",
-      "channel": "CuffR",
-      "role": "CuffR",
-      "triangles": 620,
-      "exprKeys": []
-    },
-    {
       "name": "Ovelle__Mouth",
       "channel": "Head",
       "role": "Mouth",
+      "colorRole": "mouth",
+      "centerRoblox": [
+        0.0,
+        0.9340089,
+        0.4409778
+      ],
+      "sizeRoblox": [
+        0.182,
+        0.0580178,
+        0.0181891
+      ],
       "triangles": 144,
       "exprKeys": [
         "curious",
@@ -140,6 +294,17 @@
       "name": "Ovelle__CharmDot",
       "channel": "CharmAnchor",
       "role": "CharmDot",
+      "colorRole": "secondary",
+      "centerRoblox": [
+        0.0,
+        1.739,
+        0.0
+      ],
+      "sizeRoblox": [
+        0.2166577,
+        0.22,
+        0.2133662
+      ],
       "triangles": 324,
       "exprKeys": []
     }
