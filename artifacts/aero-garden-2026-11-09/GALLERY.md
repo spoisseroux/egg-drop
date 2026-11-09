@@ -1,6 +1,6 @@
 # Aero garden and original baby companions
 
-November 9, 2026. This gallery separates ordinary Studio controls from controlled art studies. Publication and final interaction evidence are recorded in [VERIFY.md](VERIFY.md). Absolute image paths support the Codex desktop preview.
+November 9, 2026. **Private v297 Published — Aero babies and shared garden - 2e9da43**, verified in refreshed native Version History; runtime `2e9da43` is pushed. [Publication proof](private-published-v297-2e9da43.png) · [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop). This gallery separates ordinary Studio controls from controlled art studies. Exact evidence and limits are recorded in [VERIFY.md](VERIFY.md). Absolute image paths support the Codex desktop preview.
 
 ## The five new babies
 
@@ -45,6 +45,14 @@ Actual Humanoid walks crossed the bridge both ways with the follower. A separate
 ![Actual bridge route at night](C:/Users/skunk/Documents/Development/egg-drop/artifacts/aero-garden-2026-11-09/actual-fixed-bridge-east-night.png)
 
 [Bridge walk recording](actual-bridge-east-nook-west-night.mp4) · [Nook approach, rest and automatic return](actual-nook-rest-auto-return-night.mp4).
+
+## Actual two-pet return on the bench apron
+
+Two ordinary local Studio clients walked to the relocated toy and used native E Start / Join for the same action, 322. The film shows approach, the five-second send/return and release; Astra gave the actual film visual GO. Both owners stayed at six Stars with unchanged inventory, hue stock and profile revision. The toy gives no awards. This is actual two-client Studio interaction, not a synthetic ensemble or live multiplayer-service test.
+
+![Actual relocated two-pet return — ordinary two-client controls](C:/Users/skunk/Documents/Development/egg-drop/artifacts/aero-garden-2026-11-09/actual-relocated-two-pet-return-contact.jpg)
+
+[Watch the full native return](actual-relocated-two-pet-return.mp4) · [Two-owner observations](actual-relocated-pair-summary.json).
 
 ## New music to audition
 

@@ -1,3 +1,19 @@
+# Egg Drop — Aero babies and shared garden
+
+**Private v297 Published — Aero babies and shared garden - `2e9da43`.** Runtime commit `2e9da43` is pushed; publication is verified in refreshed native Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png) · [Current gallery](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/aero-garden-2026-11-09/VERIFY.md).
+
+The item-egg economy from v274 continues unchanged. Explore the usable creek bridge and curved rest nook on the existing **160 × 128** floor. Five replacement babies — **Tikket, Nuum, Vezzi, Kiprik and Nolli** — retain all saved identities/ownership; Zivvi and Ovelle retain their original bodies. All seven share saved Main/Secondary pigments, protected faces and expressive planted motion.
+
+Journal → Customize offers free **Dot / Ring / Pebble** and saved visibility. Published source has `SelectionsEnabled=true` and `PetCharmVersion=2`, with old-client visibility compatibility and opaque future-shape retention. On the clear lawn beyond the benches, **Start a return**, then another nearby owner can **Join return** during the three-second window. Pets approach at their own validated pace and perform a five-second send/return. The toy gives **no rewards**, spends nothing and changes no inventory.
+
+**Evidence:** 123 native source matches / zero compile errors, Rojo build, **172 server cases / 19 suites** and **292 client cases / 36 suites** without duplicate reruns. Ordinary two-client Start / Join / release has Astra film GO; both owners' wallets and inventories stayed unchanged. Actual two-way bridge walking, nook rest, continuous-care Saved awards and short-landscape Largest phone-emulator focus were observed. Medium text and clean Edit were restored before publication. The 6:11 AM post-publication census found one Team Create edit server and no gameplay writer. Night is readable but flatter, with weak individual Vezzi teeth.
+
+Live join was attempted through the authenticated browser but reached Download Roblox while the standalone player was signed out; no live VM/profile test ran. Signing in to the standalone player remains the prerequisite, not a reproduced game or DataStore fault. Physical-phone performance, live save/rejoin, service-scale latency and longer human play remain untested.
+
+The liked music remains default; two new original local listening drafts are in the gallery, with technical approval and subjective listening pending. Nursery, battling, clothing/stat eggs, new currency and public release remain deferred. [Remaining work](TODO.md) · [Current handoff](OVERNIGHT-AERO.md).
+
+## Historical private v274 handoff — retained item-egg rules
+
 # Egg Drop — item eggs and Aero companions
 
 **Private v274 Published — Item eggs and Aero companions — `bb8c60b`.** Verified in refreshed Studio Version History. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/item-eggs-aero-2026-11-09/private-published-v274-bb8c60b.png) · [Screenshots and walking films](artifacts/item-eggs-aero-2026-11-09/GALLERY.md) · [Exact verification and limits](artifacts/item-eggs-aero-2026-11-09/VERIFY.md).

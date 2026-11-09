@@ -1,91 +1,65 @@
-# Egg Drop — morning handoff, November 7, 2026
+# Egg Drop — November 9 morning build
 
-> Historical overnight checkpoint. The current private build is v125 Published (runtime f813d61); see [November7 afternoon rundown](AFTERNOON-RUNDOWN.md). The overnight automation remains finished.
+**Private v297 Published · runtime 2e9da43 · feat/egg-drop-arcade-polish.** The reviewed code is committed and pushed. Refreshed Studio Version History confirms “Aero babies and shared garden - 2e9da43.” Only the existing private Egg Drop place was updated; access and account settings are unchanged.
 
-**Private build updated:** Studio's refreshed Version History confirms **v93 Published**, titled **Pocket Deck and Hollow experience - 24751c2**. Runtime `24751c2` is committed and pushed on `feat/egg-drop-arcade-polish`. Astra approved the final source, fixtures and11 integrated Medium renders. The same existing private place was updated; no access or account setting changed. [Publication screenshot](artifacts/ui-redesign-2026-11-07/private-published-24751c2.png).
+[Play the private game](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png) · [Full gallery and films](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Exact test evidence](artifacts/aero-garden-2026-11-09/TEST-INDEX.md) · [Remaining work](TODO.md)
 
-[Open the private game](https://www.roblox.com/games/96451847774961/Egg-Drop). The account must already have access. Roblox Player on this computer is signed out; no authentication or account settings were changed.
+## What shipped
 
-## What changed
+The item-egg build and the follow-on garden pass are both in the private game. Astra directed the original assets and reviewed the actual models, night views, gait and shared-play film. Sol 6.1 High implemented the systems; fixes passed independent source review before publication.
 
-The new reference-backed design uses a fern handheld, pale LCD and warm graphite menu surfaces. The tray owns the center, grips stop growing with monitor width, the LEFT/RIGHT banks have boundaries and labels, and the wallet, queue, quest and remaining drops have separate roles. The case backing changes with its finish.
+- **All seven babies have authored models.** Zivvi and Ovelle keep their existing baby forms. Tikket, Nuum, Vezzi, Kiprik and Nolli replace the five legacy forms, with new portraits, neutral base coats, expressive face pieces, planted steps and loosely bouncing charms. Existing ownership and pigment remain attached to the same permanent pet identities.
+- **The garden has purposeful activity spaces:** a supported creek crossing, curved rest nook and a low glass-accented ball-return gate on the clear bench apron. Nearby scenery moves within a fixed update budget; day/night and warm lantern lighting remain. The main floor is still 160 × 128 studs: this is a more usable and lively layout, not a larger map footprint.
+- **Two pets can return a ball together.** Walk near the gate with your pet and use Start; another nearby player can Join during the three-second window. Pets approach, face one another, play a five-second exchange and resume their normal behavior. A solo return also works. This activity grants no Stars, items or stats.
+- **Dot, Ring and Pebble charms are free options.** Journal → the pet’s Customize icon → Charm. Hide/show is saved per pet; a hidden charm stays hidden when its shape changes. Charm color follows Secondary pigment. The old client’s visibility requests preserve newer shapes.
+- **Hatching is more saturated and animated:** a cobalt/lagoon stage, patterned shell split and bounded droplets/prisms. The receipt and save rules remain authoritative. Short-landscape pet focus now keeps its helper above the face and feet.
+- **Care rewards work through sustained contact.** Hold/rub the focused pet, or hold the supported keyboard contact control. The pet reacts; valid continued contact can earn +1 Star, capped at five care Stars per Hollow day. Back exits the held pet view. Simply opening focus grants nothing.
 
-Opening the deck has a short original power-on sequence. It cancels when another screen owns input and does not play over a recap/menu. The recap leads with the saved nectar reward, animates counters and the transfer toward the selected egg, then offers replay or eggs. Score/best/chain/clears and the receipt are secondary details. Reveal dismissal is a corner X.
+These are Blender design renders of the five new bodies; the gallery also has the actual uploaded Roblox models and measured night views.
 
-The phone follow-up uses actual available body height. Landscape Menu shows all three illustrated destinations on entry; Mastery starts with the selected family's progress; both egg choices fit. Buttons keep their touch target even when the visible hardware is small. In cramped layouts, meaningful Falling/Settle/Save status temporarily uses the quest well, then restores its goal. The decorative DROP caption stays beside A or hides when it cannot fit.
+![Five new original baby designs](C:/Users/skunk/Documents/Development/egg-drop/assets/garden-babies/new-five-2026-11-09/five-babies-gallery.png)
 
-Physical destinations now have a purpose: the tree browses eggs, the Field journal inspects/equips pets and opens family goals, and the workbench opens deck style. Menu shortcuts remain. Approaching a shop never spends currency. The shared native E/X/touch prompt respects menus and pet focus. A deck visit preserves the outgoing roam camera rather than returning through a tree.
+## The player loop and rewards
 
-Pet focus is held until **Back**. Greet can be repeated, and holding/rubbing the pet produces a reaction. The pet hint is outside the creature. Pets remain collection/companionship/prestige; they do not produce income or paid power.
+1. New players aim and merge on the welcome board for guaranteed **Zivvi and 6 Stars**. Returning accounts keep their existing collection and purchases.
+2. Play unlimited **24-drop rounds**. Bank Pair, Creek Crossing and Lantern Chain rotate. Use the center launch angle and read the active goal; later goals require different merge locations or a continued chain. Complete both goals for **6 Stars**, or **8** with the low-pile bonus. Failed rounds can still finish eligible skill contracts. Score and chain support those goals and personal bests; they are not separate spendable currencies.
+3. Spend earned Stars in the single Hatch eggs grid: **Companion Egg 18**, **Hue Egg 8**. The hatch tree opens the same shop without buying anything. Journal and deck-style stations retain fast menu shortcuts.
+4. Companion odds are **Zivvi 35%, Ovelle 25%, Tikket 20%, Nuum 10%, Vezzi 5%, Kiprik 3%, Nolli 2%**. After seven consecutive common outcomes, the next roll is rare-only at 50/30/20. A duplicate companion says Already owned and grants nothing.
+5. Hue Eggs grant a saved **Rose, Tide, Citrus, Iris or Reset jar**, each at 20%. Store it or use it immediately. Jars stack; closing or reopening never rerolls the result. Journal → Customize → Hue selects the pet and Main/Secondary channel. Each hue has five dose notches; repeated doses deepen it, different hues mix, and a Reset jar clears only the selected channel. Every use asks for confirmation.
+6. The optional daily gift is **6 Stars**. Contracts are **Win 2 rounds +4, Chain 3 merges +3, Score 500 +3** under their completed-round rules. The Hollow day rolls at **05:00 UTC**. Family mastery/prestige is frozen: no new ranks, marks or overhead level badges. Earned deck cosmetics remain, including Honey at one saved win, Gloaming at three, and Copperleaf/Lantern background at ten.
 
-Style now shows the actual finish silhouette, keeps a complete first choice visible on phone landscape, and pins X, tabs and Equip. Preview is reversible until Equip. Journal wraps long rare names, separates portrait and family crest, and keeps Family goals visible. Both lists signal additional content with a chevron that clears at the end. These changes passed85 actual-game cases at each of Medium and Largest,60 source wrapper compilations, Rojo build, and Astra source/native-render review. Emulator touch swipes reached the final Shell and Journal choices; Club end geometry was fixture-assisted. The original Medium text preference is restored.
+No paid luck, daily play cap, new currency, nursery or public release was added. Clothing/stat eggs, battles and further minigames remain future scope.
 
-Save problems now appear once inside the screen being used, with distinct truthful instructions for automatic retry, session waiting or rejoin. A neutral hatch state cannot hide a profile retry. Recovery keeps the same result and pet viewport. No transaction or reward rule changed.
+## What was tested
 
-Switching from a pointer to a controller in Menu, Style, Journal or the ordinary egg shop acquires a safe focus target. First unfocused A focuses; the next fresh A activates. Existing native selection is preserved. Roblox's own menu keeps priority. Held/dual-pad/disconnect/race coverage is simulated; native Studio virtual-controller checks corroborated ordinary navigation.
+- **123 of 123 runtime sources** exactly matched native Studio and compiled without errors; the Rojo build passed. Seven templates contain **122 validated uploaded mesh resources**.
+- **172 server cases across 19 suites; 292 client cases across 36 suites.** These are unique latest per-suite results, not inflated counts from repeated preferences, frames or reruns. The original 197-case client matrix was checked at actual Medium/Largest; later targeted cases extend the union. Not every later case was rerun at both preferences.
+- Ordinary tutorial drops earned Zivvi and opened the new hatch/Meet path. A separate 30-second contact hold produced **two Saved care-Star receipts**, without injecting a reward.
+- Actual Humanoid walks crossed the creek both ways with the follower. A separate approach showed the nook’s six-second rest and automatic return.
+- **Actual local two-client Start/Join action 322** showed the ball passing both directions; both owners stayed at six Stars with unchanged hue stock, inventory and profile revision. Separate ordinary controls saved Pebble → Hide → Ring while hidden → Show; the visitor observed the same appearance pair.
+- Actual **iPhone 13 landscape emulation, Largest text, 749 × 389 effective viewport**, passed the focused-pet visual review. It is not a physical phone test.
+- A controlled seven-rig comparison used the same current world and measured light. Median round p95 rig CPU changed **1.3901 → 1.1926 ms by day** and **1.3280 → 1.2820 ms at midnight**. Overall frame time stayed near 17.8 ms. This isolates synthetic rig rendering; it is not a full historical-place benchmark or phone performance claim.
 
-Welcome instructions now wrap at actual preferred text size and remove optional headings before losing the current lesson. They retain aim/drop controls, the exact matching marks, or the Pip goal. The clipped Largest desktop Space instruction is fixed without moving the tray or controls. A save retry temporarily replaces the lesson, and recovery restores the correct phase.
+![Actual two-client return contact sheet](C:/Users/skunk/Documents/Development/egg-drop/artifacts/aero-garden-2026-11-09/actual-relocated-two-pet-return-contact.jpg)
 
-## What the player does
+[Watch the actual return](C:/Users/skunk/Documents/Development/egg-drop/artifacts/aero-garden-2026-11-09/actual-relocated-two-pet-return.mp4).
 
-A new profile begins with a short merge welcome. Matching pieces fills **6 charge**, hatches guaranteed **Pip**, and awards the welcome **6 nectar**. Six charge does not mean six drops. Returning Pip owners start in Sprout Hollow.
+## New original music drafts
 
-A field round has **24 drops**. Aim equal pieces into the highlighted **LEFT** bank to make a tier III or higher merge, then do the same on **RIGHT**. The queue shows now/next; the dispenser shows drops remaining. Contact releases the next drop with a stuck-state fallback; the final cascade gets four seconds to settle.
+The currently liked in-game music stays the default. These two original local drafts are ready to audition; they have not been uploaded or substituted into the game. Deterministic loop/seam, mono and loudness checks passed; subjective listening is still yours to judge.
 
-Complete both sides for **6 nectar**, or **8 total** with a low pile. Failure gives no base nectar, although a completed full-budget run can still satisfy skill dailies. Pressure above the line becomes meaningful after drop12 and allows2.4seconds to recover; an early sustained spawn jam can also end a run. Try again is one action away.
+**Creek With One Shoe** — quirky garden cue, 92 BPM, 62.61-second loop:
 
-**Nectar buys an egg hatch. Score and chains are skill records and challenge progress, not spendable currency.** The recap uses the saved wallet and never adds its receipt twice. Choose an egg, inspect its actual odds, and press the explicit hatch action. Its outcome is committed before the cinematic.
+![Creek With One Shoe](C:/Users/skunk/Documents/Development/egg-drop/assets/concepts/music/overnight-aero-2026-11-09/creek-with-one-shoe.mp3)
 
-Meet acknowledges/equips the result and opens pet focus; Play again acknowledges and returns to play. X dismisses without acknowledging, so tree/Menu can reopen that same committed result without another debit or reroll. Isolated save/recovery tests cover this; live-account rejoin remains unverified.
+**Pocket Skip** — brighter handheld cue, 120 BPM, 48-second loop:
 
-## Eggs, pets and mastery
+![Pocket Skip](C:/Users/skunk/Documents/Development/egg-drop/assets/concepts/music/overnight-aero-2026-11-09/pocket-skip.mp3)
 
-**Mixed Meadow:18 nectar. Sprout Focused:24 nectar, Pip80% / Bloom Pip20%.** After seven consecutive non-rares, the next hatch guarantees a rare. This does not guarantee a missing species.
+## What to try in the morning
 
-| Pet | Appearance | Meadow |
-| --- | --- | ---: |
-| Pip | Cream sprout chick, leaf crown, cracked shell, green slippers |35%|
-| Puddle | Rounded aqua companion with fins/flippers |25%|
-| Wick | Coral flame creature with a golden core |20%|
-| Orbit | Lavender companion with an orbit ring and small moon |10%|
-| Bloom Pip | Peach Pip with a flower above its sprout |5%|
-| Foxfire Wick | Blue Wick with twin aqua foxfire flames |3%|
-| Eclipse Orbit | Deep violet Orbit with a golden halo |2%|
+Play a round, hatch/store a Hue jar, apply it to Main and inspect Secondary separately. Choose Ring or Pebble, hide/show it, then leave and rejoin to check the same appearance and inventory. Walk both bridge directions, approach the nook, and try the toy with another player. Pet a baby for around 30 seconds and judge the reaction, sound and Star feedback. On your phone, check the lowest controls, scrolling and focus framing. Tell me which movements, materials or screens still feel wrong and which music draft you prefer.
 
-The four families are Pip, Puddle, Wick and Orbit; rares share their family's mastery. A win earns1 mark, a clean win2 total, a duplicate1. Ranks **I/II/III require3/10/25 marks**; rankIII also needs successful clean/chain3/score500 challenges. Rewards are a family crest, outline finish and bounded flourishes. Reduced effects keeps static identity.
+**Open limitations:** the standalone Roblox Player here is signed out. The authenticated browser’s Play attempt reached a download fallback and did not launch a live game, so no fresh service-backed save/rejoin result is claimed. Sign in to Roblox Player when convenient for that check. Physical phone, service-scale multiplayer/latency and longer human fun/pacing tests remain open. Night faces and silhouettes are readable but flatter than noon; the proposed .60 brightness trial target was not met. One tool-assisted camera obstruction remains unattributed; a clean ordinary-input fresh-spawn Meet was clear. Known Studio warnings about inaccessible EditableImage and an old asset-type mismatch remain; no security setting was changed.
 
-Daily contracts auto-credit once per Hollow day: finish2 quests **+4**, chain3 **+3**, score500 **+3**. There is a **6-nectar daily gift**, with no duplicate welcome-day gift. Hollow uses a fixed UTC−5 clock and real24-hour lighting. There are no paid eggs/luck/currency or play caps. Nursery remains deferred. Seventeen original synthesized cues are wired; a finished background-music loop is not shipped.
-
-## Why physical destinations
-
-Publisher examples support familiar objects for familiar services: Adopt Me uses a Nursery egg machine; Pet Simulator99 combines physical machines with inventory shortcuts. Roblox supports native keyboard/controller/touch proximity interactions. For this compact loop, the appropriate decision is an optional walk to an existing landmark plus immediate recap/Menu access. It is not evidence that physical shops cause retention. [Research and implementation evidence](WORLD-INTERACTIONS.md) · [UI references and reusable rules](UI-DESIGN-SYSTEM.md).
-
-These follow the specific conventions verified in [Adopt Me's egg release](https://www.playadopt.me/news/garden-egg-release-notes), [Pet Simulator99's physical Supercomputer](https://www.biggames.io/post/pet-simulator-99-update-6) and [later inventory access](https://www.biggames.io/post/pet-simulator-99-update-26). They establish examples, not Roblox-wide prevalence or a reason to add another room, currency or shop.
-
-## Evidence and limits
-
-| Checkpoint | Verified evidence |
-| --- | --- |
-| UI8b49b75 / privatev69 |214 actual-game client cases across21 suites at Medium;42 separate Largest cases;34 isolated server cases;59 source wrappers; Rojo; native24-drop→saved14→Meadow18→same-ID reopen→Meet journey |
-| World92df51c |127 client cases across10 suites, including15 camera lifecycle cases;34 isolated server cases;60 source wrappers; Rojo; actual walks and E; injected ButtonX verified keycode routing; native-menu priority, same-ID purchase/reopen, emulated touch browse/pet/Back |
-| Phone6da2865 |98 actual-game client cases across10 suites at Medium and the same98 at Largest;60 source wrappers; Rojo; actual Studio phone-emulator tabs/choices/rotation/A; Astra source and rendered GO |
-| Style/Journal a623636 |85 client cases across9 suites at each of Medium/Largest;60 selected source wrappers; Rojo; actual emulator swipes, rare-name/crest layouts and camera/glove checks; Astra GO |
-| Save feedback f6d1f4f |113 client checks at each of Medium/Largest;34 isolated server cases;61 selected source wrappers; Rojo; actual partial and successful rounds, one paid duplicate hatch, same-ID reopen/ack and client-only retry presentation; Astra GO |
-| Controller566a655 |30 focused checks at each of Medium/Largest plus52 targeted Largest regressions; actual virtual-controller navigation;63 complete source hashes/wrappers; Rojo; Astra GO |
-| Welcome24751c2 |56 checks across6 suites at each of Medium/Largest; four root cases each cover3 phases×3 input types; actual Largest Space/A/touch accepted drops and phase-correct save recovery;63 complete source hashes/wrappers; Rojo; Astra source/render GO |
-
-These counts overlap across slices and preferences. Do not add them as unique tests. Corrected rendering tests run in real game LocalScripts with enabled ScreenGui hosts; earlier plugin-context Largest fixture passes were superseded. Older selected-wrapper counts omitted the trivial Shared registry root; the final63 checks include every repository source. Reports in `scripts/`: UIRedesign, WorldInteractions, EmulatorReflow, StyleJournal, SaveNotice, ControllerFocus and WelcomeCoaching `-results.json`. Detailed control/fixture distinctions are in [UI-OVERNIGHT.md](UI-OVERNIGHT.md).
-
-The final24751c2 Studio walkthrough used actual controls: welcome Pip/6 nectar;24 drops, score640/chain4/both banks; quest6+daily6 saved wallet18; Meadow spent18 once for **new Wick**, bank0, sparse inventory5 (Pip+Wick), revision5. X→Menu→Eggs retained ID `8f32a231-9a02-48a0-8612-576158de1941`, wallet and revision. After the cinematic unlocked its actions, Meet acknowledged once (revision6), opened Wick in held Scriptable focus, and Back restored Custom camera and the character Humanoid subject. The aiming helper read board state to choose real drag/release inputs. This is an automated walkthrough, not an unaided human test. [Screenshots](artifacts/ui-redesign-2026-11-07/index.html).
-
-Known console warnings: EditableImage unavailable and external asset203785492 type mismatch. No security setting was changed to bypass them. The latest ordinary-play console has no game runtime exception. Failure-injection warnings in server fixtures are expected.
-
-**Still unproven:** physical-phone thumb comfort, physical controller, live multiplayer visibility, real private-server disconnect/rejoin, first-time comprehension, fun and voluntary replay. Automated aiming uses board state and cannot prove those. Reconnecting intentionally starts a fresh unfinished field; saved wallet/ownership/settings/pending hatch should persist.
-
-## Your next playtest
-
-Use the private link while signed into the authorized account. On phone use landscape. Desktop arrows/A-D aim; Space or on-screen A drops. Try one field, read its recap, hatch, Meet, Back, and walk to each station. Preview/cancel a finish, equip one, then leave/rejoin and compare wallet, collection, companion, settings and any unacknowledged hatch. Finally try a second player.
-
-Where the goal becomes unclear and whether you voluntarily choose another round matter more than another automated solver run. Monetization and additional pet/social purpose remain future decisions after that evidence.
-
-You can adjust simple button offsets and hardware dimensions yourself in `src/client/DeckLayout.lua` through its named `Layout.Settings`. Save in VS Code, let Egg Drop Rojo sync, then stop/start Play. Studio Play property edits are temporary. [Small UI editing guide](UI-EDITING.md).
+Studio was left in Edit with production entries enabled, temporary QA objects removed, normal desktop emulation and the original Medium text preference restored. The overnight automation runs only through 9 AM Eastern, then starts no new changes. This build is a tested private prototype; it is not a production-readiness or retention claim.

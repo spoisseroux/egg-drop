@@ -1,34 +1,34 @@
 # Egg Drop — remaining work
 
-Updated November 9, 2026. Keep unfinished items here until implemented and verified. The published private build is recorded in [PLAY-BUILD.md](PLAY-BUILD.md); a checked source change alone does not establish live or device coverage.
+Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
-## Active build — item eggs and vibrant companions
+## Completed item-egg and Aero build
 
-Accepted scope: [ITEM-EGGS-AND-AERO.md](ITEM-EGGS-AND-AERO.md). Astra owns creative direction and rendered review; Sol 6.1 High implements; root integrates and tests in Egg Drop Studio.
+Private v274 / bb8c60b contains the accepted [item-egg scope](ITEM-EGGS-AND-AERO.md): unified Companion / Hue shop, saved stacked hue/reset items, independent five-dose channels, migration of old purchases, per-pet customization, seven-ID color support, planted motion, faster aiming and themed supply balls.
 
-- [x] Unified Companion Egg / Hue Egg selection; original patterned shells and fruit-jar rewards.
-- [x] Saved, stacked hue/reset inventory with Store / Use now and confirmed per-pet use.
-- [x] Five doses per hue, separate Main / Secondary mixtures, targeted Reset, and preservation of existing purchases.
-- [x] Per-pet Journal customization, charm controls, segmented hue bars, and coherent vibrant glassy UI.
-- [x] Visible appearance support for all seven existing pet identities, including legacy material-role adapters.
-- [x] Faster facing, legible planted/propulsive steps, stepped expressive poses over smooth movement, and brighter nighttime silhouettes.
-- [x] Faster held aiming and deck-themed supply balls.
-- [x] Independent source review, Astra render/motion review, Studio control walkthroughs and transaction/regression checks.
+## Completed overnight build — private v297
 
-The user authorized continuing the substantial production work below overnight after this active build passes review and testing. Use the Frutiger Aero and original Chao Garden-inspired direction for visuals, make hatch presentation more saturated, and draft new original synth music. Keep the currently liked music available. See [OVERNIGHT-AERO.md](OVERNIGHT-AERO.md) for the running handoff and morning checkpoint.
+The bounded [garden and baby scope](OVERNIGHT-GARDEN-PETS.md) is implemented, independently reviewed and published as **private v297 / 2e9da43**. Runtime is pushed; refreshed native Version History verifies **Aero babies and shared garden - 2e9da43**. [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png) · [Verification](artifacts/aero-garden-2026-11-09/VERIFY.md) · [Gallery](artifacts/aero-garden-2026-11-09/GALLERY.md) · [Native test index](artifacts/aero-garden-2026-11-09/TEST-INDEX.md).
 
-## Next substantial production work
+- [x] Purposeful lawn, usable creek crossing, curved rest nook, clearer routes and bounded moving scenery. The existing main floor remains 160 × 128 studs; actual avatars and pets crossed both ways and the pet rested in the nook.
+- [x] Five original replacement babies: Tikket, Nuum, Vezzi, Kiprik and Nolli, with authored expressions, portraits, fallback forms and protected pigment roles. All seven saved identities and existing ownership remain stable; Zivvi and Ovelle retain their models.
+- [x] Free optional Dot / Ring / Pebble shapes with saved visibility, unknown-shape preservation, exact retries and old-client compatibility. Published source enables selections with `SelectionsEnabled=true` and `PetCharmVersion=2`; pre/post-publication censuses found no older gameplay writer.
+- [x] One shared two-pet return with ordinary Start / Join, exclusive generation-bound reservations, bounded approaches and interruption/retry guards. Final actual two-client film has visual GO; no rewards or currency were added.
+- [x] Saturated hatch presentation, bounded ambience, focus scenery coverage and short-landscape phone-emulator review at Largest text.
+- [x] Native source equality / compile / Rojo gates; 172 server cases across 19 suites and 292 client cases across 36 suites, counted without duplicate reruns.
+- [x] Two original local synth music drafts and technical loop/loudness validation. Subjective listening and any future audio upload are separate; the currently liked in-game default is unchanged.
 
-- [ ] **Larger, livelier garden redesign:** purposeful spaces, stronger landmarks, moving scenery and useful shared activities. Keep the day/night cycle and fast menu access. Verify scale and walking routes with actual avatars and pets.
-- [ ] **Five remaining pet redesigns:** Wick, Orbit, Bloom Pip, Foxfire Wick and Eclipse Orbit still use legacy forms. Only Zivvi and Ovelle have the new authored baby models. Preserve player ownership and stable saved IDs through replacements.
-- [ ] **More expressions and charm shapes**, followed by social pet minigames. Clothing eggs, stat eggs and battling remain future scope, with a separate design/review pass before implementation. Nursery remains deferred.
-- [ ] **Physical-phone testing, live save/rejoin checks and longer human playtesting.** Record exact devices/builds, control paths, persistence outcomes and observed pacing; Studio emulator, synthetic fixtures and local two-client checks do not replace these.
+## Follow-up verification
 
-## Acceptance notes
+- [x] Record private v297 / pushed runtime 2e9da43, refreshed Version History proof and the 6:11 AM post-publication census (one Team Create edit server, no gameplay writer).
+- [ ] Test physical-phone touch, sustained performance and controls; Studio landscape emulation is the current coverage.
+- [ ] Verify live save/rejoin, including shape/visibility pairs and hue inventory. The browser Play attempt reached Download Roblox while the standalone player was signed out; no live VM/profile test ran. Sign in to the standalone player before retrying. Isolated Studio receipts are not live persistence proof.
+- [ ] Run longer human play and service-scale multiplayer sessions; assess earning pace, repeated companion outcomes, time to a chosen hue and whether shared activities remain enjoyable.
+- [ ] Revisit flatter nighttime shading and weak individual Vezzi teeth if further art tuning is authorized; the proposed .60 brightness trial target was not met.
 
-- [ ] Observe idle wandering in an ordinary live walk-through; previous near-creek samples observed only rest/follow.
-- [ ] Record fixed-camera owner/visitor motion and petting-return continuity, alongside replicated pose checks.
-- [ ] Measure sustained rendering and control response with one local pet and nearby visitors on available hardware.
-- [ ] Review earning pace, repeated companion outcomes and time to a chosen hue with human players before claiming that fun or retention is established.
+## Future scope — separate design and review
 
-No paid luck, daily play caps, public release or new currency is part of this backlog's active build.
+- [ ] A genuinely larger map footprint and additional social activities/minigames beyond the completed shared return. The bounded garden pass uses the existing floor.
+- [ ] Clothing eggs, stat eggs and battling. Nursery remains deferred.
+
+No paid luck, daily play caps, new currency or public release is authorized by this backlog.

@@ -1,16 +1,22 @@
-# Current item-egg rules — private v274
+# Current item-egg and garden rules — private v297
 
-The current contract is [ITEM-EGGS-AND-AERO.md](ITEM-EGGS-AND-AERO.md), implemented in `bb8c60b`. [Play/build handoff](PLAY-BUILD.md) · [Exact tests](artifacts/item-eggs-aero-2026-11-09/VERIFY.md).
+**Private v297 Published — Aero babies and shared garden - 2e9da43**, verified in refreshed native Version History; runtime `2e9da43` is pushed. [Publication proof](artifacts/aero-garden-2026-11-09/private-published-v297-2e9da43.png). The current economy contract remains [ITEM-EGGS-AND-AERO.md](ITEM-EGGS-AND-AERO.md), with the bounded [garden/baby scope](OVERNIGHT-GARDEN-PETS.md) now implemented. [Play/build handoff](PLAY-BUILD.md) · [Exact current tests and limits](artifacts/aero-garden-2026-11-09/VERIFY.md).
 
 Companion Egg18Stars retains35/25/20/10/5/3/2odds and the7-common rare guarantee. Sprout Focused is no longer offered for new purchases; old pending receipts remain valid. Companion duplicates award nothing. Hue Egg8Stars grants exactly one fixed random Rose/Tide/Citrus/Iris/Reset jar at20%each, stacked in saved inventory before its reveal. Each owned pet has independent Main/Secondary four-hue vectors with0–5doses per hue. Five equal doses fully dye the channel; other hue doses mix vividly. A Reset jar clears only the selected channel; original channels reject without spend. Every use confirms exact target, displayed revision/counts and stock change. Closing/reopening preserves fixed results and never repeats the debit/grant.
 
 Wallet and stock snapshots are owner-only. Applied doses are public appearance descriptions. Frozen pre-v6 validation and immutable migration proofs preserve old earned color libraries and held tokens; new pigment locks only its selected channel until a consumable Reset. Existing star/day/contract/round rules stay as documented in the v250 historical section. Mastery remains frozen; no new currency or paid luck.
 
+The seven live names are Zivvi, Ovelle, Tikket, Nuum, Vezzi, Kiprik and Nolli in the existing saved-ID/odds order. Five new bodies replace legacy forms without new ownership bits or altered odds. Free Dot / Ring / Pebble selection and saved visibility use version-2 authority; published source enables the selector gate. Unmarked historical Dot visibility requests preserve stored alternate/future forms, and unsupported future shapes retain their saved identity with a visual fallback. No shape purchase or entitlement economy is added.
+
+The shared toy on the bench apron has one generation-bound reservation. Native Start opens a three-second Join window; each pet may take up to eight validated seconds to approach, followed by the same five-second exchange. Exact retries cannot start another action; greeting/manual reservations are protected. Toy play gives no Stars, inventory, progression or rewards. The creek bridge and nearby-owner six-second nook rest use the existing 160 × 128 floor.
+
+Current evidence is 172 server cases / 19 suites and 292 client cases / 36 suites, plus ordinary local two-client return and saved shape/visibility observations. Pre/post-publication censuses found no older gameplay writer. The live join attempt was blocked by a signed-out standalone player, so no live VM/profile test ran; physical-phone performance, live save/rejoin and service-scale multiplayer remain untested.
+
 ## Historical progression notes and superseded color flows
 
 # Egg Drop — Stars, companion eggs and held Hue Eggs
 
-**Active accepted/runtime rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** These supersede earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. Verified private publication is **v250 (a3fce0c)**, Pet loop reset and angle aim, confirmed in refreshed Studio Version History. [PLAY-BUILD.md](PLAY-BUILD.md) is the publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
+**Historical v250 rules: [PET-LOOP-RESET.md](PET-LOOP-RESET.md).** Current v297 rules above take precedence; the held-token/free-color flow below is retained history. These rules superseded earlier mastery, directional Hue purchase, subtle tint and highlighted-region proposals. The historical private publication was **v250 (a3fce0c)**, Pet loop reset and angle aim, confirmed in refreshed Studio Version History. [PLAY-BUILD.md](PLAY-BUILD.md) is the current publication handoff. [Reset verification](artifacts/pet-loop-reset-2026-11-09/VERIFY.md) · [Gallery](artifacts/pet-loop-reset-2026-11-09/GALLERY.md).
 
 ## Play, collect and return
 
