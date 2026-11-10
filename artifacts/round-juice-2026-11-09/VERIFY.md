@@ -1,6 +1,6 @@
 # Round feedback and clear rewards
 
-Reviewed candidate following private v389 / runtime13afc44. The exact published checkpoint is recorded in PLAY-BUILD.md after native publication verification.
+Private v397 Published / runtime b733167, committed and pushed. Refreshed native Version History verifies **Round feedback and white zero notches - b733167**. [Publication proof](private-published-v397-b733167.jpg). Documentation-only updates do not alter that runtime checkpoint.
 
 ## Implemented scope
 

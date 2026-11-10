@@ -1,3 +1,15 @@
+# Egg Drop — round feedback and clear rewards
+
+**Private v397 Published — runtime b733167, committed and pushed.** Refreshed native Version History verifies **Round feedback and white zero notches - b733167**. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/round-juice-2026-11-09/private-published-v397-b733167.jpg) · [Screenshot gallery](artifacts/round-juice-2026-11-09/GALLERY.html) · [Verification](artifacts/round-juice-2026-11-09/VERIFY.md).
+
+Every hue0 notch is now white on both Main/Secondary, with a dark current-dose check; saved colours, stages1–5, inventory and confirmed one-channel Reset are unchanged. Accepted Drop gives the entire device a small tap. A witnessed round ends with final-ball bounce and bounded seed/ribbon confetti, retiring on replay/leave. Recap has one exact payout breakdown and one actual-goal checklist, without redundant source cards, hints or BEST kicker. Egg shop uses three measured offers per row and accessible narrow fallback. Matte/Gloss receipts show a lit teal sample with ground shadow. All five egg families have complementary cold-load shell pieces and a120ms open-shell gap before the reward enters.
+
+**Passed:**250 unique client cases/26 suites (preference/focus reruns overlap),40 isolated server cases/3 suites,171/171 native source matches and compiles, cold Rojo and diff checks, independent Sol source review and Astra rendered review. Actual ordinary controls completed both Bank goals:1010 points, chain9,12 Stars =6 Quest +6 Daily. A65-frame trace observed one art owner,12 confetti pieces then zero. Actual earned8-Star Toy Egg awarded Ball and applied it to Zivvi; quick replay and garden re-entry opened empty new rounds. Desktop and iPhone17Pro emulator shop navigation passed. Original Medium/Automatic/default viewport restored, QA removed, Studio Edit.
+
+**Test:** Drop/merge feel →finish round and quick retry →scroll all five egg choices →Toy/Feature Use now at cradle →white0/current hue checks and one-fruit confirmations →Matte/Gloss readability →rejoin on phone and verify Stars/items/appearance. Physical-phone, live rejoin, current two-owner visitor behaviour, ordinary overflow and longer human fun/balance remain open. Existing EditableImage-disabled/legacy wrong-type warnings and intermittent failed egg-image fetches remain; fallbacks were tested and no security settings changed. Garnet/Ink colour trials remain design-only; versioned catalog/receipt compatibility and Ink Main night contrast are still TODO.
+
+## Historical v389 — device, hatching and personal play
+
 # Egg Drop — device, hatching and personal play
 
 **Private v389 Published — runtime13afc44, committed and pushed.** Refreshed native Version History verifies **Personal toys, features and hatches - 13afc44**. [Publication proof](artifacts/device-hatch-play-2026-11-09/private-published-v389-13afc44.jpg). [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Current gallery](artifacts/device-hatch-play-2026-11-09/GALLERY.html) · [Exact checks and limits](artifacts/device-hatch-play-2026-11-09/VERIFY.md).

@@ -2,7 +2,7 @@
 
 Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
-## Round feedback and clear rewards — reviewed candidate after v389
+## Round feedback and clear rewards — private v397 Published
 
 - [x] Accepted Drop kicks the entire handheld; merge priority, hidden/duplicate/reduced suppression and pointer mapping remain correct.
 - [x] Current-run final balls bounce with bounded confetti/seed art; exact payout and live controls retain authority. Actual two-goal24-drop win:1010 points, chain9,12 Stars =6 Quest +6 Daily; one art owner,12 confetti, quiet settlement, fresh replay.
@@ -10,7 +10,7 @@ Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.m
 - [x] Three measured egg offers per row with accessible narrow fallback; actual desktop/phone-emulator controls reach both rows.
 - [x] Lit Matte/Gloss sample and compact award receipt; fix2px empty scroll. Complementary cold-load shell halves and120ms shell-only opening pass15 native phase captures across all five egg families.
 - [x] Every hue0 notch white on both channels; retain saved-dose highlight, original stages1–5 and one-channel confirmed Reset semantics. No stored colours changed.
-- [x]250 unique client checks/26 suites,40 server cases/3 suites,171 source matches/compiles, cold Rojo, independent source review and Astra render review. Exact artifacts and limitations: [verification](artifacts/round-juice-2026-11-09/VERIFY.md), [gallery](artifacts/round-juice-2026-11-09/GALLERY.md).
+- [x]250 unique client checks/26 suites,40 server cases/3 suites,171 source matches/compiles, cold Rojo, independent source review and Astra render review. Runtime b733167 pushed, private v397 Published verified in refreshed native Version History. Exact artifacts and limitations: [verification](artifacts/round-juice-2026-11-09/VERIFY.md), [gallery](artifacts/round-juice-2026-11-09/GALLERY.md).
 - [ ] Remaining verification: physical phone, live rejoin, current two-owner toys/features observation, human objective balance and actual overflow walkthrough. Garnet/Ink trial work below remains design-only until a compatible versioned catalog is implemented.
 
 ## Player feedback after v358 — private v370 Published
