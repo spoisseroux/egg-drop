@@ -17,16 +17,7 @@ function Panel.new(parent,intent,options)
  local self=setmetatable({root=root,intent=intent,options=options or {},rows={}},Panel)
  self.title=label(root,"Heading","Materials","Heading");self.note=label(root,"Description","Choose a material for this pet.","Body")
  self.art=Art.frame(root,"MaterialResultArt","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),root.ZIndex+1);self.art.BackgroundTransparency=1
- self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="material",resultBuilder=function(parent,result,position,size,z)
-  local tile=Art.frame(parent,"UnlockedMaterial","raised",position,size,z);tile.BackgroundTransparency=1
-  local sample=Art.frame(tile,"FinishSample",Color3.fromHex("#69D7D5"),UDim2.fromScale(.5,.5),UDim2.fromScale(.78,.78),z+1);sample.AnchorPoint=Vector2.new(.5,.5);Art.corner(sample,100)
-  sample:SetAttribute("AccessibleLabel",Catalog.ById[result.finishId].name.." material")
-  local shade=Instance.new("UIGradient");shade.Color=ColorSequence.new(Color3.fromHex("#A8EBDF"),Color3.fromHex("#3EAAA9"));shade.Rotation=70;shade.Parent=sample
-  if result.finishId=="gloss"or result.finishId=="metal"then
-   local glint=Art.frame(sample,"GlossGlint",Color3.new(1,1,1),UDim2.fromOffset(14,12),UDim2.fromOffset(18,9),z+2);Art.corner(glint,6);glint.Rotation=-28
-  else shade.Color=ColorSequence.new(Color3.fromHex("#8BD7D1"),Color3.fromHex("#69BBB8"))end
-  return tile
- end})
+ self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="material",resultBuilder=require(script.Parent.MaterialFinishPreview).create})
  self.pool=label(root,"AvailableOdds","","Body")
  self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)

@@ -2,6 +2,17 @@
 
 Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## Round feedback and clear rewards — reviewed candidate after v389
+
+- [x] Accepted Drop kicks the entire handheld; merge priority, hidden/duplicate/reduced suppression and pointer mapping remain correct.
+- [x] Current-run final balls bounce with bounded confetti/seed art; exact payout and live controls retain authority. Actual two-goal24-drop win:1010 points, chain9,12 Stars =6 Quest +6 Daily; one art owner,12 confetti, quiet settlement, fresh replay.
+- [x] Compact recap shows one payout breakdown and one marked goal list; remove duplicate hint/cards/kicker and scenario/dynamics jargon from results.
+- [x] Three measured egg offers per row with accessible narrow fallback; actual desktop/phone-emulator controls reach both rows.
+- [x] Lit Matte/Gloss sample and compact award receipt; fix2px empty scroll. Complementary cold-load shell halves and120ms shell-only opening pass15 native phase captures across all five egg families.
+- [x] Every hue0 notch white on both channels; retain saved-dose highlight, original stages1–5 and one-channel confirmed Reset semantics. No stored colours changed.
+- [x]250 unique client checks/26 suites,40 server cases/3 suites,171 source matches/compiles, cold Rojo, independent source review and Astra render review. Exact artifacts and limitations: [verification](artifacts/round-juice-2026-11-09/VERIFY.md), [gallery](artifacts/round-juice-2026-11-09/GALLERY.md).
+- [ ] Remaining verification: physical phone, live rejoin, current two-owner toys/features observation, human objective balance and actual overflow walkthrough. Garnet/Ink trial work below remains design-only until a compatible versioned catalog is implemented.
+
 ## Player feedback after v358 — private v370 Published
 
 ### Device, hatching and personal play — private v389 Published
@@ -69,12 +80,12 @@ The user authorized building the [Astra proposal](PET-CARE-EXPANSION.md) within 
 
 - [x] Complete-model loading/fallback before authored mesh reveal, bounded shared asset queue and owner/hatch priority; reviewed whole-rig handoff and stale-lifetime cases. [Care verification](CARE-LOADING-FEEDBACK.md).
 - [x] Exact conditional color swatches on the existing four hue rows; live muted Customize portrait; explicit one-channel Reset Main/Secondary confirmation. Actual Largest phone controls preserve a full first row.
-- [ ] Add dark-red/Garnet and black/Ink with historical data and receipts preserved.
+- [ ] Version the Hue catalog and preserve historical rolls, odds and receipts. Four-pet noon/midnight trials provisionally accepted Garnet on Main and Secondary and Ink on Secondary. Ink Main is pending. Its original blink nearly disappears at midnight, and the warm-gray backing trial left oval marks when the eyes closed. Test a narrow stroke that follows the actual lid pose before offering Ink on Main. [Original blink](artifacts/round-juice-2026-11-09/palette-ink-main-0-blink-TRIAL.jpg) · [Rejected backing](artifacts/round-juice-2026-11-09/ink-contrast-0-blink-TRIAL.jpg).
 - [x] Tier-based device-art merge response, bounded existing effects and88%-opacity motifs over the opaque theme base. Earned low-tier and labeled injected-clear native recordings pass review.
 - [x] Carry from petting, supported set-down, one physical care-machine bay and confirmed owned-pet switching; fast shortcuts retained. Astra accepted actual earned R15 motion and Largest phone UI; [verification](artifacts/carry-machine-2026-11-09/VERIFY.md) distinguishes isolated switch/contention tests from actual controls. Private publication is recorded in PLAY-BUILD.md.
 - [x] Standard/Gloss/Matte finish ownership and per-pet selection, with native day/night facial review.
 - [ ] Metal and gradient-to-white/black Skin FX require accepted native rendering; UV/compositor work remains open.
-- [ ] Feature Egg with horns/tail/wings, rarities, stored items and separate five-stage earned/visible feature sizes per pet.
+- [x] Feature Egg with Horn/Claw/Wing items, rarities, storage and separate five-stage earned/visible sizes per pet, shipped in private v389. Tail shapes remain future scope.
 - [ ] Per-pet Movement/Swim XP levels, Stat Egg, meaningful practice, crawl/first-step and beginner/competent swimming animations with safe shores.
 - [ ] Original textured basin, terrace, animated pond/waterfall and purposeful cave entrance inspired by the supplied garden's proportions. No Sonic mesh or textures imported into the game.
 - [x] Bounded room coo scheduler and Astra-authored relative poses with mute/reduced/lifecycle guards. Existing original family voices verified in accelerated Studio playback; normal listening frequency unverified after160s with no cue.

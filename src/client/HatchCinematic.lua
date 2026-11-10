@@ -11,7 +11,7 @@ local Shot=require(script.Parent.PetGreetingShot)
 local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
-local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24
+local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
 local function frame(parent,name,color,z)
@@ -276,20 +276,21 @@ function Cinematic:publishDiagnostics(phase)
 end
 function Cinematic:paint()
  if not self.stage then return end
- local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75);local revealed=not self.active or self.age>=split
- self.resultRoot.Visible=revealed;self.shell.Visible=not revealed;self.crack.Visible=self.age>=.20 and not revealed
+ local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
+ local heroAt=split+Cinematic.HeroDelay;local revealed=not self.active or self.age>=heroAt;local opened=not self.active or self.age>=split
+ self.resultRoot.Visible=revealed;self.shell.Visible=not opened;self.crack.Visible=self.age>=.20 and not opened
  if self.anticipation then
-  self.anticipation.Visible=not revealed
+  self.anticipation.Visible=not opened
   local value=if rare and self.age>1.15 then "A rare glow…"elseif self.age>.6 then "A little more…"else "Something is stirring…"
   if self.anticipation.Text~=value then self.anticipation.Text=value end
  end
  local t=self.age
  self.shell.Rotation=if not self.active or t<.20 or t>=.60 then 0 elseif t<.38 then -6*(t-.20)/.18 elseif t<.49 then -6+10*(t-.38)/.11 else 4*(1-(t-.49)/.11)
  self.shellScale.Scale=if not self.active or t>=.20 then 1 elseif t<.12 then .90+.14*(1-(1-t/.12)^3)else 1.04-.04*(1-(1-(t-.12)/.08)^3)
- self.heroScale.Scale=if self.active and revealed then (if t<split+.35 then .82+.215*(1-(1-math.clamp((t-split)/.35,0,1))^3)else 1.035-.035*math.clamp((t-split-.35)/.40,0,1))else 1
+ self.heroScale.Scale=if self.active and revealed then (if t<heroAt+.35 then .82+.215*(1-(1-math.clamp((t-heroAt)/.35,0,1))^3)else 1.035-.035*math.clamp((t-heroAt-.35)/.40,0,1))else 1
  local quiet=self:reduced()or not self:owned();self.halo.Rotation=0
  self.haloStroke.Transparency=if not revealed then .62-math.max(0,math.sin(self.age*12))*.15 elseif rare then .42 else .65
- self.discoveryArt:split(self.age-split,self.active and revealed and self.age-split<.31 and not quiet)
+ self.discoveryArt:split(self.age-split,self.active and opened and self.age-split<.31 and not quiet)
  self:paintBits(revealed,quiet);self:publishDiagnostics("paint")
 end
 -- Every role has an authored trajectory; all reuse the same24 passive slots.
@@ -326,6 +327,7 @@ function Cinematic:paintBits(revealed,quiet)
  local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
  local count=if rare then 8 else 6;local burstAge=self.age-split;local burst=burstAge>=0 and burstAge<.75 and self.active
  self.liveBits=0
+ if self.active and self.age>=split and self.age<split+Cinematic.HeroDelay then for _,node in ipairs(self.bits)do node.Visible=false end;return end
  for i,node in ipairs(self.bits)do
   local show=self.active and not quiet and self.bandHeight>=20 and((burst and(i<=12 or(rare and i>=17)))or(revealed and i<=count)or(not revealed and i<=4))
   local x,y,w,h,rotation,alpha

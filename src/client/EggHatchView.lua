@@ -461,7 +461,17 @@ function View:renderBody()
  left=left or frame(self.body,"EggColumn","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100));left.BackgroundTransparency=1
  for _,child in ipairs(left:GetChildren())do if not child:IsA("TextButton")or not(child.Name=="Recipe_meadow"or child.Name=="Recipe_hue"or child.Name=="Recipe_material"or child.Name=="Recipe_toy"or child.Name=="Recipe_feature"or child.Name=="DailyNectar")then child:Destroy()end end
  local rect=Art.scrollContentRect(self.body,self.body.Size.X.Offset);local width=rect.width+8;local w=rect.width;local short=self.shade.AbsoluteSize.Y<280
- left.Position=UDim2.fromOffset(rect.x-4,0);left.Size=UDim2.fromOffset(width,1);local y=6;local cols=if w>=264 then 2 else 1;local _,cw=Art.gridCell(w,0,cols,8)
+ left.Position=UDim2.fromOffset(rect.x-4,0);left.Size=UDim2.fromOffset(width,1);local y=6
+ -- Measure the unbreakable price/name words before choosing up to three offers.
+ local probe=Art.text(left,"RecipeMeasure","",UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),"text",16);probe.Visible=false
+ local minimum=44
+ for _,id in ipairs(liveOrder)do
+  local recipe=shopRecipe(id);Art.type(probe,"Action",short)
+  for word in recipe.name:gmatch("%S+")do probe.Text=word;minimum=math.max(minimum,Art.textWidth(probe)+12)end
+  Art.type(probe,"Body",short);probe.Text=recipe.cost.." Stars";minimum=math.max(minimum,Art.textWidth(probe)+12)
+ end
+ probe:Destroy();local cols=math.clamp(math.floor((w+8)/(minimum+8)),1,3);local _,cw=Art.gridCell(w,0,cols,8)
+ left:SetAttribute("RecipeColumns",cols)
  local eggHosts={}
  local cardH=short and 116 or 160
  for _,id in ipairs(liveOrder)do
@@ -479,7 +489,14 @@ function View:renderBody()
   local eggH=math.max(52,cardH-nh-ph-18);local egg=EggArt.create(n,id,UDim2.fromOffset((cw-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH),n.ZIndex+2);table.insert(eggHosts,egg)
   Art.control(n,self.selected==id,not self.pending);n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",self.selected==id)
  end
- for index,id in ipairs(liveOrder)do local n=left:FindFirstChild("Recipe_"..id);local x,cellW=Art.gridCell(w,(index-1)%cols,cols,8);n.Position,n.Size=UDim2.fromOffset(4+x,y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cellW,cardH)end
+ for index,id in ipairs(liveOrder)do
+  local n=left:FindFirstChild("Recipe_"..id);local x,cellW=Art.gridCell(w,(index-1)%cols,cols,8)
+  n.Position,n.Size=UDim2.fromOffset(4+x,y+math.floor((index-1)/cols)*(cardH+8)),UDim2.fromOffset(cellW,cardH)
+  local name,cost=n.RecipeName,n.Cost;local nh,ph=name.Size.Y.Offset,cost.Size.Y.Offset
+  name.Position=UDim2.fromOffset(4,cardH-nh-ph-10);cost.Position=UDim2.fromOffset(4,cardH-ph-6)
+  local eggH=math.max(52,cardH-nh-ph-18);local egg=eggHosts[index]
+  egg.Position,egg.Size=UDim2.fromOffset((cellW-eggH*.78)/2,4),UDim2.fromOffset(eggH*.78,eggH)
+ end
  y+=math.ceil(#liveOrder/cols)*(cardH+8)
  local function copy(name,value,role,color)
   local n=Art.text(left,name,value,UDim2.fromOffset(4,y),UDim2.fromOffset(w,24),color or "text",16);Art.type(n,role or "Body",short);n.TextXAlignment=Enum.TextXAlignment.Left

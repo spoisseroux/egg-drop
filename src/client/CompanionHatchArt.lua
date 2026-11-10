@@ -43,15 +43,37 @@ function Stage:layout(x,y,w,h,center,pixels)
  self.shell.Position,self.shell.Size=UDim2.fromOffset(center.X,center.Y),UDim2.fromOffset(pixels*.60,pixels*.80)
  for _,half in ipairs({self.top,self.bottom})do half.Size=UDim2.fromOffset(pixels*.60,pixels*.80)end
 end
+local function pose(self,node,art,dx,dy,angle,upper,ease)
+ local c,r=self.center,self.pixels
+  local rotation=angle*ease;local a=math.rad(rotation);local cs,sn=math.cos(a),math.sin(a)
+  local square=r*.60;local loY,hiY=if upper then -.44 else -.03,if upper then .03 else .40
+  local minX,minY,maxX,maxY=math.huge,math.huge,-math.huge,-math.huge
+  for side=-1,1,2 do for row=0,1 do
+   local x,y=side*.36,if row==0 then loY else hiY
+   local px,py=(x*cs-y*sn)*square,(x*sn+y*cs)*square
+   minX,minY,maxX,maxY=math.min(minX,px),math.min(minY,py),math.max(maxX,px),math.max(maxY,py)
+  end end
+  local p,size=self.pond.Position,self.pond.Size
+  local left,right=p.X.Offset+4-minX,p.X.Offset+size.X.Offset-4-maxX
+  local top,bottom=p.Y.Offset+4-minY,p.Y.Offset+size.Y.Offset-4-maxY
+  local x=math.clamp(c.X+dx*r*ease,left,math.max(left,right));local y=math.clamp(c.Y+dy*r*ease,top,math.max(top,bottom))
+  node.Position=UDim2.fromOffset(x,y);art.Rotation=rotation
+  node:SetAttribute("ArtLeft",x+minX);node:SetAttribute("ArtRight",x+maxX);node:SetAttribute("ArtTop",y+minY);node:SetAttribute("ArtBottom",y+maxY)
+ end
 function Stage:split(age,visible)
  local upper=self.topArt.RegisteredShell.ShellImage;local lower=self.bottomArt.RegisteredShell.ShellImage
  local ready=upper.IsLoaded and lower.IsLoaded
- self.top.Visible,self.bottom.Visible=visible and ready,visible and ready
- if visible and not ready then self.shell.Visible=true;return end
+ self.top:SetAttribute("AtlasReady",ready);self.bottom:SetAttribute("AtlasReady",ready)
+ self.top.Visible,self.bottom.Visible=visible,visible
+ -- Each half has a complementary native fallback. Never put the whole shell
+ -- back in front of the already-visible hero when image fetching fails.
+ if visible then self.shell.Visible=false end
  if not visible then return end
- local u=math.clamp(age/.31,0,1);local ease=1-(1-u)^2;local c,r=self.center,self.pixels
- self.top.Position=UDim2.fromOffset(c.X-r*.60*.14*ease,c.Y-r*.80*.30*ease)
- self.bottom.Position=UDim2.fromOffset(c.X+r*.05*ease,c.Y+r*.80*.14*ease)
- self.topArt.Rotation,self.bottomArt.Rotation=-18*ease,12*ease
+ local u=math.clamp(age/.18,0,1);local ease=1-(1-u)^3;local c,r=self.center,self.pixels
+ -- Bounds are the registered shell's opaque art, rather than its transparent
+ -- square. Both native and atlas halves use this same conservative silhouette.
+
+ pose(self,self.top,self.topArt,-.30,-.25,-22,true,ease)
+ pose(self,self.bottom,self.bottomArt,.33,.20,20,false,ease)
 end
 return Stage

@@ -26,7 +26,7 @@ function Receipt.questHint(result)
 end
 function Receipt.questDetails(result)
  if not result.objective or result.objective.sequence~=result.sequence then return nil end
- return QuestCopy.menu(result.objective,result.phase)
+ return QuestCopy.results(result.objective,result.stage)
 end
 function Receipt.familyName(family)
 	local pet=Pets.byId[family];return if pet then pet.name else "Family"

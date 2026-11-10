@@ -124,9 +124,12 @@ return function(client,parent)
     local c,sounds=make();local completed,presented=0,0
     c:play(packet(if rare then "foxfire_wick"else "puddle",rare),function()completed+=1 end,{onPresented=function()presented+=1 end})
     assert(presented==1 and c.active and c.connection and c.heroConnection==nil)
-    local count=#c.frame:GetDescendants();advance(c,c.splitAt+.25)
+    local count=#c.frame:GetDescendants()
+    c.age=c.splitAt+.11;c:paint();assert(not c.resultRoot.Visible and not c.shell.Visible and c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible and c.liveBits==0)
+    c.age=c.splitAt+.12;c:paint();assert(c.resultRoot.Visible and math.abs(c.heroScale.Scale-.82)<.00001)
+    c.age=0;c:paint();advance(c,c.splitAt+.25)
     assert(c.liveBits==(if rare then 20 else 12),"jewel droplets/rare prism count exceeded existing pool")
-    assert((c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible)or c.shell.Visible,"neither loaded split nor complete unavailable-asset egg visible")
+    assert(c.discoveryArt.top.Visible and c.discoveryArt.bottom.Visible and not c.shell.Visible,"registered or native halves must flank the first hero")
     if c.discoveryArt.top.Visible then assert(c.discoveryArt.top.Position.X.Offset<c.center.X and c.discoveryArt.bottom.Position.X.Offset>c.center.X,"patterned halves did not split outward")end
     if rare then
      local center=c.outlineCenter or c.center

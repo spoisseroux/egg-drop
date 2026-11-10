@@ -9,6 +9,20 @@ return function(client,parent)
   local j=Jolt.new({shell,rim});table.insert(owners,j);j:setOwner(true,1,false);return j,shell,rim,field
  end
  local ok,problem=pcall(function()
+  test("accepted drop uses exact ninety millisecond signed keys and consumes duplicate ID",function()
+   local j,shell=make();assert(j:drop(1,1,0)and not j:drop(1,1,.01))
+   for _,key in ipairs({{0,0},{.018,2},{.054,-.7}})do j:update(key[1]);assert(math.abs(j.offset.Y-key[2])<.00001 and j.offset.X==0)end
+   j:update(.09);assert(j.offset==Vector2.zero and shell.Position==j.nodes[1].base)
+  end)
+  test("merge replaces drop and accepted drop cannot restart stronger merge",function()
+   local j=make();j:drop(1,1,0);assert(j:emit(1,2,4,1,false,.01));local active=j.active
+   assert(active.kind=="merge"and not j:drop(1,2,.02)and j.active==active)
+   j:update(.20);assert(j:drop(1,3,.21)and j.active.kind=="drop")
+  end)
+  test("hidden remote reduced and duplicate drop owners cause zero kick and no stationary aim drift",function()
+   local j=make();assert(not j:drop(0,1,0));j:setOwner(false,1,false);assert(not j:drop(1,1,0));j:setOwner(true,1,true);assert(not j:drop(1,1,0))
+   j:setOwner(true,1,false);j:drop(1,1,0);j:update(.018);assert(j:appliedOffset().X==0 and math.abs(j:pointerAim(170,100,280)-.25)<.000001)
+  end)
   test("accepted serial and merge ID debounce a single bounded held curve",function()
    local j=make();assert(j:emit(1,10,4,1,false,0)and not j:emit(1,10,4,1,false,0))
    for i=0,100 do j:update(i*.001);assert(j.offset.Magnitude<=7.000001)end

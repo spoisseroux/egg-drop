@@ -101,7 +101,7 @@ function View.new(parent,intent,options)
   local ticks,stages={},{};for notch=0,5 do
    local stage=notch
    local tick=button(row,"Notch"..notch,tostring(notch),function()self:chooseNotch(id,stage)end);tick:SetAttribute("DoseStage",stage)
-   tick:SetAttribute("SwatchColor",Hues.ById[id].color)
+   tick:SetAttribute("SwatchColor",if stage==0 then Color3.new(1,1,1)else Hues.ById[id].color)
    Art.bind(tick,{BackgroundColor3=function()return tick:GetAttribute("SwatchColor")end,TextColor3=function()return tick:GetAttribute("SwatchInk")or Art.Ink end})
    for _,child in ipairs(tick:GetChildren())do if child:IsA("UIGradient")then child:Destroy()end end
    local check=Art.frame(tick,"SavedCheck",Art.Ink,UDim2.fromOffset(3,7),UDim2.fromOffset(12,9),tick.ZIndex+1);check.BackgroundTransparency=1;check.Active=false;check.Selectable=false
@@ -329,7 +329,7 @@ function View:paintSwatches(visible)
   local stock=(self.state.hueInventory or {})[id]or 0;local stockCopy=tostring(stock)..(if stock==1 then " jar"else " jars");bar.stockCopy=reason or stockCopy
   bar.row:SetAttribute("AccessibleLabel",names[id].." · "..stockCopy.." · Current "..counts[id].."/5"..(if reason then " · "..reason else ""))
   for _,tick in ipairs(bar.ticks)do local stage=tick:GetAttribute("DoseStage")
-   local color=Swatches.at(self.petId,appearance,self.channel,id,stage)
+   local color=if stage==0 then Color3.new(1,1,1)else Swatches.at(self.petId,appearance,self.channel,id,stage)
    local inspected=self.inspected and self.inspected.petId==self.petId and self.inspected.channel==self.channel and self.inspected.id==id and self.inspected.stage==stage
    tick:SetAttribute("SwatchColor",color);tick.BackgroundColor3=color;tick.BackgroundTransparency=0;tick:SetAttribute("Filled",stage<=counts[id]);tick:SetAttribute("SavedStage",stage==counts[id]);tick:SetAttribute("Inspected",inspected==true)
    tick:SetAttribute("AccessibleLabel",names[id].." "..stage..(if stage==counts[id]then " · Current"else "")..(if reason then " · "..reason else " · Use one: "..counts[id].." to "..math.min(5,counts[id]+1)))
@@ -1128,7 +1128,8 @@ function View:layoutTransaction()
   y=math.max(ly,ry)
  end
  if(self.confirmation or materialReceipt or toyReceipt or featureReceipt or hueReceipt)and not short then
-  height=math.min(size.Y-16,header+y+footer+12);self.card.Size=UDim2.fromOffset(width,height)
+  -- Canvas includes six pixels after content; reserve all six before the footer.
+  height=math.min(size.Y-16,header+y+footer+14);self.card.Size=UDim2.fromOffset(width,height)
   bodyH=math.max(1,height-header-footer-8);place(self.body,pad,header,bodyW,bodyH)
   place(peer,pad,height-footer,(shellW-8)/2,footer-8);place(self.action,pad+(shellW+8)/2,height-footer,(shellW-8)/2,footer-8)
  end

@@ -1,0 +1,76 @@
+{
+  "fixtureOnly": true,
+  "correctedInvocation": "Pass required HatchProgress/EggCatalog APIs and actual init.server source; earlier harness argument failures not runtime defects.",
+  "suites": [
+    {
+      "ok": true,
+      "name": "HatchProgress",
+      "result": {
+        "passed": 22,
+        "cases": [
+          "active four outcomes normalize safely even at the retained rare threshold",
+          "legacy seven-pet migration and one-time credits",
+          "starter grant, persistent reveal, exact acknowledgement",
+          "ambiguous session acquire resumes the same lease",
+          "direct full-cost spending, stale commands and callback retries",
+          "ambiguous committed hatch cannot reroll or duplicate",
+          "pre-commit hatch, acknowledgement and daily failures resume unchanged",
+          "monotonic payouts reject replay beyond receipt history",
+          "lease takeover fences stale commands and renewals",
+          "local overlap, sparse inventory and public isolation",
+          "failed legacy load cannot spend or overwrite",
+          "daily reward is once per Hollow day and survives callback retry",
+          "every active outcome grants once and absent rare pool freezes earned misses",
+          "paid retired outcome receipts survive reload and acknowledge without reroll or regrant",
+          "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+          "saved wins preserve archived mastery points challenges and rank without promotions",
+          "daily contracts and saved wins commit atomically once per run and day",
+          "completed-budget failures can earn skill contracts but not mastery or free wins",
+          "run start-day lock, daily rollover and rollback cannot reassign a contract",
+          "compound award retries immutable stats and original day before or after commit",
+          "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+          "rare-only ownership earns saved wins and duplicate preserves archived marks"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "MaterialProgress",
+      "result": {
+        "persistentWrites": false,
+        "passed": 13,
+        "cases": [
+          "v6 migration preserves frozen Hue fields proofs and root siblings exactly",
+          "v6 cannot smuggle a preexisting Material namespace into the v7 upgrade",
+          "two sorted remaining-only rolls debit16 once each and exhausted pool never spends",
+          "exact saved replay is read-only and same-ID changed quote is a conflict",
+          "reserve and settlement ambiguous responses retain one winner and one debit",
+          "durable reservation resumes after release/rejoin without another roll",
+          "free whole-pet selections are independent and atomically acknowledge Use now",
+          "stale selection unowned target and wrong result cannot mutate any pigment or charm",
+          "lease expiry takeover and authoritative revision changes fence new purchases",
+          "pending Material result blocks Hue/Companion purchases and compaction retains referenced proof",
+          "UpdateAsync callback reentry never rerolls or duplicates unlocks",
+          "historical v1 three-choice reservation can grant Metal after rejoin and replay its proof",
+          "new v1 buy and forged v2 Metal eligibility cannot roll write or debit"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "MaterialHost",
+      "result": {
+        "evidence": "actual host callbacks/render gate/owner projection and retry coroutine; isolated store",
+        "persistentWrites": false,
+        "passed": 5,
+        "cases": [
+          "unverified profiles reject new purchases before any roll write or debit",
+          "durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+          "background completion publishes unlock before receipt and conflict cannot clear waiter",
+          "lost free-equip response reconciles exact selected finish without changing hues or charm",
+          "owner snapshots contain no private grant proofs and another player cannot select this profile"
+        ]
+      }
+    }
+  ]
+}

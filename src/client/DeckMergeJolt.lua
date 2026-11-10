@@ -1,6 +1,7 @@
 -- One signed presentation translation. Input targets inherit it; simulation stays fixed.
 local Recipe=require(script.Parent.CareFeedbackData).jolt
 local Jolt={};Jolt.__index=Jolt
+local dropKeys={{0,0,0},{.2,0,2},{.6,0,-.7},{1,0,0}}
 local peak=0;for _,key in ipairs(Recipe.keys)do peak=math.max(peak,Vector2.new(key[2],key[3]).Magnitude)end
 function Jolt.new(nodes)
  local self=setmetatable({nodes={},seen={},ring={},cursor=0,offset=Vector2.zero},Jolt)
@@ -27,7 +28,17 @@ function Jolt:emit(serial,id,tier,chain,cleared,now)
  local entry=if cleared then Recipe.clear elseif tier>=5 then Recipe.tierV elseif tier==4 then Recipe.tierIV elseif tier==3 then Recipe.tierIII else Recipe.tierII
  local amplitude=math.min(Recipe.peakPixels,entry[1]*(if chain>1 then Recipe.chainScale else 1))
  if self.active and now-self.active.at<self.active.duration and amplitude<self.active.amplitude then return false end
- self.active={at=now,duration=entry[2],amplitude=amplitude};return true
+ self.active={kind="merge",at=now,duration=entry[2],amplitude=amplitude};return true
+end
+-- Accepted replication only; a merge always retains the stronger shared owner.
+function Jolt:drop(serial,id,now)
+ if self.destroyed or not self.visible or self.serial~=serial or self.reduced or type(id)~="number"then return false end
+ local key="drop:"..id
+ if self.seen[key]then return false end
+ self.cursor=self.cursor%64+1;local old=self.ring[self.cursor];if old~=nil then self.seen[old]=nil end
+ self.ring[self.cursor],self.seen[key]=key,true
+ if self.active and self.active.kind=="merge"and now-self.active.at<self.active.duration then return false end
+ self.active={kind="drop",at=now,duration=.09,amplitude=2};return true
 end
 function Jolt:update(now)
  local active=self.active
@@ -35,10 +46,11 @@ function Jolt:update(now)
  local t=math.clamp((now-active.at)/active.duration,0,1)
  if t>=1 then self:reset();return end
  local x,y=0,0
- for i=2,#Recipe.keys do local a,b=Recipe.keys[i-1],Recipe.keys[i]
+ local keys=if active.kind=="drop"then dropKeys else Recipe.keys
+ for i=2,#keys do local a,b=keys[i-1],keys[i]
   if t<=b[1]then local u=(t-a[1])/(b[1]-a[1]);u=u*u*(3-2*u);x=a[2]+(b[2]-a[2])*u;y=a[3]+(b[3]-a[3])*u;break end
  end
- local offset=Vector2.new(x,y)*(active.amplitude/peak);self.offset=offset
+ local offset=Vector2.new(x,y)*(if active.kind=="drop"then 1 else active.amplitude/peak);self.offset=offset
  for _,entry in ipairs(self.nodes)do if entry.node.Parent then entry.node.Position=entry.base+UDim2.fromOffset(offset.X,offset.Y)end end
 end
 -- Native UDim pixel offsets quantize the curve. Compensate the displacement

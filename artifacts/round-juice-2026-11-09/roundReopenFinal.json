@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"seq\":3,\"drops\":0,\"content\":\"{\\\"serial\\\":51,\\\"ids\\\":[]}\",\"mode\":\"Board\",\"over\":false,\"reset\":51}"
+    }
+  ],
+  "isError": false
+}

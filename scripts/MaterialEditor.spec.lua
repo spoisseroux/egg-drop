@@ -11,9 +11,11 @@ return function(client,parent)
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end
  local ok,problem=pcall(function()
-  test("four equal tabs retain geometry and Materials owns saved preview without a paid selection",function()
-   view:open(state,"materials","pip");frames();local width=view.petTab.AbsoluteSize.X
-   for _,tab in ipairs({view.petTab,view.hueTab,view.charmTab,view.materialTab})do assert(tab.Visible and math.abs(tab.AbsoluteSize.X-width)<.1 and tab.AbsoluteSize.Y>=44 and tab.TextFits)end
+  test("six measured tabs retain readable targets and Materials owns saved preview without a paid selection",function()
+   view:open(state,"materials","pip");frames()
+   for _,tab in pairs(view.editorTabs)do assert(tab.Visible and tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44 and tab.TextFits)end
+   local rail=view.tabRail.scroll;local selected=view.materialTab
+   assert(view.tab=="materials"and selected.AbsolutePosition.X>=rail.AbsolutePosition.X+5.9 and selected.AbsolutePosition.X+selected.AbsoluteSize.X<=rail.AbsolutePosition.X+rail.AbsoluteSize.X-5.9)
    assert(view.materialPanel.root.Visible and view.portrait.Visible and view:appearance().finish=="standard"and #sent==0 and equips==0)
    assert(view.materialPanel.rows.standard.Visible and view.materialPanel.rows.gloss.Visible and not view.materialPanel.rows.metal.Visible)
   end)
@@ -38,9 +40,12 @@ return function(client,parent)
     for _,id in ipairs({"gloss","matte"})do
      state.pendingMaterialResult={id="sample-"..id..tostring(size),finishId=id,revision=state.revision,catalogVersion=1}
      view:open(state,"materials","pip");frames()
-     local use=view.materialPanel.useNow;local keep=view.action;local sample=view.materialPanel.reveal.jar:FindFirstChild("FinishSample")
-     assert(view.card.AbsoluteSize.X<=470 and sample and sample.AbsoluteSize==Vector2.new(64,64))
-     assert((sample:FindFirstChild("GlossGlint")~=nil)==(id=="gloss"))
+     local use=view.materialPanel.useNow;local keep=view.action;local sample=view.materialPanel.reveal.jar
+     assert(view.card.AbsoluteSize.X<=470 and sample and sample:FindFirstChild("FinishViewport")and sample:FindFirstChild("GroundShadow"))
+     local viewport=sample.FinishViewport
+     assert(viewport:IsA("ViewportFrame")and viewport.CurrentCamera and viewport:FindFirstChildWhichIsA("WorldModel"))
+     assert(math.abs(sample.AbsoluteSize.X-sample.AbsoluteSize.Y)<.1 and sample.AbsoluteSize.X<=view.materialPanel.art.AbsoluteSize.X+.1)
+     assert(sample:GetAttribute("FinishId")==id and sample:GetAttribute("PreviewBackend")~=nil)
      assert(use.Parent==view.card and use.AbsolutePosition.Y==keep.AbsolutePosition.Y and use.AbsolutePosition.X+use.AbsoluteSize.X+7<=keep.AbsolutePosition.X)
      for _,node in ipairs({use,keep})do assert(node.TextFits and node.AbsoluteSize.X>=44 and node.AbsoluteSize.Y>=44)end
      if size.Y>=280 then
@@ -59,7 +64,7 @@ return function(client,parent)
    assert(not panel.title.Visible and not panel.note.Visible and panel.rows.standard.Position.Y.Offset==0)
    assert(panel.rows.gloss.AbsolutePosition.Y+panel.rows.gloss.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y)
    state.pendingMaterialResult={id="sample-retire-target",finishId="gloss",revision=state.revision,catalogVersion=1};view:open(state,"materials","pip");frames()
-   local sample=panel.reveal.jar:FindFirstChild("FinishSample");panel.options.useNow(state.pendingMaterialResult);frames()
+   local sample=panel.reveal.jar;panel.options.useNow(state.pendingMaterialResult);frames()
    assert(not sample.Parent and not panel.reveal.resultId and not panel.useNow.Visible)
    state.pendingMaterialResult=nil;view:close("forced")
   end)

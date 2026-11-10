@@ -1286,6 +1286,9 @@ end
 
 updateHud = function()
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+ if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
+ local final=rendererPresentation.roundEnd and rendererPresentation.roundEnd.frozen
+ recap.endArt.Visible=final~=nil and #final.balls>0
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
@@ -1424,8 +1427,8 @@ updateHud = function()
 	if over then
 		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
 		if nurseryActive and owned > 0 then
-			recap:updateField({ sequence = board:GetAttribute("RunSequence"), success = board:GetAttribute("FieldSuccess"), reason = board:GetAttribute("FieldReason"),
-				stage = board:GetAttribute("FieldFinalStage") or 0, objective=clientUI.fieldView,phase=board:GetAttribute("FieldPhase"),status = board:GetAttribute("RewardStatus"),
+			recap:updateField({ sequence = board:GetAttribute("RunSequence"), success = if final then final.success else board:GetAttribute("FieldSuccess"), reason = if final then final.reason else board:GetAttribute("FieldReason"),
+				stage = if final then final.stage else board:GetAttribute("FieldFinalStage") or 0, objective=if final then final.objective else clientUI.fieldView,phase=board:GetAttribute("FieldPhase"),status = board:GetAttribute("RewardStatus"),
 				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
 				balance = nurseryState and nurseryState.nectar or 0,
 				reward = runReceipt, receiptPending = board:GetAttribute("RewardStatus") == "Saved" and not runReceipt,
@@ -1667,12 +1670,12 @@ layout = function()
 		local compact=screen.Y<440
 		recap.compactLayout=compact
 		local shallow=screen.Y<220
-		modalTag.Visible=not compact or modalSave~=nil
+		modalTag.Visible=modalSave~=nil
 		modalTitle.Visible=not (compact and modalSave~=nil)
 		Art.type(modalTitle,if shallow then "Body"else "Heading",true)
 		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if shallow then 22 else 28)
 		local titleY=2
-		if not compact or modalSave then
+		if modalSave then
 			Art.type(modalTag,"Supporting",true)
 			local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,18)
 			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+6
@@ -1784,6 +1787,19 @@ local function recapOwnsInput()
 end
 
 recap.ownsFeedback=function()return recapOwnsInput()and audio.deviceActive ~= false end
+rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
+ readView=function()return clientUI.FieldQuestText.read(board,clientUI.fieldCache)end,
+ reduced=reduceEffects,
+ owns=function()
+  return not rendererPresentation.destroyed and gui.Parent~=nil and gui.Enabled and backdrop.Visible
+   and board:GetAttribute("Mode")=="Board"and audio.deviceActive~=false and not GuiService.MenuIsOpen
+   and not UserInputService:GetFocusedTextBox()and not isPickerOpen()and not journal.shade.Visible
+   and not nurseryView:isOpen()and not clientUI.isHueOpen()and not gameMenu.shade.Visible
+   and not roomView.busy and not roomView.transition.shade.Visible and(not modal.Visible or recap.frame.Visible)
+ end,
+ target=function()return if recap:isVisible()and recap.fieldMode then recap.endArt else effects end,
+})
+rendererPresentation.roundEnd:observe()
 
 local function requestRetry()
 	cancelHatchNavigation()
@@ -2148,6 +2164,7 @@ GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(refreshMotio
 
 local hudQueued = false
 board.AttributeChanged:Connect(function()
+ if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
 	if not hudQueued then
 		hudQueued = true
 		task.defer(function()
@@ -2195,6 +2212,7 @@ board:GetAttributeChangedSignal("Drops"):Connect(function()
  if accepted and rendererPresentation.canPresent(serial)then
   audio:play("drop",1,.48)
   rendererPresentation.setFieldOwner(true,serial,reduceEffects())
+  rendererPresentation.jolt:drop(serial,count,os.clock())
   -- The neutral physical dispenser owns compression; NextTier may already be advanced.
  end
 end)
@@ -2204,11 +2222,7 @@ board:GetAttributeChangedSignal("HatchCharge"):Connect(function()
 		audio:play("charge", 1 + charge * 0.03, 0.35)
 	end
 end)
-board:GetAttributeChangedSignal("RoundOver"):Connect(function()
-	if board:GetAttribute("RoundOver") then
-		audio:play(if board:GetAttribute("FieldSuccess") then "charge" else "overflow")
-	end
-end)
+-- Terminal sounds belong to matching Saved RecapFeedback only.
 for _,attribute in ipairs({"FieldObjective","RunSequence"})do
  board:GetAttributeChangedSignal(attribute):Connect(function()
   clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
@@ -2252,6 +2266,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		table.clear(heldAim)
 	end
 	local now,reduced=os.clock(),reduceEffects()
+ if rendererPresentation.roundEnd then rendererPresentation.roundEnd:step(dt)end
 	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible and not modalShade.Visible and not GuiService.MenuIsOpen,reduced,gui.Enabled and bleed.Enabled and not GuiService.MenuIsOpen)
 	if not backdrop.Visible then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduced)
@@ -2386,6 +2401,7 @@ gui.Destroying:Connect(function()
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	rendererPresentation.destroyed=true;rendererPresentation.visible=false
  rendererPresentation.fx:destroy()
+ if rendererPresentation.roundEnd then rendererPresentation.roundEnd:destroy()end
  rendererPresentation.jolt:destroy()
  if clientUI.clock then clientUI.clock:destroy();clientUI.clock=nil end
 	for _,connection in ipairs(rendererPresentation.connections)do connection:Disconnect()end

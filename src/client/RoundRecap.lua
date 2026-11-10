@@ -117,13 +117,15 @@ function Recap.new(parent, audio, reduceEffects)
 	promotion.TextXAlignment=Enum.TextXAlignment.Left;promotion.Visible=false
 	local detailsContent=Art.frame(body,"DetailsContent","panel",UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),body.ZIndex+1)
  detailsContent.BackgroundTransparency=1;detailsContent.Visible=false
+ local endArt=Art.frame(body,"RoundFinishStrip",Art.Ink,UDim2.fromOffset(8,0),UDim2.fromOffset(100,64),body.ZIndex+1)
+ endArt.BackgroundTransparency=1;endArt.ClipsDescendants=true;endArt.Visible=false;endArt:SetAttribute("RoundEndStrip",true)
  local bottleScale=Instance.new("UIScale");bottleScale.Name="SavedPop";bottleScale.Parent=nectarIcon
  local sourceGlows={}
  for i,label in ipairs(componentLabels)do
   local glow=Art.frame(goal,"SourceGlow"..i,Art.Amber,UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),goal.ZIndex)
   glow.BackgroundTransparency=1;Art.corner(glow,6);sourceGlows[i]=glow
  end
- local self = setmetatable({detailsContent=detailsContent,detailCards={},bottleScale=bottleScale,sourceGlows=sourceGlows, promotionLabel=promotion, frame = frame, stats = stats, goal = goal, values = values, title = title, detail = detail,
+ local self = setmetatable({endArt=endArt,detailsContent=detailsContent,detailCards={},bottleScale=bottleScale,sourceGlows=sourceGlows, promotionLabel=promotion, frame = frame, stats = stats, goal = goal, values = values, title = title, detail = detail,
 		fill = fill, receiptScroll = receipt, receiptRows = {}, scales = scales, accents = accents,
 		nectarIcon = nectarIcon, earnedGraphic = earnedGraphic, bankGraphic = bankGraphic, transfer = transfer, chips = chips,
 		detailsButton = detailsButton, summary = summary, componentLabels = componentLabels, eggGoal = eggGoal,
@@ -192,7 +194,7 @@ function Recap:paintFeedback(sample)
   self.bankGraphic.Text=Stars.format("Stars saved: %d",self.displayBalance)
  end
  if self.finalTitle then self.title.Text=self.finalTitle end
- self.bottleScale.Scale=1+(if sample then sample.pop or 0 else 0)*.10
+ self.bottleScale.Scale=1+(if sample then sample.pop or 0 else 0)*.12
  self.nectarIcon.Rotation=if sample then (sample.pop or 0)*-6 else 0
  for i,glow in ipairs(self.sourceGlows)do
   glow.Visible=self.hasReceipt==true and self.componentLabels[i].Visible
@@ -291,14 +293,14 @@ function Recap:buildDetails(result,reward,lines)
   card("chain","Longest chain","×"..self.statTargets[2],true)
   card("clears","Tier V clears",tostring(self.statTargets[3]),true)
  end
- card("source","Quest Stars","+"..(reward.base or 0),true)
- card("source","Daily contracts","+"..(reward.daily or 0),true)
+ -- Exact payout components already have one summary above this detail section.
  local skip=self.statTargets and 4 or 2
  local unique={}
+ local checklist=Receipt.questDetails(result);local unfinished=if checklist then Receipt.questHint(result)else nil
  -- The last two canonical lines repeat the live egg facts already in summary.
  -- Keep them in receiptLines/signature for history/tests, omit the visual repeat.
  for i=skip+1,math.max(skip,#lines-2)do
-  local line=lines[i];local found
+  local line=lines[i];local found=unfinished~=nil and line==unfinished
   for _,definition in ipairs(Daily.Definitions)do
    if line==Stars.format("%s · %d Stars",definition.title,definition.reward)then card("contract",definition.title,"+"..definition.reward,true);found=true;break end
   end
@@ -475,6 +477,7 @@ function Recap:layoutField(height)
   self.eggPanel.Visible,self.detailsButton.Visible,self.eggGoal.Visible,self.shortfall.Visible=false,false,false,false
   self.fill.Parent.Visible=false;self.transfer.Visible=false
   self.summaryLayout={earned={x=8,y=0,w=content,h=y},twoColumn=false}
+  if self.endArt.Visible then place(self.endArt,8,noticeInset+y,content,64);y+=72 end
   self.detailsTop=y+4
   local detailsWidth=content;local pairW=(detailsWidth-8)/2
   local pairsFit=detailsWidth>=280
@@ -517,6 +520,7 @@ function Recap:layoutField(height)
   total=self.detailsTop+math.max(0,rowY-8)
  else
   for _,label in ipairs(self.componentLabels)do label.Visible=false end
+  if self.endArt.Visible then place(self.endArt,8,noticeInset+total+8,math.max(1,width-16),64);total+=72 end
  end
  self.bodyContentHeight=total+noticeInset+4
  place(self.goal,0,noticeInset,width,if self.hasReceipt then self.detailsTop-12 else total)

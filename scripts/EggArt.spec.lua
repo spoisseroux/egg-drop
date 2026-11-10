@@ -8,7 +8,7 @@ return function(client,parent)
   local registered=egg.RegisteredShell;local shell=registered.ShellImage
   local kind=if id=="meadow"then "companion"else id
   assert(shell.Image==Assets.Atlas and shell.ImageRectSize==Vector2.new(192,192)and shell.ImageRectOffset==Vector2.new(Assets.Columns[kind]*192,0)and shell.ScaleType==Enum.ScaleType.Fit and registered:FindFirstChildOfClass("UIAspectRatioConstraint").AspectRatio==1)
-  assert(registered.FallbackOvoid:FindFirstChild("ShellRow47")and not registered.FallbackOvoid:FindFirstChild("Crown"))
+  assert(registered.FallbackOvoid:FindFirstChild("ShellColumn24")and not registered.FallbackOvoid:FindFirstChild("Crown"))
   assert(registered.GroundShadow.Size.Y.Scale<.05)
   for _,d in ipairs(egg:GetDescendants())do if d:IsA("GuiObject")then assert(not d.Active and not d.Selectable)end end
  end

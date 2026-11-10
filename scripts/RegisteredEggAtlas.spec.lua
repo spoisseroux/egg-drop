@@ -15,8 +15,9 @@ return function(client,parent)
   local stage=Stage.new(root,false,"toy");stage:layout(0,0,400,240,Vector2.new(200,120),160)
   stage.topArt.RegisteredShell.ShellImage.Image="";stage.bottomArt.RegisteredShell.ShellImage.Image="";stage:split(.1,true)
   local count=0;for _,n in ipairs(root:GetDescendants())do if n:IsA("GuiObject")then count+=1 end end
-  assert(count<110 and stage.shell.Visible and not stage.top.Visible and not stage.bottom.Visible,"unavailable split duplicated fallback geometry")
-  table.insert(cases,"unavailable atlas retains one bounded complete fallback egg")
+  assert(count<230 and not stage.shell.Visible and stage.top.Visible and stage.bottom.Visible,"unavailable split must show bounded complementary halves behind the hero")
+  assert(stage.topArt.RegisteredShell.FallbackOvoid.Visible and stage.bottomArt.RegisteredShell.FallbackOvoid.Visible)
+  table.insert(cases,"unavailable atlas uses bounded jagged halves and never restores whole egg over the hero")
  end)
  root:Destroy();assert(ok,problem);return cases
 end

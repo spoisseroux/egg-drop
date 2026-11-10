@@ -16,6 +16,39 @@ return function(client,parent)
    for stage=0,5 do local tick=view.bars.citrus.stages[stage];assert(tick:GetAttribute("SavedStage")== (stage==0));assert(not tick:FindFirstChild("SavedMark"))end
    assert(view.bars.rose.stages[2]:GetAttribute("SavedStage")and view.bars.iris.stages[5]:GetAttribute("SavedStage"))
   end)
+  test("every primary and secondary zero notch is pure white while all nonzero colors retain production mixing",function()
+   local Swatches=require(client.HueSwatches)
+   for _,channel in ipairs({"main","secondary"})do
+    assert(view:chooseChannel(channel));frames();local appearance=view:appearance()
+    for id,bar in pairs(view.bars)do
+     assert(bar.stages[0].BackgroundColor3==Color3.new(1,1,1)and bar.stages[0]:GetAttribute("SwatchColor")==Color3.new(1,1,1))
+     for stage=1,5 do assert(bar.stages[stage].BackgroundColor3==Swatches.at(view.petId,appearance,channel,id,stage),"nonzero palette changed")end
+    end
+   end
+   assert(view:chooseChannel("main")and #sent==0)
+  end)
+  test("saved zero keeps a contrasting check and keyline on white for every hue and channel",function()
+   local originalMain,originalSecondary=row.main,row.secondary
+   row.main,row.secondary=H.emptyCounts(),H.emptyCounts()
+   for _,channel in ipairs({"main","secondary"})do
+    assert(view:chooseChannel(channel));frames()
+    for _,bar in pairs(view.bars)do
+     local zero=bar.stages[0];local stroke=zero:FindFirstChildWhichIsA("UIStroke")
+     assert(zero:GetAttribute("SavedStage")and zero.Text=="0"and stroke.Thickness==3 and zero.BackgroundColor3==Color3.new(1,1,1))
+     assert(zero.TextColor3==Color3.new(0,0,0))
+     for _,check in ipairs(zero.SavedCheck:GetChildren())do assert(check.Visible and check.BackgroundColor3==Color3.new(0,0,0))end
+     for stage=1,5 do assert(not bar.stages[stage]:GetAttribute("SavedStage"))end
+    end
+   end
+   row.main,row.secondary=originalMain,originalSecondary;assert(view:chooseChannel("main"));frames();assert(#sent==0)
+  end)
+  test("white zero stays a one-fruit choice and explicit reset still confirms only the selected channel",function()
+   assert(view:chooseNotch("rose",0)and view.confirmation.itemId=="rose"and view.confirmation.channel=="main")
+   assert(view.confirmDelta.Text=="Rose 2 → 3"and #sent==0);view:cancelConfirmation()
+   assert(view:chooseItem("reset")and view.confirmation.itemId=="reset"and view.confirmation.channel=="main")
+   assert(view.title.Text=="Reset Main color?"and #sent==0);view:cancelConfirmation()
+   assert(state.petHues.pip.main.rose==2 and state.petHues.pip.secondary.rose==0)
+  end)
   test("every clicked reference notch confirms current two to three without spending or recoloring",function()
    local visual=view.visual;local body=visual.colors.body
    for stage=0,5 do

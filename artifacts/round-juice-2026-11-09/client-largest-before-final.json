@@ -1,0 +1,676 @@
+{
+  "fixtureOnly": true,
+  "preference": "Largest",
+  "suites": [
+    {
+      "ok": true,
+      "name": "DeckMergeJolt",
+      "result": {
+        "passed": 14,
+        "cases": [
+          "accepted drop uses exact ninety millisecond signed keys and consumes duplicate ID",
+          "merge replaces drop and accepted drop cannot restart stronger merge",
+          "hidden remote reduced and duplicate drop owners cause zero kick and no stationary aim drift",
+          "accepted serial and merge ID debounce a single bounded held curve",
+          "clear and chains cap at twelve pixels without adding or erasing stronger recoil",
+          "all tier peaks and durations match the accepted recipe",
+          "exterior tint and underlays flatten once while BoardBacking is transparent",
+          "only registered presentation roots move and return exactly",
+          "one device root carries hardware LCD HUD and hit targets with identical signed translation",
+          "fixed screen X keeps logical aim through signed twelve pixel recoil and resize",
+          "pointer compensation follows quantized native root displacement and resets on rebase",
+          "mode overlay reduced and serial changes clear motion and scope duplicate IDs",
+          "reflow captures a fresh authored base after reset without accumulated displacement",
+          "motif compositor preserves an opaque theme floor and intrinsic quieter marks"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "CompactEggShop",
+      "result": [
+        "1649, 971 unified grid exact price and five disclosed item chances",
+        "350, 703 unified grid exact price and five disclosed item chances",
+        "568, 210 unified grid exact price and five disclosed item chances",
+        "active four odds remain disclosed at stored misses7 without an unavailable rare promise"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "EggShopReopen",
+      "result": [
+        "733, 307 retained toy visible on same-size reopen before user scroll",
+        "733, 307 retained feature visible on same-size reopen before user scroll",
+        "568, 210 retained toy visible on same-size reopen before user scroll",
+        "568, 210 retained feature visible on same-size reopen before user scroll",
+        "350, 703 retained toy visible on same-size reopen before user scroll",
+        "350, 703 retained feature visible on same-size reopen before user scroll",
+        "close invalidates the queued opening scroll"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "UsableSheetWidth",
+      "result": [
+        "scroll budget resolves padding and scrollbar only once with integer boundaries",
+        "1649, 971 four pet columns fill usable width with wrapped names and selectable borders",
+        "1649, 971 hue stock and confirmation remain inside real scrolling window",
+        "1649, 971 all egg cards and odds preserve clear right stroke gutter",
+        "1649, 971 Pocket menu contains only three requested routes and no bottom copy",
+        "900, 720 four pet columns fill usable width with wrapped names and selectable borders",
+        "900, 720 hue stock and confirmation remain inside real scrolling window",
+        "900, 720 all egg cards and odds preserve clear right stroke gutter",
+        "900, 720 Pocket menu contains only three requested routes and no bottom copy",
+        "390, 740 four pet columns fill usable width with wrapped names and selectable borders",
+        "390, 740 hue stock and confirmation remain inside real scrolling window",
+        "390, 740 all egg cards and odds preserve clear right stroke gutter",
+        "390, 740 Pocket menu contains only three requested routes and no bottom copy",
+        "350, 703 four pet columns fill usable width with wrapped names and selectable borders",
+        "350, 703 hue stock and confirmation remain inside real scrolling window",
+        "350, 703 all egg cards and odds preserve clear right stroke gutter",
+        "350, 703 Pocket menu contains only three requested routes and no bottom copy",
+        "749, 381 four pet columns fill usable width with wrapped names and selectable borders",
+        "749, 381 hue stock and confirmation remain inside real scrolling window",
+        "749, 381 all egg cards and odds preserve clear right stroke gutter",
+        "749, 381 Pocket menu contains only three requested routes and no bottom copy",
+        "568, 210 four pet columns fill usable width with wrapped names and selectable borders",
+        "568, 210 hue stock and confirmation remain inside real scrolling window",
+        "568, 210 all egg cards and odds preserve clear right stroke gutter",
+        "568, 210 Pocket menu contains only three requested routes and no bottom copy"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "FieldQuestText",
+      "result": [
+        "Bank teaches minimum III without changing the two ordered locations",
+        "Creek exact II has center bounds and preserves the published seeded side",
+        "Lantern distinguishes two initial merges from two new linked merges",
+        "chain expiry changes displayed actual count back to zero",
+        "complete goals and settling never invent another active bank",
+        "public snapshot decoding is cached across HUD updates",
+        "missing metadata alone uses legacy Bank; malformed metadata fails closed",
+        "Menu and recap retain the completed field while stale receipt data stays rejected",
+        "new objective current instructions and next hints come from immutable descriptor"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "FieldQuestLayout",
+      "result": [
+        "1649, 971 every active goal count expiry complete and save recovery fits",
+        "1649, 971 Menu exposes metadata without replacing live actions or selection",
+        "733, 307 every active goal count expiry complete and save recovery fits",
+        "733, 307 Menu exposes metadata without replacing live actions or selection",
+        "568, 160 every active goal count expiry complete and save recovery fits",
+        "568, 160 Menu exposes metadata without replacing live actions or selection",
+        "385, 703 every active goal count expiry complete and save recovery fits",
+        "385, 703 Menu exposes metadata without replacing live actions or selection"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "RecapFeedback",
+      "result": {
+        "passed": 21,
+        "cases": [
+          "feedback has a separate exact-value lane and bounded 1100ms four-stage sample",
+          "committed timeline uses two source notes five rising drops and one quiet cadence",
+          "owner loss or skipped resume lands final and cannot emit delayed cues",
+          "matching late receipt starts once while pending stale and repeated Saved packets cannot replay",
+          "cancel inside first render cannot install an inactive clock or emit a zero cue after close",
+          "zero is one quiet accent only while hidden reduced muted and background receipts stay quiet",
+          "owned pooled voices stop on cancel without stopping a newer ordinary or owned cue",
+          "matching committed receipt starts once and retains count through HUD refresh",
+          "count up lands on exact score chain clears and earned Stars",
+          "hide cancels immediately and reopening the same receipt cannot replay",
+          "hidden ancestor cancels and does not consume a future receipt",
+          "Saving delayed and pending states suppress old receipt and currency transfer",
+          "stale sequence cannot announce the previous reward",
+          "new receipt cancels the old animation and reinitializes every counter",
+          "daily only failure retains missed side quest zero and exact total",
+          "zero earned never invents Stars drops or transfer sounds",
+          "reduced effects shows final static values with no recap cues",
+          "audio remains routed through the muted shared audio group",
+          "receipt details stay open and never retain an egg transfer destination",
+          "first Saved receipt survives synchronous resize during publication",
+          "destroying the component removes its animation connection"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "CompactRecap",
+      "result": {
+        "preference": "Largest",
+        "passed": 9,
+        "cases": [
+          "1649, 971 exact Stars and all run details are available without Details",
+          "1649, 971 scroll and repeated saved receipt cannot replay or erase zero credit",
+          "733, 307 exact Stars and all run details are available without Details",
+          "733, 307 scroll and repeated saved receipt cannot replay or erase zero credit",
+          "568, 160 exact Stars and all run details are available without Details",
+          "568, 160 scroll and repeated saved receipt cannot replay or erase zero credit",
+          "385, 703 exact Stars and all run details are available without Details",
+          "385, 703 scroll and repeated saved receipt cannot replay or erase zero credit",
+          "pending failed-save overflow and recovered receipt keep exact payout ownership"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "HatchActions",
+      "result": {
+        "passed": 29,
+        "cases": [
+          "Meet acknowledges exact rare-only result and waits for advanced Ready",
+          "Replay never purchases and synchronous confirmation fires once",
+          "Retry and same-ID updates retain immutable choice",
+          "Pending feedback preserves choice before state catches up",
+          "Throttle, lock, and network feedback cannot erase an in-flight choice",
+          "Pre-dispatch throttle retries the same acknowledgement and confirms once",
+          "Close cancels a scheduled pre-dispatch retry",
+          "Busy feedback queues a retry until Ready for the same result",
+          "A retry timer encountering Busy retains its work until Ready",
+          "Another pending transaction releases the captured ack on Ready",
+          "Repeated pre-dispatch locks are bounded and expose a user retry",
+          "A changed result revokes old navigation",
+          "Close during retry cancels navigation without a second acknowledgement",
+          "Definitive rejection permits changing the action",
+          "First result action skips unfinished cinematic without acknowledging; fresh action confirms",
+          "Legacy duplicate receipt retains both choices without reviving removed mastery rewards",
+          "corner X dismisses and reopens the same committed result without acknowledgment",
+          "Mid-crack X and two reopens retain the result and show the quiet final scene",
+          "A stalled intro settles quietly without acknowledging or replaying its retained result",
+          "Hidden snapshots and a covered first paint do not reserve the presentation marker",
+          "A stale same-ID completion cannot unlock or steal focus after reopen",
+          "Fresh controller focus waits for Meet while a deliberate X remains selected",
+          "A covered intro completes without reclaiming the covering owner's focus",
+          "Same-ID save recovery preserves generation, hero and presentation history",
+          "Confirmed Ember themes the result shell and peach Meet action",
+          "Result layout measurement is independent of the previously painted text size",
+          "Short animated same-ID layout and notice reparent retain active ownership",
+          "Short result captions remain reachable in the single body without covering X",
+          "44px result actions fit short landscape safe areas and long names"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "HatchCinematic",
+      "result": {
+        "fixtureOnly": true,
+        "geometry": [
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 344,
+            "fraction": 0.5899999918565658,
+            "stageHeight": 360,
+            "preparationMs": 4.863799549639225,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 344,
+            "fraction": 0.5899999885476123,
+            "stageHeight": 360,
+            "preparationMs": 10.691199917346239,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999640402449,
+            "stageHeight": 360,
+            "preparationMs": 5.66580006852746,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999596288807,
+            "stageHeight": 360,
+            "preparationMs": 5.5738999508321285,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999651732254,
+            "stageHeight": 360,
+            "preparationMs": 5.378399975597858,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999896504381,
+            "stageHeight": 360,
+            "preparationMs": 5.86890010163188,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999653971437,
+            "stageHeight": 360,
+            "preparationMs": 5.309900268912315,
+            "limited": false,
+            "preference": "Largest",
+            "size": "600, 360"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4740741664331428,
+            "stageHeight": 420,
+            "preparationMs": 4.823899827897549,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4522995979101089,
+            "stageHeight": 420,
+            "preparationMs": 4.5992000959813595,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4899238577844957,
+            "stageHeight": 420,
+            "preparationMs": 6.956600118428469,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4569744923812588,
+            "stageHeight": 420,
+            "preparationMs": 5.403300281614065,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4896227966022165,
+            "stageHeight": 420,
+            "preparationMs": 6.22399989515543,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4913867634670959,
+            "stageHeight": 420,
+            "preparationMs": 8.328000083565712,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "full greeting",
+            "bandHeight": 288,
+            "fraction": 0.4623512822336913,
+            "stageHeight": 420,
+            "preparationMs": 4.855399951338768,
+            "limited": true,
+            "preference": "Largest",
+            "size": "338, 420"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5488,
+            "pet": "pip",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 164,
+            "fraction": 0.5899999741248487,
+            "stageHeight": 180,
+            "preparationMs": 4.821600392460823,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 5096,
+            "pet": "puddle",
+            "reason": "target",
+            "normalFitPixelBudget": 0,
+            "bandHeight": 164,
+            "fraction": 0.5899999927188303,
+            "stageHeight": 180,
+            "preparationMs": 5.564599763602018,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "wick",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999707884624,
+            "stageHeight": 180,
+            "preparationMs": 6.0096001252532005,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 5096,
+            "pet": "orbit",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999311664083,
+            "stageHeight": 180,
+            "preparationMs": 5.211099982261658,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6272,
+            "pet": "bloom_pip",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999789518459,
+            "stageHeight": 180,
+            "preparationMs": 6.622600369155407,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 6664,
+            "pet": "foxfire_wick",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999905354357,
+            "stageHeight": 180,
+            "preparationMs": 6.017500068992376,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          },
+          {
+            "sweptPoints": 5488,
+            "pet": "eclipse_orbit",
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999630793071,
+            "stageHeight": 180,
+            "preparationMs": 5.156300030648708,
+            "limited": false,
+            "preference": "Largest",
+            "size": "500, 180"
+          }
+        ],
+        "passed": 9,
+        "cases": [
+          "short-landscape484x203 keeps final name and caption inside host beside hero",
+          "all seven real subjects fit the rectangular viewport through every greeting frame",
+          "all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",
+          "common and rare split within1.5/1.7s and settle with no idle clock or audio replay",
+          "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+          "covered first play defers marker while presented owner loss lands final and stops its clock",
+          "resize keeps exact hero and epoch and device discontinuity settles only once",
+          "candidate minimum height is independent of previous stage and painted text sizes",
+          "pixel fallback and twenty canceled cycles retain a fixed passive pool"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "EggArt",
+      "result": [
+        "all five registered owned shells use square Fit with one continuous ovoid load fallback and detached shadow",
+        "all five jars carry readable distinct fruit silhouettes and no input"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "CompanionHatchArt",
+      "result": [
+        "pond gradient and patterned companion shell match the earned grid",
+        "owned split and static/reduced final use passive retained geometry",
+        "art owns no input particles sounds or separate render clock"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "ItemReceiptComposition",
+      "result": [
+        "1649, 971/hue one bounded stage one copy and pinned Use now Store",
+        "1649, 971/material one bounded stage one copy and pinned Use now Store",
+        "1649, 971/toy one bounded stage one copy and pinned Use now Store",
+        "1649, 971/feature one bounded stage one copy and pinned Use now Store",
+        "390, 740/hue one bounded stage one copy and pinned Use now Store",
+        "390, 740/material one bounded stage one copy and pinned Use now Store",
+        "390, 740/toy one bounded stage one copy and pinned Use now Store",
+        "390, 740/feature one bounded stage one copy and pinned Use now Store",
+        "733, 307/hue one bounded stage one copy and pinned Use now Store",
+        "733, 307/material one bounded stage one copy and pinned Use now Store",
+        "733, 307/toy one bounded stage one copy and pinned Use now Store",
+        "733, 307/feature one bounded stage one copy and pinned Use now Store",
+        "568, 160/hue one bounded stage one copy and pinned Use now Store",
+        "568, 160/material one bounded stage one copy and pinned Use now Store",
+        "568, 160/toy one bounded stage one copy and pinned Use now Store",
+        "568, 160/feature one bounded stage one copy and pinned Use now Store"
+      ]
+    },
+    {
+      "ok": false,
+      "name": "MaterialEditor",
+      "result": "ReplicatedStorage._RoundFinalQA.MaterialEditor:104: ReplicatedStorage._RoundFinalQA.MaterialEditor:54: Unconstrained receipt kept a tall empty scroll sheet"
+    },
+    {
+      "ok": true,
+      "name": "MaterialIntent",
+      "result": {
+        "passed": 7,
+        "cases": [
+          "purchase captures sorted remaining pool version and blocks duplicate purchase",
+          "full collection and unverified pool cannot send or debit",
+          "lost response timeout and retry retain exact quote object and revision",
+          "Saved cannot unlock early and malformed same-ID finish cannot clear exact receipt wait",
+          "free equip captures per-pet expected finish and cannot equip locked or unowned pet",
+          "Use now preserves result identity and selected finish before snapshot proof",
+          "destroyed owner cannot revive a pending timeout or send another command"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "HueItemReveal",
+      "result": [
+        "new paid jar uses shared1.5s timeline and same receipt never replays",
+        "clear destroys transient scene and reopen stays static and silent",
+        "reduced motion or saved joined result owns no animation clock",
+        "skip settles but never performs a purchase store use or acknowledgment",
+        "Material Toy and Feature adapters use the same registered kind and one owner clock"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "HatchNavigation",
+      "result": {
+        "passed": 12,
+        "cases": [
+          "already equipped pet focuses without duplicate equip",
+          "rare-only companion waits for server equip acknowledgment",
+          "mode and local handoff must both finish before equip",
+          "manual cancellation prevents late equip and focus",
+          "overlay interruption cancels pending focus",
+          "unconfirmed equip never substitutes a local pet",
+          "Room replay delegates fresh entry to server without a deferred reset",
+          "replay preserves an unfinished board",
+          "already Board replay carries exactly the captured ended sequence",
+          "sequence changes while waiting cannot reset a newer field",
+          "cancelled Board replay cannot reset after its handoff",
+          "newer navigation wins over a stale mode wait"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "ReceiptRouteGuard",
+      "result": [
+        "undocked ordinary editor refuses to open",
+        "saved result chooses only its exact owned recipient and Hue channel",
+        "lost or acknowledged receipt closes outside cradle instead of showing stock",
+        "stale material choice checks cradle at activation time",
+        "live cradle permission permits ordinary customization and its loss closes it"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "DeviceItemFront",
+      "result": [
+        "1649, 971 all six tabs reachable both directions and active tab fully visible",
+        "1649, 971 five egg families disclose actual pool and full feature odds",
+        "390, 740 all six tabs reachable both directions and active tab fully visible",
+        "390, 740 five egg families disclose actual pool and full feature odds",
+        "733, 307 all six tabs reachable both directions and active tab fully visible",
+        "733, 307 five egg families disclose actual pool and full feature odds",
+        "600, 360 all six tabs reachable both directions and active tab fully visible",
+        "600, 360 five egg families disclose actual pool and full feature odds",
+        "568, 160 all six tabs reachable both directions and active tab fully visible",
+        "568, 160 five egg families disclose actual pool and full feature odds",
+        "private unselected pet preview uses its own toy and visible feature stages",
+        "stale Toy and Feature handlers check live cradle before mutation",
+        "Toy receipt only chooses its exact owned recipient outside cradle"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "RoundEndPresentation",
+      "result": {
+        "passed": 12,
+        "cases": [
+          "witnessed current run starts once and final descriptor and balls are immutable",
+          "RoundOver before terminal attributes waits for matching complete descriptor",
+          "terminal attributes before RoundOver do not start or snapshot early",
+          "historical over true and stale sequence descriptors remain static",
+          "snapshot includes at most six current visible balls and no other board parts",
+          "quick replay retires old art and a new run requires its own false edge",
+          "one run owner hands off to recap without a restart or descriptor replacement",
+          "overflow uses three falling seeds and reduced motion remains stable",
+          "hidden or covered owner cancels immediately and reopening cannot replay",
+          "quiet gap settles without queuing effects and mute has no visual dependency",
+          "real recap reserves decoration after pending copy and before Saved breakdown",
+          "result goals state completed marks and actual seeded locations without scenario jargon"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "MaterialFinishPreview",
+      "result": {
+        "passed": 5,
+        "cases": [
+          "Matte and Gloss immediately show teal shaded sphere slate tile and ground shadow",
+          "both finishes retain identical camera framing upper-left key and fill",
+          "cold readiness success swaps exact verified production profiles only onto MeshParts",
+          "failed and unverified loads leave immediate fallback and destroy prevents late resurrection",
+          "receipt sample has no input physics queries lights particles or independent frame clock"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "RoundJuiceShop",
+      "result": {
+        "passed": 3,
+        "cases": [
+          "1649, 971 measured offers names prices borders and fixed actions fit",
+          "749, 381 measured offers names prices borders and fixed actions fit",
+          "350, 703 measured offers names prices borders and fixed actions fit"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "ColdHatchSplit",
+      "result": {
+        "passed": 6,
+        "cases": [
+          "meadow cold complementary native halves stay behind revealed face within passive budget",
+          "hue cold complementary native halves stay behind revealed face within passive budget",
+          "material cold complementary native halves stay behind revealed face within passive budget",
+          "toy cold complementary native halves stay behind revealed face within passive budget",
+          "feature cold complementary native halves stay behind revealed face within passive budget",
+          "cold first reveal and settled static never put whole shell over hero"
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "name": "RegisteredEggAtlas",
+      "result": [
+        "companion whole and split use correct served1024 atlas registration",
+        "hue whole and split use correct served1024 atlas registration",
+        "material whole and split use correct served1024 atlas registration",
+        "toy whole and split use correct served1024 atlas registration",
+        "feature whole and split use correct served1024 atlas registration",
+        "unavailable atlas uses bounded jagged halves and never restores whole egg over the hero"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "cases": 250,
+  "suites": 26,
+  "baselineNativeLargest": [
+    {
+      "name": "DeckMergeJolt",
+      "cases": 14
+    },
+    {
+      "name": "CompactEggShop",
+      "cases": 4
+    },
+    {
+      "name": "EggShopReopen",
+      "cases": 7
+    },
+    {
+      "name": "UsableSheetWidth",
+      "cases": 25
+    },
+    {
+      "name": "FieldQuestText",
+      "cases": 9
+    },
+    {
+      "name": "FieldQuestLayout",
+      "cases": 8
+    },
+    {
+      "name": "RecapFeedback",
+      "cases": 21
+    },
+    {
+      "name": "CompactRecap",
+      "cases": 9
+    },
+    {
+      "name": "HatchActions",
+      "cases": 29
+    },
+    {
+      "name": "HatchCinematic",
+      "cases": 9
+    },
+    {
+      "name": "EggArt",
+      "cases": 2
+    },
+    {
+      "name": "CompanionHatchArt",
+      "cases": 3
+    },
+    {
+      "name": "ItemReceiptComposition",
+      "cases": 16
+    },
+    {
+      "name": "MaterialIntent",
+      "cases": 7
+    },
+    {
+      "name": "HueItemReveal",
+      "cases": 5
+    },
+    {
+      "name": "HatchNavigation",
+      "cases": 12
+    },
+    {
+      "name": "ReceiptRouteGuard",
+      "cases": 5
+    },
+    {
+      "name": "DeviceItemFront",
+      "cases": 13
+    },
+    {
+      "name": "RoundEndPresentation",
+      "cases": 12
+    },
+    {
+      "name": "MaterialFinishPreview",
+      "cases": 5
+    },
+    {
+      "name": "RoundJuiceShop",
+      "cases": 3
+    },
+    {
+      "name": "ColdHatchSplit",
+      "cases": 6
+    },
+    {
+      "name": "RegisteredEggAtlas",
+      "cases": 6
+    }
+  ],
+  "focused": {
+    "MaterialEditor": 9,
+    "HueSwatchInspection": 9,
+    "ItemReceiptComposition": 16,
+    "HatchActions": 29,
+    "MaterialIntent": 7
+  },
+  "overlap": "230 cases/23 baseline passing suites + MaterialEditor9 + HueSwatch9 + RoundRecapClarity2. Final99 and20 focus reruns overlap these; never add them to unique total.",
+  "finalFocused": {
+    "cases": 99,
+    "suites": 10,
+    "artifact": "client-final-focus99.json"
+  },
+  "finalCopyLayout": {
+    "cases": 20,
+    "suites": 3,
+    "artifact": "final-copy-layout20.json"
+  }
+}

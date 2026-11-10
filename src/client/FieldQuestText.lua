@@ -83,12 +83,22 @@ function Text.menu(view,phase)
  local first=Text.goal(view.goals[1]);local second=Text.goal(view.goals[2])
  return view.title..(if copy.dynamics~=""then " · "..copy.dynamics else "").."\n"..copy.instruction..(if copy.nextHint~=""then "\n"..copy.nextHint else "").."\n"..copy.ticker.."\n1. "..first.."\n2. "..second
 end
+-- Results use frozen descriptor goals, never scenario/dynamics nicknames.
+function Text.results(view,stage)
+ if not view or view.empty then return nil end
+ local lines={"Goals"}
+ for index,goal in ipairs(view.goals)do
+  local instruction=Text.goal(goal)
+  table.insert(lines,(if index<=(stage or 0)then "✓ "else "○ ")..instruction)
+ end
+ return table.concat(lines,"\n")
+end
 function Text.recap(view,stage,reason)
  if view and not view.empty then
   if stage>=2 then return "Both goals done · "..(if reason=="Overflow"then "clear the overflow line"else "survive all 24 drops")end
   local step=math.clamp(stage+1,1,2)
   local instruction=Text.goal(view.goals[step],if view.step==step then view.progress else nil)
-  return view.title.." · goal "..step.." unfinished: "..instruction
+  return "Goal "..step.." unfinished: "..instruction
  end
  return if stage>=2 then "Both goals done · "..(if reason=="Overflow"then "clear the overflow line"else "survive all 24 drops")else "Complete both goals in your next round"
 end

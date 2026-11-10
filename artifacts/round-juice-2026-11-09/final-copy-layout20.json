@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"1\":{\"ok\":true,\"name\":\"FieldQuestText\",\"result\":{\"1\":\"Bank teaches minimum III without changing the two ordered locations\",\"3\":\"Lantern distinguishes two initial merges from two new linked merges\",\"2\":\"Creek exact II has center bounds and preserves the published seeded side\",\"5\":\"complete goals and settling never invent another active bank\",\"4\":\"chain expiry changes displayed actual count back to zero\",\"7\":\"missing metadata alone uses legacy Bank; malformed metadata fails closed\",\"6\":\"public snapshot decoding is cached across HUD updates\",\"9\":\"new objective current instructions and next hints come from immutable descriptor\",\"8\":\"Menu and recap retain the completed field while stale receipt data stays rejected\"}},\"3\":{\"ok\":true,\"name\":\"RoundJuiceShop\",\"result\":{\"passed\":3,\"cases\":{\"1\":\"1649, 971 measured offers names prices borders and fixed actions fit\",\"3\":\"350, 703 measured offers names prices borders and fixed actions fit\",\"2\":\"749, 381 measured offers names prices borders and fixed actions fit\"}}},\"2\":{\"ok\":true,\"name\":\"FieldQuestLayout\",\"result\":{\"1\":\"1649, 971 every active goal count expiry complete and save recovery fits\",\"8\":\"385, 703 Menu exposes metadata without replacing live actions or selection\",\"3\":\"733, 307 every active goal count expiry complete and save recovery fits\",\"2\":\"1649, 971 Menu exposes metadata without replacing live actions or selection\",\"5\":\"568, 160 every active goal count expiry complete and save recovery fits\",\"4\":\"733, 307 Menu exposes metadata without replacing live actions or selection\",\"7\":\"385, 703 every active goal count expiry complete and save recovery fits\",\"6\":\"568, 160 Menu exposes metadata without replacing live actions or selection\"}}}"
+    }
+  ],
+  "isError": false
+}

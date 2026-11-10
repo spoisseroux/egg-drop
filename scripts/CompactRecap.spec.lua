@@ -19,7 +19,9 @@ return function(client,parent)
    test(tostring(size).." exact Stars and all run details are available without Details",function()
     assert(view.earnedGraphic.Text=="+14 Stars"and view.componentLabels[1].Text=="Quest +8"and view.componentLabels[2].Text=="Daily +6")
     assert(view.detailsContent.Visible and not view.detailsButton.Visible and not view.eggPanel.Visible and not view.fill.Parent.Visible and not view.transfer.Visible)
-    assert(#view.detailCards>=6 and view.fieldBody.ScrollingEnabled==(view.bodyContentHeight>view.fieldBody.Size.Y.Offset)and view.detailsContent.Parent==view.fieldBody and not view.receiptScroll.Visible)
+    local facts={};for _,card in ipairs(view.detailCards)do assert(card.kind~="source","payout component duplicated under its exact summary");facts[card.kind]=true end
+    assert(facts.score and facts.best and facts.chain and facts.clears,"four historical run metrics must remain available")
+    assert(#view.detailCards>=4 and view.fieldBody.ScrollingEnabled==(view.bodyContentHeight>view.fieldBody.Size.Y.Offset)and view.detailsContent.Parent==view.fieldBody and not view.receiptScroll.Visible)
     assert(view.receiptSignature:find("Personal best 700",1,true)and view.receiptSignature:find("Longest chain ×4",1,true))
     fit(view.earnedGraphic);for _,node in ipairs(view.componentLabels)do fit(node)end
     for _,node in ipairs(view.receiptRows)do fit(node);assert(node.TextColor3==Color3.fromHex("#173D36"))end
