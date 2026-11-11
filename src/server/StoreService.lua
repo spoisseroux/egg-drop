@@ -6,6 +6,7 @@ local PolicyService = game:GetService("PolicyService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalog = require(ReplicatedStorage.Shared.StoreCatalog)
+local Economy = require(script.Parent.EconomyAnalytics)
 
 local Store = {}
 local api -- { board(player), nursery, publish(board), onGrant(board, product, stars, balance) }
@@ -86,6 +87,7 @@ function Store.grant(player, product, purchaseId)
 			if ok then
 				if reason ~= "AlreadyGranted" then
 					local balance = api.nursery.public(board.nursery).nectar
+					Economy.source(player, product.stars, balance, "IAP", "StarsPack_" .. product.key)
 					if api.onGrant then api.onGrant(board, product, product.stars, balance) end
 					resultRemote:FireClient(player, { kind = "product", key = product.key, stars = product.stars, balance = balance })
 				end
@@ -147,7 +149,7 @@ function Store.start(options)
 	requestRemote.OnServerEvent:Connect(function(player, action, key)
 		if action == "open" then
 			local board = api.board(player)
-			if board then Store.publish(board) end
+			if board then Store.publish(board); Economy.event(player, "StoreOpened") end
 		elseif action == "prompt" then
 			local status = prompt(player, key)
 			if status ~= "Prompted" then resultRemote:FireClient(player, { kind = "rejected", key = key, reason = status }) end
@@ -158,6 +160,7 @@ function Store.start(options)
 		local board = api.board(player)
 		if not pass or not board or not purchased then return end
 		board.passes[pass.key] = true
+		Economy.event(player, "PassPurchased_" .. pass.key)
 		if api.onPass then api.onPass(board, pass) end
 		resultRemote:FireClient(player, { kind = "pass", key = pass.key })
 		Store.publish(board)

@@ -38,6 +38,7 @@ local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 local StoreService = require(script.StoreService)
+local Economy = require(script.EconomyAnalytics)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -552,7 +553,9 @@ local function addPlayer(player)
 		award=function(candidate)
 			if boards[player]~=board or board.closing then return end
 			board.nurseryBusy=true;publishNursery(board)
-			Nursery.awardPet(board.nursery,candidate)
+			local walletBefore=board.nursery.state.nectar
+			local petOk,petReason=Nursery.awardPet(board.nursery,candidate)
+			if petOk and petReason~="AlreadySaved"then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","PetCare")end
 			board.nurseryBusy=false
 			if boards[player]==board and not board.closing then publishNursery(board);publishState(board)end
 		end,
@@ -833,7 +836,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   board.lastHatchRequest=os.clock()
   if board.nurseryBusy or board.payoutPending then sendItemResult(board,itemKind,quote,"Rejected","Busy");return end
   board.nurseryBusy=true;publishNursery(board)
+  local walletBefore=board.nursery.state.nectar
   local ok,reason,saved=Nursery[itemKind.."Command"](board.nursery,action,value,revision)
+  if ok then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
   if reason=="Retrying"then board[itemKind.."Waiting"]=quote end
   board.nurseryBusy=false;if boards[player]~=board then return end
   publishNursery(board);publishState(board)
@@ -852,7 +857,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.lastHatchRequest=os.clock()
 		if board.nurseryBusy or board.payoutPending then sendMaterialResult(board,quote,"Rejected","Busy");return end
 		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
 		local ok,reason,saved=Nursery.materialCommand(board.nursery,action,value,revision)
+		if ok then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
 		if reason=="Retrying"then board.materialWaiting=quote end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
@@ -888,8 +895,10 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	board.nurseryBusy = true
 	publishNursery(board)
 	local ok, reason, receipt
+	local walletBefore = board.nursery.state.nectar
 	if isHue then ok,reason,receipt=Nursery.hueCommand(board.nursery,action,value,revision)
 	else ok,reason=Nursery.command(board.nursery,action,value,revision)end
+	if ok and reason ~= "AlreadySaved" then Economy.command(player, action, walletBefore, board.nursery.state.nectar, board.nursery.state) end
 	if isHue and reason=="Retrying"then board.hueWaiting=quote end
 	board.nurseryBusy = false
 	if boards[player] ~= board then return end
@@ -929,6 +938,10 @@ local function settleReward(player, board)
 					board.folder:SetAttribute("MasteryAward", saved and saved.sequence == board.runSequence and saved.masteryPoints or 0)
 					board.folder:SetAttribute("DailyAward", saved and saved.sequence == board.runSequence and saved.daily or 0)
 					board.folder:SetAttribute("RewardStatus", "Saved")
+					if saved and saved.sequence == board.runSequence then
+						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward")
+					end
+					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
 					break
 				end
 				board.folder:SetAttribute("RewardStatus", messages[reason] or reason)

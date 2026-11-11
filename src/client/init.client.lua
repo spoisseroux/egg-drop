@@ -802,6 +802,18 @@ end)
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
+-- Robux store page inside the egg shop. Server-initiated prompts only.
+clientUI.storeView=require(script.StoreView).new(nurseryView.shade,{reduceEffects=reduceEffects,
+ request=function(actionName,key)if clientUI.storeRequest then clientUI.storeRequest:FireServer(actionName,key)end end})
+clientUI.storeView.onAccepted=function(kind)clientUI.accepted(kind)end
+nurseryView:attachStore(clientUI.storeView)
+task.spawn(function()
+ clientUI.storeRequest=remotes:WaitForChild("StoreRequest")
+ local stateConnection=remotes:WaitForChild("StoreState").OnClientEvent:Connect(function(snapshot)clientUI.storeView:setState(snapshot)end)
+ local resultConnection=remotes:WaitForChild("StoreResult").OnClientEvent:Connect(function(result)clientUI.storeView:handleResult(result)end)
+ gui.Destroying:Connect(function()stateConnection:Disconnect();resultConnection:Disconnect()end)
+ clientUI.storeRequest:FireServer("open")
+end)
 nurseryView.appearanceFor=function(petId)
  local a=roomView.garden:appearance(board,petId)
  local state=nurseryState

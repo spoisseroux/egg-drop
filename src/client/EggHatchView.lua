@@ -98,16 +98,24 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local action = button(card, "Action", "Hatch", UDim2.new(0.30, 2, 1, -56), UDim2.new(0.70, -14, 0, 44), "accent", 60)
 	local meet = button(card, "Meet", "Meet friend", UDim2.new(0, 12, 1, -56), UDim2.new(0.50, -18, 0, 44), "accent", 60)
 	meet.Visible = false
+	-- Shown only once a Robux store page is attached; the header owns its place.
+	local getStars = Instance.new("TextButton")
+	getStars.Name, getStars.Text, getStars.Size, getStars.ZIndex, getStars.BorderSizePixel = "GetStars", "Get Stars", UDim2.fromOffset(100, 44), 60, 0
+	getStars.BackgroundColor3, getStars.TextColor3, getStars.Visible = Art.Raised, Art.Silver, false
+	getStars.Parent = card
+	Art.bind(getStars, { BackgroundColor3 = "raised", TextColor3 = "text" })
+	Art.button(getStars, 10)
+	Art.type(getStars, "Action", true)
 	local revealHost = frame(card, "RevealHost", "inset", UDim2.fromOffset(10, 10), UDim2.new(1, -20, 1, -80), 40)
 	revealHost.Visible = false
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
 		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
-		closeButton = close, action = action, meetButton = meet, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
+		closeButton = close, action = action, meetButton = meet, getStars = getStars, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
 		intentToken = 0, presentationGeneration = 0,
 	}, View)
- self.shelfEffects=ShelfEffects.new(shade,{audio=audio,reduceEffects=reduceEffects,owns=function()return shade.Visible and not self.state.lastHatch and (not audio or audio.deviceActive~=false)end})
+ self.shelfEffects=ShelfEffects.new(shade,{audio=audio,reduceEffects=reduceEffects,owns=function()return shade.Visible and not self:isStoreOpen() and not self.state.lastHatch and (not audio or audio.deviceActive~=false)end})
 	self.cinematic = HatchCinematic.new(revealHost, audio, reduceEffects, function()
 		return shade.Visible and (not self.ownsPresentation or self.ownsPresentation())
 	end)
@@ -125,6 +133,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	end)
 	self:layout()
 	close.Activated:Connect(function() self:close("close") end)
+	getStars.Activated:Connect(function() self:openStore() end)
 	meet.Activated:Connect(function() self:chooseResult("meet") end)
 	action.Activated:Connect(function()
 		if not shade.Visible or self.pending or not action.Interactable then return end
@@ -148,6 +157,35 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	return self
 end
 
+-- Robux store page (StoreView). It replaces the egg card while open, so the egg
+-- shop remains the one presentation, Back and controller-focus owner.
+function View:isStoreOpen()
+	return self.store ~= nil and self.store:isOpen()
+end
+function View:attachStore(store)
+	self.store = store
+	store.onOpened = function()
+		self.card.Visible = false
+		self:bumpControllerEpoch()
+	end
+	store.onClosed = function()
+		self.card.Visible = true
+		self:bumpControllerEpoch()
+		if self.shade.Visible then
+			self:layout()
+			if self:ownsInput() and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
+				GuiService.SelectedObject = if self.getStars.Visible then self.getStars else self:openingFocusTarget()
+			end
+		end
+	end
+	if self.shade.Visible then self:layout() end
+end
+function View:openStore()
+	if not self.store or not self.shade.Visible or self.state.lastHatch or self.pending or self:isStoreOpen() or not self:ownsInput() then return false end
+	if self.onAccepted then self.onAccepted("confirm") end
+	self.store:open(self.state.nectar or 0)
+	return true
+end
 function View:getSaveNotice()
 	return if self.noticeManaged then self.managedSaveNotice else SaveNotice.resolve(nil,self.state)
 end
@@ -197,12 +235,20 @@ function View:layoutShop()
  self.wallet.Parent,self.nectar.Parent=self.card,self.wallet
  self.wallet.Visible,self.heading.Visible,self.nectar.Visible,self.body.Visible=true,true,true,true
  self.meetButton.Visible,self.revealHost.Visible=false,false
- self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.walletDrop,self.closeButton,{pad=12,top=0,amount=self.state.nectar or 0,title=self.headerTitle or "Hatch eggs",shortTitle=self.headerShortTitle or "Hatch eggs",accessibleTitle=self.statusText or "Choose an egg",status=self.statusText~=nil})
+ self.headerPlan=Art.sheetHeader(width,self.heading,self.wallet,self.nectar,self.walletDrop,self.closeButton,{pad=12,top=0,amount=self.state.nectar or 0,title=self.headerTitle or "Hatch eggs",shortTitle=self.headerShortTitle or "Hatch eggs",accessibleTitle=self.statusText or "Choose an egg",status=self.statusText~=nil,secondary=if self.store then self.getStars else nil})
+ self.getStars.Visible=self.store~=nil
+ local storeRowH=0
+ if self.store and not self.headerPlan.secondaryHeader then
+  -- No room beside the title: the same button takes one full row under the header.
+  storeRowH=Art.actionHeight(self.getStars,width-24)
+  self.getStars.Position,self.getStars.Size=UDim2.fromOffset(12,self.headerPlan.height+2),UDim2.fromOffset(width-24,storeRowH)
+  storeRowH+=4
+ end
  Art.type(self.action,"Action",short)
  local footerH=self:footerRowHeight(self.action,width-24);self.footerHeight=footerH
  local edgeGap=if short then 4 else 8
  self.action.Position,self.action.Size=UDim2.fromOffset(12,self.card.Size.Y.Offset-footerH-edgeGap),UDim2.fromOffset(width-24,footerH)
- local top=self.headerPlan.height+(if short then 0 else 4)
+ local top=self.headerPlan.height+storeRowH+(if short then 0 else 4)
  self.note.Visible=false;self.notePinned=false
  self.body.Position,self.body.Size=UDim2.fromOffset(12,top),UDim2.fromOffset(width-24,math.max(1,self.card.Size.Y.Offset-top-footerH-edgeGap-4))
  local signature=width..":"..self.card.Size.Y.Offset..":"..GuiService.PreferredTextSize.Name
@@ -241,6 +287,7 @@ function View:layout()
 	self.cinematic.compactLandscape=self.card.Size.X.Offset>=480 and self.card.Size.Y.Offset<400
 	self.closeButton.Position, self.closeButton.Size = UDim2.new(1,-56,0,6), UDim2.fromOffset(44,44)
 	self.wallet.Visible, self.heading.Visible, self.nectar.Visible, self.note.Visible = false, false, false, false
+	self.getStars.Visible = false
 	self.meetButton.Visible = true
 	local width = (self.card.Size.X.Offset-36)/2
 	local footerH = math.max(44,self:footerRowHeight(self.action,width),self:footerRowHeight(self.meetButton,width))
@@ -546,7 +593,7 @@ function View:renderBody()
   copy("ItemRules","Fixed colors stack in your inventory. Use one jar for one dose on one pet and channel. Reset Hue clears that channel; an original channel uses nothing. Store any result.","Body")
  else
   copy("PoolHeading","Possible companions","Action");outcomes(Catalog.odds("meadow",self.state.misses or 0),false)
-  copy("PoolNote","Four companions are currently available. Companions you already own remain yours. Duplicates grant no reward.","Supporting")
+  copy("PoolNote","Four companions are currently available. Companions you already own remain yours. A duplicate gives back half its Stars.","Supporting")
  end
  local daily=left:FindFirstChild("DailyNectar")
  if not daily then daily=button(left,"DailyNectar","",UDim2.fromOffset(4,y),UDim2.fromOffset(w,44),"raised");daily.Activated:Connect(function()local state=self.state;if liveShopTarget(daily,self.shade)and state.dailyAvailable and state.dailyDay and not self.pending then self:send("daily",state.dailyDay)end end)end
@@ -575,6 +622,10 @@ end
 function View:update(state)
 	local wasResult=self.state.lastHatch~=nil
 	self.state = state or {}
+	if self.store then
+		self.store:setBalance(self.state.nectar or 0)
+		if self.state.lastHatch and self.store:isOpen() then self.store:close("forced") end
+	end
 	if wasResult~=(self.state.lastHatch~=nil)then self:bumpControllerEpoch()end
 	if self.errorMessage and self.errorRevision and self.state.status=="Ready" and (self.state.revision or 0)>self.errorRevision then self.errorMessage,self.errorRevision=nil,nil end
 	local intent = self.ackIntent
@@ -694,6 +745,7 @@ function View:bumpControllerEpoch()
 	self.shade:SetAttribute("ControllerEpoch",(self.shade:GetAttribute("ControllerEpoch")or 0)+1)
 end
 function View:getControllerFocus()
+	if self:isStoreOpen() then return self.store:getControllerFocus() end
 	if not self.shade.Visible or self.state.lastHatch~=nil then return nil end
 	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
 		target=function()return self.closeButton end,fallback=self.closeButton}
@@ -719,6 +771,11 @@ function View:open(state)
 end
 
 function View:close(reason, choice)
+	if self:isStoreOpen() then
+		-- Back or X leaves the store page first; every other reason closes both.
+		if reason == nil or reason == "close" then self.store:close("back"); return end
+		self.store:close("forced")
+	end
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
  if (reason==nil or reason=="close"or reason=="earn")and self.onAccepted then self.onAccepted(if reason=="earn"then "confirm"else "back")end
