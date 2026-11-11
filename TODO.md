@@ -54,7 +54,8 @@ Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid 
 
 ### 2. Garden environment
 The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGardenArt`, `LoungeSpringArt`) on a flat 160 × 176 lawn. Reference: [top](artifacts/garden-reference-2026-11-11/reference-layout-top.png) · [perspective](artifacts/garden-reference-2026-11-11/reference-layout-perspective.png). Target proportions and the kit list are in ART-HANDOFF.md section 7.
-- [ ] Greybox in Studio: about 230 × 180 stud crescent floor, roughly 60-stud cliff ring on north/east with cave gap, west pond about 35 × 65 with island, waterfall, terraces/pillar steps, creek crossing, landmark tree, hub stations. Original layout; no Sega mesh or textures.
+- [x] Greybox built in Studio Edit as `Workspace.GardenGreybox` at X=+1000, from `scripts/GardenGreybox.lua` (rebuildable). Captures in `artifacts/garden-greybox-2026-11-11/`. Not in the Rojo tree, so it is only in this Studio session until the place is saved; remove it before any publish.
+- [ ] (spec) Greybox in Studio: about 230 × 180 stud crescent floor, roughly 60-stud cliff ring on north/east with cave gap, west pond about 35 × 65 with island, waterfall, terraces/pillar steps, creek crossing, landmark tree, hub stations. Original layout; no Sega mesh or textures.
 - [ ] Walk the greybox at avatar and pet scale, at phone camera distance, before any detailing.
 - [ ] Spencer models the final kit in Blender from the approved greybox.
 - [ ] Load the environment as authored assets instead of code-built parts; keep day/night lighting.
