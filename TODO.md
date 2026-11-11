@@ -6,7 +6,7 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
-- **Overnight systems run (started 2026-11-11 02:30, Claude Opus):** store backend done (`0d5798e`). Now: shop UI (Fable agent) and analytics (Opus). Not published.
+- **Overnight systems run, 2026-11-11 — done:** store backend `0d5798e`, Get Stars shop + analytics `3b82189`. Not published. Next systems step needs Spencer's product/pass ids.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
 
 ## v1 public launch
@@ -46,9 +46,10 @@ Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid 
 - [x] Monetization backend (`0d5798e`): `StoreCatalog` config, `PurchaseState` ledger (each purchase id grants once across servers), `StoreService` (server-initiated prompts, ProcessReceipt, pass ownership, PolicyService gate that fails closed). Passes boost round rewards inside the transaction.
 - [ ] **Spencer:** create the 5 developer products and 2 game passes on the Creator Dashboard at the listed prices and send Claude the ids for `src/shared/StoreCatalog.lua`. Until then the store lists items but can't prompt them.
 - [ ] Supporter cosmetics (deck shell + charm) promised by the Supporter pass and starter pack need art; currently Stars-only.
-- [ ] Shop UI for passes and packs (Fable).
-- [ ] Analytics: economy (Stars earned/spent by source and sink, purchases), rounds per session, D1/D7 return markers.
-- [ ] Remove or hide retired surfaces that v1 no longer uses (legacy pets, frozen Family mastery UI).
+- [x] Get Stars shop (Fable), opened from the egg shop header; packs hidden when Roblox restricts paid random items; "Coming soon" until ids exist (`3b82189`). Not yet checked: Largest text, gamepad focus, the real in-game path, real purchases.
+- [x] Analytics (`3b82189`): Stars sources/sinks, round won/lost, store opens, pass purchases. D1/D7 retention comes from the Creator Dashboard. Only fires on published servers, so it is unverified until a live session.
+- [x] Retired surfaces: the Family mastery menu was already removed, and the save wipe clears retired pets. Nothing else to hide.
+- [ ] `scripts/PetAward.spec.lua` fails on a stale `version == 4` assert (pre-existing, unrelated to v1 work).
 
 ### 2. Garden environment
 The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGardenArt`, `LoungeSpringArt`) on a flat 160 × 176 lawn. Reference: [top](artifacts/garden-reference-2026-11-11/reference-layout-top.png) · [perspective](artifacts/garden-reference-2026-11-11/reference-layout-perspective.png). Target proportions and the kit list are in ART-HANDOFF.md section 7.
