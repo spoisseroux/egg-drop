@@ -1,5 +1,7 @@
 # Egg Drop
 
+**New here? Start with [ONBOARDING.md](ONBOARDING.md).** Parts of this README are out of date ("nectar" is now Stars).
+
 Run `rojo serve --port 34873` and connect the Rojo Studio plugin to that
 port. In Play mode, aim with the Pocket Deck's D-pad and press A to drop.
 You can also drag across the screen bar and release to drop.

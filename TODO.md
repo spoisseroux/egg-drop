@@ -8,6 +8,8 @@ Keep this list current: add an item when work starts, move it to done when it la
 
 - **Overnight systems run, 2026-11-11 — done:** store backend `0d5798e`, Get Stars shop + analytics `3b82189`. Not published. Next systems step needs Spencer's product/pass ids.
 - **Claude:** greybox approved and exported as a Blender underlay. Garden swap scoped (section 2); waiting on Spencer's go-ahead.
+- [x] Onboarding doc for new collaborators: [ONBOARDING.md](ONBOARDING.md) (2026-11-11).
+- **Spencer:** add the new collaborator to the GitHub repo and as a Roblox collaborator on universe 10774758591.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
 
 ## v1 public launch
