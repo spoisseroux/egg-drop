@@ -99,7 +99,7 @@ What it shows (source units → our studs at about ×0.5):
 
 ### How the environment gets built
 1. **Claude greyboxes it in Studio** (Parts and Terrain) at those proportions. It includes the hub stations, walking routes, pet rest spots and phone camera views. You and Claude walk it in Play mode and agree on it.
-2. **You build the final kit in Blender**, using the greybox (exported to OBJ) as your underlay.
+2. **You build the final kit in Blender**, using the greybox as your underlay. It's ready (approved 2026-11-11): open `assets/art-source/environment/garden-greybox-underlay.blend`, or append its `GreyboxUnderlay` collection into your scene (File → Append), or import `garden-greybox.obj` with the default OBJ settings. It is in studs, centred on the garden origin, with north = Blender +Y and the sea to the south (−Y). Model over it, then hide or delete the underlay before export.
 3. **Claude imports it**, sets collisions, wires materials, and rebuilds the pet walking map and route data for the new ground.
 
 ### The kit to model
