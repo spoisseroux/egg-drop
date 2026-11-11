@@ -6,8 +6,7 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
-- **Planning v1:** scope, art handoff ([ART-HANDOFF.md](ART-HANDOFF.md)), garden reference measurements. *(Claude, 2026-11-11, no runtime changes)*
-- **Waiting on Spencer's go-ahead:** overnight systems run (section 1 below), Opus. Shop UI goes to Fable.
+- **Overnight systems run (started 2026-11-11 02:30, Claude Opus):** store backend done (`0d5798e`). Now: shop UI (Fable agent) and analytics (Opus). Not published.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
 
 ## v1 public launch
@@ -41,10 +40,12 @@ Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid 
 | Duplicate companion | — | — | Refunds 50% of that egg's Stars price |
 
 ### 1. Systems
-- [ ] Save hardening: whole-profile session lock, DataStore budget/backoff, schema version, fresh launch store name, BindToClose drain.
-- [ ] Trim to four babies: catalogs, hatch recipes, odds (sum to 100%), rare protection, shop and journal. Retired pets hidden.
-- [ ] Duplicate companion compensation, so every egg outcome gives something.
-- [ ] Monetization: ProcessReceipt with idempotent receipt records, 2× Stars pass, per-round bonus, Robux→Stars packs gated by `ArePaidRandomItemsRestricted`. Product IDs in one config; Spencer creates the real products on the dashboard.
+- [x] Save hardening: fresh `EggDropLaunchV1` store and DataStore request-budget waits (`0d5798e`). The existing hatching lease (90 s, renewed every 20 s) already acts as the economy session lock, with re-acquire on Locked/Unavailable, retries and a close drain, so no rewrite was needed.
+- [x] Trim to four babies: only Zivvi/Ovelle/Tikket/Nuum were already active and the rare pool was empty. Meadow odds are now whole percentages 40/28/22/10 (`0d5798e`). With the save wipe nobody owns retired pets.
+- [x] Duplicate companion refunds 50% of the egg price (9 Stars on Meadow) (`0d5798e`).
+- [x] Monetization backend (`0d5798e`): `StoreCatalog` config, `PurchaseState` ledger (each purchase id grants once across servers), `StoreService` (server-initiated prompts, ProcessReceipt, pass ownership, PolicyService gate that fails closed). Passes boost round rewards inside the transaction.
+- [ ] **Spencer:** create the 5 developer products and 2 game passes on the Creator Dashboard at the listed prices and send Claude the ids for `src/shared/StoreCatalog.lua`. Until then the store lists items but can't prompt them.
+- [ ] Supporter cosmetics (deck shell + charm) promised by the Supporter pass and starter pack need art; currently Stars-only.
 - [ ] Shop UI for passes and packs (Fable).
 - [ ] Analytics: economy (Stars earned/spent by source and sink, purchases), rounds per session, D1/D7 return markers.
 - [ ] Remove or hide retired surfaces that v1 no longer uses (legacy pets, frozen Family mastery UI).
