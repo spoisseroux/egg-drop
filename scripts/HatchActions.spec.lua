@@ -176,12 +176,12 @@ return function(client, parent)
 			assert(hatch.masteryHint == nil and view.cinematic.result.masteryHint == nil)
 			assert(not view.cinematic.frame:FindFirstChild("Mastery", true))
 			local caption = view.cinematic.frame:FindFirstChild("CollectionStatus", true)
-			assert(caption and caption.Text == "Already owned · no additional reward")
+			assert(caption and caption.Text == "Already owned")
 			assert(view.meetButton.Interactable and view.action.Interactable)
 			hatch.promotedTo = 2
 			view:close(); view:open(snapshot)
 			assert(not view.cinematic.frame:FindFirstChild("Mastery", true), "legacy promotion revived a removed reward")
-			assert(view.cinematic.frame:FindFirstChild("CollectionStatus", true).Text == "Already owned · no additional reward")
+			assert(view.cinematic.frame:FindFirstChild("CollectionStatus", true).Text == "Already owned")
 			assert(hatch.mastery == 18 and hatch.promotedTo == 2 and snapshot.masteryDetails.wick.points == 18, "presentation mutated historical receipt data")
 			assert(view.meetButton.Interactable and view.action.Interactable and #sent == 0)
 			view:chooseResult("meet");assert(#sent == 1 and sent[1].command == "ack" and sent[1].value == hatch.id and sent[1].revision == 10)
@@ -404,7 +404,7 @@ return function(client, parent)
 					end
 				end
 				local caption=view.cinematic.frame:FindFirstChild("CollectionStatus",true)
-				assert(caption.Text == "Already owned · no additional reward" and not view.cinematic.frame:FindFirstChild("Mastery",true))
+				assert(caption.Text == "Already owned" and not view.cinematic.frame:FindFirstChild("Mastery",true))
 				local offset=view.body.CanvasPosition
 				view:update(snapshot)
 				assert(view.cinematic.epoch==epoch and view.cinematic.heroViewport==hero and view.body.CanvasPosition==offset)

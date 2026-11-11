@@ -512,12 +512,12 @@ function View:renderBody()
    local owned=not itemPool and Catalog.isOwned(self.state.inventoryMask or 0,entry.id)
    local row=frame(left,"Outcome_"..entry.id,"inset",UDim2.fromOffset(0,0),UDim2.fromOffset(rw,52));Art.corner(row,9)
    local label=Art.text(row,"Name",name,UDim2.fromOffset(48,6),UDim2.fromOffset(rw-112,24),"text",16);Art.type(label,"Body",short);label.TextXAlignment=Enum.TextXAlignment.Left
-   local chance=Art.text(row,"Chance",string.format(if itemPool then "%.0f%%"else "%.1f%%",entry.weight),UDim2.fromOffset(rw-62,6),UDim2.fromOffset(54,24),"text",18);Art.type(chance,"Action",short);chance.TextXAlignment=Enum.TextXAlignment.Right
+   local chance=Art.text(row,"Chance",string.format(if itemPool or math.abs(entry.weight-math.round(entry.weight))<1e-6 then "%.0f%%"else "%.1f%%",entry.weight),UDim2.fromOffset(rw-62,6),UDim2.fromOffset(54,24),"text",18);Art.type(chance,"Action",short);chance.TextXAlignment=Enum.TextXAlignment.Right
    local cw=math.max(54,Art.textWidth(chance)+4);local nw=math.max(1,rw-cw-64)
    local nh=Art.textHeight(label,nw,24);label.Size=UDim2.fromOffset(nw,nh)
    local ch=Art.textHeight(chance,cw,24);chance.Position,chance.Size=UDim2.fromOffset(rw-cw-8,6),UDim2.fromOffset(cw,ch)
    local h=math.max(52,math.max(nh,ch)+12)
-   if owned then local ownedText=Art.text(row,"Owned","Already owned · no reward",UDim2.fromOffset(48,nh+8),UDim2.fromOffset(rw-56,20),"muted",14);Art.type(ownedText,"Supporting",short);ownedText.TextXAlignment=Enum.TextXAlignment.Left;local oh=Art.textHeight(ownedText,rw-56,20);ownedText.Size=UDim2.fromOffset(rw-56,oh);h+=oh+4 end
+   if owned then local ownedText=Art.text(row,"Owned","Already owned · half your Stars back",UDim2.fromOffset(48,nh+8),UDim2.fromOffset(rw-56,20),"muted",14);Art.type(ownedText,"Supporting",short);ownedText.TextXAlignment=Enum.TextXAlignment.Left;local oh=Art.textHeight(ownedText,rw-56,20);ownedText.Size=UDim2.fromOffset(rw-56,oh);h+=oh+4 end
    if itemPool then JarArt.create(row,entry.id,UDim2.fromOffset(5,4),UDim2.fromOffset(34,42),row.ZIndex+2)else Portrait.create(row,Pets.byId[entry.id],2,UDim2.fromOffset(24,26),row.ZIndex+2,false,self.appearanceFor and self.appearanceFor(entry.id))end
    nodes[index]=row;local group=math.floor((index-1)/columns)+1;heights[group]=math.max(heights[group]or 0,h)
   end

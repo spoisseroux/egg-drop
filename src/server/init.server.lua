@@ -37,6 +37,7 @@ local GardenActivity = require(ReplicatedStorage.Shared.GardenActivity)
 local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
+local StoreService = require(script.StoreService)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -486,6 +487,8 @@ local function addPlayer(player)
 	if board.profileReady then board.firstSession = FirstSession.new(player, profile) end
 	board.mode = if NurseryCatalog.isOwned(nursery.state.inventoryMask, "pip") then "Room" else "Board"
 	boards[player] = board
+	board.passes = {}
+	StoreService.join(board)
 	reset(board, Config.DefaultPreset)
 	publishNursery(board)
 	publishPetAppearance(board)
@@ -588,6 +591,13 @@ local function closeBoard(board)
 		closing[board] = nil
 	end)
 end
+StoreService.start({
+	board = function(player) return boards[player] end,
+	nursery = Nursery,
+	publish = function(board)
+		if boards[board.player] == board and not board.closing then publishNursery(board); publishState(board) end
+	end,
+})
 Players.PlayerAdded:Connect(addPlayer)
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
@@ -901,13 +911,14 @@ local function settleReward(player, board)
 	local summary = { family = board.runFamily, day = board.runDay, success = board.field.outcome.success,
 		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
 		clears = board.round.maxClears, drops = board.sim.drops }
-	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false }
+	local boost = StoreService.boost(board)
+	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false, boost = boost }
 	board.payoutPending, board.payoutRunning = true, true
 	board.folder:SetAttribute("RewardStatus", "Saving")
 	task.spawn(function()
 		while boards[player] == board and not board.closing and board.payoutPending do
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
-				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary)
+				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary, boost)
 				if boards[player] ~= board then break end
 				publishNursery(board)
 				if ok then

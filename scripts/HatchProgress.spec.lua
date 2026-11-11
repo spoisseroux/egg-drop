@@ -109,11 +109,12 @@ return function(Hatching, Catalog)
 		assert(h.state.nectar == 18)
 		local revision = h.state.revision
 		command(h, "hatch", "meadow")
-		assert(h.state.nectar == 0 and h.state.lastHatch.petId == "pip" and h.state.lastHatch.duplicate)
+		-- v1: a duplicate refunds half of the 18-Star price.
+		assert(h.state.nectar == 9 and h.state.lastHatch.petId == "pip" and h.state.lastHatch.duplicate and h.state.lastHatch.refund == 9)
 		assert(h.state.mastery.pip == 0 and c.randomCalls == 1)
 		writes = c.updateCalls
 		ok = Hatching.command(h, "hatch", "meadow", revision)
-		assert(not ok and h.state.nectar == 0 and c.randomCalls == 1 and c.updateCalls == writes)
+		assert(not ok and h.state.nectar == 9 and c.randomCalls == 1 and c.updateCalls == writes)
 		assert(db.player_1.hatching.mastery.pip == 0)
 	end)
 
@@ -144,11 +145,11 @@ return function(Hatching, Catalog)
 		local hatchId = h.pending.candidate.id
 		c.sample = 0.999
 		assert(Hatching.retry(h))
-		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == 0)
+		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == 9) -- duplicate pip refund
 		assert(h.state.lastOperation.id == pendingId and h.state.lastHatch.id == hatchId)
 		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 0 and c.randomCalls == 1)
 		local ok, reason = Hatching.retry(h)
-		assert(not ok and reason == "NoPending" and h.state.nectar == 0)
+		assert(not ok and reason == "NoPending" and h.state.nectar == 9)
 		c.failBeforeCommit = true
 		assert(not Hatching.command(h, "ack", hatchId, h.state.revision))
 		assert(db.player_1.hatching.lastHatch.id == hatchId)
@@ -161,12 +162,12 @@ return function(Hatching, Catalog)
 		local day = Hatching.public(h).dailyDay
 		c.failBeforeCommit = true
 		assert(not Hatching.command(h, "daily", day, h.state.revision))
-		assert(db.player_1.hatching.nectar == 0 and h.pending)
+		assert(db.player_1.hatching.nectar == 9 and h.pending)
 		pendingId = h.pending.id
 		assert(Hatching.retry(h))
-		assert(h.state.nectar == 6 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
+		assert(h.state.nectar == 15 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
 		assert(not Hatching.command(h, "daily", day, h.state.revision))
-		assert(h.state.nectar == 6 and c.randomCalls == 1)
+		assert(h.state.nectar == 15 and c.randomCalls == 1)
 	end)
 
 	test("monotonic payouts reject replay beyond receipt history", function()
@@ -251,7 +252,7 @@ return function(Hatching, Catalog)
 			command(h,"hatch","meadow")
 			local expected=Catalog.ById.meadow.weights[index].id
 			assert(h.state.lastHatch.petId==expected and Catalog.isOwned(h.state.inventoryMask,expected))
-			assert(h.state.nectar==0 and h.state.misses==0 and not h.state.lastHatch.rare)
+			assert(h.state.nectar==(if expected=="pip"then 9 else 0)and h.state.misses==0 and not h.state.lastHatch.rare)
 		end
 		for misses=0,7 do
 			local db,c,adapter=fixture();local h=Hatching.load(1,{rank=1},adapter("a"))

@@ -353,6 +353,7 @@ function Recap:updateField(result)
 		-- The total and saved egg balance remain pinned while the receipt scrolls.
 		self.title.Text = Stars.format("Stars +%d · Saved %d/%d", reward.total, balance, cost)
 		local lines = { Stars.format("Quest Stars +%d", reward.base or 0), string.format("Daily contracts total +%d", reward.daily or 0) }
+		if (reward.bonus or 0) > 0 then table.insert(lines, Stars.format("Pass bonus +%d", reward.bonus)) end
 		if self.statTargets then
 			table.insert(lines,"Score "..self.statTargets[1].." · Personal best "..(self.statBest or 0))
 			table.insert(lines,"Longest chain ×"..self.statTargets[2].." · Tier V clears "..self.statTargets[3])

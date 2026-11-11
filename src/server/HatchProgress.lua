@@ -13,6 +13,7 @@ local FeatureState=require(script.Parent.FeatureState)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
 local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local Guard=require(script.Parent.HatchGuard)
+local Purchases=require(script.Parent.PurchaseState)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -138,7 +139,7 @@ local function validV7(state)
  -- Version-specific historical validation never interprets new working fields.
  return validVersion(state,7,false)and HueState.validHistorical(state)and MaterialState.valid(state)
 end
-local function valid(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)end
+local function valid(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -281,6 +282,7 @@ function Hatching.public(handle)
 	for key,value in pairs(MaterialState.public(state))do public[key]=value end
 	for key,value in pairs(ToyState.public(state))do public[key]=value end
 	for key,value in pairs(FeatureState.public(state))do public[key]=value end
+	for key,value in pairs(Purchases.public(state))do public[key]=value end
 	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
@@ -653,12 +655,14 @@ function Hatching.command(handle, action, value, expectedRevision)
 			local family = Catalog.family(petId)
 			local duplicate = Catalog.isOwned(state.inventoryMask, petId)
 			local previousRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family])
-			state.nectar -= recipe.cost
-			-- A duplicate is collection status only. Frozen legacy marks remain intact.
+			-- A duplicate refunds half its price so every paid outcome gives something
+			-- (Roblox paid-random-items policy). Frozen legacy marks remain intact.
+			local refund = if duplicate then math.floor(recipe.cost * Catalog.DuplicateRefund) else 0
+			state.nectar += refund - recipe.cost
 			state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(petId))
 			-- Preserve earned protection while the active pool has no rare outcomes.
 			if Catalog.hasRarePool(value)then state.misses = if pet.trial then 0 else math.min(7, state.misses + 1)end
-			state.lastHatch = { id = choice.id, petId = petId, duplicate = duplicate,
+			state.lastHatch = { id = choice.id, petId = petId, duplicate = duplicate, refund = refund,
 				family = family, mastery = state.mastery[family], rare = pet.trial ~= nil, recipe = value,
 				masteryRank = Mastery.rank(state.mastery[family], state.masteryChallenges[family]),
 				promotedTo = if Mastery.rank(state.mastery[family], state.masteryChallenges[family]) > previousRank
@@ -681,10 +685,26 @@ function Hatching.grantStarter(handle)
 	end, { id = handle.adapter.guid() })
 end
 
-function Hatching.award(handle, runSequence, amount, summary)
+-- Robux purchase grant. The purchase id is the durable idempotency key, so a
+-- repeated ProcessReceipt on any server can never grant twice.
+function Hatching.grantPurchase(handle, purchaseId, stars, once)
+	if type(purchaseId) ~= "string" or #purchaseId < 1 or #purchaseId > 100 then return false, "InvalidPurchase" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if Purchases.granted(handle.state, purchaseId) then return true, "AlreadyGranted" end
+	local candidate = table.freeze({ purchaseId = purchaseId, stars = stars, once = once == true })
+	local ok, reason = transact(handle, "purchase:" .. purchaseId, handle.state.revision, Purchases.apply, candidate, "purchase:" .. purchaseId)
+	if not ok and reason == "AlreadyGranted" then return true, reason end
+	return ok, reason
+end
+
+-- boost = { multiplier = 1|2, bonus = 0|1 } from the player's game passes.
+function Hatching.award(handle, runSequence, amount, summary, boost)
 	if not integer(runSequence) or runSequence < 1 or (amount ~= 0 and amount ~= 6 and amount ~= 8) then
 		return false, "InvalidReward"
 	end
+	boost = if type(boost) == "table" then boost else {}
+	local multiplier = if boost.multiplier == 2 then 2 else 1
+	local bonus = if boost.bonus == 1 then 1 else 0
 	if runSequence <= handle.state.lastAwardSeq then return true, "AlreadyAwarded" end
 	if summary ~= nil then
 		if type(summary) ~= "table" or type(summary.family) ~= "string"
@@ -703,7 +723,7 @@ function Hatching.award(handle, runSequence, amount, summary)
 	end
 	-- Copy once: the host's mutable board and day clock must never alter a
 	-- pending transaction when DataStore invokes its callback again later.
-	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()) }
+	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus }
 	local signature = "award:" .. runSequence .. ":" .. amount
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
@@ -717,10 +737,12 @@ function Hatching.award(handle, runSequence, amount, summary)
 			end
 			state.contracts, extra, completed = Daily.apply(state.contracts, run, captured.day)
 		end
-		if state.nectar + amount + extra > 1000000000 then return false, "BalanceLimit" end
-		state.nectar += amount + extra
+		local earned = amount + extra
+		local total = earned * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
+		if state.nectar + total > 1000000000 then return false, "BalanceLimit" end
+		state.nectar += total
 		state.lastAwardSeq = runSequence
-		state.lastRunReward = { sequence = runSequence, base = amount, daily = extra, total = amount + extra,
+		state.lastRunReward = { sequence = runSequence, base = amount, daily = extra, total = total, bonus = total - earned,
 			masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted, contracts = completed }
 		return true
 	end, candidate)

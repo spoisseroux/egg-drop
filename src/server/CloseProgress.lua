@@ -12,7 +12,7 @@ function Close.drain(hatching, handle, payout, options)
 			hatching.retry(handle)
 			wait(.1)
 		elseif payout and not payout.saved then
-			local ok = hatching.award(handle, payout.sequence, payout.amount, payout.summary)
+			local ok = hatching.award(handle, payout.sequence, payout.amount, payout.summary, payout.boost)
 			if ok then payout.saved = true else wait(.25) end
 		else
 			if options.profileFlush then

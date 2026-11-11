@@ -2,6 +2,7 @@ local Pets = require(script.Parent.PetCatalog)
 
 local Catalog = {
 	DailyBonus = 6,
+	DuplicateRefund = 0.5,
 	DayOffsetSeconds = -5 * 3600,
 	RareGuarantee = 7,
 	Order = { "meadow" },
@@ -9,8 +10,9 @@ local Catalog = {
 		meadow = {
 			name = "Mixed Meadow", cost = 18, color = Color3.fromHex("#C2EC74"),
 			weights = {
-				{ id = "pip", weight = 35 }, { id = "puddle", weight = 25 },
-				{ id = "wick", weight = 20 }, { id = "orbit", weight = 10 },
+				-- Whole percentages that sum to 100, shown before purchase.
+				{ id = "pip", weight = 40 }, { id = "puddle", weight = 28 },
+				{ id = "wick", weight = 22 }, { id = "orbit", weight = 10 },
 			},
 		},
 		sprout = {

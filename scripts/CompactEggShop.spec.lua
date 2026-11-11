@@ -15,7 +15,7 @@ return function(client,parent)
   end
   view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7});view:selectRecipe("meadow");settle()
   local grid=view.body.EggColumn;assert(not grid:FindFirstChild("RareProtection")and grid:FindFirstChild("PoolNote"))
-  for id,chance in pairs({pip="38.9%",puddle="27.8%",wick="22.2%",orbit="11.1%"})do assert(grid["Outcome_"..id].Chance.Text==chance and grid["Outcome_"..id].Chance.TextFits)end
+  for id,chance in pairs({pip="40%",puddle="28%",wick="22%",orbit="10%"})do assert(grid["Outcome_"..id].Chance.Text==chance and grid["Outcome_"..id].Chance.TextFits)end
   for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do assert(not grid:FindFirstChild("Outcome_"..id))end
   table.insert(cases,"active four odds remain disclosed at stored misses7 without an unavailable rare promise")
  end)

@@ -1,21 +1,49 @@
 -- Both profile and hatch writers share the same root in Studio as in live play.
 local RunService = game:GetService("RunService")
-local backing = if RunService:IsStudio() then nil else game:GetService("DataStoreService"):GetDataStore("EggDropProgressV1")
+local DataStoreService = if RunService:IsStudio() then nil else game:GetService("DataStoreService")
+
+-- v1 launch store. Private-test saves in "EggDropProgressV1" are intentionally
+-- left behind: the public launch starts every player fresh (decided 2026-11-11).
+local Store = { Name = "EggDropLaunchV1" }
+local backing = if DataStoreService then DataStoreService:GetDataStore(Store.Name) else nil
 local memory = {}
-local Store = { persistent = backing ~= nil }
+Store.persistent = backing ~= nil
+
 local function clone(value)
 	if type(value) ~= "table" then return value end
 	local result = {}
 	for key, child in pairs(value) do result[key] = clone(child) end
 	return result
 end
+
+-- Wait briefly for request budget instead of letting a burst (server shutdown,
+-- many joins) fail and fall into slower retry paths. Never waits forever: the
+-- callers already retry and fence failed writes.
+local function awaitBudget(requestType, maxWait)
+	if not DataStoreService then return end
+	local deadline = os.clock() + maxWait
+	while os.clock() < deadline do
+		local ok, budget = pcall(DataStoreService.GetRequestBudgetForRequestType, DataStoreService, requestType)
+		if not ok or budget > 0 then return end
+		task.wait(0.25)
+	end
+end
+Store.awaitBudget = awaitBudget
+
 function Store:GetAsync(key)
-	return if backing then backing:GetAsync(key) else clone(memory[key])
+	if not backing then return clone(memory[key]) end
+	awaitBudget(Enum.DataStoreRequestType.GetAsync, 3)
+	return backing:GetAsync(key)
 end
+
 function Store:UpdateAsync(key, transform)
-	if backing then return backing:UpdateAsync(key, transform) end
-	local result = transform(clone(memory[key]))
-	if result ~= nil then memory[key] = clone(result) end
-	return clone(result)
+	if not backing then
+		local result = transform(clone(memory[key]))
+		if result ~= nil then memory[key] = clone(result) end
+		return clone(result)
+	end
+	awaitBudget(Enum.DataStoreRequestType.UpdateAsync, 3)
+	return backing:UpdateAsync(key, transform)
 end
+
 return Store
