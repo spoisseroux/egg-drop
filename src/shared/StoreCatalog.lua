@@ -1,24 +1,24 @@
 -- Robux store for v1 (prices chosen 2026-11-11; see TODO.md "Launch prices").
--- Ids are 0 until the products/passes exist on the Creator Dashboard. An entry
--- with id 0 is listed but cannot be prompted. Prices shown in the UI come from
--- MarketplaceService when available; `price` is the intended dashboard price.
+-- Ids are the Creator Dashboard ids for universe 10774758591 (created 2026-11-11,
+-- Managed Pricing off). An entry with id 0 is listed but cannot be prompted.
+-- `price` must match the dashboard price.
 local Store = {}
 
 Store.Passes = table.freeze({
-	table.freeze({ key = "doubleStars", id = 0, price = 299, name = "2× Stars",
+	table.freeze({ key = "doubleStars", id = 2078960411, price = 299, name = "2× Stars",
 		blurb = "Double Stars from every round and daily contract. Forever." }),
-	table.freeze({ key = "supporter", id = 0, price = 99, name = "Supporter",
+	table.freeze({ key = "supporter", id = 2078804439, price = 99, name = "Supporter",
 		blurb = "+1 Star for every finished round. Thank you!" }),
 })
 
 -- `once` products can be prompted a single time per player (server enforced).
 Store.Products = table.freeze({
-	table.freeze({ key = "starter", id = 0, price = 49, stars = 40, once = true, name = "Starter pack",
+	table.freeze({ key = "starter", id = 3730431023, price = 49, stars = 40, once = true, name = "Starter pack",
 		blurb = "40 Stars to get your garden going. One per player." }),
-	table.freeze({ key = "handful", id = 0, price = 39, stars = 20, name = "Handful of Stars" }),
-	table.freeze({ key = "pouch", id = 0, price = 99, stars = 60, name = "Pouch of Stars" }),
-	table.freeze({ key = "jar", id = 0, price = 199, stars = 140, name = "Jar of Stars" }),
-	table.freeze({ key = "chest", id = 0, price = 499, stars = 400, name = "Chest of Stars" }),
+	table.freeze({ key = "handful", id = 3730431114, price = 39, stars = 20, name = "Handful of Stars" }),
+	table.freeze({ key = "pouch", id = 3730431153, price = 99, stars = 60, name = "Pouch of Stars" }),
+	table.freeze({ key = "jar", id = 3730431202, price = 199, stars = 140, name = "Jar of Stars" }),
+	table.freeze({ key = "chest", id = 3730431229, price = 499, stars = 400, name = "Chest of Stars" }),
 })
 
 -- Pass effects on a saved round reward. Applied inside the fenced transaction.
