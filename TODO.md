@@ -1,6 +1,86 @@
 # Egg Drop — remaining work
 
-Updated November 9, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+
+## Now working on
+
+Keep this list current: add an item when work starts, move it to done when it lands.
+
+- **Planning v1:** scope, art handoff ([ART-HANDOFF.md](ART-HANDOFF.md)), garden reference measurements. *(Claude, 2026-11-11, no runtime changes)*
+- **Waiting on Spencer's go-ahead:** overnight systems run (section 1 below), Opus. Shop UI goes to Fable.
+- **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
+
+## v1 public launch
+
+Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid luck" line at the end of this file for v1.
+
+- Quiet soft public launch, then iterate on retention data.
+- Roster: the four new babies only (Zivvi, Ovelle, Nuum, Tikket). Legacy Vezzi/Kiprik/Nolli and rare editions leave the hatch pool and shop.
+- Private-test saves are wiped at launch with a fresh DataStore name. No legacy migration.
+- Rounds stay unlimited. Monetization: Stars boosts (2× Stars pass, per-round bonus), game passes and Robux→Stars packs.
+- All ages, default chat, no trading.
+- Agents: in Claude Code, Fable for art/UI and Opus for systems. In Codex, Astra/Sol per AGENTS.md.
+
+**Paid random items (applies once Stars are sold for Robux).** Every egg becomes a paid random item under [Roblox's policy](https://devforum.roblox.com/t/clarifying-requirements-for-paid-random-items/4654622):
+- Odds must be shown as percentages for every outcome before purchase and must sum to 100%.
+- **Every outcome must give something.** Today a duplicate companion grants nothing, so it needs compensation, for example a Stars refund.
+- Players for whom `PolicyService:GetPolicyInfoForPlayerAsync` reports `ArePaidRandomItemsRestricted` must not be able to buy Stars packs. This currently covers UK under-18s, with reports of Brazil restrictions too.
+- Disclose it in the maturity questionnaire.
+
+**Launch prices** (Claude's pick, 2026-11-11; all in one config, retune after the balance pass). Earning baseline: a won round pays 6–8 Stars and a Mixed companion egg costs 18, so one egg is about 3 wins.
+
+| Product | Type | Price | Gives |
+|---|---|---:|---|
+| Starter pack | Developer product, once per player | 49 R$ | 40 Stars + Supporter charm shape |
+| Handful of Stars | Developer product | 39 R$ | 20 Stars |
+| Pouch of Stars | Developer product | 99 R$ | 60 Stars |
+| Jar of Stars | Developer product | 199 R$ | 140 Stars |
+| Chest of Stars | Developer product | 499 R$ | 400 Stars |
+| 2× Stars | Game pass | 299 R$ | Doubles Stars from rounds and contracts (not the daily gift or refunds) |
+| Supporter | Game pass | 99 R$ | +1 Star per finished round, Supporter deck shell + charm |
+| Duplicate companion | — | — | Refunds 50% of that egg's Stars price |
+
+### 1. Systems
+- [ ] Save hardening: whole-profile session lock, DataStore budget/backoff, schema version, fresh launch store name, BindToClose drain.
+- [ ] Trim to four babies: catalogs, hatch recipes, odds (sum to 100%), rare protection, shop and journal. Retired pets hidden.
+- [ ] Duplicate companion compensation, so every egg outcome gives something.
+- [ ] Monetization: ProcessReceipt with idempotent receipt records, 2× Stars pass, per-round bonus, Robux→Stars packs gated by `ArePaidRandomItemsRestricted`. Product IDs in one config; Spencer creates the real products on the dashboard.
+- [ ] Shop UI for passes and packs (Fable).
+- [ ] Analytics: economy (Stars earned/spent by source and sink, purchases), rounds per session, D1/D7 return markers.
+- [ ] Remove or hide retired surfaces that v1 no longer uses (legacy pets, frozen Family mastery UI).
+
+### 2. Garden environment
+The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGardenArt`, `LoungeSpringArt`) on a flat 160 × 176 lawn. Reference: [top](artifacts/garden-reference-2026-11-11/reference-layout-top.png) · [perspective](artifacts/garden-reference-2026-11-11/reference-layout-perspective.png). Target proportions and the kit list are in ART-HANDOFF.md section 7.
+- [ ] Greybox in Studio: about 230 × 180 stud crescent floor, roughly 60-stud cliff ring on north/east with cave gap, west pond about 35 × 65 with island, waterfall, terraces/pillar steps, creek crossing, landmark tree, hub stations. Original layout; no Sega mesh or textures.
+- [ ] Walk the greybox at avatar and pet scale, at phone camera distance, before any detailing.
+- [ ] Spencer models the final kit in Blender from the approved greybox.
+- [ ] Load the environment as authored assets instead of code-built parts; keep day/night lighting.
+- [ ] Rebuild garden walkability and pet path data (`GardenLayout`, `GardenWalkability`, `GardenPathPlanner`) for the new ground.
+- [ ] Original skybox, sea plane and phone performance budget.
+
+### 3. 3D assets (Spencer models, Claude integrates; see ART-HANDOFF.md)
+- [ ] Blender template, export preset, test cube and test cone verified in Studio.
+- [ ] Horns, claws, wings: shared set, separate L/R meshes, stage-5 size, base/tip split.
+- [ ] Hand-tweak the four babies, keeping the part names and split.
+- [ ] Toys: Ball, Bone, Sparkler.
+- [ ] Stations and props: care machine, hatch tree, workbench, journal stand, lanterns, bench, rocks, bushes.
+- [ ] Claude: import, pivot/collision/material setup, code wiring, before/after captures.
+
+### 4. Live verification (after systems and the garden are in)
+- [ ] Physical iPhone and Android: touch, frame rate, heat, text size, first session to first hatch.
+- [ ] Live save/rejoin on the published place (needs signed-in standalone player).
+- [ ] Live purchase test of each pass and pack.
+- [ ] Two-player garden, carry and bay contention (needs a second account or tester).
+- [ ] 6–8 player load test.
+
+### 5. Release
+- [ ] Human balance pass on Star earning against egg and pack prices; the three newer field goals with real players.
+- [ ] Confirm all 17 SFX, Music and Purr load in the published place; decide on coo and garden music drafts.
+- [ ] Icon, thumbnails, description, maturity questionnaire (including paid random items).
+- [ ] Soft launch.
+
+### Deferred past v1
+Metal and gradient materials, Movement/Swim XP and Stat Egg, cave activity, retired-pet replacements, Ink on Main, clothing eggs, battling, additional garden spaces.
 
 ## Round feedback and clear rewards — private v397 Published
 
