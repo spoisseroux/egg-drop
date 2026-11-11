@@ -117,10 +117,12 @@ return function(parent, origin)
 	label("High terrace lookout", Vector3.new(105, 26, -75))
 
 	-- West stepping pillars up to a lookout ledge above the pond.
-	for i, h in ipairs({ 4, 8, 12, 16, 20 }) do
-		part("props", "Pillar" .. i, Vector3.new(h, 7, 7), Vector3.new(-108, h / 2, 40 - i * 9), colors.path, { shape = Enum.PartType.Cylinder, rot = CFrame.Angles(0, 0, math.rad(90)) })
+	-- Walk-tested 2026-11-11: 7-stud pillars 9 apart were too hard to chain.
+	-- 10-stud tops, 1-stud gaps and 3.5-stud rises are comfortable for R15.
+	for i, h in ipairs({ 3.5, 7, 10.5, 14, 17.5 }) do
+		part("props", "Pillar" .. i, Vector3.new(h, 10, 10), Vector3.new(-107, h / 2, 50 - i * 11), colors.path, { shape = Enum.PartType.Cylinder, rot = CFrame.Angles(0, 0, math.rad(90)) })
 	end
-	part("props", "PillarLedge", Vector3.new(18, 22, 12), Vector3.new(-110, 11, -16), colors.cliff)
+	part("props", "PillarLedge", Vector3.new(18, 21, 12), Vector3.new(-110, 10.5, -17), colors.cliff)
 	label("Stepping pillars to ledge", Vector3.new(-108, 30, 10))
 
 	-- Landmark tree, visible from everywhere.
