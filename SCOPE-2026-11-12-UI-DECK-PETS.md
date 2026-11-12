@@ -550,3 +550,27 @@ Steps 1 to 5 are about 6 to 7 working days. Steps 8 and 9 are about 6 more and s
 17. Pocket Deck Slim shape and the new pixel wordmark: approve, or iterate?
 18. Horn shape and the five sizes: approve, or iterate?
 19. Anchor list: anything missing (I left out pants on purpose)?
+
+## Decisions (Spencer + Claude, 2026-11-12)
+Spencer approved the deck shape, the pixel wordmark, the horn shape and the attachment list, and asked Claude to set the balance numbers.
+
+- **Back arrow:** a UI back arrow in the top-right of the whole view (not inside the deck glass).
+- **Wider screen:** yes. The deck screen goes wide, in a Tetris-like layout. The board sits in the middle, with side panels inside the screen for the current quests/goals, the ball/egg count, next egg, score, chain and difficulty.
+- **Difficulty:**
+  - Easy ×0.8, Medium ×1 (today's round, unchanged), Hard ×1.5 Stars.
+  - Multipliers stack multiplicatively with the 2× Stars pass and Supporter, applied to the round's base payout.
+  - Harder modes always pay more, so it's never optimal to grind Easy.
+- **Hard mode:** three goals, a lower overflow line and a slightly faster spawn mix. No shot clock, because a timer adds stress for younger players.
+- **Quests:**
+  - Daily: 3 quests worth 12 Stars in total, plus 1 free reroll per day.
+  - Weekly: 3 quests worth 30 Stars in total, plus a small bonus for clearing all three.
+  - A quest log shows today's and this week's quests, with progress and history.
+  - Quests rotate from a pool, so the dailies are no longer identical every day.
+- **Faceplates replace stickers:**
+  - Drop the Star, Glitch, Seed and Wick stickers.
+  - Faceplates use non-pixel Y2K/Frutiger Aero designs: glossy gradients, bubbles, chrome, translucent plastic, aurora/water overlays, lens-flare-style shapes.
+  - Sold at fixed Star prices: 20 / 40 / 80 for common / rare / showcase.
+  - The 8 existing deck styles become the starter faceplates.
+- **No random faceplates:** faceplates are bought directly, never from an egg (see the next point).
+- **Paid random items:** Stars can be bought with Robux, so anything random bought with Stars is a paid random item. Roblox requires the odds to be shown, some countries restrict loot boxes, and too many of them make the game feel gacha-like. A few eggs are fine; cosmetics people want specific copies of (faceplates) are fixed-price.
+- **Attachments:** approved. One helix piercing on each ear, made bigger. Documented in PET-STYLE-GUIDE.md ("Character creation").
