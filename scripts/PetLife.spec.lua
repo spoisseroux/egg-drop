@@ -98,6 +98,46 @@ return function(client)
    v.boopAt=os.clock()-.3;v:update(0);assert(math.abs(body.part.Size.Y-rest)<1e-4,"squash outlived 0.15 s")
    v.reducedEffects=true;v.boopAt=os.clock()-.075;v:update(0);assert(math.abs(body.part.Size.Y-rest)<1e-4,"squash under Reduced Effects")
   end)
+  local Beats=require(client.PetIdleBeats)
+  local function beats(seed,seconds,still,eligibleAt)
+   local v={petId="pip",cosmeticSeed=seed};local seen,starts,running={},{},false;local t=0
+   for _=1,math.floor(seconds*30)do
+    t+=1/30;local kind=Beats.step(v,1/30,if eligibleAt then eligibleAt(t)else true,still)
+    if kind and not running then table.insert(seen,kind);table.insert(starts,t)end;running=kind~=nil
+   end
+   return seen,starts,v
+  end
+  test("idle beats start after 8 s idle and are at least 10 s apart",function()
+   local seen,starts=beats(77,120,false)
+   assert(#seen>=5,"too few beats "..#seen);assert(starts[1]>8 and starts[1]<=10.1,"first beat at "..starts[1])
+   for i=2,#starts do assert(starts[i]-starts[i-1]>=10,"beats too close")end
+  end)
+  test("wave only when the owner stands still nearby; the sequence is seeded per pet",function()
+   local moving=beats(77,400,false);for _,kind in ipairs(moving)do assert(kind~="wave","waved at a moving owner")end
+   local a,b=beats(77,400,true),beats(77,400,true);local waves=0
+   assert(#a==#b);for i=1,#a do assert(a[i]==b[i],"same pet diverged on rejoin");if a[i]=="wave"then waves+=1 end end
+   assert(waves>0,"a still owner never got a wave")
+   local other=beats(78,400,true);local same=#other==#a;for i=1,math.min(#a,#other)do if other[i]~=a[i]then same=false end end
+   assert(not same,"different pets share one sequence")
+  end)
+  test("losing eligibility (carry, care, toy, focus) cancels and resets the idle clock",function()
+   local seen,starts=beats(5,40,false,function(t)return not(t>7 and t<12)end)
+   assert(#seen>=1 and starts[1]>12+8,"beat ran or resumed early: "..tostring(starts[1]))
+  end)
+  test("the idle clock runs through wandering, but a beat only plays while the pet stands still",function()
+   local v={petId="pip",cosmeticSeed=77};local kind
+   for _=1,9*30 do kind=Beats.step(v,1/30,true,false,false)end;assert(kind==nil,"beat started while walking")
+   for _=1,2*30 do kind=Beats.step(v,1/30,true,false,true)or kind end;assert(kind~=nil,"no beat once the pet stopped")
+   assert(Beats.step(v,1/30,true,false,false)==nil,"beat kept playing while walking")
+  end)
+  test("a real Bear performs beats only when enabled and never while focused",function()
+   local v=make();v.reducedEffects=false;v.idleBeatsEnabled=true;v.cosmeticSeed=77
+   for _=1,12*30 do v:update(1/30)end;assert(v.model:GetAttribute("IdleBeat")~=nil,"no beat on an idle Bear")
+   local w=make();w.reducedEffects=false;w.idleBeatsEnabled=true;w.focusPose=true
+   for _=1,12*30 do w:update(1/30)end;assert(w.model:GetAttribute("IdleBeat")==nil,"beat during focus")
+   local r=make();r.reducedEffects=true;r.idleBeatsEnabled=true
+   for _=1,12*30 do r:update(1/30)end;assert(r.model:GetAttribute("IdleBeat")==nil,"beat under Reduced Effects")
+  end)
  end)
  for _,v in ipairs(views)do v:destroy()end;folder:Destroy()
  assert(ok,err);return{passed=#cases,cases=cases}

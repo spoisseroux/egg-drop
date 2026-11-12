@@ -13,6 +13,7 @@ local NativeArt=require(script.Parent.CareNativeOverrides)
 local CooPose=require(script.Parent.PetCooPose)
 local PersonalPlay=require(script.Parent.PetPlayVisual)
 local Reactions=require(script.Parent.PetReactions)
+local IdleBeats=require(script.Parent.PetIdleBeats)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -241,7 +242,13 @@ function Visual:update(dt)
  if personal then toyReach=personal.reach;toyExpression=personal.expression end
  -- Deck-play reactions (cheer/win/loss) are local presentation over the resting pose.
  local reactHop,reactExpression=Reactions.sample(self,os.clock())
- local expression=toyExpression or reactExpression or Expression.name(self);local pose=Expression.get(expression)
+ -- Idle personality beats (C3/C4), only for the owner's own garden pet.
+ local beatEligible=self.idleBeatsEnabled==true and self.worldContext and not reduced and not self.focusPose and not self.gardenFocus and not self.focused
+  and not self.careState and not self.petting and not personal and toyReach==0 and reactExpression==nil
+  and self.gardenAction~="greet"and self.gardenAction~="shove"and self.gardenAction~="toyReturn"and self.gardenAction~="focus"
+ local beat,beatPhase=IdleBeats.step(self,dt,beatEligible,self.ownerNearStill==true,(self.gaitWeight or 0)<.03 and not self.gardenPivot)
+ local beatPitch,beatYaw,beatHandL,beatHandR,beatStretch,beatEye,beatMouth,beatExpression=IdleBeats.pose(beat,beatPhase or 0)
+ local expression=toyExpression or reactExpression or beatExpression or Expression.name(self);local pose=Expression.get(expression)
  local cooRoll,cooNod,cooHand,cooMouth,cooEye=CooPose.sample(self)
  local mouth=if cooMouth>.12 then "open"else pose.mouth
  if personal and self.personalToyId=="bone"and personal.phase>=.58 and personal.phase<=1.02 and not reduced then
@@ -249,6 +256,7 @@ function Visual:update(dt)
  end
  local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
+ if beat then headPitch+=beatPitch;headYaw+=beatYaw;bodyStretch+=beatStretch;eye*=beatEye;if beatMouth then mouth="open"end end
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
  local hinges=self.appendageHinges
@@ -301,7 +309,7 @@ function Visual:update(dt)
    local side=if string.sub(name,-1)=="L"then -1 else 1
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
-   local fold=pose.hand+greet*.5+shove*.7+toyReach*.50
+   local fold=pose.hand+greet*.5+shove*.7+toyReach*.50+(if side<0 then beatHandL else beatHandR)
    cf=upper*CFrame.new(0,hop+cooHand+toyReach*.045*self.scale+(self.careHand or 0),toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1

@@ -209,6 +209,13 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
 			end
 			self.pet.cosmeticSeed=Players.LocalPlayer.UserId
+            -- Idle beats run only on the owner's garden pet; a wave needs the owner
+            -- standing still (1 s+) within 6 studs.
+            local still=root~=nil and root.AssemblyLinearVelocity.Magnitude<.6
+            if still then self.ownerStillSince=self.ownerStillSince or serverNow else self.ownerStillSince=nil end
+            self.pet.idleBeatsEnabled=self.mode=="Room"and not self.focusing
+            self.pet.ownerNearStill=still and serverNow-self.ownerStillSince>=1 and(root.Position-self.pet.origin).Magnitude<=6
+            if self.pet.idleBeat and self.pet.idleBeat.kind then self.pet.poseDirty=true end
             self.pet.cosmeticTime=serverNow
             -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
             -- frame instead of the 15 Hz pose cadence. One focused pet only.
