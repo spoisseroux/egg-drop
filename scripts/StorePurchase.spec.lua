@@ -30,13 +30,19 @@ return function(server)
 		return h, db, c, adapter
 	end
 
-	test("odds are whole percentages that sum to 100", function()
-		local total = 0
-		for _, entry in ipairs(Catalog.odds("meadow", 0)) do
-			assert(math.abs(entry.weight - math.round(entry.weight)) < 1e-9, "fractional odds " .. entry.weight)
-			total += entry.weight
+	-- v1: formerly checked the Meadow odds summed to 100. Every companion recipe is
+	-- retired, so none publishes odds; any future active recipe must still be whole and sum to 100.
+	test("retired companion eggs publish no odds; active recipes are whole percentages", function()
+		assert(Catalog.ById.meadow.retired and #Catalog.odds("meadow", 0) == 0)
+		for _, id in ipairs(Catalog.Order) do
+			local odds, total = Catalog.odds(id, 0), 0
+			assert(#odds == 0 or not Catalog.ById[id].retired)
+			for _, entry in ipairs(odds) do
+				assert(math.abs(entry.weight - math.round(entry.weight)) < 1e-9, "fractional odds " .. entry.weight)
+				total += entry.weight
+			end
+			assert(#odds == 0 or math.abs(total - 100) < 1e-9, "odds total " .. total)
 		end
-		assert(math.abs(total - 100) < 1e-9, "odds total " .. total)
 	end)
 
 	test("a purchase grants its Stars exactly once, even when replayed", function()
@@ -115,18 +121,18 @@ return function(server)
 		assert(reward.total == reward.base + reward.daily and reward.bonus == 0)
 	end)
 
-	test("a duplicate companion refunds half the egg price", function()
-		local h = fixture(.01) -- lowest sample always rolls the first outcome (pip), already owned
+	-- v1: formerly "a duplicate companion refunds half the egg price". The retired
+	-- Meadow egg is now refused with no debit, no reveal and no write.
+	test("the retired companion egg is refused without spending purchased Stars", function()
+		local h, _, c = fixture(.01)
 		assert(H.grantStarter(h)) -- rank 1 fixtures already own pip
 		if h.state.lastHatch then assert(H.command(h, "ack", h.state.lastHatch.id, h.state.revision)) end
 		local stored = h.state.revision
 		assert(H.grantPurchase(h, "fund", 100, false))
-		local before = h.state.nectar
+		local before, writes = h.state.nectar, c.writes
 		local ok, reason = H.command(h, "hatch", "meadow", h.state.revision)
-		assert(ok, tostring(reason))
-		local hatch = h.state.lastHatch
-		assert(hatch.duplicate == true and hatch.refund == 9, "refund " .. tostring(hatch.refund))
-		assert(h.state.nectar == before - 18 + 9)
+		assert(not ok and reason == "RetiredEgg", tostring(reason))
+		assert(h.state.lastHatch == nil and h.state.nectar == before and c.writes == writes)
 		assert(stored ~= nil)
 	end)
 

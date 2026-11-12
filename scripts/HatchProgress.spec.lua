@@ -49,16 +49,17 @@ return function(Hatching, Catalog)
 		table.insert(passed, name)
 	end
 
-	test("active four outcomes normalize safely even at the retained rare threshold", function()
-		local ids={"pip","puddle","wick","orbit"}
-		for index,unit in ipairs({17.5/90,47.5/90,70/90,85/90})do
-			for misses=0,7 do assert(Catalog.roll("meadow",misses,unit)==ids[index])end
-		end
+	-- v1 (one pet): formerly "active four outcomes normalize" over the Meadow odds.
+	-- Meadow is retired, so it now offers no odds, no rare pool and cannot roll.
+	test("v1 roster is Zivvi only and the retired Meadow egg offers no odds", function()
+		local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
+		assert(#Pets.active==1 and Pets.active[1].id=="pip" and Pets.isActive("pip"))
+		for _,id in ipairs({"puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"})do assert(Pets.byId[id]and not Pets.isActive(id))end
+		assert(Catalog.ById.meadow.retired and Catalog.ById.sprout.retired)
 		assert(not Catalog.hasRarePool("meadow")and #Catalog.odds("sprout",7)==0)
 		for misses=0,7 do
-			local sum=0;local odds=Catalog.odds("meadow",misses);assert(#odds==4)
-			for i,entry in ipairs(odds)do assert(entry.id==ids[i]);sum+=entry.weight end
-			assert(math.abs(sum-100)<.000001)
+			assert(#Catalog.odds("meadow",misses)==0)
+			assert(not pcall(Catalog.roll,"meadow",misses,.1))
 		end
 	end)
 
@@ -82,8 +83,12 @@ return function(Hatching, Catalog)
 		local id = h.state.lastHatch.id
 		assert(Hatching.grantStarter(h))
 		assert(h.state.lastHatch.id == id)
-		local ok = Hatching.command(h, "hatch", "meadow", h.state.revision)
-		assert(not ok)
+		local nectar = h.state.nectar
+		local ok, reason = Hatching.command(h, "hatch", "meadow", h.state.revision)
+		assert(not ok and reason == "RetiredEgg" and h.state.nectar == nectar)
+		-- The pending starter reveal still blocks another live award route.
+		ok, reason = Hatching.awardPet(h, Hatching.petCandidate(h, "lease", "pip"))
+		assert(not ok and reason == "RevealPending" and h.state.nectar == nectar)
 		ok = Hatching.command(h, "ack", "wrong-id", h.state.revision)
 		assert(not ok and h.state.lastHatch.id == id)
 		command(h, "ack", id)
@@ -98,58 +103,71 @@ return function(Hatching, Catalog)
 		assert(db.player_1.hatching.lease.token == h.token)
 	end)
 
-	test("direct full-cost spending, stale commands and callback retries", function()
+	-- v1: formerly spent the full Meadow price and rejected a stale hatch. The
+	-- retired egg is now refused before any write; stale/replayed commands are
+	-- exercised through the still-live daily claim.
+	test("retired egg never spends; stale commands and callback retries", function()
 		local db, c, adapter = fixture()
 		c.replay = true
+		c.now = 18000 + 86400 * 20 + 86399
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		local writes = c.updateCalls
 		local ok, reason = Hatching.command(h, "hatch", "meadow", h.state.revision)
-		assert(not ok and reason == "NeedNectar" and c.randomCalls == 0 and c.updateCalls == writes)
+		assert(not ok and reason == "RetiredEgg" and c.randomCalls == 0 and c.updateCalls == writes)
 		assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 6))
 		assert(h.state.nectar == 18)
-		local revision = h.state.revision
-		command(h, "hatch", "meadow")
-		-- v1: a duplicate refunds half of the 18-Star price.
-		assert(h.state.nectar == 9 and h.state.lastHatch.petId == "pip" and h.state.lastHatch.duplicate and h.state.lastHatch.refund == 9)
-		assert(h.state.mastery.pip == 0 and c.randomCalls == 1)
 		writes = c.updateCalls
-		ok = Hatching.command(h, "hatch", "meadow", revision)
-		assert(not ok and h.state.nectar == 9 and c.randomCalls == 1 and c.updateCalls == writes)
+		ok, reason = Hatching.command(h, "hatch", "meadow", h.state.revision)
+		assert(not ok and reason == "RetiredEgg" and h.state.nectar == 18 and h.state.lastHatch == nil)
+		assert(c.randomCalls == 0 and c.updateCalls == writes)
+		c.now += 1
+		local day = Hatching.public(h).dailyDay
+		local revision = h.state.revision
+		command(h, "daily", day)
+		assert(h.state.nectar == 24 and db.player_1.hatching.nectar == 24)
+		writes = c.updateCalls
+		ok = Hatching.command(h, "daily", day, revision)
+		assert(not ok and h.state.nectar == 24 and c.randomCalls == 0 and c.updateCalls == writes)
 		assert(db.player_1.hatching.mastery.pip == 0)
 	end)
 
-	test("ambiguous committed hatch cannot reroll or duplicate", function()
+	-- v1: formerly an ambiguous committed Meadow hatch; the same fenced
+	-- resume guarantee is now checked with a daily claim.
+	test("ambiguous committed daily claim cannot credit twice", function()
 		local db, c, adapter = fixture()
+		c.now = 18000 + 86400 * 20 + 86399
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 6))
-		local id = "meadow"
+		c.now += 1
+		local day = Hatching.public(h).dailyDay
 		local revision = h.state.revision
 		c.failAfterCommit = true
-		local ok = Hatching.command(h, "hatch", id, revision)
+		local ok = Hatching.command(h, "daily", day, revision)
 		assert(not ok and h.status == "Retrying")
-		local committed = copy(db.player_1.hatching.lastHatch)
-		c.sample = 0.999
-		ok = Hatching.command(h, "hatch", id, revision)
-		assert(ok and h.state.lastHatch.id == committed.id and h.state.lastHatch.petId == "pip")
-		assert(h.state.mastery.pip == 0 and c.randomCalls == 1)
+		local committed = copy(db.player_1.hatching.lastOperation)
+		assert(db.player_1.hatching.nectar == 24)
+		ok = Hatching.command(h, "daily", day, revision)
+		assert(ok and h.state.lastOperation.id == committed.id and h.state.nectar == 24)
+		assert(h.state.dailyClaimDay == day and c.randomCalls == 0)
 	end)
 
-	test("pre-commit hatch, acknowledgement and daily failures resume unchanged", function()
+	-- v1: the pending reveal fixture is now the onboarding starter grant
+	-- instead of a Meadow hatch.
+	test("pre-commit starter, acknowledgement and daily failures resume unchanged", function()
 		local db, c, adapter = fixture()
-		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-		assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 6))
+		local h = Hatching.load(1, {}, adapter("a"))
+		local nectar = h.state.nectar
 		c.failBeforeCommit = true
-		assert(not Hatching.command(h, "hatch", "meadow", h.state.revision))
-		assert(h.status == "Retrying" and h.pending and db.player_1.hatching.nectar == 18)
+		assert(not Hatching.grantStarter(h))
+		assert(h.status == "Retrying" and h.pending and not Catalog.isOwned(db.player_1.hatching.inventoryMask, "pip"))
 		local pendingId = h.pending.id
 		local hatchId = h.pending.candidate.id
-		c.sample = 0.999
 		assert(Hatching.retry(h))
-		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == 9) -- duplicate pip refund
-		assert(h.state.lastOperation.id == pendingId and h.state.lastHatch.id == hatchId)
-		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 0 and c.randomCalls == 1)
+		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == nectar)
+		assert(h.state.lastOperation.id == pendingId and h.state.lastHatch.id == hatchId and h.state.lastHatch.starter)
+		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 0 and c.randomCalls == 0)
 		local ok, reason = Hatching.retry(h)
-		assert(not ok and reason == "NoPending" and h.state.nectar == 9)
+		assert(not ok and reason == "NoPending" and h.state.nectar == nectar)
 		c.failBeforeCommit = true
 		assert(not Hatching.command(h, "ack", hatchId, h.state.revision))
 		assert(db.player_1.hatching.lastHatch.id == hatchId)
@@ -162,12 +180,12 @@ return function(Hatching, Catalog)
 		local day = Hatching.public(h).dailyDay
 		c.failBeforeCommit = true
 		assert(not Hatching.command(h, "daily", day, h.state.revision))
-		assert(db.player_1.hatching.nectar == 9 and h.pending)
+		assert(db.player_1.hatching.nectar == nectar and h.pending)
 		pendingId = h.pending.id
 		assert(Hatching.retry(h))
-		assert(h.state.nectar == 15 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
+		assert(h.state.nectar == nectar + 6 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
 		assert(not Hatching.command(h, "daily", day, h.state.revision))
-		assert(h.state.nectar == 15 and c.randomCalls == 1)
+		assert(h.state.nectar == nectar + 6 and c.randomCalls == 0)
 	end)
 
 	test("monotonic payouts reject replay beyond receipt history", function()
@@ -244,24 +262,21 @@ return function(Hatching, Catalog)
 		assert(nextVisit.state.nectar == 18)
 	end)
 
-	test("every active outcome grants once and absent rare pool freezes earned misses", function()
-		for index,sample in ipairs({17.5/90,47.5/90,70/90,85/90})do
-			local _,c,adapter=fixture();c.sample=sample
-			local h=Hatching.load(1,{rank=1},adapter("a"))
-			assert(Hatching.award(h,1,6)and Hatching.award(h,2,6))
-			command(h,"hatch","meadow")
-			local expected=Catalog.ById.meadow.weights[index].id
-			assert(h.state.lastHatch.petId==expected and Catalog.isOwned(h.state.inventoryMask,expected))
-			assert(h.state.nectar==(if expected=="pip"then 9 else 0)and h.state.misses==0 and not h.state.lastHatch.rare)
-		end
+	-- v1: formerly "every active outcome grants once" (Meadow outcome grants and
+	-- frozen misses). The retired egg is refused with no debit, roll or grant,
+	-- and earned misses survive reload untouched.
+	test("retired Meadow egg is refused at any pity level with no state change", function()
 		for misses=0,7 do
 			local db,c,adapter=fixture();local h=Hatching.load(1,{rank=1},adapter("a"))
 			db.player_1.hatching.misses=misses;assert(Hatching.renew(h))
 			assert(Hatching.award(h,1,6)and Hatching.award(h,2,6));c.sample=.999
-			command(h,"hatch","meadow")
-			assert(h.state.lastHatch.petId=="orbit"and not h.state.lastHatch.rare and h.state.misses==misses)
-			command(h,"ack",h.state.lastHatch.id);assert(Hatching.release(h))
-			local again=Hatching.load(1,{},adapter("b"));assert(again.state.misses==misses)
+			local before,writes=copy(db.player_1.hatching),c.updateCalls
+			local ok,reason=Hatching.command(h,"hatch","meadow",h.state.revision)
+			assert(not ok and reason=="RetiredEgg"and c.randomCalls==0 and c.updateCalls==writes)
+			assert(h.state.nectar==18 and h.state.lastHatch==nil and h.state.misses==misses and h.state.inventoryMask==before.inventoryMask)
+			assert(db.player_1.hatching.revision==before.revision and db.player_1.hatching.nectar==18)
+			assert(Hatching.release(h))
+			local again=Hatching.load(1,{},adapter("b"));assert(again.state.misses==misses and again.state.nectar==18)
 		end
 	end)
 
@@ -394,7 +409,9 @@ return function(Hatching, Catalog)
 		assert(c.updateCalls == writes and h.state.nectar == 6 and h.state.mastery.pip == 0)
 	end)
 
-	test("rare-only ownership earns saved wins and duplicate preserves archived marks", function()
+	-- v1: the duplicate half formerly hatched Meadow; the retired egg is now
+	-- refused and the archived marks are checked unchanged.
+	test("rare-only ownership earns saved wins and refused retired egg preserves archived marks", function()
 		local db, c, adapter = fixture()
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		db.player_1.hatching.inventoryMask = Catalog.bit("bloom_pip")
@@ -406,8 +423,10 @@ return function(Hatching, Catalog)
 		db.player_1.hatching.mastery.pip = 3
 		assert(Hatching.renew(h))
 		c.sample = 0
-		command(h, "hatch", "meadow")
-		assert(h.state.lastHatch.duplicate and h.state.mastery.pip == 3)
+		local nectar = h.state.nectar
+		local ok, reason = Hatching.command(h, "hatch", "meadow", h.state.revision)
+		assert(not ok and reason == "RetiredEgg" and h.state.lastHatch == nil and h.state.nectar == nectar)
+		assert(h.state.mastery.pip == 3 and c.randomCalls == 0)
 		assert(h.state.masteryLegacyMask == 0 and Hatching.public(h).masteryRanks.pip == 1)
 	end)
 

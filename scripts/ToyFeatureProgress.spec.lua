@@ -133,15 +133,17 @@ return function(server,frozenSource)
    q,r=quote(h,c,"hue",{itemId="rose",petId="pip",channel="main",counts={rose=0,tide=0,citrus=0,iris=0}});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"material",{petId="pip",finishId="standard",expectedFinish="standard"});ok,why=H.materialCommand(h,"materialEquip",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"material",{poolVersion=2,eligible={"gloss","matte"}});ok,why=H.materialCommand(h,"materialBuy",q,r);assert(not ok and why=="RevealPending")
-   ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RevealPending")
+   ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg"and h.state.nectar==before) -- v1: Meadow retired; ack below covers the Companion route.
    ok,why=H.command(h,"ack","wrong",h.state.revision);assert(not ok and why=="RevealPending"and h.state.nectar==before)
    local other=if kind=="toy"then"feature"else"toy";q,r=quote(h,c,other,if other=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});ok,why=H[other.."Command"](h,other.."Buy",q,r);assert(not ok and why=="RevealPending")
   end
  end)
  test("new families respect existing Hue Material and Companion pending results",function()
   for _,kind in ipairs({"hue","material","companion"})do
-   local h,_,c=fixture()
-   if kind=="companion"then assert(H.command(h,"hatch","meadow",h.state.revision))
+   local h,db,c=fixture()
+   -- v1: Meadow is retired, so a saved Companion reveal receipt replaces the hatch fixture.
+   if kind=="companion"then local ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")
+    db.player_1.hatching.lastHatch={id="saved-companion-reveal",petId="pip",duplicate=true,refund=0,family="pip",mastery=0,rare=false,recipe="meadow"};assert(H.renew(h)and h.state.lastHatch)
    else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(H[kind.."Command"](h,kind.."Buy",q,r))end
    for _,new in ipairs({"toy","feature"})do local q,r=quote(h,c,new,if new=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});local ok,why=H[new.."Command"](h,new.."Buy",q,r);assert(not ok and why=="RevealPending")end
   end
@@ -216,8 +218,11 @@ return function(server,frozenSource)
   local old=frozenWriter()
   for _,kind in ipairs({"hue","material","companion"})do
    local h,db,c,a=fixture(old)
-   if kind=="companion"then assert(old.command(h,"hatch","meadow",h.state.revision))else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(old[kind.."Command"](h,kind.."Buy",q,r))end
-   assert(old.release(h));local previous=copy(db.player_1.hatching);local rolls=c.rolls;local new=H.load(1,{},a);assert(new.status=="Ready"and new.state.version==8 and c.rolls==rolls)
+   -- v1: the frozen writer also refuses retired Meadow, so a saved historical Companion reveal replaces the hatch fixture.
+   if kind=="companion"then local ok,why=old.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(old[kind.."Command"](h,kind.."Buy",q,r))end
+   assert(old.release(h))
+   if kind=="companion"then db.player_1.hatching.lastHatch={id="v7-companion-reveal",petId="pip",duplicate=true,refund=9,family="pip",mastery=0,rare=false,recipe="meadow"}end
+   local previous=copy(db.player_1.hatching);local rolls=c.rolls;local new=H.load(1,{},a);assert(new.status=="Ready"and new.state.version==8 and c.rolls==rolls)
    for _,key in ipairs({"hueInventory","petHues","hueItemReceipts","hueReceiptOrder","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","pendingHueResult","pendingMaterialResult","lastHatch","misses","inventoryMask","nectar"})do assert(T.same(new.state[key],previous[key]),"changed historical "..key)end
   end
  end)

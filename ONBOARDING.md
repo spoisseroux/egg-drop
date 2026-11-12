@@ -176,7 +176,7 @@ Specs live in `scripts/*.spec.lua`. Each returns a function you run inside Studi
    A spec errors on failure and returns `{ passed = n, cases = {...} }` on success.
 4. Delete the copies when you're done. Stop `rojo serve` first, or restart it afterwards.
 
-**Known failure:** `PetAward.spec.lua` fails on an old `version == 4` assert. It isn't caused by the v1 work.
+**Status (2026-11-12):** the garden, store and v1 one-pet specs pass in Studio, including PetAward, HatchProgress, SessionRecovery, StorePurchase and GardenGreyboxWorld. A full sweep of every spec hasn't been run.
 
 ## 8. How we work
 

@@ -6,18 +6,20 @@ return function(client,parent)
  local ok,err=pcall(function()
   for _,size in ipairs({Vector2.new(1649,971),Vector2.new(350,703),Vector2.new(568,210)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);settle();view:open({status="Ready",revision=10,nectar=24,inventoryMask=3,misses=0});settle()
-   local grid=view.body.EggColumn;assert(grid.Recipe_meadow and grid.Recipe_hue and not grid:FindFirstChild("Recipe_sprout")and not grid:FindFirstChild("CompanionTab"))
-   for _,id in ipairs({"meadow","hue"})do local n=grid["Recipe_"..id];assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44 and n.RecipeName.TextFits and n.Cost.TextFits)end
+   -- v1 sells the four item eggs only; the Companion Egg (meadow) is retired.
+   local grid=view.body.EggColumn;assert(not grid:FindFirstChild("Recipe_meadow")and not grid:FindFirstChild("Recipe_sprout")and not grid:FindFirstChild("CompanionTab"))
+   for _,id in ipairs({"toy","feature","material","hue"})do local n=grid["Recipe_"..id];assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44 and n.RecipeName.TextFits and n.Cost.TextFits)end
    assert(view.action.AbsoluteSize.Y>=44 and view.action.TextFits and view.closeButton.AbsoluteSize==Vector2.new(44,44))
    assert(view:selectRecipe("hue"));settle();grid=view.body.EggColumn
    for _,id in ipairs({"rose","tide","citrus","iris","reset"})do assert(grid["Outcome_"..id].Chance.Text=="20%"and grid["Outcome_"..id]:FindFirstChild("Name").TextFits)end
    assert(view.action.Text:find("8",1,true));assert(not view:selectRecipe("sprout"));table.insert(cases,tostring(size).." unified grid exact price and five disclosed item chances")
   end
-  view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7});view:selectRecipe("meadow");settle()
-  local grid=view.body.EggColumn;assert(not grid:FindFirstChild("RareProtection")and grid:FindFirstChild("PoolNote"))
-  for id,chance in pairs({pip="40%",puddle="28%",wick="22%",orbit="10%"})do assert(grid["Outcome_"..id].Chance.Text==chance and grid["Outcome_"..id].Chance.TextFits)end
-  for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do assert(not grid:FindFirstChild("Outcome_"..id))end
-  table.insert(cases,"active four odds remain disclosed at stored misses7 without an unavailable rare promise")
+  -- v1: formerly disclosed the four Meadow companion odds at misses7. The retired
+  -- Companion Egg cannot be selected and no companion odds or pity promise appear.
+  view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7});assert(not view:selectRecipe("meadow")and view.selected=="hue");settle()
+  local grid=view.body.EggColumn;assert(not grid:FindFirstChild("RareProtection")and not grid:FindFirstChild("PoolNote")and not grid:FindFirstChild("Recipe_meadow"))
+  for _,id in ipairs({"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"})do assert(not grid:FindFirstChild("Outcome_"..id))end
+  table.insert(cases,"retired Companion Egg cannot be selected and shows no companion odds at stored misses7")
  end)
  view:close();view.shade:Destroy();root:Destroy();assert(ok,err);return cases
 end

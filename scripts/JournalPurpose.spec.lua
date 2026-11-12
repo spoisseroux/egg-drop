@@ -14,9 +14,12 @@ return function(client,parent)
    local view,visits,tracks,goals=fixture()
    view:open(0,0,"foxfire_wick",false,nil,Catalog.bit("foxfire_wick"),{wick=3})
    local rare,base=view.cards[Pets.byId.foxfire_wick.index],view.cards[Pets.byId.wick.index]
-   assert(rare.Visible and rare.Interactable and rare.Status.Text=="Equipped"and rare.Species.Text=="Kiprik · Retained"and not base.Interactable and base.Status.Text=="Hatch from eggs")
+   -- v1: Tikket (wick) is retired, so its unowned base row is hidden; Zivvi is met on the handheld.
+   local zivvi=view.cards[Pets.byId.pip.index]
+   assert(rare.Visible and rare.Interactable and rare.Status.Text=="Equipped"and rare.Species.Text=="Kiprik · Retained"and not base.Visible and not base.Interactable and base.Status.Text=="")
+   assert(zivvi.Visible and not zivvi.Interactable and zivvi.Status.Text=="Meet on the handheld")
    assert(not view.goalsButton and view.openFamilyGoals==nil and not rare:FindFirstChild("FamilyCrest")and not rare:FindFirstChild("FamilyRank"))
-   assert(view.title.Text:find("00/04",1,true)and view.title.Text:find("1 retained",1,true)and goals()==0 and #visits==0 and #tracks==0)
+   assert(view.title.Text:find("00/01",1,true)and view.title.Text:find("1 retained",1,true)and goals()==0 and #visits==0 and #tracks==0)
    assert(view:activatePet(Pets.byId.foxfire_wick.index)and visits[1]=="foxfire_wick"and not view.shade.Visible)
   end)
   test("each owned row has an independent 44px Customize action including legacy rares",function()
@@ -30,8 +33,8 @@ return function(client,parent)
   end)
   test("unowned retired pets have no visible row, acquisition hint, customize target or collection denominator",function()
    local view=fixture();view:open(0,0,"pip",false,nil,Catalog.bit("pip"),{})
-   assert(view.title.Text:find("01/04",1,true))
-   for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do
+   assert(view.title.Text:find("01/01",1,true))
+   for _,id in ipairs({"puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"})do
     local index=Pets.byId[id].index;local row=view.cards[index];local customize=view.customizeButtons[index]
     assert(not row.Visible and not row.Interactable and not row.Selectable and row.Status.Text==""and not row.Track.Visible)
     assert(not customize.Visible and not customize.Interactable and customize:GetAttribute("AcquisitionCondition")==nil)

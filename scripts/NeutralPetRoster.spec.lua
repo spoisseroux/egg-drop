@@ -9,11 +9,11 @@ return function(shared)
   wick={"#383342","#63434C","#FFF4DB","#DCA39D"},orbit={"#343448","#655265","#FFF4DB","#C2ABB7"},
   bloom_pip={"#383342","#63434C","#FFF4DB","#DCA39D"},foxfire_wick={"#393044","#6B475C","#FFF4DB","#D9A3AB"},eclipse_orbit={"#363448","#645265","#FFF4DB","#C5A6AF"},
  }
- test("all seven saved IDs and ownership bits remain permanent while only four are active",function()
-  assert(#Pets.collection==7 and #Pets.active==4)
+ test("all seven saved IDs and ownership bits remain permanent while only Zivvi is active",function()
+  assert(#Pets.collection==7 and #Pets.active==1 and Pets.active[1].id=="pip")
   for i,id in ipairs(ids)do
    assert(Pets.collection[i]==Pets.byId[id]and Pets.byId[id].index==i and Eggs.bit(id)==2^(i-1))
-   assert(Pets.isActive(id)==(i<=4)and Pets.isActive(Pets.byId[id])==(i<=4))
+   assert(Pets.isActive(id)==(i==1)and Pets.isActive(Pets.byId[id])==(i==1))
    assert(Pets.isUnlocked(Pets.byId[id],0,0,Eggs.bit(id)),"retained ownership no longer equips")
   end
   assert(Eggs.mask(ids)==127 and #Pets.rares==3 and #Eggs.Families==4)
@@ -21,8 +21,9 @@ return function(shared)
  test("active collection target excludes retained owners without changing total ownership semantics",function()
   local retained=Eggs.bit("foxfire_wick")
   assert(Pets.ownedCount(0,0,retained)==1 and Pets.activeOwnedCount(0,0,retained)==0)
-  assert(Pets.collectionSummary(0,0,retained)=="00/04 · 1 retained")
-  assert(Pets.activeOwnedCount(0,0,127)==4 and Pets.ownedCount(0,0,127)==7 and Pets.collectionSummary(0,0,127)=="04/04 · 3 retained")
+  assert(Pets.collectionSummary(0,0,retained)=="00/01 · 1 retained")
+  assert(Pets.activeOwnedCount(0,0,127)==1 and Pets.ownedCount(0,0,127)==7 and Pets.collectionSummary(0,0,127)=="01/01 · 6 retained")
+  assert(Pets.collectionSummary(0,0,Eggs.bit("pip"))=="01/01")
  end)
  test("white Main and achromatic grey Secondary agree across canonical and direct definitions, protected colors stay exact",function()
   for _,id in ipairs(ids)do
@@ -60,13 +61,13 @@ return function(shared)
    p=Palette.resolve(id,{mainDoses=main,secondaryDoses=Hue.emptyCounts()});assert(p.body==expected and p.secondary==Color3.fromHex("#C8C8C8"))
   end
  end)
- test("all random samples use normalized surviving weights even with frozen guarantee counter",function()
-  assert(not Eggs.hasRarePool("meadow"))
-  local expected={35/90*100,25/90*100,20/90*100,10/90*100}
+ -- v1: formerly checked normalized surviving Meadow weights. Meadow is retired, so it
+ -- publishes no odds and cannot roll at any stored guarantee counter.
+ test("retired Meadow egg publishes no odds and cannot roll even with frozen guarantee counter",function()
+  assert(Eggs.ById.meadow.retired and not Eggs.hasRarePool("meadow"))
   for misses=0,7 do
-   local odds=Eggs.odds("meadow",misses);assert(#odds==4)
-   for i,row in ipairs(odds)do assert(row.id==ids[i]and math.abs(row.weight-expected[i])<.000001)end
-   for i=0,999 do assert(Pets.isActive(Eggs.roll("meadow",misses,i/1000)))end
+   assert(#Eggs.odds("meadow",misses)==0)
+   for i=0,9 do assert(not pcall(Eggs.roll,"meadow",misses,i/10))end
   end
  end)
  return{passed=#cases,cases=cases}

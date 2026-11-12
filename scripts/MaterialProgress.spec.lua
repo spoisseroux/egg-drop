@@ -106,7 +106,7 @@ return function(server)
   local h,_,c=fixture();local q=buy(h,c);local id=q.id
   local hue,r=quote(h,c,{});hue.catalogVersion=require(game.ReplicatedStorage.Shared.HueCatalog).CatalogVersion
   local ok,why=H.hueCommand(h,"hueBuy",hue,r);assert(not ok and why=="RevealPending")
-  ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RevealPending")
+  local nectar=h.state.nectar;ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg"and h.state.nectar==nectar) -- v1: Meadow retired; the Hue route above covers the pending block.
   for i=1,40 do command(h,c,"materialEquip",{petId="pip",finishId=if i%2==1 then "gloss"else "standard",expectedFinish=if i%2==1 then "standard"else "gloss"})end
   assert(#h.state.materialReceiptOrder==32 and h.state.materialReceipts[id]and h.state.pendingMaterialResult.id==id)
  end)

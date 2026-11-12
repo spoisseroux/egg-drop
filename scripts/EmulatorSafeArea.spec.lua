@@ -52,11 +52,12 @@ return function(client,parent)
 			menu:close()
 			local shop=Shop.new(root,{play=function()end},function()return true end,function()error("browse cannot send")end)
 			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("hue");settle()
-			test("733x"..height.." shop shows both complete recipes above a pinned exact shortfall",function()
-				assert(shop.body.CanvasPosition.Y==0)
-				for _,id in ipairs({"meadow","hue"})do
+			test("733x"..height.." shop shows the four complete item recipes above a pinned exact shortfall",function()
+				-- Four offers no longer fit one short viewport; the selected offer scrolls fully into view.
+				assert(not shop.body.EggColumn:FindFirstChild("Recipe_meadow") and inside(shop.body.EggColumn.Recipe_hue,shop.body))
+				for _,id in ipairs({"toy","feature","material","hue"})do
 					local row=shop.body.EggColumn["Recipe_"..id]
-					assert(row.AbsoluteSize.Y>=44 and inside(row,shop.body) and row.RecipeName.TextFits and row.Cost.TextFits)
+					assert(row.AbsoluteSize.Y>=44 and row.RecipeName.TextFits and row.Cost.TextFits)
 					assert(row:FindFirstChild("Egg"),"recipe silhouette lost")
 				end
 				assert(shop.selected=="hue" and shop.action.Text:find("2",1,true) and shop.action.TextFits and shop.action.AbsoluteSize.Y>=44)
@@ -83,7 +84,7 @@ return function(client,parent)
 			assert(not menu.compact and menu.destinations[1].art.AbsoluteSize.X==72 and menu.destinations[1].subtitle.Visible);menu:close()
 			local shop=Shop.new(root,{play=function()end},function()return true end,function()error("browse cannot send")end)
 			table.insert(views,shop.shade);shop:open(state());settle()
-			assert(not shop.compactShop and shop.body.EggColumn.Recipe_meadow.AbsoluteSize.Y>=83 and shop.body.EggColumn.Recipe_meadow.Cost.TextFits);shop:close()
+			assert(not shop.compactShop and shop.body.EggColumn.Recipe_toy.AbsoluteSize.Y>=83 and shop.body.EggColumn.Recipe_toy.Cost.TextFits);shop:close()
 		end)
 	end)
 	for _,view in ipairs(views)do view:Destroy()end;root:Destroy();assert(ok,problem)

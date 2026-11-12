@@ -32,13 +32,16 @@ return function(server, hostSource, sessionSource)
 			end}
 		end
 		local key="player_"..id
-		-- Old Fivefold ownership is legitimate; it is not awarded by today's Meadow roll.
+		-- Old Fivefold ownership is legitimate; no v1 egg awards it.
 		db[key]={rank=1,rareTrials=8}
 		local owner=ActualHatch.load(id,{rank=1},adapter())
 		assert(ActualHatch.award(owner,1,8));assert(ActualHatch.award(owner,2,8))
-		assert(ActualHatch.command(owner,"hatch","meadow",owner.state.revision))
+		-- v1: Meadow is retired, so a saved reveal receipt replaces the old Meadow hatch fixture.
+		local refused,why=ActualHatch.command(owner,"hatch","meadow",owner.state.revision);assert(not refused and why=="RetiredEgg")
+		db[key].hatching.lastHatch={id="host-saved-reveal",petId="pip",duplicate=false,family="pip",mastery=0,rare=false,starter=true}
+		assert(ActualHatch.renew(owner))
 		local hatchId=owner.state.lastHatch.id
-		assert(owner.state.lastHatch.petId=="orbit"and not owner.state.lastHatch.rare)
+		assert(hatchId=="host-saved-reveal"and not owner.state.lastHatch.rare)
 		assert(require(realGame.ReplicatedStorage.Shared.EggCatalog).isOwned(owner.state.inventoryMask,"foxfire_wick"))
 		db[key].companionId="foxfire_wick";db[key].theme="ice";db[key].sticker="star"
 		db[key].sound="Quiet";db[key].reduced=true

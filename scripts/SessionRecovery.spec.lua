@@ -125,7 +125,7 @@ return function(server, profileSource, sessionSource)
 	test("dirty outgoing profile drains before release and a stale reader hydrates the acquired root", function()
 		local id, key = 71001, "player_71001"
 		local original = initial()
-		-- A genuine prior-edition owner remains equipped while new paid rolls use the active four.
+		-- A genuine prior-edition owner remains equipped while the v1 Meadow egg is retired.
 		original.rareTrials = Pets.byId.foxfire_wick.trial.bit
 		local db, c, module, adapter, options = harness({ [key] = original })
 		local A, deferredA = module("A")
@@ -137,8 +137,12 @@ return function(server, profileSource, sessionSource)
 		assert(Hatching.award(a, 1, 8, summary(a)))
 		assert(a.state.nectar == 20, "first clean win + chain/score contracts: welcome6 +8 +6")
 		db[key].hatching.innerSentinel = { intact = true }
-		command(a, "hatch", "meadow")
-		assert(a.state.lastHatch.petId == "orbit" and not a.state.lastHatch.rare and a.state.nectar == 2 and c.randomCalls == 1)
+		-- v1: Meadow is retired (no debit, no roll); a saved reveal receipt replaces the
+		-- old orbit hatch so the pending reveal still crosses the lease handoff.
+		local refused, why = Hatching.command(a, "hatch", "meadow", a.state.revision)
+		assert(not refused and why == "RetiredEgg" and a.state.nectar == 20 and c.randomCalls == 0)
+		db[key].hatching.lastHatch = { id = "recovery-saved-reveal", petId = "pip", duplicate = false, family = "pip", mastery = 0, rare = false, starter = true }
+		assert(Hatching.renew(a) and a.state.lastHatch.id == "recovery-saved-reveal")
 		assert(Catalog.isOwned(a.state.inventoryMask,"foxfire_wick"),"migration lost the retained owner")
 		local revealId = a.state.lastHatch.id
 		A.setSetting(profileA, "sound", "Quiet"); A.setSetting(profileA, "reduced", true)
@@ -159,7 +163,7 @@ return function(server, profileSource, sessionSource)
 			end
 		end
 		assert(Close.drain(Hatching, a, payout, options(function() return A.flushOnce(profileA) end)))
-		assert(payout.saved and db[key].hatching.nectar == 14, "second win8 + final daily contract4")
+		assert(payout.saved and db[key].hatching.nectar == 32, "second win8 + final daily contract4")
 		local savedRevision, writes = db[key].hatching.revision, c.profileWrites
 		deferredA()
 		assert(c.profileWrites == writes and db[key].hatching.revision == savedRevision, "delayed old flush must already be drained")
@@ -170,15 +174,15 @@ return function(server, profileSource, sessionSource)
 		assert(sessionModule(B).hydrate(profileB, b) and profileB.onSaveFailed == callback)
 		assert(profileB.sound == "Quiet" and profileB.reduced and profileB.theme == "ice" and profileB.sticker == "seed"
 			and profileB.companionId == "foxfire_wick" and profileB.bestScore == 999)
-		assert(b.state.inventoryMask == Catalog.mask({ "pip", "orbit", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "orbit" and b.state.nectar == 14)
+		assert(b.state.inventoryMask == Catalog.mask({ "pip", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "pip" and b.state.nectar == 32)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
 		command(b, "ack", revealId)
 		local balance, marks = b.state.nectar, b.state.mastery.wick
 		assert(Hatching.award(b, 2, 8, summary(b, "wick")))
-		assert(b.state.nectar == balance and b.state.mastery.wick == marks and c.randomCalls == 1, "reward replay must not credit twice or reroll")
+		assert(b.state.nectar == balance and b.state.mastery.wick == marks and c.randomCalls == 0, "reward replay must not credit twice or reroll")
 		assert(Close.drain(Hatching, b, nil, options(function() return B.flushOnce(profileB) end)))
 		local again = Hatching.load(id, profileB, adapter("C"))
-		assert(again.status == "Ready" and again.state.lastHatch == nil and again.state.nectar == 14 and c.randomCalls == 1)
+		assert(again.status == "Ready" and again.state.lastHatch == nil and again.state.nectar == 32 and c.randomCalls == 0)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
 	end)
 

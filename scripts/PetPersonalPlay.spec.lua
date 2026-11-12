@@ -13,12 +13,16 @@ return function(client,parent)
   v.reducedEffects=true;v:update(0);return v
  end
  local ok,problem=pcall(function()
-  test("shared hero handles have exact bounded lifetimes without physics queries lights or emitters",function()
+  test("shared hero handles have exact bounded lifetimes without physics queries; only the sparkler tip lights and emits",function()
    assert(not Toys.create(root,"none")and not Features.create(root,"horns",0))
    for _,id in ipairs({"sparkler","ball","bone"})do
     local h=assert(Toys.create(root,id,1));assert(#h.parts<=8)
     h:pivot(CFrame.new(4,5,6));for _,p in ipairs(h.parts)do assert(p.Anchored and not p.CanQuery and not p.CanTouch and not p.CanCollide)end
-    assert(not h.model:FindFirstChildWhichIsA("PointLight",true)and not h.model:FindFirstChildWhichIsA("ParticleEmitter",true))
+    -- The sparkler's Neon tip now owns exactly one bounded emitter and one small light; other toys have none.
+    if id=="sparkler"then
+     local lights,emitters=0,0;for _,d in ipairs(h.model:GetDescendants())do if d:IsA("Light")then lights+=1 elseif d:IsA("ParticleEmitter")then emitters+=1 end end
+     assert(lights==1 and emitters==1 and h.emitter.Parent==h.tip and h.glow.Parent==h.tip and h.tip.Material==Enum.Material.Neon)
+    else assert(not h.model:FindFirstChildWhichIsA("PointLight",true)and not h.model:FindFirstChildWhichIsA("ParticleEmitter",true))end
     h:destroy();h:destroy();assert(not h.model.Parent)
    end
   end)
