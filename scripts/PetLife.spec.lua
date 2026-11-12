@@ -34,6 +34,47 @@ return function(client)
    assert(piece(v,"Head").part.Position.Y>rest+.02,"no hop");assert(#v.model:GetDescendants()==count)
    Reactions.clear(v);v:update(0);assert(math.abs(piece(v,"Head").part.Position.Y-rest)<1e-3)
   end)
+  local Motion=require(client.PetIdleMotion)
+  local function run(v,expression,seconds,each)
+   local dt=1/60
+   for _=1,math.floor(seconds/dt)do v.time=(v.time or 0)+dt;local l,r,t=Motion.appendages(v,expression,dt);if each then each(l,r,t,v.time)end end
+  end
+  local function crossings(expression)
+   local v={cosmeticSeed=5,time=0};run(v,expression,1.5)
+   local n,last=0,nil;run(v,expression,4,function(_,_,t)if last and(last<0)~=(t<0)then n+=1 end;last=t end);return n
+  end
+  test("tail wags about 1 Hz on neutral, about 3 Hz when pleased or affectionate, still when sleepy",function()
+   local calm,happy,fond=crossings("neutral"),crossings("pleased"),crossings("affectionate")
+   assert(calm>=7 and calm<=9,"neutral crossings "..calm);assert(happy>=23 and happy<=25 and fond>=23 and fond<=25,"happy crossings "..happy)
+   local v={time=0};run(v,"pleased",1);run(v,"sleepy",2);local _,_,t=Motion.appendages(v,"sleepy",1/60);assert(math.abs(t)<math.rad(.5),"sleepy tail still moving")
+  end)
+  test("ears perk +10 deg when curious, droop -15 deg when sleepy, and one flicks every 4-9 s",function()
+   local v={time=0,cosmeticSeed=9};local l,r
+   run(v,"curious",2,function(a,b)l,r=a,b end);assert(math.abs(math.max(l,r)-Motion.EarPerk)<math.rad(13)and math.min(l,r)>math.rad(9),"no perk")
+   run(v,"sleepy",2,function(a,b)l,r=a,b end);assert(math.min(l,r)<math.rad(-14),"no droop")
+   local w={time=0,cosmeticSeed=3};local starts={};local was=false
+   run(w,"neutral",40,function(a,b,_,time)local flicking=math.abs(a-b)>math.rad(1);if flicking and not was then table.insert(starts,time)end;was=flicking end)
+   assert(#starts>=4,"too few flicks "..#starts)
+   for i=2,#starts do local gap=starts[i]-starts[i-1];assert(gap>=3.9 and gap<=9.1,"flick gap "..gap)end
+   local twin={time=0,cosmeticSeed=3};local again={};was=false
+   run(twin,"neutral",40,function(a,b,_,time)local flicking=math.abs(a-b)>math.rad(1);if flicking and not was then table.insert(again,time)end;was=flicking end)
+   assert(#again==#starts and math.abs(again[1]-starts[1])<1e-6,"flicks are not seeded per pet")
+  end)
+  test("Reduced Effects freezes ears and tail at rest",function()
+   local v={time=0,reducedEffects=true};run(v,"pleased",3,function(a,b,t)assert(a==0 and b==0 and t==0)end)
+  end)
+  test("real Bear ears and tail move inside the padded bounds, without allocating",function()
+   local v=make();v.reducedEffects=false;v:update(0);local count=#v.model:GetDescendants()
+   local ear,tail=piece(v,"EarL"),piece(v,"Tail")
+   v.expression="neutral";for _=1,90 do v:update(1/60)end;local earRest=ear.part.CFrame
+   v.expression="sleepy";for _=1,120 do v:update(1/60)end
+   assert((ear.part.CFrame.UpVector-earRest.UpVector).Magnitude>.15,"ear did not droop")
+   local seen={};v.expression="pleased";for i=1,60 do v:update(1/60);seen[i]=tail.part.Position end
+   local spread=0;for i=2,#seen do spread=math.max(spread,(seen[i]-seen[1]).Magnitude)end;assert(spread>.02,"tail never wagged")
+   assert(#v.model:GetDescendants()==count,"appendage motion allocated instances")
+   local pad=Motion.padding(v,tail);assert(pad.X>0 and pad.Z>0,"tail padding missing")
+   assert(Motion.padding(v,ear).X>Motion.padding(v,piece(v,"Head")).X,"ear padding missing")
+  end)
  end)
  for _,v in ipairs(views)do v:destroy()end;folder:Destroy()
  assert(ok,err);return{passed=#cases,cases=cases}

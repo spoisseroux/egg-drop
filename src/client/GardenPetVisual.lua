@@ -249,6 +249,14 @@ function Visual:update(dt)
  end
  local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
+ -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
+ local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
+ local hinges=self.appendageHinges
+ if not hinges or hinges.scale~=self.scale then
+  local anchors=self.definition.anchors
+  hinges={scale=self.scale,EarL=anchors.EarL and v(anchors.EarL)*self.scale,EarR=anchors.EarR and v(anchors.EarR)*self.scale,Tail=anchors.Tail and v(anchors.Tail)*self.scale}
+  self.appendageHinges=hinges
+ end
  if personal then headPitch-=math.sin(math.clamp(personal.phase/1.8,0,1)*math.pi)*.06 end
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
@@ -278,6 +286,13 @@ function Visual:update(dt)
   local cf=upper*CFrame.new(0,hop,0)*entry.frame
   local isFace=channel=="Face"or string.find(name,"Eye")or string.find(name,"Glint")or string.find(name,"Mouth")or string.find(name,"Teeth")or string.find(name,"Cheek")
   if channel=="Head"or isFace or channel=="Charm"then cf=head*entry.frame end
+  if channel=="Head"and string.sub(name,1,3)=="Ear"then
+   local left=string.sub(name,-1)=="L";local hinge=if left then hinges.EarL else hinges.EarR
+   -- Positive pose perks the ear toward the crown; negative droops it outward.
+   if hinge then cf=head*CFrame.new(hinge)*CFrame.Angles(0,0,if left then -earL else earR)*CFrame.new(-hinge)*entry.frame end
+  elseif name=="Tail"and hinges.Tail and tailYaw~=0 then
+   cf=upper*CFrame.new(0,hop,0)*CFrame.new(hinges.Tail)*CFrame.Angles(0,tailYaw,0)*CFrame.new(-hinges.Tail)*entry.frame
+  end
   if channel=="HandL"or channel=="HandR"or channel=="CuffL"or channel=="CuffR"or channel=="Hand"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
