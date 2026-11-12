@@ -16,6 +16,8 @@ function Return.classify(board, ready, ownsPip)
 	local earned, receipt = board.earnedPayout, board.nursery.state.lastRunReward
 	if earned and earned.saved == true and earned.sequence == board.runSequence
 		and receipt and receipt.sequence == board.runSequence then return "FreshField" end
+	-- A permanently refused payout (e.g. BalanceLimit) is final: the run may end.
+	if earned and earned.refused and earned.sequence == board.runSequence then return "FreshField" end
 	return "Preserve"
 end
 

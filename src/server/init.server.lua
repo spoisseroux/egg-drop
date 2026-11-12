@@ -18,6 +18,8 @@ local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
 local PetContactController = require(script.PetContact)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
 local Nursery = require(script.HatchProgress)
+local RunDay = require(script.RunDay)
+local RewardRetry = require(script.RewardRetry)
 local HueState = require(script.HueState)
 local MaterialState=require(script.MaterialState)
 local ToyState=require(script.ToyState)
@@ -476,7 +478,9 @@ local function reset(board, preset, sameField)
 	local selected = NurseryCatalog.family(board.profile.companionId) or "pip"
 	board.runFamily = if FamilyMastery.ownsFamily(inventory(board), selected) then selected else "pip"
 	board.selectedFamily = board.runFamily
-	board.runDay = Nursery.public(board.nursery).dailyDay
+	-- Stamped at the first drop (RunDay), not here: an idle fresh board can
+	-- sit across the 05:00 UTC rollover before the player starts it.
+	board.runDay = nil
 	board.runSequence = board.nursery.nextRunSeq
 	board.folder:SetAttribute("RunSequence", board.runSequence)
 	board.nursery.nextRunSeq += 1
@@ -783,11 +787,14 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.lastHeatRequest = now
 		local decision = HeatRequest.decide({ mode = board.mode, ready = canProgress(board), payoutPending = board.payoutPending,
 			over = board.round.over, drops = board.sim.drops, field = board.field ~= nil, guided = board.heatGuided,
-			runHeat = board.runHeat }, value)
+			runHeat = board.runHeat, cooling = now - board.lastReset < Config.ResetInterval }, value)
 		if decision == "Store" or decision == "Rebuild" then
 			board.nextHeat = value
 			Progress.setHeat(board.profile, value)
-			if decision == "Rebuild" then reset(board, board.sim.preset, true) end
+			if decision == "Rebuild" then
+				board.lastReset = now
+				reset(board, board.sim.preset, true)
+			end
 		end
 		publishHeat(board)
 		return
@@ -846,6 +853,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		end
 		board.lastDrop = now
 		if Simulation.drop(board.sim, value) then
+			board.runDay = RunDay.onDrop(board.runDay, board.sim.drops, Daily.dayOf(board.nursery.adapter.now()))
 			publishState(board)
 			if board.firstSession then
 				board.firstSession:advance(2)
@@ -884,6 +892,7 @@ local messages = {
 	SessionLost = "This hatch session moved to another server. Rejoin to continue.",
 	Locked = "Your previous session is closing. Please wait a moment.",
 	Temporary = "Loading your save. Please wait before spending Stars.",
+	BalanceLimit = "Your Stars wallet is full, so this round's Stars could not be added.",
 }
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
@@ -1038,7 +1047,7 @@ local function settleReward(player, board)
 	board.folder:SetAttribute("FieldSuccess", board.field.outcome.success)
 	board.folder:SetAttribute("FieldReason", board.field.outcome.reason)
 	board.folder:SetAttribute("FieldFinalStage", board.field.outcome.rootStage)
-	local summary = { family = board.runFamily, day = board.runDay, success = board.field.outcome.success,
+	local summary = { family = board.runFamily, day = RunDay.forSummary(board.runDay, Daily.dayOf(board.nursery.adapter.now())), success = board.field.outcome.success,
 		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
 		clears = board.round.maxClears, drops = board.sim.drops, heat = board.runHeat,
 		maxTier = math.clamp(board.maxTier or 0, 0, #Config.Tiers), goalsMet = board.field.outcome.rootStage,
@@ -1049,12 +1058,26 @@ local function settleReward(player, board)
 	board.payoutPending, board.payoutRunning = true, true
 	board.folder:SetAttribute("RewardStatus", "Saving")
 	task.spawn(function()
+		local failures = 0
 		while boards[player] == board and not board.closing and board.payoutPending do
+			local wait = 2
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
 				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary, boost)
 				if boards[player] ~= board then break end
 				publishNursery(board)
-				if ok then
+				local outcome = RewardRetry.classify(ok, reason)
+				if outcome == "Permanent" then
+					-- A retry can never save this (e.g. BalanceLimit): end cleanly so
+					-- the board can replay/leave, and tell the player once.
+					warn("Egg Drop round payout refused:", reason)
+					board.payoutPending = false
+					board.earnedPayout.refused = reason
+					board.folder:SetAttribute("RewardStatus", "Refused")
+					nurseryFeedback:FireClient(player, "error", messages[reason] or "This round's Stars could not be saved.")
+					publishState(board)
+					break
+				end
+				if outcome == "Saved" then
 					board.payoutPending = false
 					board.earnedPayout.saved = true
 					local saved = Nursery.public(board.nursery).lastRunReward
@@ -1068,9 +1091,12 @@ local function settleReward(player, board)
 					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
 					break
 				end
+				-- Transient (DataStore error, busy, pending): retry with backoff.
+				failures += 1
+				wait = RewardRetry.delay(failures)
 				board.folder:SetAttribute("RewardStatus", messages[reason] or reason)
 			end
-			task.wait(2)
+			task.wait(wait)
 		end
 		board.payoutRunning = false
 	end)

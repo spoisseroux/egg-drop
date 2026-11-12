@@ -96,5 +96,13 @@ return function(server)
 		b.mode="Room";assert(Return.enter(b,true,true,reset));b.mode="Board"
 		assert(not Return.retry(b,true,true,7,reset) and b.initializations==1)
 	end)
+	test("a permanently refused payout (BalanceLimit) lets the board replay once",function()
+		local b,reset=fixture();b.mode="Board";b.nursery.state.lastRunReward={sequence=6,total=8}
+		b.earnedPayout={sequence=7,saved=false}
+		assert(not Return.retry(b,true,true,7,reset) and b.initializations==0)
+		b.earnedPayout.refused="BalanceLimit"
+		assert(Return.retry(b,true,true,7,reset) and b.initializations==1)
+		assert(not Return.retry(b,true,true,7,reset) and b.initializations==1)
+	end)
 	return {passed=#cases,cases=cases,evidence="production server transition API with authoritative state doubles"}
 end

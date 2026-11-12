@@ -15,7 +15,9 @@ function Heat.runHeat(guided, nextHeat)
 	return if Config.validHeat(nextHeat) then nextHeat else Config.DefaultHeat
 end
 
--- state = { mode, ready, payoutPending, over, drops, field, guided, runHeat }
+-- state = { mode, ready, payoutPending, over, drops, field, guided, runHeat, cooling }
+-- `cooling` is true inside the normal board reset cooldown (Config.ResetInterval):
+-- a Rebuild is a reset, so it obeys the same limit as the reset button.
 -- Returns "Store" (remember for the next reset), "Rebuild" (fresh field with
 -- no drops: rebuild it now with the new heat) or a refusal reason.
 function Heat.decide(state, value)
@@ -24,7 +26,9 @@ function Heat.decide(state, value)
 	if state.mode ~= "Board" or not state.ready then return "Unavailable" end
 	if not (state.over or state.drops == 0) then return "Locked" end
 	if state.guided and not state.over then return "Guided" end
-	if state.field and not state.over and state.drops == 0 and state.runHeat ~= value then return "Rebuild" end
+	if state.field and not state.over and state.drops == 0 and state.runHeat ~= value then
+		return if state.cooling then "Cooldown" else "Rebuild"
+	end
 	return "Store"
 end
 

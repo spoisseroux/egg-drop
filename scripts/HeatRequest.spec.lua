@@ -36,5 +36,12 @@ return function(server)
 		-- After a guided round ends the player may pick; the next reset decides.
 		assert(Heat.decide(state({ guided = true, over = true, drops = 24 }), "hard") == "Store")
 	end)
+	test("a pre-drop rebuild respects the normal reset cooldown", function()
+		assert(Heat.decide(state({ cooling = true }), "hard") == "Cooldown")
+		assert(Heat.decide(state({ cooling = false }), "hard") == "Rebuild")
+		-- Storing for the next reset is not a reset, so the cooldown does not apply.
+		assert(Heat.decide(state({ cooling = true }), "medium") == "Store")
+		assert(Heat.decide(state({ cooling = true, over = true, drops = 24 }), "hard") == "Store")
+	end)
 	return { passed = #passed, cases = passed }
 end

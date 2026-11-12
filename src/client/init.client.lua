@@ -1388,7 +1388,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local stage=if final then final.stage else board:GetAttribute("FieldFinalStage")or 0
  local objective=if final and final.objective then final.objective else clientUI.fieldView
  local status=board:GetAttribute("RewardStatus")
- local pending=field and(status~="Saved"or runReceipt==nil)
+ local pending=field and status~="Refused"and(status~="Saved"or runReceipt==nil)
  local rows,reward={},runReceipt
  local heat,heatLabel=clientUI.heatInfo(reward and reward.heat or board:GetAttribute("Heat"))
  if reward then

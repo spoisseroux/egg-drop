@@ -8,6 +8,14 @@
 --   heat:   minimum heat a run must be played on to count (nil = any)
 --   tier:   for tierMade, the tier the run must reach
 local Catalog = {}
+-- WARNING (Quests/difficulty review): bumping CatalogVersion makes
+-- QuestState.valid reject every saved record, and QuestState.sanitize then
+-- replaces it with a fresh draw for today. That silently drops the player's
+-- claim masks (daily/weekly `claimed`, weekly `bonus`) and the daily `rerolled`
+-- flag, so already-claimed quests could be claimed (paid) again and the free
+-- reroll restored. BEFORE bumping, add a migration in QuestState.sanitize that
+-- carries `claimed`, `bonus` and `rerolled` over for the same day/week.
+-- TODO(quests): write that migration the first time this number changes.
 Catalog.CatalogVersion = 1
 Catalog.DailyReward = 4
 Catalog.WeeklyReward = 10

@@ -14,7 +14,8 @@ end
 -- The server still decides whether its durable payout/hatch owners permit it.
 function Receipt.replaySequence(sequence,status,starter)
 	if type(sequence)~="number"or sequence~=sequence or sequence<1 or sequence%1~=0 then return nil end
-	return if starter or status=="Saved"then sequence else nil
+	-- "Refused": the server ended a permanently refused payout; replay may proceed.
+	return if starter or status=="Saved"or status=="Refused"then sequence else nil
 end
 function Receipt.outcome(result)
 	if result.reason=="Overflow"then return "Overflow"end
