@@ -29,3 +29,10 @@ Fallback: if anything is unsafe, set `WorldVersion = "legacy"`, keep the v7 code
 - Performance (Studio client): v7 lounge 159 MeshParts (91 visible + 68 collision) and 211 Parts; legacy 0 MeshParts and 1,262 Parts. GraphicsMeshParts 11.0 MB vs 10.8, GraphicsTexture 105 vs 96, PhysicsParts 9.2 vs 11.9, total 2,574 vs 2,357 MB (Studio total includes the editor).
 - Not verified: Journal "Open companions" and petting the Bear (the Studio window had no focus, which gates HatchCinematic and PetFocusUI; the hatch cinematic also waited on it); the cradle's visible mesh replaces the legacy care machine, whose parts are now hidden supports, so the dock highlight colours no longer show; backdrop clouds are not tinted at night; the night Dn face shows a pale band at the horizon.
 - Screenshots: `day-0*.jpg`, `night-0*.jpg` here (UI hidden).
+
+## Polish, 2026-11-12 pm
+
+- Cradle dock feedback: `LoungeWorldV7Art.careStatus` marks the cradle mobile's neon gem and the CradleLight with `CareRestColor`/`CareOccupiedColor`; `GardenCareClient` paints them with the legacy machine parts (gem #FFD889 → #62DEDC, lamp #FFD5A0 → #7FE8FF). Verified live: docked Bear turns the gem aqua, release returns it to warm.
+- Night sky: `HollowClock.backdrop` tints the clouds by daylight (white through early dusk, #2C355E at night) and swaps the textured far peaks to a flat slate (#7C86A8 → #283052) while the night faces show. The pale horizon band was this unlit backdrop ring; the night faces and Atmosphere alone show no band (`../world1-v7-polish/diag-*`).
+- Live checks (window focused via one click): hatch cinematic, Meet Bear, hold-E petting, Pick up, Place Bear → Companions editor, Set down. The hatch cinematic waits for window focus by design.
+- Captures: `artifacts/world1-v7-polish/`.
