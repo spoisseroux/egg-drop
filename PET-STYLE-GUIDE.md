@@ -85,7 +85,7 @@ Every pet's body uses **one primary and one secondary colour**, nothing more:
 
 Spencer approved the attachment list, the horn shape and the piercings on 2026-11-12. This section is the working spec for building a pet and anything it can wear. The reference file is `assets/art-source/pets/pet-bear-attachments.blend` (a copy of `pet-bear.blend` with every anchor and one placeholder per slot). Boards: `artifacts/scope-2026-11-12/01-attachment-anchors.png`, `02-attachment-mock-outfits.png`, `02b-helix-both-ears-closeup.png`, `03-horn-sizes.png`.
 
-**Status.** The anchors, placeholders and horns exist in Blender only. The runtime does not read the new anchors yet, and the game still builds horns from sphere primitives in `PetFeatureGeometry`. Treat the tables below as the target the rig and importer must reach.
+**Status (2026-11-12).** The Bear's rig reads all 46 anchors (`anchors` and `anchorFrames` in the generated `BearRigDefinition.lua`). Horns and wings S1 to S5 are the authored meshes from `assets/garden-babies/attachments/` (template `PetAssets.BearAttachments`, Open Cloud asset 97156894572368), coloured with the secondary. Claws, and every rig without an attachment template, still use the procedural `PetFeatureGeometry`. Wearable slots and exclusions are data-driven (`PetAttachmentRules`); no item is sold or saved yet, and the placeholders are equipped only through the Studio-only `workspace.StudioPetWearables` attribute (for example `Hat=beanie;Shirt=tee;Neck=beads;EarPiercingL=ring;EarPiercingR=ring;Eyes=button;Mouth=o;Tail=arrow`). Rebuild with `python scripts/build_bear_attachments.py` after a new export and Studio import.
 
 ### 1. Anchors: the rules
 
