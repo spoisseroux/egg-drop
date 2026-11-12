@@ -95,7 +95,10 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	device = Instance.new("Model")
 	device.Name = "PocketDeck"
 	device:SetAttribute("BoardUserId", userId)
-	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(22), 0, 0)
+	-- The device's Front (screen, controls, sticker) faces back toward the holder's
+	-- face: turned 180 degrees about Y and tipped 22 degrees up toward the eyes.
+	-- Device +X therefore lies on the holder's left, so the rocker reads left and A right.
+	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(-22), math.pi, 0)
 	local shell = attach(device, torso, "Shell", Vector3.new(1.84, 0.87, 0.17), mount, Palette.Shell)
 	attach(device, torso, "FrontPlate", Vector3.new(1.78, 0.81, 0.025),
 		mount * CFrame.new(0, 0, -0.085), Palette.Shell)
@@ -166,7 +169,8 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 		if humanoid and arm and hand then
 			local target = Instance.new("Attachment")
 			target.Name = side .. "Grip"
-			target.Position = Vector3.new(if side == "Left" then -0.88 else 0.88, -0.27, 0.10)
+			-- Shell +X is the holder's left; grip from the holder's side of the shell.
+			target.Position = Vector3.new(if side == "Left" then 0.88 else -0.88, -0.27, -0.10)
 			target.Parent = shell
 			local grip = Instance.new("IKControl")
 			grip.Name = "Deck" .. side
