@@ -19,5 +19,8 @@ return function(client)
     local focus=table.clone(actor);focus.action="focus";focus.behavior="rest"
     assert(Activity.sample(focus,12).expression=="curious","idle focus must keep its eyes open")
     assert(Activity.sample({from={0/0,0,0},to={0,0,0},startTime=0,endTime=1},.5)==nil)
-    return{passed=4,cases={"two viewer rates sample identical server-time positions","movement advances every rendered frame","reduced gait preserves shared gameplay position","late and malformed snapshots are bounded"}}
+    local drift=Vector3.new(.005,0,0);local origin=Vector3.new(-18,4.025,-12)
+    local ok,path=pcall(Activity.plan,origin,origin+Vector3.new(-5,0,0),drift,4,0,0)
+    assert(ok and #path>=1 and (Activity.vector(path[#path].to)-(origin+Vector3.new(-5,0,0))).Magnitude<1e-3,"residual drift against the new heading must settle, not assert")
+    return{passed=5,cases={"two viewer rates sample identical server-time positions","movement advances every rendered frame","reduced gait preserves shared gameplay position","late and malformed snapshots are bounded","residual drift brakes in place"}}
 end

@@ -70,6 +70,10 @@ function Activity.plan(from,to,velocity,speed,minimum,yaw,via,terminalVelocity)
         total+=duration;yaw+=turn
     end
     local function brake()
+        -- A residual drift (under .01 stud/s) moves less than .002 stud in
+        -- the brake window; Activity.leg rejects so short a chord with nonzero
+        -- velocity, so settle it in place instead of asserting.
+        if velocity.Magnitude<.01 then velocity=ZERO;return end
         local stop=from+velocity*.125
         local leg=assert(Activity.leg(from,stop,velocity,ZERO,math.max(speed,velocity.Magnitude),.25,yaw))
         table.insert(path,leg);total+=leg.duration
