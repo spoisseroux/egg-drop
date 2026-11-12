@@ -440,11 +440,11 @@ The rule the code should enforce is hide, never unequip: a blocked item stays ow
 `assets/art-source/pets/pet-bear-attachments.blend` is a copy of `pet-bear.blend`; the original is untouched. Added collections:
 
 - `PetBear_AttachAnchors`: the 28 new empties (arrow display, with `channel`, `slot`, `excludes`, `note` properties).
-- `PetBear_AttachPlaceholders`: `Hat_Beanie`, `Shirt_Tee` (a shell of the body mesh, hem cut above the legs) with `Shirt_Tee_SleeveL/R` on the arm channels, `Neck_Beads`, `HelixL_Ring` (left ear only), `EyeL/R_AltButton`, `Mouth_AltO`, `Tail_AltArrow`.
+- `PetBear_AttachPlaceholders`: `Hat_Beanie`, `Shirt_Tee` (a shell of the body mesh, hem cut above the legs) with `Shirt_Tee_SleeveL/R` on the arm channels, `Neck_Beads`, `HelixL_Ring` and `HelixR_Ring` (one per ear, radius 0.056), `EyeL/R_AltButton`, `Mouth_AltO`, `Tail_AltArrow`.
 - `PetBear_FeatureHorns`: section 9.
 - `MockOnly_HornSizeLineup` and `MockOnly_Stage`: a viewport line-up, camera and lights. Not for export.
 
-The file opens in outfit A (hat, shirt, beads, helix). Alternates and horns are hidden the same way the existing `_Alt` meshes are.
+The file opens in outfit A (hat, shirt, beads, both helix rings). Alternates and horns are hidden the same way the existing `_Alt` meshes are.
 
 **Honest limits.** These are grey-box shapes. The shirt is the body mesh pushed out, so its silhouette is right but its topology is not final. The helix ring is placed from the ear's outline and reads as a ring through the rim; a real one needs the ear modelled with a rim. The Bear's two ears differ by about 0.02 in the source, so HelixR and LobeR are not exact mirrors; I left them where the mesh is. The 3D head is low-poly, so surface anchors were placed by ray-cast onto the real mesh and will need re-deriving per pet.
 
