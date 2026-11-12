@@ -101,8 +101,8 @@ function Menu.new(parent,callbacks)
 	for _,key in ipairs({"play","daily"}) do
 		local page=Art.frame(body,key,"panel",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),31)
 		page.BackgroundTransparency=1;self.pages[key]=page
-		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Daily" else "Daily",function()self:activatePage(key)end)
-        self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Daily contracts")
+		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Quests" else "Quests",function()self:activatePage(key)end)
+        self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Today's quests")
 	end
 	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
@@ -262,7 +262,7 @@ function Menu:layoutContents(wanted)
 		local w=if list then usable else (usable-24)/3
 		styleType(row.title,"Action",short);styleType(row.count,"Counter",short);styleType(row.reward,"Supporting",short)
 		if short then row.title.TextSize=14;row.count.TextSize=14 end
-		row.reward.Text=if row.complete then "Earned" else (if short then "+"..row.amount else "+"..Stars.amount(row.amount))
+		row.reward.Text=if row.claimed then "Claimed"elseif row.complete then "Claim in log" else (if short then "+"..row.amount else "+"..Stars.amount(row.amount))
 		local tw=if list and not short then w-72 else w-12
 		row.titleH=Art.textHeight(row.title,tw,if short then 18 else 28)
 		row.countH=Art.textHeight(row.count,if short then w*.5-28 else tw,if short then 20 else 30)
@@ -312,17 +312,19 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
 	self.dailyButton.Interactable = state.dailyAvailable == true and state.status == "Ready"
 	self.dailyButton.Selectable=self.dailyButton.Interactable
 	Art.control(self.dailyButton,true,self.dailyButton.Interactable)
-	self.dailyHint.Text = if state.dailyAvailable then "Claim your separate daily gift above. Contracts pay automatically after a round."
-		else "Daily gift claimed. Finish rounds to complete these contracts; fresh goals arrive tomorrow."
+	self.dailyHint.Text = if state.dailyAvailable then "Claim your separate daily gift above. Claim finished quests in the quest log (Menu on the Pocket Deck)."
+		else "Daily gift claimed. Claim finished quests in the quest log (Menu on the Pocket Deck); new ones arrive tomorrow."
 	for index, row in ipairs(self.dailyCards) do
-		local contract = state.contracts and state.contracts[index]
+		-- Today's quests (hatching v9). Claims happen in the deck's quest log.
+		local contract = state.quests and state.quests.daily and state.quests.daily[index]
 		local progress, target = if contract then contract.progress or 0 else 0, if contract then contract.target or 1 else 1
 		row.title.Text = if contract then contract.name or contract.title or contract.id else "First pet unlocks"
 		row.count.Text = string.format("%d/%d", math.min(progress, target), target)
-		row.complete, row.amount = contract and (contract.claimed or contract.complete) == true or false, if contract then contract.reward or 0 else 0
+		row.complete, row.amount = contract and (contract.claimed or contract.ready) == true or false, if contract then contract.reward or 0 else 0
+		row.claimed = contract ~= nil and contract.claimed == true
 		row.fill.Size = UDim2.fromScale(math.clamp(progress / math.max(1, target), 0, 1), 1)
 		row.fill.BackgroundColor3 = if row.complete then Art.Amber else Art.Leaf
-		row.reward.Text=if row.complete then "Earned" else (if self.compact then "+"..row.amount else "+"..Stars.amount(row.amount))
+		row.reward.Text=if contract and contract.claimed then "Claimed"elseif row.complete then "Claim in log"else (if self.compact then "+"..row.amount else "+"..Stars.amount(row.amount))
 	end
 	self.headerTitle=if self.saveNotice then self.saveNotice.short else "Pocket menu"
 	if not self.shade.Visible then self.heading.Text=self.headerTitle end

@@ -30,11 +30,11 @@ local assetIds = {
 local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
 	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "overflow", "retry", "menu",
-	"deck_boot",
+	"deck_boot", "quest_complete",
 }
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
-Audio.PendingCues = { deck_boot = true }
+Audio.PendingCues = { deck_boot = true, quest_complete = true }
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 
 function Audio.uri(cue)

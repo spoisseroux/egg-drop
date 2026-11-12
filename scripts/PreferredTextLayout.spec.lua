@@ -21,7 +21,7 @@ return function(client,parent)
 	end
 	local function state()
 		return{status="Ready",nectar=20,inventoryMask=Catalog.mask({"pip","wick"}),dailyAvailable=false,
-			contracts={{title="Finish 2 quests",progress=1,target=2,reward=4},{title="Chain 3 merges",progress=2,target=3,reward=3},{title="Score 500",progress=300,target=500,reward=3}},
+			quests={daily={{title="Win 2 rounds",progress=1,target=2,reward=4},{title="Chain 3 merges",progress=2,target=3,reward=4},{title="Score 600",progress=300,target=600,reward=4}}},
 			mastery={pip=3,wick=25},masteryDetails={pip=Mastery.describe(3,0),wick=Mastery.describe(25,0)}}
 	end
 	local ok,problem=pcall(function()

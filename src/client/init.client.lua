@@ -506,6 +506,11 @@ clientUI.deckGui=make("ScreenGui","EggDropDeck",{ResetOnSpawn=false,ScreenInsets
 bleed.DisplayOrder=8
 clientUI.deck=DeckScreen.new({parent=clientUI.deckGui,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
 clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
+-- Part 2b: difficulty picker and quest log, full-LCD layers above the board.
+clientUI.heatCallbacks,clientUI.questCallbacks={}, {}
+clientUI.heatPicker=require(script.DifficultyPicker).new(clientUI.deck:addOverlay("DeckDifficulty",32),clientUI.heatCallbacks)
+clientUI.questLog=require(script.QuestLog).new(clientUI.deck:addOverlay("DeckQuestLog",34),clientUI.questCallbacks)
+function clientUI.deckOverlayOpen()return clientUI.heatPicker.visible or clientUI.questLog.visible end
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -773,7 +778,7 @@ local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible and not roomView.busy
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 		and not (nurseryView and nurseryView:isOpen()) and not clientUI.isHueOpen() and board:GetAttribute("FieldPhase") ~= "Settling"
-		and not board:GetAttribute("RoundOver")
+		and not board:GetAttribute("RoundOver") and not clientUI.deckOverlayOpen()
 end
 
 local function canPlay()
@@ -1030,6 +1035,7 @@ local function refreshNursery(state)
  if type(state)~="table"then return end
  if nurseryState and type(state.revision)=="number"and type(nurseryState.revision)=="number"and state.revision<nurseryState.revision then return end
  nurseryState = state
+    if clientUI.onQuests then clientUI.onQuests(state)end
     if picker then picker:setShopState(state.nectar,state.faceplates)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
@@ -1350,11 +1356,29 @@ function clientUI.deckGoals(view,stage)
 end
 function clientUI.dailyRows()
  local rows={}
- for index,row in ipairs(nurseryState and nurseryState.contracts or {})do
+ local quests=nurseryState and nurseryState.quests
+ for index,row in ipairs(quests and quests.daily or {})do
   if index>3 then break end
-  rows[index]={title=row.title,progress=row.progress or 0,target=row.target or 1,done=row.claimed==true}
+  rows[index]={title=row.title,progress=row.progress or 0,target=row.target or 1,done=row.claimed==true or row.ready==true}
  end
  return rows
+end
+-- Difficulty shown on the HUD and results: the server's run heat and payouts.
+function clientUI.heatInfo(key)
+ local Config=require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+ local Payout=require(game:GetService("ReplicatedStorage").Shared.HeatPayout)
+ key=if Config.validHeat(key)then key else Config.DefaultHeat
+ return Config.Heat[key],Payout.label(key)
+end
+function clientUI.questTitle(id)
+ local def=require(game:GetService("ReplicatedStorage").Shared.QuestCatalog).ById[id]
+ return def and def.title
+end
+function clientUI.weeklyLine()
+ local q=nurseryState and nurseryState.quests
+ if not q then return ""end
+ local done=0;for _,r in ipairs(q.weekly or {})do if r.claimed or r.ready then done+=1 end end
+ return "Weekly "..done.."/"..#(q.weekly or {})
 end
 function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local owned=board:GetAttribute("OwnedPets")or 0
@@ -1366,24 +1390,30 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local status=board:GetAttribute("RewardStatus")
  local pending=field and(status~="Saved"or runReceipt==nil)
  local rows,reward={},runReceipt
+ local heat,heatLabel=clientUI.heatInfo(reward and reward.heat or board:GetAttribute("Heat"))
  if reward then
-  table.insert(rows,{name="Round win",amount=reward.base or 0})
-  if(reward.daily or 0)>0 then table.insert(rows,{name="Daily quests",amount=reward.daily})end
+  -- Payout rows: the round amount (with the tidy +2), the difficulty
+  -- multiplier's share, then any pass or Supporter Stars (server receipt).
+  local base=reward.base or 0
+  table.insert(rows,{name=if base>=8 then "Round win + tidy stack"else "Round win",amount=base})
+  local roundStars=reward.roundStars or base
+  if roundStars~=base then table.insert(rows,{name=heat.name.." "..heatLabel,amount=roundStars-base,signed=true})end
   if(reward.bonus or 0)>0 then table.insert(rows,{name="Pass bonus",amount=reward.bonus})end
  end
  local strip={}
- for _,id in ipairs(reward and reward.contracts or {})do
-  for _,row in ipairs(nurseryState and nurseryState.contracts or {})do if row.id==id then table.insert(strip,row.title.." ★+"..row.reward)end end
+ for _,moved in ipairs(reward and reward.quests or {})do
+  if #strip>=2 then break end
+  table.insert(strip,(if moved.scope=="weekly"then "Weekly: "else "")..(clientUI.questTitle(moved.id)or moved.id).." "..moved.count.."/"..moved.target..(if moved.done then "  · CLAIM IN LOG"else ""))
  end
  local balance=nurseryState and nurseryState.nectar or 0
  local recipe=EggCatalog.ById[nurseryView.selected]or EggCatalog.ById.meadow
  return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
-  title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty="Medium",multiplierLine="Medium ×1",
+  title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,multiplierLine=heat.name.." "..heatLabel,
   pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
   loss=not pending and(reward==nil or(reward.total or 0)==0),goals=clientUI.deckGoals(objective,stage or 0),
   score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
   strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
-  stripRight=if recipe and balance>=recipe.cost then "You can hatch an egg"else "Wallet ★ "..balance,
+  stripRight=if recipe and balance>=recipe.cost then "You can hatch an egg"else clientUI.weeklyLine(),
   canLeave=owned>0,
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
@@ -1540,7 +1570,7 @@ updateHud = function()
 	modalTag.Text = if hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	local runReceipt = RunReceipt.select(nurseryState, board:GetAttribute("RunSequence"), board:GetAttribute("RewardStatus"), over)
 	-- Results live inside the deck LCD and hand the board back on Replay or Leave.
-	local resultsOpen=over and not sheetOpen and not roomView.busy
+	local resultsOpen=over and not sheetOpen and not roomView.busy and not clientUI.questLog.visible
 	local resultsOpened=resultsOpen and not recap.visible
 	if resultsOpen then
 		recap:show(clientUI.resultsData(final,runReceipt,score,best,peakChain),clientUI.deckCompact==true)
@@ -1595,7 +1625,9 @@ updateHud = function()
 	clientUI.deck:setHud({score=score,best=best,chain=chain,goals=if fieldActive then clientUI.deckGoals(clientUI.fieldView)else {},
 		message=if not fieldActive then status.Text else nil,statusLabel=if blocked then status.Text else nil,daily=clientUI.dailyRows(),
 		next={nextTier(),board:GetAttribute("PreviewTier1")or 1,board:GetAttribute("PreviewTier2")or 1},
-		eggsLeft=remaining,budget=budget,difficulty="Medium",multiplier="×1",winPays="6–8",input=clientUI.inputKind()})
+		eggsLeft=remaining,budget=budget,difficulty=clientUI.heatInfo(board:GetAttribute("Heat")).name,multiplier=select(2,clientUI.heatInfo(board:GetAttribute("Heat"))),
+		winPays=board:GetAttribute("WinPays")or "…",input=clientUI.inputKind()})
+	if clientUI.refreshDeckOverlays then clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)end
 	clientUI.refreshBack()
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
@@ -1929,7 +1961,7 @@ local function handleControl(name, state, input)
 			clientUI.deck:flash("A")
 			dropEgg()
 		elseif name == "EggDropCustomize" then
-			if openMenu()then clientUI.accepted("confirm")end
+			if clientUI.openQuestLog()then clientUI.accepted("confirm")end
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
 			clientUI.deck:flash(if name == "EggDropLeft" then "Left" else "Right")
@@ -1990,8 +2022,11 @@ ContextActionService:BindActionAtPriority("EggDropResults", function(_, state, i
 		if key == Enum.KeyCode.Left or key == Enum.KeyCode.A or key == Enum.KeyCode.DPadLeft then recap:move(-1);clientUI.deck:flash("Left")
 		elseif key == Enum.KeyCode.Right or key == Enum.KeyCode.D or key == Enum.KeyCode.DPadRight then recap:move(1);clientUI.deck:flash("Right")
 		elseif key == Enum.KeyCode.ButtonB or key == Enum.KeyCode.Backspace then clientUI.deck:flash("B");recap:back()
-		elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.Down or key == Enum.KeyCode.DPadDown then
-			-- Difficulty picker arrives in part 2; up/down stay inside results.
+			elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.Down or key == Enum.KeyCode.DPadDown then
+				-- Up on Replay starts the next round on the difficulty picker.
+				if (key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp) and recap.focus == 1 and recap.data and not recap.data.pending then
+					clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;clientUI.deck:flash("Up");requestRetry()
+				end
 		else clientUI.deck:flash("A");recap:confirm() end
 	end
 	return Enum.ContextActionResult.Sink
@@ -2027,18 +2062,160 @@ local faceplateResultConnection=remotes:WaitForChild("FaceplateResult").OnClient
 	picker.shop:result(message)
 end)
 gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropFaceplateShop")end)
-recap:on("replay",function()requestRetry()end)
+-- Replay keeps the difficulty (no picker); Up on Replay picks again.
+recap:on("replay",function()clientUI.keepHeatAfter=board:GetAttribute("RunSequence");requestRetry()end)
 recap:on("leave",function()clientUI.leaveDeck()end)
 -- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.
 clientUI.deck:on("dpad",function(dir,input)
-	if recap.visible then
+	if clientUI.questLog.visible then
+		if dir=="Up"or dir=="Down"then clientUI.questLog:move(if dir=="Up"then -1 else 1)else clientUI.questLog:cycleTab(if dir=="Left"then -1 else 1)end
+	elseif clientUI.heatPicker.visible then
+		if dir=="Left"or dir=="Right"then clientUI.heatPicker:move(if dir=="Left"then -1 else 1)end
+	elseif recap.visible then
 		if dir=="Left" or dir=="Right" then recap:move(if dir=="Left" then -1 else 1) end
 	elseif dir=="Left" or dir=="Right" then startAim(input,if dir=="Left" then -1 else 1) end
 end)
-clientUI.deck:on("A",function()if recap.visible then recap:confirm() else dropEgg() end end)
-clientUI.deck:on("B",function()if recap.visible then recap:back() else clientUI.leaveDeck() end end)
-clientUI.deck:on("menu",function()if openMenu()then clientUI.accepted("confirm")end end)
-clientUI.deck:on("back",function()if recap.visible then recap:back() else clientUI.leaveDeck() end end)
+clientUI.deck:on("A",function()
+	if clientUI.questLog.visible then clientUI.questLog:act()elseif clientUI.heatPicker.visible then clientUI.heatPicker:confirm()
+	elseif recap.visible then recap:confirm() else dropEgg() end end)
+clientUI.deck:on("B",function()
+	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
+clientUI.deck:on("menu",function()
+	if board:GetAttribute("Mode")=="Board"then if clientUI.toggleQuestLog()then clientUI.accepted("confirm")end
+	elseif openMenu()then clientUI.accepted("confirm")end end)
+clientUI.deck:on("back",function()
+	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
+
+-- ── Part 2b: difficulty picker and quest log ────────────────────────────────
+-- The picker shows before a fresh round (no drops yet) unless the server marks
+-- the run guided, the player already pressed Start, or Replay kept the heat.
+clientUI.heatStarted=false
+function clientUI.questLine()
+ local q=nurseryState and nurseryState.quests
+ for _,row in ipairs(q and q.daily or {})do
+  if not row.claimed and not row.ready then return row.title.." "..row.progress.."/"..row.target end
+ end
+ return nil
+end
+function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
+ local picker,log=clientUI.heatPicker,clientUI.questLog
+ if board:GetAttribute("Mode")~="Board"then
+  clientUI.heatStarted=false;clientUI.keepHeatAfter=nil
+  picker:hide();if log.visible then clientUI.closeQuestLog()end
+  return
+ end
+ local sequence=board:GetAttribute("RunSequence")
+ if over then clientUI.heatStarted=false
+ elseif clientUI.keepHeatAfter and sequence~=clientUI.keepHeatAfter then clientUI.heatStarted=true;clientUI.keepHeatAfter=nil end
+ if log.visible then log:update(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0)end
+ local want=fieldActive and drops==0 and not over and not sheetOpen and not modal.Visible and not roomView.busy
+  and board:GetAttribute("HeatGuided")~=true and not clientUI.heatStarted
+ if want then
+  local ok,pays=pcall(function()return HttpService:JSONDecode(board:GetAttribute("HeatPays")or "{}")end)
+  picker:show({selected=clientUI.pickedHeat or board:GetAttribute("NextHeat"),pays=if ok then pays else nil,
+   wallet=nurseryState and nurseryState.nectar or 0,goal=clientUI.fieldView and not clientUI.fieldView.empty and clientUI.fieldView.title or nil,
+   quest=clientUI.questLine()})
+ else picker:hide()end
+end
+clientUI.heatCallbacks.select=function(key)clientUI.pickedHeat=key;audio:play("aim",1.1,.35)end
+clientUI.heatCallbacks.start=function(key)
+ if board:GetAttribute("Heat")~=key or board:GetAttribute("NextHeat")~=key then request:FireServer("heat",key)end
+ clientUI.pickedHeat=nil;clientUI.heatStarted=true;clientUI.heatPicker:hide()
+ clientUI.accepted("confirm");if updateHud then task.defer(updateHud)end
+end
+function clientUI.openQuestLog(tab)
+ if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or isPickerOpen()or gameMenu.shade.Visible or nurseryView:isOpen()or clientUI.isHueOpen()then return false end
+ clearPlayInputs()
+ clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab)
+ if not board:GetAttribute("RoundOver")then request:FireServer("pause",true)end
+ if updateHud then task.defer(updateHud)end
+ return true
+end
+function clientUI.closeQuestLog()
+ if not clientUI.questLog.visible then return false end
+ clientUI.questLog:hide();request:FireServer("pause",false)
+ clientUI.accepted("back");if updateHud then task.defer(updateHud)end
+ return true
+end
+function clientUI.toggleQuestLog()
+ if clientUI.questLog.visible then return clientUI.closeQuestLog()end
+ return clientUI.openQuestLog()
+end
+clientUI.questCallbacks.claim=function(scope,slot,period)
+ nurseryRequest:FireServer("questClaim",{scope=scope,slot=slot,period=period},nurseryState and nurseryState.revision or 0)
+end
+clientUI.questCallbacks.reroll=function(slot,day)
+ nurseryRequest:FireServer("questReroll",{slot=slot,period=day},nurseryState and nurseryState.revision or 0)
+end
+clientUI.questCallbacks.back=function()clientUI.closeQuestLog()end
+clientUI.questCallbacks.menu=function()clientUI.closeQuestLog();if openMenu()then clientUI.accepted("confirm")end end
+clientUI.questCallbacks.tab=function()clientUI.accepted("tab")end
+-- Feedback: a toast and the quest_complete cue (a quiet no-op until the sound
+-- file arrives) when a quest becomes claimable, and again on a saved claim.
+clientUI.questReady=nil
+clientUI.onQuests=function(state)
+ local q=state.quests;if type(q)~="table"then return end
+ local ready={}
+ for _,scope in ipairs({"daily","weekly"})do for _,row in ipairs(q[scope]or {})do
+  local key=scope..":"..row.id
+  ready[key]=row.ready==true or row.claimed==true
+  if clientUI.questReady and row.ready and not clientUI.questReady[key]then
+   clientUI.deck.toaster.show("Quest done: "..row.title,row.reward);audio:play("quest_complete",1,.7)
+  end
+ end end
+ clientUI.questReady=ready
+ clientUI.questLog:update(q,state.nectar or 0)
+end
+clientUI.questResultConnection=remotes:WaitForChild("QuestResult").OnClientEvent:Connect(function(message)
+ clientUI.questLog:result(message)
+ if type(message)~="table"then return end
+ if message.status=="Saved"and message.action=="questClaim"then
+  clientUI.deck.toaster.show("Quest claimed",message.stars);audio:play("quest_complete",1.1,.7)
+ elseif message.status=="Saved"and message.action=="questReroll"then audio:play("retry",1.2,.5)
+ elseif message.status=="Rejected"and message.reason~="AlreadyClaimed"then
+  clientUI.deck.toaster.show(({NoReroll="No reroll left today",Started="Only unstarted quests can be rerolled",Busy="Saving, try again",Throttled="One moment…",NotComplete="Not finished yet",PeriodChanged="New quests arrived"})[message.reason]or "Try again")
+ end
+end)
+gui.Destroying:Connect(function()clientUI.questResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropDeckOverlay")end)
+-- Keyboard and gamepad for both layers (UI-SPEC 3 "Gamepad and keyboard map").
+ContextActionService:BindActionAtPriority("EggDropDeckOverlay",function(_,state,input)
+ local log,heat=clientUI.questLog,clientUI.heatPicker
+ if UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen or roomView.busy then return Enum.ContextActionResult.Pass end
+ if not(log.visible or heat.visible)then
+  -- Menu from the results screen opens the quest log too (UI-SPEC 5.4).
+  local k=input.KeyCode
+  if recap.visible and(k==Enum.KeyCode.M or k==Enum.KeyCode.ButtonY or k==Enum.KeyCode.ButtonSelect or k==Enum.KeyCode.ButtonStart)then
+   if state==Enum.UserInputState.Begin then clientUI.openQuestLog()end
+   return Enum.ContextActionResult.Sink
+  end
+  return Enum.ContextActionResult.Pass
+ end
+ if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
+ local K=Enum.KeyCode;local key=input.KeyCode
+ local left=key==K.Left or key==K.A or key==K.DPadLeft
+ local right=key==K.Right or key==K.D or key==K.DPadRight
+ local up=key==K.Up or key==K.W or key==K.DPadUp
+ local down=key==K.Down or key==K.S or key==K.DPadDown
+ local confirm=key==K.Space or key==K.Return or key==K.KeypadEnter or key==K.ButtonA
+ local back=key==K.ButtonB or key==K.Backspace
+ local menu=key==K.M or key==K.ButtonY or key==K.ButtonSelect or key==K.ButtonStart
+ if log.visible then
+  if up or down then log:move(if up then -1 else 1);clientUI.deck:flash(if up then "Up"else "Down")
+  elseif key==K.Q or key==K.ButtonL1 then log:cycleTab(-1)
+  elseif key==K.E or key==K.ButtonR1 then log:cycleTab(1)
+  elseif confirm then clientUI.deck:flash("A");log:act()
+  elseif back or menu then clientUI.deck:flash("B");clientUI.closeQuestLog()end
+ else
+  if left or right then heat:move(if left then -1 else 1);clientUI.deck:flash(if left then "Left"else "Right")
+  elseif confirm then clientUI.deck:flash("A");heat:confirm()
+  elseif back then clientUI.deck:flash("B");clientUI.leaveDeck()
+  elseif menu then clientUI.openQuestLog()end
+ end
+ return Enum.ContextActionResult.Sink
+end,false,priority+700,Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,Enum.KeyCode.W,Enum.KeyCode.S,
+ Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,
+ Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,
+ Enum.KeyCode.M,Enum.KeyCode.ButtonY,Enum.KeyCode.ButtonSelect,Enum.KeyCode.ButtonStart)
 ContextActionService:BindActionAtPriority("EggDropLeft", handleControl, false, priority,
 	Enum.KeyCode.Left, Enum.KeyCode.A, Enum.KeyCode.DPadLeft)
 ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, priority,

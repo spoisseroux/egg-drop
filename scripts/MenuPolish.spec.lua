@@ -17,9 +17,10 @@ return function(client, parent)
 	local function test(name, run) run(); table.insert(cases, name) end
 	local function snapshot()
 		return { status = "Ready", nectar = 24, inventoryMask = 127, dailyAvailable = true, dailyBonus = 6,
-			contracts = { { id = "runs", title = "Finish 2 quests", progress = 1, target = 2, reward = 4 },
-				{ id = "chain", title = "Chain 3 merges", progress = 3, target = 3, reward = 3, claimed = true },
-				{ id = "score", title = "Score 500", progress = 250, target = 500, reward = 3 } },
+			-- Hatching v9: today's quests replace the daily contracts.
+			quests = { day = "20", daily = { { id = "d_wins2", title = "Win 2 rounds", progress = 1, target = 2, reward = 4 },
+				{ id = "d_chain3", title = "Chain 3 merges", progress = 3, target = 3, reward = 4, claimed = true },
+				{ id = "d_score600", title = "Score 600", progress = 250, target = 600, reward = 4 } } },
 			mastery = { pip = 60, wick = 25 }, masteryDetails = { pip = Mastery.describe(60, 7), wick = Mastery.describe(25, 5) } }
 	end
 	local function fixture()
@@ -134,7 +135,7 @@ return function(client, parent)
 			local state=snapshot();state.dailyAvailable=false
 			menu:update(state,"pip","wick",0,0,0,"meadow");task.wait(.03)
 			assert(menu.dailyButton.Text=="Gift claimed" and not menu.dailyButton.Interactable and not menu:activate("daily") and #calls==0)
-			assert(menu.dailyCards[2].reward.Text=="Earned" and menu.dailyCards[1].reward.Text=="+4 Stars")
+			assert(menu.dailyCards[2].reward.Text=="Claimed" and menu.dailyCards[1].reward.Text=="+4 Stars")
 			menu:close()
 		end)
 		test("fresh open and page entry reset scroll while snapshots retain reading position",function()
