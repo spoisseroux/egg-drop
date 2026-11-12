@@ -1,0 +1,7 @@
+{
+ "method": "every vertex of every balustrade and shore/rim rock: on the open (drop) side it must be inside the rim line (d <= 0) and over ground no lower than 0.45 studs below the lawn",
+ "objects": 46,
+ "vertices": 7926,
+ "failures": [],
+ "outermost_vertex_vs_rim_studs": -0.31
+}

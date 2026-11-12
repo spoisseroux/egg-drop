@@ -1,0 +1,435 @@
+{
+ "note": "Blender (x, y, z) = Roblox (X, -Z, Y - 4). yaw_rad is the rotation about the vertical axis (Blender Z = Roblox Y, same sign). Front of every station is local -Y in Blender = +Z in Roblox before the yaw.",
+ "stations": [
+  {
+   "name": "Station_EggNest",
+   "definition": "EggNest",
+   "source_file": "assets/art-source/stations/v2/EggNest.blend",
+   "blender_location": [
+    -31,
+    11,
+    0.1
+   ],
+   "roblox_position": [
+    -31,
+    4.1,
+    -11
+   ],
+   "yaw_rad": -0.35,
+   "roblox_cframe": "CFrame.new(-31.000, 4.100, -11.000) * CFrame.Angles(0, -0.350, 0)",
+   "parts": [
+    "Station_EggNest_Steps",
+    "Station_EggNest_Nest_Cup",
+    "Station_EggNest_Egg",
+    "Station_EggNest_Glow_Halo",
+    "Station_EggNest_Sign_Stele"
+   ],
+   "triangles": 586
+  },
+  {
+   "name": "Station_CareCradle",
+   "definition": "CareCradle",
+   "source_file": "assets/art-source/stations/v2/CareCradle.blend",
+   "blender_location": [
+    -17,
+    15,
+    0.2
+   ],
+   "roblox_position": [
+    -17,
+    4.2,
+    -15
+   ],
+   "yaw_rad": -0.5,
+   "roblox_cframe": "CFrame.new(-17.000, 4.200, -15.000) * CFrame.Angles(0, -0.500, 0)",
+   "parts": [
+    "Station_CareCradle_Dais",
+    "Station_CareCradle_Cradle_Pedestal",
+    "Station_CareCradle_Cradle_Cushion",
+    "Station_CareCradle_Canopy_Arch",
+    "Station_CareCradle_Canopy_Mobile_Glow",
+    "Station_CareCradle_Gauge_Post",
+    "Station_CareCradle_Journal_Lectern"
+   ],
+   "triangles": 1100
+  },
+  {
+   "name": "Station_PocketDeckKiosk",
+   "definition": "PocketDeckKiosk",
+   "source_file": "assets/art-source/stations/v2/PocketDeckKiosk.blend",
+   "blender_location": [
+    -46,
+    9,
+    0.2
+   ],
+   "roblox_position": [
+    -46,
+    4.2,
+    -9
+   ],
+   "yaw_rad": 0.45,
+   "roblox_cframe": "CFrame.new(-46.000, 4.200, -9.000) * CFrame.Angles(0, 0.450, 0)",
+   "parts": [
+    "Station_PocketDeckKiosk_Kiosk"
+   ],
+   "triangles": 984
+  },
+  {
+   "name": "Station_BenchWest",
+   "definition": "Bench",
+   "source_file": "assets/art-source/stations/v2/Bench.blend",
+   "blender_location": [
+    -43,
+    -5,
+    0.05
+   ],
+   "roblox_position": [
+    -43,
+    4.05,
+    5
+   ],
+   "yaw_rad": 2.442,
+   "roblox_cframe": "CFrame.new(-43.000, 4.050, 5.000) * CFrame.Angles(0, 2.442, 0)",
+   "parts": [
+    "Station_BenchWest_Supports",
+    "Station_BenchWest_Seat_Slats"
+   ],
+   "triangles": 156
+  },
+  {
+   "name": "Station_BenchEast",
+   "definition": "Bench",
+   "source_file": "assets/art-source/stations/v2/Bench.blend",
+   "blender_location": [
+    -17,
+    -5,
+    0.05
+   ],
+   "roblox_position": [
+    -17,
+    4.05,
+    5
+   ],
+   "yaw_rad": 3.842,
+   "roblox_cframe": "CFrame.new(-17.000, 4.050, 5.000) * CFrame.Angles(0, 3.842, 0)",
+   "parts": [
+    "Station_BenchEast_Supports",
+    "Station_BenchEast_Seat_Slats"
+   ],
+   "triangles": 156
+  },
+  {
+   "name": "Station_PicnicWest",
+   "definition": "PicnicTable",
+   "source_file": "assets/art-source/stations/v2/PicnicTable.blend",
+   "blender_location": [
+    -58,
+    -12,
+    0.2
+   ],
+   "roblox_position": [
+    -58,
+    4.2,
+    12
+   ],
+   "yaw_rad": 0.4,
+   "roblox_cframe": "CFrame.new(-58.000, 4.200, 12.000) * CFrame.Angles(0, 0.400, 0)",
+   "parts": [
+    "Station_PicnicWest_Trestles",
+    "Station_PicnicWest_Top_And_Seats"
+   ],
+   "triangles": 144
+  },
+  {
+   "name": "Station_PicnicEast",
+   "definition": "PicnicTable",
+   "source_file": "assets/art-source/stations/v2/PicnicTable.blend",
+   "blender_location": [
+    34,
+    -46,
+    0.2
+   ],
+   "roblox_position": [
+    34,
+    4.2,
+    46
+   ],
+   "yaw_rad": 0.4,
+   "roblox_cframe": "CFrame.new(34.000, 4.200, 46.000) * CFrame.Angles(0, 0.400, 0)",
+   "parts": [
+    "Station_PicnicEast_Trestles",
+    "Station_PicnicEast_Top_And_Seats"
+   ],
+   "triangles": 144
+  },
+  {
+   "name": "Station_ToyLawn",
+   "definition": "ToyLawn",
+   "source_file": "assets/art-source/stations/v2/ToyLawn.blend",
+   "blender_location": [
+    -30,
+    -18.5,
+    0.1
+   ],
+   "roblox_position": [
+    -30,
+    4.1,
+    18.5
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(-30.000, 4.100, 18.500) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Station_ToyLawn_ToyChest",
+    "Station_ToyLawn_Ball",
+    "Station_ToyLawn_StackingRings",
+    "Station_ToyLawn_Blocks"
+   ],
+   "triangles": 564
+  },
+  {
+   "name": "Station_NapDais_CreekNook",
+   "definition": "NapDais",
+   "source_file": "assets/art-source/stations/v2/NapDais.blend",
+   "blender_location": [
+    1,
+    33,
+    0.05
+   ],
+   "roblox_position": [
+    1,
+    4.05,
+    -33
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(1.000, 4.050, -33.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Station_NapDais_CreekNook_Dais",
+    "Station_NapDais_CreekNook_Cushion",
+    "Station_NapDais_CreekNook_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "name": "Station_NapDais_SpringRestWest",
+   "definition": "NapDais",
+   "source_file": "assets/art-source/stations/v2/NapDais.blend",
+   "blender_location": [
+    49.5,
+    -14,
+    0.05
+   ],
+   "roblox_position": [
+    49.5,
+    4.05,
+    14
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(49.500, 4.050, 14.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Station_NapDais_SpringRestWest_Dais",
+    "Station_NapDais_SpringRestWest_Cushion",
+    "Station_NapDais_SpringRestWest_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "name": "Station_NapDais_SpringRestEast",
+   "definition": "NapDais",
+   "source_file": "assets/art-source/stations/v2/NapDais.blend",
+   "blender_location": [
+    54.5,
+    -14,
+    0.05
+   ],
+   "roblox_position": [
+    54.5,
+    4.05,
+    14
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(54.500, 4.050, 14.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Station_NapDais_SpringRestEast_Dais",
+    "Station_NapDais_SpringRestEast_Cushion",
+    "Station_NapDais_SpringRestEast_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "name": "Station_ArrivalDais",
+   "definition": "ArrivalDais",
+   "source_file": "assets/art-source/stations/v2/ArrivalDais.blend",
+   "blender_location": [
+    96,
+    -66,
+    0.05
+   ],
+   "roblox_position": [
+    96,
+    4.05,
+    66
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(96.000, 4.050, 66.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Station_ArrivalDais_Dais",
+    "Station_ArrivalDais_Glow_Disc"
+   ],
+   "triangles": 234
+  },
+  {
+   "name": "Lamp_1",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    70,
+    -50,
+    0.521
+   ],
+   "roblox_position": [
+    70,
+    4.521,
+    50
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(70.000, 4.521, 50.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_1_Post",
+    "Lamp_1_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_2",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    30,
+    -33,
+    0.585
+   ],
+   "roblox_position": [
+    30,
+    4.585,
+    33
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(30.000, 4.585, 33.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_2_Post",
+    "Lamp_2_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_3",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    -9,
+    -23,
+    0.567
+   ],
+   "roblox_position": [
+    -9,
+    4.567,
+    23
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(-9.000, 4.567, 23.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_3_Post",
+    "Lamp_3_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_4",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    -12,
+    44,
+    0.618
+   ],
+   "roblox_position": [
+    -12,
+    4.618,
+    -44
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(-12.000, 4.618, -44.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_4_Post",
+    "Lamp_4_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_5",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    -70,
+    3,
+    0.477
+   ],
+   "roblox_position": [
+    -70,
+    4.477,
+    -3
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(-70.000, 4.477, -3.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_5_Post",
+    "Lamp_5_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_6",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    50,
+    10,
+    0.611
+   ],
+   "roblox_position": [
+    50,
+    4.611,
+    -10
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(50.000, 4.611, -10.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_6_Post",
+    "Lamp_6_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "name": "Lamp_7",
+   "definition": "Lamp",
+   "source_file": "assets/art-source/stations/v2/Lamp.blend",
+   "blender_location": [
+    -22,
+    -38,
+    0.757
+   ],
+   "roblox_position": [
+    -22,
+    4.757,
+    38
+   ],
+   "yaw_rad": 0.0,
+   "roblox_cframe": "CFrame.new(-22.000, 4.757, 38.000) * CFrame.Angles(0, 0.000, 0)",
+   "parts": [
+    "Lamp_7_Post",
+    "Lamp_7_Orb_Glow"
+   ],
+   "triangles": 146
+  }
+ ]
+}

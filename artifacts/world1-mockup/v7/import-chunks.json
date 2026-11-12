@@ -1,0 +1,4245 @@
+{
+ "summary": {
+  "chunks": 249,
+  "triangles_total": 73172,
+  "largest_chunk_triangles": 7620,
+  "chunks_over_10k": [],
+  "animated_chunks": 105,
+  "note": "Every chunk has exactly one material, identity transform and its origin at the world origin. Blender (x, y, z) = Roblox (X, -Z, Y - 4)."
+ },
+ "chunks": [
+  {
+   "chunk": "Anim__Chime_1__gold",
+   "category": "Anim__Chime_1",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    87.04,
+    -54.85,
+    10.21
+   ],
+   "bounds_max": [
+    87.12,
+    -54.77,
+    11.21
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_1__ph_pink",
+   "category": "Anim__Chime_1",
+   "material": "W1_ph_pink",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    86.84,
+    -55.03,
+    8.41
+   ],
+   "bounds_max": [
+    87.32,
+    -54.59,
+    10.21
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_2__gold",
+   "category": "Anim__Chime_2",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    86.0,
+    -56.2,
+    11.22
+   ],
+   "bounds_max": [
+    86.08,
+    -56.11,
+    12.22
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_2__ph_yellow",
+   "category": "Anim__Chime_2",
+   "material": "W1_ph_yellow",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    85.8,
+    -56.38,
+    8.62
+   ],
+   "bounds_max": [
+    86.28,
+    -55.93,
+    11.22
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_3__gold",
+   "category": "Anim__Chime_3",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    84.96,
+    -57.54,
+    11.51
+   ],
+   "bounds_max": [
+    85.04,
+    -57.46,
+    12.51
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_3__ph_lilac",
+   "category": "Anim__Chime_3",
+   "material": "W1_ph_lilac",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    84.76,
+    -57.72,
+    8.31
+   ],
+   "bounds_max": [
+    85.24,
+    -57.28,
+    11.51
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_4__gold",
+   "category": "Anim__Chime_4",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    83.92,
+    -58.89,
+    11.22
+   ],
+   "bounds_max": [
+    84.0,
+    -58.8,
+    12.22
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_4__ph_aqua",
+   "category": "Anim__Chime_4",
+   "material": "W1_ph_aqua",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    83.72,
+    -59.07,
+    8.82
+   ],
+   "bounds_max": [
+    84.2,
+    -58.62,
+    11.22
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_5__gold",
+   "category": "Anim__Chime_5",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    82.88,
+    -60.23,
+    10.21
+   ],
+   "bounds_max": [
+    82.96,
+    -60.15,
+    11.21
+   ]
+  },
+  {
+   "chunk": "Anim__Chime_5__ph_mint",
+   "category": "Anim__Chime_5",
+   "material": "W1_ph_mint",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    82.68,
+    -60.41,
+    8.51
+   ],
+   "bounds_max": [
+    83.16,
+    -59.97,
+    10.21
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_01__cliff_rock",
+   "category": "Anim__Drifting_Rock_01",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -169.29,
+    -54.14,
+    -4.51
+   ],
+   "bounds_max": [
+    -163.25,
+    -48.9,
+    5.44
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_02__cliff_rock",
+   "category": "Anim__Drifting_Rock_02",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -106.93,
+    107.27,
+    -31.21
+   ],
+   "bounds_max": [
+    -103.02,
+    110.75,
+    -25.94
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_03__cliff_rock",
+   "category": "Anim__Drifting_Rock_03",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -46.4,
+    192.39,
+    30.61
+   ],
+   "bounds_max": [
+    -43.3,
+    194.8,
+    34.64
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_04__cliff_rock",
+   "category": "Anim__Drifting_Rock_04",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -20.29,
+    -182.63,
+    -14.6
+   ],
+   "bounds_max": [
+    -16.97,
+    -180.0,
+    -9.85
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_05__cliff_rock",
+   "category": "Anim__Drifting_Rock_05",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    90.61,
+    145.22,
+    1.8
+   ],
+   "bounds_max": [
+    94.18,
+    147.98,
+    6.64
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_06__cliff_rock",
+   "category": "Anim__Drifting_Rock_06",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -100.77,
+    -218.72,
+    38.94
+   ],
+   "bounds_max": [
+    -97.52,
+    -215.9,
+    42.79
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_07__cliff_rock",
+   "category": "Anim__Drifting_Rock_07",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    220.81,
+    -86.03,
+    -23.2
+   ],
+   "bounds_max": [
+    225.08,
+    -80.27,
+    -14.3
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_08__cliff_rock",
+   "category": "Anim__Drifting_Rock_08",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -167.66,
+    -25.42,
+    -20.63
+   ],
+   "bounds_max": [
+    -164.69,
+    -21.96,
+    -15.1
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_09__cliff_rock",
+   "category": "Anim__Drifting_Rock_09",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -167.51,
+    -190.22,
+    27.99
+   ],
+   "bounds_max": [
+    -159.77,
+    -184.27,
+    37.87
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_10__cliff_rock",
+   "category": "Anim__Drifting_Rock_10",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    134.38,
+    -99.48,
+    -36.55
+   ],
+   "bounds_max": [
+    141.14,
+    -93.7,
+    -25.84
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_11__cliff_rock",
+   "category": "Anim__Drifting_Rock_11",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -27.38,
+    163.0,
+    -40.03
+   ],
+   "bounds_max": [
+    -21.83,
+    170.54,
+    -30.37
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_12__cliff_rock",
+   "category": "Anim__Drifting_Rock_12",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    59.68,
+    162.19,
+    -34.52
+   ],
+   "bounds_max": [
+    62.6,
+    164.32,
+    -30.46
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_13__cliff_rock",
+   "category": "Anim__Drifting_Rock_13",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    95.02,
+    168.75,
+    -2.53
+   ],
+   "bounds_max": [
+    98.12,
+    171.46,
+    2.45
+   ]
+  },
+  {
+   "chunk": "Anim__Drifting_Rock_14__cliff_rock",
+   "category": "Anim__Drifting_Rock_14",
+   "material": "W1_cliff_rock",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    133.44,
+    81.99,
+    -27.93
+   ],
+   "bounds_max": [
+    138.93,
+    86.32,
+    -19.96
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East__cliff_rock",
+   "category": "Anim__Islet_Near_East",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    152.75,
+    -38.5,
+    -11.06
+   ],
+   "bounds_max": [
+    183.88,
+    -4.75,
+    13.6
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East__grass",
+   "category": "Anim__Islet_Near_East",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    151.75,
+    -37.59,
+    13.6
+   ],
+   "bounds_max": [
+    184.28,
+    -6.72,
+    16.1
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East_Tree1__bark",
+   "category": "Anim__Islet_Near_East_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    166.85,
+    -20.61,
+    14.12
+   ],
+   "bounds_max": [
+    169.81,
+    -15.66,
+    23.75
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East_Tree1__foliage",
+   "category": "Anim__Islet_Near_East_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    164.63,
+    -23.41,
+    20.34
+   ],
+   "bounds_max": [
+    172.69,
+    -13.16,
+    27.61
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East_Tree2__bark",
+   "category": "Anim__Islet_Near_East_Tree2",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    157.96,
+    -22.79,
+    14.12
+   ],
+   "bounds_max": [
+    163.08,
+    -20.16,
+    22.61
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_East_Tree2__foliage_blossom",
+   "category": "Anim__Islet_Near_East_Tree2",
+   "material": "W1_foliage_blossom",
+   "triangles": 60,
+   "anim": "bob",
+   "bounds_min": [
+    155.16,
+    -24.98,
+    20.08
+   ],
+   "bounds_max": [
+    165.68,
+    -18.22,
+    25.9
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth__cliff_rock",
+   "category": "Anim__Islet_Near_FarSouth",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    -67.58,
+    -244.26,
+    -84.06
+   ],
+   "bounds_max": [
+    -10.71,
+    -189.59,
+    -34.4
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth__grass",
+   "category": "Anim__Islet_Near_FarSouth",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    -68.29,
+    -241.42,
+    -34.4
+   ],
+   "bounds_max": [
+    -12.48,
+    -189.86,
+    -31.24
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth__marble",
+   "category": "Anim__Islet_Near_FarSouth",
+   "material": "W1_marble",
+   "triangles": 152,
+   "anim": "bob",
+   "bounds_min": [
+    -54.12,
+    -229.12,
+    -33.5
+   ],
+   "bounds_max": [
+    -25.88,
+    -200.88,
+    -23.45
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree1__bark",
+   "category": "Anim__Islet_Near_FarSouth_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -38.51,
+    -216.81,
+    -33.88
+   ],
+   "bounds_max": [
+    -33.54,
+    -213.85,
+    -24.25
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree1__foliage",
+   "category": "Anim__Islet_Near_FarSouth_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -41.01,
+    -219.03,
+    -27.66
+   ],
+   "bounds_max": [
+    -30.75,
+    -210.98,
+    -20.39
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree2__bark",
+   "category": "Anim__Islet_Near_FarSouth_Tree2",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -42.03,
+    -221.68,
+    -33.88
+   ],
+   "bounds_max": [
+    -39.44,
+    -216.45,
+    -25.39
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree2__foliage_blossom",
+   "category": "Anim__Islet_Near_FarSouth_Tree2",
+   "material": "W1_foliage_blossom",
+   "triangles": 60,
+   "anim": "bob",
+   "bounds_min": [
+    -44.35,
+    -224.24,
+    -27.92
+   ],
+   "bounds_max": [
+    -37.46,
+    -213.68,
+    -22.1
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree3__bark",
+   "category": "Anim__Islet_Near_FarSouth_Tree3",
+   "material": "W1_bark",
+   "triangles": 48,
+   "anim": "bob",
+   "bounds_min": [
+    -48.76,
+    -212.93,
+    -33.88
+   ],
+   "bounds_max": [
+    -45.97,
+    -210.51,
+    -23.85
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_FarSouth_Tree3__foliage",
+   "category": "Anim__Islet_Near_FarSouth_Tree3",
+   "material": "W1_foliage",
+   "triangles": 60,
+   "anim": "bob",
+   "bounds_min": [
+    -50.83,
+    -214.92,
+    -25.97
+   ],
+   "bounds_max": [
+    -44.93,
+    -208.98,
+    -16.63
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_NorthWest__cliff_rock",
+   "category": "Anim__Islet_Near_NorthWest",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    -163.6,
+    114.79,
+    23.21
+   ],
+   "bounds_max": [
+    -135.98,
+    142.03,
+    43.6
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_NorthWest__grass",
+   "category": "Anim__Islet_Near_NorthWest",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    -162.52,
+    115.19,
+    43.6
+   ],
+   "bounds_max": [
+    -137.18,
+    140.09,
+    45.92
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_NorthWest_Tree1__bark",
+   "category": "Anim__Islet_Near_NorthWest_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -151.04,
+    128.0,
+    44.13
+   ],
+   "bounds_max": [
+    -148.13,
+    132.75,
+    53.68
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_NorthWest_Tree1__foliage",
+   "category": "Anim__Islet_Near_NorthWest_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -153.28,
+    125.25,
+    50.29
+   ],
+   "bounds_max": [
+    -145.2,
+    135.2,
+    57.51
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South__cliff_rock",
+   "category": "Anim__Islet_Near_South",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    8.18,
+    -171.56,
+    -46.24
+   ],
+   "bounds_max": [
+    52.28,
+    -127.09,
+    -12.4
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South__grass",
+   "category": "Anim__Islet_Near_South",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    9.36,
+    -169.94,
+    -12.4
+   ],
+   "bounds_max": [
+    47.28,
+    -130.93,
+    -9.6
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South__marble",
+   "category": "Anim__Islet_Near_South",
+   "material": "W1_marble",
+   "triangles": 152,
+   "anim": "bob",
+   "bounds_min": [
+    16.92,
+    -161.08,
+    -11.5
+   ],
+   "bounds_max": [
+    39.08,
+    -138.92,
+    -3.94
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthEast__cliff_rock",
+   "category": "Anim__Islet_Near_SouthEast",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    141.08,
+    -128.68,
+    -35.75
+   ],
+   "bounds_max": [
+    159.28,
+    -107.74,
+    -22.4
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthEast__grass",
+   "category": "Anim__Islet_Near_SouthEast",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    140.68,
+    -126.98,
+    -22.4
+   ],
+   "bounds_max": [
+    159.55,
+    -109.65,
+    -20.26
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthEast_Tree1__bark",
+   "category": "Anim__Islet_Near_SouthEast_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    148.71,
+    -121.05,
+    -21.65
+   ],
+   "bounds_max": [
+    150.9,
+    -117.45,
+    -14.49
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthEast_Tree1__foliage",
+   "category": "Anim__Islet_Near_SouthEast_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    146.53,
+    -122.89,
+    -17.03
+   ],
+   "bounds_max": [
+    152.58,
+    -115.38,
+    -11.62
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthWest__cliff_rock",
+   "category": "Anim__Islet_Near_SouthWest",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    -123.97,
+    -138.15,
+    -15.13
+   ],
+   "bounds_max": [
+    -100.09,
+    -115.69,
+    5.6
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthWest__grass",
+   "category": "Anim__Islet_Near_SouthWest",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    -122.42,
+    -138.65,
+    5.6
+   ],
+   "bounds_max": [
+    -101.27,
+    -117.52,
+    7.86
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthWest_Tree1__bark",
+   "category": "Anim__Islet_Near_SouthWest_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -112.86,
+    -128.37,
+    6.2
+   ],
+   "bounds_max": [
+    -109.85,
+    -124.31,
+    14.96
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_SouthWest_Tree1__foliage",
+   "category": "Anim__Islet_Near_SouthWest_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -115.01,
+    -130.79,
+    11.85
+   ],
+   "bounds_max": [
+    -107.22,
+    -122.16,
+    18.47
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South_Tree1__bark",
+   "category": "Anim__Islet_Near_South_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    34.99,
+    -148.5,
+    -11.88
+   ],
+   "bounds_max": [
+    40.39,
+    -145.67,
+    -2.25
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South_Tree1__foliage",
+   "category": "Anim__Islet_Near_South_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    32.48,
+    -150.98,
+    -5.66
+   ],
+   "bounds_max": [
+    43.06,
+    -143.02,
+    1.61
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South_Tree2__bark",
+   "category": "Anim__Islet_Near_South_Tree2",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    23.22,
+    -157.14,
+    -11.88
+   ],
+   "bounds_max": [
+    25.9,
+    -152.05,
+    -3.39
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_South_Tree2__foliage_blossom",
+   "category": "Anim__Islet_Near_South_Tree2",
+   "material": "W1_foliage_blossom",
+   "triangles": 60,
+   "anim": "bob",
+   "bounds_min": [
+    20.68,
+    -159.57,
+    -5.92
+   ],
+   "bounds_max": [
+    27.63,
+    -149.45,
+    -0.1
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West__cliff_rock",
+   "category": "Anim__Islet_Near_West",
+   "material": "W1_cliff_rock",
+   "triangles": 90,
+   "anim": "bob",
+   "bounds_min": [
+    -193.56,
+    10.86,
+    -13.03
+   ],
+   "bounds_max": [
+    -158.18,
+    49.74,
+    23.6
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West__grass",
+   "category": "Anim__Islet_Near_West",
+   "material": "W1_grass",
+   "triangles": 54,
+   "anim": "bob",
+   "bounds_min": [
+    -192.68,
+    13.47,
+    23.6
+   ],
+   "bounds_max": [
+    -157.77,
+    48.38,
+    26.22
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West_Tree1__bark",
+   "category": "Anim__Islet_Near_West_Tree1",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -180.14,
+    34.38,
+    24.12
+   ],
+   "bounds_max": [
+    -177.34,
+    39.78,
+    33.75
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West_Tree1__foliage",
+   "category": "Anim__Islet_Near_West_Tree1",
+   "material": "W1_foliage",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    -182.66,
+    31.75,
+    30.34
+   ],
+   "bounds_max": [
+    -174.73,
+    42.33,
+    37.61
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West_Tree2__bark",
+   "category": "Anim__Islet_Near_West_Tree2",
+   "material": "W1_bark",
+   "triangles": 64,
+   "anim": "bob",
+   "bounds_min": [
+    -173.15,
+    28.82,
+    24.12
+   ],
+   "bounds_max": [
+    -168.19,
+    31.46,
+    32.61
+   ]
+  },
+  {
+   "chunk": "Anim__Islet_Near_West_Tree2__foliage_blossom",
+   "category": "Anim__Islet_Near_West_Tree2",
+   "material": "W1_foliage_blossom",
+   "triangles": 60,
+   "anim": "bob",
+   "bounds_min": [
+    -175.76,
+    26.93,
+    30.08
+   ],
+   "bounds_max": [
+    -165.39,
+    33.9,
+    35.9
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_1_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_1_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    69.48,
+    -50.49,
+    4.34
+   ],
+   "bounds_max": [
+    70.52,
+    -49.51,
+    5.54
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_2_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_2_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    29.48,
+    -33.49,
+    4.41
+   ],
+   "bounds_max": [
+    30.52,
+    -32.51,
+    5.61
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_3_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_3_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    -9.52,
+    -23.49,
+    4.39
+   ],
+   "bounds_max": [
+    -8.48,
+    -22.51,
+    5.59
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_4_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_4_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    -12.52,
+    43.51,
+    4.44
+   ],
+   "bounds_max": [
+    -11.48,
+    44.49,
+    5.64
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_5_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_5_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    -70.52,
+    2.51,
+    4.3
+   ],
+   "bounds_max": [
+    -69.48,
+    3.49,
+    5.5
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_6_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_6_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    49.48,
+    9.51,
+    4.43
+   ],
+   "bounds_max": [
+    50.52,
+    10.49,
+    5.63
+   ]
+  },
+  {
+   "chunk": "Anim__Lamp_7_Orb_Glow__glow_warm",
+   "category": "Anim__Lamp_7_Orb_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "pulse",
+   "bounds_min": [
+    -22.52,
+    -38.49,
+    4.58
+   ],
+   "bounds_max": [
+    -21.48,
+    -37.51,
+    5.78
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_0__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_0",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    51.14,
+    -3.9,
+    1.7
+   ],
+   "bounds_max": [
+    52.86,
+    -2.1,
+    3.5
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_1__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_1",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    49.88,
+    -3.95,
+    3.65
+   ],
+   "bounds_max": [
+    50.92,
+    -2.85,
+    4.75
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_2__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_2",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    52.73,
+    -3.4,
+    4.7
+   ],
+   "bounds_max": [
+    54.07,
+    -2.0,
+    6.1
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_3__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_3",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    51.92,
+    -4.0,
+    6.8
+   ],
+   "bounds_max": [
+    52.68,
+    -3.2,
+    7.6
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_4__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_4",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    49.07,
+    -2.75,
+    1.25
+   ],
+   "bounds_max": [
+    49.73,
+    -2.05,
+    1.95
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_BubbleSpring_Bubble_5__bubble",
+   "category": "Anim__Landmark_BubbleSpring_Bubble_5",
+   "material": "W1_bubble",
+   "triangles": 80,
+   "anim": "bob",
+   "bounds_min": [
+    53.97,
+    -3.95,
+    1.65
+   ],
+   "bounds_max": [
+    54.83,
+    -3.05,
+    2.55
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_GlowGrotto_Crystals__glow_aqua",
+   "category": "Anim__Landmark_GlowGrotto_Crystals",
+   "material": "W1_glow_aqua",
+   "triangles": 96,
+   "anim": "pulse",
+   "bounds_min": [
+    -14.35,
+    98.19,
+    -0.69
+   ],
+   "bounds_max": [
+    1.17,
+    115.73,
+    5.81
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_GlowGrotto_Crystals__glow_pink",
+   "category": "Anim__Landmark_GlowGrotto_Crystals",
+   "material": "W1_glow_pink",
+   "triangles": 96,
+   "anim": "pulse",
+   "bounds_min": [
+    -16.32,
+    91.51,
+    -0.64
+   ],
+   "bounds_max": [
+    1.73,
+    111.37,
+    4.84
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_HatchTree_Lantern__bark",
+   "category": "Anim__Landmark_HatchTree_Lantern",
+   "material": "W1_bark",
+   "triangles": 12,
+   "anim": "sway",
+   "bounds_min": [
+    -31.83,
+    16.65,
+    5.2
+   ],
+   "bounds_max": [
+    -31.73,
+    16.75,
+    8.6
+   ]
+  },
+  {
+   "chunk": "Anim__Landmark_HatchTree_Lantern__glow_warm",
+   "category": "Anim__Landmark_HatchTree_Lantern",
+   "material": "W1_glow_warm",
+   "triangles": 48,
+   "anim": "sway",
+   "bounds_min": [
+    -32.28,
+    16.2,
+    4.3
+   ],
+   "bounds_max": [
+    -31.28,
+    17.2,
+    5.3
+   ]
+  },
+  {
+   "chunk": "Anim__Pennant_1__teal",
+   "category": "Anim__Pennant_1",
+   "material": "W1_teal",
+   "triangles": 2,
+   "anim": "sway",
+   "bounds_min": [
+    8.59,
+    -45.26,
+    6.04
+   ],
+   "bounds_max": [
+    11.18,
+    -45.03,
+    7.54
+   ]
+  },
+  {
+   "chunk": "Anim__Pennant_2__ph_pink",
+   "category": "Anim__Pennant_2",
+   "material": "W1_ph_pink",
+   "triangles": 2,
+   "anim": "sway",
+   "bounds_min": [
+    -18.9,
+    -42.84,
+    6.14
+   ],
+   "bounds_max": [
+    -16.31,
+    -42.62,
+    7.64
+   ]
+  },
+  {
+   "chunk": "Anim__Station_ArrivalDais_Glow_Disc__glow_aqua",
+   "category": "Anim__Station_ArrivalDais_Glow_Disc",
+   "material": "W1_glow_aqua",
+   "triangles": 40,
+   "anim": "pulse",
+   "bounds_min": [
+    93.7,
+    -68.3,
+    0.41
+   ],
+   "bounds_max": [
+    98.3,
+    -63.7,
+    0.41
+   ]
+  },
+  {
+   "chunk": "Anim__Station_ArrivalDais_Glow_Disc__gold",
+   "category": "Anim__Station_ArrivalDais_Glow_Disc",
+   "material": "W1_gold",
+   "triangles": 16,
+   "anim": "pulse",
+   "bounds_min": [
+    94.5,
+    -67.5,
+    0.43
+   ],
+   "bounds_max": [
+    97.5,
+    -64.5,
+    0.43
+   ]
+  },
+  {
+   "chunk": "Anim__Station_CareCradle_Canopy_Mobile_Glow__care_blush",
+   "category": "Anim__Station_CareCradle_Canopy_Mobile_Glow",
+   "material": "W1_care_blush",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    -17.54,
+    16.08,
+    4.99
+   ],
+   "bounds_max": [
+    -17.08,
+    16.54,
+    5.59
+   ]
+  },
+  {
+   "chunk": "Anim__Station_CareCradle_Canopy_Mobile_Glow__care_sage",
+   "category": "Anim__Station_CareCradle_Canopy_Mobile_Glow",
+   "material": "W1_care_sage",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    -15.96,
+    15.22,
+    4.99
+   ],
+   "bounds_max": [
+    -15.5,
+    15.67,
+    5.59
+   ]
+  },
+  {
+   "chunk": "Anim__Station_CareCradle_Canopy_Mobile_Glow__glow_warm",
+   "category": "Anim__Station_CareCradle_Canopy_Mobile_Glow",
+   "material": "W1_glow_warm",
+   "triangles": 20,
+   "anim": "sway",
+   "bounds_min": [
+    -16.82,
+    15.58,
+    4.79
+   ],
+   "bounds_max": [
+    -16.22,
+    16.18,
+    5.47
+   ]
+  },
+  {
+   "chunk": "Anim__Station_CareCradle_Canopy_Mobile_Glow__gold",
+   "category": "Anim__Station_CareCradle_Canopy_Mobile_Glow",
+   "material": "W1_gold",
+   "triangles": 36,
+   "anim": "sway",
+   "bounds_min": [
+    -17.34,
+    15.42,
+    5.33
+   ],
+   "bounds_max": [
+    -15.7,
+    16.34,
+    6.63
+   ]
+  },
+  {
+   "chunk": "Anim__Station_EggNest_Glow_Halo__glow_warm",
+   "category": "Anim__Station_EggNest_Glow_Halo",
+   "material": "W1_glow_warm",
+   "triangles": 24,
+   "anim": "pulse",
+   "bounds_min": [
+    -32.32,
+    9.68,
+    1.19
+   ],
+   "bounds_max": [
+    -29.68,
+    12.32,
+    1.3
+   ]
+  },
+  {
+   "chunk": "Anim__Underside_Crystals__glow_aqua",
+   "category": "Anim__Underside_Crystals",
+   "material": "W1_glow_aqua",
+   "triangles": 180,
+   "anim": "pulse",
+   "bounds_min": [
+    -69.38,
+    -55.44,
+    -87.7
+   ],
+   "bounds_max": [
+    89.3,
+    72.2,
+    -22.1
+   ]
+  },
+  {
+   "chunk": "Anim__Underside_Crystals__glow_pink",
+   "category": "Anim__Underside_Crystals",
+   "material": "W1_glow_pink",
+   "triangles": 180,
+   "anim": "pulse",
+   "bounds_min": [
+    -46.63,
+    -51.39,
+    -93.91
+   ],
+   "bounds_max": [
+    47.7,
+    44.32,
+    -28.28
+   ]
+  },
+  {
+   "chunk": "Anim__Water_AqueductChannel__water_stream",
+   "category": "Anim__Water_AqueductChannel",
+   "material": "W1_water_stream",
+   "triangles": 12,
+   "anim": "scrollV",
+   "bounds_min": [
+    37.9,
+    82.54,
+    48.0
+   ],
+   "bounds_max": [
+    85.4,
+    103.55,
+    48.1
+   ]
+  },
+  {
+   "chunk": "Anim__Water_Pool_Falls__water_pool",
+   "category": "Anim__Water_Pool_Falls",
+   "material": "W1_water_pool",
+   "triangles": 110,
+   "anim": "ripple",
+   "bounds_min": [
+    51.0,
+    54.0,
+    -0.8
+   ],
+   "bounds_max": [
+    78.0,
+    78.0,
+    -0.8
+   ]
+  },
+  {
+   "chunk": "Anim__Water_Pool_Lily__water_pool",
+   "category": "Anim__Water_Pool_Lily",
+   "material": "W1_water_pool",
+   "triangles": 56,
+   "anim": "ripple",
+   "bounds_min": [
+    3.0,
+    0.0,
+    -0.8
+   ],
+   "bounds_max": [
+    24.0,
+    15.0,
+    -0.8
+   ]
+  },
+  {
+   "chunk": "Anim__Water_SkyFalls__waterfall_sky",
+   "category": "Anim__Water_SkyFalls",
+   "material": "W1_waterfall_sky",
+   "triangles": 60,
+   "anim": "scrollV",
+   "bounds_min": [
+    -11.83,
+    -67.18,
+    -72.0
+   ],
+   "bounds_max": [
+    0.12,
+    -60.96,
+    -0.75
+   ]
+  },
+  {
+   "chunk": "Anim__Water_SkyFalls_Channel__water_stream",
+   "category": "Anim__Water_SkyFalls_Channel",
+   "material": "W1_water_stream",
+   "triangles": 4,
+   "anim": "scrollV",
+   "bounds_min": [
+    -8.93,
+    -62.27,
+    -0.8
+   ],
+   "bounds_max": [
+    -0.55,
+    -45.62,
+    -0.8
+   ]
+  },
+  {
+   "chunk": "Anim__Water_SkyFalls_Foam__foam",
+   "category": "Anim__Water_SkyFalls_Foam",
+   "material": "W1_foam",
+   "triangles": 100,
+   "anim": "bob",
+   "bounds_min": [
+    -9.32,
+    -63.45,
+    -1.52
+   ],
+   "bounds_max": [
+    -1.5,
+    -61.02,
+    0.07
+   ]
+  },
+  {
+   "chunk": "Anim__Water_SkyFalls_Mist__cloud",
+   "category": "Anim__Water_SkyFalls_Mist",
+   "material": "W1_cloud",
+   "triangles": 100,
+   "anim": "bob",
+   "bounds_min": [
+    -33.32,
+    -80.3,
+    -80.59
+   ],
+   "bounds_max": [
+    13.43,
+    -52.09,
+    -67.66
+   ]
+  },
+  {
+   "chunk": "Anim__Water_Stream__water_stream",
+   "category": "Anim__Water_Stream",
+   "material": "W1_water_stream",
+   "triangles": 352,
+   "anim": "scrollV",
+   "bounds_min": [
+    -12.0,
+    -54.0,
+    -0.8
+   ],
+   "bounds_max": [
+    81.0,
+    78.0,
+    -0.8
+   ]
+  },
+  {
+   "chunk": "Anim__Water_TumbleFalls_Foam_Bottom__foam",
+   "category": "Anim__Water_TumbleFalls_Foam_Bottom",
+   "material": "W1_foam",
+   "triangles": 180,
+   "anim": "bob",
+   "bounds_min": [
+    66.49,
+    66.15,
+    -1.44
+   ],
+   "bounds_max": [
+    77.86,
+    78.39,
+    0.4
+   ]
+  },
+  {
+   "chunk": "Anim__Water_TumbleFalls_Foam_Ledge__foam",
+   "category": "Anim__Water_TumbleFalls_Foam_Ledge",
+   "material": "W1_foam",
+   "triangles": 120,
+   "anim": "bob",
+   "bounds_min": [
+    74.31,
+    75.22,
+    17.51
+   ],
+   "bounds_max": [
+    84.05,
+    83.38,
+    19.35
+   ]
+  },
+  {
+   "chunk": "Anim__Water_TumbleFalls_LedgePool__water_pool",
+   "category": "Anim__Water_TumbleFalls_LedgePool",
+   "material": "W1_water_pool",
+   "triangles": 4,
+   "anim": "ripple",
+   "bounds_min": [
+    70.8,
+    70.8,
+    18.15
+   ],
+   "bounds_max": [
+    85.58,
+    85.58,
+    18.15
+   ]
+  },
+  {
+   "chunk": "Anim__Water_TumbleFalls_Lower__waterfall_tumble",
+   "category": "Anim__Water_TumbleFalls_Lower",
+   "material": "W1_waterfall_tumble",
+   "triangles": 48,
+   "anim": "scrollV",
+   "bounds_min": [
+    68.54,
+    68.54,
+    -0.8
+   ],
+   "bounds_max": [
+    80.56,
+    80.56,
+    18.3
+   ]
+  },
+  {
+   "chunk": "Anim__Water_TumbleFalls_Upper__waterfall_tumble",
+   "category": "Anim__Water_TumbleFalls_Upper",
+   "material": "W1_waterfall_tumble",
+   "triangles": 60,
+   "anim": "scrollV",
+   "bounds_min": [
+    76.53,
+    76.53,
+    18.25
+   ],
+   "bounds_max": [
+    86.15,
+    86.15,
+    47.6
+   ]
+  },
+  {
+   "chunk": "Architecture_Aqueduct__gold",
+   "category": "Architecture_Aqueduct",
+   "material": "W1_gold",
+   "triangles": 148,
+   "anim": null,
+   "bounds_min": [
+    -9.9,
+    -62.61,
+    0.0
+   ],
+   "bounds_max": [
+    85.93,
+    104.02,
+    54.49
+   ]
+  },
+  {
+   "chunk": "Architecture_Aqueduct__marble",
+   "category": "Architecture_Aqueduct",
+   "material": "W1_marble",
+   "triangles": 696,
+   "anim": null,
+   "bounds_min": [
+    -9.72,
+    -62.25,
+    -8.35
+   ],
+   "bounds_max": [
+    87.88,
+    104.25,
+    48.55
+   ]
+  },
+  {
+   "chunk": "Architecture_Aqueduct__marble_smooth",
+   "category": "Architecture_Aqueduct",
+   "material": "W1_marble_smooth",
+   "triangles": 124,
+   "anim": null,
+   "bounds_min": [
+    37.04,
+    99.84,
+    48.0
+   ],
+   "bounds_max": [
+    41.22,
+    104.02,
+    56.14
+   ]
+  },
+  {
+   "chunk": "Architecture_Balustrades__gold",
+   "category": "Architecture_Balustrades",
+   "material": "W1_gold",
+   "triangles": 396,
+   "anim": null,
+   "bounds_min": [
+    -106.24,
+    -83.79,
+    3.04
+   ],
+   "bounds_max": [
+    110.61,
+    26.91,
+    3.42
+   ]
+  },
+  {
+   "chunk": "Architecture_Balustrades__marble",
+   "category": "Architecture_Balustrades",
+   "material": "W1_marble",
+   "triangles": 3924,
+   "anim": null,
+   "bounds_min": [
+    -106.37,
+    -83.69,
+    -0.04
+   ],
+   "bounds_max": [
+    110.51,
+    26.81,
+    3.19
+   ]
+  },
+  {
+   "chunk": "Architecture_Bridge__gold",
+   "category": "Architecture_Bridge",
+   "material": "W1_gold",
+   "triangles": 72,
+   "anim": null,
+   "bounds_min": [
+    -5.9,
+    -24.5,
+    3.21
+   ],
+   "bounds_max": [
+    13.9,
+    -17.5,
+    3.46
+   ]
+  },
+  {
+   "chunk": "Architecture_Bridge__marble",
+   "category": "Architecture_Bridge",
+   "material": "W1_marble",
+   "triangles": 372,
+   "anim": null,
+   "bounds_min": [
+    -8.6,
+    -24.7,
+    -4.75
+   ],
+   "bounds_max": [
+    16.6,
+    -17.3,
+    3.24
+   ]
+  },
+  {
+   "chunk": "Architecture_Bridge__trim",
+   "category": "Architecture_Bridge",
+   "material": "W1_trim",
+   "triangles": 24,
+   "anim": null,
+   "bounds_min": [
+    -6.0,
+    -24.46,
+    -0.39
+   ],
+   "bounds_max": [
+    14.0,
+    -17.54,
+    0.31
+   ]
+  },
+  {
+   "chunk": "Architecture_Colonnade__gold",
+   "category": "Architecture_Colonnade",
+   "material": "W1_gold",
+   "triangles": 348,
+   "anim": null,
+   "bounds_min": [
+    -53.48,
+    8.85,
+    8.0
+   ],
+   "bounds_max": [
+    -27.88,
+    28.08,
+    10.12
+   ]
+  },
+  {
+   "chunk": "Architecture_Colonnade__marble",
+   "category": "Architecture_Colonnade",
+   "material": "W1_marble",
+   "triangles": 968,
+   "anim": null,
+   "bounds_min": [
+    -53.62,
+    8.71,
+    0.0
+   ],
+   "bounds_max": [
+    -7.18,
+    28.2,
+    10.48
+   ]
+  },
+  {
+   "chunk": "Architecture_Colonnade__trim",
+   "category": "Architecture_Colonnade",
+   "material": "W1_trim",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    -53.35,
+    8.98,
+    9.0
+   ],
+   "bounds_max": [
+    -28.0,
+    27.97,
+    9.9
+   ]
+  },
+  {
+   "chunk": "Architecture_Edging__marble",
+   "category": "Architecture_Edging",
+   "material": "W1_marble",
+   "triangles": 2136,
+   "anim": null,
+   "bounds_min": [
+    -9.59,
+    -49.97,
+    -2.2
+   ],
+   "bounds_max": [
+    78.02,
+    77.11,
+    0.28
+   ]
+  },
+  {
+   "chunk": "Architecture_MarbleArch__gold",
+   "category": "Architecture_MarbleArch",
+   "material": "W1_gold",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    79.17,
+    -64.43,
+    7.11
+   ],
+   "bounds_max": [
+    90.83,
+    -50.57,
+    15.81
+   ]
+  },
+  {
+   "chunk": "Architecture_MarbleArch__marble",
+   "category": "Architecture_MarbleArch",
+   "material": "W1_marble",
+   "triangles": 192,
+   "anim": null,
+   "bounds_min": [
+    78.96,
+    -64.64,
+    0.51
+   ],
+   "bounds_max": [
+    91.04,
+    -50.36,
+    14.81
+   ]
+  },
+  {
+   "chunk": "Architecture_MarbleArch__trim",
+   "category": "Architecture_MarbleArch",
+   "material": "W1_trim",
+   "triangles": 24,
+   "anim": null,
+   "bounds_min": [
+    79.43,
+    -64.16,
+    6.46
+   ],
+   "bounds_max": [
+    90.57,
+    -50.84,
+    7.06
+   ]
+  },
+  {
+   "chunk": "Architecture_Plaza__gold",
+   "category": "Architecture_Plaza",
+   "material": "W1_gold",
+   "triangles": 16,
+   "anim": null,
+   "bounds_min": [
+    -33.2,
+    0.8,
+    0.2
+   ],
+   "bounds_max": [
+    -26.8,
+    7.2,
+    0.2
+   ]
+  },
+  {
+   "chunk": "Architecture_Plaza__marble",
+   "category": "Architecture_Plaza",
+   "material": "W1_marble",
+   "triangles": 96,
+   "anim": null,
+   "bounds_min": [
+    -45.31,
+    -11.51,
+    0.04
+   ],
+   "bounds_max": [
+    -14.12,
+    19.38,
+    0.13
+   ]
+  },
+  {
+   "chunk": "Architecture_Plaza__trim",
+   "category": "Architecture_Plaza",
+   "material": "W1_trim",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -41.9,
+    -7.9,
+    0.2
+   ],
+   "bounds_max": [
+    -18.1,
+    15.9,
+    0.2
+   ]
+  },
+  {
+   "chunk": "Architecture_Rotunda__gold",
+   "category": "Architecture_Rotunda",
+   "material": "W1_gold",
+   "triangles": 488,
+   "anim": null,
+   "bounds_min": [
+    -67.5,
+    -57.5,
+    17.1
+   ],
+   "bounds_max": [
+    -52.5,
+    -42.5,
+    26.2
+   ]
+  },
+  {
+   "chunk": "Architecture_Rotunda__marble",
+   "category": "Architecture_Rotunda",
+   "material": "W1_marble",
+   "triangles": 1046,
+   "anim": null,
+   "bounds_min": [
+    -69.2,
+    -59.2,
+    7.7
+   ],
+   "bounds_max": [
+    -50.8,
+    -40.8,
+    19.1
+   ]
+  },
+  {
+   "chunk": "Architecture_Rotunda__teal",
+   "category": "Architecture_Rotunda",
+   "material": "W1_teal",
+   "triangles": 128,
+   "anim": null,
+   "bounds_min": [
+    -67.2,
+    -57.2,
+    19.4
+   ],
+   "bounds_max": [
+    -52.8,
+    -42.8,
+    23.55
+   ]
+  },
+  {
+   "chunk": "Architecture_Rotunda__trim",
+   "category": "Architecture_Rotunda",
+   "material": "W1_trim",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    -67.45,
+    -57.45,
+    18.15
+   ],
+   "bounds_max": [
+    -52.55,
+    -42.55,
+    19.05
+   ]
+  },
+  {
+   "chunk": "Architecture_Ruins__gold",
+   "category": "Architecture_Ruins",
+   "material": "W1_gold",
+   "triangles": 120,
+   "anim": null,
+   "bounds_min": [
+    -93.02,
+    3.03,
+    8.33
+   ],
+   "bounds_max": [
+    8.02,
+    80.97,
+    9.24
+   ]
+  },
+  {
+   "chunk": "Architecture_Ruins__marble",
+   "category": "Architecture_Ruins",
+   "material": "W1_marble",
+   "triangles": 752,
+   "anim": null,
+   "bounds_min": [
+    -97.56,
+    2.85,
+    0.03
+   ],
+   "bounds_max": [
+    8.15,
+    81.15,
+    9.66
+   ]
+  },
+  {
+   "chunk": "Architecture_Stairs__marble",
+   "category": "Architecture_Stairs",
+   "material": "W1_marble",
+   "triangles": 204,
+   "anim": null,
+   "bounds_min": [
+    -58.71,
+    -46.58,
+    -0.27
+   ],
+   "bounds_max": [
+    -33.46,
+    -17.8,
+    10.12
+   ]
+  },
+  {
+   "chunk": "Architecture_Statues_Urns__gold",
+   "category": "Architecture_Statues_Urns",
+   "material": "W1_gold",
+   "triangles": 360,
+   "anim": null,
+   "bounds_min": [
+    -104.1,
+    -59.47,
+    0.64
+   ],
+   "bounds_max": [
+    84.01,
+    17.95,
+    8.24
+   ]
+  },
+  {
+   "chunk": "Architecture_Statues_Urns__marble_smooth",
+   "category": "Architecture_Statues_Urns",
+   "material": "W1_marble_smooth",
+   "triangles": 3592,
+   "anim": null,
+   "bounds_min": [
+    -104.2,
+    -59.61,
+    0.0
+   ],
+   "bounds_max": [
+    84.15,
+    17.95,
+    6.15
+   ]
+  },
+  {
+   "chunk": "Backdrop_Clouds__cloud",
+   "category": "Backdrop_Clouds",
+   "material": "W1_cloud",
+   "triangles": 7620,
+   "anim": null,
+   "bounds_min": [
+    -1774.4,
+    -1851.34,
+    -364.72
+   ],
+   "bounds_max": [
+    1929.0,
+    1821.47,
+    382.99
+   ]
+  },
+  {
+   "chunk": "Backdrop_Islands__far_peak",
+   "category": "Backdrop_Islands",
+   "material": "W1_far_peak",
+   "triangles": 2778,
+   "anim": null,
+   "bounds_min": [
+    -1221.17,
+    -1114.05,
+    -341.81
+   ],
+   "bounds_max": [
+    1295.77,
+    1413.35,
+    353.47
+   ]
+  },
+  {
+   "chunk": "Landmarks__cave_dark",
+   "category": "Landmarks",
+   "material": "W1_cave_dark",
+   "triangles": 96,
+   "anim": null,
+   "bounds_min": [
+    -16.47,
+    99.31,
+    -0.5
+   ],
+   "bounds_max": [
+    2.49,
+    118.78,
+    11.38
+   ]
+  },
+  {
+   "chunk": "Landmarks__cliff_rock",
+   "category": "Landmarks",
+   "material": "W1_cliff_rock",
+   "triangles": 1133,
+   "anim": null,
+   "bounds_min": [
+    -26.88,
+    39.73,
+    -5.68
+   ],
+   "bounds_max": [
+    110.54,
+    123.26,
+    51.4
+   ]
+  },
+  {
+   "chunk": "Landmarks__egg",
+   "category": "Landmarks",
+   "material": "W1_egg",
+   "triangles": 168,
+   "anim": null,
+   "bounds_min": [
+    14.41,
+    42.34,
+    10.45
+   ],
+   "bounds_max": [
+    19.1,
+    47.02,
+    15.98
+   ]
+  },
+  {
+   "chunk": "Landmarks__gold",
+   "category": "Landmarks",
+   "material": "W1_gold",
+   "triangles": 180,
+   "anim": null,
+   "bounds_min": [
+    -15.62,
+    98.87,
+    0.4
+   ],
+   "bounds_max": [
+    1.62,
+    101.27,
+    7.2
+   ]
+  },
+  {
+   "chunk": "Landmarks__grass",
+   "category": "Landmarks",
+   "material": "W1_grass",
+   "triangles": 83,
+   "anim": null,
+   "bounds_min": [
+    -25.66,
+    63.28,
+    7.11
+   ],
+   "bounds_max": [
+    109.09,
+    112.18,
+    52.81
+   ]
+  },
+  {
+   "chunk": "Landmarks__marble",
+   "category": "Landmarks",
+   "material": "W1_marble",
+   "triangles": 180,
+   "anim": null,
+   "bounds_min": [
+    -15.67,
+    -5.67,
+    -0.3
+   ],
+   "bounds_max": [
+    56.3,
+    101.32,
+    6.9
+   ]
+  },
+  {
+   "chunk": "Landmarks__teal",
+   "category": "Landmarks",
+   "material": "W1_teal",
+   "triangles": 64,
+   "anim": null,
+   "bounds_min": [
+    -7.88,
+    99.6,
+    2.4
+   ],
+   "bounds_max": [
+    -6.08,
+    100.05,
+    4.3
+   ]
+  },
+  {
+   "chunk": "Landmarks__trim",
+   "category": "Landmarks",
+   "material": "W1_trim",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -14.55,
+    99.3,
+    5.85
+   ],
+   "bounds_max": [
+    0.55,
+    100.85,
+    6.55
+   ]
+  },
+  {
+   "chunk": "Landmarks__water",
+   "category": "Landmarks",
+   "material": "W1_water",
+   "triangles": 34,
+   "anim": null,
+   "bounds_min": [
+    48.59,
+    -5.11,
+    0.32
+   ],
+   "bounds_max": [
+    55.41,
+    -0.89,
+    0.33
+   ]
+  },
+  {
+   "chunk": "Props__marble",
+   "category": "Props",
+   "material": "W1_marble",
+   "triangles": 114,
+   "anim": null,
+   "bounds_min": [
+    27.58,
+    27.26,
+    -2.95
+   ],
+   "bounds_max": [
+    39.14,
+    39.14,
+    -0.25
+   ]
+  },
+  {
+   "chunk": "Rocks_Loose__boulder_rock",
+   "category": "Rocks_Loose",
+   "material": "W1_boulder_rock",
+   "triangles": 640,
+   "anim": null,
+   "bounds_min": [
+    -95.15,
+    -69.73,
+    -0.83
+   ],
+   "bounds_max": [
+    102.48,
+    82.2,
+    18.88
+   ]
+  },
+  {
+   "chunk": "Rocks_Underside__bark",
+   "category": "Rocks_Underside",
+   "material": "W1_bark",
+   "triangles": 448,
+   "anim": null,
+   "bounds_min": [
+    -104.13,
+    -75.99,
+    -27.31
+   ],
+   "bounds_max": [
+    135.17,
+    137.41,
+    -6.93
+   ]
+  },
+  {
+   "chunk": "Rocks_Underside__cliff_rock",
+   "category": "Rocks_Underside",
+   "material": "W1_cliff_rock",
+   "triangles": 1884,
+   "anim": null,
+   "bounds_min": [
+    -116.51,
+    -92.25,
+    -124.22
+   ],
+   "bounds_max": [
+    146.48,
+    160.93,
+    -4.2
+   ]
+  },
+  {
+   "chunk": "Rocks_Underside__foliage",
+   "category": "Rocks_Underside",
+   "material": "W1_foliage",
+   "triangles": 256,
+   "anim": null,
+   "bounds_min": [
+    -104.46,
+    -82.16,
+    -27.84
+   ],
+   "bounds_max": [
+    134.03,
+    139.64,
+    -6.95
+   ]
+  },
+  {
+   "chunk": "Rocks_Walls__cliff_rock",
+   "category": "Rocks_Walls",
+   "material": "W1_cliff_rock",
+   "triangles": 3745,
+   "anim": null,
+   "bounds_min": [
+    -100.87,
+    -68.55,
+    -12.16
+   ],
+   "bounds_max": [
+    132.19,
+    132.88,
+    38.41
+   ]
+  },
+  {
+   "chunk": "Rocks_Walls__grass",
+   "category": "Rocks_Walls",
+   "material": "W1_grass",
+   "triangles": 335,
+   "anim": null,
+   "bounds_min": [
+    -95.8,
+    -67.8,
+    0.25
+   ],
+   "bounds_max": [
+    130.46,
+    129.56,
+    38.41
+   ]
+  },
+  {
+   "chunk": "Stations_ArrivalDais__marble",
+   "category": "Stations_ArrivalDais",
+   "material": "W1_marble",
+   "triangles": 138,
+   "anim": null,
+   "bounds_min": [
+    91.7,
+    -70.3,
+    -0.25
+   ],
+   "bounds_max": [
+    100.3,
+    -61.7,
+    0.39
+   ]
+  },
+  {
+   "chunk": "Stations_ArrivalDais__trim",
+   "category": "Stations_ArrivalDais",
+   "material": "W1_trim",
+   "triangles": 40,
+   "anim": null,
+   "bounds_min": [
+    92.7,
+    -69.3,
+    0.4
+   ],
+   "bounds_max": [
+    99.3,
+    -62.7,
+    0.4
+   ]
+  },
+  {
+   "chunk": "Stations_BenchEast__gold",
+   "category": "Stations_BenchEast",
+   "material": "W1_gold",
+   "triangles": 24,
+   "anim": null,
+   "bounds_min": [
+    -18.59,
+    -7.31,
+    2.48
+   ],
+   "bounds_max": [
+    -14.5,
+    -3.76,
+    2.62
+   ]
+  },
+  {
+   "chunk": "Stations_BenchEast__marble",
+   "category": "Stations_BenchEast",
+   "material": "W1_marble",
+   "triangles": 72,
+   "anim": null,
+   "bounds_min": [
+    -19.55,
+    -7.34,
+    0.05
+   ],
+   "bounds_max": [
+    -14.45,
+    -2.66,
+    2.5
+   ]
+  },
+  {
+   "chunk": "Stations_BenchEast__wood_plank",
+   "category": "Stations_BenchEast",
+   "material": "W1_wood_plank",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    -19.36,
+    -7.16,
+    1.12
+   ],
+   "bounds_max": [
+    -14.62,
+    -2.86,
+    2.35
+   ]
+  },
+  {
+   "chunk": "Stations_BenchWest__gold",
+   "category": "Stations_BenchWest",
+   "material": "W1_gold",
+   "triangles": 24,
+   "anim": null,
+   "bounds_min": [
+    -45.5,
+    -7.31,
+    2.48
+   ],
+   "bounds_max": [
+    -41.41,
+    -3.76,
+    2.62
+   ]
+  },
+  {
+   "chunk": "Stations_BenchWest__marble",
+   "category": "Stations_BenchWest",
+   "material": "W1_marble",
+   "triangles": 72,
+   "anim": null,
+   "bounds_min": [
+    -45.55,
+    -7.34,
+    0.05
+   ],
+   "bounds_max": [
+    -40.45,
+    -2.66,
+    2.5
+   ]
+  },
+  {
+   "chunk": "Stations_BenchWest__wood_plank",
+   "category": "Stations_BenchWest",
+   "material": "W1_wood_plank",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    -45.38,
+    -7.16,
+    1.12
+   ],
+   "bounds_max": [
+    -40.64,
+    -2.86,
+    2.35
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__book_green",
+   "category": "Stations_CareCradle",
+   "material": "W1_book_green",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -20.07,
+    14.13,
+    1.98
+   ],
+   "bounds_max": [
+    -19.0,
+    14.94,
+    2.59
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__care_sage",
+   "category": "Stations_CareCradle",
+   "material": "W1_care_sage",
+   "triangles": 84,
+   "anim": null,
+   "bounds_min": [
+    -18.32,
+    13.7,
+    1.92
+   ],
+   "bounds_max": [
+    -15.68,
+    16.3,
+    2.2
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__care_teal",
+   "category": "Stations_CareCradle",
+   "material": "W1_care_teal",
+   "triangles": 72,
+   "anim": null,
+   "bounds_min": [
+    -18.25,
+    13.75,
+    0.7
+   ],
+   "bounds_max": [
+    -15.75,
+    16.25,
+    1.72
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__deck_cream",
+   "category": "Stations_CareCradle",
+   "material": "W1_deck_cream",
+   "triangles": 136,
+   "anim": null,
+   "bounds_min": [
+    -20.05,
+    13.4,
+    1.72
+   ],
+   "bounds_max": [
+    -15.38,
+    16.6,
+    2.52
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__glow_aqua",
+   "category": "Stations_CareCradle",
+   "material": "W1_glow_aqua",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -16.35,
+    12.37,
+    2.34
+   ],
+   "bounds_max": [
+    -15.74,
+    12.78,
+    2.51
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__gold",
+   "category": "Stations_CareCradle",
+   "material": "W1_gold",
+   "triangles": 74,
+   "anim": null,
+   "bounds_min": [
+    -19.68,
+    12.44,
+    1.93
+   ],
+   "bounds_max": [
+    -14.23,
+    17.35,
+    7.8
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__marble",
+   "category": "Stations_CareCradle",
+   "material": "W1_marble",
+   "triangles": 366,
+   "anim": null,
+   "bounds_min": [
+    -19.73,
+    12.27,
+    -0.1
+   ],
+   "bounds_max": [
+    -14.27,
+    17.73,
+    7.07
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__marble_smooth",
+   "category": "Stations_CareCradle",
+   "material": "W1_marble_smooth",
+   "triangles": 184,
+   "anim": null,
+   "bounds_min": [
+    -20.12,
+    12.29,
+    0.2
+   ],
+   "bounds_max": [
+    -15.5,
+    15.08,
+    2.7
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__ph_mint",
+   "category": "Stations_CareCradle",
+   "material": "W1_ph_mint",
+   "triangles": 32,
+   "anim": null,
+   "bounds_min": [
+    -17.66,
+    14.34,
+    2.21
+   ],
+   "bounds_max": [
+    -16.68,
+    15.05,
+    2.21
+   ]
+  },
+  {
+   "chunk": "Stations_CareCradle__trim",
+   "category": "Stations_CareCradle",
+   "material": "W1_trim",
+   "triangles": 32,
+   "anim": null,
+   "bounds_min": [
+    -19.45,
+    12.55,
+    0.44
+   ],
+   "bounds_max": [
+    -14.55,
+    17.45,
+    0.68
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__egg",
+   "category": "Stations_EggNest",
+   "material": "W1_egg",
+   "triangles": 144,
+   "anim": null,
+   "bounds_min": [
+    -32.0,
+    10.0,
+    1.1
+   ],
+   "bounds_max": [
+    -30.0,
+    12.0,
+    3.5
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__foliage",
+   "category": "Stations_EggNest",
+   "material": "W1_foliage",
+   "triangles": 36,
+   "anim": null,
+   "bounds_min": [
+    -32.83,
+    9.08,
+    1.12
+   ],
+   "bounds_max": [
+    -29.17,
+    12.92,
+    1.6
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__gold",
+   "category": "Stations_EggNest",
+   "material": "W1_gold",
+   "triangles": 116,
+   "anim": null,
+   "bounds_min": [
+    -32.48,
+    9.52,
+    0.88
+   ],
+   "bounds_max": [
+    -27.96,
+    12.48,
+    1.88
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__marble",
+   "category": "Stations_EggNest",
+   "material": "W1_marble",
+   "triangles": 174,
+   "anim": null,
+   "bounds_min": [
+    -34.4,
+    7.6,
+    -0.2
+   ],
+   "bounds_max": [
+    -27.6,
+    14.4,
+    0.88
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__marble_smooth",
+   "category": "Stations_EggNest",
+   "material": "W1_marble_smooth",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    -28.8,
+    10.44,
+    0.34
+   ],
+   "bounds_max": [
+    -27.41,
+    11.36,
+    2.33
+   ]
+  },
+  {
+   "chunk": "Stations_EggNest__trim",
+   "category": "Stations_EggNest",
+   "material": "W1_trim",
+   "triangles": 32,
+   "anim": null,
+   "bounds_min": [
+    -33.21,
+    8.79,
+    0.62
+   ],
+   "bounds_max": [
+    -28.79,
+    13.21,
+    0.86
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_1__gold",
+   "category": "Stations_Lamp_1",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    69.48,
+    -50.45,
+    4.24
+   ],
+   "bounds_max": [
+    70.52,
+    -49.55,
+    6.07
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_1__marble_smooth",
+   "category": "Stations_Lamp_1",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    69.54,
+    -50.46,
+    0.52
+   ],
+   "bounds_max": [
+    70.46,
+    -49.54,
+    4.24
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_2__gold",
+   "category": "Stations_Lamp_2",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    29.48,
+    -33.45,
+    4.31
+   ],
+   "bounds_max": [
+    30.52,
+    -32.55,
+    6.14
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_2__marble_smooth",
+   "category": "Stations_Lamp_2",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    29.54,
+    -33.46,
+    0.59
+   ],
+   "bounds_max": [
+    30.46,
+    -32.54,
+    4.31
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_3__gold",
+   "category": "Stations_Lamp_3",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    -9.52,
+    -23.45,
+    4.29
+   ],
+   "bounds_max": [
+    -8.48,
+    -22.55,
+    6.12
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_3__marble_smooth",
+   "category": "Stations_Lamp_3",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -9.46,
+    -23.46,
+    0.57
+   ],
+   "bounds_max": [
+    -8.54,
+    -22.54,
+    4.29
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_4__gold",
+   "category": "Stations_Lamp_4",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    -12.52,
+    43.55,
+    4.34
+   ],
+   "bounds_max": [
+    -11.48,
+    44.45,
+    6.17
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_4__marble_smooth",
+   "category": "Stations_Lamp_4",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -12.46,
+    43.54,
+    0.62
+   ],
+   "bounds_max": [
+    -11.54,
+    44.46,
+    4.34
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_5__gold",
+   "category": "Stations_Lamp_5",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    -70.52,
+    2.55,
+    4.2
+   ],
+   "bounds_max": [
+    -69.48,
+    3.45,
+    6.03
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_5__marble_smooth",
+   "category": "Stations_Lamp_5",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -70.46,
+    2.54,
+    0.48
+   ],
+   "bounds_max": [
+    -69.54,
+    3.46,
+    4.2
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_6__gold",
+   "category": "Stations_Lamp_6",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    49.48,
+    9.55,
+    4.33
+   ],
+   "bounds_max": [
+    50.52,
+    10.45,
+    6.16
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_6__marble_smooth",
+   "category": "Stations_Lamp_6",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    49.54,
+    9.54,
+    0.61
+   ],
+   "bounds_max": [
+    50.46,
+    10.46,
+    4.33
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_7__gold",
+   "category": "Stations_Lamp_7",
+   "material": "W1_gold",
+   "triangles": 46,
+   "anim": null,
+   "bounds_min": [
+    -22.52,
+    -38.45,
+    4.48
+   ],
+   "bounds_max": [
+    -21.48,
+    -37.55,
+    6.31
+   ]
+  },
+  {
+   "chunk": "Stations_Lamp_7__marble_smooth",
+   "category": "Stations_Lamp_7",
+   "material": "W1_marble_smooth",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -22.46,
+    -38.46,
+    0.76
+   ],
+   "bounds_max": [
+    -21.54,
+    -37.54,
+    4.48
+   ]
+  },
+  {
+   "chunk": "Stations_Misc__marble",
+   "category": "Stations_Misc",
+   "material": "W1_marble",
+   "triangles": 324,
+   "anim": null,
+   "bounds_min": [
+    -63.36,
+    -51.33,
+    0.06
+   ],
+   "bounds_max": [
+    39.09,
+    25.67,
+    0.26
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__glow_warm",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_glow_warm",
+   "triangles": 16,
+   "anim": null,
+   "bounds_min": [
+    0.7,
+    34.65,
+    2.35
+   ],
+   "bounds_max": [
+    1.3,
+    35.25,
+    3.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__gold",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_gold",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    0.82,
+    32.82,
+    0.95
+   ],
+   "bounds_max": [
+    1.18,
+    35.05,
+    3.25
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__marble",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_marble",
+   "triangles": 68,
+   "anim": null,
+   "bounds_min": [
+    -1.3,
+    30.76,
+    -0.25
+   ],
+   "bounds_max": [
+    3.3,
+    35.24,
+    0.41
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__marble_smooth",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_marble_smooth",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    0.75,
+    34.74,
+    0.05
+   ],
+   "bounds_max": [
+    1.25,
+    35.16,
+    2.35
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__ph_pink",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_ph_pink",
+   "triangles": 140,
+   "anim": null,
+   "bounds_min": [
+    -0.95,
+    31.1,
+    0.41
+   ],
+   "bounds_max": [
+    2.95,
+    34.9,
+    1.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_CreekNook__trim",
+   "category": "Stations_NapDais_CreekNook",
+   "material": "W1_trim",
+   "triangles": 28,
+   "anim": null,
+   "bounds_min": [
+    -1.31,
+    30.75,
+    0.08
+   ],
+   "bounds_max": [
+    3.31,
+    35.25,
+    0.32
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__glow_warm",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_glow_warm",
+   "triangles": 16,
+   "anim": null,
+   "bounds_min": [
+    54.2,
+    -12.35,
+    2.35
+   ],
+   "bounds_max": [
+    54.8,
+    -11.75,
+    3.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__gold",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_gold",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    54.32,
+    -14.18,
+    0.95
+   ],
+   "bounds_max": [
+    54.68,
+    -11.95,
+    3.25
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__marble",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_marble",
+   "triangles": 68,
+   "anim": null,
+   "bounds_min": [
+    52.2,
+    -16.24,
+    -0.25
+   ],
+   "bounds_max": [
+    56.8,
+    -11.76,
+    0.41
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__marble_smooth",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_marble_smooth",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    54.25,
+    -12.26,
+    0.05
+   ],
+   "bounds_max": [
+    54.75,
+    -11.84,
+    2.35
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__ph_mint",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_ph_mint",
+   "triangles": 140,
+   "anim": null,
+   "bounds_min": [
+    52.55,
+    -15.9,
+    0.41
+   ],
+   "bounds_max": [
+    56.45,
+    -12.1,
+    1.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestEast__trim",
+   "category": "Stations_NapDais_SpringRestEast",
+   "material": "W1_trim",
+   "triangles": 28,
+   "anim": null,
+   "bounds_min": [
+    52.19,
+    -16.25,
+    0.08
+   ],
+   "bounds_max": [
+    56.81,
+    -11.75,
+    0.32
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__glow_warm",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_glow_warm",
+   "triangles": 16,
+   "anim": null,
+   "bounds_min": [
+    49.2,
+    -12.35,
+    2.35
+   ],
+   "bounds_max": [
+    49.8,
+    -11.75,
+    3.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__gold",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_gold",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    49.32,
+    -14.18,
+    0.95
+   ],
+   "bounds_max": [
+    49.68,
+    -11.95,
+    3.25
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__marble",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_marble",
+   "triangles": 68,
+   "anim": null,
+   "bounds_min": [
+    47.2,
+    -16.24,
+    -0.25
+   ],
+   "bounds_max": [
+    51.8,
+    -11.76,
+    0.41
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__marble_smooth",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_marble_smooth",
+   "triangles": 60,
+   "anim": null,
+   "bounds_min": [
+    49.25,
+    -12.26,
+    0.05
+   ],
+   "bounds_max": [
+    49.75,
+    -11.84,
+    2.35
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__ph_lilac",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_ph_lilac",
+   "triangles": 140,
+   "anim": null,
+   "bounds_min": [
+    47.55,
+    -15.9,
+    0.41
+   ],
+   "bounds_max": [
+    51.45,
+    -12.1,
+    1.0
+   ]
+  },
+  {
+   "chunk": "Stations_NapDais_SpringRestWest__trim",
+   "category": "Stations_NapDais_SpringRestWest",
+   "material": "W1_trim",
+   "triangles": 28,
+   "anim": null,
+   "bounds_min": [
+    47.19,
+    -16.25,
+    0.08
+   ],
+   "bounds_max": [
+    51.81,
+    -11.75,
+    0.32
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicEast__gold",
+   "category": "Stations_PicnicEast",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    31.07,
+    -48.18,
+    1.36
+   ],
+   "bounds_max": [
+    36.93,
+    -43.82,
+    1.44
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicEast__marble",
+   "category": "Stations_PicnicEast",
+   "material": "W1_marble",
+   "triangles": 96,
+   "anim": null,
+   "bounds_min": [
+    31.03,
+    -49.19,
+    0.2
+   ],
+   "bounds_max": [
+    36.97,
+    -42.81,
+    1.4
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicEast__wood_plank",
+   "category": "Stations_PicnicEast",
+   "material": "W1_wood_plank",
+   "triangles": 36,
+   "anim": null,
+   "bounds_min": [
+    30.5,
+    -49.45,
+    0.88
+   ],
+   "bounds_max": [
+    37.5,
+    -42.55,
+    1.66
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicWest__gold",
+   "category": "Stations_PicnicWest",
+   "material": "W1_gold",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -60.93,
+    -14.18,
+    1.36
+   ],
+   "bounds_max": [
+    -55.07,
+    -9.82,
+    1.44
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicWest__marble",
+   "category": "Stations_PicnicWest",
+   "material": "W1_marble",
+   "triangles": 96,
+   "anim": null,
+   "bounds_min": [
+    -60.97,
+    -15.19,
+    0.2
+   ],
+   "bounds_max": [
+    -55.03,
+    -8.81,
+    1.4
+   ]
+  },
+  {
+   "chunk": "Stations_PicnicWest__wood_plank",
+   "category": "Stations_PicnicWest",
+   "material": "W1_wood_plank",
+   "triangles": 36,
+   "anim": null,
+   "bounds_min": [
+    -61.5,
+    -15.45,
+    0.88
+   ],
+   "bounds_max": [
+    -54.5,
+    -8.55,
+    1.66
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__deck_cream",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_deck_cream",
+   "triangles": 262,
+   "anim": null,
+   "bounds_min": [
+    -47.89,
+    7.84,
+    2.68
+   ],
+   "bounds_max": [
+    -44.22,
+    10.68,
+    6.21
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__deck_shell",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_deck_shell",
+   "triangles": 168,
+   "anim": null,
+   "bounds_min": [
+    -48.09,
+    7.66,
+    2.84
+   ],
+   "bounds_max": [
+    -44.62,
+    10.69,
+    6.41
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__glow_aqua",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_glow_aqua",
+   "triangles": 58,
+   "anim": null,
+   "bounds_min": [
+    -47.26,
+    7.87,
+    2.72
+   ],
+   "bounds_max": [
+    -44.27,
+    10.29,
+    5.6
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__glow_warm",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_glow_warm",
+   "triangles": 40,
+   "anim": null,
+   "bounds_min": [
+    -49.33,
+    8.31,
+    5.56
+   ],
+   "bounds_max": [
+    -43.49,
+    11.4,
+    6.28
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__gold",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_gold",
+   "triangles": 140,
+   "anim": null,
+   "bounds_min": [
+    -49.11,
+    8.23,
+    2.72
+   ],
+   "bounds_max": [
+    -43.72,
+    11.41,
+    7.29
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__marble",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_marble",
+   "triangles": 120,
+   "anim": null,
+   "bounds_min": [
+    -48.93,
+    6.95,
+    0.2
+   ],
+   "bounds_max": [
+    -43.25,
+    11.27,
+    6.65
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__ph_mint",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_ph_mint",
+   "triangles": 34,
+   "anim": null,
+   "bounds_min": [
+    -45.19,
+    9.25,
+    2.72
+   ],
+   "bounds_max": [
+    -44.42,
+    10.28,
+    3.08
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__ph_pink",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_ph_pink",
+   "triangles": 102,
+   "anim": null,
+   "bounds_min": [
+    -46.73,
+    8.12,
+    2.72
+   ],
+   "bounds_max": [
+    -44.69,
+    10.42,
+    4.78
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__trim",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_trim",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -47.85,
+    6.73,
+    1.95
+   ],
+   "bounds_max": [
+    -43.11,
+    9.11,
+    2.45
+   ]
+  },
+  {
+   "chunk": "Stations_PocketDeckKiosk__wood_plank",
+   "category": "Stations_PocketDeckKiosk",
+   "material": "W1_wood_plank",
+   "triangles": 48,
+   "anim": null,
+   "bounds_min": [
+    -49.4,
+    6.7,
+    0.45
+   ],
+   "bounds_max": [
+    -43.03,
+    11.47,
+    7.19
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__egg",
+   "category": "Stations_ToyLawn",
+   "material": "W1_egg",
+   "triangles": 80,
+   "anim": null,
+   "bounds_min": [
+    -29.61,
+    -20.05,
+    0.1
+   ],
+   "bounds_max": [
+    -27.99,
+    -18.35,
+    1.8
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__gold",
+   "category": "Stations_ToyLawn",
+   "material": "W1_gold",
+   "triangles": 124,
+   "anim": null,
+   "bounds_min": [
+    -32.95,
+    -18.6,
+    0.1
+   ],
+   "bounds_max": [
+    -27.0,
+    -16.35,
+    1.85
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__marble",
+   "category": "Stations_ToyLawn",
+   "material": "W1_marble",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -32.9,
+    -18.55,
+    0.1
+   ],
+   "bounds_max": [
+    -30.5,
+    -17.05,
+    1.1
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__ph_lilac",
+   "category": "Stations_ToyLawn",
+   "material": "W1_ph_lilac",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -30.39,
+    -17.79,
+    0.1
+   ],
+   "bounds_max": [
+    -29.21,
+    -16.61,
+    1.1
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__ph_mint",
+   "category": "Stations_ToyLawn",
+   "material": "W1_ph_mint",
+   "triangles": 112,
+   "anim": null,
+   "bounds_min": [
+    -31.47,
+    -18.22,
+    0.72
+   ],
+   "bounds_max": [
+    -27.15,
+    -16.37,
+    2.1
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__ph_pink",
+   "category": "Stations_ToyLawn",
+   "material": "W1_ph_pink",
+   "triangles": 100,
+   "anim": null,
+   "bounds_min": [
+    -32.68,
+    -18.25,
+    0.35
+   ],
+   "bounds_max": [
+    -26.91,
+    -16.75,
+    1.56
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__ph_yellow",
+   "category": "Stations_ToyLawn",
+   "material": "W1_ph_yellow",
+   "triangles": 112,
+   "anim": null,
+   "bounds_min": [
+    -32.09,
+    -18.14,
+    0.1
+   ],
+   "bounds_max": [
+    -27.03,
+    -16.27,
+    1.56
+   ]
+  },
+  {
+   "chunk": "Stations_ToyLawn__wood_plank",
+   "category": "Stations_ToyLawn",
+   "material": "W1_wood_plank",
+   "triangles": 12,
+   "anim": null,
+   "bounds_min": [
+    -32.95,
+    -17.85,
+    1.1
+   ],
+   "bounds_max": [
+    -30.45,
+    -16.91,
+    2.57
+   ]
+  },
+  {
+   "chunk": "Terrain_Ground__dirt_path",
+   "category": "Terrain_Ground",
+   "material": "W1_dirt_path",
+   "triangles": 1182,
+   "anim": null,
+   "bounds_min": [
+    -93.72,
+    -71.39,
+    0.05
+   ],
+   "bounds_max": [
+    102.07,
+    75.42,
+    9.87
+   ]
+  },
+  {
+   "chunk": "Terrain_Ground__grass",
+   "category": "Terrain_Ground",
+   "material": "W1_grass",
+   "triangles": 5612,
+   "anim": null,
+   "bounds_min": [
+    -105.0,
+    -84.0,
+    -0.18
+   ],
+   "bounds_max": [
+    123.0,
+    126.0,
+    46.65
+   ]
+  },
+  {
+   "chunk": "Terrain_Ground__ground",
+   "category": "Terrain_Ground",
+   "material": "W1_ground",
+   "triangles": 5517,
+   "anim": null,
+   "bounds_min": [
+    -114.0,
+    -90.0,
+    -9.0
+   ],
+   "bounds_max": [
+    147.0,
+    159.0,
+    46.65
+   ]
+  },
+  {
+   "chunk": "Terrain_Ground__meadow",
+   "category": "Terrain_Ground",
+   "material": "W1_meadow",
+   "triangles": 126,
+   "anim": null,
+   "bounds_min": [
+    -37.9,
+    -24.35,
+    0.03
+   ],
+   "bounds_max": [
+    63.3,
+    0.39,
+    0.48
+   ]
+  },
+  {
+   "chunk": "Terrain_Ground__pebble_bed",
+   "category": "Terrain_Ground",
+   "material": "W1_pebble_bed",
+   "triangles": 531,
+   "anim": null,
+   "bounds_min": [
+    -108.0,
+    -81.0,
+    -8.88
+   ],
+   "bounds_max": [
+    111.0,
+    78.0,
+    0.2
+   ]
+  },
+  {
+   "chunk": "Vegetation_Bushes__foliage",
+   "category": "Vegetation_Bushes",
+   "material": "W1_foliage",
+   "triangles": 380,
+   "anim": null,
+   "bounds_min": [
+    -76.56,
+    -60.83,
+    -0.17
+   ],
+   "bounds_max": [
+    99.57,
+    80.47,
+    2.27
+   ]
+  },
+  {
+   "chunk": "Vegetation_Bushes__foliage_blossom",
+   "category": "Vegetation_Bushes",
+   "material": "W1_foliage_blossom",
+   "triangles": 140,
+   "anim": null,
+   "bounds_min": [
+    -90.0,
+    -63.48,
+    -0.02
+   ],
+   "bounds_max": [
+    65.33,
+    2.15,
+    1.88
+   ]
+  },
+  {
+   "chunk": "Vegetation_Flowers__ph_lilac",
+   "category": "Vegetation_Flowers",
+   "material": "W1_ph_lilac",
+   "triangles": 320,
+   "anim": null,
+   "bounds_min": [
+    -86.51,
+    -65.78,
+    0.67
+   ],
+   "bounds_max": [
+    75.49,
+    84.93,
+    1.59
+   ]
+  },
+  {
+   "chunk": "Vegetation_Flowers__ph_pink",
+   "category": "Vegetation_Flowers",
+   "material": "W1_ph_pink",
+   "triangles": 96,
+   "anim": null,
+   "bounds_min": [
+    -65.24,
+    -51.49,
+    0.89
+   ],
+   "bounds_max": [
+    95.7,
+    55.78,
+    1.89
+   ]
+  },
+  {
+   "chunk": "Vegetation_Flowers__ph_white",
+   "category": "Vegetation_Flowers",
+   "material": "W1_ph_white",
+   "triangles": 512,
+   "anim": null,
+   "bounds_min": [
+    -87.13,
+    -66.79,
+    0.58
+   ],
+   "bounds_max": [
+    96.7,
+    83.46,
+    1.98
+   ]
+  },
+  {
+   "chunk": "Vegetation_Flowers__ph_yellow",
+   "category": "Vegetation_Flowers",
+   "material": "W1_ph_yellow",
+   "triangles": 352,
+   "anim": null,
+   "bounds_min": [
+    -86.99,
+    -66.85,
+    0.63
+   ],
+   "bounds_max": [
+    96.13,
+    83.05,
+    1.9
+   ]
+  },
+  {
+   "chunk": "Vegetation_Flowers__stem",
+   "category": "Vegetation_Flowers",
+   "material": "W1_stem",
+   "triangles": 960,
+   "anim": null,
+   "bounds_min": [
+    -86.96,
+    -66.65,
+    0.15
+   ],
+   "bounds_max": [
+    96.4,
+    84.67,
+    1.75
+   ]
+  },
+  {
+   "chunk": "Vegetation_HatchTree__bark",
+   "category": "Vegetation_HatchTree",
+   "material": "W1_bark",
+   "triangles": 412,
+   "anim": null,
+   "bounds_min": [
+    -103.5,
+    11.65,
+    -1.36
+   ],
+   "bounds_max": [
+    -30.28,
+    23.3,
+    19.85
+   ]
+  },
+  {
+   "chunk": "Vegetation_HatchTree__foliage",
+   "category": "Vegetation_HatchTree",
+   "material": "W1_foliage",
+   "triangles": 560,
+   "anim": null,
+   "bounds_min": [
+    -48.46,
+    6.32,
+    12.08
+   ],
+   "bounds_max": [
+    -23.75,
+    29.61,
+    24.91
+   ]
+  },
+  {
+   "chunk": "Vegetation_HatchTree__foliage_blossom",
+   "category": "Vegetation_HatchTree",
+   "material": "W1_foliage_blossom",
+   "triangles": 240,
+   "anim": null,
+   "bounds_min": [
+    -107.68,
+    8.82,
+    7.26
+   ],
+   "bounds_max": [
+    -90.96,
+    21.68,
+    17.66
+   ]
+  },
+  {
+   "chunk": "Vegetation_Trees__bark",
+   "category": "Vegetation_Trees",
+   "material": "W1_bark",
+   "triangles": 1840,
+   "anim": null,
+   "bounds_min": [
+    -78.86,
+    -63.18,
+    -0.48
+   ],
+   "bounds_max": [
+    101.31,
+    63.73,
+    10.36
+   ]
+  },
+  {
+   "chunk": "Vegetation_Trees__foliage",
+   "category": "Vegetation_Trees",
+   "material": "W1_foliage",
+   "triangles": 3240,
+   "anim": null,
+   "bounds_min": [
+    -79.2,
+    -66.01,
+    5.05
+   ],
+   "bounds_max": [
+    103.75,
+    48.33,
+    19.66
+   ]
+  },
+  {
+   "chunk": "Vegetation_Trees__foliage_blossom",
+   "category": "Vegetation_Trees",
+   "material": "W1_foliage_blossom",
+   "triangles": 1920,
+   "anim": null,
+   "bounds_min": [
+    -80.6,
+    -48.04,
+    4.65
+   ],
+   "bounds_max": [
+    77.36,
+    65.58,
+    11.57
+   ]
+  }
+ ]
+}

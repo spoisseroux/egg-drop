@@ -1,0 +1,1477 @@
+{
+ "note": "Linked-duplicate vegetation: import each mesh once and place copies from this table.",
+ "instances": [
+  {
+   "object": "Landmark_BlossomPointTree",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -100.0,
+    15.0,
+    0.0
+   ],
+   "roblox_position": [
+    -100.0,
+    4.0,
+    -15.0
+   ],
+   "yaw_rad": 0.6,
+   "scale": 1.7
+  },
+  {
+   "object": "Tree_01_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    -62.0,
+    24.0,
+    0.635
+   ],
+   "roblox_position": [
+    -62.0,
+    4.635,
+    -24.0
+   ],
+   "yaw_rad": 0.9463,
+   "scale": 1.1646
+  },
+  {
+   "object": "Tree_02_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    -50.0,
+    42.0,
+    0.664
+   ],
+   "roblox_position": [
+    -50.0,
+    4.664,
+    -42.0
+   ],
+   "yaw_rad": 0.6251,
+   "scale": 1.1527
+  },
+  {
+   "object": "Tree_03_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -36.0,
+    52.0,
+    0.796
+   ],
+   "roblox_position": [
+    -36.0,
+    4.796,
+    -52.0
+   ],
+   "yaw_rad": 5.1394,
+   "scale": 1.0374
+  },
+  {
+   "object": "Tree_04_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    -70.0,
+    44.0,
+    0.404
+   ],
+   "roblox_position": [
+    -70.0,
+    4.404,
+    -44.0
+   ],
+   "yaw_rad": 3.482,
+   "scale": 1.0984
+  },
+  {
+   "object": "Tree_05_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -8.0,
+    48.0,
+    0.604
+   ],
+   "roblox_position": [
+    -8.0,
+    4.604,
+    -48.0
+   ],
+   "yaw_rad": 3.7331,
+   "scale": 0.9625
+  },
+  {
+   "object": "Tree_06_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    -76.0,
+    -16.0,
+    0.503
+   ],
+   "roblox_position": [
+    -76.0,
+    4.503,
+    16.0
+   ],
+   "yaw_rad": 2.1756,
+   "scale": 0.9649
+  },
+  {
+   "object": "Tree_07_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -66.0,
+    -28.0,
+    0.695
+   ],
+   "roblox_position": [
+    -66.0,
+    4.695,
+    28.0
+   ],
+   "yaw_rad": 2.9281,
+   "scale": 0.9837
+  },
+  {
+   "object": "Tree_08_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    -34.0,
+    -38.0,
+    0.697
+   ],
+   "roblox_position": [
+    -34.0,
+    4.697,
+    38.0
+   ],
+   "yaw_rad": 0.6252,
+   "scale": 1.1548
+  },
+  {
+   "object": "Tree_09_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    -28.0,
+    -56.0,
+    0.495
+   ],
+   "roblox_position": [
+    -28.0,
+    4.495,
+    56.0
+   ],
+   "yaw_rad": 4.9968,
+   "scale": 0.9924
+  },
+  {
+   "object": "Tree_10_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    18.0,
+    -44.0,
+    0.574
+   ],
+   "roblox_position": [
+    18.0,
+    4.574,
+    44.0
+   ],
+   "yaw_rad": 5.9486,
+   "scale": 0.9591
+  },
+  {
+   "object": "Tree_11_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    30.0,
+    -60.0,
+    0.55
+   ],
+   "roblox_position": [
+    30.0,
+    4.55,
+    60.0
+   ],
+   "yaw_rad": 4.3065,
+   "scale": 1.1411
+  },
+  {
+   "object": "Tree_12_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    52.0,
+    -56.0,
+    0.517
+   ],
+   "roblox_position": [
+    52.0,
+    4.517,
+    56.0
+   ],
+   "yaw_rad": 6.2268,
+   "scale": 0.9445
+  },
+  {
+   "object": "Tree_13_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    66.0,
+    -26.0,
+    0.674
+   ],
+   "roblox_position": [
+    66.0,
+    4.674,
+    26.0
+   ],
+   "yaw_rad": 0.3852,
+   "scale": 1.0973
+  },
+  {
+   "object": "Tree_14_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    74.0,
+    -12.0,
+    0.787
+   ],
+   "roblox_position": [
+    74.0,
+    4.787,
+    12.0
+   ],
+   "yaw_rad": 4.6923,
+   "scale": 0.9448
+  },
+  {
+   "object": "Tree_15_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    38.0,
+    -8.0,
+    0.346
+   ],
+   "roblox_position": [
+    38.0,
+    4.346,
+    8.0
+   ],
+   "yaw_rad": 2.5601,
+   "scale": 0.9928
+  },
+  {
+   "object": "Tree_16_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    72.0,
+    22.0,
+    0.583
+   ],
+   "roblox_position": [
+    72.0,
+    4.583,
+    -22.0
+   ],
+   "yaw_rad": 0.4314,
+   "scale": 1.1745
+  },
+  {
+   "object": "Tree_17_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    38.0,
+    62.0,
+    0.617
+   ],
+   "roblox_position": [
+    38.0,
+    4.617,
+    -62.0
+   ],
+   "yaw_rad": 3.2906,
+   "scale": 0.9925
+  },
+  {
+   "object": "Tree_18_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    76.0,
+    40.0,
+    0.435
+   ],
+   "roblox_position": [
+    76.0,
+    4.435,
+    -40.0
+   ],
+   "yaw_rad": 2.1985,
+   "scale": 0.9669
+  },
+  {
+   "object": "Tree_19_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -12.0,
+    -34.0,
+    0.764
+   ],
+   "roblox_position": [
+    -12.0,
+    4.764,
+    34.0
+   ],
+   "yaw_rad": 5.3792,
+   "scale": 0.9092
+  },
+  {
+   "object": "Tree_20_round",
+   "mesh": "Tree_Round",
+   "blender_location": [
+    100.0,
+    -44.0,
+    0.506
+   ],
+   "roblox_position": [
+    100.0,
+    4.506,
+    44.0
+   ],
+   "yaw_rad": 4.9688,
+   "scale": 0.927
+  },
+  {
+   "object": "Tree_21_blossom",
+   "mesh": "Tree_Blossom",
+   "blender_location": [
+    -76.929,
+    22.929,
+    0.529
+   ],
+   "roblox_position": [
+    -76.929,
+    4.529,
+    -22.929
+   ],
+   "yaw_rad": 5.0336,
+   "scale": 1.0286
+  },
+  {
+   "object": "Tree_22_tall",
+   "mesh": "Tree_Tall",
+   "blender_location": [
+    36.0,
+    16.0,
+    0.502
+   ],
+   "roblox_position": [
+    36.0,
+    4.502,
+    -16.0
+   ],
+   "yaw_rad": 4.3637,
+   "scale": 0.8878
+  },
+  {
+   "object": "Bush_01",
+   "mesh": "Bush",
+   "blender_location": [
+    66.819,
+    24.059,
+    0.806
+   ],
+   "roblox_position": [
+    66.819,
+    4.806,
+    -24.059
+   ],
+   "yaw_rad": 3.629,
+   "scale": 1.456
+  },
+  {
+   "object": "Bush_02",
+   "mesh": "Bush",
+   "blender_location": [
+    -34.997,
+    -58.701,
+    0.74
+   ],
+   "roblox_position": [
+    -34.997,
+    4.74,
+    58.701
+   ],
+   "yaw_rad": 1.9517,
+   "scale": 1.5675
+  },
+  {
+   "object": "Bush_03",
+   "mesh": "Bush",
+   "blender_location": [
+    32.137,
+    66.463,
+    0.846
+   ],
+   "roblox_position": [
+    32.137,
+    4.846,
+    -66.463
+   ],
+   "yaw_rad": 0.2139,
+   "scale": 1.4486
+  },
+  {
+   "object": "Bush_04",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    63.538,
+    -60.788,
+    0.689
+   ],
+   "roblox_position": [
+    63.538,
+    4.689,
+    60.788
+   ],
+   "yaw_rad": 5.8555,
+   "scale": 1.555
+  },
+  {
+   "object": "Bush_05",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    -36.846,
+    -61.362,
+    0.763
+   ],
+   "roblox_position": [
+    -36.846,
+    4.763,
+    61.362
+   ],
+   "yaw_rad": 5.7625,
+   "scale": 1.4408
+  },
+  {
+   "object": "Bush_06",
+   "mesh": "Bush",
+   "blender_location": [
+    -30.656,
+    41.128,
+    0.907
+   ],
+   "roblox_position": [
+    -30.656,
+    4.907,
+    -41.128
+   ],
+   "yaw_rad": 4.0056,
+   "scale": 1.4949
+  },
+  {
+   "object": "Bush_07",
+   "mesh": "Bush",
+   "blender_location": [
+    68.747,
+    28.526,
+    0.753
+   ],
+   "roblox_position": [
+    68.747,
+    4.753,
+    -28.526
+   ],
+   "yaw_rad": 1.5768,
+   "scale": 1.3318
+  },
+  {
+   "object": "Bush_08",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    31.75,
+    -59.78,
+    0.767
+   ],
+   "roblox_position": [
+    31.75,
+    4.767,
+    59.78
+   ],
+   "yaw_rad": 6.127,
+   "scale": 1.6139
+  },
+  {
+   "object": "Bush_09",
+   "mesh": "Bush",
+   "blender_location": [
+    -48.518,
+    44.494,
+    0.874
+   ],
+   "roblox_position": [
+    -48.518,
+    4.874,
+    -44.494
+   ],
+   "yaw_rad": 4.4566,
+   "scale": 0.902
+  },
+  {
+   "object": "Bush_10",
+   "mesh": "Bush",
+   "blender_location": [
+    33.944,
+    4.509,
+    0.77
+   ],
+   "roblox_position": [
+    33.944,
+    4.77,
+    -4.509
+   ],
+   "yaw_rad": 1.8155,
+   "scale": 0.9973
+  },
+  {
+   "object": "Bush_11",
+   "mesh": "Bush",
+   "blender_location": [
+    -11.683,
+    78.439,
+    0.877
+   ],
+   "roblox_position": [
+    -11.683,
+    4.877,
+    -78.439
+   ],
+   "yaw_rad": 5.7012,
+   "scale": 1.6148
+  },
+  {
+   "object": "Bush_12",
+   "mesh": "Bush",
+   "blender_location": [
+    71.048,
+    46.891,
+    0.716
+   ],
+   "roblox_position": [
+    71.048,
+    4.716,
+    -46.891
+   ],
+   "yaw_rad": 3.4964,
+   "scale": 1.6512
+  },
+  {
+   "object": "Bush_13",
+   "mesh": "Bush",
+   "blender_location": [
+    -12.556,
+    72.33,
+    0.879
+   ],
+   "roblox_position": [
+    -12.556,
+    4.879,
+    -72.33
+   ],
+   "yaw_rad": 6.1865,
+   "scale": 1.0485
+  },
+  {
+   "object": "Bush_14",
+   "mesh": "Bush",
+   "blender_location": [
+    -3.454,
+    -6.215,
+    0.271
+   ],
+   "roblox_position": [
+    -3.454,
+    4.271,
+    6.215
+   ],
+   "yaw_rad": 2.7701,
+   "scale": 1.4724
+  },
+  {
+   "object": "Bush_15",
+   "mesh": "Bush",
+   "blender_location": [
+    74.34,
+    46.826,
+    0.721
+   ],
+   "roblox_position": [
+    74.34,
+    4.721,
+    -46.826
+   ],
+   "yaw_rad": 5.0005,
+   "scale": 1.2868
+  },
+  {
+   "object": "Bush_16",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    -23.744,
+    -23.955,
+    0.34
+   ],
+   "roblox_position": [
+    -23.744,
+    4.34,
+    23.955
+   ],
+   "yaw_rad": 1.3744,
+   "scale": 1.2062
+  },
+  {
+   "object": "Bush_17",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    -88.184,
+    0.274,
+    0.792
+   ],
+   "roblox_position": [
+    -88.184,
+    4.792,
+    -0.274
+   ],
+   "yaw_rad": 3.4133,
+   "scale": 1.5207
+  },
+  {
+   "object": "Bush_18",
+   "mesh": "Bush",
+   "blender_location": [
+    -74.828,
+    -2.175,
+    0.701
+   ],
+   "roblox_position": [
+    -74.828,
+    4.701,
+    2.175
+   ],
+   "yaw_rad": 2.4514,
+   "scale": 1.4292
+  },
+  {
+   "object": "Bush_19",
+   "mesh": "Bush",
+   "blender_location": [
+    0.661,
+    64.654,
+    0.854
+   ],
+   "roblox_position": [
+    0.661,
+    4.854,
+    -64.654
+   ],
+   "yaw_rad": 5.891,
+   "scale": 1.3263
+  },
+  {
+   "object": "Bush_20",
+   "mesh": "Bush",
+   "blender_location": [
+    54.986,
+    -54.13,
+    0.715
+   ],
+   "roblox_position": [
+    54.986,
+    4.715,
+    54.13
+   ],
+   "yaw_rad": 1.828,
+   "scale": 1.2915
+  },
+  {
+   "object": "Bush_21",
+   "mesh": "Bush",
+   "blender_location": [
+    95.889,
+    -21.02,
+    0.747
+   ],
+   "roblox_position": [
+    95.889,
+    4.747,
+    21.02
+   ],
+   "yaw_rad": 0.0712,
+   "scale": 1.786
+  },
+  {
+   "object": "Bush_22",
+   "mesh": "Bush",
+   "blender_location": [
+    -35.177,
+    53.191,
+    1.0
+   ],
+   "roblox_position": [
+    -35.177,
+    5.0,
+    -53.191
+   ],
+   "yaw_rad": 5.2643,
+   "scale": 1.5147
+  },
+  {
+   "object": "Bush_23",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    17.044,
+    -13.877,
+    0.72
+   ],
+   "roblox_position": [
+    17.044,
+    4.72,
+    13.877
+   ],
+   "yaw_rad": 5.2875,
+   "scale": 1.4182
+  },
+  {
+   "object": "Bush_24",
+   "mesh": "Bush_Blossom",
+   "blender_location": [
+    43.018,
+    -61.655,
+    0.769
+   ],
+   "roblox_position": [
+    43.018,
+    4.769,
+    61.655
+   ],
+   "yaw_rad": 5.8887,
+   "scale": 1.3994
+  },
+  {
+   "object": "Bush_25",
+   "mesh": "Bush",
+   "blender_location": [
+    13.326,
+    -47.557,
+    0.792
+   ],
+   "roblox_position": [
+    13.326,
+    4.792,
+    47.557
+   ],
+   "yaw_rad": 4.7924,
+   "scale": 1.4728
+  },
+  {
+   "object": "Bush_26",
+   "mesh": "Bush",
+   "blender_location": [
+    98.43,
+    -45.632,
+    0.721
+   ],
+   "roblox_position": [
+    98.43,
+    4.721,
+    45.632
+   ],
+   "yaw_rad": 5.8614,
+   "scale": 0.9471
+  },
+  {
+   "object": "Flowers_01",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    30.624,
+    12.604,
+    0.543
+   ],
+   "roblox_position": [
+    30.624,
+    4.543,
+    -12.604
+   ],
+   "yaw_rad": 2.5336,
+   "scale": 1.3283
+  },
+  {
+   "object": "Flowers_02",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -10.672,
+    -19.389,
+    0.26
+   ],
+   "roblox_position": [
+    -10.672,
+    4.26,
+    19.389
+   ],
+   "yaw_rad": 6.1934,
+   "scale": 1.1761
+  },
+  {
+   "object": "Flowers_03",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    50.968,
+    77.567,
+    0.616
+   ],
+   "roblox_position": [
+    50.968,
+    4.616,
+    -77.567
+   ],
+   "yaw_rad": 2.205,
+   "scale": 1.1363
+  },
+  {
+   "object": "Flowers_04",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    78.611,
+    -18.891,
+    0.732
+   ],
+   "roblox_position": [
+    78.611,
+    4.732,
+    18.891
+   ],
+   "yaw_rad": 4.4034,
+   "scale": 1.0809
+  },
+  {
+   "object": "Flowers_05",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -8.358,
+    83.457,
+    0.635
+   ],
+   "roblox_position": [
+    -8.358,
+    4.635,
+    -83.457
+   ],
+   "yaw_rad": 5.3339,
+   "scale": 1.4245
+  },
+  {
+   "object": "Flowers_06",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    32.864,
+    -36.614,
+    0.611
+   ],
+   "roblox_position": [
+    32.864,
+    4.611,
+    36.614
+   ],
+   "yaw_rad": 1.6441,
+   "scale": 1.0904
+  },
+  {
+   "object": "Flowers_07",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -31.007,
+    -49.747,
+    0.576
+   ],
+   "roblox_position": [
+    -31.007,
+    4.576,
+    49.747
+   ],
+   "yaw_rad": 5.5815,
+   "scale": 1.2067
+  },
+  {
+   "object": "Flowers_08",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -35.368,
+    58.214,
+    0.807
+   ],
+   "roblox_position": [
+    -35.368,
+    4.807,
+    -58.214
+   ],
+   "yaw_rad": 0.0849,
+   "scale": 1.07
+  },
+  {
+   "object": "Flowers_09",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    72.412,
+    48.488,
+    0.523
+   ],
+   "roblox_position": [
+    72.412,
+    4.523,
+    -48.488
+   ],
+   "yaw_rad": 4.8154,
+   "scale": 0.9773
+  },
+  {
+   "object": "Flowers_10",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    29.676,
+    8.841,
+    0.563
+   ],
+   "roblox_position": [
+    29.676,
+    4.563,
+    -8.841
+   ],
+   "yaw_rad": 0.2436,
+   "scale": 1.1718
+  },
+  {
+   "object": "Flowers_11",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -63.135,
+    42.32,
+    0.633
+   ],
+   "roblox_position": [
+    -63.135,
+    4.633,
+    -42.32
+   ],
+   "yaw_rad": 2.819,
+   "scale": 1.2174
+  },
+  {
+   "object": "Flowers_12",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    70.683,
+    -65.835,
+    0.497
+   ],
+   "roblox_position": [
+    70.683,
+    4.497,
+    65.835
+   ],
+   "yaw_rad": 5.3603,
+   "scale": 1.4389
+  },
+  {
+   "object": "Flowers_13",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    -38.177,
+    55.915,
+    0.818
+   ],
+   "roblox_position": [
+    -38.177,
+    4.818,
+    -55.915
+   ],
+   "yaw_rad": 0.5036,
+   "scale": 1.0115
+  },
+  {
+   "object": "Flowers_14",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    -27.403,
+    -50.63,
+    0.554
+   ],
+   "roblox_position": [
+    -27.403,
+    4.554,
+    50.63
+   ],
+   "yaw_rad": 5.7405,
+   "scale": 0.949
+  },
+  {
+   "object": "Flowers_15",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    73.852,
+    -43.579,
+    0.577
+   ],
+   "roblox_position": [
+    73.852,
+    4.577,
+    43.579
+   ],
+   "yaw_rad": 2.98,
+   "scale": 1.4193
+  },
+  {
+   "object": "Flowers_16",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    74.885,
+    -11.657,
+    0.791
+   ],
+   "roblox_position": [
+    74.885,
+    4.791,
+    11.657
+   ],
+   "yaw_rad": 3.6711,
+   "scale": 1.2714
+  },
+  {
+   "object": "Flowers_17",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    -65.285,
+    9.113,
+    0.469
+   ],
+   "roblox_position": [
+    -65.285,
+    4.469,
+    -9.113
+   ],
+   "yaw_rad": 6.2167,
+   "scale": 1.3106
+  },
+  {
+   "object": "Flowers_18",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -86.322,
+    22.392,
+    0.631
+   ],
+   "roblox_position": [
+    -86.322,
+    4.631,
+    -22.392
+   ],
+   "yaw_rad": 3.5046,
+   "scale": 0.972
+  },
+  {
+   "object": "Flowers_19",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -55.994,
+    38.991,
+    0.638
+   ],
+   "roblox_position": [
+    -55.994,
+    4.638,
+    -38.991
+   ],
+   "yaw_rad": 3.1296,
+   "scale": 1.3718
+  },
+  {
+   "object": "Flowers_20",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    81.18,
+    -7.628,
+    0.776
+   ],
+   "roblox_position": [
+    81.18,
+    4.776,
+    7.628
+   ],
+   "yaw_rad": 1.6002,
+   "scale": 1.3349
+  },
+  {
+   "object": "Flowers_21",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -21.626,
+    58.526,
+    0.65
+   ],
+   "roblox_position": [
+    -21.626,
+    4.65,
+    -58.526
+   ],
+   "yaw_rad": 2.4842,
+   "scale": 0.9909
+  },
+  {
+   "object": "Flowers_22",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    80.775,
+    -5.923,
+    0.786
+   ],
+   "roblox_position": [
+    80.775,
+    4.786,
+    5.923
+   ],
+   "yaw_rad": 0.0932,
+   "scale": 1.3384
+  },
+  {
+   "object": "Flowers_23",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    -57.437,
+    13.591,
+    0.151
+   ],
+   "roblox_position": [
+    -57.437,
+    4.151,
+    -13.591
+   ],
+   "yaw_rad": 4.9249,
+   "scale": 1.3096
+  },
+  {
+   "object": "Flowers_24",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    29.57,
+    -29.356,
+    0.569
+   ],
+   "roblox_position": [
+    29.57,
+    4.569,
+    29.356
+   ],
+   "yaw_rad": 2.3996,
+   "scale": 1.4262
+  },
+  {
+   "object": "Flowers_25",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    42.107,
+    -0.35,
+    0.329
+   ],
+   "roblox_position": [
+    42.107,
+    4.329,
+    0.35
+   ],
+   "yaw_rad": 0.069,
+   "scale": 0.9733
+  },
+  {
+   "object": "Flowers_26",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    -29.414,
+    67.065,
+    0.715
+   ],
+   "roblox_position": [
+    -29.414,
+    4.715,
+    -67.065
+   ],
+   "yaw_rad": 5.581,
+   "scale": 1.1623
+  },
+  {
+   "object": "Flowers_27",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    10.169,
+    82.331,
+    0.663
+   ],
+   "roblox_position": [
+    10.169,
+    4.663,
+    -82.331
+   ],
+   "yaw_rad": 3.9482,
+   "scale": 1.0049
+  },
+  {
+   "object": "Flowers_28",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    52.075,
+    27.368,
+    0.553
+   ],
+   "roblox_position": [
+    52.075,
+    4.553,
+    -27.368
+   ],
+   "yaw_rad": 1.2849,
+   "scale": 1.0329
+  },
+  {
+   "object": "Flowers_29",
+   "mesh": "Flowers_A",
+   "blender_location": [
+    96.259,
+    -33.066,
+    0.533
+   ],
+   "roblox_position": [
+    96.259,
+    4.533,
+    33.066
+   ],
+   "yaw_rad": 4.5506,
+   "scale": 1.4511
+  },
+  {
+   "object": "Flowers_30",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    41.5,
+    68.726,
+    0.658
+   ],
+   "roblox_position": [
+    41.5,
+    4.658,
+    -68.726
+   ],
+   "yaw_rad": 1.422,
+   "scale": 1.2779
+  },
+  {
+   "object": "Flowers_31",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    18.161,
+    -42.875,
+    0.574
+   ],
+   "roblox_position": [
+    18.161,
+    4.574,
+    42.875
+   ],
+   "yaw_rad": 1.5933,
+   "scale": 0.965
+  },
+  {
+   "object": "Flowers_32",
+   "mesh": "Flowers_B",
+   "blender_location": [
+    14.244,
+    -50.091,
+    0.573
+   ],
+   "roblox_position": [
+    14.244,
+    4.573,
+    50.091
+   ],
+   "yaw_rad": 4.6308,
+   "scale": 0.9395
+  },
+  {
+   "object": "Islet_Near_East_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    168.384,
+    -17.633,
+    15.0
+   ],
+   "roblox_position": [
+    168.384,
+    19.0,
+    17.633
+   ],
+   "yaw_rad": 4.8001,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_East_Tree2",
+   "mesh": "TreeLite_Blossom",
+   "blender_location": [
+    161.047,
+    -21.504,
+    15.0
+   ],
+   "roblox_position": [
+    161.047,
+    19.0,
+    21.504
+   ],
+   "yaw_rad": 3.2128,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_South_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    37.282,
+    -147.033,
+    -11.0
+   ],
+   "roblox_position": [
+    37.282,
+    -7.0,
+    147.033
+   ],
+   "yaw_rad": 5.9738,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_South_Tree2",
+   "mesh": "TreeLite_Blossom",
+   "blender_location": [
+    24.616,
+    -154.879,
+    -11.0
+   ],
+   "roblox_position": [
+    24.616,
+    -7.0,
+    154.879
+   ],
+   "yaw_rad": 2.1772,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_SouthWest_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    -111.353,
+    -125.877,
+    7.0
+   ],
+   "roblox_position": [
+    -111.353,
+    11.0,
+    125.877
+   ],
+   "yaw_rad": 5.0083,
+   "scale": 1.0
+  },
+  {
+   "object": "Islet_Near_West_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    -178.695,
+    37.484,
+    25.0
+   ],
+   "roblox_position": [
+    -178.695,
+    29.0,
+    -37.484
+   ],
+   "yaw_rad": 4.3667,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_West_Tree2",
+   "mesh": "TreeLite_Blossom",
+   "blender_location": [
+    -171.228,
+    30.159,
+    25.0
+   ],
+   "roblox_position": [
+    -171.228,
+    29.0,
+    -30.159
+   ],
+   "yaw_rad": 6.2499,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_NorthWest_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    -149.532,
+    130.876,
+    45.0
+   ],
+   "roblox_position": [
+    -149.532,
+    49.0,
+    -130.876
+   ],
+   "yaw_rad": 4.8737,
+   "scale": 1.0909
+  },
+  {
+   "object": "Islet_Near_SouthEast_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    149.771,
+    -119.621,
+    -21.0
+   ],
+   "roblox_position": [
+    149.771,
+    -17.0,
+    119.621
+   ],
+   "yaw_rad": 1.711,
+   "scale": 0.8182
+  },
+  {
+   "object": "Islet_Near_FarSouth_Tree1",
+   "mesh": "TreeLite_Round",
+   "blender_location": [
+    -36.529,
+    -215.281,
+    -33.0
+   ],
+   "roblox_position": [
+    -36.529,
+    -29.0,
+    215.281
+   ],
+   "yaw_rad": 0.0808,
+   "scale": 1.1
+  },
+  {
+   "object": "Islet_Near_FarSouth_Tree2",
+   "mesh": "TreeLite_Blossom",
+   "blender_location": [
+    -40.765,
+    -219.552,
+    -33.0
+   ],
+   "roblox_position": [
+    -40.765,
+    -29.0,
+    219.552
+   ],
+   "yaw_rad": 1.7373,
+   "scale": 1.1
+  }
+ ]
+}

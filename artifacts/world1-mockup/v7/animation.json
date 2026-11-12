@@ -1,0 +1,667 @@
+[
+ {
+  "object": "Underside_Crystals",
+  "anim": "pulse",
+  "how": "Slow pulse."
+ },
+ {
+  "object": "Water_Stream",
+  "anim": "scrollV",
+  "how": "Scroll the texture along V (downstream) about 0.15 tiles/s: Texture.OffsetStudsV on a Texture, or tween SurfaceAppearance offsets."
+ },
+ {
+  "object": "Water_Pool_Falls",
+  "anim": "ripple",
+  "how": "No flow: a slow two-direction UV drift (about 0.03 tiles/s) or a gentle transparency pulse."
+ },
+ {
+  "object": "Water_Pool_Lily",
+  "anim": "ripple",
+  "how": "No flow: a slow two-direction UV drift (about 0.03 tiles/s) or a gentle transparency pulse."
+ },
+ {
+  "object": "Water_TumbleFalls_Upper",
+  "anim": "scrollV",
+  "how": "Fast scroll down the fall, about 1.2 tiles/s. V runs down the fall and tiles. A Beam with the same texture also works."
+ },
+ {
+  "object": "Water_TumbleFalls_Lower",
+  "anim": "scrollV",
+  "how": "Fast scroll down the fall, about 1.2 tiles/s."
+ },
+ {
+  "object": "Water_TumbleFalls_LedgePool",
+  "anim": "ripple",
+  "how": "As the pools."
+ },
+ {
+  "object": "Water_TumbleFalls_Foam_Bottom",
+  "anim": "bob",
+  "how": "Foam strip: bob 0.15 studs at about 2 Hz and jitter its UV strip in U; a ParticleEmitter can sit on top."
+ },
+ {
+  "object": "Water_TumbleFalls_Foam_Ledge",
+  "anim": "bob",
+  "how": "Foam strip: bob 0.15 studs at about 2 Hz and jitter its UV strip in U; a ParticleEmitter can sit on top."
+ },
+ {
+  "object": "Water_AqueductChannel",
+  "anim": "scrollV",
+  "how": "Same slow scroll as the stream."
+ },
+ {
+  "object": "Water_SkyFalls_Channel",
+  "anim": "scrollV",
+  "how": "Same slow scroll as the stream."
+ },
+ {
+  "object": "Water_SkyFalls",
+  "anim": "scrollV",
+  "how": "Fast scroll, about 1.4 tiles/s; fade transparency toward the bottom."
+ },
+ {
+  "object": "Water_SkyFalls_Foam",
+  "anim": "bob",
+  "how": "Foam strip: bob 0.15 studs at about 2 Hz and jitter its UV strip in U."
+ },
+ {
+  "object": "Water_SkyFalls_Mist",
+  "anim": "bob",
+  "how": "Slow bob and scale pulse; or replace with a ParticleEmitter."
+ },
+ {
+  "object": "Chime_1",
+  "anim": "sway",
+  "how": "Pivot is the hanging point: swing +-8 degrees, each chime out of phase; play a chime sound when a player passes."
+ },
+ {
+  "object": "Chime_2",
+  "anim": "sway",
+  "how": "Pivot is the hanging point: swing +-8 degrees, each chime out of phase; play a chime sound when a player passes."
+ },
+ {
+  "object": "Chime_3",
+  "anim": "sway",
+  "how": "Pivot is the hanging point: swing +-8 degrees, each chime out of phase; play a chime sound when a player passes."
+ },
+ {
+  "object": "Chime_4",
+  "anim": "sway",
+  "how": "Pivot is the hanging point: swing +-8 degrees, each chime out of phase; play a chime sound when a player passes."
+ },
+ {
+  "object": "Chime_5",
+  "anim": "sway",
+  "how": "Pivot is the hanging point: swing +-8 degrees, each chime out of phase; play a chime sound when a player passes."
+ },
+ {
+  "object": "Pennant_1",
+  "anim": "sway",
+  "how": "Pivot is the hoist: wave about the pole by +-12 degrees, or swap for a 2-bone flag."
+ },
+ {
+  "object": "Pennant_2",
+  "anim": "sway",
+  "how": "Pivot is the hoist: wave about the pole by +-12 degrees, or swap for a 2-bone flag."
+ },
+ {
+  "object": "Landmark_HatchTree_Lantern",
+  "anim": "sway",
+  "how": "Slow swing +-4 degrees; light on at night."
+ },
+ {
+  "object": "Landmark_GlowGrotto_Crystals",
+  "anim": "pulse",
+  "how": "Slow colour and brightness pulse."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_0",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_1",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_2",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_3",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_4",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Landmark_BubbleSpring_Bubble_5",
+  "anim": "bob",
+  "how": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+ },
+ {
+  "object": "Station_EggNest_Glow_Halo",
+  "anim": "pulse",
+  "how": "Soft brightness pulse; brighter when an egg is ready."
+ },
+ {
+  "object": "Station_CareCradle_Canopy_Mobile_Glow",
+  "anim": "sway",
+  "how": "Turn slowly about the vertical axis and sway +-5 degrees."
+ },
+ {
+  "object": "Station_ArrivalDais_Glow_Disc",
+  "anim": "pulse",
+  "how": "Soft pulse; flash on spawn."
+ },
+ {
+  "object": "Lamp_1_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_2_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_3_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_4_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_5_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_6_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Lamp_7_Orb_Glow",
+  "anim": "pulse",
+  "how": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+ },
+ {
+  "object": "Islet_Near_East",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_East_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_East_Tree2",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_South",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_South_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_South_Tree2",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_SouthWest",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_SouthWest_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_West",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_West_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_West_Tree2",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_NorthWest",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_NorthWest_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_SouthEast",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_SouthEast_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_FarSouth",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_FarSouth_Tree1",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_FarSouth_Tree2",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Islet_Near_FarSouth_Tree3",
+  "anim": "bob",
+  "how": "Whole islet (rock, cap and its trees share anim_group) bobs 1 stud over 6-9 s, out of phase."
+ },
+ {
+  "object": "Drifting_Rock_01",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_02",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_03",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_04",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_05",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_06",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_07",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_08",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_09",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_10",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_11",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_12",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_13",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Drifting_Rock_14",
+  "anim": "bob",
+  "how": "Bob 0.6 studs and rotate slowly."
+ },
+ {
+  "object": "Distant_Cloud_01",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_02",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_03",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_04",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_05",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_06",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_07",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_08",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_09",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_10",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_11",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_12",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_13",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_14",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_15",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_16",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_17",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_18",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_19",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "Distant_Cloud_20",
+  "anim": "drift",
+  "how": "Drift slowly around the island."
+ },
+ {
+  "object": "CloudFloor_01",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_02",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_03",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_04",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_05",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_06",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_07",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_08",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_09",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_10",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_11",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_12",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_13",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_14",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_15",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_16",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_17",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_18",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_19",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_20",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_21",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_22",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_23",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_24",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_25",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_26",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_27",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_28",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_29",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_30",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_31",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_32",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_33",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "CloudFloor_34",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_1",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_2",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_3",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_4",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_5",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_6",
+  "anim": "drift",
+  "how": "Drift slowly."
+ },
+ {
+  "object": "Cloud_Near_7",
+  "anim": "drift",
+  "how": "Drift slowly."
+ }
+]

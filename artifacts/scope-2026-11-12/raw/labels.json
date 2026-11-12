@@ -1,0 +1,742 @@
+{
+ "front": [
+  {
+   "name": "AnkleL",
+   "x": 468.2321459054947,
+   "y": 938.0365431308746,
+   "occluded": true,
+   "new": true,
+   "channel": "FootL"
+  },
+  {
+   "name": "AnkleR",
+   "x": 634.7920775413513,
+   "y": 906.6685721278191,
+   "occluded": true,
+   "new": true,
+   "channel": "FootR"
+  },
+  {
+   "name": "Back",
+   "x": 489.06539380550385,
+   "y": 696.10515832901,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "Body",
+   "x": 564.7921442985535,
+   "y": 767.4389153718948,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmAnchor",
+   "x": 559.3261778354645,
+   "y": 15.214252471923828,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmCenter",
+   "x": 600.3108620643616,
+   "y": 208.62929224967957,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmFloat",
+   "x": 559.3261778354645,
+   "y": 15.214252471923828,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmLeft",
+   "x": 240.66791236400604,
+   "y": 175.343918800354,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmRight",
+   "x": 891.8120265007019,
+   "y": 151.74729824066162,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CheekL",
+   "x": 444.74010169506073,
+   "y": 569.1945135593414,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "CheekR",
+   "x": 833.3194255828857,
+   "y": 524.4959592819214,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Chest",
+   "x": 675.263386964798,
+   "y": 791.9506937265396,
+   "occluded": false,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "ClawL",
+   "x": 381.22498393058777,
+   "y": 854.7214016318321,
+   "occluded": true,
+   "new": true,
+   "channel": "HandL"
+  },
+  {
+   "name": "ClawR",
+   "x": 781.1676263809204,
+   "y": 785.052752494812,
+   "occluded": true,
+   "new": true,
+   "channel": "HandR"
+  },
+  {
+   "name": "EarL",
+   "x": 369.5540338754654,
+   "y": 292.25621223449707,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EarR",
+   "x": 718.2696402072906,
+   "y": 271.41470313072205,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EyeL",
+   "x": 567.2285437583923,
+   "y": 475.0365912914276,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "EyeLine",
+   "x": 704.0226697921753,
+   "y": 467.29958057403564,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EyeR",
+   "x": 803.5116910934448,
+   "y": 451.6634166240692,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "FaceBridge",
+   "x": 701.0485053062439,
+   "y": 459.9935293197632,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "FootL",
+   "x": 488.30533027648926,
+   "y": 990.0134228169918,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "FootR",
+   "x": 655.7636022567749,
+   "y": 956.6270217299461,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "Forehead",
+   "x": 669.8911130428314,
+   "y": 322.6922571659088,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Ground",
+   "x": 550.0001311302185,
+   "y": 1014.101330935955,
+   "occluded": true,
+   "new": true,
+   "channel": "Root"
+  },
+  {
+   "name": "HandCatch",
+   "x": 700.3430902957916,
+   "y": 834.4169199466705,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HandL",
+   "x": 448.60529601573944,
+   "y": 669.224151968956,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HandR",
+   "x": 681.7912459373474,
+   "y": 637.7963364124298,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HatCrown",
+   "x": 559.1981291770935,
+   "y": 214.05546069145203,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Head",
+   "x": 555.9457063674927,
+   "y": 622.198298573494,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HelixL",
+   "x": 302.28377282619476,
+   "y": 194.89707350730896,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HelixR",
+   "x": 783.6524784564972,
+   "y": 186.29984855651855,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HornL",
+   "x": 485.37437319755554,
+   "y": 239.40168619155884,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HornR",
+   "x": 673.1239974498749,
+   "y": 229.88759875297546,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "LobeL",
+   "x": 292.68628656864166,
+   "y": 309.1842710971832,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "LobeR",
+   "x": 783.6982429027557,
+   "y": 276.94557905197144,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Mouth",
+   "x": 717.1778500080109,
+   "y": 620.3316926956177,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Neck",
+   "x": 570.9369719028473,
+   "y": 668.9528435468674,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "Nose",
+   "x": 716.1545097827911,
+   "y": 552.1198838949203,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Tail",
+   "x": 482.8427731990814,
+   "y": 796.567952632904,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "ToeL",
+   "x": 561.8562698364258,
+   "y": 1048.4963528811932,
+   "occluded": false,
+   "new": true,
+   "channel": "FootL"
+  },
+  {
+   "name": "ToeR",
+   "x": 734.111875295639,
+   "y": 1011.6209290921688,
+   "occluded": false,
+   "new": true,
+   "channel": "FootR"
+  },
+  {
+   "name": "Torso",
+   "x": 564.7921442985535,
+   "y": 767.4389153718948,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "WingL",
+   "x": 445.67561745643616,
+   "y": 698.4039694070816,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "WingR",
+   "x": 556.0183525085449,
+   "y": 682.9086393117905,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "WristL",
+   "x": 407.1636885404587,
+   "y": 783.3125233650208,
+   "occluded": true,
+   "new": true,
+   "channel": "HandL"
+  },
+  {
+   "name": "WristR",
+   "x": 743.7429308891296,
+   "y": 729.5966356992722,
+   "occluded": true,
+   "new": true,
+   "channel": "HandR"
+  }
+ ],
+ "back": [
+  {
+   "name": "AnkleL",
+   "x": 624.4973063468933,
+   "y": 902.1727725863457,
+   "occluded": true,
+   "new": true,
+   "channel": "FootL"
+  },
+  {
+   "name": "AnkleR",
+   "x": 465.93998968601227,
+   "y": 937.603223323822,
+   "occluded": true,
+   "new": true,
+   "channel": "FootR"
+  },
+  {
+   "name": "Back",
+   "x": 624.5487093925476,
+   "y": 751.9576489925385,
+   "occluded": false,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "Body",
+   "x": 533.4993600845337,
+   "y": 754.3183863162994,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmAnchor",
+   "x": 539.5279079675674,
+   "y": 13.736742734909058,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmCenter",
+   "x": 496.0983008146286,
+   "y": 195.228111743927,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmFloat",
+   "x": 539.5279079675674,
+   "y": 13.736742734909058,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmLeft",
+   "x": 790.4114544391632,
+   "y": 142.87476539611816,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CharmRight",
+   "x": 184.8302721977234,
+   "y": 167.50062704086304,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "CheekL",
+   "x": 618.0411100387573,
+   "y": 468.34285259246826,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "CheekR",
+   "x": 270.90273797512054,
+   "y": 509.268856048584,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Chest",
+   "x": 426.1929780244827,
+   "y": 687.7037763595581,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "ClawL",
+   "x": 684.046882390976,
+   "y": 746.5324640274048,
+   "occluded": true,
+   "new": true,
+   "channel": "HandL"
+  },
+  {
+   "name": "ClawR",
+   "x": 313.70823085308075,
+   "y": 816.9346392154694,
+   "occluded": true,
+   "new": true,
+   "channel": "HandR"
+  },
+  {
+   "name": "EarL",
+   "x": 709.8055124282837,
+   "y": 269.5366561412811,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EarR",
+   "x": 377.00363993644714,
+   "y": 293.25483441352844,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EyeL",
+   "x": 515.5174732208252,
+   "y": 385.65423488616943,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "EyeLine",
+   "x": 402.1427780389786,
+   "y": 392.29453802108765,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "EyeR",
+   "x": 309.9104702472687,
+   "y": 405.28324842453003,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "FaceBridge",
+   "x": 404.56419587135315,
+   "y": 387.3107373714447,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "FootL",
+   "x": 601.2046456336975,
+   "y": 929.3761134147644,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "FootR",
+   "x": 444.085368514061,
+   "y": 965.3200291097164,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "Forehead",
+   "x": 430.8281034231186,
+   "y": 279.93587255477905,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Ground",
+   "x": 550.0001311302185,
+   "y": 1014.9451702833176,
+   "occluded": true,
+   "new": true,
+   "channel": "Root"
+  },
+  {
+   "name": "HandCatch",
+   "x": 405.15408515930176,
+   "y": 706.0220450162888,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HandL",
+   "x": 637.0401740074158,
+   "y": 622.6852178573608,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HandR",
+   "x": 417.37217605113983,
+   "y": 656.9631814956665,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HatCrown",
+   "x": 539.6707087755203,
+   "y": 210.87345480918884,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Head",
+   "x": 543.2984590530396,
+   "y": 617.8600192070007,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "HelixL",
+   "x": 763.9422953128815,
+   "y": 174.0001618862152,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HelixR",
+   "x": 302.37713754177094,
+   "y": 208.03310871124268,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HornL",
+   "x": 601.8459379673004,
+   "y": 220.05224227905273,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "HornR",
+   "x": 426.57364904880524,
+   "y": 230.12264966964722,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "LobeL",
+   "x": 771.3961958885193,
+   "y": 276.53953433036804,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "LobeR",
+   "x": 302.3301601409912,
+   "y": 308.92378091812134,
+   "occluded": false,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Mouth",
+   "x": 391.60803854465485,
+   "y": 514.943516254425,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Neck",
+   "x": 526.8100142478943,
+   "y": 652.5523215532303,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "Nose",
+   "x": 392.4154728651047,
+   "y": 458.3793818950653,
+   "occluded": true,
+   "new": true,
+   "channel": "Head"
+  },
+  {
+   "name": "Tail",
+   "x": 632.8170597553253,
+   "y": 867.4693897366524,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "ToeL",
+   "x": 524.3952184915543,
+   "y": 903.5742431879044,
+   "occluded": true,
+   "new": true,
+   "channel": "FootL"
+  },
+  {
+   "name": "ToeR",
+   "x": 370.81163823604584,
+   "y": 937.1296301484108,
+   "occluded": true,
+   "new": true,
+   "channel": "FootR"
+  },
+  {
+   "name": "Torso",
+   "x": 533.4993600845337,
+   "y": 754.3183863162994,
+   "occluded": true,
+   "new": true,
+   "channel": "Body"
+  },
+  {
+   "name": "WingL",
+   "x": 662.2853636741638,
+   "y": 724.2997616529465,
+   "occluded": false,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "WingR",
+   "x": 553.217476606369,
+   "y": 744.141435623169,
+   "occluded": true,
+   "new": false,
+   "channel": ""
+  },
+  {
+   "name": "WristL",
+   "x": 666.6428864002228,
+   "y": 700.6786197423935,
+   "occluded": true,
+   "new": true,
+   "channel": "HandL"
+  },
+  {
+   "name": "WristR",
+   "x": 352.9861569404602,
+   "y": 756.3220232725143,
+   "occluded": true,
+   "new": true,
+   "channel": "HandR"
+  }
+ ]
+}

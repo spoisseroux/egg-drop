@@ -1,0 +1,55 @@
+{
+ "meshes": {
+  "TreeLite_Round": {
+   "clumps": 4,
+   "clumps_seated": 4,
+   "trunk_top_z": 7.96,
+   "canopy_bottom_z": 4.85,
+   "trunk_reaches_into_canopy_by": 3.1,
+   "ok": true
+  },
+  "TreeLite_Tall": {
+   "clumps": 3,
+   "clumps_seated": 3,
+   "trunk_top_z": 8.32,
+   "canopy_bottom_z": 6.39,
+   "trunk_reaches_into_canopy_by": 1.93,
+   "ok": true
+  },
+  "TreeLite_Blossom": {
+   "clumps": 3,
+   "clumps_seated": 3,
+   "trunk_top_z": 6.91,
+   "canopy_bottom_z": 4.62,
+   "trunk_reaches_into_canopy_by": 2.3,
+   "ok": true
+  },
+  "Tree_Round": {
+   "clumps": 6,
+   "clumps_seated": 6,
+   "trunk_top_z": 7.96,
+   "canopy_bottom_z": 4.9,
+   "trunk_reaches_into_canopy_by": 3.06,
+   "ok": true
+  },
+  "Tree_Tall": {
+   "clumps": 5,
+   "clumps_seated": 5,
+   "trunk_top_z": 8.32,
+   "canopy_bottom_z": 6.33,
+   "trunk_reaches_into_canopy_by": 1.99,
+   "ok": true
+  },
+  "Tree_Blossom": {
+   "clumps": 6,
+   "clumps_seated": 6,
+   "trunk_top_z": 6.91,
+   "canopy_bottom_z": 4.27,
+   "trunk_reaches_into_canopy_by": 2.64,
+   "ok": true
+  }
+ },
+ "tree_objects_checked": 34,
+ "tree_objects_failing": [],
+ "method": "per tree mesh: every canopy clump must contain a trunk or branch end, or overlap a clump that does; and the wood must rise at least 0.5 studs above the lowest leaf vertex"
+}

@@ -6,6 +6,8 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
+- **Fable scope, 2026-11-12 (awaiting Spencer's decisions, nothing built in `src/`):** [SCOPE-2026-11-12-UI-DECK-PETS.md](SCOPE-2026-11-12-UI-DECK-PETS.md) covers the UI pass, Pocket Deck Slim, faceplates replacing stickers, boot sequence, quest rotation and log, Easy/Medium/Hard, in-deck results with a back arrow, pet attachment anchors and horns. Boards: `artifacts/scope-2026-11-12/`. Mock: `assets/art-source/pets/pet-bear-attachments.blend` (28 new anchors, placeholder outfit, devil horns S1-S5; `pet-bear.blend` untouched). 19 decisions listed at the end of the scope; quests and difficulty should not start before them.
+
 - **Overnight run 2026-11-12 (Spencer asked; publish to PRIVATE for his morning playtest):**
   - Fable: world v6 (trim trees ~70k, all-green Hatch Tree) + redesign care station, egg spot and other placeholder devices; station sources in `assets/art-source/stations/v2/`. Mockup only, not imported tonight.
   - Game Designer: `OVERNIGHT-2026-11-12.md` scope (design, feedback/juice, pet expressiveness, PICO-8 palette, SFX, engagement) with an overnight batch.
