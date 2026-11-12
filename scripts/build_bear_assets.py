@@ -82,7 +82,7 @@ def lua_definition() -> str:
         "schema": 1, "id": "bear", "legacyId": "pip", "twoTone": True,
         "axes": {"up": "+Y", "front": "+Z", "right": "+X"}, "units": "studs at garden size",
         "nativeScaleFactor": 1.3888888888888888,
-        "palette": {"body": "#FFFFFF", "secondary": "#C8C8C8", "face": "#2A2226", "mouth": "#66332E",
+        "palette": {"body": "#FFFFFF", "secondary": "#A8A5AE", "face": "#2A2226", "mouth": "#66332E",
                     "ivory": "#FFF6E9", "blush": "#E8A6A6"},
         "anchors": anchors, "pieces": pieces,
     }

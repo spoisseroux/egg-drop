@@ -77,7 +77,7 @@ function Owner:paint(entry,visual,daylight)
   entry.materialTint=nil;entry.materialStrength=nil;entry.materialPartColor=nil
  end
  local base=entry.color or entry.faceBaseColor or entry.part.Color
- local values=Config.Profiles[key]
+ local values=Config.Profiles[if twoTone then "BodyTwoTone" else key]
  local strength=values.day+(values.night-values.day)*Materials.dusk(daylight)
  if visual.emissionEnabled==false or entry.renderHidden==true or(key=="Charm"and(visual.charmVisible==false or(entry.charmShape or "dot")~=(visual.renderCharmShape or "dot")))then strength=0 end
  -- Emission multiplies albedo; a neutral tint avoids applying the pigment twice.

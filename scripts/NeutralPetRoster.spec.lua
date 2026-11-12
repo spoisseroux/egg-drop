@@ -27,10 +27,10 @@ return function(shared)
  end)
  test("white Main and achromatic grey Secondary agree across canonical and direct definitions, protected colors stay exact",function()
   for _,id in ipairs(ids)do
-   local p=Palette.original(id);assert(p.body==Color3.fromHex("#FFFFFF")and p.secondary==Color3.fromHex("#C8C8C8"))
+   local p=Palette.original(id);assert(p.body==Color3.fromHex("#FFFFFF")and p.secondary==Color3.fromHex("#A8A5AE"))
    assert(Pets.byId[id].color==p.body and Pets.byId[id].accent==p.secondary)
    local def=Defs[id];assert(Color3.fromHex(def.palette.body)==p.body and Color3.fromHex(def.palette.secondary)==p.secondary)
-   if NewDefs[id]then assert(NewDefs[id].palette.body=="#FFFFFF"and NewDefs[id].palette.secondary=="#C8C8C8")end
+   if NewDefs[id]then assert(NewDefs[id].palette.body=="#FFFFFF"and NewDefs[id].palette.secondary=="#A8A5AE")end
    for i,role in ipairs({"face","mouth","ivory","blush"})do assert(p[role]==Color3.fromHex(protected[id][i]),"protected "..id.." "..role)end
    -- faceBody only feeds blush (cheek) pieces; the two-tone Bear has none.
    local hasBlush=false;for _,piece in ipairs(def.pieces)do if piece.colorRole=="blush"then hasBlush=true end end
@@ -62,7 +62,7 @@ return function(shared)
    assert((Vector3.new(p.body.R,p.body.G,p.body.B)-Vector3.new(expected.R,expected.G,expected.B)).Magnitude<.00001)
    assert(p.secondary==Hue.ById.tide.color and main.rose==1 and secondary.tide==5)
    p=Palette.resolve(id,{mainDoses=Hue.emptyCounts(),secondaryDoses=secondary});assert(p.body==Color3.new(1,1,1)and p.secondary==Hue.ById.tide.color)
-   p=Palette.resolve(id,{mainDoses=main,secondaryDoses=Hue.emptyCounts()});assert(p.body==expected and p.secondary==Color3.fromHex("#C8C8C8"))
+   p=Palette.resolve(id,{mainDoses=main,secondaryDoses=Hue.emptyCounts()});assert(p.body==expected and p.secondary==Color3.fromHex("#A8A5AE"))
   end
  end)
  -- v1: formerly checked normalized surviving Meadow weights. Meadow is retired, so it

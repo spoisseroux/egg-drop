@@ -9,7 +9,7 @@ return function(shared)
  test("every learned grade protects facial roles and Original restores neutral channels",function()
   for _,pet in ipairs({"pip","puddle"})do
    local base=Palette.resolve(pet);assert(table.isfrozen(base))
-   assert(base.body==Color3.fromHex("#FFFFFF")and base.secondary==Color3.fromHex("#C8C8C8"),"Original channel defaults are not neutral")
+   assert(base.body==Color3.fromHex("#FFFFFF")and base.secondary==Color3.fromHex("#A8A5AE"),"Original channel defaults are not neutral")
    for _,hue in ipairs(Hue.Order)do
     local previous=0
     for rank=1,3 do
