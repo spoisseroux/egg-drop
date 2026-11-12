@@ -241,7 +241,7 @@ local function card(parent,name,r,label,pad)
 end
 local function egg(parent,diameter)
  local ball=Kit.frame(parent,"Egg",nil,UDim2.new(),UDim2.fromOffset(diameter,diameter),999);ball.BackgroundTransparency=0
- local mark=Kit.text(ball,"Strong","I",nil,{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(diameter*.42)})
+ local mark=Kit.text(ball,"Strong","I",nil,{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.max(11,math.floor(diameter*.42))})
  Art.jellyPreview(ball,1,mark)
  return{ball=ball,mark=mark}
 end

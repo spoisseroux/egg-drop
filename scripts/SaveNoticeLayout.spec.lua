@@ -4,7 +4,7 @@
 return function(client,parent,rootSize)
 	assert(parent:IsA("ScreenGui"),"ScreenGui host required")
 	local Notice=require(client.SaveNotice);local Menu=require(client.DeckMenu);local Picker=require(client.DeckPicker)
-	local Journal=require(client.PetJournal);local Shop=require(client.EggHatchView);local Recap=require(client.RoundRecap);local Focus=require(client.PetFocusUI)
+	local Journal=require(client.PetJournal);local Shop=require(client.EggHatchView);local Results=require(client.DeckResults);local Focus=require(client.PetFocusUI)
 	local Catalog=require(game.ReplicatedStorage.Shared.EggCatalog);local GuiService=game:GetService("GuiService")
 	local previousSelection=GuiService.SelectedObject
 	local root=Instance.new("Frame");root.Name="_SaveNoticeLayout";root.BackgroundTransparency=1;root.Parent=parent
@@ -105,17 +105,17 @@ return function(client,parent,rootSize)
 					assert(v.cards[6].Interactable and not v.cards[1].Interactable and v.cards[6].FamilyRank.Text=="Wick · III")
 				end)
 				assert(journal.title.Text:find("01/07",1,true) and not journal.saveDetail.Visible);journal:close()
-				local recap=Recap.new(root,audio,true);table.insert(views,{shade=recap.frame,close=function()end})
-				recap.frame.Visible=true;recap:update(600,3,0,nil,0,nil,0,700)
-				recap:updateField({sequence=1,status="Saved",success=true,stage=2,award=14,daily=6,balance=24,recipe=Catalog.ById.sprout,
-					reward={sequence=1,total=14,base=8,daily=6,family="pip",masteryPoints=1,contracts={}}});settle()
-				local starts,signature,oldSounds=recap.feedback.starts,recap.receiptSignature,sounds
+				local host=Instance.new("Frame");host.Size=UDim2.fromOffset(848,608);host.BackgroundTransparency=1;host.Parent=root
+				table.insert(views,{shade=host,close=function()end});local inner=Instance.new("Frame");inner.Size=UDim2.fromScale(1,1);inner.BackgroundTransparency=1;inner.Parent=host
+				local recap=Results.new(inner,{audio=audio,reduce=function()return true end})
+				local saved={outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=24,goals={}}
+				recap:show(saved,false);settle();assert(recap.totalText.Text=="+14 Stars" and recap.wallet.amount.Text=="24")
 				for _,status in ipairs(statuses)do
-					recap:setSaveNotice(Notice.resolve(nil,status),"Both sides complete");settle();readable(recap.saveDetail);reach(recap.saveDetail,recap.fieldBody)
-					assert(recap.earnedGraphic.Text=="+14 Stars" and recap.bankGraphic.Text=="Stars saved: 24" and recap.receiptSignature==signature)
-					assert(recap.feedback.starts==starts and sounds==oldSounds)
+					-- A save that is still pending keeps Leave usable and never shows a receipt.
+					saved.pending=true;recap:show(saved,false);settle();readable(recap.saved)
+					assert(recap.totalText.Text=="Saving…" and recap.saved.Text=="Saving…" and recap.focus==2,tostring(status))
 				end
-				recap:setSaveNotice(nil,nil);assert(not recap.saveDetail.Visible);recap.frame.Visible=false
+				saved.pending=false;recap:show(saved,false);assert(recap.saved.Text=="Saved to your wallet");recap:hide()
 				local focus=Focus.new(parent,{back=outgoing,greet=outgoing,pet=outgoing,canReact=function()return true end,canOwnInput=function()return true end})
 				focus.gui.Name="_SaveNoticeLayoutFocus";focus.gui:SetAttribute("FixtureRootSize",tostring(size))
 				table.insert(focusViews,focus);focus.root.Size=UDim2.fromOffset(size.X,size.Y);settle()

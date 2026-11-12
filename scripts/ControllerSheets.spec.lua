@@ -118,26 +118,7 @@ return function(client,parent)
 				assert(view:getControllerFocus().epoch>epoch);close(view);assert(view:getControllerFocus()==nil)
 			end
 		end)
-  test("recap Details preserve both pinned footer selections and never dispatch a route",function()
-   local Art=require(client.DeckArt);local Recap=require(client.RoundRecap)
-   root.Size=UDim2.fromOffset(600,307);settle()
-   local v=Recap.new(root,nil,true);v.frame.Visible=true;v.headerInset,v.footerInset,v.layoutWidth=30,58,600
-   v:update(630,4,2,nil,0,nil,0,700)
-   local value={sequence=881,status="Saved",success=true,stage=2,award=14,daily=6,balance=20,recipe=Catalog.ById.meadow,reward={sequence=881,total=14,base=8,daily=6,family="pip",masteryPoints=2,contracts={"chain","score"}}}
-   v:updateField(value);settle()
-   local buttons={}
-   for i,caption in ipairs({"Try again","Hatch eggs"})do
-    local b=Instance.new("TextButton");b.Text=caption;b.Size=UDim2.fromOffset(276,44);b.Position=UDim2.fromOffset(12+(i-1)*294,257);b.ZIndex=40;b.Parent=root
-    Art.button(b,8);Art.type(b,"Action",true);b.Activated:Connect(count("route"));table.insert(buttons,b)
-   end
-   local before=total()
-   for _,b in ipairs(buttons)do
-    GuiService.SelectedObject=b;v:setDetails(true);settle();local iterations=0
-    while v:scrollReceipt(1)do iterations+=1;assert(iterations<100)end
-    v:setDetails(false);settle();assert(GuiService.SelectedObject==b and b.Interactable and b.AbsoluteSize.Y>=44 and total()==before)
-   end
-   GuiService.SelectedObject=nil;for _,b in ipairs(buttons)do b:Destroy()end;v.frame:Destroy()
-  end)
+  -- The recap Details test retired with the floating recap (in-deck results: DeckResults.spec).
 
 	end)
 	for _,co in ipairs(coordinators)do co:destroy()end

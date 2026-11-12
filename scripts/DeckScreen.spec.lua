@@ -1,0 +1,95 @@
+-- Studio Client. Pocket Deck Slim geometry, touch targets, token contrast and the
+-- DeckKit component states (UI-SPEC-2026-11-12 sections 1-4 and 7).
+-- Usage: require(PlayerScripts.Client.ZZSpecs.DeckScreen)(PlayerScripts.Client, PlayerGui)
+return function(client,parent)
+ local Screen=require(client.DeckScreen);local Kit=require(client.DeckKit);local Art=require(client.DeckArt)
+ local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
+ local aspect=(11+.8)/(19+.8)
+ local cases={};local function test(name,run)run();table.insert(cases,name)end
+ local function near(a,b,e)return math.abs(a-b)<=(e or .51)end
+ local function lum(c)
+  local function ch(v)return if v<=.03928 then v/12.92 else((v+.055)/1.055)^2.4 end
+  return .2126*ch(c.R)+.7152*ch(c.G)+.0722*ch(c.B)
+ end
+ local function contrast(a,b)local x,y=lum(a),lum(b);return(math.max(x,y)+.05)/(math.min(x,y)+.05)end
+ local gui=Instance.new("ScreenGui");gui.Name="_DeckScreenSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
+ local old=Art.getTheme()
+ local ok,problem=pcall(function()
+  test("1920x1080 reference: s = 1, deck at (160,150), LCD at (536,246), board 584 high in the centre",function()
+   local g=Screen.resolve(Vector2.new(1920,1080),aspect)
+   assert(g.s==1 and g.mode=="Regular")
+   assert(near(g.deck.x,160)and near(g.deck.y,150)and near(g.lcd.x,536)and near(g.lcd.y,246),"deck/LCD origin")
+   assert(g.boardLocal.h==584 and g.boardLocal.y==12 and near(g.boardLocal.x+g.boardLocal.w/2,424,1),"board centred in the LCD")
+   assert(g.column>=200,"side panels keep their width")
+  end)
+  test("1649x971 is still s = 1; small desktop roots scale down but stay Regular above 0.75",function()
+   assert(Screen.resolve(Vector2.new(1649,971),aspect).s==1)
+   local g=Screen.resolve(Vector2.new(1300,700),aspect);assert(g.s<1 and g.s>=.75 and not g.compact)
+  end)
+  test("phone landscape 733x307 is Compact: the LCD fills the safe height and the case bleeds",function()
+   local g=Screen.resolve(Vector2.new(733,307),aspect)
+   assert(g.compact and near(g.s,(307-8)/608,.001))
+   assert(near(g.lcd.h,299)and near(g.lcd.y,4)and g.deck.w>733,"LCD fills, body bleeds past the root")
+   assert(g.authored==Screen.Compact and near(g.contentScale,1,.01))
+  end)
+  test("every hardware target is at least 44 px on the phone and the back arrow is 44",function()
+   local root=Instance.new("Frame");root.Size=UDim2.fromOffset(733,307);root.BackgroundTransparency=1;root.Parent=gui
+   local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(733,307),aspect);s:setVisible(true)
+   task.wait()
+   for _,q in pairs(s.quadrants)do assert(q.AbsoluteSize.X>=44 and q.AbsoluteSize.Y>=44,q.Name)end
+   for id,b in pairs(s.buttons)do assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)end
+   assert(s.menuHit.AbsoluteSize.Y>=44 and s.back.root.AbsoluteSize.X==44)
+   -- HUD content is authored at 417x299 and keeps compact type at 12 or more.
+   for _,node in ipairs(s.hudRoot:GetDescendants())do if node:IsA("TextLabel")and node.Text~=""then assert(node.TextSize>=11,node:GetFullName())end end
+   root:Destroy()
+  end)
+  test("HUD fills from replicated data without inventing numbers",function()
+   local root=Instance.new("Frame");root.Size=UDim2.fromOffset(1920,1080);root.BackgroundTransparency=1;root.Parent=gui
+   local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(1920,1080),aspect)
+   s:setHud({score=2340,best=2210,chain=7,goals={{text="Match I + I in CENTER",done=true,progress=1,target=1},{text="Make III on RIGHT",done=false,progress=0,target=1}},
+    daily={{title="Win 2 rounds",progress=1,target=2}},next={2,1,3},eggsLeft=14,budget=24,input="Gamepad"})
+   local h=s.hud
+   assert(h.score.Text=="2340"and h.best.Text=="BEST 2210"and h.chain.Text=="×7")
+   assert(h.goalsCount.Text=="1/2"and h.goals[3].row.Visible==false and h.eggs.Text=="14"and h.budget.Text=="/24")
+   assert(h.diffName.Text=="Medium"and h.daily[1].count.Text=="1/2"and not h.daily[2].name.Visible)
+   s:setHud({score=0,goals={},message="1/3 AIM & DROP",statusLabel=nil,next={1,1,1},eggsLeft=24,budget=24})
+   assert(h.status.Visible and h.goalsCount.Text=="")
+   s:setHud({score=0,goals={{text="A",progress=0,target=1}},statusLabel="Settling…",next={1,1,1},eggsLeft=3,budget=24})
+   assert(h.goalsEyebrow.Text=="SETTLING…")
+   root:Destroy()
+  end)
+  test("text roles keep 4.5:1 on every starter plate's glass; ink keeps 4.5:1 on the accent",function()
+   for _,id in ipairs(Themes.Order)do
+    local t=Themes.ById[id]
+    for _,surface in ipairs({t.ui.panel,t.ui.raised,t.ui.inset})do
+     for _,role in ipairs({"text","soft","dim"})do assert(contrast(Kit.Color[role],surface)>=4.5,id.." "..role)end
+     assert(contrast(Kit.Color.stars,surface)>=4.5,id.." stars")
+    end
+    assert(contrast(t.ui.ink,t.ui.accent)>=4.5,id.." ink on accent")
+   end
+  end)
+  test("button states: selected 2 px accent, disabled leaves the selection tree, press settles 2 px",function()
+   Art.applyTheme(Themes.ById.ice)
+   local holder=Instance.new("Frame");holder.Size=UDim2.fromOffset(400,200);holder.Parent=gui
+   local b,state=Kit.button(holder,"Probe",{text="Leave",glyph="B"})
+   assert(b.AbsoluteSize.Y==48 and state.stroke.Thickness==1 and near(state.stroke.Transparency,.86,.01))
+   Kit.setSelected(b,true);assert(state.stroke.Thickness==2 and state.stroke.Color==Themes.ById.ice.ui.accent)
+   Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency>0)
+   Kit.setEnabled(b,true);state.pressed=true;Kit.paintButton(b);assert(state.content.Position.Y.Offset==2)
+   local p,ps=Kit.button(holder,"Primary",{variant="primary",text="Replay",glyph="A"})
+   assert(ps.fill.BackgroundColor3==Themes.ById.ice.ui.accent and ps.label.TextColor3==Kit.Color.ink and ps.edge.Visible,"primary accent fill, ink label, lower edge")
+   Art.applyTheme(Themes.ById.brick);assert(ps.fill.BackgroundColor3==Themes.ById.brick.ui.accent,"deck tint repaints the primary")
+   holder:Destroy()
+  end)
+  test("focus ring sits 4 px outside its target and hides with it",function()
+   local holder=Instance.new("Frame");holder.Size=UDim2.fromOffset(400,200);holder.Position=UDim2.fromOffset(10,10);holder.Parent=gui
+   local b=Kit.button(holder,"Target",{text="Replay"});b.Position=UDim2.fromOffset(40,30)
+   local ring=Kit.focusRing(holder);task.wait();ring.attach(b,12);task.wait()
+   assert(near(ring.root.AbsolutePosition.X,b.AbsolutePosition.X-4,1)and near(ring.root.AbsoluteSize.X,b.AbsoluteSize.X+8,1)and ring.root.Visible)
+   ring.hide();assert(not ring.root.Visible);holder:Destroy()
+  end)
+ end)
+ gui:Destroy();if old then Art.applyTheme(old)end
+ assert(ok,problem)
+ return{passed=#cases,cases=cases}
+end

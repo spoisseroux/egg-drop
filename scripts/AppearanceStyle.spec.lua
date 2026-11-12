@@ -58,7 +58,8 @@ return function(client,parent,onlySize)
    assert(selected.ApplyStrokeMode==Enum.ApplyStrokeMode.Border and selected.Color==Art.Amber and selected.Transparency==0 and selected.ZIndex>edge.ZIndex,"confirmed border must render above ordinary edge")
    reach(selected.Parent,v.scroll);Gui.SelectedObject=selected.Parent;settle()
    assert(Gui.SelectedObject==selected.Parent and edge.Color==Art.paletteColor("focus") and edge.Thickness>selected.Thickness and selected.Enabled and selected.Color~=edge.Color,string.format("focus must remain distinct: selected=%s target=%s edgeColor=%s expected=%s edgeWidth=%s confirmedWidth=%s confirmedEnabled=%s confirmedColor=%s",tostring(Gui.SelectedObject),tostring(selected.Parent),tostring(edge.Color),tostring(Art.paletteColor("focus")),tostring(edge.Thickness),tostring(selected.Thickness),tostring(selected.Enabled),tostring(selected.Color)))
-   Gui.SelectedObject=nil;settle();assert(edge.Color==Art.paletteColor("line") and edge.Thickness<selected.Thickness)
+   -- Rest border is the spec's 1 px white at 14% (UI-SPEC 2.3).
+   Gui.SelectedObject=nil;settle();assert(edge.Color==Color3.new(1,1,1) and edge.Transparency>.8 and edge.Thickness<selected.Thickness)
    v:close("back");assert(closes[#closes]=="back"and #sends==0)
   end)
  end

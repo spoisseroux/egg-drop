@@ -12,7 +12,8 @@ return function(client,parent)
    local measured=Art.measureText(label.Text,label.TextSize,label.Font,412)
    label.Size=UDim2.fromOffset(412,math.max(44,Art.textHeight(label,412,0)))
    assert(measured.X>0 and measured.Y>0)
-   local expected=if role=="Heading"then Enum.Font.FredokaOne elseif role=="Counter"then Enum.Font.RobotoMono else Enum.Font.PatrickHand
+   -- UI-SPEC-2026-11-12 2.2: Builder Sans for words, Roboto Mono for counters.
+   local expected=if role=="Heading"or role=="Action"then Enum.Font.BuilderSansBold elseif role=="Counter"then Enum.Font.RobotoMono else Enum.Font.BuilderSans
    assert(label.Font==expected)
    table.insert(rows,{role=role,family=label.FontFace.Family,font=label.Font.Name,width=measured.X,height=measured.Y})
   end

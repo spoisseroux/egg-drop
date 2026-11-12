@@ -7,7 +7,7 @@ return function(client,parent)
 	assert(parent:IsA("ScreenGui") or parent:FindFirstAncestorOfClass("ScreenGui"),"preferred text fixture requires a real ScreenGui host")
 	local Art=require(client.DeckArt)
 	local Menu=require(client.DeckMenu)
-	local Recap=require(client.RoundRecap)
+	local Results=require(client.DeckResults)
 	local Shop=require(client.EggHatchView)
 	local Catalog=require(game.ReplicatedStorage.Shared.EggCatalog)
 	local Mastery=require(game.ReplicatedStorage.Shared.FamilyMastery)
@@ -71,21 +71,16 @@ return function(client,parent)
 			end)
 			shop:close()
 			root.Size=UDim2.fromOffset(if size.Y<200 then 536 else math.min(600,size.X),if size.Y<200 then 144 else 500);settle()
-			local recap=Recap.new(root,nil,true);table.insert(views,recap.frame);recap.frame.Visible=true
-			recap:update(600,3,0,nil,0,nil,0,700)
-			recap:updateField({sequence=1,status="Saved",success=true,stage=2,award=8,daily=0,balance=9,recipe=Catalog.ById.meadow,
-				reward={sequence=1,total=8,base=8,daily=0,family="wick",masteryPoints=1,contracts={}},mastery=Mastery.describe(25,0)})
+			local host=Instance.new("Frame");host.Size=UDim2.fromOffset(if size.Y<400 then 417 else 848,if size.Y<400 then 299 else 608);host.BackgroundTransparency=1;host.Parent=root
+			table.insert(views,host);local inner=Instance.new("Frame");inner.Size=UDim2.fromScale(1,1);inner.BackgroundTransparency=1;inner.Parent=host
+			local recap=Results.new(inner,{})
+			recap:show({outcome="clear",title="Bank pair",rows={{name="Round win",amount=8}},total=8,earned=8,balance=9,goals={{text="Make III or higher on LEFT",short="III LEFT",done=true}},score=600,best=700,chain=3},size.Y<400)
 			settle()
-			test(tostring(size).." recap reward wallet and complete receipt stay readable",function()
-				for _,label in ipairs({recap.earnedGraphic,recap.componentLabels[1],recap.componentLabels[2]})do readable(label)end
-				assert(recap.earnedGraphic.Font==Art.Font.Reward)
-				for _,label in ipairs(recap.componentLabels)do readable(label);assert(label.Font==Art.Font.Counter)end
-				recap:setDetails(true);settle();for _,row in ipairs(recap.receiptRows)do readable(row)end
-				local iterations=0;while recap:scrollReceipt(1)do iterations+=1;assert(iterations<100)end
-				settle();local last=recap.receiptRows[#recap.receiptRows]
-				assert(last.AbsolutePosition.Y+last.AbsoluteSize.Y<=recap.fieldBody.AbsolutePosition.Y+recap.fieldBody.AbsoluteSize.Y+1)
+			test(tostring(size).." in-deck results Stars, payout and actions stay readable",function()
+				for _,label in ipairs({recap.totalText,recap.rows[1].name,recap.rows[1].amount,recap.eyebrow})do assert(label.TextFits,label:GetFullName().." does not fit")end
+				assert(recap.replay.AbsoluteSize.Y>=44 and recap.leave.AbsoluteSize.Y>=44)
 			end)
-			recap.frame:Destroy()
+			host:Destroy()
 		end
 	end)
 	for _,view in ipairs(views)do view:Destroy()end;root:Destroy();assert(ok,problem)

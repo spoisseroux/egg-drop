@@ -1,6 +1,6 @@
--- Studio Client presentation fixtures. No remotes or progression writes.
+-- Studio Client presentation fixtures for the RecapFeedback clock (used by
+-- DeckResults). No remotes or progression writes.
 return function(client, parent)
-	local Recap = require(client.RoundRecap)
 	local Feedback=require(client.RecapFeedback)
 	local Catalog = require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 	local root = Instance.new("Frame")
@@ -10,8 +10,6 @@ return function(client, parent)
 	function audio:play(name, speed, volume)
 		if self.group.Volume ~= 0 then table.insert(sounds, { name, speed, volume }) end
 	end
-	local recap = Recap.new(root, audio, function() return reduced end)
-	recap.frame.Visible = true
 	local cases = {}
 	local function fitDiagnostic(...)
 		local rows={}
@@ -29,12 +27,6 @@ return function(client, parent)
 			reward = { sequence = sequence, total = 14, base = 8, daily = 6, family = "pip", masteryPoints = 2, contracts = { "chain", "score" } } }
 		for key, item in pairs(changes or {}) do value[key] = item end
 		return value
-	end
-	local function show(value)
-		recap:update(630, 4, 2, nil, 0, nil, 0, 700)
-		recap:updateField(value)
-		-- Advance deterministically without waiting for native rendering frames.
-		if recap.feedback.connection then recap.feedback.connection:Disconnect(); recap.feedback.connection = nil end
 	end
 	local function advance(feedback,duration)
 		local remaining=duration
@@ -140,133 +132,7 @@ return function(client, parent)
 			audio:setDeviceActive(false);assert(audio.deviceEpoch==1 and audio.voiceOwners==nil and voice.stops==2)
 			audio:setDeviceActive(true);audio:setDeviceActive(true);assert(audio.deviceEpoch==2)
 		end)
-		test("matching committed receipt starts once and retains count through HUD refresh", function()
-			local value = result(1)
-			show(value)
-			assert(recap.feedback.active and recap.feedback.starts == 1 and recap.values[1].Text == "0"and recap.earnedGraphic.Text=="+0 Stars")
-			recap.feedback:step(.2)
-			local count = recap.values[1].Text
-			show(value)
-			assert(recap.feedback.starts == 1 and recap.values[1].Text == count)
-			assert(recap.bankGraphic.Text == "Stars saved: 20" and value.balance == 20 and value.reward.total == 14)
-		end)
-		test("count up lands on exact score chain clears and earned Stars", function()
-			advance(recap.feedback,.5)
-			assert(recap.values[1].Text == "630" and recap.values[2].Text == "×4" and recap.values[3].Text == "2")
-			local partial=tonumber(recap.earnedGraphic.Text:match("%+(%d+)"))
-			assert(recap.transfer.Visible==recap.transferAnchorsVisible and recap.bankGraphic.Text == "Stars saved: 20"and partial and partial>0 and partial<14,"Stars did not count up: "..recap.earnedGraphic.Text)
-			recap.feedback:step(.8)
-			assert(not recap.feedback.active and not recap.transfer.Visible)
-			assert(recap.earnedGraphic.Text == "+14 Stars" and recap.scales[1].Scale == 1)
-			assert(#sounds > 0 and recap.feedback.connection == nil)
-		end)
-		test("hide cancels immediately and reopening the same receipt cannot replay", function()
-			show(result(2)); recap.feedback:step(.1)
-			recap.frame.Visible = false
-			assert(not recap.feedback.active and recap.values[1].Text == "630" and recap.feedback.connection == nil)
-			local count, starts = #sounds, recap.feedback.starts
-			recap.frame.Visible = true; show(result(2))
-			assert(not recap.feedback.active and #sounds == count and recap.feedback.starts == starts)
-		end)
-		test("hidden ancestor cancels and does not consume a future receipt", function()
-			root.Visible = false; show(result(3))
-			assert(not recap.feedback.active)
-			root.Visible = true; show(result(3)); assert(recap.feedback.active)
-			root.Visible = false; assert(not recap.feedback.active and not recap.transfer.Visible)
-			root.Visible = true
-		end)
-		test("Saving delayed and pending states suppress old receipt and currency transfer", function()
-			for index, change in ipairs({ { status = "Saving" }, { status = "Save delayed" }, { receiptPending = true } }) do
-				show(result(10 + index, change))
-				assert(not recap.feedback.active and not recap.hasReceipt and not recap.transfer.Visible)
-				assert(not recap.earnedGraphic.Visible and not recap.bankGraphic.Visible and not recap.fill.Parent.Visible)
-				assert(recap.receiptLines == nil and not recap.title.Text:find("20/18", 1, true))
-			end
-		end)
-		test("stale sequence cannot announce the previous reward", function()
-			local value = result(20); value.reward.sequence = 19
-			show(value)
-			assert(not recap.hasReceipt and not recap.feedback.active and recap.title.Text == "Loading receipt…")
-			value.reward.sequence = 20; show(value); assert(recap.feedback.active)
-		end)
-		test("new receipt cancels the old animation and reinitializes every counter", function()
-			recap.feedback:step(.4); show(result(21))
-			assert(recap.feedback.active and recap.feedback.age == 0 and recap.values[1].Text == "0")
-			recap.feedback:step(2); assert(recap.values[1].Text == "630")
-		end)
-		test("daily only failure retains missed side quest zero and exact total", function()
-			local value = result(22, { success = false, stage = 1, award = 6, daily = 6, balance = 12 })
-			value.reward.total, value.reward.base, value.reward.masteryPoints = 6, 0, 0
-			show(value); recap.feedback:step(2)
-			assert(recap.fieldHeading == "1 of 2 goals" and recap.earnedGraphic.Text == "+6 Stars")
-			assert(recap.receiptLines[1] == "Quest Stars +0" and recap.bankGraphic.Text == "Stars saved: 12")
-		end)
-		test("zero earned never invents Stars drops or transfer sounds", function()
-			local value = result(23, { success = false, stage = 0, award = 0, daily = 0, balance = 6 })
-			value.reward.total, value.reward.base, value.reward.daily, value.reward.masteryPoints = 0, 0, 0, 0
-			value.reward.contracts = {}
-			show(value); recap.feedback:step(.85)
-			local count = #sounds
-			assert(recap.earnedGraphic.Text == "+0 Stars" and not recap.transfer.Visible)
-			recap.feedback:step(.6)
-			assert(#sounds == count and recap.fieldHeading == "0 of 2 goals")
-		end)
-		test("reduced effects shows final static values with no recap cues", function()
-			reduced = true
-			local count = #sounds
-			show(result(24))
-			assert(not recap.feedback.active and recap.earnedGraphic.Text == "+14 Stars" and #sounds == count)
-			reduced = false; show(result(25)); reduced = true; recap.feedback:step(.01)
-			assert(not recap.feedback.active and recap.values[1].Text == "630")
-			reduced = false
-		end)
-		test("audio remains routed through the muted shared audio group", function()
-			audio.group.Volume = 0
-			local count = #sounds
-			show(result(26)); recap.feedback:step(2)
-			assert(#sounds == count and recap.earnedGraphic.Text == "+14 Stars")
-		end)
-		test("receipt details stay open and never retain an egg transfer destination",function()
-   reduced=true;root.Size=UDim2.fromOffset(360,198);task.wait(.06);show(result(400));task.wait(.06)
-   assert(recap.detailsContent.Visible and not recap.detailsButton.Visible and not recap.eggPanel.Visible and not recap.fill.Parent.Visible)
-   local starts=recap.feedback.starts;recap:setDetails(false);assert(recap.detailsContent.Visible)
-   for _,row in ipairs(recap.receiptRows)do assert(row.TextFits and not row.TextScaled,fitDiagnostic(row))end
-   recap:scrollReceipt(1);show(result(400));assert(recap.feedback.starts==starts and not recap.transfer.Visible)
-  end)
-		test("first Saved receipt survives synchronous resize during publication",function()
-			local isolated=Recap.new(root,nil,true);isolated.frame.Visible=true
-			local title=isolated.title;local calls=0
-			-- Force the same callback path synchronously from the first title write,
-			-- independent of Studio's Immediate/Deferred signal setting.
-			isolated.title=setmetatable({},{
-				__index=function(_,key)
-					local value=title[key]
-					if type(value)=="function" then return function(_,...)return value(title,...)end end
-					return value
-				end,
-				__newindex=function(_,key,value)
-					title[key]=value
-					if key=="Text" and isolated.updatingField then
-						calls+=1
-						assert(isolated.displayRecipe==Catalog.ById.meadow and isolated.displayCost==18 and isolated.displayBalance==20 and isolated.displayReward==14,"partial canonical presentation exposed")
-						isolated.frame.Size=UDim2.fromOffset(600,500)
-						isolated:layoutField(500)
-					end
-				end,
-			})
-			local passed,problem=pcall(function()isolated:updateField(result(701))end)
-			isolated.title=title
-			assert(passed,problem);assert(calls>0 and isolated.hasReceipt and isolated.updatingField==false)
-			isolated:layoutField(500)
-			assert(isolated.displayBalance==20 and isolated.bankGraphic.Text=="Stars saved: 20"and isolated.detailsContent.Visible and not isolated.eggPanel.Visible)
-			isolated.frame:Destroy()
-		end)
-		test("destroying the component removes its animation connection", function()
-			reduced = false; show(result(500))
-			assert(recap.feedback.active)
-			recap.frame:Destroy()
-			assert(not recap.feedback.active and recap.feedback.connection == nil)
-		end)
+		-- The view tests moved to DeckResults.spec.lua with the in-deck results screen.
 	end)
 	root:Destroy()
 	assert(ok, problem)

@@ -1,7 +1,7 @@
 -- Run in Studio Client with production Client modules and a PlayerGui parent.
 -- Presentation fixtures do not alter inventory, rewards, or a live board.
 return function(client, parent)
-	local Recap = require(client.RoundRecap)
+	local Results = require(client.DeckResults)
 	local Guide = require(client.FirstHatchGuide)
 	local Art = require(client.DeckArt)
 	local View = require(client.EggHatchView)
@@ -10,45 +10,50 @@ return function(client, parent)
 	local root = Instance.new("Frame")
 	root.Name, root.Size, root.Parent = "_OnboardingSpec", UDim2.fromOffset(360, 236), parent
 	root.BackgroundTransparency = 1
-	local recap = Recap.new(root)
-	recap.frame.Visible = true
+	-- The round result renders inside the deck LCD (848x608 authored).
+	local resultsHost = Instance.new("Frame")
+	resultsHost.Size, resultsHost.BackgroundTransparency, resultsHost.Parent = UDim2.fromOffset(848, 608), 1, root
+	local inner = Instance.new("Frame")
+	inner.Size, inner.BackgroundTransparency, inner.Parent = UDim2.fromScale(1, 1), 1, resultsHost
+	local recap = Results.new(inner, {})
 	local cases = {}
 	local function test(name, run) run(); table.insert(cases, name) end
 	local function result(overrides)
-		local value = { success = false, reason = "Root patches incomplete", stage = 0, status = "Saved",
-			award = 6, daily = 6, balance = 12, recipe = Catalog.ById.meadow }
+		local value = { outcome = "missed", title = "Bank pair", difficulty = "Medium", total = 6, earned = 6, balance = 12,
+			rows = { { name = "Round win", amount = 0 }, { name = "Daily quests", amount = 6 } },
+			goals = { { text = "Make III or higher on LEFT", short = "III LEFT", done = false }, { text = "Make III or higher on RIGHT", short = "III RIGHT", done = false } } }
 		for key, item in pairs(overrides or {}) do value[key] = item end
 		return value
 	end
 	local ok, problem = pcall(function()
 		test("daily-only failed quest remains a failure with committed balance", function()
-			recap:updateField(result())
-			assert(recap.fieldHeading == "0 of 2 goals")
-			assert(recap.title.Text:find("quest 0", 1, true) and recap.title.Text:find("daily 6", 1, true))
-			assert(recap.detail.Text:find("12/18", 1, true) and recap.detail.Text:find("need 6", 1, true))
+			recap:show(result(), false)
+			assert(recap.eyebrow.Text == "GOALS MISSED" and recap.goalsCount.Text == "0/2")
+			assert(recap.rows[2].name.Text == "Daily quests" and recap.rows[2].amount.Text == "+6")
+			assert(recap.wallet.amount.Text == "12" and recap.totalAmount.Text == "★ 6")
 		end)
 		test("right target and overflow explanations use terminal state", function()
-			recap:updateField(result({ stage = 1 })); assert(recap.fieldHeading == "1 of 2 goals")
-			recap:updateField(result({ stage = 2, reason = "Overflow" })); assert(recap.fieldHeading == "Overflow")
+			recap:show(result({ goals = { { text = "Left", done = true }, { text = "Right", done = false } } }), false)
+			assert(recap.goalsCount.Text == "1/2")
+			recap:show(result({ outcome = "overflow" }), false); assert(recap.eyebrow.Text == "OVERFLOW")
+			recap:show(result({ outcome = "clear" }), false); assert(recap.eyebrow.Text == "ROUND CLEAR")
 		end)
 		test("transient save error never displays old balance as a receipt", function()
-			recap:updateField(result({ status = "Saving" })); assert(recap.title.Text == "Saving your rewards…")
-			recap:updateField(result({ status = "Saving is delayed. Your result will stay the same when retried." }))
-			assert(recap.title.Text:find("retrying", 1, true) and not recap.detail.Text:find("12/18", 1, true))
+			recap:show(result({ pending = true }), false)
+			assert(recap.totalText.Text == "Saving…" and recap.saved.Text == "Saving…" and recap.totalAmount.Text == "…")
+			local replay = require(client.DeckKit).buttonState(recap.replay)
+			assert(not replay.enabled and replay.label.Text == "Saving…" and recap.focus == 2, "pending save must disable Replay and focus Leave")
 		end)
-		test("selected recipe uses saved balance without adding the payout twice", function()
-			recap:updateField(result({ success = true, stage = 2, award = 8, daily = 0, balance = 23, recipe = Catalog.ById.sprout }))
-			assert(recap.fieldHeading == "Round complete" and recap.detail.Text:find("23/24", 1, true))
-			recap:updateField(result({ balance = 24, recipe = Catalog.ById.sprout })); assert(recap.detail.Text:find("ready to hatch", 1, true))
+		test("loss shows no Stars rather than an invented payout", function()
+			recap:show(result({ loss = true, total = 0, earned = 0, rows = {} }), false)
+			assert(recap.totalText.Text == "0 Stars" and recap.rows[1].name.Text == "No Stars this round")
 		end)
-		test("compact pending recap keeps readable status out of pinned footer",function()
-			for _,height in ipairs({128,166,198,236}) do
-				root.Size=UDim2.fromOffset(360,height);task.wait(.06)
-				recap:update(630,3,0,nil,0,nil,0,700);recap:updateField(result());task.wait(.06)
-				assert(recap.title.TextFits and recap.detail.TextFits)
-				assert(recap.fieldBody.Position.Y.Offset+recap.fieldBody.Size.Y.Offset<=height-60)
-				assert(not recap.title.TextScaled and recap.title.TextSize>=14)
-			end
+		test("compact results keep readable copy and 44 px actions",function()
+			resultsHost.Size = UDim2.fromOffset(417, 299)
+			recap:show(result(), true); task.wait(.06)
+			for _, label in ipairs({ recap.eyebrow, recap.totalText, recap.rows[1].name }) do assert(label.TextSize >= 12) end
+			assert(recap.replay.AbsoluteSize.Y >= 44 and recap.leave.AbsoluteSize.Y >= 44)
+			resultsHost.Size = UDim2.fromOffset(848, 608)
 		end)
 		local nodes = {}
 		for _, name in ipairs({"rail", "rocker", "drop", "meter", "status"}) do

@@ -2,7 +2,7 @@
 return function(client,parent,onlySize)
  local Art=require(client.DeckArt);local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
  local Menu=require(client.DeckMenu);local Picker=require(client.DeckPicker);local Journal=require(client.PetJournal)
- local Shop=require(client.EggHatchView);local Recap=require(client.RoundRecap);local Focus=require(client.PetFocusUI)
+ local Shop=require(client.EggHatchView);local Results=require(client.DeckResults);local Focus=require(client.PetFocusUI)
  local old=Art.getTheme();local defaults={Art.Surface,Art.Ink,Art.Silver,Art.Focus};local cases,cleanup={},{}
  local root=Instance.new("Frame");root.BackgroundTransparency=1;root.Parent=parent
  local audio={play=function()end};local writes=0
@@ -41,16 +41,18 @@ return function(client,parent,onlySize)
   root.Size=UDim2.fromOffset(size.X,size.Y);settle()
   local menu=Menu.new(root,{});local picker=Picker.new(root,nil,nil,outgoing,outgoing,outgoing,outgoing)
   local journal=Journal.new(root,nil,nil,outgoing,outgoing,outgoing);local shop=Shop.new(root,audio,function()return true end,outgoing)
-  local recap=Recap.new(root,audio,true);local focus=Focus.new(parent,{})
+  local resultsHost=Instance.new("Frame");resultsHost.Size=UDim2.fromOffset(848,608);resultsHost.BackgroundTransparency=1;resultsHost.Parent=root
+  local recap=Results.new(Instance.new("Frame",resultsHost),{});recap.host.Size=UDim2.fromOffset(848,608);local focus=Focus.new(parent,{})
   for _,v in ipairs({menu,picker,journal,shop})do table.insert(cleanup,function()v:close();v.shade:Destroy()end)end
-  table.insert(cleanup,function()recap.frame:Destroy()end);table.insert(cleanup,function()focus:destroy()end)
+  table.insert(cleanup,function()resultsHost:Destroy()end);table.insert(cleanup,function()focus:destroy()end)
   menu:update({status="Ready",nectar=24,inventoryMask=1,dailyAvailable=false},"pip","pip",0,0,0,"meadow");menu:open();menu:setPage("daily")
   picker:updateClub(1,0,0,0,"On",false,false,1,true,0,{pip=0});picker:open("sherbet","none")
   journal:open(1,0,"pip",false,nil,1,{pip=0});shop:open({status="Ready",revision=4,nectar=24,inventoryMask=1});shop:selectRecipe("hue")
-  recap.frame.Visible=true;recap.layoutWidth=size.X;recap:updateField(result(9))
+  local function resultsData(sequence)return{outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=20,goals={{text="Goal",done=true}}}end
+  recap:show(resultsData(9),false)
   focus.panel.Visible=true;focus.back.Visible=true;focus.helper.Visible=true
   test(tostring(size).." open sheets adopt each palette without identity/focus/receipt changes",function()
-   local recipe=shop.body.EggColumn.Recipe_hue;local pending=shop.pending;local receipt=recap.receiptSignature
+   local recipe=shop.body.EggColumn.Recipe_hue;local pending=shop.pending
    local amber=shop.nectar.TextColor3
    for _,id in ipairs(Themes.Order)do
     local t=Themes.ById[id];Art.applyTheme(t);settle()
@@ -60,7 +62,7 @@ return function(client,parent,onlySize)
     assert(picker.card.BackgroundColor3==t.ui.contentPanel and picker.tabs.Shell.BackgroundColor3==t.ui.tab)
     assert(journal.card.BackgroundColor3==t.ui.contentPanel and journal.cards[1].BackgroundColor3==t.ui.contentRaised and journal.cards[1].Species.TextColor3==t.ui.contentText)
     assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==t.ui.accent and recipe.RecipeName.TextColor3==t.ui.ink)
-    assert(recap.eggPanel.BackgroundColor3==t.ui.inset and recap.detailsButton.TextColor3==t.ui.text and recap.receiptSignature==receipt)
+    assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass follows the plate; text stays neutral")
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
     assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe and shop.nectar.TextColor3==amber)
     assert(Art.Surface==defaults[1]and Art.Ink==defaults[2]and Art.Silver==defaults[3]and Art.Focus==defaults[4],"public art constants changed")
@@ -68,9 +70,9 @@ return function(client,parent,onlySize)
   end)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
    local t=Themes.ById.copperleaf;Art.applyTheme(t);local recipe=shop.body.EggColumn.Recipe_hue
-   local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:updateField(result(10));settle()
+   local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:show(resultsData(10),false);settle()
    assert(shop.body.EggColumn.Recipe_hue==recipe and recipe.RecipeName.TextColor3==t.ui.ink and shop.selected=="hue")
-   for _,row in ipairs(recap.receiptRows)do if not row.Text:find("unlocked!",1,true)then assert(row.TextColor3==t.ui.text)end end
+   assert(recap.payout.BackgroundColor3==t.ui.raised)
    for _,tab in pairs(picker.tabs)do assert(tab.AbsoluteSize.Y>=44);fit(tab)end
    assert(picker.tabs.Background:GetAttribute("AccessibleLabel")=="Background patterns")
    assert(not Art.applyTheme(t),"unchanged confirmed theme reapplied registry")

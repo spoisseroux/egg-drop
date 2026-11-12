@@ -70,20 +70,8 @@ return function(client,parent)
    local e,b,c,ball,final=make();e:observe();ball(1);final(true);e:observe();e:step(.3);assert(not e.active and e.age==End.Duration)
    assert(#e.pieces==12 and e.starts==1);for _,node in ipairs(e.layer:GetDescendants())do assert(not node:IsA("Sound")and not node:IsA("ParticleEmitter"));if node:IsA("GuiObject")then assert(not node.Active and not node.Selectable)end end
   end)
-  test("real recap reserves decoration after pending copy and before Saved breakdown",function()
-   local Recap=require(client.RoundRecap);local Eggs=require(game.ReplicatedStorage.Shared.EggCatalog)
-   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(420,400);host.Parent=parent;table.insert(roots,host)
-   local recap=Recap.new(host,nil,function()return true end);recap.frame.Visible=true;recap.endArt.Visible=true
-   local result={sequence=71,status="Saving",success=true,stage=2,reason="Complete",award=8,daily=0,balance=8,recipe=Eggs.ById.meadow}
-   recap:updateField(result);recap:layoutField(400)
-   local copyBottom=recap.goal.Position.Y.Offset+recap.detail.Position.Y.Offset+recap.detail.Size.Y.Offset
-   assert(recap.endArt.Position.Y.Offset>=copyBottom+7 and recap.endArt.Size.X.Offset>100,"pending strip overlaps saving copy or retains default bounds")
-   assert(recap.fieldBody.CanvasSize.Y.Offset>=recap.endArt.Position.Y.Offset+64)
-   result.status="Saved";result.reward={sequence=71,total=8,base=8,daily=0,contracts={}};recap:updateField(result);recap:layoutField(400)
-   assert(recap.endArt.Position.Y.Offset>=recap.earnedGraphic.Size.Y.Offset+8)
-   assert(recap.detailsContent.Position.Y.Offset>=recap.endArt.Position.Y.Offset+recap.endArt.Size.Y.Offset,"Saved breakdown overlaps owned strip")
-   assert(recap.displayReward==8 and not recap.feedback.active)
-  end)
+  -- The recap strip test retired: results render inside the deck LCD and the
+  -- round-end art draws on the board effects layer under them.
   test("result goals state completed marks and actual seeded locations without scenario jargon",function()
    local e,b,c,ball,final=make();e:observe();final(false);local frozen=e:observe();local result=Copy.results(frozen.objective,frozen.stage)
    assert(result:sub(1,5)=="Goals"and not result:find("of 2",1,true)and result:find("✓ Match I + I in CENTER",1,true))
