@@ -128,9 +128,9 @@ return function(server,progressSource)
 		local f=fixture();f:request("theme","brick",1,1)
 		f.before=function()f.db.theme="moss";f.db.sticker="star";f.db.themeAt=10000;f.db.themeWriter="foreign"end
 		assert(f.api.flushOnce(f.profile) and #f.saved==0 and #f.superseded==1)
-		assert(f.profile.theme=="moss"and f.profile.sticker=="star"and f.profile.appearanceChange==nil)
+		assert(f.profile.theme=="moss"and f.profile.sticker=="none"and f.profile.appearanceChange==nil) -- stickers retired: a foreign old id resolves to none
 		assert(f.state.revision==2 and f.superseded[1].reason=="Superseded"and f.superseded[1].seq==1)
-		assert(f.superseded[1].themeId=="moss"and f.superseded[1].stickerId=="star")
+		assert(f.superseded[1].themeId=="moss"and f.superseded[1].stickerId=="none")
 		assert(f.api.flushOnce(f.profile)and f.writes==1 and f.db.themeAt==10000)
 	end)
 	test("equal stamp higher writer wins and live eligibility validates the adopted sticker",function()
@@ -152,7 +152,7 @@ return function(server,progressSource)
 		local f=fixture();f:request("sticker","star",1,1);assert(f.api.flushOnce(f.profile))
 		assert(f.db.customSibling=="preserved"and f.db.hatching.nectar==37 and f.db.hatching.revision==4)
 		local loaded=f.api.fromRecord(1,f.db,true)
-		assert(loaded.theme=="sherbet"and loaded.sticker=="star"and loaded.appearanceSaved.sticker=="star")
+		assert(loaded.theme=="sherbet"and loaded.sticker=="none"and loaded.appearanceSaved.sticker=="star") -- retired id ignored on load; saved proof kept
 	end)
 	return {passed=#cases,cases=cases,persistentWrites=false,evidence="real PlayerProgress code and protocol; isolated logical reload"}
 end

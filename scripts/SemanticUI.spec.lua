@@ -29,7 +29,7 @@ return function(client,parent)
   test("style tabs and settings distinguish layout from accepted activation",function()
    picker:updateClub(1,0,0,0,"On",false,false,1,true);picker:open("sherbet","none");local n=#heard
    picker:layout();picker:showTab("Settings");assert(#heard==n);assert(picker:changeSetting("music"));assert(settings==1 and #heard==n+1)
-   picker:showTab("Shell");assert(not picker:activateTab("Shell"));assert(picker:activateTab("Sticker"));assert(#heard==n+2)
+   picker:showTab("Shell");assert(not picker:activateTab("Shell"));assert(picker:activateTab("Background"));assert(#heard==n+2)
   end)
   test("confirmed no-op and repeat locked inspection stay silent",function()
    picker:showTab("Shell");local n=#heard;picker:activateChoice("Shell","sherbet");assert(#heard==n)

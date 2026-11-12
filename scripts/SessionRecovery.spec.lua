@@ -146,7 +146,7 @@ return function(server, profileSource, sessionSource)
 		assert(Catalog.isOwned(a.state.inventoryMask,"foxfire_wick"),"migration lost the retained owner")
 		local revealId = a.state.lastHatch.id
 		A.setSetting(profileA, "sound", "Quiet"); A.setSetting(profileA, "reduced", true)
-		A.equip(profileA, "ice", "seed"); A.equipCompanion(profileA, Pets.byId.foxfire_wick); A.recordScore(profileA, 999)
+		A.equip(profileA, "ice", "none"); A.equipCompanion(profileA, Pets.byId.foxfire_wick); A.recordScore(profileA, 999)
 		A.release(profileA) -- Deliberately delay this outgoing autosave callback.
 		c.staleRead = original
 		local profileB = B.load(id)
@@ -158,7 +158,7 @@ return function(server, profileSource, sessionSource)
 		c.beforeHatchCommit = function(nextRoot, previous)
 			if previous.hatching.lease.expiresAt > c.now and nextRoot.hatching.lease.expiresAt == 0 then
 				assert(nextRoot.hatching.lease.token == previous.hatching.lease.token, "release preserves the old fencing token")
-				assert(nextRoot.sound == "Quiet" and nextRoot.theme == "ice" and nextRoot.sticker == "seed"
+				assert(nextRoot.sound == "Quiet" and nextRoot.theme == "ice" and nextRoot.sticker == "none"
 					and nextRoot.reduced and nextRoot.companionId == "foxfire_wick", "lease released before profile drain")
 			end
 		end
@@ -172,7 +172,7 @@ return function(server, profileSource, sessionSource)
 		local callback = function() end
 		profileB.onSaveFailed = callback
 		assert(sessionModule(B).hydrate(profileB, b) and profileB.onSaveFailed == callback)
-		assert(profileB.sound == "Quiet" and profileB.reduced and profileB.theme == "ice" and profileB.sticker == "seed"
+		assert(profileB.sound == "Quiet" and profileB.reduced and profileB.theme == "ice" and profileB.sticker == "none"
 			and profileB.companionId == "foxfire_wick" and profileB.bestScore == 999)
 		assert(b.state.inventoryMask == Catalog.mask({ "pip", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "pip" and b.state.nectar == 32)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
@@ -237,6 +237,7 @@ return function(server, profileSource, sessionSource)
 		A.flushOnce(failed)
 	end)
 
+	-- Stickers are retired: a stored old sticker id loads as "none".
 	test("locked and unavailable sessions preserve provisional rare and sticker choices", function()
 		local _, _, module = harness()
 		local A = module("provisional")
@@ -247,7 +248,7 @@ return function(server, profileSource, sessionSource)
 		for _, status in ipairs({ "Loading", "Locked", "Unavailable", "Temporary", "Retrying" }) do
 			local handle = { status = status, state = { inventoryMask = 0 }, profileRecord = {} }
 			assert(not Session.ready(handle) and not Session.hydrate(profile, handle))
-			assert(profile.companionId == "foxfire_wick" and profile.sticker == "wick" and profile.theme == "moss" and profile.sound == "Off")
+			assert(profile.companionId == "foxfire_wick" and profile.sticker == "none" and profile.theme == "moss" and profile.sound == "Off")
 		end
 		assert(Session.ready({ status = "Ready" }) and not Session.ready({ status = "Ready" }, true))
 	end)
@@ -286,7 +287,7 @@ return function(server, profileSource, sessionSource)
 		assert(not fresh.loadFailed and acquired.status == "Ready")
 		assert(sessionModule(A).hydrate(provisional, acquired))
 		assert(not provisional.loadFailed and provisional.sound == "Quiet" and provisional.reduced and provisional.theme == "ice"
-			and provisional.sticker == "seed" and provisional.companionId == "pip")
+			and provisional.sticker == "none" and provisional.companionId == "pip")
 		assert(c.profileWrites == 0, "recovery hydration must not save provisional defaults")
 	end)
 

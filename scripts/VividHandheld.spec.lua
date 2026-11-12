@@ -55,29 +55,7 @@ return function(client,parent)
    assert(transition.mark.Underprint1 and transition.mark.Lettering4 and not transition.mark.Active and not transition.mark.Selectable)
    transition:hide();transition.shade:Destroy();tray:Destroy()
   end)
-  test("all six smooth prints reuse their die-cut composition through resizing",function()
-   local host=Art.frame(root,"Print",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(220,220))
-   for _,id in ipairs(Stickers.Order)do
-    Stickers.paint(host,id)
-    if id=="none"then assert(not host.Visible)else
-     local print=host.StickerPixels;assert(print:GetAttribute("SmoothPrint")and print.DieCut and print.PrintedInk)
-     local count=#print:GetDescendants();assert(count<=100,id.." print exceeded bounded primitive budget")
-     for _,n in ipairs(print:GetDescendants())do
-      if n:IsA("GuiObject")then assert(not n.Active and not n.Selectable and n.Name~="PixelRun")end
-      if n:IsA("TextLabel")then assert(not n.TextScaled,"functional TextScaled exception escaped decorative local scaler")end
-      if n:IsA("UIScale")then assert(id=="star"and n.Parent.Name=="StarGlyph","local art scaler escaped the star glyph")end
-     end
-     if id=="star"then
-      local glyph=print.PrintedInk.StarGlyph;settle()
-      assert(glyph.Text=="★"and glyph.Font==Enum.Font.SourceSans and glyph.DieCutStroke.ApplyStrokeMode==Enum.ApplyStrokeMode.Contextual and glyph.TextSize==100 and glyph.GlyphScale and math.abs(glyph.DieCutStroke.Thickness*glyph.GlyphScale.Scale-2)<.01)
-      assert(glyph.TextBounds.X>=host.AbsoluteSize.X*.80 and glyph.TextBounds.X<=host.AbsoluteSize.X+1,"native star glyph did not fill print seat: "..tostring(glyph.TextBounds).." host="..tostring(host.AbsoluteSize))
-      metrics.starGlyph={font=glyph.Font.Name,textBounds=tostring(glyph.TextBounds),localScale=glyph.GlyphScale.Scale,host=tostring(host.AbsoluteSize),measurement="native text bounds; ink shape requires capture"}
-     end
-     host.Size=UDim2.fromOffset(120,120);Stickers.paint(host,id);assert(host.StickerPixels==print and #print:GetDescendants()==count)
-    end
-   end
-   host:Destroy()
-  end)
+  -- Sticker prints are retired (faceplates replace them; FaceplatePurchase/DeckBoot specs).
   for _,size in ipairs({Vector2.new(1649,971),Vector2.new(1000,650)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);settle()
    test(tostring(size).." roomy menu choices and tabs use their measured larger faces",function()
@@ -92,7 +70,7 @@ return function(client,parent)
     local v=Picker.new(root,nil,nil,function()end,function()end,function()end,function()end)
     v:updateClub(0,0,0,0,"On",false,false,1);v:open("sherbet","none");settle()
     assert(v.card.AbsoluteSize.X>=680 and v.card.AbsoluteSize.X<=740 and v.heading.TextSize==28)
-    for _,page in ipairs({"Shell","Sticker","Background","Settings","Trials"})do
+    for _,page in ipairs({"Background","Settings","Trials"})do -- Shell is the faceplate shop screen
      v:showTab(page);settle();fit(v.heading)
      if v.choices[page]then
       for _,stroke in pairs(v.choices[page])do fit(stroke.Parent.Caption);assert(stroke.Parent.Caption.TextSize==20 and stroke.Parent.AbsoluteSize.Y>=52)end

@@ -20,7 +20,8 @@ return function(client,parent,onlySize)
    for _,role in ipairs({"contentPanel","contentRaised","contentInset","contentSelected"})do assert(contrast(t.ui.contentText,t.ui[role])>=4.5 and contrast(t.ui.contentMuted,t.ui[role])>=4.5,id.." light content contrast "..role)end
    assert(contrast(t.ui.tabInk,t.ui.tab)>=4.5,id.." active jewel tab contrast")
    for _,role in ipairs({"panel","raised","inset","selected"})do assert(contrast(t.ui.text,t.ui[role])>=4.5,id.." text contrast "..role)end
-   assert(contrast(t.ui.muted,t.ui.raised)>=4.5 and contrast(Art.LCDInk,t.lcd.base)>=4.5,id.." supporting/LCD contrast")
+   -- Dark-well board: light text and the danger word read on the well.
+   assert(contrast(t.ui.muted,t.ui.raised)>=4.5 and contrast(t.ui.text,t.lcd.base)>=4.5 and contrast(Color3.fromHex("#FF5A6E"),t.lcd.base)>=4.5,id.." supporting/LCD contrast")
    -- Gradients are neutral multipliers over the role color. Check both authored
    -- ends, including the TextButton foreground when its own gradient is applied.
    for _,sample in ipairs({{"panel",.96},{"raised",.97},{"inset",.96},{"selected",.97}})do

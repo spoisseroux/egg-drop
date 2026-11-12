@@ -24,16 +24,17 @@ return function(server)
 	end)
 	test("backgrounds and Lantern stamp distinguish High Roller from Triple Pop",function()
 		local f=facts();assert(Catalog.canEquip("background","canopy",f))
+		-- The Lantern stamp sticker is retired with the other stickers (faceplates replace them).
 		assert(not Catalog.canEquip("background","creek",f)and not Catalog.canEquip("sticker","lantern",f))
-		f.trials=1;assert(Catalog.canEquip("sticker","lantern",f)and not Catalog.canEquip("background","creek",f))
+		f.trials=1;assert(not Catalog.canEquip("sticker","lantern",f)and not Catalog.canEquip("background","creek",f))
 		f.trials=2;assert(Catalog.canEquip("background","creek",f)and not Catalog.canEquip("sticker","lantern",f))
 		f.masteryRanks.pip=2;assert(Catalog.canEquip("background","lantern",f))
 	end)
 	test("existing Wick and complete-trial crest locks preserve sparse and legacy behavior",function()
-		local f=facts();f.inventoryMask=Eggs.bit("foxfire_wick");assert(not Catalog.canEquip("sticker","wick",f))
-		f.inventoryMask=Eggs.bit("wick");assert(Catalog.canEquip("sticker","wick",f))
-		f.inventoryMask=nil;f.rank=3;assert(Catalog.canEquip("sticker","wick",f))
-		f.trials=3;assert(not Catalog.canEquip("sticker","club",f));f.trials=7;assert(Catalog.canEquip("sticker","club",f))
+		-- Wick and the Trial crest were stickers; stickers are retired, only "none" remains.
+		local f=facts();f.inventoryMask=Eggs.bit("wick");f.rank=3;f.trials=7
+		assert(not Catalog.canEquip("sticker","wick",f)and not Catalog.canEquip("sticker","club",f))
+		assert(Catalog.canEquip("sticker","none",f))
 	end)
 	test("raw and public HatchState facts produce the same real mastery ranks",function()
 		for _,points in ipairs({2,3,9,10})do
@@ -60,12 +61,12 @@ return function(server)
         assert(Catalog.describeRequirement("theme","gloaming",facts()).text=="Win 3 saved field rounds")
         f.totalWins=0;f.masteryRanks.pip=2;assert(Catalog.canEquip("theme","gloaming",f)and Catalog.canEquip("theme","copperleaf",f)and Catalog.canEquip("background","lantern",f))
     end)
-	test("all eight themes expose complete semantic palettes and readable muted/text states",function()
+	test("all sixteen faceplates expose complete semantic palettes and readable muted/text states",function()
 		local function luminance(color)
 			local function c(value)return if value<=.04045 then value/12.92 else ((value+.055)/1.055)^2.4 end
 			return .2126*c(color.R)+.7152*c(color.G)+.0722*c(color.B)
 		end
-		assert(#Themes.Order==8)
+		assert(#Themes.Order==16)
 		for _,id in ipairs(Themes.Order)do
 			local t=Themes.ById[id]
 			for _,key in ipairs({"panel","raised","inset","ink","text","muted","line","selected","focus","accent"})do assert(typeof(t.ui[key])=="Color3",id..key)end

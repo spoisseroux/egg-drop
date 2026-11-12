@@ -18,7 +18,7 @@ return function(client,parent)
 	assert(parent:IsA("ScreenGui") or parent:FindFirstAncestorOfClass("ScreenGui"),"ScreenGui host required")
 	local Picker=require(client.DeckPicker);local Journal=require(client.PetJournal)
 	local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
-	local Stickers=require(game.ReplicatedStorage.Shared.DeckStickers)
+	local Backgrounds=require(game.ReplicatedStorage.Shared.DeckBackgrounds)
 	local Catalog=require(game.ReplicatedStorage.Shared.EggCatalog)
 	local root=Instance.new("Frame");root.Name="_StyleJournalLayout";root.BackgroundTransparency=1;root.Parent=parent
 	local views,cases={},{}
@@ -50,18 +50,18 @@ return function(client,parent)
 			test(tostring(size).." Style pins X and tabs around reachable preferred-text content",function()
 				local events=0
 				local view=Picker.new(root,nil,nil,function()end,function()end,function()events+=1 end,function()events+=1 end)
-				table.insert(views,view);club(view);view:open("brick","star");settle()
+				table.insert(views,view);club(view);view:open("brick","none");settle()
 				local tabY=view.tabs.Shell.AbsolutePosition.Y;local closeY=view.cancel.AbsolutePosition.Y
-				for _,tab in ipairs({"Shell","Sticker","Trials","Settings","Shell"})do
+				for _,tab in ipairs({"Background","Trials","Settings","Background"})do -- Shell is the faceplate shop screen
 					view:showTab(tab);settle()
 					assert(inside(view.card,root) and inside(view.scroll,view.card) and view.scroll.AbsoluteSize.Y>=44)
 					assert(view.cancel.AbsoluteSize==Vector2.new(44,44) and inside(view.cancel,view.card) and not view.cancel:IsDescendantOf(view.scroll));readable(view.cancel)
-					if tab=="Shell"or tab=="Sticker"then assert(view.tabs.Shell.AbsolutePosition.Y==tabY and view.cancel.AbsolutePosition.Y==closeY,"Style tab band moved")end
+					if tab=="Background"then assert(view.tabs.Shell.AbsolutePosition.Y==tabY and view.cancel.AbsolutePosition.Y==closeY,"Style tab band moved")end
 					for _,button in pairs(view.tabs)do
 						assert(button.AbsoluteSize.Y>=44 and inside(button,view.card));readable(button)
 						if button.AbsolutePosition.Y<view.cancel.AbsolutePosition.Y+44 then assert(button.AbsolutePosition.X+button.AbsoluteSize.X<=view.cancel.AbsolutePosition.X,"tab overlaps X")end
 					end
-					if tab=="Shell"or tab=="Sticker"then
+					if tab=="Background"then
 						assert(not view.card:FindFirstChild("Apply"),"obsolete Equip remains")
 						assert(inside(view.scroll,view.card))
 						if view.display.Visible then
@@ -69,7 +69,7 @@ return function(client,parent)
 							if view.previewNote.Visible then readable(view.previewNote)end
 						end
 						if size==Vector2.new(1649,971)then assert(view.previewMode=="full","roomy preview changed")end
-						local catalog=if tab=="Shell"then Themes else Stickers
+						local catalog=Backgrounds
 						local first=view.choices[tab][catalog.Order[1]].Parent
 						assert(view.scroll.CanvasPosition.Y==0)
 						for _,id in ipairs(catalog.Order)do
@@ -86,12 +86,8 @@ return function(client,parent)
 						end
 						view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle()
 						assert(not view.moreCue.Visible,"Style cue persists at end")
-						if tab=="Shell"then
-							local chip=view.choices.Shell.brick.Parent.Chip
-							assert(chip.BackgroundColor3==Themes.ById.brick.shell and chip.Face.BackgroundColor3==Themes.ById.brick.face and chip.Face.Accent.BackgroundColor3==Themes.ById.brick.buttons)
-						else assert(view.choices.Sticker.club.Parent.Interactable and not view.available.club)end
 					else
-      assert(not view.card:FindFirstChild("Apply")and not view.tabs.Shell.Visible and not view.tabs.Sticker.Visible)
+      assert(not view.card:FindFirstChild("Apply")and not view.tabs.Shell.Visible and not view.tabs.Background.Visible)
       if tab=="Trials"then
        assert(not view.sound.Visible);for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
        readable(view.reward);reach(view.reward,view.scroll)
@@ -103,7 +99,7 @@ return function(client,parent)
       local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged data reset reading")
       view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
 					end
-					assert(view.themeId=="brick" and view.stickerId=="star" and events==0,"layout or scroll submitted an action")
+					assert(view.themeId=="brick" and view.stickerId=="none" and events==0,"layout or scroll submitted an action")
 				end
 				view:close()
 			end)
