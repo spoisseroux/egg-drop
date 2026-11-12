@@ -2,6 +2,10 @@
 
 Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 November 2026. Dimensions are Roblox UI offset pixels within the already inset content root. The design tables specify targets. Runtime24751c2 is now private **v93 Published**, verified in refreshed Studio Version History. The historical checkpoint below covers the original implementation, followed by the final input/coaching checks. [Morning handoff](MORNING-RUNDOWN.md).
 
+## Current source of truth (2026-11-12)
+
+The deck rebuild follows [UI-SPEC-2026-11-12.md](UI-SPEC-2026-11-12.md) (Fable). Where this file and the spec disagree, the spec wins. Part 1 is implemented: the glass tokens and components (`DeckKit`), the wide Pocket Deck Slim screen with the HUD inside the LCD (`DeckScreen`), results inside the deck (`DeckResults`), the view back arrow and the token pass over every sheet. The sections below that predate it are kept as history and marked where they are replaced. Studio captures: `artifacts/deck-rebuild/studio/`.
+
 ## Implementation checkpoint through `f6d1f4f`
 
 - **Desktop deck.** At 1649×971, the finished LCD measured approximately 417 px across, or 430 px including its bezel, inside an approximately 830 px case. The LCD occupies about 50% of the case width (52% with bezel), within the 48–55% desktop target. Studio Version History confirmed private version 69 at `8b49b75`. The subsequent results below are branch and Studio verification. [UI redesign results](scripts/UIRedesign-results.json) · [Delivery record](UI-OVERNIGHT.md)
@@ -24,50 +28,35 @@ The tray is the brightest, largest continuous surface of a pocket-sized instrume
 
 ## Shared visual contract
 
-Use one small token table and the existing `DeckArt` constructors for the generated Luau Frames. Keep hardware finish fields in `DeckThemes`, with existing saved IDs. In the default Scout finish a dark outline around an inset LCD and two readable physical clusters give the case its handheld silhouette. A light top lip and a dark bottom seam communicate molded depth. A compact asymmetric speaker grille and a single sticker recess are sufficient detail.
+Replaced by UI-SPEC-2026-11-12 sections 2 and 3, implemented in `src/client/DeckKit.lua` (tokens and constructors) on top of `DeckArt` (theme registry, sheet helpers). Summary:
 
-| Role | Starting color | Pairing and use |
+| Role | Value | Use |
 | --- | --- | --- |
-| Ink / shadow | #282722 | Dark text on bright controls, instrument seams, modal scrim. Use a neutral scrim near 55–65% opacity. |
-| Panel / raised / inset | #353630 / #45483E / #292C27 | Opaque modal, selectable card, recessed meter or number well. Use value and border changes so static cards and actions differ. |
-| Text / secondary | #F5F6F1 / #CDD1C7 | Body and supporting text on those dark surfaces. Use secondary for explanations. Keep amounts and choices prominent. |
-| Scout shell / face / lip | #326855 / #48866A / #8EB49D | Physical casing. Keep the desktop background quieter and darker than the case. |
-| LCD / LCD ink | #D2E5BB / #213D37 | Tray and legible markings. Maintain differing tier colors and silhouettes, left/right labels, and the overflow line. |
-| Leaf / nectar / focus | #A8DE78 / #FFBF50 / #83D7EF | Leaf for affirmative state/primary route, amber for earned currency and the physical drop cap, aqua for a 2 px keyboard/controller focus ring. Use ink text on bright fills. |
-| Danger | #FF907B | Overflow, error or warning plus a word or threshold marker. Never use warning color alone. |
+| Glass `panel` / `raised` / `well` | #15171B / #23262C / #0C0D10, leaning 14% / 16% / 10% toward the plate's `deep` | LCD and sheets / cards, rows, secondary buttons / board well, tracks, pills |
+| `selected` | `raised` 14% toward the accent | Selected card, row or tile, with a 2 px accent stroke |
+| Text `text` / `soft` / `dim` | #F3F4F6 / #C3C8D0 / #959BA5 | Titles and values / supporting lines / labels. `dim` is a touch lighter than the spec's #8A909A so 13 px labels keep 4.5:1 on every plate's `raised` |
+| `ink` | #0E0F12 | Text on accent or gold fills |
+| `stars` / `danger` / `good` | #FFC14D / #FF5A6E / #7BE495 | Stars, overflow and Hard, Easy. Never tinted by the plate |
+| `accent` | the plate's bright colour | Only: selected tab pill, primary fill, progress, selected stroke, check marks, and the hardware (A, d-pad arrows, LED) |
 
-Tokens are starting swatches. Verify contrast of final composited text backgrounds, including selected, claimed, disabled and dimmed states. Use 4.5:1 for normal functional text and 3:1 for large text and essential boundaries as project checks. Aim for recognizable luminance steps between the scene, case, LCD, card and action. Keep dialog surfaces warm neutral charcoal even in Creek and Canopy. Avoid a uniform green filter over both the subject and its surroundings. Themes change the case and scene backing while reward, warning, focus and text keep stable meanings.
+Type: Builder Sans for words, Roboto Mono for anything that ticks (`DeckKit.Type`: Display 40/30, Title 26/20, Heading 20/16, Body 16/14, Small 14/12, Label 13/12 caps, Counter 18/15, Counter L 34/22). `TextScaled` stays off. `DeckArt.Font` and `DeckArt.SheetFont` now use the same faces, so every sheet reads the same.
 
-| Role | Standard / compact size | Face and rule |
-| --- | --- | --- |
-| Confirmed nectar or outcome number | 32–36 / 24–28 | GothamBold, one dominant value |
-| Dialog title | 24–26 / 20 | GothamBold, sentence case |
-| Card title / major action | 18 / 16 | GothamBold, wrap if needed |
-| Body / action | 16 / 14 | Gotham or existing legible sans, one to two lines |
-| Supporting | 14 / 12 | Sans for words. Code face only for short hardware marks or counters |
-| Cosmetic plate etching | 11–12 | Optional and removable in compact layout. No essential information here |
+Spacing 4, 8, 12, 16, 24, 32. Radii: button 12, card and quest row 14, list row 10, tile 12, pills full. One 1 px white 14% `UIStroke` on every card, row, track and pill. Focus: one 2.5 px white ring 4 px outside the control with a soft glow (`DeckKit.focusRing`); legacy `Art.button` sheets use the same 2.5 px white stroke. Primary buttons carry a 3 px lower edge and a white 18% top sheen. Press settles the content 2 px and darkens 8%; hover lightens 6%; disabled is 60% and leaves the selection tree. Reduced Motion turns every tween into its final value.
 
-Spacing scale 4, 8, 12, 16, 24, 32. On standard dialogs use 20–24 outer padding, 12–16 between groups and 4–8 within related data. On compact dialogs use 6–12. Standard card radius 10–12, panel 16–20, button 8–10. Reserve fully round silhouettes for physical A, token art and small pills. Use a 1–2 px structural edge and, for raised actions, a 2–3 px lower edge. Do not add a tick, decorative line, icon, or border to every label. Keep contrast stronger near interactive and earned elements.
-
-**Reusable pieces.** Header = title, optional wallet/status and 44×44 close. Tab = text plus selected underline or distinctly filled segment. Primary button = leaf with ink lettering. Secondary = raised surface with light lettering and visible edge. A claim is an action only while available. A pending/disabled action has explicit state text and no activation. Pressed buttons settle 1–2 px without moving the hit target. Focus uses an outer aqua ring with room inside the clip rectangle. Give the X two simple crossed strokes or a legible multiplication glyph, a stable control name and a discoverable Close label. Keep it out of scroll content.
-
-**Art grammar.** Retain existing `EggArt`, `PetPortrait`, `FamilyCrest` and their silhouettes. Use 20–24 px utility glyphs, 28–40 px family/contract emblems, 56–80 px illustrated destination art. A pet journal gets a pet portrait, hatch gets its egg, style gets a miniature of the actual shell, nectar always gets the same amber droplet. Frame each subject in its own reserved safe well with 8 px breathing room on regular screens and 4 px on compact. Measure the drawn silhouette including protruding leaves, not just its parent frame. Preserve art aspect and meaningful outlines. Use ordinary Frames, gradients, corners, strokes, existing synth cues, and the current ViewportFrame pets.
+Components (all in `DeckKit`): `button` (secondary, primary, reward, ghost, destructive), `tabs`, `card`, `toggle`, `progress` (bar and segmented), `toaster`, `listRow`, `chip`, `wallet`, `glyph`, `check`, `icon` (from `ui/icons.png`), `backArrow`, `focusRing`.
 
 ## Layout and interaction
 
 ### Handheld and board
 
-`DeckLayout.resolve` owns geometry. `init.client.lua` consumes its rectangles once against the interactive root's AbsoluteSize. Preserve the simulation aspect `(Config.Width + .8)/(Config.Height + .8)` and aiming through the actual tray. Compute tray and control requirements FIRST and center the resulting shell. Avoid feeding excess horizontal viewport width into grip width.
+Replaced by UI-SPEC sections 1, 4, 5.1 and 7, implemented in `DeckScreen.lua`.
 
-| Root class | Tray and rails | Controls |
-| --- | --- | --- |
-| Roomy landscape, typically ≥800×480 | Start at available height minus outer margins and bezel. Aim for a desktop tray height of 600–700 px when available. Use two equal rails about 150–205 px each, 12–16 px bezel gaps and 10–16 px outer shell padding. At reference desktop size the tray should occupy about 48–55% of shell width. Shrink to fit actual root. | Place wallet and one quest block in the upper left, queue and remaining drops in the upper right. At regular height center the physical controls in the lower portion, roughly 65–80% down the shell. Preserve room around thumb caps and speakers. |
-| Short landscape and narrow landscape | Prioritize safe height for the tray. Allow rail share to increase where control minimums require it. Solve width for two 44 px arrows plus gap in a single rail before allocating excess to decoration. A 160 px-high safe root is an explicit exception to the roomy ratio. | Use concise wallet/quest text, compact queue and count. Hide trim, vents and unused hints before essential information. Keep every actionable rectangle distinct, ≥44×44, out of both tray and neighbor. |
-| Portrait or square | Stack top status, fixed-aspect centered tray, objective/queue and bottom controls. Use available height after reserving each band's actual height. Use a single-column sheet for collection content. | A and aim stay in the bottom band. Keep targets inside the safe frame, retain the selected egg and current run on rotate, and cancel active drag on relayout. |
-
-Board states need an immediately identifiable destination, two matching pieces and result, remaining drops with exact count, distinct Dropping/Next, and action readiness. Label banks RIGHT/LEFT and show check marks on completion. Preserve A key/gamepad and drag-to-drop paths, save-wait and falling/settling messages, and accepted-drop-only pulses. Existing status text and counts win priority over vent/sticker art. Empty grip areas should visually frame a reachable physical control cluster. For the 1649×971 desktop reference, record tray width divided by total shell width. If this drifts outside the target, identify which measured control minimum required the extra width. Use a narrower shell rather than filling spare grip area with decoration.
-
-Center the drop caption on A and measure clearance from nearby readouts and controls. The decorative “Drop” label may disappear. If there is no room for a blocking reason beside A, the existing quest/status line displays “Falling”, “Settling” or the current save-wait reason until input is ready. Restore the full objective immediately. Keep both queue tiers, the count, the wallet and the 44 px targets available.
+- **Geometry.** `DeckScreen.resolve(root, aspect)` owns the wide deck: `s = min((W-48)/1600, (H-60)/800, 1)`; below 0.75 the deck switches to Compact with `s = (H-8)/608` so the LCD fills the safe height and the case bleeds. The 1600x800 body carries the `shell.json` sprite stack (shadow, shoulders, band, faceplate, plate overlay, wordmark, glass, glare, d-pad disc, Menu pill, A and B). The deck is capped at s = 1 so the 1920x1080 reference matches the mockups (deck at 160,150; LCD at 536,246).
+- **LCD.** Regular screens are authored at 848x608 and Compact at 417x299, each with one `UIScale`. The board takes the centre well (height fixed by the padding, width from `(Config.Width + .8) / (Config.Height + .8)`); the existing board renderer is placed over it. Left panel: Score, Chain, Goals, Daily quests. Right panel: Next, Eggs left, Difficulty badge (Medium until part 2), Win pays, Controls (follow the last input type). Compact drops Daily quests, Controls and Best.
+- **Status.** "Falling", "Settling" and save waits replace the Goals label row. The first-pet lessons show inside the Goals card.
+- **Layers.** The shell and HUD live in their own Sibling-ordered `EggDropDeck` gui (DisplayOrder 9, the canopy backdrop moved to 8) so the board gui (10) draws over the LCD well; the glare and the results screen sit above the board in the board gui.
+- **Input.** The d-pad disc has four 44 px+ quadrants (left/right aim; all four drive menus). A drops or confirms, B and the view's back arrow leave, the Menu pill opens the menu. Keyboard and gamepad presses flash the hardware. Drag-to-aim on the board is unchanged.
+- **Portrait and square** keep the legacy stacked case (`DeckLayout`), now inside the `LegacyCase` container, with the new tokens.
 
 ### Pocket Menu, Daily, Mastery
 
@@ -84,17 +73,17 @@ Studio’s touch-enabled iPhone 17 Pro landscape emulator produced a 749×381 vi
 - **Menu.** Before placing the card, subtract the measured header, tabs, insets and footer (if present) from its available height. If the body cannot show a complete illustrated destination with its caption and focus edge, condense the header and use measured horizontal art-and-label buttons. Make this decision from the same destination footprint on every tab so their screen positions remain stable. At initial scroll position show the first complete destination row. On shallow Mastery screens put the selected family, marks and next goal before the general earning instructions.
 - **Egg shop.** Budget for the measured heading, X and pinned action before comparing the remaining body with the footprint of both recipe choices. When the stacked pair would be cut off, use two adjacent, complete targets of at least 44 px each, with both names, illustrations and the selected outline visible. Keep secondary details and odds scrollable. Rotation retains the selected recipe, price and shortfall. The roomy shop, portrait layout when both choices fit, and hatch reveal follow their existing arrangements.
 
-### Round recap
+### Round results (replaces Round recap)
 
-Keep `RunReceipt`, `RecapFeedback` and the matching Saved sequence as data owners. Give the ordinary field recap its own sizing in `init.client.lua` and `RoundRecap.lua`. Do not change the welcome pet dialog as a side effect. Regular sheet width 560–640 px, height dictated by measured content, with a pinned decision footer. Use the following order.
+The floating recap card and `RoundRecap.lua` are gone. `DeckResults.lua` renders UI-SPEC 5.3 inside the LCD; `RunReceipt` and `RecapFeedback` remain the data owners and the count-up clock.
 
-1. Specific outcome such as “Both banks complete” or the actual missed side/overflow reason.
-2. Large amber drop and confirmed “+14 nectar” (example) with one small source line “Quest +8 · Daily +6”.
-3. Selected egg drawing and name adjacent to the saved bank, a bounded progress bar, and a plain shortfall or Ready to hatch label. Bank may exceed cost. Clamp the bar, retain the real balance in text.
-4. Score and best, peak chain, and clears as one quiet metrics row on roomy screens. Details exposes the line-item receipt, marks, challenge progress and earned promotions. A player can read the full receipt without shrinking it into the summary.
-5. Keep replay and hatch actions at stable positions. Use Hatch eggs as the visual primary when affordable and Try again otherwise. Preserve gamepad focus until the player moves it. Button captions express the actual next action.
+1. Outcome eyebrow (ROUND CLEAR in accent; OVERFLOW / GOALS MISSED in danger) and the field title with the difficulty.
+2. Stars total counted up from 0 (once per saved receipt); a loss reads "0 Stars".
+3. Payout card (Round win, Daily quests, Pass bonus, Total, wallet pill; "Saving…" while pending) and Goals card (checks plus Score / Best / Chain and NEW BEST).
+4. Quest strip (daily contracts finished this round; "You can hatch an egg" when affordable).
+5. Replay (primary, A) and Leave to garden (secondary, B). Two targets only: left/right move, A/Enter/Space confirm, B/Backspace leave, touch or mouse tap either. The first A during the count-up only finishes it. A pending save disables Replay and moves focus to Leave. Leave puts the deck away (the old Lounge path).
 
-Pending shows a saving status and existing safe navigation. Stale receipts cannot animate or announce a reward. A legitimately earned zero reads zero. Use one brief transfer toward the balance after a confirmed award. Reduced effects shows the same final values immediately. On short landscape pin the outcome and footer, scroll the center summary/details, and collapse secondary metrics into Details. At 568×160, budget roughly 44 px footer, 28 px outcome, 8 px shell insets and a scrollable center; controls remain reachable and no compressed secondary type is required.
+Compact results use one row of two 190x120 cards and 190x48 buttons. Portrait shows the compact results fitted over the stacked case.
 
 ### Egg shop, reveal, journal, deck style, lounge
 

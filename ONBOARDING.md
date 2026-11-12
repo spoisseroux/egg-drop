@@ -145,7 +145,7 @@ Three folders, the standard Roblox split. The server owns everything that matter
 - **Handheld:** `Deck*`, `Jelly*` (the LCD renderer), `HandheldScreens`, `DropDispenser`.
 - **Pets:** `Pet*` (`PetFactory` builds a pet from rig data, `PetFollow` moves it, `PetFace`/`PetExpression` animate it). `RoomCompanions` renders other players' pets.
 - **Hatching:** `EggHatchView` (egg shop), `HatchCinematic`, `HatchReveal`.
-- **UI:** `StoreView`, `RoundRecap`, `PetJournal`, `*Panel` and the rest.
+- **UI:** `StoreView`, `DeckResults` (round results inside the deck), `PetJournal`, `*Panel` and the rest. Tokens and components are in `DeckKit`; the wide deck screen is `DeckScreen` (see [UI-SPEC-2026-11-12.md](UI-SPEC-2026-11-12.md)).
 
 ### `src/shared` — data both sides read
 | Module | What it holds |
