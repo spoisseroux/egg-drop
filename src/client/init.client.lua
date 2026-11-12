@@ -45,6 +45,7 @@ local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
 clientUI.JellyPalette=require(ReplicatedStorage.Shared.JellyPalette)
+clientUI.Pico8=require(ReplicatedStorage.Shared.Pico8)
 clientUI.uiSequence=0
 clientUI.accepted=function(kind)
  if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return end
@@ -391,11 +392,11 @@ local eggGoalText = Art.text(eggGoal, "Caption", "MEADOW EGG", UDim2.fromOffset(
 eggGoalText.TextXAlignment = Enum.TextXAlignment.Left
 Art.fitText(eggGoalText, 13, 9, 0, true)
 local overflowLine = make("Frame", "OverflowLine", {
-	BackgroundColor3 = Palette.Amber, BackgroundTransparency = 0.45,
+	BackgroundColor3 = clientUI.Pico8.Danger, BackgroundTransparency = 0.45,
 	BorderSizePixel = 0, ZIndex = 5,
 }, overlay)
 local pressureTrack = Art.frame(overlay, "DangerTrack", Art.Ink, UDim2.new(1, -7, 0, 4), UDim2.new(0, 4, .22, 0), 7)
-local pressureFill = Art.frame(pressureTrack, "Fill", Art.Amber, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
+local pressureFill = Art.frame(pressureTrack, "Fill", clientUI.Pico8.Danger, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
 pressureFill.AnchorPoint = Vector2.new(0, 1)
 pressureTrack.Visible = false
 local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Art.LCDInk, 11)

@@ -1,4 +1,6 @@
 local Palette = require(script.Parent.DeckPalette)
+-- Tier colours are the PICO-8 body colours (presentation only; radii and marks are the rules).
+local Pico8 = require(script.Parent.Pico8)
 
 local Config = {
 	Width = 11,
@@ -25,11 +27,11 @@ local Config = {
 		Springy = { bounce = 0.64, kick = 11, reach = 3.5 },
 	},
 	Tiers = {
-		{ radius = 0.72, color = Color3.fromHex("#52ADF2"), mark = "I" },
-		{ radius = 1.04, color = Color3.fromHex("#F39749"), mark = "II" },
-		{ radius = 1.43, color = Color3.fromHex("#A8D34C"), mark = "III" },
-		{ radius = 1.88, color = Color3.fromHex("#EF78A4"), mark = "IV" },
-		{ radius = 2.35, color = Color3.fromHex("#AB8CF2"), mark = "V" },
+		{ radius = 0.72, color = Pico8[12], mark = "I" },
+		{ radius = 1.04, color = Pico8[9], mark = "II" },
+		{ radius = 1.43, color = Pico8[11], mark = "III" },
+		{ radius = 1.88, color = Pico8[14], mark = "IV" },
+		{ radius = 2.35, color = Pico8[10], mark = "V" },
 	},
 	Starter = {
 		{ x = 0, tier = 1 },

@@ -27,6 +27,16 @@ return function(client,parent)
    local color=Color3.fromHex("#35BCA8");assert(Palette.resolve(color)==Palette.resolve(color)and Palette.resolve(color).body==color)
    assert(Config.DropInterval==.35 and Config.FixedStep==1/120 and Config.MaxEggs==32)
   end)
+  test("tiers use the PICO-8 rim/body/highlight ramps from the overnight plan",function()
+   local Pico8=require(game.ReplicatedStorage.Shared.Pico8)
+   local expected={{"#1D2B53","#29ADFF","#C2C3C7"},{"#AB5236","#FFA300","#FFCCAA"},{"#008751","#00E436","#FFF1E8"},{"#7E2553","#FF77A8","#FFCCAA"},{"#AB5236","#FFEC27","#FFF1E8"}}
+   for tier,hex in ipairs(expected)do
+    local roles=Palette.byTier[tier]
+    assert(roles.rim:ToHex():upper()==hex[1]:sub(2)and roles.body:ToHex():upper()==hex[2]:sub(2)and(roles.upper:ToHex():upper()==hex[3]:sub(2)or roles.glint:ToHex():upper()==hex[3]:sub(2)),"tier "..tier.." is off the PICO-8 ramp")
+    assert(Config.Tiers[tier].color==roles.body and Palette.resolve(Config.Tiers[tier].color)==roles)
+   end
+   assert(Palette.Ink==Pico8[0] and Pico8.Danger:ToHex():upper()=="FF004D" and Pico8[15]:ToHex():upper()=="FFCCAA")
+  end)
   test("five fixed fallback layers are passive colored once and never change the source pose",function()
    for tier,roles in ipairs(Palette.byTier)do
     local view,source=fixture(tier);local original=source.CFrame;local size,color=source.Size,source.Color

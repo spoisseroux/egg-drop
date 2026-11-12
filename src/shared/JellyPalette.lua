@@ -1,20 +1,27 @@
 -- Presentation colors only. Tier radii, identities and game rules stay in BoardConfig.
 local Config=require(script.Parent.BoardConfig)
 local Palette={byTier={}}
-Palette.Ink=Color3.fromHex("#201D32")
-Palette.Cream=Color3.fromHex("#FFF5DA")
-local colors={
- {"#123E83","#0870CF","#159CF4","#70D5FF"},
- {"#83312B","#E45017","#FF8A23","#FFC760"},
- {"#315B28","#65B616","#A9E72B","#DAFF70"},
- {"#6A235B","#BD1F6D","#F64A96","#FF9FC0"},
- {"#3E246E","#682BBA","#A86CF7","#D0AAFF"},
-}
+local Pico8=require(script.Parent.Pico8)
+-- PICO-8 ink (0) and cream highlight (7). Tier ramps are PICO-8 rim/body/highlight
+-- indices; the lower band sits between rim and body so the shading order holds.
+Palette.Ink=Pico8[0]
+Palette.Cream=Pico8[7]
+local colors={}
+for tier,ramp in ipairs(Pico8.TierRamps)do
+ local rim,body=Pico8[ramp[1]],Pico8[ramp[2]]
+ -- Snap blends to 8-bit so Part.Color and framebuffer writes round-trip exactly.
+ local function snap(c)return Color3.fromRGB(math.round(c.R*255),math.round(c.G*255),math.round(c.B*255))end
+ local upper=Pico8[ramp[3]]
+ -- A cream (7) highlight IS the glint; the upper band then blends body toward
+ -- it so the tight cream light stays a distinct, small spot.
+ if upper==Pico8[7]then upper=snap(body:Lerp(upper,.5))end
+ colors[tier]={rim,snap(rim:Lerp(body,.55)),body,upper}
+end
 local function key(color)return math.round(color.R*255)+math.round(color.G*255)*256+math.round(color.B*255)*65536 end
 local known,custom={},{}
 local customCount=0
 for tier,hex in ipairs(colors)do
- local entry=table.freeze({rim=Color3.fromHex(hex[1]),lower=Color3.fromHex(hex[2]),body=Color3.fromHex(hex[3]),upper=Color3.fromHex(hex[4]),glint=Palette.Cream,mark=Palette.Ink})
+ local entry=table.freeze({rim=hex[1],lower=hex[2],body=hex[3],upper=hex[4],glint=Palette.Cream,mark=Palette.Ink})
  Palette.byTier[tier]=entry;known[key(Config.Tiers[tier].color)]=entry;known[key(entry.body)]=entry
 end
 table.freeze(Palette.byTier)
