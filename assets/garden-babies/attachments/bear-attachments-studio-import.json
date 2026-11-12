@@ -1,7 +1,7 @@
 {
  "assetId": "97156894572368",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units.",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. The three Shirt pieces come from the shirt-split re-import (shirtSplitAssetId, 2026-11-12); the other parts from assetId.",
  "textures": {
   "eyeTexture": "rbxassetid://75513553871906"
  },
@@ -292,43 +292,43 @@
     57.21524
    ]
   },
-  "Bear__Shirt_Tee": {
+  "Bear__Shirt_SleeveL": {
+   "id": "rbxassetid://127546643447036",
+   "rel": [
+    31.055428,
+    53.775139,
+    -10.655543
+   ],
+   "ms": [
+    27.81819,
+    38.033089,
+    25.379185
+   ]
+  },
+  "Bear__Shirt_SleeveR": {
+   "id": "rbxassetid://77645429250810",
+   "rel": [
+    -31.212206,
+    53.679558,
+    -10.352219
+   ],
+   "ms": [
+    27.468704,
+    38.169441,
+    24.71855
+   ]
+  },
+  "Bear__Shirt_Torso": {
    "id": "rbxassetid://103561670735785",
    "rel": [
-    2e-06,
-    52.999992,
-    -8.505329
+    0.0,
+    53.000008,
+    -8.505333
    ],
    "ms": [
     65.115318,
     35.000011,
     68.945793
-   ]
-  },
-  "Bear__Shirt_Tee_SleeveL": {
-   "id": "rbxassetid://75242752279853",
-   "rel": [
-    25.98744,
-    60.670433,
-    -8.200651
-   ],
-   "ms": [
-    24.49271,
-    23.553837,
-    22.350933
-   ]
-  },
-  "Bear__Shirt_Tee_SleeveR": {
-   "id": "rbxassetid://118188422499420",
-   "rel": [
-    -25.960184,
-    60.632225,
-    -8.110487
-   ],
-   "ms": [
-    24.491341,
-    23.536221,
-    22.13657
    ]
   },
   "Bear__Tail_AltArrow": {
@@ -474,5 +474,6 @@
     38.890503
    ]
   }
- }
+ },
+ "shirtSplitAssetId": "120398944545621"
 }

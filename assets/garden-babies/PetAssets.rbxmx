@@ -6708,7 +6708,7 @@
       </Item>
       <Item class="MeshPart" referent="BearAtt22">
         <Properties>
-          <string name="Name">Bear__Shirt_Tee</string>
+          <string name="Name">Bear__Shirt_Torso</string>
           <Content name="MeshId">
             <url>rbxassetid://103561670735785</url>
           </Content>
@@ -6747,27 +6747,27 @@
       </Item>
       <Item class="MeshPart" referent="BearAtt23">
         <Properties>
-          <string name="Name">Bear__Shirt_Tee_SleeveL</string>
+          <string name="Name">Bear__Shirt_SleeveL</string>
           <Content name="MeshId">
-            <url>rbxassetid://75242752279853</url>
+            <url>rbxassetid://127546643447036</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.24492709999999998</X>
-            <Y>0.23553837000000002</Y>
-            <Z>0.22350933</Z>
+            <X>0.27818190000000004</X>
+            <Y>0.38033089</Y>
+            <Z>0.25379185</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>24.49271</X>
-            <Y>23.553837</Y>
-            <Z>22.350933</Z>
+            <X>27.81819</X>
+            <Y>38.033089</Y>
+            <Z>25.379185</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.25987</X>
-            <Y>0.6067</Y>
-            <Z>-0.08201</Z>
+            <X>0.31055</X>
+            <Y>0.53775</Y>
+            <Z>-0.10656</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -6786,27 +6786,27 @@
       </Item>
       <Item class="MeshPart" referent="BearAtt24">
         <Properties>
-          <string name="Name">Bear__Shirt_Tee_SleeveR</string>
+          <string name="Name">Bear__Shirt_SleeveR</string>
           <Content name="MeshId">
-            <url>rbxassetid://118188422499420</url>
+            <url>rbxassetid://77645429250810</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.24491341</X>
-            <Y>0.23536221000000002</Y>
-            <Z>0.2213657</Z>
+            <X>0.27468704</X>
+            <Y>0.38169441</Y>
+            <Z>0.2471855</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>24.491341</X>
-            <Y>23.536221</Y>
-            <Z>22.13657</Z>
+            <X>27.468704</X>
+            <Y>38.169441</Y>
+            <Z>24.71855</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2596</X>
-            <Y>0.60632</Y>
-            <Z>-0.0811</Z>
+            <X>-0.31212</X>
+            <Y>0.5368</Y>
+            <Z>-0.10352</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>

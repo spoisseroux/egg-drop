@@ -55,11 +55,23 @@ return function(client,parent)
    end end
    assert(placed==13,"expected 13 parts (11 wearable meshes + 2 wings), got "..placed)
    -- Head-channel parts follow a head turn; body parts do not.
-   v.affectionTilt=4;v.poseDirty=true;v:update(0);local turned=find(v,"Hat_Beanie").part.CFrame;local shirt=find(v,"Shirt_Tee").part.CFrame
+   v.affectionTilt=4;v.poseDirty=true;v:update(0);local turned=find(v,"Hat_Beanie").part.CFrame;local shirt=find(v,"Shirt_Torso").part.CFrame
    v.affectionTilt=0;v.poseDirty=true;v:update(0)
    assert((find(v,"Hat_Beanie").part.CFrame.Position-turned.Position).Magnitude>.01,"hat ignored the head channel")
-   assert((find(v,"Shirt_Tee").part.CFrame.Position-shirt.Position).Magnitude<1e-4,"shirt followed the head")
+   assert((find(v,"Shirt_Torso").part.CFrame.Position-shirt.Position).Magnitude<1e-4,"shirt followed the head")
    assert(find(v,"HelixL_Ring").earSide=="L"and find(v,"Tail_AltArrow").tailWag)
+   -- The tee is three pieces; each sleeve rides its arm channel, so a wave folds arm and sleeve together.
+   assert(shown(find(v,"Shirt_Torso"))and shown(find(v,"Shirt_SleeveL"))and shown(find(v,"Shirt_SleeveR")),"tee is not three shown pieces")
+   assert(find(v,"Shirt_Torso").channel=="Body"and find(v,"Shirt_SleeveL").channel=="HandL"and find(v,"Shirt_SleeveR").channel=="HandR")
+   local function grip(s)return find(v,"Hand"..s).part.CFrame:ToObjectSpace(find(v,"Shirt_Sleeve"..s).part.CFrame)end
+   local function arm(s)return find(v,"Shirt_Torso").part.CFrame:ToObjectSpace(find(v,"Hand"..s).part.CFrame)end
+   local gripL,gripR,armL,armR=grip("L"),grip("R"),arm("L"),arm("R")
+   v.reducedEffects=false;v:greet();v.poseDirty=true;v:update(.6)
+   for s,rest in pairs({L={gripL,armL},R={gripR,armR}})do
+    local moved=arm(s);assert(math.acos(math.clamp(moved.LookVector:Dot(rest[2].LookVector),-1,1))>.2,"arm "..s.." did not fold for the wave")
+    local now=grip(s);assert((now.Position-rest[1].Position).Magnitude<1e-3 and now.LookVector:Dot(rest[1].LookVector)>.9999,"sleeve "..s.." left its arm")
+   end
+   v.reducedEffects=true;v.greeting=2;v.poseDirty=true;v:update(0)
   end)
   test("horns and wings show exactly the S1-S5 meshes for the shown stage 0..5",function()
    local v=make(Pets.byId.pip,appearance())
@@ -92,7 +104,7 @@ return function(client,parent)
     local e=assert(find(v,name),name);assert(e.colorRole=="secondary"and(e.color or e.part.Color)==v.secondaryColor,name)
    end
    assert(v.secondaryColor==H.ById.tide.color and v.twoTone==true)
-   assert(find(v,"Shirt_Tee").part.Color==Color3.fromHex("#1A8C9E")and find(v,"Shirt_Tee").colorRole=="own")
+   assert(find(v,"Shirt_Torso").part.Color==Color3.fromHex("#1A8C9E")and find(v,"Shirt_Torso").colorRole=="own")
    a.secondaryDoses=H.emptyCounts();a.secondaryDoses.rose=5;v:applyAppearance(a);v:update(0)
    assert(find(v,"HornL_S4").part.Color==H.ById.rose.color or find(v,"HornL_S4").color==H.ById.rose.color,"horn ignored the new secondary")
   end)
