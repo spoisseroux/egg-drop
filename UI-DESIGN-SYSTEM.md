@@ -6,6 +6,8 @@ Design handoff for the Egg Drop client, originally based on commit `1cd0927`, 7 
 
 The deck rebuild follows [UI-SPEC-2026-11-12.md](UI-SPEC-2026-11-12.md) (Fable). Where this file and the spec disagree, the spec wins. Part 1 is implemented: the glass tokens and components (`DeckKit`), the wide Pocket Deck Slim screen with the HUD inside the LCD (`DeckScreen`), results inside the deck (`DeckResults`), the view back arrow and the token pass over every sheet. The sections below that predate it are kept as history and marked where they are replaced. Studio captures: `artifacts/deck-rebuild/studio/`.
 
+Phone landscape (Compact) layouts for the round HUD, picker, results, quest log and faceplate shop are specified in [UI-SPEC-COMPACT-2026-11-12.md](UI-SPEC-COMPACT-2026-11-12.md), with mockups in `artifacts/deck-rebuild/mockups/compact/`. It replaces the Compact notes below and section 7 of the main spec. Not implemented yet.
+
 ## Implementation checkpoint through `f6d1f4f`
 
 - **Desktop deck.** At 1649×971, the finished LCD measured approximately 417 px across, or 430 px including its bezel, inside an approximately 830 px case. The LCD occupies about 50% of the case width (52% with bezel), within the 48–55% desktop target. Studio Version History confirmed private version 69 at `8b49b75`. The subsequent results below are branch and Studio verification. [UI redesign results](scripts/UIRedesign-results.json) · [Delivery record](UI-OVERNIGHT.md)
