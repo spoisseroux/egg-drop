@@ -19,7 +19,7 @@ Keep this list current: add an item when work starts, move it to done when it la
 Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid luck" line at the end of this file for v1.
 
 - Quiet soft public launch, then iterate on retention data.
-- Roster: the four new babies only (Zivvi, Ovelle, Nuum, Tikket). Legacy Vezzi/Kiprik/Nolli and rare editions leave the hatch pool and shop.
+- Roster (revised 2026-11-12): **one pet, Zivvi**, met through onboarding. The Companion Egg is retired; Ovelle, Nuum and Tikket stay in code for a later, deliberate roster design. (Originally: the four new babies only.) Legacy Vezzi/Kiprik/Nolli and rare editions leave the hatch pool and shop.
 - Private-test saves are wiped at launch with a fresh DataStore name. No legacy migration.
 - Rounds stay unlimited. Monetization: Stars boosts (2× Stars pass, per-round bonus), game passes and Robux→Stars packs.
 - All ages, default chat, no trading.
@@ -56,6 +56,10 @@ Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid 
 - [x] Analytics (`3b82189`): Stars sources/sinks, round won/lost, store opens, pass purchases. D1/D7 retention comes from the Creator Dashboard. Only fires on published servers, so it is unverified until a live session.
 - [x] Retired surfaces: the Family mastery menu was already removed, and the save wipe clears retired pets. Nothing else to hide.
 - [ ] `scripts/PetAward.spec.lua` fails on a stale `version == 4` assert (pre-existing, unrelated to v1 work).
+- [x] One pet for v1 (2026-11-12): `PetCatalog.active` is Zivvi only, the `meadow` Companion Egg is retired (server answers RetiredEgg), the shop sells Toy/Feature/Material/Hue eggs (Toy selected first), journal and hue text point to meeting Zivvi on the handheld. Studio: shop shows the four item eggs; a meadow hatch is refused. Evidence: `artifacts/one-pet-sparkler-2026-11-12/`.
+- [ ] Specs that hatch the Companion Egg as fixture setup or assert four active pets need updating (not run since the change): HatchProgress, HueProgress, MaterialProgress, PetAward, SessionHost, SessionRecovery, StorePurchase, ToyFeatureProgress, CompactEggShop, EmulatorSafeArea, JournalPurpose, NeutralPetRoster, RoundJuiceShop. Best done once Rojo is reconnected.
+- [ ] Item eggs are still paid random items (Toy, Feature, Material, Hue): keep odds shown; Toy Egg shows 33.3% ×3 (sums to 99.9%), so check the policy's sum-to-100 rule for displayed decimals.
+- [ ] The onboarding Zivvi reveal can stick on "Something is stirring… / Hatching…" in Studio automation (seen before and after the one-pet change); check it by hand in a normal Play session.
 
 ### 2. Garden environment
 The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGardenArt`, `LoungeSpringArt`) on a flat 160 × 176 lawn. Reference: [top](artifacts/garden-reference-2026-11-11/reference-layout-top.png) · [perspective](artifacts/garden-reference-2026-11-11/reference-layout-perspective.png). Target proportions and the kit list are in ART-HANDOFF.md section 7.
@@ -74,8 +78,9 @@ The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGarde
 ### 3. 3D assets (Spencer models, Claude integrates; see ART-HANDOFF.md)
 - [ ] Blender template, export preset, test cube and test cone verified in Studio.
 - [ ] Horns, claws, wings: shared set, separate L/R meshes, stage-5 size, base/tip split. Fable blockout ready in `features.blend`; Spencer hand pass next.
-- [ ] Hand-tweak the four babies, keeping the part names and split.
+- [ ] Hand-tweak Zivvi (the only v1 pet), keeping the part names and split. Spencer may change parts if he tells Claude.
 - [ ] Toys: Ball, Bone, Sparkler. Fable blockout ready in `toys.blend`.
+- [x] Sparkler glow tip and real spark particles (2026-11-12): a Neon `GlowTip` with a flickering ParticleEmitter and small PointLight replaces the three mesh sparks in code (`PetToyGeometry`, `PetPlayVisual`); Reduced Motion keeps a steady glow with no sparks. `toys.blend` now has `Sparkler_Glow` instead of `Spark_1..3`. `PetPersonalPlay.spec` updated, not run.
 - [ ] Stations and props: care machine, hatch tree, workbench, journal stand, lanterns, bench, rocks, bushes. Fable blockout ready in `stations.blend` (care machine is now a floor unit; docked pet sits ~0.09 higher).
 - [ ] Claude: import, pivot/collision/material setup, code wiring, before/after captures.
 

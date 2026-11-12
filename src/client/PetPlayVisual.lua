@@ -132,13 +132,12 @@ function Play.render(v,root)
    local squash=Vector3.new(1+roll*.05,1-roll*.12,1+roll*.05)
    p.Size=spec.size*squash;p.CFrame=cf*CFrame.new(spec.frame.Position*squash)*spec.frame.Rotation
   end
-  if p.Name:sub(1,6)=="Spark_"then
-   p.Transparency=if v.reducedEffects then .25 else 0
-   if not v.reducedEffects then
-    local fall=(t*.8+i*.29)%1;p.CFrame=cf*spec.frame*CFrame.new((i-2)*size*.025,-fall*size*.10,0)
-   end
+  if p.Name=="GlowTip"then
+   -- A gentle flicker; Reduced Motion keeps a steady glow and stops the sparks.
+   p.Transparency=if v.reducedEffects then 0 else .12+math.sin(t*31+i)*.12
   end
  end
+ if toy.emitter then toy.emitter.Enabled=not v.reducedEffects end
 end
 function Play.destroy(v)Play.cancel(v);Play.clearFeatures(v)end
 return Play

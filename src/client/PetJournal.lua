@@ -52,7 +52,7 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 		local entry=button(scroll,pet.name,"",function()self:activatePet(index)end)
 		local well=Art.frame(entry,"PortraitWell","inset",UDim2.fromOffset(8,8),UDim2.fromOffset(60,60),entry.ZIndex+1);Art.corner(well,8)
 		text(entry,"Species",pet.name..(if pet.trial then " · Rare"else ""),"Action")
-		text(entry,"Status","Hatch from eggs","Body","muted")
+		text(entry,"Status","Meet on the handheld","Body","muted")
 		text(entry,"ColorHint","","Supporting","muted")
 		text(entry,"Track","Track & play","Supporting",Art.Leaf).Visible=false
 		self.cards[index]=entry
@@ -204,7 +204,7 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		entry.Species.Text=if active then pet.name elseif unlocked then pet.name.." · Retained"else ""
 		local equipped=unlocked and pet.id==companionId
         local trackable=false
-		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif active then "Hatch from eggs"else ""
+		entry.Status.Text=if unlocked then (if equipped then "Equipped"else "Equip")elseif active then "Meet on the handheld"else ""
         entry.ColorHint.Text=if unlocked then "Customize with the hanger"else ""
         entry.ColorHint.Visible=entry.ColorHint.Text~=""
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
@@ -219,8 +219,8 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 		entry:SetAttribute("ControllerOwned",unlocked)
         local customize=self.customizeButtons[index];customize.Interactable,customize.Selectable=unlocked,unlocked
         customize.Visible=entry.Visible
-        customize:SetAttribute("AcquisitionCondition",if unlocked then "Owned"elseif active then "Hatch from Companion Eggs"else nil)
-        customize:SetAttribute("DisabledReason",if unlocked or not active then nil else "Hatch from Companion Eggs")
+        customize:SetAttribute("AcquisitionCondition",if unlocked then "Owned"elseif active then "Meet on the handheld"else nil)
+        customize:SetAttribute("DisabledReason",if unlocked or not active then nil else "Meet on the handheld")
         Art.control(customize,false,unlocked)
 		if unlocked and not firstOwned then firstOwned=entry elseif trackable and not firstTrack then firstTrack=entry end
 	end

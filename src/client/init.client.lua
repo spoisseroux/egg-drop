@@ -880,7 +880,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   return care:request("carePickup",nil,done)
  end,
  shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
- eggs=function()if openNursery then openNursery();nurseryView:selectRecipe("meadow")end end,
+ eggs=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
  materialShop=function()if openNursery then openNursery();nurseryView:selectRecipe("material")end end,
  toyShop=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
  featureShop=function()if openNursery then openNursery();nurseryView:selectRecipe("feature")end end,

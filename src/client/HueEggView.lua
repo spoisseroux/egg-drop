@@ -711,7 +711,7 @@ function View:refresh()
  if self.featureAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..FeatureCatalog.ById[self.featureAssignment.featureId].name end
  if self.materialAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..MaterialCatalog.ById[self.materialAssignment.finishId].name end
  self.eggsButton.Visible=customization and self.tab=="pet"and not confirming and self:canCustomize()
- if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companions yet. Hatch a Companion Egg."end
+ if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companion yet. Play your first rounds to meet Zivvi."end
  local materialMode=if self.page=="materialReceipt"then "receipt"elseif self.page=="materialBuy"then "buy"elseif customization and self.tab=="materials"and not confirming then "choices"else nil
  self.materialPanel:refresh(self.state,self.petId,materialMode,materialResult and self.materialPurchaseInFlight==materialResult.id)
  if materialMode=="receipt"then self.materialPurchaseInFlight=nil end

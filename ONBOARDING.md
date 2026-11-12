@@ -9,7 +9,7 @@ Egg Drop is a Roblox game about a shared garden of strange little baby pets, plu
 - **The garden (3D, social).** Everyone spawns in one open garden. Your equipped baby follows you around, plays with its toy, rests, and reacts when you pet it. You can see other players' babies nearby. The stations are there too: the care cradle (customise and switch pets), the workbench (style your handheld), the journal, and the bench where you sit to play.
 - **The handheld board (2D, solo).** A pocket console with a Suika-style merge game. You drop eggs onto a field and same-tier eggs merge upward. A round is 24 drops with a goal, such as making tier III+ merges in a marked patch. Winning earns **Stars**.
 - **Stars, the one currency.** You earn them from rounds, daily contracts, a daily gift and petting your baby. You spend them on eggs in the egg shop.
-- **Eggs.** A **Companion egg** (18 Stars) hatches one of the four babies. Item eggs unlock cosmetics:
+- **One pet for v1: Zivvi.** Every player meets Zivvi through the first rounds on the handheld. The Companion Egg is retired (decided 2026-11-12) so more pets can be designed deliberately later. The eggs left are item eggs that unlock cosmetics:
 
   | Egg | Price | What it gives |
   |---|---:|---|
@@ -20,7 +20,7 @@ Egg Drop is a Roblox game about a shared garden of strange little baby pets, plu
 
   Everything is cosmetic: no pet is stronger than another.
 
-**The four babies.** The internal ids in the code are leftovers from an older roster, so learn this mapping:
+**The babies.** Only Zivvi is active in v1 (`PetCatalog.active`); the other three stay in the code for later. The internal ids are leftovers from an older roster, so learn this mapping:
 
 | Name | Internal id | Personality |
 |---|---|---|

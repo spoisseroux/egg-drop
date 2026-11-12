@@ -9,11 +9,22 @@ function Toys.create(parent,id,scale)
   h:add("IndigoGrip",Vector3.new(.052,.17,.052),CFrame.new(0,-.065,0)*CFrame.Angles(0,0,-.10),indigo,"sphere")
   h:add("OffsetBrassWire",Vector3.new(.016,.12,.016),CFrame.new(.018,.074,0)*CFrame.Angles(0,0,-.24),brass,"sphere")
   for i=-1,1 do h:add("SeedProng"..i,Vector3.new(.025,.082,.025),CFrame.new(.025+i*.026,.145+math.abs(i)*-.015,0)*CFrame.Angles(0,0,-i*.55),citrine,"sphere")end
-  h.sparks={}
-  for i=1,3 do
-   local p=h:add("Spark_"..i,Vector3.new(.014,.043,.012),CFrame.new(.025+(i-2)*.052,.213+(i%2)*.025,.008)*CFrame.Angles(0,0,(i-2)*.5),Color3.fromHex("#FFE9A6"),"sphere")
-   table.insert(h.sparks,p)
-  end
+  -- A glowing tip throws real sparks: one bounded emitter and a small light.
+  local tip=h:add("GlowTip",Vector3.new(.034,.034,.034),CFrame.new(.025,.19,0),Color3.fromHex("#FFF1B8"),"sphere")
+  tip.Material=Enum.Material.Neon
+  local s=h.scale
+  local sparks=Instance.new("ParticleEmitter");sparks.Name="Sparks"
+  sparks.Texture="rbxasset://textures/particles/sparkles_main.dds"
+  sparks.Rate=40;sparks.Lifetime=NumberRange.new(.25,.55);sparks.Speed=NumberRange.new(s*.8,s*1.8)
+  sparks.SpreadAngle=Vector2.new(180,180);sparks.Acceleration=Vector3.new(0,-s*7,0);sparks.Drag=2.5
+  sparks.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,s*.14),NumberSequenceKeypoint.new(1,0)})
+  sparks.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,.6)})
+  sparks.Color=ColorSequence.new(Color3.fromHex("#FFF6C8"),Color3.fromHex("#FFA640"))
+  sparks.LightEmission=1;sparks.LightInfluence=0;sparks.Rotation=NumberRange.new(0,360);sparks.ZOffset=.2
+  sparks.Parent=tip
+  local glow=Instance.new("PointLight");glow.Name="SparkGlow";glow.Color=Color3.fromHex("#FFD27A")
+  glow.Range=math.max(2,s*3);glow.Brightness=.9;glow.Shadows=false;glow.Parent=tip
+  h.tip,h.emitter,h.glow=tip,sparks,glow
  elseif id=="ball"then
   h:add("CoralBall",Vector3.new(.24,.24,.24),CFrame.identity,Color3.fromHex("#EF786B"),"sphere")
   h:add("OffsetCreamEquator",Vector3.new(.244,.055,.244),CFrame.new(0,.018,0)*CFrame.Angles(0,0,.18),Color3.fromHex("#FFF0C9"),"sphere")

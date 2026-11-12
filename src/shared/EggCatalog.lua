@@ -7,7 +7,9 @@ local Catalog = {
 	RareGuarantee = 7,
 	Order = { "meadow" },
 	ById = {
+		-- Retired for v1 (one pet, Zivvi). The server refuses retired recipes.
 		meadow = {
+			retired = true,
 			name = "Mixed Meadow", cost = 18, color = Color3.fromHex("#C2EC74"),
 			weights = {
 				-- Whole percentages that sum to 100, shown before purchase.

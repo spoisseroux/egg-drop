@@ -51,7 +51,7 @@ return function(client,parent)
      v.gaitWeight=0;v.focusPose=false;v.gardenFocus=false;v.careState=nil;v.gardenBehavior="follow";v.gardenAction=nil;v.personalPlayEnabled=true
      Play.reset(v);v.cosmeticTime=0;v:update(0);v.cosmeticTime=1.0;v:update(0)
      assert(v.personalToy and v.personalToyActive and #v.personalToy.parts<=8,id.." failed to begin")
-     if id=="sparkler"then assert(#v.personalToy.sparks==3)end
+     if id=="sparkler"then local e=v.personalToy.emitter;assert(e and e:IsA("ParticleEmitter")and e.Parent==v.personalToy.tip and v.personalToy.tip.Material==Enum.Material.Neon)end
      local prop,deadline=v.personalToy,v.personalNextOpportunity
      v[case[1]]=case[2];v:update(0);assert(not v.personalToy and prop.destroyed,case[1].." failed to cancel")
      assert(v.personalNextOpportunity==deadline,case[1].." reset opportunity cooldown")

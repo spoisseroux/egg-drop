@@ -28,8 +28,10 @@ for index, pet in ipairs(Pets.collection) do
 end
 -- Permanent collection/order/ownership bits above retain all seven saved identities.
 -- Availability is a separate set; retiring an outcome never deletes an owned pet.
-Pets.active = table.freeze({Pets.byId.pip, Pets.byId.puddle, Pets.byId.wick, Pets.byId.orbit})
-Pets.activeById = table.freeze({pip=true,puddle=true,wick=true,orbit=true})
+-- v1 (2026-11-11): one pet, Zivvi, met through onboarding. Ovelle, Nuum and
+-- Tikket stay in the catalog for a later, more deliberate roster design.
+Pets.active = table.freeze({Pets.byId.pip})
+Pets.activeById = table.freeze({pip=true})
 function Pets.isActive(pet)
  return Pets.activeById[if type(pet)=="table"then pet.id else pet]==true
 end

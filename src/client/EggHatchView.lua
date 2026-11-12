@@ -14,7 +14,8 @@ local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 local JarArt=require(script.Parent.HueJarArt)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog);local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local ShelfEffects=require(script.Parent.EggShelfEffects)
-local liveOrder={"meadow","hue","material","toy","feature"}
+-- v1 sells item eggs only; the Companion Egg is retired (one pet, Zivvi).
+local liveOrder={"toy","feature","material","hue"}
 local function shopRecipe(id)
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
  if id=="toy"then return {id="toy",name="Toy Egg",cost=ToyCatalog.Cost}end
@@ -84,7 +85,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	Art.corner(wallet, 10)
 	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), 23)
 	nectar.Parent=wallet;nectar.ZIndex = 25
-	local note = label(card, "Notice", "Earn Stars. Choose an egg. Meet a new friend.", UDim2.fromOffset(12, 29),
+	local note = label(card, "Notice", "Earn Stars. Choose an egg for your pet.", UDim2.fromOffset(12, 29),
 		UDim2.new(1, -24, 0, 16), "muted", 11)
 	local body = Instance.new("ScrollingFrame")
 	body.Name, body.Position, body.Size = "Body", UDim2.fromOffset(12, 48), UDim2.new(1, -24, 1, -110)
@@ -112,7 +113,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	local self = setmetatable({
 		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
 		closeButton = close, action = action, meetButton = meet, getStars = getStars, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
-		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = Catalog.Order[1], state = {}, pending = false,
+		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = liveOrder[1], state = {}, pending = false,
 		intentToken = 0, presentationGeneration = 0,
 	}, View)
  self.shelfEffects=ShelfEffects.new(shade,{audio=audio,reduceEffects=reduceEffects,owns=function()return shade.Visible and not self:isStoreOpen() and not self.state.lastHatch and (not audio or audio.deviceActive~=false)end})
@@ -352,7 +353,7 @@ function View:refreshShopHeader()
 	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Hatch eggs"
 	self.headerShortTitle=if notice then notice.narrow elseif self.statusText then self.headerTitle else "Hatch eggs"
 	if self.state.lastHatch then self.heading.Text=self.headerTitle end
-	self.note.Text=self.statusText or "Earn Stars. Choose an egg. Meet a new friend."
+	self.note.Text=self.statusText or "Earn Stars. Choose an egg for your pet."
 end
 
 function View:revokeIntent()
@@ -646,7 +647,7 @@ function View:update(state)
 	end
 	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
 	self.nectar.Text = tostring(self.state.nectar or 0)
-	self.note.Text = self.errorMessage or self.state.message or "Earn Stars. Choose an egg. Meet a new friend."
+	self.note.Text = self.errorMessage or self.state.message or "Earn Stars. Choose an egg for your pet."
 	self:layout()
 	if self.shade.Visible then
 		if result then
@@ -708,7 +709,7 @@ function View:setError(message)
 	self.pending = self.ackIntent ~= nil or status == "Busy"
 	self.errorMessage = message
 	self.errorRevision=self.state.revision or 0
-	self.note.Text = message or "Earn Stars. Choose an egg. Meet a new friend."
+	self.note.Text = message or "Earn Stars. Choose an egg for your pet."
 	if message == "One moment…" or message == "Finishing your last save…"
 		or message == "Finishing your last hatch action…"
 		or message == "Retry the previous action while it saves." then self:retryAcknowledgement() end
