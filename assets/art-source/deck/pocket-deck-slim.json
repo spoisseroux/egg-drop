@@ -273,5 +273,21 @@
    ],
    "note": "LED. Neon, Color = faceplate accent."
   }
- ]
+ ],
+ "uploaded": {
+  "modelAssetId": "96845902742297",
+  "date": "2026-11-12",
+  "template": "assets/deck/PocketDeckSlim.rbxmx (ServerStorage.PocketDeckSlim)",
+  "meshIds": {
+   "Shell": "rbxassetid://115225104888385",
+   "FrontPlate": "rbxassetid://79518867373692",
+   "Bezel": "rbxassetid://111898830930565",
+   "Screen": "rbxassetid://70629451066803",
+   "AimRocker": "rbxassetid://97228572660844",
+   "Confirm": "rbxassetid://107899862395983",
+   "Back": "rbxassetid://96763978132853",
+   "Customize": "rbxassetid://95398375566470",
+   "Power": "rbxassetid://133032069698309"
+  }
+ }
 }

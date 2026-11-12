@@ -2,7 +2,6 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
-local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 
 local LoungeArt = require(script.Parent.LoungeArt)
 local WorldLayout = require(ReplicatedStorage.Shared.HollowWorldLayout)
@@ -79,6 +78,7 @@ local function watchFallCatch(room)
 end
 
 function Lounge.create()
+	task.spawn(Lounge.warmDeck) -- the held-deck meshes, before the first player
 	local room = Instance.new("Model")
 	room.Name = "EggDropLounge"
 	LoungeArt.build(room, part)
@@ -86,12 +86,54 @@ function Lounge.create()
 	watchFallCatch(room)
 end
 
-local function attach(model, torso, name, size, offset, color)
-	local piece = part(model, name, size, torso.CFrame * offset, color, false)
+-- Pocket Deck Slim (UI-SPEC-2026-11-12 section 9): nine meshes from
+-- pocket-deck-slim.fbx, kept as a template whose part CFrames are the
+-- part-space centres. Each piece is welded at torso * mount * centre.
+local ServerStorage = game:GetService("ServerStorage")
+local AssetService = game:GetService("AssetService")
+-- Mesh ids of the uploaded pocket-deck-slim.fbx (model asset 96845902742297).
+-- Rojo's live sync cannot write MeshPart.MeshId, so a template part without a
+-- mesh is rebuilt once with CreateMeshPartAsync and cached.
+local SlimMeshes = {
+	Shell = 115225104888385, FrontPlate = 79518867373692, Bezel = 111898830930565, Screen = 70629451066803,
+	AimRocker = 97228572660844, Confirm = 107899862395983, Back = 96763978132853, Customize = 95398375566470,
+	Power = 133032069698309,
+}
+local slimCache, slimBuilding
+local function slimTemplate()
+	if slimCache then return slimCache end
+	while slimBuilding do task.wait() end
+	if slimCache then return slimCache end
+	local source = ServerStorage:FindFirstChild("PocketDeckSlim")
+	if not source then return nil end
+	slimBuilding = true
+	local model = Instance.new("Model")
+	model.Name = "PocketDeckSlimResolved"
+	for _, piece in ipairs(source:GetChildren()) do
+		if piece:IsA("MeshPart") then
+			local resolved = piece
+			if piece.MeshId == "" and SlimMeshes[piece.Name] then
+				local ok, made = pcall(AssetService.CreateMeshPartAsync, AssetService, "rbxassetid://" .. SlimMeshes[piece.Name])
+				if ok and made then
+					made.Name, made.Size, made.CFrame = piece.Name, piece.Size, piece.CFrame
+					resolved = made
+				else
+					warn("Egg Drop: deck mesh", piece.Name, made)
+				end
+			end
+			local copy = if resolved == piece then piece:Clone() else resolved
+			copy.Parent = model
+		end
+	end
+	slimBuilding = false
+	slimCache = model
+	return model
+end
+local function weldPiece(piece, torso, offset)
+	piece.CFrame = torso.CFrame * offset
 	piece.Anchored = false
 	piece.Massless = true
-	piece.CanTouch = false
-	piece.CanQuery = false
+	piece.CanCollide, piece.CanTouch, piece.CanQuery = false, false, false
 	local weld = Instance.new("WeldConstraint")
 	weld.Part0 = torso
 	weld.Part1 = piece
@@ -99,25 +141,54 @@ local function attach(model, torso, name, size, offset, color)
 	return piece
 end
 
-local function paintDevice(device, themeId, stickerId)
+local Colors = { glass = Color3.fromHex("#0C0D10"), bezel = Color3.fromHex("#08090B"), pad = Color3.fromHex("#1D1F25"), back = Color3.fromHex("#3A3E47") }
+local function paintDevice(device, themeId)
 	local theme = Themes.ById[themeId] or Themes.ById[Themes.Default]
-	device.Shell.Color = theme.shell
-	device.FrontPlate.Color = theme.face or theme.shell:Lerp(theme.trim, 0.27)
-	device.Bezel.Color = theme.trim
-	device.Screen.Color = if theme.lcd then theme.lcd.base else Color3.fromHex("#C6DFA0")
-	device.AimRocker.Color = theme.rocker or Color3.fromHex("#283744")
-	device.Confirm.Color = theme.buttons
-	Stickers.paint(device.Shell.StickerFace.Decal, stickerId)
+	local accent = theme.accent or theme.buttons
+	local shell = device:FindFirstChild("Shell")
+	if shell then
+		shell.Color = theme.bandTint or Color3.new(1, 1, 1)
+		shell.Material = Enum.Material.Metal
+	end
+	local plate = device:FindFirstChild("FrontPlate")
+	if plate then
+		-- The plate has a planar 0..1 UV, so the faceplate texture maps straight on.
+		local held = theme.held3d or {}
+		plate.TextureID = theme.texture or ""
+		plate.Color = if theme.texture then Color3.new(1, 1, 1) else theme.face or theme.shell
+		plate.Material = Enum.Material[held.material or "SmoothPlastic"] or Enum.Material.SmoothPlastic
+		plate.Reflectance = held.reflectance or 0
+		plate.Transparency = held.transparency or 0
+	end
+	local function paint(name, color, material)
+		local piece = device:FindFirstChild(name)
+		if piece then
+			piece.Color = color
+			if material then piece.Material = material end
+		end
+	end
+	paint("Bezel", Colors.bezel)
+	if device:FindFirstChild("Bezel") then device.Bezel.Reflectance = 0.15 end
+	paint("Screen", if theme.lcd then theme.lcd.base else Colors.glass)
+	paint("AimRocker", Colors.pad)
+	paint("Customize", Colors.pad)
+	paint("Back", Colors.back)
+	paint("Confirm", accent)
+	paint("Power", accent, Enum.Material.Neon)
 end
 
-function Lounge.setAppearance(character, themeId, stickerId)
+function Lounge.warmDeck()
+	slimTemplate()
+end
+
+function Lounge.setAppearance(character, themeId)
 	local device = character and character:FindFirstChild("PocketDeck")
 	if device then
-		paintDevice(device, themeId, stickerId)
+		paintDevice(device, themeId)
 	end
 end
 
-function Lounge.setMode(character, userId, mode, themeId, stickerId)
+function Lounge.setMode(character, userId, mode, themeId)
 	if not character then
 		return
 	end
@@ -147,59 +218,37 @@ function Lounge.setMode(character, userId, mode, themeId, stickerId)
 	if device then
 		return
 	end
+	local template = slimTemplate()
+	if not template then
+		warn("Egg Drop: ServerStorage.PocketDeckSlim is missing; no held deck")
+		return
+	end
+	-- Building the template can yield once; re-check after it.
+	if character:FindFirstChild("PocketDeck") or not character.Parent or not torso.Parent then
+		return
+	end
 
 	device = Instance.new("Model")
 	device.Name = "PocketDeck"
 	device:SetAttribute("BoardUserId", userId)
-	-- The device's Front (screen, controls, sticker) faces back toward the holder's
+	-- The device's Front (screen, controls) faces back toward the holder's
 	-- face: turned 180 degrees about Y and tipped 22 degrees up toward the eyes.
-	-- Device +X therefore lies on the holder's left, so the rocker reads left and A right.
+	-- Device +X therefore lies on the holder's left, so the pad reads left and A right.
 	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(-22), math.pi, 0)
-	local shell = attach(device, torso, "Shell", Vector3.new(1.84, 0.87, 0.17), mount, Palette.Shell)
-	attach(device, torso, "FrontPlate", Vector3.new(1.78, 0.81, 0.025),
-		mount * CFrame.new(0, 0, -0.085), Palette.Shell)
-	local stickerFace = Instance.new("SurfaceGui")
-	stickerFace.Name = "StickerFace"
-	stickerFace.Face = Enum.NormalId.Front
-	stickerFace.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	stickerFace.CanvasSize = Vector2.new(178, 81)
-	stickerFace.LightInfluence = 0
-	stickerFace.MaxDistance = 34
-	stickerFace.Parent = shell
-	local decal = Instance.new("Frame")
-	decal.Name = "Decal"
-	decal.Position = UDim2.fromOffset(119, 17)
-	decal.Size = UDim2.fromOffset(48, 48)
-	decal.Rotation = -11
-	decal.BorderSizePixel = 0
-	decal.Parent = stickerFace
-	local rounded = Instance.new("UICorner")
-	rounded.CornerRadius = UDim.new(0, 4)
-	rounded.Parent = decal
-	-- Mount the decal on the face plate so the new layered shell cannot cover it.
-	stickerFace.Adornee = device.FrontPlate
-	stickerFace.ZOffset = 1
-	attach(device, torso, "Bezel", Vector3.new(0.69, 0.74, 0.026),
-		mount * CFrame.new(0, 0.022, -0.109), Palette.Rim)
-	local screen = attach(device, torso, "Screen", Vector3.new(0.49, 0.665, 0.029),
-		mount * CFrame.new(0, 0.022, -0.131), Color3.fromHex("#C6DFA0"))
-	local power = attach(device, torso, "Power", Vector3.new(0.055, 0.055, 0.027),
-		mount * CFrame.new(-0.75, 0.25, -0.102), Color3.fromHex("#C2EC74"))
-	power.Material = Enum.Material.Neon
-	attach(device, torso, "AimRocker", Vector3.new(0.27, 0.13, 0.06),
-		mount * CFrame.new(0.59, -0.24, -0.112), Palette.Ink)
-	attach(device, torso, "AimDivider", Vector3.new(0.018, 0.105, 0.012),
-		mount * CFrame.new(0.59, -0.24, -0.146), Palette.Rim)
-	local buttonA = attach(device, torso, "Confirm", Vector3.new(0.06, 0.19, 0.19),
-		mount * CFrame.new(-0.60, -0.24, -0.120) * CFrame.Angles(0, math.pi / 2, 0), Palette.Primary)
-	buttonA.Shape = Enum.PartType.Cylinder
-	attach(device, torso, "Customize", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, 0.10, -0.107), Palette.Ink)
-	attach(device, torso, "Lounge", Vector3.new(0.18, 0.05, 0.04), mount * CFrame.new(0.59, 0.0, -0.107), Palette.Ink)
-	for index = 0, 2 do
-		attach(device, torso, "SpeakerSlot", Vector3.new(0.018, 0.11, 0.017),
-			mount * CFrame.new(-0.65 - index * 0.044, 0.12, -0.107) * CFrame.Angles(0, 0, math.rad(-22)), Palette.Ink)
+	for _, source in ipairs(template:GetChildren()) do
+		if source:IsA("BasePart") then
+			local piece = source:Clone()
+			weldPiece(piece, torso, mount * source.CFrame)
+			piece.Parent = device
+		end
 	end
-	paintDevice(device, themeId, stickerId)
+	local shell, screen = device:FindFirstChild("Shell"), device:FindFirstChild("Screen")
+	if not shell or not screen then
+		device:Destroy()
+		return
+	end
+	device.PrimaryPart = shell
+	paintDevice(device, themeId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
 	badge.Adornee = screen
@@ -257,8 +306,8 @@ function Lounge.spawn(character, slot, player, deckState)
 		return
 	end
 	character:PivotTo(Lounge.spawnFrame(slot, humanoid, root, workspace:FindFirstChild("EggDropLounge")))
-	local mode, themeId, stickerId = deckState()
-	Lounge.setMode(character, player.UserId, mode, themeId, stickerId)
+	local mode, themeId = deckState()
+	Lounge.setMode(character, player.UserId, mode, themeId)
 end
 
 return Lounge
