@@ -35,6 +35,8 @@ The supplied 32-second turntable separates a small figure and its sharper access
 
 ## Optional charms and finishes
 
+> **Superseded for pets and charms (2026-11-12):** see [PET-STYLE-GUIDE.md](PET-STYLE-GUIDE.md). The plush Bear is the reference pet. Pets start with no charm; charms (shape and position) come from an expensive Charm Egg, and wings come from the Feature Egg.
+
 The starter charm is a small dot tinted from the baby’s **secondary** swatch. Owners can turn it off. Each owned pet saves its own visibility, chosen shape, palette and finish. Switching it off retains the selected shape for the next time it is enabled. Equipping another pet restores that pet’s settings. Preview Dot, Spike, Ring and Heart at the same position above the head, with a clear gap for head movement. When hidden, the charm contributes zero camera headroom and no input target. Put mastery in a separate small badge. Show mood through the face, hands and body even when a permanent heart happens to be equipped.
 
 | Finish | What changes | Proposed access |

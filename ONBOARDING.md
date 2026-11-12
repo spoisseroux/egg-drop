@@ -56,6 +56,7 @@ There are a lot of markdown files at the root. Most are build logs from past pas
 |---|---|
 | **This file**, then [TODO.md](TODO.md) | Current state, what's being worked on, the launch checklist |
 | [CHAO-GARDEN-DIRECTION.md](CHAO-GARDEN-DIRECTION.md) | Creative direction for the babies, garden and economy |
+| [PET-STYLE-GUIDE.md](PET-STYLE-GUIDE.md) | How pets look (the plush Bear is the reference), the two-colour rule, what comes from eggs, rig conventions |
 | [ART-HANDOFF.md](ART-HANDOFF.md) | How 3D assets are made for this game: Blender setup, pivots, scale, Roblox materials |
 | [AGENTS.md](AGENTS.md) | Rules for AI agents working in the repo |
 | [PLAY-BUILD.md](PLAY-BUILD.md) (top entry only) | What is actually published |
