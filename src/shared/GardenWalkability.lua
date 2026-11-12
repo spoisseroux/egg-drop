@@ -1,4 +1,6 @@
 -- Explicit authored supports, never inferred from a water/rock ray hit.
+-- The 'wet' list also carries GardenBlockedRegion footprints (terraces, ramps,
+-- pillars): pets never cross those, even on a span.
 local World=require(script.Parent.HollowWorldLayout)
 local Walk={}
 function Walk.spanAt(position,inset)
@@ -21,6 +23,7 @@ function Walk.segmentAllowed(from,to,wet)
   local a,b=water.CFrame:PointToObjectSpace(from),water.CFrame:PointToObjectSpace(to)
   local lo,hi=interval(a.X,b.X,-water.Size.X*.5-.35,water.Size.X*.5+.35,0,1)
   if lo then lo,hi=interval(a.Z,b.Z,-water.Size.Z*.5-.35,water.Size.Z*.5+.35,lo,hi)end
+  if lo and water:GetAttribute("GardenBlockedRegion")==true then return false end
   if lo then
    local enter,leave=from:Lerp(to,lo),from:Lerp(to,hi)
    local span,id=Walk.spanAt(enter)

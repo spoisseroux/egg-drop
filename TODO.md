@@ -7,7 +7,7 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 Keep this list current: add an item when work starts, move it to done when it lands.
 
 - **Overnight systems run, 2026-11-11 — done:** store backend `0d5798e`, Get Stars shop + analytics `3b82189`. Not published. Next systems step needs Spencer's product/pass ids.
-- **Claude:** greybox approved and exported as a Blender underlay. Garden swap scoped (section 2); waiting on Spencer's go-ahead.
+- **Claude:** garden swap done (greybox around the hub, pets ground-only, multi-bridge routing). Next garden step waits on Spencer's Blender kit.
 - [x] Onboarding doc for new collaborators: [ONBOARDING.md](ONBOARDING.md) (2026-11-11).
 - **Spencer:** add the new collaborator to the GitHub repo and as a Roblox collaborator on universe 10774758591.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
@@ -62,15 +62,11 @@ The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGarde
 - [x] Walk test with an R15 avatar (`artifacts/garden-greybox-2026-11-11/WALK.md`): ramps, terraces and creek pass; pillars were too hard and are now 10-stud tops with 3.5-stud rises.
 - [x] Spencer approved the greybox layout (2026-11-11). Phone camera framing not yet checked.
 - [x] Greybox exported as a Blender underlay: `assets/art-source/environment/garden-greybox.obj` (+ `.mtl`, `garden-greybox-underlay.blend` with a `GreyboxUnderlay` collection). Studs, centred on the garden origin, checked in Blender against the 5.5 avatar reference. Regenerate with `node scripts/greybox-to-obj.js assets/art-source/environment/greybox-parts.json assets/art-source/environment`.
-- [ ] **Garden swap (scoped 2026-11-11, not started).** Today the hub is `HollowWorldLayout` (flat 160 × 176 lawn at FloorTop 4), drawn by `LoungeArt`/`LoungeGardenArt`/`LoungeSpringArt`, and pets walk it via `GardenLayout`, `GardenWalkability` (authored spans: one bridge, one rest nook) and `GardenPathPlanner` (one bridge detour). Seven modules and about 15 specs read those coordinates. Plan:
-  1. New layout data for the greybox (floor, water rectangles, bridge span, station anchors, rest anchors, routes, lamps) replacing `HollowWorldLayout` values, at the real world origin.
-  2. Build the greybox ground from that data in place of the old lawn/spring art; keep stations, handheld bench and day/night lighting. Players spawn at the arrival point facing north.
-  3. Pets stay on the ground level and cross the creek by the bridge (the planner already does one bridge detour). Terraces, pillars and the ledge stay player-only for v1, so the rest nook moves to ground level. Proposed, needs Spencer's OK.
-  4. Update the coordinate specs (WorldRoutes, GardenWalkability, GardenBridgeFollow, GardenNook*, SpringMeadow*, GardenToy*, GardenState, PetLoopResetGarden).
-  5. Studio evidence: walk, pet follow across the bridge, toy and rest, phone framing.
+- [x] **Garden swap (2026-11-11).** The approved greybox landscape now surrounds the unchanged hub (stations, hatch tree, spawn, toy lawn, nook, spring meadow) via `HollowWorldLayout.GreyboxOffset`; built by `src/server/LoungeGreyboxArt.lua`. Old outer scenery (hills, tree line, lantern pool/boardwalk, orchard glade, boundary ring, MeadowGround, spring distant hills) removed. Floor 241 × 200; west creek crossed by a new `WestBridge` span. Pets stay on the ground: terraces, ramps, pillars and ledge carry invisible `GardenBlockedRegion` footprints, and an owner standing above the ground leaves the pet at its last ground anchor. The planner tries every bridge, then a small visibility graph around water and blocked regions (multi-bridge, around the pond). Evidence: `artifacts/garden-swap-2026-11-11/VERIFY.md`.
+- [ ] Garden swap follow-ups: water is a flat sheet players can walk across (sink it in the art pass); terrace edges still blend into the lawn from above; the place's default `Baseplate` was moved to `ServerStorage.Baseplate_RetiredByGreybox` in Studio Edit (decide to delete before publish); phone camera framing not checked; the pet route planner keeps no hysteresis between equal-length bridges.
 - [ ] Spencer models the final kit in Blender from the approved greybox.
 - [ ] Load the environment as authored assets instead of code-built parts; keep day/night lighting.
-- [ ] Rebuild garden walkability and pet path data (`GardenLayout`, `GardenWalkability`, `GardenPathPlanner`) for the new ground.
+- [x] Rebuild garden walkability and pet path data for the greybox ground (garden swap, 2026-11-11). Redo once the authored kit replaces the greybox.
 - [ ] Original skybox, sea plane and phone performance budget.
 
 ### 3. 3D assets (Spencer models, Claude integrates; see ART-HANDOFF.md)

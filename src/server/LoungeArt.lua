@@ -2,6 +2,7 @@ local Lighting = game:GetService("Lighting")
 local WorldLayout=require(game:GetService("ReplicatedStorage").Shared.HollowWorldLayout)
 local GardenArt=require(script.Parent.LoungeGardenArt)
 local SpringArt=require(script.Parent.LoungeSpringArt)
+local GreyboxArt=require(script.Parent.LoungeGreyboxArt)
 
 local Art = {}
 local grass = Color3.fromHex("#72B85B")
@@ -118,37 +119,14 @@ function Art.build(room, part)
 	grade.Saturation = 0.015
 	grade.TintColor = Color3.fromHex("#F1F7FF")
 
-	local ground = box("Floor", 0, WorldLayout.FloorTop-.5, WorldLayout.FloorCenterZ, WorldLayout.Width, 1, WorldLayout.Depth, grass, true)
+	local ground = box("Floor", WorldLayout.FloorCenterX, WorldLayout.FloorTop-.5, WorldLayout.FloorCenterZ, WorldLayout.Width, 1, WorldLayout.Depth, grass, true)
 	ground:SetAttribute("PlayableWidth", WorldLayout.Width)
 	ground:SetAttribute("PlayableDepth", WorldLayout.Depth)
-	box("MeadowGround", 0, 2.85, -24, 400, 0.85, 280, grass)
 	for _, side in ipairs({ -1, 1 }) do
-		box("GardenBoundary", side * (WorldLayout.Width*.5-.4), 12, WorldLayout.FloorCenterZ, 0.8, 16, WorldLayout.Depth, grass, true).Transparency = 1
-		box("GardenBoundary", 0, 12, WorldLayout.FloorCenterZ+side * (WorldLayout.Depth*.5-.4), WorldLayout.Width, 16, 0.8, grass, true).Transparency = 1
+		box("GardenBoundary", WorldLayout.FloorCenterX+side * (WorldLayout.Width*.5-.4), 24, WorldLayout.FloorCenterZ, 0.8, 40, WorldLayout.Depth, grass, true).Transparency = 1
+		box("GardenBoundary", WorldLayout.FloorCenterX, 24, WorldLayout.FloorCenterZ+side * (WorldLayout.Depth*.5-.4), WorldLayout.Width, 40, 0.8, grass, true).Transparency = 1
 	end
-	for _, hill in ipairs({
-		{ -32, -21, 35, 11, 28 }, { -16, -31, 31, 14, 25 }, { 11, -34, 34, 12, 26 },
-		{ 33, -29, 38, 19, 32 }, { 19, -53, 66, 22, 33 }, { -39, -49, 45, 23, 38 },
-		{ 43, 2, 29, 12, 33 }, { -43, 0, 29, 8, 31 },
-		{ -69, -62, 74, 27, 49 }, { -32, -87, 65, 25, 44 }, { 29, -90, 69, 29, 54 }, { 75, -64, 67, 26, 50 },
-	}) do
-		local slope = oval("MeadowHill", hill[1] * 2.5, 1.5, hill[2] * 2.5, hill[3], hill[4], hill[5],
-			if hill[2] < -40 then Color3.fromHex("#799C9D") else Color3.fromHex("#8BA562"))
-		slope.Material = Enum.Material.Grass
-	end
-	for index = 1, 13 do
-		local x = -58 + (index - 1) * 9.5
-		local z = -53 - index % 3 * 4.1
-		local y = if math.abs(x) > 22 then 6 else 5
-		limb("DistantTrunk", Vector3.new(x, y - 1, z), Vector3.new(x, y + 4, z), 0.72, bark)
-		local distant = oval("DistantCrown", x, y + 4.2, z, 5.6, 4.6, 4.5, leaf[index % #leaf + 1])
-		distant.Material = Enum.Material.Grass
-		if index % 3 ~= 0 then
-			oval("DistantCrown", x + 1.44, y + 4.61, z - 0.8, 3.65, 3.3, 4,
-				leaf[(index + 1) % #leaf + 1]).Material = Enum.Material.Grass
-		end
-	end
-
+	-- The approved greybox landscape (LoungeGreyboxArt) replaces the old outer hills and tree line.
 	-- A curved route links the player entrance, nest, and field stations.
 	for index, tile in ipairs({
 		{ 2.5, 13.3 }, { 1.1, 11.5 }, { -0.4, 9.7 }, { -1.1, 7.8 }, { -0.8, 5.8 },
@@ -405,6 +383,8 @@ function Art.build(room, part)
 	for _, position in ipairs({ { -38, -29 }, { -28, -27 }, { -43, 13 }, { -38, 31 }, { 44, -34 }, { 48, 29 }, { -14, 36 } }) do
 		local x, z = position[1], position[2]
 		local height = random:NextNumber(5.2, 7.4)
+		-- (48, 29) now sits under the greybox low-terrace ramp; keep the seeded draw.
+		if x == 48 and z == 29 then continue end
 		local trunk = limb("OrchardTrunk", Vector3.new(x, 4, z), Vector3.new(x + 0.3, 4 + height, z), 0.85, bark)
 		trunk.Material, trunk.CanCollide, trunk.CanQuery = Enum.Material.Wood, true, true
 		for j = 1, 3 do
@@ -445,14 +425,6 @@ function Art.build(room, part)
 		box("MeadowBridgeRail", 20.5, 5.13, z, 7.4, 0.15, 0.15, wood)
 		for _, x in ipairs({ 17.1, 20.5, 23.9 }) do box("MeadowBridgePost", x, 4.7, z, 0.2, 1.2, 0.2, bark) end
 	end
-	for i = 0, 11 do
-		local angle = i * math.pi * 2 / 12
-		local x, z = math.cos(angle) * (WorldLayout.Width*.5-5), WorldLayout.FloorCenterZ+math.sin(angle) * (WorldLayout.Depth*.5-5)
-		shrub(x, z, 2.3)
-		plant(x - 1.2, 4, z + 0.9, 2.1)
-		oval("BoundaryStone", x + 0.6, 4.4, z - 0.5, 2.5, 1.1, 1.7, stone:Lerp(moss, 0.2))
-	end
-
 	-- Raise the complete service assemblies; supports keep their original floor seats.
 	local serviceLift=1.10
 	for _, station in ipairs({
@@ -571,65 +543,6 @@ function Art.build(room, part)
 		end
 	end
 
-	-- The expansion is appended after the original seeded hub draws. Every
-	-- route assembly remains authored at human scale and the same ground level.
-	local function routeTrail(points)
-		for i=2,#points do
-			trail(points[i-1],points[i],math.max(3,math.ceil((points[i]-points[i-1]).Magnitude/2)))
-		end
-	end
-	routeTrail(WorldLayout.Routes.Orchard)
-	routeTrail(WorldLayout.Routes.OrchardReturn)
-	routeTrail(WorldLayout.Routes.EastReturn)
-	trail(Vector2.new(41,-28),WorldLayout.Routes.Boardwalk[1],3)
-	waterShape("LanternPool",61,4.038,-17,25,21,-12,waterEdge)
-	waterShape("LanternPoolDepth",61,4.069,-17,22.5,18.5,-12,waterDeep)
-	local function boardwalk(a,b,openSide)
-		local from,to=Vector3.new(a.X,4.11,a.Y),Vector3.new(b.X,4.11,b.Y)
-		local length=(to-from).Magnitude
-		local cf=CFrame.lookAt((from+to)*.5,to)
-		local deck=box("LanternBoardwalkDeck",0,0,0,WorldLayout.BoardwalkWidth,.22,length+.8,wood,true)
-		deck.CFrame=cf;deck.Material=Enum.Material.WoodPlanks
-		deck:SetAttribute("HollowRouteSolid",true)
-		for _,side in ipairs({-1,1})do
-			if side==openSide then continue end
-			-- Open the final two studs at each joint for both walking lanes.
-			-- A full-length inside rail otherwise clips the turning shoulder.
-			local railLength=math.max(1,length-4)
-			local rail=box("LanternBoardwalkRail",0,0,0,.16,.15,railLength,bark,true)
-			rail.CFrame=cf*CFrame.new(side*(WorldLayout.BoardwalkWidth*.5-.15),2.05,0)
-			for _,endSide in ipairs({-1,1})do
-				local post=box("LanternBoardwalkPost",0,0,0,.23,2.25,.23,bark,true)
-				post.CFrame=cf*CFrame.new(side*(WorldLayout.BoardwalkWidth*.5-.15),1.0,endSide*railLength*.5)
-			end
-		end
-	end
-	for i=2,#WorldLayout.Routes.Boardwalk do
-		-- The return trail enters the northwest edge of the second span.
-		-- Leave that whole edge open rather than fencing across a walking route.
-		boardwalk(WorldLayout.Routes.Boardwalk[i-1],WorldLayout.Routes.Boardwalk[i],if i==3 then 1 else nil)
-	end
-	boardwalk(WorldLayout.Routes.EastReturn[1],WorldLayout.Routes.EastReturn[2])
-	local outlook=box("LanternLookoutDeck",64,4.11,-14,10,.22,9,wood,true)
-	outlook.Material=Enum.Material.WoodPlanks;outlook:SetAttribute("HollowRouteSolid",true)
-	-- A low, broad landing is the landmark; paired lamps reveal its return gap.
-	box("LanternLookoutSeat",68,4.85,-14,1.1,.24,3.5,wood,true)
-	for _,z in ipairs({-15.2,-12.8})do box("LanternLookoutSeatLeg",68,4.42,z,.5,.85,.5,bark,true)end
-	oval("OrchardGladeMoss",-59,4.02,-34,15,.035,13,grass:Lerp(leaf[3],.22)).CastShadow=false
-	for i,tree in ipairs({{-65,-41,6.8},{-55,-43,7.7},{-69,-29,6.1},{-51,-38,7.0}})do
-		local x,z,h=table.unpack(tree)
-		local trunk=limb("GladeOrchardTrunk",Vector3.new(x,4,z),Vector3.new(x+.35,4+h,z),.8,bark)
-		trunk.Material,trunk.CanCollide,trunk.CanQuery=Enum.Material.Wood,true,true
-		for j=1,3 do
-			local angle=j*math.pi*2/3+i*.4
-			oval("GladeOrchardCrown",x+math.cos(angle)*1.3,4+h+j*.24,z+math.sin(angle)*1.1,
-				5.4+i*.22,3.3+j*.18,4.7,leaf[(i+j)%#leaf+1]).Material=Enum.Material.Grass
-		end
-		flower(x+.9,z+.6,1.1,Color3.fromHex("#E9DAAE"))
-	end
-	box("GladeBenchSeat",-64,4.85,-34,1.2,.24,4.6,wood,true)
-	box("GladeBenchBack",-64.65,5.4,-34,.16,.8,4.6,bark,true)
-	for _,z in ipairs({-35.5,-32.5})do box("GladeBenchLeg",-64,4.42,z,.5,.85,.5,bark,true)end
 	for i,point in ipairs(WorldLayout.Lamps)do
 		local x,z=point.X,point.Y
 		box("HollowLampStand",x,4.7,z,.20,1.4,.20,bark)
@@ -645,9 +558,6 @@ function Art.build(room, part)
 			light:SetAttribute("HollowLamp",true);light.Parent=glass
 		end
 	end
-	-- One small fork marker; the destinations introduce no interaction prompts.
-	local forkSign=box("HollowRouteFork",43,5.2,-22,.95,1.8,.16,bark)
-	sign(forkSign,"Pool  →")
 	local function ambient(name,kind,position,size,tint,phase,period,amplitude,transparency)
 		local bit=box("HollowAmbient_"..name,position.X,position.Y,position.Z,size.X,size.Y,size.Z,tint)
 		bit.CastShadow=false;bit.Transparency=transparency
@@ -662,12 +572,13 @@ function Art.build(room, part)
 	end
 	GardenArt.build(room,part)
     SpringArt.build(room,part)
+	GreyboxArt.build(room,part)
 	for i=1,5 do
-		ambient("Water"..i,"water",Vector3.new(52+i*2.7,4.13,-25+(i%3)*5.0),Vector3.new(1.3,.025,.09),
+		ambient("Water"..i,"water",Vector3.new(-86+(i%2)*4,4.13,-12+i*9),Vector3.new(1.3,.025,.09),
 			Color3.fromHex("#D2EBDB"),(i-1)/6,7+i%3,Vector3.new(.35,0,0),.42)
-		ambient("Leaf"..i,"leaf",Vector3.new(-65+i*1.7,5.1+(i%3)*.5,-38+(i%2)*9),Vector3.new(.32,.045,.19),
+		ambient("Leaf"..i,"leaf",Vector3.new(-40+i*1.7,5.1+(i%3)*.5,-30+(i%2)*9),Vector3.new(.32,.045,.19),
 			Color3.fromHex("#C8DA82"),(i-1)/6,8+i%3,Vector3.new(.35,.20,.18),.12)
-		ambient("Firefly"..i,"firefly",Vector3.new(56+(i%3)*4,5.2+(i%2)*.6,-12+(i%2)*5),Vector3.new(.10,.10,.10),
+		ambient("Firefly"..i,"firefly",Vector3.new(-72+(i%3)*4,5.2+(i%2)*.6,26+(i%2)*5),Vector3.new(.10,.10,.10),
 			Color3.fromHex("#FFE2A0"),(i-1)/6,6+i%3,Vector3.new(.18,.24,.14),.22)
 	end
 end

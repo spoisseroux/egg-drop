@@ -52,37 +52,23 @@ return function(server,artSource)
 	end
 	local success,problem=pcall(function()
 		art.build(room,part)
-		test("floor and four boundaries align with the expanded collision envelope",function()
-			local floor=room.Floor;assert(floor.CanCollide and floor.CanQuery and floor.Size==Vector3.new(160,1,176))
-			assert(floor.Position==Vector3.new(0,3.5,24)and floor.Position.Y+floor.Size.Y*.5==4 and floor:GetAttribute("PlayableWidth")==160 and floor:GetAttribute("PlayableDepth")==176)
+		test("floor and four boundaries align with the greybox collision envelope",function()
+			local floor=room.Floor;assert(floor.CanCollide and floor.CanQuery and floor.Size==Vector3.new(241,1,200))
+			assert(floor.Position==Vector3.new(-10.5,3.5,25)and floor.Position.Y+floor.Size.Y*.5==4 and floor:GetAttribute("PlayableWidth")==241 and floor:GetAttribute("PlayableDepth")==200)
 			local boundaries=0
 			for _,p in ipairs(parts)do if p.Name=="GardenBoundary"then
-				boundaries+=1;assert(p.CanCollide and p.Transparency==1)
-				if p.Size.X<1 then assert(math.abs(math.abs(p.Position.X)-79.6)<.001 and p.Size.Z==176 and p.Position.Z==24)
-				else assert(math.abs(math.abs(p.Position.Z-24)-87.6)<.001 and p.Size.X==160)end
+				boundaries+=1;assert(p.CanCollide and p.Transparency==1 and p.Size.Y==40)
+				if p.Size.X<1 then assert(math.abs(math.abs(p.Position.X+10.5)-120.1)<.001 and p.Size.Z==200 and p.Position.Z==25)
+				else assert(math.abs(math.abs(p.Position.Z-25)-99.6)<.001 and p.Size.X==241 and p.Position.X==-10.5)end
 			end end;assert(boundaries==4)
 		end)
-		test("boardwalk center and both shoulders have authored solids through former boundary and every joint",function()
-			local decks={};for _,p in ipairs(parts)do if p:GetAttribute("HollowRouteSolid")then table.insert(decks,p);assert(p.CanCollide and p.CanQuery)end end
-			local routes={layout.Routes.Boardwalk,{layout.Routes.EastReturn[1],layout.Routes.EastReturn[2]}}
-			for _,route in ipairs(routes)do for i=2,#route do
-				local a,b=route[i-1],route[i];local delta=b-a;local normal=Vector2.new(-delta.Y,delta.X).Unit
-				for step=0,math.ceil(delta.Magnitude*2)do
-					local center=a:Lerp(b,math.min(1,step/(delta.Magnitude*2)))
-					for _,side in ipairs({-2.2,0,2.2})do
-						local supported=false;for _,deck in ipairs(decks)do if contains(deck,center+normal*side)then supported=true;break end end
-						assert(supported,"unsupported boardwalk shoulder at "..tostring(center))
-					end
-				end
-			end end
-			local banked=0
-			for _,p in ipairs(parts)do if p:GetAttribute("HollowBankPlant")then
-				banked+=1
-				for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
-					local corner=p.CFrame:PointToWorldSpace(Vector3.new(x*p.Size.X*.5,y*p.Size.Y*.5,z*p.Size.Z*.5))
-					for _,deck in ipairs(decks)do assert(not contains(deck,Vector2.new(corner.X,corner.Z)),p.Name.." still protrudes onto boardwalk")end
-				end end end
-			end end
+		test("greybox landscape replaces the lantern boardwalk, orchard glade and outer hills",function()
+			for _,p in ipairs(parts)do
+				assert(not p:GetAttribute("HollowRouteSolid"),"retired boardwalk solid "..p.Name)
+				for _,name in ipairs({"LanternPool","LanternBoardwalkDeck","GladeBenchSeat","MeadowHill","DistantCrown","BoundaryStone","HollowRouteFork"})do assert(p.Name~=name,"retired part "..name)end
+			end
+			assert(room:FindFirstChild("GreyboxTerraceLow")and room:FindFirstChild("GreyboxBridgeSupport")and room:FindFirstChild("GreyboxPond"))
+			local banked=0;for _,p in ipairs(parts)do if p:GetAttribute("HollowBankPlant")then banked+=1 end end
 			assert(banked==13,"expected all six shrub lobes and seven flower parts banked together")
 		end)
 		test("all route centerlines stay inside ground and clear above-ground colliders",function()
@@ -113,23 +99,13 @@ return function(server,artSource)
 			end;assert(tree and bridge)
 			local support=room.GardenBridgeSupport;assert(support.CanCollide and support.CanQuery and support.Size.Z==4.5 and support:GetAttribute("GardenWalkableSpan")=="PrimaryBridge")
 			assert(room.NookSupport.CanCollide and room.NookSupport:GetAttribute("GardenWalkableSpan")=="RestNook")
-			assert(not room.ReturnGateEdge.CanCollide and not room.ReturnGateEdge.CanQuery)
+			-- The shared-toy return gate was retired with the shared world ball (v389).
+			assert(not room:FindFirstChild("ReturnGateEdge"))
 		end)
-        test("one return gate and two flush landing stones derive from the bench-apron toy anchors",function()
+        test("bench-apron toy anchors stay where the hub expects them",function()
             local toy=gardenLayout.Toy
             assert(near(toy,Vector3.new(-2,4.025,17.5)))
             assert(near(gardenLayout.ToyWest,toy+Vector3.new(-2.4,0,0))and near(gardenLayout.ToyEast,toy+Vector3.new(2.4,0,0)))
-            local gate=room.ReturnGateEdge;assert(math.abs(gate.Position.X-toy.X)<.0001 and math.abs(gate.Position.Z-toy.Z)<.0001 and not gate.CanCollide and not gate.CanQuery)
-            local glass,stones=0,{}
-            for _,p in ipairs(parts)do
-                if p.Name=="ReturnGateGlass"then glass+=1;assert(math.abs(p.Position.X-toy.X)<.0001 and math.abs(math.abs(p.Position.Z-toy.Z)-1.35)<.0001 and not p.CanCollide and not p.CanQuery)
-                elseif p.Name=="ReturnSlotStone"then table.insert(stones,p);assert(not p.CanCollide and not p.CanQuery)end
-            end
-            assert(glass==2 and #stones==2)
-            for _,slot in ipairs({gardenLayout.ToyWest,gardenLayout.ToyEast})do
-                local matched=0;for _,p in ipairs(stones)do if Vector2.new(p.Position.X-slot.X,p.Position.Z-slot.Z).Magnitude<.0001 then matched+=1;assert(math.abs(p.Position.Y+p.Size.Y*.5-slot.Y)<.0001)end end
-                assert(matched==1)
-            end
         end)
         test("toy reach excludes every spawn and station while both natural owner lanes stay clear",function()
             local toy=gardenLayout.Toy
@@ -173,7 +149,7 @@ return function(server,artSource)
                 end
             end end
             assert(crossings==2,"both independent branches must cross old Z64")
-            assert(contains(room.Floor,Vector2.new(-10,110))and not contains(room.Floor,Vector2.new(-10,113)))
+            assert(contains(room.Floor,Vector2.new(-10,124))and not contains(room.Floor,Vector2.new(-10,126)))
         end)
         test("spring lawn and rest remain supported and clear while the actual wet basin is behind them",function()
             local spring=layout.Spring;local water=room.SpringWater

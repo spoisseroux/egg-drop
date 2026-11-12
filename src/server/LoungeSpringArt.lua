@@ -92,8 +92,7 @@ function Art.build(room,part)
   oval("GrassBrow",patch,Vector3.new(4.8,.5,3.1),"427E58")
   oval("GrassTip",patch+Vector3.new(.7,.16,.2),Vector3.new(2.7,.6,2.2),"A4CA66")
  end
- oval("DistantHill",Vector3.new(-38,0,143),Vector3.new(128,26,48),"467E73").CastShadow=false
- oval("DistantHill",Vector3.new(45,-.5,148),Vector3.new(120,24,54),"547E80").CastShadow=false
+ -- The south distant hills were retired by the greybox sea and rim (2026-11-11).
  oval("WarmAccent",Vector3.new(-23.8,4.35,84.5),Vector3.new(.8,.7,.65),"D58B72")
  oval("BlueAccent",Vector3.new(11.4,4.35,82.5),Vector3.new(.75,.65,.7),"779FC9")
 end

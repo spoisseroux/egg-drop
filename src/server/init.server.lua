@@ -126,7 +126,7 @@ gardenScene=function()
   wanderScene={room=room,wet={},stations={},solids={}}
   for _,node in ipairs(room:GetDescendants())do
    if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"then table.insert(wanderScene.solids,node)end
-   if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
+   if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
  end
@@ -197,6 +197,19 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 		local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
 		return hit~=nil and math.abs(hit.Position.Y+.025-target.Y)<.3
 	end})
+-- Pets stay on the ground level: an owner on a terrace, ramp, pillar, ledge or
+-- bench leaves the pet at the last ground anchor (bridges and other authored
+-- spans still count as ground). Kept out of petAnchor so care reach is unchanged.
+local function groundAnchor(board,anchor)
+	if anchor and(GardenWalkability.spanAt(anchor)~=nil or anchor.Y<=GardenLayout.FloorY+.6)then
+		board.groundAnchor=anchor
+		return anchor
+	end
+	-- Above the ground with no remembered spot yet: start on the open lawn, never
+	-- under the owner inside a terrace or ledge footprint.
+	if anchor and not board.groundAnchor then return GardenLayout.Lawn end
+	return board.groundAnchor
+end
 local function gardenInput(board)
 	local character=board.player.Character
 	local root=character and character:FindFirstChild("HumanoidRootPart")
@@ -208,7 +221,7 @@ local function gardenInput(board)
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
-		anchor=if root then petAnchor({root=root,position=position})or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
+		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}))or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
 		yaw=if root then math.atan2(root.CFrame.LookVector.X,root.CFrame.LookVector.Z)else 0,
 		charmVisible=not preferences[petId] or preferences[petId].charmVisible~=false}
 end
@@ -567,7 +580,7 @@ local function addPlayer(player)
 		board.firstSession:advance(1)
 	end
 	local function spawn(character)
-		board.characterGeneration=(board.characterGeneration or 0)+1
+		board.characterGeneration=(board.characterGeneration or 0)+1;board.groundAnchor=nil
 		character:SetAttribute("GardenCharacterId",board.characterGeneration)
 		board.folder:SetAttribute("GardenCharacterId",board.characterGeneration)
 		Lounge.spawn(character, slot, player, function()
