@@ -1,6 +1,8 @@
 -- Continuous owner walk around both dry loop directions; actual production math.
 return function(server)
  local Shared=game.ReplicatedStorage.Shared;local World=require(Shared.HollowWorldLayout)
+ -- World 1 v7 (2026-11-12) has no Spring Meadow basin or loop; this spec covers the legacy world only.
+ if not World.Spring then return{passed=0,cases={},skipped="no Spring Meadow in World "..tostring(World.WorldVersion)}end
  local A=require(Shared.GardenActivity);local W=require(Shared.GardenWalkability);local P=require(Shared.GardenPathPlanner);local G=require(server.GardenState)
  local holder=Instance.new("Folder");local water=Instance.new("Part");water.Size=World.Spring.BasinSize;water.CFrame=CFrame.new(World.Spring.BasinCenter);water.Parent=holder
  local cases,metrics={},{}

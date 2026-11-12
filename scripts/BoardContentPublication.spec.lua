@@ -4,7 +4,7 @@ return function(server,client,hostSource)
  local Config=require(game.ReplicatedStorage.Shared.BoardConfig)
  local Http=game:GetService("HttpService");local Sim=require(server.BoardSimulation);local Gate=require(client.BoardContentGate)
  assert(type(hostSource)=="string","pass current init.server source as argument three")
- local first=assert(hostSource:find("local function syncVisuals(board)",1,true));local last=assert(hostSource:find("local function reset(board, preset)",first,true))
+ local first=assert(hostSource:find("local function syncVisuals(board)",1,true));local last=assert(hostSource:find("local function reset(board",first,true))
  local install=assert(loadstring("return function(Config,HttpService)\n"..hostSource:sub(first,last-1).."\nreturn syncVisuals\nend"))()
  local publish=install(Config,Http);local folder=Instance.new("Folder");folder.Name="_BoardContentPublication";folder.Parent=workspace
  local board={folder=folder,parts={}};local cases={};local function test(name,f)f();table.insert(cases,name)end

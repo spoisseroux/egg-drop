@@ -30,7 +30,7 @@ return function(server)
  end)
  test("actual nearby owner discovers nook even when lateral follow anchor is farther than4",function()
   local now=0;local input={alive=true,owned=true,mode="Room",petId="pip",characterId=1,petGeneration=1,
-   position=Vector3.new(24.181,7.148,-13.796),anchor=Vector3.new(21.5,4.38,-11.35),yaw=0}
+   position=L.Nook+Vector3.new(-1.819,2.973,1.704),anchor=L.Nook+Vector3.new(-4.5,.205,4.15),yaw=0} -- relative to the nook (World v7 moved it)
   assert(Vector2.new(input.anchor.X-L.Nook.X,input.anchor.Z-L.Nook.Z).Magnitude>4)
   local g=Garden.new({now=function()return now end,validWander=function(_,target)return target end});g:sync({[1]=input});now=4;g:decide()
   assert(g.actors[1].action=="nookApproach"and(A.vector(g.actors[1].to)-L.Nook).Magnitude<1e-6)

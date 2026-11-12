@@ -25,7 +25,11 @@ return function(server,hostSource)
 	local remotes=Instance.new("Folder");remotes.Name="Remotes";remotes.Parent=replicated
 	local players={PlayerAdded=signal(),PlayerRemoving=signal()}
 	local heart=signal()
-	local root={Position=Vector3.new(0,7,0),CFrame=CFrame.new(0,7,0)}
+	-- The owner stands at the same spot relative to the garden lawn in every world
+	-- (legacy: the origin). World v7 moved the lawn to (-30,27).
+	local Lawn=require(realGame.ReplicatedStorage.Shared.GardenLayout).Lawn
+	local O=Vector3.new(Lawn.X+2,7,Lawn.Z-12.5)
+	local root={Position=O,CFrame=CFrame.new(O)}
 	local humanoid={Health=100}
 	local floor={Size=Vector3.new(160,1,128),CFrame=CFrame.new(0,3.5,0)}
 	local room={FindFirstChild=function(_,name)return if name=="Floor"then floor else nil end}
@@ -38,7 +42,7 @@ return function(server,hostSource)
 	function world:Raycast(origin,direction,params)
 		c.groundCalls+=1
 		assert(params.RespectCanCollide and params.FilterType==Enum.RaycastFilterType.Include and params.FilterDescendantsInstances[1]==room)
-		assert(math.abs(origin.X-2.6)<.0001 and math.abs(origin.Z-3)<.0001,"Anchor must derive from normal server companion offset")
+		assert(math.abs(origin.X-(O.X+2.6))<.0001 and math.abs(origin.Z-(O.Z+3))<.0001,"Anchor must derive from normal server companion offset")
 		return{Position=Vector3.new(origin.X,4,origin.Z)}
 	end
 	local character={attributes={}}

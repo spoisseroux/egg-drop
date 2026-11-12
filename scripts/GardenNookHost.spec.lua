@@ -2,6 +2,9 @@
 return function(server,hostSource)
  local Shared=game.ReplicatedStorage.Shared;local W=require(Shared.GardenWalkability);local P=require(Shared.GardenPathPlanner)
  local A=require(Shared.GardenActivity);local L=require(Shared.GardenLayout);local Garden=require(server.GardenState)
+ -- The detour fixture is the legacy creek beside the legacy nook. World 1 v7 (2026-11-12) moved the
+ -- nook to a creek dais with different wet geometry; v7 walkability is covered by GardenWalkability/GardenGreyboxWorld.
+ if require(Shared.HollowWorldLayout).WorldVersion~="legacy"then return{passed=0,cases={},skipped="legacy creek fixture"}end
  local first=assert(hostSource:find("local wanderScene",1,true));local last=assert(hostSource:find("local garden = GardenState.new",first,true))
  local module=Instance.new("ModuleScript");module.Name="_NookHostFixture";module.Parent=server
  module.Source="return function(e)local workspace,GardenWalkability,GardenPathPlanner,GardenActivity,GardenLayout=e.workspace,e.walk,e.planner,e.activity,e.layout;local gardenScene\n"..hostSource:sub(first,last-1).."\nreturn validWander end"

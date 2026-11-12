@@ -135,12 +135,12 @@ return function(server, profileSource, sessionSource)
 		assert(a.status == "Ready")
 		assert(Hatching.grantStarter(a)); command(a, "ack", a.state.lastHatch.id)
 		assert(Hatching.award(a, 1, 8, summary(a)))
-		assert(a.state.nectar == 20, "first clean win + chain/score contracts: welcome6 +8 +6")
+		assert(a.state.nectar == 14, "first clean win: welcome6 +8 (contracts retired for quests, 4dae3d0)")
 		db[key].hatching.innerSentinel = { intact = true }
 		-- v1: Meadow is retired (no debit, no roll); a saved reveal receipt replaces the
 		-- old orbit hatch so the pending reveal still crosses the lease handoff.
 		local refused, why = Hatching.command(a, "hatch", "meadow", a.state.revision)
-		assert(not refused and why == "RetiredEgg" and a.state.nectar == 20 and c.randomCalls == 0)
+		assert(not refused and why == "RetiredEgg" and a.state.nectar == 14 and c.randomCalls == 0)
 		db[key].hatching.lastHatch = { id = "recovery-saved-reveal", petId = "pip", duplicate = false, family = "pip", mastery = 0, rare = false, starter = true }
 		assert(Hatching.renew(a) and a.state.lastHatch.id == "recovery-saved-reveal")
 		assert(Catalog.isOwned(a.state.inventoryMask,"foxfire_wick"),"migration lost the retained owner")
@@ -163,7 +163,7 @@ return function(server, profileSource, sessionSource)
 			end
 		end
 		assert(Close.drain(Hatching, a, payout, options(function() return A.flushOnce(profileA) end)))
-		assert(payout.saved and db[key].hatching.nectar == 32, "second win8 + final daily contract4")
+		assert(payout.saved and db[key].hatching.nectar == 22, "second win8 (quest Stars are claimed by hand)")
 		local savedRevision, writes = db[key].hatching.revision, c.profileWrites
 		deferredA()
 		assert(c.profileWrites == writes and db[key].hatching.revision == savedRevision, "delayed old flush must already be drained")
@@ -174,7 +174,7 @@ return function(server, profileSource, sessionSource)
 		assert(sessionModule(B).hydrate(profileB, b) and profileB.onSaveFailed == callback)
 		assert(profileB.sound == "Quiet" and profileB.reduced and profileB.theme == "ice" and profileB.sticker == "none"
 			and profileB.companionId == "foxfire_wick" and profileB.bestScore == 999)
-		assert(b.state.inventoryMask == Catalog.mask({ "pip", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "pip" and b.state.nectar == 32)
+		assert(b.state.inventoryMask == Catalog.mask({ "pip", "foxfire_wick" }) and b.state.lastHatch.id == revealId and b.state.lastHatch.petId == "pip" and b.state.nectar == 22)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
 		command(b, "ack", revealId)
 		local balance, marks = b.state.nectar, b.state.mastery.wick
@@ -182,7 +182,7 @@ return function(server, profileSource, sessionSource)
 		assert(b.state.nectar == balance and b.state.mastery.wick == marks and c.randomCalls == 0, "reward replay must not credit twice or reroll")
 		assert(Close.drain(Hatching, b, nil, options(function() return B.flushOnce(profileB) end)))
 		local again = Hatching.load(id, profileB, adapter("C"))
-		assert(again.status == "Ready" and again.state.lastHatch == nil and again.state.nectar == 32 and c.randomCalls == 0)
+		assert(again.status == "Ready" and again.state.lastHatch == nil and again.state.nectar == 22 and c.randomCalls == 0)
 		assert(db[key].outerSentinel.intact and db[key].hatching.innerSentinel.intact)
 	end)
 

@@ -1,6 +1,8 @@
 -- Actual cached host validator on the shifted floor; controlled detached rays.
 return function(server,hostSource)
  local Shared=game.ReplicatedStorage.Shared;local World=require(Shared.HollowWorldLayout)
+ -- World 1 v7 (2026-11-12) has no Spring Meadow basin or loop; this spec covers the legacy world only.
+ if not World.Spring then return{passed=0,cases={},skipped="no Spring Meadow in World "..tostring(World.WorldVersion)}end
  local W=require(Shared.GardenWalkability);local P=require(Shared.GardenPathPlanner);local A=require(Shared.GardenActivity)
  local L=require(Shared.GardenLayout);local G=require(server.GardenState)
  local first=assert(hostSource:find("local wanderScene",1,true));local last=assert(hostSource:find("local garden = GardenState.new",first,true))

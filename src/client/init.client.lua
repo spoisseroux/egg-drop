@@ -2115,6 +2115,8 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
   picker:show({selected=clientUI.pickedHeat or board:GetAttribute("NextHeat"),pays=if ok then pays else nil,
    wallet=nurseryState and nurseryState.nectar or 0,goal=clientUI.fieldView and not clientUI.fieldView.empty and clientUI.fieldView.title or nil,
    quest=clientUI.questLine()})
+  -- An open quest log covers the picker (both are translucent LCD layers).
+  if log.visible then picker.overlay.layer.Visible=false end
  else picker:hide()end
 end
 clientUI.heatCallbacks.select=function(key)clientUI.pickedHeat=key;audio:play("aim",1.1,.35)end
@@ -2127,6 +2129,8 @@ function clientUI.openQuestLog(tab)
  if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or isPickerOpen()or gameMenu.shade.Visible or nurseryView:isOpen()or clientUI.isHueOpen()then return false end
  clearPlayInputs()
  clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab)
+ -- Both are translucent LCD layers: the log hides the picker under it until it closes.
+ if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=false end
  if not board:GetAttribute("RoundOver")then request:FireServer("pause",true)end
  if updateHud then task.defer(updateHud)end
  return true
@@ -2134,6 +2138,7 @@ end
 function clientUI.closeQuestLog()
  if not clientUI.questLog.visible then return false end
  clientUI.questLog:hide();request:FireServer("pause",false)
+ if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=true end
  clientUI.accepted("back");if updateHud then task.defer(updateHud)end
  return true
 end
