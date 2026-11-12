@@ -169,12 +169,23 @@ A blocked item is **hidden, never unequipped**. It stays owned and selected, and
 Common to all of them: one material per mesh, a UV map, smooth shading, origin on the anchor, modelled on the Bear in `pet-bear-attachments.blend`, and named so the importer can find it. Budget: a full outfit should add no more than about 800 triangles to a pet.
 
 **Shirts (and never pants).**
-- Start from a copy of the shared `Body` mesh. Push it out 0.024 along its normals to make a shell.
-- Cut the hem with a flat plane at body-local z = −0.10 (just above the legs) and the collar at z = +0.25. The hem never goes lower. There are no pants, shorts, skirts or shoes that cover the leg.
-- Sleeves are **separate meshes**, `Shirt_<Name>_SleeveL` and `_SleeveR`, parented to HandL and HandR. That way they swing with the arms. A short sleeve runs 0.135 down the arm, radius 0.085 at the shoulder to 0.104 at the cuff.
-- Parent the shell to Torso. Channel `Body`, slot `Shirt`.
-- Because every pet shares the Bear's body, one shirt fits every pet. Do not sculpt a shirt to one species.
-- Placeholder: `PetBear__Shirt_Tee` (108 triangles) plus two 32-triangle sleeves.
+- A shirt is **always three meshes**: a torso and two sleeves. Never ship a one-piece shirt. The arms move on their own channels, so a one-piece shell lets them poke through.
+
+  | Mesh | Channel | Anchor (origin) | Slot |
+  |---|---|---|---|
+  | `Shirt_Torso` | Body | Torso | Shirt |
+  | `Shirt_SleeveL` | HandL | HandL (the shoulder) | Shirt |
+  | `Shirt_SleeveR` | HandR | HandR (the shoulder) | Shirt |
+
+  The manifest lists them under `slots.Shirt.pieces`. All three share one item id through the `variant` property (`tee`), and are shown and hidden together.
+- **Torso.** Start from a copy of the shared `Body` mesh. Push it out 0.024 along its normals to make a shell. Cut the hem with a flat plane at body-local z = −0.10 (just above the legs) and the collar at z = +0.25. The hem never goes lower. There are no pants, shorts, skirts or shoes that cover the leg.
+- **No armholes.** Leave the torso shell closed behind the arms. The sleeves pass through it, cloth through cloth in one colour, so no gap can open when an arm turns.
+- **Sleeves.** Start from a copy of that side's arm mesh (`HandL`, `HandR`), with the origin on the shoulder anchor. Push it out 0.020 along its normals, so the sleeve wraps the arm and turns with it.
+- **Cuff.** Cut the sleeve with a slanted plane. On the outside of the arm the sleeve is short (about 0.23 from the shoulder). On the side that faces the body it is long (about 0.33). It has to be long there: that side of the arm sweeps inside the torso shell when the arm folds, and it must stay under the sleeve.
+- **Cuff lip.** Turn the cuff edge in by 0.030 so it ends just under the arm surface. A sleeve has no open edge outside the arm.
+- Because every pet shares the Bear's body and arms, one shirt fits every pet. Do not sculpt a shirt to one species.
+- **Check before export.** Run `scripts/check_bear_shirt.py`. It turns each arm from −35° to +35° at the shoulder with the game's pose and fails if a sleeve cuts the arm, if the arm crosses the torso outside a sleeve, or if the torso lifts off the body. A walking step can still press the bare paw onto the belly; that contact is reported, not failed, because the bare Bear does the same.
+- Placeholder: `PetBear__Shirt_Torso` (108 triangles), `PetBear__Shirt_SleeveL` (91) and `PetBear__Shirt_SleeveR` (97). `scripts/export_bear_attachments.py` rebuilds the sleeves from the arm meshes on every run.
 
 **Necklaces.**
 - Parent to Neck. The ring is tilted: the front sits 0.03 lower than the back, so it rests on the chest and clears the chin.

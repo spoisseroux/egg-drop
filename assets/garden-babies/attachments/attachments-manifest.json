@@ -2921,8 +2921,8 @@
    "placeholder": true
   },
   {
-   "name": "Bear__Shirt_Tee",
-   "source": "PetBear__Shirt_Tee",
+   "name": "Bear__Shirt_Torso",
+   "source": "PetBear__Shirt_Torso",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -2960,12 +2960,13 @@
    "triangles": 108,
    "hasUV": true,
    "defaultVisible": false,
+   "variant": "tee",
    "shellOffset": 0.024,
    "placeholder": true
   },
   {
-   "name": "Bear__Shirt_Tee_SleeveL",
-   "source": "PetBear__Shirt_Tee_SleeveL",
+   "name": "Bear__Shirt_SleeveL",
+   "source": "PetBear__Shirt_SleeveL",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -2981,33 +2982,35 @@
     0.655
    ],
    "centerBlender": [
-    -0.25987,
-    -0.08201,
-    0.6067
+    -0.31055,
+    -0.10656,
+    0.53775
    ],
    "sizeBlender": [
-    0.24493,
-    0.22351,
-    0.23554
+    0.27818,
+    0.25379,
+    0.38033
    ],
    "centerRuntime": [
-    -0.25987,
-    0.6067,
-    0.08201
+    -0.31055,
+    0.53775,
+    0.10656
    ],
    "sizeRuntime": [
-    0.24493,
-    0.23554,
-    0.22351
+    0.27818,
+    0.38033,
+    0.25379
    ],
-   "triangles": 32,
+   "triangles": 91,
    "hasUV": true,
    "defaultVisible": false,
+   "variant": "tee",
+   "shellOffset": 0.02,
    "placeholder": true
   },
   {
-   "name": "Bear__Shirt_Tee_SleeveR",
-   "source": "PetBear__Shirt_Tee_SleeveR",
+   "name": "Bear__Shirt_SleeveR",
+   "source": "PetBear__Shirt_SleeveR",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -3023,28 +3026,30 @@
     0.655
    ],
    "centerBlender": [
-    0.2596,
-    -0.0811,
-    0.60632
+    0.31212,
+    -0.10352,
+    0.5368
    ],
    "sizeBlender": [
-    0.24491,
-    0.22137,
-    0.23536
+    0.27469,
+    0.24719,
+    0.38169
    ],
    "centerRuntime": [
-    0.2596,
-    0.60632,
-    0.0811
+    0.31212,
+    0.5368,
+    0.10352
    ],
    "sizeRuntime": [
-    0.24491,
-    0.23536,
-    0.22137
+    0.27469,
+    0.38169,
+    0.24719
    ],
-   "triangles": 32,
+   "triangles": 97,
    "hasUV": true,
    "defaultVisible": false,
+   "variant": "tee",
+   "shellOffset": 0.02,
    "placeholder": true
   },
   {
@@ -3617,7 +3622,27 @@
    "max": 1
   },
   "Shirt": {
-   "max": 1
+   "max": 1,
+   "pieces": [
+    {
+     "piece": "Torso",
+     "mesh": "Bear__Shirt_Torso",
+     "channel": "Body",
+     "anchor": "Torso"
+    },
+    {
+     "piece": "SleeveL",
+     "mesh": "Bear__Shirt_SleeveL",
+     "channel": "HandL",
+     "anchor": "HandL"
+    },
+    {
+     "piece": "SleeveR",
+     "mesh": "Bear__Shirt_SleeveR",
+     "channel": "HandR",
+     "anchor": "HandR"
+    }
+   ]
   },
   "Chest": {
    "max": 1
@@ -3729,8 +3754,8 @@
   "notes": [
    "Horn stage 4 or 5 lifts CharmFloat by 0.10 so a floating charm clears the tips.",
    "Hat_Beanie is a full hat: coversHorns = true, hidesEars = false.",
-   "Shirt_Tee sleeves ride HandL/HandR and are shown and hidden with the shirt."
+   "A shirt is three meshes: Shirt_Torso on Body, Shirt_SleeveL on HandL and Shirt_SleeveR on HandR. The sleeves pivot on the shoulder anchors with the arms and are shown and hidden with the torso."
   ]
  },
- "placeholderNote": "Hat_Beanie, Shirt_Tee (+sleeves), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art."
+ "placeholderNote": "Hat_Beanie, Shirt_Torso (+Shirt_SleeveL/R), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art."
 }

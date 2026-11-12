@@ -1,4 +1,5 @@
-"""Add wing stages S1-S5 to pet-bear-attachments.blend, then export the attachment FBX set and manifest.
+"""Add wing stages S1-S5 and the three-piece shirt to pet-bear-attachments.blend, then export the
+attachment FBX set and manifest.
 
 Run (background Blender only):
   blender -b assets/art-source/pets/pet-bear-attachments.blend --python scripts/export_bear_attachments.py
@@ -6,8 +7,12 @@ Run (background Blender only):
 Convention matches assets/garden-babies/bear.fbx: axis_forward=-Z, axis_up=Y, meshes named Bear__<Role>,
 world transform baked, pet root at the origin, 1 unit = 1 stud. Blender pet-local: front -Y, up +Z, L = -X.
 Outputs go to assets/garden-babies/attachments/. Pass `-- --no-save` to leave the .blend untouched.
+
+Shirts are always three meshes: Shirt_Torso (Body channel, Torso anchor) and Shirt_SleeveL/R (HandL/HandR
+channels, origin on the shoulder anchor). The sleeves are rebuilt here from the arm meshes on every run;
+check them with scripts/check_bear_shirt.py.
 """
-import bpy, json, math, sys
+import bpy, bmesh, json, math, sys
 from pathlib import Path
 from mathutils import Vector
 
@@ -45,6 +50,73 @@ for side in "LR":
             ob[k] = v
         ob.hide_render = True
         ob.hide_set(True)
+
+
+# ---------- shirt: torso shell on Body, one sleeve per arm on HandL/HandR ----------
+# A sleeve is a shell of the arm mesh itself, so it wraps the arm at a fixed offset and turns with it about
+# the shoulder anchor. The cuff is a slanted plane: short on the outside of the arm, long on the side that
+# faces the body, because that side sweeps inside the torso shell when the arm folds +-35 degrees.
+SLEEVE_OFFSET = 0.020        # sleeve surface above the arm surface
+SLEEVE_AXIS = (-0.525, -0.277, -0.805)   # down the left arm from the shoulder (pet-local); x mirrors for R
+SLEEVE_CUFF_T = 0.268        # where the cuff plane crosses the arm axis, measured from the shoulder anchor
+SLEEVE_CUFF_LEAN = (0.90, 0.40, 0.0)     # the cuff gets longer in this direction (toward the body, a bit back)
+SLEEVE_CUFF_SLOPE = 0.62     # extra sleeve length per unit of distance from the axis along the lean
+SLEEVE_LIP = 0.030           # the cuff turns in this far, so it closes onto the arm
+
+placeholders = bpy.data.collections["PetBear_AttachPlaceholders"]
+torso = D.get("PetBear__Shirt_Torso") or D.get("PetBear__Shirt_Tee")
+torso.name = torso.data.name = "PetBear__Shirt_Torso"
+SHIRT_PROPS = dict(mock=True, slot="Shirt", placeholder=True, variant="tee")
+for k, v in dict(SHIRT_PROPS, role="Shirt", channel="Body").items():
+    torso[k] = v
+for side, sx in (("L", 1.0), ("R", -1.0)):
+    for old in (f"PetBear__Shirt_Tee_Sleeve{side}", f"PetBear__Shirt_Sleeve{side}"):
+        if D.get(old):
+            me = D[old].data
+            bpy.data.objects.remove(D[old], do_unlink=True)
+            if me.users == 0:
+                bpy.data.meshes.remove(me)
+    arm = D["PetBear__Hand" + side]
+    name = f"PetBear__Shirt_Sleeve{side}"
+    bm = bmesh.new()
+    bm.from_mesh(arm.data)
+    bm.normal_update()
+    for v in bm.verts:  # push out so every face around the vertex ends up SLEEVE_OFFSET above the arm
+        tight = min((v.normal.dot(f.normal) for f in v.link_faces), default=1.0)
+        v.co += v.normal * (SLEEVE_OFFSET / max(tight, 0.45))
+    axis = Vector((SLEEVE_AXIS[0] * sx, SLEEVE_AXIS[1], SLEEVE_AXIS[2])).normalized()
+    lean = Vector((SLEEVE_CUFF_LEAN[0] * sx, SLEEVE_CUFF_LEAN[1], SLEEVE_CUFF_LEAN[2]))
+    lean = (lean - axis * lean.dot(axis)).normalized()
+    to_arm = arm.matrix_basis.inverted() @ arm.matrix_parent_inverse.inverted()  # anchor space -> mesh space
+    plane_no = (to_arm.to_3x3() @ (axis - lean * SLEEVE_CUFF_SLOPE)).normalized()
+    plane_co = to_arm @ (axis * SLEEVE_CUFF_T)
+    cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=plane_co,
+                                 plane_no=plane_no, clear_outer=True)["geom_cut"]
+    rim = [e for e in cut if isinstance(e, bmesh.types.BMEdge)]
+    for e in rim:
+        e.smooth = False
+    lip = [v for v in bmesh.ops.extrude_edge_only(bm, edges=rim)["geom"] if isinstance(v, bmesh.types.BMVert)]
+    middle = sum((v.co for v in lip), Vector()) / len(lip)
+    for v in lip:  # the lip stays in the cuff plane and ends just under the arm surface
+        out = v.co - middle
+        v.co = middle + out * max(0.0, 1.0 - SLEEVE_LIP / out.length)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    for f in bm.faces:
+        f.smooth = True
+        f.material_index = 0
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    me.materials.append(torso.data.materials[0])
+    me.calc_loop_triangles()
+    ob = bpy.data.objects.new(name, me)
+    placeholders.objects.link(ob)
+    ob.parent = arm.parent
+    ob.matrix_parent_inverse = arm.matrix_parent_inverse.copy()
+    ob.matrix_basis = arm.matrix_basis.copy()
+    for k, v in dict(SHIRT_PROPS, role="Sleeve" + side, channel="Hand" + side, tris=len(me.loop_triangles),
+                     shellOffset=SLEEVE_OFFSET).items():
+        ob[k] = v
 
 bpy.context.view_layer.update()
 
@@ -105,7 +177,7 @@ GROUPS = {
     "horns": [f"Horn{s}_S{i}" for i in range(1, 6) for s in "LR"],
     "wings": [f"Wing{s}_S{i}" for i in range(1, 6) for s in "LR"],
     "piercings": ["HelixL_Ring", "HelixR_Ring"],
-    "wearables": ["Shirt_Tee", "Shirt_Tee_SleeveL", "Shirt_Tee_SleeveR", "Neck_Beads", "Hat_Beanie"],
+    "wearables": ["Shirt_Torso", "Shirt_SleeveL", "Shirt_SleeveR", "Neck_Beads", "Hat_Beanie"],
     "face-alts": ["EyeL_AltRound", "EyeR_AltRound", "EyeL_AltSmallWide", "EyeR_AltSmallWide", "EyeL_AltButton",
                   "EyeR_AltButton", "Mouth_AltW", "Mouth_AltO"],
     "tails": ["Tail_AltArrow"],
@@ -176,6 +248,10 @@ export(OUT / "bear-attachments.fbx", list(made.values()))
 for group, names in GROUPS.items():
     export(OUT / f"bear-attachments-{group}.fbx", [made[n] for n in names])
 
+SHIRT_PIECES = [{"piece": m["role"].replace("Shirt", "Torso"), "mesh": m["name"], "channel": m["channel"],
+                 "anchor": m["anchor"]} for m in meshes if m["slot"] == "Shirt"]
+assert [p["channel"] for p in SHIRT_PIECES] == ["Body", "HandL", "HandR"], SHIRT_PIECES
+
 HORN_NAMES = {1: "Bud", 2: "Nub", 3: "Horn", 4: "Curl", 5: "Crown"}
 for m in meshes:
     if m.get("feature") == "horns":
@@ -212,7 +288,8 @@ manifest = {
         "Hat": {"max": 1}, "Horns": {"max": 1, "staged": True}, "EarPiercing": {"max": 1, "perSide": True},
         "Earring": {"max": 1, "perSide": True}, "Eyes": {"max": 1, "swap": True}, "Eyewear": {"max": 1},
         "Mouth": {"max": 1, "swap": True}, "Nose": {"max": 1, "swap": True}, "Forehead": {"max": 1},
-        "Cheek": {"max": 1}, "Neck": {"max": 1}, "Shirt": {"max": 1}, "Chest": {"max": 1}, "Back": {"max": 1},
+        "Cheek": {"max": 1}, "Neck": {"max": 1},
+        "Shirt": {"max": 1, "pieces": SHIRT_PIECES}, "Chest": {"max": 1}, "Back": {"max": 1},
         "Tail": {"max": 1, "swap": True}, "Claws": {"max": 1, "staged": True}, "Wrist": {"max": 1, "perSide": True},
         "Ankle": {"max": 1, "perSide": True}, "Charm": {"max": 1}, "Aura": {"max": 1},
     },
@@ -238,10 +315,10 @@ manifest = {
         "notes": [
             "Horn stage 4 or 5 lifts CharmFloat by 0.10 so a floating charm clears the tips.",
             "Hat_Beanie is a full hat: coversHorns = true, hidesEars = false.",
-            "Shirt_Tee sleeves ride HandL/HandR and are shown and hidden with the shirt.",
+            "A shirt is three meshes: Shirt_Torso on Body, Shirt_SleeveL on HandL and Shirt_SleeveR on HandR. The sleeves pivot on the shoulder anchors with the arms and are shown and hidden with the torso.",
         ],
     },
-    "placeholderNote": "Hat_Beanie, Shirt_Tee (+sleeves), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art.",
+    "placeholderNote": "Hat_Beanie, Shirt_Torso (+Shirt_SleeveL/R), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art.",
 }
 (OUT / "attachments-manifest.json").write_text(json.dumps(manifest, indent=1), newline="\n")
 

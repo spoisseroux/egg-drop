@@ -1,0 +1,364 @@
+{
+ "minClear": 0.012,
+ "folds": [
+  -35,
+  -30,
+  -25,
+  -20,
+  -15,
+  -10,
+  -5,
+  0,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35
+ ],
+ "sides": {
+  "L": {
+   "sleeve": "PetBear__Shirt_SleeveL",
+   "triangles": 91,
+   "originOnShoulderAnchor": true,
+   "wrap": {
+    "sleeveFacesCuttingArm": 0,
+    "sameAfterRotation": 0,
+    "clearanceAboveArm": 0.0182,
+    "openEdgesOutsideArm": 0,
+    "cuffFromShoulder": [
+     0.229,
+     0.332
+    ],
+    "pass": true
+   },
+   "foldPoses": {
+    "pass": true,
+    "worstBareArmAboveTorso": 0.0095,
+    "crossingsOutsideSleeve": 0,
+    "rows": [
+     {
+      "fold": -35,
+      "step": 0.0,
+      "armTorsoCrossings": 28,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0657,
+      "bareArmAboveBody": 0.0892,
+      "pass": true
+     },
+     {
+      "fold": -30,
+      "step": 0.0,
+      "armTorsoCrossings": 28,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0566,
+      "bareArmAboveBody": 0.0798,
+      "pass": true
+     },
+     {
+      "fold": -25,
+      "step": 0.0,
+      "armTorsoCrossings": 32,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0478,
+      "bareArmAboveBody": 0.0709,
+      "pass": true
+     },
+     {
+      "fold": -20,
+      "step": 0.0,
+      "armTorsoCrossings": 40,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0436,
+      "bareArmAboveBody": 0.0663,
+      "pass": true
+     },
+     {
+      "fold": -15,
+      "step": 0.0,
+      "armTorsoCrossings": 42,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0394,
+      "bareArmAboveBody": 0.0621,
+      "pass": true
+     },
+     {
+      "fold": -10,
+      "step": 0.0,
+      "armTorsoCrossings": 42,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0345,
+      "bareArmAboveBody": 0.0572,
+      "pass": true
+     },
+     {
+      "fold": -5,
+      "step": 0.0,
+      "armTorsoCrossings": 48,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0289,
+      "bareArmAboveBody": 0.0518,
+      "pass": true
+     },
+     {
+      "fold": 0,
+      "step": 0.0,
+      "armTorsoCrossings": 56,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0227,
+      "bareArmAboveBody": 0.0463,
+      "pass": true
+     },
+     {
+      "fold": 5,
+      "step": 0.0,
+      "armTorsoCrossings": 50,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0203,
+      "bareArmAboveBody": 0.0436,
+      "pass": true
+     },
+     {
+      "fold": 10,
+      "step": 0.0,
+      "armTorsoCrossings": 50,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0138,
+      "bareArmAboveBody": 0.0366,
+      "pass": true
+     },
+     {
+      "fold": 15,
+      "step": 0.0,
+      "armTorsoCrossings": 48,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0109,
+      "bareArmAboveBody": 0.0341,
+      "pass": true
+     },
+     {
+      "fold": 20,
+      "step": 0.0,
+      "armTorsoCrossings": 52,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0095,
+      "bareArmAboveBody": 0.033,
+      "pass": true
+     },
+     {
+      "fold": 25,
+      "step": 0.0,
+      "armTorsoCrossings": 52,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0095,
+      "bareArmAboveBody": 0.0332,
+      "pass": true
+     },
+     {
+      "fold": 30,
+      "step": 0.0,
+      "armTorsoCrossings": 56,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0101,
+      "bareArmAboveBody": 0.0338,
+      "pass": true
+     },
+     {
+      "fold": 35,
+      "step": 0.0,
+      "armTorsoCrossings": 48,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0134,
+      "bareArmAboveBody": 0.0365,
+      "pass": true
+     }
+    ]
+   },
+   "walkingContact": {
+    "note": "step roll of +-0.18 rad presses the paw on the belly; reported only",
+    "posesWithBareArmInShirt": 10,
+    "of": 30,
+    "deepestIntoShirt": -0.0368,
+    "deepestIntoBareBody": -0.0136
+   }
+  },
+  "R": {
+   "sleeve": "PetBear__Shirt_SleeveR",
+   "triangles": 97,
+   "originOnShoulderAnchor": true,
+   "wrap": {
+    "sleeveFacesCuttingArm": 0,
+    "sameAfterRotation": 0,
+    "clearanceAboveArm": 0.0181,
+    "openEdgesOutsideArm": 0,
+    "cuffFromShoulder": [
+     0.229,
+     0.332
+    ],
+    "pass": true
+   },
+   "foldPoses": {
+    "pass": true,
+    "worstBareArmAboveTorso": 0.0092,
+    "crossingsOutsideSleeve": 0,
+    "rows": [
+     {
+      "fold": -35,
+      "step": 0.0,
+      "armTorsoCrossings": 30,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0649,
+      "bareArmAboveBody": 0.0883,
+      "pass": true
+     },
+     {
+      "fold": -30,
+      "step": 0.0,
+      "armTorsoCrossings": 36,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0556,
+      "bareArmAboveBody": 0.0792,
+      "pass": true
+     },
+     {
+      "fold": -25,
+      "step": 0.0,
+      "armTorsoCrossings": 36,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0471,
+      "bareArmAboveBody": 0.0702,
+      "pass": true
+     },
+     {
+      "fold": -20,
+      "step": 0.0,
+      "armTorsoCrossings": 42,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0428,
+      "bareArmAboveBody": 0.0655,
+      "pass": true
+     },
+     {
+      "fold": -15,
+      "step": 0.0,
+      "armTorsoCrossings": 44,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0386,
+      "bareArmAboveBody": 0.0613,
+      "pass": true
+     },
+     {
+      "fold": -10,
+      "step": 0.0,
+      "armTorsoCrossings": 44,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0337,
+      "bareArmAboveBody": 0.0564,
+      "pass": true
+     },
+     {
+      "fold": -5,
+      "step": 0.0,
+      "armTorsoCrossings": 50,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.028,
+      "bareArmAboveBody": 0.0509,
+      "pass": true
+     },
+     {
+      "fold": 0,
+      "step": 0.0,
+      "armTorsoCrossings": 52,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0217,
+      "bareArmAboveBody": 0.0452,
+      "pass": true
+     },
+     {
+      "fold": 5,
+      "step": 0.0,
+      "armTorsoCrossings": 50,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0189,
+      "bareArmAboveBody": 0.0424,
+      "pass": true
+     },
+     {
+      "fold": 10,
+      "step": 0.0,
+      "armTorsoCrossings": 54,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0135,
+      "bareArmAboveBody": 0.0363,
+      "pass": true
+     },
+     {
+      "fold": 15,
+      "step": 0.0,
+      "armTorsoCrossings": 50,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0105,
+      "bareArmAboveBody": 0.0337,
+      "pass": true
+     },
+     {
+      "fold": 20,
+      "step": 0.0,
+      "armTorsoCrossings": 54,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0092,
+      "bareArmAboveBody": 0.0325,
+      "pass": true
+     },
+     {
+      "fold": 25,
+      "step": 0.0,
+      "armTorsoCrossings": 54,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0099,
+      "bareArmAboveBody": 0.0331,
+      "pass": true
+     },
+     {
+      "fold": 30,
+      "step": 0.0,
+      "armTorsoCrossings": 54,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0093,
+      "bareArmAboveBody": 0.0328,
+      "pass": true
+     },
+     {
+      "fold": 35,
+      "step": 0.0,
+      "armTorsoCrossings": 52,
+      "crossingsOutsideSleeve": 0,
+      "bareArmAboveTorso": 0.0137,
+      "bareArmAboveBody": 0.0364,
+      "pass": true
+     }
+    ]
+   },
+   "walkingContact": {
+    "note": "step roll of +-0.18 rad presses the paw on the belly; reported only",
+    "posesWithBareArmInShirt": 10,
+    "of": 30,
+    "deepestIntoShirt": -0.0386,
+    "deepestIntoBareBody": -0.0159
+   }
+  }
+ },
+ "torso": {
+  "triangles": 108,
+  "aboveBodyMin": 0.0184,
+  "aboveBodyMax": 0.0242,
+  "openEdgeHeights": [
+   0.355,
+   0.705
+  ],
+  "note": "open edges are the hem and the collar only",
+  "pass": true
+ },
+ "pass": true
+}
