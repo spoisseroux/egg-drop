@@ -190,7 +190,9 @@ function Recap:paintFeedback(sample)
 		end
 	end
  if self.displayReward~=nil then
-  self.earnedGraphic.Text=Stars.format("+%d Stars",self.displayReward)
+  -- Count-up: the payout ticks 0 -> total while the feedback clock runs; the final
+  -- (receipt) value whenever there is no sample (reduced, finished, cancelled).
+  self.earnedGraphic.Text=Stars.format("+%d Stars",if sample and sample.counted then math.min(sample.counted,self.displayReward)else self.displayReward)
   self.bankGraphic.Text=Stars.format("Stars saved: %d",self.displayBalance)
  end
  if self.finalTitle then self.title.Text=self.finalTitle end

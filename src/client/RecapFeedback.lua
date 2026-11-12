@@ -53,14 +53,24 @@ function Feedback:step(dt)
 	for index,threshold in ipairs({.18,.32})do
 		if before<threshold and self.age>=threshold then self:cue("bank",1+(index-1)*.18,.18)end
 	end
-	for index=1,self.chips do
-		local threshold=.45+(index-1)*.08
-		if before<threshold and self.age>=threshold then self:cue("charge",1+index*.065,.14)end
-	end
-	if before<.88 and self.age>=.88 then self:cue("bank",1.36,.14)end
-	if self.age >= Feedback.Duration then self:cancel() else self.render(Feedback.sample(self.age)) end
+	-- Star count-up: one charge tick per Star, pitch +3% each. Several Stars crossing in
+	-- one frame share a single tick so a long payout never stacks voices.
+	local counted=self:countAt(self.age)
+	if counted>self.counted then self.counted=counted;self:cue("charge",math.min(2,1+counted*.03),.14)end
+	local cadence=math.max(.88,self.countEnd)
+	if before<cadence and self.age>=cadence then self:cue("bank",1.36,.14)end
+	if self.age >= self.duration then self:cancel() else self:paint(self.age) end
 end
 
+-- Stars tick in from 0.45 s, at most 0.08 s apart and finishing within 0.9 s.
+Feedback.CountStart,Feedback.CountSpan,Feedback.CountStep=.45,.9,.08
+function Feedback:countAt(age)
+	if age<Feedback.CountStart then return 0 end
+	return math.min(self.earned,1+math.floor((age-Feedback.CountStart)/self.spacing+1e-6))
+end
+function Feedback:paint(age)
+	local sample=Feedback.sample(age);sample.counted=self.counted;self.render(sample)
+end
 function Feedback:observe(result, visible)
 	local reward = result.reward
 	local eligible = result.status == "Saved" and not result.receiptPending and type(reward) == "table"
@@ -86,10 +96,14 @@ function Feedback:observe(result, visible)
 		if self.serial==serial and self.key==key then self:cue("bank",.92,.12)end
 		return false
 	end
+	self.spacing=math.min(Feedback.CountStep,Feedback.CountSpan/self.earned)
+	self.countEnd=Feedback.CountStart+(self.earned-1)*self.spacing
+	self.duration=math.max(Feedback.Duration,self.countEnd+.25)
+	self.counted=0
 	self.active, self.age, self.starts = true, 0, self.starts + 1
 	self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0
 	local serial = self.serial
-	self.render(Feedback.sample(0))
+	self:paint(0)
 	if self.serial~=serial or not self.active then return false end
 	self.connection = game:GetService("RunService").RenderStepped:Connect(function(dt)
 		if serial == self.serial then self:step(dt) end
