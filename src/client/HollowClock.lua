@@ -62,8 +62,60 @@ function Clock.island(daylight)
 			sky:SetAttribute("FaceSet", set)
 		end
 	end
+	Clock.backdrop(daylight)
 end
-function Clock.daylight()return Clock.lastDaylight or select(2,Clock.sample(workspace:GetServerTimeNow()))end
+-- The backdrop ring (clouds and far peaks) is lit only by ambient, so at night
+-- it read as a pale band around the horizon against the dark faces.
+-- Clouds are untextured: tint them toward the night sky by daylight, holding
+-- white through the bright half of dusk. Far peaks carry the palette texture,
+-- which ignores Color, so after the night faces swap in they drop the texture
+-- for a flat dusk-to-night slate silhouette and get it back at dawn.
+Clock.CloudDay = Color3.fromHex("#FAFCFF")
+Clock.CloudNight = Color3.fromHex("#2C355E")
+Clock.PeakDusk = Color3.fromHex("#7C86A8")
+Clock.PeakNight = Color3.fromHex("#283052")
+Clock.clouds, Clock.peaks = {}, {}
+function Clock.cloudColor(daylight)
+	local t = math.clamp((daylight - 0.1) / 0.5, 0, 1)
+	return Clock.CloudNight:Lerp(Clock.CloudDay, t * t * (3 - 2 * t))
+end
+function Clock.backdrop(daylight)
+	local lounge = workspace:FindFirstChild("EggDropLounge")
+	local meshes = lounge and lounge:FindFirstChild("World")
+	if not meshes then return nil end
+	if Clock.cloudFolder ~= meshes or #Clock.clouds == 0 then
+		Clock.cloudFolder, Clock.clouds, Clock.peaks = meshes, {}, {}
+		for _, part in ipairs(meshes:GetChildren()) do
+			if part:IsA("BasePart") and part.Name:find("^W7_Backdrop__cloud") then table.insert(Clock.clouds, part) end
+			if part:IsA("MeshPart") and part.Name:find("^W7_Backdrop__far_peak") then
+				if part:GetAttribute("DayTextureID") == nil then part:SetAttribute("DayTextureID", part.TextureID) end
+				table.insert(Clock.peaks, part)
+			end
+		end
+	end
+	local color = Clock.cloudColor(daylight)
+	for _, part in ipairs(Clock.clouds) do
+		if part.Color ~= color then part.Color = color end
+	end
+	local night = daylight < Clock.SkyThreshold
+	local slate = Clock.PeakNight:Lerp(Clock.PeakDusk, math.clamp(daylight / Clock.SkyThreshold, 0, 1))
+	for _, part in ipairs(Clock.peaks) do
+		local texture = if night then "" else part:GetAttribute("DayTextureID") or ""
+		if part.TextureID ~= texture then part.TextureID = texture end
+		if night and part.Color ~= slate then part.Color = slate end
+	end
+	return color
+end
+-- Studio-only inspection hook: workspace attribute StudioClockHour (0-24) pins
+-- the garden clock to that hour, so day, dusk and night can be checked in Play.
+function Clock.now()
+ if game:GetService("RunService"):IsStudio()then
+  local hour=workspace:GetAttribute("StudioClockHour")
+  if type(hour)=="number"and hour==hour then return((hour%24)-Clock.TimeZoneOffsetHours)*3600 end
+ end
+ return workspace:GetServerTimeNow()
+end
+function Clock.daylight()return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))end
 Clock.Step=5
 local Controller={};Controller.__index=Controller
 local function finite(value)return type(value)=="number"and value==value and math.abs(value)<math.huge end
@@ -128,8 +180,8 @@ function Controller:destroy()
 end
 function Clock.new(options)
  options=options or {};local world=options.world or workspace
- local self=setmetatable({world=world,now=options.now or function()return workspace:GetServerTimeNow()end,
-  environment=options.environment or Clock.environment,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0,daylight=select(2,Clock.sample((options.now or function()return workspace:GetServerTimeNow()end)()))},Controller)
+ local self=setmetatable({world=world,now=options.now or Clock.now,
+  environment=options.environment or Clock.environment,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0,daylight=select(2,Clock.sample((options.now or Clock.now)()))},Controller)
  table.insert(self.connections,world.ChildAdded:Connect(function(item)if not self.destroyed and item.Name=="EggDropLounge"then self:bind(item)end end))
  table.insert(self.connections,world.ChildRemoved:Connect(function(item)if not self.destroyed and self.room==item then self:bind(nil)end end))
  self:bind(world:FindFirstChild("EggDropLounge"));self:apply(self.now())
