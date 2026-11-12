@@ -79,6 +79,9 @@ function Client:station()
  local actor=self:actor()
  if actor and actor.mode=="Carried"then return self:request("carePlace")end
  if actor and actor.mode=="Docked"then self.wantMachine=true;if self.openMachine then self.openMachine(actor)end;return true end
+ -- Free hands: the prompt reads "Open companions", so open the editor for the
+ -- equipped pet without docking it.
+ if self.openFree then return self.openFree()==true end
  return false
 end
 function Client:keepsDock(actor,bay)

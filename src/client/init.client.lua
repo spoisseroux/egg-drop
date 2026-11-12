@@ -28,7 +28,7 @@ local RoomView = require(script.RoomView)
 local LoungeStations = require(script.LoungeStations)
 local HandheldScreens = require(script.HandheldScreens)
 local HatchReveal = require(script.HatchReveal)
-local RoundRecap = require(script.RoundRecap)
+local DeckScreen = require(script.DeckScreen)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
@@ -495,6 +495,19 @@ firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),
 local questHUD = BoardQuestHUD.new(status)
 local dispenser = DropDispenser.new(meter, reduceEffects)
 rendererPresentation.dispenser=dispenser
+-- Pocket Deck Slim (UI-SPEC-2026-11-12). The wide layout draws the sprite shell and
+-- the in-LCD HUD; the stacked portrait case keeps the legacy hardware below. Both
+-- keep their offset coordinates because the containers fill deviceRoot.
+clientUI.legacyDeck=make("Frame","LegacyCase",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=0},clientUI.deviceRoot)
+for _,node in ipairs({shell,bezel,queueHost,status,meter,hardware,customizeButton,roomButton,eggButton,walletDrop,rareGoal,eggGoal,title,clientUI.wordmark.root})do node.Parent=clientUI.legacyDeck end
+clientUI.railReadouts=make("Frame","Readouts",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=rail.ZIndex},rail)
+for _,node in ipairs({walletFace,readout,scoreCaption,rail.ReadoutDivider})do node.Parent=clientUI.railReadouts end
+-- The sprite shell and HUD sit in their own Sibling-ordered gui just under the
+-- board gui (DisplayOrder 10), so the board renderer draws over the LCD well.
+clientUI.deckGui=make("ScreenGui","EggDropDeck",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=9,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},gui.Parent)
+bleed.DisplayOrder=8
+clientUI.deck=DeckScreen.new({parent=clientUI.deckGui,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
+clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -573,6 +586,7 @@ do
 	local curtain = Art.frame(bleed, "HandoffBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 2)
 	local function updateBacking()
 		bleed.Enabled = gui.Enabled
+		clientUI.deckGui.Enabled = gui.Enabled and backdrop.Visible
 		overlayGui.Enabled = gui.Enabled
 		backing.Visible = backdrop.Visible
 		curtain.Visible = handoff.Visible and not backdrop.Visible
@@ -656,10 +670,9 @@ pet.Size = UDim2.fromOffset(88, 88)
 pet.ZIndex = 14
 pet.AutoButtonColor = false
 local reveal = HatchReveal.new(modal, pet, audio)
-local recap = RoundRecap.new(modal, audio, reduceEffects)
-recap.onAccepted=clientUI.accepted
-recap.onPreferredLayout=function()if layout then layout() end end
-recap.onContentLayout=function()if layout then layout()end end
+-- The round results render inside the deck LCD (DeckResults); the floating
+-- recap card is gone. `recap` keeps the old name for the owner checks below.
+local recap = clientUI.deckResults
 local modalAction = label("TextButton", "Continue", "", modal, Art.Amber)
 modalAction.Position = UDim2.new(0.09, 0, 1, -52)
 modalAction.Size = UDim2.new(0.82, 0, 0, 44)
@@ -689,7 +702,7 @@ local function restoreLegacySaveParents()
 		modalTag.Font,modalTag.TextSize,modalTag.TextScaled,modalTag.TextWrapped=Art.Font.Body,11,false,false
 		for _,button in ipairs({modalAction,keepPlaying})do button.Font=Art.Font.Body;Art.fitText(button,15,10,9,true)end
 	end
-	for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer,recap.frame})do if node.Parent~=modal then node.Parent=modal end end
+	for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer})do if node.Parent~=modal then node.Parent=modal end end
 end
 local knownPets = board:GetAttribute("OwnedPets") or 0
 local hatchQueue = {}
@@ -732,6 +745,7 @@ local function paintDeck(id, stickerId,backgroundId)
   end
  end
  Art.setBackground(backing,backgroundId or "canopy",theme)
+	clientUI.deck:setTheme(id,theme)
 	Art.finish(shell,theme,"shell")
 	Art.finish(shell.Faceplate,theme,"face")
 	rim.Color = theme.trim
@@ -852,6 +866,8 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  canCustomize=function(petId)
   local actor=roomView.care and roomView.care:actor()
   petId=petId or(clientUI.hueView and clientUI.hueView.petId)
+  -- Opened from the cradle with free hands: edit the pet without docking it.
+  if clientUI.hueReturn=="companions"and roomView.mode=="Room"and not roomView.busy and petId~=nil then return true end
   return roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy and actor~=nil and actor.care~=nil and actor.care.state=="Docked"and actor.petId==petId
  end,
  appearance=nurseryView.appearanceFor,
@@ -905,7 +921,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  end})
 clientUI.openHue=function(page,petId,back)
  local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
- if not purchasePage then
+ if not purchasePage and back~="companions"then
   local actor=roomView.care and roomView.care:actor()
   if back~="machine"or not actor or not actor.care or actor.care.state~="Docked"or actor.petId~=petId then return false end
  end
@@ -918,6 +934,11 @@ clientUI.openHue=function(page,petId,back)
  return clientUI.hueView:open(nurseryState,page,petId or board:GetAttribute("CompanionId"))
 end
 roomView.care.revision=function()return nurseryState and nurseryState.revision end
+roomView.care.openFree=function()
+ local petId=board:GetAttribute("CompanionId")
+ if not petId or not nurseryState or not EggCatalog.isOwned(nurseryState.inventoryMask or 0,petId)then return false end
+ return clientUI.openHue("palette",petId,"companions")
+end
 roomView.care.isMachineOpen=function(claimId)return clientUI.hueReturn=="machine"and clientUI.hueView.shade.Visible and clientUI.hueView.machine and clientUI.hueView.machine.claimId==claimId end
 roomView.care.openMachine=function(actor)
  if clientUI.hueView.shade.Visible and clientUI.hueReturn~="machine"then return end
@@ -1001,7 +1022,7 @@ visitEggs = function()
 		identity=function()return player.Character,workspace.CurrentCamera end,
 		canEnterFromBoard=function()
 			return not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()
-				and not gameMenu.shade.Visible and (not modal.Visible or recap.frame.Visible)
+				and not gameMenu.shade.Visible and not modal.Visible
 		end,
 		sendMode=function(mode)request:FireServer("mode",mode)end,open=openNursery})
 end
@@ -1176,7 +1197,7 @@ refreshSaveNotice=function()
 	local owner=if currentSaveNotice then clientUI.SaveNotice.owner({
 		native=GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()~=nil or roomView.busy or roomView.transition.shade.Visible,
 		eggs=nurseryView:isOpen() or clientUI.isHueOpen(),style=isPickerOpen(),journal=journal.shade.Visible,menu=gameMenu.shade.Visible,
-		modal=modal.Visible,recap=recap.frame.Visible,focusing=roomView.focusing,
+		modal=modal.Visible,recap=recap.visible,focusing=roomView.focusing,
 		mode=if board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"then "Room"else "Board"})else nil
 	saveNoticeOwner=owner
 	nurseryView:setSaveNotice(if owner=="eggs"and not clientUI.isHueOpen()then currentSaveNotice else nil)
@@ -1185,8 +1206,6 @@ refreshSaveNotice=function()
 	journal:setSaveNotice(if owner=="journal"then currentSaveNotice else nil)
 	gameMenu:setSaveNotice(if owner=="menu"then currentSaveNotice else nil)
 	roomView.focusUI:setSaveNotice(if owner=="roam"or owner=="focus"then currentSaveNotice else nil)
-	recap:setSaveNotice(if owner=="recap"then currentSaveNotice else nil,
-		if owner=="recap"and modal.Size.Y.Offset<300 then modalTitle.Text else nil)
 	nurseryView.cinematic:refreshOwner()
 	status.Visible=not (currentSaveNotice~=nil and owner~="board")
 	if owner~="board"then status:SetAttribute("AccessibleLabel",nil)end
@@ -1308,11 +1327,86 @@ local function shouldCoachField()
 		and board:GetAttribute("FieldPhase") == "Playing" and canAim() and not isPickerOpen() and not roomView.busy
 end
 
+-- Deck HUD/results data. Presentation only: every number is a replicated board
+-- attribute or the saved receipt.
+function clientUI.inputKind()
+ local kind=UserInputService:GetLastInputType()
+ if isGamepad(kind)then return "Gamepad"elseif kind==Enum.UserInputType.Touch then return "Touch"end
+ return "Keyboard"
+end
+function clientUI.deckGoals(view,stage)
+ local goals={}
+ if not view or view.empty or type(view.goals)~="table"then return goals end
+ for index,goal in ipairs(view.goals)do
+  local full,candidates=clientUI.FieldQuestText.goal(goal)
+  local done=if stage then index<=stage else(view.complete==true or index<(view.step or 1))
+  local current=not stage and index==view.step and not view.complete
+  goals[index]={text=full,short=candidates[1]or full,done=done,progress=if current then view.progress or 0 else 0,target=goal.target or 1}
+ end
+ return goals
+end
+function clientUI.dailyRows()
+ local rows={}
+ for index,row in ipairs(nurseryState and nurseryState.contracts or {})do
+  if index>3 then break end
+  rows[index]={title=row.title,progress=row.progress or 0,target=row.target or 1,done=row.claimed==true}
+ end
+ return rows
+end
+function clientUI.resultsData(final,runReceipt,score,best,peakChain)
+ local owned=board:GetAttribute("OwnedPets")or 0
+ local field=board:GetAttribute("HatchActive")==true and owned>0
+ local success=if final then final.success else board:GetAttribute("FieldSuccess")
+ local reason=if final then final.reason else board:GetAttribute("FieldReason")
+ local stage=if final then final.stage else board:GetAttribute("FieldFinalStage")or 0
+ local objective=if final and final.objective then final.objective else clientUI.fieldView
+ local status=board:GetAttribute("RewardStatus")
+ local pending=field and(status~="Saved"or runReceipt==nil)
+ local rows,reward={},runReceipt
+ if reward then
+  table.insert(rows,{name="Round win",amount=reward.base or 0})
+  if(reward.daily or 0)>0 then table.insert(rows,{name="Daily quests",amount=reward.daily})end
+  if(reward.bonus or 0)>0 then table.insert(rows,{name="Pass bonus",amount=reward.bonus})end
+ end
+ local strip={}
+ for _,id in ipairs(reward and reward.contracts or {})do
+  for _,row in ipairs(nurseryState and nurseryState.contracts or {})do if row.id==id then table.insert(strip,row.title.." ★+"..row.reward)end end
+ end
+ local balance=nurseryState and nurseryState.nectar or 0
+ local recipe=EggCatalog.ById[nurseryView.selected]or EggCatalog.ById.meadow
+ return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
+  title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty="Medium",multiplierLine="Medium ×1",
+  pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
+  loss=not pending and(reward==nil or(reward.total or 0)==0),goals=clientUI.deckGoals(objective,stage or 0),
+  score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
+  strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
+  stripRight=if recipe and balance>=recipe.cost then "You can hatch an egg"else "Wallet ★ "..balance,
+  canLeave=owned>0,
+  result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
+end
+-- The view's back arrow: shown on every deck screen, hidden under sheets and the
+-- hatch card (they own their own close), disabled until the first pet exists.
+function clientUI.refreshBack()
+ local visible=board:GetAttribute("Mode")=="Board"and not modalShade.Visible and backdrop.Visible
+ local enabled=(board:GetAttribute("OwnedPets")or 0)>0 and not roomView.busy
+ clientUI.deck.backVisible=visible
+ local arrow=clientUI.deck.back
+ if arrow.root.Visible~=visible then arrow.root.Visible=visible end
+ if arrow.enabled~=enabled then arrow.setEnabled(enabled)end
+end
+-- Leave the deck for the garden (the old Lounge cap path).
+function clientUI.leaveDeck()
+ if roomView.busy or(board:GetAttribute("OwnedPets")or 0)==0 or board:GetAttribute("Mode")~="Board"then return false end
+ cancelHatchNavigation();clearPlayInputs();recap:hide()
+ roomView:collapseControls()
+ roomView:requestSwitch(function()if not isPickerOpen()then request:FireServer("mode","Room")end end)
+ clientUI.accepted("back");return true
+end
+
 updateHud = function()
  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
  if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
  local final=rendererPresentation.roundEnd and rendererPresentation.roundEnd.frozen
- recap.endArt.Visible=final~=nil and #final.balls>0
 	local drops = board:GetAttribute("Drops") or 0
 	local merges = board:GetAttribute("Merges") or 0
 	local chain = board:GetAttribute("Chain") or 0
@@ -1417,9 +1511,9 @@ updateHud = function()
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	local wasVisible = modal.Visible
-	local wasRecap = recap.frame.Visible
-	modal.Visible = (over or showHatch) and not (isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible)
-	if modal.Visible then
+	local sheetOpen=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible
+	modal.Visible = showHatch and not over and not sheetOpen
+	if modal.Visible or(over and not sheetOpen)then
 		clearPlayInputs()
 		picker:close()
 	end
@@ -1440,59 +1534,32 @@ updateHud = function()
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
 	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
-	modalTag.Text = if over then "ROUND RECAP  ·  BEST " .. best
-		elseif hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
-	recap.frame.Visible = over
-	if wasRecap ~= over then
-		if layout then task.defer(layout) end
-		modalTitle.Size = UDim2.new(1, 0, 0, if over then 22 else 35)
-	end
+	modalTag.Text = if hatchPet and hatchPet.trial then "RARE HATCH" else "POCKET HATCHERY"
 	local runReceipt = RunReceipt.select(nurseryState, board:GetAttribute("RunSequence"), board:GetAttribute("RewardStatus"), over)
-	if over then
-		recap:update(score, peakChain, maxClears, if trackedRare then nil else nextPet, charge, nextRare, rareProgress, best)
-		if nurseryActive and owned > 0 then
-			recap:updateField({ sequence = board:GetAttribute("RunSequence"), success = if final then final.success else board:GetAttribute("FieldSuccess"), reason = if final then final.reason else board:GetAttribute("FieldReason"),
-				stage = if final then final.stage else board:GetAttribute("FieldFinalStage") or 0, objective=if final then final.objective else clientUI.fieldView,phase=board:GetAttribute("FieldPhase"),status = board:GetAttribute("RewardStatus"),
-				award = board:GetAttribute("NectarAward") or 0, daily = board:GetAttribute("DailyAward") or 0,
-				balance = nurseryState and nurseryState.nectar or 0,
-				reward = runReceipt, receiptPending = board:GetAttribute("RewardStatus") == "Saved" and not runReceipt,
-				recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow })
-		end
-	end
-	modalTitle.Text = if over then (if board:GetAttribute("NewBest") then "New personal best!" else "Tray full")
-		else "You hatched " .. (hatchName or "") .. "!"
-	if over and nurseryActive and owned > 0 then
-		modalTitle.Text = recap.fieldHeading or "Quest unfinished"
-
-	end
+	-- Results live inside the deck LCD and hand the board back on Replay or Leave.
+	local resultsOpen=over and not sheetOpen and not roomView.busy
+	local resultsOpened=resultsOpen and not recap.visible
+	if resultsOpen then
+		recap:show(clientUI.resultsData(final,runReceipt,score,best,peakChain),clientUI.deckCompact==true)
+	else recap:hide() end
+	if resultsOpened then GuiService.SelectedObject=nil;if layout then task.defer(layout)end end
+	modalTitle.Text = "You hatched " .. (hatchName or "") .. "!"
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
 	scoreCaption.Text = if owned > 0 then "Stars" else "SCORE"
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	layoutWallet(instrumentLayout)
 	bestReadout.Text = if owned > 0 then "Stars · eggs from 8" else "BEST " .. best
 	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, nil, nil, score, peakChain, best, nurseryView.selected) end
-	local rewardPending = over and nurseryActive and owned > 0 and board:GetAttribute("RewardStatus") ~= "Saved"
-	modalAction.Text = if rewardPending then "Saving…" elseif over then "Try again" else "Meet " .. (hatchName or "")
-	modalAction.Interactable = not rewardPending
-	keepPlaying.Interactable = not rewardPending
-	local showEggChoice = over and nurseryActive and owned > 0
-	modalAction.Position = UDim2.new(if over and not showEggChoice then 0.09 else 0.05, 0, 1, -52)
-	modalAction.Size = UDim2.new(if over and not showEggChoice then 0.82 else 0.43, 0, 0, 44)
-	keepPlaying.Visible = not over or showEggChoice
-	keepPlaying.Text = if showEggChoice then "Hatch eggs" else "Keep playing"
-	local affordable=showEggChoice and runReceipt~=nil and (nurseryState and nurseryState.nectar or 0)>=(EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow).cost
- local preferredRecapAction=if affordable then keepPlaying else modalAction
- Art.control(modalAction,not affordable,modalAction.Interactable);Art.control(keepPlaying,affordable,keepPlaying.Interactable)
-	if showEggChoice then
-		local shallow=backdrop.AbsoluteSize.Y<220
-		local footerH=math.max(44,modalAction.Size.Y.Offset,keepPlaying.Size.Y.Offset)
-		local footerY=-(if shallow then 6 elseif backdrop.AbsoluteSize.Y<440 then 8 else 12)-footerH
-		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,footerY),UDim2.new(.5,-18,0,footerH)
-		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,footerY),UDim2.new(.5,-18,0,footerH)
-		Art.type(modalAction,if shallow then "Body"else "Action",true);Art.type(keepPlaying,if shallow then "Body"else "Action",true)
-	end
-	if modal.Visible and (not wasVisible or (over and not wasRecap)) and isGamepad(UserInputService:GetLastInputType()) then
-		GuiService.SelectedObject = preferredRecapAction
+	-- The modal is now only the hatch card.
+	modalAction.Text = "Meet " .. (hatchName or "")
+	modalAction.Interactable,keepPlaying.Interactable = true,true
+	modalAction.Position = UDim2.new(0.05, 0, 1, -52)
+	modalAction.Size = UDim2.new(0.43, 0, 0, 44)
+	keepPlaying.Visible = true
+	keepPlaying.Text = "Keep playing"
+	Art.control(modalAction,true,true);Art.control(keepPlaying,false,true)
+	if modal.Visible and not wasVisible and isGamepad(UserInputService:GetLastInputType()) then
+		GuiService.SelectedObject = modalAction
 	elseif not modal.Visible and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(modal) then
 		GuiService.SelectedObject = nil
 	end
@@ -1520,6 +1587,13 @@ updateHud = function()
 	eggButton.Interactable = unlocked and not modal.Visible
 	roomLip.Color = if unlocked then Palette.Primary else Palette.Rim
 	roomCaption.TextTransparency = if unlocked then 0 else 0.35
+	-- In-LCD HUD (wide deck) and the view's back arrow.
+	local blocked=dropCaption:GetAttribute("BlockedCaption")
+	clientUI.deck:setHud({score=score,best=best,chain=chain,goals=if fieldActive then clientUI.deckGoals(clientUI.fieldView)else {},
+		message=if not fieldActive then status.Text else nil,statusLabel=if blocked then status.Text else nil,daily=clientUI.dailyRows(),
+		next={nextTier(),board:GetAttribute("PreviewTier1")or 1,board:GetAttribute("PreviewTier2")or 1},
+		eggsLeft=remaining,budget=budget,difficulty="Medium",multiplier="×1",winPays="6–8",input=clientUI.inputKind()})
+	clientUI.refreshBack()
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
 		revealedPet = hatchName
@@ -1590,7 +1664,7 @@ layout = function()
 	shell.ShellCurve.CornerRadius=UDim.new(0,radius)
 	shell.Faceplate:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-4)
 	shell.MoldSeam:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(0,radius-5)
-	place(rail,l.tray);rail.BackgroundTransparency=1;rail.ReadoutDivider.Visible=false
+	place(rail,l.tray);rail.BackgroundTransparency=1;clientUI.railReadouts.ReadoutDivider.Visible=false
 	bestReadout.Visible,nextReadout.Visible,mascot.Visible=false,false,false
 	Art.type(scoreCaption,"Supporting",l.short or l.dense or not l.lateral);if l.roomy then scoreCaption.TextSize=20 end
 	layoutWallet(l)
@@ -1686,46 +1760,11 @@ layout = function()
 	modal.Position=UDim2.fromScale(.5,.5)
 	restoreLegacySaveParents()
 	local modalSave=if saveNoticeOwner=="recap"or saveNoticeOwner=="welcome"then currentSaveNotice else nil
-	local fieldRecap=recap.frame.Visible and (board:GetAttribute("OwnedPets") or 0)>0
-	local dialogHeight=if fieldRecap then math.min(if recap.detailsOpen then 720 else 400,math.max(1,screen.Y-16)) else math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
+	local dialogHeight=math.min(300,math.max(1,screen.Y-(if modalSave then 16 else 32)))
 	modal:SetAttribute("CompactDialog",dialogHeight<220)
-	modal.Size=UDim2.fromOffset(math.min(if fieldRecap then 600 else 440,screen.X-(if fieldRecap then 16 else 32)),dialogHeight)
-	if fieldRecap then
-		local compact=screen.Y<440
-		recap.compactLayout=compact
-		local shallow=screen.Y<220
-		modalTag.Visible=modalSave~=nil
-		modalTitle.Visible=not (compact and modalSave~=nil)
-		Art.type(modalTitle,if shallow then "Body"else "Heading",true)
-		local titleH=Art.textHeight(modalTitle,modal.Size.X.Offset-24,if shallow then 22 else 28)
-		local titleY=2
-		if modalSave then
-			Art.type(modalTag,"Supporting",true)
-			local tagH=Art.textHeight(modalTag,modal.Size.X.Offset-24,18)
-			modalTag.Size=UDim2.new(1,-24,0,tagH);titleY=tagH+6
-		end
-		modalTitle.Position,modalTitle.Size=UDim2.fromOffset(12,titleY),UDim2.new(1,-24,0,titleH)
-		Art.type(modalAction,if shallow then "Body"else "Action",true);Art.type(keepPlaying,if shallow then "Body"else "Action",true)
-		local bw=(modal.Size.X.Offset-36)/2
-		local footerH=math.max(Art.actionHeight(modalAction,bw),Art.actionHeight(keepPlaying,bw))
-		local bottomMargin=if shallow then 6 elseif compact then 8 else 12
-		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
-		keepPlaying.Position,keepPlaying.Size=UDim2.new(.5,6,1,-bottomMargin-footerH),UDim2.new(.5,-18,0,footerH)
-		recap.headerInset=if compact and modalSave then titleY+1 else titleY+titleH+4
-		recap.footerInset=footerH+bottomMargin+4
-		recap.layoutWidth=modal.Size.X.Offset
-
-	else
-		modalTag.Visible=true;modalTitle.Visible=true
-		modalTitle.Position=UDim2.fromOffset(0,18)
-	end
-	if fieldRecap then
-		recap:layoutField(dialogHeight)
-		local fitted=math.min(dialogHeight,math.max(recap.headerInset+recap.footerInset+44,(recap.bodyContentHeight or 0)+recap.headerInset+recap.footerInset))
-		if fitted~=dialogHeight then
-			dialogHeight=fitted;modal.Size=UDim2.fromOffset(modal.Size.X.Offset,dialogHeight);recap:layoutField(dialogHeight)
-		end
-	end
+	modal.Size=UDim2.fromOffset(math.min(440,screen.X-32),dialogHeight)
+	modalTag.Visible=true;modalTitle.Visible=true
+	modalTitle.Position=UDim2.fromOffset(0,18)
 	local stageHeight=math.max(24,dialogHeight-110-(if dialogHeight<220 then 0 else 18))
 	hatchStage.Size=UDim2.new(1,-24,0,stageHeight);hatchIndex.Position=UDim2.fromOffset(12,55+stageHeight)
 	hatchIndex.Visible=pet.Visible and dialogHeight>=220
@@ -1737,7 +1776,7 @@ layout = function()
 		modalTag.Position,modalTag.Size=UDim2.fromOffset(12,2),UDim2.new(1,-24,0,tagH)
 		local bw=(modal.Size.X.Offset-36)/2
 		Art.type(modalAction,"Body",true);Art.type(keepPlaying,"Body",true)
-		if Art.textHeight(modalAction,bw,0)+8>44 then modalAction.Text=if recap.frame.Visible then "Retry"else "Meet"end
+		if Art.textHeight(modalAction,bw,0)+8>44 then modalAction.Text="Meet"end
 		if Art.textHeight(keepPlaying,bw,0)+8>44 then keepPlaying.Text="Play"end
 		local footerH=math.max(44,Art.textHeight(modalAction,bw,0)+8,Art.textHeight(keepPlaying,bw,0)+8)
 		modalAction.Position,modalAction.Size=UDim2.new(0,12,1,-footerH-4),UDim2.new(.5,-18,0,footerH)
@@ -1745,7 +1784,7 @@ layout = function()
 		local top=tagH+8;local height=math.max(1,dialogHeight-top-footerH-8)
 		legacySaveScroll.Position,legacySaveScroll.Size=UDim2.fromOffset(12,top),UDim2.new(1,-24,0,height)
 		legacySaveContent.Size=UDim2.fromOffset(modal.Size.X.Offset-24,220)
-		for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer,recap.frame})do node.Parent=legacySaveContent end
+		for _,node in ipairs({modalTitle,hatchStage,hatchIndex,pet,reveal.layer})do node.Parent=legacySaveContent end
 		Art.type(legacySaveDetail,"Body",true);legacySaveDetail.Text=modalSave.detail
 		local h=Art.textHeight(legacySaveDetail,modal.Size.X.Offset-32,24)
 		legacySaveDetail.Position,legacySaveDetail.Size=UDim2.fromOffset(4,228),UDim2.fromOffset(modal.Size.X.Offset-32,h)
@@ -1753,6 +1792,23 @@ layout = function()
 		legacySaveScroll.ScrollingEnabled=total>height;legacySaveScroll.Visible=true
 		legacySaveScroll.CanvasPosition=Vector2.new(0,math.clamp(legacySaveScroll.CanvasPosition.Y,0,math.max(0,total-height)))
 	end
+	-- Wide screens use the Pocket Deck Slim: the board sits in the LCD's centre well
+	-- and the HUD moves into the side panels. Portrait keeps the stacked case.
+	local wide=l.lateral==true
+	clientUI.legacyDeck.Visible=not wide;clientUI.railReadouts.Visible=not wide
+	clientUI.deck:setVisible(wide)
+	if wide then
+		local g=clientUI.deck:layout(screen,ratio)
+		clientUI.deckCompact=g.compact
+		place(viewport,g.board);overlay.Position,overlay.Size=viewport.Position,viewport.Size
+		place(rail,g.board)
+		Art.setBackdropCase(backing,{x=g.deck.x+backdrop.AbsolutePosition.X-backing.AbsolutePosition.X,y=g.deck.y+backdrop.AbsolutePosition.Y-backing.AbsolutePosition.Y,w=g.deck.w,h=g.deck.h})
+	else
+		clientUI.deckCompact=true
+		clientUI.deck:placeResults(l.shell)
+	end
+	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
+	if recap.visible and recap.compact~=clientUI.deckCompact then task.defer(updateHud)end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
 	if refreshSaveNotice then refreshSaveNotice()end
@@ -1805,12 +1861,11 @@ end
 action.Activated:Connect(dropEgg)
 
 local function recapOwnsInput()
-	return clientUI.PresentationPolicy.ownsRecap({modal=modal.Visible,recap=recap.frame.Visible,busy=roomView.busy,
+	return clientUI.PresentationPolicy.ownsRecap({modal=recap.visible,recap=recap.visible,busy=roomView.busy,
 		overlay=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible,
 		coreMenu=GuiService.MenuIsOpen})
 end
 
-recap.ownsFeedback=function()return recapOwnsInput()and audio.deviceActive ~= false end
 rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
  readView=function()return clientUI.FieldQuestText.read(board,clientUI.fieldCache)end,
  reduced=reduceEffects,
@@ -1819,9 +1874,9 @@ rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
    and board:GetAttribute("Mode")=="Board"and audio.deviceActive~=false and not GuiService.MenuIsOpen
    and not UserInputService:GetFocusedTextBox()and not isPickerOpen()and not journal.shade.Visible
    and not nurseryView:isOpen()and not clientUI.isHueOpen()and not gameMenu.shade.Visible
-   and not roomView.busy and not roomView.transition.shade.Visible and(not modal.Visible or recap.frame.Visible)
+   and not roomView.busy and not roomView.transition.shade.Visible and not modal.Visible
  end,
- target=function()return if recap:isVisible()and recap.fieldMode then recap.endArt else effects end,
+ target=function()return effects end,
 })
 rendererPresentation.roundEnd:observe()
 
@@ -1862,24 +1917,19 @@ local function handleControl(name, state, input)
 		heldAim[key] = nil
 	end
 	local gamepad = isGamepad(input.UserInputType)
-	if key == Enum.KeyCode.ButtonA and recapOwnsInput() then
-		if GuiService.SelectedObject and GuiService.SelectedObject.Visible and GuiService.SelectedObject:IsDescendantOf(modal) then return Enum.ContextActionResult.Pass end
-		if state == Enum.UserInputState.Begin then
-			requestRetry()
-		end
-		return Enum.ContextActionResult.Sink
-	end
 	if not canAim() or isPickerOpen() or roomView.busy or GuiService.MenuIsOpen
 		or UserInputService:GetFocusedTextBox() or (gamepad and GuiService.SelectedObject) then
 		return Enum.ContextActionResult.Pass
 	end
 	if state == Enum.UserInputState.Begin then
 		if name == "EggDropDrop" then
+			clientUI.deck:flash("A")
 			dropEgg()
 		elseif name == "EggDropCustomize" then
 			if openMenu()then clientUI.accepted("confirm")end
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
+			clientUI.deck:flash(if name == "EggDropLeft" then "Left" else "Right")
 		end
 	end
 	return Enum.ContextActionResult.Sink
@@ -1928,22 +1978,35 @@ controllerFocus:watch(UserInputService.TextBoxFocused);controllerFocus:watch(Use
 controllerFocus:watch(UserInputService.WindowFocusReleased,function()controllerFocus:invalidate(true);controllerFocus.inputKind=nil end)
 controllerFocus:watch(gui.Destroying,function()controllerFocus:destroy();ContextActionService:UnbindAction(controllerAction)end)
 
--- Keep footer navigation explicit while up/down reads a long saved receipt.
-ContextActionService:BindActionAtPriority("EggDropReceiptScroll", function(_, state, input)
-	if not recapOwnsInput() or not recap.hasReceipt
-		or UserInputService:GetFocusedTextBox() then return Enum.ContextActionResult.Pass end
+-- In-deck results: two targets (Replay, Leave). D-pad/arrows/A-D move, A/Enter/
+-- Space confirm, B/Backspace leave. Keyboard, gamepad and the deck hardware share it.
+ContextActionService:BindActionAtPriority("EggDropResults", function(_, state, input)
+	if not recap.visible or not recapOwnsInput() or UserInputService:GetFocusedTextBox() then return Enum.ContextActionResult.Pass end
 	if state == Enum.UserInputState.Begin then
 		local key = input.KeyCode
-		if key == Enum.KeyCode.DPadLeft or key == Enum.KeyCode.DPadRight then
-			GuiService.SelectedObject = if key == Enum.KeyCode.DPadRight and keepPlaying.Visible and keepPlaying.Interactable
-				then keepPlaying else modalAction
-		else
-			recap:scrollReceipt(if key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.PageUp then -1 else 1)
-		end
+		if key == Enum.KeyCode.Left or key == Enum.KeyCode.A or key == Enum.KeyCode.DPadLeft then recap:move(-1);clientUI.deck:flash("Left")
+		elseif key == Enum.KeyCode.Right or key == Enum.KeyCode.D or key == Enum.KeyCode.DPadRight then recap:move(1);clientUI.deck:flash("Right")
+		elseif key == Enum.KeyCode.ButtonB or key == Enum.KeyCode.Backspace then clientUI.deck:flash("B");recap:back()
+		elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.Down or key == Enum.KeyCode.DPadDown then
+			-- Difficulty picker arrives in part 2; up/down stay inside results.
+		else clientUI.deck:flash("A");recap:confirm() end
 	end
 	return Enum.ContextActionResult.Sink
-end, false, priority, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown, Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight,
-	Enum.KeyCode.PageUp, Enum.KeyCode.PageDown)
+end, false, priority + 1, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.A, Enum.KeyCode.D, Enum.KeyCode.Up, Enum.KeyCode.Down,
+	Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown, Enum.KeyCode.Space, Enum.KeyCode.Return,
+	Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
+recap:on("replay",function()requestRetry()end)
+recap:on("leave",function()clientUI.leaveDeck()end)
+-- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.
+clientUI.deck:on("dpad",function(dir,input)
+	if recap.visible then
+		if dir=="Left" or dir=="Right" then recap:move(if dir=="Left" then -1 else 1) end
+	elseif dir=="Left" or dir=="Right" then startAim(input,if dir=="Left" then -1 else 1) end
+end)
+clientUI.deck:on("A",function()if recap.visible then recap:confirm() else dropEgg() end end)
+clientUI.deck:on("B",function()if recap.visible then recap:back() else clientUI.leaveDeck() end end)
+clientUI.deck:on("menu",function()if openMenu()then clientUI.accepted("confirm")end end)
+clientUI.deck:on("back",function()if recap.visible then recap:back() else clientUI.leaveDeck() end end)
 ContextActionService:BindActionAtPriority("EggDropLeft", handleControl, false, priority,
 	Enum.KeyCode.Left, Enum.KeyCode.A, Enum.KeyCode.DPadLeft)
 ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, priority,
@@ -1976,8 +2039,12 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 		end
 		return Enum.ContextActionResult.Sink
 	end
+	if board:GetAttribute("Mode") == "Board" and backdrop.Visible and not modal.Visible and clientUI.deck.back.root.Visible then
+		if state == Enum.UserInputState.Begin and clientUI.deck.back.enabled then clientUI.deck:flash("B");clientUI.leaveDeck() end
+		return Enum.ContextActionResult.Sink
+	end
 	return Enum.ContextActionResult.Pass
-end, false, priority, Enum.KeyCode.ButtonB)
+end, false, priority, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
 ContextActionService:BindActionAtPriority("EggDropCustomize", handleControl, false, priority,
 	Enum.KeyCode.M, Enum.KeyCode.ButtonY)
 
@@ -2022,22 +2089,14 @@ picker.shade:GetPropertyChangedSignal("Visible"):Connect(function()
 	task.defer(updateHud)
 end)
 UserInputService.LastInputTypeChanged:Connect(function()
-	if (board:GetAttribute("OwnedPets") or 0) == 0 then
-		updateHud()
-	end
-end)
-UserInputService.InputBegan:Connect(function(input, processed)
-	if not processed and input.KeyCode == Enum.KeyCode.Return then
-		requestRetry()
-	end
+	-- The deck's Controls card follows the last input type.
+	task.defer(updateHud)
 end)
 modalAction.Activated:Connect(function()
 	if roomView.busy then
 		return
 	end
-	if recap.frame.Visible then
-		requestRetry()
-	elseif hatchQueue[1] then
+	if hatchQueue[1] then
 		roomView:requestSwitch(function()
 			if hatchQueue[1] then
 				roomView:choosePet(hatchQueue[1])
@@ -2050,7 +2109,6 @@ keepPlaying.Activated:Connect(function()
 	if roomView.busy then
 		return
 	end
-	if recap.frame.Visible then if visitEggs()then clientUI.accepted("confirm")end;return end
 	table.remove(hatchQueue, 1)
 	reveal:cancel()
  clientUI.accepted("back")
@@ -2241,7 +2299,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
  for _,source in ipairs(board:GetChildren())do addView(source)end
  rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
-	if recap.feedback then recap.feedback:cancel() end
+	recap.feedback:cancel()
 	clearPlayInputs()
 	reveal:cancel()
 	rendererPresentation.fx:clear()
@@ -2294,6 +2352,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	-- Transition completion changes local busy state without a replicated attribute.
 	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
 	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")
+	clientUI.refreshBack()
 	firstHatchGuide:fieldStep(0, 1, false)
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
 	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
