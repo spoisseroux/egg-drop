@@ -14,6 +14,7 @@ local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
 local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local Guard=require(script.Parent.HatchGuard)
 local Purchases=require(script.Parent.PurchaseState)
+local Faceplates=require(script.Parent.FaceplateState)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -139,7 +140,7 @@ local function validV7(state)
  -- Version-specific historical validation never interprets new working fields.
  return validVersion(state,7,false)and HueState.validHistorical(state)and MaterialState.valid(state)
 end
-local function valid(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)end
+local function valid(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -283,6 +284,7 @@ function Hatching.public(handle)
 	for key,value in pairs(ToyState.public(state))do public[key]=value end
 	for key,value in pairs(FeatureState.public(state))do public[key]=value end
 	for key,value in pairs(Purchases.public(state))do public[key]=value end
+	for key,value in pairs(Faceplates.public(state))do public[key]=value end
 	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
@@ -694,6 +696,22 @@ function Hatching.grantPurchase(handle, purchaseId, stars, once)
 	local candidate = table.freeze({ purchaseId = purchaseId, stars = stars, once = once == true })
 	local ok, reason = transact(handle, "purchase:" .. purchaseId, handle.state.revision, Purchases.apply, candidate, "purchase:" .. purchaseId)
 	if not ok and reason == "AlreadyGranted" then return true, reason end
+	return ok, reason
+end
+
+-- Faceplate Star purchase. `operationId` (client-made, per press) is the
+-- idempotency key: a retry of the same id resumes the same pending operation,
+-- and owning the plate already is a success that never charges again.
+function Hatching.buyFaceplate(handle, operationId, plateId, price)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(plateId) ~= "string" or #plateId > 64 then return false, "InvalidFaceplate" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "faceplate:" .. operationId
+	if Faceplates.owns(handle.state, plateId) and not (handle.pending and handle.pending.signature == signature) then return true, "AlreadyOwned" end
+	local candidate = handle.pending and handle.pending.signature == signature and handle.pending.candidate
+		or table.freeze({ plateId = plateId, price = price, operationId = operationId })
+	if candidate.plateId ~= plateId then return false, "OperationConflict" end
+	local ok, reason = transact(handle, signature, handle.state.revision, Faceplates.apply, candidate, signature)
+	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end
 

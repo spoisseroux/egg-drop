@@ -69,7 +69,7 @@ local function decode(key, record, success)
 	local petAppearance=PetAppearance.decode(record.petAppearance)
 	local petAt=0;for _,entry in pairs(petAppearance)do petAt=math.max(petAt,entry.at)end
 	local fallbacks={}
-	for slot,collection in pairs({theme=Themes,sticker=Stickers,background=Backgrounds})do
+	for slot,collection in pairs({theme=Themes,background=Backgrounds})do -- old sticker ids are ignored (retired)
 		if record[slot]~=nil and not collection.ById[record[slot]]then fallbacks[slot]="Unknown"end
 	end
 	return {
@@ -257,11 +257,11 @@ flush=function(profile)
 			local foreignAt=appearanceStamp(type(result)=="table" and result.themeAt)
 			local foreignWriter=if type(result)=="table" and type(result.themeWriter)=="string" then result.themeWriter else nil
 			local validForeign=type(result)=="table" and type(result.theme)=="string" and Themes.ById[result.theme]
-				and type(result.sticker)=="string" and Stickers.ById[result.sticker] and foreignWriter
+				and foreignWriter
 				and type(storedBackground(result))=="string" and Backgrounds.ById[storedBackground(result)]
 				and foreignAt==result.themeAt and (foreignAt>appearance.at or (foreignAt==appearance.at and foreignWriter>appearance.writer))
 			if current and current.generation==appearance.generation and validForeign then
-				profile.theme,profile.sticker,profile.background=result.theme,result.sticker,storedBackground(result)
+				profile.theme,profile.sticker,profile.background=result.theme,Stickers.Default,storedBackground(result)
 				if profile.resolveAppearance then profile.theme,profile.sticker,profile.background=profile.resolveAppearance(profile.theme,profile.sticker,profile.background) end
 				profile.lastAppearanceAt=math.max(profile.lastAppearanceAt or 0,foreignAt)
 				profile.appearanceSaved={theme=result.theme,sticker=result.sticker,background=storedBackground(result)}

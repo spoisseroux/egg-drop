@@ -59,6 +59,7 @@ local materialResult=child("RemoteEvent","MaterialResult",remotes)
 local toyResult=child("RemoteEvent","ToyResult",remotes)
 local featureResult=child("RemoteEvent","FeatureResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
+local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
 local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
@@ -242,7 +243,7 @@ local function publishAppearance(board)
 	board.folder:SetAttribute("DeckBackgroundId",board.profile.background)
 	board.folder:SetAttribute("AppearanceFallbacks",HttpService:JSONEncode(board.profile.appearanceFallbacks or {}))
 	board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
-	Lounge.setAppearance(board.player.Character,board.profile.theme,board.profile.sticker)
+	Lounge.setAppearance(board.player.Character,board.profile.theme)
 end
 
 local function validateAppearance(board,slot,id)
@@ -538,7 +539,7 @@ local function addPlayer(player)
 			if AppearanceCatalog.canEquip(slot,id,facts)then return id end
 			profile.appearanceFallbacks[slot]="Locked";return default
 		end
-		return allowed("theme",theme,Themes.Default),allowed("sticker",sticker,Stickers.Default),allowed("background",background,Backgrounds.Default)
+		return allowed("theme",theme,Themes.Default),Stickers.Default,allowed("background",background,Backgrounds.Default) -- stickers retired
 	end
 	profile.onAppearanceSuperseded=function(candidate)
 		if boards[player]~=board or board.closing then return end
@@ -588,7 +589,7 @@ local function addPlayer(player)
 		character:SetAttribute("GardenCharacterId",board.characterGeneration)
 		board.folder:SetAttribute("GardenCharacterId",board.characterGeneration)
 		Lounge.spawn(character, slot, player, function()
-			return board.mode, profile.theme, profile.sticker
+			return board.mode, profile.theme
 		end)
 	end
 	board.characterConnection = player.CharacterAdded:Connect(spawn)
@@ -770,7 +771,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
         end
 		board.mode = value
 		board.menuPaused = false
-		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme, board.profile.sticker)
+		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme)
 		board.folder:SetAttribute("Mode", value)
 		garden:sync(gardenInputs());garden:publish()
 		if value == "Room" and board.firstSession then
@@ -840,6 +841,28 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		nurserySnapshot:FireClient(player,state);return
 	end
 	if not board.profileReady then return end
+	-- Faceplate Star purchase (UI-SPEC 5.5): fixed price, server-validated,
+	-- idempotent by the client's operation id. Success equips the plate.
+	if action=="faceplateBuy"then
+		local opId=if type(value)=="table"and type(value.id)=="string"and #value.id<=80 then value.id else nil
+		local plateId=if type(value)=="table"and type(value.plateId)=="string"and #value.plateId<=64 then value.plateId else nil
+		local function reply(status,reason)faceplateResult:FireClient(player,{id=opId,plateId=plateId,status=status,reason=reason,revision=board.nursery.state.revision})end
+		if not opId or not plateId then reply("Rejected","InvalidFaceplate");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason=Nursery.buyFaceplate(board.nursery,opId,plateId,if type(value.price)=="number"then value.price else nil)
+		if ok and reason~="AlreadyOwned"then Economy.command(player,"Faceplate_"..plateId,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		if ok then
+			-- Wear it at once; the appearance save path confirms it as usual.
+			Progress.equip(board.profile,plateId,board.profile.sticker,board.profile.background);board.appearance.revision+=1;publishAppearance(board)
+		end
+		publishNursery(board);publishState(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
 
  local itemKind=if ToyState.isAction(action)then "toy"elseif FeatureState.isAction(action)then "feature"else nil
  if itemKind then
@@ -1122,8 +1145,8 @@ task.spawn(function()
 							board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 							board.folder:SetAttribute("SoundLevel", board.profile.sound)
 							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)
-							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme, board.profile.sticker)
-							Lounge.setAppearance(player.Character, board.profile.theme, board.profile.sticker)
+							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme)
+							Lounge.setAppearance(player.Character, board.profile.theme)
 							if board.firstSession then board.firstSession:advance(1) end
 						elseif replacement.status == "Ready" then
 							-- Never enable play over a dirty/unhydrated provisional profile.

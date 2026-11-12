@@ -1,0 +1,29 @@
+{
+ "schema": 1,
+ "uploaded": "2026-11-12",
+ "note": "Roblox image asset ids for assets/deck/faceplates (starters uploaded in part 1)",
+ "faceplates": {
+  "sherbet": "rbxassetid://112897675123239",
+  "stone": "rbxassetid://70670641097836",
+  "ice": "rbxassetid://119556542491955",
+  "brick": "rbxassetid://94183456721116",
+  "moss": "rbxassetid://135606664666122",
+  "honey": "rbxassetid://139483187822198",
+  "gloaming": "rbxassetid://131585392712948",
+  "copperleaf": "rbxassetid://132092721259236",
+  "aqua_pop": "rbxassetid://79634182860528",
+  "lime_gel": "rbxassetid://120212176951748",
+  "sorbet_sky": "rbxassetid://85539453492749",
+  "liquid_chrome": "rbxassetid://89787687297986",
+  "tidepool": "rbxassetid://128201905497104",
+  "aurora_glass": "rbxassetid://93664804690525",
+  "prism_flare": "rbxassetid://71935198179823",
+  "night_orb": "rbxassetid://85678618484391"
+ },
+ "overlays": {
+  "overlay-gloss-sweep.png": "rbxassetid://114031715260538",
+  "overlay-water.png": "rbxassetid://105339906963951",
+  "overlay-aurora.png": "rbxassetid://104767690020788",
+  "overlay-sparkle.png": "rbxassetid://94774890275610"
+ }
+}
