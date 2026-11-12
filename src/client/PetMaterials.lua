@@ -43,6 +43,12 @@ end
 function Materials.dusk(daylight)
  local t=math.clamp(1-daylight,0,1);return t*t*(3-2*t)
 end
+-- Two-tone pets glow only after sunset: nothing while daylight is above .75,
+-- then a smoothstep ramp to full glow at full night. Daylight follows the
+-- real-time garden clock, so the fade lasts the whole dusk (about 2 hours).
+function Materials.nightGlow(daylight)
+ local t=math.clamp((.75-daylight)/.75,0,1);return t*t*(3-2*t)
+end
 function Materials.new(options)
  options=options or {}
  return setmetatable({templates=options.templates,twoToneTemplates=options.twoToneTemplates},Owner)
@@ -101,7 +107,8 @@ function Owner:paint(entry,visual,daylight)
  end
  local base=entry.color or entry.faceBaseColor or entry.part.Color
  local values=Config.Profiles[if twoTone then "BodyTwoTone" else key]
- local strength=values.day+(values.night-values.day)*Materials.dusk(daylight)
+ local ramp=if twoTone then Materials.nightGlow(daylight)else Materials.dusk(daylight)
+ local strength=values.day+(values.night-values.day)*ramp
  if visual.emissionEnabled==false or entry.renderHidden==true or(key=="Charm"and(visual.charmVisible==false or(entry.charmShape or "dot")~=(visual.renderCharmShape or "dot")))then strength=0 end
  -- Emission multiplies albedo; a neutral tint avoids applying the pigment twice.
  -- Two-tone: the part keeps the primary; the surface tint carries the secondary.

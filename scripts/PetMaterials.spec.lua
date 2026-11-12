@@ -109,6 +109,11 @@ return function(client)
    local surface=e.materialSurface;v.secondaryColor=Color3.fromHex("#2F5DA8");assert(owner:paint(e,v,0)and e.materialSurface==surface and surface.Color==v.secondaryColor)
    -- Unverified finish variant falls back to the standard two-tone template.
    v.appearance={finish="gloss"};assert(owner:paint(e,v,0)and e.materialProfile=="BodyTwoTone")
+   -- Two-tone glow: off in daylight, full at night, smooth in between.
+   assert(owner:paint(e,v,1)and e.materialSurface.EmissiveStrength==0,"two-tone should not glow by day")
+   assert(owner:paint(e,v,.8)and e.materialSurface.EmissiveStrength==0,"no glow until dusk")
+   owner:paint(e,v,.4);local mid=e.materialSurface.EmissiveStrength;assert(mid>0 and mid<.5,"partial glow at dusk")
+   assert(owner:paint(e,v,0)and math.abs(e.materialSurface.EmissiveStrength-.5)<.00001,"full glow at night")
    -- Turning two-tone off on the same entry swaps back to the one-colour body tinted primary.
    v.appearance=nil;v.twoTone=false;assert(owner:paint(e,v,0)and e.materialProfile=="Body"and e.materialSurface.Color==primary and e.part.Color==primary)
    -- Secondary-role parts stay one flat colour.

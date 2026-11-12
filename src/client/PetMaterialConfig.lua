@@ -10,7 +10,8 @@ return table.freeze({
  Profiles=table.freeze({
   Body=table.freeze({day=.22,night=.46}),
   -- Two-tone bodies: less glow so a white primary keeps its shading and gradient (Spencer, 2026-11-12).
-  BodyTwoTone=table.freeze({day=.05,night=.28}),
+  -- No glow by day; a soft, fairly bright glow at night (Spencer, 2026-11-12). Ramp: Materials.nightGlow.
+  BodyTwoTone=table.freeze({day=0,night=.5}),
   Eye=table.freeze({day=0,night=0}),
   Charm=table.freeze({day=.38,night=.98}),
   Catchlight=table.freeze({day=.12,night=.48}),
