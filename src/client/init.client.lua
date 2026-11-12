@@ -225,8 +225,6 @@ local power = make("Frame", "PowerLight", {
 }, shell)
 make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, power)
 Art.stroke(power, Art.Cyan, 0.65, 3)
-local deckSticker=Art.frame(shell.Faceplate,"DeckSticker",Art.Amber,UDim2.fromOffset(0,0),UDim2.fromOffset(84,84),shell.Faceplate.ZIndex+1)
-deckSticker.BackgroundTransparency=1;deckSticker.Active,deckSticker.Selectable=false,false
 shell.Faceplate.ClipsDescendants=true
 local rail = label("TextButton", "AimRail", "", clientUI.deviceRoot, Art.Ink)
 rail.AutoButtonColor = false
@@ -400,7 +398,8 @@ local pressureTrack = Art.frame(overlay, "DangerTrack", Art.Ink, UDim2.new(1, -7
 local pressureFill = Art.frame(pressureTrack, "Fill", clientUI.Pico8.Danger, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
 pressureFill.AnchorPoint = Vector2.new(0, 1)
 pressureTrack.Visible = false
-local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Art.LCDInk, 11)
+-- Dark-well board (UI-SPEC 5.1): the warning is a danger-red word on the well.
+local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Color3.fromHex("#FF5A6E"), 11)
 pressureText.ZIndex=8
 pressureText.TextWrapped=true
 pressureText.Visible = false
@@ -478,7 +477,6 @@ local function layoutDropCaption(l)
     local blocked=if dropCaption.Text~="DROP"then dropCaption.Text else nil
     dropCaption:SetAttribute("BlockedCaption",blocked)
     action:SetAttribute("AccessibleLabel",if blocked then "Drop jelly · "..string.lower(blocked)else "Drop jelly")
-    Stickers.layoutPrint(deckSticker,l,nil)
 end
 local vents = make("Frame", "Speaker", { Size = UDim2.fromOffset(57, 28), BackgroundTransparency = 1 }, hardware)
 for row = 0, 2 do
@@ -767,7 +765,6 @@ local function paintDeck(id, stickerId,backgroundId)
 	Art.tintBackdrop(backing,theme)
 	for _,instrument in ipairs({walletFace,queueHost,status,meter})do instrument.InsetLip.BackgroundColor3=theme.trim end
 	modalShade.BackgroundColor3=Art.Ink
-	Stickers.paint(deckSticker, stickerId)
  if dropCaptionLayout then layoutDropCaption(dropCaptionLayout)end
 
 end
@@ -1033,6 +1030,7 @@ local function refreshNursery(state)
  if type(state)~="table"then return end
  if nurseryState and type(state.revision)=="number"and type(nurseryState.revision)=="number"and state.revision<nurseryState.revision then return end
  nurseryState = state
+    if picker then picker:setShopState(state.nectar,state.faceplates)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
@@ -1135,6 +1133,9 @@ roomView.transition.presentationState = function()
 		overlay=modal.Visible or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
 			or gameMenu.shade.Visible or GuiService.MenuIsOpen, reduced=reduceEffects() }
 end
+-- The Pocket Deck boot plays in the deck LCD on a real arrival (UI-SPEC section 6).
+roomView.transition.deckBoot=clientUI.deck.boot
+roomView.transition.deckVisible=function() return clientUI.deck.visible==true end
 for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
 	board:GetAttributeChangedSignal(name):Connect(function() roomView.transition:refresh() end)
 end
@@ -1156,6 +1157,7 @@ local function updateClub()
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
+	if nurseryState then picker:setShopState(nurseryState.nectar,nurseryState.faceplates)end
 end
 
 openPicker = function(mode,back,source)
@@ -1172,7 +1174,8 @@ openPicker = function(mode,back,source)
 	clientUI.pickerReturn=back
  picker.customizationEntry=source=="workbench"
 	picker:open(themeId, stickerId,mode)
-	if isGamepad(UserInputService:GetLastInputType()) then
+	if picker:shopOpen() then GuiService.SelectedObject=nil
+	elseif isGamepad(UserInputService:GetLastInputType()) then
 		GuiService.SelectedObject = picker.tabs[picker.active]or (if picker.active=="Settings"then picker.sound else picker.cancel)
 	end
  return true
@@ -1424,7 +1427,7 @@ updateHud = function()
 		if bit32.band(newlyEarned, Trials.ClubMask) ~= 0 then
 			trialNotice = "Trial complete! Check the Club tab."
 			if earnedClub then
-				trialNotice = "Club sticker earned!"
+				trialNotice = "All Pocket Trials complete!"
 			else
 				for _, goal in ipairs(Trials.Goals) do
 					if bit32.band(newlyEarned, goal.bit) ~= 0 then
@@ -1995,6 +1998,35 @@ ContextActionService:BindActionAtPriority("EggDropResults", function(_, state, i
 end, false, priority + 1, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.A, Enum.KeyCode.D, Enum.KeyCode.Up, Enum.KeyCode.Down,
 	Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown, Enum.KeyCode.Space, Enum.KeyCode.Return,
 	Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
+-- Faceplate shop (UI-SPEC 5.5): it owns focus while open. D-pad / arrows / WASD
+-- browse the grid, A / Enter / Space buy or equip, B / Backspace back out.
+ContextActionService:BindActionAtPriority("EggDropFaceplateShop", function(_, state, input)
+	if not picker:shopOpen() or UserInputService:GetFocusedTextBox() or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+	if state ~= Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
+	local key=input.KeyCode;local shop=picker.shop
+	if key==Enum.KeyCode.Left or key==Enum.KeyCode.A or key==Enum.KeyCode.DPadLeft then shop:move(-1,0)
+	elseif key==Enum.KeyCode.Right or key==Enum.KeyCode.D or key==Enum.KeyCode.DPadRight then shop:move(1,0)
+	elseif key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then shop:move(0,-1)
+	elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then shop:move(0,1)
+	elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then picker:back()
+	else shop:act(false)end
+	return Enum.ContextActionResult.Sink
+end, false, priority + 600, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.Up, Enum.KeyCode.Down, Enum.KeyCode.A, Enum.KeyCode.D,
+	Enum.KeyCode.W, Enum.KeyCode.S, Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown,
+	Enum.KeyCode.Space, Enum.KeyCode.Return, Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
+picker.onBuy=function(order)
+	nurseryRequest:FireServer("faceplateBuy",{id=order.id,plateId=order.plateId,price=order.price},nurseryState and nurseryState.revision or 0)
+end
+picker.onBought=function(id)
+	local theme=Themes.ById[id]
+	-- The toast lives on the picker overlay so it shows in the garden too.
+	clientUI.shopToaster=clientUI.shopToaster or require(script.DeckKit).toaster(picker.shade)
+	clientUI.shopToaster.show((theme and theme.name or "Faceplate").." equipped")
+end
+local faceplateResultConnection=remotes:WaitForChild("FaceplateResult").OnClientEvent:Connect(function(message)
+	picker.shop:result(message)
+end)
+gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropFaceplateShop")end)
 recap:on("replay",function()requestRetry()end)
 recap:on("leave",function()clientUI.leaveDeck()end)
 -- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.

@@ -10,12 +10,13 @@ Assets.Image={
  buttonGloss="rbxassetid://79522605312831",buttonGlossPressed="rbxassetid://126420147674370",
  led="rbxassetid://109638204048831",icons="rbxassetid://78684830466920",focusGlow="rbxassetid://85253701978874",
 }
--- Starter faceplates keep today's saved DeckThemes ids.
-Assets.Faceplate={
- sherbet="rbxassetid://112897675123239",stone="rbxassetid://70670641097836",ice="rbxassetid://119556542491955",
- brick="rbxassetid://94183456721116",moss="rbxassetid://135606664666122",honey="rbxassetid://139483187822198",
- gloaming="rbxassetid://131585392712948",copperleaf="rbxassetid://132092721259236",
-}
+-- Faceplate textures for all 16 plates (ids in assets/deck/faceplates/asset-ids.json;
+-- the shared DeckThemes entry carries them so the server's held deck can use them).
+local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
+Assets.Faceplate={}
+for id,theme in pairs(Themes.ById)do Assets.Faceplate[id]=theme.texture end
+-- Boot sheets (assets/deck/boot/asset-ids.json): fixed art under accent-tinted ink.
+Assets.Boot={fixed="rbxassetid://139514431996183",ink="rbxassetid://108875671405895"}
 Assets.Layout={
  size=Vector2.new(1600,800),
  shadow={-90,-68+22,1780,980},shoulderL={170,-12,220,24},shoulderR={1210,-12,220,24},

@@ -3,11 +3,13 @@ local GuiService=game:GetService("GuiService")
 local UserInputService=game:GetService("UserInputService")
 local Palette=require(Shared.DeckPalette)
 local Themes=require(Shared.DeckThemes)
-local Stickers=require(Shared.DeckStickers)
 local Backgrounds=require(Shared.DeckBackgrounds)
 local AppearanceCatalog=require(Shared.AppearanceCatalog)
-local catalogs={Shell=Themes,Sticker=Stickers,Background=Backgrounds}
-local slots={Shell="theme",Sticker="sticker",Background="background"}
+local catalogs={Shell=Themes,Background=Backgrounds}
+local slots={Shell="theme",Background="background"}
+-- Faceplates (the Shell tab) open the glass shop screen; stickers are retired.
+local Shop=require(script.Parent.FaceplateShop)
+local TabOrder={"Shell","Background"}
 local Trials=require(Shared.PocketTrials)
 local Art=require(script.Parent.DeckArt)
 local SaveNotice=require(script.Parent.SaveNotice)
@@ -40,7 +42,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	scroll.BackgroundTransparency,scroll.BorderSizePixel,scroll.ZIndex=1,0,card.ZIndex+1
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	scroll.ScrollBarThickness=4;Art.bind(scroll,{ScrollBarImageColor3="accent"})
-	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Sticker={},Background={}},rows={},
+	local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Background={}},rows={},
 		onPreview=onPreview,onClose=onClose,onApply=onApply,available={},confirmed={},onSetting=onSetting,active="Shell"},Picker)
 	self.heading=text(card,"Heading","Deck style","Heading")
 	self.saveMarker=text(card,"SaveStatus","","Supporting");Art.bind(self.saveMarker,{TextColor3="reward"});self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
@@ -56,7 +58,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	self.appearanceStatus=text(scroll,"AppearanceStatus","Select to wear immediately.","Supporting")
  self.retryButton=button(scroll,"RetryAppearance","Retry",function()if self.shade.Visible and self.retryButton.Interactable and self.onRetry and self.onRetry(slots[self.active]or "theme")~=false then if self.onAccepted then self.onAccepted("confirm")end end end)
  self.trialsLink=button(scroll,"ViewTrials","View Pocket Trials",function()self.innerReturn={active=self.active,scroll=self.scroll.CanvasPosition,focus=GuiService.SelectedObject};self:showTab("Trials");if self.onAccepted then self.onAccepted("confirm")end end)
- for _,tab in ipairs({"Shell","Sticker","Background"})do self.tabs[tab]=button(card,tab.."Tab",if tab=="Sticker"then "Stickers"elseif tab=="Background"then "Background"else tab,function()self:activateTab(tab)end)end
+ for _,tab in ipairs(TabOrder)do self.tabs[tab]=button(card,tab.."Tab",if tab=="Background"then "Background"else "Faceplates",function()self:activateTab(tab)end)end
 
 	self.display=panel(scroll,"Display","inset")
 	self.previewName=text(self.display,"PreviewName","Scout","Action")
@@ -70,9 +72,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	local big=panel(screen,"BigEgg",Palette.Ember);place(big,17,26,13,13)
 	local rocker=panel(self.face,"AimRocker",Palette.Ink);place(rocker,5,24,16,7)
 	self.buttonA=panel(self.face,"A",Palette.Primary);place(self.buttonA,76,23,13,13)
-	self.sticker=Art.frame(self.face,"Sticker",Art.Amber,UDim2.fromOffset(70,37),UDim2.fromOffset(23,23),self.face.ZIndex+1);self.sticker.BackgroundTransparency=1
 	self.backgroundPreview=Art.frame(self.display,"BackgroundPreview","inset",UDim2.fromOffset(12,12),UDim2.fromOffset(102,68),self.display.ZIndex+1);self.backgroundPreview.ClipsDescendants=true;self.backgroundPreview.Visible=false
-	for _,tab in ipairs({"Shell","Sticker","Background"})do
+	for _,tab in ipairs(TabOrder)do
 		local catalog=catalogs[tab]
 		for _,id in ipairs(catalog.Order)do
 			local option=catalog.ById[id]
@@ -81,9 +82,6 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 			if tab=="Shell"then
 				local face=panel(chip,"Face",option.face or option.shell);place(face,3,3,36,24)
 				local accent=panel(face,"Accent",option.buttons);place(accent,25,6,8,8)
-			elseif tab=="Sticker"then
-				chip.BackgroundTransparency=1
-				Stickers.paint(chip,id)
    else
     Art.backgroundThumbnail(chip,id,Themes.ById[Themes.Default])
 			end
@@ -111,11 +109,25 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 	self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
+	self.shop=Shop.new(shade,{
+		equip=function(id)if self.shade.Visible and self.onApply then self.onApply("theme",id);if self.onAccepted then self.onAccepted("confirm")end end end,
+		buy=function(order)if self.onBuy then self.onBuy(order)end;if self.onAccepted then self.onAccepted("confirm")end end,
+		bought=function(id)if self.onBought then self.onBought(id)end end,
+		backgrounds=function()self:activateTab("Background")end,
+	})
 	self:showTab("Shell");return self
 end
+-- Owned faceplates and the wallet come from the nursery snapshot.
+function Picker:setShopState(wallet,faceplates)
+	self.faceplates=faceplates or {};self.wallet=wallet or 0
+	if self.facts then self.facts.faceplates=self.faceplates end
+	self.shop:setContext({wallet=self.wallet,facts=self.facts or {faceplates=self.faceplates}})
+end
+function Picker:shopOpen()return self.shade.Visible and self.active=="Shell"end
 function Picker:layout()
 	if self.layingOut then return end;self.layingOut=true
 	local size=self.shade.AbsoluteSize;local short=size.Y<220
+	if self.shop then self.shop:fit(size)end
  self.roomy=size.X>=1000 and size.Y>=650
  local function styleType(n,r,c)return Art.roomyType(n,r,c,self.roomy)end
 	local width=math.max(1,math.min(if self.roomy then 720 else 620,size.X-24));local pad=if short then 8 else 16
@@ -134,14 +146,14 @@ function Picker:layout()
 	local headingH=Art.textHeight(self.heading,usable-56,32)
 	local tabsY=if short then 4 else math.max(44,headingH)+12
  local tabAvailable=usable-(if short then 56 else 0)
- local baseTabW=(tabAvailable-12)/3;local minTab=88
+ local baseTabW=(tabAvailable-6*(#TabOrder-1))/#TabOrder;local minTab=88
  for key,tab in pairs(self.tabs)do
   styleType(tab,if short then "Body"else "Action",short)
   if key=="Background"then tab.Text="Background";tab:SetAttribute("AccessibleLabel","Background patterns");if Art.textWidth(tab)>baseTabW-12 then tab.Text="Scenes"end end
   minTab=math.max(minTab,Art.textWidth(tab)+16)
  end
- local tabColumns=math.max(1,math.min(3,math.floor((tabAvailable+6)/(minTab+6))))
- local tabRows=math.ceil(3/tabColumns);local tabW=(tabAvailable-(tabColumns-1)*6)/tabColumns;local tabH=44
+ local tabColumns=math.max(1,math.min(#TabOrder,math.floor((tabAvailable+6)/(minTab+6))))
+ local tabRows=math.ceil(#TabOrder/tabColumns);local tabW=(tabAvailable-(tabColumns-1)*6)/tabColumns;local tabH=44
  for _,tab in pairs(self.tabs)do tabH=math.max(tabH,Art.textHeight(tab,tabW-12,0)+12)end
 	local leaf=self.active=="Trials"or self.active=="Settings"
  local header=if leaf then (if short then math.max(44,headingH)+4 else math.max(44,headingH)+12)else tabsY+tabRows*(tabH+6)-6+4
@@ -218,17 +230,17 @@ function Picker:layout()
 	end
 	return y
 	end
-	local heights={Shell=layoutBody("Shell"),Sticker=layoutBody("Sticker"),Background=layoutBody("Background"),Trials=layoutBody("Trials"),Settings=layoutBody("Settings")}
+	local heights={Shell=layoutBody("Shell"),Background=layoutBody("Background"),Trials=layoutBody("Trials"),Settings=layoutBody("Settings")}
 	local y=heights[self.active]
 
 	if self.safeTop==nil or self.layoutRootSize~=size then
-		local tallest=header+math.max(heights.Shell+footerH+8,heights.Sticker+footerH+8,heights.Background+8,heights.Trials,heights.Settings)+8
+		local tallest=header+math.max(heights.Shell+footerH+8,heights.Background+8,heights.Trials,heights.Settings)+8
 		self.safeTop=math.max(0,(size.Y-math.min(maximum,tallest))/2);self.layoutRootSize=size
 	end
 	local height=math.min(maximum,math.max(1,size.Y-self.safeTop-4),header+y+footer+8)
 	self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
 	place(self.heading,pad,4,usable-56,headingH);place(self.cancel,width-pad-44,4,44,44)
-	for index,tab in ipairs({"Shell","Sticker","Background"})do place(self.tabs[tab],pad+((index-1)%tabColumns)*(tabW+6),tabsY+math.floor((index-1)/tabColumns)*(tabH+6),tabW,tabH)end
+	for index,tab in ipairs(TabOrder)do place(self.tabs[tab],pad+((index-1)%tabColumns)*(tabW+6),tabsY+math.floor((index-1)/tabColumns)*(tabH+6),tabW,tabH)end
 	self.saveMarker.Visible=markerW>0;self.saveDetail.Visible=self.saveNotice~=nil
 	place(self.saveMarker,pad,header,markerW,math.max(44,height-header-footer-4))
 	place(self.scroll,pad+(if markerW>0 then markerW+12 else 0),header,scrollW,math.max(44,height-header-footer-4))
@@ -272,6 +284,9 @@ function Picker:showTab(active)
  if not self.tabs[active]and active~="Trials"and active~="Settings"then return end
  if not self.returningFromTrials and active~=self.active and active~="Trials"then self.inspectId,self.inspectSlot=nil,nil end
  local changed=self.active~=active;self.active=active
+ local shopping=active=="Shell"and self.shade.Visible
+ self.card.Visible=not shopping
+ if shopping then self.shop:open(self.confirmed and self.confirmed.theme)else self.shop:close()end
  local style=slots[active]~=nil;local trials=active=="Trials";local settings=active=="Settings"
  self.display.Visible,self.appearanceStatus.Visible=style,style
  self.clubHeader.Visible,self.reward.Visible=trials,trials
@@ -282,7 +297,8 @@ function Picker:showTab(active)
  self:refreshAppearance();self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
-  if not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[active]or (if active=="Settings"then self.sound else self.cancel)
+  if shopping then GuiService.SelectedObject=nil
+  elseif not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[active]or (if active=="Settings"then self.sound else self.cancel)
   elseif selected and selected:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end
  end
 end
@@ -304,14 +320,14 @@ function Picker:changeSetting(key)
  if not self.shade.Visible or self.active~="Settings"or not control or not control.Interactable then return false end
  self.onSetting(key);if self.onAccepted then self.onAccepted("confirm")end;return true
 end
-function Picker:preview(themeId,stickerId)
- local theme=Themes.ById[themeId];if not theme or not Stickers.ById[stickerId]then return false end
- self.previewName.Text=if self.active=="Sticker"then Stickers.ById[stickerId].name else theme.name
+function Picker:preview(themeId)
+ local theme=Themes.ById[themeId];if not theme then return false end
+ self.previewName.Text=theme.name
  Art.finish(self.shell,theme,"shell");Art.finish(self.face,theme,"face")
  self.face.AimRocker.BackgroundColor3=theme.rocker or Palette.Ink
  self.bezel.BackgroundColor3,self.buttonA.BackgroundColor3=theme.trim,theme.buttons
  self.screen.BackgroundColor3=theme.lcd.base
- Stickers.paint(self.sticker,stickerId);return true
+ return true
 end
 function Picker:select(themeId,stickerId,backgroundId)
  self.themeId,self.stickerId,self.backgroundId=themeId,stickerId,backgroundId or Backgrounds.Default;self.confirmed={theme=themeId,sticker=stickerId,background=backgroundId or Backgrounds.Default};self:refreshAppearance();self:layout();return true
@@ -349,11 +365,12 @@ function Picker:refreshAppearance()
   if tab=="Background"then Art.backgroundThumbnail(stroke.Parent.Chip,id,Themes.ById[self.confirmed.theme or Themes.Default])end
   stroke.Parent.Caption.Text=option.name..(if accepted then " \u{2713}"elseif not AppearanceCatalog.canEquip(slots[tab],id,self.facts)then " - Locked"else "")
  end end
- self:preview(if self.inspectSlot=="theme"then self.inspectId else self.themeId or Themes.Default,if self.inspectSlot=="sticker"then self.inspectId else self.stickerId or Stickers.Default)
+ self:preview(if self.inspectSlot=="theme"then self.inspectId else self.themeId or Themes.Default)
+ if self.shop then self.shop:setContext({equipped=self.confirmed.theme or Themes.Default,facts=self.facts})end
  if self.active=="Background"then self.previewName.Text=Backgrounds.ById[if self.inspectSlot=="background"then self.inspectId else self.backgroundId or Backgrounds.Default].name end
 end
 function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask,musicEnabled,totalWins,masteryRanks)
- self.facts={rank=owned,trials=mask,inventoryMask=inventoryMask,totalWins=totalWins or 0,masteryRanks=masteryRanks or {}}
+ self.facts={rank=owned,trials=mask,inventoryMask=inventoryMask,totalWins=totalWins or 0,masteryRanks=masteryRanks or {},faceplates=self.faceplates}
 	self.sound.Text="SFX: "..sound
 	self.music.Text=if musicEnabled==false then "Music: Off"else "Music: On"
 	self.motion.Text=if systemReduced then "Motion: Roblox"elseif reduced then "Motion: Low"else "Motion: Full"
@@ -370,16 +387,10 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		count+=if done then 1 else 0
 	end
 	self.clubHeader.Text=string.format("Pocket trials · %d/%d",count,#Trials.Goals)
-	self.reward.Text=if Trials.clubComplete(mask)then "Trial crest ready in Stickers"else "Finish all three to earn the Trial crest"
-	for id,stroke in pairs(self.choices.Sticker)do
-		local available=Stickers.canEquip(id,owned,mask,inventoryMask);local swatch=stroke.Parent;local option=Stickers.ById[id]
-		self.available[id]=available;swatch.Interactable,swatch.Selectable=true,true
-  Art.bind(swatch.Caption,{TextColor3=function()return if available then Art.surfaceColor(swatch.Caption,"text")else Art.surfaceColor(swatch.Caption,"muted") end})
-	end
+	self.reward.Text=if Trials.clubComplete(mask)then "All three Pocket Trials complete"else "Finish all three Pocket Trials"
 	self:refreshAppearance()
 	local signature={self.sound.Text,self.music.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
 	for _,row in ipairs(self.rows)do table.insert(signature,row.title.Text..row.status.Text)end
-	for _,id in ipairs(Stickers.Order)do table.insert(signature,self.choices.Sticker[id].Parent.Caption.Text)end
 	local key=table.concat(signature,"|")
 	if self.shade.Visible and self.clubLayoutKey~=key then self:layout()end
 	self.clubLayoutKey=key
@@ -389,13 +400,16 @@ function Picker:bumpControllerEpoch()
 end
 function Picker:getControllerFocus()
 	if not self.shade.Visible then return nil end
+	-- The faceplate shop owns its focus ring; the coordinator selects nothing native.
+	if self.active=="Shell"then return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,target=function()return nil end}end
 	return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
 		target=function()return self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end,fallback=self.cancel}
 end
 function Picker:open(themeId,stickerId,mode)
  self:bumpControllerEpoch();self.previousSelection=GuiService.SelectedObject;self.safeTop=nil;self.innerReturn=nil;self.inspectId,self.inspectSlot=nil,nil
  self.shade.Visible=true;if not self.appearance then self:select(themeId,stickerId)end;self:showTab(mode or "Shell")
- if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end
+ if self:shopOpen()then GuiService.SelectedObject=nil
+ elseif string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=self.tabs[self.active]or (if self.active=="Settings"then self.sound else self.cancel)end
 end
 function Picker:back()
  if not self.shade.Visible then return false end
@@ -406,7 +420,7 @@ end
 function Picker:close(reason)
  Art.setBackgroundPreview(self.backgroundPreview,nil,nil,false)
  if not self.shade.Visible then return end
- self:bumpControllerEpoch();self.shade.Visible=false;self.innerReturn=nil;self.onClose(reason or "forced")
+ self:bumpControllerEpoch();self.shade.Visible=false;self.shop:close();self.card.Visible=true;self.innerReturn=nil;self.onClose(reason or "forced")
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=visibleSelection(self.previousSelection)end
 end
 return Picker

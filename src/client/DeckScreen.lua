@@ -8,6 +8,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Art=require(script.Parent.DeckArt)
 local Kit=require(script.Parent.DeckKit)
 local Assets=require(script.Parent.DeckAssets)
+local Boot=require(script.Parent.DeckBoot)
 local Config=require(Shared.BoardConfig)
 local JellyPalette=require(Shared.JellyPalette)
 local L=Assets.Layout
@@ -56,6 +57,8 @@ function Screen.new(options)
  self.shoulders={image(root,"ShoulderL",I.shoulder,2),image(root,"ShoulderR",I.shoulder,2)}
  self.band=image(root,"Band",I.band,3)
  self.plate=image(root,"Faceplate",Assets.Faceplate.sherbet,4)
+ -- Finish overlay (gloss, water, aurora, sparkle) sits between the plate and plate-overlay.
+ self.finish=image(root,"FinishOverlay","",5,{ImageTransparency=1,Visible=false})
  self.plateOverlay=image(root,"PlateOverlay",I.plateOverlay,5)
  self.wordmarkShadow=image(root,"WordmarkShadow",I.wordmark,6,{ResampleMode=Enum.ResamplerMode.Pixelated,ImageColor3=Color3.new(1,1,1),ImageTransparency=.7})
  self.wordmark=image(root,"Wordmark",I.wordmark,6,{ResampleMode=Enum.ResamplerMode.Pixelated})
@@ -130,6 +133,10 @@ function Screen.new(options)
  local rcontent=Kit.frame(results,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));rcontent.ZIndex=results.ZIndex+2
  self.resultsScale=Kit.node("UIScale",rcontent,{Scale=1})
  self.results,self.resultsContent=results,rcontent
+ -- Boot (section 6): above every LCD layer, below the glare.
+ local bootHost=Kit.frame(options.overlayParent or parent,"DeckBoot",nil,UDim2.new(),UDim2.fromOffset(848,608),30)
+ bootHost.ZIndex=110;bootHost.ClipsDescendants=true;bootHost.Active=false
+ self.bootHost=bootHost;self.boot=Boot.new(bootHost,{audio=options.audio})
  -- Back arrow lives on the interactive root, never on the deck body.
  self.back=Kit.backArrow(options.viewRoot,false)
  self.back.root.Activated:Connect(function()if self.back.enabled and self.callbacks.back then self.callbacks.back()end end)
@@ -170,6 +177,24 @@ function Screen:setTheme(id,theme)
  local accent=theme.ui and theme.ui.accent or theme.buttons
  self.buttons.A.base.ImageColor3=accent;self.dpadArrows.ImageColor3=accent;self.led.ImageColor3=accent
  self.buttons.A.letter.TextColor3=theme.ui and theme.ui.ink or Kit.Color.ink
+ self.accent=accent;self.boot:setAccent(accent)
+ self:setFinish(theme.overlay)
+end
+
+-- Section 8: animate ImageTransparency only, ping-pong between 1 - max and
+-- 1 - min over the period; Reduced Motion holds the low opacity.
+function Screen:setFinish(overlay)
+ self.finishToken=(self.finishToken or 0)+1;local token=self.finishToken
+ if self.finishTween then self.finishTween:Cancel();self.finishTween=nil end
+ self.finish.Visible=overlay~=nil
+ if not overlay then return end
+ self.finish.Image=overlay.image
+ local low,high=1-overlay.min,1-overlay.max
+ self.finish.ImageTransparency=low
+ if Kit.reduced()then return end
+ local tween=game:GetService("TweenService"):Create(self.finish,TweenInfo.new(overlay.period/2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{ImageTransparency=high})
+ self.finishTween=tween
+ task.defer(function()if self.finishToken==token then tween:Play()end end)
 end
 
 function Screen:setVisible(visible)
@@ -185,7 +210,7 @@ function Screen:layout(rootSize,aspect)
  self.root.Position=UDim2.fromOffset(g.deck.x,g.deck.y);self.root.Size=UDim2.fromOffset(g.deck.w,g.deck.h)
  placeU(self.shadow,L.shadow,s);self.shadow.SliceScale=s
  placeU(self.shoulders[1],L.shoulderL,s);placeU(self.shoulders[2],L.shoulderR,s)
- placeU(self.band,L.band,s);placeU(self.plate,L.plate,s);placeU(self.plateOverlay,L.plate,s)
+ placeU(self.band,L.band,s);placeU(self.plate,L.plate,s);placeU(self.plateOverlay,L.plate,s);placeU(self.finish,L.plate,s)
  placeU(self.wordmark,L.wordmark,s)
  self.wordmarkShadow.Position=UDim2.fromOffset((L.wordmark[1]+1.6)*s,(L.wordmark[2]+2)*s);self.wordmarkShadow.Size=self.wordmark.Size
  placeU(self.glass,L.glass,s);placeU(self.led,L.led,s)
@@ -212,6 +237,7 @@ function Screen:layout(rootSize,aspect)
  local lcdR=g.lcd
  self.glare.Position=UDim2.fromOffset(lcdR.x,lcdR.y);self.glare.Size=UDim2.fromOffset(lcdR.w,lcdR.h)
  self.results.Position=self.glare.Position;self.results.Size=self.glare.Size;Kit.corner(self.results,math.floor(L.lcdRadius*s))
+ self.bootHost.Position=self.glare.Position;self.bootHost.Size=self.glare.Size;Kit.corner(self.bootHost,math.floor(L.lcdRadius*s))
  self.resultsContent.Size=self.content.Size;self.resultsScale.Scale=g.contentScale
  local inset=if g.compact then 12 else 24
  self.back.setCompact(g.compact);self.back.root.Position=UDim2.new(1,-inset,0,inset)

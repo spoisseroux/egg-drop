@@ -990,7 +990,8 @@ function Room:driveModes(initial)
 					if changed and destination=="Room" and not self.overlayOpen() and not GuiService.MenuIsOpen then
 						self.audio:play(self.shownPet.cue)
 					end
-					if token then self.transition:reveal(destination=="Board",token) end
+					if token then self.transition:reveal(destination=="Board",token)
+					elseif destination=="Board" and self.mode=="Board" then self.transition:stillBoot(if first then "initial" else "arrival") end
 					-- Keep Meet/focus from snapshotting an unfinished lounge camera move.
 					if self.cameraTween and self.cameraTween.PlaybackState==Enum.PlaybackState.Playing then
 						self.cameraTween.Completed:Wait()

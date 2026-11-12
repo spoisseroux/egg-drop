@@ -30,7 +30,11 @@ local assetIds = {
 local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
 	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "overflow", "retry", "menu",
+	"deck_boot",
 }
+-- Cues named by the UI spec whose sound files are not delivered yet
+-- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
+Audio.PendingCues = { deck_boot = true }
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 
 function Audio.uri(cue)
@@ -81,7 +85,7 @@ function Audio.new()
 			end
 			self.voices[cue] = voices
 			table.insert(warmup, voices[1])
-		else
+		elseif not Audio.PendingCues[cue] then
 			table.insert(missing, cue)
 		end
 	end
@@ -236,6 +240,20 @@ function Audio:play(name, speed, volume, owner)
 		self.voiceOwners=self.voiceOwners or {};self.voiceOwners[voice]=owner
 	elseif self.voiceOwners then self.voiceOwners[voice]=nil end
 	voice:Play()
+	return true
+end
+
+-- Fade one cue's playing voices out (boot skip: 60 ms). Safe with no voices.
+function Audio:fadeCue(name, seconds)
+	local voices = self.voices[name]
+	if self.destroyed or not voices then return false end
+	for _, voice in ipairs(voices) do
+		if voice.IsPlaying then
+			local tween = TweenService:Create(voice, TweenInfo.new(seconds or 0.06), { Volume = 0 })
+			tween.Completed:Connect(function() voice:Stop() end)
+			tween:Play()
+		end
+	end
 	return true
 end
 

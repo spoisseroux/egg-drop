@@ -112,7 +112,19 @@ end
 
 function Transition:reveal(toDeck, token)
 	if not self:owns(token) then return false end
-	if toDeck then
+	if toDeck and self.deckBoot and self.deckBoot.host.Parent and self.deckVisible and self.deckVisible() then
+		-- Pocket Deck boot inside the LCD: drop the curtain, play the sprite boot,
+		-- hand off when it ends or any input skips it.
+		self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
+		local boot=self.deckBoot
+		boot:play({owns=function()return self:owns(token)end})
+		self.activeBoot=boot
+		if not self:motion(token,self.shade,.10,{BackgroundTransparency=1}) then return false end
+		self.shade.Visible=false
+		boot:wait()
+		self.activeBoot=nil
+		if not self:owns(token) then return false end
+	elseif toDeck then
 		self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
 		self.logo.Visible=true;self.mark.GroupTransparency=1
 
@@ -141,6 +153,21 @@ function Transition:reveal(toDeck, token)
 	return true
 end
 
+-- Reduced Motion has no presentation token, so it gets the still logo:
+-- frame 21 for 0.4 s with deck_boot at 0 ms, on a real arrival only.
+function Transition:stillBoot(route)
+	local boot=self.deckBoot
+	if not boot or not boot.host.Parent or not (self.deckVisible and self.deckVisible()) then return false end
+	local state=table.clone(self.presentationState and self.presentationState() or {mode="Board",reduced=self.reduce()})
+	if state.reduced~=true then return false end
+	state.reduced=false
+	if not Policy.canBoot(state,route) then return false end
+	self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
+	boot:play({reduced=true})
+	boot:wait()
+	return true
+end
+
 -- Re-evaluate synchronously when any overlay, round state or motion preference changes.
 function Transition:refresh()
 	local token=self.policy.active
@@ -153,6 +180,7 @@ function Transition:hide(token)
 	for motion in pairs(self.motions) do motion:Cancel() end
 	table.clear(self.motions)
 	if self.audio and self.audio.cancelBoot then self.audio:cancelBoot() end
+	if self.activeBoot then self.activeBoot:finish(false);self.activeBoot=nil end
 	self.logo.Visible=false
 	self.shade.Visible=false
 	self.aperture.Visible,self.scan.Visible=false,false
