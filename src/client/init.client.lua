@@ -1814,12 +1814,30 @@ rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
 })
 rendererPresentation.roundEnd:observe()
 
+-- Overflow danger: the line pulses PICO-8 red while armed (solid under Reduced
+-- Effects) and the warning blip repeats no faster than every 0.65 s. The cue only
+-- plays on a presented board, never under a menu, modal or hidden deck.
+clientUI.overflowArmed,clientUI.overflowNext=false,0
+function clientUI.overflowLineTransparency(pressure,now,reduced)
+ if pressure<=0 then return .55 end
+ if reduced then return .05 end
+ return .05+.3*(.5+.5*math.cos(now*math.pi*5))
+end
+function clientUI.overflowCue(pressure,now,audible)
+ local armed=pressure>0
+ if not armed then clientUI.overflowArmed=false;return end
+ if not clientUI.overflowArmed then clientUI.overflowArmed=true;clientUI.overflowNext=0 end
+ if audible and now>=clientUI.overflowNext then
+  if audio:play("overflow",1,.5)then clientUI.overflowNext=now+.65 end
+ end
+end
 local function requestRetry()
 	cancelHatchNavigation()
 	local sequence=RunReceipt.replaySequence(board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),(board:GetAttribute("OwnedPets")or 0)==0)
 	if sequence and recapOwnsInput() and not UserInputService:GetFocusedTextBox() then
   clientUI.accepted("confirm")
 		request:FireServer("reset",sequence)
+  if not GuiService.MenuIsOpen then audio:play("retry",1,.6)end
   return true
 	end
  return false
@@ -2290,7 +2308,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	pressureTrack.Visible = pressure > 0
 	pressureText.Visible = pressure > 0
 	pressureFill.Size = UDim2.fromScale(1, math.clamp(pressure, 0, 1))
-	overflowLine.BackgroundTransparency = if pressure > 0 then .05 else .55
+	overflowLine.BackgroundTransparency = clientUI.overflowLineTransparency(pressure, now, reduced)
 	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
 		mascotMood = mood
@@ -2302,6 +2320,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
  rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
  if audio.deviceActive==false then rendererPresentation.jolt:reset()else rendererPresentation.jolt:update(now)end
+ clientUI.overflowCue(pressure, now, presented)
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
  rendererPresentation.fx:update(now)
 	if not rendererPresentation.visible then
