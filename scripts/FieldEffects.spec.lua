@@ -57,6 +57,23 @@ return function(client,parent)
    for n=1,120 do if n%12==0 then emit("merge",1+n%5,1,21,50+n/60)end;fx:update(50+n/60)end
    root.Size=UDim2.fromOffset(172,289);fx:clear();assert(#fx.root:GetDescendants()==count)
   end)
+  test("merge score pops show the server delta, rise, fade within 0.7 s and cap at four",function()
+   local Config=require(game.ReplicatedStorage.Shared.BoardConfig);local Pico8=require(game.ReplicatedStorage.Shared.Pico8)
+   assert(Config.mergeScore(2,1,false)==20 and Config.mergeScore(3,2,false)==40 and Config.mergeScore(5,12,true)==240)
+   root.Size=UDim2.fromOffset(354,594);fx:clear();fx:setOwner(true,40,false);local count=#fx.root:GetDescendants()
+   assert(fx:emit("merge",point,18,color,3,2,40,60,nil,false,Config.mergeScore(3,2,false)))
+   local pop;for _,p in ipairs(fx.pops)do if p.active then pop=p.label end end
+   assert(pop and pop.Visible and pop.Text=="+40" and pop.TextColor3==color,"no +N pop")
+   local y=pop.Position.Y.Offset;fx:update(60.35);assert(pop.Position.Y.Offset<y-5,"pop did not rise");fx:update(60.71);assert(not pop.Visible,"pop outlived 0.7 s")
+   for n=1,7 do fx:emit("merge",point,18,color,2,1,40,61+n*.01,nil,false,20)end
+   local shown=0;for _,p in ipairs(fx.pops)do if p.label.Visible then shown+=1 end end
+   assert(shown<=4 and #fx.pops==4 and #fx.root:GetDescendants()==count,"pop pool grew")
+   for chain,c in pairs({[2]=Pico8[9],[3]=Pico8[10],[5]=Pico8[8]})do
+    fx:clear();assert(fx:emit("merge",point,18,color,3,chain,40,70+chain,nil,false,10));assert(fx.caption.Text=="×"..chain and fx.caption.TextColor3==c,"chain caption "..chain)
+   end
+   fx:setOwner(true,40,true);fx:clear();assert(fx:emit("merge",point,18,color,4,1,40,80,nil,false,40))
+   for _,p in ipairs(fx.pops)do if p.active then local at=p.label.Position;fx:update(80.3);assert(p.label.Position==at and p.label.Text=="+40","reduced pop moved")end end
+  end)
   test("teardown is idempotent and rejects late events",function()
    fx:destroy();fx:destroy();local writes=fx.stats.writes;assert(not emit("merge",5,5,21,60));fx:update(60);assert(fx.stats.writes==writes and fx.root.Parent==nil)
   end)

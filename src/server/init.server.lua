@@ -1013,7 +1013,7 @@ RunService.Heartbeat:Connect(function(dt)
 				if merge.cleared then
 					board.round.maxClears += 1
 				end
-				board.round.score += 10 * (merge.tier + math.min(board.chain - 1, 9)) + (if merge.cleared then 100 else 0)
+				board.round.score += Config.mergeScore(merge.tier, board.chain, merge.cleared)
 				Progress.recordScore(board.profile, board.round.score)
 				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
 				if board.field then board.field:observe(merge,{sequence=board.runSequence,ordinal=board.merges,chain=board.chain,playTime=board.playTime}) end

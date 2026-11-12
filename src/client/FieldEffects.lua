@@ -1,5 +1,7 @@
 -- Four reusable, passive tray bursts. No event creates Instances or tweens.
 local Effects={};Effects.__index=Effects
+local Pico8=require(game:GetService("ReplicatedStorage").Shared.Pico8)
+Effects.PopDuration=.7
 local function node(parent,name)
 	local frame=Instance.new("Frame");frame.Name=name;frame.BorderSizePixel=0;frame.BackgroundTransparency=1
 	frame.Active,frame.Selectable=false,false;frame.AnchorPoint=Vector2.new(.5,.5);frame.ZIndex=5;frame.Visible=false;frame.Parent=parent
@@ -23,6 +25,14 @@ function Effects.new(parent)
  caption.Active,caption.Selectable=false,false;caption.Visible=false;caption.ZIndex=5;caption.Font=Enum.Font.GothamBold;caption.TextSize=14
  caption.TextWrapped=true;caption.TextColor3=Color3.fromHex("#F4F8E9");caption.TextStrokeColor3=Color3.fromHex("#142D20");caption.TextStrokeTransparency=.25;caption.Parent=root
  self.caption=caption
+ -- Four pooled "+N" score pops, oldest reused first. Colours come from the caller.
+ self.pops={}
+ for i=1,4 do
+  local pop=Instance.new("TextLabel");pop.Name="ScorePop"..i;pop.BackgroundTransparency=1;pop.BorderSizePixel=0;pop.AnchorPoint=Vector2.new(.5,.5)
+  pop.Active,pop.Selectable=false,false;pop.Visible=false;pop.ZIndex=6;pop.Font=Enum.Font.GothamBlack;pop.TextSize=16;pop.Size=UDim2.fromOffset(84,26)
+  pop.TextStrokeColor3=Pico8[0];pop.TextStrokeTransparency=.1;pop.Parent=root
+  self.pops[i]={label=pop,active=false,start=0}
+ end
 	self.stats.instances=#root:GetDescendants()+1
 	return self
 end
@@ -37,6 +47,7 @@ function Effects:clear()
 		for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 	end
  if self.caption then put(self,self.caption,"Visible",false)end
+ if self.pops then for _,pop in ipairs(self.pops)do pop.active=false;put(self,pop.label,"Visible",false)end end
  self.captionUntil=nil
 	self.stats.active=0
 end
@@ -48,8 +59,9 @@ function Effects:setOwner(visible,serial,reduced)
 	self.visible,self.serial,self.reduced=visible,serial,reduced
  return lost
 end
-function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,cleared)
+function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,cleared,score)
 	if self.destroyed or not self.visible or serial~=self.serial then self.stats.rejected+=1;return false end
+ if kind=="merge"and type(score)=="number"and score>0 then self:pop(point,radius,color,score,now)end
 	local priority=if kind=="merge"then 100+(tier or 1)*10+math.min(chain or 1,9)+(if cleared then 1000 else 0)elseif kind=="impact"then 20 else 10
 	local chosen
 	for _,slot in ipairs(self.slots)do if not slot.active then chosen=slot;break end end
@@ -68,7 +80,8 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
  if kind=="merge"and(cleared or(chain or 1)>1)and(not self.captionUntil or now>=self.captionUntil or priority>=(self.captionPriority or 0))then
   self.captionPriority=priority
   local label=self.caption;local width=math.max(1,self.root.AbsoluteSize.X-8);local maxH=math.max(1,self.root.AbsoluteSize.Y-8)
-  local text=if cleared then "MAX CLEAR +100 pts"else "CHAIN ×"..tostring(chain)
+  local text=if cleared then "MAX CLEAR +100 pts"else "×"..tostring(chain)
+  put(self,label,"TextColor3",if cleared then Pico8[7] else Pico8.ChainRamp[math.clamp((chain or 2)-1,1,3)])
   local service=game:GetService("TextService")
   local bounds=service:GetTextSize(text,14,Enum.Font.GothamBold,Vector2.new(width,10000))
   if cleared and bounds.Y+4>maxH then text="MAX\n+100\npts";bounds=service:GetTextSize(text,14,Enum.Font.GothamBold,Vector2.new(width,10000))end
@@ -87,6 +100,7 @@ function Effects:update(now)
   if now>=self.captionUntil then put(self,self.caption,"Visible",false);self.captionUntil=nil
   else put(self,self.caption,"TextTransparency",math.clamp((now-self.captionStart)/.30,0,1)*.8)end
  end
+ self:updatePops(now)
 	local active=0
 	for _,slot in ipairs(self.slots)do if slot.active then
 		local t=math.clamp((now-slot.start)/slot.duration,0,1)
@@ -106,6 +120,30 @@ function Effects:update(now)
 		end
 	end end
 	self.stats.active=active
+end
+-- "+N" rises about 18 px and fades out within PopDuration. Reduced Effects keeps it
+-- still at the merge point and only fades. Writes go through put(); no allocation.
+function Effects:pop(point,radius,color,score,now)
+ local chosen
+ for _,pop in ipairs(self.pops)do if not pop.active then chosen=pop;break end end
+ if not chosen then for _,pop in ipairs(self.pops)do if not chosen or pop.start<chosen.start then chosen=pop end end;self.stats.popEvicted=(self.stats.popEvicted or 0)+1 end
+ chosen.active,chosen.start,chosen.x,chosen.y=true,now,point.X,math.max(9,point.Y-radius*.4)
+ local label=chosen.label
+ put(self,label,"Text","+"..tostring(score));put(self,label,"TextColor3",color);put(self,label,"TextSize",math.clamp(math.floor(radius*.5),15,24))
+ put(self,label,"Position",UDim2.fromOffset(chosen.x,chosen.y));put(self,label,"TextTransparency",0);put(self,label,"TextStrokeTransparency",.1)
+ put(self,label,"Visible",true)
+ self.stats.pops=(self.stats.pops or 0)+1
+end
+function Effects:updatePops(now)
+ for _,pop in ipairs(self.pops)do if pop.active then
+  local t=(now-pop.start)/Effects.PopDuration
+  if t>=1 then pop.active=false;put(self,pop.label,"Visible",false)
+  else
+   local fade=math.clamp((t-.45)/.55,0,1)
+   put(self,pop.label,"TextTransparency",fade);put(self,pop.label,"TextStrokeTransparency",.1+.9*fade)
+   if not self.reduced then put(self,pop.label,"Position",UDim2.fromOffset(pop.x,pop.y-18*math.sin(math.min(t,1)*math.pi*.5)))end
+  end
+ end end
 end
 function Effects:getStats()return table.clone(self.stats)end
 function Effects:destroy()if self.destroyed then return end;self:clear();self.destroyed=true;self.root:Destroy()end

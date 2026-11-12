@@ -1,6 +1,6 @@
 -- Read-only production topology gate; call after settled Board, no purchase/reset.
 return function(gui)
- local overlay=gui.Backdrop.TrayOverlay;local fx=overlay.MergeEffects.FieldFeedback
+ local overlay=gui.Backdrop:FindFirstChild("TrayOverlay",true);local fx=overlay.MergeEffects.FieldFeedback
  local cases={}
  assert(fx.ClipsDescendants and not fx.Active and not fx.Selectable,"feedback must be passive and clipped")
  table.insert(cases,"passive tray-local feedback owner")

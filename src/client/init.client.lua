@@ -2166,7 +2166,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
    color=clientUI.JellyPalette.byTier[tier].body,start=now,id=id})
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
- rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared)
+ rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared,Config.mergeScore(tier,chain,cleared))
  rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
 end))
 

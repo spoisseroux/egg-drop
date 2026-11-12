@@ -42,6 +42,11 @@ local Config = {
 	Queue = { 1, 1, 2, 1, 2, 1 },
 }
 
+-- Points for one merge. The server adds exactly this to the round score, and the
+-- client shows the same number as the merge's "+N" pop.
+function Config.mergeScore(tier,chain,cleared)
+	return 10 * (tier + math.min(chain - 1, 9)) + (if cleared then 100 else 0)
+end
 -- The normalized input is an angle; the launch origin never depends on tier.
 function Config.validAim(aim)
  return type(aim)=="number" and aim==aim and aim>=0 and aim<=1
