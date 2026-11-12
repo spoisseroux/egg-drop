@@ -59,7 +59,7 @@ function Backdrop:configure(id,theme)
 end
 function Backdrop:floor()
  local seeThrough=self.exterior and self.root.Parent==self.home
- assign(self,self.root,"BackgroundTransparency",if seeThrough then 1-Backdrop.ExteriorOpacity else 0,"styleWrites")
+ assign(self,self.root,"BackgroundTransparency",if seeThrough then (1-Backdrop.ExteriorOpacity)*math.clamp(game:GetService("GuiService").PreferredTransparency,0,1) else 0,"styleWrites")
 end
 function Backdrop:colors(phase)
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true

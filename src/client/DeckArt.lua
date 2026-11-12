@@ -394,6 +394,9 @@ function Art.sheetHeader(width,heading,wallet,amount,glyph,close,options)
 	return{height=top+rowH,rowHeight=rowH,secondaryHeader=secondaryHeader==true,secondaryWidth=secondaryW,secondaryHeight=secondaryH,walletWidth=walletW,titleFull=full}
 end
 function Art.dockTransparency(preference)return .18*math.clamp(preference,0,1)end
+-- Glass and see-through floors scale by the player's Reduce transparency setting
+-- (GuiService.PreferredTransparency: 1 default, 0 fully opaque).
+function Art.glassTransparency(base)return base*math.clamp(game:GetService("GuiService").PreferredTransparency,0,1)end
 function Art.dockCircle(button,kind)
 	button.Text=if kind=="menu"then "Menu"else "Open deck";button.TextTransparency=1;Art.bind(button,{BackgroundColor3="panel"});Art.corner(button,24)
 	button:SetAttribute("AccessibleLabel",if kind=="menu"then "Menu"else "Deck")
@@ -470,7 +473,7 @@ function Art.backdrop(parent)
  -- Every exterior pixel, tint and underlay is flattened exactly once. BoardBacking
  -- itself is transparent so the see-through share really comes from the garden.
  parent.BackgroundTransparency=1;parent.ClipsDescendants=true
- local host=node("CanvasGroup",parent,{Name="ExteriorComposite",Size=UDim2.fromScale(1,1),BackgroundColor3=Art.Backdrop,BackgroundTransparency=1-PatternBackdrop.ExteriorOpacity,BorderSizePixel=0,GroupTransparency=0,ZIndex=parent.ZIndex,Active=false,Selectable=false})
+ local host=node("CanvasGroup",parent,{Name="ExteriorComposite",Size=UDim2.fromScale(1,1),BackgroundColor3=Art.Backdrop,BackgroundTransparency=Art.glassTransparency(1-PatternBackdrop.ExteriorOpacity),BorderSizePixel=0,GroupTransparency=0,ZIndex=parent.ZIndex,Active=false,Selectable=false})
  Art.shade(host,1,.76)
  local motion={host=host,entries={},layers={},resting=true,elapsed=0,phases=setmetatable({},{__mode="k"}),confirmed="canopy"}
  backdropMotion[parent]=motion;buildCanopy(host,motion)
@@ -551,6 +554,10 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
   motion.lastTime=nil;return
  end
  if surfaceAlive then motion.surface:update(motion.host,now,false,reduced)end
+ -- Back on the canopy: the host fill is the see-through floor again (the themed
+ -- path cleared it so it would not double its own floor).
+ local floor=Art.glassTransparency(1-PatternBackdrop.ExteriorOpacity)
+ if motion.host.BackgroundTransparency~=floor then motion.host.BackgroundTransparency=floor end
  canopyOwner(motion,motion.host,owner);if not motion.art.Visible then motion.art.Visible=true end
  visible=preview or visible
  if motion.owner~=owner then
@@ -609,11 +616,19 @@ function Art.insignia(parent, unit, position, tint, z)
 	return Art.pixels(parent, "DropMark", eggMark, { X = tint }, unit, position, z)
 end
 
+-- Panels follow a live change to Reduce transparency through one shared connection.
+local glassPanels = setmetatable({}, { __mode = "k" })
+game:GetService("GuiService"):GetPropertyChangedSignal("PreferredTransparency"):Connect(function()
+	for panel in pairs(glassPanels) do
+		if panel.Parent then panel.BackgroundTransparency = Art.glassTransparency(Art.SheetGlass) end
+	end
+end)
 -- Dark frosted glass: a slightly see-through graphite sheet, one thin light edge.
 function Art.panel(parent, radius, accent)
  parent:SetAttribute("ContentSurface",true)
 	Art.bind(parent,{BackgroundColor3="panel"})
-	parent.BackgroundTransparency = Art.SheetGlass
+	parent.BackgroundTransparency = Art.glassTransparency(Art.SheetGlass)
+	glassPanels[parent] = true
 	Art.corner(parent, radius)
 	Art.surfaceGradient(parent,"panel")
 	Art.stroke(parent,"line",0.55,1)

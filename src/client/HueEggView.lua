@@ -147,6 +147,10 @@ function View.new(parent,intent,options)
   local world=Instance.new("WorldModel");world.Parent=viewport;local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
   local caption=text(node,"PetName",pet.name,"Action");caption.TextXAlignment=Enum.TextXAlignment.Center
   local active=text(node,"Active","","Supporting");active.TextXAlignment=Enum.TextXAlignment.Center
+  -- The labels sit on the tab fill, so they follow the tab's own ink: dark on a
+  -- selected pastel deck fill, light on an unselected dark tile.
+  Art.bind(caption,{TextColor3=function()return node.TextColor3 end});Art.bind(active,{TextColor3=function()return node.TextColor3 end})
+  node:GetPropertyChangedSignal("TextColor3"):Connect(function()caption.TextColor3=node.TextColor3;active.TextColor3=node.TextColor3 end)
   local entry={button=node,viewport=viewport,world=world,camera=camera,caption=caption,active=active};self.gridPreviews[pet.id]=entry
   viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if entry.visual and entry.fit then entry.fit()end end)
  end

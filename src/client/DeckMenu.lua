@@ -370,7 +370,7 @@ function Menu:setPage(key)
 	for name,tab in pairs(self.tabs)do
         local active=name==key
         tab:SetAttribute("Selected",active)
-        tab.Font=if active then Enum.Font.GothamBold else Enum.Font.GothamMedium
+        tab.Font=if active then Art.SheetFont.Heading else Art.SheetFont.Action
         Art.tab(tab,active,true)
     end
 	self.dailyButton.Visible=key=="daily"
