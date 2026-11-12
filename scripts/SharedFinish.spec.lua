@@ -19,7 +19,7 @@ return function(client,parent)
   Art.type(counter,"Counter");counter.TextWrapped=false
   local heading=Art.text(panel,"Heading","A new friend",UDim2.fromOffset(170,12),UDim2.fromOffset(300,44),"text",24);Art.type(heading,"Heading")
   test("assigned faces retain measured targets and distinguish exact Roman marks",function()
-   settle();assert(action.Font==Enum.Font.Nunito and heading.Font==Enum.Font.FredokaOne and counter.Font==Enum.Font.RobotoMono)
+   settle();assert(action.Font==Art.SheetFont.Action and heading.Font==Art.SheetFont.Heading and counter.Font==Enum.Font.RobotoMono)
    for _,label in ipairs({action,heading,counter})do assert(label.TextFits,label.Name.." "..tostring(label.TextBounds))end
    assert(action.AbsoluteSize.Y>=44 and Art.actionHeight(action,200)>=44)
    for _,mark in ipairs({"I","II","III","IV","V"})do counter.Text=mark;settle();assert(counter.TextFits and counter.TextBounds.X>0)end

@@ -50,7 +50,7 @@ function Recap.new(parent, audio, reduceEffects)
 		Art.Cyan, 13, Art.Font.Heading)
 	fitText(title, 13)
 	local detail = Art.text(goal, "Progress", "", UDim2.fromOffset(6, 15), UDim2.new(1, -12, 0, 12), "text", 12)
-	Art.bind(title,{TextColor3=function()return Color3.fromHex("#173D36")end});Art.bind(detail,{TextColor3=function()return Color3.fromHex("#173D36")end})
+	Art.bind(title,{TextColor3="text"});Art.bind(detail,{TextColor3="text"})
 	fitText(detail, 12)
 	local track = Art.frame(goal, "Track", "ink", UDim2.new(0, 6, 1, -4), UDim2.new(1, -12, 0, 2))
 	local fill = Art.frame(track, "Fill", Art.Cyan, UDim2.fromOffset(0, 0), UDim2.fromScale(0, 1))
@@ -135,7 +135,7 @@ function Recap.new(parent, audio, reduceEffects)
 	Art.watchTextPreference(frame,function()return self:isVisible()end,function()if self.onPreferredLayout then self.onPreferredLayout() else self:layoutField(frame.AbsoluteSize.Y) end end)
 	self.saveDetail=Art.text(body,"SaveInstruction","",UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),Art.Amber,14)
 	self.saveDetail.TextXAlignment,self.saveDetail.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Top
-	Art.bind(self.saveDetail,{TextColor3=function()return Color3.fromHex("#173D36")end});self.saveDetail.Visible=false
+	Art.bind(self.saveDetail,{TextColor3="text"});self.saveDetail.Visible=false
 	self.feedback = Feedback.new(function(sample) self:paintFeedback(sample) end, audio, reduceEffects,function()return self:isVisible()and(not self.ownsFeedback or self.ownsFeedback())end)
  body:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:paintFeedback(self.presentation)end)
 	-- Any hidden ancestor also ends the sequence; returning to this receipt shows
@@ -269,7 +269,7 @@ function Recap:buildDetails(result,reward,lines)
  self.detailCards,self.receiptRows={},{}
  local function card(kind,caption,value,pair)
   local frame=Art.frame(self.detailsContent,"Detail_"..(#self.detailCards+1),"raised",UDim2.fromOffset(0,0),UDim2.fromOffset(1,1),self.detailsContent.ZIndex+1)
-  Art.corner(frame,8);Art.bind(frame,{BackgroundColor3=function()return Color3.fromHex("#F5EFD9")end});frame:SetAttribute("ReceiptSection",kind)
+  Art.corner(frame,8);frame:SetAttribute("ReceiptSection",kind)
   local icon=Art.frame(frame,"Icon","accent",UDim2.fromOffset(10,10),UDim2.fromOffset(18,18),frame.ZIndex+1);Art.corner(icon,if kind=="contract"then 8 else 4)
   if kind=="contract"then icon.BackgroundTransparency=1;EggArt.nectar(icon,UDim2.fromOffset(2,0),UDim2.fromOffset(14,18),icon.ZIndex+1)
   elseif kind=="score"or kind=="best"then icon.Rotation=45
@@ -283,7 +283,7 @@ function Recap:buildDetails(result,reward,lines)
    Art.type(counter,"Counter");counter.TextSize=18;counter.TextXAlignment=Enum.TextXAlignment.Left
    table.insert(self.receiptRows,counter)
   end
-  Art.bind(title,{TextColor3=function()return Color3.fromHex("#173D36")end});if counter then Art.bind(counter,{TextColor3=function()return Color3.fromHex("#173D36")end})end
+  Art.bind(title,{TextColor3="text"});if counter then Art.bind(counter,{TextColor3="text"})end
   local entry={frame=frame,title=title,value=counter,pair=pair==true,kind=kind}
   table.insert(self.detailCards,entry);return entry
  end
@@ -462,8 +462,7 @@ function Recap:layoutField(height)
  self.twoColumn=false
  if self.hasReceipt then
   Art.type(self.earnedGraphic,"Reward",true);self.earnedGraphic.TextXAlignment=Enum.TextXAlignment.Left
-  local ink=Color3.fromHex("#173D36")
-  Art.bind(self.earnedGraphic,{TextColor3=function()return ink end})
+  Art.bind(self.earnedGraphic,{TextColor3="text"})
   local content=math.max(1,width-16)
   local heroH=Art.textHeight(self.earnedGraphic,math.max(1,content-34),28)
   place(self.nectarIcon,8,math.max(2,(heroH-24)/2),24,24)
@@ -471,7 +470,7 @@ function Recap:layoutField(height)
   local y=heroH+8
   for i,label in ipairs(self.componentLabels)do
    label.Parent=self.goal;Art.type(label,"Counter",true);label.TextXAlignment=Enum.TextXAlignment.Left
-   label.Visible=true;Art.bind(label,{TextColor3=function()return ink end})
+   label.Visible=true;Art.bind(label,{TextColor3="text"})
    local h=Art.textHeight(label,content,22);place(label,8,y,content,h)
    place(self.sourceGlows[i],6,y-2,content+4,h+4);y+=h+4
   end

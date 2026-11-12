@@ -59,7 +59,7 @@ return function(client,parent,onlySize)
     assert(menu.card:FindFirstChildOfClass("UIGradient").Rotation==100 and menu.nectar.Font==Art.Font.Counter)
     assert(picker.card.BackgroundColor3==t.ui.contentPanel and picker.tabs.Shell.BackgroundColor3==t.ui.tab)
     assert(journal.card.BackgroundColor3==t.ui.contentPanel and journal.cards[1].BackgroundColor3==t.ui.contentRaised and journal.cards[1].Species.TextColor3==t.ui.contentText)
-    assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==t.ui.accent and recipe.RecipeName.TextColor3==t.ui.contentText)
+    assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==t.ui.accent and recipe.RecipeName.TextColor3==t.ui.ink)
     assert(recap.eggPanel.BackgroundColor3==t.ui.inset and recap.detailsButton.TextColor3==t.ui.text and recap.receiptSignature==receipt)
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
     assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe and shop.nectar.TextColor3==amber)
@@ -69,7 +69,7 @@ return function(client,parent,onlySize)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
    local t=Themes.ById.copperleaf;Art.applyTheme(t);local recipe=shop.body.EggColumn.Recipe_hue
    local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:updateField(result(10));settle()
-   assert(shop.body.EggColumn.Recipe_hue==recipe and recipe.RecipeName.TextColor3==t.ui.contentText and shop.selected=="hue")
+   assert(shop.body.EggColumn.Recipe_hue==recipe and recipe.RecipeName.TextColor3==t.ui.ink and shop.selected=="hue")
    for _,row in ipairs(recap.receiptRows)do if not row.Text:find("unlocked!",1,true)then assert(row.TextColor3==t.ui.text)end end
    for _,tab in pairs(picker.tabs)do assert(tab.AbsoluteSize.Y>=44);fit(tab)end
    assert(picker.tabs.Background:GetAttribute("AccessibleLabel")=="Background patterns")

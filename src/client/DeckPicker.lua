@@ -365,7 +365,7 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
 		row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
 		row.status:SetAttribute("ExactCounter",not done)
 		row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
-		Art.bind(row.status,{TextColor3=function()return if done then Color3.fromHex("#197038")else Art.surfaceColor(row.status,"muted") end})
+		Art.bind(row.status,{TextColor3=function()return if done then Art.surfaceColor(row.status,"accent")else Art.surfaceColor(row.status,"muted") end})
 		row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf
 		count+=if done then 1 else 0
 	end

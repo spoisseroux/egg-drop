@@ -24,8 +24,8 @@ return function(client,parent)
     assert(#view.detailCards>=4 and view.fieldBody.ScrollingEnabled==(view.bodyContentHeight>view.fieldBody.Size.Y.Offset)and view.detailsContent.Parent==view.fieldBody and not view.receiptScroll.Visible)
     assert(view.receiptSignature:find("Personal best 700",1,true)and view.receiptSignature:find("Longest chain ×4",1,true))
     fit(view.earnedGraphic);for _,node in ipairs(view.componentLabels)do fit(node)end
-    for _,node in ipairs(view.receiptRows)do fit(node);assert(node.TextColor3==Color3.fromHex("#173D36"))end
-    assert(view.earnedGraphic.TextColor3==Color3.fromHex("#173D36")and view.fieldBody.Position.Y.Offset+view.fieldBody.Size.Y.Offset<=root.Size.Y.Offset-54)
+    for _,node in ipairs(view.receiptRows)do fit(node);assert(node.TextColor3==Art.surfaceColor(node,"text"))end
+    assert(view.earnedGraphic.TextColor3==Art.surfaceColor(view.earnedGraphic,"text")and view.fieldBody.Position.Y.Offset+view.fieldBody.Size.Y.Offset<=root.Size.Y.Offset-54)
    end)
    test(tostring(size).." scroll and repeated saved receipt cannot replay or erase zero credit",function()
     local starts=view.feedback.starts;local signature=view.receiptSignature

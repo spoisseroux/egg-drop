@@ -57,7 +57,7 @@ return function(client,parent)
 					local snapshot=state();snapshot.nectar=balance
 					shop:update(snapshot);settle()
 					readable(shop.heading);readable(shop.action)
-						assert(shop.action.Font==Art.Font.Action and shop.action.AbsoluteSize.Y>=44)
+						assert(shop.action.Font==Art.SheetFont.Action and shop.action.AbsoluteSize.Y>=44)
 					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." Stars")
 					do
 						readable(shop.nectar)

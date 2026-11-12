@@ -6,6 +6,11 @@ local Art = {}
 Art.Type = { Reward = 32, Heading = 24, Action = 20, Body = 18, Supporting = 16, Counter = 18, Compact = 14 }
 Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.PatrickHand, Body=Enum.Font.PatrickHand, Supporting=Enum.Font.PatrickHand, Counter=Enum.Font.RobotoMono }
 Art.Space = { Small = 4, Related = 8, Group = 12, Panel = 20 }
+-- Sheets (anything inside an Art.panel content surface) use a clean modern sans.
+-- The handheld keeps its playful faces outside those surfaces.
+Art.SheetFont = { Reward=Enum.Font.BuilderSansExtraBold, Heading=Enum.Font.BuilderSansBold, Action=Enum.Font.BuilderSansMedium, Body=Enum.Font.BuilderSans, Supporting=Enum.Font.BuilderSans, Counter=Enum.Font.RobotoMono }
+-- Frosted sheet glass: share of the scene that shows through a sheet panel.
+Art.SheetGlass = 0.14
 for name, hex in pairs({
 	Backdrop = "#123C35", Ink = "#201D32", Surface = "#123C35", Raised = "#234A43", Inset = "#0F322C",
 	Line = "#69F4B3", Silver = "#FFF6E4", Muted = "#E0DCE8", Amber = "#FFC14D",
@@ -23,14 +28,25 @@ local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="S
 Art.Selected,Art.Accent=Art.Inset,Color3.fromHex("#76F6B0")
 local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,writes=0}
 function Art.paletteColor(role)return (currentTheme and currentTheme.ui and currentTheme.ui[role])or Art[roleNames[role]or role]end
-local contentDefaults={contentPanel=Color3.fromHex("#F8F8EA"),contentRaised=Color3.fromHex("#E2F5DA"),contentInset=Color3.fromHex("#E5F3EB"),contentText=Color3.fromHex("#10382E"),contentMuted=Color3.fromHex("#36554B"),contentLine=Color3.fromHex("#37694F"),contentSelected=Color3.fromHex("#C9EDB7"),contentFocus=Color3.fromHex("#075F8A"),contentReward=Color3.fromHex("#87500F")}
+local contentDefaults={contentPanel=Color3.fromHex("#16201E"),contentRaised=Color3.fromHex("#232D2C"),contentInset=Color3.fromHex("#0C1311"),contentText=Color3.fromHex("#F3F4F6"),contentMuted=Color3.fromHex("#C3C8D0"),contentLine=Color3.fromHex("#69F4B3"),contentSelected=Color3.fromHex("#3A5249"),contentFocus=Color3.fromHex("#A3F4FF"),contentReward=Color3.fromHex("#FFC14D")}
 local scoped={panel="contentPanel",raised="contentRaised",inset="contentInset",text="contentText",muted="contentMuted",line="contentLine",selected="contentSelected",focus="contentFocus",reward="contentReward"}
 local function contentOwner(object)
  local n=object
  while n do if n:GetAttribute("ContentSurface")==true then return true end;n=n.Parent end
  return false
 end
+-- Copy sitting on a filled primary control (a selected card, the main action)
+-- reads in ink, like the control's own label, whatever surface it lives on.
+local function onPrimaryFill(object)
+ local n=object.Parent
+ while n and not n:IsA("LayerCollector")do
+  if n:IsA("GuiButton")then return n:GetAttribute("PrimaryAction")==true and n:GetAttribute("ActionEnabled")==true end
+  n=n.Parent
+ end
+ return false
+end
 function Art.surfaceColor(object,role)
+ if(role=="text"or role=="muted")and onPrimaryFill(object)then return Art.paletteColor("ink")end
  local mapped=contentOwner(object)and scoped[role]
  return if mapped then currentTheme and currentTheme.ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
 end
@@ -120,11 +136,13 @@ function Art.control(button,primary,enabled)
  Art.bind(button,{BackgroundColor3=function()return if primary and enabled then Art.paletteColor("accent")else Art.surfaceColor(button,"raised")end,
   TextColor3=function()return if primary then Art.paletteColor("ink")else Art.surfaceColor(button,if enabled then "text"else "muted")end})
  Art.surfaceGradient(button,if primary and enabled then "primary"else "raised")
+ -- Labels inside the control follow its fill.
+ for _,child in ipairs(button:GetDescendants())do local entry=bindings[child];if entry then paintBinding(child,entry)end end
 end
 function Art.tab(button,selected,enabled)
  Art.control(button,false,enabled)
- Art.bind(button,{BackgroundColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tab or Color3.fromHex("#38B84A") else Art.surfaceColor(button,"raised")end,
- TextColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tabInk or Art.Ink else Art.surfaceColor(button,"text")end})
+ Art.bind(button,{BackgroundColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
+ TextColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
  button:SetAttribute("SelectedTab",selected)
 
 end
@@ -150,7 +168,7 @@ function Art.instrument(parent)
 end
 
 function Art.text(parent,name,content,position,size,color,textSize,font)
- local f=node("TextLabel",parent,{Name=name,Text=content,Position=position,Size=size,TextColor3=if type(color)=="string"then Art.paletteColor(color)else color,TextSize=textSize,Font=font or Art.Font.Body,BackgroundTransparency=1,ZIndex=parent.ZIndex+1,Active=false})
+ local f=node("TextLabel",parent,{Name=name,Text=content,Position=position,Size=size,TextColor3=if type(color)=="string"then Art.paletteColor(color)else color,TextSize=textSize,Font=font or(if contentOwner(parent)then Art.SheetFont.Body else Art.Font.Body),BackgroundTransparency=1,ZIndex=parent.ZIndex+1,Active=false})
  if type(color)=="string"then Art.bind(f,{TextColor3=color})end;return f
 end
 
@@ -179,7 +197,8 @@ function Art.type(label, role, compact)
 	if inset then inset.PaddingTop,inset.PaddingBottom=UDim.new(0,0),UDim.new(0,0) end
 	label.TextScaled = false
 	label.TextSize = if compact then (sizes[role] or 14) else (Art.Type[role] or 16)
-	label.Font = Art.Font[role] or Art.Font.Body
+	local faces = if contentOwner(label) then Art.SheetFont else Art.Font
+	label.Font = faces[role] or faces.Body
 	label:SetAttribute("TypeRole",role)
 	label.TextWrapped = true
 	label.TextTruncate = Enum.TextTruncate.None
@@ -590,12 +609,14 @@ function Art.insignia(parent, unit, position, tint, z)
 	return Art.pixels(parent, "DropMark", eggMark, { X = tint }, unit, position, z)
 end
 
+-- Dark frosted glass: a slightly see-through graphite sheet, one thin light edge.
 function Art.panel(parent, radius, accent)
  parent:SetAttribute("ContentSurface",true)
 	Art.bind(parent,{BackgroundColor3="panel"})
+	parent.BackgroundTransparency = Art.SheetGlass
 	Art.corner(parent, radius)
 	Art.surfaceGradient(parent,"panel")
-	Art.stroke(parent,"accent",0.08,3)
+	Art.stroke(parent,"line",0.55,1)
 
 end
 

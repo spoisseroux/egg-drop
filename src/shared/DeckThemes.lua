@@ -32,22 +32,24 @@ local palettes={
 	copperleaf={lcd={"#4D3528","#F0D8B5","#D5B88F","#BF9E75","#674A32","#7E6240"}},
 }
 local lcdKeys={"outside","base","dither","rail","rim","guide"}
-local panels={sherbet="#123C35",stone="#293D39",ice="#143B50",brick="#49242D",moss="#193E31",honey="#443022",gloaming="#25344A",copperleaf="#432735"}
-local dark=Color3.new(0,0,0)
 for id,values in pairs(palettes)do
- local theme=Themes.ById[id];local panel=Color3.fromHex(panels[id]);theme.lcd={}
- local saturated={sherbet="#12644A",stone="#2E5B47",ice="#075C82",brick="#902B4B",moss="#1A5C35",honey="#694618",gloaming="#45458B",copperleaf="#743A4A"}
- local shell=Color3.fromHex(saturated[id]);local white=Color3.fromHex("#F8F8EA")
- theme.ui={panel=shell,raised=shell:Lerp(white,.07),inset=shell:Lerp(dark,.40),ink=Color3.fromHex("#062417"),text=white,muted=Color3.fromHex("#E2EEE3"),line=theme.highlight,selected=shell:Lerp(white,.09),focus=Color3.fromHex("#FFFFFF"),accent=theme.buttons}
- theme.ui.tab=({sherbet=Color3.fromHex("#38B84A"),stone=Color3.fromHex("#B8DD9D"),ice=Color3.fromHex("#069FC3"),brick=Color3.fromHex("#CB1E61"),moss=Color3.fromHex("#80CB32"),honey=Color3.fromHex("#F8C944"),gloaming=Color3.fromHex("#7543CF"),copperleaf=Color3.fromHex("#E59843")})[id]
- theme.ui.tabInk=if id=="brick"or id=="gloaming"then white else Color3.fromHex("#062417")
- theme.ui.contentPanel=Color3.fromHex("#F8F8EA")
- theme.ui.contentRaised=theme.highlight:Lerp(Color3.fromHex("#FFFFFF"),.77)
- theme.ui.contentInset=theme.face:Lerp(Color3.fromHex("#FFFFFF"),.86)
- theme.ui.contentText=Color3.fromHex("#10382E");theme.ui.contentMuted=Color3.fromHex("#36554B")
- theme.ui.contentLine=theme.shell:Lerp(Color3.fromHex("#10382E"),.35)
- theme.ui.contentSelected=theme.highlight:Lerp(Color3.fromHex("#FFFFFF"),.59)
- theme.ui.contentFocus=Color3.fromHex("#075F8A");theme.ui.contentReward=Color3.fromHex("#87500F")
+ local theme=Themes.ById[id];theme.lcd={}
+ -- Menus are dark graphite glass. The equipped deck only tints them: surfaces lean
+ -- slightly toward its shell, and its bright button colour marks selection,
+ -- tabs, primary actions and progress. Text stays neutral for contrast.
+ local glass,raisedGlass,well=Color3.fromHex("#15171B"),Color3.fromHex("#23262C"),Color3.fromHex("#0C0D10")
+ local text,soft,ink=Color3.fromHex("#F3F4F6"),Color3.fromHex("#C3C8D0"),Color3.fromHex("#0E0F12")
+ local tint=theme.buttons
+ local panel=glass:Lerp(theme.shell,.14);local raised=raisedGlass:Lerp(theme.shell,.16)
+ local inset=well:Lerp(theme.shell,.10);local selected=raised:Lerp(tint,.14)
+ local line=Color3.fromHex("#9AA0AA"):Lerp(tint,.35)
+ theme.ui={panel=panel,raised=raised,inset=inset,ink=ink,text=text,muted=soft,line=line,selected=selected,focus=Color3.fromHex("#FFFFFF"),accent=tint}
+ theme.ui.tab=tint;theme.ui.tabInk=ink
+ -- Content inside a sheet uses the same glass; the scoped roles keep their names.
+ theme.ui.contentPanel=panel;theme.ui.contentRaised=raised;theme.ui.contentInset=inset
+ theme.ui.contentText=text;theme.ui.contentMuted=soft
+ theme.ui.contentLine=line;theme.ui.contentSelected=selected
+ theme.ui.contentFocus=Color3.fromHex("#FFFFFF");theme.ui.contentReward=Color3.fromHex("#FFC14D")
  -- Three authored stops are reused by worn hardware and isolated Style previews.
  theme.shellGradient=ColorSequence.new({ColorSequenceKeypoint.new(0,theme.highlight),ColorSequenceKeypoint.new(.34,theme.face),ColorSequenceKeypoint.new(1,theme.shell)})
  theme.faceGradient=theme.shellGradient

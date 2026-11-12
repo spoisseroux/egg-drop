@@ -208,8 +208,8 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
         entry.ColorHint.Text=if unlocked then "Customize with the hanger"else ""
         entry.ColorHint.Visible=entry.ColorHint.Text~=""
 		entry.Track.Visible=trackable;entry.Track.Text=if tracked==pet then "Tracked · Play"else "Track & play"
-		Art.bind(entry.Status,{TextColor3=function()return if equipped then Color3.fromHex("#197038")else Art.surfaceColor(entry.Status,"muted") end})
-		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Color3.fromHex("#8B4B14")elseif unlocked then Art.surfaceColor(entry.Species,"text")else Art.surfaceColor(entry.Species,"muted") end})
+		Art.bind(entry.Status,{TextColor3=function()return if equipped then Art.surfaceColor(entry.Status,"accent")else Art.surfaceColor(entry.Status,"muted") end})
+		Art.bind(entry.Species,{TextColor3=function()return if pet.trial then Art.surfaceColor(entry.Species,"reward")elseif unlocked then Art.surfaceColor(entry.Species,"text")else Art.surfaceColor(entry.Species,"muted") end})
 		if not self.portraits[index]or self.portraits[index].unlocked~=unlocked then
 			if self.portraits[index]then self.portraits[index].sprite:Destroy()end
 			self.portraits[index]={unlocked=unlocked,sprite=Portrait.create(entry.PortraitWell,pet,4,UDim2.fromScale(.5,.5),entry.ZIndex+3,not unlocked,self.appearanceFor and self.appearanceFor(pet.id))}
