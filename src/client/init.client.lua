@@ -52,6 +52,7 @@ clientUI.accepted=function(kind)
  clientUI.uiSequence+=1;audio:ui(kind,clientUI.uiSequence)
 end
 clientUI.clock=HollowClock.start()
+clientUI.worldMotion=require(script.WorldMotion).start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")

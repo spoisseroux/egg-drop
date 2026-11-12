@@ -1,4 +1,6 @@
 local Lighting = game:GetService("Lighting")
+local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local World = require(Shared:WaitForChild("HollowWorldLayout"))
 
 local Clock = {}
 -- A shared world timezone, fixed year-round. This is a real 24-hour day.
@@ -29,7 +31,37 @@ function Clock.environment(unixSeconds)
 	if grade then
 		grade.TintColor = Color3.fromHex("#DDECE6"):Lerp(Color3.fromHex("#FFF5E5"), daylight)
 	end
+	if World.WorldVersion == "v7" then
+		Clock.island(daylight)
+	end
  return hour,daylight
+end
+-- v7 island: blue-violet night ambient and the painted day or night skybox.
+-- A Sky cannot blend two face sets, so the faces switch at dusk and dawn
+-- (daylight 0.35) while ambient and atmosphere carry the smooth fade.
+Clock.SkyThreshold = 0.35
+function Clock.island(daylight)
+	Lighting.Ambient = Color3.fromHex("#6C7398"):Lerp(Color3.fromHex("#9C9C92"), daylight)
+	Lighting.OutdoorAmbient = Color3.fromHex("#6E7DB0"):Lerp(Color3.fromHex("#A4AEB4"), daylight)
+	Lighting.ColorShift_Top = Color3.fromHex("#9FB4E0"):Lerp(Color3.fromHex("#FFF4E5"), daylight)
+	local air = Lighting:FindFirstChildOfClass("Atmosphere")
+	if air then
+		air.Color = Color3.fromHex("#3E4C80"):Lerp(Color3.fromHex("#CFE6F5"), daylight)
+		air.Decay = Color3.fromHex("#2C3566"):Lerp(Color3.fromHex("#A9C6E0"), daylight)
+		air.Density = 0.16
+		air.Haze = 0.35
+	end
+	local sky = Lighting:FindFirstChild("WorldSky")
+	if sky and sky:IsA("Sky") then
+		local set = if daylight >= Clock.SkyThreshold then "day" else "night"
+		if sky:GetAttribute("FaceSet") ~= set then
+			local faces = require(Shared:WaitForChild("WorldV7Data")).sky[set]
+			for _, face in ipairs({ "Bk", "Dn", "Ft", "Lf", "Rt", "Up" }) do
+				sky["Skybox" .. face] = faces[face]
+			end
+			sky:SetAttribute("FaceSet", set)
+		end
+	end
 end
 function Clock.daylight()return Clock.lastDaylight or select(2,Clock.sample(workspace:GetServerTimeNow()))end
 Clock.Step=5
