@@ -7,7 +7,9 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 Keep this list current: add an item when work starts, move it to done when it lands.
 
 - **Overnight systems run, 2026-11-11 — done:** store backend `0d5798e`, Get Stars shop + analytics `3b82189`. Not published. Next systems step needs Spencer's product/pass ids.
-- **Claude:** garden swap done (greybox around the hub, pets ground-only, multi-bridge routing). Next garden step waits on Spencer's Blender kit.
+- **Claude:** garden swap done (`c7a189e`). First-pass 3D mockups by Fable are in `assets/art-source/` (features, toys, stations, environment), with sizes, origins, names and splits set. Notes and renders: `artifacts/art-mockups-2026-11-11/`. Not yet imported into Studio.
+- **Spencer:** hand-tune the mockups in Blender (shapes only; keep names, origins and the L/R and colour splits), then tell Claude which files are ready.
+- **Spencer:** reconnect Rojo in Studio (Connect on the Rojo popup, port 34873).
 - [x] Onboarding doc for new collaborators: [ONBOARDING.md](ONBOARDING.md) (2026-11-11).
 - **Spencer:** add the new collaborator to the GitHub repo and as a Roblox collaborator on universe 10774758591.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
@@ -64,17 +66,17 @@ The current garden is code-built from primitive Parts (`LoungeArt`, `LoungeGarde
 - [x] Greybox exported as a Blender underlay: `assets/art-source/environment/garden-greybox.obj` (+ `.mtl`, `garden-greybox-underlay.blend` with a `GreyboxUnderlay` collection). Studs, centred on the garden origin, checked in Blender against the 5.5 avatar reference. Regenerate with `node scripts/greybox-to-obj.js assets/art-source/environment/greybox-parts.json assets/art-source/environment`.
 - [x] **Garden swap (2026-11-11).** The approved greybox landscape now surrounds the unchanged hub (stations, hatch tree, spawn, toy lawn, nook, spring meadow) via `HollowWorldLayout.GreyboxOffset`; built by `src/server/LoungeGreyboxArt.lua`. Old outer scenery (hills, tree line, lantern pool/boardwalk, orchard glade, boundary ring, MeadowGround, spring distant hills) removed. Floor 241 × 200; west creek crossed by a new `WestBridge` span. Pets stay on the ground: terraces, ramps, pillars and ledge carry invisible `GardenBlockedRegion` footprints, and an owner standing above the ground leaves the pet at its last ground anchor. The planner tries every bridge, then a small visibility graph around water and blocked regions (multi-bridge, around the pond). Evidence: `artifacts/garden-swap-2026-11-11/VERIFY.md`.
 - [ ] Garden swap follow-ups: water is a flat sheet players can walk across (sink it in the art pass); terrace edges still blend into the lawn from above; the place's default `Baseplate` was moved to `ServerStorage.Baseplate_RetiredByGreybox` in Studio Edit (decide to delete before publish); phone camera framing not checked; the pet route planner keeps no hysteresis between equal-length bridges.
-- [ ] Spencer models the final kit in Blender from the approved greybox.
+- [ ] Spencer models the final kit in Blender from the approved greybox. Fable blockout ready in `environment/environment.blend` (111 meshes, 112k tris, sunken pond/creek, terrace edge trim, shared world origin).
 - [ ] Load the environment as authored assets instead of code-built parts; keep day/night lighting.
 - [x] Rebuild garden walkability and pet path data for the greybox ground (garden swap, 2026-11-11). Redo once the authored kit replaces the greybox.
 - [ ] Original skybox, sea plane and phone performance budget.
 
 ### 3. 3D assets (Spencer models, Claude integrates; see ART-HANDOFF.md)
 - [ ] Blender template, export preset, test cube and test cone verified in Studio.
-- [ ] Horns, claws, wings: shared set, separate L/R meshes, stage-5 size, base/tip split.
+- [ ] Horns, claws, wings: shared set, separate L/R meshes, stage-5 size, base/tip split. Fable blockout ready in `features.blend`; Spencer hand pass next.
 - [ ] Hand-tweak the four babies, keeping the part names and split.
-- [ ] Toys: Ball, Bone, Sparkler.
-- [ ] Stations and props: care machine, hatch tree, workbench, journal stand, lanterns, bench, rocks, bushes.
+- [ ] Toys: Ball, Bone, Sparkler. Fable blockout ready in `toys.blend`.
+- [ ] Stations and props: care machine, hatch tree, workbench, journal stand, lanterns, bench, rocks, bushes. Fable blockout ready in `stations.blend` (care machine is now a floor unit; docked pet sits ~0.09 higher).
 - [ ] Claude: import, pivot/collision/material setup, code wiring, before/after captures.
 
 ### 4. Live verification (after systems and the garden are in)

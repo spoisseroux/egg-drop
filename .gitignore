@@ -1,3 +1,6 @@
 .DS_Store
 *.rbxl
 *.rbxlx
+
+# Blender auto-backups
+*.blend1
