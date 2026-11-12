@@ -412,6 +412,21 @@ def walk_data(finals, manifest):
         grid["heights"].append(row)
         grid["hits"].append(names)
     data["grid"] = grid
+    # Bare ground height (ground meshes only) on a 4-stud grid, for pet waypoints and the on-ground test.
+    ground_trees = [(n, t) for n, t in trees if n.startswith("W7_Ground__")]
+    gg = {"x0": -114, "z0": -136, "step": 4, "nx": 66, "nz": 58, "heights": []}
+    for j in range(gg["nz"]):
+        row = []
+        for i in range(gg["nx"]):
+            x, z = gg["x0"] + i * gg["step"], gg["z0"] + j * gg["step"]
+            best = None
+            for _, tree in ground_trees:
+                hit = tree.ray_cast(Vector((x, -z, 200)), Vector((0, 0, -1)))
+                if hit[0] is not None and (best is None or hit[0].z > best):
+                    best = hit[0].z
+            row.append(None if best is None else round(best + 4, 2))
+        gg["heights"].append(row)
+    data["ground"] = gg
     (OUT / "world-v7-walk.json").write_text(json.dumps(data))
 
 
