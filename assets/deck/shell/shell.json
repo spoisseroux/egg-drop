@@ -1,0 +1,387 @@
+{
+ "schema": 1,
+ "name": "Pocket Deck Slim",
+ "units": "deck units: body = 1600 x 800 (2:1). scale s = deckWidthPx / 1600.",
+ "layout": {
+  "size": [
+   1600,
+   800
+  ],
+  "bandRadius": 150,
+  "bandThickness": 20,
+  "plate": [
+   20,
+   20,
+   1560,
+   760
+  ],
+  "plateRadius": 132,
+  "glass": [
+   360,
+   80,
+   880,
+   640
+  ],
+  "glassRadius": 44,
+  "lcd": [
+   376,
+   96,
+   848,
+   608
+  ],
+  "lcdRadius": 30,
+  "dpad": {
+   "center": [
+    190,
+    424
+   ],
+   "diameter": 208,
+   "well": 232
+  },
+  "menu": [
+   128,
+   618,
+   124,
+   44
+  ],
+  "wordmark": {
+   "center": [
+    190,
+    172
+   ],
+   "pixel": 6
+  },
+  "led": {
+   "center": [
+    190,
+    258
+   ],
+   "diameter": 12
+  },
+  "buttonA": {
+   "center": [
+    1432,
+    372
+   ],
+   "diameter": 176
+  },
+  "buttonB": {
+   "center": [
+    1318,
+    548
+   ],
+   "diameter": 104
+  },
+  "speaker": {
+   "center": [
+    1456,
+    652
+   ]
+  },
+  "screws": [
+   [
+    66,
+    66
+   ],
+   [
+    1534,
+    66
+   ]
+  ],
+  "shoulderL": [
+   170,
+   -12,
+   220,
+   24
+  ],
+  "shoulderR": [
+   1210,
+   -12,
+   220,
+   24
+  ]
+ },
+ "stack": [
+  "shadow-9slice",
+  "shoulder (L, R)",
+  "band",
+  "faceplate texture (assets/deck/faceplates/<id>.png) in rect plate",
+  "plate-overlay",
+  "wordmark (two copies, see files)",
+  "glass",
+  "LCD Frame (rect lcd, UICorner lcdRadius * s, #0C0D10 leaning 10% to the plate's deep colour; ClipsDescendants)",
+  "glass-glare",
+  "dpad-disc + dpad-arrows (+ dpad-press)",
+  "menu-pill + label",
+  "button-base + button-gloss + letter (A, B)",
+  "led-glow"
+ ],
+ "letters": {
+  "A": "BuilderSans ExtraBold, size = 0.46 * diameter, colour = faceplate ink",
+  "B": "same, colour #C3C8D0"
+ },
+ "press": "swap base and gloss to the -pressed sprites (cap drops by 7% of its diameter, lower edge collapses); the letter moves down the same amount. 60 ms down, 100 ms up.",
+ "hitTargets": {
+  "dpad": "four 96 x 96 unit quadrant buttons, never below 44 px each",
+  "A": "diameter + 16 units",
+  "B": "max(diameter + 16 units, 44 px)",
+  "menu": "max(124 x 44 units, 44 px tall)",
+  "shoulders": "220 x 56 units each, extending down over the band"
+ },
+ "files": {
+  "band.png": {
+   "size": [
+    1024,
+    512
+   ],
+   "rect": [
+    0,
+    0,
+    1600,
+    800
+   ],
+   "z": 2,
+   "tint": "band colour (silver #FFFFFF, gunmetal #6F7480, gold #EBC978, rose #F0B8B0)"
+  },
+  "band-9slice.png": {
+   "size": [
+    360,
+    360
+   ],
+   "rect": [
+    0,
+    0,
+    1600,
+    800
+   ],
+   "z": 2,
+   "sliceCenter": [
+    170,
+    170,
+    190,
+    190
+   ],
+   "sliceScale": "deckWidth / 1600",
+   "tint": "band colour",
+   "note": "same art as band.png for decks that are not exactly 2:1"
+  },
+  "plate-overlay.png": {
+   "size": [
+    1024,
+    499
+   ],
+   "rect": [
+    20,
+    20,
+    1560,
+    760
+   ],
+   "z": 4,
+   "note": "hardware detail over any faceplate: lip, shade, gloss, glass recess, wells, screws, seed speaker, LED socket. Do not tint."
+  },
+  "glass.png": {
+   "size": [
+    880,
+    640
+   ],
+   "rect": [
+    360,
+    80,
+    880,
+    640
+   ],
+   "z": 5
+  },
+  "glass-9slice.png": {
+   "size": [
+    120,
+    120
+   ],
+   "rect": [
+    360,
+    80,
+    880,
+    640
+   ],
+   "z": 5,
+   "sliceCenter": [
+    50,
+    50,
+    70,
+    70
+   ],
+   "sliceScale": "deckWidth / 1600"
+  },
+  "glass-glare.png": {
+   "size": [
+    848,
+    608
+   ],
+   "rect": [
+    376,
+    96,
+    848,
+    608
+   ],
+   "z": 40,
+   "note": "above all LCD content, ImageTransparency 0; hide under Reduced Effects if it hurts contrast"
+  },
+  "button-base.png": {
+   "size": [
+    256,
+    274
+   ],
+   "z": 7,
+   "aspect": [
+    1,
+    1.07
+   ],
+   "note": "A and B both use this. Rect = centre +- diameter/2, height = diameter * 1.07 (the lower edge hangs below). Base: tint with the accent (A) or #3A3E47 (B). Gloss: never tinted."
+  },
+  "button-base-pressed.png": {
+   "size": [
+    256,
+    274
+   ],
+   "z": 7,
+   "aspect": [
+    1,
+    1.07
+   ],
+   "note": "A and B both use this. Rect = centre +- diameter/2, height = diameter * 1.07 (the lower edge hangs below). Base: tint with the accent (A) or #3A3E47 (B). Gloss: never tinted."
+  },
+  "button-gloss.png": {
+   "size": [
+    256,
+    274
+   ],
+   "z": 8,
+   "aspect": [
+    1,
+    1.07
+   ],
+   "note": "A and B both use this. Rect = centre +- diameter/2, height = diameter * 1.07 (the lower edge hangs below). Base: tint with the accent (A) or #3A3E47 (B). Gloss: never tinted."
+  },
+  "button-gloss-pressed.png": {
+   "size": [
+    256,
+    274
+   ],
+   "z": 8,
+   "aspect": [
+    1,
+    1.07
+   ],
+   "note": "A and B both use this. Rect = centre +- diameter/2, height = diameter * 1.07 (the lower edge hangs below). Base: tint with the accent (A) or #3A3E47 (B). Gloss: never tinted."
+  },
+  "dpad-disc.png": {
+   "size": [
+    256,
+    256
+   ],
+   "z": 7
+  },
+  "dpad-arrows.png": {
+   "size": [
+    256,
+    256
+   ],
+   "z": 8,
+   "tint": "accent"
+  },
+  "dpad-press.png": {
+   "size": [
+    256,
+    256
+   ],
+   "z": 9,
+   "note": "UP wedge; set Rotation 90 / 180 / 270 for right / down / left; visible only while held"
+  },
+  "menu-pill.png": {
+   "size": [
+    248,
+    88
+   ],
+   "rect": [
+    128,
+    618,
+    124,
+    44
+   ],
+   "z": 7,
+   "sliceCenter": [
+    44,
+    43,
+    204,
+    45
+   ],
+   "note": "label MENU: BuilderSans Bold 19, tracking +1.6, #E6E9EE"
+  },
+  "shoulder.png": {
+   "size": [
+    440,
+    48
+   ],
+   "rect": [
+    170,
+    -12,
+    220,
+    24
+   ],
+   "z": 1,
+   "tint": "band colour",
+   "note": "same sprite for L and R (rects shoulderL and shoulderR); sits behind the band"
+  },
+  "wordmark.png": {
+   "size": [
+    328,
+    128
+   ],
+   "rect": [
+    67.0,
+    124.0,
+    246,
+    96
+   ],
+   "z": 4,
+   "resample": "Pixelated",
+   "tint": "faceplate engrave.color at engrave.opacity",
+   "note": "41 x 16 cells at 8 px. Engraved look: one copy offset (+1.6, +2) units in the opposite tone (white 30% under a dark engrave, black 45% under a light one), then the main copy on top."
+  },
+  "led-glow.png": {
+   "size": [
+    64,
+    64
+   ],
+   "rect": [
+    173,
+    241,
+    34,
+    34
+   ],
+   "z": 6,
+   "tint": "accent"
+  },
+  "shadow-9slice.png": {
+   "size": [
+    380,
+    380
+   ],
+   "rect": [
+    -90,
+    -68,
+    1780,
+    980
+   ],
+   "z": 0,
+   "sliceCenter": [
+    189,
+    189,
+    191,
+    191
+   ],
+   "sliceScale": "deckWidth / 1600",
+   "note": "offset 22 units down"
+  }
+ }
+}

@@ -1,0 +1,712 @@
+{
+ "schema": 1,
+ "textureSize": [
+  1024,
+  499
+ ],
+ "plateRect": [
+  20,
+  20,
+  1560,
+  760
+ ],
+ "tiers": {
+  "starter": {
+   "priceStars": 0,
+   "note": "the 8 existing deck styles; ids are the saved DeckThemes ids, unlock rules unchanged"
+  },
+  "common": {
+   "priceStars": 20
+  },
+  "rare": {
+   "priceStars": 40
+  },
+  "showcase": {
+   "priceStars": 80
+  }
+ },
+ "tintRule": "UI surfaces: glass #15171B, raised #23262C, well #0C0D10 lean 14% / 16% / 10% toward `deep`. `accent` is used only for selection, focus fill, the primary action and progress. Text on an accent fill uses `ink`. The `ui` block is that derivation, precomputed.",
+ "overlayRule": "Overlay textures share the plate rect and already carry its rounded alpha. Animate ImageTransparency only (no scrolling, the plate cannot clip). opacity = [min, max].",
+ "faceplates": [
+  {
+   "id": "sherbet",
+   "name": "Scout",
+   "order": 1,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "sherbet.png",
+   "finish": "gloss",
+   "accent": "#76F6B0",
+   "ink": "#0E0F12",
+   "accentInkContrast": 14.22,
+   "deep": "#147863",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#152525",
+    "raised": "#213335",
+    "well": "#0D1818",
+    "selected": "#2D4E46",
+    "line": "#8DBEAC"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.35
+    ],
+    "periodSeconds": 6.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "legacyThemeId": "sherbet",
+   "unlock": "free"
+  },
+  {
+   "id": "stone",
+   "name": "Pebble",
+   "order": 2,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "stone.png",
+   "finish": "matte speckle",
+   "accent": "#C8EB9B",
+   "ink": "#0E0F12",
+   "accentInkContrast": 14.43,
+   "deep": "#48685E",
+   "band": {
+    "name": "gunmetal",
+    "tint": "#6F7480"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1C2224",
+    "raised": "#293134",
+    "well": "#121618",
+    "selected": "#3F4B42",
+    "line": "#AABAA5"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "Plastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "legacyThemeId": "stone",
+   "unlock": "free"
+  },
+  {
+   "id": "ice",
+   "name": "Creek",
+   "order": 3,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "ice.png",
+   "finish": "clear plastic",
+   "accent": "#70ECFF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 13.81,
+   "deep": "#216892",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#17222C",
+    "raised": "#23313C",
+    "well": "#0E161D",
+    "selected": "#2E4B57",
+    "line": "#8BBBC8"
+   },
+   "overlay": {
+    "texture": "overlay-water.png",
+    "kind": "water",
+    "opacity": [
+     0.1,
+     0.4
+    ],
+    "periodSeconds": 5.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   },
+   "legacyThemeId": "ice",
+   "unlock": "free"
+  },
+  {
+   "id": "brick",
+   "name": "Ember",
+   "order": 4,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "brick.png",
+   "finish": "brushed metal",
+   "accent": "#FF9B70",
+   "ink": "#0E0F12",
+   "accentInkContrast": 9.29,
+   "deep": "#AB3047",
+   "band": {
+    "name": "gunmetal",
+    "tint": "#6F7480"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#2A1A21",
+    "raised": "#392830",
+    "well": "#1C1016",
+    "selected": "#553839",
+    "line": "#BD9E96"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "Metal",
+    "reflectance": 0.25,
+    "transparency": 0
+   },
+   "legacyThemeId": "brick",
+   "unlock": "free"
+  },
+  {
+   "id": "moss",
+   "name": "Canopy",
+   "order": 5,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "moss.png",
+   "finish": "leaf print gloss",
+   "accent": "#BCF57B",
+   "ink": "#0E0F12",
+   "accentInkContrast": 15.04,
+   "deep": "#27734A",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#182422",
+    "raised": "#243231",
+    "well": "#0F1716",
+    "selected": "#394D3B",
+    "line": "#A6BE9A"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "legacyThemeId": "moss",
+   "unlock": "free"
+  },
+  {
+   "id": "honey",
+   "name": "Honey",
+   "order": 6,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "honey.png",
+   "finish": "pearl",
+   "accent": "#FFD77D",
+   "ink": "#0E0F12",
+   "accentInkContrast": 13.93,
+   "deep": "#AF622F",
+   "band": {
+    "name": "gold",
+    "tint": "#EBC978"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#2B221E",
+    "raised": "#39302C",
+    "well": "#1C1613",
+    "selected": "#554737",
+    "line": "#BDB39A"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.3
+    ],
+    "periodSeconds": 7.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "legacyThemeId": "honey",
+   "unlock": "firstWin"
+  },
+  {
+   "id": "gloaming",
+   "name": "Gloaming",
+   "order": 7,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "gloaming.png",
+   "finish": "two-tone gloss",
+   "accent": "#92ECE6",
+   "ink": "#0E0F12",
+   "accentInkContrast": 14.02,
+   "deep": "#465489",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1C202A",
+    "raised": "#292D3B",
+    "well": "#12141C",
+    "selected": "#384853",
+    "line": "#97BBBF"
+   },
+   "overlay": {
+    "texture": "overlay-sparkle.png",
+    "kind": "sparkle",
+    "opacity": [
+     0.0,
+     0.55
+    ],
+    "periodSeconds": 3.2,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "legacyThemeId": "gloaming",
+   "unlock": "rankI"
+  },
+  {
+   "id": "copperleaf",
+   "name": "Copperleaf",
+   "order": 8,
+   "tier": "starter",
+   "priceStars": 0,
+   "texture": "copperleaf.png",
+   "finish": "brushed copper",
+   "accent": "#FFBC90",
+   "ink": "#0E0F12",
+   "accentInkContrast": 11.73,
+   "deep": "#8D4456",
+   "band": {
+    "name": "rose",
+    "tint": "#F0B8B0"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#261D23",
+    "raised": "#342B33",
+    "well": "#191217",
+    "selected": "#503F40",
+    "line": "#BDAAA1"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "Metal",
+    "reflectance": 0.25,
+    "transparency": 0
+   },
+   "legacyThemeId": "copperleaf",
+   "unlock": "rankII"
+  },
+  {
+   "id": "aqua_pop",
+   "name": "Aqua Pop",
+   "order": 9,
+   "tier": "common",
+   "priceStars": 20,
+   "texture": "aqua_pop.png",
+   "finish": "glossy bubbles",
+   "accent": "#6FE3FF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 12.87,
+   "deep": "#1B6FA8",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#16232F",
+    "raised": "#223240",
+    "well": "#0E171F",
+    "selected": "#2D4B5B",
+    "line": "#8BB7C8"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.4
+    ],
+    "periodSeconds": 5.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "lime_gel",
+   "name": "Lime Gel",
+   "order": 10,
+   "tier": "common",
+   "priceStars": 20,
+   "texture": "lime_gel.png",
+   "finish": "translucent gel",
+   "accent": "#B6F24B",
+   "ink": "#0E0F12",
+   "accentInkContrast": 14.41,
+   "deep": "#3E7D12",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1B251A",
+    "raised": "#273428",
+    "well": "#111810",
+    "selected": "#3B4F2D",
+    "line": "#A4BD89"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.35
+    ],
+    "periodSeconds": 5.5,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  },
+  {
+   "id": "sorbet_sky",
+   "name": "Sorbet Sky",
+   "order": 11,
+   "tier": "common",
+   "priceStars": 20,
+   "texture": "sorbet_sky.png",
+   "finish": "glossy gradient",
+   "accent": "#FFB37A",
+   "ink": "#0E0F12",
+   "accentInkContrast": 10.93,
+   "deep": "#B8456B",
+   "band": {
+    "name": "rose",
+    "tint": "#F0B8B0"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#2C1D26",
+    "raised": "#3B2B36",
+    "well": "#1D1319",
+    "selected": "#563E40",
+    "line": "#BDA799"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.35
+    ],
+    "periodSeconds": 6.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "liquid_chrome",
+   "name": "Liquid Chrome",
+   "order": 12,
+   "tier": "rare",
+   "priceStars": 40,
+   "texture": "liquid_chrome.png",
+   "finish": "chrome",
+   "accent": "#DCE6F5",
+   "ink": "#0E0F12",
+   "accentInkContrast": 15.22,
+   "deep": "#4A5568",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1C2026",
+    "raised": "#292E36",
+    "well": "#121419",
+    "selected": "#424851",
+    "line": "#B1B8C4"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.5
+    ],
+    "periodSeconds": 4.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Metal",
+    "reflectance": 0.25,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "tidepool",
+   "name": "Tidepool",
+   "order": 13,
+   "tier": "rare",
+   "priceStars": 40,
+   "texture": "tidepool.png",
+   "finish": "water overlay",
+   "accent": "#5CD6E8",
+   "ink": "#0E0F12",
+   "accentInkContrast": 11.17,
+   "deep": "#0E4A7A",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#FFFFFF",
+    "opacity": 0.78
+   },
+   "ui": {
+    "panel": "#141E28",
+    "raised": "#202C38",
+    "well": "#0C131B",
+    "selected": "#284451",
+    "line": "#84B3C0"
+   },
+   "overlay": {
+    "texture": "overlay-water.png",
+    "kind": "water",
+    "opacity": [
+     0.15,
+     0.7
+    ],
+    "periodSeconds": 4.5,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  },
+  {
+   "id": "aurora_glass",
+   "name": "Aurora Glass",
+   "order": 14,
+   "tier": "rare",
+   "priceStars": 40,
+   "texture": "aurora_glass.png",
+   "finish": "aurora overlay",
+   "accent": "#7CF5C4",
+   "ink": "#0E0F12",
+   "accentInkContrast": 14.34,
+   "deep": "#1B2A5E",
+   "band": {
+    "name": "gunmetal",
+    "tint": "#6F7480"
+   },
+   "engrave": {
+    "color": "#FFFFFF",
+    "opacity": 0.78
+   },
+   "ui": {
+    "panel": "#161A24",
+    "raised": "#222734",
+    "well": "#0E1018",
+    "selected": "#2F4448",
+    "line": "#90BEB3"
+   },
+   "overlay": {
+    "texture": "overlay-aurora.png",
+    "kind": "aurora",
+    "opacity": [
+     0.1,
+     0.75
+    ],
+    "periodSeconds": 6.5,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "prism_flare",
+   "name": "Prism Flare",
+   "order": 15,
+   "tier": "showcase",
+   "priceStars": 80,
+   "texture": "prism_flare.png",
+   "finish": "holographic lens flare",
+   "accent": "#F3B6FF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 11.81,
+   "deep": "#5B4BA8",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1F1E2F",
+    "raised": "#2C2C40",
+    "well": "#14131F",
+    "selected": "#483F5B",
+    "line": "#B9A8C8"
+   },
+   "overlay": {
+    "texture": "overlay-sparkle.png",
+    "kind": "sparkle",
+    "opacity": [
+     0.0,
+     0.8
+    ],
+    "periodSeconds": 2.8,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Foil",
+    "reflectance": 0.25,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "night_orb",
+   "name": "Night Orb",
+   "order": 16,
+   "tier": "showcase",
+   "priceStars": 80,
+   "texture": "night_orb.png",
+   "finish": "glass orbs and chrome rings",
+   "accent": "#FF7AD9",
+   "ink": "#0E0F12",
+   "accentInkContrast": 8.25,
+   "deep": "#1A1440",
+   "band": {
+    "name": "gunmetal",
+    "tint": "#6F7480"
+   },
+   "engrave": {
+    "color": "#FFFFFF",
+    "opacity": 0.78
+   },
+   "ui": {
+    "panel": "#161720",
+    "raised": "#22232F",
+    "well": "#0D0E15",
+    "selected": "#412F47",
+    "line": "#BD93BA"
+   },
+   "overlay": {
+    "texture": "overlay-sparkle.png",
+    "kind": "sparkle",
+    "opacity": [
+     0.0,
+     0.7
+    ],
+    "periodSeconds": 3.4,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
+  }
+ ]
+}

@@ -1,0 +1,3736 @@
+{
+ "schema": 1,
+ "asset": "bear-attachments",
+ "sourceBlend": "assets/art-source/pets/pet-bear-attachments.blend",
+ "builtBy": "scripts/export_bear_attachments.py",
+ "axes": "FBX axis_forward=-Z axis_up=Y, same as bear.fbx. Blender pet-local: front -Y, up +Z, L = -X, paws at z = 0, 1 unit = 1 stud.",
+ "conversions": {
+  "blenderToRuntime": "(x, y, z) -> (x, z, -y)  [runtime: front +Z, up +Y]",
+  "blenderToStudioTemplate": "(x, y, z) -> (-x, z, y)  [import template: front -Z]",
+  "note": "Same mapping scripts/build_bear_assets.py uses. Meshes are exported with the world transform baked and the pet root at the origin, so each imports at its pet-local position. Studio default FBX units give a uniform 100x MeshSize; Size = MeshSize/100, as for the Bear."
+ },
+ "anchorKinds": {
+  "surface": "local +Z leaves the surface; local Y stays close to pet +Y",
+  "face": "identity rotation; part modelled pushed out along -Y",
+  "swap": "identity rotation; origin at the joint"
+ },
+ "files": {
+  "all": "bear-attachments.fbx",
+  "horns": "bear-attachments-horns.fbx",
+  "wings": "bear-attachments-wings.fbx",
+  "piercings": "bear-attachments-piercings.fbx",
+  "wearables": "bear-attachments-wearables.fbx",
+  "face-alts": "bear-attachments-face-alts.fbx",
+  "tails": "bear-attachments-tails.fbx"
+ },
+ "anchors": [
+  {
+   "name": "AnkleL",
+   "blenderName": "PetBear__Anchor_AnkleL",
+   "channel": "FootL",
+   "slot": "Ankle",
+   "kind": "swap",
+   "isNew": true,
+   "positionBlender": [
+    -0.165,
+    -0.01,
+    0.17
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.165,
+    0.17,
+    0.01
+   ],
+   "note": "Sock cuff, anklet. They never wear pants."
+  },
+  {
+   "name": "AnkleR",
+   "blenderName": "PetBear__Anchor_AnkleR",
+   "channel": "FootR",
+   "slot": "Ankle",
+   "kind": "swap",
+   "isNew": true,
+   "positionBlender": [
+    0.165,
+    -0.01,
+    0.17
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.165,
+    0.17,
+    0.01
+   ],
+   "note": "Sock cuff, anklet. They never wear pants."
+  },
+  {
+   "name": "Back",
+   "blenderName": "PetBear__Anchor_Back",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    0.21521,
+    0.52
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.52,
+    -0.21521
+   ],
+   "note": "Backpack, cape, shell. Wings and Back items are exclusive."
+  },
+  {
+   "name": "Body",
+   "blenderName": "PetBear__Anchor_Body",
+   "channel": "Body",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.455,
+    0.05
+   ],
+   "note": ""
+  },
+  {
+   "name": "CharmAnchor",
+   "blenderName": "PetBear__Anchor_CharmAnchor",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.7
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.7,
+    0.03
+   ],
+   "note": ""
+  },
+  {
+   "name": "CharmCenter",
+   "blenderName": "PetBear__Anchor_CharmCenter",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.16,
+    1.4
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.4,
+    0.16
+   ],
+   "note": ""
+  },
+  {
+   "name": "CharmFloat",
+   "blenderName": "PetBear__Anchor_CharmFloat",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.7
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.7,
+    0.03
+   ],
+   "note": ""
+  },
+  {
+   "name": "CharmLeft",
+   "blenderName": "PetBear__Anchor_CharmLeft",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    -0.6,
+    -0.12,
+    1.47
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.6,
+    1.47,
+    0.12
+   ],
+   "note": ""
+  },
+  {
+   "name": "CharmRight",
+   "blenderName": "PetBear__Anchor_CharmRight",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.6,
+    -0.12,
+    1.47
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.6,
+    1.47,
+    0.12
+   ],
+   "note": ""
+  },
+  {
+   "name": "CheekL",
+   "blenderName": "PetBear__Anchor_CheekL",
+   "channel": "Head",
+   "slot": "Cheek",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    -0.36,
+    -0.30616,
+    0.88
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.36,
+    0.88,
+    0.30616
+   ],
+   "note": "Blush, freckles, whiskers, face stickers."
+  },
+  {
+   "name": "CheekR",
+   "blenderName": "PetBear__Anchor_CheekR",
+   "channel": "Head",
+   "slot": "Cheek",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.36,
+    -0.30616,
+    0.88
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.36,
+    0.88,
+    0.30616
+   ],
+   "note": "Blush, freckles, whiskers, face stickers."
+  },
+  {
+   "name": "Chest",
+   "blenderName": "PetBear__Anchor_Chest",
+   "channel": "Body",
+   "slot": "Chest",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.39631,
+    0.5
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.5,
+    0.39631
+   ],
+   "note": "Badge, bib, pocket."
+  },
+  {
+   "name": "ClawL",
+   "blenderName": "PetBear__Anchor_ClawL",
+   "channel": "HandL",
+   "slot": "Claws",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.39041,
+    -0.13897,
+    0.38773
+   ],
+   "eulerXYZDegBlender": [
+    14.104,
+    -148.246,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     -0.85032,
+     0.0,
+     0.52627
+    ],
+    "y": [
+     -0.12824,
+     0.96986,
+     -0.2072
+    ],
+    "z": [
+     -0.51041,
+     -0.24367,
+     -0.82469
+    ]
+   },
+   "positionRuntime": [
+    -0.39041,
+    0.38773,
+    0.13897
+   ],
+   "note": "Paw tip. Feature Egg claws, stages 1-5."
+  },
+  {
+   "name": "ClawR",
+   "blenderName": "PetBear__Anchor_ClawR",
+   "channel": "HandR",
+   "slot": "Claws",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.3859,
+    -0.13202,
+    0.38904
+   ],
+   "eulerXYZDegBlender": [
+    13.045,
+    148.828,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     -0.85561,
+     0.0,
+     -0.51761
+    ],
+    "y": [
+     0.11683,
+     0.97419,
+     -0.19313
+    ],
+    "z": [
+     0.50426,
+     -0.22572,
+     -0.83353
+    ]
+   },
+   "positionRuntime": [
+    0.3859,
+    0.38904,
+    0.13202
+   ],
+   "note": "Paw tip. Feature Egg claws, stages 1-5."
+  },
+  {
+   "name": "EarL",
+   "blenderName": "PetBear__Anchor_EarL",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    -0.33,
+    0.0,
+    1.27
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.33,
+    1.27,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "EarR",
+   "blenderName": "PetBear__Anchor_EarR",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.33,
+    0.0,
+    1.27
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.33,
+    1.27,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "EyeL",
+   "blenderName": "PetBear__Anchor_EyeL",
+   "channel": "Head",
+   "slot": "Eyes",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.2145,
+    1.03,
+    0.42468
+   ],
+   "note": "Eye socket centre on the skull. Identity rotation: +Z up, -Y out of the face, so eye textures stay upright."
+  },
+  {
+   "name": "EyeLine",
+   "blenderName": "PetBear__Anchor_EyeLine",
+   "channel": "Head",
+   "slot": null,
+   "kind": "face",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.469,
+    1.03
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.03,
+    0.469
+   ],
+   "note": ""
+  },
+  {
+   "name": "EyeR",
+   "blenderName": "PetBear__Anchor_EyeR",
+   "channel": "Head",
+   "slot": "Eyes",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.2145,
+    1.03,
+    0.42468
+   ],
+   "note": "Eye socket centre on the skull. Identity rotation: +Z up, -Y out of the face, so eye textures stay upright."
+  },
+  {
+   "name": "FaceBridge",
+   "blenderName": "PetBear__Anchor_FaceBridge",
+   "channel": "Head",
+   "slot": "Eyewear",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.46051,
+    1.04
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.04,
+    0.46051
+   ],
+   "note": "Between the eyes: glasses, masks, monocle."
+  },
+  {
+   "name": "FootL",
+   "blenderName": "PetBear__Anchor_FootL",
+   "channel": "FootL",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    -0.165,
+    -0.08,
+    0.1
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.165,
+    0.1,
+    0.08
+   ],
+   "note": ""
+  },
+  {
+   "name": "FootR",
+   "blenderName": "PetBear__Anchor_FootR",
+   "channel": "FootR",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.165,
+    -0.08,
+    0.1
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.165,
+    0.1,
+    0.08
+   ],
+   "note": ""
+  },
+  {
+   "name": "Forehead",
+   "blenderName": "PetBear__Anchor_Forehead",
+   "channel": "Head",
+   "slot": "Forehead",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.3688,
+    1.24
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.24,
+    0.3688
+   ],
+   "note": "Gem, bow, unicorn nub, bandage."
+  },
+  {
+   "name": "Ground",
+   "blenderName": "PetBear__Anchor_Ground",
+   "channel": "Root",
+   "slot": "Aura",
+   "kind": "swap",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "note": "Shadow blob, aura ring, pedestal. z = 0 is the floor."
+  },
+  {
+   "name": "HandCatch",
+   "blenderName": "PetBear__Anchor_HandCatch",
+   "channel": "Root",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.47,
+    0.45
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.45,
+    0.47
+   ],
+   "note": ""
+  },
+  {
+   "name": "HandL",
+   "blenderName": "PetBear__Anchor_HandL",
+   "channel": "HandL",
+   "slot": "Sleeve",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    -0.225,
+    -0.06,
+    0.655
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.225,
+    0.655,
+    0.06
+   ],
+   "note": ""
+  },
+  {
+   "name": "HandR",
+   "blenderName": "PetBear__Anchor_HandR",
+   "channel": "HandR",
+   "slot": "Sleeve",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.225,
+    -0.06,
+    0.655
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.225,
+    0.655,
+    0.06
+   ],
+   "note": ""
+  },
+  {
+   "name": "HatCrown",
+   "blenderName": "PetBear__Anchor_HatCrown",
+   "channel": "Head",
+   "slot": "Hat",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    1.3824,
+    0.03
+   ],
+   "note": "Top of skull. Hat origin sits on the crown; brim hangs below. Max radius 0.19 to clear ears unless hidesEars."
+  },
+  {
+   "name": "Head",
+   "blenderName": "PetBear__Anchor_Head",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.7,
+    0.02
+   ],
+   "note": ""
+  },
+  {
+   "name": "HelixL",
+   "blenderName": "PetBear__Anchor_HelixL",
+   "channel": "Head",
+   "slot": "EarPiercing",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.44337,
+    0.00176,
+    1.42758
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    -45.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.70711,
+     0.0,
+     0.70711
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     -0.70711,
+     0.0,
+     0.70711
+    ]
+   },
+   "positionRuntime": [
+    -0.44337,
+    1.42758,
+    -0.00176
+   ],
+   "note": "Upper outer rim. +Z = out along the rim radius; ring clamps the rim in the local YZ plane."
+  },
+  {
+   "name": "HelixR",
+   "blenderName": "PetBear__Anchor_HelixR",
+   "channel": "Head",
+   "slot": "EarPiercing",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.46106,
+    -0.00101,
+    1.40933
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    45.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.70711,
+     0.0,
+     -0.70711
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.70711,
+     0.0,
+     0.70711
+    ]
+   },
+   "positionRuntime": [
+    0.46106,
+    1.40933,
+    0.00101
+   ],
+   "note": "Upper outer rim. +Z = out along the rim radius; ring clamps the rim in the local YZ plane."
+  },
+  {
+   "name": "HornL",
+   "blenderName": "PetBear__Anchor_HornL",
+   "channel": "Head",
+   "slot": "Horns",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "eulerXYZDegBlender": [
+    7.995,
+    -16.99,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.95635,
+     0.0,
+     0.29221
+    ],
+    "y": [
+     -0.04064,
+     0.99028,
+     0.13302
+    ],
+    "z": [
+     -0.28937,
+     -0.13909,
+     0.94706
+    ]
+   },
+   "positionRuntime": [
+    -0.175,
+    1.35446,
+    0.1
+   ],
+   "note": "+Z leaves the skull. Horn base ring sits on origin, sunk 0.025. Feature Egg stages 1-5."
+  },
+  {
+   "name": "HornR",
+   "blenderName": "PetBear__Anchor_HornR",
+   "channel": "Head",
+   "slot": "Horns",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "eulerXYZDegBlender": [
+    7.995,
+    16.99,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.95635,
+     0.0,
+     -0.29221
+    ],
+    "y": [
+     0.04064,
+     0.99028,
+     0.13302
+    ],
+    "z": [
+     0.28937,
+     -0.13909,
+     0.94706
+    ]
+   },
+   "positionRuntime": [
+    0.175,
+    1.35446,
+    0.1
+   ],
+   "note": "+Z leaves the skull. Horn base ring sits on origin, sunk 0.025. Feature Egg stages 1-5."
+  },
+  {
+   "name": "LobeL",
+   "blenderName": "PetBear__Anchor_LobeL",
+   "channel": "Head",
+   "slot": "Earring",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.46326,
+    0.00176,
+    1.25048
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    -112.973,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     -0.39029,
+     0.0,
+     0.92069
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     -0.92069,
+     0.0,
+     -0.39029
+    ]
+   },
+   "positionRuntime": [
+    -0.46326,
+    1.25048,
+    -0.00176
+   ],
+   "note": "Lower outer rim. Drop earrings hang along world -Z, not local."
+  },
+  {
+   "name": "LobeR",
+   "blenderName": "PetBear__Anchor_LobeR",
+   "channel": "Head",
+   "slot": "Earring",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.46425,
+    -0.00101,
+    1.25383
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    112.973,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     -0.39029,
+     0.0,
+     -0.92069
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.92069,
+     0.0,
+     -0.39029
+    ]
+   },
+   "positionRuntime": [
+    0.46425,
+    1.25383,
+    0.00101
+   ],
+   "note": "Lower outer rim. Drop earrings hang along world -Z, not local."
+  },
+  {
+   "name": "Mouth",
+   "blenderName": "PetBear__Anchor_Mouth",
+   "channel": "Head",
+   "slot": "Mouth",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.51029,
+    0.8
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.8,
+    0.51029
+   ],
+   "note": "Mouth swap (alpha patch or mesh). Expression system owns visibility."
+  },
+  {
+   "name": "Neck",
+   "blenderName": "PetBear__Anchor_Neck",
+   "channel": "Body",
+   "slot": "Neck",
+   "kind": "swap",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.63,
+    0.07
+   ],
+   "note": "Necklace ring lies tilted: front 0.03 lower than back."
+  },
+  {
+   "name": "Nose",
+   "blenderName": "PetBear__Anchor_Nose",
+   "channel": "Head",
+   "slot": "Nose",
+   "kind": "face",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.50522,
+    0.905
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.905,
+    0.50522
+   ],
+   "note": "Nose swap. On the muzzle tip."
+  },
+  {
+   "name": "Tail",
+   "blenderName": "PetBear__Anchor_Tail",
+   "channel": "Body",
+   "slot": "Tail",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.0,
+    0.24,
+    0.33
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.33,
+    -0.24
+   ],
+   "note": ""
+  },
+  {
+   "name": "ToeL",
+   "blenderName": "PetBear__Anchor_ToeL",
+   "channel": "FootL",
+   "slot": "Claws",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.165,
+    -0.325,
+    0.08
+   ],
+   "eulerXYZDegBlender": [
+    78.69,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     0.19612,
+     0.98058
+    ],
+    "z": [
+     0.0,
+     -0.98058,
+     0.19612
+    ]
+   },
+   "positionRuntime": [
+    -0.165,
+    0.08,
+    0.325
+   ],
+   "note": "Toe claws follow the Claws feature stage."
+  },
+  {
+   "name": "ToeR",
+   "blenderName": "PetBear__Anchor_ToeR",
+   "channel": "FootR",
+   "slot": "Claws",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.165,
+    -0.325,
+    0.08
+   ],
+   "eulerXYZDegBlender": [
+    78.69,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     0.19612,
+     0.98058
+    ],
+    "z": [
+     0.0,
+     -0.98058,
+     0.19612
+    ]
+   },
+   "positionRuntime": [
+    0.165,
+    0.08,
+    0.325
+   ],
+   "note": "Toe claws follow the Claws feature stage."
+  },
+  {
+   "name": "Torso",
+   "blenderName": "PetBear__Anchor_Torso",
+   "channel": "Body",
+   "slot": "Shirt",
+   "kind": "swap",
+   "isNew": true,
+   "positionBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.0,
+    0.455,
+    0.05
+   ],
+   "note": "Same point as Body. Shirts are a shell of the shared body mesh; sleeves ride HandL/R."
+  },
+  {
+   "name": "WingL",
+   "blenderName": "PetBear__Anchor_WingL",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    -0.11,
+    0.54,
+    -0.17
+   ],
+   "note": ""
+  },
+  {
+   "name": "WingR",
+   "blenderName": "PetBear__Anchor_WingR",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "swap",
+   "isNew": false,
+   "positionBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "eulerXYZDegBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "positionRuntime": [
+    0.11,
+    0.54,
+    -0.17
+   ],
+   "note": ""
+  },
+  {
+   "name": "WristL",
+   "blenderName": "PetBear__Anchor_WristL",
+   "channel": "HandL",
+   "slot": "Wrist",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    -0.32756,
+    -0.10896,
+    0.4893
+   ],
+   "eulerXYZDegBlender": [
+    -14.104,
+    31.754,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.85032,
+     0.0,
+     -0.52627
+    ],
+    "y": [
+     -0.12824,
+     0.96986,
+     -0.2072
+    ],
+    "z": [
+     0.51041,
+     0.24367,
+     0.82469
+    ]
+   },
+   "positionRuntime": [
+    -0.32756,
+    0.4893,
+    0.10896
+   ],
+   "note": "Bracelet, watch, cuff. +Z points back up the arm."
+  },
+  {
+   "name": "WristR",
+   "blenderName": "PetBear__Anchor_WristR",
+   "channel": "HandR",
+   "slot": "Wrist",
+   "kind": "surface",
+   "isNew": true,
+   "positionBlender": [
+    0.32476,
+    -0.10465,
+    0.4901
+   ],
+   "eulerXYZDegBlender": [
+    -13.045,
+    -31.172,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     0.85561,
+     0.0,
+     0.51762
+    ],
+    "y": [
+     0.11683,
+     0.97419,
+     -0.19313
+    ],
+    "z": [
+     -0.50426,
+     0.22572,
+     0.83353
+    ]
+   },
+   "positionRuntime": [
+    0.32476,
+    0.4901,
+    0.10465
+   ],
+   "note": "Bracelet, watch, cuff. +Z points back up the arm."
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Bear__HornL_S1",
+   "source": "PetBear__HornL_S1",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornL",
+   "parentAnchor": "HornL",
+   "channel": "Head",
+   "role": "HornL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    -0.16975,
+    -0.097,
+    1.36286
+   ],
+   "sizeBlender": [
+    0.10535,
+    0.09185,
+    0.09514
+   ],
+   "centerRuntime": [
+    -0.16975,
+    1.36286,
+    0.097
+   ],
+   "sizeRuntime": [
+    0.10535,
+    0.09514,
+    0.09185
+   ],
+   "triangles": 46,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 1,
+   "height": 0.06,
+   "baseRadius": 0.05,
+   "stageName": "Bud"
+  },
+  {
+   "name": "Bear__HornR_S1",
+   "source": "PetBear__HornR_S1",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornR",
+   "parentAnchor": "HornR",
+   "channel": "Head",
+   "role": "HornR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    0.16975,
+    -0.097,
+    1.36286
+   ],
+   "sizeBlender": [
+    0.10535,
+    0.09185,
+    0.09514
+   ],
+   "centerRuntime": [
+    0.16975,
+    1.36286,
+    0.097
+   ],
+   "sizeRuntime": [
+    0.10535,
+    0.09514,
+    0.09185
+   ],
+   "triangles": 46,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 1,
+   "height": 0.06,
+   "baseRadius": 0.05,
+   "stageName": "Bud"
+  },
+  {
+   "name": "Bear__HornL_S2",
+   "source": "PetBear__HornL_S2",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornL",
+   "parentAnchor": "HornL",
+   "channel": "Head",
+   "role": "HornL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    -0.16951,
+    -0.09693,
+    1.38047
+   ],
+   "sizeBlender": [
+    0.11905,
+    0.10445,
+    0.13468
+   ],
+   "centerRuntime": [
+    -0.16951,
+    1.38047,
+    0.09693
+   ],
+   "sizeRuntime": [
+    0.11905,
+    0.13468,
+    0.10445
+   ],
+   "triangles": 46,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 2,
+   "height": 0.1,
+   "baseRadius": 0.057,
+   "stageName": "Nub"
+  },
+  {
+   "name": "Bear__HornR_S2",
+   "source": "PetBear__HornR_S2",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornR",
+   "parentAnchor": "HornR",
+   "channel": "Head",
+   "role": "HornR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    0.16951,
+    -0.09693,
+    1.38047
+   ],
+   "sizeBlender": [
+    0.11905,
+    0.10445,
+    0.13468
+   ],
+   "centerRuntime": [
+    0.16951,
+    1.38047,
+    0.09693
+   ],
+   "sizeRuntime": [
+    0.11905,
+    0.13468,
+    0.10445
+   ],
+   "triangles": 46,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 2,
+   "height": 0.1,
+   "baseRadius": 0.057,
+   "stageName": "Nub"
+  },
+  {
+   "name": "Bear__HornL_S3",
+   "source": "PetBear__HornL_S3",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornL",
+   "parentAnchor": "HornL",
+   "channel": "Head",
+   "role": "HornL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    -0.17266,
+    -0.09693,
+    1.40258
+   ],
+   "sizeBlender": [
+    0.13955,
+    0.11717,
+    0.18325
+   ],
+   "centerRuntime": [
+    -0.17266,
+    1.40258,
+    0.09693
+   ],
+   "sizeRuntime": [
+    0.13955,
+    0.18325,
+    0.11717
+   ],
+   "triangles": 58,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 3,
+   "height": 0.15,
+   "baseRadius": 0.064,
+   "stageName": "Horn"
+  },
+  {
+   "name": "Bear__HornR_S3",
+   "source": "PetBear__HornR_S3",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornR",
+   "parentAnchor": "HornR",
+   "channel": "Head",
+   "role": "HornR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    0.17266,
+    -0.09693,
+    1.40258
+   ],
+   "sizeBlender": [
+    0.13955,
+    0.11717,
+    0.18325
+   ],
+   "centerRuntime": [
+    0.17266,
+    1.40258,
+    0.09693
+   ],
+   "sizeRuntime": [
+    0.13955,
+    0.18325,
+    0.11717
+   ],
+   "triangles": 58,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 3,
+   "height": 0.15,
+   "baseRadius": 0.064,
+   "stageName": "Horn"
+  },
+  {
+   "name": "Bear__HornL_S4",
+   "source": "PetBear__HornL_S4",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornL",
+   "parentAnchor": "HornL",
+   "channel": "Head",
+   "role": "HornL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    -0.17827,
+    -0.09697,
+    1.42805
+   ],
+   "sizeBlender": [
+    0.16495,
+    0.12998,
+    0.23852
+   ],
+   "centerRuntime": [
+    -0.17827,
+    1.42805,
+    0.09697
+   ],
+   "sizeRuntime": [
+    0.16495,
+    0.23852,
+    0.12998
+   ],
+   "triangles": 70,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 4,
+   "height": 0.21,
+   "baseRadius": 0.071,
+   "stageName": "Curl"
+  },
+  {
+   "name": "Bear__HornR_S4",
+   "source": "PetBear__HornR_S4",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornR",
+   "parentAnchor": "HornR",
+   "channel": "Head",
+   "role": "HornR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    0.17827,
+    -0.09697,
+    1.42805
+   ],
+   "sizeBlender": [
+    0.16495,
+    0.12998,
+    0.23852
+   ],
+   "centerRuntime": [
+    0.17827,
+    1.42805,
+    0.09697
+   ],
+   "sizeRuntime": [
+    0.16495,
+    0.23852,
+    0.12998
+   ],
+   "triangles": 70,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 4,
+   "height": 0.21,
+   "baseRadius": 0.071,
+   "stageName": "Curl"
+  },
+  {
+   "name": "Bear__HornL_S5",
+   "source": "PetBear__HornL_S5",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornL",
+   "parentAnchor": "HornL",
+   "channel": "Head",
+   "role": "HornL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    -0.18498,
+    -0.09703,
+    1.45568
+   ],
+   "sizeBlender": [
+    0.19257,
+    0.14283,
+    0.29812
+   ],
+   "centerRuntime": [
+    -0.18498,
+    1.45568,
+    0.09703
+   ],
+   "sizeRuntime": [
+    0.19257,
+    0.29812,
+    0.14283
+   ],
+   "triangles": 82,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 5,
+   "height": 0.28,
+   "baseRadius": 0.078,
+   "stageName": "Crown"
+  },
+  {
+   "name": "Bear__HornR_S5",
+   "source": "PetBear__HornR_S5",
+   "fbx": "bear-attachments-horns.fbx",
+   "group": "horns",
+   "slot": "Horns",
+   "anchor": "HornR",
+   "parentAnchor": "HornR",
+   "channel": "Head",
+   "role": "HornR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "centerBlender": [
+    0.18498,
+    -0.09703,
+    1.45568
+   ],
+   "sizeBlender": [
+    0.19257,
+    0.14283,
+    0.29812
+   ],
+   "centerRuntime": [
+    0.18498,
+    1.45568,
+    0.09703
+   ],
+   "sizeRuntime": [
+    0.19257,
+    0.29812,
+    0.14283
+   ],
+   "triangles": 82,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "horns",
+   "stage": 5,
+   "height": 0.28,
+   "baseRadius": 0.078,
+   "stageName": "Crown"
+  },
+  {
+   "name": "Bear__WingL_S1",
+   "source": "PetBear__WingL_S1",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingL",
+   "parentAnchor": "WingL",
+   "channel": "Body",
+   "role": "WingL",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    -0.18389,
+    0.24389,
+    0.55268
+   ],
+   "sizeBlender": [
+    0.14778,
+    0.14778,
+    0.18215
+   ],
+   "centerRuntime": [
+    -0.18389,
+    0.55268,
+    -0.24389
+   ],
+   "sizeRuntime": [
+    0.14778,
+    0.18215,
+    0.14778
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 1,
+   "stageName": "Bud",
+   "spanScale": 0.38,
+   "heightScale": 0.4611
+  },
+  {
+   "name": "Bear__WingR_S1",
+   "source": "PetBear__WingR_S1",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingR",
+   "parentAnchor": "WingR",
+   "channel": "Body",
+   "role": "WingR",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    0.18389,
+    0.24389,
+    0.55268
+   ],
+   "sizeBlender": [
+    0.14778,
+    0.14778,
+    0.18215
+   ],
+   "centerRuntime": [
+    0.18389,
+    0.55268,
+    -0.24389
+   ],
+   "sizeRuntime": [
+    0.14778,
+    0.18215,
+    0.14778
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 1,
+   "stageName": "Bud",
+   "spanScale": 0.38,
+   "heightScale": 0.4611
+  },
+  {
+   "name": "Bear__WingL_S2",
+   "source": "PetBear__WingL_S2",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingL",
+   "parentAnchor": "WingL",
+   "channel": "Body",
+   "role": "WingL",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    -0.21112,
+    0.27112,
+    0.5563
+   ],
+   "sizeBlender": [
+    0.20223,
+    0.20223,
+    0.2341
+   ],
+   "centerRuntime": [
+    -0.21112,
+    0.5563,
+    -0.27112
+   ],
+   "sizeRuntime": [
+    0.20223,
+    0.2341,
+    0.20223
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 2,
+   "stageName": "Flutter",
+   "spanScale": 0.52,
+   "heightScale": 0.5927
+  },
+  {
+   "name": "Bear__WingR_S2",
+   "source": "PetBear__WingR_S2",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingR",
+   "parentAnchor": "WingR",
+   "channel": "Body",
+   "role": "WingR",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    0.21112,
+    0.27112,
+    0.5563
+   ],
+   "sizeBlender": [
+    0.20223,
+    0.20223,
+    0.2341
+   ],
+   "centerRuntime": [
+    0.21112,
+    0.5563,
+    -0.27112
+   ],
+   "sizeRuntime": [
+    0.20223,
+    0.2341,
+    0.20223
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 2,
+   "stageName": "Flutter",
+   "spanScale": 0.52,
+   "heightScale": 0.5927
+  },
+  {
+   "name": "Bear__WingL_S3",
+   "source": "PetBear__WingL_S3",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingL",
+   "parentAnchor": "WingL",
+   "channel": "Body",
+   "role": "WingL",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    -0.24223,
+    0.30223,
+    0.5602
+   ],
+   "sizeBlender": [
+    0.26446,
+    0.26446,
+    0.29014
+   ],
+   "centerRuntime": [
+    -0.24223,
+    0.5602,
+    -0.30223
+   ],
+   "sizeRuntime": [
+    0.26446,
+    0.29014,
+    0.26446
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 3,
+   "stageName": "Wing",
+   "spanScale": 0.68,
+   "heightScale": 0.7345
+  },
+  {
+   "name": "Bear__WingR_S3",
+   "source": "PetBear__WingR_S3",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingR",
+   "parentAnchor": "WingR",
+   "channel": "Body",
+   "role": "WingR",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    0.24223,
+    0.30223,
+    0.5602
+   ],
+   "sizeBlender": [
+    0.26446,
+    0.26446,
+    0.29014
+   ],
+   "centerRuntime": [
+    0.24223,
+    0.5602,
+    -0.30223
+   ],
+   "sizeRuntime": [
+    0.26446,
+    0.29014,
+    0.26446
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 3,
+   "stageName": "Wing",
+   "spanScale": 0.68,
+   "heightScale": 0.7345
+  },
+  {
+   "name": "Bear__WingL_S4",
+   "source": "PetBear__WingL_S4",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingL",
+   "parentAnchor": "WingL",
+   "channel": "Body",
+   "role": "WingL",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    -0.27334,
+    0.33334,
+    0.56392
+   ],
+   "sizeBlender": [
+    0.32668,
+    0.32668,
+    0.34357
+   ],
+   "centerRuntime": [
+    -0.27334,
+    0.56392,
+    -0.33334
+   ],
+   "sizeRuntime": [
+    0.32668,
+    0.34357,
+    0.32668
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 4,
+   "stageName": "Glide",
+   "spanScale": 0.84,
+   "heightScale": 0.8698
+  },
+  {
+   "name": "Bear__WingR_S4",
+   "source": "PetBear__WingR_S4",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingR",
+   "parentAnchor": "WingR",
+   "channel": "Body",
+   "role": "WingR",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    0.27334,
+    0.33334,
+    0.56392
+   ],
+   "sizeBlender": [
+    0.32668,
+    0.32668,
+    0.34357
+   ],
+   "centerRuntime": [
+    0.27334,
+    0.56392,
+    -0.33334
+   ],
+   "sizeRuntime": [
+    0.32668,
+    0.34357,
+    0.32668
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 4,
+   "stageName": "Glide",
+   "spanScale": 0.84,
+   "heightScale": 0.8698
+  },
+  {
+   "name": "Bear__WingL_S5",
+   "source": "PetBear__WingL_S5",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingL",
+   "parentAnchor": "WingL",
+   "channel": "Body",
+   "role": "WingL",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    -0.30445,
+    0.36445,
+    0.5675
+   ],
+   "sizeBlender": [
+    0.3889,
+    0.3889,
+    0.395
+   ],
+   "centerRuntime": [
+    -0.30445,
+    0.5675,
+    -0.36445
+   ],
+   "sizeRuntime": [
+    0.3889,
+    0.395,
+    0.3889
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 5,
+   "stageName": "Crown",
+   "spanScale": 1.0,
+   "heightScale": 1.0
+  },
+  {
+   "name": "Bear__WingR_S5",
+   "source": "PetBear__WingR_S5",
+   "fbx": "bear-attachments-wings.fbx",
+   "group": "wings",
+   "slot": "Back",
+   "anchor": "WingR",
+   "parentAnchor": "WingR",
+   "channel": "Body",
+   "role": "WingR",
+   "colorRole": "wingTexture",
+   "material": "petBear__wing",
+   "originBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "centerBlender": [
+    0.30445,
+    0.36445,
+    0.5675
+   ],
+   "sizeBlender": [
+    0.3889,
+    0.3889,
+    0.395
+   ],
+   "centerRuntime": [
+    0.30445,
+    0.5675,
+    -0.36445
+   ],
+   "sizeRuntime": [
+    0.3889,
+    0.395,
+    0.3889
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "feature": "wings",
+   "stage": 5,
+   "stageName": "Crown",
+   "spanScale": 1.0,
+   "heightScale": 1.0
+  },
+  {
+   "name": "Bear__HelixL_Ring",
+   "source": "PetBear__HelixL_Ring",
+   "fbx": "bear-attachments-piercings.fbx",
+   "group": "piercings",
+   "slot": "EarPiercing",
+   "anchor": "HelixL",
+   "parentAnchor": "HelixL",
+   "channel": "Head",
+   "role": "HelixL",
+   "colorRole": "own:#FFC240",
+   "material": "attach__metal",
+   "originBlender": [
+    -0.44337,
+    0.00176,
+    1.42758
+   ],
+   "centerBlender": [
+    -0.43064,
+    0.00176,
+    1.41485
+   ],
+   "sizeBlender": [
+    0.10114,
+    0.137,
+    0.10114
+   ],
+   "centerRuntime": [
+    -0.43064,
+    1.41485,
+    -0.00176
+   ],
+   "sizeRuntime": [
+    0.10114,
+    0.10114,
+    0.137
+   ],
+   "triangles": 168,
+   "hasUV": true,
+   "defaultVisible": false,
+   "majorRadius": 0.056,
+   "minorRadius": 0.0125,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__HelixR_Ring",
+   "source": "PetBear__HelixR_Ring",
+   "fbx": "bear-attachments-piercings.fbx",
+   "group": "piercings",
+   "slot": "EarPiercing",
+   "anchor": "HelixR",
+   "parentAnchor": "HelixR",
+   "channel": "Head",
+   "role": "HelixR",
+   "colorRole": "own:#FFC240",
+   "material": "attach__metal",
+   "originBlender": [
+    0.46106,
+    -0.00101,
+    1.40933
+   ],
+   "centerBlender": [
+    0.44834,
+    -0.00101,
+    1.3966
+   ],
+   "sizeBlender": [
+    0.10114,
+    0.137,
+    0.10114
+   ],
+   "centerRuntime": [
+    0.44834,
+    1.3966,
+    0.00101
+   ],
+   "sizeRuntime": [
+    0.10114,
+    0.10114,
+    0.137
+   ],
+   "triangles": 168,
+   "hasUV": true,
+   "defaultVisible": false,
+   "majorRadius": 0.056,
+   "minorRadius": 0.0125,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Shirt_Tee",
+   "source": "PetBear__Shirt_Tee",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "own:#1A8C9E",
+   "material": "attach__cloth",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.0,
+    -0.08505,
+    0.53
+   ],
+   "sizeBlender": [
+    0.65115,
+    0.68946,
+    0.35
+   ],
+   "centerRuntime": [
+    0.0,
+    0.53,
+    0.08505
+   ],
+   "sizeRuntime": [
+    0.65115,
+    0.35,
+    0.68946
+   ],
+   "triangles": 108,
+   "hasUV": true,
+   "defaultVisible": false,
+   "shellOffset": 0.024,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Shirt_Tee_SleeveL",
+   "source": "PetBear__Shirt_Tee_SleeveL",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "HandL",
+   "parentAnchor": "HandL",
+   "channel": "HandL",
+   "role": "SleeveL",
+   "colorRole": "own:#1A8C9E",
+   "material": "attach__cloth",
+   "originBlender": [
+    -0.225,
+    -0.06,
+    0.655
+   ],
+   "centerBlender": [
+    -0.25987,
+    -0.08201,
+    0.6067
+   ],
+   "sizeBlender": [
+    0.24493,
+    0.22351,
+    0.23554
+   ],
+   "centerRuntime": [
+    -0.25987,
+    0.6067,
+    0.08201
+   ],
+   "sizeRuntime": [
+    0.24493,
+    0.23554,
+    0.22351
+   ],
+   "triangles": 32,
+   "hasUV": true,
+   "defaultVisible": false,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Shirt_Tee_SleeveR",
+   "source": "PetBear__Shirt_Tee_SleeveR",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "HandR",
+   "parentAnchor": "HandR",
+   "channel": "HandR",
+   "role": "SleeveR",
+   "colorRole": "own:#1A8C9E",
+   "material": "attach__cloth",
+   "originBlender": [
+    0.225,
+    -0.06,
+    0.655
+   ],
+   "centerBlender": [
+    0.2596,
+    -0.0811,
+    0.60632
+   ],
+   "sizeBlender": [
+    0.24491,
+    0.22137,
+    0.23536
+   ],
+   "centerRuntime": [
+    0.2596,
+    0.60632,
+    0.0811
+   ],
+   "sizeRuntime": [
+    0.24491,
+    0.23536,
+    0.22137
+   ],
+   "triangles": 32,
+   "hasUV": true,
+   "defaultVisible": false,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Neck_Beads",
+   "source": "PetBear__Neck_Beads",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "own:#F2EDD9",
+   "material": "attach__bead",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.0,
+    -0.11967,
+    0.624
+   ],
+   "sizeBlender": [
+    0.51326,
+    0.57215,
+    0.116
+   ],
+   "centerRuntime": [
+    0.0,
+    0.624,
+    0.11967
+   ],
+   "sizeRuntime": [
+    0.51326,
+    0.116,
+    0.57215
+   ],
+   "triangles": 320,
+   "hasUV": true,
+   "defaultVisible": false,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Hat_Beanie",
+   "source": "PetBear__Hat_Beanie",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#5440BF",
+   "material": "attach__knit",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    -0.03,
+    1.4444
+   ],
+   "sizeBlender": [
+    0.392,
+    0.392,
+    0.244
+   ],
+   "centerRuntime": [
+    0.0,
+    1.4444,
+    0.03
+   ],
+   "sizeRuntime": [
+    0.392,
+    0.244,
+    0.392
+   ],
+   "triangles": 228,
+   "hasUV": true,
+   "defaultVisible": false,
+   "placeholder": true,
+   "coversHorns": true,
+   "hidesEars": false
+  },
+  {
+   "name": "Bear__EyeL_AltRound",
+   "source": "PetBear__EyeL_AltRound",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "Head",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "eyeTexture",
+   "material": "petBear__eye",
+   "originBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "centerBlender": [
+    -0.21383,
+    -0.42061,
+    1.02937
+   ],
+   "sizeBlender": [
+    0.18772,
+    0.09856,
+    0.20108
+   ],
+   "centerRuntime": [
+    -0.21383,
+    1.02937,
+    0.42061
+   ],
+   "sizeRuntime": [
+    0.18772,
+    0.20108,
+    0.09856
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "Round",
+   "alternate": true
+  },
+  {
+   "name": "Bear__EyeR_AltRound",
+   "source": "PetBear__EyeR_AltRound",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "Head",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "eyeTexture",
+   "material": "petBear__eye",
+   "originBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "centerBlender": [
+    0.21383,
+    -0.42077,
+    1.02936
+   ],
+   "sizeBlender": [
+    0.1878,
+    0.09837,
+    0.20106
+   ],
+   "centerRuntime": [
+    0.21383,
+    1.02936,
+    0.42077
+   ],
+   "sizeRuntime": [
+    0.1878,
+    0.20106,
+    0.09837
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "Round",
+   "alternate": true
+  },
+  {
+   "name": "Bear__EyeL_AltSmallWide",
+   "source": "PetBear__EyeL_AltSmallWide",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "Head",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "eyeTexture",
+   "material": "petBear__eye",
+   "originBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "centerBlender": [
+    -0.24827,
+    -0.40748,
+    1.02449
+   ],
+   "sizeBlender": [
+    0.12936,
+    0.08256,
+    0.19204
+   ],
+   "centerRuntime": [
+    -0.24827,
+    1.02449,
+    0.40748
+   ],
+   "sizeRuntime": [
+    0.12936,
+    0.19204,
+    0.08256
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "SmallWide",
+   "alternate": true
+  },
+  {
+   "name": "Bear__EyeR_AltSmallWide",
+   "source": "PetBear__EyeR_AltSmallWide",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "Head",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "eyeTexture",
+   "material": "petBear__eye",
+   "originBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "centerBlender": [
+    0.24835,
+    -0.40762,
+    1.02449
+   ],
+   "sizeBlender": [
+    0.12936,
+    0.08233,
+    0.19203
+   ],
+   "centerRuntime": [
+    0.24835,
+    1.02449,
+    0.40762
+   ],
+   "sizeRuntime": [
+    0.12936,
+    0.19203,
+    0.08233
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "SmallWide",
+   "alternate": true
+  },
+  {
+   "name": "Bear__EyeL_AltButton",
+   "source": "PetBear__EyeL_AltButton",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2145,
+    -0.41268,
+    1.03
+   ],
+   "sizeBlender": [
+    0.14836,
+    0.09,
+    0.156
+   ],
+   "centerRuntime": [
+    -0.2145,
+    1.03,
+    0.41268
+   ],
+   "sizeRuntime": [
+    0.14836,
+    0.156,
+    0.09
+   ],
+   "triangles": 100,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "Button",
+   "alternate": true,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__EyeR_AltButton",
+   "source": "PetBear__EyeR_AltButton",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2145,
+    -0.41268,
+    1.03
+   ],
+   "sizeBlender": [
+    0.14836,
+    0.09,
+    0.156
+   ],
+   "centerRuntime": [
+    0.2145,
+    1.03,
+    0.41268
+   ],
+   "sizeRuntime": [
+    0.14836,
+    0.156,
+    0.09
+   ],
+   "triangles": 100,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "Button",
+   "alternate": true,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Mouth_AltW",
+   "source": "PetBear__Mouth_AltW",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Mouth",
+   "anchor": "Mouth",
+   "parentAnchor": "Head",
+   "channel": "Head",
+   "role": "Mouth",
+   "colorRole": "face",
+   "material": "petBear__nose",
+   "originBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "centerBlender": [
+    0.0,
+    -0.5186,
+    0.79797
+   ],
+   "sizeBlender": [
+    0.13085,
+    0.0391,
+    0.04839
+   ],
+   "centerRuntime": [
+    0.0,
+    0.79797,
+    0.5186
+   ],
+   "sizeRuntime": [
+    0.13085,
+    0.04839,
+    0.0391
+   ],
+   "triangles": 156,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "W",
+   "alternate": true
+  },
+  {
+   "name": "Bear__Mouth_AltO",
+   "source": "PetBear__Mouth_AltO",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Mouth",
+   "anchor": "Mouth",
+   "parentAnchor": "Mouth",
+   "channel": "Head",
+   "role": "Mouth",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.0,
+    -0.51029,
+    0.8
+   ],
+   "centerBlender": [
+    0.0,
+    -0.50429,
+    0.8
+   ],
+   "sizeBlender": [
+    0.06467,
+    0.03804,
+    0.08
+   ],
+   "centerRuntime": [
+    0.0,
+    0.8,
+    0.50429
+   ],
+   "sizeRuntime": [
+    0.06467,
+    0.08,
+    0.03804
+   ],
+   "triangles": 64,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "O",
+   "alternate": true,
+   "placeholder": true
+  },
+  {
+   "name": "Bear__Tail_AltArrow",
+   "source": "PetBear__Tail_AltArrow",
+   "fbx": "bear-attachments-tails.fbx",
+   "group": "tails",
+   "slot": "Tail",
+   "anchor": "Tail",
+   "parentAnchor": "Tail",
+   "channel": "Body",
+   "role": "Tail",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    0.24,
+    0.33
+   ],
+   "centerBlender": [
+    0.0,
+    0.35791,
+    0.51966
+   ],
+   "sizeBlender": [
+    0.09526,
+    0.32198,
+    0.46069
+   ],
+   "centerRuntime": [
+    0.0,
+    0.51966,
+    -0.35791
+   ],
+   "sizeRuntime": [
+    0.09526,
+    0.46069,
+    0.32198
+   ],
+   "triangles": 82,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "Arrow",
+   "alternate": true,
+   "placeholder": true
+  }
+ ],
+ "features": {
+  "horns": {
+   "slot": "Horns",
+   "anchors": [
+    "HornL",
+    "HornR"
+   ],
+   "stages": 5,
+   "colorRole": "secondary",
+   "meshPattern": "Bear__Horn{L|R}_S{1..5}",
+   "show": "exactly one stage per side; L and R always share the stage"
+  },
+  "wings": {
+   "slot": "Back",
+   "anchors": [
+    "WingL",
+    "WingR"
+   ],
+   "stages": 5,
+   "colorRole": "wingTexture (the Bear's wing map, tinted secondary)",
+   "meshPattern": "Bear__Wing{L|R}_S{1..5}",
+   "show": "exactly one stage per side; S5 is identical to the Bear's existing Bear__WingL/R",
+   "stageScale": {
+    "1": {
+     "name": "Bud",
+     "span": 0.38,
+     "height": 0.4611
+    },
+    "2": {
+     "name": "Flutter",
+     "span": 0.52,
+     "height": 0.5927
+    },
+    "3": {
+     "name": "Wing",
+     "span": 0.68,
+     "height": 0.7345
+    },
+    "4": {
+     "name": "Glide",
+     "span": 0.84,
+     "height": 0.8698
+    },
+    "5": {
+     "name": "Crown",
+     "span": 1.0,
+     "height": 1.0
+    }
+   }
+  }
+ },
+ "slots": {
+  "Hat": {
+   "max": 1
+  },
+  "Horns": {
+   "max": 1,
+   "staged": true
+  },
+  "EarPiercing": {
+   "max": 1,
+   "perSide": true
+  },
+  "Earring": {
+   "max": 1,
+   "perSide": true
+  },
+  "Eyes": {
+   "max": 1,
+   "swap": true
+  },
+  "Eyewear": {
+   "max": 1
+  },
+  "Mouth": {
+   "max": 1,
+   "swap": true
+  },
+  "Nose": {
+   "max": 1,
+   "swap": true
+  },
+  "Forehead": {
+   "max": 1
+  },
+  "Cheek": {
+   "max": 1
+  },
+  "Neck": {
+   "max": 1
+  },
+  "Shirt": {
+   "max": 1
+  },
+  "Chest": {
+   "max": 1
+  },
+  "Back": {
+   "max": 1
+  },
+  "Tail": {
+   "max": 1,
+   "swap": true
+  },
+  "Claws": {
+   "max": 1,
+   "staged": true
+  },
+  "Wrist": {
+   "max": 1,
+   "perSide": true
+  },
+  "Ankle": {
+   "max": 1,
+   "perSide": true
+  },
+  "Charm": {
+   "max": 1
+  },
+  "Aura": {
+   "max": 1
+  }
+ },
+ "exclusions": {
+  "rule": "Hide, never unequip. A blocked item stays owned and selected and returns when the blocker comes off.",
+  "hides": [
+   {
+    "blocker": "Hat",
+    "unlessFlag": "openCrown",
+    "hides": [
+     "Horns",
+     "Charm@CharmCenter"
+    ]
+   },
+   {
+    "blocker": "Hat",
+    "whenFlag": "hidesEars",
+    "hides": [
+     "EarPiercing",
+     "Earring"
+    ]
+   },
+   {
+    "blocker": "Hat",
+    "whenFlag": "lowBrim",
+    "hides": [
+     "Forehead"
+    ]
+   },
+   {
+    "blocker": "Shirt",
+    "whenFlag": "printedChest",
+    "hides": [
+     "Chest"
+    ]
+   },
+   {
+    "blocker": "Eyes",
+    "whenFlag": "noEyewear",
+    "hides": [
+     "Eyewear"
+    ]
+   },
+   {
+    "blocker": "Mittens (future hand item)",
+    "hides": [
+     "Claws@ClawL",
+     "Claws@ClawR"
+    ]
+   }
+  ],
+  "oneOf": [
+   {
+    "slot": "Back",
+    "items": "wings (any stage) | backpack | cape"
+   },
+   {
+    "slot": "Neck",
+    "items": "necklace | scarf | collar; draws over a Shirt"
+   },
+   {
+    "slot": "Eyes",
+    "items": "default EyeL/R | AltRound | AltSmallWide | AltButton; a swap hides Bear__EyeL/R"
+   },
+   {
+    "slot": "Mouth",
+    "items": "default MouthSmile | AltW | AltO; the expression system still picks the frame"
+   },
+   {
+    "slot": "Tail",
+    "items": "species Tail | AltArrow; a swap hides Bear__Tail"
+   },
+   {
+    "slot": "Horns",
+    "items": "stages S1..S5, one visible"
+   },
+   {
+    "slot": "Back (wings)",
+    "items": "stages S1..S5, one visible"
+   }
+  ],
+  "notes": [
+   "Horn stage 4 or 5 lifts CharmFloat by 0.10 so a floating charm clears the tips.",
+   "Hat_Beanie is a full hat: coversHorns = true, hidesEars = false.",
+   "Shirt_Tee sleeves ride HandL/HandR and are shown and hidden with the shirt."
+  ]
+ },
+ "placeholderNote": "Hat_Beanie, Shirt_Tee (+sleeves), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art."
+}

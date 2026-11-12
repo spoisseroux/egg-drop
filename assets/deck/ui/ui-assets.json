@@ -1,0 +1,117 @@
+{
+ "icons": {
+  "file": "icons.png",
+  "cell": 64,
+  "drawn": 48,
+  "rects": {
+   "back": [
+    0,
+    0,
+    64,
+    64
+   ],
+   "quests": [
+    64,
+    0,
+    64,
+    64
+   ],
+   "star": [
+    128,
+    0,
+    64,
+    64
+   ],
+   "replay": [
+    192,
+    0,
+    64,
+    64
+   ],
+   "reroll": [
+    256,
+    0,
+    64,
+    64
+   ],
+   "lock": [
+    320,
+    0,
+    64,
+    64
+   ],
+   "bars": [
+    384,
+    0,
+    64,
+    64
+   ],
+   "faceplate": [
+    448,
+    0,
+    64,
+    64
+   ],
+   "check": [
+    0,
+    64,
+    64,
+    64
+   ],
+   "settings": [
+    64,
+    64,
+    64,
+    64
+   ],
+   "clock": [
+    128,
+    64,
+    64,
+    64
+   ],
+   "trophy": [
+    192,
+    64,
+    64,
+    64
+   ],
+   "chain": [
+    256,
+    64,
+    64,
+    64
+   ],
+   "target": [
+    320,
+    64,
+    64,
+    64
+   ],
+   "close": [
+    384,
+    64,
+    64,
+    64
+   ],
+   "egg": [
+    448,
+    64,
+    64,
+    64
+   ]
+  },
+  "use": "ImageRectOffset / ImageRectSize; white art, tint with ImageColor3; display at 24 px (20 in rows, 28 in quest wells); never recolour the star, it is always #FFC14D"
+ },
+ "focusGlow": {
+  "file": "focus-glow-9slice.png",
+  "sliceCenter": [
+   40,
+   40,
+   56,
+   56
+  ],
+  "inset": 24,
+  "use": "optional soft glow behind the focus ring: size = target + 2 * (4 + 20) px, white, ImageTransparency 0.35. The crisp ring itself is a UIStroke (2.5 px white)."
+ }
+}

@@ -1,0 +1,355 @@
+{
+ "schema": 1,
+ "name": "Pocket Deck boot",
+ "totalMs": 1670,
+ "frameSize": [
+  212,
+  152
+ ],
+ "columns": 4,
+ "rows": 6,
+ "frameCount": 24,
+ "sheets": {
+  "fixed": {
+   "file": "boot-sheet-fixed.png",
+   "tint": null,
+   "z": 1
+  },
+  "ink": {
+   "file": "boot-sheet-ink.png",
+   "tint": "faceplate accent (ImageColor3)",
+   "z": 2
+  }
+ },
+ "display": {
+  "parent": "the LCD frame (rect lcd in assets/deck/shell/shell.json), above every screen, below glass-glare",
+  "size": "UDim2.fromScale(1, 1): 212 x 152 art on the 848 x 608 LCD is exactly 4 units per pixel",
+  "resampleMode": "Enum.ResamplerMode.Pixelated",
+  "perFrame": "set ImageRectOffset = rect.xy and ImageRectSize = rect.wh on both ImageLabels at startMs; drive from one clock (os.clock), not chained task.wait, so a slow frame cannot stretch the boot",
+  "end": "after the last frame hide both labels; the start screen is already laid out underneath and input goes live"
+ },
+ "sound": [
+  {
+   "cue": "deck_boot",
+   "atMs": 810,
+   "frame": 14,
+   "required": true,
+   "note": "the one boot sound: starts on the frame the wordmark lands. A short rising three-note chime (about 0.45 s) so its tail covers the flash and sparkles. Original; not any console's jingle."
+  },
+  {
+   "cue": "drop",
+   "atMs": 510,
+   "frame": 9,
+   "required": false,
+   "note": "optional: the existing BoardAudio drop 'plip' at 60% volume"
+  },
+  {
+   "cue": "merge_bubble",
+   "atMs": 640,
+   "frame": 11,
+   "required": false,
+   "note": "optional: the existing merge bubble at 60% volume"
+  }
+ ],
+ "skip": {
+  "fromMs": 150,
+  "action": "any input jumps to the end: hide both labels, stop deck_boot with a 60 ms fade, input goes live"
+ },
+ "reducedEffects": {
+  "show": 21,
+  "holdMs": 400,
+  "sound": "deck_boot at 0 ms, normal volume",
+  "note": "no motion: the finished logo, then hide"
+ },
+ "playsWhen": "only on a real arrival at the deck (first board or a deliberate garden to deck entry). Never over results, a menu or a replay. Reuse the existing Transition:owns token so a route change cancels pending frames and the sound.",
+ "frames": [
+  {
+   "index": 0,
+   "rect": [
+    0,
+    0,
+    212,
+    152
+   ],
+   "startMs": 0,
+   "durationMs": 80,
+   "note": "glass black"
+  },
+  {
+   "index": 1,
+   "rect": [
+    212,
+    0,
+    212,
+    152
+   ],
+   "startMs": 80,
+   "durationMs": 50,
+   "note": "scanline starts"
+  },
+  {
+   "index": 2,
+   "rect": [
+    424,
+    0,
+    212,
+    152
+   ],
+   "startMs": 130,
+   "durationMs": 50,
+   "note": "scanline full width"
+  },
+  {
+   "index": 3,
+   "rect": [
+    636,
+    0,
+    212,
+    152
+   ],
+   "startMs": 180,
+   "durationMs": 50,
+   "note": "wipe opens"
+  },
+  {
+   "index": 4,
+   "rect": [
+    0,
+    152,
+    212,
+    152
+   ],
+   "startMs": 230,
+   "durationMs": 50,
+   "note": "wipe opens"
+  },
+  {
+   "index": 5,
+   "rect": [
+    212,
+    152,
+    212,
+    152
+   ],
+   "startMs": 280,
+   "durationMs": 50,
+   "note": "screen on"
+  },
+  {
+   "index": 6,
+   "rect": [
+    424,
+    152,
+    212,
+    152
+   ],
+   "startMs": 330,
+   "durationMs": 60,
+   "note": "egg falls"
+  },
+  {
+   "index": 7,
+   "rect": [
+    636,
+    152,
+    212,
+    152
+   ],
+   "startMs": 390,
+   "durationMs": 60,
+   "note": "egg falls"
+  },
+  {
+   "index": 8,
+   "rect": [
+    0,
+    304,
+    212,
+    152
+   ],
+   "startMs": 450,
+   "durationMs": 60,
+   "note": "egg falls"
+  },
+  {
+   "index": 9,
+   "rect": [
+    212,
+    304,
+    212,
+    152
+   ],
+   "startMs": 510,
+   "durationMs": 70,
+   "note": "egg lands and squashes"
+  },
+  {
+   "index": 10,
+   "rect": [
+    424,
+    304,
+    212,
+    152
+   ],
+   "startMs": 580,
+   "durationMs": 60,
+   "note": "egg rebounds"
+  },
+  {
+   "index": 11,
+   "rect": [
+    636,
+    304,
+    212,
+    152
+   ],
+   "startMs": 640,
+   "durationMs": 70,
+   "note": "egg pops"
+  },
+  {
+   "index": 12,
+   "rect": [
+    0,
+    456,
+    212,
+    152
+   ],
+   "startMs": 710,
+   "durationMs": 50,
+   "note": "wordmark drops in"
+  },
+  {
+   "index": 13,
+   "rect": [
+    212,
+    456,
+    212,
+    152
+   ],
+   "startMs": 760,
+   "durationMs": 50,
+   "note": "wordmark drops in"
+  },
+  {
+   "index": 14,
+   "rect": [
+    424,
+    456,
+    212,
+    152
+   ],
+   "startMs": 810,
+   "durationMs": 60,
+   "note": "wordmark lands (overshoot)"
+  },
+  {
+   "index": 15,
+   "rect": [
+    636,
+    456,
+    212,
+    152
+   ],
+   "startMs": 870,
+   "durationMs": 50,
+   "note": "bounce up"
+  },
+  {
+   "index": 16,
+   "rect": [
+    0,
+    608,
+    212,
+    152
+   ],
+   "startMs": 920,
+   "durationMs": 60,
+   "note": "white flash"
+  },
+  {
+   "index": 17,
+   "rect": [
+    212,
+    608,
+    212,
+    152
+   ],
+   "startMs": 980,
+   "durationMs": 70,
+   "note": "settles to the accent, sparkle"
+  },
+  {
+   "index": 18,
+   "rect": [
+    424,
+    608,
+    212,
+    152
+   ],
+   "startMs": 1050,
+   "durationMs": 70,
+   "note": "sparkle peak, sub-line dithers in"
+  },
+  {
+   "index": 19,
+   "rect": [
+    636,
+    608,
+    212,
+    152
+   ],
+   "startMs": 1120,
+   "durationMs": 70,
+   "note": "second sparkle"
+  },
+  {
+   "index": 20,
+   "rect": [
+    0,
+    760,
+    212,
+    152
+   ],
+   "startMs": 1190,
+   "durationMs": 70,
+   "note": "second sparkle peak"
+  },
+  {
+   "index": 21,
+   "rect": [
+    212,
+    760,
+    212,
+    152
+   ],
+   "startMs": 1260,
+   "durationMs": 250,
+   "note": "hold"
+  },
+  {
+   "index": 22,
+   "rect": [
+    424,
+    760,
+    212,
+    152
+   ],
+   "startMs": 1510,
+   "durationMs": 80,
+   "note": "dither dissolve to the start screen"
+  },
+  {
+   "index": 23,
+   "rect": [
+    636,
+    760,
+    212,
+    152
+   ],
+   "startMs": 1590,
+   "durationMs": 80,
+   "note": "dither dissolve to the start screen"
+  }
+ ]
+}

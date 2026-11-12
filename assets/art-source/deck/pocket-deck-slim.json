@@ -1,0 +1,277 @@
+{
+ "schema": 1,
+ "asset": "pocket-deck-slim",
+ "fbx": "pocket-deck-slim.fbx",
+ "blend": "pocket-deck-slim.blend",
+ "builtBy": "scripts/build_pocket_deck_slim.py",
+ "axes": "FBX axis_forward=-Z axis_up=Y (pet preset). Blender: screen -Y, up +Z, d-pad on -X. Roblox part space: (x, y, z) = (-bx, bz, by), so the screen is on -Z (Front) and the d-pad on +X.",
+ "sizeStuds": [
+  1.84,
+  0.92,
+  0.14
+ ],
+ "unitsPerStud": 869.565,
+ "triangles": 784,
+ "import": "Studio's default FBX units give 100x MeshSize; set Size = MeshSize / 100 as for the pets, or import with scale unit Studs.",
+ "attach": {
+  "convention": "unchanged from Lounge.setMode: every part is welded to the torso with C0 = mount * CFrame.new(centerRoblox).",
+  "mount": "CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(-22), math.pi, 0)",
+  "grips": {
+   "LeftGrip": [
+    0.88,
+    -0.27,
+    -0.1
+   ],
+   "RightGrip": [
+    -0.88,
+    -0.27,
+    -0.1
+   ],
+   "parent": "Shell",
+   "note": "same attachments as today; the shell is still 1.84 wide"
+  },
+  "removed": [
+   "Lounge cap",
+   "AimDivider",
+   "SpeakerSlot x3 (now in the faceplate overlay)",
+   "StickerFace SurfaceGui (stickers are retired)"
+  ],
+  "paintDevice": "Shell.Color = band tint; FrontPlate texture + material from faceplates.json; Confirm.Color and Power.Color = accent; Screen.Color stays the LCD glass."
+ },
+ "parts": [
+  {
+   "name": "PocketDeckSlim__Shell",
+   "robloxName": "Shell",
+   "triangles": 228,
+   "centerBlender": [
+    0.0,
+    0.0,
+    0.0069
+   ],
+   "sizeBlender": [
+    1.84,
+    0.14,
+    0.9338
+   ],
+   "centerRoblox": [
+    0.0,
+    0.0069,
+    0.0
+   ],
+   "sizeRoblox": [
+    1.84,
+    0.9338,
+    0.14
+   ],
+   "note": "band + both shoulder nubs. Color = faceplate band tint; Material Metal."
+  },
+  {
+   "name": "PocketDeckSlim__FrontPlate",
+   "robloxName": "FrontPlate",
+   "triangles": 118,
+   "centerBlender": [
+    0.0,
+    -0.074,
+    0.0
+   ],
+   "sizeBlender": [
+    1.794,
+    0.008,
+    0.874
+   ],
+   "centerRoblox": [
+    0.0,
+    0.0,
+    -0.074
+   ],
+   "sizeRoblox": [
+    1.794,
+    0.874,
+    0.008
+   ],
+   "note": "planar UV 0..1 across the face, so a faceplate texture maps straight on (SurfaceAppearance.ColorMap, or a Decal/Texture on the Front face). Material from faceplates.json held3d."
+  },
+  {
+   "name": "PocketDeckSlim__Bezel",
+   "robloxName": "Bezel",
+   "triangles": 78,
+   "centerBlender": [
+    0.0,
+    -0.08,
+    0.0
+   ],
+   "sizeBlender": [
+    1.012,
+    0.008,
+    0.736
+   ],
+   "centerRoblox": [
+    0.0,
+    0.0,
+    -0.08
+   ],
+   "sizeRoblox": [
+    1.012,
+    0.736,
+    0.008
+   ],
+   "note": "black glass, SmoothPlastic #08090B, Reflectance 0.15."
+  },
+  {
+   "name": "PocketDeckSlim__Screen",
+   "robloxName": "Screen",
+   "triangles": 46,
+   "centerBlender": [
+    0.0,
+    -0.084,
+    0.0
+   ],
+   "sizeBlender": [
+    0.9752,
+    0.004,
+    0.6992
+   ],
+   "centerRoblox": [
+    0.0,
+    0.0,
+    -0.084
+   ],
+   "sizeRoblox": [
+    0.9752,
+    0.6992,
+    0.004
+   ],
+   "note": "separate part. Keep the SurfaceGui / 'Playing' badge adornee here. Color = LCD glass #0C0D10; Neon tint optional."
+  },
+  {
+   "name": "PocketDeckSlim__AimRocker",
+   "robloxName": "AimRocker",
+   "triangles": 78,
+   "centerBlender": [
+    -0.7015,
+    -0.084,
+    -0.0276
+   ],
+   "sizeBlender": [
+    0.2392,
+    0.02,
+    0.2392
+   ],
+   "centerRoblox": [
+    0.7015,
+    -0.0276,
+    -0.084
+   ],
+   "sizeRoblox": [
+    0.2392,
+    0.2392,
+    0.02
+   ],
+   "note": "the round four-way pad (keeps the old part name so paintDevice still finds it). Color #1D1F25."
+  },
+  {
+   "name": "PocketDeckSlim__Confirm",
+   "robloxName": "Confirm",
+   "triangles": 78,
+   "centerBlender": [
+    0.7268,
+    -0.089,
+    0.0322
+   ],
+   "sizeBlender": [
+    0.2024,
+    0.03,
+    0.2024
+   ],
+   "centerRoblox": [
+    -0.7268,
+    0.0322,
+    -0.089
+   ],
+   "sizeRoblox": [
+    0.2024,
+    0.2024,
+    0.03
+   ],
+   "note": "A. Color = faceplate accent."
+  },
+  {
+   "name": "PocketDeckSlim__Back",
+   "robloxName": "Back",
+   "triangles": 58,
+   "centerBlender": [
+    0.5957,
+    -0.086,
+    -0.1702
+   ],
+   "sizeBlender": [
+    0.1196,
+    0.024,
+    0.1196
+   ],
+   "centerRoblox": [
+    -0.5957,
+    -0.1702,
+    -0.086
+   ],
+   "sizeRoblox": [
+    0.1196,
+    0.1196,
+    0.024
+   ],
+   "note": "B. Color #3A3E47."
+  },
+  {
+   "name": "PocketDeckSlim__Customize",
+   "robloxName": "Customize",
+   "triangles": 78,
+   "centerBlender": [
+    -0.7015,
+    -0.081,
+    -0.276
+   ],
+   "sizeBlender": [
+    0.1426,
+    0.014,
+    0.0506
+   ],
+   "centerRoblox": [
+    0.7015,
+    -0.276,
+    -0.081
+   ],
+   "sizeRoblox": [
+    0.1426,
+    0.0506,
+    0.014
+   ],
+   "note": "the Menu pill (old part name kept). Color #1D1F25."
+  },
+  {
+   "name": "PocketDeckSlim__Power",
+   "robloxName": "Power",
+   "triangles": 22,
+   "centerBlender": [
+    -0.7015,
+    -0.0775,
+    0.1633
+   ],
+   "sizeBlender": [
+    0.0184,
+    0.007,
+    0.0184
+   ],
+   "centerRoblox": [
+    0.7015,
+    0.1633,
+    -0.0775
+   ],
+   "sizeRoblox": [
+    0.0184,
+    0.0184,
+    0.007
+   ],
+   "note": "LED. Neon, Color = faceplate accent."
+  }
+ ]
+}
