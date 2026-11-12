@@ -19,3 +19,13 @@ Coordinates: Blender (x, y, z) = Roblox (x, z + 4, -y). Lawn top is Roblox Y 4, 
 10. **Performance**: MeshPart count, tris, Stats memory vs the legacy world.
 
 Fallback: if anything is unsafe, set `WorldVersion = "legacy"`, keep the v7 code behind the flag and list what is left.
+
+## Status, 2026-11-12 (Studio Edit, not saved, not published)
+
+- In the game: WorldVersion "v7" by default. Legacy world returns with ReplicatedStorage attribute `WorldVersion = "legacy"` (both checked in Play).
+- Assets: merged world model 73356672911240 (91 MeshParts, 73,172 tris), ground collision model 104433572633200 (68 invisible tiles). Texture, palette and sky ids in `assets/world/world-v7-uploads.json`.
+- Verified in Play: spawn on the arrival dais; Space x5 earns the Bear; Eggs and Pocket Deck prompts open their views with E; the Bear follows and crosses the bridge on the deck (no wet samples); edge walls hold at four rims; FallCatch returns a player from Y -140 in 0.8 s; the cave blocker stops at Z -99; the rotunda floor (Y ~14.6) is reachable. No new console errors.
+- Specs (v7 and legacy both pass): GardenGreyboxWorld 8 / 10, WorldRoutes 6, GardenWalkability 7 / 11, GardenBridgeFollow 2 / 2.
+- Performance (Studio client): v7 lounge 159 MeshParts (91 visible + 68 collision) and 211 Parts; legacy 0 MeshParts and 1,262 Parts. GraphicsMeshParts 11.0 MB vs 10.8, GraphicsTexture 105 vs 96, PhysicsParts 9.2 vs 11.9, total 2,574 vs 2,357 MB (Studio total includes the editor).
+- Not verified: Journal "Open companions" and petting the Bear (the Studio window had no focus, which gates HatchCinematic and PetFocusUI; the hatch cinematic also waited on it); the cradle's visible mesh replaces the legacy care machine, whose parts are now hidden supports, so the dock highlight colours no longer show; backdrop clouds are not tinted at night; the night Dn face shows a pale band at the horizon.
+- Screenshots: `day-0*.jpg`, `night-0*.jpg` here (UI hidden).
