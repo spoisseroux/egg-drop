@@ -14,6 +14,7 @@ local CooPose=require(script.Parent.PetCooPose)
 local PersonalPlay=require(script.Parent.PetPlayVisual)
 local Reactions=require(script.Parent.PetReactions)
 local IdleBeats=require(script.Parent.PetIdleBeats)
+local Attachments=require(script.Parent.PetAttachments)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -170,6 +171,8 @@ function Visual:commitReadyRig()
  self.featureHandles,self.featureSignature,self.featureStages=candidate.featureHandles,candidate.featureSignature,candidate.featureStages
  self.featureHaloLift,self.featureRevision=candidate.featureHaloLift,candidate.featureRevision;self.careBoundsKey=nil
  for _,child in ipairs(candidate.model:GetChildren())do child.Parent=self.model end
+ -- Feature/attachment attributes were published on the candidate model.
+ for key,value in pairs(candidate.model:GetAttributes())do self.model:SetAttribute(key,value)end
  self.model.PrimaryPart=newPrimary
  if oldPrimary then for _,child in ipairs(oldPrimary:GetChildren())do
   if child:IsA("ProximityPrompt")or child:IsA("ClickDetector")then child.Parent=self.model.PrimaryPart end
@@ -234,6 +237,8 @@ function Visual:applyGardenPose(sample)
 end
 function Visual:update(dt)
  self:commitReadyRig()
+ -- Studio-only: a changed StudioPetWearables attribute re-applies the current appearance.
+ if self.wearDebugRevision~=Attachments.debug.revision and self.appearance~=nil and not self.destroyed then PersonalPlay.apply(self,self.appearance)end
  Charms.step(self)
  self.time+=dt;self.greeting=math.min(2,self.greeting+dt)
  local reduced=self.reducedEffects==true;local toyReach,toyExpression=0,nil
@@ -298,11 +303,12 @@ function Visual:update(dt)
   local cf=upper*CFrame.new(0,hop,0)*entry.frame
   local isFace=channel=="Face"or string.find(name,"Eye")or string.find(name,"Glint")or string.find(name,"Mouth")or string.find(name,"Teeth")or string.find(name,"Cheek")
   if channel=="Head"or isFace or channel=="Charm"then cf=head*entry.frame end
-  if channel=="Head"and string.sub(name,1,3)=="Ear"then
-   local left=string.sub(name,-1)=="L";local hinge=if left then hinges.EarL else hinges.EarR
+  if channel=="Head"and(entry.earSide or string.sub(name,1,3)=="Ear")then
+   -- Ear pieces and anything pierced through an ear roll about the ear's base anchor.
+   local left=(entry.earSide or string.sub(name,-1))=="L";local hinge=if left then hinges.EarL else hinges.EarR
    -- Positive pose perks the ear toward the crown; negative droops it outward.
    if hinge then cf=head*CFrame.new(hinge)*CFrame.Angles(0,0,if left then -earL else earR)*CFrame.new(-hinge)*entry.frame end
-  elseif name=="Tail"and hinges.Tail and tailYaw~=0 then
+  elseif(name=="Tail"or entry.tailWag)and hinges.Tail and tailYaw~=0 then
    cf=upper*CFrame.new(0,hop,0)*CFrame.new(hinges.Tail)*CFrame.Angles(0,tailYaw,0)*CFrame.new(-hinges.Tail)*entry.frame
   end
   if channel=="HandL"or channel=="HandR"or channel=="CuffL"or channel=="CuffR"or channel=="Hand"then
@@ -315,7 +321,7 @@ function Visual:update(dt)
    local side=if string.sub(name,-1)=="L"then -1 else 1
    cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale+(self.careFootLift or 0),step*side*.075*self.scale+(self.careFootForward or 0))*entry.frame
   end
-  local size=entry.size;local hidden=not Charms.isVisible(self,entry)
+  local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then
    local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
    size=Vector3.new(size.X*(1+squash*.35+boop*.07),size.Y*(1+bodyStretch-squash-boop*.14),size.Z*(1+squash*.35+boop*.07))
@@ -326,6 +332,7 @@ function Visual:update(dt)
   end
   if string.find(name,"Eye")then size=Vector3.new(size.X*(if mouth=="open"then 1.12 else 1),size.Y*eye*blink,size.Z)
   elseif string.find(name,"Glint")then hidden=hidden or eye*blink<.4
+  elseif entry.mouthAlt then hidden=hidden or mouth=="open"
   elseif name=="MouthO"then hidden=hidden or mouth~="open";if cooMouth>.12 then size*=.45+.55*cooMouth end
   elseif name=="MouthSmile"then
    hidden=hidden or mouth=="open"

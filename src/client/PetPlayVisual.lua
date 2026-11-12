@@ -1,6 +1,8 @@
 -- Personal props and rooted features share the pet's existing pose clock.
 local Toys=require(script.Parent.PetToyGeometry)
 local Features=require(script.Parent.PetFeatureGeometry)
+local Attachments=require(script.Parent.PetAttachments)
+local Rules=require(game:GetService("ReplicatedStorage").Shared.PetAttachmentRules)
 local Play={}
 local maps={
  pip={left="HandL",right="HandR"},puddle={left="CuffL",right="CuffR"},wick={left="HandL",right="HandR"},orbit={left="HandL",right="HandR"},
@@ -8,7 +10,7 @@ local maps={
 local function stage(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=5 then n else 0 end
 function Play.seats(v)
  local found={};local low,high=math.huge,-math.huge
- for _,e in ipairs(v.pieces)do if e.role~="feature"and e.role~="charm"then
+ for _,e in ipairs(v.pieces)do if e.role~="feature"and e.role~="charm"and e.role~="attachment"and not e.suppressed then
   found[e.name]=found[e.name]or e
   low=math.min(low,e.frame.Y-e.size.Y*.5);high=math.max(high,e.frame.Y+e.size.Y*.5)
  end end
@@ -30,7 +32,8 @@ end
 function Play.clearFeatures(v)
  if v.featureHandles then for _,h in ipairs(v.featureHandles)do h:destroy()end end
  v.featureHandles={}
- for i=#v.pieces,1,-1 do if v.pieces[i].role=="feature"then table.remove(v.pieces,i)end end
+ for i=#v.pieces,1,-1 do local e=v.pieces[i];e.suppressed=nil;if e.role=="feature"or e.role=="attachment"then table.remove(v.pieces,i)end end
+ v.attachmentState=nil
 end
 function Play.apply(v,appearance)
  local a=type(appearance)=="table"and appearance or {};local toy=a.toyId
@@ -39,11 +42,24 @@ function Play.apply(v,appearance)
  v.personalToyId,v.personalAppearanceGeneration=toy,a.appearanceGeneration
  local stages=type(a.featureStages)=="table"and a.featureStages or {}
  local h,c,w=stage(stages.horns),stage(stages.claws),stage(stages.wings)
- local key=h..":"..c..":"..w..":"..v.secondaryColor:ToHex()
+ -- Authored rigs (the Bear) place horns, wings and wearables from their attachment template;
+ -- any feature without authored meshes, and every rig without a template, stays procedural.
+ local source=Attachments.template(v)
+ local wear=if source then Rules.normalize(v.definition,Attachments.wearables(a))else {}
+ local key=h..":"..c..":"..w..":"..v.secondaryColor:ToHex()..":"..(if source then "A"..Rules.signature(wear)else "P")
+ v.wearDebugRevision=Attachments.debug.revision
  if v.featureSignature==key then return end
  Play.clearFeatures(v);v.featureSignature=key;v.featureStages={horns=h,claws=c,wings=w}
  local seats=Play.seats(v);local head=seats.head
  if not head then return end
+ local authored={}
+ if source then
+  local resolved=Rules.resolve(v.definition,{horns=h,claws=c,wings=w},wear)
+  for id in pairs(v.definition.features or {})do authored[id]=Rules.hasFeature(v.definition,id)end
+  for name in pairs(resolved.suppress)do for _,e in ipairs(v.pieces)do if e.name==name then e.suppressed=true end end end
+  for _,part in ipairs(Attachments.build(v,resolved,source))do table.insert(v.featureHandles,part)end
+  v.attachmentState=resolved
+ end
  local width=head.size.X;local headCenter=head.frame.Position
  local function attach(id,n,side,frame,channel)
   local prop=Features.create(v.model,id,n,width,v.secondaryColor,side);if not prop then return end
@@ -55,22 +71,29 @@ function Play.apply(v,appearance)
   end
  end
  for _,side in ipairs({-1,1})do
-  attach("horns",h,side,CFrame.new(headCenter+Vector3.new(side*width*.30,head.size.Y*.43,-head.size.Z*.18)),"Head")
+  if not authored.horns then attach("horns",h,side,CFrame.new(headCenter+Vector3.new(side*width*.30,head.size.Y*.43,-head.size.Z*.18)),"Head")end
   local hand=if side<0 then seats.left else seats.right
   if hand then attach("claws",c,side,CFrame.new(hand.frame.Position+Vector3.new(0,-hand.size.Y*.25,hand.size.Z*.38)),hand.channel)end
   local body=seats.body
-  if body then attach("wings",w,side,CFrame.new(body.frame.Position+Vector3.new(side*body.size.X*.29,body.size.Y*.20,-body.size.Z*.47)),"Back")end
+  if body and not authored.wings then attach("wings",w,side,CFrame.new(body.frame.Position+Vector3.new(side*body.size.X*.29,body.size.Y*.20,-body.size.Z*.47)),"Back")end
  end
  v.featureHaloLift=0
+ if authored.horns then
+  -- PET-STYLE-GUIDE: horn stage 4 or 5 lifts the floating charm 0.10 so it clears the tips.
+  v.featureHaloLift=v.attachmentState.charmLift*v.scale
+ end
  local dot=seats.found.CharmDot
  -- CharmDot was excluded from core measurements; resolve it explicitly.
  for _,e in ipairs(v.pieces)do if e.role=="charm"and(e.charmShape or "dot")=="dot"then dot=e;break end end
- if h>0 and dot then
+ if h>0 and dot and not authored.horns then
   local hornTop=headCenter.Y+head.size.Y*.43+.22*width*h/5
   v.featureHaloLift=math.max(0,hornTop+width*.07-(dot.frame.Y-.05*v.scale))
  end
  v.featureRevision=(v.featureRevision or 0)+1;v.careBoundsKey=nil;v.focusEnvelopeCache=nil;v.poseSlots=nil;v.poseDirty=true
- v.model:SetAttribute("VisibleHorns",h);v.model:SetAttribute("VisibleClaws",c);v.model:SetAttribute("VisibleWings",w)
+ local shown=v.attachmentState and v.attachmentState.stages or {}
+ v.model:SetAttribute("VisibleHorns",shown.horns or h);v.model:SetAttribute("VisibleClaws",c);v.model:SetAttribute("VisibleWings",shown.wings or w)
+ v.model:SetAttribute("FeatureBackend",if source then "AuthoredAttachments"else "Procedural")
+ v.model:SetAttribute("Wearables",if source then Rules.signature(wear)else "")
 end
 local function eligible(v)
  return v.personalPlayEnabled==true and v.worldContext and v.personalToyId~="none"and not v.destroyed
