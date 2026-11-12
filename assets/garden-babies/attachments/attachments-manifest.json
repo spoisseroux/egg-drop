@@ -2843,7 +2843,7 @@
    "channel": "Head",
    "role": "HelixL",
    "colorRole": "own:#FFC240",
-   "material": "attach__metal",
+   "material": "wear__FFC240",
    "originBlender": [
     -0.44337,
     0.00176,
@@ -2872,9 +2872,63 @@
    "triangles": 168,
    "hasUV": true,
    "defaultVisible": false,
+   "variant": "ring",
+   "item": "ring",
+   "piece": "Main",
+   "displayName": "Little Hoops",
+   "tier": "common",
+   "price": 15,
    "majorRadius": 0.056,
    "minorRadius": 0.0125,
-   "placeholder": true
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__HelixL_StarStud",
+   "source": "PetBear__HelixL_StarStud",
+   "fbx": "bear-attachments-piercings.fbx",
+   "group": "piercings",
+   "slot": "EarPiercing",
+   "anchor": "HelixL",
+   "parentAnchor": "HelixL",
+   "channel": "Head",
+   "role": "HelixL",
+   "colorRole": "own:#FFC240",
+   "material": "wear__FFC240",
+   "originBlender": [
+    -0.44337,
+    0.00176,
+    1.42758
+   ],
+   "centerBlender": [
+    -0.41509,
+    -0.00435,
+    1.40426
+   ],
+   "sizeBlender": [
+    0.09891,
+    0.15258,
+    0.09407
+   ],
+   "centerRuntime": [
+    -0.41509,
+    1.40426,
+    0.00435
+   ],
+   "sizeRuntime": [
+    0.09891,
+    0.09407,
+    0.15258
+   ],
+   "triangles": 50,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "starstud",
+   "item": "starstud",
+   "piece": "Main",
+   "displayName": "Star Studs",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": false
   },
   {
    "name": "Bear__HelixR_Ring",
@@ -2887,7 +2941,7 @@
    "channel": "Head",
    "role": "HelixR",
    "colorRole": "own:#FFC240",
-   "material": "attach__metal",
+   "material": "wear__FFC240",
    "originBlender": [
     0.46106,
     -0.00101,
@@ -2916,13 +2970,416 @@
    "triangles": 168,
    "hasUV": true,
    "defaultVisible": false,
+   "variant": "ring",
+   "item": "ring",
+   "piece": "Main",
+   "displayName": "Little Hoops",
+   "tier": "common",
+   "price": 15,
    "majorRadius": 0.056,
    "minorRadius": 0.0125,
-   "placeholder": true
+   "tintBySecondary": false
   },
   {
-   "name": "Bear__Shirt_Torso",
-   "source": "PetBear__Shirt_Torso",
+   "name": "Bear__HelixR_StarStud",
+   "source": "PetBear__HelixR_StarStud",
+   "fbx": "bear-attachments-piercings.fbx",
+   "group": "piercings",
+   "slot": "EarPiercing",
+   "anchor": "HelixR",
+   "parentAnchor": "HelixR",
+   "channel": "Head",
+   "role": "HelixR",
+   "colorRole": "own:#FFC240",
+   "material": "wear__FFC240",
+   "originBlender": [
+    0.46106,
+    -0.00101,
+    1.40933
+   ],
+   "centerBlender": [
+    0.43278,
+    -0.00434,
+    1.38601
+   ],
+   "sizeBlender": [
+    0.09891,
+    0.1545,
+    0.09407
+   ],
+   "centerRuntime": [
+    0.43278,
+    1.38601,
+    0.00434
+   ],
+   "sizeRuntime": [
+    0.09891,
+    0.09407,
+    0.1545
+   ],
+   "triangles": 50,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "starstud",
+   "item": "starstud",
+   "piece": "Main",
+   "displayName": "Star Studs",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_Beanie",
+   "source": "PetBear__Hat_Beanie",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#E9574C",
+   "material": "wear__E9574C",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    -0.02454,
+    1.42997
+   ],
+   "sizeBlender": [
+    0.398,
+    0.41233,
+    0.18118
+   ],
+   "centerRuntime": [
+    0.0,
+    1.42997,
+    0.02454
+   ],
+   "sizeRuntime": [
+    0.398,
+    0.18118,
+    0.41233
+   ],
+   "triangles": 126,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "beanie",
+   "item": "beanie",
+   "piece": "Main",
+   "displayName": "Pom Beanie",
+   "tier": "common",
+   "price": 15,
+   "height": 0.18,
+   "coversHorns": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_Beanie_Trim",
+   "source": "PetBear__Hat_Beanie_Trim",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    -0.03366,
+    1.42126
+   ],
+   "sizeBlender": [
+    0.384,
+    0.39729,
+    0.2803
+   ],
+   "centerRuntime": [
+    0.0,
+    1.42126,
+    0.03366
+   ],
+   "sizeRuntime": [
+    0.384,
+    0.2803,
+    0.39729
+   ],
+   "triangles": 182,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "beanie",
+   "item": "beanie",
+   "piece": "Trim",
+   "displayName": "Pom Beanie",
+   "tier": "common",
+   "price": 15,
+   "coversHorns": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Hat_SunHat",
+   "source": "PetBear__Hat_SunHat",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#F3D37E",
+   "material": "wear__F3D37E",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    -0.00146,
+    -0.02764,
+    1.41167
+   ],
+   "sizeBlender": [
+    0.37907,
+    0.53755,
+    0.19946
+   ],
+   "centerRuntime": [
+    -0.00146,
+    1.41167,
+    0.02764
+   ],
+   "sizeRuntime": [
+    0.37907,
+    0.19946,
+    0.53755
+   ],
+   "triangles": 272,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sunhat",
+   "item": "sunhat",
+   "piece": "Main",
+   "displayName": "Tiny Sun Hat",
+   "tier": "rare",
+   "price": 30,
+   "height": 0.13,
+   "coversHorns": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_SunHat_Band",
+   "source": "PetBear__Hat_SunHat_Band",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.00232,
+    -0.03992,
+    1.39363
+   ],
+   "sizeBlender": [
+    0.27,
+    0.28483,
+    0.09202
+   ],
+   "centerRuntime": [
+    0.00232,
+    1.39363,
+    0.03992
+   ],
+   "sizeRuntime": [
+    0.27,
+    0.09202,
+    0.28483
+   ],
+   "triangles": 146,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sunhat",
+   "item": "sunhat",
+   "piece": "Band",
+   "displayName": "Tiny Sun Hat",
+   "tier": "rare",
+   "price": 30,
+   "coversHorns": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Hat_FlowerCrown",
+   "source": "PetBear__Hat_FlowerCrown",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#58B368",
+   "material": "wear__58B368",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    0.01966,
+    1.18313
+   ],
+   "sizeBlender": [
+    0.90813,
+    0.78047,
+    0.22831
+   ],
+   "centerRuntime": [
+    0.0,
+    1.18313,
+    -0.01966
+   ],
+   "sizeRuntime": [
+    0.90813,
+    0.22831,
+    0.78047
+   ],
+   "triangles": 216,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "flowercrown",
+   "item": "flowercrown",
+   "piece": "Vine",
+   "displayName": "Flower Crown",
+   "tier": "showcase",
+   "price": 60,
+   "height": 0.0,
+   "openCrown": true,
+   "lowBrim": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_FlowerCrown_Petals",
+   "source": "PetBear__Hat_FlowerCrown_Petals",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    0.00782,
+    1.17909
+   ],
+   "sizeBlender": [
+    0.83366,
+    0.8587,
+    0.28444
+   ],
+   "centerRuntime": [
+    0.0,
+    1.17909,
+    -0.00782
+   ],
+   "sizeRuntime": [
+    0.83366,
+    0.28444,
+    0.8587
+   ],
+   "triangles": 240,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "flowercrown",
+   "item": "flowercrown",
+   "piece": "Petals",
+   "displayName": "Flower Crown",
+   "tier": "showcase",
+   "price": 60,
+   "openCrown": true,
+   "lowBrim": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Hat_FlowerCrown_Centers",
+   "source": "PetBear__Hat_FlowerCrown_Centers",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#FFD23F",
+   "material": "wear__FFD23F",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    -0.00079,
+    0.02388,
+    1.18567
+   ],
+   "sizeBlender": [
+    0.77763,
+    0.84164,
+    0.23173
+   ],
+   "centerRuntime": [
+    -0.00079,
+    1.18567,
+    -0.02388
+   ],
+   "sizeRuntime": [
+    0.77763,
+    0.23173,
+    0.84164
+   ],
+   "triangles": 120,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "flowercrown",
+   "item": "flowercrown",
+   "piece": "Centers",
+   "displayName": "Flower Crown",
+   "tier": "showcase",
+   "price": 60,
+   "openCrown": true,
+   "lowBrim": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Shirt_Tee_Torso",
+   "source": "PetBear__Shirt_Tee_Torso",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -2930,8 +3387,58 @@
    "parentAnchor": "Torso",
    "channel": "Body",
    "role": "Shirt",
-   "colorRole": "own:#1A8C9E",
-   "material": "attach__cloth",
+   "colorRole": "own:#33539E",
+   "material": "wear__33539E",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.0,
+    -0.08494,
+    0.53
+   ],
+   "sizeBlender": [
+    0.65115,
+    0.68673,
+    0.35
+   ],
+   "centerRuntime": [
+    0.0,
+    0.53,
+    0.08494
+   ],
+   "sizeRuntime": [
+    0.65115,
+    0.35,
+    0.68673
+   ],
+   "triangles": 176,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "tee",
+   "item": "tee",
+   "piece": "Torso",
+   "displayName": "Stripy Tee",
+   "tier": "common",
+   "price": 15,
+   "shellOffset": 0.024,
+   "tintBySecondary": false,
+   "shell": true
+  },
+  {
+   "name": "Bear__Shirt_Tee_Stripes",
+   "source": "PetBear__Shirt_Tee_Stripes",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
    "originBlender": [
     0.0,
     -0.05,
@@ -2940,33 +3447,39 @@
    "centerBlender": [
     0.0,
     -0.08505,
-    0.53
+    0.5225
    ],
    "sizeBlender": [
-    0.65115,
+    0.64413,
     0.68946,
-    0.35
+    0.195
    ],
    "centerRuntime": [
     0.0,
-    0.53,
+    0.5225,
     0.08505
    ],
    "sizeRuntime": [
-    0.65115,
-    0.35,
+    0.64413,
+    0.195,
     0.68946
    ],
    "triangles": 108,
    "hasUV": true,
    "defaultVisible": false,
    "variant": "tee",
+   "item": "tee",
+   "piece": "Stripes",
+   "displayName": "Stripy Tee",
+   "tier": "common",
+   "price": 15,
    "shellOffset": 0.024,
-   "placeholder": true
+   "tintBySecondary": true,
+   "shell": true
   },
   {
-   "name": "Bear__Shirt_SleeveL",
-   "source": "PetBear__Shirt_SleeveL",
+   "name": "Bear__Shirt_Tee_SleeveL",
+   "source": "PetBear__Shirt_Tee_SleeveL",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -2974,8 +3487,8 @@
    "parentAnchor": "HandL",
    "channel": "HandL",
    "role": "SleeveL",
-   "colorRole": "own:#1A8C9E",
-   "material": "attach__cloth",
+   "colorRole": "own:#33539E",
+   "material": "wear__33539E",
    "originBlender": [
     -0.225,
     -0.06,
@@ -3005,12 +3518,17 @@
    "hasUV": true,
    "defaultVisible": false,
    "variant": "tee",
+   "item": "tee",
+   "piece": "SleeveL",
+   "displayName": "Stripy Tee",
+   "tier": "common",
+   "price": 15,
    "shellOffset": 0.02,
-   "placeholder": true
+   "tintBySecondary": false
   },
   {
-   "name": "Bear__Shirt_SleeveR",
-   "source": "PetBear__Shirt_SleeveR",
+   "name": "Bear__Shirt_Tee_SleeveR",
+   "source": "PetBear__Shirt_Tee_SleeveR",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
    "slot": "Shirt",
@@ -3018,8 +3536,8 @@
    "parentAnchor": "HandR",
    "channel": "HandR",
    "role": "SleeveR",
-   "colorRole": "own:#1A8C9E",
-   "material": "attach__cloth",
+   "colorRole": "own:#33539E",
+   "material": "wear__33539E",
    "originBlender": [
     0.225,
     -0.06,
@@ -3049,8 +3567,313 @@
    "hasUV": true,
    "defaultVisible": false,
    "variant": "tee",
+   "item": "tee",
+   "piece": "SleeveR",
+   "displayName": "Stripy Tee",
+   "tier": "common",
+   "price": 15,
    "shellOffset": 0.02,
-   "placeholder": true
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_Torso",
+   "source": "PetBear__Shirt_Hoodie_Torso",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "own:#8E7BE8",
+   "material": "wear__8E7BE8",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.0,
+    -0.08505,
+    0.5515
+   ],
+   "sizeBlender": [
+    0.65115,
+    0.68946,
+    0.307
+   ],
+   "centerRuntime": [
+    0.0,
+    0.5515,
+    0.08505
+   ],
+   "sizeRuntime": [
+    0.65115,
+    0.307,
+    0.68946
+   ],
+   "triangles": 108,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "Torso",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "shellOffset": 0.024,
+   "printedChest": true,
+   "tintBySecondary": false,
+   "shell": true
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_Hem",
+   "source": "PetBear__Shirt_Hoodie_Hem",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.0,
+    -0.08452,
+    0.3765
+   ],
+   "sizeBlender": [
+    0.64281,
+    0.67609,
+    0.043
+   ],
+   "centerRuntime": [
+    0.0,
+    0.3765,
+    0.08452
+   ],
+   "sizeRuntime": [
+    0.64281,
+    0.043,
+    0.67609
+   ],
+   "triangles": 48,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "Hem",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "shellOffset": 0.024,
+   "printedChest": true,
+   "tintBySecondary": true,
+   "shell": true
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_SleeveL",
+   "source": "PetBear__Shirt_Hoodie_SleeveL",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "HandL",
+   "parentAnchor": "HandL",
+   "channel": "HandL",
+   "role": "SleeveL",
+   "colorRole": "own:#8E7BE8",
+   "material": "wear__8E7BE8",
+   "originBlender": [
+    -0.225,
+    -0.06,
+    0.655
+   ],
+   "centerBlender": [
+    -0.31055,
+    -0.10656,
+    0.53775
+   ],
+   "sizeBlender": [
+    0.27818,
+    0.25379,
+    0.38033
+   ],
+   "centerRuntime": [
+    -0.31055,
+    0.53775,
+    0.10656
+   ],
+   "sizeRuntime": [
+    0.27818,
+    0.38033,
+    0.25379
+   ],
+   "triangles": 91,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "SleeveL",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "shellOffset": 0.02,
+   "printedChest": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_SleeveR",
+   "source": "PetBear__Shirt_Hoodie_SleeveR",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "HandR",
+   "parentAnchor": "HandR",
+   "channel": "HandR",
+   "role": "SleeveR",
+   "colorRole": "own:#8E7BE8",
+   "material": "wear__8E7BE8",
+   "originBlender": [
+    0.225,
+    -0.06,
+    0.655
+   ],
+   "centerBlender": [
+    0.31212,
+    -0.10352,
+    0.5368
+   ],
+   "sizeBlender": [
+    0.27469,
+    0.24719,
+    0.38169
+   ],
+   "centerRuntime": [
+    0.31212,
+    0.5368,
+    0.10352
+   ],
+   "sizeRuntime": [
+    0.27469,
+    0.38169,
+    0.24719
+   ],
+   "triangles": 97,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "SleeveR",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "shellOffset": 0.02,
+   "printedChest": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_Star",
+   "source": "PetBear__Shirt_Hoodie_Star",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.00389,
+    -0.40157,
+    0.53768
+   ],
+   "sizeBlender": [
+    0.18641,
+    0.0787,
+    0.16962
+   ],
+   "centerRuntime": [
+    0.00389,
+    0.53768,
+    0.40157
+   ],
+   "sizeRuntime": [
+    0.18641,
+    0.16962,
+    0.0787
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "Star",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "printedChest": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Shirt_Hoodie_Hood",
+   "source": "PetBear__Shirt_Hoodie_Hood",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Shirt",
+   "anchor": "Torso",
+   "parentAnchor": "Torso",
+   "channel": "Body",
+   "role": "Shirt",
+   "colorRole": "own:#8E7BE8",
+   "material": "wear__8E7BE8",
+   "originBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "centerBlender": [
+    0.0,
+    0.20048,
+    0.602
+   ],
+   "sizeBlender": [
+    0.41872,
+    0.20481,
+    0.14704
+   ],
+   "centerRuntime": [
+    0.0,
+    0.602,
+    -0.20048
+   ],
+   "sizeRuntime": [
+    0.41872,
+    0.14704,
+    0.20481
+   ],
+   "triangles": 108,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "hoodie",
+   "item": "hoodie",
+   "piece": "Hood",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "printedChest": true,
+   "tintBySecondary": false
   },
   {
    "name": "Bear__Neck_Beads",
@@ -3062,8 +3885,104 @@
    "parentAnchor": "Neck",
    "channel": "Body",
    "role": "Necklace",
-   "colorRole": "own:#F2EDD9",
-   "material": "attach__bead",
+   "colorRole": "own:#FFF2D6",
+   "material": "wear__FFF2D6",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.0019,
+    -0.11199,
+    0.65277
+   ],
+   "sizeBlender": [
+    0.51601,
+    0.52809,
+    0.11817
+   ],
+   "centerRuntime": [
+    0.0019,
+    0.65277,
+    0.11199
+   ],
+   "sizeRuntime": [
+    0.51601,
+    0.11817,
+    0.52809
+   ],
+   "triangles": 500,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "beads",
+   "item": "beads",
+   "piece": "Main",
+   "displayName": "Pearl Beads",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Neck_Beads_Pendant",
+   "source": "PetBear__Neck_Beads_Pendant",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.00469,
+    -0.38312,
+    0.58661
+   ],
+   "sizeBlender": [
+    0.09412,
+    0.04444,
+    0.08117
+   ],
+   "centerRuntime": [
+    0.00469,
+    0.58661,
+    0.38312
+   ],
+   "sizeRuntime": [
+    0.09412,
+    0.08117,
+    0.04444
+   ],
+   "triangles": 24,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "beads",
+   "item": "beads",
+   "piece": "Pendant",
+   "displayName": "Pearl Beads",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Neck_BellCollar",
+   "source": "PetBear__Neck_BellCollar",
+   "fbx": "bear-attachments-wearables.fbx",
+   "group": "wearables",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
    "originBlender": [
     0.0,
     -0.07,
@@ -3071,72 +3990,82 @@
    ],
    "centerBlender": [
     0.0,
-    -0.11967,
-    0.624
+    -0.1181,
+    0.64667
    ],
    "sizeBlender": [
-    0.51326,
-    0.57215,
-    0.116
+    0.4769,
+    0.51457,
+    0.11641
    ],
    "centerRuntime": [
     0.0,
-    0.624,
-    0.11967
+    0.64667,
+    0.1181
    ],
    "sizeRuntime": [
-    0.51326,
-    0.116,
-    0.57215
+    0.4769,
+    0.11641,
+    0.51457
    ],
-   "triangles": 320,
+   "triangles": 128,
    "hasUV": true,
    "defaultVisible": false,
-   "placeholder": true
+   "variant": "bellcollar",
+   "item": "bellcollar",
+   "piece": "Main",
+   "displayName": "Bell Collar",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": true
   },
   {
-   "name": "Bear__Hat_Beanie",
-   "source": "PetBear__Hat_Beanie",
+   "name": "Bear__Neck_BellCollar_Bell",
+   "source": "PetBear__Neck_BellCollar_Bell",
    "fbx": "bear-attachments-wearables.fbx",
    "group": "wearables",
-   "slot": "Hat",
-   "anchor": "HatCrown",
-   "parentAnchor": "HatCrown",
-   "channel": "Head",
-   "role": "Hat",
-   "colorRole": "own:#5440BF",
-   "material": "attach__knit",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "own:#FFC240",
+   "material": "wear__FFC240",
    "originBlender": [
     0.0,
-    -0.03,
-    1.3824
+    -0.07,
+    0.63
    ],
    "centerBlender": [
-    0.0,
-    -0.03,
-    1.4444
+    0.00652,
+    -0.39617,
+    0.58405
    ],
    "sizeBlender": [
-    0.392,
-    0.392,
-    0.244
+    0.11,
+    0.11,
+    0.124
    ],
    "centerRuntime": [
-    0.0,
-    1.4444,
-    0.03
+    0.00652,
+    0.58405,
+    0.39617
    ],
    "sizeRuntime": [
-    0.392,
-    0.244,
-    0.392
+    0.11,
+    0.124,
+    0.11
    ],
-   "triangles": 228,
+   "triangles": 132,
    "hasUV": true,
    "defaultVisible": false,
-   "placeholder": true,
-   "coversHorns": true,
-   "hidesEars": false
+   "variant": "bellcollar",
+   "item": "bellcollar",
+   "piece": "Bell",
+   "displayName": "Bell Collar",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": false
   },
   {
    "name": "Bear__EyeL_AltRound",
@@ -3311,94 +4240,6 @@
    "alternate": true
   },
   {
-   "name": "Bear__EyeL_AltButton",
-   "source": "PetBear__EyeL_AltButton",
-   "fbx": "bear-attachments-face-alts.fbx",
-   "group": "face-alts",
-   "slot": "Eyes",
-   "anchor": "EyeL",
-   "parentAnchor": "EyeL",
-   "channel": "Head",
-   "role": "EyeL",
-   "colorRole": "face",
-   "material": "attach__ink",
-   "originBlender": [
-    -0.2145,
-    -0.42468,
-    1.03
-   ],
-   "centerBlender": [
-    -0.2145,
-    -0.41268,
-    1.03
-   ],
-   "sizeBlender": [
-    0.14836,
-    0.09,
-    0.156
-   ],
-   "centerRuntime": [
-    -0.2145,
-    1.03,
-    0.41268
-   ],
-   "sizeRuntime": [
-    0.14836,
-    0.156,
-    0.09
-   ],
-   "triangles": 100,
-   "hasUV": true,
-   "defaultVisible": false,
-   "variant": "Button",
-   "alternate": true,
-   "placeholder": true
-  },
-  {
-   "name": "Bear__EyeR_AltButton",
-   "source": "PetBear__EyeR_AltButton",
-   "fbx": "bear-attachments-face-alts.fbx",
-   "group": "face-alts",
-   "slot": "Eyes",
-   "anchor": "EyeR",
-   "parentAnchor": "EyeR",
-   "channel": "Head",
-   "role": "EyeR",
-   "colorRole": "face",
-   "material": "attach__ink",
-   "originBlender": [
-    0.2145,
-    -0.42468,
-    1.03
-   ],
-   "centerBlender": [
-    0.2145,
-    -0.41268,
-    1.03
-   ],
-   "sizeBlender": [
-    0.14836,
-    0.09,
-    0.156
-   ],
-   "centerRuntime": [
-    0.2145,
-    1.03,
-    0.41268
-   ],
-   "sizeRuntime": [
-    0.14836,
-    0.156,
-    0.09
-   ],
-   "triangles": 100,
-   "hasUV": true,
-   "defaultVisible": false,
-   "variant": "Button",
-   "alternate": true,
-   "placeholder": true
-  },
-  {
    "name": "Bear__Mouth_AltW",
    "source": "PetBear__Mouth_AltW",
    "fbx": "bear-attachments-face-alts.fbx",
@@ -3442,8 +4283,498 @@
    "alternate": true
   },
   {
-   "name": "Bear__Mouth_AltO",
-   "source": "PetBear__Mouth_AltO",
+   "name": "Bear__EyeL_AltSparkle_White",
+   "source": "PetBear__EyeL_AltSparkle_White",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2145,
+    -0.40301,
+    1.03
+   ],
+   "sizeBlender": [
+    0.165,
+    0.11657,
+    0.245
+   ],
+   "centerRuntime": [
+    -0.2145,
+    1.03,
+    0.40301
+   ],
+   "sizeRuntime": [
+    0.165,
+    0.245,
+    0.11657
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "White",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle",
+   "source": "PetBear__EyeL_AltSparkle",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2145,
+    -0.4179,
+    1.026
+   ],
+   "sizeBlender": [
+    0.132,
+    0.09541,
+    0.208
+   ],
+   "centerRuntime": [
+    -0.2145,
+    1.026,
+    0.4179
+   ],
+   "sizeRuntime": [
+    0.132,
+    0.208,
+    0.09541
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Pupil",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle_Iris",
+   "source": "PetBear__EyeL_AltSparkle_Iris",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2145,
+    -0.44598,
+    0.978
+   ],
+   "sizeBlender": [
+    0.088,
+    0.04683,
+    0.07228
+   ],
+   "centerRuntime": [
+    -0.2145,
+    0.978,
+    0.44598
+   ],
+   "sizeRuntime": [
+    0.088,
+    0.07228,
+    0.04683
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Iris",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle_Shine",
+   "source": "PetBear__EyeL_AltSparkle_Shine",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2055,
+    -0.44844,
+    1.06294
+   ],
+   "sizeBlender": [
+    0.094,
+    0.03722,
+    0.10212
+   ],
+   "centerRuntime": [
+    -0.2055,
+    1.06294,
+    0.44844
+   ],
+   "sizeRuntime": [
+    0.094,
+    0.10212,
+    0.03722
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Shine",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeL_AltSleepy",
+   "source": "PetBear__EyeL_AltSleepy",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.22506,
+    -0.41234,
+    0.99687
+   ],
+   "sizeBlender": [
+    0.17137,
+    0.10724,
+    0.07692
+   ],
+   "centerRuntime": [
+    -0.22506,
+    0.99687,
+    0.41234
+   ],
+   "sizeRuntime": [
+    0.17137,
+    0.07692,
+    0.10724
+   ],
+   "triangles": 90,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sleepy",
+   "item": "sleepy",
+   "piece": "Main",
+   "displayName": "Sleepy Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_White",
+   "source": "PetBear__EyeR_AltSparkle_White",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2145,
+    -0.40301,
+    1.03
+   ],
+   "sizeBlender": [
+    0.165,
+    0.11657,
+    0.245
+   ],
+   "centerRuntime": [
+    0.2145,
+    1.03,
+    0.40301
+   ],
+   "sizeRuntime": [
+    0.165,
+    0.245,
+    0.11657
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "White",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle",
+   "source": "PetBear__EyeR_AltSparkle",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2145,
+    -0.4179,
+    1.026
+   ],
+   "sizeBlender": [
+    0.132,
+    0.09541,
+    0.208
+   ],
+   "centerRuntime": [
+    0.2145,
+    1.026,
+    0.4179
+   ],
+   "sizeRuntime": [
+    0.132,
+    0.208,
+    0.09541
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Pupil",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_Iris",
+   "source": "PetBear__EyeR_AltSparkle_Iris",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2145,
+    -0.44598,
+    0.978
+   ],
+   "sizeBlender": [
+    0.088,
+    0.04683,
+    0.07228
+   ],
+   "centerRuntime": [
+    0.2145,
+    0.978,
+    0.44598
+   ],
+   "sizeRuntime": [
+    0.088,
+    0.07228,
+    0.04683
+   ],
+   "triangles": 30,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Iris",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_Shine",
+   "source": "PetBear__EyeR_AltSparkle_Shine",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2235,
+    -0.44015,
+    1.06294
+   ],
+   "sizeBlender": [
+    0.094,
+    0.06896,
+    0.10212
+   ],
+   "centerRuntime": [
+    0.2235,
+    1.06294,
+    0.44015
+   ],
+   "sizeRuntime": [
+    0.094,
+    0.10212,
+    0.06896
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sparkle",
+   "item": "sparkle",
+   "piece": "Shine",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltSleepy",
+   "source": "PetBear__EyeR_AltSleepy",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.22506,
+    -0.41234,
+    0.99687
+   ],
+   "sizeBlender": [
+    0.17137,
+    0.10724,
+    0.07692
+   ],
+   "centerRuntime": [
+    0.22506,
+    0.99687,
+    0.41234
+   ],
+   "sizeRuntime": [
+    0.17137,
+    0.07692,
+    0.10724
+   ],
+   "triangles": 90,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "sleepy",
+   "item": "sleepy",
+   "piece": "Main",
+   "displayName": "Sleepy Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Mouth_AltBlep",
+   "source": "PetBear__Mouth_AltBlep",
    "fbx": "bear-attachments-face-alts.fbx",
    "group": "face-alts",
    "slot": "Mouth",
@@ -3460,34 +4791,90 @@
    ],
    "centerBlender": [
     0.0,
-    -0.50429,
-    0.8
+    -0.52126,
+    0.82122
    ],
    "sizeBlender": [
-    0.06467,
-    0.03804,
-    0.08
+    0.09737,
+    0.02607,
+    0.03643
    ],
    "centerRuntime": [
     0.0,
-    0.8,
-    0.50429
+    0.82122,
+    0.52126
    ],
    "sizeRuntime": [
-    0.06467,
-    0.08,
-    0.03804
+    0.09737,
+    0.03643,
+    0.02607
    ],
-   "triangles": 64,
+   "triangles": 54,
    "hasUV": true,
    "defaultVisible": false,
-   "variant": "O",
+   "variant": "blep",
+   "item": "blep",
+   "piece": "Main",
+   "displayName": "Blep",
+   "tier": "common",
+   "price": 15,
    "alternate": true,
-   "placeholder": true
+   "neutralOnly": true,
+   "tintBySecondary": false
   },
   {
-   "name": "Bear__Tail_AltArrow",
-   "source": "PetBear__Tail_AltArrow",
+   "name": "Bear__Mouth_AltBlep_Tongue",
+   "source": "PetBear__Mouth_AltBlep_Tongue",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Mouth",
+   "anchor": "Mouth",
+   "parentAnchor": "Mouth",
+   "channel": "Head",
+   "role": "Mouth",
+   "colorRole": "own:#FF7C9C",
+   "material": "wear__FF7C9C",
+   "originBlender": [
+    0.0,
+    -0.51029,
+    0.8
+   ],
+   "centerBlender": [
+    0.0,
+    -0.50488,
+    0.793
+   ],
+   "sizeBlender": [
+    0.052,
+    0.0597,
+    0.062
+   ],
+   "centerRuntime": [
+    0.0,
+    0.793,
+    0.50488
+   ],
+   "sizeRuntime": [
+    0.052,
+    0.062,
+    0.0597
+   ],
+   "triangles": 40,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "blep",
+   "item": "blep",
+   "piece": "Tongue",
+   "displayName": "Blep",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "neutralOnly": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Tail_AltHeart",
+   "source": "PetBear__Tail_AltHeart",
    "fbx": "bear-attachments-tails.fbx",
    "group": "tails",
    "slot": "Tail",
@@ -3503,31 +4890,567 @@
     0.33
    ],
    "centerBlender": [
-    0.0,
-    0.35791,
-    0.51966
+    0.00338,
+    0.33775,
+    0.51364
    ],
    "sizeBlender": [
-    0.09526,
-    0.32198,
-    0.46069
+    0.23397,
+    0.32263,
+    0.49921
    ],
    "centerRuntime": [
-    0.0,
-    0.51966,
-    -0.35791
+    0.00338,
+    0.51364,
+    -0.33775
    ],
    "sizeRuntime": [
-    0.09526,
-    0.46069,
-    0.32198
+    0.23397,
+    0.49921,
+    0.32263
    ],
-   "triangles": 82,
+   "triangles": 168,
    "hasUV": true,
    "defaultVisible": false,
-   "variant": "Arrow",
+   "variant": "heart",
+   "item": "heart",
+   "piece": "Main",
+   "displayName": "Heart Tail",
+   "tier": "rare",
+   "price": 30,
    "alternate": true,
-   "placeholder": true
+   "tintBySecondary": true
+  }
+ ],
+ "priceTiers": {
+  "common": 15,
+  "rare": 30,
+  "showcase": 60
+ },
+ "items": [
+  {
+   "id": "beanie",
+   "slot": "Hat",
+   "displayName": "Pom Beanie",
+   "tier": "common",
+   "price": 15,
+   "triangles": 308,
+   "tintBySecondary": true,
+   "primaryColor": "own:#E9574C",
+   "flags": {
+    "coversHorns": true
+   },
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Hat_Beanie",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "own:#E9574C",
+     "tintBySecondary": false,
+     "triangles": 126
+    },
+    {
+     "piece": "Trim",
+     "mesh": "Bear__Hat_Beanie_Trim",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 182
+    }
+   ]
+  },
+  {
+   "id": "sunhat",
+   "slot": "Hat",
+   "displayName": "Tiny Sun Hat",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 418,
+   "tintBySecondary": true,
+   "primaryColor": "own:#F3D37E",
+   "flags": {
+    "coversHorns": true
+   },
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Hat_SunHat",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "own:#F3D37E",
+     "tintBySecondary": false,
+     "triangles": 272
+    },
+    {
+     "piece": "Band",
+     "mesh": "Bear__Hat_SunHat_Band",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 146
+    }
+   ]
+  },
+  {
+   "id": "flowercrown",
+   "slot": "Hat",
+   "displayName": "Flower Crown",
+   "tier": "showcase",
+   "price": 60,
+   "triangles": 576,
+   "tintBySecondary": true,
+   "primaryColor": "own:#58B368",
+   "flags": {
+    "openCrown": true,
+    "lowBrim": true
+   },
+   "pieces": [
+    {
+     "piece": "Vine",
+     "mesh": "Bear__Hat_FlowerCrown",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "own:#58B368",
+     "tintBySecondary": false,
+     "triangles": 216
+    },
+    {
+     "piece": "Petals",
+     "mesh": "Bear__Hat_FlowerCrown_Petals",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 240
+    },
+    {
+     "piece": "Centers",
+     "mesh": "Bear__Hat_FlowerCrown_Centers",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "own:#FFD23F",
+     "tintBySecondary": false,
+     "triangles": 120
+    }
+   ]
+  },
+  {
+   "id": "tee",
+   "slot": "Shirt",
+   "displayName": "Stripy Tee",
+   "tier": "common",
+   "price": 15,
+   "triangles": 472,
+   "tintBySecondary": true,
+   "primaryColor": "own:#33539E",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Torso",
+     "mesh": "Bear__Shirt_Tee_Torso",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "own:#33539E",
+     "tintBySecondary": false,
+     "triangles": 176
+    },
+    {
+     "piece": "Stripes",
+     "mesh": "Bear__Shirt_Tee_Stripes",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 108
+    },
+    {
+     "piece": "SleeveL",
+     "mesh": "Bear__Shirt_Tee_SleeveL",
+     "channel": "HandL",
+     "anchor": "HandL",
+     "colorRole": "own:#33539E",
+     "tintBySecondary": false,
+     "triangles": 91
+    },
+    {
+     "piece": "SleeveR",
+     "mesh": "Bear__Shirt_Tee_SleeveR",
+     "channel": "HandR",
+     "anchor": "HandR",
+     "colorRole": "own:#33539E",
+     "tintBySecondary": false,
+     "triangles": 97
+    }
+   ]
+  },
+  {
+   "id": "hoodie",
+   "slot": "Shirt",
+   "displayName": "Star Hoodie",
+   "tier": "showcase",
+   "price": 60,
+   "triangles": 482,
+   "tintBySecondary": true,
+   "primaryColor": "own:#8E7BE8",
+   "flags": {
+    "printedChest": true
+   },
+   "pieces": [
+    {
+     "piece": "Torso",
+     "mesh": "Bear__Shirt_Hoodie_Torso",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "own:#8E7BE8",
+     "tintBySecondary": false,
+     "triangles": 108
+    },
+    {
+     "piece": "Hem",
+     "mesh": "Bear__Shirt_Hoodie_Hem",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 48
+    },
+    {
+     "piece": "SleeveL",
+     "mesh": "Bear__Shirt_Hoodie_SleeveL",
+     "channel": "HandL",
+     "anchor": "HandL",
+     "colorRole": "own:#8E7BE8",
+     "tintBySecondary": false,
+     "triangles": 91
+    },
+    {
+     "piece": "SleeveR",
+     "mesh": "Bear__Shirt_Hoodie_SleeveR",
+     "channel": "HandR",
+     "anchor": "HandR",
+     "colorRole": "own:#8E7BE8",
+     "tintBySecondary": false,
+     "triangles": 97
+    },
+    {
+     "piece": "Star",
+     "mesh": "Bear__Shirt_Hoodie_Star",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 30
+    },
+    {
+     "piece": "Hood",
+     "mesh": "Bear__Shirt_Hoodie_Hood",
+     "channel": "Body",
+     "anchor": "Torso",
+     "colorRole": "own:#8E7BE8",
+     "tintBySecondary": false,
+     "triangles": 108
+    }
+   ]
+  },
+  {
+   "id": "beads",
+   "slot": "Neck",
+   "displayName": "Pearl Beads",
+   "tier": "common",
+   "price": 15,
+   "triangles": 524,
+   "tintBySecondary": true,
+   "primaryColor": "own:#FFF2D6",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Neck_Beads",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "own:#FFF2D6",
+     "tintBySecondary": false,
+     "triangles": 500
+    },
+    {
+     "piece": "Pendant",
+     "mesh": "Bear__Neck_Beads_Pendant",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 24
+    }
+   ]
+  },
+  {
+   "id": "bellcollar",
+   "slot": "Neck",
+   "displayName": "Bell Collar",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 260,
+   "tintBySecondary": true,
+   "primaryColor": "secondary",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Neck_BellCollar",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 128
+    },
+    {
+     "piece": "Bell",
+     "mesh": "Bear__Neck_BellCollar_Bell",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 132
+    }
+   ]
+  },
+  {
+   "id": "ring",
+   "slot": "EarPiercing",
+   "displayName": "Little Hoops",
+   "tier": "common",
+   "price": 15,
+   "triangles": 336,
+   "tintBySecondary": false,
+   "primaryColor": "own:#FFC240",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__HelixL_Ring",
+     "channel": "Head",
+     "anchor": "HelixL",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 168
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__HelixR_Ring",
+     "channel": "Head",
+     "anchor": "HelixR",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 168
+    }
+   ],
+   "perSide": true
+  },
+  {
+   "id": "starstud",
+   "slot": "EarPiercing",
+   "displayName": "Star Studs",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 100,
+   "tintBySecondary": false,
+   "primaryColor": "own:#FFC240",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__HelixL_StarStud",
+     "channel": "Head",
+     "anchor": "HelixL",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 50
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__HelixR_StarStud",
+     "channel": "Head",
+     "anchor": "HelixR",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 50
+    }
+   ],
+   "perSide": true
+  },
+  {
+   "id": "sparkle",
+   "slot": "Eyes",
+   "displayName": "Sparkle Eyes",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 384,
+   "tintBySecondary": true,
+   "primaryColor": "own:#FFFFFF",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "White",
+     "mesh": "Bear__EyeL_AltSparkle_White",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 60
+    },
+    {
+     "piece": "Pupil",
+     "mesh": "Bear__EyeL_AltSparkle",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 60
+    },
+    {
+     "piece": "Iris",
+     "mesh": "Bear__EyeL_AltSparkle_Iris",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 30
+    },
+    {
+     "piece": "Shine",
+     "mesh": "Bear__EyeL_AltSparkle_Shine",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 42
+    },
+    {
+     "piece": "White",
+     "mesh": "Bear__EyeR_AltSparkle_White",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 60
+    },
+    {
+     "piece": "Pupil",
+     "mesh": "Bear__EyeR_AltSparkle",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 60
+    },
+    {
+     "piece": "Iris",
+     "mesh": "Bear__EyeR_AltSparkle_Iris",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 30
+    },
+    {
+     "piece": "Shine",
+     "mesh": "Bear__EyeR_AltSparkle_Shine",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 42
+    }
+   ]
+  },
+  {
+   "id": "sleepy",
+   "slot": "Eyes",
+   "displayName": "Sleepy Eyes",
+   "tier": "common",
+   "price": 15,
+   "triangles": 180,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeL_AltSleepy",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 90
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeR_AltSleepy",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 90
+    }
+   ]
+  },
+  {
+   "id": "blep",
+   "slot": "Mouth",
+   "displayName": "Blep",
+   "tier": "common",
+   "price": 15,
+   "triangles": 94,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {
+    "neutralOnly": true
+   },
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Mouth_AltBlep",
+     "channel": "Head",
+     "anchor": "Mouth",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 54
+    },
+    {
+     "piece": "Tongue",
+     "mesh": "Bear__Mouth_AltBlep_Tongue",
+     "channel": "Head",
+     "anchor": "Mouth",
+     "colorRole": "own:#FF7C9C",
+     "tintBySecondary": false,
+     "triangles": 40
+    }
+   ]
+  },
+  {
+   "id": "heart",
+   "slot": "Tail",
+   "displayName": "Heart Tail",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 168,
+   "tintBySecondary": true,
+   "primaryColor": "secondary",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Tail_AltHeart",
+     "channel": "Body",
+     "anchor": "Tail",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 168
+    }
+   ]
   }
  ],
  "features": {
@@ -3626,19 +5549,19 @@
    "pieces": [
     {
      "piece": "Torso",
-     "mesh": "Bear__Shirt_Torso",
+     "mesh": "Bear__Shirt_<Variant>_Torso",
      "channel": "Body",
      "anchor": "Torso"
     },
     {
      "piece": "SleeveL",
-     "mesh": "Bear__Shirt_SleeveL",
+     "mesh": "Bear__Shirt_<Variant>_SleeveL",
      "channel": "HandL",
      "anchor": "HandL"
     },
     {
      "piece": "SleeveR",
-     "mesh": "Bear__Shirt_SleeveR",
+     "mesh": "Bear__Shirt_<Variant>_SleeveR",
      "channel": "HandR",
      "anchor": "HandR"
     }
@@ -3732,15 +5655,15 @@
    },
    {
     "slot": "Eyes",
-    "items": "default EyeL/R | AltRound | AltSmallWide | AltButton; a swap hides Bear__EyeL/R"
+    "items": "default EyeL/R | AltRound | AltSmallWide | sparkle | sleepy; a swap hides Bear__EyeL/R"
    },
    {
     "slot": "Mouth",
-    "items": "default MouthSmile | AltW | AltO; the expression system still picks the frame"
+    "items": "default MouthSmile | AltW | blep (neutralOnly: replaces the neutral frame only); the expression system still picks the frame"
    },
    {
     "slot": "Tail",
-    "items": "species Tail | AltArrow; a swap hides Bear__Tail"
+    "items": "species Tail | heart; a swap hides Bear__Tail"
    },
    {
     "slot": "Horns",
@@ -3753,9 +5676,11 @@
   ],
   "notes": [
    "Horn stage 4 or 5 lifts CharmFloat by 0.10 so a floating charm clears the tips.",
-   "Hat_Beanie is a full hat: coversHorns = true, hidesEars = false.",
-   "A shirt is three meshes: Shirt_Torso on Body, Shirt_SleeveL on HandL and Shirt_SleeveR on HandR. The sleeves pivot on the shoulder anchors with the arms and are shown and hidden with the torso."
+   "beanie and sunhat are full hats (coversHorns). flowercrown is a wreath round the head under the ears: openCrown (horns and the centre charm stay) and lowBrim (it covers the Forehead slot).",
+   "An item is every mesh that shares its item id (`item`, also `variant`); all its pieces are shown and hidden together. Pieces exist because a mesh has one colour: `tintBySecondary` pieces take the pet's secondary colour, `face` pieces the face ink, `own:#hex` pieces keep their colour.",
+   "A shirt is Shirt_<Variant>_Torso on Body plus Shirt_<Variant>_SleeveL on HandL and Shirt_<Variant>_SleeveR on HandR, and any trim (stripes, hem, star, hood) on Body. The sleeves pivot on the shoulder anchors with the arms.",
+   "Helix piercings are sold as a pair (one item id, a mesh per ear) but the two ears stay independent slots."
   ]
  },
- "placeholderNote": "Hat_Beanie, Shirt_Torso (+Shirt_SleeveL/R), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art."
+ "wearablesNote": "The 13 launch wearables are final art built by scripts/build_bear_wearables.py. The grey-box placeholders (Shirt_Torso/SleeveL/SleeveR, AltButton eyes, AltO mouth, AltArrow tail) are gone; Hat_Beanie, Neck_Beads and HelixL/R_Ring keep their names with final meshes. Studio must re-import the FBX set before scripts/build_bear_attachments.py will run."
 }

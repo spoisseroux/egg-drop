@@ -1,4 +1,4 @@
-"""Add wing stages S1-S5 and the three-piece shirt to pet-bear-attachments.blend, then export the
+"""Add wing stages S1-S5 and the launch wearables to pet-bear-attachments.blend, then export the
 attachment FBX set and manifest.
 
 Run (background Blender only):
@@ -8,9 +8,11 @@ Convention matches assets/garden-babies/bear.fbx: axis_forward=-Z, axis_up=Y, me
 world transform baked, pet root at the origin, 1 unit = 1 stud. Blender pet-local: front -Y, up +Z, L = -X.
 Outputs go to assets/garden-babies/attachments/. Pass `-- --no-save` to leave the .blend untouched.
 
-Shirts are always three meshes: Shirt_Torso (Body channel, Torso anchor) and Shirt_SleeveL/R (HandL/HandR
-channels, origin on the shoulder anchor). The sleeves are rebuilt here from the arm meshes on every run;
-check them with scripts/check_bear_shirt.py.
+The wearables (hats, shirts, necklaces, helix piercings, alternate eyes, mouth and tail) are rebuilt on
+every run by scripts/build_bear_wearables.py, which also holds the item list (ids, display names, Star
+price tiers). An item is one or more meshes sharing an item id; the manifest lists them under `items`.
+Shirts are always Torso (Body channel) + SleeveL/R (HandL/HandR channels, origin on the shoulder anchor),
+plus trim pieces; check them with scripts/check_bear_shirt.py.
 """
 import bpy, bmesh, json, math, sys
 from pathlib import Path
@@ -52,72 +54,12 @@ for side in "LR":
         ob.hide_set(True)
 
 
-# ---------- shirt: torso shell on Body, one sleeve per arm on HandL/HandR ----------
-# A sleeve is a shell of the arm mesh itself, so it wraps the arm at a fixed offset and turns with it about
-# the shoulder anchor. The cuff is a slanted plane: short on the outside of the arm, long on the side that
-# faces the body, because that side sweeps inside the torso shell when the arm folds +-35 degrees.
-SLEEVE_OFFSET = 0.020        # sleeve surface above the arm surface
-SLEEVE_AXIS = (-0.525, -0.277, -0.805)   # down the left arm from the shoulder (pet-local); x mirrors for R
-SLEEVE_CUFF_T = 0.268        # where the cuff plane crosses the arm axis, measured from the shoulder anchor
-SLEEVE_CUFF_LEAN = (0.90, 0.40, 0.0)     # the cuff gets longer in this direction (toward the body, a bit back)
-SLEEVE_CUFF_SLOPE = 0.62     # extra sleeve length per unit of distance from the axis along the lean
-SLEEVE_LIP = 0.030           # the cuff turns in this far, so it closes onto the arm
-
-placeholders = bpy.data.collections["PetBear_AttachPlaceholders"]
-torso = D.get("PetBear__Shirt_Torso") or D.get("PetBear__Shirt_Tee")
-torso.name = torso.data.name = "PetBear__Shirt_Torso"
-SHIRT_PROPS = dict(mock=True, slot="Shirt", placeholder=True, variant="tee")
-for k, v in dict(SHIRT_PROPS, role="Shirt", channel="Body").items():
-    torso[k] = v
-for side, sx in (("L", 1.0), ("R", -1.0)):
-    for old in (f"PetBear__Shirt_Tee_Sleeve{side}", f"PetBear__Shirt_Sleeve{side}"):
-        if D.get(old):
-            me = D[old].data
-            bpy.data.objects.remove(D[old], do_unlink=True)
-            if me.users == 0:
-                bpy.data.meshes.remove(me)
-    arm = D["PetBear__Hand" + side]
-    name = f"PetBear__Shirt_Sleeve{side}"
-    bm = bmesh.new()
-    bm.from_mesh(arm.data)
-    bm.normal_update()
-    for v in bm.verts:  # push out so every face around the vertex ends up SLEEVE_OFFSET above the arm
-        tight = min((v.normal.dot(f.normal) for f in v.link_faces), default=1.0)
-        v.co += v.normal * (SLEEVE_OFFSET / max(tight, 0.45))
-    axis = Vector((SLEEVE_AXIS[0] * sx, SLEEVE_AXIS[1], SLEEVE_AXIS[2])).normalized()
-    lean = Vector((SLEEVE_CUFF_LEAN[0] * sx, SLEEVE_CUFF_LEAN[1], SLEEVE_CUFF_LEAN[2]))
-    lean = (lean - axis * lean.dot(axis)).normalized()
-    to_arm = arm.matrix_basis.inverted() @ arm.matrix_parent_inverse.inverted()  # anchor space -> mesh space
-    plane_no = (to_arm.to_3x3() @ (axis - lean * SLEEVE_CUFF_SLOPE)).normalized()
-    plane_co = to_arm @ (axis * SLEEVE_CUFF_T)
-    cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=plane_co,
-                                 plane_no=plane_no, clear_outer=True)["geom_cut"]
-    rim = [e for e in cut if isinstance(e, bmesh.types.BMEdge)]
-    for e in rim:
-        e.smooth = False
-    lip = [v for v in bmesh.ops.extrude_edge_only(bm, edges=rim)["geom"] if isinstance(v, bmesh.types.BMVert)]
-    middle = sum((v.co for v in lip), Vector()) / len(lip)
-    for v in lip:  # the lip stays in the cuff plane and ends just under the arm surface
-        out = v.co - middle
-        v.co = middle + out * max(0.0, 1.0 - SLEEVE_LIP / out.length)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    for f in bm.faces:
-        f.smooth = True
-        f.material_index = 0
-    me = bpy.data.meshes.new(name)
-    bm.to_mesh(me)
-    bm.free()
-    me.materials.append(torso.data.materials[0])
-    me.calc_loop_triangles()
-    ob = bpy.data.objects.new(name, me)
-    placeholders.objects.link(ob)
-    ob.parent = arm.parent
-    ob.matrix_parent_inverse = arm.matrix_parent_inverse.copy()
-    ob.matrix_basis = arm.matrix_basis.copy()
-    for k, v in dict(SHIRT_PROPS, role="Sleeve" + side, channel="Hand" + side, tris=len(me.loop_triangles),
-                     shellOffset=SLEEVE_OFFSET).items():
-        ob[k] = v
-
+# ---------- wearables: final art, rebuilt from code ----------
+_builder = Path(__file__).with_name("build_bear_wearables.py")
+_ns = {"__name__": "build_bear_wearables"}
+exec(compile(_builder.read_text(encoding="utf-8"), str(_builder), "exec"), _ns)
+ITEMS, TIERS = _ns["ITEMS"], _ns["TIERS"]
+WEARABLES = [o.name.split("__", 1)[1] for o in bpy.data.collections["PetBear_Wearables"].objects]
 bpy.context.view_layer.update()
 
 
@@ -176,11 +118,11 @@ for o in sorted(D, key=lambda o: o.name):
 GROUPS = {
     "horns": [f"Horn{s}_S{i}" for i in range(1, 6) for s in "LR"],
     "wings": [f"Wing{s}_S{i}" for i in range(1, 6) for s in "LR"],
-    "piercings": ["HelixL_Ring", "HelixR_Ring"],
-    "wearables": ["Shirt_Torso", "Shirt_SleeveL", "Shirt_SleeveR", "Neck_Beads", "Hat_Beanie"],
-    "face-alts": ["EyeL_AltRound", "EyeR_AltRound", "EyeL_AltSmallWide", "EyeR_AltSmallWide", "EyeL_AltButton",
-                  "EyeR_AltButton", "Mouth_AltW", "Mouth_AltO"],
-    "tails": ["Tail_AltArrow"],
+    "piercings": [n for n in WEARABLES if n.startswith("Helix")],
+    "wearables": [n for n in WEARABLES if n.split("_")[0] in ("Shirt", "Neck", "Hat")],
+    "face-alts": ["EyeL_AltRound", "EyeR_AltRound", "EyeL_AltSmallWide", "EyeR_AltSmallWide", "Mouth_AltW"]
+                 + [n for n in WEARABLES if n.startswith(("Eye", "Mouth"))],
+    "tails": [n for n in WEARABLES if n.startswith("Tail")],
 }
 SLOT_FIX = {"Horn": "Horns", "Wing": "Back", "Eye": "Eyes", "Mouth": "Mouth", "Tail": "Tail"}
 SLOT_ANCHOR = {"EyeL": "EyeL", "EyeR": "EyeR", "Mouth": "Mouth"}
@@ -188,9 +130,10 @@ COLOR_ROLE = {"petBear__secondary": "secondary", "petBear__body": "body", "petBe
               "petBear__mouth": "mouthTexture", "petBear__nose": "face", "petBear__wing": "wingTexture",
               "attach__ink": "face", "attach__metal": "own:#FFC240", "attach__bead": "own:#F2EDD9",
               "attach__cloth": "own:#1A8C9E", "attach__knit": "own:#5440BF"}
-BOOL_KEYS = ("alternate", "placeholder", "coversHorns", "hidesEars")
-COPY_KEYS = ("feature", "stage", "stageName", "variant", "height", "baseRadius", "majorRadius", "minorRadius",
-             "shellOffset", "spanScale", "heightScale") + BOOL_KEYS
+BOOL_KEYS = ("alternate", "placeholder", "coversHorns", "hidesEars", "openCrown", "lowBrim", "printedChest",
+             "noEyewear", "neutralOnly", "tintBySecondary", "shell")
+COPY_KEYS = ("feature", "stage", "stageName", "variant", "item", "piece", "displayName", "tier", "price", "height",
+             "baseRadius", "majorRadius", "minorRadius", "shellOffset", "spanScale", "heightScale") + BOOL_KEYS
 
 export_scene = bpy.data.scenes.new("AttachmentExport")
 made, meshes = {}, []
@@ -217,7 +160,7 @@ for group, names in GROUPS.items():
             "name": ob.name, "source": src.name, "fbx": f"bear-attachments-{group}.fbx", "group": group,
             "slot": slot, "anchor": slot_anchor, "parentAnchor": anchor,
             "channel": "Root" if channel == "CharmAnchor" else channel,
-            "role": role, "colorRole": COLOR_ROLE.get(mat, mat), "material": mat,
+            "role": role, "colorRole": src.get("colorRole") or COLOR_ROLE.get(mat, mat), "material": mat,
             "originBlender": r(local(src).to_translation()),
             "centerBlender": r(c), "sizeBlender": r(s),
             "centerRuntime": r((c.x, c.z, -c.y)), "sizeRuntime": r((s.x, s.z, s.y)),
@@ -248,9 +191,30 @@ export(OUT / "bear-attachments.fbx", list(made.values()))
 for group, names in GROUPS.items():
     export(OUT / f"bear-attachments-{group}.fbx", [made[n] for n in names])
 
-SHIRT_PIECES = [{"piece": m["role"].replace("Shirt", "Torso"), "mesh": m["name"], "channel": m["channel"],
-                 "anchor": m["anchor"]} for m in meshes if m["slot"] == "Shirt"]
-assert [p["channel"] for p in SHIRT_PIECES] == ["Body", "HandL", "HandR"], SHIRT_PIECES
+# Every shirt has these three pieces (plus any trim on the Body channel).
+SHIRT_PIECES = [{"piece": "Torso", "mesh": "Bear__Shirt_<Variant>_Torso", "channel": "Body", "anchor": "Torso"},
+                {"piece": "SleeveL", "mesh": "Bear__Shirt_<Variant>_SleeveL", "channel": "HandL", "anchor": "HandL"},
+                {"piece": "SleeveR", "mesh": "Bear__Shirt_<Variant>_SleeveR", "channel": "HandR", "anchor": "HandR"}]
+
+items = []
+for item_id, info in ITEMS.items():
+    parts = [m for m in meshes if m.get("item") == item_id]
+    assert parts, item_id
+    row = {"id": item_id, "slot": info["slot"], "displayName": info["name"], "tier": info["tier"],
+           "price": TIERS[info["tier"]], "triangles": sum(m["triangles"] for m in parts),
+           "tintBySecondary": any(m.get("tintBySecondary") for m in parts),
+           "primaryColor": parts[0]["colorRole"],
+           "flags": dict(info["flags"]),
+           "pieces": [{"piece": m["piece"], "mesh": m["name"], "channel": m["channel"], "anchor": m["parentAnchor"],
+                       "colorRole": m["colorRole"], "tintBySecondary": bool(m.get("tintBySecondary")),
+                       "triangles": m["triangles"]} for m in parts]}
+    if info["slot"] == "Shirt":
+        need = {("Torso", "Body"), ("SleeveL", "HandL"), ("SleeveR", "HandR")}
+        assert need <= {(p["piece"], p["channel"]) for p in row["pieces"]}, row
+    if info["slot"] == "EarPiercing":
+        row["perSide"] = True
+    assert row["triangles"] <= 600, row
+    items.append(row)
 
 HORN_NAMES = {1: "Bud", 2: "Nub", 3: "Horn", 4: "Curl", 5: "Crown"}
 for m in meshes:
@@ -273,6 +237,8 @@ manifest = {
     "files": {"all": "bear-attachments.fbx", **{g: f"bear-attachments-{g}.fbx" for g in GROUPS}},
     "anchors": anchors,
     "meshes": meshes,
+    "priceTiers": TIERS,
+    "items": items,
     "features": {
         "horns": {"slot": "Horns", "anchors": ["HornL", "HornR"], "stages": 5, "colorRole": "secondary",
                   "meshPattern": "Bear__Horn{L|R}_S{1..5}",
@@ -306,19 +272,21 @@ manifest = {
         "oneOf": [
             {"slot": "Back", "items": "wings (any stage) | backpack | cape"},
             {"slot": "Neck", "items": "necklace | scarf | collar; draws over a Shirt"},
-            {"slot": "Eyes", "items": "default EyeL/R | AltRound | AltSmallWide | AltButton; a swap hides Bear__EyeL/R"},
-            {"slot": "Mouth", "items": "default MouthSmile | AltW | AltO; the expression system still picks the frame"},
-            {"slot": "Tail", "items": "species Tail | AltArrow; a swap hides Bear__Tail"},
+            {"slot": "Eyes", "items": "default EyeL/R | AltRound | AltSmallWide | sparkle | sleepy; a swap hides Bear__EyeL/R"},
+            {"slot": "Mouth", "items": "default MouthSmile | AltW | blep (neutralOnly: replaces the neutral frame only); the expression system still picks the frame"},
+            {"slot": "Tail", "items": "species Tail | heart; a swap hides Bear__Tail"},
             {"slot": "Horns", "items": "stages S1..S5, one visible"},
             {"slot": "Back (wings)", "items": "stages S1..S5, one visible"},
         ],
         "notes": [
             "Horn stage 4 or 5 lifts CharmFloat by 0.10 so a floating charm clears the tips.",
-            "Hat_Beanie is a full hat: coversHorns = true, hidesEars = false.",
-            "A shirt is three meshes: Shirt_Torso on Body, Shirt_SleeveL on HandL and Shirt_SleeveR on HandR. The sleeves pivot on the shoulder anchors with the arms and are shown and hidden with the torso.",
+            "beanie and sunhat are full hats (coversHorns). flowercrown is a wreath round the head under the ears: openCrown (horns and the centre charm stay) and lowBrim (it covers the Forehead slot).",
+            "An item is every mesh that shares its item id (`item`, also `variant`); all its pieces are shown and hidden together. Pieces exist because a mesh has one colour: `tintBySecondary` pieces take the pet's secondary colour, `face` pieces the face ink, `own:#hex` pieces keep their colour.",
+            "A shirt is Shirt_<Variant>_Torso on Body plus Shirt_<Variant>_SleeveL on HandL and Shirt_<Variant>_SleeveR on HandR, and any trim (stripes, hem, star, hood) on Body. The sleeves pivot on the shoulder anchors with the arms.",
+            "Helix piercings are sold as a pair (one item id, a mesh per ear) but the two ears stay independent slots.",
         ],
     },
-    "placeholderNote": "Hat_Beanie, Shirt_Torso (+Shirt_SleeveL/R), Neck_Beads, the helix rings, AltButton eyes, AltO mouth and AltArrow tail are grey-box placeholders with the correct size, origin and slot. Horns and wings are review-ready first-pass art.",
+    "wearablesNote": "The 13 launch wearables are final art built by scripts/build_bear_wearables.py. The grey-box placeholders (Shirt_Torso/SleeveL/SleeveR, AltButton eyes, AltO mouth, AltArrow tail) are gone; Hat_Beanie, Neck_Beads and HelixL/R_Ring keep their names with final meshes. Studio must re-import the FBX set before scripts/build_bear_attachments.py will run.",
 }
 (OUT / "attachments-manifest.json").write_text(json.dumps(manifest, indent=1), newline="\n")
 
