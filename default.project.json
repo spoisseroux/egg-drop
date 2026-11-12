@@ -23,6 +23,12 @@
         "$path": "assets/pet-materials/PetCharmAssets.rbxmx"
       }
     },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldAssets": {
+        "$path": "assets/world/WorldAssets.rbxmx"
+      }
+    },
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "Server": {

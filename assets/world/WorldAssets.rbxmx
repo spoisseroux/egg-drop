@@ -1,0 +1,1741 @@
+<roblox version="4">
+  <Item class="Folder" referent="WorldAssets">
+    <Properties>
+      <string name="Name">WorldAssets</string>
+    </Properties>
+    <Item class="Model" referent="WorldV7">
+      <Properties>
+        <string name="Name">WorldV7</string>
+      </Properties>
+      <Item class="MeshPart" referent="W7P0">
+        <Properties>
+          <string name="Name">W7_Aqueduct__marble</string>
+          <Content name="MeshId"><url>rbxassetid://93708769538584</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>97.5996</X><Y>56.9046</Y><Z>166.496</Z></Vector3>
+          <Vector3 name="InitialSize"><X>105.63489</X><Y>61.58942</Y><Z>180.20341</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>39.0789</X><Y>24.1023</Y><Z>-21.0026</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P1">
+        <Properties>
+          <string name="Name">W7_Aqueduct__marble_smooth</string>
+          <Content name="MeshId"><url>rbxassetid://73263003281727</url></Content>
+          <Content name="TextureID"><url>rbxassetid://137029596414621</url></Content>
+          <Vector3 name="Size"><X>4.18</X><Y>8.14</Y><Z>4.18</Z></Vector3>
+          <Vector3 name="InitialSize"><X>4.52414</X><Y>8.81016</Y><Z>4.52413</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>39.1259</X><Y>56.0746</Y><Z>-101.9266</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P2">
+        <Properties>
+          <string name="Name">W7_Aqueduct__palette</string>
+          <Content name="MeshId"><url>rbxassetid://137122026931778</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>95.8352</X><Y>54.4946</Y><Z>166.6237</Z></Vector3>
+          <Vector3 name="InitialSize"><X>103.72515</X><Y>58.98101</Y><Z>180.34169</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>38.0166</X><Y>31.2473</Y><Z>-20.7047</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P3">
+        <Properties>
+          <string name="Name">W7_Architecture__marble</string>
+          <Content name="MeshId"><url>rbxassetid://127504518051755</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>188.6049</X><Y>17.0075</Y><Z>145.7914</Z></Vector3>
+          <Vector3 name="InitialSize"><X>204.13249</X><Y>18.40778</Y><Z>157.79417</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-3.2581</X><Y>10.3038</Y><Z>-8.2543</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P4">
+        <Properties>
+          <string name="Name">W7_Architecture__marble_smooth</string>
+          <Content name="MeshId"><url>rbxassetid://112342100197206</url></Content>
+          <Content name="TextureID"><url>rbxassetid://137029596414621</url></Content>
+          <Vector3 name="Size"><X>188.3476</X><Y>6.1546</Y><Z>77.5649</Z></Vector3>
+          <Vector3 name="InitialSize"><X>203.85399</X><Y>6.66132</Y><Z>83.95071</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-10.0262</X><Y>7.0773</Y><Z>20.8324</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P5">
+        <Properties>
+          <string name="Name">W7_Architecture__palette</string>
+          <Content name="MeshId"><url>rbxassetid://89620989215492</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>194.9339</X><Y>15.6075</Y><Z>145.401</Z></Vector3>
+          <Vector3 name="InitialSize"><X>210.98262</X><Y>16.89251</Y><Z>157.3717</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-6.633</X><Y>12.0038</Y><Z>-8.2696</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P6">
+        <Properties>
+          <string name="Name">W7_Architecture__trim</string>
+          <Content name="MeshId"><url>rbxassetid://72613363262474</url></Content>
+          <Content name="TextureID"><url>rbxassetid://115810962166534</url></Content>
+          <Vector3 name="Size"><X>143.9172</X><Y>9.7</Y><Z>92.1367</Z></Vector3>
+          <Vector3 name="InitialSize"><X>155.7657</X><Y>10.49859</Y><Z>99.72222</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>18.6088</X><Y>9.05</Y><Z>18.0961</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P7">
+        <Properties>
+          <string name="Name">W7_ArrivalGlow__glow_aqua</string>
+          <Content name="MeshId"><url>rbxassetid://96849385607387</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>4.6</X><Y>0.001</Y><Z>4.6</Z></Vector3>
+          <Vector3 name="InitialSize"><X>4.97871</X><Y>0.0</Y><Z>4.97872</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.0</X><Y>4.41</Y><Z>66.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P8">
+        <Properties>
+          <string name="Name">W7_ArrivalGlow__palette</string>
+          <Content name="MeshId"><url>rbxassetid://112581266389249</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>3.0</X><Y>0.001</Y><Z>3.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>3.24699</X><Y>0.0</Y><Z>3.24699</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.0</X><Y>4.425</Y><Z>66.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P9">
+        <Properties>
+          <string name="Name">W7_Backdrop__cloud_1</string>
+          <Content name="MeshId"><url>rbxassetid://121346133528623</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1764.902</X><Y>637.0129</Y><Z>1862.4729</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1910.2041</X><Y>689.45734</Y><Z>2015.80811</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-813.2285</X><Y>-13.0189</Y><Z>747.7108</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P10">
+        <Properties>
+          <string name="Name">W7_Backdrop__cloud_2</string>
+          <Content name="MeshId"><url>rbxassetid://80350179426040</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1846.6945</X><Y>725.954</Y><Z>1864.771</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1998.73059</X><Y>785.72101</Y><Z>2018.29529</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>884.8398</X><Y>24.0155</Y><Z>918.9576</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P11">
+        <Properties>
+          <string name="Name">W7_Backdrop__cloud_3</string>
+          <Content name="MeshId"><url>rbxassetid://131982719284108</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1892.2161</X><Y>526.6562</Y><Z>514.5114</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2048.0</X><Y>570.01514</Y><Z>556.87048</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>982.8887</X><Y>-12.1818</Y><Z>161.9708</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P12">
+        <Properties>
+          <string name="Name">W7_Backdrop__cloud_4</string>
+          <Content name="MeshId"><url>rbxassetid://122759623552300</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1866.3879</X><Y>599.3155</Y><Z>1876.3241</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2020.04541</X><Y>648.65649</Y><Z>2030.79956</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>832.5131</X><Y>-26.5129</Y><Z>-883.3084</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P13">
+        <Properties>
+          <string name="Name">W7_Backdrop__cloud_5</string>
+          <Content name="MeshId"><url>rbxassetid://129666764393879</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1815.8445</X><Y>587.4356</Y><Z>1793.6135</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1965.34082</X><Y>635.7984</Y><Z>1941.27954</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-866.4813</X><Y>-67.0046</Y><Z>-793.1442</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P14">
+        <Properties>
+          <string name="Name">W7_Backdrop__far_peak_1</string>
+          <Content name="MeshId"><url>rbxassetid://114427780541092</url></Content>
+          <Content name="TextureID"><url>rbxassetid://83686729943384</url></Content>
+          <Vector3 name="Size"><X>1817.4771</X><Y>542.605</Y><Z>1432.2607</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1967.10779</X><Y>587.27704</Y><Z>1550.177</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-4.1913</X><Y>-66.5035</Y><Z>397.9203</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P15">
+        <Properties>
+          <string name="Name">W7_Backdrop__far_peak_2</string>
+          <Content name="MeshId"><url>rbxassetid://113849586882394</url></Content>
+          <Content name="TextureID"><url>rbxassetid://83686729943384</url></Content>
+          <Vector3 name="Size"><X>1840.0865</X><Y>661.4707</Y><Z>1010.8797</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1991.57874</X><Y>715.92877</Y><Z>1094.10425</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>375.7299</X><Y>26.7391</Y><Z>-907.9086</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P16">
+        <Properties>
+          <string name="Name">W7_Backdrop__far_peak_3</string>
+          <Content name="MeshId"><url>rbxassetid://123312853907057</url></Content>
+          <Content name="TextureID"><url>rbxassetid://83686729943384</url></Content>
+          <Vector3 name="Size"><X>444.6726</X><Y>323.204</Y><Z>463.0394</Z></Vector3>
+          <Vector3 name="InitialSize"><X>481.28201</X><Y>349.81305</Y><Z>501.16089</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-998.8379</X><Y>-24.402</Y><Z>-503.8487</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P17">
+        <Properties>
+          <string name="Name">W7_Balustrades__marble</string>
+          <Content name="MeshId"><url>rbxassetid://132004804505425</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>216.8779</X><Y>3.2336</Y><Z>110.5057</Z></Vector3>
+          <Vector3 name="InitialSize"><X>234.73323</X><Y>3.49984</Y><Z>119.60348</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>2.0708</X><Y>5.5769</Y><Z>28.4388</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P18">
+        <Properties>
+          <string name="Name">W7_Balustrades__palette</string>
+          <Content name="MeshId"><url>rbxassetid://106876033362056</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>216.8479</X><Y>0.3836</Y><Z>110.7057</Z></Vector3>
+          <Vector3 name="InitialSize"><X>234.70071</X><Y>0.4152</Y><Z>119.81995</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>2.1858</X><Y>7.2269</Y><Z>28.4388</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P19">
+        <Properties>
+          <string name="Name">W7_Bridge__marble</string>
+          <Content name="MeshId"><url>rbxassetid://71683609399980</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>25.2</X><Y>7.99</Y><Z>7.4</Z></Vector3>
+          <Vector3 name="InitialSize"><X>27.27468</X><Y>8.64781</Y><Z>8.00923</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>4.0</X><Y>3.245</Y><Z>21.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P20">
+        <Properties>
+          <string name="Name">W7_Bridge__palette</string>
+          <Content name="MeshId"><url>rbxassetid://130805543446678</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>19.8</X><Y>0.25</Y><Z>7.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>21.43011</X><Y>0.27058</Y><Z>7.5763</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>4.0</X><Y>7.34</Y><Z>21.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P21">
+        <Properties>
+          <string name="Name">W7_Bridge__trim</string>
+          <Content name="MeshId"><url>rbxassetid://79158071993427</url></Content>
+          <Content name="TextureID"><url>rbxassetid://115810962166534</url></Content>
+          <Vector3 name="Size"><X>20.0</X><Y>0.7</Y><Z>6.92</Z></Vector3>
+          <Vector3 name="InitialSize"><X>21.64658</X><Y>0.75763</Y><Z>7.48971</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>4.0</X><Y>3.96</Y><Z>21.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P22">
+        <Properties>
+          <string name="Name">W7_Bubbles__bubble</string>
+          <Content name="MeshId"><url>rbxassetid://125693356760083</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>5.7608</X><Y>6.35</Y><Z>2.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>6.23513</X><Y>6.87279</Y><Z>2.16466</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>51.9476</X><Y>8.425</Y><Z>3.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">1568</token>
+          <Color3uint8 name="Color3uint8">4292408831</Color3uint8>
+          <float name="Transparency">0.45</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P23">
+        <Properties>
+          <string name="Name">W7_Chime_1__palette</string>
+          <Content name="MeshId"><url>rbxassetid://75624710828588</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>0.4757</X><Y>2.8</Y><Z>0.4441</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.51485</X><Y>3.03052</Y><Z>0.48064</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>87.0789</X><Y>13.8089</Y><Z>54.8096</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P24">
+        <Properties>
+          <string name="Name">W7_Chime_2__palette</string>
+          <Content name="MeshId"><url>rbxassetid://140537826692574</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>0.4757</X><Y>3.6</Y><Z>0.4441</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.51485</X><Y>3.89638</Y><Z>0.48064</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>86.0395</X><Y>14.4159</Y><Z>56.1548</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P25">
+        <Properties>
+          <string name="Name">W7_Chime_3__palette</string>
+          <Content name="MeshId"><url>rbxassetid://84957941290099</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>0.4757</X><Y>4.2</Y><Z>0.4441</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.51485</X><Y>4.54578</Y><Z>0.48064</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>85.0</X><Y>14.4075</Y><Z>57.5</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P26">
+        <Properties>
+          <string name="Name">W7_Chime_4__palette</string>
+          <Content name="MeshId"><url>rbxassetid://135687425176436</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>0.4757</X><Y>3.4</Y><Z>0.4441</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.51485</X><Y>3.67992</Y><Z>0.48064</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>83.9605</X><Y>14.5159</Y><Z>58.8452</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P27">
+        <Properties>
+          <string name="Name">W7_Chime_5__palette</string>
+          <Content name="MeshId"><url>rbxassetid://98483272299281</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>0.4757</X><Y>2.7</Y><Z>0.4441</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.51485</X><Y>2.92229</Y><Z>0.48064</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>82.9211</X><Y>13.8589</Y><Z>60.1904</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P28">
+        <Properties>
+          <string name="Name">W7_CradleMobile__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://129976169905431</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>0.6032</X><Y>0.68</Y><Z>0.5977</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.65286</X><Y>0.73598</Y><Z>0.64694</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-16.5206</X><Y>9.13</Y><Z>-15.8776</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P29">
+        <Properties>
+          <string name="Name">W7_CradleMobile__palette</string>
+          <Content name="MeshId"><url>rbxassetid://74295748988213</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>2.0409</X><Y>1.6366</Y><Z>1.3201</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2.20895</X><Y>1.77135</Y><Z>1.42873</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-16.5206</X><Y>9.8117</Y><Z>-15.8776</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P30">
+        <Properties>
+          <string name="Name">W7_Crystals__glow_aqua</string>
+          <Content name="MeshId"><url>rbxassetid://128204583057538</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>158.6748</X><Y>93.5159</Y><Z>171.1649</Z></Vector3>
+          <Vector3 name="InitialSize"><X>171.73827</X><Y>101.21497</Y><Z>185.25668</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>9.9599</X><Y>-36.9459</Y><Z>-30.1429</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P31">
+        <Properties>
+          <string name="Name">W7_Crystals__glow_pink</string>
+          <Content name="MeshId"><url>rbxassetid://113299286672915</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>94.3273</X><Y>98.7453</Y><Z>162.7648</Z></Vector3>
+          <Vector3 name="InitialSize"><X>102.09314</X><Y>106.87482</Y><Z>176.16499</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>0.5317</X><Y>-40.5333</Y><Z>-29.9901</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294934735</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P32">
+        <Properties>
+          <string name="Name">W7_DriftRocksA__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://80098587336966</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>394.3745</X><Y>77.8995</Y><Z>385.021</Z></Vector3>
+          <Vector3 name="InitialSize"><X>426.84293</X><Y>84.31297</Y><Z>416.71933</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>27.8929</X><Y>2.9228</Y><Z>-2.292</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P33">
+        <Properties>
+          <string name="Name">W7_DriftRocksB__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://109512074156746</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>308.7965</X><Y>79.3359</Y><Z>383.0367</Z></Vector3>
+          <Vector3 name="InitialSize"><X>334.21936</X><Y>85.86752</Y><Z>414.57169</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-13.2588</X><Y>7.1221</Y><Z>27.1997</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P34">
+        <Properties>
+          <string name="Name">W7_Ground__dirt_path</string>
+          <Content name="MeshId"><url>rbxassetid://88949727291914</url></Content>
+          <Content name="TextureID"><url>rbxassetid://83138237139598</url></Content>
+          <Vector3 name="Size"><X>195.7893</X><Y>9.8182</Y><Z>146.8141</Z></Vector3>
+          <Vector3 name="InitialSize"><X>211.9084</X><Y>10.62659</Y><Z>158.90109</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>4.1771</X><Y>8.9581</Y><Z>-2.0137</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P35">
+        <Properties>
+          <string name="Name">W7_Ground__grass</string>
+          <Content name="MeshId"><url>rbxassetid://123853117558353</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74054148466451</url></Content>
+          <Vector3 name="Size"><X>228.0</X><Y>46.836</Y><Z>210.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>246.77097</X><Y>50.69196</Y><Z>227.28905</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>9.0</X><Y>27.2333</Y><Z>-21.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P36">
+        <Properties>
+          <string name="Name">W7_Ground__ground</string>
+          <Content name="MeshId"><url>rbxassetid://138668998785056</url></Content>
+          <Content name="TextureID"><url>rbxassetid://90984704485304</url></Content>
+          <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>282.48782</X><Y>60.22912</Y><Z>269.49988</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>16.5</X><Y>22.8239</Y><Z>-34.5</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P37">
+        <Properties>
+          <string name="Name">W7_Ground__meadow</string>
+          <Content name="MeshId"><url>rbxassetid://70773878057627</url></Content>
+          <Content name="TextureID"><url>rbxassetid://97493983848286</url></Content>
+          <Vector3 name="Size"><X>101.1945</X><Y>0.4534</Y><Z>24.7404</Z></Vector3>
+          <Vector3 name="InitialSize"><X>109.52576</X><Y>0.49073</Y><Z>26.7773</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>12.7009</X><Y>4.2567</Y><Z>11.9799</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P38">
+        <Properties>
+          <string name="Name">W7_Ground__pebble_bed</string>
+          <Content name="MeshId"><url>rbxassetid://107285940407252</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72228706240178</url></Content>
+          <Vector3 name="Size"><X>219.0</X><Y>9.0806</Y><Z>159.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>237.03001</X><Y>9.82824</Y><Z>172.09029</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>1.5</X><Y>-0.3423</Y><Z>1.5</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P39">
+        <Properties>
+          <string name="Name">W7_IsletsA__bark</string>
+          <Content name="MeshId"><url>rbxassetid://92107551209820</url></Content>
+          <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
+          <Vector3 name="Size"><X>146.5905</X><Y>45.4051</Y><Z>141.4846</Z></Vector3>
+          <Vector3 name="InitialSize"><X>158.65915</X><Y>49.14325</Y><Z>153.1329</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.5189</X><Y>5.048</Y><Z>86.4006</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P40">
+        <Properties>
+          <string name="Name">W7_IsletsA__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://105127547746115</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>175.7054</X><Y>59.8362</Y><Z>166.8107</Z></Vector3>
+          <Vector3 name="InitialSize"><X>190.17101</X><Y>64.76238</Y><Z>180.54402</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.0312</X><Y>-12.3181</Y><Z>88.1551</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P41">
+        <Properties>
+          <string name="Name">W7_IsletsA__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://133772732055094</url></Content>
+          <Content name="TextureID"><url>rbxassetid://111743769836742</url></Content>
+          <Vector3 name="Size"><X>140.2084</X><Y>44.6423</Y><Z>137.8216</Z></Vector3>
+          <Vector3 name="InitialSize"><X>151.75165</X><Y>48.31768</Y><Z>149.16833</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>102.5841</X><Y>9.2923</Y><Z>82.0689</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P42">
+        <Properties>
+          <string name="Name">W7_IsletsA__foliage_blossom</string>
+          <Content name="MeshId"><url>rbxassetid://99653091329346</url></Content>
+          <Content name="TextureID"><url>rbxassetid://118615784897925</url></Content>
+          <Vector3 name="Size"><X>145.0054</X><Y>31.8223</Y><Z>141.3531</Z></Vector3>
+          <Vector3 name="InitialSize"><X>156.94351</X><Y>34.44212</Y><Z>152.99048</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>93.1788</X><Y>13.9883</Y><Z>88.8981</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P43">
+        <Properties>
+          <string name="Name">W7_IsletsA__grass</string>
+          <Content name="MeshId"><url>rbxassetid://110779389299939</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74054148466451</url></Content>
+          <Vector3 name="Size"><X>174.9162</X><Y>38.5</Y><Z>163.2145</Z></Vector3>
+          <Vector3 name="InitialSize"><X>189.31683</X><Y>41.66964</Y><Z>176.65179</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.8193</X><Y>0.85</Y><Z>88.3301</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P44">
+        <Properties>
+          <string name="Name">W7_IsletsA__marble</string>
+          <Content name="MeshId"><url>rbxassetid://80489462648218</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>22.1639</X><Y>7.5627</Y><Z>22.1637</Z></Vector3>
+          <Vector3 name="InitialSize"><X>23.98859</X><Y>8.18529</Y><Z>23.98839</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>28.0001</X><Y>-3.7187</Y><Z>149.9999</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P45">
+        <Properties>
+          <string name="Name">W7_IsletsB__bark</string>
+          <Content name="MeshId"><url>rbxassetid://85388897655983</url></Content>
+          <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
+          <Vector3 name="Size"><X>146.5974</X><Y>87.5583</Y><Z>354.4288</Z></Vector3>
+          <Vector3 name="InitialSize"><X>158.66656</X><Y>94.76676</Y><Z>383.60849</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.8437</X><Y>13.8991</Y><Z>44.4607</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P46">
+        <Properties>
+          <string name="Name">W7_IsletsB__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://73421172456059</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>182.8432</X><Y>127.6627</Y><Z>386.2912</Z></Vector3>
+          <Vector3 name="InitialSize"><X>197.89647</X><Y>138.17291</Y><Z>418.09412</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-102.1345</X><Y>-16.2313</Y><Z>51.1183</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P47">
+        <Properties>
+          <string name="Name">W7_IsletsB__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://75167136279406</url></Content>
+          <Content name="TextureID"><url>rbxassetid://111743769836742</url></Content>
+          <Vector3 name="Size"><X>151.9064</X><Y>85.1703</Y><Z>354.2339</Z></Vector3>
+          <Vector3 name="InitialSize"><X>164.41266</X><Y>92.18217</Y><Z>383.39755</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.7018</X><Y>18.9241</Y><Z>41.917</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P48">
+        <Properties>
+          <string name="Name">W7_IsletsB__foliage_blossom</string>
+          <Content name="MeshId"><url>rbxassetid://120609278024812</url></Content>
+          <Content name="TextureID"><url>rbxassetid://118615784897925</url></Content>
+          <Vector3 name="Size"><X>138.2953</X><Y>63.8223</Y><Z>258.1385</Z></Vector3>
+          <Vector3 name="InitialSize"><X>149.68094</X><Y>69.07661</Y><Z>279.39081</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.6083</X><Y>7.9883</Y><Z>95.169</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P49">
+        <Properties>
+          <string name="Name">W7_IsletsB__grass</string>
+          <Content name="MeshId"><url>rbxassetid://116659075171139</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74054148466451</url></Content>
+          <Vector3 name="Size"><X>180.2046</X><Y>80.32</Y><Z>381.5085</Z></Vector3>
+          <Vector3 name="InitialSize"><X>195.04063</X><Y>86.93259</Y><Z>412.91769</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-102.5794</X><Y>9.76</Y><Z>50.6609</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P50">
+        <Properties>
+          <string name="Name">W7_IsletsB__marble</string>
+          <Content name="MeshId"><url>rbxassetid://128418467794983</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>28.2443</X><Y>10.0514</Y><Z>28.2446</Z></Vector3>
+          <Vector3 name="InitialSize"><X>30.5696</X><Y>10.8789</Y><Z>30.56997</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-40.0002</X><Y>-24.4743</Y><Z>214.9998</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P51">
+        <Properties>
+          <string name="Name">W7_LampOrbs__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://94457219960863</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>141.0375</X><Y>1.48</Y><Z>94.9867</Z></Vector3>
+          <Vector3 name="InitialSize"><X>152.64899</X><Y>1.60183</Y><Z>102.80688</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>0.0</X><Y>9.037</Y><Z>3.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P52">
+        <Properties>
+          <string name="Name">W7_Landmarks__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://107797087411264</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>137.4132</X><Y>57.0803</Y><Z>83.5307</Z></Vector3>
+          <Vector3 name="InitialSize"><X>148.72624</X><Y>61.77962</Y><Z>90.40772</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>41.8303</X><Y>26.8631</Y><Z>-81.4958</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P53">
+        <Properties>
+          <string name="Name">W7_Landmarks__grass</string>
+          <Content name="MeshId"><url>rbxassetid://132068383333881</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74054148466451</url></Content>
+          <Vector3 name="Size"><X>134.7484</X><Y>45.7001</Y><Z>48.8936</Z></Vector3>
+          <Vector3 name="InitialSize"><X>145.84206</X><Y>49.46251</Y><Z>52.91896</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>41.7121</X><Y>33.9564</Y><Z>-87.7316</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P54">
+        <Properties>
+          <string name="Name">W7_Landmarks__marble</string>
+          <Content name="MeshId"><url>rbxassetid://132927533124516</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>71.972</X><Y>7.2</Y><Z>106.9901</Z></Vector3>
+          <Vector3 name="InitialSize"><X>77.89738</X><Y>7.79275</Y><Z>115.79848</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>20.314</X><Y>7.3</Y><Z>-47.8291</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P55">
+        <Properties>
+          <string name="Name">W7_Landmarks__palette</string>
+          <Content name="MeshId"><url>rbxassetid://121301068289444</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>35.5703</X><Y>16.4794</Y><Z>76.4378</Z></Vector3>
+          <Vector3 name="InitialSize"><X>38.4988</X><Y>17.8361</Y><Z>82.73087</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>1.3175</X><Y>11.7397</Y><Z>-80.5573</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P56">
+        <Properties>
+          <string name="Name">W7_Landmarks__trim</string>
+          <Content name="MeshId"><url>rbxassetid://123308025747841</url></Content>
+          <Content name="TextureID"><url>rbxassetid://115810962166534</url></Content>
+          <Vector3 name="Size"><X>15.0981</X><Y>0.7</Y><Z>1.5521</Z></Vector3>
+          <Vector3 name="InitialSize"><X>16.3411</X><Y>0.75763</Y><Z>1.67989</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-6.9977</X><Y>10.2</Y><Z>-100.0723</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P57">
+        <Properties>
+          <string name="Name">W7_Landmarks__water</string>
+          <Content name="MeshId"><url>rbxassetid://127218808949087</url></Content>
+          <Content name="TextureID"><url>rbxassetid://70661948546201</url></Content>
+          <Vector3 name="Size"><X>6.82</X><Y>0.01</Y><Z>4.2284</Z></Vector3>
+          <Vector3 name="InitialSize"><X>7.38148</X><Y>0.01082</Y><Z>4.57652</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>52.0</X><Y>4.325</Y><Z>3.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.12</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P58">
+        <Properties>
+          <string name="Name">W7_Lantern__bark</string>
+          <Content name="MeshId"><url>rbxassetid://105789070353260</url></Content>
+          <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
+          <Vector3 name="Size"><X>0.1</X><Y>3.4</Y><Z>0.1</Z></Vector3>
+          <Vector3 name="InitialSize"><X>0.10823</X><Y>3.67992</Y><Z>0.10823</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.78</X><Y>10.9</Y><Z>-16.7</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P59">
+        <Properties>
+          <string name="Name">W7_Lantern__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://99109183539377</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1.08233</X><Y>1.08233</Y><Z>1.08233</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.78</X><Y>8.8</Y><Z>-16.7</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P60">
+        <Properties>
+          <string name="Name">W7_NestHalo__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://112583451635109</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>2.6397</X><Y>0.11</Y><Z>2.6397</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2.85704</X><Y>0.11906</Y><Z>2.85704</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.245</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P61">
+        <Properties>
+          <string name="Name">W7_Pennant_1__palette</string>
+          <Content name="MeshId"><url>rbxassetid://117588073880027</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>2.59</X><Y>1.5</Y><Z>0.2276</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2.80325</X><Y>1.62349</Y><Z>0.24637</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>9.8854</X><Y>10.787</Y><Z>45.1462</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P62">
+        <Properties>
+          <string name="Name">W7_Pennant_2__palette</string>
+          <Content name="MeshId"><url>rbxassetid://122862407343486</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>2.59</X><Y>1.5</Y><Z>0.2276</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2.80325</X><Y>1.62349</Y><Z>0.24637</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-17.6086</X><Y>10.8893</Y><Z>42.7299</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P63">
+        <Properties>
+          <string name="Name">W7_Props__marble</string>
+          <Content name="MeshId"><url>rbxassetid://130742388728712</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>11.5586</X><Y>2.7</Y><Z>11.8778</Z></Vector3>
+          <Vector3 name="InitialSize"><X>12.51024</X><Y>2.92229</Y><Z>12.85563</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>33.3609</X><Y>2.4</Y><Z>-33.1971</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P64">
+        <Properties>
+          <string name="Name">W7_Rocks__boulder_rock</string>
+          <Content name="MeshId"><url>rbxassetid://75002359329138</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74693654598989</url></Content>
+          <Vector3 name="Size"><X>197.6358</X><Y>19.7103</Y><Z>151.9361</Z></Vector3>
+          <Vector3 name="InitialSize"><X>213.90689</X><Y>21.33302</Y><Z>164.44479</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>3.6664</X><Y>13.0216</Y><Z>-6.2342</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P65">
+        <Properties>
+          <string name="Name">W7_Rocks__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://78612494874947</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>233.056</X><Y>50.5718</Y><Z>201.4282</Z></Vector3>
+          <Vector3 name="InitialSize"><X>252.24324</X><Y>54.73533</Y><Z>218.01158</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>15.6582</X><Y>17.1268</Y><Z>-32.1691</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P66">
+        <Properties>
+          <string name="Name">W7_Rocks__grass</string>
+          <Content name="MeshId"><url>rbxassetid://76869770760100</url></Content>
+          <Content name="TextureID"><url>rbxassetid://74054148466451</url></Content>
+          <Vector3 name="Size"><X>226.2603</X><Y>38.1626</Y><Z>197.3646</Z></Vector3>
+          <Vector3 name="InitialSize"><X>244.88808</X><Y>41.30444</Y><Z>213.61336</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>17.3261</X><Y>23.3314</Y><Z>-30.8816</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P67">
+        <Properties>
+          <string name="Name">W7_Rotunda__marble</string>
+          <Content name="MeshId"><url>rbxassetid://70893765710500</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>35.741</X><Y>19.3647</Y><Z>41.4027</Z></Vector3>
+          <Vector3 name="InitialSize"><X>38.68352</X><Y>20.95894</Y><Z>44.81131</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-51.3295</X><Y>13.4167</Y><Z>38.4987</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P68">
+        <Properties>
+          <string name="Name">W7_Rotunda__palette</string>
+          <Content name="MeshId"><url>rbxassetid://119075529657844</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>15.0</X><Y>9.1</Y><Z>15.0</Z></Vector3>
+          <Vector3 name="InitialSize"><X>16.23493</X><Y>9.84919</Y><Z>16.23493</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-60.0</X><Y>25.649</Y><Z>50.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P69">
+        <Properties>
+          <string name="Name">W7_Rotunda__trim</string>
+          <Content name="MeshId"><url>rbxassetid://112301225432735</url></Content>
+          <Content name="TextureID"><url>rbxassetid://115810962166534</url></Content>
+          <Vector3 name="Size"><X>14.9</X><Y>0.9</Y><Z>14.9</Z></Vector3>
+          <Vector3 name="InitialSize"><X>16.12669</X><Y>0.9741</Y><Z>16.1267</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-60.0</X><Y>22.599</Y><Z>50.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P70">
+        <Properties>
+          <string name="Name">W7_Stations__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://132809598445653</url></Content>
+          <Content name="TextureID"><url>rbxassetid://111743769836742</url></Content>
+          <Vector3 name="Size"><X>3.6635</X><Y>0.48</Y><Z>3.8415</Z></Vector3>
+          <Vector3 name="InitialSize"><X>3.9651</X><Y>0.51952</Y><Z>4.15772</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.36</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P71">
+        <Properties>
+          <string name="Name">W7_Stations__glow_aqua</string>
+          <Content name="MeshId"><url>rbxassetid://77431353182171</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>31.5222</X><Y>3.2613</Y><Z>4.9126</Z></Vector3>
+          <Vector3 name="InitialSize"><X>34.11738</X><Y>3.52979</Y><Z>5.31701</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.5022</X><Y>7.9731</Y><Z>-10.327</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P72">
+        <Properties>
+          <string name="Name">W7_Stations__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://102268639485159</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>104.1336</X><Y>3.93</Y><Z>47.6</Z></Vector3>
+          <Vector3 name="InitialSize"><X>112.70681</X><Y>4.25356</Y><Z>51.51885</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>2.7332</X><Y>8.315</Y><Z>-11.45</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P73">
+        <Properties>
+          <string name="Name">W7_Stations__marble</string>
+          <Content name="MeshId"><url>rbxassetid://87157038162380</url></Content>
+          <Content name="TextureID"><url>rbxassetid://123582108639405</url></Content>
+          <Vector3 name="Size"><X>163.6559</X><Y>7.32</Y><Z>105.5423</Z></Vector3>
+          <Vector3 name="InitialSize"><X>177.12955</X><Y>7.92265</Y><Z>114.23151</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>18.472</X><Y>7.41</Y><Z>17.5288</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P74">
+        <Properties>
+          <string name="Name">W7_Stations__marble_smooth</string>
+          <Content name="MeshId"><url>rbxassetid://135872330338657</url></Content>
+          <Content name="TextureID"><url>rbxassetid://137029596414621</url></Content>
+          <Vector3 name="Size"><X>140.92</X><Y>4.427</Y><Z>94.92</Z></Vector3>
+          <Vector3 name="InitialSize"><X>152.52177</X><Y>4.79149</Y><Z>102.73465</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>0.0</X><Y>6.2635</Y><Z>3.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P75">
+        <Properties>
+          <string name="Name">W7_Stations__palette</string>
+          <Content name="MeshId"><url>rbxassetid://109420391157319</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>141.04</X><Y>7.7</Y><Z>94.9007</Z></Vector3>
+          <Vector3 name="InitialSize"><X>152.65164</X><Y>8.33393</Y><Z>102.71372</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>0.0</X><Y>7.95</Y><Z>3.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P76">
+        <Properties>
+          <string name="Name">W7_Stations__trim</string>
+          <Content name="MeshId"><url>rbxassetid://132095006963916</url></Content>
+          <Content name="TextureID"><url>rbxassetid://115810962166534</url></Content>
+          <Vector3 name="Size"><X>147.1497</X><Y>2.37</Y><Z>104.5521</Z></Vector3>
+          <Vector3 name="InitialSize"><X>159.2643</X><Y>2.56512</Y><Z>113.15974</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>25.7252</X><Y>5.265</Y><Z>17.024</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P77">
+        <Properties>
+          <string name="Name">W7_Stations__wood_plank</string>
+          <Content name="MeshId"><url>rbxassetid://110588364547448</url></Content>
+          <Content name="TextureID"><url>rbxassetid://81265948353670</url></Content>
+          <Vector3 name="Size"><X>98.9987</X><Y>6.74</Y><Z>60.9186</Z></Vector3>
+          <Vector3 name="InitialSize"><X>107.14915</X><Y>7.2949</Y><Z>65.93398</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-12.0</X><Y>7.82</Y><Z>18.9869</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P78">
+        <Properties>
+          <string name="Name">W7_Trunks__bark</string>
+          <Content name="MeshId"><url>rbxassetid://132137561354735</url></Content>
+          <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
+          <Vector3 name="Size"><X>204.8081</X><Y>21.2147</Y><Z>126.9194</Z></Vector3>
+          <Vector3 name="InitialSize"><X>221.66971</X><Y>22.96129</Y><Z>137.36852</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-1.0969</X><Y>13.2474</Y><Z>-0.2752</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P79">
+        <Properties>
+          <string name="Name">W7_Underside__bark</string>
+          <Content name="MeshId"><url>rbxassetid://91724884340856</url></Content>
+          <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
+          <Vector3 name="Size"><X>239.3018</X><Y>20.3778</Y><Z>213.4024</Z></Vector3>
+          <Vector3 name="InitialSize"><X>259.00323</X><Y>22.05548</Y><Z>230.97157</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>15.5201</X><Y>-13.1193</Y><Z>-30.7066</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P80">
+        <Properties>
+          <string name="Name">W7_Underside__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://79105253840702</url></Content>
+          <Content name="TextureID"><url>rbxassetid://72251301850844</url></Content>
+          <Vector3 name="Size"><X>262.9902</X><Y>120.0179</Y><Z>253.1788</Z></Vector3>
+          <Vector3 name="InitialSize"><X>284.64188</X><Y>129.89886</Y><Z>274.02274</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>14.9819</X><Y>-60.209</Y><Z>-34.3442</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P81">
+        <Properties>
+          <string name="Name">W7_Underside__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://118511023060923</url></Content>
+          <Content name="TextureID"><url>rbxassetid://111743769836742</url></Content>
+          <Vector3 name="Size"><X>238.4955</X><Y>20.8885</Y><Z>221.801</Z></Vector3>
+          <Vector3 name="InitialSize"><X>258.13055</X><Y>22.60822</Y><Z>240.06158</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>14.7872</X><Y>-13.3973</Y><Z>-28.7377</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P82">
+        <Properties>
+          <string name="Name">W7_Vegetation__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://107060632813283</url></Content>
+          <Content name="TextureID"><url>rbxassetid://111743769836742</url></Content>
+          <Vector3 name="Size"><X>182.948</X><Y>25.0835</Y><Z>146.4809</Z></Vector3>
+          <Vector3 name="InitialSize"><X>198.00992</X><Y>27.14858</Y><Z>158.54044</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>12.273</X><Y>16.3707</Y><Z>-7.2295</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P83">
+        <Properties>
+          <string name="Name">W7_Vegetation__foliage_blossom</string>
+          <Content name="MeshId"><url>rbxassetid://139661819741416</url></Content>
+          <Content name="TextureID"><url>rbxassetid://118615784897925</url></Content>
+          <Vector3 name="Size"><X>185.0393</X><Y>17.6778</Y><Z>129.0614</Z></Vector3>
+          <Vector3 name="InitialSize"><X>200.27338</X><Y>19.13318</Y><Z>139.6869</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-15.1646</X><Y>12.8172</Y><Z>-1.0526</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P84">
+        <Properties>
+          <string name="Name">W7_Vegetation__palette</string>
+          <Content name="MeshId"><url>rbxassetid://115197170885303</url></Content>
+          <Content name="TextureID"><url>rbxassetid://116072737988994</url></Content>
+          <Vector3 name="Size"><X>183.8319</X><Y>1.8259</Y><Z>151.7823</Z></Vector3>
+          <Vector3 name="InitialSize"><X>198.96661</X><Y>1.97616</Y><Z>164.27834</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>4.7849</X><Y>5.0643</Y><Z>-9.0421</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P85">
+        <Properties>
+          <string name="Name">W7_Water__cloud</string>
+          <Content name="MeshId"><url>rbxassetid://92131219943089</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>46.742</X><Y>12.9236</Y><Z>28.2111</Z></Vector3>
+          <Vector3 name="InitialSize"><X>50.59026</X><Y>13.98757</Y><Z>30.5337</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-9.9453</X><Y>-70.1258</Y><Z>66.1952</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
+          <float name="Transparency">0.35</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P86">
+        <Properties>
+          <string name="Name">W7_Water__foam</string>
+          <Content name="MeshId"><url>rbxassetid://103535974953611</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>93.3713</X><Y>20.8661</Y><Z>146.8316</Z></Vector3>
+          <Vector3 name="InitialSize"><X>101.05847</X><Y>22.58398</Y><Z>158.92009</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>37.3684</X><Y>12.915</Y><Z>-9.9658</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4293982972</Color3uint8>
+          <float name="Transparency">0.15</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P87">
+        <Properties>
+          <string name="Name">W7_Water__water_pool</string>
+          <Content name="MeshId"><url>rbxassetid://73517314085792</url></Content>
+          <Content name="TextureID"><url>rbxassetid://70661948546201</url></Content>
+          <Vector3 name="Size"><X>82.5806</X><Y>18.95</Y><Z>85.5806</Z></Vector3>
+          <Vector3 name="InitialSize"><X>89.37935</X><Y>20.51013</Y><Z>92.62634</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>44.2903</X><Y>12.675</Y><Z>-42.7903</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.12</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P88">
+        <Properties>
+          <string name="Name">W7_Water__water_stream</string>
+          <Content name="MeshId"><url>rbxassetid://94441103822151</url></Content>
+          <Content name="TextureID"><url>rbxassetid://70661948546201</url></Content>
+          <Vector3 name="Size"><X>97.396</X><Y>48.9046</Y><Z>165.8256</Z></Vector3>
+          <Vector3 name="InitialSize"><X>105.41448</X><Y>52.93082</Y><Z>179.47778</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>36.698</X><Y>27.6523</Y><Z>-20.6378</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.12</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P89">
+        <Properties>
+          <string name="Name">W7_Water__waterfall_sky</string>
+          <Content name="MeshId"><url>rbxassetid://123141503639398</url></Content>
+          <Content name="TextureID"><url>rbxassetid://104384534640492</url></Content>
+          <Vector3 name="Size"><X>11.9539</X><Y>71.25</Y><Z>6.211</Z></Vector3>
+          <Vector3 name="InitialSize"><X>12.93808</X><Y>77.11593</Y><Z>6.72233</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-5.8577</X><Y>-32.375</Y><Z>64.0703</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.08</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P90">
+        <Properties>
+          <string name="Name">W7_Water__waterfall_tumble</string>
+          <Content name="MeshId"><url>rbxassetid://133999394898061</url></Content>
+          <Content name="TextureID"><url>rbxassetid://104384534640492</url></Content>
+          <Vector3 name="Size"><X>17.607</X><Y>48.4046</Y><Z>17.607</Z></Vector3>
+          <Vector3 name="InitialSize"><X>19.05651</X><Y>52.38966</Y><Z>19.05653</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>77.3428</X><Y>27.4023</Y><Z>-77.3428</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.08</float>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+</roblox>

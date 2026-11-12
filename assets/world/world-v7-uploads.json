@@ -1,0 +1,22 @@
+{
+ "model": "73356672911240",
+ "textures": {
+  "W1_bark": "rbxassetid://131990250699654", "W1_boulder_rock": "rbxassetid://74693654598989",
+  "W1_cliff_rock": "rbxassetid://72251301850844", "W1_dirt_path": "rbxassetid://83138237139598",
+  "W1_far_peak": "rbxassetid://83686729943384", "W1_foliage": "rbxassetid://111743769836742",
+  "W1_foliage_blossom": "rbxassetid://118615784897925", "W1_grass": "rbxassetid://74054148466451",
+  "W1_ground": "rbxassetid://90984704485304", "W1_marble": "rbxassetid://123582108639405",
+  "W1_marble_smooth": "rbxassetid://137029596414621", "W1_trim": "rbxassetid://115810962166534",
+  "W1_meadow": "rbxassetid://97493983848286", "W1_pebble_bed": "rbxassetid://72228706240178",
+  "W1_water": "rbxassetid://70661948546201", "W1_water_pool": "rbxassetid://70661948546201",
+  "W1_water_stream": "rbxassetid://70661948546201", "W1_waterfall_sky": "rbxassetid://104384534640492",
+  "W1_waterfall_tumble": "rbxassetid://104384534640492", "W1_wood_plank": "rbxassetid://81265948353670",
+  "W1_palette": "rbxassetid://116072737988994"
+ },
+ "sky": {
+  "day": {"Bk": "rbxassetid://116497756787064", "Dn": "rbxassetid://106784350262535", "Ft": "rbxassetid://133973534924035",
+          "Lf": "rbxassetid://125983174232854", "Rt": "rbxassetid://81740340876746", "Up": "rbxassetid://95106725093801"},
+  "night": {"Bk": "rbxassetid://138421772797924", "Dn": "rbxassetid://104283349503821", "Ft": "rbxassetid://138939517595997",
+            "Lf": "rbxassetid://140570215359255", "Rt": "rbxassetid://120089995868348", "Up": "rbxassetid://74059368574010"}
+ }
+}
