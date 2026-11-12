@@ -178,6 +178,27 @@ function Art.lights(room)
 	at("GrottoLight",Vector3.new(-7,7,-106),18,2,cyan)
 end
 
+-- Dock feedback on the visible cradle. The legacy machine's coloured parts are
+-- hidden supports under the v7 mesh, so its free/occupied colours move to the
+-- cradle's neon mobile (always visible) and the cradle lamp (night). Values
+-- follow CARE-MACHINE-ART.md: the occupied gauge aqua #62DEDC; the free mobile
+-- keeps its authored warm glow. GardenCareClient paints both from the bay state.
+Art.CareStatus={mobileRest="#FFD889",mobileOccupied="#62DEDC",lightRest="#FFD5A0",lightOccupied="#7FE8FF"}
+function Art.careStatus(room)
+	local c=Art.CareStatus
+	local function mark(item,rest,occupied)
+		if not item then return end
+		item:SetAttribute("CareRestColor",rest)
+		item:SetAttribute("CareOccupiedColor",occupied)
+		item:SetAttribute("CareStatusSurface",true)
+	end
+	local meshes=room:FindFirstChild("World")
+	mark(meshes and meshes:FindFirstChild("W7_CradleMobile__glow_warm"),c.mobileRest,c.mobileOccupied)
+	local lights=room:FindFirstChild("Lights")
+	local fixture=lights and lights:FindFirstChild("CradleLight")
+	mark(fixture and fixture:FindFirstChildOfClass("PointLight"),c.lightRest,c.lightOccupied)
+end
+
 -- Flowing water overlays: beams scroll the water texture downstream and down
 -- the falls. Client WorldMotion stops them when Reduced Motion is on.
 function Art.water(room)
@@ -230,6 +251,7 @@ function Art.build(room)
 	Art.collision(room)
 	Art.stations(room)
 	Art.lights(room)
+	Art.careStatus(room)
 	Art.water(room)
 	room:SetAttribute("WorldVersion","v7")
 end

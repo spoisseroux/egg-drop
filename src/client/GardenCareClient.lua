@@ -142,7 +142,17 @@ function Client:step()
  local token=bay and bay.id or false
  if machine and self.artToken~=token then
   self.artToken=token
-  for _,p in ipairs(machine:GetChildren())do if p:IsA("BasePart")then local color=p:GetAttribute(if bay then "CareOccupiedColor"else "CareRestColor");if color then p.Color=Color3.fromHex(color)end end end
+  local key=if bay then "CareOccupiedColor"else "CareRestColor"
+  for _,p in ipairs(machine:GetChildren())do if p:IsA("BasePart")then local color=p:GetAttribute(key);if color then p.Color=Color3.fromHex(color)end end end
+  -- v7: the visible cradle's mobile glow and lamp carry the same free/occupied state.
+  for _,name in ipairs({"World","Lights"})do
+   local folder=lounge:FindFirstChild(name)
+   if folder then for _,item in ipairs(folder:GetDescendants())do
+    if item:GetAttribute("CareStatusSurface")==true and(item:IsA("BasePart")or item:IsA("Light"))then
+     local color=item:GetAttribute(key);if color then item.Color=Color3.fromHex(color)end
+    end
+   end end
+  end
  end
  if room.stations then for _,prompt in ipairs(room.stations.prompts)do if prompt:GetAttribute("PocketClubStation")=="Journal"then
   prompt.ActionText=if state=="Carried"then "Place "..room.shownPet.name elseif state=="Docked"then "Care for "..room.shownPet.name elseif bay then "Machine occupied"else "Open companions"
