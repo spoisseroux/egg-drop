@@ -12,6 +12,7 @@ local Readiness=require(script.Parent.PetAssetReadiness)
 local NativeArt=require(script.Parent.CareNativeOverrides)
 local CooPose=require(script.Parent.PetCooPose)
 local PersonalPlay=require(script.Parent.PetPlayVisual)
+local Reactions=require(script.Parent.PetReactions)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -238,7 +239,9 @@ function Visual:update(dt)
  if self.gardenAction=="toyReturn"then toyReach,toyExpression=ToyPose.sample(self.toyRole,self.toyTime,reduced)end
  local personal=PersonalPlay.sample(self,self.cosmeticTime or self.time)
  if personal then toyReach=personal.reach;toyExpression=personal.expression end
- local expression=toyExpression or Expression.name(self);local pose=Expression.get(expression)
+ -- Deck-play reactions (cheer/win/loss) are local presentation over the resting pose.
+ local reactHop,reactExpression=Reactions.sample(self,os.clock())
+ local expression=toyExpression or reactExpression or Expression.name(self);local pose=Expression.get(expression)
  local cooRoll,cooNod,cooHand,cooMouth,cooEye=CooPose.sample(self)
  local mouth=if cooMouth>.12 then "open"else pose.mouth
  if personal and self.personalToyId=="bone"and personal.phase>=.58 and personal.phase<=1.02 and not reduced then
@@ -266,7 +269,7 @@ function Visual:update(dt)
  self.weightShift,self.weightRoll=weightX,weightRoll
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
  local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0),0)*CFrame.new(hipAnchor)*CFrame.Angles(0,0,weightRoll)*CFrame.new(-hipAnchor)
- local hop=(greet*.11+(self.movementBob or 0))*self.scale
+ local hop=(greet*.11+reactHop*.11+(self.movementBob or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
  local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0))*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)

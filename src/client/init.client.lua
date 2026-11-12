@@ -1117,6 +1117,16 @@ for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
 	board:GetAttributeChangedSignal(name):Connect(function() roomView.transition:refresh() end)
 end
 GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(function() roomView.transition:refresh() end)
+-- The resting pet answers the round's end: a double hop for a win, startled then
+-- sleepy for a loss. Local presentation; the Welcome hatch round is left alone.
+board:GetAttributeChangedSignal("RoundOver"):Connect(function()
+ if board:GetAttribute("RoundOver")~=true or board:GetAttribute("Mode")~="Board"or board:GetAttribute("FieldPhase")=="Welcome"then return end
+ local serial=board:GetAttribute("ResetId")
+ task.defer(function()
+  if board:GetAttribute("ResetId")~=serial or board:GetAttribute("RoundOver")~=true then return end
+  roomView:cheerPet(if board:GetAttribute("FieldSuccess")==true then "win"else "loss")
+ end)
+end)
 GuiService.MenuOpened:Connect(function() roomView.transition:refresh() end)
 
 local function updateClub()
@@ -2168,6 +2178,8 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  rendererPresentation.setFieldOwner(true,serial,reduced)
  rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared,Config.mergeScore(tier,chain,cleared))
  rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
+ -- Big moments reach the resting pet behind the see-through deck.
+ if tier>=3 or chain>=3 then roomView:cheerPet("cheer")end
 end))
 
 local function applySound()

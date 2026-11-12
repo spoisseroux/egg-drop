@@ -18,6 +18,7 @@ local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
 local PetGreetingShot = require(script.Parent.PetGreetingShot)
 local PetPrestige = require(script.Parent.PetPrestige)
+local PetReactions = require(script.Parent.PetReactions)
 local PetRigBounds=require(script.Parent.PetRigBounds)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
@@ -332,6 +333,10 @@ function Room:showPet(pet)
 	if dock then require(script.Parent.PetCarePose).set(self.pet,"Docked");self.pet.yaw=rendered.yaw or 0;self.pet:update(0)end
 	self.followState = nil
 	self:refreshPetAppearance()
+	-- The local pet is not rendered while the deck is up, so a round's ending
+	-- reaction waits for the pet's next appearance (within 30 s) and plays then.
+	local pending=self.pendingPlayReaction;self.pendingPlayReaction=nil
+	if pending and os.clock()-pending.at<=30 then self:cheerPet(pending.kind,.9)end
 	local body = self.pet.model.PrimaryPart
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name, prompt.ActionText, prompt.ObjectText = "PetInteraction", "Say hi", pet.name
@@ -847,6 +852,24 @@ function Room:updatePetContact(dt)
  if self.petContactIntent then self.petContactIntent:step()end
  if self.affection then self.affection:step(dt,active==true,self.reduceEffects())end
 end
+-- Deck play reaches the local pet: "cheer" (tier III+ merge or chain 3+, at most
+-- every 1.5 s), "win" (double hop) or "loss" (startled, then sleepy). Visual and a
+-- chirp only; the pet's server state and other players' views never change.
+function Room:cheerPet(kind,delay)
+ local pet=self.pet;local now=os.clock()+(delay or 0)
+ if(not pet or pet.destroyed)and kind~="cheer"then self.pendingPlayReaction={kind=kind,at=now};return false end
+ if not pet or pet.destroyed or self.focusing then return false end
+ if not PetReactions.trigger(pet,kind,now)then return false end
+ pet.poseDirty=true;pet.model:SetAttribute("PlayReaction",kind)
+ if kind~="loss"and self.shownPet and self.shownPet.cue and now-(self.lastCheerAudioAt or -math.huge)>=.6 then
+  self.lastCheerAudioAt=now
+  local cue,speed=self.shownPet.cue,if kind=="win"then 1.18 else 1.12
+  if(delay or 0)>0 then task.delay(delay,function()if self.pet==pet and not self.destroyed then self.audio:play(cue,speed,.32)end end)
+  else self.audio:play(cue,speed,.32)end
+ end
+ return true
+end
+
 function Room:reactPet(petting)
  if self.focusUI and self.focusUI.windowActive==false then return false end
 	if self.focusTransitioning then return false end
