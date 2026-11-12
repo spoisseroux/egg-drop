@@ -347,7 +347,8 @@ function Screen:buildHud(g)
   local star=Kit.icon(pays,"star",18);star.Position=UDim2.fromOffset(8,30)
   h.pays=txt(pays,"Counter","6–8","stars",30,26,col-36,26,{TextSize=17})
  end
- self.lastHud=nil
+ -- A rebuilt HUD has empty control rows; repaint them on the next setHud.
+ self.lastHud=nil;self.controlsKey=nil
 end
 
 local controlRows={
