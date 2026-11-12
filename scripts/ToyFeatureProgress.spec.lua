@@ -1,5 +1,5 @@
 -- Isolated durable roots only. frozenSource must be fixtures/FrozenV370HatchProgress.lua.
-return function(server,frozenSource)
+return function(server,frozenSource,frozenDailySource)
  local H=require(server.HatchProgress);local T=require(server.ToyState);local F=require(server.FeatureState)
  local Hue=require(server.HueState);local Material=require(server.MaterialState)
  local TC=require(game.ReplicatedStorage.Shared.ToyCatalog);local FC=require(game.ReplicatedStorage.Shared.FeatureCatalog)
@@ -40,8 +40,13 @@ return function(server,frozenSource)
  end
  local function frozenWriter()
   assert(type(frozenSource)=="string","pass exact fixtures/FrozenV370HatchProgress.lua as argument two")
-  local module=Instance.new("ModuleScript");module.Name="_FrozenV370HatchWriter";module.Source=frozenSource;module.Parent=server
-  local ok,old=pcall(require,module);module:Destroy();assert(ok,old);return old
+  -- v9 retired DailyContracts' contract API; the frozen writer gets the frozen
+  -- module (fixtures/FrozenDailyContracts.lua) as argument three.
+  assert(type(frozenDailySource)=="string","pass fixtures/FrozenDailyContracts.lua as argument three")
+  local daily=Instance.new("ModuleScript");daily.Name="_FrozenDailyContracts";daily.Source=frozenDailySource;daily.Parent=server
+  local source=frozenSource:gsub("require%(ReplicatedStorage%.Shared%.DailyContracts%)","require(script.Parent._FrozenDailyContracts)",1)
+  local module=Instance.new("ModuleScript");module.Name="_FrozenV370HatchWriter";module.Source=source;module.Parent=server
+  local ok,old=pcall(require,module);module:Destroy();daily:Destroy();assert(ok,old);return old
  end
  local function test(name,run)run();table.insert(cases,name)end
  test("catalog fixed boundaries remaining uniform odds and no stats",function()
@@ -51,7 +56,7 @@ return function(server,frozenSource)
   assert(not FC.roll(0/0));local odds=TC.odds({ball=true});assert(#odds==2 and odds[1].probability==.5 and odds[2].probability==.5)
  end)
  test("new v8 profile neutral state and permanent uniform toy exhaustion costs24",function()
-  local h,db,c=fixture();local before=h.state.nectar;assert(h.state.version==8 and db.player_1.custom=="preserved")
+  local h,db,c=fixture();local before=h.state.nectar;assert(h.state.version==9 and db.player_1.custom=="preserved")
   for _,id in ipairs({"ball","bone","sparkler"})do local _,_,r=buy(h,c,"toy");assert(r.toyId==id and r.cost==8 and h.state.toyUnlocks[id]);ack(h,c,"toy")end
   assert(h.state.nectar==before-24 and c.rolls==3 and #TC.remaining(h.state.toyUnlocks)==0)
   local q,r=quote(h,c,"toy",{poolVersion=1,eligible={"ball"}});local writes=c.writes;local ok,why=H.toyCommand(h,"toyBuy",q,r);assert(not ok and why=="AllUnlocked"and writes==c.writes and c.rolls==3)
@@ -176,7 +181,7 @@ return function(server,frozenSource)
  test("frozen actual v370 writer cannot renew write or release upgraded v8 root",function()
   local old=frozenWriter()
   local h,db,c,a=fixture(old);assert(h.state.version==7);assert(old.release(h));local oldHandle=old.load(1,{},a);assert(oldHandle.status=="Ready")
-  c.now+=100;local fresh=H.load(1,{},a);assert(fresh.status=="Ready"and fresh.state.version==8)
+  c.now+=100;local fresh=H.load(1,{},a);assert(fresh.status=="Ready"and fresh.state.version==9)
   local before=copy(db.player_1);assert(not old.renew(oldHandle));assert(T.same(db.player_1,before))
   oldHandle.status="Ready";assert(not old.award(oldHandle,41,8));assert(T.same(db.player_1,before))
   oldHandle.status="Ready";assert(not old.release(oldHandle));assert(T.same(db.player_1,before))
@@ -201,7 +206,7 @@ return function(server,frozenSource)
    candidate[if kind=="material"then"finishId"else"itemId"]=if kind=="material"then"metal"else"iris"
    db.player_1.hatching[kind.."Reservation"]=candidate;assert(api.valid(db.player_1.hatching));assert(old.release(h))
    local before=db.player_1.hatching.nectar;local rolls=c.rolls;local fresh=H.load(1,{},a)
-   assert(fresh.status=="Ready"and fresh.state.version==8 and c.rolls==rolls and not fresh.state[kind.."Reservation"])
+   assert(fresh.status=="Ready"and fresh.state.version==9 and c.rolls==rolls and not fresh.state[kind.."Reservation"])
    assert(fresh.state.nectar==before-(if kind=="material"then 16 else 8))
    assert(H[kind.."Command"](fresh,kind.."Buy",value,revision))
   end
@@ -222,7 +227,7 @@ return function(server,frozenSource)
    if kind=="companion"then local ok,why=old.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(old[kind.."Command"](h,kind.."Buy",q,r))end
    assert(old.release(h))
    if kind=="companion"then db.player_1.hatching.lastHatch={id="v7-companion-reveal",petId="pip",duplicate=true,refund=9,family="pip",mastery=0,rare=false,recipe="meadow"}end
-   local previous=copy(db.player_1.hatching);local rolls=c.rolls;local new=H.load(1,{},a);assert(new.status=="Ready"and new.state.version==8 and c.rolls==rolls)
+   local previous=copy(db.player_1.hatching);local rolls=c.rolls;local new=H.load(1,{},a);assert(new.status=="Ready"and new.state.version==9 and c.rolls==rolls)
    for _,key in ipairs({"hueInventory","petHues","hueItemReceipts","hueReceiptOrder","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","pendingHueResult","pendingMaterialResult","lastHatch","misses","inventoryMask","nectar"})do assert(T.same(new.state[key],previous[key]),"changed historical "..key)end
   end
  end)

@@ -62,6 +62,7 @@ local toyResult=child("RemoteEvent","ToyResult",remotes)
 local featureResult=child("RemoteEvent","FeatureResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
+local questResult = child("RemoteEvent", "QuestResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
 local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
@@ -329,6 +330,8 @@ local function publishHeat(board)
 end
 
 local function publishNursery(board)
+	-- Quest rewards are shown with the player's 2x pass applied.
+	board.nursery.passMultiplier = StoreService.boost(board).multiplier
 	local state = Nursery.public(board.nursery)
 	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
 		if not NurseryCatalog.isOwned(state.inventoryMask, board.profile.companionId) then
@@ -889,6 +892,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	if action=="snapshot"then
 		if os.clock()-(board.lastNurserySnapshot or -math.huge)<.3 then return end
 		board.lastNurserySnapshot=os.clock()
+		board.nursery.passMultiplier=StoreService.boost(board).multiplier
 		local state=Nursery.public(board.nursery);if board.nurseryBusy then state.status="Busy"end
 		nurserySnapshot:FireClient(player,state);return
 	end
@@ -916,7 +920,32 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
 
- local itemKind=if ToyState.isAction(action)then "toy"elseif FeatureState.isAction(action)then "feature"else nil
+	-- Quests (plan sections 5 and 7). Claims are idempotent; the reroll is one a
+	-- day. Same busy and rate rules as the other hatch actions.
+	if action=="questClaim"or action=="questReroll"then
+		local v=if type(value)=="table"then value else {}
+		local scope=if action=="questReroll"then "daily"elseif v.scope=="weekly"then "weekly"elseif v.scope=="daily"then "daily"else nil
+		local slot=if type(v.slot)=="number"and v.slot%1==0 then v.slot else nil
+		local period=if type(v.period)=="string"and #v.period<=12 then v.period else nil
+		local function reply(status,reason)questResult:FireClient(player,{action=action,scope=scope,slot=slot,period=period,status=status,reason=reason,
+			stars=if status=="Saved"and action=="questClaim"and board.nursery.state.lastQuestClaim then board.nursery.state.lastQuestClaim.stars else nil})end
+		if not scope or not slot or not period then reply("Rejected","InvalidQuest");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local boost=StoreService.boost(board)
+		local ok,reason
+		if action=="questClaim"then ok,reason=Nursery.questClaim(board.nursery,scope,slot,period,boost)
+		else ok,reason=Nursery.questReroll(board.nursery,slot,period,boost)end
+		if ok and board.nursery.state.nectar>walletBefore then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","Quest")end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		reply(if ok then(if reason=="AlreadyClaimed"then "AlreadyClaimed"else "Saved")elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	 local itemKind=if ToyState.isAction(action)then "toy"elseif FeatureState.isAction(action)then "feature"else nil
  if itemKind then
   local api=if itemKind=="toy"then ToyState else FeatureState
   local quote=if type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil

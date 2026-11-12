@@ -4,6 +4,12 @@ local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Mastery = require(ReplicatedStorage.Shared.FamilyMastery)
 local Daily = require(ReplicatedStorage.Shared.DailyContracts)
+local QuestState = require(script.Parent.QuestState)
+local QuestRotation = require(ReplicatedStorage.Shared.QuestRotation)
+-- Retired daily contracts (hatching v3 to v8). Kept only to validate and
+-- upgrade old saves; v9 replaces them with `quests`.
+local LegacyContracts = { { id = "runs", target = 2 }, { id = "chain", target = 3 }, { id = "score", target = 500 } }
+local function legacyContracts(day) return { day = day, progress = { runs = 0, chain = 0, score = 0 }, claimedMask = 0 } end
 local HueState=require(script.Parent.HueState)
 local MaterialState=require(script.Parent.MaterialState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
@@ -78,7 +84,7 @@ local function migrate(record, now)
 		version = 5, hueAssignments = {}, migrated = true, welcomeCredited = true,
 		nectar = charge + 6, inventoryMask = mask, mastery = mastery, misses = 0,
 		masteryChallenges = challenges, masteryLegacyMask = 0, totalWins = 0,
-		contracts = Daily.empty(dayOf(now)),
+		contracts = legacyContracts(dayOf(now)),
 		revision = 0, epoch = 0, operationSeq = 0, lastAwardSeq = 0,
 		dailyClaimDay = dayOf(now),
 		petDay = dayOf(now), petCount = 0,
@@ -96,8 +102,9 @@ local function validBase(state,version)
 		or type(state.dailyClaimDay) ~= "string"
 		or type(state.mastery) ~= "table" or type(state.masteryChallenges) ~= "table"
 		or not integer(state.masteryLegacyMask, 15) or not integer(state.totalWins)
-		or type(state.contracts) ~= "table" or type(state.contracts.progress) ~= "table"
-		or type(state.contracts.day) ~= "string" or not integer(state.contracts.claimedMask, 7)
+		or (version < 9 and (type(state.contracts) ~= "table" or type(state.contracts.progress) ~= "table"
+			or type(state.contracts.day) ~= "string" or not integer(state.contracts.claimedMask, 7)))
+		or (version >= 9 and state.contracts ~= nil)
 		or type(state.lease) ~= "table"
 		or type(state.lease.token) ~= "string" or type(state.lease.expiresAt) ~= "number" then
 		return false
@@ -111,10 +118,12 @@ local function validBase(state,version)
 		if not integer(state.mastery[family], Mastery.MaxPoints)
 			or not integer(state.masteryChallenges[family], 7) then return false end
 	end
-	local contractDay = tonumber(state.contracts.day)
-	if not contractDay or contractDay ~= math.floor(contractDay) or math.abs(contractDay) > 1000000000 then return false end
-	for _, item in ipairs(Daily.Definitions) do
-		if not integer(state.contracts.progress[item.id], item.target) then return false end
+	if version < 9 then
+		local contractDay = tonumber(state.contracts.day)
+		if not contractDay or contractDay ~= math.floor(contractDay) or math.abs(contractDay) > 1000000000 then return false end
+		for _, item in ipairs(LegacyContracts) do
+			if not integer(state.contracts.progress[item.id], item.target) then return false end
+		end
 	end
 	if state.lastHatch ~= nil then
 		if type(state.lastHatch) ~= "table" or type(state.lastHatch.id) ~= "string"
@@ -142,11 +151,13 @@ local function validV7(state)
  -- Version-specific historical validation never interprets new working fields.
  return validVersion(state,7,false)and HueState.validHistorical(state)and MaterialState.valid(state)
 end
-local function valid(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function validV8(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- v9: daily contracts retired, quests added (QUESTS-DIFFICULTY-PLAN section 3).
+local function valid(state)return validVersion(state,9,false)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
-local function upgrade(state, now)
+local function upgrade(state, now, userId)
 	if type(state)~="table"then return state end
 	local nextState=state
 	if state.version==2 then
@@ -159,7 +170,7 @@ local function upgrade(state, now)
 			if nextState.mastery[family]==3 then legacy=bit32.bor(legacy,bit32.lshift(1,index-1))end
 		end
 		nextState.version,nextState.masteryChallenges,nextState.masteryLegacyMask=3,challenges,legacy
-		nextState.totalWins,nextState.contracts=0,Daily.empty(dayOf(now))
+		nextState.totalWins,nextState.contracts=0,legacyContracts(dayOf(now))
 	end
 	if nextState.version==3 then
 		if not validBase(nextState,3)or nextState.petDay~=nil or nextState.petCount~=nil or nextState.lastPetAward~=nil then return state end
@@ -188,6 +199,12 @@ local function upgrade(state, now)
 		for _,key in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult"})do if nextState[key]~=nil then return state end end
 		nextState=FeatureState.upgrade(ToyState.upgrade(nextState))
 	end
+	if nextState.version==8 then
+		-- Validate the whole v8 record, then retire contracts and draw quests.
+		if not validV8(nextState)or nextState.quests~=nil then return state end
+		nextState=clone(nextState);nextState.contracts=nil;nextState.version=9
+		nextState.quests=QuestRotation.fresh(userId,tonumber(dayOf(now)))
+	end
 	return nextState
 end
 
@@ -207,11 +224,11 @@ end
 function Hatching.load(userId, profile, adapter)
 	adapter = adapter or defaultAdapter()
 	local handle = {
-		key = "player_" .. userId, adapter = adapter, token = adapter.guid(),
+		key = "player_" .. userId, userId = userId, adapter = adapter, token = adapter.guid(),
 		status = "Loading", busy = false, nextRunSeq = 1,
 	}
 	if profile and profile.loadFailed then
-		handle.state = migrate(legacyRecord(profile), adapter.now())
+		handle.state = upgrade(migrate(legacyRecord(profile), adapter.now()), adapter.now(), userId)
 		handle.state.nectar = 0
 		handle.status = "Temporary"
 		return handle
@@ -220,7 +237,9 @@ function Hatching.load(userId, profile, adapter)
 	local function acquire(previous)
 		local root = if type(previous) == "table" then clone(previous) else legacyRecord(profile)
 		local state = root.hatching
-		if state == nil then state = migrate(root, adapter.now()) else state = upgrade(state, adapter.now()) end
+		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
+		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
+		if type(state) == "table" and state.version == 9 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -252,7 +271,7 @@ function Hatching.load(userId, profile, adapter)
 		if handle.state.toyReservation then Hatching.resumeItemReservation(handle,"toy")end
 		if handle.state.featureReservation then Hatching.resumeItemReservation(handle,"feature")end
 	else
-		handle.state = migrate(legacyRecord(profile), adapter.now())
+		handle.state = upgrade(migrate(legacyRecord(profile), adapter.now()), adapter.now(), userId)
 		handle.state.nectar = 0
 		handle.status = if ok then reason else "Unavailable"
 		if not ok then warn("Egg Drop hatching load failed:", record) end
@@ -272,7 +291,8 @@ function Hatching.public(handle)
 		status = handle.status, revision = state.revision, nectar = state.nectar,
 		masteryRanks = ranks, masteryDetails = details, masteryChallenges = clone(state.masteryChallenges),
 		masteryLegacyMask = state.masteryLegacyMask, totalWins = state.totalWins,
-		contracts = Daily.public(state.contracts, dayOf(handle.adapter.now())), lastRunReward = clone(state.lastRunReward),
+		quests = QuestState.public(state.quests, dayOf(handle.adapter.now()), handle.userId, handle.passMultiplier or 1, handle.adapter.now()),
+		lastRunReward = clone(state.lastRunReward), lastQuestClaim = clone(state.lastQuestClaim),
 		misses = state.misses, inventoryMask = state.inventoryMask, mastery = clone(state.mastery),
 		lastHatch = clone(state.lastHatch),
 		hues=clone(state.hues or {}),lastHueResult=HueState.publicReceipt(state.lastHueResult),
@@ -749,31 +769,59 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 	local heat = if summary and summary.heat then summary.heat else BoardConfig.DefaultHeat
 	-- Copy once: the host's mutable board and day clock must never alter a
 	-- pending transaction when DataStore invokes its callback again later.
-	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus }
+	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus, userId = handle.userId }
 	local signature = "award:" .. runSequence .. ":" .. amount .. ":" .. heat
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
 		local run = captured.summary
-		local extra, completed, marks, promoted = 0, {}, 0, 0
+		local marks, promoted = 0, 0
 		if run then
 			if not Mastery.ownsFamily(state.inventoryMask, run.family) then return false, "FamilyChanged" end
 			if run.success then
 				-- Saved wins still unlock independent cosmetics; family facts are archived.
 				state.totalWins += 1
 			end
-			state.contracts, extra, completed = Daily.apply(state.contracts, run, captured.day)
 		end
+		-- Quests: roll the calendar (auto-credit) and count this run, atomically
+		-- with the payout. Quest Stars are claimed by hand, never added here.
+		local quests, credited, moved = QuestState.onRun(state.quests, run, captured.day, captured.userId, captured.multiplier or 1)
+		state.quests = quests
 		-- Heat multiplier on the round amount (base and tidy), before the pass.
 		local roundStars = HeatPayout.roundStars(amount, heat)
-		local earned = roundStars + extra
-		local total = earned * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
-		if state.nectar + total > 1000000000 then return false, "BalanceLimit" end
-		state.nectar += total
+		local total = roundStars * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
+		if state.nectar + total + credited > 1000000000 then return false, "BalanceLimit" end
+		state.nectar += total + credited
 		state.lastAwardSeq = runSequence
-		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, daily = extra, total = total, bonus = total - earned,
-			masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted, contracts = completed }
+		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = total - roundStars,
+			questAuto = credited, quests = moved, masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted }
 		return true
 	end, candidate)
+end
+
+-- Quest claim (plan section 5): signature quest:<scope>:<period>:<slot>. A repeat
+-- returns true, "AlreadyClaimed"; an ambiguous write resumes the same pending
+-- operation, so a claim pays exactly once. boost.multiplier doubles it (2x pass).
+function Hatching.questClaim(handle, scope, slot, period, boost)
+	if (scope ~= "daily" and scope ~= "weekly") or not integer(slot, 3) or type(period) ~= "string" or #period > 12 then return false, "InvalidQuest" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "quest:" .. scope .. ":" .. period .. ":" .. slot
+	local candidate = if handle.pending and handle.pending.signature == signature then handle.pending.candidate
+		else table.freeze({ scope = scope, slot = slot, period = period, day = dayOf(handle.adapter.now()), userId = handle.userId,
+			multiplier = if type(boost) == "table" and boost.multiplier == 2 then 2 else 1 })
+	local ok, reason = transact(handle, signature, handle.state.revision, QuestState.claim, candidate)
+	if not ok and reason == "AlreadyClaimed" then return true, reason end
+	return ok, reason
+end
+
+-- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.
+function Hatching.questReroll(handle, slot, day, boost)
+	if not integer(slot, 3) or slot < 1 or type(day) ~= "string" or #day > 12 then return false, "InvalidQuest" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "reroll:" .. day .. ":" .. slot
+	local candidate = if handle.pending and handle.pending.signature == signature then handle.pending.candidate
+		else table.freeze({ slot = slot, period = day, day = dayOf(handle.adapter.now()), userId = handle.userId,
+			multiplier = if type(boost) == "table" and boost.multiplier == 2 then 2 else 1 })
+	return transact(handle, signature, handle.state.revision, QuestState.reroll, candidate)
 end
 
 local function maintain(handle, releasing)

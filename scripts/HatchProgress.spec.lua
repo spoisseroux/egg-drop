@@ -308,12 +308,13 @@ return function(Hatching, Catalog)
 		assert(Hatching.release(h))
 		local old = db.player_1.hatching
 		old.version, old.mastery.pip, old.mastery.wick = 2, 3, 2
+		old.quests = nil -- authentic v2 input (v2 upgrade adds contracts)
 		for _,key in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","materialReservation","pendingMaterialResult","lastMaterialResult","hueInventory","petHues","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyLastHueResult","legacyHueEgg","legacyHueRedemption","pendingHueResult","hueReservation"})do old[key]=nil end
 		old.hueAssignments=nil;old.petDay,old.petCount,old.lastPetAward=nil,nil,nil -- Authentic pre-pet v2 input.
 		old.masteryChallenges, old.masteryLegacyMask, old.contracts, old.totalWins = nil, nil, nil, nil
 		db.player_1.keep, old.nectar = "untouched", 47
 		h = Hatching.load(1, {}, adapter("b"))
-		assert(h.status == "Ready" and h.state.version == 8 and h.state.nectar == 47)
+		assert(h.status == "Ready" and h.state.version == 9 and h.state.nectar == 47)
 		assert(h.state.petCount==0 and h.state.petDay==Hatching.public(h).dailyDay)
 		local public = Hatching.public(h)
 		assert(public.mastery.pip == 3 and public.mastery.wick == 2 and public.masteryLegacyMask == 1)
@@ -337,48 +338,165 @@ return function(Hatching, Catalog)
         assert(h.state.lastRunReward.promotedTo == 0 and h.state.lastRunReward.masteryPoints == 0)
     end)
 
-	test("daily contracts and saved wins commit atomically once per run and day", function()
+	-- Quests replace the daily contracts (hatching v9, QUESTS-DIFFICULTY-PLAN 3-5).
+	local QuestCatalog=require(game.ReplicatedStorage.Shared.QuestCatalog)
+	local QuestRules=require(game.ReplicatedStorage.Shared.QuestRules)
+	local function slotFor(h,metric,scope)
+		for slot,id in ipairs(h.state.quests[scope or "daily"].ids)do if QuestCatalog.ById[id].metric==metric then return slot,QuestCatalog.ById[id] end end
+	end
+	local function finish(db,h,scope,slot)
+		local def=QuestCatalog.ById[db.player_1.hatching.quests[scope].ids[slot]]
+		db.player_1.hatching.quests[scope].prog[slot]=QuestRules.maxStored(def);assert(Hatching.renew(h))
+		return def
+	end
+	test("saved wins and quest progress commit atomically once per run; quests never pay inside award", function()
 		local _, c, adapter = fixture()
 		c.replay = true
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(h.state.version==9 and h.state.contracts==nil and h.state.quests.v==1)
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
-		assert(h.state.nectar == 20 and h.state.lastRunReward.daily == 6 and h.state.lastRunReward.total == 14)
-		assert(h.state.mastery.pip == 0 and h.state.totalWins == 1)
-		assert(Hatching.award(h, 2, 8, runSummary(h)))
-		assert(h.state.nectar == 32 and h.state.lastRunReward.daily == 4 and h.state.contracts.claimedMask == 7)
-		assert(Hatching.award(h, 3, 8, runSummary(h)))
-		assert(h.state.nectar == 40 and h.state.lastRunReward.daily == 0)
+		assert(h.state.nectar == 14 and h.state.lastRunReward.total == 8 and h.state.lastRunReward.questAuto == 0)
+		assert(h.state.totalWins == 1 and type(h.state.lastRunReward.quests)=="table")
+		local before=table.clone(h.state.quests.daily.prog)
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
-		assert(h.state.nectar == 40 and h.state.mastery.pip == 0 and h.state.totalWins == 3)
+		assert(h.state.nectar == 14 and table.concat(h.state.quests.daily.prog,",")==table.concat(before,","),"a replayed award moves nothing")
 		local public = Hatching.public(h)
-		assert(#public.contracts == 3 and public.contracts[1].claimed and public.contracts[1].progress == 2)
-		public.contracts[1].progress, public.masteryDetails.pip.points = 0, 0
-		assert(h.state.contracts.progress.runs == 2 and h.state.mastery.pip == 0)
+		assert(public.contracts==nil and #public.quests.daily==3 and #public.quests.weekly==3 and public.quests.rerollLeft==1)
+		public.quests.daily[1].progress=99
+		assert(h.state.quests.daily.prog[1]~=99)
 	end)
 
-	test("completed-budget failures can earn skill contracts but not mastery or free wins", function()
-		local _, _, adapter = fixture()
-		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-		assert(Hatching.award(h, 1, 0, runSummary(h, { success = false, clean = false, drops = 3 })))
-		assert(h.state.nectar == 6 and h.state.mastery.pip == 0 and h.state.contracts.claimedMask == 0)
-		assert(Hatching.award(h, 2, 0, runSummary(h, { success = false, clean = false })))
-		assert(h.state.nectar == 12 and h.state.mastery.pip == 0 and h.state.totalWins == 0)
-		assert(h.state.contracts.progress.runs == 0 and h.state.contracts.claimedMask == 6)
-	end)
-
-	test("run start-day lock, daily rollover and rollback cannot reassign a contract", function()
+	test("progress only comes from the server summary; overflowed rounds and other days do not count", function()
 		local _, c, adapter = fixture()
 		c.now = 18000 + 86400 * 20 + 86390
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local zero=table.concat(h.state.quests.daily.prog,",")
+		assert(Hatching.award(h, 1, 0, runSummary(h, { success = false, clean = false, drops = 3 })))
+		assert(table.concat(h.state.quests.daily.prog,",")==zero)
 		local oldRun = runSummary(h)
-		c.now += 15
-		assert(Hatching.award(h, 1, 8, oldRun))
-		assert(h.state.nectar == 14 and h.state.contracts.claimedMask == 0)
-		assert(Hatching.award(h, 2, 8, runSummary(h)))
-		assert(h.state.nectar == 28 and h.state.contracts.day == "21")
-		c.now -= 15
+		c.now += 15 -- the run started yesterday
+		assert(Hatching.award(h, 2, 8, oldRun))
+		assert(table.concat(h.state.quests.daily.prog,",")=="0,0,0" and h.state.quests.day=="21")
+		c.now -= 15 -- clock rollback: the stored day stays, the run does not count
 		assert(Hatching.award(h, 3, 8, runSummary(h)))
-		assert(h.state.nectar == 36 and h.state.contracts.day == "21" and h.state.contracts.progress.runs == 1)
+		assert(h.state.quests.day=="21" and table.concat(h.state.quests.daily.prog,",")=="0,0,0")
+		-- There is no client progress path: only award, questClaim and questReroll exist.
+		assert(Hatching.questProgress==nil and Hatching.setQuest==nil)
+	end)
+
+	test("claims pay once, doubled by the pass, including after an ambiguous retry", function()
+		local db, c, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local day=h.state.quests.day
+		local ok,reason=Hatching.questClaim(h,"daily",1,day)
+		assert(not ok and reason=="NotComplete")
+		finish(db,h,"daily",1)
+		local wallet=h.state.nectar
+		c.failAfterCommit=true
+		ok=Hatching.questClaim(h,"daily",1,day,{multiplier=2})
+		assert(not ok and h.status=="Retrying" and db.player_1.hatching.nectar==wallet+8)
+		ok,reason=Hatching.questClaim(h,"daily",1,day,{multiplier=2})
+		assert(ok and reason=="Saved" and h.state.nectar==wallet+8)
+		ok,reason=Hatching.questClaim(h,"daily",1,day,{multiplier=2})
+		assert(ok and reason=="AlreadyClaimed" and h.state.nectar==wallet+8)
+		local entry=h.state.quests.history[#h.state.quests.history]
+		assert(entry.s==8 and entry.a==false and entry.d==day)
+		assert(not Hatching.questClaim(h,"daily",1,"999") and not Hatching.questClaim(h,"daily",4,day) and not Hatching.questClaim(h,"monthly",1,day))
+		assert(h.state.nectar==wallet+8)
+	end)
+
+	test("weekly claims and the all-three bonus", function()
+		local db, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local week=h.state.quests.week
+		local wallet=h.state.nectar
+		assert(not Hatching.questClaim(h,"weekly",0,week))
+		for slot=1,3 do finish(db,h,"weekly",slot);assert(Hatching.questClaim(h,"weekly",slot,week))end
+		assert(h.state.nectar==wallet+30 and Hatching.public(h).quests.bonusReady)
+		assert(Hatching.questClaim(h,"weekly",0,week))
+		assert(h.state.nectar==wallet+35 and h.state.quests.weekly.bonus)
+		local ok,reason=Hatching.questClaim(h,"weekly",0,week)
+		assert(ok and reason=="AlreadyClaimed" and h.state.nectar==wallet+35)
+	end)
+
+	test("one free reroll a day, saved across sessions and refused once used", function()
+		local db, c, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		local day=h.state.quests.day
+		local old=h.state.quests.daily.ids[2]
+		assert(Hatching.questReroll(h,2,day))
+		local new=h.state.quests.daily.ids[2]
+		assert(new~=old and QuestCatalog.ById[new].pool=="craft" and h.state.quests.daily.rerolled and db.player_1.hatching.quests.daily.rerolled)
+		local ok,reason=Hatching.questReroll(h,3,day)
+		assert(not ok and reason=="NoReroll")
+		assert(Hatching.release(h))
+		local again=Hatching.load(1,{},adapter("b"))
+		ok,reason=Hatching.questReroll(again,1,day)
+		assert(not ok and reason=="NoReroll" and again.state.quests.daily.ids[2]==new and Hatching.public(again).quests.rerollLeft==0)
+		-- A started or claimed slot cannot be rerolled; a new day brings a new reroll.
+		assert(Hatching.release(again))
+		c.now+=86400
+		again=Hatching.load(1,{},adapter("b2"))
+		local tomorrow=Hatching.public(again).quests
+		assert(tomorrow.rerollLeft==1 and tomorrow.day~=day)
+		assert(Hatching.release(again))
+		db.player_1.hatching.quests=nil -- forces a sanitize-at-load path below
+		local fresh=Hatching.load(1,{},adapter("c"))
+		assert(fresh.status=="Ready" and fresh.state.quests.day==tomorrow.day)
+		fresh.state.quests.daily.prog[1]=1;db.player_1.hatching.quests.daily.prog[1]=1
+		ok,reason=Hatching.questReroll(fresh,1,tomorrow.day);assert(not ok and reason=="Started")
+		assert(not Hatching.questReroll(fresh,1,day),"yesterday's reroll is refused")
+	end)
+
+	test("day and week rollover auto-credit unclaimed finished quests inside the next transaction", function()
+		local db, c, adapter = fixture()
+		c.now = 18000 + 86400 * 20 + 86390
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		finish(db,h,"daily",1)
+		local wallet=h.state.nectar
+		c.now += 15
+		assert(Hatching.award(h, 1, 8, runSummary(h), { multiplier = 2, bonus = 0 }))
+		local reward=h.state.lastRunReward
+		assert(reward.questAuto==8 and reward.total==16 and h.state.nectar==wallet+24)
+		local entry=h.state.quests.history[#h.state.quests.history]
+		assert(entry.a==true and entry.s==8 and entry.d=="20")
+		-- Weekly: finish all three, jump to next Monday, then any claim credits 30 + 5.
+		db.player_1.hatching.quests.daily.prog={0,0,0}
+		for slot=1,3 do finish(db,h,"weekly",slot)end
+		wallet=h.state.nectar
+		assert(Hatching.release(h))
+		c.now += 86400*7
+		h=Hatching.load(1,{},adapter("b"))
+		assert(h.state.nectar==wallet,"loading never credits by itself")
+		local day=Hatching.public(h).quests.day
+		assert(Hatching.questReroll(h,1,day))
+		assert(h.state.nectar==wallet+35,h.state.nectar-wallet)
+		assert(h.state.quests.history[#h.state.quests.history].id=="weekly_bonus")
+	end)
+
+	test("old saves never crash: v8 with contracts, malformed quests and an old catalogue", function()
+		local db, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.release(h))
+		local v8=copy(db.player_1.hatching);v8.version=8;v8.quests=nil
+		v8.contracts={day="20",progress={runs=1,chain=3,score=500},claimedMask=6}
+		db.player_1.hatching=v8
+		h=Hatching.load(1,{},adapter("b"))
+		assert(h.status=="Ready"and h.state.version==9 and h.state.contracts==nil and h.state.quests.v==1)
+		for _,broken in ipairs({"junk",{v=1},{v=1,catalog=0},"catalog"})do
+			assert(Hatching.release(h))
+			if broken=="catalog"then db.player_1.hatching.quests.catalog=QuestCatalog.CatalogVersion+1
+			else db.player_1.hatching.quests=broken end
+			h=Hatching.load(1,{},adapter("x"..tostring(broken)))
+			assert(h.status=="Ready"and h.state.quests.catalog==QuestCatalog.CatalogVersion,tostring(broken))
+		end
+		assert(Hatching.release(h))
+		db.player_1.hatching.quests.daily.ids[1]="d_retired_quest"
+		h=Hatching.load(1,{},adapter("y"))
+		assert(h.status=="Ready"and QuestCatalog.ById[h.state.quests.daily.ids[1]])
+		local size=#game:GetService("HttpService"):JSONEncode(h.state.quests)
+		for i=1,30 do table.insert(h.state.quests.history,{d="20404",id="w_goals_hard12",s=20,a=true})end
+		assert(#game:GetService("HttpService"):JSONEncode(h.state.quests)<2200 and size<1500)
 	end)
 
 	test("compound award retries immutable stats and original day before or after commit", function()
@@ -389,12 +507,12 @@ return function(Hatching, Catalog)
 			local summary = runSummary(h)
 			c[failure] = true
 			assert(not Hatching.award(h, 1, 8, summary))
-			assert(db.player_1.hatching.nectar == (if failure == "failAfterCommit" then 20 else 6))
+			assert(db.player_1.hatching.nectar == (if failure == "failAfterCommit" then 14 else 6))
 			summary.family, summary.score = "orbit", 0
 			c.now += 15
 			assert(Hatching.retry(h))
-			assert(h.state.nectar == 20 and h.state.mastery.pip == 0 and h.state.mastery.orbit == 0)
-			assert(h.state.contracts.day == "20" and h.state.contracts.claimedMask == 6 and h.state.totalWins == 1)
+			assert(h.state.nectar == 14 and h.state.mastery.pip == 0 and h.state.mastery.orbit == 0)
+			assert(h.state.quests.day == "20" and h.state.totalWins == 1 and h.state.lastRunReward.total == 8)
 		end
 	end)
 
@@ -443,7 +561,7 @@ return function(Hatching, Catalog)
 					local reward = h.state.lastRunReward
 					local want = pair[index] * boost.multiplier + boost.bonus
 					assert(reward.heat == heat and reward.roundStars == pair[index] and reward.total == want, heat .. amount)
-					assert(h.state.nectar - before == want + (reward.daily or 0) * boost.multiplier)
+					assert(h.state.nectar - before == want)
 				end
 			end
 		end

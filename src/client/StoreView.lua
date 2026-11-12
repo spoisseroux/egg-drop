@@ -379,7 +379,7 @@ function View:renderBody(plannedWidth, compact, short)
 
 	-- A short phone leads with a whole offer; the framing copy closes the list instead.
 	local function framing()
-		copy("Intro", "Stars hatch eggs. You always earn them free by playing rounds and daily contracts.", "Supporting", "muted")
+		copy("Intro", "Stars hatch eggs. You always earn them free by playing rounds and quests.", "Supporting", "muted")
 		if short then copy("IdleNote", View.Idle, "Supporting", "muted") end
 	end
 	if not short then framing() end

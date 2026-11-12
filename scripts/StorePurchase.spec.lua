@@ -95,30 +95,30 @@ return function(server)
 		assert(h.state.purchases == nil)
 	end)
 
-	test("2x Stars doubles round and contract Stars; Supporter adds one per finished round", function()
+	test("2x Stars doubles round Stars; Supporter adds one per finished round", function()
 		local h = fixture()
-		local summary = { family = "pip", day = h.state.contracts.day, success = true, clean = false,
+		local summary = { family = "pip", day = h.state.quests.day, success = true, clean = false,
 			score = 100, chain = 1, clears = 0, drops = 24 }
 		local before = h.state.nectar
 		assert(H.award(h, 1, 6, summary, Store.boost({ doubleStars = true, supporter = true })))
 		local reward = h.state.lastRunReward
-		assert(reward.total == (reward.base + reward.daily) * 2 + 1, "boosted total " .. reward.total)
-		assert(reward.bonus == reward.total - reward.base - reward.daily)
+		assert(reward.total == reward.roundStars * 2 + 1 and reward.roundStars == 6, "boosted total " .. reward.total)
+		assert(reward.bonus == reward.total - reward.roundStars)
 		assert(h.state.nectar == before + reward.total)
-		local failed = { family = "pip", day = h.state.contracts.day, success = false, clean = false,
+		local failed = { family = "pip", day = h.state.quests.day, success = false, clean = false,
 			score = 0, chain = 0, clears = 0, drops = 3 }
 		before = h.state.nectar
 		assert(H.award(h, 2, 0, failed, Store.boost({ supporter = true })))
-		assert(h.state.lastRunReward.total == h.state.lastRunReward.daily + 1 and h.state.nectar == before + h.state.lastRunReward.total)
+		assert(h.state.lastRunReward.total == 1 and h.state.nectar == before + h.state.lastRunReward.total)
 	end)
 
 	test("no passes leaves rewards unchanged and forged boosts are clamped", function()
 		local h = fixture()
-		local summary = { family = "pip", day = h.state.contracts.day, success = true, clean = true,
+		local summary = { family = "pip", day = h.state.quests.day, success = true, clean = true,
 			score = 100, chain = 1, clears = 0, drops = 24 }
 		assert(H.award(h, 1, 8, summary, { multiplier = 50, bonus = 99 }))
 		local reward = h.state.lastRunReward
-		assert(reward.total == reward.base + reward.daily and reward.bonus == 0)
+		assert(reward.total == reward.base and reward.bonus == 0)
 	end)
 
 	-- v1: formerly "a duplicate companion refunds half the egg price". The retired

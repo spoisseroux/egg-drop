@@ -14,7 +14,7 @@ local function equal(a,b)
  for k,v in pairs(a)do if not equal(v,b[k])then return false end end
  for k in pairs(b)do if a[k]==nil then return false end end;return true
 end
-local function oldView(state)local v=table.clone(state);if state.version==6 or state.version==7 or state.version==8 then v.lastHueResult=state.legacyLastHueResult end;return v end
+local function oldView(state)local v=table.clone(state);if state.version==6 or state.version==7 or state.version==8 or state.version==9 then v.lastHueResult=state.legacyLastHueResult end;return v end
 function State.validLegacy(state)return Legacy.validLegacy(state)end
 function State.validV5(state)return Legacy.valid(state)end
 function State.row(state,petId)
@@ -194,7 +194,7 @@ function State.validHistorical(state)
  return true
 end
 function State.valid(state)
- if state.version==8 then state=table.clone(state);state.version=7 end
+ if state.version==8 or state.version==9 then state=table.clone(state);state.version=7 end
  return State.validHistorical(state)
 end
 local function saveReceipt(state,r)

@@ -6,7 +6,7 @@ local Store = {}
 
 Store.Passes = table.freeze({
 	table.freeze({ key = "doubleStars", id = 2078960411, price = 299, name = "2× Stars",
-		blurb = "Double Stars from every round and daily contract. Forever." }),
+		blurb = "Double Stars from every round and quest. Forever." }),
 	table.freeze({ key = "supporter", id = 2078804439, price = 99, name = "Supporter",
 		blurb = "+1 Star for every finished round. Thank you!" }),
 })
