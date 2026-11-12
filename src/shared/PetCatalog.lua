@@ -1,20 +1,21 @@
 local Trials = require(script.Parent.PocketTrials)
 local BaseColors = require(script.Parent.PetBaseColors)
 
+-- All pets share one voice ("pet" cue) until each new pet gets its own set (Spencer, 2026-11-12).
 local Pets = {
 	{ id = "pip", name = "Bear", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
-	{ id = "puddle", name = "Ovelle", charge = 12, cue = "puddle", color = Color3.fromHex("#D3DBD9") },
-	{ id = "wick", name = "Tikket", charge = 24, cue = "wick", color = Color3.fromHex("#DDD6CA") },
-	{ id = "orbit", name = "Nuum", charge = 36, cue = "orbit", color = Color3.fromHex("#D9D9D4") },
+	{ id = "puddle", name = "Ovelle", charge = 12, cue = "pet", color = Color3.fromHex("#D3DBD9") },
+	{ id = "wick", name = "Tikket", charge = 24, cue = "pet", color = Color3.fromHex("#DDD6CA") },
+	{ id = "orbit", name = "Nuum", charge = 36, cue = "pet", color = Color3.fromHex("#D9D9D4") },
 }
 
 Pets.rares = {
 	{ id = "bloom_pip", name = "Vezzi", family = "pip", trial = Trials.HighRoller,
 		cue = "pet", color = Color3.fromHex("#E4D9CD") },
 	{ id = "foxfire_wick", name = "Kiprik", family = "wick", trial = Trials.Fivefold,
-		cue = "wick", color = Color3.fromHex("#DEDAD7"), accent = Color3.fromHex("#AC9DC1") },
+		cue = "pet", color = Color3.fromHex("#DEDAD7"), accent = Color3.fromHex("#AC9DC1") },
 	{ id = "eclipse_orbit", name = "Nolli", family = "orbit", trial = Trials.DoubleSweep,
-		cue = "orbit", color = Color3.fromHex("#D3D3CC"), accent = Color3.fromHex("#9795AC") },
+		cue = "pet", color = Color3.fromHex("#D3D3CC"), accent = Color3.fromHex("#9795AC") },
 }
 Pets.collection = table.clone(Pets)
 for _, pet in ipairs(Pets.rares) do

@@ -79,6 +79,9 @@ Every pet's body uses **one primary and one secondary colour**, nothing more:
   - Paired parts are always separate L and R meshes.
 - **Names the importer looks for:** eyes are `Eye*`, the mouth is `Mouth*`, and the charm is `CharmDot`.
 
+## Next pet (planned)
+A soft green toy-alien plush: round head, stubby limbs, a big friendly face, maybe little antennae. The mood reference is generic store-shelf alien plushies. Design it original (don't copy any specific product), on the Bear's shared body.
+
 ## Making a new pet
 
 1. Copy the Bear's collection in `pet-bear.blend`.
