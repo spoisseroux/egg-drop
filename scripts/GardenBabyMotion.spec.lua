@@ -76,7 +76,7 @@ return function(client)
    for index,id in ipairs(order)do
     local original=Palette.original(id)
     assert(Pets.byId[id].index==index and Pets.byId[id].color==Color3.fromRGB(255,255,255))
-    assert(original.body==Color3.fromRGB(255,255,255)and original.secondary==Color3.fromRGB(200,200,200))
+    assert(original.body==Color3.fromRGB(255,255,255)and original.secondary==Color3.fromHex("#A8A5AE"))
     assert(Pets.isActive(id)==(index==1),"retained edition silently reentered the active roster") -- v1: only pip is active
    end
   end)

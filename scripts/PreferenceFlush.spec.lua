@@ -37,10 +37,11 @@ return function(server,source)
  end
  local function test(name,run)run();table.insert(cases,name)end
  test("healthy preference gets deferred durable proof before retry UI without periodic sweep",function()
-  local f=fixture();local packet=f:request("pip",false,1,"ring")
-  assert(packet.status=="Applied"and f.writes==0 and #f.jobs==1 and Appearance.public(f.profile).pip.charmVisible)
+  -- Pets start with no charm (81ab8fe), so turning the charm ON is the visible change.
+  local f=fixture();local packet=f:request("pip",true,1,"ring")
+  assert(packet.status=="Applied"and f.writes==0 and #f.jobs==1 and not Appearance.public(f.profile).pip.charmVisible)
   f:drain();assert(f.now<2 and f.writes==1 and #f.saved==1 and f.saved[1].status=="Saved")
-  assert(not Appearance.public(f.profile).pip.charmVisible and f.db.petAppearance.pip.charmShape=="ring")
+  assert(Appearance.public(f.profile).pip.charmVisible and f.db.petAppearance.pip.charmShape=="ring")
   assert(f.db.custom=="kept"and f.db.hatching.nectar==37 and f.db.hatching.revision==6 and f.db.hatching.lease.token=="same")
  end)
  test("same-turn preferences and Applied replays coalesce into one writer",function()

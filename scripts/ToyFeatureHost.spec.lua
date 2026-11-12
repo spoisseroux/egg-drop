@@ -113,7 +113,8 @@ return function(server,hostSource,kind)
   local public=snapshot();assert(public["pending"..title.."Result"]==nil and public.nectar==balance)
   if kind=="toy"then assert(public.petToys.pip=="ball")else assert(public.petFeatures.pip.horns.earned==1 and public.petFeatures.pip.horns.visible==1 and public.featureStock.horns==0)end
   local appearance=realGame.HttpService:JSONDecode(board:GetAttribute("PetAppearance"))
-  assert(appearance.pip.body=="original"and appearance.pip.charmVisible and not appearance.pip.featureStock and not appearance.pip.earned)
+  -- Pets start with no charm (81ab8fe); this fixture never saves a charm choice.
+  assert(appearance.pip.body=="original"and not appearance.pip.charmVisible and not appearance.pip.featureStock and not appearance.pip.earned)
   if kind=="toy"then assert(appearance.pip.toyId=="ball")else assert(appearance.pip.featureStages.horns==1)end
   c.dropSaved=false;c.now=5.5;assert(send(usage,rev,action).status=="Saved")
   local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":"..kind.."-host-next",catalogVersion=1,poolVersion=1}

@@ -27,7 +27,9 @@ return function(client, parent)
 		test("all three contracts use canonical names and component rewards", function()
 			recap:updateField(result())
    assert(recap.earnedGraphic.Text=="+18 Stars"and #recap.chips==5,"first Saved frame hid the exact receipt total")
-   assert(recap.eggGoal.Parent==recap.eggPanel and recap.eggGoal.Visible and recap.eggPanel.Visible and recap.eggGoal.Text:find("20/18",1,true)and recap.eggGoal.ZIndex>recap.eggPanel.ZIndex,"live selected egg name/balance is covered")
+   -- Since 4bf7893 the saved receipt is one unified card: the selected-egg panel stays
+   -- hidden and the title below carries the live balance (20/18).
+   assert(recap.hasReceipt and not recap.eggPanel.Visible and not recap.eggGoal.Visible,"receipt layout must not stack the selected-egg panel over the receipt")
 			assert(recap.title.Text:find("Stars +18", 1, true) and recap.title.Text:find("20/18", 1, true))
 			assert(hasLine("Quest Stars +8") and hasLine("Daily contracts total +10"))
 			for _, contract in ipairs(Daily.Definitions) do
