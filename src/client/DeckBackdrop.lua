@@ -2,7 +2,9 @@
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
 Backdrop.MotifOpacity=.88
-Backdrop.ExteriorOpacity=.92 -- Applied once by DeckArt exterior CanvasGroup, never per motif.
+Backdrop.ExteriorOpacity=.68 -- About 32% of the garden shows through the exterior floor.
+-- The floor carries it directly (CanvasGroup GroupTransparency did not render in
+-- Studio captures). Borrowed previews and plain surfaces keep an opaque floor.
 local function frame(parent,name)
  local f=Instance.new("Frame");f.Name,f.BorderSizePixel,f.BackgroundTransparency=name,0,1
  f.Active,f.Selectable,f.ZIndex=false,false,parent.ZIndex+1;f.Parent=parent;return f
@@ -11,10 +13,10 @@ local function assign(self,node,property,value,category)
  if node[property]==value then return end
  node[property]=value;self.stats.writes+=1;self.stats[category]=(self.stats[category]or 0)+1
 end
-function Backdrop.new(parent)
+function Backdrop.new(parent,options)
  local started=os.clock()
  local root=frame(parent,"PatternSurface");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true
- local self=setmetatable({root=root,home=parent,homeOffset=root.ZIndex-parent.ZIndex,layers={},bands={},elapsed=0,phases=setmetatable({},{__mode="k"}),stats={stripHosts=16,primitives=0,created=1,writes=0,ticks=0}},Backdrop)
+ local self=setmetatable({root=root,home=parent,exterior=options and options.exterior==true,homeOffset=root.ZIndex-parent.ZIndex,layers={},bands={},elapsed=0,phases=setmetatable({},{__mode="k"}),stats={stripHosts=16,primitives=0,created=1,writes=0,ticks=0}},Backdrop)
  for layer=1,2 do for row=1,8 do
   local host=frame(root,"Band"..layer.."_"..row);host.ClipsDescendants=false
   local canvas=frame(host,"RepeatCanvas");local entry={host=host,canvas=canvas,layer=layer,row=row,pieces={}}
@@ -36,7 +38,7 @@ end
 function Backdrop:configure(id,theme)
  if self.id==id and self.theme==theme then return false end
  self.id,self.theme=id,theme;self.bucket=nil;self.colorBucket=nil;self.resting=false
- assign(self,self.root,"BackgroundTransparency",0,"styleWrites");assign(self,self.root,"BackgroundColor3",theme.backdrop,"colorWrites")
+ self:floor();assign(self,self.root,"BackgroundColor3",theme.backdrop,"colorWrites")
  self.colorsApplied=false
  for _,b in ipairs(self.bands)do for _,p in ipairs(b.pieces)do
   local layer=b.layer
@@ -54,6 +56,10 @@ function Backdrop:configure(id,theme)
   assign(self,p.core,"BackgroundTransparency",1-(if id=="creek"then .88 else .78)*Backdrop.MotifOpacity,"styleWrites")
  end end
  self.size=nil;self:colors(.2);return true
+end
+function Backdrop:floor()
+ local seeThrough=self.exterior and self.root.Parent==self.home
+ assign(self,self.root,"BackgroundTransparency",if seeThrough then 1-Backdrop.ExteriorOpacity else 0,"styleWrites")
 end
 function Backdrop:colors(phase)
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true
@@ -119,7 +125,7 @@ end
 -- Global-Z sheets need the borrowed surface above its opaque preview face.
 -- Cache geometry's authored depths once; no descendants are discovered on ticks.
 function Backdrop:setOwner(owner)
- if self.root.Parent~=owner then assign(self,self.root,"Parent",owner,"ownerWrites");self.size=nil;self.resting=false end
+ if self.root.Parent~=owner then assign(self,self.root,"Parent",owner,"ownerWrites");self.size=nil;self.resting=false;self:floor()end
  if self.layerOwner==owner and self.ownerZ==owner.ZIndex then return end
  self.layerOwner,self.ownerZ=owner,owner.ZIndex
  local base=owner.ZIndex+(if owner==self.home then self.homeOffset else 1)

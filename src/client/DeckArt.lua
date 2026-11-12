@@ -449,9 +449,9 @@ end
 function Art.backdrop(parent)
  if backdropMotion[parent]then return end
  -- Every exterior pixel, tint and underlay is flattened exactly once. BoardBacking
- -- itself is transparent so the remaining 8% really comes from the garden.
+ -- itself is transparent so the see-through share really comes from the garden.
  parent.BackgroundTransparency=1;parent.ClipsDescendants=true
- local host=node("CanvasGroup",parent,{Name="ExteriorComposite",Size=UDim2.fromScale(1,1),BackgroundColor3=Art.Backdrop,BorderSizePixel=0,GroupTransparency=1-PatternBackdrop.ExteriorOpacity,ZIndex=parent.ZIndex,Active=false,Selectable=false})
+ local host=node("CanvasGroup",parent,{Name="ExteriorComposite",Size=UDim2.fromScale(1,1),BackgroundColor3=Art.Backdrop,BackgroundTransparency=1-PatternBackdrop.ExteriorOpacity,BorderSizePixel=0,GroupTransparency=0,ZIndex=parent.ZIndex,Active=false,Selectable=false})
  Art.shade(host,1,.76)
  local motion={host=host,entries={},layers={},resting=true,elapsed=0,phases=setmetatable({},{__mode="k"}),confirmed="canopy"}
  backdropMotion[parent]=motion;buildCanopy(host,motion)
@@ -525,7 +525,9 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
  if theme then
   if not wanted and not surfaceAlive then return end
   if canopyAlive then if motion.art.Visible then motion.art.Visible=false end;canopyOwner(motion,motion.host,motion.host)end
-  if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(motion.host)end
+  if not motion.surface then if not wanted then return end;motion.surface=PatternBackdrop.new(motion.host,{exterior=true})end
+  -- The themed surface owns the see-through floor; the host fill would double it.
+  if motion.host.BackgroundTransparency~=1 then motion.host.BackgroundTransparency=1 end
   motion.surface:configure(id,theme);if motion.case then motion.surface:setCase(motion.case)end;motion.surface:update(owner,now,preview or visible,reduced)
   motion.lastTime=nil;return
  end
