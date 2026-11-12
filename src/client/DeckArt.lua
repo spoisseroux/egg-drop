@@ -3,12 +3,14 @@ local Art = {}
 
 -- Stable default constants. Confirmed interface palettes are resolved only by
 -- explicit semantic bindings; species, status and hardware identity stay stable.
-Art.Type = { Reward = 32, Heading = 24, Action = 20, Body = 18, Supporting = 16, Counter = 18, Compact = 14 }
-Art.Font = { Reward=Enum.Font.FredokaOne, Heading=Enum.Font.FredokaOne, Action=Enum.Font.PatrickHand, Body=Enum.Font.PatrickHand, Supporting=Enum.Font.PatrickHand, Counter=Enum.Font.RobotoMono }
+-- Deck glass type (UI-SPEC-2026-11-12 2.2): Builder Sans for words, Roboto Mono for
+-- anything that ticks, everywhere. DeckKit holds the full role table.
+Art.Type = { Reward = 32, Heading = 26, Action = 20, Body = 16, Supporting = 14, Counter = 18, Compact = 14 }
+Art.Font = { Reward=Enum.Font.BuilderSansExtraBold, Heading=Enum.Font.BuilderSansBold, Action=Enum.Font.BuilderSansBold, Body=Enum.Font.BuilderSans, Supporting=Enum.Font.BuilderSans, Counter=Enum.Font.RobotoMono }
 Art.Space = { Small = 4, Related = 8, Group = 12, Panel = 20 }
 -- Sheets (anything inside an Art.panel content surface) use a clean modern sans.
 -- The handheld keeps its playful faces outside those surfaces.
-Art.SheetFont = { Reward=Enum.Font.BuilderSansExtraBold, Heading=Enum.Font.BuilderSansBold, Action=Enum.Font.BuilderSansMedium, Body=Enum.Font.BuilderSans, Supporting=Enum.Font.BuilderSans, Counter=Enum.Font.RobotoMono }
+Art.SheetFont = { Reward=Enum.Font.BuilderSansExtraBold, Heading=Enum.Font.BuilderSansBold, Action=Enum.Font.BuilderSansBold, Body=Enum.Font.BuilderSans, Supporting=Enum.Font.BuilderSans, Counter=Enum.Font.RobotoMono }
 -- Frosted sheet glass: share of the scene that shows through a sheet panel.
 Art.SheetGlass = 0.14
 for name, hex in pairs({
@@ -190,7 +192,7 @@ end
 
 -- Functional text keeps a real size and preferred-text support. Layout owns wrapping.
 function Art.type(label, role, compact)
-	local sizes = { Reward = 26, Heading = 20, Action = 18, Body = 16, Supporting = 14, Counter = 12 }
+	local sizes = { Reward = 26, Heading = 20, Action = 18, Body = 16, Supporting = 14, Counter = 13 }
 	local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
 	if constraint then constraint:Destroy() end
 	local inset=label:FindFirstChildOfClass("UIPadding")
@@ -631,7 +633,8 @@ function Art.panel(parent, radius, accent)
 	glassPanels[parent] = true
 	Art.corner(parent, radius)
 	Art.surfaceGradient(parent,"panel")
-	Art.stroke(parent,"line",0.55,1)
+	-- One 1 px white 14% border (UI-SPEC 2.3).
+	Art.stroke(parent,Color3.new(1,1,1),0.86,1)
 
 end
 
@@ -643,16 +646,19 @@ function Art.button(button, radius)
  local keyline=Art.frame(button,"FocusKeyline",Art.Ink,UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-4),button.ZIndex)
  keyline.BackgroundTransparency=1;keyline.Active,keyline.Selectable=false,false;Art.corner(keyline,math.max(1,radius-2))
  local inner=Art.stroke(keyline,"ink",1,1)
- Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Art.surfaceColor(button,"line") end})
+ border.Transparency=.86
+ Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Color3.new(1,1,1) end})
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
 			border.Color = Art.surfaceColor(button,"focus")
-   border.Thickness=button:GetAttribute("FocusThickness")or 2;inner.Transparency=0
+   border.Thickness=button:GetAttribute("FocusThickness")or 2.5;border.Transparency=0;inner.Transparency=0
 		end
 	end)
 	local function focusPaint(focused)
-  border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2 else 1;inner.Transparency=if focused then 0 else 1
-		border.Color = if focused then Art.surfaceColor(button,"focus")else Art.surfaceColor(button,"line")
+  -- Focus: the 2.5 px white ring; rest: the 1 px white 14% border.
+  border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2.5 else 1;inner.Transparency=if focused then 0 else 1
+		border.Transparency=if focused then 0 else .86
+		border.Color = if focused then Art.surfaceColor(button,"focus")else Color3.new(1,1,1)
 	end
 	local function restore()focusPaint(button==game:GetService("GuiService").SelectedObject)end
  button.MouseButton1Up:Connect(restore)
@@ -764,4 +770,6 @@ function Art.lcdCorners(parent,color)
 	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	resize();return root
 end
+-- Components from the deck spec (button, tab, card, toggle, progress, toast, list
+-- row, back arrow, focus ring) live in DeckKit, which builds on this module.
 return Art

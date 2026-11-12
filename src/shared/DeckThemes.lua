@@ -31,6 +31,13 @@ local palettes={
 	gloaming={lcd={"#23424A","#D0E5E6","#ACCBD0","#8FB0B9","#365B65","#4E7480"}},
 	copperleaf={lcd={"#4D3528","#F0D8B5","#D5B88F","#BF9E75","#674A32","#7E6240"}},
 }
+-- Pocket Deck Slim hardware (assets/deck/faceplates/faceplates.json): metal band
+-- tint and wordmark engraving per starter plate.
+local hardware={sherbet="#FFFFFF",stone="#6F7480",ice="#FFFFFF",brick="#6F7480",moss="#FFFFFF",honey="#EBC978",gloaming="#FFFFFF",copperleaf="#F0B8B0"}
+for id,band in pairs(hardware)do
+ local theme=Themes.ById[id];theme.bandTint=Color3.fromHex(band)
+ theme.engrave,theme.engraveOpacity=Color3.fromHex("#0E0F12"),.42
+end
 local lcdKeys={"outside","base","dither","rail","rim","guide"}
 for id,values in pairs(palettes)do
  local theme=Themes.ById[id];theme.lcd={}
