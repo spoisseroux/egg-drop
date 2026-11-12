@@ -42,6 +42,29 @@ local Config = {
 	Queue = { 1, 1, 2, 1, 2, 1 },
 }
 
+-- Difficulty ("heat"), QUESTS-DIFFICULTY-PLAN section 1. Medium is today's round,
+-- byte for byte. `tenths` is the Star multiplier in tenths (HeatPayout), the tidy
+-- bonus line moves with the overflow line, and Hard adds a third goal.
+Config.HeatOrder = table.freeze({ "easy", "medium", "hard" })
+Config.DefaultHeat = "medium"
+Config.Heat = table.freeze({
+	easy = table.freeze({ key = "easy", index = 1, name = "Easy", nickname = "Breezy", tenths = 8,
+		overflowY = 9.6, grace = 3.0, armAfter = 16, bag = table.freeze({ 1, 1, 1, 1, 1, 2 }), bonusHeight = 8.5, goals = 2,
+		bullets = table.freeze({ "Calmer egg mix", "Line sits higher", "2 goals" }) }),
+	medium = table.freeze({ key = "medium", index = 2, name = "Medium", nickname = "Classic", tenths = 10,
+		overflowY = 8.6, grace = 2.4, armAfter = 12, bag = table.freeze({ 1, 1, 1, 1, 2, 2 }), bonusHeight = 7.5, goals = 2,
+		bullets = table.freeze({ "Today's rules", "Line as now", "2 goals" }) }),
+	hard = table.freeze({ key = "hard", index = 3, name = "Hard", nickname = "Spicy", tenths = 15,
+		overflowY = 7.6, grace = 2.0, armAfter = 10, bag = table.freeze({ 1, 1, 1, 2, 2, 3 }), bonusHeight = 6.5, goals = 3,
+		bullets = table.freeze({ "Faster egg mix", "Line sits lower", "3 goals" }) }),
+})
+function Config.validHeat(key)
+	return type(key) == "string" and Config.Heat[key] ~= nil
+end
+function Config.heat(key)
+	return Config.Heat[key] or Config.Heat[Config.DefaultHeat]
+end
+
 -- Points for one merge. The server adds exactly this to the round score, and the
 -- client shows the same number as the merge's "+N" pop.
 function Config.mergeScore(tier,chain,cleared)
