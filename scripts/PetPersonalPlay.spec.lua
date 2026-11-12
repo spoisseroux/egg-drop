@@ -27,14 +27,18 @@ return function(client,parent)
    end
   end)
   for _,native in ipairs({true,false})do for _,pet in ipairs(Pets.collection)do
-   test(pet.id..(if native then " native"else " authored").." stages grow from fixed roots and replace idempotently",function()
+   test(pet.id..(if native then " native"else " authored").." stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",function()
     local v=make(pet,native);assert(v.backend==(if native then "NativeRecipe"else "AuthoredMesh"))
+    -- Rigs with authored attachments (the Bear) grow mesh horns/wings: 2+2 parts, procedural claws 8.
+    local authored=v.model:GetAttribute("FeatureBackend")=="AuthoredAttachments"
+    local expected=if authored then 12 else 24
     local original=#v.pieces;local primary=v.model.PrimaryPart;local beforeHeight=select(2,Bounds.get(v)).Y;local count;local rooted={};local priorHeight=beforeHeight
     for _,stage in ipairs({1,3,5})do
      v:applyAppearance(appearance(stage));v:update(0)
      local features=0
      for _,e in ipairs(v.pieces)do if e.role=="feature"then features+=1;assert(not e.part.CanQuery and e.part.Anchored and e.part.Transparency==0)end end
-     assert(features==24 and #v.pieces==original+24 and v.model.PrimaryPart==primary)
+     assert(features==expected and #v.pieces==original+expected and v.model.PrimaryPart==primary)
+     -- Authored stages are separate meshes (PetAttachments spec); procedural parts grow from fixed roots.
      for _,e in ipairs(v.pieces)do if e.name=="Feature_horns1L"or e.name=="Feature_claws1L"or e.name=="Feature_wings1L"then
       if rooted[e.name]then assert((rooted[e.name]-e.frame.Position).Magnitude<.000001,"feature root drifted with stage")end;rooted[e.name]=e.frame.Position
      end end
