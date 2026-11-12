@@ -39,60 +39,67 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 - **Device sounds stop** when a menu or recap covers the board.
 - Players can mute music separately from sound effects.
 
-## Cue list
-Priority: **P1** = needed for launch; **P2** = nice for launch; **P3** = later.
+## Cue list (sorted by priority)
+- **Placeholder:** the game already plays a synthesised stand-in sound for this cue. Replacing it is welcome, but it isn't blocking.
+- **Partial:** borrows another cue for now.
+- **None:** silent until delivered, so these matter most within each tier.
 
-### Device: board, merges and rounds
-| Cue | When it plays | Sound | Length | Priority | Status |
-|---|---|---|---|---|---|
-| `aim` | Moving the drop aim | Soft click/tick | 0.03-0.08 s | P2 | exists, replaceable |
-| `drop` | An egg is released | Short "plip" | 0.1-0.2 s | P1 | exists, replaceable |
-| `land` | An egg lands or bounces | Wet jelly thud (pitched by impact) | 0.1-0.3 s | P1 | exists, replaceable |
-| `bank` | An egg settles into the bank | Softer thud or tap | 0.1-0.25 s | P2 | exists, replaceable |
-| `merge_bubble` | Small-tier merge | Bubble pop | 0.15-0.35 s | P1 | exists, replaceable |
-| `merge_jelly` | Mid-tier merge | Squishier jelly pop | 0.2-0.4 s | P1 | exists, replaceable |
-| `merge_chain` | Each extra link in a chain | Bright arpeggio note, built to be stacked and repitched | 0.15-0.3 s | P1 | exists, replaceable |
-| `clear_v` | The top tier (V) clears | Sparkly glass chime with a soft downward whoosh | 0.6-1.0 s | P1 | **new** |
-| `overflow` | Board is in danger, repeating | Low, soft two-note warning blip | 0.2-0.35 s | P1 | exists, replaceable |
-| `win` | Round won | Bright 4-note chiptune jingle | 1.0-1.5 s | P1 | **new** |
-| `lose` | Round lost | Soft, friendly descending "wah-wah" | 0.8-1.2 s | P1 | **new** |
-| `charge` | Each Star in the recap count-up | Coin tick (repitched up per Star) | 0.05-0.15 s | P1 | exists, replaceable |
-| `retry` | Try again / new board | Cartridge "ka-chunk" | 0.2-0.4 s | P2 | exists, replaceable |
+### High priority (needed for launch)
+| Cue | When it plays | Sound | Length | Placeholder in game? |
+|---|---|---|---|---|
+| `drop` | An egg is released | Short "plip" | 0.1-0.2 s | placeholder |
+| `land` | An egg lands or bounces | Wet jelly thud (pitched by impact) | 0.1-0.3 s | placeholder |
+| `merge_bubble` | Small-tier merge | Bubble pop | 0.15-0.35 s | placeholder |
+| `merge_jelly` | Mid-tier merge | Squishier jelly pop | 0.2-0.4 s | placeholder |
+| `merge_chain` | Each extra link in a chain | Bright arpeggio note, built to be stacked and repitched | 0.15-0.3 s | placeholder |
+| `clear_v` | The top tier (V) clears | Sparkly glass chime with a soft downward whoosh | 0.6-1.0 s | **none** |
+| `overflow` | Board in danger, repeats while armed | Low, soft two-note warning blip | 0.2-0.35 s | placeholder |
+| `win` | Round won | Bright 4-note chiptune jingle | 1.0-1.5 s | **none** |
+| `lose` | Round lost | Soft, friendly descending "wah-wah" | 0.8-1.2 s | **none** |
+| `charge` | Each Star in the results count-up | Coin tick (repitched up per Star) | 0.05-0.15 s | placeholder |
+| `deck_boot` | Pocket Deck powers on (startup animation) | Original retro handheld boot chime: short, bright, 2-3 notes | 1.0-1.8 s | **none** |
+| `deck_button` | Pressing A/B or a screen button on the deck | Crisp plastic button click | 0.03-0.08 s | partial (`menu` blip is used now) |
+| `deck_move` | Moving the selection with the D-pad | Tiny soft tick, lighter than the button click | 0.03-0.06 s | partial (`aim` tick is used now) |
+| `menu` | Menu open/close, tab change | Soft UI blip, 2-3 variants welcome | 0.05-0.15 s | placeholder |
+| `purchase` | Buying an egg with Stars | Coin-purse "cha-ching" | 0.4-0.8 s | **none** |
+| `hatch_rise` | An egg starts cracking | Rising shimmer or build | 0.8-1.4 s | placeholder |
+| `hatch` | The egg pops open and reveals | Pop plus sparkle burst | 0.5-1.0 s | placeholder |
+| `pet` | Pet greeting or general happy noise | Small cute plush "mm!" | 0.2-0.5 s | placeholder |
+| `bear_boop_1/2/3` | Tapping or booping the pet | Plush squeak, 3 variants | 0.1-0.3 s | **none** |
+| `bear_chirp` | Pet is happy or cheering after a good round | Tiny rising "mew-hm" hum | 0.3-0.6 s | **none** |
+| `purr (loop)` | Held petting | Warm purr or hum, seamless loop | 2.0 s loop | placeholder |
 
-### Device: menus and shop
-| Cue | When | Sound | Length | Priority | Status |
-|---|---|---|---|---|---|
-| `menu` | Menu open/close, tab change, button press | Soft UI blip, 2-3 variants welcome | 0.05-0.15 s | P1 | exists, replaceable |
-| `deny` | Pressing something you can't use or afford | Dull soft buzz | 0.15-0.3 s | P2 | **new** |
-| `purchase` | Buying an egg with Stars | Coin-purse "cha-ching" | 0.4-0.8 s | P1 | **new** |
-| `hatch_rise` | An egg starts cracking | Rising shimmer or build | 0.8-1.4 s | P1 | exists, replaceable |
-| `hatch` | The egg pops open and reveals | Pop plus sparkle burst | 0.5-1.0 s | P1 | exists, replaceable |
+### Medium priority (nice for launch)
+| Cue | When it plays | Sound | Length | Placeholder in game? |
+|---|---|---|---|---|
+| `aim` | Moving the drop aim | Soft click/tick | 0.03-0.08 s | placeholder |
+| `bank` | An egg settles into the bank | Softer thud or tap | 0.1-0.25 s | placeholder |
+| `retry` | Replay from the results screen / new board | Cartridge "ka-chunk" | 0.2-0.4 s | placeholder |
+| `deck_back` | The back arrow on the deck screen | Soft descending two-note blip | 0.08-0.15 s | partial (`menu` blip is used now) |
+| `deck_power_off` | Leaving the deck / putting it away | Short descending power-down chirp | 0.3-0.6 s | **none** |
+| `difficulty_select` | Choosing Easy / Medium / Hard before a round | Three related blips, rising in pitch for harder (or one blip repitched) | 0.1-0.2 s | **none** |
+| `quest_complete` | A quest is finished | Bright little fanfare, smaller than `win` | 0.5-0.9 s | **none** |
+| `deny` | Pressing something you can't use or afford | Dull soft buzz | 0.15-0.3 s | **none** |
+| `bear_yawn` | Idle yawn or sleepy moment | Breathy, soft descending hum | 0.6-1.0 s | **none** |
+| `toy_squeak` | A pet bites the ball or bone toy | Rubber squeak | 0.15-0.3 s | **none** |
+| `ambience_day` | Garden in daytime | Gentle birds and light breeze (stereo loop) | 30-60 s loop | **none** |
+| `ambience_night` | Garden at night | Soft crickets and a faint wind chime (stereo loop) | 30-60 s loop | **none** |
+| `garden music` | Background in the garden | Calm, bright loopable track under everything at low volume | 1-2 min loop | placeholder (53 s procedural loop) |
 
-### World: pet voice (shared by every pet for now)
-| Cue | When | Sound | Length | Priority | Status |
-|---|---|---|---|---|---|
-| `pet` | Pet greeting or general happy noise | Small cute plush "mm!" | 0.2-0.5 s | P1 | exists, replaceable |
-| `bear_boop_1/2/3` | Tapping or booping the pet | Plush squeak, 3 variants | 0.1-0.3 s | P1 | **new** |
-| `bear_chirp` | Pet is happy or cheering after a good round | Tiny rising "mew-hm" hum | 0.3-0.6 s | P1 | **new** |
-| `bear_yawn` | Idle yawn or sleepy moment | Breathy, soft descending hum | 0.6-1.0 s | P2 | **new** |
-| `bear_sneeze` | Idle sneeze | Tiny "pff-chu" | 0.2-0.4 s | P3 | **new** |
-| purr loop | Held petting | Warm purr or hum, seamless loop | 2.0 s loop | P1 | exists, replaceable |
+### Low priority (later)
+| Cue | When it plays | Sound | Length | Placeholder in game? |
+|---|---|---|---|---|
+| `faceplate_swap` | Swapping the deck's faceplate | Satisfying plastic snap/click | 0.15-0.3 s | **none** |
+| `quest_log` | Opening the quest log | Page-flip or soft chime | 0.1-0.25 s | **none** |
+| `quest_reroll` | Rerolling a quest | Quick shuffle or whoosh | 0.2-0.4 s | **none** |
+| `bear_sneeze` | Idle sneeze | Tiny "pff-chu" | 0.2-0.4 s | **none** |
+| `sparkler (loop)` | The Sparkler toy fizzes | Soft crackle fizz, loopable | 1-2 s loop | **none** |
+| `waterfall (loop)` | Near the waterfalls (3D positional) | Soft falling water (mono loop) | 10-20 s loop | **none** |
+| `chimes` | Wind chimes on the arch sway | Gentle random chime notes, 3-4 single hits | 0.5-1.5 s each | **none** |
 
-(The `bear_` names are historical; these cues play for every pet.)
-
-### World: toys and garden
-| Cue | When | Sound | Length | Priority | Status |
-|---|---|---|---|---|---|
-| `toy_squeak` | A pet bites the ball or bone toy | Rubber squeak | 0.15-0.3 s | P2 | **new** |
-| `sparkler` | The Sparkler toy fizzes | Soft crackle fizz, loopable | 1-2 s loop | P3 | **new** |
-| `ambience_day` | Garden in daytime | Gentle birds and light breeze | 30-60 s stereo loop | P2 | **new** |
-| `ambience_night` | Garden at night | Soft crickets and a faint wind chime | 30-60 s stereo loop | P2 | **new** |
-| `waterfall` | Near the waterfalls (3D positional) | Soft falling water | 10-20 s mono loop | P3 | **new** |
-
-### Music
-| Cue | When | Notes | Priority |
-|---|---|---|---|
-| Garden music | Background in the garden | Currently a 53 s procedural chiptune loop, "Pocket Apricot". Could be replaced by a calm, bright, loopable track of 1-2 min that sits under everything at low volume. | P2 |
+Notes:
+- The `bear_` names are historical: every pet uses these voice cues.
+- The `deck_*`, `difficulty_select`, `faceplate_swap` and `quest_*` cues are for Pocket Deck features being designed now (boot animation, faceplates, difficulty picker, quest log). They're planned, not in the game yet.
 
 ## Where the current sounds are
 - The source WAVs for the existing cues are in `assets/audio/` (`egg_drop_*.wav`), with measured levels in `egg_drop_audio_manifest.json`.
@@ -104,5 +111,5 @@ Priority: **P1** = needed for launch; **P2** = nice for launch; **P3** = later.
 - [ ] Mono one-shots, stereo loops, 44.1/48 kHz, 16-bit
 - [ ] Peaks around -1 dBFS for one-shots; quieter loops
 - [ ] No leading silence; short fade-outs; seamless loops
-- [ ] P1 cues first
+- [ ] High-priority cues first, starting with the ones that have no placeholder
 - [ ] Every sound is original or properly licensed for commercial use
