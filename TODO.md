@@ -6,7 +6,15 @@ Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
+- **In progress (2026-11-12 pm), Spencer asked for 1+2+3 then launch prep:**
+  1. World polish (Studio agent): Care Cradle highlights, night clouds/horizon, live checks of companions/petting/hatch, Bear night glow.
+  2. Pocket Deck rebuild, with Fable driving visuals: UI spec + mockups, slim deck art, 16 faceplates, retro boot, then implementation of the wide screen, in-deck results, back arrow, faceplates, boot, quests and difficulty (per SCOPE-2026-11-12 decisions).
+  3. Pets: attachment slots + horns/wings growing S1-S5 through the Feature Egg in game.
+  - Spencer: audio (AUDIO-HANDOFF.md). After 1-3: v1 launch checklist.
+
 - [x] **Claude (Studio), 2026-11-12: World 1 v7 imported behind `WorldVersion` (default "v7").** 91 merged MeshParts + 68 collision tiles, sky, motion, stations at stations.json frames, pet walkability, specs rewritten. Status and gaps: `artifacts/world1-v7-import/PLAN.md`. Studio Edit has the pushed scripts and `ServerStorage.WorldAssets` but is NOT saved or published.
+
+- [x] **Fable, 2026-11-12:** helix rings enlarged 1.65× and added to both ears in `pet-bear-attachments.blend` (HelixR placed from the right ear's own mesh); board 02 re-rendered plus `02b-helix-both-ears-closeup.png`. "Character creation" section added to PET-STYLE-GUIDE.md (anchors, slots, authoring, horn stages, night glow, voice, new-pet steps, green alien). Not committed. Blender only: the runtime does not read the new anchors yet.
 
 - **Fable scope, 2026-11-12 (awaiting Spencer's decisions, nothing built in `src/`):** [SCOPE-2026-11-12-UI-DECK-PETS.md](SCOPE-2026-11-12-UI-DECK-PETS.md) covers the UI pass, Pocket Deck Slim, faceplates replacing stickers, boot sequence, quest rotation and log, Easy/Medium/Hard, in-deck results with a back arrow, pet attachment anchors and horns. Boards: `artifacts/scope-2026-11-12/`. Mock: `assets/art-source/pets/pet-bear-attachments.blend` (28 new anchors, placeholder outfit, devil horns S1-S5; `pet-bear.blend` untouched). 19 decisions listed at the end of the scope; quests and difficulty should not start before them.
 
