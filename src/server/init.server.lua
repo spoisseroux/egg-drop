@@ -125,7 +125,8 @@ gardenScene=function()
  if not wanderScene or wanderScene.room~=room then
   wanderScene={room=room,wet={},stations={},solids={}}
   for _,node in ipairs(room:GetDescendants())do
-   if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"then table.insert(wanderScene.solids,node)end
+   -- Merged island meshes span the world; their bounds would block every rest path.
+   if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"and node:GetAttribute("WorldMesh")~=true then table.insert(wanderScene.solids,node)end
    if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
@@ -201,7 +202,7 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 -- bench leaves the pet at the last ground anchor (bridges and other authored
 -- spans still count as ground). Kept out of petAnchor so care reach is unchanged.
 local function groundAnchor(board,anchor)
-	if anchor and(GardenWalkability.spanAt(anchor)~=nil or anchor.Y<=GardenLayout.FloorY+.6)then
+	if anchor and(GardenWalkability.spanAt(anchor)~=nil or GardenLayout.onGround(anchor))then
 		board.groundAnchor=anchor
 		return anchor
 	end
@@ -221,7 +222,7 @@ local function gardenInput(board)
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
-		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}))or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
+		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}))or Vector3.new(position.X,GardenLayout.groundAt(position.X,position.Z),position.Z)else Vector3.zero,
 		yaw=if root then math.atan2(root.CFrame.LookVector.X,root.CFrame.LookVector.Z)else 0,
 		charmVisible=preferences[petId]~=nil and preferences[petId].charmVisible==true}
 end
@@ -272,7 +273,10 @@ local gardenCareHost=require(script.GardenCareHost).new({garden=garden,boards=bo
   if math.abs(at.X)>support.Size.X*.5 or math.abs(at.Z)>support.Size.Z*.5 or math.abs(at.Y-support.Size.Y*.5)>.08 then return false end
   for _,dx in ipairs({-.95,0,.95})do for _,dz in ipairs({-.95,0,.95})do local p=careLayout.Dock+Vector3.new(dx,0,dz);if not GardenWalkability.segmentAllowed(p,p,scene.wet)then return false end end end
   local overlap=OverlapParams.new();overlap.RespectCanCollide=true;overlap.FilterType=Enum.RaycastFilterType.Include;overlap.FilterDescendantsInstances={scene.room}
-  return #workspace:GetPartBoundsInBox(CFrame.new(careLayout.Dock+Vector3.new(0,1.53,0)),careLayout.Footprint,overlap)==0
+  for _,hit in ipairs(workspace:GetPartBoundsInBox(CFrame.new(careLayout.Dock+Vector3.new(0,1.53,0)),careLayout.Footprint,overlap))do
+   if hit:GetAttribute("WorldMesh")~=true then return false end
+  end
+  return true
  end})
 
 local function sendHueResult(board,quote,status,reason,receipt)

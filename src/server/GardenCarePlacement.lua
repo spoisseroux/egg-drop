@@ -20,7 +20,10 @@ function Placement.clear(point,room,wet)
  local grounded=Vector3.new(point.X,y+.025,point.Z)
  local overlap=OverlapParams.new();overlap.RespectCanCollide=true;overlap.FilterType=Enum.RaycastFilterType.Include;overlap.FilterDescendantsInstances={room}
  local box=Layout.Footprint
- if #workspace:GetPartBoundsInBox(CFrame.new(grounded+Vector3.new(0,box.Y*.5+.06,0)),box,overlap)>0 then return nil end
+ -- Merged island meshes are skipped: their bounds cover the whole world; rays above checked the ground.
+ for _,hit in ipairs(workspace:GetPartBoundsInBox(CFrame.new(grounded+Vector3.new(0,box.Y*.5+.06,0)),box,overlap))do
+  if hit:GetAttribute("WorldMesh")~=true then return nil end
+ end
  return grounded
 end
 function Placement.find(input,room,wet,solids)

@@ -32,6 +32,10 @@ local function sign(parent, title)
 end
 
 function Art.build(room, part)
+	-- WorldVersion v7 imports the floating island; the procedural garden below is the legacy world.
+	if WorldLayout.WorldVersion == "v7" then
+		return require(script.Parent.LoungeWorldV7Art).build(room)
+	end
 	local random = Random.new(1702)
 	local function box(name, x, y, z, w, h, d, tint, collide)
 		local piece = part(room, name, Vector3.new(w, h, d), CFrame.new(x, y, z), tint, collide)

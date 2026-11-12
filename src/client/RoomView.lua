@@ -576,7 +576,8 @@ function Room.greetingVisualBlocks(lounge,floor,rootPosition,reach)
  -- A tiny nonqueryable leaf can cover the lens completely at close range.
  -- Collect rendered descendants once per plan, never by visual size or physics.
  for _,part in ipairs(lounge:GetDescendants())do
-  if part:IsA("BasePart")and part~=floor and not part:IsA("Terrain")
+  -- Merged island meshes (WorldMesh) have world-sized bounds, never a usable blocker box.
+  if part:IsA("BasePart")and part~=floor and not part:IsA("Terrain")and part:GetAttribute("WorldMesh")~=true
    and 1-(1-part.Transparency)*(1-part.LocalTransparencyModifier)<.99 then
    local cf,size=part.CFrame,part.Size
    local mesh=part:FindFirstChildOfClass("SpecialMesh")

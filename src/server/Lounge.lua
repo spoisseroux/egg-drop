@@ -5,6 +5,8 @@ local Themes = require(ReplicatedStorage.Shared.DeckThemes)
 local Stickers = require(ReplicatedStorage.Shared.DeckStickers)
 
 local LoungeArt = require(script.Parent.LoungeArt)
+local WorldLayout = require(ReplicatedStorage.Shared.HollowWorldLayout)
+local Players = game:GetService("Players")
 
 local Lounge = {}
 
@@ -23,11 +25,65 @@ local function part(parent, name, size, transform, color, collides)
 	return piece
 end
 
+-- Feet-on-ground spawn frame for a player slot. Legacy: rows near the hub.
+-- v7: a small grid on the arrival dais, facing the hub across the bridge.
+function Lounge.spawnFrame(slot, humanoid, root, room)
+	local lift = humanoid.HipHeight + root.Size.Y / 2 + 0.1
+	if humanoid.RigType == Enum.HumanoidRigType.R6 then
+		local leg = humanoid.Parent and humanoid.Parent:FindFirstChild("Left Leg")
+		if leg then
+			lift += leg.Size.Y
+		end
+	end
+	if WorldLayout.WorldVersion ~= "v7" then
+		local x = ((slot - 1) % 5 - 2) * 5.5
+		local z = 4 + math.floor(((slot - 1) % 10) / 5) * 5
+		return CFrame.new(x, 4 + lift, z) * CFrame.Angles(0, math.pi, 0)
+	end
+	local spawn = WorldLayout.Spawn
+	local at = spawn:PointToWorldSpace(Vector3.new(((slot - 1) % 5 - 2) * 3, 0, math.floor(((slot - 1) % 10) / 5) * 3.5))
+	local ground = at.Y
+	if room then
+		local params = RaycastParams.new()
+		params.FilterType, params.FilterDescendantsInstances, params.RespectCanCollide = Enum.RaycastFilterType.Include, { room }, true
+		local hit = workspace:Raycast(at + Vector3.new(0, 20, 0), Vector3.new(0, -40, 0), params)
+		if hit then
+			ground = hit.Position.Y
+		end
+	end
+	return CFrame.new(at.X, ground + lift, at.Z) * spawn.Rotation
+end
+
+-- v7 FallCatch: anyone who drops off the island is put back on the arrival dais.
+local function watchFallCatch(room)
+	local catch = room:FindFirstChild("FallCatch")
+	if not catch then
+		return
+	end
+	local busy = {}
+	catch.Touched:Connect(function(hit)
+		local character = hit.Parent
+		local player = character and Players:GetPlayerFromCharacter(character)
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if not player or not humanoid or not root or busy[player] then
+			return
+		end
+		busy[player] = true
+		root.AssemblyLinearVelocity = Vector3.zero
+		character:PivotTo(Lounge.spawnFrame(player.UserId % 5 + 1, humanoid, root, room))
+		task.delay(1, function()
+			busy[player] = nil
+		end)
+	end)
+end
+
 function Lounge.create()
 	local room = Instance.new("Model")
 	room.Name = "EggDropLounge"
 	LoungeArt.build(room, part)
 	room.Parent = workspace
+	watchFallCatch(room)
 end
 
 local function attach(model, torso, name, size, offset, color)
@@ -200,14 +256,7 @@ function Lounge.spawn(character, slot, player, deckState)
 	if player.Character ~= character or not character:IsDescendantOf(workspace) then
 		return
 	end
-	local x = ((slot - 1) % 5 - 2) * 5.5
-	local z = 4 + math.floor(((slot - 1) % 10) / 5) * 5
-	local height = 4 + humanoid.HipHeight + root.Size.Y / 2 + 0.1
-	local leg = if humanoid.RigType == Enum.HumanoidRigType.R6 then character:FindFirstChild("Left Leg") else nil
-	if leg then
-		height += leg.Size.Y
-	end
-	character:PivotTo(CFrame.new(x, height, z) * CFrame.Angles(0, math.pi, 0))
+	character:PivotTo(Lounge.spawnFrame(slot, humanoid, root, workspace:FindFirstChild("EggDropLounge")))
 	local mode, themeId, stickerId = deckState()
 	Lounge.setMode(character, player.UserId, mode, themeId, stickerId)
 end
