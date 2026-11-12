@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-12",
+  "plan": "artifacts/deck-rebuild/QUESTS-DIFFICULTY-PLAN.md",
+  "benchmark": {
+    "source": "scripts/FieldObjectiveBenchmark.lua Benchmark.heats, goal_aware policy, seeds 40001-40006 x 6 templates per heat, Studio Play server",
+    "mediumMatchesToday": true,
+    "easy":   { "wins": 33, "runs": 36, "overflows": 0,  "baseReward": 264, "perTemplate": { "bank_bounce": 6, "bank_pair": 3, "creek_crossing": 6, "lantern_chain": 6, "mirror_marks": 6, "ripple_relay": 6 } },
+    "medium": { "wins": 34, "runs": 36, "overflows": 1,  "baseReward": 240, "perTemplate": { "bank_bounce": 5, "bank_pair": 6, "creek_crossing": 6, "lantern_chain": 6, "mirror_marks": 5, "ripple_relay": 6 } },
+    "hard":   { "wins": 16, "runs": 36, "overflows": 19, "baseReward": 126, "perTemplate": { "bank_bounce": 3, "bank_pair": 2, "creek_crossing": 3, "lantern_chain": 2, "mirror_marks": 3, "ripple_relay": 3 } }
+  },
+  "livePayouts": {
+    "note": "Studio Play, real settle/award path (EggDropRoundTestHook finishes the goals); Studio grants both passes, so totals are roundStars x2 +1",
+    "easy":   { "win": { "roundStars": 5, "total": 11 }, "tidy": { "roundStars": 6,  "total": 13 } },
+    "medium": { "win": { "roundStars": 6, "total": 13 }, "tidy": { "roundStars": 8,  "total": 17 } },
+    "hard":   { "win": { "roundStars": 9, "total": 19 }, "tidy": { "roundStars": 12, "total": 25 } }
+  },
+  "quests": { "claimDailyWithPass": 8, "secondReroll": "Rejected NoReroll", "repeatClaim": "AlreadyClaimed, no Stars" }
+}
