@@ -2,7 +2,7 @@ local Trials = require(script.Parent.PocketTrials)
 local BaseColors = require(script.Parent.PetBaseColors)
 
 local Pets = {
-	{ id = "pip", name = "Zivvi", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
+	{ id = "pip", name = "Bear", charge = 6, cue = "pet", color = Color3.fromHex("#E5DBD0") },
 	{ id = "puddle", name = "Ovelle", charge = 12, cue = "puddle", color = Color3.fromHex("#D3DBD9") },
 	{ id = "wick", name = "Tikket", charge = 24, cue = "wick", color = Color3.fromHex("#DDD6CA") },
 	{ id = "orbit", name = "Nuum", charge = 36, cue = "orbit", color = Color3.fromHex("#D9D9D4") },

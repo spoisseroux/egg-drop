@@ -18,8 +18,8 @@ function Owner:tryUpgrade()
   or template:GetAttribute("MaterialVersion")~=Config.Version or template:GetAttribute("MaterialProfile")~=key then return false end
  local source=self.options.meshSource
  if not source then
-  local assets=Storage:FindFirstChild("PetAssets");local family=assets and assets:FindFirstChild("Zivvi")
-  source=family and family:FindFirstChild("Zivvi__CharmDot",true)
+  local assets=Storage:FindFirstChild("PetAssets");local family=assets and assets:FindFirstChild("Bear")
+  source=family and family:FindFirstChild("Bear__CharmDot",true)
  end
  if not source or not source:IsA("MeshPart")or source.MeshId==""or source.MeshSize.Magnitude<=0 then return false end
  local epoch=self.epoch;local queue=self.options.readiness or Readiness.shared

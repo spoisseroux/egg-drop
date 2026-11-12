@@ -9,6 +9,8 @@ local function release(entry)
  entry.materialTint=nil;entry.materialStrength=nil;entry.materialPartColor=nil
 end
 local function profile(entry)
+ -- Authored textures (eye whites, the mouth) would be hidden by a finish surface.
+ if entry.part and entry.part:IsA("MeshPart")and entry.part.TextureID~=""then return nil end
  if entry.role=="charm"then return "Charm"end
  if entry.faceRole=="spark"then return "Catchlight"end
  if entry.name=="EyeL"or entry.name=="EyeR"or entry.name=="Eye"then return "Eye"end

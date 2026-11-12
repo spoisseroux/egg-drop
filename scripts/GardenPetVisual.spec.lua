@@ -55,7 +55,7 @@ return function(client)
    end)
   end
   test("all seven authored aliases retain identity bits, ordering and rarity",function()
-   assert(Pets.byId.pip.name=="Zivvi"and Pets.byId.puddle.name=="Ovelle"and #Pets.collection==7)
+   assert(Pets.byId.pip.name=="Bear"and Pets.byId.puddle.name=="Ovelle"and #Pets.collection==7)
    for i,pet in ipairs(Pets.collection)do
     assert(pet.index==i);local v=Factory.new(folder,Vector3.new(2000,4,0),pet,.72);table.insert(views,v)
     assert(v.model:GetAttribute("RigId")~=nil and v.definition.legacyId==pet.id)
@@ -63,8 +63,8 @@ return function(client)
   end)
   test("a named but empty imported resource rejects the entire backend for a faithful native fallback",function()
    local assets=game.ReplicatedStorage:FindFirstChild("PetAssets");assert(assets)
-   local source=assets:FindFirstChild("Zivvi");assert(source)
-   local original=source:FindFirstChild("Zivvi__Body");assert(original and original:IsA("MeshPart"))
+   local source=assets:FindFirstChild("Bear");assert(source)
+   local original=source:FindFirstChild("Bear__Body");assert(original and original:IsA("MeshPart"))
    local placeholder=Instance.new("MeshPart");placeholder.Name=original.Name;placeholder.Size=original.Size;placeholder.CFrame=original.CFrame
    original.Parent=folder;placeholder.Parent=source
    local made;local success,why=pcall(function()

@@ -18,7 +18,8 @@ function Appearance.decode(value)
 end
 function Appearance.visible(profile,id)
  local entry=profile.petAppearance and profile.petAppearance[id]
- return if entry then entry.charmVisible else true
+ -- Pets start with no charm (PET-STYLE-GUIDE.md); only a saved choice shows one.
+ return if entry then entry.charmVisible else false
 end
 function Appearance.shape(profile,id)return shape(profile.petAppearance and profile.petAppearance[id])end
 function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures,confirmedPetId)
@@ -28,7 +29,7 @@ function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures
  for _,id in ipairs(Appearance.Ids)do
   local entry=profile.petAppearanceSaved and profile.petAppearanceSaved[id]
   result[id]=Hue.appearance(hues,id,petHues)
-  result[id].charmVisible=if valid(entry)then entry.charmVisible else true
+  result[id].charmVisible=if valid(entry)then entry.charmVisible else false
   result[id].charmShape=if valid(entry)then shape(entry)else Charms.Default
   result[id].finish=if type(petMaterials)=="table"then petMaterials[id]or "standard"else "standard"
   if id==(confirmedPetId or profile.companionId)then
@@ -64,7 +65,7 @@ function Appearance.new(options)
  return{revision=0,requests={},lastAt=-math.huge,lastMalformed=-math.huge,selectionsEnabled=if options and options.selectionsEnabled~=nil then options.selectionsEnabled==true else Charms.SelectionsEnabled==true}
 end
 local function packet(state,profile,id,seq,status,reason)
- return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else true,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
+ return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else false,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
 end
 function Appearance.request(state,profile,value,now,usable,owns,apply)
  if type(value)~="table"or not supported[value.petId]or type(value.visible)~="boolean"or(value.shape~=nil and not Charms.known(value.shape))or(value.shapeVersion~=nil and(value.shapeVersion~=Charms.Version or value.shape==nil))or type(value.seq)~="number"or value.seq~=value.seq or value.seq%1~=0 or value.seq<1 or value.seq>2147483647 then

@@ -6,7 +6,8 @@ return function(client)
  local Shot=require(client.PetGreetingShot);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
  local folder=Instance.new("Folder");folder.Name="_GardenBabyMotion";folder.Parent=workspace
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local function entry(visual,name)for _,piece in ipairs(visual.pieces)do if piece.name==name then return piece end end;error(name.." missing")end
+ local function find(visual,name)for _,piece in ipairs(visual.pieces)do if piece.name==name then return piece end end end
+ local function entry(visual,name)return find(visual,name)or error(name.." missing")end
  local function sample(v,expression)return table.pack(Motion.sample(v,expression or "neutral"))end
  local ok,problem=pcall(function()
   test("seeded blinks close briefly, rest open and repeat without frame integration",function()
@@ -44,16 +45,17 @@ return function(client)
     visual.cosmeticSeed=117;visual.focusPose=true;visual.greeting=2;visual.expression="neutral";visual:update(0)
     local count=#visual.model:GetDescendants();local foot=entry(visual,"FootL").part.CFrame
     local dot=entry(visual,"CharmDot");local baseline=dot.part.Position;local moved=false;local blink=false
-    local eye=entry(visual,"EyeL");local glint=entry(visual,"GlintL")
+    local eye=entry(visual,"EyeL");local glint=find(visual,"GlintL") -- the v1 Bear (pip) has no glint piece
     for i=0,240 do
      visual.time=i*.05;visual:update(0)
      assert(entry(visual,"FootL").part.CFrame==foot,"idle slides or lifts the planted foot")
      moved=moved or(dot.part.Position-baseline).Magnitude>.025
-     if eye.part.Size.Y<eye.size.Y*.3 then blink=true;assert(glint.part.Transparency==1,"glint remains above closed eyelid")end
+     if eye.part.Size.Y<eye.size.Y*.3 then blink=true;if glint then assert(glint.part.Transparency==1,"glint remains above closed eyelid")end end
      assert(math.abs(dot.part.Size.X*dot.part.Size.Y*dot.part.Size.Z-dot.size.X*dot.size.Y*dot.size.Z)<.00001,"Dot squash changes volume")
     end
     assert(moved and blink and #visual.model:GetDescendants()==count)
-    for _,side in ipairs({"L","R"})do
+    -- Cuff trims exist only on cuffed rigs; the v1 Bear's paw tips come from its two-tone body.
+    for _,side in ipairs(if find(visual,"CuffTrimL")then {"L","R"}else {})do
      local hand=entry(visual,"Hand"..side).part;local trim=entry(visual,"CuffTrim"..side).part
      visual.expression="neutral";visual:update(0);local relative=hand.CFrame:ToObjectSpace(trim.CFrame)
      for _,pose in ipairs({"curious","pleased","affectionate"})do
@@ -75,7 +77,7 @@ return function(client)
     local original=Palette.original(id)
     assert(Pets.byId[id].index==index and Pets.byId[id].color==Color3.fromRGB(255,255,255))
     assert(original.body==Color3.fromRGB(255,255,255)and original.secondary==Color3.fromRGB(200,200,200))
-    assert(Pets.isActive(id)==(index<=4),"retained edition silently reentered the active roster")
+    assert(Pets.isActive(id)==(index==1),"retained edition silently reentered the active roster") -- v1: only pip is active
    end
   end)
   test("focus captures analytic extrema once and hidden Dot contributes no padding or points",function()

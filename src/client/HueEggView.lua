@@ -92,7 +92,7 @@ function View.new(parent,intent,options)
  self.viewport=Instance.new("ViewportFrame");self.viewport.Name="SavedPet";self.viewport.BackgroundTransparency=1;self.viewport.Size=UDim2.fromScale(1,1);self.viewport.ZIndex=24;self.viewport.Parent=self.portrait
  self.viewport.Ambient=Color3.fromRGB(175,184,183);self.viewport.LightColor=Color3.fromRGB(255,250,231);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
- self.petName=text(card,"PetName","Zivvi","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center
+ self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center
  self.channelTitle=text(body,"ChannelTitle","Main","Action")
  self.inspection=text(body,"HueInspection","Choose a color to use one fruit.","Body")
  for _,id in ipairs(ids)do if id~="reset"then
@@ -711,7 +711,7 @@ function View:refresh()
  if self.featureAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..FeatureCatalog.ById[self.featureAssignment.featureId].name end
  if self.materialAssignment then self.targetTitle.Visible=customization and self.tab=="pet";self.targetTitle.Text="Choose a pet for "..MaterialCatalog.ById[self.materialAssignment.finishId].name end
  self.eggsButton.Visible=customization and self.tab=="pet"and not confirming and self:canCustomize()
- if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companion yet. Play your first rounds to meet Zivvi."end
+ if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companion yet. Play your first rounds to meet your Bear."end
  local materialMode=if self.page=="materialReceipt"then "receipt"elseif self.page=="materialBuy"then "buy"elseif customization and self.tab=="materials"and not confirming then "choices"else nil
  self.materialPanel:refresh(self.state,self.petId,materialMode,materialResult and self.materialPurchaseInFlight==materialResult.id)
  if materialMode=="receipt"then self.materialPurchaseInFlight=nil end

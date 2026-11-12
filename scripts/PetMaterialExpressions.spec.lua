@@ -17,15 +17,27 @@ return function(client)
    a.mainDoses.rose=3;a.mainDoses.citrus=2;a.secondaryDoses.tide=5
    local v=Factory.new(folder,Vector3.new(2000,4,0),pet,.72,a);table.insert(visuals,v);v.reducedEffects=true;v:update(0)
    local count=#v.pieces;local expected=Palette.resolve(pet.id,a)
+   -- Two-tone rigs (v1 Bear): body parts keep Main on the part and carry Secondary on the surface tint.
+   local function checkBody(e,palette,why)
+    if v.twoTone and e.colorRole=="body"then
+     colorControl.Color=palette.body
+     assert(e.materialSurface.Color==palette.secondary,why.." (two-tone surface must carry Secondary)")
+     assert(e.part.Color==colorControl.Color,why.." (two-tone part must carry Main)")
+    else assert(e.materialSurface.Color==palette[e.colorRole],why)end
+   end
    for _,e in ipairs(v.pieces)do
-    if e.colorRole=="body"or e.colorRole=="secondary"then assert(e.materialSurface.Color==expected[e.colorRole],"mixed material tint differs from saved palette")end
+    if e.colorRole=="body"or e.colorRole=="secondary"then checkBody(e,expected,"mixed material tint differs from saved palette")end
    end
    v.expression="affectionate";v:update(0)
    for _,e in ipairs(v.pieces)do if e.faceRole=="spark"then assert(e.part.Transparency==1,"catchlight floats over closed eye")end end
    v.expression="neutral";v:update(0)
    for _,e in ipairs(v.pieces)do
     if e.faceRole=="spark"then assert(e.part.Transparency==0 and e.part.Color==e.faceBaseColor and e.materialSurface.Color==e.faceBaseColor,"authored pale catchlight dimmed")end
-    if e.name=="EyeL"or e.name=="EyeR"then assert(e.materialSurface.EmissiveStrength==0 and e.materialSurface.Color==e.color,"eye identity/emission changed")end
+    if e.name=="EyeL"or e.name=="EyeR"then
+     -- A textured authored eye (v1 Bear) keeps its own texture and gets no finish surface.
+     if e.part:IsA("MeshPart")and e.part.TextureID~=""then assert(e.materialSurface==nil and e.part.Material~=Enum.Material.Neon,"textured eye got a finish surface or glows")
+     else assert(e.materialSurface.EmissiveStrength==0 and e.materialSurface.Color==e.color,"eye identity/emission changed")end
+    end
    end
    for _,shape in ipairs({"ring","pebble","dot"})do
     a.charmShape=shape;v:applyAppearance(a);v:update(0)
@@ -46,10 +58,16 @@ return function(client)
    a.charmVisible=false;v:applyAppearance(a)
    for _,e in ipairs(v.pieces)do if e.role=="charm"then assert(e.part.Transparency==1 and e.part.Material~=Enum.Material.Neon and(not e.materialSurface or e.materialSurface.EmissiveStrength==0))end end
    a.mainDoses=Hue.emptyCounts();v:applyAppearance(a)
-   for _,e in ipairs(v.pieces)do if e.colorRole=="body"then assert(e.materialSurface.Color==Palette.original(pet.id).body)end end
+   local reset=Palette.resolve(pet.id,a);assert(reset.body==Palette.original(pet.id).body)
+   for _,e in ipairs(v.pieces)do if e.colorRole=="body"then checkBody(e,reset,"Main reset did not restore the original body")end end
    local preview=Factory.new(folder,Vector3.zero,pet,nil,a);table.insert(visuals,preview)
    assert(not preview.worldContext and not preview.model:FindFirstChildWhichIsA("Highlight",true))
-   for _,e in ipairs(preview.pieces)do if e.materialSurface then assert(e.materialSurface.Color==e.color,"preview logical palette mismatch")end end
+   local previewPalette=Palette.resolve(pet.id,a)
+   for _,e in ipairs(preview.pieces)do if e.materialSurface then
+    -- Two-tone body surfaces carry the logical Secondary; every other surface carries its own logical color.
+    local want=if preview.twoTone and e.colorRole=="body"then previewPalette.secondary else e.color
+    assert(e.materialSurface.Color==want,"preview logical palette mismatch")
+   end end
    table.insert(cases,pet.name.." mixed tint/reset, closed/open catchlight, shape glow/hide and preview logical parity")
   end
  end)

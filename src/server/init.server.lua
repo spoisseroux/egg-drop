@@ -223,7 +223,7 @@ local function gardenInput(board)
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
 		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}))or Vector3.new(position.X,GardenLayout.FloorY,position.Z)else Vector3.zero,
 		yaw=if root then math.atan2(root.CFrame.LookVector.X,root.CFrame.LookVector.Z)else 0,
-		charmVisible=not preferences[petId] or preferences[petId].charmVisible~=false}
+		charmVisible=preferences[petId]~=nil and preferences[petId].charmVisible==true}
 end
 local function gardenInputs()
 	local inputs={}

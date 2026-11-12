@@ -109,7 +109,7 @@ return function(server,hostSource)
   local rev=h.state.revision;local usage={id=tostring(rev)..":host-equip",catalogVersion=1,petId="pip",finishId="gloss",expectedFinish="standard",resultId=packet.id}
   local balance=h.state.nectar;c.now=5;c.dropSaved=true;local count=#c.packets;send(usage,rev,"materialEquip");assert(#c.packets==count)
   local public=snapshot();assert(public.petMaterials.pip=="gloss"and public.pendingMaterialResult==nil and public.nectar==balance)
-  local appearance=realGame.HttpService:JSONDecode(board:GetAttribute("PetAppearance"));assert(appearance.pip.finish=="gloss"and appearance.pip.body=="original"and appearance.pip.charmVisible)
+  local appearance=realGame.HttpService:JSONDecode(board:GetAttribute("PetAppearance"));assert(appearance.pip.finish=="gloss"and appearance.pip.body=="original"and appearance.pip.charmVisible==false) -- no saved choice: pets start with no charm
   c.dropSaved=false;c.now=5.5;assert(send(usage,rev,"materialEquip").status=="Saved")
   local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":host-next-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible={"matte"}}
   c.now=6;send(nextBuy,nextRev);local resultId=h.state.pendingMaterialResult.id;local nextBalance=h.state.nectar

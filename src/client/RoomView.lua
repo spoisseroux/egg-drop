@@ -543,7 +543,7 @@ end
 
 function Room.captureFocusSubject(pet,family)
 	local rig=pet.model:GetAttribute("RigId")
-	if rig=="zivvi"or rig=="ovelle"then return PetGreetingShot.captureFocusedSubject(pet)end
+	if rig=="zivvi"or rig=="ovelle"or rig=="bear"then return PetGreetingShot.captureFocusedSubject(pet)end
 	local fields={"greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame"}
 	local saved={};for i,key in ipairs(fields)do saved[i]=pet[key]end
 	pet.greeting=if family=="pip"or family=="puddle"then 2 else 0

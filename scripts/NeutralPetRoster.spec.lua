@@ -5,11 +5,11 @@ return function(shared)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local ids={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"}
  local protected={
-  pip={"#443641","#855763","#FFF6E9","#D9A6A2"},puddle={"#404149","#7C626C","#FFFAF0","#D6AFB0"},
+  pip={"#2A2226","#66332E","#FFF6E9","#E8A6A6"},puddle={"#404149","#7C626C","#FFFAF0","#D6AFB0"},
   wick={"#383342","#63434C","#FFF4DB","#DCA39D"},orbit={"#343448","#655265","#FFF4DB","#C2ABB7"},
   bloom_pip={"#383342","#63434C","#FFF4DB","#DCA39D"},foxfire_wick={"#393044","#6B475C","#FFF4DB","#D9A3AB"},eclipse_orbit={"#363448","#645265","#FFF4DB","#C5A6AF"},
  }
- test("all seven saved IDs and ownership bits remain permanent while only Zivvi is active",function()
+ test("all seven saved IDs and ownership bits remain permanent while only the Bear (pip) is active",function()
   assert(#Pets.collection==7 and #Pets.active==1 and Pets.active[1].id=="pip")
   for i,id in ipairs(ids)do
    assert(Pets.collection[i]==Pets.byId[id]and Pets.byId[id].index==i and Eggs.bit(id)==2^(i-1))
@@ -32,15 +32,19 @@ return function(shared)
    local def=Defs[id];assert(Color3.fromHex(def.palette.body)==p.body and Color3.fromHex(def.palette.secondary)==p.secondary)
    if NewDefs[id]then assert(NewDefs[id].palette.body=="#FFFFFF"and NewDefs[id].palette.secondary=="#C8C8C8")end
    for i,role in ipairs({"face","mouth","ivory","blush"})do assert(p[role]==Color3.fromHex(protected[id][i]),"protected "..id.." "..role)end
-   assert(def.faceBody~="#FFFFFF","original cheek blend source lost")
+   -- faceBody only feeds blush (cheek) pieces; the two-tone Bear has none.
+   local hasBlush=false;for _,piece in ipairs(def.pieces)do if piece.colorRole=="blush"then hasBlush=true end end
+   if hasBlush then assert(def.faceBody~="#FFFFFF","original cheek blend source lost")end
   end
  end)
  test("hands cuffs feet and floating charm use Secondary without changing semantic geometry",function()
   for _,id in ipairs(ids)do
-   local found={}
+   local found={};local twoTone=Defs[id].twoTone
    for _,piece in ipairs(Defs[id].pieces)do
     if piece.channel=="HandL"or piece.channel=="HandR"or piece.channel=="CuffL"or piece.channel=="CuffR"or piece.channel=="FootL"or piece.channel=="FootR"or piece.channel=="Charm"then
-     assert(piece.colorRole=="secondary",id.." "..piece.name.." is not a neutral grey accent");found[piece.channel]=true
+     -- Two-tone rigs (the v1 Bear) take paw/foot tips from the body gradient, so limbs stay body; the charm stays Secondary.
+     local expected=(twoTone and piece.channel~="Charm")and"body"or"secondary"
+     assert(piece.colorRole==expected,id.." "..piece.name.." expected "..expected);found[piece.channel]=true
     end
    end
    assert(found.HandL and found.HandR and found.FootL and found.FootR and found.Charm)

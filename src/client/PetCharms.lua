@@ -56,7 +56,8 @@ function Charms.step(visual)
  if add(visual,"ring","Mesh",mesh:Clone(),Vector3.zero,Vector3.new(.259,.259,.049),CFrame.Angles(math.pi/2,0,0),"mesh")then visual.charmRingBound=true;visual.poseDirty=true end
 end
 function Charms.apply(visual,appearance)
- visual.charmVisible=type(appearance)~="table"or appearance.charmVisible~=false
+ -- Pets start with no charm: only an explicit choice shows it.
+ visual.charmVisible=type(appearance)=="table"and appearance.charmVisible==true
  visual.charmShape=if type(appearance)=="table"and Catalog.validStored(appearance.charmShape)then appearance.charmShape else Catalog.Default
  visual.renderCharmShape=Catalog.renderShape(visual.charmShape)
  prepare(visual,visual.renderCharmShape)
