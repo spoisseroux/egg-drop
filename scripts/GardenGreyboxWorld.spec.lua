@@ -170,6 +170,28 @@ local function v7(server)
 		for _,name in ipairs({"GreyboxTerraceLow","GreyboxPond","HatchTop","GardenBoundary","SpringWater"})do assert(not room:FindFirstChild(name),"legacy part "..name)end
 	end)
 
+	test("foliage, grass, ground and rock are matte; marble keeps a slight sheen and water stays glossy",function()
+		local matte={grass=1,meadow=1,dirt_path=1,pebble_bed=1,foliage=1,foliage_blossom=1,bark=1,cliff_rock=1,boulder_rock=1,wood_plank=1}
+		local seen=0
+		for _,part in ipairs(room.World:GetChildren())do
+			local kind=string.match(part.Name,"^W7_.-__(.-)$")
+			local finish=part:FindFirstChildOfClass("SurfaceAppearance")
+			if kind and matte[kind]then
+				seen+=1
+				assert(finish and finish.Name=="MatteFinish",part.Name.." has no matte finish")
+				assert(finish.ColorMap==part.TextureID and finish.ColorMap~="","matte finish lost the colour map "..part.Name)
+				assert(finish.RoughnessMap=="rbxassetid://132217078330162"and finish.MetalnessMap=="rbxassetid://114363080604088",part.Name)
+			else
+				assert(not finish,"unexpected finish on "..part.Name)
+				if kind=="ground"then assert(part.Material==Enum.Material.Fabric,"vertex-coloured ground is not rough")end
+				if kind=="marble"or kind=="marble_smooth"then assert(part.Material==Enum.Material.Plastic,part.Name)end
+				if kind=="water"then assert(part.Material==Enum.Material.SmoothPlastic,"water lost its gloss")end
+			end
+		end
+		assert(seen==30,"matte parts "..seen)
+		assert(math.abs(game:GetService("Lighting").EnvironmentSpecularScale-.2)<1e-3,"global specular changed; pets and water rely on it")
+	end)
+
 	test("ground tiles, rocks and architecture collide; leaves, water and decoration do not",function()
 		for _,part in ipairs(room.World:GetChildren())do
 			local info=Data.parts[part.Name];assert(info and part.Anchored,part.Name)

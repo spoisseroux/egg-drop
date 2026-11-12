@@ -40,7 +40,21 @@ FLAT = {
     "W1_glow_warm": (255, 216, 137), "W1_glow_aqua": (79, 230, 255), "W1_glow_pink": (255, 128, 207),
     "W1_cloud": (250, 252, 255), "W1_foam": (240, 250, 252), "W1_bubble": (216, 245, 255),
 }
-MATERIAL_TOKEN = {"SmoothPlastic": 272, "Neon": 288, "Glass": 1568}
+MATERIAL_TOKEN = {"SmoothPlastic": 272, "Plastic": 256, "Fabric": 1312, "Neon": 288, "Glass": 1568}
+# Matte finish (polish 2026-11-12): SmoothPlastic read glossy on foliage, grass, ground and rock.
+# Textured natural surfaces get a SurfaceAppearance with their own colour map, a uniformly white
+# roughness map (roughness 1) and a black metalness map, so they lose the specular sheen without
+# touching the global EnvironmentSpecularScale that pets and water rely on. The uniform maps are
+# the place's existing pet-material uploads (assets/pet-materials/white-opaque.png, metalness-zero.png).
+MATTE_ROUGHNESS = "rbxassetid://132217078330162"
+MATTE_METALNESS = "rbxassetid://114363080604088"
+MATTE = {"W1_grass", "W1_meadow", "W1_dirt_path", "W1_pebble_bed", "W1_foliage", "W1_foliage_blossom",
+         "W1_bark", "W1_cliff_rock", "W1_boulder_rock", "W1_wood_plank"}
+# W1_ground is a near-white detail texture tinted by mesh vertex colours, which a SurfaceAppearance
+# drops (the slopes turn white), so it takes the rough Fabric material instead.
+FABRIC = {"W1_ground"}
+# Marble and the painted palette props keep a very slight sheen; gold trim and water stay glossy.
+SOFT_SHEEN = {"W1_marble", "W1_marble_smooth", "W1_palette"}
 FIDELITY = {"Default": 0, "Hull": 1, "Box": 2, "PreciseConvexDecomposition": 3}
 
 
@@ -70,7 +84,28 @@ def look(part):
         out["shadow"] = False
     if region == "Vegetation" and mat == "W1_palette":
         out["shadow"] = False  # flowers
+    if mat in MATTE and tex:
+        out["matte"] = True
+    elif mat in FABRIC:
+        out["material"] = "Fabric"
+    elif mat in SOFT_SHEEN:
+        out["material"] = "Plastic"
     return out
+
+
+def xml_matte(index, texture):
+    lines = [
+        f"        <Item class=\"SurfaceAppearance\" referent=\"W7S{index}\">",
+        "          <Properties>",
+        "            <string name=\"Name\">MatteFinish</string>",
+        "            <token name=\"AlphaMode\">0</token>",
+        f"            <Content name=\"ColorMap\"><url>{texture}</url></Content>",
+        f"            <Content name=\"MetalnessMap\"><url>{MATTE_METALNESS}</url></Content>",
+        f"            <Content name=\"RoughnessMap\"><url>{MATTE_ROUGHNESS}</url></Content>",
+        "          </Properties>",
+        "        </Item>",
+    ]
+    return "".join(line + "\n" for line in lines)
 
 
 def xml_part(index, part):
@@ -103,7 +138,9 @@ def xml_part(index, part):
         f"          <token name=\"Material\">{MATERIAL_TOKEN[lk['material']]}</token>\n"
         f"          <Color3uint8 name=\"Color3uint8\">{color}</Color3uint8>\n"
         f"          <float name=\"Transparency\">{lk['transparency']!r}</float>\n"
-        "        </Properties>\n      </Item>\n")
+        "        </Properties>\n"
+        + (xml_matte(index, lk["texture"]) if lk.get("matte") else "")
+        + "      </Item>\n")
 
 
 def rbxmx():
