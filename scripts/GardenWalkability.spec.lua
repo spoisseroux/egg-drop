@@ -1,5 +1,5 @@
 -- Pure support/path math against detached geometry; no world/profile mutation.
-return function(shared)
+local function legacy(shared)
  local W=require(shared.GardenWalkability);local P=require(shared.GardenPathPlanner);local A=require(shared.GardenActivity)
  local world=require(shared.HollowWorldLayout);local cases={};local function test(name,f)f();table.insert(cases,name)end
  local holder=Instance.new("Folder");local wet={}
@@ -79,4 +79,67 @@ return function(shared)
   end)
  end)
  holder:Destroy();assert(ok,problem);return{passed=#cases,cases=cases}
+end
+
+-- World 1 v7 (2026-11-12): the same support/path math against the island's
+-- generated stream boxes and the marble bridge, on detached fixture parts.
+local function v7(shared)
+ local W=require(shared.GardenWalkability);local P=require(shared.GardenPathPlanner);local A=require(shared.GardenActivity)
+ local world=require(shared.HollowWorldLayout);local Data=require(shared.WorldV7Data)
+ local cases={};local function test(name,f)f();table.insert(cases,name)end
+ local holder=Instance.new("Folder");local wet={}
+ for _,entry in ipairs(Data.wet)do
+  local part=Instance.new("Part");part.Size=Vector3.new(entry.size[1],.2,entry.size[3])
+  part.CFrame=CFrame.new(entry.center[1],entry.center[2],entry.center[3])*CFrame.Angles(0,entry.yaw,0);part:SetAttribute("GardenWetRegion",true);part.Parent=holder;table.insert(wet,part)
+ end
+ local function g(x,z)return Vector3.new(x,world.groundY(x,z)+.025,z)end
+ local bridge=world.WalkableSpans.MainBridge;local top=W.top(bridge)
+ local ok,problem=pcall(function()
+  test("the marble bridge gives four usable studs and an exact support top",function()
+   local span,id=W.spanAt(Vector3.new(2.5,top,21));assert(id=="MainBridge"and span.size.Z==4 and math.abs(top-4.365)<1e-6)
+   assert(W.spanAt(Vector3.new(2.5,top,24))==nil and W.spanAt(Vector3.new(2.5,top,18))==nil)
+  end)
+  test("open stream or the bridge underside is never admitted as a crossing",function()
+   assert(not W.segmentAllowed(g(-12,30),g(16,30),wet),"open stream at Z30")
+   assert(not W.segmentAllowed(Vector3.new(-7.5,3.5,21),Vector3.new(12.5,3.5,21),wet),"under the deck")
+   assert(W.segmentAllowed(Vector3.new(-7.5,top,21),Vector3.new(12.5,top,21),wet),"on the deck")
+  end)
+  test("both crossing directions reach their endpoint with a safe control hull on the deck",function()
+   for _,points in ipairs({{g(-14,21),g(18,21)},{g(18,21),g(-14,21)}})do
+    local path,seconds=P.plan(points[1],points[2],Vector3.zero,4,0,0,nil,Vector3.zero,wet)
+    assert(W.pathAllowed(path,wet),"bridge hull unsafe")
+    local actor={from=A.pack(points[1]),to=A.pack(points[2]),path=path,startTime=0,endTime=seconds,yaw=0}
+    assert((A.sample(actor,seconds).position-points[2]).Magnitude<1e-5,"crossing never reached destination")
+    -- Over the stream the pet must be on the deck footprint at or above its top (the banks sit ~0.2 higher).
+    local overDeck=0
+    for i=0,200 do local p=A.sample(actor,seconds*i/200).position
+     if not W.segmentAllowed(Vector3.new(p.X,3,p.Z),Vector3.new(p.X,3,p.Z),wet)then assert(W.spanAt(p)and p.Y>=top-.05,"over water off the deck at "..tostring(p));overDeck+=1 end
+    end
+    assert(overDeck>0,"never crossed over the stream")
+   end
+  end)
+  test("a genuinely wet lateral follow goal beside the deck projects onto it",function()
+   local raw=g(3,18.4);assert(not W.segmentAllowed(raw,raw,wet))
+   local goal,clamped=W.resolveAnchor(raw,wet);assert(clamped and goal and math.abs(goal.Y-top)<1e-6 and W.segmentAllowed(goal,goal,wet))
+  end)
+  test("far unsupported stream goals are not projected across the garden",function()
+   assert(W.resolveAnchor(g(18,-16.5),wet)==nil and W.resolveAnchor(g(39,-39),wet)==nil)
+  end)
+  test("dry movement on one bank keeps the exact planner path",function()
+   local from,to,velocity=g(-40,-10),g(-25,-10),Vector3.new(2,0,0)
+   local path,seconds=P.plan(from,to,velocity,9,0,math.pi/2,nil,Vector3.new(4,0,0),wet)
+   local original,duration=A.plan(from,to,velocity,9,0,math.pi/2,nil,Vector3.new(4,0,0))
+   assert(seconds==duration and #path==#original and W.pathAllowed(path,wet))
+  end)
+  test("bare ground under the hub and arrival lawns is about the lawn height",function()
+   for _,p in ipairs({{-30,4},{96,66},{-30,23},{50,14}})do local y=world.groundY(p[1],p[2]);assert(y>3.8 and y<5.6,"ground "..y)end
+  end)
+ end)
+ holder:Destroy();assert(ok,problem);return{passed=#cases,cases=cases}
+end
+
+return function(shared,...)
+ local World=require(shared.HollowWorldLayout)
+ if World.WorldVersion=="v7"then return v7(shared,...)end
+ return legacy(shared,...)
 end

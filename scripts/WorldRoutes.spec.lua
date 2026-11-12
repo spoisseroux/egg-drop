@@ -1,5 +1,5 @@
 -- Actual authored geometry, fresh source/config; geometry is not a native walk.
-return function(server,artSource)
+local function legacy(server,artSource)
 	assert(type(artSource)=="string","Actual LoungeArt source required")
 	local lighting=game:GetService("Lighting")
 	local properties={"ClockTime","Brightness","Ambient","OutdoorAmbient","ColorShift_Top","EnvironmentDiffuseScale","EnvironmentSpecularScale","ShadowSoftness"}
@@ -224,4 +224,94 @@ return function(server,artSource)
 	if not grade then local item=lighting:FindFirstChild("SproutHollowGrade");if item then item:Destroy()end end
 	assert(success,problem)
 	return{passed=#cases,cases=cases,evidence="actual source-generated collision geometry; native walking/camera/performance remain separate"}
+end
+
+-- World 1 v7 (2026-11-12): the same intent against the live island. Stations
+-- sit at the stations.json frames, the arrival route stays on supported
+-- ground with no collider at walking height, toy and station reach disks do
+-- not overlap spawns, lamps are managed and shadowless, and movers stay still
+-- on the server.
+local function v7(server)
+	local Shared=game.ReplicatedStorage.Shared
+	local World=require(Shared.HollowWorldLayout)
+	local Layout=require(Shared.GardenLayout)
+	local Data=require(Shared.WorldV7Data)
+	local Walk=require(Shared.GardenWalkability)
+	local room=workspace:WaitForChild("EggDropLounge",10);assert(room,"live lounge required")
+	local cases={}
+	local function test(name,check)check();table.insert(cases,name)end
+	local function flat(v)return Vector2.new(v.X,v.Z)end
+	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room};params.RespectCanCollide=true
+
+	test("three station prompts sit at the v7 station frames",function()
+		local found={}
+		for _,node in ipairs(room:GetDescendants())do if node:IsA("ProximityPrompt")then
+			local id=node:GetAttribute("PocketClubStation");found[id]=node
+			assert(node.MaxActivationDistance<=8 and not node.RequiresLineOfSight)
+		end end
+		assert(found.Eggs and found.Journal and found.Customize,"three stations")
+		assert((flat(found.Eggs.Parent.Position)-flat(World.Stations.Eggs.Position)).Magnitude<1)
+		assert((flat(found.Customize.Parent.Position)-flat(World.Stations.Customize.Position)).Magnitude<2)
+		assert((flat(found.Journal.Parent.Position)-flat(World.Stations.Journal.Position)).Magnitude<2)
+	end)
+
+	test("the arrival-to-hub route stays on supported ground with nothing at walking height",function()
+		local route=World.Routes.ArrivalToHub
+		for i=2,#route do
+			local a,b=route[i-1],route[i]
+			for step=0,math.ceil((b-a).Magnitude/2)do
+				local p=a:Lerp(b,math.min(1,step*2/(b-a).Magnitude))
+				-- Cast from walking height: the marble arch spans the path overhead.
+				local hit=workspace:Raycast(Vector3.new(p.X,World.groundY(p.X,p.Y)+3,p.Y),Vector3.new(0,-8,0),params)
+				assert(hit,"no ground at "..tostring(p))
+				local gy=World.groundY(p.X,p.Y)
+				assert(Walk.spanAt(hit.Position)or math.abs(hit.Position.Y-gy)<1.2,"route not on ground at "..tostring(p).." hit "..hit.Instance.Name.." "..hit.Position.Y)
+			end
+			local from=Vector3.new(a.X,World.groundY(a.X,a.Y)+2.6,a.Y);local to=Vector3.new(b.X,World.groundY(b.X,b.Y)+2.6,b.Y)
+			local blocked=workspace:Raycast(from,to-from,params)
+			assert(not blocked,"route blocked by "..(blocked and blocked.Instance.Name or "")..(blocked and tostring(blocked.Position)or ""))
+		end
+	end)
+
+	test("toy reach excludes every spawn and station disk",function()
+		local toy=Layout.Toy
+		for slot=1,10 do
+			local at=World.Spawn:PointToWorldSpace(Vector3.new(((slot-1)%5-2)*3,0,math.floor((slot-1)/5)*3.5))
+			assert((flat(at)-flat(toy)).Magnitude>8.5)
+		end
+		for _,node in ipairs(room:GetDescendants())do if node:IsA("ProximityPrompt")then
+			assert((flat(node.Parent.Position)-flat(toy)).Magnitude>7+node.MaxActivationDistance,"toy and "..node:GetAttribute("PocketClubStation").." overlap")
+		end end
+		assert((flat(Layout.ToyWest)-flat(toy)-Vector2.new(-2.4,0)).Magnitude<1e-3 and(flat(Layout.ToyEast)-flat(toy)-Vector2.new(2.4,0)).Magnitude<1e-3)
+	end)
+
+	test("every lamp and station light is managed and shadowless",function()
+		local lights=0
+		for _,node in ipairs(room:GetDescendants())do if node:IsA("PointLight")then
+			lights+=1;assert(node:GetAttribute("HollowLamp")and not node.Shadows,node:GetFullName())
+		end end
+		assert(lights>=#World.Lamps and lights<=20,"lights "..lights)
+	end)
+
+	test("the painted day sky is installed",function()
+		local sky=game:GetService("Lighting"):FindFirstChild("WorldSky");assert(sky and sky:IsA("Sky"))
+		for _,face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"})do assert(sky["Skybox"..face]==Data.sky.day[face],face)end
+	end)
+
+	test("movers never collide and rest where they were authored on the server",function()
+		local movers=0
+		for _,part in ipairs(room.World:GetChildren())do if part:GetAttribute("WorldMotion")then
+			movers+=1;assert(not part.CanCollide and part:GetAttribute("WorldRestCFrame")==part.CFrame,part.Name)
+		end end
+		assert(movers>=20,"movers "..movers)
+		local beams=0;for _,b in ipairs(room.WaterFlow:GetDescendants())do if b:IsA("Beam")then beams+=1;assert(b:GetAttribute("WorldFlowSpeed"))end end
+		assert(beams>=10)
+	end)
+	return{passed=#cases,cases=cases,evidence="live v7 lounge geometry and raycasts"}
+end
+
+return function(server,...)
+	local World=require(game.ReplicatedStorage.Shared.HollowWorldLayout)
+	if World.WorldVersion=="v7"then return v7(server,...)end
+	return legacy(server,...)
 end

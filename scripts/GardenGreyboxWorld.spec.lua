@@ -1,7 +1,7 @@
 -- Greybox garden swap (2026-11-11): live lounge geometry, west crossing,
 -- routes around the pond and terraces, and the unchanged single-bridge detour.
 -- Run in a Server datamodel during Play: require(...)(game.ServerScriptService.Server)
-return function(server)
+local function legacy(server)
 	local Shared=game.ReplicatedStorage.Shared
 	local World=require(Shared.HollowWorldLayout)
 	local Walk=require(Shared.GardenWalkability)
@@ -120,4 +120,112 @@ return function(server)
 	end)
 
 	return{passed=#cases,cases=cases}
+end
+
+-- World 1 v7 (2026-11-12): the floating island replaces the greybox. Same
+-- intent: the live lounge geometry, its supported crossing, wet and blocked
+-- regions, and routes that stay on the ground and on the floor bounds.
+local function v7(server)
+	local Shared=game.ReplicatedStorage.Shared
+	local World=require(Shared.HollowWorldLayout)
+	local Walk=require(Shared.GardenWalkability)
+	local Planner=require(Shared.GardenPathPlanner)
+	local A=require(Shared.GardenActivity)
+	local Layout=require(Shared.GardenLayout)
+	local Data=require(Shared.WorldV7Data)
+	local room=workspace:WaitForChild("EggDropLounge",10);assert(room,"live lounge required")
+	local wet={}
+	for _,node in ipairs(room:GetDescendants())do
+		if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true)then table.insert(wet,node)end
+	end
+	local cases={}
+	local function test(name,run)run();table.insert(cases,name)end
+	local function ground(x,z)return Vector3.new(x,World.groundY(x,z)+.025,z)end
+	local function plan(from,to)return Planner.plan(from,to,Vector3.zero,4,0,0,nil,Vector3.zero,wet)end
+	local function arrives(path,to)
+		local last=path[#path]
+		return last and not last.safetyStop and(A.vector(last.to)-to).Magnitude<.05 and Walk.pathAllowed(path,wet)
+	end
+	local function usesDeck(path)
+		local bridge=World.WalkableSpans.MainBridge
+		for _,leg in ipairs(path)do for _,key in ipairs({"from","to"})do
+			local p=A.vector(leg[key])
+			if math.abs(p.Y-Walk.top(bridge))<.08 and math.abs(p.X-bridge.center.X)<bridge.size.X*.5 and math.abs(p.Z-bridge.center.Z)<bridge.size.Z*.5 then return true end
+		end end
+		return false
+	end
+	local function onFloor(path)
+		for _,leg in ipairs(path)do for _,key in ipairs({"from","to"})do
+			local p=A.vector(leg[key])
+			if not(math.abs(p.X-World.FloorCenterX)<=World.Width*.5-1.5 and math.abs(p.Z-World.FloorCenterZ)<=World.Depth*.5-1.5)then return false end
+		end end
+		return true
+	end
+
+	test("the island replaces the greybox: bounds floor, meshes and no legacy scenery",function()
+		local floor=room.Floor
+		assert(floor.Position==Vector3.new(World.FloorCenterX,World.FloorTop-.5,World.FloorCenterZ)and floor.Size==Vector3.new(World.Width,1,World.Depth))
+		assert(not floor.CanCollide and floor.Transparency==1,"floor is bounds only; the island meshes carry collision")
+		assert(#room.World:GetChildren()==Data.meshParts+Data.collisionTiles,"mesh count "..#room.World:GetChildren())
+		for _,name in ipairs({"GreyboxTerraceLow","GreyboxPond","HatchTop","GardenBoundary","SpringWater"})do assert(not room:FindFirstChild(name),"legacy part "..name)end
+	end)
+
+	test("ground tiles, rocks and architecture collide; leaves, water and decoration do not",function()
+		for _,part in ipairs(room.World:GetChildren())do
+			local info=Data.parts[part.Name];assert(info and part.Anchored,part.Name)
+			assert(part:GetAttribute("WorldMesh")==true,part.Name)
+			assert(part.CanCollide==info.collide,part.Name.." CanCollide")
+			if info.region=="GroundCollision"then assert(part.Transparency==1)end
+			if info.region=="Ground"or info.region=="Vegetation"or info.region=="Water"or info.region=="Backdrop"or info.motion then assert(not part.CanCollide,part.Name)end
+		end
+		for _,name in ipairs({"W7_Rocks__cliff_rock","W7_Rotunda__marble","W7_Bridge__marble","W7_Balustrades__marble","W7_Trunks__bark"})do assert(room.World[name].CanCollide,name)end
+	end)
+
+	test("perimeter wall, cave blocker and fall catch enclose the island",function()
+		local walls=room.PerimeterWall:GetChildren();assert(#walls==#Data.perimeter and #walls>60)
+		for _,w in ipairs(walls)do assert(w.CanCollide and w.Transparency==1 and w.Size.Y>=10,w.Name)end
+		assert(room.CaveBlocker.CanCollide and room.CaveBlocker.Transparency==1)
+		local catch=room.FallCatch;assert(catch.CanTouch and not catch.CanCollide and catch.Position.Y< -150 and catch.Size.X>=1400)
+	end)
+
+	test("the marble bridge support matches its registered crossing span",function()
+		local span=World.WalkableSpans.MainBridge;local support=room.MainBridgeSupport
+		assert(span.crossing and support:GetAttribute("GardenWalkableSpan")=="MainBridge"and support.Position==span.center and support.Size==span.size)
+		local _,id=Walk.spanAt(Vector3.new(2.5,Walk.top(span),21));assert(id=="MainBridge")
+	end)
+
+	test("stream, pools and spring are wet; knoll and stairs are blocked; lawns are open",function()
+		for _,entry in ipairs(Data.wet)do
+			local p=ground(entry.center[1],entry.center[3]);assert(not Walk.segmentAllowed(p,p,wet),"should be wet "..entry.name)
+		end
+		for _,p in ipairs({ground(52,3),ground(-63,45),ground(-46,31.5),ground(-60,50)})do assert(not Walk.segmentAllowed(p,p,wet),"off-limits "..tostring(p))end
+		for _,p in ipairs({ground(-30,4),ground(-90,0),ground(60,40),ground(96,60),ground(-20,-30),Layout.Toy})do assert(Walk.segmentAllowed(p,p,wet),"open "..tostring(p))end
+		for _,rest in ipairs(Layout.RestAnchors)do assert(Walk.segmentAllowed(rest.position,rest.position,wet),rest.id)end
+	end)
+
+	test("a pet follows from the arrival dais to the hub across the bridge, and back",function()
+		local a,b=ground(90,55),ground(-25,8)
+		local path=plan(a,b);assert(arrives(path,b)and usesDeck(path)and onFloor(path),"westbound")
+		path=plan(b,a);assert(arrives(path,a)and usesDeck(path)and onFloor(path),"eastbound")
+	end)
+
+	test("a pet walks around the knoll instead of over it",function()
+		local from,to=ground(-92,20),ground(-40,62);local path=plan(from,to)
+		assert(arrives(path,to)and not usesDeck(path)and onFloor(path),"around knoll")
+	end)
+
+	test("same-bank walks never detour over the bridge",function()
+		local from,to=ground(-40,-30),ground(-20,30);local path=plan(from,to)
+		assert(arrives(path,to)and not usesDeck(path))
+		local walked=0;for _,leg in ipairs(path)do walked+=(A.vector(leg.to)-A.vector(leg.from)).Magnitude end
+		assert(walked<90,"walked "..walked)
+	end)
+
+	return{passed=#cases,cases=cases}
+end
+
+return function(server,...)
+	local World=require(game.ReplicatedStorage.Shared.HollowWorldLayout)
+	if World.WorldVersion=="v7"then return v7(server,...)end
+	return legacy(server,...)
 end
