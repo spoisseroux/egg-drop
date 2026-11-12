@@ -75,6 +75,29 @@ return function(client)
    local pad=Motion.padding(v,tail);assert(pad.X>0 and pad.Z>0,"tail padding missing")
    assert(Motion.padding(v,ear).X>Motion.padding(v,piece(v,"Head")).X,"ear padding missing")
   end)
+  local Expression=require(client.PetExpression);local Affection=require(client.PetAffection);local Pico8=require(game.ReplicatedStorage.Shared.Pico8)
+  test("holding builds pleased (0-1 s) then affectionate; un-clocked petting stays affectionate",function()
+   assert(Expression.name({petting=true,pettingHeld=.4})=="pleased"and Expression.name({petting=true,pettingHeld=1.1})=="affectionate")
+   assert(Expression.name({petting=true})=="affectionate"and Expression.name({petting=false,pettingHeld=3})=="neutral")
+  end)
+  test("a held pet gets PICO-8 pink hearts after 1 s; Reduced Effects and release clear them",function()
+   local v=make();local fx=Affection.new(folder);fx:setPet(v);local count=#fx.folder:GetDescendants()
+   fx.clock=function()return 100 end;fx:begin(false);v.petting=true
+   for _=1,30 do fx:step(1/60,true,false)end;assert(v.pettingHeld and v.pettingHeld<1 and Expression.name(v)=="pleased")
+   for _=1,60 do fx:step(1/60,true,false)end;assert(Expression.name(v)=="affectionate")
+   local shown=0;for _,h in ipairs(fx.hearts)do if h.gui.Enabled then shown+=1;assert(h.glyph.TextColor3==Pico8[14]and h.glyph.Text=="♥")end end
+   assert(shown>0,"no hearts while held");assert(#fx.folder:GetDescendants()==count,"hearts allocated per frame")
+   fx:clear();assert(v.pettingHeld==nil);for _,h in ipairs(fx.hearts)do assert(not h.gui.Enabled)end
+   fx.clock=function()return 200 end;fx:begin(true);for _=1,120 do fx:step(1/60,true,true)end
+   for _,h in ipairs(fx.hearts)do assert(not h.gui.Enabled,"hearts under Reduced Effects")end
+   fx:destroy();v.petting=false
+  end)
+  test("a boop squashes the body for 0.15 s; none under Reduced Effects",function()
+   local v=make();v.reducedEffects=false;v:update(0);local body=piece(v,"Body");local rest=body.part.Size.Y
+   v.boopAt=os.clock()-.075;v:update(0);assert(body.part.Size.Y<rest*.9,"no squash")
+   v.boopAt=os.clock()-.3;v:update(0);assert(math.abs(body.part.Size.Y-rest)<1e-4,"squash outlived 0.15 s")
+   v.reducedEffects=true;v.boopAt=os.clock()-.075;v:update(0);assert(math.abs(body.part.Size.Y-rest)<1e-4,"squash under Reduced Effects")
+  end)
  end)
  for _,v in ipairs(views)do v:destroy()end;folder:Destroy()
  assert(ok,err);return{passed=#cases,cases=cases}

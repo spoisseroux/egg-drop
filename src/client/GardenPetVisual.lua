@@ -277,7 +277,11 @@ function Visual:update(dt)
  self.weightShift,self.weightRoll=weightX,weightRoll
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
  local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0),0)*CFrame.new(hipAnchor)*CFrame.Angles(0,0,weightRoll)*CFrame.new(-hipAnchor)
- local hop=(greet*.11+reactHop*.11+(self.movementBob or 0))*self.scale
+ -- Boop (C2): a 0.15 s squash, body wider and shorter with the head dipping.
+ local boopAge=if self.boopAt and not reduced then os.clock()-self.boopAt else nil
+ local boop=if boopAge and boopAge>=0 and boopAge<.15 then math.sin(boopAge/.15*math.pi)else 0
+ self.boopSquash=boop
+ local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
  local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0))*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
@@ -306,7 +310,7 @@ function Visual:update(dt)
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)
   if channel=="Body"then
    local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
-   size=Vector3.new(size.X*(1+squash*.35),size.Y*(1+bodyStretch-squash),size.Z*(1+squash*.35))
+   size=Vector3.new(size.X*(1+squash*.35+boop*.07),size.Y*(1+bodyStretch-squash-boop*.14),size.Z*(1+squash*.35+boop*.07))
   end
   if entry.role=="charm"then
    cf+=head:VectorToWorldSpace(Vector3.new(0,self.featureHaloLift or 0,0))

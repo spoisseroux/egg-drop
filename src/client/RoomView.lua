@@ -210,6 +210,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			end
 			self.pet.cosmeticSeed=Players.LocalPlayer.UserId
             self.pet.cosmeticTime=serverNow
+            -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
+            -- frame instead of the 15 Hz pose cadence. One focused pet only.
+            if self.pet.petting or(self.pet.boopAt and os.clock()-self.pet.boopAt<.25)then self.pet.poseDirty=true end
             self.pet:update(dt)
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
@@ -829,8 +832,12 @@ function Room:setPetContact(active)
  self.petContactActive,self.contactPet=true,self.pet;self.pet.petting=true
  if self.affection then self.affection:begin(self.reduceEffects())end
  local now=os.clock()
- if not self.reduceEffects()and now-(self.lastContactChirpAt or -math.huge)>=1.5 and now-(self.lastReactionAudioAt or -math.huge)>=.7 then
-  self.lastContactChirpAt=now;self.lastReactionAudioAt=now;self.audio:play(self.shownPet.cue,1.04,.26)
+ -- Every touch starts with a boop: a 0.15 s squash (not under Reduced Effects) and
+ -- the pet's cue at a random pitch from 0.96 to 1.08. Holding then builds the pose.
+ if not self.reduceEffects()then self.pet.boopAt=now end
+ if now-(self.lastContactChirpAt or -math.huge)>=.25 then
+  self.boopRandom=self.boopRandom or Random.new()
+  self.lastContactChirpAt=now;self.lastReactionAudioAt=now;self.audio:play(self.shownPet.cue,self.boopRandom:NextNumber(.96,1.08),.3)
  end
  self.contactContext={pet=self.pet,root=root,camera=workspace.CurrentCamera,shot=self.greetingCamera}
  if self.petContactIntent then self.petContactIntent:begin(self.shownPet.id,self.contactContext)end

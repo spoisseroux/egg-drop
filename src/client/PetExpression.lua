@@ -10,6 +10,9 @@ local poses={
 }
 function Expression.get(name)return poses[name]or poses.neutral end
 function Expression.name(visual)
+ -- Petting builds: pleased for the first second of a hold, then affectionate.
+ -- Visuals without a hold clock (fixtures, captures) keep the old affectionate read.
+ if visual.petting and type(visual.pettingHeld)=="number"then return if visual.pettingHeld>=1 then "affectionate"else "pleased"end
  if visual.petting or(visual.affection or 0)>.15 then return "affectionate"end
  return if poses[visual.expression]then visual.expression else "neutral"
 end
