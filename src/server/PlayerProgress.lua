@@ -4,6 +4,7 @@ local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
 local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 local Backgrounds = require(game:GetService("ReplicatedStorage").Shared.DeckBackgrounds)
+local BoardConfig = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local PetAppearance=require(script.Parent.PetAppearance)
 local HatchGuard=require(script.Parent.HatchGuard)
 local EggCatalog=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
@@ -97,6 +98,9 @@ local function decode(key, record, success)
 		trials = trials,
 		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
 		reduced = record.reduced == true,
+		-- Last difficulty played (picker focus). Never trusted for payout; the
+		-- run's own server-stored heat is.
+		lastHeat = if BoardConfig.validHeat(record.heat) then record.heat else BoardConfig.DefaultHeat,
 		loadFailed = not success,
 		saveFailed = false,
 	}
@@ -174,7 +178,7 @@ flush=function(profile)
 	local companionWriter=if companionChange then companionChange.writer else writer
 	local companionFenced=true
 	local earnedTrials = profile.earnedTrials
-	local soundChange, motionChange = profile.soundChange, profile.motionChange
+	local soundChange, motionChange, heatChange = profile.soundChange, profile.motionChange, profile.heatChange
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
 		local previousRank = rankOf(record)
@@ -202,6 +206,7 @@ flush=function(profile)
 		end
 		mergeSetting("sound", soundChange)
 		mergeSetting("reduced", motionChange)
+		mergeSetting("heat", heatChange)
 		if next(petChanges)then record.petAppearance=PetAppearance.merge(record.petAppearance,petChanges)end
 		local previousTime = appearanceStamp(record.themeAt)
 		local previousWriter = if type(record.themeWriter) == "string" then record.themeWriter else ""
@@ -327,8 +332,11 @@ flush=function(profile)
 	if motionChange == profile.motionChange then
 		profile.motionChange = nil
 	end
+	if heatChange == profile.heatChange then
+		profile.heatChange = nil
+	end
 	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt or profile.companionChange
-		or profile.earnedTrials or profile.soundChange or profile.motionChange or next(profile.petAppearanceChanges or {})) then
+		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
 	finishFlush(profile,not profile.saveFailed)
@@ -345,6 +353,14 @@ function Progress.recordTrials(profile, chain, score, clears)
 	profile.trials = earned
 	profile.earnedTrials = earned
 	markDirty(profile)
+end
+
+function Progress.setHeat(profile, heat)
+	if not BoardConfig.validHeat(heat) or profile.lastHeat == heat then return false end
+	profile.lastHeat = heat
+	profile.heatChange = { value = heat, at = DateTime.now().UnixTimestampMillis }
+	markDirty(profile)
+	return true
 end
 
 function Progress.setSetting(profile, key, value)

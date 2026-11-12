@@ -39,6 +39,8 @@ local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 local StoreService = require(script.StoreService)
 local Economy = require(script.EconomyAnalytics)
+local HeatPayout = require(ReplicatedStorage.Shared.HeatPayout)
+local HeatRequest = require(script.HeatRequest)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -305,6 +307,27 @@ local function sendItemResult(board,kind,quote,status,reason,receipt)
  if status~="Retrying"and not awaiting and board[waiting]and board[waiting].id==quote.id then board[waiting]=nil end
 end
 
+-- Guided first session (plan section 1): until the first saved win, the first
+-- three rounds of a session run Easy with no picker.
+local function guidedHeat(board)
+	return HeatRequest.guided(board.nursery.state.totalWins, board.settledRounds)
+end
+-- The picker's numbers come from here: each heat's win and tidy-win totals for
+-- this player's passes. Presentation only; payout reads the run's stored heat.
+local function publishHeat(board)
+	local boost = StoreService.boost(board)
+	local pays = {}
+	for _, key in ipairs(Config.HeatOrder) do
+		local low, high = HeatPayout.range(key, boost)
+		pays[key] = { low, high }
+	end
+	board.folder:SetAttribute("Heat", board.runHeat or Config.DefaultHeat)
+	board.folder:SetAttribute("NextHeat", board.nextHeat or Config.DefaultHeat)
+	board.folder:SetAttribute("HeatGuided", board.heatGuided == true)
+	board.folder:SetAttribute("HeatPays", HttpService:JSONEncode(pays))
+	board.folder:SetAttribute("WinPays", HeatPayout.rangeText(board.runHeat or Config.DefaultHeat, boost))
+end
+
 local function publishNursery(board)
 	local state = Nursery.public(board.nursery)
 	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
@@ -319,6 +342,7 @@ local function publishNursery(board)
 	-- attributes carry only appearance/roster; never publish the full profile there.
 	board.folder:SetAttribute("HatchState", nil)
 	nurserySnapshot:FireClient(board.player,state)
+	if board.runHeat then publishHeat(board) end
 	publishPetAppearance(board)
 	if board.hueWaiting and state.lastHueResult and state.lastHueResult.id==board.hueWaiting.id then
 		sendHueResult(board,board.hueWaiting,"Saved",nil,state.lastHueResult)
@@ -427,15 +451,24 @@ local function syncVisuals(board)
  end
 end
 
-local function reset(board, preset)
+-- `sameField` rebuilds the current fresh field (no drops yet) with the newly
+-- chosen heat, keeping its template and seed instead of advancing the rotation.
+local function reset(board, preset, sameField)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
 	local field = hasPip(board) and board.nursery.status == "Ready"
+	board.heatGuided = field and guidedHeat(board)
+	-- A run's heat is frozen here, before its first drop.
+	board.runHeat = HeatRequest.runHeat(board.heatGuided, board.nextHeat)
 	local descriptor
 	if field then
-		local count=board.fieldCount or 0
-		descriptor=FieldObjectives.create(FieldObjectives.next(count),Random.new():NextInteger(1,2147483646))
-		board.fieldCount=count+1
+		if sameField and board.field then
+			descriptor=FieldObjectives.create(board.field.descriptor.id,board.field.descriptor.seed,board.runHeat)
+		else
+			local count=board.fieldCount or 0
+			descriptor=FieldObjectives.create(FieldObjectives.next(count),Random.new():NextInteger(1,2147483646),board.runHeat)
+			board.fieldCount=count+1
+		end
 	end
 	local selected = NurseryCatalog.family(board.profile.companionId) or "pip"
 	board.runFamily = if FamilyMastery.ownsFamily(inventory(board), selected) then selected else "pip"
@@ -444,10 +477,11 @@ local function reset(board, preset)
 	board.runSequence = board.nursery.nextRunSeq
 	board.folder:SetAttribute("RunSequence", board.runSequence)
 	board.nursery.nextRunSeq += 1
-	board.field=if field then FieldRun.new({descriptor=descriptor,sequence=board.runSequence})else nil
+	board.field=if field then FieldRun.new({descriptor=descriptor,sequence=board.runSequence,heat=board.runHeat})else nil
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial,
-		if field then FieldObjectives.simulationOptions(descriptor,preset) else nil)
-	board.round = Round.new(if field then FieldRun.roundOptions() else nil)
+		if field then FieldObjectives.simulationOptions(descriptor,preset,board.runHeat) else nil)
+	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) else nil)
+	board.maxTier = 0
 	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
 	board.merges = 0
@@ -465,6 +499,7 @@ local function reset(board, preset)
 	board.folder:SetAttribute("DailyAward", 0)
 	board.folder:SetAttribute("MasteryAward", 0)
 	board.folder:SetAttribute("RewardStatus", "")
+	publishHeat(board)
 	publishState(board)
 	syncVisuals(board)
 end
@@ -507,6 +542,7 @@ local function addPlayer(player)
 	board.mode = if NurseryCatalog.isOwned(nursery.state.inventoryMask, "pip") then "Room" else "Board"
 	boards[player] = board
 	board.passes = {}
+	board.nextHeat = if Config.validHeat(profile.lastHeat) then profile.lastHeat else Config.DefaultHeat
 	StoreService.join(board)
 	reset(board, Config.DefaultPreset)
 	publishNursery(board)
@@ -737,6 +773,22 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if typeof(value) == "boolean" then board.menuPaused = value end
 		return
 	end
+	-- Difficulty (plan section 1). Validated and stored here; applied at reset.
+	-- Refused once the run has its first drop, and while a payout is pending.
+	if action == "heat" then
+		if now - (board.lastHeatRequest or -math.huge) < .2 then return end
+		board.lastHeatRequest = now
+		local decision = HeatRequest.decide({ mode = board.mode, ready = canProgress(board), payoutPending = board.payoutPending,
+			over = board.round.over, drops = board.sim.drops, field = board.field ~= nil, guided = board.heatGuided,
+			runHeat = board.runHeat }, value)
+		if decision == "Store" or decision == "Rebuild" then
+			board.nextHeat = value
+			Progress.setHeat(board.profile, value)
+			if decision == "Rebuild" then reset(board, board.sim.preset, true) end
+		end
+		publishHeat(board)
+		return
+	end
 	-- Retired progression request: no active family selection remains.
 	if action == "family" then return end
 	if action == "companion" then
@@ -959,7 +1011,10 @@ local function settleReward(player, board)
 	board.folder:SetAttribute("FieldFinalStage", board.field.outcome.rootStage)
 	local summary = { family = board.runFamily, day = board.runDay, success = board.field.outcome.success,
 		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
-		clears = board.round.maxClears, drops = board.sim.drops }
+		clears = board.round.maxClears, drops = board.sim.drops, heat = board.runHeat,
+		maxTier = math.clamp(board.maxTier or 0, 0, #Config.Tiers), goalsMet = board.field.outcome.rootStage,
+		templateId = board.field.descriptor.id }
+	board.settledRounds = (board.settledRounds or 0) + 1
 	local boost = StoreService.boost(board)
 	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false, boost = boost }
 	board.payoutPending, board.payoutRunning = true, true
@@ -979,7 +1034,7 @@ local function settleReward(player, board)
 					board.folder:SetAttribute("DailyAward", saved and saved.sequence == board.runSequence and saved.daily or 0)
 					board.folder:SetAttribute("RewardStatus", "Saved")
 					if saved and saved.sequence == board.runSequence then
-						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward")
+						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
 					end
 					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
 					break
@@ -1035,6 +1090,7 @@ RunService.Heartbeat:Connect(function(dt)
 			for _, merge in ipairs(merged) do
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.peakChain = math.max(board.peakChain, board.chain)
+				board.maxTier = math.max(board.maxTier or 0, merge.tier)
 				board.lastMerge = board.playTime
 				board.merges += 1
 				if merge.cleared then

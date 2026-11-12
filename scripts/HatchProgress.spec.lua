@@ -430,5 +430,31 @@ return function(Hatching, Catalog)
 		assert(h.state.masteryLegacyMask == 0 and Hatching.public(h).masteryRanks.pip == 1)
 	end)
 
+	test("heat multiplier sits inside award before the pass and Supporter", function()
+		local expect = { easy = { 5, 6 }, medium = { 6, 8 }, hard = { 9, 12 } }
+		for heat, pair in pairs(expect) do
+			for index, amount in ipairs({ 6, 8 }) do
+				for _, boost in ipairs({ { multiplier = 1, bonus = 0 }, { multiplier = 2, bonus = 1 } }) do
+					local _, _, adapter = fixture()
+					local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+					local before = h.state.nectar
+					local summary = runSummary(h, { heat = heat, clean = amount == 8, chain = 1, score = 0 })
+					assert(Hatching.award(h, 1, amount, summary, boost))
+					local reward = h.state.lastRunReward
+					local want = pair[index] * boost.multiplier + boost.bonus
+					assert(reward.heat == heat and reward.roundStars == pair[index] and reward.total == want, heat .. amount)
+					assert(h.state.nectar - before == want + (reward.daily or 0) * boost.multiplier)
+				end
+			end
+		end
+		local _, _, adapter = fixture()
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.award(h, 1, 8, runSummary(h, { heat = "hard", chain = 1, score = 0 }), { multiplier = 2, bonus = 1 }))
+		assert(h.state.lastRunReward.total == 25)
+		-- No summary pays Medium; an unknown heat is refused before any write.
+		assert(not Hatching.award(h, 2, 8, runSummary(h, { heat = "insane" })))
+		assert(Hatching.award(h, 2, 6) and h.state.lastRunReward.total == 6 and h.state.lastRunReward.heat == "medium")
+	end)
+
 	return { passed = #passed, cases = passed }
 end

@@ -15,6 +15,8 @@ local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local Guard=require(script.Parent.HatchGuard)
 local Purchases=require(script.Parent.PurchaseState)
 local Faceplates=require(script.Parent.FaceplateState)
+local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
+local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -735,14 +737,20 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 			or not integer(summary.clears, 10000) or not integer(summary.drops, 24)
 			or (summary.success and summary.drops ~= 24)
 			or (summary.clean and not summary.success)
+			or (summary.heat ~= nil and not BoardConfig.validHeat(summary.heat))
+			or (summary.maxTier ~= nil and not integer(summary.maxTier, 5))
+			or (summary.goalsMet ~= nil and not integer(summary.goalsMet, 3))
+			or (summary.templateId ~= nil and (type(summary.templateId) ~= "string" or #summary.templateId > 40))
 			or amount ~= (if summary.success then (if summary.clean then 8 else 6) else 0) then
 			return false, "InvalidSummary"
 		end
 	end
+	-- The run's heat is set by the server at its first drop; no summary is Medium.
+	local heat = if summary and summary.heat then summary.heat else BoardConfig.DefaultHeat
 	-- Copy once: the host's mutable board and day clock must never alter a
 	-- pending transaction when DataStore invokes its callback again later.
 	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus }
-	local signature = "award:" .. runSequence .. ":" .. amount
+	local signature = "award:" .. runSequence .. ":" .. amount .. ":" .. heat
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
 		local run = captured.summary
@@ -755,12 +763,14 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 			end
 			state.contracts, extra, completed = Daily.apply(state.contracts, run, captured.day)
 		end
-		local earned = amount + extra
+		-- Heat multiplier on the round amount (base and tidy), before the pass.
+		local roundStars = HeatPayout.roundStars(amount, heat)
+		local earned = roundStars + extra
 		local total = earned * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
 		if state.nectar + total > 1000000000 then return false, "BalanceLimit" end
 		state.nectar += total
 		state.lastAwardSeq = runSequence
-		state.lastRunReward = { sequence = runSequence, base = amount, daily = extra, total = total, bonus = total - earned,
+		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, daily = extra, total = total, bonus = total - earned,
 			masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted, contracts = completed }
 		return true
 	end, candidate)
