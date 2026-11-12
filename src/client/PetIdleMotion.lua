@@ -76,6 +76,32 @@ function Motion.appendages(visual,expression,dt)
  end
  return pose+flickL,pose+flickR,tail
 end
+-- Wings (authored WingL/WingR S1-S5). Each wing lifts about its own root anchor:
+-- a gentle ±10° idle flap on a 1.8 s cycle, the right wing a beat behind the
+-- left; pleased/affectionate faces (deck cheers, petting) flap quicker and a
+-- little wider; sleepy barely stirs. Amplitude and rate ease between moods, the
+-- phase only advances with dt, and Reduced Effects rests them at zero.
+Motion.WingIdle,Motion.WingExcited,Motion.WingSleepy=math.rad(10),math.rad(14),math.rad(2)
+Motion.WingIdleRate,Motion.WingExcitedRate,Motion.WingSleepyRate=1/1.8,2.6,.3
+Motion.WingLag=.45
+Motion.WingMax=Motion.WingExcited
+local wingExcited={pleased=true,affectionate=true}
+function Motion.wings(visual,expression,dt)
+ if visual.reducedEffects or visual.idleMotionFrozen then return 0,0 end
+ dt=math.clamp(dt or 0,0,.25)
+ local excited=wingExcited[expression]==true or visual.petting==true
+ local amp,rate
+ if excited then amp,rate=Motion.WingExcited,Motion.WingExcitedRate
+ elseif expression=="sleepy"then amp,rate=Motion.WingSleepy,Motion.WingSleepyRate
+ else amp,rate=Motion.WingIdle,Motion.WingIdleRate end
+ local k=math.min(1,dt*4)
+ local a=(visual.wingAmp or amp)+(amp-(visual.wingAmp or amp))*k
+ local r=(visual.wingRate or rate)+(rate-(visual.wingRate or rate))*k
+ visual.wingAmp,visual.wingRate=a,r
+ local phase=((visual.wingPhase or seedOf(visual)*tau)+dt*r*tau)%tau
+ visual.wingPhase=phase
+ return math.sin(phase)*a,math.sin(phase-Motion.WingLag)*a
+end
 -- Conservative per-axis displacement beyond an actual expression/greeting box.
 -- Includes rotation of each corner, breathing and Dot's independent translation.
 function Motion.padding(visual,entry)
@@ -86,6 +112,15 @@ function Motion.padding(visual,entry)
   local radius=(entry.frame.Position-pivot).Magnitude+entry.size.Magnitude*.5
   local turn=2*radius*math.sin(Motion.TailWag*.5)
   return Vector3.new(turn,entry.size.Y*Motion.BodyStretch*.5,turn)
+ end
+ if entry.wingSide and anchors then
+  local a=anchors["Wing"..entry.wingSide]
+  if a then
+   local pivot=Vector3.new(a[1],a[2],a[3])*scale
+   local radius=(entry.frame.Position-pivot).Magnitude+entry.size.Magnitude*.5
+   local turn=2*radius*math.sin(Motion.WingMax*.5)
+   return Vector3.new(turn,turn+entry.size.Y*Motion.BodyStretch*.5,turn)
+  end
  end
  if entry.channel=="Body"then return Vector3.new(0,entry.size.Y*Motion.BodyStretch*.5,0)end
  local name=entry.name

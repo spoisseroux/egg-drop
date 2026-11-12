@@ -110,6 +110,44 @@ return function(client,parent)
    v:applyAppearance(appearance(0,0,{}));v:update(0)
    for _,name in ipairs({"EyeL","EyeR","MouthSmile","Tail"})do assert(find(v,name).part.Transparency==0,"default did not return "..name)end
   end)
+  test("authored S1-S5 wings flap about their own roots: gentle idle, quicker when pleased or petted, still under Reduced Effects",function()
+   local Motion=require(client.PetIdleMotion)
+   local function run(m,expression,seconds,each)for _=1,math.floor(seconds*60)do local l,r=Motion.wings(m,expression,1/60);if each then each(l,r)end end end
+   local function measure(expression,extra)
+    local m=extra or {cosmeticSeed=4};run(m,expression,2)
+    local peak,n,last,offset=0,0,nil,0
+    run(m,expression,6,function(l,r)peak=math.max(peak,math.abs(l));offset=math.max(offset,math.abs(l-r));if last and(last<0)~=(l<0)then n+=1 end;last=l end)
+    return peak,n,offset
+   end
+   local idlePeak,idleCross,lag=measure("neutral")
+   assert(idlePeak>math.rad(8)and idlePeak<=math.rad(12)+1e-6,"idle amplitude "..math.deg(idlePeak))
+   assert(idleCross>=6 and idleCross<=7,"idle cycle crossings "..idleCross)-- 1.8 s cycle: ~6.7 crossings in 6 s
+   assert(lag>math.rad(2),"left and right flap in lockstep")
+   local happyPeak,happyCross=measure("pleased");local fondPeak,fondCross=measure("affectionate");local pettedPeak,pettedCross=measure("neutral",{cosmeticSeed=4,petting=true})
+   assert(happyCross>=2*idleCross and fondCross>=2*idleCross and pettedCross>=2*idleCross,"excited flap is not quicker")
+   assert(happyPeak>idlePeak and fondPeak>idlePeak and pettedPeak>idlePeak and happyPeak<=Motion.WingMax+1e-6)
+   local sleepyPeak=measure("sleepy");assert(sleepyPeak<math.rad(3),"sleepy wings flap")
+   run({reducedEffects=true},"pleased",2,function(l,r)assert(l==0 and r==0,"wings flap under Reduced Effects")end)
+   for n=1,5 do
+    local v=make(Pets.byId.pip,appearance(0,n));v.reducedEffects=false;v.expression="neutral";v:update(0)
+    local count=#v.model:GetDescendants();local left,right=find(v,"WingL_S"..n),find(v,"WingR_S"..n)
+    assert(left and right and left.wingSide=="L"and right.wingSide=="R","wing "..n.." untagged")
+    local hinge=Vector3.new(table.unpack(bear.anchors.WingL))*v.scale
+    local function inRig(p)return(CFrame.new(v.origin)*CFrame.Angles(0,v.yaw or 0,0)):PointToObjectSpace(p)end
+    -- The wing turns about its own root: its distance to the WingL anchor holds while the tip rises and falls.
+    local lowY,highY,d0=math.huge,-math.huge,nil
+    for _=1,120 do
+     v:update(1/60)
+     local p=inRig(left.part.Position);lowY,highY=math.min(lowY,p.Y),math.max(highY,p.Y)
+     local d=(p-hinge).Magnitude;d0=d0 or d;assert(math.abs(d-d0)<.02*v.scale,"wing "..n.." left its root")
+    end
+    assert(highY-lowY>.004*v.scale,"wing "..n.." did not flap")
+    assert(#v.model:GetDescendants()==count,"wing flap allocated instances")
+    local pad=Motion.padding(v,left);assert(pad.X>0 and pad.Y>0 and pad.Z>0,"wing padding missing")
+    v.reducedEffects=true;v:update(1/60);local rest=left.part.Position;v:update(1/60)
+    assert((left.part.Position-rest).Magnitude<1e-5,"wing moving under Reduced Effects")
+   end
+  end)
   test("rules: normalise unknown items, one item per slot, a Back wearable hides wings, flags drive exclusions",function()
    assert(next(Rules.normalize(bear,{Hat="crown",Wings="beanie",Eyes="button",EarPiercing="ring"}))=="Eyes")
    local items=Rules.items(bear);assert(#items==11,#items)

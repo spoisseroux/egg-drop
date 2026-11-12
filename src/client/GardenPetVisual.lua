@@ -267,9 +267,11 @@ function Visual:update(dt)
  local hinges=self.appendageHinges
  if not hinges or hinges.scale~=self.scale then
   local anchors=self.definition.anchors
-  hinges={scale=self.scale,EarL=anchors.EarL and v(anchors.EarL)*self.scale,EarR=anchors.EarR and v(anchors.EarR)*self.scale,Tail=anchors.Tail and v(anchors.Tail)*self.scale}
+  hinges={scale=self.scale,EarL=anchors.EarL and v(anchors.EarL)*self.scale,EarR=anchors.EarR and v(anchors.EarR)*self.scale,Tail=anchors.Tail and v(anchors.Tail)*self.scale,
+   WingL=anchors.WingL and v(anchors.WingL)*self.scale,WingR=anchors.WingR and v(anchors.WingR)*self.scale}
   self.appendageHinges=hinges
  end
+ local wingL,wingR=Motion.wings(self,expression,dt)
  if personal then headPitch-=math.sin(math.clamp(personal.phase/1.8,0,1)*math.pi)*.06 end
  local wave=if reduced then 0 else math.sin(math.clamp(self.greeting/1.2,0,1)*math.pi)
  if self.greeting>=1.2 then wave=0 end
@@ -310,6 +312,20 @@ function Visual:update(dt)
    if hinge then cf=head*CFrame.new(hinge)*CFrame.Angles(0,0,if left then -earL else earR)*CFrame.new(-hinge)*entry.frame end
   elseif(name=="Tail"or entry.tailWag)and hinges.Tail and tailYaw~=0 then
    cf=upper*CFrame.new(0,hop,0)*CFrame.new(hinges.Tail)*CFrame.Angles(0,tailYaw,0)*CFrame.new(-hinges.Tail)*entry.frame
+  elseif entry.wingSide then
+   -- Each wing lifts about its own root: the axis is horizontal and square to the
+   -- wing's outward reach, so positive flap raises the tip (cached once per piece).
+   local left=entry.wingSide=="L";local hinge=if left then hinges.WingL else hinges.WingR
+   local flap=if left then wingL else wingR
+   if hinge and flap~=0 then
+    local axis=entry.wingAxis
+    if not axis then
+     local reach=entry.frame.Position-hinge;reach=Vector3.new(reach.X,0,reach.Z)
+     axis=if reach.Magnitude>1e-4 then reach.Unit:Cross(Vector3.yAxis)else Vector3.new(0,0,if left then 1 else -1)
+     entry.wingAxis=axis
+    end
+    cf=upper*CFrame.new(0,hop,0)*CFrame.new(hinge)*CFrame.fromAxisAngle(axis,flap)*CFrame.new(-hinge)*entry.frame
+   end
   end
   if channel=="HandL"or channel=="HandR"or channel=="CuffL"or channel=="CuffR"or channel=="Hand"then
    local side=if string.sub(name,-1)=="L"then -1 else 1

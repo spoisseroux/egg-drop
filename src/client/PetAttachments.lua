@@ -42,7 +42,9 @@ function Attachments.build(v,resolved,source)
   local entry={part=part,name=a.name,colorRole=if a.colorRole=="own"then "own"else a.colorRole,channel=a.channel,frame=frame,size=template.Size*v.scale,
    role=if a.feature then "feature"else "attachment",featureId=a.feature,slot=a.slot,attachment=a,color=color,faceBaseColor=color,faceBaseMaterial=part.Material,
    -- Piercings ride the ear flick; swapped tails wag; an alternate mouth gives way to the open "O".
-   earSide=if a.slot=="EarPiercing"or a.slot=="Earring"then side else nil,tailWag=a.slot=="Tail"or nil,mouthAlt=a.slot=="Mouth"or nil}
+   earSide=if a.slot=="EarPiercing"or a.slot=="Earring"then side else nil,tailWag=a.slot=="Tail"or nil,mouthAlt=a.slot=="Mouth"or nil,
+   -- Wings flap about their own WingL/WingR root (PetIdleMotion.wings).
+   wingSide=if a.anchor=="WingL"then "L"elseif a.anchor=="WingR"then "R"else nil}
   part.Parent=v.model
   table.insert(v.pieces,entry);table.insert(handles,handle(part))
  end
