@@ -11,7 +11,7 @@ Keep this list current: add an item when work starts, move it to done when it la
   2. Pocket Deck rebuild, with Fable driving visuals: UI spec + mockups, slim deck art, 16 faceplates, retro boot, then implementation of the wide screen, in-deck results, back arrow, faceplates, boot, quests and difficulty (per SCOPE-2026-11-12 decisions).
   3. Pets: attachment slots + horns/wings growing S1-S5 through the Feature Egg in game.
   - Spencer: audio (AUDIO-HANDOFF.md). After 1-3: v1 launch checklist.
-- [x] **Final pre-publish pass (Claude, Studio, 2026-11-12 pm):** review fixes, full spec sweep 171/203 pass (`artifacts/deck-rebuild/SPEC-SWEEP-2026-11-12-pm.md`; no remaining failure traces to today), Play smoke test, place cleaned and saved. Not published.
+- [x] **Final pre-publish pass (Claude, Studio, 2026-11-12 pm):** review fixes, full spec sweep 171/203 pass (`artifacts/deck-rebuild/SPEC-SWEEP-2026-11-12-pm.md`; no remaining failure traces to today), Play smoke test, place cleaned and saved as version 485 (notes truncated by Roblox). Not published.
   - Fixed: quest log opened over the difficulty picker drew both translucent layers; the picker now hides under the log.
   - Open: equipped faceplate textures log `No asset content representation` on the held 3D deck (`Lounge.paintDevice` FrontPlate.TextureID, ids 112897675123239 / 79634182860528) in Studio; check the held deck in the private build.
   - Open (latent): the Room -> Board content gate keys on `ResetId`, which is the egg id counter; a round that ends with no new eggs (only possible through `EggDropRoundTestHook`) leaves the handoff covered forever. Consider a per-reset serial.
