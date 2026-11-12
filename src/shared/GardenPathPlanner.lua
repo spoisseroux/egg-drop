@@ -25,7 +25,8 @@ function Planner.restPathClear(path,solids)
  end
  return true
 end
-local function floorPoint(x,z)return Vector3.new(x,World.FloorTop+.025,z)end
+-- Waypoints sit on the bare ground (flat FloorTop in the legacy world).
+local function floorPoint(x,z)return Vector3.new(x,World.groundY(x,z)+.025,z)end
 local function deckEnds(bridge)
  return bridge.center.X-bridge.size.X*.5+.30,bridge.center.X+bridge.size.X*.5-.30
 end
