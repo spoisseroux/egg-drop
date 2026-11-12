@@ -13,7 +13,7 @@ end
 function Owner:tryUpgrade()
  if self.destroyed or self.ready or self.ticket then return false end
  local pack=self.options.templates or Storage:FindFirstChild("PetMaterials")
- local key=Config.FinishProfiles[self.finish];local template=pack and pack:FindFirstChild(key)
+ local key=Config.FinishProfiles[self.finish];local template=Materials.template(pack,key)
  if not template or not template:IsA("SurfaceAppearance")or template:GetAttribute("NativeVerified")~=true
   or template:GetAttribute("MaterialVersion")~=Config.Version or template:GetAttribute("MaterialProfile")~=key then return false end
  local source=self.options.meshSource

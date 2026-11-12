@@ -17,6 +17,29 @@ local function profile(entry)
  if entry.colorRole=="body"or entry.colorRole=="secondary"then return "Body"end
  return nil
 end
+-- PetMaterials.rbxm also carries stale unverified copies of BodyGloss/BodyMatte/BodyMetal
+-- under the same names, and replication order decides which FindFirstChild returns.
+-- Prefer the NativeVerified copy of a name; otherwise the first one.
+local templateCache=setmetatable({},{__mode="k"})
+function Materials.template(pack,key)
+ if not pack or not key then return nil end
+ local cache=templateCache[pack]
+ if not cache then
+  cache={};templateCache[pack]=cache
+  local function clear()table.clear(cache)end
+  pack.ChildAdded:Connect(clear);pack.ChildRemoved:Connect(clear)
+ end
+ local found=cache[key]
+ if found and found.Parent==pack and found.Name==key then return found end
+ found=nil
+ for _,child in ipairs(pack:GetChildren())do
+  if child.Name==key then
+   if child:GetAttribute("NativeVerified")==true then found=child;break end
+   found=found or child
+  end
+ end
+ cache[key]=found;return found
+end
 function Materials.dusk(daylight)
  local t=math.clamp(1-daylight,0,1);return t*t*(3-2*t)
 end
@@ -46,10 +69,10 @@ function Owner:paint(entry,visual,daylight)
  if key=="Body"then
   local finish=visual.appearance and visual.appearance.finish or "standard"
   local candidate=Config.FinishProfiles[finish]
-  local selected=candidate and pack and pack:FindFirstChild(candidate)
+  local selected=candidate and Materials.template(pack,candidate)
   if candidate~="Body"and selected and selected:IsA("SurfaceAppearance")and selected:GetAttribute("MaterialVersion")==Config.Version and selected:GetAttribute("MaterialProfile")==candidate and (selected:GetAttribute("NativeVerified")==true or visual.allowUnverifiedFinish==true)then templateKey=candidate end
  end
- local template=pack and pack:FindFirstChild(templateKey)
+ local template=Materials.template(pack,templateKey)
  -- Two-tone pets (PET-STYLE-GUIDE.md): body-role parts use a template whose
  -- ColorMap alpha is the shared UV gradient. Overlay shows the part Color
  -- (primary) where alpha is 0 and the surface tint (secondary) where it is 1.
