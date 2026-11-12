@@ -20,7 +20,7 @@ function Materials.dusk(daylight)
 end
 function Materials.new(options)
  options=options or {}
- return setmetatable({templates=options.templates},Owner)
+ return setmetatable({templates=options.templates,twoToneTemplates=options.twoToneTemplates},Owner)
 end
 function Owner:begin()
  -- These are immutable, authored SurfaceAppearances. Raw URI callbacks and
@@ -48,6 +48,22 @@ function Owner:paint(entry,visual,daylight)
   if candidate~="Body"and selected and selected:IsA("SurfaceAppearance")and selected:GetAttribute("MaterialVersion")==Config.Version and selected:GetAttribute("MaterialProfile")==candidate and (selected:GetAttribute("NativeVerified")==true or visual.allowUnverifiedFinish==true)then templateKey=candidate end
  end
  local template=pack and pack:FindFirstChild(templateKey)
+ -- Two-tone pets (PET-STYLE-GUIDE.md): body-role parts use a template whose
+ -- ColorMap alpha is the shared UV gradient. Overlay shows the part Color
+ -- (primary) where alpha is 0 and the surface tint (secondary) where it is 1.
+ -- A missing or unverified variant falls back to the ordinary one-colour finish.
+ local twoTone=false
+ if key=="Body"and visual.twoTone==true and entry.colorRole=="body"then
+  local twoPack=if self.twoToneTemplates then self.twoToneTemplates else ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone")
+  local name=Config.TwoToneProfiles[templateKey]
+  local candidate=name and twoPack and twoPack:FindFirstChild(name)
+  if candidate and name~="BodyTwoTone"and candidate:GetAttribute("NativeVerified")~=true and visual.allowUnverifiedFinish~=true then
+   name="BodyTwoTone";candidate=twoPack:FindFirstChild(name)
+  end
+  if candidate and candidate:IsA("SurfaceAppearance")and candidate:GetAttribute("MaterialVersion")==Config.Version and candidate:GetAttribute("MaterialProfile")==name then
+   template,templateKey,twoTone=candidate,name,true
+  end
+ end
  if not template or not template:IsA("SurfaceAppearance")or template:GetAttribute("MaterialVersion")~=Config.Version then release(entry);return false end
  local surface=entry.materialSurface
  if surface and entry.materialProfile~=templateKey then release(entry);surface=nil end
@@ -63,7 +79,9 @@ function Owner:paint(entry,visual,daylight)
  local strength=values.day+(values.night-values.day)*Materials.dusk(daylight)
  if visual.emissionEnabled==false or entry.renderHidden==true or(key=="Charm"and(visual.charmVisible==false or(entry.charmShape or "dot")~=(visual.renderCharmShape or "dot")))then strength=0 end
  -- Emission multiplies albedo; a neutral tint avoids applying the pigment twice.
- if entry.materialTint~=base then surface.Color=base;entry.materialTint=base end
+ -- Two-tone: the part keeps the primary; the surface tint carries the secondary.
+ local tint=if twoTone then(visual.secondaryColor or base)else base
+ if entry.materialTint~=tint then surface.Color=tint;entry.materialTint=tint end
  if surface.EmissiveTint~=white then surface.EmissiveTint=white end
  if entry.materialStrength~=strength then surface.EmissiveStrength=strength;entry.materialStrength=strength end
  -- BasePart readback is byte-quantized; compare logical requests to avoid

@@ -97,6 +97,29 @@ return function(client)
    template:Destroy();v.appearance.finish="gloss";assert(owner:paint(e,v,0)and e.materialProfile=="Body")
    for _,original in ipairs(originalVerification)do assert(original.template:GetAttribute("NativeVerified")==original.verified,"fixture changed production verification")end
   end)
+  test("two-tone body: part keeps primary, surface carries secondary, other roles unchanged",function()
+   local twoPack=assert(game.ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone"),"Two-tone pack missing")
+   local owner=Materials.new({templates=source,twoToneTemplates=twoPack})
+   local _,e,v=make();local primary,secondary=Color3.fromHex("#FFCA00"),Color3.fromHex("#FFBAB6")
+   e.color=primary;v.twoTone=true;v.secondaryColor=secondary
+   assert(owner:paint(e,v,0)and e.materialProfile=="BodyTwoTone","two-tone template not chosen")
+   assert(e.part.Color==primary and e.materialSurface.Color==secondary,"two-tone colours not split")
+   assert(e.materialSurface.ColorMap==twoPack.BodyTwoTone.ColorMap,"gradient map not cloned")
+   -- A hue change to the secondary retints the same surface once.
+   local surface=e.materialSurface;v.secondaryColor=Color3.fromHex("#2F5DA8");assert(owner:paint(e,v,0)and e.materialSurface==surface and surface.Color==v.secondaryColor)
+   -- Unverified finish variant falls back to the standard two-tone template.
+   v.appearance={finish="gloss"};assert(owner:paint(e,v,0)and e.materialProfile=="BodyTwoTone")
+   -- Turning two-tone off on the same entry swaps back to the one-colour body tinted primary.
+   v.appearance=nil;v.twoTone=false;assert(owner:paint(e,v,0)and e.materialProfile=="Body"and e.materialSurface.Color==primary and e.part.Color==primary)
+   -- Secondary-role parts stay one flat colour.
+   local _,s,v2=make();s.colorRole="secondary";s.color=secondary;v2.twoTone=true;v2.secondaryColor=secondary
+   assert(owner:paint(s,v2,0)and s.materialProfile=="Body"and s.materialSurface.Color==secondary)
+   -- Rigs without the flag keep the one-colour body.
+   local _,z,v3=make();assert(owner:paint(z,v3,0)and z.materialProfile=="Body"and z.materialSurface.Color==z.color)
+   -- Missing two-tone pack falls back to the one-colour body.
+   local bare=Materials.new({templates=source,twoToneTemplates=Instance.new("Folder")})
+   local _,b,v4=make();v4.twoTone=true;v4.secondaryColor=secondary;assert(bare:paint(b,v4,0)and b.materialProfile=="Body"and b.materialSurface.Color==b.color)
+  end)
   test("model destruction owns all cloned surface cleanup",function()
    local owner,e,v=make();assert(owner:paint(e,v,0));local surface=e.materialSurface
    v.model:Destroy();assert(surface.Parent==nil)

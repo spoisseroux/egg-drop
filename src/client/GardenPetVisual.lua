@@ -192,6 +192,8 @@ function Visual.new(parent,origin,pet,worldScale,appearance,options)
  local self=setmetatable({petId=pet.id,nightTreatment=options and options.nightTreatment or "shadedHead",secondaryColor=cachedColors.secondary,colors=cachedColors,model=model,definition=definition,pieces={},bodyHull={},origin=origin,yaw=0,time=0,greeting=2,worldScale=worldScale or 1,worldContext=worldScale~=nil,scale=(worldScale or 1)*definition.nativeScaleFactor,expression="neutral",lastActionId=nil},Visual)
  self.readiness=options and options.readiness or Readiness.shared;self.nativeOnly=options and options.native==true
  self.materialsEnabled=not options or options.materialsEnabled~=false
+ -- Rigs authored to the shared UV gradient opt in to the two-colour body.
+ self.twoTone=definition.twoTone==true and not(options and options.twoTone==false)
  self.emissionEnabled=not options or options.emissionEnabled~=false
  self.assetPriority=options and options.priority or(if worldScale==nil then 3 else 2);self.assetEpoch=1;self.rigRevision=0
  local source,pending

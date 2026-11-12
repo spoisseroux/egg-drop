@@ -16,6 +16,9 @@
       "PetMaterials": {
         "$path": "assets/pet-materials/PetMaterials.rbxm"
       },
+      "PetMaterialsTwoTone": {
+        "$path": "assets/pet-materials/PetMaterialsTwoTone.model.json"
+      },
       "PetCharmAssets": {
         "$path": "assets/pet-materials/PetCharmAssets.rbxmx"
       }

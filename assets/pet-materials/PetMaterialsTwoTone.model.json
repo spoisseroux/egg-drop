@@ -1,0 +1,116 @@
+{
+  "className": "Folder",
+  "attributes": {
+    "MaterialVersion": 1,
+    "GradientMap": "rbxassetid://112903053450684"
+  },
+  "children": [
+    {
+      "name": "BodyTwoTone",
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://90822949282078",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoTone",
+        "MaterialVersion": 1,
+        "TwoTone": true
+      }
+    },
+    {
+      "name": "BodyTwoToneGloss",
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://101362074171738",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneGloss",
+        "MaterialVersion": 1,
+        "TwoTone": true,
+        "NativeVerified": false
+      }
+    },
+    {
+      "name": "BodyTwoToneMatte",
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://132217078330162",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneMatte",
+        "MaterialVersion": 1,
+        "TwoTone": true,
+        "NativeVerified": false
+      }
+    },
+    {
+      "name": "BodyTwoToneMetal",
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://132217078330162",
+        "RoughnessMap": "rbxassetid://90822949282078",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneMetal",
+        "MaterialVersion": 1,
+        "TwoTone": true,
+        "NativeVerified": false
+      }
+    }
+  ]
+}

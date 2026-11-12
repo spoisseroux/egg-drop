@@ -1,0 +1,315 @@
+{
+ "asset": "bear",
+ "export": "bear.fbx",
+ "axes": "axis_forward=-Z axis_up=Y (same as earlier pets)",
+ "objects": [
+  {
+   "name": "Bear__Body",
+   "centerBlender": [
+    0.0,
+    -0.085,
+    0.455
+   ],
+   "sizeBlender": [
+    0.60315,
+    0.64287,
+    0.58
+   ],
+   "triangles": 148
+  },
+  {
+   "name": "Bear__Head",
+   "centerBlender": [
+    0.0,
+    -0.03,
+    1.00997
+   ],
+   "sizeBlender": [
+    0.98499,
+    0.89371,
+    0.75955
+   ],
+   "triangles": 198
+  },
+  {
+   "name": "Bear__EarL",
+   "centerBlender": [
+    -0.34421,
+    -0.0,
+    1.32972
+   ],
+   "sizeBlender": [
+    0.30118,
+    0.15065,
+    0.29945
+   ],
+   "triangles": 78
+  },
+  {
+   "name": "Bear__EarR",
+   "centerBlender": [
+    0.345,
+    -0.0001,
+    1.32974
+   ],
+   "sizeBlender": [
+    0.2996,
+    0.15045,
+    0.29947
+   ],
+   "triangles": 78
+  },
+  {
+   "name": "Bear__EarInnerL",
+   "centerBlender": [
+    -0.345,
+    -0.05,
+    1.335
+   ],
+   "sizeBlender": [
+    0.17782,
+    0.06991,
+    0.176
+   ],
+   "triangles": 48
+  },
+  {
+   "name": "Bear__EarInnerR",
+   "centerBlender": [
+    0.345,
+    -0.05,
+    1.335
+   ],
+   "sizeBlender": [
+    0.17782,
+    0.06991,
+    0.176
+   ],
+   "triangles": 48
+  },
+  {
+   "name": "Bear__Muzzle",
+   "centerBlender": [
+    0.0,
+    -0.395,
+    0.85
+   ],
+   "sizeBlender": [
+    0.32853,
+    0.2711,
+    0.24
+   ],
+   "triangles": 72
+  },
+  {
+   "name": "Bear__Nose",
+   "centerBlender": [
+    0.00075,
+    -0.51617,
+    0.90718
+   ],
+   "sizeBlender": [
+    0.09518,
+    0.06032,
+    0.0715
+   ],
+   "triangles": 44
+  },
+  {
+   "name": "Bear__MouthSmile",
+   "centerBlender": [
+    0.0,
+    -0.43973,
+    0.79767
+   ],
+   "sizeBlender": [
+    0.14956,
+    0.19141,
+    0.13629
+   ],
+   "triangles": 128
+  },
+  {
+   "name": "Bear__EyeL",
+   "centerBlender": [
+    -0.21451,
+    -0.42246,
+    1.02886
+   ],
+   "sizeBlender": [
+    0.16415,
+    0.09247,
+    0.2447
+   ],
+   "triangles": 42
+  },
+  {
+   "name": "Bear__EyeR",
+   "centerBlender": [
+    0.21452,
+    -0.42256,
+    1.02885
+   ],
+   "sizeBlender": [
+    0.16422,
+    0.09232,
+    0.24469
+   ],
+   "triangles": 42
+  },
+  {
+   "name": "Bear__Tail",
+   "centerBlender": [
+    0.0,
+    0.305,
+    0.37
+   ],
+   "sizeBlender": [
+    0.17833,
+    0.1707,
+    0.17
+   ],
+   "triangles": 64
+  },
+  {
+   "name": "Bear__HandL",
+   "centerBlender": [
+    -0.33317,
+    -0.11055,
+    0.52984
+   ],
+   "sizeBlender": [
+    0.27781,
+    0.21948,
+    0.34831
+   ],
+   "triangles": 72
+  },
+  {
+   "name": "Bear__HandR",
+   "centerBlender": [
+    0.3342,
+    -0.11282,
+    0.53162
+   ],
+   "sizeBlender": [
+    0.27575,
+    0.22358,
+    0.34466
+   ],
+   "triangles": 72
+  },
+  {
+   "name": "Bear__FootL",
+   "centerBlender": [
+    -0.165,
+    -0.08,
+    0.10749
+   ],
+   "sizeBlender": [
+    0.30139,
+    0.53,
+    0.21502
+   ],
+   "triangles": 84
+  },
+  {
+   "name": "Bear__FootR",
+   "centerBlender": [
+    0.165,
+    -0.08,
+    0.10749
+   ],
+   "sizeBlender": [
+    0.30139,
+    0.53,
+    0.21502
+   ],
+   "triangles": 84
+  },
+  {
+   "name": "Bear__WingL",
+   "centerBlender": [
+    -0.30445,
+    0.36445,
+    0.5675
+   ],
+   "sizeBlender": [
+    0.3889,
+    0.38891,
+    0.395
+   ],
+   "triangles": 30
+  },
+  {
+   "name": "Bear__WingR",
+   "centerBlender": [
+    0.30445,
+    0.36445,
+    0.5675
+   ],
+   "sizeBlender": [
+    0.3889,
+    0.38891,
+    0.395
+   ],
+   "triangles": 30
+  },
+  {
+   "name": "Bear__CharmDot",
+   "centerBlender": [
+    -0.00304,
+    -0.03244,
+    1.71274
+   ],
+   "sizeBlender": [
+    0.25899,
+    0.10547,
+    0.24141
+   ],
+   "triangles": 48
+  },
+  {
+   "name": "Bear__CharmStar",
+   "centerBlender": [
+    -8.24272,
+    -0.12195,
+    1.48138
+   ],
+   "sizeBlender": [
+    0.23124,
+    0.11383,
+    0.21555
+   ],
+   "triangles": 60
+  },
+  {
+   "name": "Bear__CharmHeart",
+   "centerBlender": [
+    -8.24309,
+    -0.11502,
+    1.46873
+   ],
+   "sizeBlender": [
+    0.21054,
+    0.12336,
+    0.18446
+   ],
+   "triangles": 96
+  },
+  {
+   "name": "Bear__CharmButton",
+   "centerBlender": [
+    -8.24,
+    -0.12,
+    1.47
+   ],
+   "sizeBlender": [
+    0.21397,
+    0.11555,
+    0.20971
+   ],
+   "triangles": 72
+  }
+ ]
+}

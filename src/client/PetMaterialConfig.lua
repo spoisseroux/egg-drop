@@ -14,5 +14,7 @@ return table.freeze({
   Catchlight=table.freeze({day=.12,night=.48}),
  }),
  FinishProfiles=table.freeze({standard="Body",gloss="BodyGloss",matte="BodyMatte",metal="BodyMetal"}),
+ -- Two-tone body variants (ReplicatedStorage.PetMaterialsTwoTone), keyed by the one-colour profile.
+ TwoToneProfiles=table.freeze({Body="BodyTwoTone",BodyGloss="BodyTwoToneGloss",BodyMatte="BodyTwoToneMatte",BodyMetal="BodyTwoToneMetal"}),
  LoadTimeout=12,
 })

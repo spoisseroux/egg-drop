@@ -50,7 +50,7 @@ Every pet's body uses **one primary and one secondary colour**, nothing more:
 
 - A new pet starts with **no charm and no wings**. It's just the bear: body, head, ears, face, tail.
 - **Charms come from the Charm Egg** (see below).
-- **Wings, horns and claws come from the Feature Egg.** Wings are its Rare result. The Bear's `WingL/R` meshes (three-feather style) are the art for that item and are hidden by default.
+- **Wings, horns and claws come from the Feature Egg.** Wings are its Rare result. They may move to a Personality Egg and panel (wings and horns in 5 sizes, plus procedural traits); see TODO. The Bear's `WingL/R` meshes (three-feather style) are the art for that item and are hidden by default.
 
 ## Charm Egg (approved idea, not built yet)
 
