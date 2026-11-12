@@ -147,7 +147,7 @@ function Results:show(data,compact)
   for index,row in ipairs(self.rows)do
    local item=data.rows and data.rows[index]
    row.name.Text=item and item.name or "";row.name.TextColor3=Kit.Color.text
-   row.amount.Text=if item then(if index==1 then tostring(item.amount)else "+"..tostring(item.amount))else ""
+   row.amount.Text=if item then(if index==1 then tostring(item.amount)elseif item.amount<0 then "−"..tostring(-item.amount)else "+"..tostring(item.amount))else ""
    row.hair.Visible=item~=nil
   end
  end

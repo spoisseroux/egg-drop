@@ -133,6 +133,7 @@ function Screen.new(options)
  local rcontent=Kit.frame(results,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));rcontent.ZIndex=results.ZIndex+2
  self.resultsScale=Kit.node("UIScale",rcontent,{Scale=1})
  self.results,self.resultsContent=results,rcontent
+ self.overlays={}
  -- Boot (section 6): above every LCD layer, below the glare.
  local bootHost=Kit.frame(options.overlayParent or parent,"DeckBoot",nil,UDim2.new(),UDim2.fromOffset(848,608),30)
  bootHost.ZIndex=110;bootHost.ClipsDescendants=true;bootHost.Active=false
@@ -146,6 +147,28 @@ function Screen.new(options)
 end
 
 function Screen:on(name,callback)self.callbacks[name]=callback end
+
+-- A full-LCD screen layer above the board (difficulty picker, quest log),
+-- placed exactly like the results layer. Content is authored at 848x608 and
+-- scaled to the LCD (compact LCDs scale the same layout down).
+function Screen:addOverlay(name,z)
+ local layer=Kit.frame(self.options.overlayParent or self.options.parent,name,"panel",UDim2.new(),UDim2.fromOffset(848,608),30)
+ layer.ZIndex=z or 32;layer.ClipsDescendants=true;layer.Visible=false;layer.Active=true
+ local tint=Kit.frame(layer,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
+ Kit.node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
+ local content=Kit.frame(layer,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));content.ZIndex=layer.ZIndex+2
+ local scale=Kit.node("UIScale",content,{Scale=1})
+ local overlay={layer=layer,content=content,scale=scale}
+ table.insert(self.overlays,overlay)
+ if self.geometry then self:placeOverlay(overlay)end
+ return overlay
+end
+function Screen:placeOverlay(overlay)
+ local g=self.geometry;if not g then return end
+ overlay.layer.Position=UDim2.fromOffset(g.lcd.x,g.lcd.y);overlay.layer.Size=UDim2.fromOffset(g.lcd.w,g.lcd.h)
+ Kit.corner(overlay.layer,math.floor(L.lcdRadius*g.s))
+ overlay.content.Size=UDim2.fromOffset(848,608);overlay.scale.Scale=g.lcd.w/848
+end
 
 function Screen:pressDpad(dir,down)
  self.dpadPress.Visible=down
@@ -239,6 +262,7 @@ function Screen:layout(rootSize,aspect)
  self.results.Position=self.glare.Position;self.results.Size=self.glare.Size;Kit.corner(self.results,math.floor(L.lcdRadius*s))
  self.bootHost.Position=self.glare.Position;self.bootHost.Size=self.glare.Size;Kit.corner(self.bootHost,math.floor(L.lcdRadius*s))
  self.resultsContent.Size=self.content.Size;self.resultsScale.Scale=g.contentScale
+ for _,overlay in ipairs(self.overlays)do self:placeOverlay(overlay)end
  local inset=if g.compact then 12 else 24
  self.back.setCompact(g.compact);self.back.root.Position=UDim2.new(1,-inset,0,inset)
  local b=g.boardLocal
@@ -378,9 +402,9 @@ function Screen:buildHud(g)
 end
 
 local controlRows={
- Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Pause and leave"},{"MENU","Menu"}},
- Keyboard={{"← →","Aim"},{"Space","Drop"},{"Bksp","Leave"},{"M","Menu"}},
- Touch={{"Drag","Drag to aim"},{"A","A or release to drop"},{"MENU","Menu"},{"←","Back arrow leaves"}},
+ Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Pause and leave"},{"MENU","Quest log"}},
+ Keyboard={{"← →","Aim"},{"Space","Drop"},{"Bksp","Leave"},{"M","Quest log"}},
+ Touch={{"Drag","Drag to aim"},{"A","A or release to drop"},{"MENU","Quest log"},{"←","Back arrow leaves"}},
 }
 local function eggPaint(slot,tier)
  tier=math.clamp(tier or 1,1,#Config.Tiers)

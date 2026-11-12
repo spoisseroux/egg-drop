@@ -1219,6 +1219,27 @@ task.spawn(function()
 	end
 end)
 
+-- Studio-only check hook (never in a live server): finish the current field's
+-- goals and budget so the real settle, award and quest paths run. "plain"
+-- disables the tidy line for this run, "tidy" clears the stack. Returns the run heat.
+if RunService:IsStudio() then
+	local hook = Instance.new("BindableFunction")
+	hook.Name = "EggDropRoundTestHook"
+	hook.OnInvoke = function(player, action)
+		local board = boards[player]
+		if not board or not board.field or board.round.over then return nil, "NoField" end
+		if action == "plain" or action == "tidy" then
+			board.field.rootStage = board.field.goalCount
+			board.sim.drops = FieldRun.Budget
+			if action == "plain" then board.field.bonusHeight = -1 else table.clear(board.sim.eggs) end
+			publishState(board)
+			return board.runHeat
+		end
+		return nil, "UnknownAction"
+	end
+	hook.Parent = game:GetService("ServerStorage")
+end
+
 game:BindToClose(function()
 	for _, board in pairs(boards) do closeBoard(board) end
 	local deadline = os.clock() + 25
