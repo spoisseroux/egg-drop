@@ -1,0 +1,158 @@
+{
+ "triangles_visible_total": 70382,
+ "triangles_without_REF": 64694,
+ "triangles_island_only": 49392,
+ "triangles_by_collection": {
+  "Ground": 12718,
+  "Underside": 2948,
+  "Walls_Rocks": 4800,
+  "Water": 1134,
+  "Architecture": 15664,
+  "Landmarks": 3624,
+  "Stations": 1902,
+  "Props": 6602,
+  "Sky_Islets": 3724,
+  "Distant": 11578,
+  "REF": 5688
+ },
+ "triangles_unique_mesh_data": 57510,
+ "objects": 534,
+ "garden_floor_area_sq_studs": 27712,
+ "pet_walkable_area_sq_studs": 22664,
+ "spawn_to_hub_path_studs": 142,
+ "spawn_to_hub_seconds_at_16": 8.9,
+ "underside_lowest_point_studs": -124.2,
+ "stations": {
+  "EggSpot": [
+   -31,
+   -11
+  ],
+  "CareMachine": [
+   -17,
+   -15
+  ],
+  "Workbench": [
+   -46,
+   -9
+  ],
+  "BenchWest": [
+   -43,
+   5
+  ],
+  "BenchEast": [
+   -17,
+   5
+  ],
+  "ToyLawn": [
+   -30,
+   17
+  ],
+  "PicnicWest": [
+   -58,
+   12
+  ],
+  "PicnicEast": [
+   34,
+   46
+  ],
+  "CreekNook": [
+   1,
+   -33
+  ],
+  "SpringRestWest": [
+   49.5,
+   14
+  ],
+  "SpringRestEast": [
+   54.5,
+   14
+  ],
+  "SpringBasin": [
+   52,
+   3
+  ],
+  "Spawn": [
+   96,
+   66
+  ]
+ },
+ "hatch_tree": [
+  -36,
+  -18
+ ],
+ "hub_centre": [
+  -30,
+  -4
+ ],
+ "chime_arch": [
+  85,
+  57.5
+ ],
+ "bridge": [
+  4,
+  21
+ ],
+ "knoll_rotunda": [
+  -60,
+  50
+ ],
+ "falls_foot": [
+  73.4,
+  -73.4
+ ],
+ "sky_falls_lip": [
+  -5.4,
+  61.9
+ ],
+ "grotto_mouth": [
+  -6.9,
+  -98.5
+ ],
+ "lamps": [
+  [
+   70,
+   50
+  ],
+  [
+   30,
+   33
+  ],
+  [
+   -9,
+   23
+  ],
+  [
+   -12,
+   -44
+  ],
+  [
+   -70,
+   -3
+  ],
+  [
+   50,
+   -10
+  ],
+  [
+   -22,
+   38
+  ]
+ ],
+ "station_heights": {
+  "EggSpot": 0.0,
+  "CareMachine": 0.0,
+  "Workbench": 0.0,
+  "BenchWest": 0.0,
+  "BenchEast": 0.0,
+  "ToyLawn": 0.0,
+  "PicnicWest": 0.0,
+  "PicnicEast": 0.0,
+  "CreekNook": 0.0,
+  "SpringRestWest": 0.0,
+  "SpringRestEast": 0.0,
+  "SpringBasin": 0.0,
+  "Spawn": 0.0
+ },
+ "transforms": "rotation and scale applied on every mesh except linked-duplicate vegetation (Trees, Bushes, Flowers, islet trees) and the REF bears",
+ "origin_note": "Blender (x,y,z) = Roblox (X, -Z, Y-4); 1 unit = 1 stud"
+}

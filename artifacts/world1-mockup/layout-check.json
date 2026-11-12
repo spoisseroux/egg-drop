@@ -1,0 +1,134 @@
+{
+ "stations": {
+  "EggSpot": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "CareMachine": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "Workbench": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "BenchWest": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "BenchEast": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "ToyLawn": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "PicnicWest": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "PicnicEast": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "CreekNook": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "SpringRestWest": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "SpringRestEast": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "SpringBasin": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.092
+  },
+  "Spawn": {
+   "h": 0.0,
+   "min3": 0.0,
+   "max3": 0.0
+  },
+  "ToyRest": {
+   "h": 0.0
+  },
+  "Toy": {
+   "h": 0.0
+  },
+  "HatchTreeRoot": {
+   "h": 0.0
+  },
+  "SpringLawn": {
+   "h": 0.0
+  },
+  "WestBridge": {
+   "h": -2.6
+  }
+ },
+ "paths": {
+  "Path_SpawnToHub": {
+   "min_h": 0.0,
+   "max_h": 1.81,
+   "max_slope_deg": 9.5,
+   "wet_samples": 0
+  },
+  "Path_HubToWestBridge": {
+   "min_h": 0.0,
+   "max_h": 1.09,
+   "max_slope_deg": 14.7,
+   "wet_samples": 0
+  },
+  "Path_WestBank": {
+   "min_h": 0.27,
+   "max_h": 2.22,
+   "max_slope_deg": 17.2,
+   "wet_samples": 0
+  },
+  "Path_HubToFalls": {
+   "min_h": 0.0,
+   "max_h": 2.37,
+   "max_slope_deg": 5.3,
+   "wet_samples": 0
+  },
+  "Path_HubToGrotto": {
+   "min_h": 0.0,
+   "max_h": 1.33,
+   "max_slope_deg": 7.8,
+   "wet_samples": 0
+  },
+  "Path_HubToTerrace": {
+   "min_h": -1.9,
+   "max_h": 16.01,
+   "max_slope_deg": 47.0,
+   "wet_samples": 5
+  },
+  "Path_NookToPicnic": {
+   "min_h": 0.0,
+   "max_h": 0.78,
+   "max_slope_deg": 18.9,
+   "wet_samples": 0
+  },
+  "Path_SpringLoop": {
+   "min_h": 0.0,
+   "max_h": 2.72,
+   "max_slope_deg": 20.9,
+   "wet_samples": 0
+  }
+ }
+}

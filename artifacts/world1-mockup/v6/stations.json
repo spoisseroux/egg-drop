@@ -1,0 +1,111 @@
+{
+ "CareCradle": {
+  "file": "assets/art-source/stations/v2/CareCradle.blend",
+  "purpose": "Care machine: dock a pet on the cushion, restyle hue / charm, open companions",
+  "parts": [
+   "CareCradle_Dais",
+   "CareCradle_Cradle_Pedestal",
+   "CareCradle_Cradle_Cushion",
+   "CareCradle_Canopy_Arch",
+   "CareCradle_Canopy_Mobile_Glow",
+   "CareCradle_Gauge_Post",
+   "CareCradle_Journal_Lectern"
+  ],
+  "triangles": 1100,
+  "non_identity_parts": [],
+  "lowest_point": -0.3
+ },
+ "EggNest": {
+  "file": "assets/art-source/stations/v2/EggNest.blend",
+  "purpose": "Egg spot under the Hatch Tree: browse and hatch eggs",
+  "parts": [
+   "EggNest_Steps",
+   "EggNest_Nest_Cup",
+   "EggNest_Egg",
+   "EggNest_Glow_Halo",
+   "EggNest_Sign_Stele"
+  ],
+  "triangles": 586,
+  "non_identity_parts": [],
+  "lowest_point": -0.3
+ },
+ "PocketDeckKiosk": {
+  "file": "assets/art-source/stations/v2/PocketDeckKiosk.blend",
+  "purpose": "Deck workbench: style the Pocket Deck handheld",
+  "parts": [
+   "PocketDeckKiosk_Kiosk"
+  ],
+  "triangles": 984,
+  "non_identity_parts": [],
+  "lowest_point": 0.0
+ },
+ "ToyLawn": {
+  "file": "assets/art-source/stations/v2/ToyLawn.blend",
+  "purpose": "Toy lawn props: toys pets chase and play with",
+  "parts": [
+   "ToyLawn_ToyChest",
+   "ToyLawn_Ball",
+   "ToyLawn_StackingRings",
+   "ToyLawn_Blocks"
+  ],
+  "triangles": 564,
+  "non_identity_parts": [],
+  "lowest_point": -0.0
+ },
+ "NapDais": {
+  "file": "assets/art-source/stations/v2/NapDais.blend",
+  "purpose": "Rest spot (creek nook, spring meadow): pets nap here",
+  "parts": [
+   "NapDais_Dais",
+   "NapDais_Cushion",
+   "NapDais_StarLamp"
+  ],
+  "triangles": 360,
+  "non_identity_parts": [],
+  "lowest_point": -0.3
+ },
+ "Bench": {
+  "file": "assets/art-source/stations/v2/Bench.blend",
+  "purpose": "Garden bench by the plaza",
+  "parts": [
+   "Bench_Supports",
+   "Bench_Seat_Slats"
+  ],
+  "triangles": 156,
+  "non_identity_parts": [],
+  "lowest_point": 0.0
+ },
+ "PicnicTable": {
+  "file": "assets/art-source/stations/v2/PicnicTable.blend",
+  "purpose": "Picnic table",
+  "parts": [
+   "PicnicTable_Trestles",
+   "PicnicTable_Top_And_Seats"
+  ],
+  "triangles": 144,
+  "non_identity_parts": [],
+  "lowest_point": 0.0
+ },
+ "ArrivalDais": {
+  "file": "assets/art-source/stations/v2/ArrivalDais.blend",
+  "purpose": "Spawn pad inside the Chime Arch",
+  "parts": [
+   "ArrivalDais_Dais",
+   "ArrivalDais_Glow_Disc"
+  ],
+  "triangles": 234,
+  "non_identity_parts": [],
+  "lowest_point": -0.3
+ },
+ "Lamp": {
+  "file": "assets/art-source/stations/v2/Lamp.blend",
+  "purpose": "Path lamp",
+  "parts": [
+   "Lamp_Post",
+   "Lamp_Orb_Glow"
+  ],
+  "triangles": 146,
+  "non_identity_parts": [],
+  "lowest_point": 0.0
+ }
+}

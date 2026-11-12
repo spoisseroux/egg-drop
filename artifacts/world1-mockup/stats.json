@@ -1,0 +1,18 @@
+{
+ "triangles_visible_total": 76838,
+ "triangles_unique_mesh_data": 45640,
+ "triangles_by_collection": {
+  "Ground": 22844,
+  "Walls_Rocks": 20876,
+  "Water": 1826,
+  "Landmarks": 5914,
+  "Stations": 2056,
+  "Props": 10794,
+  "Distant": 6840,
+  "REF": 5688
+ },
+ "triangles_without_REF": 71150,
+ "objects": 681,
+ "unique_meshes": 171,
+ "origin_note": "Blender (x,y,z) = Roblox (X, -Z, Y-4); 1 unit = 1 stud"
+}

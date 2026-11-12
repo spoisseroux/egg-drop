@@ -1,0 +1,439 @@
+{
+ "triangles_visible_total": 78458,
+ "triangles_without_REF": 72770,
+ "triangles_island_only": 58648,
+ "triangles_by_collection": {
+  "Ground": 12968,
+  "Underside": 2948,
+  "Walls_Rocks": 4740,
+  "Water": 1206,
+  "Architecture": 17112,
+  "Landmarks": 3562,
+  "Stations": 5472,
+  "Props": 10640,
+  "Sky_Islets": 3724,
+  "Distant": 10398,
+  "REF": 5688
+ },
+ "triangles_unique_mesh_data": 63202,
+ "objects": 556,
+ "garden_floor_area_sq_studs": 27712,
+ "pet_walkable_area_sq_studs": 22732,
+ "spawn_to_hub_path_studs": 142,
+ "spawn_to_hub_seconds_at_16": 8.9,
+ "underside_lowest_point_studs": -124.2,
+ "stations": {
+  "EggSpot": [
+   -31,
+   -11
+  ],
+  "CareMachine": [
+   -17,
+   -15
+  ],
+  "Workbench": [
+   -46,
+   -9
+  ],
+  "BenchWest": [
+   -43,
+   5
+  ],
+  "BenchEast": [
+   -17,
+   5
+  ],
+  "ToyLawn": [
+   -30,
+   17
+  ],
+  "PicnicWest": [
+   -58,
+   12
+  ],
+  "PicnicEast": [
+   34,
+   46
+  ],
+  "CreekNook": [
+   1,
+   -33
+  ],
+  "SpringRestWest": [
+   49.5,
+   14
+  ],
+  "SpringRestEast": [
+   54.5,
+   14
+  ],
+  "SpringBasin": [
+   52,
+   3
+  ],
+  "Spawn": [
+   96,
+   66
+  ]
+ },
+ "hatch_tree": [
+  -36,
+  -18
+ ],
+ "hub_centre": [
+  -30,
+  -4
+ ],
+ "chime_arch": [
+  85,
+  57.5
+ ],
+ "bridge": [
+  4,
+  21
+ ],
+ "knoll_rotunda": [
+  -60,
+  50
+ ],
+ "bridge_deck_top_above_lawn": 0.34,
+ "falls_foot": [
+  73.4,
+  -73.4
+ ],
+ "sky_falls_lip": [
+  -5.4,
+  61.9
+ ],
+ "grotto_mouth": [
+  -6.9,
+  -98.5
+ ],
+ "lamps": [
+  [
+   70,
+   50
+  ],
+  [
+   30,
+   33
+  ],
+  [
+   -9,
+   23
+  ],
+  [
+   -12,
+   -44
+  ],
+  [
+   -70,
+   -3
+  ],
+  [
+   50,
+   -10
+  ],
+  [
+   -22,
+   38
+  ]
+ ],
+ "station_heights": {
+  "EggSpot": 0.0,
+  "CareMachine": 0.0,
+  "Workbench": 0.0,
+  "BenchWest": 0.0,
+  "BenchEast": 0.0,
+  "ToyLawn": 0.0,
+  "PicnicWest": 0.0,
+  "PicnicEast": 0.0,
+  "CreekNook": 0.0,
+  "SpringRestWest": 0.0,
+  "SpringRestEast": 0.0,
+  "SpringBasin": 0.0,
+  "Spawn": 0.0
+ },
+ "stations_placed": [
+  {
+   "object_prefix": "Station_EggNest",
+   "definition": "EggNest",
+   "world_X_Z": [
+    -31,
+    -11
+   ],
+   "yaw_rad": -0.35,
+   "parts": [
+    "Station_EggNest_Steps",
+    "Station_EggNest_Nest_Cup",
+    "Station_EggNest_Egg",
+    "Station_EggNest_Glow_Halo",
+    "Station_EggNest_Sign_Stele"
+   ],
+   "triangles": 586
+  },
+  {
+   "object_prefix": "Station_CareCradle",
+   "definition": "CareCradle",
+   "world_X_Z": [
+    -17,
+    -15
+   ],
+   "yaw_rad": -0.5,
+   "parts": [
+    "Station_CareCradle_Dais",
+    "Station_CareCradle_Cradle_Pedestal",
+    "Station_CareCradle_Cradle_Cushion",
+    "Station_CareCradle_Canopy_Arch",
+    "Station_CareCradle_Canopy_Mobile_Glow",
+    "Station_CareCradle_Gauge_Post",
+    "Station_CareCradle_Journal_Lectern"
+   ],
+   "triangles": 1100
+  },
+  {
+   "object_prefix": "Station_PocketDeckKiosk",
+   "definition": "PocketDeckKiosk",
+   "world_X_Z": [
+    -46,
+    -9
+   ],
+   "yaw_rad": 0.45,
+   "parts": [
+    "Station_PocketDeckKiosk_Kiosk"
+   ],
+   "triangles": 984
+  },
+  {
+   "object_prefix": "Station_BenchWest",
+   "definition": "Bench",
+   "world_X_Z": [
+    -43,
+    5
+   ],
+   "yaw_rad": 2.442,
+   "parts": [
+    "Station_BenchWest_Supports",
+    "Station_BenchWest_Seat_Slats"
+   ],
+   "triangles": 156
+  },
+  {
+   "object_prefix": "Station_BenchEast",
+   "definition": "Bench",
+   "world_X_Z": [
+    -17,
+    5
+   ],
+   "yaw_rad": 3.842,
+   "parts": [
+    "Station_BenchEast_Supports",
+    "Station_BenchEast_Seat_Slats"
+   ],
+   "triangles": 156
+  },
+  {
+   "object_prefix": "Station_PicnicWest",
+   "definition": "PicnicTable",
+   "world_X_Z": [
+    -58,
+    12
+   ],
+   "yaw_rad": 0.4,
+   "parts": [
+    "Station_PicnicWest_Trestles",
+    "Station_PicnicWest_Top_And_Seats"
+   ],
+   "triangles": 144
+  },
+  {
+   "object_prefix": "Station_PicnicEast",
+   "definition": "PicnicTable",
+   "world_X_Z": [
+    34,
+    46
+   ],
+   "yaw_rad": 0.4,
+   "parts": [
+    "Station_PicnicEast_Trestles",
+    "Station_PicnicEast_Top_And_Seats"
+   ],
+   "triangles": 144
+  },
+  {
+   "object_prefix": "Station_ToyLawn",
+   "definition": "ToyLawn",
+   "world_X_Z": [
+    -30,
+    18.5
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Station_ToyLawn_ToyChest",
+    "Station_ToyLawn_Ball",
+    "Station_ToyLawn_StackingRings",
+    "Station_ToyLawn_Blocks"
+   ],
+   "triangles": 564
+  },
+  {
+   "object_prefix": "Station_NapDais_CreekNook",
+   "definition": "NapDais",
+   "world_X_Z": [
+    1,
+    -33
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Station_NapDais_CreekNook_Dais",
+    "Station_NapDais_CreekNook_Cushion",
+    "Station_NapDais_CreekNook_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "object_prefix": "Station_NapDais_SpringRestWest",
+   "definition": "NapDais",
+   "world_X_Z": [
+    49.5,
+    14
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Station_NapDais_SpringRestWest_Dais",
+    "Station_NapDais_SpringRestWest_Cushion",
+    "Station_NapDais_SpringRestWest_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "object_prefix": "Station_NapDais_SpringRestEast",
+   "definition": "NapDais",
+   "world_X_Z": [
+    54.5,
+    14
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Station_NapDais_SpringRestEast_Dais",
+    "Station_NapDais_SpringRestEast_Cushion",
+    "Station_NapDais_SpringRestEast_StarLamp"
+   ],
+   "triangles": 360
+  },
+  {
+   "object_prefix": "Station_ArrivalDais",
+   "definition": "ArrivalDais",
+   "world_X_Z": [
+    96,
+    66
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Station_ArrivalDais_Dais",
+    "Station_ArrivalDais_Glow_Disc"
+   ],
+   "triangles": 234
+  },
+  {
+   "object_prefix": "Lamp_1",
+   "definition": "Lamp",
+   "world_X_Z": [
+    70,
+    50
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_1_Post",
+    "Lamp_1_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_2",
+   "definition": "Lamp",
+   "world_X_Z": [
+    30,
+    33
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_2_Post",
+    "Lamp_2_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_3",
+   "definition": "Lamp",
+   "world_X_Z": [
+    -9,
+    23
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_3_Post",
+    "Lamp_3_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_4",
+   "definition": "Lamp",
+   "world_X_Z": [
+    -12,
+    -44
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_4_Post",
+    "Lamp_4_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_5",
+   "definition": "Lamp",
+   "world_X_Z": [
+    -70,
+    -3
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_5_Post",
+    "Lamp_5_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_6",
+   "definition": "Lamp",
+   "world_X_Z": [
+    50,
+    -10
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_6_Post",
+    "Lamp_6_Orb_Glow"
+   ],
+   "triangles": 146
+  },
+  {
+   "object_prefix": "Lamp_7",
+   "definition": "Lamp",
+   "world_X_Z": [
+    -22,
+    38
+   ],
+   "yaw_rad": 0.0,
+   "parts": [
+    "Lamp_7_Post",
+    "Lamp_7_Orb_Glow"
+   ],
+   "triangles": 146
+  }
+ ],
+ "transforms": "rotation and scale applied on every mesh except linked-duplicate vegetation (Trees, Bushes, Flowers, islet trees) and the REF bears",
+ "origin_note": "Blender (x,y,z) = Roblox (X, -Z, Y-4); 1 unit = 1 stud"
+}

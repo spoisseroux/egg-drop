@@ -1,0 +1,153 @@
+{
+ "triangles_visible_total": 45296,
+ "triangles_without_REF": 39608,
+ "triangles_by_collection": {
+  "Ground": 12686,
+  "Walls_Rocks": 6440,
+  "Water": 1354,
+  "Landmarks": 4296,
+  "Stations": 1902,
+  "Props": 6950,
+  "Distant": 5980,
+  "REF": 5688
+ },
+ "triangles_unique_mesh_data": 27926,
+ "garden_floor_area_sq_studs": 27712,
+ "v1_floor_area_sq_studs": 48200,
+ "area_ratio_vs_v1": 0.575,
+ "pet_walkable_area_sq_studs": 22692,
+ "garden_extent_studs": {
+  "east_west": 191,
+  "north_south": 152
+ },
+ "spawn_to_hub_path_studs": 142,
+ "spawn_to_hub_seconds_at_16": 8.9,
+ "stations": {
+  "EggSpot": [
+   -31,
+   -11
+  ],
+  "CareMachine": [
+   -17,
+   -15
+  ],
+  "Workbench": [
+   -46,
+   -9
+  ],
+  "BenchWest": [
+   -43,
+   5
+  ],
+  "BenchEast": [
+   -17,
+   5
+  ],
+  "ToyLawn": [
+   -30,
+   17
+  ],
+  "PicnicWest": [
+   -58,
+   12
+  ],
+  "PicnicEast": [
+   34,
+   46
+  ],
+  "CreekNook": [
+   1,
+   -33
+  ],
+  "SpringRestWest": [
+   49.5,
+   14
+  ],
+  "SpringRestEast": [
+   54.5,
+   14
+  ],
+  "SpringBasin": [
+   52,
+   3
+  ],
+  "Spawn": [
+   96,
+   66
+  ]
+ },
+ "hatch_tree": [
+  -36,
+  -18
+ ],
+ "hub_centre": [
+  -30,
+  -4
+ ],
+ "chime_arch": [
+  85,
+  57.5
+ ],
+ "bridge": [
+  4,
+  21
+ ],
+ "knoll_pinwheel": [
+  -60,
+  50
+ ],
+ "falls_foot": [
+  73.4,
+  -73.4
+ ],
+ "grotto_mouth": [
+  -6.9,
+  -98.5
+ ],
+ "lamps": [
+  [
+   70,
+   50
+  ],
+  [
+   30,
+   33
+  ],
+  [
+   -9,
+   23
+  ],
+  [
+   -12,
+   -44
+  ],
+  [
+   -70,
+   -3
+  ],
+  [
+   50,
+   -10
+  ],
+  [
+   -22,
+   38
+  ]
+ ],
+ "station_heights": {
+  "EggSpot": 0.0,
+  "CareMachine": 0.0,
+  "Workbench": 0.0,
+  "BenchWest": 0.0,
+  "BenchEast": 0.0,
+  "ToyLawn": 0.0,
+  "PicnicWest": 0.0,
+  "PicnicEast": 0.0,
+  "CreekNook": 0.0,
+  "SpringRestWest": 0.0,
+  "SpringRestEast": 0.0,
+  "SpringBasin": 0.0,
+  "Spawn": 0.0
+ },
+ "origin_note": "Blender (x,y,z) = Roblox (X, -Z, Y-4); 1 unit = 1 stud"
+}

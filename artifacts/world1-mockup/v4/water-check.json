@@ -1,0 +1,97 @@
+{
+ "visible_water_cells": 232,
+ "objects_checked_after_cleanup": 214,
+ "trees_checked": 22,
+ "trees_moved_at_placement": [
+  [
+   "Tree_21_blossom",
+   [
+    -84,
+    -30
+   ],
+   [
+    -76.9,
+    -22.9
+   ]
+  ]
+ ],
+ "trees_dropped_at_placement": [],
+ "overlaps_found_first_pass": [
+  [
+   "Rocks_Shore",
+   "Rock_007",
+   12
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_008",
+   12
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_009",
+   6
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_013",
+   1
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_014",
+   4
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_015",
+   7
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_016",
+   12
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_017",
+   12
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_020",
+   7
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_025",
+   8
+  ],
+  [
+   "Rocks_Shore",
+   "Rock_034",
+   2
+  ]
+ ],
+ "auto_removed": [
+  "Rock_007",
+  "Rock_008",
+  "Rock_009",
+  "Rock_013",
+  "Rock_014",
+  "Rock_015",
+  "Rock_016",
+  "Rock_017",
+  "Rock_020",
+  "Rock_025",
+  "Rock_034"
+ ],
+ "overlaps_remaining": [],
+ "exempt_by_design": [
+  "Edging_* (the marble kerbs that line the water)",
+  "Bridge_Main_Marble (deck over the stream)",
+  "Prop_SteppingStone_* (in the stream on purpose)",
+  "marble spout, falls rock face and lips, aqueduct"
+ ],
+ "method": "every vertex of every object (world XY, below 14 studs) tested against every visible cell of Water_StreamAndPools and the Sky Falls channel"
+}
