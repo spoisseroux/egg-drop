@@ -26,7 +26,7 @@ function Simulation.new(preset, serial, options)
 		local random = Random.new(options.seed)
 		board.queue = {}
 		for _ = 1, 4 do
-			local bag = { 1, 1, 1, 1, 2, 2 }
+			local bag = table.clone(options.bag or { 1, 1, 1, 1, 2, 2 })
 			for index = #bag, 2, -1 do
 				local other = random:NextInteger(1, index)
 				bag[index], bag[other] = bag[other], bag[index]

@@ -39,10 +39,10 @@ local function chooseAim(policy,sim,field,state,Simulation,Config)
 end
 local function runOne(d,id,seed,policy,options)
 	local Simulation,Round,Field,Config=d.Simulation,d.Round,d.FieldRun,d.Config
-	local descriptor=d.Objectives.create(id,seed)
+	local descriptor=d.Objectives.create(id,seed,options.heat)
 	local sim=Simulation.new("Springy",0,d.Objectives.simulationOptions(descriptor,"Springy"))
 	local field=Field.new({descriptor=descriptor,sequence=1})
-	local round=Round.new(Field.roundOptions())
+	local round=Round.new(Field.roundOptions(options.heat))
 	local cadence=if policy=="fast_center"then Config.DropInterval else options.cadence or 1.25
 	local now,nextIntent,lastDrop,lastMerge,chain,ordinal=0,0,-math.huge,-math.huge,0,0
 	local merged,trace,state={}, {}, {separatedChain=options.separatedChain==true}
@@ -190,5 +190,40 @@ function Benchmark.replayWinningTraces(dependencies,results,templateIds)
 	end
 	for _,id in ipairs(templateIds or dependencies.Objectives.Order)do assert(counts[id]==3,"Need three distinct successful seeds for "..id)end
 	return{passed=#rows,rows=rows,evidence="exact accepted aim/time/tier trace replay through the unchanged production solver",persistentWrites=false}
+end
+-- Difficulty check (QUESTS-DIFFICULTY-PLAN section 8): seeds x templates x heats
+-- with the goal-aware policy. Hard must stay winnable on every template.
+function Benchmark.heats(d,options)
+	options=options or {}
+	local count=options.count or 6
+	local out={count=count,rows={},persistentWrites=false}
+	for _,heat in ipairs(options.heats or {"easy","medium","hard"})do
+		local total={heat=heat,wins=0,runs=0,overflows=0,reward=0,templates={}}
+		for _,id in ipairs(d.Objectives.Order)do
+			local wins=0
+			for index=0,count-1 do
+				local sample=runOne(d,id,(options.firstSeed or 40001)+index,options.policy or "goal_aware",{heat=heat})
+				total.runs+=1;total.reward+=sample.baseReward
+				if sample.success then wins+=1;total.wins+=1 end
+				if sample.overflow then total.overflows+=1 end
+				if options.yieldEach~=false then task.wait()end
+			end
+			total.templates[id]=wins
+		end
+		total.winRate=total.wins/total.runs;table.insert(out.rows,total)
+	end
+	return out
+end
+-- Medium must reproduce today's results exactly (same solver samples).
+function Benchmark.mediumMatchesToday(d,options)
+	options=options or {}
+	for _,id in ipairs(d.Objectives.Order)do for index=0,(options.count or 3)-1 do
+		local seed=(options.firstSeed or 40001)+index
+		local a=runOne(d,id,seed,"goal_aware",{})
+		local b=runOne(d,id,seed,"goal_aware",{heat="medium"})
+		assert(a.success==b.success and a.score==b.score and a.drops==b.drops and a.merges==b.merges and a.baseReward==b.baseReward
+			and math.abs(a.seconds-b.seconds)<1e-9,"Medium differs from today on "..id.." "..seed)
+	end end
+	return true
 end
 return Benchmark

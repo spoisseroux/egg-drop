@@ -1,6 +1,7 @@
 -- Pure run state: the host observes terminal-tick merges BEFORE calling step.
 local FieldRun = {}
 local Objectives=require(game:GetService("ReplicatedStorage").Shared.FieldObjectives)
+local Config=require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 FieldRun.__index = FieldRun
 FieldRun.Budget = 24
 FieldRun.SettleSeconds = 4
@@ -15,8 +16,10 @@ function FieldRun.simulationOptions(seed,descriptor,preset)
 	return { seed = seed, starter = {}, kick = 6, contactGate = true }
 end
 
-function FieldRun.roundOptions()
-	return { overflowY = 8.6, grace = 2.4, armAfterDrops = 12, warningMargin = 2 }
+-- Per heat (BoardConfig.Heat); no argument is Medium, today's round.
+function FieldRun.roundOptions(heat)
+	local spec = Config.heat(heat)
+	return { overflowY = spec.overflowY, grace = spec.grace, armAfterDrops = spec.armAfter, warningMargin = 2 }
 end
 
 function FieldRun.new(options)
@@ -38,7 +41,10 @@ function FieldRun.new(options)
 	targets=Objectives.copy(targets)
 	return setmetatable({ budget = FieldRun.Budget, rootStage = 0, phase = "Playing", settleTime = 0,
 		minTier = minimum, targets = targets, goalCount = #targets, zoneBound = FieldRun.ZoneBound,
-		descriptor=descriptor,goalProgress=0,lastOrdinal=0,sequence=options.sequence }, FieldRun)
+		descriptor=descriptor,goalProgress=0,lastOrdinal=0,sequence=options.sequence,
+		heat=Config.heat(options.heat or descriptor.heat).key,
+		-- The tidy +2 line moves with the overflow line (Hard is lower).
+		bonusHeight=options.bonusHeight or(if options.heat or descriptor.heat then Config.heat(options.heat or descriptor.heat).bonusHeight else FieldRun.BonusHeight) }, FieldRun)
 end
 
 function FieldRun:target()
@@ -112,7 +118,7 @@ function FieldRun:step(eggs, dt, drops, overflow)
 		local success = not overflow and self.rootStage == self.goalCount
 		self.outcome = {
 			success = success,
-			reward = if success then 6 + (if maxHeight <= FieldRun.BonusHeight then 2 else 0) else 0,
+			reward = if success then 6 + (if maxHeight <= self.bonusHeight then 2 else 0) else 0,
 			reason = if overflow then "Overflow" elseif success then self.descriptor.title.." complete" else self.descriptor.title.." incomplete",
 			rootStage = self.rootStage,
 			maxHeight = maxHeight,

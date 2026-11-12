@@ -67,7 +67,7 @@ function Text.describe(view,phase)
  if view.empty then return{instruction="Field rounds earn Stars",candidates={"Field rounds earn Stars","Earn Stars"},ticker="",dynamics="",title="Field rounds",zone="any",key="no-field"}end
  local full,candidates
  if phase=="Settling"then full="Settling · keep it low";candidates={"Settling…","Settling"}
- elseif view.complete then full="Both goals done · keep it low";candidates={"Goals done ✓","Done ✓","Done"}
+ elseif view.complete then full=(if #view.goals==3 then "All goals done"else "Both goals done").." · keep it low";candidates={"Goals done ✓","Done ✓","Done"}
  else full,candidates=Text.goal(view.goals[view.step],view.progress)end
  local all={full};for _,caption in ipairs(candidates)do table.insert(all,caption)end
  local dynamics=if view.templateId=="bank_pair"then ""else view.dynamics.label
@@ -95,8 +95,9 @@ function Text.results(view,stage)
 end
 function Text.recap(view,stage,reason)
  if view and not view.empty then
-  if stage>=2 then return "Both goals done · "..(if reason=="Overflow"then "clear the overflow line"else "survive all 24 drops")end
-  local step=math.clamp(stage+1,1,2)
+  local count=#view.goals
+  if stage>=count then return (if count==3 then "All goals done · "else "Both goals done · ")..(if reason=="Overflow"then "clear the overflow line"else "survive all 24 drops")end
+  local step=math.clamp(stage+1,1,count)
   local instruction=Text.goal(view.goals[step],if view.step==step then view.progress else nil)
   return "Goal "..step.." unfinished: "..instruction
  end

@@ -159,6 +159,68 @@ return function(server,sources)
   end
   local mirror=mutable(fixture("mirror_marks"):public(7));mirror.goals[2].zone=mirror.goals[1].zone;assert(not Objectives.validatePublic(mirror,7))
  end)
+	-- Difficulty (QUESTS-DIFFICULTY-PLAN section 1).
+	test("medium equals today: same goals, queue, round options and tidy line",function()
+		for _,id in ipairs(Objectives.Order)do for seed=40001,40006 do
+			local today,medium=Objectives.create(id,seed),Objectives.create(id,seed,"medium")
+			assert(#today.goals==2 and #medium.goals==2)
+			for i,goal in ipairs(today.goals)do assert(goal.id==medium.goals[i].id and goal.target==medium.goals[i].target)end
+			local a=Simulation.new("Springy",0,Objectives.simulationOptions(today,"Springy"))
+			local b=Simulation.new("Springy",0,Objectives.simulationOptions(medium,"Springy","medium"))
+			assert(table.concat(a.queue,",")==table.concat(b.queue,","))
+		end end
+		local o,m=Field.roundOptions(),Field.roundOptions("medium")
+		assert(o.overflowY==8.6 and o.grace==2.4 and o.armAfterDrops==12 and m.overflowY==8.6 and m.grace==2.4 and m.armAfterDrops==12)
+		assert(fixture("bank_pair").bonusHeight==7.5 and Field.new({descriptor=Objectives.create("bank_pair",1,"medium")}).bonusHeight==7.5)
+	end)
+	test("hard has three goals, a lower line and a faster mix; easy a calmer one",function()
+		for _,id in ipairs(Objectives.Order)do
+			local hard=Objectives.create(id,40001,"hard");assert(#hard.goals==3)
+			local third=hard.goals[3];assert(third.id=="hard_iv"or third.id=="hard_chain3")
+			local f=Field.new({descriptor=hard,sequence=7});assert(f.goalCount==3 and f.bonusHeight==6.5 and f.heat=="hard")
+			assert(Objectives.validatePublic(f:public(7),7))
+			local easy=Objectives.create(id,40001,"easy");assert(#easy.goals==2)
+			local sim=Simulation.new("Springy",0,Objectives.simulationOptions(hard,"Springy"))
+			local threes=0;for _,t in ipairs(sim.queue)do if t==3 then threes+=1 end end;assert(threes==4 and #sim.queue==24)
+			local calm=Simulation.new("Springy",0,Objectives.simulationOptions(easy,"Springy"))
+			local twos=0;for _,t in ipairs(calm.queue)do if t==2 then twos+=1 end end;assert(twos==4)
+		end
+		local h,e=Field.roundOptions("hard"),Field.roundOptions("easy")
+		assert(h.overflowY==7.6 and h.grace==2 and h.armAfterDrops==10 and e.overflowY==9.6 and e.grace==3 and e.armAfterDrops==16)
+		assert(not pcall(Objectives.create,"bank_pair",1,"insane"))
+	end)
+	test("hard needs all three goals; the third counts after the first two",function()
+		local f=Field.new({descriptor=Objectives.create("bank_pair",40001,"hard"),sequence=7})
+		merge(f,3,-3,1);merge(f,3,3,2);assert(f.rootStage==2 and not f:public(7).complete)
+		f:step({},0,24,false);local fail=f:step({},4,24,false);assert(not fail.success and fail.reward==0)
+		local g=Field.new({descriptor=Objectives.create("bank_pair",40001,"hard"),sequence=7})
+		merge(g,3,-3,1);merge(g,3,3,2);merge(g,2,0,3,1);merge(g,2,0,4,2);merge(g,2,0,5,3)
+		assert(g.rootStage==3);local done=g:public(7);assert(done.complete and done.step==4 and Objectives.validatePublic(done,7))
+		g:step({},0,24,false);assert(g:step({},4,24,false).success)
+		local l=Field.new({descriptor=Objectives.create("lantern_chain",40001,"hard"),sequence=7})
+		for i=1,4 do merge(l,2,0,i)end;assert(l.rootStage==2)
+		assert(not merge(l,3,0,5));assert(merge(l,4,0,6)and l.rootStage==3)
+	end)
+	test("the tidy bonus moves with hard's lower line",function()
+		local function finish(heat,top)
+			local f=Field.new({descriptor=Objectives.create("bank_pair",40001,heat),sequence=7})
+			for i=1,(if heat=="hard"then 5 else 2)do merge(f,if i<=2 then 3 else 2,if i==1 then -3 elseif i==2 then 3 else 0,i,if i<=2 then 1 else i-2)end
+			local egg={{position=Vector2.new(0,top-1),radius=1}}
+			f:step(egg,0,24,false);return f:step(egg,4,24,false)
+		end
+		assert(finish("medium",7.2).reward==8 and finish("medium",7.9).reward==6)
+		-- Under Hard's 7.6 line but above its 6.5 tidy line: no free +2.
+		assert(finish("hard",7.2).reward==6 and finish("hard",6.4).reward==8)
+		assert(finish("easy",8.4).reward==8 and finish("easy",8.7).reward==6)
+	end)
+	test("public validation accepts two or three goals but not a forged third",function()
+		local function mutable(t)if type(t)~="table"then return t end;local r={};for k,v in pairs(t)do r[k]=mutable(v)end;return r end
+		local two=mutable(fixture("bank_pair"):public(7));table.insert(two.goals,{id="hard_chain3",kind="chain",zone={kind="any"},target=9})
+		assert(not Objectives.validatePublic(two,7))
+		local three=mutable(Field.new({descriptor=Objectives.create("bank_pair",40001,"hard"),sequence=7}):public(7))
+		assert(Objectives.validatePublic(three,7));three.step=5;assert(not Objectives.validatePublic(three,7))
+		local four=mutable(three);four.step=1;table.insert(four.goals,four.goals[3]);assert(not Objectives.validatePublic(four,7))
+	end)
 	shared:Destroy()
 	return{passed=#cases,cases=cases,persistentWrites=false,evidence="fresh pure solver sources and immutable catalog; no live state"}
 end
