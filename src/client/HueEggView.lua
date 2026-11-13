@@ -19,6 +19,7 @@ local MaterialPanel=require(script.Parent.MaterialPanel)
 local ToyCatalog=require(Shared.ToyCatalog);local FeatureCatalog=require(Shared.FeatureCatalog)
 local ToyPanel=require(script.Parent.ToyPanel);local FeaturePanel=require(script.Parent.FeaturePanel)
 local TabRail=require(script.Parent.EditorTabRail)
+local WearableCatalog=require(Shared.WearableCatalog)
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local EatingProof=require(script.Parent.HueEatingProof);local FruitEating=require(script.Parent.PetFruitEating)
 local View={};View.__index=View
@@ -61,8 +62,11 @@ function View.new(parent,intent,options)
  self.materialTab=button(card,"MaterialTab","Materials",function()self:setTab("materials")end)
  self.toyTab=button(card,"ToyTab","Toys",function()self:setTab("toys")end)
  self.featureTab=button(card,"FeatureTab","Features",function()self:setTab("features")end)
+ -- Wardrobe opens its own screen (WardrobeShop) over the editor; it is not an editor tab page.
+ self.wardrobeTab=button(card,"WardrobeTab","Wardrobe",function()self:openWardrobe()end)
+ self.wardrobeTab:SetAttribute("AccessibleLabel","Wardrobe · wearables for Stars")
  self.editorTabs={pet=self.petTab,hue=self.hueTab,charm=self.charmTab,materials=self.materialTab,toys=self.toyTab,features=self.featureTab}
- self.tabRail=TabRail.new(card,{self.petTab,self.hueTab,self.charmTab,self.materialTab,self.toyTab,self.featureTab})
+ self.tabRail=TabRail.new(card,{self.petTab,self.hueTab,self.charmTab,self.materialTab,self.toyTab,self.featureTab,self.wardrobeTab})
  self.eatingProof=EatingProof.new();self.fruitEating=FruitEating.new()
  self.toyIntent=self.options.toyIntent;self.featureIntent=self.options.featureIntent
  self.materialIntent=self.options.materialIntent
@@ -177,6 +181,11 @@ function View.new(parent,intent,options)
  shade.Destroying:Connect(function()self:destroy(true)end);return self
 end
 function View:isOpen()return self.shade.Visible end
+function View:openWardrobe()
+ if not self.shade.Visible or self.page~="palette"or self.confirmation or self.intent.pending or not self:canCustomize()then return false end
+ if not WearableCatalog.hasItems(self.petId)or not self.options.wardrobe then return false end
+ return self.options.wardrobe(self.petId)==true
+end
 function View:canCustomize()
  return not self.options.canCustomize or self.options.canCustomize(if self.machine then self.machine.petId else self.petId)==true
 end
@@ -615,6 +624,8 @@ function View:refresh()
   local routeAllowed=self:canCustomize()or(n==self.petTab and self:hasReceiptAssignment())or(n==self.hueTab and self:hasHueAssignment())
   visible(n,customization and not confirming and routeAllowed)
  end
+ self.wardrobeTab.Visible=customization and not confirming and self:canCustomize()and WearableCatalog.hasItems(self.petId)and self.options.wardrobe~=nil
+ Art.tab(self.wardrobeTab,false,not self.intent.pending)
  for _,n in ipairs({self.portrait,self.petName})do visible(n,customization and self.tab~="pet"and not confirming)end
  for _,n in ipairs({self.mainTab,self.secondaryTab,self.channelTitle,self.inventoryTitle})do visible(n,hue and not confirming)end
  if self.assignment then self.inventoryTitle.Visible=false end
@@ -747,7 +758,7 @@ function View:refresh()
   end
  end
  if self.boundedEating then
-  for _,tab in pairs(self.editorTabs)do tab.Visible=false end
+  for _,tab in pairs(self.editorTabs)do tab.Visible=false end;self.wardrobeTab.Visible=false
   for _,node in ipairs({self.inventoryTitle,self.empty,self.channelTitle,self.inspection,self.legacyTitle,self.presetTitle,self.status,self.quote})do node.Visible=false end
   for _,j in pairs(self.jars)do j.button.Visible=false end
   for _,b in pairs(self.bars)do b.row.Visible=false end
@@ -832,8 +843,8 @@ function View:layout()
  self.featurePanel.useNow.Parent=if self.page=="featureReceipt"then self.card else self.featurePanel.root
  self.useNow.Parent=if self.page=="receipt"then self.card else self.body
  if self.page~="palette"or self.confirmation then
-  for _,node in ipairs({self.petTab,self.materialTab,self.charmTab,self.hueTab,self.toyTab,self.featureTab,self.portrait,self.petName,self.mainTab,self.secondaryTab,self.charmToggle,self.charmOff})do
-   if node==self.petTab or node==self.materialTab or node==self.toyTab or node==self.featureTab or node==self.charmOff then node.Visible=false else node.Parent=self.body end
+  for _,node in ipairs({self.petTab,self.materialTab,self.charmTab,self.hueTab,self.toyTab,self.featureTab,self.wardrobeTab,self.portrait,self.petName,self.mainTab,self.secondaryTab,self.charmToggle,self.charmOff})do
+   if node==self.petTab or node==self.materialTab or node==self.toyTab or node==self.featureTab or node==self.wardrobeTab or node==self.charmOff then node.Visible=false else node.Parent=self.body end
   end
   self.tabRail.root.Visible=false;self:layoutTransaction();return
  end

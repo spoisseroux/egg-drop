@@ -347,11 +347,12 @@ function Visual:update(dt)
    cf,size=Charms.pose(self,cf,size,dotX,dotY,dotStretch,entry)
   end
   if string.find(name,"Eye")then size=Vector3.new(size.X*(if mouth=="open"then 1.12 else 1),size.Y*eye*blink,size.Z)
+   if entry.eyeOffsetY then cf*=CFrame.new(0,-entry.eyeOffsetY*(1-eye*blink),0)end
   elseif string.find(name,"Glint")then hidden=hidden or eye*blink<.4
-  elseif entry.mouthAlt then hidden=hidden or mouth=="open"
+  elseif entry.mouthAlt then hidden=hidden or mouth=="open"or(entry.neutralOnly==true and mouth~="smile")
   elseif name=="MouthO"then hidden=hidden or mouth~="open";if cooMouth>.12 then size*=.45+.55*cooMouth end
   elseif name=="MouthSmile"then
-   hidden=hidden or mouth=="open"
+   hidden=hidden or mouth=="open"or(entry.neutralSuppressed==true and mouth=="smile")
    if mouth=="line"then size=Vector3.new(size.X*.5,size.Y*.24,size.Z)elseif mouth=="soft"then size=Vector3.new(size.X*.82,size.Y*.75,size.Z)end
   elseif name=="Teeth"or string.find(name,"^Teeth")then
    hidden=hidden or mouth=="open"or mouth=="line"

@@ -79,7 +79,7 @@ function Rules.resolve(definition,featureStages,wearables)
   if blocked[feature.slot]or occupied[feature.slot]then n=0 end
   stages[id]=n
  end
- local show,suppress={},{}
+ local show,suppress,neutral={},{},{}
  for _,a in ipairs(list(definition))do
   local visible=false
   if a.feature then visible=stages[a.feature]~=nil and stages[a.feature]==a.stage
@@ -88,12 +88,14 @@ function Rules.resolve(definition,featureStages,wearables)
   end
   if visible then
    table.insert(show,a)
-   for _,piece in ipairs(a.replaces or {})do suppress[piece]=true end
+   -- A neutralOnly swap (the Blep) replaces only the neutral frame: the default stays for
+   -- every other expression, so it is marked rather than suppressed.
+   for _,piece in ipairs(a.replaces or {})do if a.flags and a.flags.neutralOnly then neutral[piece]=true else suppress[piece]=true end end
   end
  end
  local lift=0;local rule=type(definition)=="table"and definition.charmLift
  if rule and(stages[rule.feature]or 0)>=rule.fromStage then lift=rule.lift end
- return {show=show,suppress=suppress,blocked=blocked,stages=stages,wearables=wearables,charmLift=lift,
+ return {show=show,suppress=suppress,neutral=neutral,blocked=blocked,stages=stages,wearables=wearables,charmLift=lift,
   charmCenterHidden=blocked.Charm==true or blocked["Charm@CharmCenter"]==true}
 end
 -- Anchor frame in rig space (runtime axes), scaled. Surface anchors: +Y leaves the surface.

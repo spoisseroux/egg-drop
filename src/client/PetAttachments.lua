@@ -28,6 +28,13 @@ function Attachments.build(v,resolved,source)
  local marker=source:FindFirstChild("PawsOrigin")
  local pivot=if marker and marker:IsA("CFrameValue")then marker.Value else source:GetPivot()
  local handles={}
+ -- Multi-piece eyes squint and blink as one eye: every piece scales toward the centre of
+ -- the item's largest piece on that side, not about its own centre.
+ local eyeCenter={}
+ for _,a in ipairs(resolved.show)do if a.slot=="Eyes"and a.item then
+  local key=(a.side or "")..a.item;local c=eyeCenter[key]
+  if not c or a.size[2]>c.h then eyeCenter[key]={h=a.size[2],y=a.center[2]}end
+ end end
  for _,a in ipairs(resolved.show)do
   local template=source:FindFirstChild("Bear__"..a.name)or source:FindFirstChild(a.name)
   local part=template:Clone();part.Name=a.name
@@ -36,15 +43,21 @@ function Attachments.build(v,resolved,source)
   if a.texture and v.definition.attachmentTextures then part.TextureID=v.definition.attachmentTextures[a.texture]or part.TextureID end
   local color=if a.colorRole=="own"then Color3.fromHex(a.color)else(v.colors[a.colorRole]or v.secondaryColor)
   part.Color=color
+  -- Piece colour roles: own colour, secondary-tinted, face ink. Wearables never glow at
+  -- night (PET-STYLE-GUIDE 6), so a tinted wearable piece leaves the secondary glow group;
+  -- horns and wings (features) keep it.
+  local role=if a.colorRole=="own"then "own"elseif a.feature==nil and a.colorRole=="secondary"then "wearSecondary"else a.colorRole
   local localCF=rotation*pivot:ToObjectSpace(template.CFrame)
   local frame=CFrame.new(localCF.Position*v.scale)*localCF.Rotation
   local side=a.side
-  local entry={part=part,name=a.name,colorRole=if a.colorRole=="own"then "own"else a.colorRole,channel=a.channel,frame=frame,size=template.Size*v.scale,
+  local entry={part=part,name=a.name,colorRole=role,piece=a.piece,item=a.item,neutralOnly=a.flags and a.flags.neutralOnly==true or nil,channel=a.channel,frame=frame,size=template.Size*v.scale,
    role=if a.feature then "feature"else "attachment",featureId=a.feature,slot=a.slot,attachment=a,color=color,faceBaseColor=color,faceBaseMaterial=part.Material,
    -- Piercings ride the ear flick; swapped tails wag; an alternate mouth gives way to the open "O".
    earSide=if a.slot=="EarPiercing"or a.slot=="Earring"then side else nil,tailWag=a.slot=="Tail"or nil,mouthAlt=a.slot=="Mouth"or nil,
    -- Wings flap about their own WingL/WingR root (PetIdleMotion.wings).
    wingSide=if a.anchor=="WingL"then "L"elseif a.anchor=="WingR"then "R"else nil}
+  local c=a.slot=="Eyes"and a.item and eyeCenter[(a.side or "")..a.item]
+  if c then entry.eyeOffsetY=(a.center[2]-c.y)*v.scale end
   part.Parent=v.model
   table.insert(v.pieces,entry);table.insert(handles,handle(part))
  end
@@ -52,8 +65,8 @@ function Attachments.build(v,resolved,source)
 end
 
 -- Studio-only check path: workspace attribute StudioPetWearables, e.g.
--- "Hat=beanie;Shirt=tee;Neck=beads;EarPiercingL=ring;EarPiercingR=ring;Eyes=button;Mouth=o;Tail=arrow".
--- Never read in a live server; there is no shop or save for wearables yet.
+-- "Hat=flowercrown;Shirt=hoodie;Neck=bellcollar;EarPiercingL=starstud;EarPiercingR=starstud;Eyes=sparkle;Mouth=blep;Tail=heart".
+-- Studio only; it overrides the saved wearables (hatching v10, the Wardrobe) while set.
 local debug={revision=0,map=nil}
 Attachments.debug=debug
 function Attachments.parseDebug(text)

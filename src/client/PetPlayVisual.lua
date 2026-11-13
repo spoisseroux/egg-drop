@@ -32,7 +32,7 @@ end
 function Play.clearFeatures(v)
  if v.featureHandles then for _,h in ipairs(v.featureHandles)do h:destroy()end end
  v.featureHandles={}
- for i=#v.pieces,1,-1 do local e=v.pieces[i];e.suppressed=nil;if e.role=="feature"or e.role=="attachment"then table.remove(v.pieces,i)end end
+ for i=#v.pieces,1,-1 do local e=v.pieces[i];e.suppressed=nil;e.neutralSuppressed=nil;if e.role=="feature"or e.role=="attachment"then table.remove(v.pieces,i)end end
  v.attachmentState=nil
 end
 function Play.apply(v,appearance)
@@ -57,6 +57,7 @@ function Play.apply(v,appearance)
   local resolved=Rules.resolve(v.definition,{horns=h,claws=c,wings=w},wear)
   for id in pairs(v.definition.features or {})do authored[id]=Rules.hasFeature(v.definition,id)end
   for name in pairs(resolved.suppress)do for _,e in ipairs(v.pieces)do if e.name==name then e.suppressed=true end end end
+  for name in pairs(resolved.neutral or {})do for _,e in ipairs(v.pieces)do if e.name==name then e.neutralSuppressed=true end end end
   for _,part in ipairs(Attachments.build(v,resolved,source))do table.insert(v.featureHandles,part)end
   v.attachmentState=resolved
  end

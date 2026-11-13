@@ -68,9 +68,14 @@ function Garden:appearance(board,petId)
     local toy=selected and type(item)=="table"and item.toyId or "none"
     if toy~="ball"and toy~="bone"and toy~="sparkler"then toy="none"end
     local features=selected and type(item)=="table"and type(item.featureStages)=="table"and item.featureStages or {}
+    -- Saved wearables (slot key -> item id) for the selected pet; unknown ids are dropped by the rig rules.
+    local wearables={}
+    if selected and type(item)=="table"and type(item.wearables)=="table"then
+        for key,id in pairs(item.wearables)do if type(key)=="string"and type(id)=="string"and #key<=32 and #id<=32 then wearables[key]=id end end
+    end
     local generation=board:GetAttribute("PetAppearanceRevision")
     generation=if type(generation)=="number"and generation==generation and generation>=0 and generation<math.huge then generation else 0
-    return {toyId=toy,featureStages={horns=visibleStage(features.horns),claws=visibleStage(features.claws),wings=visibleStage(features.wings)},appearanceGeneration=generation,finish=type(item)=="table"and item.finish or "standard",mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=type(item)=="table"and item.charmVisible==true,body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default"}
+    return {toyId=toy,featureStages={horns=visibleStage(features.horns),claws=visibleStage(features.claws),wings=visibleStage(features.wings)},appearanceGeneration=generation,finish=type(item)=="table"and item.finish or "standard",mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=type(item)=="table"and item.charmVisible==true,body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default",wearables=wearables}
 end
 function Garden:renderActor(ownerId,petId,character)
  local exact=self:get(ownerId,petId,character);if exact then return exact end

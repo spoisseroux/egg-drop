@@ -864,6 +864,8 @@ nurseryView.appearanceFor=function(petId)
   a.toyId=(state.petToys or {})[petId]or "none"
   local row=(state.petFeatures or {})[petId]or {}
   a.featureStages={horns=row.horns and row.horns.visible or 0,claws=row.claws and row.claws.visible or 0,wings=row.wings and row.wings.visible or 0}
+  local worn=(state.petWearables or {})[petId]
+  a.wearables=if worn and type(worn.equipped)=="table"then table.clone(worn.equipped)else {}
   a.appearanceGeneration=state.revision or a.appearanceGeneration
  end
  return a
@@ -890,6 +892,7 @@ clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return Ht
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
+ wardrobe=function(petId)return clientUI.openWardrobe and clientUI.openWardrobe(petId)end,
  canCustomize=function(petId)
   local actor=roomView.care and roomView.care:actor()
   petId=petId or(clientUI.hueView and clientUI.hueView.petId)
@@ -988,6 +991,68 @@ nurseryView.onOpenFeature=function(purchase)
  if clientUI.openHue("featureBuy",nil,"eggs")and purchase and not nurseryState.pendingFeatureResult then clientUI.featureIntent:buy()end
 end
 journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
+-- Wardrobe (pet wearables for Stars), opened from the Companions editor at the Care Cradle.
+-- Its own ScreenGui above the overlays; the editor (and any docked session) stays open under it.
+do
+ local WardrobeShop=require(script.WardrobeShop)
+ local Kit=require(script.DeckKit)
+ local WearableCatalog=require(ReplicatedStorage.Shared.WearableCatalog)
+ local wardrobeGui=make("ScreenGui","EggDropWardrobe",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=12,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local host=make("Frame","WardrobeHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},wardrobeGui)
+ local function context(state)
+  local shop=clientUI.wardrobe;local petId=shop and shop.petId or "pip"
+  local row=(state and state.petWearables or {})[petId]
+  local features=(state and state.petFeatures or {})[petId]or {}
+  return {wallet=state and state.nectar or 0,row={owned=table.clone(row and row.owned or {}),equipped=table.clone(row and row.equipped or {})},
+   stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0}}
+ end
+ local function syncInsets()
+  local size=wardrobeGui.AbsoluteSize
+  -- Compact phones use the device root (UI-SPEC-COMPACT 1.1), like the deck guis.
+  local wanted=if Kit.compactRule(size.X,size.Y)then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
+  if wardrobeGui.ScreenInsets~=wanted then wardrobeGui.ScreenInsets=wanted end
+ end
+ clientUI.wardrobe=WardrobeShop.new(host,{
+  appearance=function(petId)return nurseryView.appearanceFor(petId)end,
+  buy=function(order)nurseryRequest:FireServer("wearableBuy",{id=order.id,petId=order.petId,itemId=order.itemId,price=order.price,equip=true},nurseryState and nurseryState.revision or 0)end,
+  equip=function(order)nurseryRequest:FireServer("wearableEquip",{id=order.id,petId=order.petId,slot=order.slot,itemId=order.wear},nurseryState and nurseryState.revision or 0)end,
+  done=function(order)
+   local item=WearableCatalog.item(order.petId,order.itemId)
+   clientUI.wardrobeToaster=clientUI.wardrobeToaster or Kit.toaster(host)
+   if item then clientUI.wardrobeToaster.show(if order.action=="wearableBuy"then item.name.." bought"elseif order.wear then item.name.." on"else item.name.." off")end
+  end,
+  back=function()clientUI.wardrobe:close();if clientUI.isHueOpen()then clientUI.hueView:refresh()end end})
+ clientUI.isWardrobeOpen=function()return clientUI.wardrobe:isOpen()end
+ clientUI.syncWardrobe=function(state)if clientUI.wardrobe:isOpen()then clientUI.wardrobe:setContext(context(state))end end
+ clientUI.openWardrobe=function(petId)
+  if not nurseryState or roomView.busy or not WearableCatalog.hasItems(petId or "")then return false end
+  if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+  syncInsets();clientUI.wardrobe.petId=petId
+  clientUI.wardrobe:open(petId,context(nurseryState));return true
+ end
+ wardrobeGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
+ local wearableResultConnection=remotes:WaitForChild("WearableResult").OnClientEvent:Connect(function(message)
+  clientUI.wardrobe:result(message)
+  nurseryRequest:FireServer("snapshot")
+ end)
+ ContextActionService:BindActionAtPriority("EggDropWardrobe",function(_,state,input)
+  if not clientUI.wardrobe:isOpen()or UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+  if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
+  local key=input.KeyCode;local shop=clientUI.wardrobe
+  if key==Enum.KeyCode.Left or key==Enum.KeyCode.A or key==Enum.KeyCode.DPadLeft then shop:move(-1,0)
+  elseif key==Enum.KeyCode.Right or key==Enum.KeyCode.D or key==Enum.KeyCode.DPadRight then shop:move(1,0)
+  elseif key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then shop:move(0,-1)
+  elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then shop:move(0,1)
+  elseif key==Enum.KeyCode.Q or key==Enum.KeyCode.ButtonL1 then shop:shiftTab(-1)
+  elseif key==Enum.KeyCode.E or key==Enum.KeyCode.ButtonR1 then shop:shiftTab(1)
+  elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then shop:back()
+  else shop:act()end
+  return Enum.ContextActionResult.Sink
+ end,false,Enum.ContextActionPriority.High.Value+800,Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,
+  Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,
+  Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace)
+ gui.Destroying:Connect(function()wearableResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropWardrobe");clientUI.wardrobe:destroy();wardrobeGui:Destroy()end)
+end
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
 clientUI.materialResult=remotes:WaitForChild("MaterialResult").OnClientEvent:Connect(function(packet)clientUI.materialIntent:receive(packet)end)
@@ -1062,6 +1127,7 @@ local function refreshNursery(state)
  nurseryState = state
     if clientUI.onQuests then clientUI.onQuests(state)end
     if picker then picker:setShopState(state.nectar,state.faceplates)end
+    if clientUI.syncWardrobe then clientUI.syncWardrobe(state)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
@@ -2036,6 +2102,8 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		if roomView.destroyed or roomView.busy or roomView.switchQueued or roomView.transition.shade.Visible
 			or roomView.focusing or (hatchNavigation and hatchNavigation.active)then return{blocked=true}end
 		local owner
+		-- The Wardrobe owns its own focus (ContextAction "EggDropWardrobe").
+		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
         elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
 		elseif isPickerOpen()then owner=picker:getControllerFocus()
