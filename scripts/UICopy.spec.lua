@@ -9,7 +9,7 @@ return function(client,parent)
  local Kit=require(client.DeckKit)
  local TextService=game:GetService("TextService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local sample={count=3,heat="Medium",low=6,high=8,pet="Bear",reward=5,item="Squeaky Bone",owned=3,total=12}
+ local sample={count=3,heat="Medium",low=6,high=8,pet="Bear",reward=5,item="Squeaky Bone",owned=3,total=12,target=3,name="Pet Park"}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000

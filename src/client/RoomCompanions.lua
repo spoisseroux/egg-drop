@@ -3,12 +3,22 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local PetFollow = require(script.Parent.PetFollow)
 local PetPrestige = require(script.Parent.PetPrestige)
+local Layout = require(ReplicatedStorage.Shared.GardenLayout)
+local Flags = require(ReplicatedStorage.Shared.FeatureFlags)
 
 local Companions = {}
 Companions.__index = Companions
+-- Distance tiers (Pet Park K3, only with FeatureFlags.Park): the nearest ObserverCap (6) pets within
+-- ObserverDistance (72) get full updates; up to MaxRendered get a lite update instead: position and
+-- facing at LiteHz with the cached pose frozen (no charm or face animation, no prestige effects).
+-- Flag off: exactly the old rule (6 nearest within 72, all full).
+Companions.MaxRendered = 11
+Companions.LiteHz = 10
+Companions.LiteCadence = .001 -- PetPoseSampler re-samples the expressive pose once per ~1000 s
 
 function Companions.new(boards, createPet, reduceEffects, options)
-	return setmetatable({ players=options and options.players or function()return Players:GetPlayers()end,localRoot=options and options.localRoot,boards = boards, createPet = createPet, reduceEffects = reduceEffects, garden=options and options.garden,active = {}, refreshIn = 0 }, Companions)
+	return setmetatable({ tiers=if options and options.tiers~=nil then options.tiers==true else Flags.Park==true,
+		players=options and options.players or function()return Players:GetPlayers()end,localRoot=options and options.localRoot,boards = boards, createPet = createPet, reduceEffects = reduceEffects, garden=options and options.garden,active = {}, refreshIn = 0 }, Companions)
 end
 
 function Companions:clear()
@@ -37,7 +47,7 @@ function Companions:update(dt,serverNow)
 				local pet = board and Pets.byId[board:GetAttribute("CompanionId")]
 				local mode=board and board:GetAttribute("Mode")
 				local actor=pet and self.garden and self.garden:renderActor(player.UserId,pet.id,player.Character)
-				if root and humanoid and humanoid.Health>0 and pet and (mode=="Room"or mode=="Board") and (root.Position - ownRoot.Position).Magnitude <= 72 then
+				if root and humanoid and humanoid.Health>0 and pet and (mode=="Room"or mode=="Board") and (root.Position - ownRoot.Position).Magnitude <= Layout.ObserverDistance then
 					local rank, legacy = PetPrestige.read(board, pet)
 					table.insert(near, { player = player, root = root, pet = pet, masteryMask = board:GetAttribute("MasteryMask") or 0, rank = rank, legacy = legacy,
 						actor=actor,board=board,distance = (root.Position - ownRoot.Position).Magnitude })
@@ -46,7 +56,8 @@ function Companions:update(dt,serverNow)
 		end
 		table.sort(near, function(a, b) return a.distance < b.distance end)
 		local visible = {}
-		for index = 1, math.min(6, #near) do
+		local cap = if self.tiers then Companions.MaxRendered else Layout.ObserverCap
+		for index = 1, math.min(cap, #near) do
 			local item = near[index]
 			local entry = self.active[item.player]
 			if entry and (entry.pet ~= item.pet or entry.masteryMask ~= item.masteryMask or entry.rank ~= item.rank or entry.legacy ~= item.legacy) then
@@ -69,6 +80,7 @@ function Companions:update(dt,serverNow)
 			if entry.root~=item.root then entry.followState=nil;PetFollow.rest(entry.visual)end
 			entry.root,entry.actor = item.root,item.actor
 			entry.board=item.board
+			entry.full=index<=Layout.ObserverCap
 			local appearanceKey=appearance and game:GetService("HttpService"):JSONEncode(appearance)
             if appearance and entry.visual.applyAppearance and entry.appearanceKey~=appearanceKey then
 				entry.visual:applyAppearance(appearance);entry.charmVisible=appearance.charmVisible;entry.appearanceKey=appearanceKey
@@ -84,16 +96,27 @@ function Companions:update(dt,serverNow)
 	end
 	for _, entry in pairs(self.active) do
 		if not entry.root.Parent then continue end
+		local step=dt
+		if entry.full==false then
+			entry.liteDt=(entry.liteDt or 0)+dt
+			if entry.liteDt<1/Companions.LiteHz then continue end
+			step=math.min(entry.liteDt,.25);entry.liteDt=0
+			if not entry.liteCadence then entry.liteCadence=entry.visual.poseCadence;entry.visual.poseCadence=Companions.LiteCadence end
+			if entry.visual.poseSlots then entry.visual.poseDirty=false end
+		elseif entry.liteCadence then
+			entry.visual.poseCadence=entry.liteCadence;entry.liteCadence=nil;entry.liteDt=nil;entry.visual.poseDirty=true
+		end
 		local actor=self.garden and self.garden:renderActor(entry.visual.model:GetAttribute("CompanionOwnerId"),entry.pet.id,entry.root.Parent)
 		entry.visual.personalPlayEnabled=actor~=nil and actor.mode=="Room"and entry.board:GetAttribute("Mode")=="Room"
         entry.visual.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
         entry.visual.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
-		if actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,dt,entry.followState,self.reduceEffects())
+		if actor and self.park then entry.followState=self.park:drive(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
+		elseif actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
-		else entry.followState = PetFollow.step(entry.visual, entry.root, dt, entry.followState,self.reduceEffects())end
+		else entry.followState = PetFollow.step(entry.visual, entry.root, step, entry.followState,self.reduceEffects())end
 		entry.visual.cosmeticTime=serverNow
-        entry.visual:update(dt)
-		PetPrestige.update(entry.visual, dt, self.reduceEffects())
+        entry.visual:update(step)
+		if entry.full~=false then PetPrestige.update(entry.visual, step, self.reduceEffects()) end
 	end
 end
 

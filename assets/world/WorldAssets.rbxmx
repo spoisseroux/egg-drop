@@ -1786,11 +1786,11 @@
       <Item class="MeshPart" referent="W7P78">
         <Properties>
           <string name="Name">W7_Trunks__bark</string>
-          <Content name="MeshId"><url>rbxassetid://132137561354735</url></Content>
+          <Content name="MeshId"><url>rbxassetid://90764302843268</url></Content>
           <Content name="TextureID"><url>rbxassetid://102384004107977</url></Content>
-          <Vector3 name="Size"><X>204.8081</X><Y>21.2147</Y><Z>126.9194</Z></Vector3>
-          <Vector3 name="InitialSize"><X>221.66971</X><Y>22.96129</Y><Z>137.36852</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-1.0969</X><Y>13.2474</Y><Z>-0.2752</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>204.8081</X><Y>21.2147</Y><Z>121.2968</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2048.0</X><Y>212.13867</Y><Z>1212.91992</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-1.0969</X><Y>13.2474</Y><Z>-3.0865</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanQuery">true</bool>
@@ -1902,11 +1902,11 @@
       <Item class="MeshPart" referent="W7P82">
         <Properties>
           <string name="Name">W7_Vegetation__foliage</string>
-          <Content name="MeshId"><url>rbxassetid://107060632813283</url></Content>
+          <Content name="MeshId"><url>rbxassetid://118226242181820</url></Content>
           <Content name="TextureID"><url>rbxassetid://80031701749701</url></Content>
-          <Vector3 name="Size"><X>182.948</X><Y>25.0835</Y><Z>146.4809</Z></Vector3>
-          <Vector3 name="InitialSize"><X>198.00992</X><Y>27.14858</Y><Z>158.54044</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>12.273</X><Y>16.3707</Y><Z>-7.2295</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>182.948</X><Y>25.0835</Y><Z>141.3016</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1829.40796</X><Y>250.82497</Y><Z>1412.95984</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>12.273</X><Y>16.3707</Y><Z>-9.8192</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1931,11 +1931,11 @@
       <Item class="MeshPart" referent="W7P83">
         <Properties>
           <string name="Name">W7_Vegetation__foliage_blossom</string>
-          <Content name="MeshId"><url>rbxassetid://139661819741416</url></Content>
+          <Content name="MeshId"><url>rbxassetid://111128518961406</url></Content>
           <Content name="TextureID"><url>rbxassetid://98997466675950</url></Content>
-          <Vector3 name="Size"><X>185.0393</X><Y>17.6778</Y><Z>129.0614</Z></Vector3>
-          <Vector3 name="InitialSize"><X>200.27338</X><Y>19.13318</Y><Z>139.6869</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-15.1646</X><Y>12.8172</Y><Z>-1.0526</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>185.0393</X><Y>17.6778</Y><Z>128.7833</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1850.31995</X><Y>176.7709</Y><Z>1287.78174</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-15.1646</X><Y>12.8172</Y><Z>-1.1917</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>

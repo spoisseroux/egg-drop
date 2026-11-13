@@ -24,6 +24,7 @@ local Faceplates=require(script.Parent.FaceplateState)
 local Wearables=require(script.Parent.WearableState)
 local BallThemes=require(script.Parent.BallThemeState)
 local Lifetime=require(script.Parent.LifetimeState)
+local PlayDate=require(script.Parent.PlayDateState)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -165,7 +166,8 @@ local function validV9(state)return validVersion(state,9,false)and QuestState.va
 local function validV10(state)return validVersion(state,10,false)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 -- v11 (batch 2026-11-13): ball themes (owned + equipped) and the play-forever
 -- lifetime fields (`stats` counters, `stamps`, collection `book` claims).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- Pet Park (K1): optional additive `playDate` on v11, valid when missing (no version bump).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -281,6 +283,8 @@ function Hatching.load(userId, profile, adapter)
 		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
 		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
 		if type(state) == "table" and type(state.version) == "number" and state.version >= 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
+		-- A malformed Play date field is dropped, never a failed load.
+		if type(state) == "table" and state.playDate ~= nil then state.playDate = PlayDate.sanitize(state.playDate) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -372,6 +376,8 @@ function Hatching.public(handle)
 	local stats = {}
 	for key, value in pairs(state.stats or {}) do if key ~= "parkGames" then stats[key] = value end end
 	public.stats = stats
+	-- Pet Park Play date progress for today: {day, count, target, reward, done}.
+	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
 	public.restricted = handle.restricted == true
 	public.nextFixed = Hatching.nextFixed(state)
 	for key,value in pairs(HueState.public(state))do public[key]=value end
@@ -1051,6 +1057,26 @@ function Hatching.questClaim(handle, scope, slot, period, boost)
 	if not ok and reason == "AlreadyClaimed" then return true, reason end
 	return ok, reason
 end
+
+-- Pet Park Play date (K1): `count` finished park activities in one write. Adds stats.parkGames,
+-- moves today's playDate count (capped at 3) and pays +4 Stars once when it reaches 3. The
+-- signature is keyed by day (park:<day>); the caller's operation id is the idempotency key and
+-- playDate.op the proof the host reads to subtract exactly what committed.
+function Hatching.parkPlay(handle, operationId, count)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 100 or not integer(count, PlayDate.MaxBatch) or count < 1 then return false, "InvalidParkPlay" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if PlayDate.committed(handle.state, operationId) then return true, "AlreadySaved" end
+	local day = dayOf(handle.adapter.now())
+	local signature = "park:" .. day
+	local pending = handle.pending
+	if pending and (pending.signature ~= signature or pending.id ~= operationId) then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, day = day, count = count })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return PlayDate.apply(state, captured, dayOf(handle.adapter.now()))
+	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count)
+end
+function Hatching.parkCommitted(handle, operationId) return PlayDate.committed(handle.state, operationId) end
+function Hatching.playDateDone(handle) return PlayDate.done(handle.state, dayOf(handle.adapter.now())) end
 
 -- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.
 function Hatching.questReroll(handle, slot, day, boost)

@@ -12,6 +12,8 @@ Removed (FEEL-ALIVE-DIRECTION-2026-11-13.md, section C2, all 12 approved by Spen
   egg statues Plaza_Ornament_09/10, urns Plaza_Ornament_11/12 and Stairs_Urn_18/19, Colonnade_Column_01 and the
   entablature span from column 01 to 02, broken columns Colonnade_Column_06/07, Colonnade_FallenDrum_08,
   empty pads Pad_Future_A/B.
+Pet Park interior (Spencer 2026-11-13): Tree_11_round and the blossom shrubs Bush_08 / Bush_24 inside the playground kerb
+  (src/shared/ParkLayout.lua, ellipse centre (36, 66), radii 16 x 11 studs).
 And every 3D flower cluster (collection Flowers, Flowers_A/B): flat ground flower patches replace them
 (src/shared/WorldDressing.lua).
 
@@ -30,7 +32,10 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 OUT = os.path.join(ROOT, "assets", "world", "world-v7-declutter.json")
 REMOVE = ["Plaza_Ornament_09", "Plaza_Ornament_10", "Plaza_Ornament_11", "Plaza_Ornament_12",
           "Stairs_Urn_18", "Stairs_Urn_19", "Colonnade_Column_01", "Colonnade_Column_06", "Colonnade_Column_07",
-          "Colonnade_FallenDrum_08", "Pad_Future_A", "Pad_Future_B"]
+          "Colonnade_FallenDrum_08", "Pad_Future_A", "Pad_Future_B",
+          # Pet Park interior (Spencer 2026-11-13): the tree by the sandbox (trunk at Roblox (30, 59.5), bark + canopy
+          # in one object) and the two pink blossom shrubs inside the kerb (Bush_24 touched the ball mat).
+          "Tree_11_round", "Bush_08", "Bush_24"]
 FLOWERS = sorted(o.name for o in bpy.data.collections["Flowers"].objects if o.type == "MESH")
 
 

@@ -46,6 +46,9 @@ local HeatRequest = require(script.HeatRequest)
 local BoardItems = require(script.BoardItems)
 local PaidRandomPolicy = require(script.PaidRandomPolicy)
 local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
+local FeatureFlags = require(ReplicatedStorage.Shared.FeatureFlags)
+local ParkDirector = require(script.ParkDirector)
+local ParkMount = require(script.ParkMount)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -81,6 +84,9 @@ local loading = {}
 local closing = {}
 local nextSlot = 0
 Lounge.create()
+-- Pet Park equipment (K3): built only with FeatureFlags.Park on; nothing is created otherwise.
+-- Beside the lounge, not inside it: the garden's Include-lounge + RespectCanCollide rays never see the player colliders.
+if FeatureFlags.Park == true then ParkMount.build(workspace) end
 
 local function inventory(board)
 	return board.nursery.state.inventoryMask
@@ -136,7 +142,8 @@ gardenScene=function()
   wanderScene={room=room,wet={},stations={},solids={}}
   for _,node in ipairs(room:GetDescendants())do
    -- Merged island meshes span the world; their bounds would block every rest path.
-   if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"and node:GetAttribute("WorldMesh")~=true then table.insert(wanderScene.solids,node)end
+   -- Park colliders (players only) never block pet rest paths; pets are visuals.
+   if node:IsA("BasePart")and node.CanCollide and node.Name~="Floor"and node:GetAttribute("WorldMesh")~=true and not ParkMount.isParkPart(node)then table.insert(wanderScene.solids,node)end
    if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
@@ -678,6 +685,11 @@ local function closeBoard(board)
 	garden:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
+		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
+		-- stops at closing), unless a write for them is still in flight or ambiguous.
+		if (board.parkPending or 0) > 0 and not board.parkInFlight and board.nursery and not board.nursery.pending then
+			pcall(Nursery.parkPlay, board.nursery, HttpService:GenerateGUID(false), board.parkPending)
+		end
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
 		})
@@ -1258,6 +1270,62 @@ local function grantWelcome(player, board)
 		board.starterRunning = false
 	end)
 end
+
+-- Pet Park (FeatureFlags.Park, slice K1). Finished playground activities queue on the board and
+-- save through Nursery.parkPlay under the quest-claim busy rules: stats.parkGames, today's Play
+-- date count and +4 Stars once a day at 3. After today's Play date is paid, further counts
+-- coalesce into one write a minute. Each write carries an op id; playDate.op proves what
+-- committed, so a retried (ambiguous) write is subtracted exactly once.
+local function flushParkGames(player, board)
+	if board.parkFlushing then return end
+	board.parkFlushing = true
+	task.spawn(function()
+		while boards[player] == board and not board.closing and ((board.parkPending or 0) > 0 or board.parkInFlight) do
+			local pause = 2
+			local flight = board.parkInFlight
+			if flight and Nursery.parkCommitted(board.nursery, flight.id) then
+				board.parkPending = math.max(0, (board.parkPending or 0) - flight.count); board.parkInFlight = nil; board.parkSavedAt = os.clock()
+			elseif flight and board.nursery.pending and board.nursery.pending.id == flight.id then
+				-- Ambiguous write: the background Nursery.retry loop settles it; wait for its proof.
+			else
+				board.parkInFlight = nil
+				local quiet = Nursery.playDateDone(board.nursery) and os.clock() - (board.parkSavedAt or -math.huge) < 60
+				if (board.parkPending or 0) > 0 and not quiet and canProgress(board) and not board.nurseryBusy and not board.nursery.busy
+					and not board.nursery.pending and not board.payoutPending then
+					local nextFlight = { id = HttpService:GenerateGUID(false), count = board.parkPending }
+					board.parkInFlight = nextFlight
+					board.nurseryBusy = true; publishNursery(board)
+					local walletBefore = board.nursery.state.nectar
+					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count)
+					board.nurseryBusy = false
+					if boards[player] ~= board then break end
+					if Nursery.parkCommitted(board.nursery, nextFlight.id) then
+						board.parkPending = math.max(0, board.parkPending - nextFlight.count); board.parkInFlight = nil; board.parkSavedAt = os.clock()
+						if board.nursery.state.nectar > walletBefore then Economy.source(player, board.nursery.state.nectar - walletBefore, board.nursery.state.nectar, "Gameplay", "PlayDate") end
+					elseif not ok and reason ~= "Retrying" then
+						board.parkInFlight = nil
+						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0 end
+					end
+					publishNursery(board); publishState(board)
+				elseif quiet then pause = 5 end
+			end
+			task.wait(pause)
+		end
+		board.parkFlushing = false
+	end)
+end
+-- The director exists only with the flag on (garden.park stays nil otherwise: v568 snapshot).
+ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
+	busy = function(ownerId)
+		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
+		return board ~= nil and board.petContact ~= nil and board.petContact.lease ~= nil
+	end,
+	finished = function(ownerId)
+		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
+		if not board or board.closing then return end
+		board.parkPending = (board.parkPending or 0) + 1
+		flushParkGames(player, board)
+	end })
 
 local accumulator = 0
 local merged = {}

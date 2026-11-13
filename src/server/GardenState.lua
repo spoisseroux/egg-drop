@@ -59,6 +59,8 @@ function Garden:resume(actor,input,prior)
 end
 function Garden:release(actor)
     if self.care then self.care:release(actor)end
+    -- Pet Park (FeatureFlags.Park): frees the pet's playground slot; membership stays with the director.
+    if self.park then self.park:release(actor)end
     actor.restAnchorId=nil
     if actor.toyActionId then ToyReturn.release(self,actor.toyActionId,actor.ownerId);actor.toyActionId=nil end
     if not self.toy.returnAction and self.toy.ownerId==actor.ownerId and actor.toyReservation==self.toy.reservation then
@@ -118,7 +120,8 @@ function Garden:sync(inputs,freshOwnerId)
         if distance(actor.lastOwner,input.position)>.65 then
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
             actor.wanderCount,actor.nextWanderAt=0,nil
-            if actor.mode=="Room" and actor.behavior~="follow" then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
+            -- Park pets stay in the playground while their owner walks around the kerb.
+            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
         if actor.care and self.care then self.care:tick(actor,input)end
     end
@@ -174,40 +177,47 @@ function Garden:greeting(now,ordered)
     for offset=1,#ordered do
         local i=((self.greetingCursor or 0)+offset-1)%#ordered+1
         local first=ordered[i]
-        if first.mode~="Room" or first.pairId or(first.behavior~="follow" and first.behavior~="rest") then continue end
+        -- Park pets greet only through the park director (6 s cadence, 45 s per pair).
+        if first.mode~="Room" or first.pairId or first.park or(first.behavior~="follow" and first.behavior~="rest") then continue end
         for delta=1,#ordered-1 do
             local second=ordered[(i+delta-1)%#ordered+1]
-            if second.mode~="Room" or second.pairId or(second.behavior~="follow" and second.behavior~="rest") then continue end
+            if second.mode~="Room" or second.pairId or second.park or(second.behavior~="follow" and second.behavior~="rest") then continue end
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
-            local prior={}
-            for _,actor in ipairs({first,second})do prior[actor.ownerId]={behavior=actor.behavior,to=actor.to,endTime=actor.endTime,restAnchorId=actor.restAnchorId}end
-            local center=(a+b)*.5;local token=self:token()
-            self:transition(first,"investigate",center+Vector3.new(-.9,0,0),2.6,"greet",token)
-            self:transition(second,"investigate",center+Vector3.new(.9,0,0),2.6,"greet",token)
-            local finish=math.max(first.endTime,second.endTime)
-            for _,actor in ipairs({first,second})do
-                local remaining=finish-actor.endTime
-                if remaining>.0001 then
-                    local target=Activity.vector(actor.to);local last=actor.path[#actor.path]
-                    local hold=assert(Activity.leg(target,target,Vector3.zero,Vector3.zero,Layout.StrollSpeed,remaining,last.yaw+last.turn))
-                    -- A hold can be shorter than the moving-leg minimum.
-                    hold.duration=remaining;table.insert(actor.path,hold)
-                end
-                actor.endTime=finish
-            end
-            first.peerId,second.peerId=second.ownerId,first.ownerId;first.pairId,second.pairId=token,token
-            first.yaw,second.yaw=math.pi*.5,-math.pi*.5
-            self.pairs[token]={id=token,owners={first.ownerId,second.ownerId},generations={first.generation,second.generation},prior=prior}
+            self:greetPair(first,second,now)
             self.greetingCursor=i
             return
         end
     end
 end
+-- One atomic paired greeting (shared by the global greeting and the park director).
+function Garden:greetPair(first,second,now)
+    local a,b=self:position(first,now),self:position(second,now)
+    local prior={}
+    for _,actor in ipairs({first,second})do prior[actor.ownerId]={behavior=actor.behavior,to=actor.to,endTime=actor.endTime,restAnchorId=actor.restAnchorId}end
+    local center=(a+b)*.5;local token=self:token()
+    self:transition(first,"investigate",center+Vector3.new(-.9,0,0),2.6,"greet",token)
+    self:transition(second,"investigate",center+Vector3.new(.9,0,0),2.6,"greet",token)
+    local finish=math.max(first.endTime,second.endTime)
+    for _,actor in ipairs({first,second})do
+        local remaining=finish-actor.endTime
+        if remaining>.0001 then
+            local target=Activity.vector(actor.to);local last=actor.path[#actor.path]
+            local hold=assert(Activity.leg(target,target,Vector3.zero,Vector3.zero,Layout.StrollSpeed,remaining,last.yaw+last.turn))
+            -- A hold can be shorter than the moving-leg minimum.
+            hold.duration=remaining;table.insert(actor.path,hold)
+        end
+        actor.endTime=finish
+    end
+    first.peerId,second.peerId=second.ownerId,first.ownerId;first.pairId,second.pairId=token,token
+    first.yaw,second.yaw=math.pi*.5,-math.pi*.5
+    self.pairs[token]={id=token,owners={first.ownerId,second.ownerId},generations={first.generation,second.generation},prior=prior}
+    return token
+end
 
 -- Bounded authoritative choices reuse the same planner and decision cadence.
 function Garden:wander(actor,input,now)
-    if not self.options.validWander then return false end
+    if not self.options.validWander or(actor.park and actor.park.session)then return false end
     local from=self:position(actor,now)
     if now>=(actor.nextNookAt or 0)then
         local eligible={}
@@ -287,6 +297,8 @@ function Garden:decide()
             continue
         end
         if actor.care then continue end
+        -- Park pets (actor.park, set only by ParkDirector) skip follow, wander and the 22-stud recall.
+        if actor.park and self.park then self.park:tick(actor,input,now) continue end
         if actor.mode=="Board" then
             if distance(self:position(actor,now),input.anchor)>.4 then self:transition(actor,"rest",input.anchor,.5) end
             continue
@@ -342,6 +354,7 @@ function Garden:decide()
             else actor.idleSince=now;self:transition(actor,"follow",input.anchor,1) end
         end
     end
+    if self.park then self.park:schedule(now,ordered)end
     self:greeting(now,ordered)
 end
 function Garden:remove(id)
@@ -376,7 +389,9 @@ function Garden:snapshot()
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
             toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil}
     end
-    return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil}
+    -- park is nil unless FeatureFlags.Park attached a director (then the snapshot is unchanged).
+    return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil,
+        park=self.park and self.park:snapshot()or nil}
 end
 function Garden:publish()
     if not self.dirty then return false end

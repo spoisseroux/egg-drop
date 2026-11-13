@@ -25,6 +25,9 @@ end
 function Follow.ground(position, visual, fallback)
 	local params = RaycastParams.new()
 	local exclude = { visual.model }
+	-- Pet Park player colliders and seats are not pet ground.
+	local park = workspace:FindFirstChild("PetPark")
+	if park then table.insert(exclude, park) end
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player.Character then table.insert(exclude, player.Character) end
 	end

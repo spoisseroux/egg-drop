@@ -14,6 +14,7 @@ local function HollowClockDaylight()return require(script.Parent.HollowClock).da
 
 local PetFactory=require(script.Parent.PetFactory)
 local GardenClient=require(script.Parent.GardenClient)
+local ParkClient=require(script.Parent.ParkClient)
 local GardenActivity=require(ReplicatedStorage.Shared.GardenActivity)
 local RoomCompanions = require(script.Parent.RoomCompanions)
 local PetFollow = require(script.Parent.PetFollow)
@@ -100,6 +101,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
  self.coos=require(script.Parent.PetCooScheduler).new(audio,{voice=require(script.Parent.AmbientAudio).shared})
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
  self.companions.garden=self.garden
+ -- Pet Park (K3): nil unless FeatureFlags.Park; companions drive their pets through it too.
+ self.park=ParkClient.new({garden=self.garden,reduced=reduceEffects})
+ self.companions.park=self.park
 	self.ambience=HollowAmbience.new()
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
@@ -204,7 +208,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
                 self.pet.personalPlayEnabled=self.pet.personalPlayEnabled and actor~=nil and actor.mode=="Room"
                 self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
                 self.pet.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
-				if actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
+				if actor and self.park then self.followState=self.park:drive(self.pet,actor,serverNow,dt,self.followState,reduced)
+				elseif actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
@@ -232,6 +237,14 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			if self.petTarget and self.petTarget.pet == self.pet then PetClickTarget.sync(self.petTarget) end
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow);self:visitorBeats()end
+		if self.park then
+			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
+			local camera=workspace.CurrentCamera
+			local context=self.parkContext or {};self.parkContext=context -- reused, no table per frame
+			context.camera,context.ownerPosition,context.ownPet=camera and camera.CFrame,root and root.Position,self.pet
+			context.active=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.menuOpen and not self.overlayOpen()and not GuiService.MenuIsOpen
+			self.park:step(serverNow,context)
+		end
   if self.coos then
    local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
    local humanoid=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -1078,6 +1091,7 @@ function Room:destroy()
 	if self.focusTransition then self.focusTransition:destroy()end
 	if self.toyPrompt then self.toyPrompt:destroy();self.toyPrompt=nil end
 	if self.garden then self.garden:destroy()end
+ if self.park then self.park:destroy();self.park=nil end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end

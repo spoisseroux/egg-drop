@@ -81,6 +81,8 @@ local Table={
    merges="Merges",bestChain="Best chain",tierFive="Tier V balls",itemsUsed="Items used",pets="Pets hatched",
    starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
  },
+ -- Pet Park K3: the park chip (shown only while the owner is inside the kerb).
+ park={name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today"},
  stamp={
   title="Stamp card",
   promise="No streaks. Miss a day, lose nothing.",

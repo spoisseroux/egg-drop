@@ -1597,19 +1597,19 @@
    "name": "W7_Trunks__bark",
    "group": "Trunks__bark",
    "material": "W1_bark",
-   "tris": 2252,
+   "tris": 2164,
    "collide": true,
    "anim": null,
    "region": "Trunks",
    "center": [
     -1.0969,
     13.2474,
-    -0.2752
+    -3.0865
    ],
    "size": [
     204.8081,
     21.2147,
-    126.9194
+    121.2968
    ],
    "top": 23.8547
   },
@@ -1677,19 +1677,19 @@
    "name": "W7_Vegetation__foliage",
    "group": "Vegetation__foliage",
    "material": "W1_foliage",
-   "tris": 4180,
+   "tris": 3940,
    "collide": false,
    "anim": null,
    "region": "Vegetation",
    "center": [
     12.273,
     16.3707,
-    -7.2295
+    -9.8192
    ],
    "size": [
     182.948,
     25.0835,
-    146.4809
+    141.3016
    ],
    "top": 28.9125
   },
@@ -1697,19 +1697,19 @@
    "name": "W7_Vegetation__foliage_blossom",
    "group": "Vegetation__foliage_blossom",
    "material": "W1_foliage_blossom",
-   "tris": 2300,
+   "tris": 2260,
    "collide": false,
    "anim": null,
    "region": "Vegetation",
    "center": [
     -15.1646,
     12.8172,
-    -1.0526
+    -1.1917
    ],
    "size": [
     185.0393,
     17.6778,
-    129.0614
+    128.7833
    ],
    "top": 21.6561
   },
@@ -1841,5 +1841,5 @@
   }
  ],
  "count": 90,
- "triangles": 69334
+ "triangles": 68966
 }

@@ -1,0 +1,25 @@
+{
+ "note": "Open Cloud upload 2026-11-13: model 136546082248550 (MeshSize reads back at 100x the authored studs; set Size from park-manifest.json). One palette TextureID for every mesh.",
+ "model": "136546082248550",
+ "texture": "rbxassetid://132276058524122",
+ "meshes": {
+  "Park_BallA": "rbxassetid://74693775529293",
+  "Park_BallB": "rbxassetid://81950708061275",
+  "Park_BallMat": "rbxassetid://90179910494479",
+  "Park_Bench": "rbxassetid://105345988261448",
+  "Park_Castle1": "rbxassetid://75899482719665",
+  "Park_Castle2": "rbxassetid://86022655775582",
+  "Park_Castle3": "rbxassetid://98786143794115",
+  "Park_GatePost": "rbxassetid://106763533108528",
+  "Park_GateStarOrb": "rbxassetid://90515653581302",
+  "Park_KerbSegment": "rbxassetid://72927644457663",
+  "Park_SandToys": "rbxassetid://121619517232554",
+  "Park_SandboxFrame": "rbxassetid://134924919972387",
+  "Park_SeeSawBase": "rbxassetid://117918989950947",
+  "Park_SeeSawBeam": "rbxassetid://96724875357045",
+  "Park_Slide": "rbxassetid://92757352124252",
+  "Park_SwingA": "rbxassetid://105819369643770",
+  "Park_SwingB": "rbxassetid://71740952243869",
+  "Park_SwingFrame": "rbxassetid://114085020332908"
+ }
+}

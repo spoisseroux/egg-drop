@@ -17,6 +17,8 @@ function Sampler.attach(visual)
  local function plant(self,slot,frame,root)
   local side=slot.side;if not side or not self.worldContext then return frame end
   if self.careState=="Carried"or self.careState=="Docked"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
+  -- Riding park equipment (ParkPetPose): the feet travel with the seat, never planted in the world.
+  if self.parkPose then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
   -- A sitting pet (PetSitPose) pushes its feet forward, soles up: released like Docked.
   if(self.sitWeight or 0)>.01 and(self.gaitWeight or 0)<.035 then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
   local weight=self.gaitWeight or 0;local focus=self.focusPose or self.gardenFocus or self.gardenAction=="focus"

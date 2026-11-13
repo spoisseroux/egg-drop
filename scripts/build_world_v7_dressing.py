@@ -38,6 +38,16 @@ X0, Z0, NX, NZ = S["x0"], S["z0"], S["nx"], S["nz"]
 
 HUB = (-30.0, 4.0)
 STATIONS = {"Eggs": (-31.0, -11.0), "Journal": (-17.0, -15.0), "Customize": (-46.0, -9.0)}
+# Pet Park playground (src/shared/ParkLayout.lua: centre (36, 66), radii 16 x 11) plus a 2-stud margin:
+# no flower patches or bushes inside the kerb.
+PARK = (36.0, 66.0, 16.0, 11.0)
+
+
+def in_park(x, z, r=0.0):
+    cx, cz, rx, rz = PARK
+    return ((x - cx) / (rx + 2 + r)) ** 2 + ((z - cz) / (rz + 2 + r)) ** 2 <= 1.0
+
+
 KEEP_OUT = [  # (x, z, radius): stations (4.9 studs + patch margin is checked per patch), toy lawn, daises, arrival
     (-31.0, -11.0, 4.9), (-17.0, -15.0, 4.9), (-46.0, -9.0, 4.9), (-30.0, 21.5, 9.5),
     (1.0, -33.0, 4.5), (49.5, 14.0, 4.5), (54.5, 14.0, 4.5), (96.0, 66.0, 9.0), (HUB[0], HUB[1], 16.5),
@@ -134,6 +144,8 @@ def inside_island(x, z):
 
 
 def kept_out(x, z, r):
+    if in_park(x, z, r):
+        return True
     return any(math.hypot(x - kx, z - kz) < kr + r for kx, kz, kr in KEEP_OUT)
 
 

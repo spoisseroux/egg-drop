@@ -3,6 +3,8 @@
 Canopy points of the v7 trees (artifacts/world1-mockup/v7/vegetation-placements.json,
 meshes Tree_* and TreeLite_*): tree position + (0, 7 x scale, 0), plus the Hatch
 Tree canopy at (-36, 15, -18). FEEL-ALIVE-DIRECTION-2026-11-13.md A5.
+Trees removed by the world declutter (assets/world/world-v7-declutter.json "removed", e.g. the Pet Park tree
+Tree_11_round, Spencer 2026-11-13) get no perch.
 When WorldV7Data exports `perches` (W1's world re-merge), AmbientAudio prefers it.
 
     python scripts/build_ambient_perches.py
@@ -13,12 +15,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "artifacts" / "world1-mockup" / "v7" / "vegetation-placements.json"
 OUT = ROOT / "src" / "client" / "AmbientPerches.lua"
+DECLUTTER = ROOT / "assets" / "world" / "world-v7-declutter.json"
 
 
 def main():
+    removed = set(json.loads(DECLUTTER.read_text())["removed"]) if DECLUTTER.exists() else set()
     rows = []
     for item in json.loads(SRC.read_text(encoding="utf-8"))["instances"]:
-        if item["mesh"].startswith(("Tree_", "TreeLite_")):
+        if item["mesh"].startswith(("Tree_", "TreeLite_")) and item.get("object") not in removed:
             x, y, z = item["roblox_position"]
             rows.append((round(x, 2), round(y + 7 * item["scale"], 2), round(z, 2)))
     rows.append((-36.0, 15.0, -18.0))
