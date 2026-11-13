@@ -46,3 +46,15 @@ Scopes (Fable, docs + mockups only)
 
 R1 renders a power-up ball when the egg carries the attribute R2 defines (`PowerUp=true`); R2 defines it.
 Uploads (meshes, textures, audio) go through Open Cloud; audio quota ~100/30 days (28 used).
+
+## Architect review changes (2026-11-13)
+
+1. **Save v11 (R1):** HatchProgress quest cleanup must run for `version >= 10` (today `== 10` makes a v11 record fail with InvalidData after any quest-catalogue change). Keep the v10 `valid()`, add a v11 `valid()` and a 10->11 upgrade (`ballThemes={owned={...},equipped="smileys"}`) written like the 9->10 `petWearables` step; purchase op ids bound to theme id + price (as FaceplateState). Update the TODO rollback note to "not past the v11 commit".
+2. **Span budget (R1):** before painting, count the spans a frame needs; over 1350, re-raster that frame with simpler faces (eyes only on the two smallest tiers); the sticky `failed` path only for frames still over 1536. Test Kittens first (~+100 spans).
+3. **Stale items (R2):** `reset()` clears belt/armed attributes; every `item` request carries `ResetId` + a sequence; the server rejects stale ones.
+4. **Phone item button (R2):** always shown under A; with an empty belt it shows "You have no items" and fades after ~1.5 s.
+5. **Item rules (R2):** live round only, not over, no payout pending, item really on the belt, nothing already armed. Swap refused if it would pass the 24-drop budget; power-up marks swap with tiers. Pop/Bomb remove balls outside `merged` (never reach field:observe, score, chargeHatch, recordTrials); Bomb capped at 4. Popping a star ball loses its item. Belt = `board.belt`, published as an attribute, never saved.
+6. **Pause (R2):** `carouselOpen` is a third input to `clientUI.syncPause` (no separate pause request); the `item` action is accepted while paused; grace already freezes (Heartbeat skips round:step).
+7. **Power-up balls (R2):** star slots from a separate random stream (seed + fixed offset) so seeds stay deterministic; `merge()` keeps the star flag from either input; Next/Then read a published per-slot flag; off in Welcome / field 0 / guided rounds.
+8. **Sequencing:** R2 lands the `PowerUp` attribute + belt schema first, R1 renders them. In init.client.lua / DeckScreen.lua, R2 owns input routing + the item button, R1 owns Next/Then; re-read before every edit. W1 lands the dusk lock in `HollowClock.sample` first; W2 tunes clock-dependent things (faces, ambience) after.
+9. **Cut/defer if needed:** Magnet last (new force code; Swap/Pop/Bomb first); frond-bush meshes if the upload quota gets tight; Pocket Deck attract last.
