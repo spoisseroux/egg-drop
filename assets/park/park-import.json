@@ -20,6 +20,8 @@
   "Park_Slide": "rbxassetid://92757352124252",
   "Park_SwingA": "rbxassetid://105819369643770",
   "Park_SwingB": "rbxassetid://71740952243869",
-  "Park_SwingFrame": "rbxassetid://114085020332908"
- }
+  "Park_SwingFrame": "rbxassetid://114085020332908",
+  "Park_BenchLong": "rbxassetid://130406059426481"
+ },
+ "benchLongModel": "87583394415244"
 }

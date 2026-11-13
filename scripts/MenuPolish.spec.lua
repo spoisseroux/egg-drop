@@ -72,13 +72,14 @@ return function(client, parent)
 		end)
 		test("complete illustrated destinations start below the scroll clip",function()
 			local menu,calls=fixture();resize(menu,680,700);menu:setPage("play");task.wait(.03)
-			assert(#menu.destinations==3 and not menu.resumeButton and not menu.card:FindFirstChild("Deck",true)and not menu.dailyButton.Visible)
+			assert(#menu.destinations==2 and not menu.resumeButton and not menu.card:FindFirstChild("Deck",true)and not menu.dailyButton.Visible)
 			for _,item in ipairs(menu.destinations) do
 				assert(item.art.Visible and #item.art:GetChildren()>0 and item.title.TextFits and item.subtitle.TextFits,fitDiagnostic(item.title,item.subtitle))
 				assert(item.button.Position.Y.Offset>=4 and item.art.Position.Y.Offset>=8)
 				assert(menu:activate(item.kind))
 			end
-			assert(menu:activate("close") and #calls==4)
+			-- QA Q5: Pocket Trials retired, so two destinations + close = 3 calls (was 4).
+			assert(menu:activate("close") and #calls==3)
 			menu:close()
 		end)
         test("roomy destination text grows within measured cards and retired shortcuts refuse activation",function()

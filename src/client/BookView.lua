@@ -155,10 +155,10 @@ end
 function View.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},visible=false,ctx={book=nil,stats=nil,stamps=nil,wallet=0,revision=0},
   pageIndex=1,zone="pages",milestoneIndex=1,pending=nil,failed={},localClaimed={},pendingToken=0,tiles={},cells={}},View)
- local shade=Kit.frame(host,"BookShade",nil,UDim2.new(),UDim2.fromScale(1,1));shade.BackgroundTransparency=.35;shade.BackgroundColor3=Color3.new(0,0,0)
- shade.Active=true;shade.Visible=false;shade.ZIndex=30;self.shade=shade
- local root=Kit.frame(shade,"CollectionBook","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
- root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=31;self.rootStroke=Kit.stroke(root)
+ -- QA Q2.1: one full-screen shade beside the panel (never its parent).
+ local shade=Kit.modalShade(host,"BookShade",30);self.shade=shade
+ local root=Kit.frame(host,"CollectionBook","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
+ root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=31;root.Visible=false;self.rootStroke=Kit.stroke(root)
  local gradient=Kit.frame(root,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  self.gradient=gradient;self.root=root
@@ -176,7 +176,7 @@ function View:build(view)
  self.view=view;self.key=View.viewKey(view,self:entries())
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
- self.shade.BackgroundTransparency=if phone then 1 else .35
+ Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
  local W=if phone then view.W else 848
  local H=if phone then view.H else 608
  self.W,self.H=W,H
@@ -709,19 +709,19 @@ function View:open(ctx,options)
   if not options.page and not entry.records and View.claimableCount(entry,self.localClaimed)>0 then index=i;break end
  end
  self.pageIndex=index;self.builtPage=nil
- self.visible=true;self.shade.Visible=true
+ self.visible=true;self.root.Visible=true
+ Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  self.key=nil
  self:fit(self.host.AbsoluteSize)
  self:openPage(index,true)
- if not self.view and not Kit.reduced()then
-  self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)})
- end
+ -- QA Q2.2: in from the right like the Pets page (Reduced Motion cuts).
+ Kit.slideIn(self.body,Kit.SlideOffset,Kit.headerSkip(self.header))
  self.sizeConnection=self.sizeConnection or self.host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if self.visible then self:fit(self.host.AbsoluteSize)end end)
  return true
 end
 function View:close(reason)
  if not self.visible then return false end
- self.visible=false;self.shade.Visible=false
+ self.visible=false;self.root.Visible=false;Kit.shadeClose(self)
  if self.ring then self.ring.hide()end
  if self.content then Peek.hide(self.content)end
  if self.callbacks.closed then self.callbacks.closed(reason)end
@@ -735,6 +735,6 @@ end
 function View:destroy()
  self:close("destroy")
  if self.sizeConnection then self.sizeConnection:Disconnect();self.sizeConnection=nil end
- self.shade:Destroy()
+ self.root:Destroy();self.shade:Destroy()
 end
 return View

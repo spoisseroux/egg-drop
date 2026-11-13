@@ -183,9 +183,16 @@ function Audio:refreshLoops()
 	local music = self.music
 	if master > 0 and self.musicEnabled and self.deviceActive and music.ready then
 		music.voice.Volume = 0.13
-		if not music.voice.IsPlaying then music.voice:Play() end
+		-- QA Q2.6: back in focus, the world music carries on from where it paused.
+		if music.paused then music.paused = false; music.voice:Resume()
+		elseif not music.voice.IsPlaying then music.voice:Play() end
+	elseif master > 0 and self.musicEnabled and music.ready and not self.deviceActive then
+		-- Window unfocused: pause (keeps TimePosition) instead of Stop (rewinds to 0).
+		music.voice.Volume = 0
+		if music.voice.IsPlaying then music.voice:Pause(); music.paused = true end
 	else
 		music.voice.Volume = 0
+		music.paused = false
 		music.voice:Stop()
 	end
 end
@@ -262,6 +269,9 @@ function Audio:play(name, speed, volume, owner)
 	if name == "hatch_rise" then self:duck("hatch", 1.2, 0.22)
 	elseif name == "hatch" then self:duck("hatch", 0.9, 0.22) end
 	self.indices[name] = index
+	-- A pooled voice still fading its tail from an earlier owner is taken back cleanly.
+	local fading = self.fades and self.fades[voice]
+	if fading then self.fades[voice] = nil; fading:Cancel() end
 	voice.PlaybackSpeed = speed or 1
 	voice.Volume = volume or 0.72
 	voice.TimePosition = 0
@@ -294,6 +304,42 @@ function Audio:stopOwner(owner)
 		if token==owner then voice:Stop();self.voiceOwners[voice]=nil;stopped+=1 end
 	end
 	return stopped
+end
+
+-- Results flourish (QA 2026-11-13): when the count-up finishes on its own, its
+-- voices keep playing to their natural end; the owner only lets go of them.
+function Audio:releaseOwner(owner)
+	local released = 0
+	for voice, token in pairs(self.voiceOwners or {}) do
+		if token == owner then self.voiceOwners[voice] = nil; released += 1 end
+	end
+	return released
+end
+-- An interrupted count-up (skip, Replay, the results closing) fades its voices over
+-- `seconds` instead of cutting them. A voice replayed meanwhile is left alone.
+function Audio:fadeOwner(owner, seconds)
+	local faded = 0
+	self.fades = self.fades or {}
+	for voice, token in pairs(self.voiceOwners or {}) do
+		if token == owner then
+			self.voiceOwners[voice] = nil
+			if voice.IsPlaying then
+				local old = self.fades[voice]
+				if old then old:Cancel() end
+				local tween = TweenService:Create(voice, TweenInfo.new(seconds or 0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Volume = 0 })
+				self.fades[voice] = tween
+				tween.Completed:Connect(function(state)
+					if state == Enum.PlaybackState.Completed and self.fades and self.fades[voice] == tween then
+						self.fades[voice] = nil
+						voice:Stop()
+					end
+				end)
+				tween:Play()
+				faded += 1
+			end
+		end
+	end
+	return faded
 end
 
 function Audio:stopField()

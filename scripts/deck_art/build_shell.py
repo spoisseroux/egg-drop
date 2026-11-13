@@ -91,11 +91,7 @@ def plate_overlay(k):
     cv.rr(X(mx - 5), Y(my - 5), U(mw + 10), U(mh + 10), U(mh / 2 + 5), fill=(0, 0, 0, 80))
     cv.rr(X(mx - 5), Y(my - 5), U(mw + 10), U(mh + 10), U(mh / 2 + 5), stroke=(255, 255, 255, 44), sw=max(1, U(1.5)))
 
-    # thumb screws
-    for sx, sy in DECK["screws"]:
-        cv.ell(X(sx), Y(sy), U(15), fill=(0, 0, 0, 96))
-        cv.grad_rr(X(sx - 11), Y(sy - 11), U(22), U(22), U(11), [(0, "#F4F6FA"), (1, "#8E94A0")])
-        cv.line([(X(sx - 6), Y(sy + 3)), (X(sx + 6), Y(sy - 3))], (40, 44, 54, 220), max(1, U(2.6)))
+    # thumb screws: removed (QA 2026-11-13 Q1 item 2, the top corners read as cut off)
     # seed speaker: five seeds in a loose cluster
     cx, cy = DECK["speaker"]["center"]
     for dx, dy, rot in ((-34, -6, -20), (0, -16, 0), (34, -6, 20), (-18, 22, -10), (18, 22, 10)):
@@ -351,7 +347,7 @@ def main():
     save("band.png", band(Wd, Hd, 0.64), rect=[0, 0, Wd, Hd], z=2, tint="band colour (silver #FFFFFF, gunmetal #6F7480, gold #EBC978, rose #F0B8B0)")
     b9 = band(360, 360, 1.0)
     save("band-9slice.png", b9, rect=[0, 0, Wd, Hd], z=2, sliceCenter=[170, 170, 190, 190], sliceScale="deckWidth / 1600", tint="band colour", note="same art as band.png for decks that are not exactly 2:1")
-    save("plate-overlay.png", plate_overlay(1024 / DECK["plate"][2]), rect=DECK["plate"], z=4, note="hardware detail over any faceplate: lip, shade, gloss, glass recess, wells, screws, seed speaker, LED socket. Do not tint.")
+    save("plate-overlay.png", plate_overlay(1024 / DECK["plate"][2]), rect=DECK["plate"], z=4, note="hardware detail over any faceplate: lip, shade, gloss, glass recess, wells, seed speaker, LED socket. Do not tint.")
     gx, gy, gw, gh = DECK["glass"]
     save("glass.png", glass(gw, gh, 1.0), rect=DECK["glass"], z=5)
     save("glass-9slice.png", glass(120, 120, 1.0), rect=DECK["glass"], z=5, sliceCenter=[50, 50, 70, 70], sliceScale="deckWidth / 1600")

@@ -54,6 +54,21 @@ return function(client,parent)
    local Balls=require(client.BallShop);assert(Balls.Reasons.NeedStars==UICopy.get("shop.reason.needStars"))
    local Shop=require(client.FaceplateShop);assert(Shop.Hints[3].promise==UICopy.get("style.promise.balls"))
   end)
+  test("every key the QA Q5 call sites read exists (machine hub, pause Settings, results Today)",function()
+   for _,key in ipairs({"hub.title","hub.eyebrow","hub.promise","hub.tile.hatch.name","hub.tile.hatch.line","hub.tile.style.name",
+    "hub.tile.style.line","hub.tile.style.short","hub.tile.companions.name","hub.tile.companions.line","hub.tile.quests.name",
+    "hub.tile.quests.line","hub.tile.book.short","hub.tile.settings.name","hub.tile.settings.line","hub.status.stamp",
+    "hub.status.locked","pause.settings","results.today.label","results.today.line","results.today.short"})do
+    assert(UICopy.has(key),"missing "..key)
+   end
+   assert(UICopy.get("results.today.line",{count=7})=="★ 7 earned"and UICopy.get("results.today.short",{count=7})=="Today: ★ 7")
+   -- Desktop hub tiles are 256 px wide (20 px padding): names fit on one line at Name 22.
+   for _,id in ipairs({"hatch","style","companions","quests","settings"})do
+    local name=UICopy.get("hub.tile."..id..".name")
+    assert(Kit.measure(name,"Name",22).X<=216,name.." fits its tile")
+   end
+   assert(Kit.measure(UICopy.get("book.title"),"Name",22).X<=216,"Collection book fits its tile")
+  end)
   test("every key the play-forever F2 call sites read exists (book, stamp card, restricted eggs)",function()
    for _,key in ipairs({"book.title","book.eyebrow","book.entry.line","book.entry.claimOne","book.entry.claimMany","book.records.name",
     "book.records.line","book.records.empty","book.promise","book.claim","book.claimShort","book.claimed","book.pending","book.retrying",

@@ -37,6 +37,19 @@ return function(client,parent)
 		assert(Companions.new(folder,function()end,function()return false end).tiers==(Flags.Park==true),"tiers must follow FeatureFlags.Park")
 	end)
 
+	test("QA Q4: local moving parts carry the import turn; their pivot sits on the group pivot",function()
+		local c=make({value={version=1,slots={}}})
+		c:animate(0)
+		for _,name in ipairs(Data.Moving)do
+			local entry=c.parts[name]
+			assert(entry.part.PivotOffset==Data.pivotOffset(name),name.." pivot offset")
+		end
+		-- Undoing the turn gives the authored axes: the beam's front is the see-saw group's front.
+		local beam=c.parts.Park_SeeSawBeam.part
+		assert((beam.CFrame*Data.ImportTurn).LookVector:Dot(Data.Roots.SeeSaw.LookVector)>.99,"beam turned back to front")
+		c:destroy()
+	end)
+
 	test("swings follow the swinging pet's pendulum from server times and settle after the hop",function()
 		local block={value={version=1,slots={swing1=session(1,"swing",11,100)}}}
 		local c=make(block)

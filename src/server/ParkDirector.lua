@@ -22,6 +22,20 @@ local ZERO=Vector3.zero
 Director.GreetEvery=6
 Director.GreetCooldown=45
 Director.GreetReach=12
+-- QA Q4: a pet queueing longer than this for a slot is not greeted (a greeting makes it ineligible,
+-- so the oldest pet kept missing every slot that freed while it greeted: 89 s waits with 12 pets).
+Director.GreetPatience=8
+-- QA Q4: a pet whose owner just walked in comes in at the follow catch-up pace (GardenLayout.
+-- CatchupSpeed), to a point inside the kerb on the owner's side, instead of strolling at 3 studs/s
+-- to the far rim point on its own side.
+Director.EnterSpeed=9
+-- QA Q4 (2-account test: no duo ever started): with few pets in the park two pets rarely go idle
+-- at the same moment, so each kept taking solos. An idle pet now waits up to DuoWait seconds for
+-- another owner's pet that is about to be free (its session or rest ends within the window) when a
+-- duo it could share is free or will be freed by that pet. Only while DuoWaitMembers or fewer pets
+-- are in the park (a busy park pairs on its own).
+Director.DuoWait=18 -- one activity (~13 s) plus the rest after it (3 s) and a short walk
+Director.DuoWaitMembers=4
 
 local function horizontal(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 local function angle(a,b)return math.atan2(math.sin(b-a),math.cos(b-a))end
@@ -246,9 +260,57 @@ function Director:endGreeting(actor,now)
 	end
 end
 
+-- Where a pet joining its owner walks to: two studs toward the centre from an owner well inside,
+-- else the point at 0.75 of the way out on the owner's ray; clear of equipment and benches.
+function Director.entryPoint(ownerPosition)
+	local target
+	if Park.inside(ownerPosition,-2.5)then
+		local toCentre=Vector3.new(Park.Center.X-ownerPosition.X,0,Park.Center.Z-ownerPosition.Z)
+		local step=if toCentre.Magnitude>2 then toCentre.Unit*2 else ZERO
+		local x,z=ownerPosition.X+step.X,ownerPosition.Z+step.Z
+		target=Vector3.new(x,Park.ground(x,z),z)
+	else
+		target=Park.toward(ownerPosition,.75)
+	end
+	if Park.clearOfKeepout(target,.3)then return target end
+	for _,scale in ipairs({.6,.45,.3,.15})do
+		local candidate=Park.toward(ownerPosition,scale)
+		if Park.clearOfKeepout(candidate,.3)then return candidate end
+	end
+	return target
+end
+
+-- The pet is outside the kerb while its owner is in the park: walk in beside the owner.
+function Director:enter(actor,input,now)
+	local from=self.garden:position(actor,now)
+	local target=Director.entryPoint(input.position)
+	local sample=A.sample(actor,now)
+	local velocity=sample and sample.velocity or ZERO
+	local yaw=sample and sample.yaw or actor.yaw or 0
+	local speed=math.clamp(horizontal(from,target)/2,Park.WalkSpeed,Director.EnterSpeed)
+	local planner=self.garden.options.planPath or A.plan
+	local path,seconds=planner(from,target,velocity,speed,0,yaw,nil,ZERO)
+	local last=path and path[#path]
+	local valid=last~=nil and(A.vector(last.to)-target).Magnitude<.1
+	if valid then for _,leg in ipairs(path)do if leg.safetyStop then valid=false;break end end end
+	-- Pets are visuals and the park lawn is flat: the plain curve planner always reaches the point.
+	if not valid then path,seconds=A.plan(from,target,velocity,speed,0,yaw,nil,ZERO)end
+	self.garden:transition(actor,"investigate",target,0,"wander",nil,nil,{path=path,duration=seconds})
+	actor.park.nextWanderAt=now+seconds+1
+end
+
 -- Idle park pets wander inside the kerb (never to the nook anchors) and pause between strolls.
 function Director:mingle(actor,input,now)
 	local park=actor.park
+	-- QA Q4: a pet left outside the kerb (it was trailing its owner, resting, or wandered out) comes
+	-- in at once, whatever it was doing, unless it is already walking in.
+	local here=self.garden:position(actor,now)
+	if not Park.inside(here,-1)then
+		local heading=A.vector(actor.to)
+		local walkingIn=actor.action=="wander"and now<actor.endTime and heading~=nil and Park.inside(heading,-1)
+		if not walkingIn then self:enter(actor,input,now)end
+		return
+	end
 	if actor.action=="wander"and now>=actor.endTime then
 		self.garden:transition(actor,"rest",self.garden:position(actor,now),math.max(1,(park.nextWanderAt or now)-now),"wanderPause")
 		return
@@ -256,11 +318,9 @@ function Director:mingle(actor,input,now)
 	if now<actor.endTime and actor.behavior~="follow"then return end
 	if now<(park.nextWanderAt or 0)then return end
 	park.nextWanderAt=now+3+self.random()*3
-	local position=self.garden:position(actor,now)
+	local position=here
 	local target
-	if not Park.inside(position,-1)then
-		target=Park.toward(position,.7) -- walk in through the kerb line (pets never collide)
-	else
+	do
 		for _=1,6 do
 			local heading=self.random()*math.pi*2
 			local radius=3+self.random()*5
@@ -345,9 +405,24 @@ function Director:schedule(now,ordered)
 	end)
 	local usedSlots,usedEquipment=self:occupancy()
 	local taken={}
+	local members=0
+	for _,actor in ipairs(ordered)do if actor.park then members+=1 end end
 	for _,first in ipairs(waiting)do
 		if taken[first]then continue end
+		local park=first.park
 		for _,kind in ipairs({"duo","solo"})do
+			if kind=="solo"then
+				local hold=members<=Director.DuoWaitMembers and self:partnerSoon(first,now,usedSlots,usedEquipment,taken)
+				if park.partnerWaitUntil and(now>=park.partnerWaitUntil or not hold)then
+					-- Code review: the window ran out (or the partner went away), so this pass falls
+					-- back to a solo and the wait is cleared; a later pass may hold for a partner again.
+					park.partnerWaitUntil=nil
+				elseif hold then
+					-- Hold for the partner (it mingles meanwhile); after the window it takes a solo.
+					park.partnerWaitUntil=park.partnerWaitUntil or now+Director.DuoWait
+					break
+				end
+			end
 			local choices={}
 			for _,id in ipairs(Catalog.Order)do
 				local activity=Catalog.ById[id]
@@ -366,17 +441,57 @@ function Director:schedule(now,ordered)
 				local pick=table.remove(choices,math.floor(self.random()*#choices)+1)
 				if self:start(pick.activity,pick.slots,pick.actors,now)then
 					started=true
-					for _,actor in ipairs(pick.actors)do taken[actor]=true end
+					for _,actor in ipairs(pick.actors)do taken[actor]=true;actor.park.partnerWaitUntil=nil end
 					for _,slotId in ipairs(pick.slots)do usedSlots[slotId]=true end
 					if pick.activity.exclusive then usedEquipment[pick.activity.equipment]=true end
 				end
 			end
 			if started then break end
 		end
-		-- Code review: a pet whose paths all failed waits 2 s instead of replanning every decide.
-		if not taken[first]then first.park.nextPickAt=math.max(first.park.nextPickAt or 0,now+2) end
+		-- Code review: a pet whose paths all failed waits 2 s instead of replanning every decide
+		-- (a pet holding for a duo partner is not a failure).
+		if not taken[first]and not(park.partnerWaitUntil and now<park.partnerWaitUntil)then park.nextPickAt=math.max(park.nextPickAt or 0,now+2)end
 	end
 	self:greetings(now,ordered,taken)
+end
+
+-- QA Q4: another owner's park pet that will be free to pick within DuoWait seconds (its session
+-- ends, or its rest/hop/greeting ends), with a duo the two could share: free now, or held only by
+-- that pet's own session, and not on either pet's last equipment.
+function Director:partnerSoon(first,now,usedSlots,usedEquipment,taken)
+	for _,other in pairs(self.garden.actors)do
+		local park=other.park
+		if not park or other==first or other.ownerId==first.ownerId or taken[other]then continue end
+		if other.mode~="Room"or other.care or self:busy(other)then continue end
+		local session=park.session and self.sessions[park.session]
+		local freeAt
+		if session then
+			freeAt=session.endTime+Catalog.RestAfter
+		else
+			freeAt=math.max(park.nextPickAt or now,if other.pairId then other.endTime or now else now)
+			if park.state=="hop"then freeAt=math.max(freeAt,other.endTime or now)end
+		end
+		if freeAt-now>Director.DuoWait then continue end
+		local otherLast=if session then session.equipment else park.last
+		for _,id in ipairs(Catalog.Order)do
+			local activity=Catalog.ById[id]
+			if activity.kind~="duo"or activity.equipment==first.park.last or activity.equipment==otherLast then continue end
+			local holder=usedEquipment[activity.equipment]
+			if holder and holder~=true and(not session or holder~=session.id)then continue end
+			if holder==true then continue end -- started this round by someone else
+			local open=false
+			for _,set in ipairs(activity.slotSets)do
+				local free=true
+				for _,slotId in ipairs(set)do
+					local by=usedSlots[slotId]
+					if by and(by==true or not session or by~=session.id)then free=false;break end
+				end
+				if free then open=true;break end
+			end
+			if open then return true end
+		end
+	end
+	return false
 end
 
 -- Park greetings: every 6 s, one pair of idle, slot-free park pets within 12 studs; the same
@@ -388,7 +503,9 @@ function Director:greetings(now,ordered,taken)
 	local idle={}
 	for _,actor in ipairs(ordered)do
 		local park=actor.park
-		if park and not taken[actor]and not park.session and park.state=="idle"and actor.mode=="Room"and not actor.care and not actor.pairId
+		if park and not taken[actor]and not park.session and park.state=="idle"and not(park.partnerWaitUntil and now<park.partnerWaitUntil)
+			and now-(park.waitingSince or now)<Director.GreetPatience
+			and actor.mode=="Room"and not actor.care and not actor.pairId
 			and actor.action~="nookApproach"and actor.action~="nookRest"and not self:busy(actor)and Park.inside(self.garden:position(actor,now),0)then
 			table.insert(idle,actor)
 		end

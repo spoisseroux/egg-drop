@@ -67,6 +67,30 @@ return function(client, parent)
 		a:destroy(); folder:Destroy(); assert(ok, err)
 	end)
 
+	test("QA Q4: the Pet Park attract hovers over the east gateway and is learned on the first walk in", function()
+		local Park = require(game:GetService("ReplicatedStorage").Shared.ParkLayout)
+		local anchor = Attract.parkAnchor()
+		local Flags = require(game:GetService("ReplicatedStorage").Shared.FeatureFlags)
+		if Flags.Park ~= true or not Park.Enabled then assert(anchor == nil, "park attract with the park off"); return end
+		assert(anchor == Park.Gateways[1].position, "park attract not on the east gateway")
+		assert(Data.Stations.Park and Data.Stations.Park.hue and table.find(Data.Order, "Park"))
+		local folder = Instance.new("Folder"); folder.Parent = parent or workspace
+		local position = anchor + Vector3.new(20, 0, 0)
+		local state = { uiReady = true, mode = "Room", viewMode = "Room", alive = true, position = position }
+		local a = Attract.new({ auto = false, world = folder, now = function() return 30 end,
+			read = function() state.position = position; return state end, positions = { Park = anchor } })
+		local ok, err = pcall(function()
+			local e = a.stations.Park
+			a:step(1 / 30); assert(e.state == "beckon" and e.billboard.Enabled, "park does not beckon at 20 studs")
+			assert(e.billboard:FindFirstChild("Icon"), "no icon (vector stand-in until the upload)")
+			position = Park.Center; a:step(1 / 30)
+			assert(a.used.Park == true, "walking into the park did not learn it")
+			position = anchor + Vector3.new(6, 0, 0); a:step(1 / 30)
+			assert(e.state == "learned" and not e.billboard.Enabled, "a learned park still beckons")
+		end)
+		a:destroy(); folder:Destroy(); assert(ok, err)
+	end)
+
 	test("the egg nest icon id slot and three hues exist for the coordinator", function()
 		for _, id in ipairs(Data.Order) do assert(Data.Stations[id] and Data.Stations[id].hue) end
 		assert(Data.Stations.Eggs.iconHeight < Data.Stations.Customize.iconHeight)

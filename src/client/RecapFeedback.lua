@@ -84,11 +84,25 @@ function Feedback:reduced()
 	return if type(self.reduceEffects) == "function" then self.reduceEffects() == true else self.reduceEffects == true
 end
 
-function Feedback:cancel()
+-- `finished` (the clock ran out on its own): the finale's voices (stars_total, the
+-- new best / egg ready beats) play to their natural end. Any other cancel (skip,
+-- Replay, the results closing or changing) fades them over Feedback.TailFade
+-- instead of cutting them (QA 2026-11-13: the final flourish was cut off).
+Feedback.TailFade=.35
+-- Voices are only cued while active, so an idle cancel (a new result key arriving after
+-- the last count-up already released or faded) leaves the audio alone.
+function Feedback:cancel(finished)
+	local wasActive=self.active
 	self.serial += 1
 	self.active, self.age = false, nil
 	if self.connection then self.connection:Disconnect(); self.connection = nil end
-	if self.audio and self.audio.stopOwner then self.audio:stopOwner(self)end
+	local audio=self.audio
+	if audio and wasActive then
+		if finished==true then
+			if audio.releaseOwner then audio:releaseOwner(self)end
+		elseif audio.fadeOwner then audio:fadeOwner(self,Feedback.TailFade)
+		elseif audio.stopOwner then audio:stopOwner(self)end
+	end
 	self.render(nil)
 end
 
@@ -124,7 +138,7 @@ function Feedback:step(dt)
 		local at=beat.at+(if beat.finale then finale else 0)
 		if before<at and self.age>=at then self:cue(beat.cue,beat.pitch or 1,beat.volume or .3)end
 	end
-	if self.age >= self.duration then self:cancel() else self:paint(self.age) end
+	if self.age >= self.duration then self:cancel(true) else self:paint(self.age) end
 end
 
 function Feedback:countAt(age)

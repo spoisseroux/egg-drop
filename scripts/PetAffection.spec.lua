@@ -13,7 +13,7 @@ return function(client)
   test("three passive pooled petals and depth-respecting saved glyph",function()
    assert(#fx.petals==3 and not fx.award.AlwaysOnTop and fx.award.MaxDistance==30)
    for _,p in ipairs(fx.petals)do assert(p.Anchored and not p.CanCollide and not p.CanTouch and not p.CanQuery and p.Transparency==1 and not p:IsDescendantOf(pip.model))end
-   assert(fx.label.Text=="+1"and fx.award.Plate:FindFirstChild("NectarDrop")and not fx.label.Active and not fx.label.Selectable and not fx.label.TextScaled)
+   assert(fx.label.Text==require(game.ReplicatedStorage.Shared.UICopy).get("pet.star")and fx.label.Text:find("★",1,true)and not fx.label.Active and not fx.label.Selectable and not fx.label.TextScaled)
   end)
   test("qualified start shows pooled petals immediately with a cooldown and static reduced cheeks",function()
    local now=0;fx.clock=function()return now end;fx:begin(false);fx:step(1/60,true,false)
@@ -37,17 +37,29 @@ return function(client)
    assert(pip.affectionTilt==0 and pip.affectionBlush==0 and not fx.award.Enabled)
    for i,p in ipairs(fx.petals)do assert(p.Transparency==1 and p.CFrame==positions[i])end
   end)
-  test("exact saved glyph fixture floats and fades then ends",function()
+  test("exact saved glyph fixture floats, holds, fades then ends",function()
    assert(fx:showSaved(false));local start=fx.award.StudsOffsetWorldSpace.Y
    for _=1,5 do fx:step(.1,true,false)end
-   assert(fx.award.StudsOffsetWorldSpace.Y>start and fx.award.StudsOffsetWorldSpace.Y<=start+.5 and fx.label.TextTransparency>0)
-   for _=1,12 do fx:step(.1,true,false)end;assert(not fx.award.Enabled)
+   assert(fx.award.StudsOffsetWorldSpace.Y>start and fx.award.StudsOffsetWorldSpace.Y<=start+.5 and fx.label.TextTransparency==0,"readable while it rises")
+   for _=1,7 do fx:step(.1,true,false)end;assert(fx.award.Enabled and fx.label.TextTransparency>0,"fades at the end")
+   for _=1,8 do fx:step(.1,true,false)end;assert(not fx.award.Enabled)
+  end)
+  test("QA Q2.7: letting go keeps the +1 rising to its end; the daily cap says so in words",function()
+   assert(fx:showSaved(false))
+   fx:clear();for _=1,3 do fx:step(.1,false,false)end
+   assert(fx.award.Enabled,"release must not hide a landed Star")
+   for _=1,20 do fx:step(.1,false,false)end;assert(not fx.award.Enabled)
+   local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
+   local text=UICopy.get("pet.capped",{pet="Bear"});assert(text=="Bear's had plenty of pets today")
+   assert(fx:showCapped(text,false)and fx.label.Text==text and fx.award.Enabled)
+   for _=1,40 do fx:step(.1,false,false)end;assert(not fx.award.Enabled)
+   assert(fx:showSaved(false)and fx.label.Text==UICopy.get("pet.star"),"the Star text comes back");fx:hideAward()
   end)
   test("reduced contact has static cheeks and glyph without moving petals",function()
    fx:clear();fx:showSaved(true);local start=fx.award.StudsOffsetWorldSpace
    for _=1,5 do fx:step(.1,true,true)end
    assert(fx.award.StudsOffsetWorldSpace==start and fx.label.TextTransparency==0 and pip.affectionTilt==0 and pip.affectionBlush>0)
-   for _,p in ipairs(fx.petals)do assert(p.Transparency==1)end;fx:clear();assert(not fx.award.Enabled)
+   for _,p in ipairs(fx.petals)do assert(p.Transparency==1)end;fx:clear();fx:hideAward();assert(not fx.award.Enabled)
   end)
   test("all seven body bobs preserve planted feet or Puddle skirt and hatch scale stays default",function()
    for _,pet in ipairs(Pets.collection)do

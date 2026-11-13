@@ -3,6 +3,7 @@ local Stars=require(script.Parent.StarText)
 local GuiService=game:GetService("GuiService")
 local EggArt=require(script.Parent.EggArt)
 local Pico8=require(game:GetService("ReplicatedStorage").Shared.Pico8)
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local Affection={};Affection.__index=Affection
 function Affection.new(parent,onVariation)
  local folder=Instance.new("Folder");folder.Name="PetAffectionPresentation";folder.Parent=parent
@@ -23,23 +24,30 @@ function Affection.new(parent,onVariation)
  local plate=Instance.new("Frame");plate.Name="Plate";plate.BackgroundColor3=Color3.fromHex("#282722");plate.BackgroundTransparency=.18;plate.BorderSizePixel=0
  plate.Size=UDim2.fromScale(1,1);plate.Active=false;plate.Selectable=false;plate.Parent=award
  local glyph=EggArt.nectar(plate,UDim2.new(0,5,.5,-12),UDim2.fromOffset(20,24),2)
- local label=Instance.new("TextLabel");label.Name="Amount";label.Text="+1";label:SetAttribute("AccessibleLabel","1 Star saved");label.Font=Enum.Font.GothamBold;label.TextSize=14
- label.TextColor3=Color3.fromHex("#FFBF50");label.BackgroundTransparency=1
- label.BorderSizePixel=0;label.Position=UDim2.fromOffset(29,0);label.Size=UDim2.new(1,-33,1,0);label.Active=false;label.Selectable=false;label.Parent=plate
+ -- QA Q2.7: the plate reads "+1 ★" in Stars gold (the old nectar drop glyph is hidden).
+ local label=Instance.new("TextLabel");label.Name="Amount";label.Text=UICopy.get("pet.star");label:SetAttribute("AccessibleLabel","1 Star saved");label.Font=Enum.Font.BuilderSansBold;label.TextSize=20
+ label.TextColor3=Color3.fromHex("#FFBF50");label.BackgroundTransparency=1;label.TextStrokeTransparency=.4;label.TextStrokeColor3=Color3.fromHex("#282722")
+ label.BorderSizePixel=0;label.Position=UDim2.fromOffset(8,0);label.Size=UDim2.new(1,-16,1,0);label.Active=false;label.Selectable=false;label.Parent=plate
+ glyph.Visible=false
  local round=Instance.new("UICorner");round.CornerRadius=UDim.new(0,8);round.Parent=plate
  self.award,self.label,self.plate=award,label,plate
  self.glyphBits={};for _,bit in ipairs(glyph:GetDescendants())do if bit:IsA("GuiObject")and bit.BackgroundTransparency<1 then table.insert(self.glyphBits,{node=bit,alpha=bit.BackgroundTransparency})end end
  local function measure()
   if self.destroyed then return end
-  local size=game:GetService("TextService"):GetTextSize(label.Text,14,Enum.Font.GothamBold,Vector2.new(10000,10000))
-  award.Size=UDim2.fromOffset(math.max(70,math.ceil(size.X)+40),math.max(36,math.ceil(size.Y)+8))
+  local size=game:GetService("TextService"):GetTextSize(label.Text,label.TextSize,Enum.Font.BuilderSansBold,Vector2.new(10000,10000))
+  award.Size=UDim2.fromOffset(math.max(70,math.ceil(size.X)+24),math.max(36,math.ceil(size.Y)+12))
  end
+ self.measure=measure
  measure();self.preference=GuiService:GetPropertyChangedSignal("PreferredTextSize"):Connect(measure)
  return self
 end
 function Affection:setPet(pet)
  if self.destroyed then return end
- self:clear();self.pet=pet;self.award.Adornee=pet and pet.model.PrimaryPart or nil
+ self:clear();self:hideAward();self.pet=pet;self.award.Adornee=pet and pet.model.PrimaryPart or nil
+end
+function Affection:hideAward()
+ if self.destroyed then return end
+ self.award.Enabled=false;self.awardUntil=nil
 end
 function Affection:rebind(pet)
  -- A complete-rig swap changes only the attachment, never its Saved cue/clock.
@@ -51,7 +59,8 @@ function Affection:clear()
  self.elapsed,self.nextVariation,self.index,self.variationAge,self.startAge=0,3,0,nil,nil
  for _,p in ipairs(self.petals)do p.Transparency=1 end
  for _,h in ipairs(self.hearts)do h.gui.Enabled=false end
- self.award.Enabled=false;self.awardUntil=nil
+ -- QA Q2.7: letting go ends the petting cue but not a "+1 ★" already on its way up;
+ -- it finishes its own rise (setPet / destroy hide it).
 end
 function Affection:begin(reduced)
  if self.destroyed or not self.pet or not self.pet.model.Parent then return end
@@ -64,21 +73,47 @@ end
 -- Holding past this many seconds turns the pose affectionate and keeps hearts rising.
 Affection.HeartsAfter=1
 Affection.HeartCycle=1.2
-function Affection:showSaved(reduced)
+Affection.AwardSeconds=1.8
+Affection.NoticeSeconds=2.6
+function Affection:showPlate(text,seconds,reduced)
  if self.destroyed or not self.pet or not self.pet.model.Parent then return false end
- self.cleared=false;self.awardUntil=1.4;self.awardReduced=reduced==true
+ self.awardSeconds=seconds;self.awardUntil=seconds;self.awardReduced=reduced==true
+ if self.label.Text~=text then self.label.Text=text;self.measure()end
+ self.label:SetAttribute("AccessibleLabel",text)
  local body=self.pet.model.PrimaryPart;local scale=self.pet.worldScale or 1
  self.award.StudsOffsetWorldSpace=body.CFrame.RightVector*(1.8*scale)+Vector3.new(0,.6*scale,0)
- self.label.TextTransparency=0;self.plate.BackgroundTransparency=.18
- for _,bit in ipairs(self.glyphBits)do bit.node.BackgroundTransparency=bit.alpha end
+ self.label.TextTransparency=0;self.label.TextStrokeTransparency=.4;self.plate.BackgroundTransparency=.18
  self.award.Enabled=true;return true
+end
+-- The day's five pets are used: one plate in words, no Star.
+function Affection:showCapped(text,reduced)
+ return self:showPlate(text,Affection.NoticeSeconds,reduced)
+end
+function Affection:showSaved(reduced)
+ if self.destroyed or not self.pet or not self.pet.model.Parent then return false end
+ local shown=self:showPlate(UICopy.get("pet.star"),Affection.AwardSeconds,reduced)
+ self.label:SetAttribute("AccessibleLabel","1 Star saved")
+ return shown
+end
+-- The "+1 ★" / notice plate: rises and holds, then fades over its last 40%.
+function Affection:stepAward(dt,reduced)
+ if not self.awardUntil then return end
+ local pet=self.pet;local body=pet and pet.model.Parent and pet.model.PrimaryPart
+ self.awardUntil-=dt
+ if self.awardUntil<=0 or not body then self:hideAward();return end
+ local total=self.awardSeconds or Affection.AwardSeconds
+ local t=(total-self.awardUntil)/total;local still=self.awardReduced or reduced
+ local fade=if still then 0 else math.max(0,(t-.6)/.4)
+ local scale=pet.worldScale or 1
+ self.award.StudsOffsetWorldSpace=body.CFrame.RightVector*(1.8*scale)+Vector3.new(0,.6*scale+(if still then 0 else .35*t),0)
+ self.label.TextTransparency=fade;self.label.TextStrokeTransparency=.4+.6*fade;self.plate.BackgroundTransparency=.18+.82*fade
 end
 function Affection:step(dt,active,reduced)
  if self.destroyed then return end
  local pet=self.pet
- if not pet or not pet.model.Parent then self:clear();return end
- if not active then self:clear();return end
+ if not pet or not pet.model.Parent then self:clear();self:hideAward();return end
  dt=math.clamp(dt,0,.1)
+ if not active then self:clear();self:stepAward(dt,reduced);return end
  if active then
   self.cleared=false
   self.elapsed+=dt
@@ -109,16 +144,7 @@ function Affection:step(dt,active,reduced)
    p.CFrame=body.CFrame*CFrame.new((i-2)*.6*scale,(.95+age*.7)*scale,(.8+math.sin(age*4+i)*.08)*scale)*CFrame.Angles(0,0,(i-2)*.4+age)
   end
  end
- if self.awardUntil then
-  self.awardUntil-=dt
-  if self.awardUntil<=0 or not active then self.award.Enabled=false;self.awardUntil=nil
-  elseif body then
-   local t=(1.4-self.awardUntil)/1.4;local fade=if self.awardReduced or reduced then 0 else t
-   self.award.StudsOffsetWorldSpace=body.CFrame.RightVector*(1.8*scale)+Vector3.new(0,.6*scale+(if self.awardReduced or reduced then 0 else .35*t),0)
-   self.label.TextTransparency=fade;self.plate.BackgroundTransparency=.18+.82*fade
-   for _,bit in ipairs(self.glyphBits)do bit.node.BackgroundTransparency=bit.alpha+(1-bit.alpha)*fade end
-  end
- end
+ self:stepAward(dt,reduced)
 end
 function Affection:destroy()
  if self.destroyed then return end;self:clear();self.destroyed=true;self.preference:Disconnect();self.folder:Destroy()

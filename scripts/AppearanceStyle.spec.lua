@@ -28,7 +28,7 @@ return function(client,parent,onlySize)
    local shop=v.shop;local back=shop.backArrow.root.AbsolutePosition
    for _,tab in ipairs({"Background","Shell"})do
     v.customizationEntry=true;v:showTab(tab);settle()
-    assert(shop.visible and not v.card.Visible and not v.sound.Visible and not v.clubHeader.Visible)
+    assert(shop.visible and not v.card.Visible and not v.sound.Visible and v.clubHeader==nil)
     -- Sub-pixel tolerance: the centred, scaled panel lands on half pixels at odd widths.
     assert((shop.backArrow.root.AbsolutePosition-back).Magnitude<=.5 and shop.backArrow.root.Size==UDim2.fromOffset(44,44),"header back moved on "..tab)
     -- 44 hit frames in panel units; the regular screen scales as a whole (UIScale), like Wardrobe.
@@ -51,21 +51,24 @@ return function(client,parent,onlySize)
    assert(#sends==0 and #settings==0)
   end)
   test(tostring(size).." leaf modes expose existing actions and no hidden Style targets",function()
-   for _,mode in ipairs({"Trials","Settings"})do
+   -- QA Q5: Pocket Trials are retired; Settings is the only leaf mode.
+   assert(v:showTab("Trials")==false and v:showTab("Club")==false and v.clubHeader==nil and #v.rows==0,"no Pocket Trials page")
+   for _,mode in ipairs({"Settings"})do
     v:showTab(mode);settle();assert(inside(v.cancel,v.card)and inside(v.scroll,v.card)and v.scroll.AbsoluteSize.Y>=44)
     assert(not v.shop.visible and v.card.Visible)
-    if mode=="Trials"then
-     assert(v.clubHeader.Visible and not v.sound.Visible and v.reward.Text:find("Pocket Trials",1,true));for _,row in ipairs(v.rows)do readable(row.title);readable(row.status);reach(row.frame,v.scroll)end;readable(v.reward);reach(v.reward,v.scroll)
-    else for _,n in ipairs({v.sound,v.music,v.motion})do assert(n.Visible and n.AbsoluteSize.Y>=44);readable(n);reach(n,v.scroll)end end
+    for _,n in ipairs({v.sound,v.music,v.motion})do assert(n.Visible and n.AbsoluteSize.Y>=44);readable(n);reach(n,v.scroll)end
    end
    assert(#settings==0 and #sends==0)
   end)
   test(tostring(size).." latest pending and definitive checks survive resize and reopen without writes",function()
    local function state(bg,confirmed,status)return{themeId="sherbet",stickerId="none",backgroundId=bg,confirmedTheme="sherbet",confirmedSticker="none",confirmedBackground=confirmed,slots={background=status}}end
-   v:showTab("Background");v:setAppearance(state("creek","canopy",{status="Pending"}));settle()
-   assert(v.choices.Background.canopy.Enabled and not v.choices.Background.creek.Enabled)
-   assert(v.shop.backgrounds.tiles[1].status.Text=="IN USE")
+   -- QA Q2.4 optimistic: the pending background is IN USE at once ...
+   v:showTab("Background");v:setAppearance(state("creek","canopy",{status="Pending",id="creek"}));settle()
+   assert(v.choices.Background.creek.Enabled and not v.choices.Background.canopy.Enabled)
+   assert(v.shop.backgrounds.tiles[2].id=="creek"and v.shop.backgrounds.tiles[2].status.Text=="IN USE")
+   -- ... and a lost reply rolls the card back to the confirmed one.
    v:setAppearance(state("creek","canopy",{status="Retry",reason="NoReply"}));settle()
+   assert(v.choices.Background.canopy.Enabled and v.shop.backgrounds.tiles[1].status.Text=="IN USE")
    v.shop.backgrounds:focusId("creek");settle()
    assert(v.shop.root:GetAttribute("BackgroundPaneState")=="retry"and v.shop.backgrounds.action.Visible and v.shop.backgrounds.status.Text:find("Retry",1,true))
    v:close("forced");v:open("sherbet","none","Background");settle();assert(v.backgroundId=="creek"and #sends==0)
@@ -78,19 +81,18 @@ return function(client,parent,onlySize)
    v:close("back");assert(closes[#closes]=="back"and #sends==0)
   end)
  end
- test("locked inspect and Trials back preserve same Style focus without request",function()
+ test("locked inspect preserves the same Style focus without a request (no Trials route, QA Q5)",function()
   root.Size=UDim2.fromOffset(733,307);settle();local calls=0
   local v=Picker.new(root,nil,nil,function()end,function()end,function()calls+=1 end,function()calls+=1 end);table.insert(views,v)
-  -- Stickers are retired; locked Background art carries the inspect/Trials route.
+  -- Stickers are retired; locked Background art carries the inspect route (Pocket Trials are retired).
   v:updateClub(0,0,0,0,"On",false,false,0);v:open("sherbet","none","Background");settle()
   local backs=v.shop.backgrounds
-  assert(v:activateChoice("Background","creek")and backs.action.Visible and v:appearanceText():find("Locked",1,true)and calls==0)
+  assert(v:activateChoice("Background","creek")and not backs.action.Visible and v:appearanceText():find("Locked",1,true)and calls==0)
   assert(v:activateChoice("Background","lantern")and v:appearanceText():find("Locked",1,true))
   local before=calls;v.onApply=function(slot,id)assert(slot=="background"and id=="canopy")end
   assert(v:activateChoice("Background","canopy")and calls==before and v.inspectId==nil and v:appearanceText()=="Select to wear immediately.")
   v:activateChoice("Background","creek");assert(backs:focusedId()=="creek")
-  assert(v.shop:act(false)and v.active=="Trials"and v.innerReturn~=nil and calls==0)
-  v:back();settle()
+  assert(not v.shop:act(false)and v.active=="Background"and v.innerReturn==nil and calls==0,"a trial-locked background offers no Trials page")
   assert(v.active=="Background"and v.shade.Visible and backs:focusedId()=="creek"and calls==0)
   v:showTab("Shell");assert(v.inspectId==nil and v:appearanceText()=="Select to wear immediately."and not v:appearanceText():find("Locked",1,true));v:close("forced");assert(not v.shade.Visible)
  end)

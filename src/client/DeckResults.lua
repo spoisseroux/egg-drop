@@ -2,10 +2,12 @@
 -- redesigned by UI-SPEC-REDESIGN-CELEBRATIONS-2026-11-12 section 2).
 -- RunReceipt stays the data owner and RecapFeedback the count-up clock; this
 -- module is the view: a slanted headline, a Star centrepiece the payout counts
--- into, larger type, a come-back strip (next egg meter + the quest this round
--- moved) and a Hatch button when an egg is affordable.
--- Focus indices: 1 Replay, 2 Leave, 3 Change difficulty (phone), 4 Quest
--- shortcut (phone), 5 Hatch.
+-- into, larger type, a come-back strip ("Today: ★ N earned" + the quest this round
+-- moved; QA 2026-11-13 Q5 replaced the next egg meter) and a Hatch button when an
+-- egg is affordable. The quest cells show progress only: the quest log opens from
+-- the garden hub's Quests tile.
+-- Focus indices: 1 Replay, 2 Leave, 3 Change difficulty (phone), 5 Hatch (4, the
+-- old phone quest shortcut, is display only now).
 local RunService=game:GetService("RunService")
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
@@ -21,7 +23,22 @@ Results.__index=Results
 function Results.new(host,options)
  local self=setmetatable({host=host,options=options or {},focus=1,callbacks={},visible=false},Results)
  self.feedback=Feedback.new(function(sample)self:paintCount(sample)end,options.audio,options.reduce,function()return self.visible end)
+ -- QA 2026-11-13: build the StarToken mesh now, so the hero never pops in late.
+ if self.options.starMesh~=false then C.preloadStarMesh()end
  return self
+end
+-- Star spin (QA 2026-11-13): one constant turn about +Y, measured from the moment
+-- the results open (`spinOrigin`), so no repaint, touch or data update resets it.
+Results.SpinRate=45 -- degrees a second
+function Results.spinYaw(elapsed)
+ return((math.max(0,elapsed or 0)*Results.SpinRate)%360)
+end
+-- Pure: does the Star wear its missed-round (silver) look? Known from the outcome
+-- even while the save is pending, so the first frame already has the final colour.
+function Results.missLook(data)
+ if data.loss and not data.pending then return true end
+ local _,missed=Results.headline(data)
+ return missed==true
 end
 function Results:on(name,callback)self.callbacks[name]=callback end
 
@@ -37,16 +54,14 @@ function Results.headline(data)
  if data.outcome=="overflow"then return "TOO TALL!",true end
  return "SO CLOSE!",true
 end
--- 2.6 Next egg meter: one segment per Star up to 10 segments.
-Results.MeterMax=10
-function Results.meter(balance,cost)
- balance=math.max(0,math.floor(balance or 0));cost=math.max(1,math.floor(cost or 8))
- local segments=math.min(cost,Results.MeterMax)
- local held=math.min(balance,cost)
- local ready=balance>=cost
- local filled=if ready then segments else math.floor(held*segments/cost)
- return{segments=segments,filled=filled,ready=ready,held=held,cost=cost,
-  label=if ready then "Ready to hatch!"else string.format("%d/%d",held,cost),short=if ready then "Ready!"else string.format("%d/%d",held,cost)}
+-- QA Q5: Stars earned from rounds today (no daily cap). `today` is the snapshot's
+-- todayEarned; while the payout counts up it counts with the Star (`shown` of
+-- `earned`), and a pending or missed round shows the saved value as it is.
+function Results.today(today,earned,shown,counting)
+ today=math.max(0,math.floor(tonumber(today)or 0))
+ if counting then today=math.max(0,today-math.floor(earned or 0)+math.floor(shown or 0))end
+ return{count=today,label=UICopy.get("results.today.label"),line=UICopy.get("results.today.line",{count=today}),
+  short=UICopy.get("results.today.short",{count=today})}
 end
 -- 2.8 Focus order, left to right.
 function Results.order(phone,hatch,quest)
@@ -132,36 +147,13 @@ function Results:buildCentre(parent,cx,starY,starSize,countY,countSize,unitY,uni
  end
 end
 
--- Next egg meter cells (shared by the desktop strip and the phone payout card).
-function Results:buildMeter(parent,x,y,width,height)
- self.meterCells={};self.meterRect={x=x,y=y,w=width,h=height,parent=parent}
- for index=1,Results.MeterMax do
-  local cell=Kit.frame(parent,"MeterCell"..index,"well",UDim2.new(),UDim2.fromOffset(10,height),3);Kit.stroke(cell)
-  self.meterCells[index]=cell
- end
-end
-function Results:paintMeter(balance)
- local data=self.data;if not data or not self.meterCells then return end
- local m=Results.meter(balance,data.eggCost or 8)
- local r=self.meterRect;local gap=if r.w>300 then 6 else 4
- local w=(r.w-gap*(m.segments-1))/m.segments
- for index,cell in ipairs(self.meterCells)do
-  local on=index<=m.filled
-  cell.Visible=index<=m.segments
-  cell.Position=UDim2.fromOffset(r.x+(index-1)*(w+gap),r.y);cell.Size=UDim2.fromOffset(w,r.h)
-  cell.BackgroundColor3=if on then Kit.Color.stars else Kit.color("well")
-  cell.KitStroke.Enabled=not on
- end
- if self.meterStatus then
-  self.meterStatus.Text=if self.phone then m.short else m.label
-  self.meterStatus.TextColor3=if m.ready then Kit.Color.stars else Kit.Color.soft
- end
- if self.stripStroke then
-  self.stripStroke.Color=if m.ready then Kit.Color.stars else Kit.Color.white
-  self.stripStroke.Transparency=if m.ready then 0 else .86;self.stripStroke.Thickness=if m.ready then 2 else 1
- end
- self.meterReady=m.ready
- return m
+-- "Today: ★ N earned" (desktop strip and phone payout card).
+function Results:paintToday(shown,counting)
+ local data=self.data;if not data or not self.todayText then return end
+ local t=Results.today(data.todayEarned or data.earned or 0,data.earned,shown,counting)
+ self.todayText.Text=t.line
+ self.todayText:SetAttribute("TodayEarned",t.count)
+ return t
 end
 
 -- ── Phone (2.3): sheet 732x288 under the Roblox controls ────────────────────
@@ -182,7 +174,7 @@ function Results:buildPhone(v)
  self:buildCentre(body,W/2,64+38,66,64+101,40,64+137,12)
  self.missText=txt(body,"Strong","No Stars this time","text",mx,64+92,cw,22,centered({TextSize=16,Visible=false}))
  self.warmText=txt(body,"Small","","soft",mx-6,64+116,cw+12,34,centered({TextSize=12,TextWrapped=true,Visible=false}))
- -- Payout card: rows, total, then the next egg meter.
+ -- Payout card: rows, total, then Stars earned today.
  local payout=Kit.card(body,"Payout","PAYOUT",{pad=12,labelY=10});self.payout=payout
  payout.Position,payout.Size=UDim2.fromOffset(20,64),UDim2.fromOffset(cw,ch)
  payout.Eyebrow.TextSize=12
@@ -199,10 +191,9 @@ function Results:buildPhone(v)
  self.totalLabel=txt(payout,"Strong","Total","text",12,0,100,20,{TextSize=14})
  self.totalAmount=txt(payout,"Counter","","stars",cw-112,0,100,20,{TextSize=16,TextXAlignment=Enum.TextXAlignment.Right})
  self.saved=txt(payout,"Small",UICopy.get("results.saved.done"),"soft",12,ch-28,cw-24,20,{TextSize=12,Visible=false})
- self.eggIcon=Kit.icon(payout,"egg",20,"stars");self.eggIcon.Position=UDim2.fromOffset(10,ch-34)
- txt(payout,"Label","NEXT EGG","dim",36,ch-38,100,14,{TextSize=12})
- self.meterStatus=txt(payout,"Strong","","soft",cw-12-100,ch-38,100,14,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
- self:buildMeter(payout,36,ch-20,cw-48,10)
+ self.todayIcon=Kit.icon(payout,"star",18,"stars");self.todayIcon.Position=UDim2.fromOffset(12,ch-31)
+ self.todayLabel=txt(payout,"Label",UICopy.get("results.today.label"),"dim",36,ch-32,70,20,{TextSize=12})
+ self.todayText=txt(payout,"Strong","","stars",cw-12-150,ch-32,150,20,{Name="TodayEarned",TextSize=14,TextXAlignment=Enum.TextXAlignment.Right})
  -- Goals card: goals, NEW BEST, then Score / Best / Chain.
  local goals,eyebrow=Kit.card(body,"Goals","GOALS",{pad=12,labelY=10})
  goals.Position,goals.Size=UDim2.fromOffset(W-20-cw,64),UDim2.fromOffset(cw,ch);self.goalsEyebrow=eyebrow;eyebrow.TextSize=12
@@ -257,11 +248,10 @@ function Results:buildPhone(v)
  self.questButton=quest
  self.questIcon=Kit.icon(quest,"quests",18,"text");self.questIcon.Position=UDim2.fromOffset(14,15)
  self.questText=txt(quest,"Strong","","text",40,0,qw-50,48,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
- self.questChip=Kit.chip(quest,"CLAIM","gold",24);self.questChip.label.TextSize=12;self.questChip.set("CLAIM","gold")
+ self.questChip=Kit.chip(quest,"DONE","gold",24);self.questChip.label.TextSize=12;self.questChip.set("DONE","gold")
  self.questChip.root.AnchorPoint=Vector2.new(1,.5);self.questChip.root.Position=UDim2.new(1,-10,.5,0)
  self.hatch=C.rewardButton(body,"Hatch","Hatch egg",Vector2.new(qw,48),16)
  self.hatch.Position=UDim2.fromOffset(qx,ay);self.hatch.Visible=false
- quest.Activated:Connect(function()if self.questTarget then self.focus=4;self:paintFocus();self:activate(4)end end)
  self.hatch.Activated:Connect(function()self.focus=5;self:paintFocus();self:activate(5)end)
  self.replay.Activated:Connect(function()self.focus=1;self:paintFocus();self:activate(1)end)
  self.leave.Activated:Connect(function()self.focus=2;self:paintFocus();self:activate(2)end)
@@ -329,13 +319,12 @@ function Results:buildDesktop()
   txt(goals,"Label",name,"dim",18+(index-1)*72,214,70,16,{TextSize=12})
   self.metrics[index]=txt(goals,"Counter","0","text",18+(index-1)*72,234,72,26,{TextSize=19})
  end
- -- Come-back strip: next egg meter (left), the quest this round moved (right).
+ -- Come-back strip: Stars earned today (left), the quest this round moved (right).
  local strip=Kit.frame(root,"ComeBackStrip","well",UDim2.fromOffset(24,412),UDim2.fromOffset(800,56),14);self.stripStroke=Kit.stroke(strip)
  self.strip=strip
- self.eggIcon=Kit.icon(strip,"egg",30,"stars");self.eggIcon.Position=UDim2.fromOffset(14,13)
- txt(strip,"Label","NEXT EGG","soft",56,8,140,16,{TextSize=13})
- self.meterStatus=txt(strip,"Strong","","soft",236,8,140,16,{TextSize=14,TextXAlignment=Enum.TextXAlignment.Right})
- self:buildMeter(strip,56,30,320,14)
+ self.todayIcon=Kit.icon(strip,"star",30,"stars");self.todayIcon.Position=UDim2.fromOffset(14,13)
+ self.todayLabel=txt(strip,"Label",UICopy.get("results.today.label"),"soft",56,8,140,16,{TextSize=13})
+ self.todayText=txt(strip,"Strong","","stars",56,24,320,26,{Name="TodayEarned",TextSize=18})
  local divider=Kit.frame(strip,"Divider",nil,UDim2.fromOffset(396,10),UDim2.fromOffset(1,36));divider.BackgroundColor3,divider.BackgroundTransparency=Color3.new(1,1,1),.88
  self.stripQuestIcon=Kit.icon(strip,"quests",22,"text");self.stripQuestIcon.Position=UDim2.fromOffset(414,17)
  self.questScope=txt(strip,"Label","DAILY QUEST","soft",448,6,180,16,{TextSize=13})
@@ -428,8 +417,8 @@ function Results:build(compact)
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.key=Results.viewKey(compact)
  self.phone=type(compact)=="table"
- self.difficulty,self.questButton,self.questTarget,self.hatch,self.star,self.meterCells=nil,nil,nil,nil,nil,nil
- self.nudge,self.strip,self.stripStroke,self.meterStatus,self.hints,self.skipHint,self.hintRight=nil,nil,nil,nil,nil,nil,nil
+ self.difficulty,self.questButton,self.questTarget,self.hatch,self.star,self.todayText=nil,nil,nil,nil,nil,nil
+ self.nudge,self.strip,self.stripStroke,self.todayLabel,self.hints,self.skipHint,self.hintRight=nil,nil,nil,nil,nil,nil,nil
  self.missText,self.warmText,self.unit,self.minis,self.confetti,self.twinkles,self.newBest=nil,nil,nil,nil,nil,nil,nil
  self.goalHint,self.replayPulse,self.starIcon,self.countHolder=nil,nil,nil,nil
  if self.phone then self.compact=false;return self:buildPhone(compact)end
@@ -520,7 +509,9 @@ function Results:paintGoals(data)
   if goal then
    if goal.done then done+=1 end
    local short=self.compact or(self.phone and self.payout.Size.X.Offset<200)
-   slot.check.set(goal.done);slot.text.RichText=true;slot.text.Text=if short then goal.short or goal.text else goal.text
+   slot.check.set(goal.done);slot.text.RichText=true
+   -- Colour circles never grow past the line's text size (vertical centring, QA 2026-11-13).
+   slot.text.Text=string.gsub(if short then goal.short or goal.text else goal.text,'size="(%d+)"',function(n)return 'size="'..math.min(tonumber(n)or 0,slot.text.TextSize)..'"' end)
    slot.text.TextColor3=if goal.done then Kit.Color.text else Kit.Color.soft
    if not goal.done and goal.hint and not hintAt then hintAt=index end
   end
@@ -589,13 +580,11 @@ function Results:paintCount(sample)
   local p=if sample then Feedback.stagger(age,index,Feedback.RowAt,Feedback.RowGap,.14)else 1
   row.name.TextTransparency=1-p;row.amount.TextTransparency=1-p
  end
- -- Count, unit, wallet and meter.
+ -- Count, unit, wallet and Stars earned today.
  self.totalText.Visible,self.countShadow.Visible,self.unit.Visible=not loss,not loss,not loss
  self.missText.Visible,self.warmText.Visible=loss,loss
- if loss then
-  self.star.setMode("glass")
- else
-  self.star.setMode("gold")
+ self.star.setMode(if Results.missLook(data)then "glass"else "gold")
+ if not loss then
   local value=if data.pending then "Saving…"else "+"..tostring(shown)
   local size=math.floor(if data.pending then self.countSize*.5 else self.countSize)
   self.totalText.Text,self.countShadow.Text=value,value
@@ -604,7 +593,7 @@ function Results:paintCount(sample)
  local balance=data.balance or 0
  local shownBalance=if loss or data.pending then balance else balance-earned+shown
  self.wallet.set(shownBalance)
- self:paintMeter(shownBalance)
+ self:paintToday(shown,not(loss or data.pending))
  if sample then
   local drop=sample.drop
   local starY=self.centre.starY-(1-bounceOut(drop))*self.centre.starSize*1.1
@@ -614,12 +603,11 @@ function Results:paintCount(sample)
   self.star.scale.Scale=1+.12*(sample.starPop or 0)+.08*math.sin(math.pi*f)
   -- 3D: spins at 360°/s from the landing, then the finale turns it two more
   -- times and stops facing front. 2D fallback: wobble, then a 720° planar spin.
-  if f>0 then
-   local from=(sample.finaleAt-Feedback.DropAt)*360;local to=math.ceil(from/360)*360+720
-   self.star.setSpin(from+(to-from)*quintOut(f),-720*(1-quintOut(f)))
-  else
-   self.star.setSpin(math.max(0,age-Feedback.DropAt)*360,6*math.sin(age*14)*(1-drop*.5))
-  end
+  -- 3D: the one constant turn (Results.spinYaw). 2D fallback: wobble, then a 720°
+  -- planar spin in the finale.
+  local yaw=Results.spinYaw(os.clock()-(self.spinOrigin or os.clock()))
+  if f>0 then self.star.setSpin(yaw,-720*(1-quintOut(f)))
+  else self.star.setSpin(yaw,6*math.sin(age*14)*(1-drop*.5))end
   self.star.setRays((age*40)%360,math.sin(math.pi*f))
   self.countScale.Scale=1+.25*(sample.starPop or 0)
   self.totalText.TextColor3=if f>0 and f<1 then Color3.new(1,1,1):Lerp(Kit.Color.stars,f)else Kit.Color.stars
@@ -634,7 +622,8 @@ function Results:paintCount(sample)
  else
   self.star.root.Visible=true
   self.star.root.Position=UDim2.fromOffset(self.centre.cx,self.centre.starY)
-  self.star.scale.Scale=1;self.star.setSpin(0,0);self.spinStart=os.clock();self.countScale.Scale=1
+  self.star.scale.Scale=1;self.countScale.Scale=1
+  if not self.idle then self.star.setSpin(if loss or Kit.reduced()then 0 else Results.spinYaw(os.clock()-(self.spinOrigin or os.clock())),0)end
   self.totalText.TextColor3=Kit.Color.stars
   for _,mini in ipairs(self.minis)do mini.Visible=false end
   if self.newBest then self.newBest.root.Visible=data.newBest==true and not loss;self.newBestScale.Scale=1 end
@@ -725,7 +714,7 @@ function Results:stepIdle()
  self.star.root.Position=UDim2.fromOffset(self.centre.cx,self.centre.starY+bob+float)
  -- Gentle idle turn: 40°/s about +Y (3D token) or a small planar sway (2D).
  if loss then self.star.setSpin(0,0)
- else self.star.setSpin(((now-(self.spinStart or now))*40)%360,5*math.sin(t*math.rad(40)*2))end
+ else self.star.setSpin(Results.spinYaw(now-(self.spinOrigin or now)),5*math.sin(t*math.rad(40)*2))end
  if not loss then self.star.setRays((t*6)%360,0)end
  for index,spark in ipairs(self.twinkles)do
   local on=not loss or index<=3
@@ -748,6 +737,7 @@ end
 -- petName, result (RecapFeedback observe record), loss, questDone, questCount
 function Results:show(data,compact)
  local opening=not self.visible
+ if opening then self.spinOrigin=os.clock();self.lossCued=false end
  if not self.root or self.key~=Results.viewKey(compact)then self:build(compact)end
  self.data=data;self.visible=true;self.host.Parent.Visible=true
  local loss=data.loss and not data.pending
@@ -794,9 +784,13 @@ function Results:show(data,compact)
  else self.feedback:setBeats({})end
  if data.result then self.feedback:observe(data.result,true)end
  local audio=self.options.audio
- if opening and audio and audio.play then
-  if loss then audio:play("lose",1,.4);audio:play("meter_fill",1,.25)
-  elseif self.feedback.active then audio:play("win",1,.5)
+ -- Losing always has a sound (QA 2026-11-13): the `lose` cue once per results
+ -- screen, as soon as the miss is known (on opening, or when a pending save lands).
+ if audio and audio.play and Results.missLook(data)and not self.lossCued then
+  self.lossCued=true;audio:play("lose",1,.45)
+  if loss then audio:play("meter_fill",1,.25)end
+ elseif opening and audio and audio.play then
+  if self.feedback.active then audio:play("win",1,.5)
   elseif not data.pending and Kit.reduced()then audio:play("stars_total",1,.4)end
  end
  if not self.feedback.active then self:paintCount(nil)end
@@ -811,8 +805,9 @@ function Results:show(data,compact)
  self:startFace()
 end
 
--- Phone extras: metrics, NEW BEST, difficulty bars and the shortcut cell
--- (Hatch when affordable, else a claim, else the quest this round moved).
+-- Phone extras: metrics, NEW BEST, difficulty bars and the shortcut cell (Hatch when
+-- affordable, else a finished quest, else the quest this round moved). QA Q5: the quest
+-- cell shows progress only (claims happen in the quest log, from the garden hub).
 function Results:paintPhone(data)
  local values={SCORE=commas(data.score),BEST=commas(data.best),CHAIN="×"..tostring(data.chain or 0)}
  for index,name in ipairs(self.metricNames)do self.metrics[index].Text=values[name]end
@@ -826,18 +821,17 @@ function Results:paintPhone(data)
   Kit.setText(self.hatch,if w>=200 then "Hatch "..(data.eggName or "egg")else "Hatch")
  end
  self.questChip.root.Visible=false;self.questIcon.Visible=true
+ self.questTarget=nil
  if hatch then
-  self.questTarget=nil
+  -- The gold Hatch button takes the cell.
  elseif data.questDone then
-  self.questTarget="claim"
   Kit.paint(q,"BackgroundColor3",function()return Kit.color("well"):Lerp(Kit.Color.stars,.06)end);q.BackgroundTransparency=0
   self.questStroke.Thickness,self.questStroke.Transparency=1.5,0;Kit.paint(self.questStroke,"Color","stars")
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.check;Kit.paint(self.questIcon,"ImageColor3","stars")
-  if w<200 then self.questText.Text="Claim 1 quest";self.questText.Size=UDim2.fromOffset(w-50,48)
-  else self.questText.RichText=true;self.questText.Text=questRich(data.questDone,self.questText.TextSize);self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end
+  if w<200 then self.questText.Text="Quest done";self.questText.Size=UDim2.fromOffset(w-50,48)
+  else self.questText.RichText=true;self.questText.Text=questRich(data.questDone,self.questText.TextSize);self.questChip.set("DONE","gold");self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  else
-  self.questTarget="log"
   Kit.paint(q,"BackgroundColor3","raised");q.BackgroundTransparency=1
   self.questStroke.Thickness,self.questStroke.Transparency=1,.86;self.questStroke.Color=Color3.new(1,1,1)
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.quests;Kit.paint(self.questIcon,"ImageColor3","text")
@@ -846,9 +840,9 @@ function Results:paintPhone(data)
   self.questText.Size=UDim2.fromOffset(w-50,48)
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  end
- if self.questTarget then self.questText.Position=UDim2.fromOffset(40,0)end
- q.Active=self.questTarget~=nil;q:SetAttribute("AccessibleLabel",if self.questTarget then BallThemes.strip(self.questText.Text)else nil)
- if self.focus==4 and not self.questTarget then self.focus=if hatch then 5 else 1 end
+ if not hatch then self.questText.Position=UDim2.fromOffset(40,0)end
+ q.Active=false;q:SetAttribute("AccessibleLabel",if hatch then nil else BallThemes.strip(self.questText.Text))
+ if self.focus==4 then self.focus=if hatch then 5 else 1 end
 end
 
 function Results:hide()
@@ -890,10 +884,7 @@ function Results:confirm()
  self:activate(self.focus);return true
 end
 function Results:activate(index)
- if index==4 then
-  if self.questTarget and self.callbacks.quests then self.callbacks.quests(self.questTarget)end
-  return
- end
+ if index==4 then return end -- display only (QA Q5)
  local button=self:target(index);if not button then return end
  if index==5 and not button.Visible then return end
  local state=Kit.buttonState(button);if not state or not state.enabled then return end

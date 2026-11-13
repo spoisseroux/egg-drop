@@ -126,6 +126,37 @@ return function(client,parent)
 			assert(greets==1,"cheer greeted "..greets.." times")
 		end)
 
+		test("QA Q4: swing and see-saw riders wait in front of the seat and land back on that point",function()
+			for _,pair in ipairs({{"swing1","swing"},{"swing2","swing"},{"seesaw1","seesaw"},{"seesaw2","seesaw"}})do
+				local slotId,activityId=pair[1],pair[2]
+				local slot=Park.Slots[slotId]
+				local entry=session(20,activityId,8000)
+				-- The wait point is in front of the seat, clear of it.
+				local out=slot.approach-slot.seatGround
+				assert(Vector2.new(out.X,out.Z).Magnitude>1,slotId.." waits under its seat")
+				if activityId=="swing"then assert(out:Dot(Data.facing(slot.yaw))>1,slotId.." waits behind the swing")end
+				frame(slotId,entry,8000.001,false)
+				assert((v.origin-slot.approach).Magnitude<.05,slotId.." mount does not start where the pet waits")
+				local cheer=8000+Catalog.phaseStart(activityId,"cheer")
+				frame(slotId,entry,cheer-.001,false)
+				assert((v.origin-slot.approach).Magnitude<.05,slotId.." hop does not land on the wait point")
+				for i=1,13 do
+					frame(slotId,entry,cheer+i*.1,false)
+					assert(Vector2.new(v.origin.X-slot.approach.X,v.origin.Z-slot.approach.Z).Magnitude<.01,slotId.." walks during the cheer")
+				end
+			end
+		end)
+
+		test("QA Q4: the slide pet waits facing the ladder; the ladder rises toward the deck and the chute runs away",function()
+			local slot=Park.Slots.slide
+			local toDeck=Data.Slide.platform-slot.approach
+			assert(Data.facing(slot.yaw):Dot(Vector3.new(toDeck.X,0,toDeck.Z).Unit)>.9,"the pet waits facing away from the ladder")
+			assert((Data.Slide.ladder[1]-slot.approach).Magnitude<1e-3,"the climb starts at the wait point")
+			local top,foot=Data.Slide.chute[1],Data.Slide.chute[#Data.Slide.chute]
+			assert(top.Y>foot.Y+1.5 and Vector2.new(foot.X-slot.chuteEnd.X,foot.Z-slot.chuteEnd.Z).Magnitude<.3,"the chute does not run down to the chute end")
+			assert((Vector2.new(foot.X,foot.Z)-Vector2.new(slot.approach.X,slot.approach.Z)).Magnitude>6,"chute foot beside the ladder")
+		end)
+
 		test("a pet whose partner left hops off on its own clock",function()
 			local actor={action=Catalog.HopOffAction,startTime=7000,endTime=7000+Catalog.HopOffSeconds,actionId=5}
 			v.origin=Park.Slots.seesaw1.approach

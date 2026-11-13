@@ -1,8 +1,9 @@
--- Pocket Menu (UI-SPEC-COMPACT-FRAME section 9, decision 6): a menu on the deck
--- screen, opened by the MENU pill (and M / Y / Start) during a round. Resume,
--- Restart round, Quit to garden, Hatch eggs, Customize, Collection book (play-forever
--- F2; a gold claim dot while a book milestone waits). Restart and Quit act at once on
--- an empty board and ask for one more tap mid-round.
+-- Pocket Menu (UI-SPEC-COMPACT-FRAME section 9, decision 6): the pause menu on the
+-- deck screen, opened by the MENU pill (and M / Y / Start) during a round: Resume,
+-- Restart round, Quit to garden and Settings (QA 2026-11-13 Q5: outside rounds the
+-- Pocket menu is the garden machine hub, MachineHub.lua, so Hatch eggs, Customize and
+-- the Collection book left this list). Restart and Quit act at once on an empty board
+-- and ask for one more tap mid-round.
 -- Presentation only: every action goes back through `callbacks`; the caller owns
 -- pausing, the round and the garden routes.
 local Kit=require(script.Parent.DeckKit)
@@ -13,9 +14,7 @@ Menu.Items={
  {id="resume",text="Resume",variant="primary"},
  {id="restart",text="Restart round",armed="Tap again to restart"},
  {id="quit",text="Quit to garden",armed="Tap again to quit"},
- {id="hatch",text="Hatch eggs"},
- {id="customize",text="Customize"},
- {id="book",text=UICopy.get("book.title")},
+ {id="settings",text=UICopy.get("pause.settings")},
 }
 Menu.Count=#Menu.Items
 Menu.OpenTime,Menu.CloseTime,Menu.ArmTime=.16,.12,3
@@ -102,23 +101,14 @@ function Menu:build(view)
   button.Activated:Connect(function()self:activate(i,true)end)
   button.MouseEnter:Connect(function()if self.visible then self:focus(i)end end)
   self.buttons[i]=button
-  if item.id=="book"then
-   -- Claim dot: 10 px Stars gold, right of the centred label.
-   local label=Kit.buttonState(button).label
-   local w=Kit.measure(item.text,"Button",label.TextSize).X
-   local dot=Kit.frame(button,"ClaimDot","stars",UDim2.new(.5,math.ceil(w/2)+8,.5,-10),UDim2.fromOffset(10,10),999)
-   dot.ZIndex=button.ZIndex+6;dot.Visible=false;self.bookDot=dot
-  end
  end
  self.ring=Kit.focusRing(self.overlay.layer)
 end
 
--- state: {empty, locked, canRestart, canQuit, canHatch, canCustomize, canBook, bookClaimable}
+-- state: {empty, locked, canRestart, canQuit, canSettings}
 function Menu:paint()
  local s=self.state
- self.enabled={true,s.canRestart~=false,s.canQuit~=false,s.canHatch~=false,s.canCustomize~=false,s.canBook~=false}
- -- A gold dot on the Collection book row while a milestone waits to be claimed.
- if self.bookDot then self.bookDot.Visible=(s.bookClaimable or 0)>0 and s.canBook~=false end
+ self.enabled={true,s.canRestart~=false,s.canQuit~=false,s.canSettings~=false}
  for i,button in ipairs(self.buttons)do
   local item=Menu.Items[i]
   local armed=self.armed==item.id
@@ -141,7 +131,8 @@ function Menu:focus(index,instant)
  self.ring.attach(button,12)
 end
 
-function Menu:open(state)
+-- focusId (optional): the row to focus, e.g. "settings" when Back returns from Settings.
+function Menu:open(state,focusId)
  self.state=state or {};self.armed=nil
  self.visible=true
  self:paint()
@@ -161,7 +152,9 @@ function Menu:open(state)
   last.Completed:Connect(function()if self.token==token then top.Visible,bottom.Visible=false,false end end)
   last:Play()
  end
- self:focus(1,true)
+ local first=1
+ for i,item in ipairs(Menu.Items)do if item.id==focusId then first=i end end
+ self:focus(first,true)
 end
 
 -- Instant when Reduced Motion is on or `instant` (round end, mode change).

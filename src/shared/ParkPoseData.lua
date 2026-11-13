@@ -4,7 +4,12 @@
 --
 -- Mesh data is copied from assets/park/park-manifest.json + park-import.json (K2). Units are studs.
 -- A mesh's world frame is groupRoot * CFrame.new(offset) * motion * CFrame.new(-pivotFromCenter)
--- (the manifest's PivotOffset rule written without PivotTo). Group roots come from ParkLayout
+-- * ImportTurn (the manifest's PivotOffset rule written without PivotTo). ImportTurn (QA Q4,
+-- 2026-11-13): the Open Cloud FBX import turns every mesh by pi about Y (the same turn the world
+-- v7 meshes carry, scripts/build_world_v7_assets.py), so without it each park mesh rendered back
+-- to front: the slide's chute stood where the pets climb (pets went UP the chute and DOWN the
+-- ladder) and the benches faced out of the park. Anchors, seats and colliders are group-frame
+-- data and never take the turn. Group roots come from ParkLayout
 -- (authoritative positions, yaw = heading of the group's +Z front). The slide is the one exception:
 -- its root is shifted so the mesh's ladder foot lands on the slide slot's approach point, which also
 -- puts the chute end within 0.15 studs of ParkLayout's chuteEnd.
@@ -46,15 +51,24 @@ mesh("Park_KerbSegment","rbxassetid://72927644457663",v(3.479,.652,.9),v(0,0,0),
 mesh("Park_GatePost","rbxassetid://106763533108528",v(1.072,3.1,1.072),v(0,0,0),v(0,-1.55,0))
 mesh("Park_GateStarOrb","rbxassetid://90515653581302",v(1.16,1.104,.72),v(0,3.6,0),v(0,-.058,0))
 mesh("Park_Bench","rbxassetid://105345988261448",v(4.5,3.42,1.39),v(0,0,0),v(0,-1.71,.005))
+-- QA Q4 five-seat bench (assets/park/park-bench-long.fbx). id nil until the coordinator uploads it:
+-- the mount stands two Park_Bench meshes end to end in its place (same five seats and colliders).
+mesh("Park_BenchLong","rbxassetid://130406059426481",v(9.57,3.42,1.39),v(0,0,0),v(0,-1.71,.005))
 Data.Meshes=table.freeze(meshes)
 -- Client-animated meshes (never mounted by the server).
 Data.Moving=table.freeze({"Park_SwingA","Park_SwingB","Park_SeeSawBeam","Park_BallA","Park_BallB","Park_Castle1","Park_Castle2","Park_Castle3"})
 
+Data.ImportTurn=CFrame.Angles(0,math.pi,0)
+local IMPORT_TURN=Data.ImportTurn
 -- World frame of a mesh in a group. `scale` (Vector3, optional) scales about the mesh pivot.
 function Data.frame(name,root,motion,scale)
 	local m=meshes[name]
 	local pivot=if scale then m.pivot*scale else m.pivot
-	return root*CFrame.new(m.offset)*(motion or IDENTITY)*CFrame.new(-pivot)
+	return root*CFrame.new(m.offset)*(motion or IDENTITY)*CFrame.new(-pivot)*IMPORT_TURN
+end
+-- MeshPart.PivotOffset that puts the part's pivot on the group pivot (with the group's axes).
+function Data.pivotOffset(name)
+	return IMPORT_TURN*CFrame.new(meshes[name].pivot)
 end
 
 -- Group roots ------------------------------------------------------------------------------------
@@ -172,7 +186,13 @@ local function kerbLayout()
 	return segments,posts
 end
 
-local BENCH_SEATS={{center=v(-1,1.7,0),size=v(1.8,.2,1.2)},{center=v(1,1.7,0),size=v(1.8,.2,1.2)}}
+local BENCH_SEATS={
+	Park_Bench={{center=v(-1,1.7,0),size=v(1.8,.2,1.2)},{center=v(1,1.7,0),size=v(1.8,.2,1.2)}},
+	Park_BenchLong={},
+}
+for i=1,5 do table.insert(BENCH_SEATS.Park_BenchLong,{center=v((i-3)*1.75,1.7,0),size=v(1.6,.2,1.2)})end
+-- Until Park_BenchLong is uploaded: two Park_Bench meshes end to end (local X offsets).
+local LONG_STAND_IN={-2.3,2.3}
 -- Manifest colliders (group frame). pitchDeg is negated: the manifest's sign follows Blender, and
 -- the chute planks must descend toward the group's +Z like the chute path does.
 local COLLIDERS={
@@ -183,6 +203,7 @@ local COLLIDERS={
 	SeeSaw={{v(0,.55,0),v(1.3,1.1,1.5),0}},
 	Sandbox={{v(0,.25,2.14),v(4.6,.5,.32),0},{v(-2.14,.25,0),v(.32,.5,4.6),0},{v(0,.25,-2.14),v(4.6,.5,.32),0},{v(2.14,.25,0),v(.32,.5,4.6),0}},
 	Bench={{v(0,.9,0),v(4.4,1.8,1.3),0},{v(0,2.42,-.56),v(4.4,1.4,.3),0}},
+	BenchLong={{v(0,.9,0),v(9.47,1.8,1.3),0},{v(0,2.42,-.56),v(9.47,1.4,.3),0}},
 }
 
 -- Everything the server mounts. Built once on first use (pure; safe on both sides).
@@ -214,17 +235,22 @@ function Data.layout()
 	end
 	for _,bench in ipairs(Park.Benches)do
 		local root=Park.cframe(bench.position,bench.yaw)
-		put("Bench","Park_Bench",Data.frame("Park_Bench",root))
-		for _,box in ipairs(COLLIDERS.Bench)do
+		local name=bench.mesh or "Park_Bench"
+		if name=="Park_BenchLong"and not meshes.Park_BenchLong.id then
+			for _,dx in ipairs(LONG_STAND_IN)do put("Bench","Park_Bench",Data.frame("Park_Bench",root*CFrame.new(dx,0,0)))end
+		else
+			put("Bench",name,Data.frame(name,root))
+		end
+		for _,box in ipairs(if name=="Park_BenchLong"then COLLIDERS.BenchLong else COLLIDERS.Bench)do
 			table.insert(colliders,table.freeze({group="Bench",cframe=root*CFrame.new(box[1])*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]}))
 		end
 		-- A Seat sits facing its LookVector (-Z): turn it to face the bench front (+Z).
-		for index,seat in ipairs(BENCH_SEATS)do
+		for index,seat in ipairs(BENCH_SEATS[name])do
 			table.insert(seats,table.freeze({bench=bench.id,index=index,cframe=root*CFrame.new(seat.center)*CFrame.Angles(0,math.pi,0),size=seat.size}))
 		end
 	end
 	for group,boxes in pairs(COLLIDERS)do
-		if group=="Bench"then continue end
+		if group=="Bench"or group=="BenchLong"then continue end
 		for _,box in ipairs(boxes)do
 			table.insert(colliders,table.freeze({group=group,cframe=roots[group]*CFrame.new(box[1])*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]}))
 		end

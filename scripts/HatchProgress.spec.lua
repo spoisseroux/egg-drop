@@ -574,5 +574,22 @@ return function(Hatching, Catalog)
 		assert(Hatching.award(h, 2, 6) and h.state.lastRunReward.total == 6 and h.state.lastRunReward.heat == "medium")
 	end)
 
+	-- QA 2026-11-13 Q5: the results strip's "Today: ★ N earned" reads public.todayEarned.
+	test("todayEarned counts saved rounds this session today, never saved, a new day reads 0", function()
+		local db, c, adapter = fixture()
+		c.now = 18000 + 86400 * 30 + 100
+		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
+		assert(Hatching.public(h).todayEarned == 0)
+		assert(Hatching.award(h, 1, 6) and Hatching.award(h, 2, 8))
+		assert(Hatching.public(h).todayEarned == 14, "two saved rounds: " .. tostring(Hatching.public(h).todayEarned))
+		local ok, why = Hatching.award(h, 2, 8)
+		assert(ok and why == "AlreadyAwarded" and Hatching.public(h).todayEarned == 14, "a repeated round adds nothing")
+		assert(Hatching.award(h, 3, 0) and Hatching.public(h).todayEarned == 14, "a missed round adds nothing")
+		assert(db.player_1.hatching.todayEarned == nil and db.player_1.hatching.roundStarsToday == nil, "never written to the save")
+		assert(h.state.todayEarned == nil and h.state.roundStarsToday == nil, "not part of the saved state")
+		c.now += 86400
+		assert(Hatching.public(h).todayEarned == 0, "a new day starts again at 0")
+	end)
+
 	return { passed = #passed, cases = passed }
 end

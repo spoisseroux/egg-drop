@@ -1,7 +1,7 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
--- Opened from the Care Cradle and the Pocket Menu "Customize". A pinned pet pane
--- (who am I dressing) and four large rows: Pets, Wardrobe, Customize and the
--- Collection book (play-forever F2; opened through the caller). The Pets
+-- Opened from the Care Cradle and the garden machine hub's Companions tile. A pinned
+-- pet pane (who am I dressing) and three large rows: Pets, Wardrobe, Customize (QA
+-- 2026-11-13 Q5: the Collection book moved to the machine hub). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
 -- hatched material, toy, feature or jar) land on it in assign mode.
 -- Focus is owned here (as in WardrobeShop): arrows / WASD / d-pad move, A / Enter
@@ -28,11 +28,10 @@ Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
  table.freeze({id="customize",icon="wand",name="Customize",line="Hue, charm, materials and toys"}),
- table.freeze({id="book",icon="book",name=UICopy.get("book.title"),line=UICopy.get("book.entry.line")}),
 })
--- Row rects: desktop rows fill the 452 px column beside the pet pane; phone rows are
--- 48 high (44 px targets) so four fit under the 60 px header.
-Hub.RowPitch={regular=116,regularH=104,phone=54,phoneH=48}
+-- Row rects (the three-row sizes from before the play-forever build): desktop rows
+-- 140 high on a 156 pitch beside the pet pane; phone rows 64 high on a 73 pitch.
+Hub.RowPitch={regular=156,regularH=140,phone=73,phoneH=64}
 Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
@@ -55,11 +54,6 @@ function Hub.status(rowId,ctx)
  if rowId=="customize"then
   local n=ctx.newItems or 0
   if n>0 then return{text=n..(if n==1 then " NEW ITEM"else " NEW ITEMS"),tone="stars",dot=true}end
-  return{text="",tone="dim"}
- end
- if rowId=="book"then
-  local n=ctx.bookClaimable or 0
-  if n>0 then return{text=if n==1 then UICopy.get("book.entry.claimOne")else UICopy.get("book.entry.claimMany",{count=n}),tone="stars",dot=true}end
   return{text="",tone="dim"}
  end
  return{text="",tone="dim"}
@@ -117,10 +111,11 @@ end
 function Hub.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},page="hub",rowIndex=Hub.DefaultRow,cardIndex=1,visible=false,
   ctx={wallet=0,state={},activeId=nil},assign=nil,pendingFollow=nil},Hub)
- local shade=Kit.frame(host,"CompanionsShade",nil,UDim2.new(),UDim2.fromScale(1,1));shade.BackgroundTransparency=.35;shade.BackgroundColor3=Color3.new(0,0,0)
- shade.Active=true;shade.Visible=false;shade.ZIndex=30;self.shade=shade
- local root=Kit.frame(shade,"CompanionsHub","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
- root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=31;self.rootStroke=Kit.stroke(root)
+ -- QA Q2.1: one full-screen shade (Kit.modalShade) beside the panel, never its parent,
+ -- so the shade can reach under the top bar while the panel keeps the safe area.
+ local shade=Kit.modalShade(host,"CompanionsShade",30);self.shade=shade
+ local root=Kit.frame(host,"CompanionsHub","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
+ root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=31;root.Visible=false;self.rootStroke=Kit.stroke(root)
  local gradient=Kit.frame(root,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  self.gradient=gradient;self.root=root
@@ -138,9 +133,7 @@ end
 function Hub:cards()return Hub.petCards(self.ctx.state,self.ctx.activeId)end
 function Hub:statusCtx()
  local petId=self.ctx.activeId or "pip";local pet=Pets.byId[petId]
- local book=self.ctx.state and self.ctx.state.book
- local claimable=type(book)=="table"and type(book.claimable)=="table"and #book.claimable or 0
- return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state),bookClaimable=claimable}
+ return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state)}
 end
 
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
@@ -208,7 +201,7 @@ function Hub:build(view)
  self.view=view;self.key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..":"..self.page..":"..tostring(self.assign~=nil)
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
- self.shade.BackgroundTransparency=if phone then 1 else .35
+ Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
  local W=if phone then view.W else 848
  local H=if phone then view.H else 608
  local content=Kit.frame(root,"Content",nil,UDim2.new(),UDim2.fromOffset(W,H));content.ZIndex=root.ZIndex+2
@@ -233,14 +226,8 @@ function Hub:build(view)
  self.ring=Kit.focusRing(self.root)
  root:SetAttribute("Page",self.page);root:SetAttribute("Assigning",self.assign~=nil)
  -- Hub to child: the content slides in 24 px from the right (160 ms); Reduced Motion cuts.
- if self.slideFrom and not Kit.reduced()then
-  local from=self.slideFrom;self.slideFrom=nil
-  for _,child in ipairs(body:GetChildren())do
-   if child:IsA("GuiObject")and child~=self.header.root and child.Name~="HeaderHairline"then
-    local goal=child.Position;child.Position=goal+UDim2.fromOffset(from,0);Kit.tween(child,Kit.Motion.screen,{Position=goal})
-   end
-  end
- end
+ -- Wardrobe and Customize reuse this move (Kit.slideIn).
+ if self.slideFrom then Kit.slideIn(body,self.slideFrom,Kit.headerSkip(self.header))end
  self.slideFrom=nil
 end
 
@@ -278,19 +265,19 @@ function Hub:buildHub(body,W,H,phone)
    position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
   local stroke=tileState.stroke
   button:SetAttribute("AccessibleLabel",row.name..", "..row.line)
-  local discSize=if phone then 36 else 72
+  local discSize=if phone then 44 else 72
   local d,icon=disc(button,row.icon,if phone then 16 else 24,(h-discSize)/2,discSize)
   local tx=if phone then 72 else 116
   local name,line,status
   local s=Hub.status(row.id,ctx)
   if phone then
-   name=txt(button,"Strong",row.name,"text",tx,4,w-tx-160,22,{TextSize=16})
-   line=txt(button,"Small",row.line,"soft",tx,26,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   name=txt(button,"Strong",row.name,"text",tx,10,w-tx-160,22,{TextSize=16})
+   line=txt(button,"Small",row.line,"soft",tx,34,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
    status=txt(button,"Label",s.text,s.tone,w-190,0,150,h,{Name="Status",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
   else
-   name=txt(button,"Heading",row.name,"text",tx,16,w-tx-56,28,{TextSize=22})
-   line=txt(button,"Body",row.line,"soft",tx,44,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),70,w-tx-70,18,{Name="Status",TextSize=12})
+   name=txt(button,"Heading",row.name,"text",tx,32,w-tx-56,28,{TextSize=22})
+   line=txt(button,"Body",row.line,"soft",tx,62,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
+   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),90,w-tx-70,18,{Name="Status",TextSize=12})
   end
   Kit.paint(status,"TextColor3",function()return colorOf(s.tone)end)
   local dot
@@ -299,7 +286,7 @@ function Hub:buildHub(body,W,H,phone)
    if phone then
     local tw=TextService:GetTextSize(status.Text,12,Enum.Font.BuilderSansBold,Vector2.new(500,30)).X
     dot.Position=UDim2.fromOffset(w-40-tw-14,h/2-4)
-   else dot.Position=UDim2.fromOffset(tx,75)end
+   else dot.Position=UDim2.fromOffset(tx,95)end
   end
   chevron(button,w-(if phone then 26 else 36),h/2,if phone then 16 else 20)
   self.rows[index]={id=row.id,button=button,stroke=stroke,disc=d,icon=icon,name=name,line=line,status=status,dot=dot}
@@ -534,6 +521,16 @@ function Hub:input(key)
 end
 
 function Hub:isOpen()return self.visible end
+-- A screen opened over the hub (Wardrobe, the Pets selector over Customize)
+-- hides this panel; coming back slides the content in from the left, as Pets -> hub does.
+function Hub:setCovered(covered)
+ if not self.visible then return end
+ self.covered=covered==true
+ self.root.Visible=not self.covered
+ if self.covered then if self.ring then self.ring.hide()end;return end
+ if self.body then Kit.slideIn(self.body,-Kit.SlideOffset,Kit.headerSkip(self.header))end
+ self:refocus()
+end
 -- options: page ("hub" or "pets"), assign = {choose(petId) -> bool, cancel(), line, button}.
 function Hub:open(ctx,options)
  options=options or {}
@@ -545,14 +542,17 @@ function Hub:open(ctx,options)
  self.assign=options.assign;self.pendingFollow=nil
  self.page=options.page or "hub";self.key=nil;self.slideFrom=nil
  self.rowIndex=self.lastRow or Hub.DefaultRow
- self.visible=true;self.shade.Visible=true
+ self.visible=true;self.covered=false;self.root.Visible=true
+ Kit.shadeOpen(self,self.shade,function(covered)self:setCovered(covered)end)
  if self.page=="pets"then
   self.cardIndex=1;for i,card in ipairs(self:cards())do if card.following then self.cardIndex=i end end
  end
  self:fit(self.host.AbsoluteSize)
  if self.page=="pets"then self:focusCard(self.cardIndex,true)else self:focusRow(self.rowIndex,true)end
  -- Screen in: 160 ms fade plus an 8 px rise (desktop); Reduced Motion is a cut.
- if not self.view and not Kit.reduced()then
+ -- Back from a child screen (Customize) slides in from the left instead (QA Q2.2).
+ if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
+ elseif not self.view and not Kit.reduced()then
   self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)})
  end
  if self.clock then self.clock:Disconnect()end
@@ -566,12 +566,12 @@ function Hub:open(ctx,options)
 end
 function Hub:close(reason)
  if not self.visible then return false end
- self.visible=false;self.shade.Visible=false;if self.ring then self.ring.hide()end
+ self.visible=false;self.covered=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
  if reason~="assigned"and reason~="cancel"then self.assign=nil end
  if self.callbacks.closed then self.callbacks.closed(reason)end
  return true
 end
-function Hub:destroy()self:close("destroy");if self.sizeConnection then self.sizeConnection:Disconnect()end;self.shade:Destroy()end
+function Hub:destroy()self:close("destroy");if self.sizeConnection then self.sizeConnection:Disconnect()end;self.root:Destroy();self.shade:Destroy()end
 return Hub

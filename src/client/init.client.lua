@@ -55,7 +55,8 @@ local NurseryView = require(script.EggHatchView)
 local HatchNavigation = require(script.HatchNavigation)
 local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
-local DeckMenu = require(script.DeckMenu)
+-- QA Q5: the garden "Pocket menu" is the machine hub (DeckMenu is retired).
+local MachineHub = require(script.MachineHub)
 local audio = Audio.new()
 -- W2 feel alive: garden ambience + Pocket Deck round music (before RoomView, whose coos use it).
 clientUI.ambient=require(script.AmbientAudio).new(audio)
@@ -545,10 +546,24 @@ board:GetAttributeChangedSignal("Mode"):Connect(clientUI.refreshInsets)
 clientUI.refreshInsets()
 clientUI.deck=DeckScreen.new({parent=clientUI.deckHost,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
 clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
--- Part 2b: difficulty picker and quest log, full-LCD layers above the board.
+-- Part 2b: difficulty picker, a full-LCD layer above the board.
 clientUI.heatCallbacks,clientUI.questCallbacks={}, {}
 clientUI.heatPicker=require(script.DifficultyPicker).new(clientUI.deck:addOverlay("DeckDifficulty",32),clientUI.heatCallbacks)
-clientUI.questLog=require(script.QuestLog).new(clientUI.deck:addOverlay("DeckQuestLog",34),clientUI.questCallbacks)
+-- QA Q5: the quest log opens from the garden machine hub's Quests tile, in its own
+-- ScreenGui (above the Wardrobe, under the Collection book), not on the deck.
+do
+ local Kit=require(script.DeckKit)
+ local questGui=make("ScreenGui","EggDropQuests",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=12,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local questRoot=make("Frame","QuestHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},questGui)
+ clientUI.questHost=require(script.QuestLogHost).new(questRoot)
+ local function syncInsets()
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
+  if questGui.ScreenInsets~=wanted then questGui.ScreenInsets=wanted end
+ end
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets);syncInsets()
+ gui.Destroying:Connect(function()clientUI.questHost:destroy();questGui:Destroy()end)
+end
+clientUI.questLog=require(script.QuestLog).new(clientUI.questHost.overlay,clientUI.questCallbacks)
 -- Pocket Menu (UI-SPEC-COMPACT-FRAME 9, decision 6): on the deck screen, above the log.
 clientUI.pocketCallbacks={}
 clientUI.pocketMenu=require(script.PocketMenu).new(clientUI.deck:addOverlay("DeckPocketMenu",36,{lcd=true}),clientUI.pocketCallbacks)
@@ -566,6 +581,9 @@ local nurseryView
 local nurseryState
 function clientUI.equippedBallTheme()
  local row=nurseryState and nurseryState.ballThemes
+ -- QA Q2.4: a ball theme chosen in the shop shows at once (BallShop rolls it back on a refusal).
+ local override=clientUI.ballThemeOverride
+ if override and os.clock()-override.at<15 and clientUI.BallThemes.ById[override.id]then return override.id end
  return if row and clientUI.BallThemes.ById[row.equipped]then row.equipped else clientUI.BallThemes.Default
 end
 local currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),nil)
@@ -603,7 +621,14 @@ clientUI.petContactRemote=remotes:WaitForChild("PetContact")
 roomView.petContactIntent=clientUI.PetContactIntent.new({now=os.clock,
  send=function(actionName,payload)clientUI.petContactRemote:FireServer(actionName,payload)end,
  eligible=function(context)return roomView:contactEligible(context)end,
- saved=function()if roomView.affection then roomView.affection:showSaved(reduceEffects())end end})
+ saved=function()if roomView.affection then roomView.affection:showSaved(reduceEffects())end end,
+ -- QA Q2.7: the day's five pets are used; say so on the pet (at most every 20 s).
+ capped=function()
+  local now=os.clock();if now-(clientUI.petCapToldAt or -math.huge)<20 or not roomView.affection then return end
+  clientUI.petCapToldAt=now
+  local UICopy=require(ReplicatedStorage.Shared.UICopy);local shown=roomView.shownPet;local pet=shown and Pets.byId[shown.id]
+  roomView.affection:showCapped(if pet then UICopy.get("pet.capped",{pet=pet.name})else UICopy.get("pet.cappedSolo"),reduceEffects())
+ end})
 clientUI.petContactConnection=clientUI.petContactRemote.OnClientEvent:Connect(function(packet)roomView.petContactIntent:receive(packet)end)
 gui.Destroying:Connect(function()clientUI.petContactConnection:Disconnect();roomView.petContactIntent:destroy()end)
 local function stationContext()
@@ -846,16 +871,13 @@ picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reaso
 			then controls.OpenHandheld else nil
 	end
 	rail.Interactable = canAim()
+ -- QA Q5: Back from Deck style / Settings opened at the machine hub returns there
+ -- (sliding in from the left); Back from Settings opened at the pause menu reopens it.
  local back=clientUI.pickerReturn;clientUI.pickerReturn=nil
- if reason=="back"and back and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()then
-  openMenu();gameMenu:setPage(back.page);gameMenu.body.CanvasPosition=back.scroll
-  if isGamepad(UserInputService:GetLastInputType())and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and clientUI.ControllerFocus.live(back.target,gameMenu.shade,player:FindFirstChild("PlayerGui"),true)then
-   local y=back.target.AbsolutePosition.Y-gameMenu.body.AbsolutePosition.Y+gameMenu.body.CanvasPosition.Y
-   local viewport=gameMenu.body.AbsoluteSize.Y;local desired=gameMenu.body.CanvasPosition.Y
-   if y<desired then desired=y elseif y+back.target.AbsoluteSize.Y>desired+viewport then desired=y+back.target.AbsoluteSize.Y-viewport end
-   gameMenu.body.CanvasPosition=Vector2.new(0,math.clamp(desired,0,math.max(0,gameMenu.body.CanvasSize.Y.Offset-viewport)))
-   GuiService.SelectedObject=back.target
-  end
+ if reason=="back"and type(back)=="table"and back.hub and openMenu and not roomView.busy and not modal.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()then
+  task.defer(function()openMenu({focus=back.hub,slideFrom=-require(script.DeckKit).SlideOffset})end)
+ elseif reason=="back"and type(back)=="table"and back.pocket then
+  task.defer(function()clientUI.openPocketMenu(back.pocket)end)
  end
 end, function(slot,id)
  return if clientUI.appearanceIntent then clientUI.appearanceIntent:choose(slot,id)else false
@@ -986,8 +1008,11 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   end
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
    if back=="eggs"and openNursery then openNursery()end
-   if back=="hub"and clientUI.openHub then clientUI.openHub()end
+   if back=="hub"and clientUI.openHub then clientUI.openHub({slideFrom=-require(script.DeckKit).SlideOffset})end
   end
+  -- QA Q5: Customize left the Companions hub some other way, so its Back no longer
+  -- leads to the machine hub.
+  if back=="hub"and reason~="back"and clientUI.machineReturn=="companions"then clientUI.machineReturn=nil end
  end})
 clientUI.openHue=function(page,petId,back)
  local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
@@ -1112,15 +1137,24 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
-   if rowId=="book"then return clientUI.openBook and clientUI.openBook()or false end
    if rowId=="customize"then
     clientUI.hub:close("customize")
-    if clientUI.openHue("palette",petId,"hub")then return true end
+    -- QA Q2.2: Customize slides in from the right, as the Pets page does.
+    clientUI.hueView.slideFrom=Kit.SlideOffset
+    local opened=clientUI.openHue("palette",petId,"hub");clientUI.hueView.slideFrom=nil
+    if opened then return true end
     clientUI.openHub();return false
    end
    return false
   end,
-  follow=function(petId)request:FireServer("companion",petId);return true end})
+  follow=function(petId)request:FireServer("companion",petId);return true end,
+  -- QA Q5: opened from the machine hub's Companions tile, Back returns there; Customize
+  -- keeps the way back (it reopens this hub), any other close forgets it.
+  closed=function(reason)
+   if clientUI.machineReturn~="companions"then return end
+   if reason=="back"then clientUI.returnToMachineHub("companions")
+   elseif reason~="customize"then clientUI.machineReturn=nil end
+  end})
  clientUI.openHub=function(options)
   if not nurseryState or roomView.busy then return false end
   options=options or {}
@@ -1162,8 +1196,8 @@ do
  gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropCompanions");clientUI.hub:destroy();hubGui:Destroy()end)
 end
 -- Collection book (play-forever F2): its own ScreenGui above the Wardrobe (12) and the
--- Companions hub (11), so it opens over the hub and Back returns there. Opened from the
--- hub's Collection book row and the Pocket Menu (over a paused round). Claims go out as
+-- Companions hub (11). Opened from the garden machine hub's Collection book tile (QA Q5;
+-- it left the Companions hub and the pause menu). Claims go out as
 -- HatchRequest "bookClaim"; replies ride FaceplateResult with kind = "book".
 do
  local BookView=require(script.BookView)
@@ -1186,7 +1220,13 @@ do
    clientUI.bookToaster.show(UICopy.get("book.toast.claimed"),if type(message.reward)=="number"and message.reward>0 then message.reward else nil)
    if message.faceplate then clientUI.bookToaster.show(UICopy.get("book.toast.bookworm"))end
   end,
-  closed=function()clientUI.syncPause();if updateHud then task.defer(updateHud)end end,
+  closed=function(reason)
+   clientUI.syncPause();if updateHud then task.defer(updateHud)end
+   -- QA Q5: opened from the machine hub's Collection book tile, Back returns there.
+   if clientUI.machineReturn=="book"then
+    if reason=="back"then clientUI.returnToMachineHub("book")else clientUI.machineReturn=nil end
+   end
+  end,
   back=function()clientUI.accepted("back")end})
  clientUI.openBook=function(options)
   if not nurseryState or roomView.busy or clientUI.book:isOpen()then return false end
@@ -1264,19 +1304,10 @@ nurseryView.onClosed = function(reason, choice)
 	elseif reason == "earn" or reason == "afterHatch" then
 		hatchNavigation:play()
 	end
-end
--- Customize from the deck: the same board-to-garden route as the egg shop, then
--- the companion editor the Care Cradle opens with free hands.
-function clientUI.visitCompanions()
-	return LoungeStations.visitEggs({cancel=cancelHatchNavigation,read=stationContext,
-		generation=function()return hatchNavigation.generation end,
-		identity=function()return player.Character,workspace.CurrentCamera end,
-		canEnterFromBoard=function()
-			return not isPickerOpen() and not journal.shade.Visible and not nurseryView:isOpen() and not clientUI.isHueOpen()
-				and not gameMenu.shade.Visible and not modal.Visible
-		end,
-		sendMode=function(mode)request:FireServer("mode",mode)end,
-		open=function()if roomView.care and roomView.care.openFree then roomView.care.openFree()end end})
+	-- QA Q5: opened from the machine hub's Hatch eggs tile, Back (X / B) returns there.
+	if clientUI.machineReturn == "hatch" then
+		if reason == "close" then clientUI.returnToMachineHub("hatch") else clientUI.machineReturn = nil end
+	end
 end
 visitEggs = function()
 	return LoungeStations.visitEggs({cancel=cancelHatchNavigation,read=stationContext,
@@ -1342,27 +1373,92 @@ nurseryFeedback.OnClientEvent:Connect(function(kind, message)
 end)
 nurseryRequest:FireServer("snapshot")
 
-gameMenu = DeckMenu.new(safeOverlays, {
-	close = function() closeMenu() end,
-	eggs = function() closeMenu(); visitEggs() end,
-	pets = function() end,
-	style = function() end,
- trials=function()closeMenu();openPicker("Trials")end,
- settings=function()closeMenu();openPicker("Settings")end,
-	play = function() closeMenu(); if board:GetAttribute("Mode") == "Room" then request:FireServer("mode", "Board") end end,
-	daily = function() if nurseryState then nurseryRequest:FireServer("daily", nurseryState.dailyDay, nurseryState.revision) end end,
-})
+-- QA Q5 machine hub: the Pocket menu outside rounds. Its own ScreenGui (beside the
+-- Companions hub, 11); a tile opens that machine's screen as its station does (the hub
+-- closes first, so the station routes see a free garden) and Back from it reopens the
+-- hub, sliding in from the left. `gameMenu` keeps its old callers: shade.Visible is
+-- "open", activate("close") closes and update(snapshot) refreshes.
+do
+ local Kit=require(script.DeckKit)
+ local UICopy=require(ReplicatedStorage.Shared.UICopy)
+ local hubGui=make("ScreenGui","EggDropMachineHub",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=11,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local host=make("Frame","MachineHubHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},hubGui)
+ local function syncInsets()
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
+  if hubGui.ScreenInsets~=wanted then hubGui.ScreenInsets=wanted end
+ end
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets);syncInsets()
+ gameMenu=MachineHub.new(host,{
+  open=function(id)return clientUI.openMachine(id)end,
+  -- Before the first pet: the tile still takes the tap and says why (as the pause menu does).
+  locked=function()
+   clientUI.machineToaster=clientUI.machineToaster or Kit.toaster(host)
+   clientUI.machineToaster.show(UICopy.get("menu.subtitle.locked"))
+   audio:play("aim",.6,.3)
+  end,
+  closed=function(reason)
+   if reason=="destroy"then return end
+   roomView:setMenuOpen(false)
+   if reason=="back"then clientUI.accepted("back")end
+  end})
+ -- Focus is the hub's own (as the Companions hub's is): above the sheet handoff and the game controls.
+ ContextActionService:BindActionAtPriority("EggDropMachineHub",function(_,state,input)
+  if not gameMenu:takesInput()or UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+  local action=MachineHub.keyAction(input.KeyCode)
+  if not action then return Enum.ContextActionResult.Pass end
+  if state==Enum.UserInputState.Begin then
+   local moved=gameMenu:input(input.KeyCode)
+   if moved and action~="open"and action~="back"then audio:play("aim",1.1,.35)
+   elseif moved and action=="open"then clientUI.accepted("confirm")end
+  end
+  return Enum.ContextActionResult.Sink
+ end,false,Enum.ContextActionPriority.High.Value+785,table.unpack(MachineHub.Keys))
+ gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropMachineHub");gameMenu:destroy();hubGui:Destroy()end)
+end
+-- A tile: close the hub, then open the machine's screen the way its station does.
+-- Back from it reopens the hub (clientUI.machineReturn, the picker's return marker,
+-- the quest log's fromHub). Nothing opened (busy, a pending hatch took over): the hub stays.
+function clientUI.openMachine(id)
+ if not gameMenu:isOpen()or MachineHub.locked(id,board:GetAttribute("OwnedPets")or 0)then return false end
+ local Kit=require(script.DeckKit)
+ gameMenu:close("machine");roomView:setMenuOpen(false)
+ clientUI.machineReturn=nil
+ local opened=false
+ if id=="hatch"then clientUI.machineReturn="hatch";opened=visitEggs()==true
+ elseif id=="style"then opened=openPicker("Shell",{hub="style"},"workbench")==true
+ elseif id=="settings"then opened=openPicker("Settings",{hub="settings"})==true
+ elseif id=="companions"then clientUI.machineReturn="companions";opened=clientUI.openHub~=nil and clientUI.openHub({slideFrom=Kit.SlideOffset})==true
+ elseif id=="quests"then opened=clientUI.openQuestLog("daily",{fromHub=true})==true
+ elseif id=="book"then clientUI.machineReturn="book";opened=clientUI.openBook~=nil and clientUI.openBook()==true end
+ if not opened then
+  clientUI.machineReturn=nil
+  if not(nurseryView:isOpen()or clientUI.isHueOpen())then openMenu({focus=id})end
+  return false
+ end
+ return true
+end
+-- Back from a machine opened at the hub: the hub again, sliding in from the left.
+function clientUI.returnToMachineHub(id)
+ if clientUI.machineReturn~=id then return false end
+ clientUI.machineReturn=nil
+ task.defer(function()if openMenu then openMenu({focus=id,slideFrom=-require(script.DeckKit).SlideOffset})end end)
+ return true
+end
 closeMenu = function()
-	gameMenu:close(); roomView:setMenuOpen(false)
-	end
-openMenu = function()
+	gameMenu:close("close"); roomView:setMenuOpen(false)
+end
+-- options: focus (a tile id), slideFrom (px).
+openMenu = function(options)
+	options=options or {}
 	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
+	if (clientUI.hub and clientUI.hub:isOpen()) or (clientUI.book and clientUI.book:isOpen()) or clientUI.questLog.visible
+		or (clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()) then return end
+	clientUI.machineReturn=nil
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
- clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
- gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"))
-	gameMenu:update(nurseryState, nil, nil, board:GetAttribute("Score"), board:GetAttribute("PeakChain"), board:GetAttribute("BestScore"), nurseryView.selected)
-	gameMenu:open();return true
+	if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+	return gameMenu:open({owned=board:GetAttribute("OwnedPets")or 0,wallet=nurseryState and nurseryState.nectar or 0,state=nurseryState},
+		{focus=options.focus,slideFrom=options.slideFrom})
 end
 roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end end
 picker.onAccepted=clientUI.accepted;journal.onAccepted=clientUI.accepted;gameMenu.onAccepted=clientUI.accepted;nurseryView.onAccepted=clientUI.accepted
@@ -1377,7 +1473,8 @@ do
 	end
 	local function updateShade()
 		roomView.transition:refresh()
-		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible
+		-- The machine hub dims with its own full-screen shade (Q2 shade stack, QA Q5).
+		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
   if modalShade.Visible then rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())end
 		if clientUI.syncPause then clientUI.syncPause()else request:FireServer("pause",modalShade.Visible)end
 	end
@@ -1431,7 +1528,8 @@ end
 
 openPicker = function(mode,back,source)
 	mode=mode or "Shell"
-	if mode~="Settings"and mode~="Trials"and source~="workbench"then return false end
+	-- Pocket Trials have no page any more (QA Q5): Settings, or Deck style at its workbench.
+	if mode~="Settings"and source~="workbench"then return false end
 	cancelHatchNavigation()
 	if isPickerOpen() or roomView.busy or clientUI.isHueOpen() or (board:GetAttribute("Mode") == "Board" and modal.Visible) then
 		return
@@ -1524,7 +1622,22 @@ do
  local theme,sticker,background=equippedAppearance()
  clientUI.appearanceIntent=clientUI.AppearanceIntent.new({themeId=theme,stickerId=sticker,revision=board:GetAttribute("AppearanceRevision")or 0,backgroundId=board:GetAttribute("DeckBackgroundId")or"canopy",
   send=function(payload)request:FireServer("appearanceSlot",payload)end,
-  changed=function(state)picker:setAppearance(state);paintDeck(state.confirmedTheme,state.confirmedSticker,state.confirmedBackground)end})
+  changed=function(state)
+   -- QA Q2.4: optimistic. The deck wears a choice as soon as it is made; a refusal
+   -- falls back to the confirmed look (AppearanceIntent.shown) with one toast.
+   picker:setAppearance(state)
+   local shown=clientUI.AppearanceIntent.shown
+   paintDeck(shown(state,"theme")or state.confirmedTheme,shown(state,"sticker")or state.confirmedSticker,shown(state,"background")or state.confirmedBackground)
+   clientUI.appearanceSeen=clientUI.appearanceSeen or {}
+   for _,slot in ipairs({"theme","background"})do
+    local s=state.slots and state.slots[slot];local status=s and s.status
+    if status=="Rejected"and clientUI.appearanceSeen[slot]~="Rejected"and s.reason~="Superseded"then
+     clientUI.styleToaster=clientUI.styleToaster or require(script.DeckKit).toaster(picker.shade)
+     clientUI.styleToaster.show(require(ReplicatedStorage.Shared.UICopy).get("shop.rolledBack"))
+    end
+    clientUI.appearanceSeen[slot]=status
+   end
+  end})
  picker.onRetry=function(slot)return clientUI.appearanceIntent:retry(slot)end
  local function refreshFallbacks()
   if not gui.Parent then return end
@@ -1589,7 +1702,6 @@ local function drawAim()
 end
 
 local lastTrialMask = board:GetAttribute("TrialMask") or 0
-local trialNotice, trialNoticeUntil
 
 local function shouldCoachField()
 	return nurseryState and nurseryState.status == "Ready" and (board:GetAttribute("OwnedPets") or 0) > 0
@@ -1665,7 +1777,7 @@ end
 function clientUI.syncPause()
  if clientUI.syncItemChip then clientUI.syncItemChip()end
  -- The item carousel is the third deck owner (BUILD-PLAN 2026-11-13 item 6).
- request:FireServer("pause",clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible,
+ request:FireServer("pause",clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible and board:GetAttribute("Mode")=="Board",
   pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true,
   book=clientUI.book~=nil and clientUI.book:isOpen()and board:GetAttribute("Mode")=="Board"}))
 end
@@ -1736,6 +1848,9 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
   title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,multiplierLine=heat.name.." "..heatLabel,
   pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
+  -- QA Q5 results strip: Stars from rounds saved today (server snapshot; includes this
+  -- round once its receipt is in the same snapshot).
+  todayEarned=if nurseryState and type(nurseryState.todayEarned)=="number"then nurseryState.todayEarned else nil,
   loss=not pending and(reward==nil or(reward.total or 0)==0),goals=clientUI.deckGoals(objective,stage or 0),
   score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
   strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
@@ -1780,26 +1895,11 @@ updateHud = function()
 	local charge = board:GetAttribute("HatchCharge") or 0
 	local owned = board:GetAttribute("OwnedPets") or 0
 	local mask = board:GetAttribute("TrialMask") or 0
+	-- Pocket Trials are retired (QA Q5): the server still keeps TrialMask, but the HUD
+	-- no longer announces trials or points at a trials page. (Newly earned bits still
+	-- feed the legacy rare-pet queue below.)
 	local newlyEarned = bit32.band(mask, bit32.bnot(lastTrialMask))
-	if mask ~= lastTrialMask then
-		local earnedClub = Trials.clubComplete(mask) and not Trials.clubComplete(lastTrialMask)
-		lastTrialMask = mask
-		if bit32.band(newlyEarned, Trials.ClubMask) ~= 0 then
-			trialNotice = "Trial complete! Check the Club tab."
-			if earnedClub then
-				trialNotice = "All Pocket Trials complete!"
-			else
-				for _, goal in ipairs(Trials.Goals) do
-					if bit32.band(newlyEarned, goal.bit) ~= 0 then
-						trialNotice = goal.name .. " trial complete!"
-						break
-					end
-				end
-			end
-			trialNoticeUntil = os.clock() + 4
-			task.delay(4, updateHud)
-		end
-	end
+	lastTrialMask = mask
 	if isPickerOpen() then
 		updateClub()
 	end
@@ -1892,8 +1992,8 @@ updateHud = function()
 	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching or fieldActive then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
-	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson elseif trialNoticeUntil and os.clock() < trialNoticeUntil
-		then (if status.AbsoluteSize.Y<60 then "Trial complete!" else trialNotice) else (if status.AbsoluteSize.Y<60 then "Quest +6 Stars" else "Win quest +6 Stars\nLow pile +2 bonus")
+	status.Text = if fieldActive then "" elseif fieldCoaching then "" elseif lesson then lesson
+		else (if status.AbsoluteSize.Y<60 then "Quest +6 Stars" else "Win quest +6 Stars\nLow pile +2 bonus")
 	pet.Visible = showHatch == true and not over
 	hatchStage.Visible = pet.Visible
 	hatchIndex.Visible = pet.Visible and not modal:GetAttribute("CompactDialog")
@@ -1912,7 +2012,8 @@ updateHud = function()
 	scoreCaption.Visible=owned==0;walletDrop.Visible=owned>0
 	layoutWallet(instrumentLayout)
 	bestReadout.Text = if owned > 0 then "Stars · eggs from 8" else "BEST " .. best
-	if gameMenu then gameMenu:setFieldObjective(clientUI.fieldView or false,board:GetAttribute("FieldPhase"));gameMenu:update(nurseryState, nil, nil, score, peakChain, best, nurseryView.selected) end
+	-- QA Q5: the machine hub's status lines and locks follow the snapshot and the pet count.
+	if gameMenu then gameMenu:setContext({owned=owned,state=nurseryState,wallet=nurseryState and nurseryState.nectar or 0}) end
 	-- The modal is now only the hatch card.
 	modalAction.Text = "Meet " .. (hatchName or "")
 	modalAction.Interactable,keepPlaying.Interactable = true,true
@@ -2173,6 +2274,7 @@ layout = function()
 	end
 	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
 	if clientUI.items then clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true and wide)end
+	if clientUI.boardHints then clientUI.boardHints:place(viewport.Position,viewport.Size)end
 	if recap.visible and recap.key~=recap.viewKey(clientUI.deckView)then task.defer(updateHud)end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
@@ -2372,6 +2474,7 @@ end, false, priority + 600, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.
 picker.onBuy=function(order)
 	nurseryRequest:FireServer("faceplateBuy",{id=order.id,plateId=order.plateId,price=order.price},nurseryState and nurseryState.revision or 0)
 end
+picker.onBallEquipped=function(id)clientUI.ballThemeOverride={id=id,at=os.clock()};task.defer(updateHud)end
 picker.onBallBought=function(id)
 	local theme=clientUI.BallThemes.ById[id]
 	clientUI.shopToaster=clientUI.shopToaster or require(script.DeckKit).toaster(picker.shade)
@@ -2402,16 +2505,17 @@ recap:on("picker",function()
 	if recap.data and recap.data.pending then return end
 	clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
 end)
-recap:on("quests",function(kind)
-	local scope=recap.data and recap.data.questDone and select(2,clientUI.finishedQuest(RunReceipt.select(nurseryState,board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),true)))
-	if clientUI.openQuestLog(if kind=="claim"and scope=="weekly"then "weekly"else "daily")then clientUI.accepted("confirm")end
-end)
+-- The results quest cell is progress only (QA Q5): no route to the quest log here.
 -- ── Round items (BUILD-PLAN 2026-11-13, R2) ─────────────────────────────────
 -- B (keyboard B, gamepad B or X, the deck's B, the phone item button) opens the
 -- carousel in a live round; it freezes the round through syncPause. The server
 -- owns the belt: the client asks with {resetId, seq, id} and shows what comes back.
 clientUI.items=clientUI.ItemCarousel.new(clientUI.deviceRoot,{z=38})
 clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true)
+-- QA 2026-11-13 Q1: settle feedback and the first-drop idle hint over the board.
+clientUI.boardHints=require(script.BoardHints).new(clientUI.deviceRoot,{z=37,audio=audio})
+clientUI.boardHints:place(viewport.Position,viewport.Size)
+gui.Destroying:Connect(function()clientUI.boardHints:destroy()end)
 function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
   and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not nurseryView:isOpen()and not clientUI.isHueOpen()
@@ -2457,7 +2561,7 @@ function clientUI.refreshItems()
  local belt=clientUI.RoundItems.decodeBelt(board:GetAttribute("ItemBelt"))
  clientUI.items:setBelt(belt)
  local front=clientUI.RoundItems.ById[belt[1]or ""]
- clientUI.deck:setItems(#belt,front and front.glyph,front and front.color)
+ clientUI.deck:setItems(#belt,front and front.glyph,front and front.color,belt[1])
  clientUI.syncItemChip()
  if clientUI.items.isOpen and(#belt==0 or not clientUI.itemsInRound())then clientUI.closeItems(true)end
 end
@@ -2469,7 +2573,7 @@ board:GetAttributeChangedSignal("ItemEvent"):Connect(function()
  if not ok or type(event)~="table"or event.resetId~=board:GetAttribute("ResetId")then return end
  local item=clientUI.RoundItems.ById[event.id or ""]
  if event.kind=="full"then clientUI.items:showNote(clientUI.ItemCarousel.FullNote);audio:play("aim",.6,.3)
- elseif event.kind=="granted"and item then clientUI.items:showNote(item.name.."!");audio:play("quest_complete",1.2,.5)
+ elseif event.kind=="granted"and item then clientUI.items:showGrant(event.id);audio:play("quest_complete",1.2,.5)
  elseif event.kind=="refused"then
   clientUI.items:showNote(({Budget="No ball left for that",Empty="Nothing to pop",Armed="An item is already armed",NotLive="Not right now"})[event.reason]or "Not right now")
  end
@@ -2503,14 +2607,15 @@ clientUI.deck:on("B",function()
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
 -- MENU: the Pocket Menu in a round; the quest log from results (UI-SPEC 5.4) or
 -- when it is already open (closes it); the garden menu outside the deck.
+-- QA Q5: MENU in a round is the pause menu; on the results screen it does nothing (the
+-- quest log opens from the garden hub now); outside the deck it is the machine hub.
 clientUI.deck:on("menu",function()
 	if clientUI.items.isOpen then clientUI.closeItems(true)end
 	if board:GetAttribute("Mode")=="Board"then
 		if clientUI.pocketMenu.visible then clientUI.closePocketMenu()
-		elseif clientUI.questLog.visible or recap.visible then if clientUI.toggleQuestLog()then clientUI.accepted("confirm")end
+		elseif recap.visible then return
 		elseif clientUI.openPocketMenu()then clientUI.accepted("confirm")end
 	elseif openMenu()then clientUI.accepted("confirm")end end)
-clientUI.deck:on("quests",function()if clientUI.openQuestLog()then clientUI.accepted("confirm")end end)
 clientUI.deck:on("back",function()
 	if clientUI.closeItems()then return end
 	if clientUI.closePocketMenu()then return end
@@ -2531,7 +2636,7 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
  local picker,log=clientUI.heatPicker,clientUI.questLog
  if board:GetAttribute("Mode")~="Board"then
   clientUI.heatStarted=false;clientUI.keepHeatAfter=nil
-  picker:hide();if log.visible then clientUI.closeQuestLog()end
+  picker:hide() -- the quest log lives in the garden now (QA Q5) and stays open
   return
  end
  local sequence=board:GetAttribute("RunSequence")
@@ -2549,18 +2654,22 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
   if log.visible then picker.overlay.layer.Visible=false end
  else picker:hide()end
 end
-clientUI.heatCallbacks.quests=function()if clientUI.openQuestLog()then clientUI.accepted("confirm")end end
 clientUI.heatCallbacks.select=function(key)clientUI.pickedHeat=key;audio:play("aim",1.1,.35)end
 clientUI.heatCallbacks.start=function(key)
  if board:GetAttribute("Heat")~=key or board:GetAttribute("NextHeat")~=key then request:FireServer("heat",key)end
  clientUI.pickedHeat=nil;clientUI.heatStarted=true;clientUI.heatPicker:hide()
  clientUI.accepted("confirm");if updateHud then task.defer(updateHud)end
 end
-function clientUI.openQuestLog(tab)
- if clientUI.pocketMenu.visible then return false end
+-- QA Q5: the quest log's one entry point is the machine hub's Quests tile
+-- (options.fromHub); Back from it returns to the hub, sliding in from the left.
+function clientUI.openQuestLog(tab,options)
+ options=options or {}
+ if clientUI.pocketMenu.visible or clientUI.questLog.visible then return false end
  if clientUI.items.isOpen then clientUI.closeItems(true)end
- if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or isPickerOpen()or gameMenu.shade.Visible or nurseryView:isOpen()or clientUI.isHueOpen()then return false end
+ if roomView.busy or modal.Visible or isPickerOpen()or gameMenu.shade.Visible or nurseryView:isOpen()or clientUI.isHueOpen()then return false end
  clearPlayInputs()
+ if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+ clientUI.questFromHub=options.fromHub==true
  clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab)
  -- Both are translucent LCD layers: the log hides the picker under it until it closes.
  if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=false end
@@ -2573,6 +2682,8 @@ function clientUI.closeQuestLog()
  clientUI.questLog:hide();clientUI.syncPause()
  if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=true end
  clientUI.accepted("back");if updateHud then task.defer(updateHud)end
+ local fromHub=clientUI.questFromHub;clientUI.questFromHub=nil
+ if fromHub then task.defer(function()if openMenu then openMenu({focus="quests",slideFrom=-require(script.DeckKit).SlideOffset})end end)end
  return true
 end
 -- Pocket Menu routes. Restart / Quit confirm in the menu itself (one more tap mid-round).
@@ -2580,10 +2691,10 @@ function clientUI.pocketState()
  local owned=(board:GetAttribute("OwnedPets")or 0)>0
  local over=board:GetAttribute("RoundOver")==true
  return{empty=(board:GetAttribute("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(board:GetAttribute("FieldPhase")or "Welcome")~="Welcome",
-  canQuit=owned,canHatch=owned,canCustomize=owned,canBook=owned,
-  bookClaimable=nurseryState and type(nurseryState.book)=="table"and type(nurseryState.book.claimable)=="table"and #nurseryState.book.claimable or 0}
+  canQuit=owned,canSettings=true}
 end
-function clientUI.openPocketMenu()
+-- focusId (optional): the row to focus (Back from Settings returns to "settings").
+function clientUI.openPocketMenu(focusId)
  if clientUI.pocketMenu.visible then return false end
  if clientUI.items.isOpen then clientUI.closeItems(true)end
  if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or recap.visible or isPickerOpen()or gameMenu.shade.Visible
@@ -2593,7 +2704,7 @@ function clientUI.openPocketMenu()
  local state=clientUI.pocketState()
  -- One restart request per 3.5 s (the server's own cooldown is 3 s).
  if os.clock()-(clientUI.lastRestart or -math.huge)<3.5 then state.canRestart=false end
- clientUI.pocketMenu:open(state)
+ clientUI.pocketMenu:open(state,focusId)
  -- Both are translucent LCD layers on desktop: hide the picker under the menu until it closes.
  if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=false end
  clientUI.syncPause()
@@ -2623,17 +2734,11 @@ clientUI.pocketCallbacks.restart=function()
  end
 end
 clientUI.pocketCallbacks.quit=function()clientUI.closePocketMenu(true);clientUI.leaveDeck()end
-clientUI.pocketCallbacks.hatch=function()
- clientUI.closePocketMenu(true)
- if visitEggs()then clientUI.accepted("confirm")end
-end
-clientUI.pocketCallbacks.customize=function()
- clientUI.closePocketMenu(true)
- if clientUI.visitCompanions()then clientUI.accepted("confirm")end
-end
--- Collection book over the paused round: opened before the menu closes so the pause holds.
-clientUI.pocketCallbacks.book=function()
- local opened=clientUI.openBook~=nil and clientUI.openBook()
+-- QA Q5: Settings over the paused round. The picker opens before the menu closes (and
+-- the overlay shade is raised at once) so the pause holds; Back returns to this row.
+clientUI.pocketCallbacks.settings=function()
+ local opened=openPicker("Settings",{pocket="settings"})==true
+ if opened then modalShade.Visible=true end
  clientUI.closePocketMenu(true)
  if opened then clientUI.accepted("confirm")end
 end
@@ -2643,10 +2748,6 @@ clientUI.pocketCallbacks.locked=function(id,state)
   elseif id=="restart"then(if state.empty then "The round has not started"elseif board:GetAttribute("RoundOver")==true then "The round is over"else "Restarting, one moment")else "Not available right now")
  audio:play("aim",.6,.3)
 end
-function clientUI.toggleQuestLog()
- if clientUI.questLog.visible then return clientUI.closeQuestLog()end
- return clientUI.openQuestLog()
-end
 clientUI.questCallbacks.claim=function(scope,slot,period)
  nurseryRequest:FireServer("questClaim",{scope=scope,slot=slot,period=period},nurseryState and nurseryState.revision or 0)
 end
@@ -2654,7 +2755,13 @@ clientUI.questCallbacks.reroll=function(slot,day)
  nurseryRequest:FireServer("questReroll",{slot=slot,period=day},nurseryState and nurseryState.revision or 0)
 end
 clientUI.questCallbacks.back=function()clientUI.closeQuestLog()end
-clientUI.questCallbacks.menu=function()clientUI.closeQuestLog();if openMenu()then clientUI.accepted("confirm")end end
+-- The log's "Menu" button: back to the machine hub (closeQuestLog reopens it when the
+-- log came from there; otherwise open it here).
+clientUI.questCallbacks.menu=function()
+ local fromHub=clientUI.questFromHub
+ clientUI.closeQuestLog()
+ if not fromHub and openMenu()then clientUI.accepted("confirm")end
+end
 clientUI.questCallbacks.tab=function()clientUI.accepted("tab")end
 -- Feedback: a toast and the quest_complete cue (a quiet no-op until the sound
 -- file arrives) when a quest becomes claimable, and again on a saved claim.
@@ -2699,21 +2806,14 @@ ContextActionService:BindActionAtPriority("EggDropDeckOverlay",function(_,state,
   return Enum.ContextActionResult.Sink
  end
  if not(log.visible or heat.visible)then
-  -- Menu from the results screen opens the quest log too (UI-SPEC 5.4); in a round it opens the Pocket Menu.
+  -- In a round Menu opens the Pocket Menu (pause). On the results screen it does nothing
+  -- now (QA Q5: the quest log opens from the garden hub's Quests tile only).
   local k=input.KeyCode
   local menuKey=k==Enum.KeyCode.M or k==Enum.KeyCode.ButtonY or k==Enum.KeyCode.ButtonSelect or k==Enum.KeyCode.ButtonStart
-  if recap.visible and menuKey then
-   if state==Enum.UserInputState.Begin then clientUI.openQuestLog()end
-   return Enum.ContextActionResult.Sink
-  end
+  if recap.visible and menuKey then return Enum.ContextActionResult.Sink end
   local inRound=board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not isPickerOpen()and not board:GetAttribute("RoundOver")
   if menuKey and inRound then
    if state==Enum.UserInputState.Begin and clientUI.openPocketMenu()then clientUI.accepted("confirm")end
-   return Enum.ContextActionResult.Sink
-  end
-  -- MENU opens the Pocket Menu now, so Q / LB keep a keyboard and gamepad route to the quest log mid-round.
-  if inRound and(k==Enum.KeyCode.Q or k==Enum.KeyCode.ButtonL1)then
-   if state==Enum.UserInputState.Begin and clientUI.openQuestLog()then clientUI.accepted("confirm")end
    return Enum.ContextActionResult.Sink
   end
   return Enum.ContextActionResult.Pass
@@ -2737,7 +2837,7 @@ ContextActionService:BindActionAtPriority("EggDropDeckOverlay",function(_,state,
   if left or right then heat:move(if left then -1 else 1);clientUI.deck:flash(if left then "Left"else "Right")
   elseif confirm then clientUI.deck:flash("A");heat:confirm()
   elseif back then clientUI.deck:flash("B");clientUI.leaveDeck()
-  elseif menu then clientUI.openQuestLog()end
+  elseif menu then if clientUI.openPocketMenu()then clientUI.accepted("confirm")end end -- QA Q5: Menu pauses
  end
  return Enum.ContextActionResult.Sink
 end,false,priority+700,Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,Enum.KeyCode.W,Enum.KeyCode.S,
@@ -3051,6 +3151,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
  local count,serial=board:GetAttribute("Drops")or 0,board:GetAttribute("ResetId")
+ if count>0 and clientUI.boardHints then clientUI.boardHints:noteDrop()end
  local accepted=rendererPresentation.fx:observeDrop(serial,count)
  if accepted and rendererPresentation.canPresent(serial)then
   audio:play("drop",1,.48)
@@ -3131,6 +3232,16 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
  rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
  if audio.deviceActive==false then rendererPresentation.jolt:reset()else rendererPresentation.jolt:update(now)end
+ -- QA 2026-11-13 Q1: the whole deck follows a merge jolt (visual only), and the
+ -- board notes (settling, first-drop hint) step with the board.
+ do
+  local jolt=rendererPresentation.jolt
+  clientUI.deck:setShake(if jolt.active and jolt.active.kind=="merge"then jolt.offset else nil,reduced)
+  local phase=board:GetAttribute("FieldPhase")
+  clientUI.boardHints:step(now,{presented=presented,settling=phase=="Settling"and board:GetAttribute("RoundOver")~=true,
+   live=canPlay()and not isPickerOpen(),firstRun=clientUI.boardHints.firstRun(phase,board:GetAttribute("Drops")),
+   input=clientUI.inputKind(),reduced=reduced})
+ end
  -- The danger cues only play on a presented board, never under a menu, modal or hidden deck.
  clientUI.danger:update(pressure, graceLeft, now, reduced, presented, board:GetAttribute("RoundOver") == true)
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
@@ -3272,6 +3383,15 @@ gui.Destroying:Connect(function()
 	for _,view in pairs(eggViews)do view.gel:destroy()end
 	table.clear(eggViews);table.clear(viewsById);table.clear(pixelMerges)
 end)
+-- QA Q2.5: alt-tab back with a menu screen open keeps the cursor free and the camera off the mouse.
+clientUI.anyModalOpen=function()
+ return(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
+  or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
+  or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)
+  or(clientUI.questLog~=nil and clientUI.questLog.visible)
+end
+clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui")})
+gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 layout()
 updateHud()
 roomView:startPresentation(board:GetAttribute("Mode"))

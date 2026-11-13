@@ -143,7 +143,13 @@ SINGLE_SIDED = ("water", "glow", "cloud", "bubble", "foam", "collision")
 
 def double_sided(part, lk):
     """Opaque, visible scenery only: water, glows and see-through layers stay one-sided."""
-    if part["region"] == "GroundCollision" or lk["transparency"] > 0:
+    if part["region"] == "GroundCollision":
+        return False
+    # QA 2026-11-13 (Q3.4): the falls foam showed hollow, inside-out bottoms from low angles; it is nearly opaque,
+    # so it renders both sides like the rest of the scenery.
+    if part["material"] == "W1_foam":
+        return True
+    if lk["transparency"] > 0:
         return False
     return not any(tag in part["material"] for tag in SINGLE_SIDED)
 
@@ -266,9 +272,19 @@ def parts_data():
             motion = {"kind": "bob", "amp": 0.12, "period": 0.8, "phase": 0.0}
         elif p["name"] == "W7_Water__cloud":
             motion = {"kind": "bob", "amp": 1.2, "period": 6.0, "phase": 0.0}
+        elif p["region"].startswith("CastleFlag_"):
+            # QA 2026-11-13 (Q3.5): the distant castle pennants wave about their poles (yaw, two sines).
+            k = int(p["region"].split("_")[1])
+            motion = {"kind": "flag", "amp": 16.0, "period": 2.4 + (k % 3) * 0.35, "phase": k * 0.29, "far": True}
+        elif p["name"].startswith("W7_Backdrop__cloud_"):
+            # QA 2026-11-13 (Q3.5): the cloud sea drifts slowly up and down so the sky feels alive.
+            k = int(p["name"].rsplit("_", 1)[1])
+            motion = {"kind": "bob", "amp": 3.5, "period": 26.0 + k * 3.7, "phase": k * 0.23, "far": True}
         if motion:
             entry["motion"] = motion
-            if motion["kind"] in ("sway", "spin"):
+            if motion["kind"] == "flag":
+                entry["pivot"] = p["pivot"]
+            elif motion["kind"] in ("sway", "spin"):
                 # The lantern's rope and glow swing together from the rope's top.
                 entry["pivot"] = LANTERN_PIVOT if p["region"] == "Lantern" else [p["center"][0], p["center"][1] + p["size"][1] / 2, p["center"][2]]
         out[p["name"]] = entry
@@ -284,7 +300,9 @@ def beams():
         c, s = p["center"], p["size"]
         falls.append({"name": name, "top": [c[0], c[1] + s[1] / 2, c[2]], "bottom": [c[0], c[1] - s[1] / 2, c[2]],
                       "width": round(min(s[0], s[2]) * 0.6, 2)})
-    return {"stream": points, "falls": falls}
+    # QA 2026-11-13 (Q3.1-3): `stream` and `falls` stay as positions for AmbientAudio; the server no longer draws stream
+    # beams (the mesh water scrolls instead). `sheets` are the per-waterfall flat beams (world-v7-walk.json "falls").
+    return {"stream": points, "falls": falls, "sheets": WALK.get("falls", [])}
 
 
 def lua_data():
@@ -293,7 +311,7 @@ def lua_data():
         "parts": parts_data(),
         "perimeter": WALK["perimeter"], "caveBlocker": WALK["CaveBlocker"], "fallCatch": WALK["FallCatch"],
         "wet": WALK["wet"], "sky": UPLOADS["sky"], "waterTexture": UPLOADS["textures"]["W1_water"],
-        "fallTexture": UPLOADS["textures"]["W1_waterfall_tumble"], "beams": beams(),
+        "fallTexture": UPLOADS["textures"]["W1_waterfall_tumble"], "beams": beams(), "foam": WALK.get("foam", []),
         "triangles": MANIFEST["triangles"], "meshParts": MANIFEST["count"], "collisionTiles": len(COLLISION["parts"]),
         "ground": {k: WALK["ground"][k] for k in ("x0", "z0", "step", "nx", "nz")} | {
             "h": [(-999 if v is None else v) for row in WALK["ground"]["heights"] for v in row]},

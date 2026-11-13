@@ -6,9 +6,11 @@ return function(client)
 	local function fixture()
 		local now, jobs, fades = 0, {}, {}
 		local function voice()
-			local value = {Volume=0, IsPlaying=false, plays=0, stops=0}
-			function value:Play() assert(not self.destroyed); self.IsPlaying=true; self.plays+=1 end
-			function value:Stop() assert(not self.destroyed); self.IsPlaying=false; self.stops+=1 end
+			local value = {Volume=0, IsPlaying=false, plays=0, stops=0, pauses=0, resumes=0, TimePosition=0}
+			function value:Play() assert(not self.destroyed); self.IsPlaying=true; self.plays+=1; self.TimePosition=0 end
+			function value:Stop() assert(not self.destroyed); self.IsPlaying=false; self.stops+=1; self.TimePosition=0 end
+			function value:Pause() assert(not self.destroyed); self.IsPlaying=false; self.pauses+=1 end
+			function value:Resume() assert(not self.destroyed); self.IsPlaying=true; self.resumes+=1 end
 			function value:Destroy() self.destroyed=true end
 			return value
 		end
@@ -88,6 +90,20 @@ return function(client)
 		local a=fixture();a:setVolume(1);a:setDeviceActive(false)
 		assert(not a:setPurr(true) and not a.music.voice.IsPlaying)
 		a:setDeviceActive(true);assert(a.music.voice.IsPlaying and a.purr.voice.plays==0)
+	end)
+	test("QA Q2.6: unfocus pauses the world music and refocus resumes it in place",function()
+		local a=fixture();a:setVolume(1)
+		assert(a.music.voice.IsPlaying and a.music.voice.plays==1)
+		a.music.voice.TimePosition=42.5
+		a:setDeviceActive(false)
+		assert(not a.music.voice.IsPlaying and a.music.voice.pauses==1 and a.music.voice.stops==0 and a.music.voice.TimePosition==42.5)
+		a:setDeviceActive(false);assert(a.music.voice.pauses==1,"a second blur does nothing")
+		a:setDeviceActive(true)
+		assert(a.music.voice.IsPlaying and a.music.voice.resumes==1 and a.music.voice.plays==1 and a.music.voice.TimePosition==42.5,"resumed, not restarted")
+		-- Turning music off while paused still stops it; turning it on again starts fresh.
+		a:setDeviceActive(false);a:setMusicEnabled(false)
+		assert(not a.music.voice.IsPlaying and a.music.voice.stops>=1 and not a.music.paused)
+		a:setDeviceActive(true);a:setMusicEnabled(true);assert(a.music.voice.IsPlaying and a.music.voice.plays==2)
 	end)
 	test("retry stops effects but preserves independent music preference",function()
 		local a,advance=fixture();a:setVolume(1);a:duck("hatch",1,.22);a:stop()

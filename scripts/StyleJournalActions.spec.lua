@@ -60,9 +60,11 @@ return function(client,parent)
    for _,route in ipairs({"back","forced","back"})do if not v.shade.Visible then v:open("ice","star")end;v:close(route);v:close(route)end
    assert(f.closed==3 and #f.applied==0 and not v.card:FindFirstChild("Apply"))
   end)
-  test("confirmed checks follow acknowledged pair independently of pending choice",function()
+  test("QA Q2.4 optimistic: a pending choice is checked at once; a refusal checks the confirmed one again",function()
    local f=picker();local v=f.view
-   v:setAppearance({themeId="brick",stickerId="star",confirmedTheme="sherbet",confirmedSticker="none",slots={theme={status="Pending"},sticker={status="Pending"}}})
+   v:setAppearance({themeId="brick",stickerId="star",confirmedTheme="sherbet",confirmedSticker="none",slots={theme={status="Pending",id="brick"},sticker={status="Pending",id="star"}}})
+   assert(v.choices.Shell.brick.Enabled and not v.choices.Shell.sherbet.Enabled)
+   v:setAppearance({themeId="sherbet",stickerId="none",confirmedTheme="sherbet",confirmedSticker="none",slots={theme={status="Rejected",reason="Locked",id="brick"},sticker={status="Ready"}}})
    assert(v.choices.Shell.sherbet.Enabled and not v.choices.Shell.brick.Enabled)
    v:setAppearance({themeId="brick",stickerId="star",confirmedTheme="brick",confirmedSticker="star",slots={theme={status="Applied"},sticker={status="Saved"}}})
    assert(v.choices.Shell.brick.Enabled and #f.applied==0);v:close()
@@ -70,10 +72,11 @@ return function(client,parent)
   test("locked art remains inspectable with concrete unlock and no appearance send",function()
    -- Stickers are retired; the locked Lantern background carries the same rule.
    local f=picker();local v=f.view;v:showTab("Background")
-   -- Deck style Backgrounds pane: the trial lock offers "View trials"; a rank lock offers nothing.
-   assert(v:activateChoice("Background","creek")and v.shop.backgrounds.action.Visible and v:appearanceText():find("High Roller",1,true))
+   -- Deck style Backgrounds pane: locks state their rule and offer no button (the trial
+   -- lock's "View trials" left with Pocket Trials, QA Q5).
+   assert(v:activateChoice("Background","creek")and not v.shop.backgrounds.action.Visible and v:appearanceText():find("High Roller",1,true))
    assert(v:activateChoice("Background","lantern")and not v.shop.backgrounds.action.Visible and v:appearanceText():find("Win 10",1,true)and #f.applied==0)
-   v:showTab("Trials");assert(not v.sound.Visible and not v.shop.visible);v:close()
+   assert(v:showTab("Trials")==false,"no Pocket Trials page");v:close()
   end)
 		test("Settings apply once immediately and persist through closing",function()
 			local f=picker();local view=f.view;view:showTab("Settings")

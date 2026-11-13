@@ -378,6 +378,8 @@ function Hatching.public(handle)
 	public.stats = stats
 	-- Pet Park Play date progress for today: {day, count, target, reward, done}.
 	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
+	-- QA Q5: Stars from rounds saved today in this session (not saved; no daily cap).
+	public.todayEarned = Hatching.roundStarsToday(handle, dayOf(handle.adapter.now()))
 	public.restricted = handle.restricted == true
 	public.nextFixed = Hatching.nextFixed(state)
 	for key,value in pairs(HueState.public(state))do public[key]=value end
@@ -419,6 +421,27 @@ end
 local function reusedId(pending,state)
 	return state.lastOperation and state.lastOperation.id==pending.id and state.lastOperation.digest~=pending.digest
 end
+-- QA 2026-11-13 Q5 results strip ("Today: ★ N earned"): Stars this session's saved
+-- rounds paid today. Session memory on the handle only, never saved and never a
+-- required field: a rejoin starts the count again, and a new day resets it.
+local function noteRoundStars(handle, pending)
+	if type(pending) ~= "table" or string.sub(pending.signature or "", 1, 6) ~= "award:" then return end
+	local reward = handle.state and handle.state.lastRunReward
+	local day = pending.candidate and pending.candidate.day
+	if type(reward) ~= "table" or type(reward.total) ~= "number" or reward.total ~= reward.total or day == nil then return end
+	local today = handle.roundStarsToday
+	if type(today) ~= "table" or today.day ~= tostring(day) then
+		today = { day = tostring(day), stars = 0 }
+		handle.roundStarsToday = today
+	end
+	today.stars = math.min(1000000000, today.stars + math.max(0, math.floor(reward.total)))
+end
+function Hatching.roundStarsToday(handle, day)
+	local today = handle and handle.roundStarsToday
+	if type(today) ~= "table" or today.day ~= tostring(day) then return 0 end
+	return today.stars
+end
+
 local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind, digest)
 	if handle.busy then return false, "Busy" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
@@ -466,6 +489,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		accept(handle, record)
 		handle.pending = nil
 		handle.status = "Ready"
+		noteRoundStars(handle, pending)
 		return true, "Saved"
 	end
 	if ok and(pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature")and record and fenced(handle,record.hatching,handle.adapter.now())then

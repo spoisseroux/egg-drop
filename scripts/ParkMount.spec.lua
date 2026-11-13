@@ -68,11 +68,45 @@ return function(server,parent)
 				assert(Mount.isParkPart(part))
 			end
 			local seats=model.Seats:GetChildren()
-			assert(#seats==#Park.Benches*2,"seat count "..#seats)
+			local expected=0;for _,bench in ipairs(Park.Benches)do expected+=bench.seats end
+			assert(#seats==expected,"seat count "..#seats)
 			for _,seat in ipairs(seats)do
 				assert(seat:IsA("Seat")and seat.Anchored and not seat.CanTouch and not seat.CanQuery and not seat.CanCollide and seat:FindFirstChild("SitPrompt"),seat.Name.." (prompt-only seat)")
+				assert(seat.SitPrompt.ActionText=="Sit","seat prompt text")
 				assert(Park.inside(seat.Position,0),"seat outside the kerb: "..seat.Name)
 			end
+		end)
+
+		test("QA Q4: one five-seat bench by the entrance, every seat facing the playground centre",function()
+			assert(#Park.Benches==1 and Park.Benches[1].seats==5,"keep only the entrance bench, with five seats")
+			local seats=model.Seats:GetChildren()
+			assert(#seats==5,"five seats")
+			for _,seat in ipairs(seats)do
+				-- A seated player faces the Seat's LookVector.
+				local toCentre=Vector3.new(Park.Center.X-seat.Position.X,0,Park.Center.Z-seat.Position.Z).Unit
+				assert(seat.CFrame.LookVector:Dot(toCentre)>.9,seat.Name.." faces away from the playground")
+			end
+			-- The visual backrest sits behind the sitter: the bench mesh's authored front (+Z, after the
+			-- import turn is undone) points the same way as the seats.
+			for _,part in ipairs(model.Meshes:GetChildren())do
+				if string.find(part.Name,"^Park_Bench")then
+					local authored=part.CFrame*Data.ImportTurn
+					assert(authored.LookVector:Dot(seats[1].CFrame.LookVector)<-.9,part.Name.." mesh turned away from its seats")
+				end
+			end
+		end)
+
+		test("QA Q4: every mesh carries the import turn, so the slide's ladder is where pets climb",function()
+			local slide
+			for _,part in ipairs(model.Meshes:GetChildren())do if string.find(part.Name,"^Park_Slide")then slide=part end end
+			assert(slide,"no slide mesh")
+			-- The uploaded mesh is the authored mesh turned by pi about Y; undo it to read authored axes.
+			local authored=slide.CFrame*Data.ImportTurn
+			local ladder=authored:PointToObjectSpace(Data.Slide.ladder[1])
+			local chute=authored:PointToObjectSpace(Data.Slide.chute[#Data.Slide.chute])
+			assert(ladder.Z<-3,"ladder foot is not on the mesh's ladder side ("..ladder.Z..")")
+			assert(chute.Z>3,"chute end is not on the mesh's chute side ("..chute.Z..")")
+			assert((slide.CFrame*slide.PivotOffset).Position:FuzzyEq(Data.Roots.Slide.Position,1e-3),"slide pivot is not the group root")
 		end)
 
 		test("anchor frames for the client are published as attributes",function()

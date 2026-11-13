@@ -39,6 +39,8 @@ local Table={
    narrow="Leave",
   },
   saved={done="Tucked into your wallet",pending="Saving…"},
+  -- QA Q5: the come-back strip's left cell (Stars earned from rounds today, no cap).
+  today={label="TODAY",line="★ {count} earned",short="Today: ★ {count}"},
   nudge={
    up="Brave? {heat} pays {low} to {high}",
    again="A win on {heat} pays {low} to {high}",
@@ -56,14 +58,33 @@ local Table={
    unowned="Not owned yet",notOwned="Buy it first",retrying="Still saving…",
   },
   failed={bought="Not bought",applied="Not applied",saved="Not saved"},
+  -- QA Q2.4: an optimistic change the server refused, now put back.
+  rolledBack="Didn't save, so it's back how it was",
  },
  items={note={empty="You have no items",full="Belt's full. Use one first."}},
  menu={subtitle={locked="Win a round and this opens up",empty="Round not started",paused="Round paused"}},
+ -- QA Q5 machine hub: the Pocket menu outside rounds, one tile per machine.
+ hub={
+  title="Pocket menu",eyebrow="Garden",
+  promise="Every machine, one tap away.",
+  tile={
+   hatch={name="Hatch eggs",line="Eggs, odds and today's stamp"},
+   style={name="Deck style",line="Faceplates, backgrounds and balls",short="Style"},
+   companions={name="Companions",line="Pets, wardrobe and customize"},
+   quests={name="Quests",line="Daily and weekly quests"},
+   book={short="Book"},
+   settings={name="Settings",line="Sound, music and motion"},
+  },
+  status={stamp="STAMP READY",locked="LOCKED"},
+ },
+ pause={settings="Settings"},
  -- Empty states (T12, wired by P3 with the pet peek).
  -- `solo` lines are the no-pet versions (fresh save).
  quests={allDone="All done. {pet} is impressed.",allDoneSolo="All done for today."},
  wardrobe={empty="Nothing to wear yet. {pet} doesn't mind.",emptySolo="Nothing to wear yet.",emptySlot="Nothing for this slot yet."},
  companions={wearing={none="Nothing yet"}},
+ -- QA Q2.7: petting pays +1 Star, five times a day.
+ pet={star="+1 ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
  -- Play-forever F2: collection book, stamp card, restricted eggs.
  book={
   title="Collection book",eyebrow="Garden",

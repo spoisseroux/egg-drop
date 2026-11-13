@@ -97,11 +97,11 @@ return function(client,parent)
   end)
   test("frame geometry matches the spec tables at the five sizes",function()
    local want={
-    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={18,154,44,88},dpadRight={62,154,44,88},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={14,64,96,37},mg=40,cw=238,pocketCols=2,pocketFirst={198,167,220,44},pocketLast={426,219,220,44}},
-    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={12,143,44,80},dpadRight={56,143,44,80},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={14,64,84,33},mg=24,cw=214,pocketCols=2,pocketFirst={146,152,220,44},pocketLast={374,204,220,44}},
-    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={18,174,44,88},dpadRight={62,174,44,88},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={14,64,96,37},mg=40,cw=268,pocketCols=2,pocketFirst={242,187,220,44},pocketLast={470,239,220,44}},
-    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={5,129,44,68},dpadRight={49,129,44,68},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={14,64,70,27},mg=6,cw=169,pocketCols=2,pocketFirst={115,132,165,44},pocketLast={288,184,165,44}},
-    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={12,150,44,80},dpadRight={56,150,44,80},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={14,64,84,33},mg=6,cw=202,pocketCols=2,pocketFirst={129,159,200,44},pocketLast={337,211,200,44}},
+    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={18,154,44,88},dpadRight={62,154,44,88},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={14,64,96,37},mg=40,cw=238,pocketCols=1,pocketFirst={272,141,300,44},pocketLast={272,297,300,44}},
+    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={12,143,44,80},dpadRight={56,143,44,80},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={14,64,84,33},mg=24,cw=214,pocketCols=1,pocketFirst={220,126,300,44},pocketLast={220,282,300,44}},
+    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={18,174,44,88},dpadRight={62,174,44,88},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={14,64,96,37},mg=40,cw=268,pocketCols=1,pocketFirst={316,161,300,44},pocketLast={316,317,300,44}},
+    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={5,129,44,68},dpadRight={49,129,44,68},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={14,64,70,27},mg=6,cw=169,pocketCols=2,pocketFirst={115,158,165,44},pocketLast={288,210,165,44}},
+    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={12,150,44,80},dpadRight={56,150,44,80},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={14,64,84,33},mg=6,cw=202,pocketCols=1,pocketFirst={183,133,300,44},pocketLast={183,289,300,44}},
    }
    for _,size in ipairs(sizes)do
     local w=want[size.X];local W,H=size.X,size.Y
@@ -112,10 +112,9 @@ return function(client,parent)
     end
     assert(g.a.X==w.a[1]and g.a.Y==w.a[2],W.." A centre")
     assert(g.mg==w.mg and g.cw==w.cw and g.ch==H-g.top-140 and g.actionY==H-g.top-66,W.." sheet")
-    assert(g.pocket.cols==w.pocketCols and same(g.pocket.items[1],w.pocketFirst)and same(g.pocket.items[5],w.pocketLast),W.." pocket "..show(g.pocket.items[1]))
-    -- Play-forever F2: six rows (Collection book last), three a column, inside the screen.
-    local book=g.pocket.items[6]
-    assert(#g.pocket.items==6 and book and book.x==w.pocketLast[1]and book.y==w.pocketLast[2]+52,W.." pocket book row "..show(book))
+    -- QA Q5: the pause menu has four rows (Resume, Restart, Quit, Settings): one column
+    -- where four 44 px rows fit, else 2 + 2 (568).
+    assert(#g.pocket.items==4 and g.pocket.cols==w.pocketCols and same(g.pocket.items[1],w.pocketFirst)and same(g.pocket.items[4],w.pocketLast),W.." pocket "..show(g.pocket.items[1]).." "..show(g.pocket.items[4]))
     -- Structure: 4 px of plate above and below the glass; every card and the board in the screen;
     -- the d-pad, MENU, back and A on the shoulders; the board H - 24 high at the sim aspect.
     -- QA 2026-11-12: the glass starts 2 px under the Roblox controls (kh 58).
@@ -138,6 +137,7 @@ return function(client,parent)
     local root=frame(size)
     local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
     local quests=0;s:on("quests",function()quests+=1 end)
+    local _=quests
     s:setHud(hudData)
     task.wait()
     local label=tostring(size);local g=s.geometry
@@ -162,9 +162,14 @@ return function(client,parent)
      assert(#texts==2 and texts[1]=="Aim"and texts[2]=="Drop",label.." touch controls "..table.concat(texts,","))
      assert(s.hud.controlsCard.AbsoluteSize.Y==30+2*28,label.." card follows its rows")
     end
-    -- The quests card / handle opens the quest log.
-    local hit=s.hud.questsHit;assert(hit and hit.AbsoluteSize.X>=44 and hit.AbsoluteSize.Y>=44,label.." quests target")
-    s.callbacks.quests();assert(quests>=1,label.." quests callback")
+    -- QA Q5: the quests card / handle shows progress only (the quest log opens from the
+    -- garden hub's Quests tile): no hit target on it.
+    assert(s.hud.questsHit==nil,label.." no quest log route on the HUD")
+    for _,node in ipairs(root:GetDescendants())do
+     if node:IsA("GuiButton")and(node.Name=="Hit")then
+      assert(not(node:FindFirstAncestor("DailyQuests")or node:FindFirstAncestor("QuestHandle")),label.." quests card is not a button")
+     end
+    end
     -- Keyboard: three rows; B is Items in a round (BUILD-PLAN 2026-11-13, leaving is MENU / back arrow).
     if s.hud.controls and #s.hud.controls>=3 then
      local data=table.clone(hudData);data.input="Keyboard";s:setHud(data);task.wait()
@@ -181,28 +186,33 @@ return function(client,parent)
    assert(Pocket.step(1,1,0,2,all,5)==4 and Pocket.step(3,1,0,2,all,5)==5 and Pocket.step(4,-1,0,2,all,5)==1 and Pocket.step(5,0,1,2,all,5)==5)
    assert(Pocket.step(1,0,1,1,{true,false,true,true,true},5)==3,"skips a disabled row")
    assert(Pocket.step(1,0,1,1,{true,false,false,false,false},5)==1,"nothing enabled below")
-   -- Six rows (play-forever F2, Collection book last): 3 + 3.
-   assert(Pocket.Count==6 and Pocket.Items[6].id=="book")
-   local six={true,true,true,true,true,true}
-   assert(Pocket.step(3,1,0,2,six)==6 and Pocket.step(5,0,1,2,six)==6 and Pocket.step(6,-1,0,2,six)==3 and Pocket.step(6,0,1,2,six)==6)
-   assert(Pocket.step(5,0,1,1,six)==6 and Pocket.step(1,0,1,1,{true,false,false,false,false,false})==1)
+   -- QA Q5: the pause menu is four rows, Settings last (no Hatch eggs, Customize or book).
+   assert(Pocket.Count==4)
+   local ids={};for i,item in ipairs(Pocket.Items)do ids[i]=item.id end
+   assert(table.concat(ids,",")=="resume,restart,quit,settings","pause rows "..table.concat(ids,","))
+   local four={true,true,true,true}
+   assert(Pocket.step(1,0,1,1,four)==2 and Pocket.step(3,0,1,1,four)==4 and Pocket.step(4,0,1,1,four)==4)
+   assert(Pocket.step(1,1,0,2,four)==3 and Pocket.step(2,1,0,2,four)==4 and Pocket.step(4,-1,0,2,four)==2 and Pocket.step(4,0,1,2,four)==4)
+   assert(Pocket.step(1,0,1,1,{true,false,false,true})==4,"skips the locked rows to Settings")
   end)
   test("Pocket Menu on a fresh save: locked rows take focus and say why (QA 2026-11-12)",function()
    local size=Vector2.new(844,390);local root=frame(size)
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root})
    local calls,locked={},{}
    local function cb(id)return function()table.insert(calls,id)end end
-   local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{resume=cb("resume"),restart=cb("restart"),quit=cb("quit"),hatch=cb("hatch"),customize=cb("customize"),
+   local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{resume=cb("resume"),restart=cb("restart"),quit=cb("quit"),settings=cb("settings"),
     locked=function(id,state)table.insert(locked,id..":"..tostring(state.locked))end})
    s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
-   menu:open({empty=true,locked=true,canRestart=false,canQuit=false,canHatch=false,canCustomize=false,canBook=false});task.wait(.3)
+   menu:open({empty=true,locked=true,canRestart=false,canQuit=false,canSettings=true});task.wait(.3)
    assert(menu.subtitle.Text==require(game:GetService("ReplicatedStorage").Shared.UICopy).get("menu.subtitle.locked"),"subtitle explains the lock")
-   -- Six rows sit 3 + 3 at 844 (play-forever F2): Hatch eggs heads the right column.
-   menu:move(0,1);assert(menu.focusIndex==2,"down moves onto a locked row");menu:move(1,0);menu:move(0,-1);assert(menu.focusIndex==4)
-   menu:confirm();assert(#calls==0 and locked[1]=="hatch:true","a locked row reports why instead of acting")
-   assert(menu.buttons[4].Active and menu.buttons[4].Interactable,"locked rows still take taps")
-   menu:move(0,2);assert(menu.focusIndex==6);menu:confirm();assert(#calls==0 and locked[2]=="book:true","the locked book row says why")
-   menu:move(-1,0);menu:move(0,-2);menu:confirm();assert(calls[1]=="resume","Resume still works")
+   -- QA Q5: four rows in one column at 844; Restart and Quit wait for the first pet, Settings never does.
+   menu:move(0,1);assert(menu.focusIndex==2,"down moves onto a locked row")
+   menu:confirm();assert(#calls==0 and locked[1]=="restart:true","a locked row reports why instead of acting")
+   assert(menu.buttons[2].Active and menu.buttons[2].Interactable,"locked rows still take taps")
+   menu:move(0,2);assert(menu.focusIndex==4);menu:confirm();assert(calls[1]=="settings","Settings opens on a fresh save")
+   menu:move(0,-3);menu:confirm();assert(calls[2]=="resume","Resume still works")
+   -- Back from Settings lands on the Settings row.
+   menu:close(true);menu:open({empty=true,canSettings=true},"settings");assert(menu.focusIndex==4,"reopens on Settings")
    root:Destroy()
   end)
   test("Pocket Menu at 568, 740 and 844: in the screen, audit, arming, routes and close",function()
@@ -212,10 +222,10 @@ return function(client,parent)
     local s=Screen.new({parent=root,overlayParent=root,viewRoot=root})
     local calls={}
     local function cb(id)return function()table.insert(calls,id)end end
-    local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{resume=cb("resume"),restart=cb("restart"),quit=cb("quit"),hatch=cb("hatch"),customize=cb("customize")})
+    local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{resume=cb("resume"),restart=cb("restart"),quit=cb("quit"),settings=cb("settings")})
     s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
     s:setHud(hudData)
-    menu:open({empty=false,canRestart=true,canQuit=true,canHatch=true,canCustomize=true})
+    menu:open({empty=false,canRestart=true,canQuit=true,canSettings=true})
     task.wait(.3)
     local g=s.geometry;local layer=menu.overlay.layer;local o=root.AbsolutePosition
     local lp=layer.AbsolutePosition-o
@@ -231,14 +241,16 @@ return function(client,parent)
     menu:move(0,1);assert(menu.focusIndex==2,label.." down")
     -- Mid-round Restart asks once more; moving away disarms; a second press acts.
     menu:confirm();assert(menu.armed=="restart"and #calls==0 and Kit.buttonState(menu.buttons[2]).label.Text=="Tap again to restart",label.." armed")
-    menu:move(0,1);assert(menu.armed==nil and Kit.buttonState(menu.buttons[2]).label.Text=="Restart round",label.." disarmed by moving")
-    menu:move(0,-1);menu:confirm();menu:confirm();assert(calls[1]=="restart",label.." restart after the second press")
+    -- (Up, not down: at 568 the four rows are 2 + 2, so Restart is a column's last row.)
+    menu:move(0,-1);assert(menu.armed==nil and Kit.buttonState(menu.buttons[2]).label.Text=="Restart round",label.." disarmed by moving")
+    menu:move(0,1);menu:confirm();menu:confirm();assert(calls[1]=="restart",label.." restart after the second press")
     -- Empty board: Quit acts at once. Disabled rows do nothing.
     table.clear(calls)
-    menu:open({empty=true,canRestart=true,canQuit=true,canHatch=false,canCustomize=true})
+    menu:open({empty=true,canRestart=true,canQuit=true,canSettings=false})
     menu:activate(3,true);assert(calls[1]=="quit",label.." empty board quits at once")
-    menu:activate(4,true);assert(#calls==1,label.." disabled Hatch does nothing")
-    menu:activate(5,true);assert(calls[2]=="customize",label.." customize")
+    menu:activate(4,true);assert(#calls==1,label.." disabled Settings does nothing")
+    menu:open({empty=true,canRestart=true,canQuit=true,canSettings=true})
+    menu:activate(4,true);assert(calls[2]=="settings",label.." settings")
     menu:activate(1,true);assert(calls[3]=="resume",label.." resume")
     -- Close hides the layer after the out wipe; a quick reopen is not hidden by the stale close.
     assert(menu:close()and not menu.visible);menu:open({empty=true});task.wait(.25)
@@ -247,7 +259,7 @@ return function(client,parent)
     assert(not menu:close(),label.." second close is a no-op")
     -- Relayout while open keeps it open (rotation / resize).
     menu:open({empty=false});s:layout(Vector2.new(740,360),aspect,{kx=116,kh=58});task.wait()
-    assert(menu.visible and layer.Visible and #menu.buttons==6,label.." survives a relayout")
+    assert(menu.visible and layer.Visible and #menu.buttons==4,label.." survives a relayout")
     root:Destroy()
    end
   end)
@@ -295,7 +307,9 @@ return function(client,parent)
     assert(replay.X+res.replay.AbsoluteSize.X==size.X-mg-14 and replay.Y==size.Y-66,label.." Replay bottom right at W - mg - 14")
     assert(res.difficulty.AbsoluteSize.X==48 and res.difficulty:GetAttribute("AccessibleLabel")=="Change difficulty",label.." change difficulty")
     local picked=0;res:on("picker",function()picked+=1 end)
-    res.focus=1;res:move(-1);assert(res.focus==3,"left of Replay is Change difficulty");res:move(-1);assert(res.focus==4,"then the quest shortcut");res:move(-1);assert(res.focus==2)
+    -- QA Q5: the results quest cell is display only (no shortcut), so Change difficulty steps straight to Leave.
+    res.focus=1;res:move(-1);assert(res.focus==3,"left of Replay is Change difficulty");res:move(-1);assert(res.focus==2,"then Leave (no quest shortcut)")
+    assert(res.questTarget==nil,"quest cell is display only")
     res.focus=3;res:confirm();res:confirm();assert(picked>=1,"Change difficulty opens the picker")
     res:hide()
     log:show({day=10,week=2,resetIn=26000,weekResetIn=200000,rerollLeft=1,

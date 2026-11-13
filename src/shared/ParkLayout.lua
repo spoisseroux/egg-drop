@@ -87,16 +87,25 @@ local function slot(id,equipmentId,approach,yaw,pose,extra)
 	for key,value in pairs(extra or {})do entry[key]=value end
 	return table.freeze(entry)
 end
+-- QA Q4: riders wait IN FRONT of a seat (the hop-off landing point), so a pet hops back onto the
+-- seat, rides, hops forward and lands where it started, instead of landing in front and walking back.
+Park.SeatStepOut=1.25
 local function swingSlot(id,dx)
 	local base=Vector3.new(swingCenter.X+dx,ground(swingCenter.X+dx,swingCenter.Z),swingCenter.Z)
-	return slot(id,"swing",base,SOUTH,{position=lift(base,1.5),yaw=SOUTH},
-		{pivot=lift(base,5.6),rope=4.1,axis="X",amplitude=.5}) -- pendulum about the bar (X axis), arcs along Z
+	-- Seats face the swing set's front (-Z, toward the lawn); the pet waits 1.25 studs in front.
+	local x,z=base.X,base.Z-Park.SeatStepOut
+	local approach=Vector3.new(x,ground(x,z),z)
+	return slot(id,"swing",approach,SOUTH,{position=lift(base,1.5),yaw=SOUTH},
+		{seatGround=base,pivot=lift(base,5.6),rope=4.1,axis="X",amplitude=.5}) -- pendulum about the bar (X axis), arcs along Z
 end
 local function seesawSlot(id,side)
 	local base=Vector3.new(seesawCenter.X+side*2.6,ground(seesawCenter.X+side*2.6,seesawCenter.Z),seesawCenter.Z)
-	-- Seat 1 (west) faces east, seat 2 (east) faces west: the pets face each other.
-	return slot(id,"seesaw",base,if side<0 then EAST else WEST,{position=lift(base,1.25),yaw=if side<0 then EAST else WEST},
-		{pivot=lift(seesawCenter,1.1),arm=2.6*side})
+	-- Seat 1 (west) faces east, seat 2 (east) faces west: the pets face each other. Each waits off
+	-- the beam's park-centre side (-Z) beside its own seat.
+	local x,z=base.X,base.Z-Park.SeatStepOut
+	local approach=Vector3.new(x,ground(x,z),z)
+	return slot(id,"seesaw",approach,if side<0 then EAST else WEST,{position=lift(base,1.25),yaw=if side<0 then EAST else WEST},
+		{seatGround=base,pivot=lift(seesawCenter,1.1),arm=2.6*side})
 end
 local function sandSlot(id,side)
 	local base=Vector3.new(sandCenter.X+side*1.6,ground(sandCenter.X+side*1.6,sandCenter.Z),sandCenter.Z)
@@ -112,9 +121,10 @@ local ladder=Vector3.new(slideBase.X,ground(slideBase.X,slideBase.Z+1.2),slideBa
 Park.Slots=table.freeze({
 	swing1=swingSlot("swing1",-1.4),
 	swing2=swingSlot("swing2",1.4),
-	-- The pet waits at the ladder foot (facing +Z, the ladder), climbs to the deck, sits at the
-	-- chute top facing -Z, slides to chuteEnd, tumbles, and walks back for a second go.
-	slide=slot("slide","slide",ladder,NORTH,{position=lift(slideBase,3.6),yaw=SOUTH},
+	-- The pet waits at the ladder foot facing the ladder and the deck (-Z; QA Q4: was +Z, away from
+	-- it), climbs to the deck, sits at the chute top facing -Z, slides to chuteEnd, tumbles, and
+	-- walks back for a second go.
+	slide=slot("slide","slide",ladder,SOUTH,{position=lift(slideBase,3.6),yaw=SOUTH},
 		{ladderTop=lift(Vector3.new(ladder.X,ladder.Y,ladder.Z-.6),3.6),chuteTop=lift(slideBase+Vector3.new(0,0,-.8),3.6),chuteEnd=slideEnd}),
 	seesaw1=seesawSlot("seesaw1",-1),
 	seesaw2=seesawSlot("seesaw2",1),
@@ -126,11 +136,16 @@ Park.Slots=table.freeze({
 Park.SlotOrder=table.freeze({"swing1","swing2","slide","seesaw1","seesaw2","sand1","sand2","ball1","ball2"})
 
 -- Benches with Roblox Seats (K2). Inside the kerb so a seated owner keeps their pet in the park.
--- yaw faces the sitter toward the lawn. [RAYCAST in Studio]
+-- yaw faces the sitter toward the playground centre. [RAYCAST in Studio]
+-- QA Q4 (Spencer 2026-11-13): ONE bench, the one beside the player in the QA shot (south side,
+-- between the two gateways, where the arrival walk enters), lengthened to five seats
+-- (Park_BenchLong, 9.57 studs). It is the only spot inside the kerb where a 9.6-stud bench clears
+-- the kerb, the gateways and every equipment keepout (the east-gate lawn is taken by the slide
+-- and the ball mat). The west and northeast benches are gone.
+local function facingCenter(position)return math.atan2(CX-position.X,CZ-position.Z)end
+local entranceBench=at(.5,-8.4)
 Park.Benches=table.freeze({
-	table.freeze({id="south",position=at(0,-8.4),yaw=NORTH,seats=2}),
-	table.freeze({id="west",position=at(-13.2,3),yaw=EAST,seats=2}),
-	table.freeze({id="northeast",position=at(13.5,3.5),yaw=WEST,seats=2}),
+	table.freeze({id="entrance",position=entranceBench,yaw=facingCenter(entranceBench),seats=5,mesh="Park_BenchLong",length=9.57}),
 })
 
 -- Pet-free circles for mingle targets: every equipment keepout plus each bench.
@@ -138,7 +153,16 @@ local keepout={}
 for _,entry in pairs(Park.Equipment)do table.insert(keepout,table.freeze({center=Vector2.new(entry.position.X,entry.position.Z),radius=entry.keepout}))end
 table.insert(keepout,table.freeze({center=Vector2.new(slideEnd.X,slideEnd.Z),radius=1.6}))
 table.insert(keepout,table.freeze({center=Vector2.new(slideBase.X,(slideBase.Z+slideEnd.Z)*.5),radius=1.6}))
-for _,bench in ipairs(Park.Benches)do table.insert(keepout,table.freeze({center=Vector2.new(bench.position.X,bench.position.Z),radius=1.8}))end
+for _,bench in ipairs(Park.Benches)do
+	-- A circle every ~3 studs along the bench's length (the long bench is 9.6 studs).
+	local along=Vector2.new(math.cos(bench.yaw),-math.sin(bench.yaw)) -- the bench's +X axis on the ground
+	local reach=math.max(0,((bench.length or 4.5)-3.6)*.5)
+	local count=math.max(1,math.ceil(reach*2/3)+1)
+	for i=0,count-1 do
+		local u=if count==1 then 0 else -reach+reach*2*i/(count-1)
+		table.insert(keepout,table.freeze({center=Vector2.new(bench.position.X,bench.position.Z)+along*u,radius=1.8}))
+	end
+end
 -- No tree keepout: the tree inside the kerb by the sandbox (trunk at (30, 59.5)) and the two pink blossom
 -- shrubs inside the kerb were removed from the world mesh (Spencer 2026-11-13, scripts/build_world_v7_declutter.py).
 table.sort(keepout,function(a,b)return if a.center.X==b.center.X then a.center.Y<b.center.Y else a.center.X<b.center.X end)

@@ -70,9 +70,9 @@ return function(client,parent)
     end
     shop:close()
    end)
-   test(tostring(size).." Pocket menu contains only three requested routes and no bottom copy",function()
+   test(tostring(size).." Pocket menu contains only the two requested routes (Pocket Trials retired, QA Q5) and no bottom copy",function()
     menu:update(snapshot());menu:open();settle();menu:layout();settle()
-    assert(#menu.destinations==3 and not menu.playHint.Visible and menu.playHint.Size.Y.Offset==0)
+    assert(#menu.destinations==2 and not menu.playHint.Visible and menu.playHint.Size.Y.Offset==0)
     assert(not menu:activate("pets")and not menu:activate("style"))
     for _,e in ipairs(menu.destinations)do contained(e.button,menu.body);fit(e.title);if e.subtitle.Visible then fit(e.subtitle)end end
     for _,n in ipairs(menu.card:GetDescendants())do assert(n.Name~="MoldHighlight"and n.Name~="UpperSheen"and n.Name~="Accent"and n.Name~="SelectedGlint"and n.Name~="SelectedEdge")end

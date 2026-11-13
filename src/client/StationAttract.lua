@@ -1,5 +1,5 @@
 -- Station attract (FEEL-ALIVE-DIRECTION-2026-11-13 D): the three hub stations
--- invite a new player over and go quiet once learned.
+-- (and the Pet Park gateway, QA Q4) invite a new player over and go quiet once learned.
 --   learned / far  : glow breath only (+-8 %)
 --   beckon (<=40)  : + icon, light shaft, ground ring, glow +-20 %
 --   invite (<=14)  : + bouncing chevron, ring ripple, sparkles, one machine_attract ping
@@ -188,6 +188,7 @@ function Attract.new(options)
 			if station then positions[id] = station.Position end
 		end
 	end
+	if not options.positions then positions.Park = Attract.parkAnchor() end
 	for _, id in ipairs(Data.Order) do
 		if positions[id] then self.stations[id] = build(folder, id, positions[id]) end
 	end
@@ -201,6 +202,32 @@ function Attract.new(options)
 		table.insert(self.connections, RunService.Heartbeat:Connect(function(dt) self:step(dt) end))
 	end
 	return self
+end
+
+-- Pet Park (QA Q4): the icon hovers over the east gateway the arrival path leads to. nil when the
+-- park flag is off or this world has no park.
+local parkLayout = nil -- ParkLayout once the park flag is confirmed on (false = no park)
+local function park()
+	if parkLayout == nil then
+		local ok, layout = pcall(function()
+			local Flags = require(Shared:WaitForChild("FeatureFlags"))
+			local Park = require(Shared:WaitForChild("ParkLayout"))
+			return if Flags.Park == true and Park.Enabled then Park else false
+		end)
+		parkLayout = if ok then layout else false
+	end
+	return parkLayout or nil
+end
+function Attract.parkAnchor()
+	local Park = park()
+	local gate = Park and Park.Gateways[1]
+	return gate and gate.position or nil
+end
+
+-- The park has no prompt: it is learned the first time the player stands inside the kerb.
+function Attract.parkMember(position)
+	local Park = park()
+	return Park ~= nil and typeof(position) == "Vector3" and Park.member(position, false)
 end
 
 function Attract:markUsed(id)
@@ -232,6 +259,7 @@ function Attract:step(dt)
 	local reduced = self.options.reduced and self.options.reduced() == true
 	local visible = self:visible(state)
 	local position = state and state.position
+	if self.stations.Park and not self.used.Park and Attract.parkMember(position) then self.used.Park = true end
 	for id, entry in pairs(self.stations) do
 		local shown = visible and not (id == "Journal" and self.options.cradleBusy and self.options.cradleBusy())
 		local distance = position and (position - entry.base).Magnitude or nil

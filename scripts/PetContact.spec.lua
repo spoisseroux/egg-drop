@@ -33,34 +33,50 @@ return function(server)
 		return broker,c,state
 	end
 	local function begin(b,c)assert(c:begin());c.leaseId=b.lease.id end
-	test("twelve continuous server seconds produce one roll and exact live Saved receipt",function()
-		local b,c=fixture();begin(b,c);c:pulseUntil(11.5);assert(c.rolls==0 and c.awards==0)
-		c:pulseUntil(12);assert(c.rolls==1 and c.awards==1 and c:saved()==1)
+	-- QA 2026-11-13 Q2.7 tuning: W seconds of contact pay, S seconds between awards, chance 1.
+	local W,S=Contact.OpportunitySeconds,Contact.SpacingSeconds
+	assert(W==4 and S==10 and Contact.AwardChance==1)
+	local function withChance(chance,run)
+		local old=Contact.AwardChance;Contact.AwardChance=chance
+		local ok,e=pcall(run);Contact.AwardChance=old;assert(ok,e)
+	end
+	test("a short continuous pet (W s) always pays one exact live Saved receipt",function()
+		local b,c=fixture();c.roll=.99;begin(b,c);c:pulseUntil(W-.5);assert(c.rolls==0 and c.awards==0)
+		c:pulseUntil(W);assert(c.rolls==1 and c.awards==1 and c:saved()==1,"chance 1 pays even on a high roll")
 		for _=1,5 do b:reconcile()end;assert(c:saved()==1)
 		local packet=c.packets[#c.packets]
 		assert(packet.leaseId==c.leaseId and packet.requestGeneration==1 and packet.petId=="pip"and packet.receipt.id==c.candidate.id)
 	end)
-	test("negative outcome consumes opportunity without storage or a promised award",function()
-		local b,c=fixture();c.roll=.9;begin(b,c);c:pulseUntil(12)
-		assert(c.rolls==1 and c.awards==0 and c:saved()==0)
-		c:pulseUntil(23.5);assert(c.rolls==1);c:pulseUntil(24);assert(c.rolls==2 and c.awards==0)
+	test("a tuned-down chance still consumes the opportunity without storage or a promised award",function()
+		withChance(.5,function()
+			local b,c=fixture();c.roll=.9;begin(b,c);c:pulseUntil(W)
+			assert(c.rolls==1 and c.awards==0 and c:saved()==0)
+			c:pulseUntil(W+S-.5);assert(c.rolls==1);c:pulseUntil(W+S);assert(c.rolls==2 and c.awards==0)
+		end)
 	end)
 	test("idle focus stationary timeout and a tap cannot earn",function()
-		local b,c=fixture();begin(b,c);c.now=12;b:update()
+		local b,c=fixture();begin(b,c);c.now=W;b:update()
 		assert(not b.lease and c.rolls==0 and c.awards==0)
-		b,c=fixture();begin(b,c);b:finish(c.leaseId);c.now=12;b:pulse(c.leaseId)
+		b,c=fixture();begin(b,c);b:finish(c.leaseId);c.now=W;b:pulse(c.leaseId)
 		assert(c.rolls==0 and c.awards==0)
 	end)
 	test("interrupted windows and rapid new contacts never carry elapsed time or reroll",function()
-		local b,c=fixture();begin(b,c);c:pulseUntil(11.5);b:finish(c.leaseId)
-		c.now=12;assert(c:begin(2));c.leaseId=b.lease.id
-		c:pulseUntil(23.5);assert(c.rolls==0 and c.awards==0)
-		c:pulseUntil(24);assert(c.rolls==1 and c.awards==1)
+		local b,c=fixture();begin(b,c);c:pulseUntil(W-.5);b:finish(c.leaseId)
+		c.now=W;assert(c:begin(2));c.leaseId=b.lease.id
+		c:pulseUntil(2*W-.5);assert(c.rolls==0 and c.awards==0)
+		c:pulseUntil(2*W);assert(c.rolls==1 and c.awards==1)
 	end)
-	test("restarting after a missed opportunity still requires a new full twelve seconds",function()
-		local b,c=fixture();c.roll=.9;begin(b,c);c:pulseUntil(12);assert(c.rolls==1)
-		b:finish(c.leaseId);c.now=12.5;assert(c:begin(2));c.leaseId=b.lease.id
-		c:pulseUntil(24);assert(c.rolls==1);c:pulseUntil(24.5);assert(c.rolls==2)
+	test("restarting after a missed opportunity needs a new full window and the player spacing",function()
+		withChance(.5,function()
+			local b,c=fixture();c.roll=.9;begin(b,c);c:pulseUntil(W);assert(c.rolls==1)
+			b:finish(c.leaseId);c.now=W+.5;assert(c:begin(2));c.leaseId=b.lease.id
+			local at=math.max(W+.5+W,W+S)
+			c:pulseUntil(at-.5);assert(c.rolls==1);c:pulseUntil(at);assert(c.rolls==2)
+		end)
+	end)
+	test("awards are spaced S seconds apart while contact continues",function()
+		local b,c=fixture();begin(b,c);c:pulseUntil(W);assert(c.awards==1 and c:saved()==1)
+		c:pulseUntil(W+S-.5);assert(c.awards==1);c:pulseUntil(W+S);assert(c.awards==2 and c:saved()==2)
 	end)
 	test("stale cross-player and replaced lease ids cannot extend a new contact",function()
 		local a,ca=fixture("a");local b,cb=fixture("b");begin(a,ca);begin(b,cb)
@@ -78,7 +94,7 @@ return function(server)
 			function(s)s.root={}end,function(s)s.character={}end,function(s)s.alive=false end,function(s)s.epoch=2 end,
 			function(s)s.position=Vector3.new(3,7,0)end,function(s)s.position=Vector3.new(0,10,0)end,
 			function(s)s.conflict=true end,function(s)s.ready=false;s.status="SessionLost"end})do
-			local b,c,s=fixture();begin(b,c);c:pulseUntil(5);mutate(s);b:update()
+			local b,c,s=fixture();begin(b,c);c:pulseUntil(W-1);mutate(s);b:update()
 			assert(not b.lease and c.rolls==0 and c.awards==0)
 		end
 	end)
@@ -88,31 +104,39 @@ return function(server)
 		c.now=1;c.anchor=Vector3.new(8,7,0);assert(not c:begin(2)and c.awards==0 and c.rolls==0)
 	end)
 	test("same held context may receive retry or renew proof once but cannot draw while saving",function()
-		local b,c=fixture();c.pending=true;begin(b,c);c:pulseUntil(12)
+		local b,c=fixture();c.pending=true;begin(b,c);c:pulseUntil(W)
 		assert(c.awards==1 and c:saved()==0 and b.issued)
-		c:pulseUntil(14);assert(c.rolls==1 and c.awards==1);c:complete();assert(c:saved()==1)
-		c:pulseUntil(25.5);assert(c.rolls==1);c:pulseUntil(26);assert(c.rolls==2)
+		c:pulseUntil(W+2);assert(c.rolls==1 and c.awards==1);c:complete();assert(c:saved()==1)
+		local at=math.max(W+2+W,W+S)
+		c:pulseUntil(at-.5);assert(c.rolls==1);c:pulseUntil(at);assert(c.rolls==2)
 	end)
-	test("end or replacement while a commit is pending prevents any later glyph",function()
-		for _,replace in ipairs({false,true})do
-			local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(12)
-			b:finish(c.leaseId);c.now=12.5
-			if replace then s.petId="wick"end
-			c:complete();b:reconcile();assert(c:saved()==0 and not b.issued and c.awards==1)
+	test("QA Q2.7: letting go while the commit lands still shows its glyph once; a replaced pet or a stale end never does",function()
+		for _,case in ipairs({"same","replace","stale"})do
+			local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(W)
+			b:finish(c.leaseId);c.now=W+.5
+			if case=="replace"then s.petId="wick"end
+			if case=="stale"then c.now=W+Contact.LateSavedSeconds+.5 end
+			c:complete();b:reconcile();b:reconcile()
+			local want=if case=="same"then 1 else 0
+			assert(c:saved()==want and not b.issued and c.awards==1,case)
+			if want==1 then local p=c.packets[#c.packets];assert(p.leaseId==c.leaseId and p.receipt.id==c.candidate.id)end
 		end
 	end)
 	test("proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",function()
-		local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(12);c:pulseUntil(13)
+		local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(W);c:pulseUntil(W+1)
 		s.pendingId=nil;s.ready=true;s.status="Ready";b:reconcile()
-		assert(not b.issued and c:saved()==0);c:pulseUntil(24.5);assert(c.rolls==1)
+		assert(not b.issued and c:saved()==0)
+		local at=math.max(W+1+W,W+S)
+		c:pulseUntil(at-.5);assert(c.rolls==1);c:pulseUntil(at);assert(c.rolls==2)
 	end)
-	test("cap mute and reduced effects are independent and capped draws stop",function()
-		local b,c,s=fixture();s.muted=true;s.reduced=true;begin(b,c);c:pulseUntil(12)
-		assert(c:saved()==1);s.capReached=true;c:pulseUntil(12.5)
+	test("cap mute and reduced effects are independent, capped draws stop and the cap is said",function()
+		local b,c,s=fixture();s.muted=true;s.reduced=true;begin(b,c);c:pulseUntil(W)
+		assert(c:saved()==1);s.capReached=true;c:pulseUntil(W+.5)
 		assert(not b.lease and c.rolls==1 and c.awards==1)
+		local last=c.packets[#c.packets];assert(last.granted==false and last.reason=="DailyCap")
 	end)
 	test("destroy cancels display and future work while retained ledger work belongs elsewhere",function()
-		local b,c=fixture();c.pending=true;begin(b,c);c:pulseUntil(12);b:destroy();c:complete()
+		local b,c=fixture();c.pending=true;begin(b,c);c:pulseUntil(W);b:destroy();c:complete()
 		assert(c:saved()==0 and not b:begin({requestGeneration=2,petId="pip"})and not b:pulse(c.leaseId))
 	end)
 	test("wrong ids and early-rate pulses are rejected before any state read or reconciliation",function()
@@ -122,7 +146,7 @@ return function(server)
 	end)
 	test("unrelated pending or busy operations cannot preserve contact or emit a Saved popup",function()
 		for _,otherPending in ipairs({false,true})do
-			local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(12)
+			local b,c,s=fixture();c.pending=true;begin(b,c);c:pulseUntil(W)
 			s.lastPetAward={id=c.candidate.id,sequence=c.candidate.sequence,day="20",petId="pip"}
 			s.pendingId=if otherPending then "different-operation"else nil;s.busy=true;s.ready=false
 			b:reconcile();assert(c:saved()==0);b:update();assert(not b.lease)

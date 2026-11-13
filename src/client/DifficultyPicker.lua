@@ -90,20 +90,24 @@ function Picker:buildCompact(v)
    if self.index==index then self:confirm()else self:focus(index);if self.callbacks.select then self.callbacks.select(key)end end
   end)
  end
- -- Action row: Quests (left thumb), goal line, Start (right thumb).
+ -- Action row: Quests (left thumb, only while the caller routes it; QA Q5 moved the
+ -- quest log to the garden hub, so the round picker has none), goal line, Start.
  local ay=v.actionY
- local quests=Kit.button(body,"Quests",{text="Quests",size=Vector2.new(148,48),textSize=15,selectable=false})
- quests.Position=UDim2.fromOffset(20,ay)
- local qs=Kit.buttonState(quests)
- local qicon=Kit.icon(qs.content,"quests",18,"text");qicon.LayoutOrder=1
- self.questDot=Kit.frame(quests,"ReadyDot","stars",UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);self.questDot.ZIndex=quests.ZIndex+6;self.questDot.Visible=false
- quests.Activated:Connect(function()if self.callbacks.quests then self.callbacks.quests()end end)
- self.questButton=quests
+ local gx=20
+ if self.callbacks.quests then
+  local quests=Kit.button(body,"Quests",{text="Quests",size=Vector2.new(148,48),textSize=15,selectable=false})
+  quests.Position=UDim2.fromOffset(20,ay)
+  local qs=Kit.buttonState(quests)
+  local qicon=Kit.icon(qs.content,"quests",18,"text");qicon.LayoutOrder=1
+  self.questDot=Kit.frame(quests,"ReadyDot","stars",UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);self.questDot.ZIndex=quests.ZIndex+6;self.questDot.Visible=false
+  quests.Activated:Connect(function()if self.callbacks.quests then self.callbacks.quests()end end)
+  self.questButton=quests;gx=180
+ end
  local startW=if W<600 then 160 else 200
  self.start=Kit.button(body,"Start",{variant="primary",text="Start",glyph="A",size=Vector2.new(startW,48),textSize=16,selectable=false})
  self.start.Position=UDim2.fromOffset(W-20-startW,ay)
  self.start.Activated:Connect(function()self:confirm()end)
- local gx=180;local gw=W-20-startW-12-gx
+ local gw=W-20-startW-12-gx
  local target=Kit.icon(body,"target",18,"soft");target.Position=UDim2.fromOffset(gx,ay+15)
  self.goalText=txt(body,"Body","","soft",gx+26,ay,math.max(20,gw-26),48,{TextSize=14,TextWrapped=true})
  self.questText=nil
@@ -152,10 +156,10 @@ function Picker:build(view)
  local target=Kit.icon(strip,"target",20,"soft");target.Position=UDim2.fromOffset(14,14)
  self.goalText=txt(strip,"Small","","soft",44,0,380,48,{TextSize=15})
  self.questText=txt(strip,"Small","","soft",420,0,366,48,{TextSize=15,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
- -- Hints and Start.
+ -- Hints and Start (QA Q5: MENU pauses; the quest log opens from the garden hub).
  local hints=Kit.frame(root,"Hints",nil,UDim2.fromOffset(24,548),UDim2.fromOffset(560,24))
  local x=0
- for _,pair in ipairs({{"◀▶","Choose"},{"MENU","Quests"},{"B","Garden"}})do
+ for _,pair in ipairs({{"◀▶","Choose"},{"MENU","Pause"},{"B","Garden"}})do
   local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
   local w=g.Size.X.Offset
   txt(hints,"Small",pair[2],"soft",x+w+6,0,80,24)

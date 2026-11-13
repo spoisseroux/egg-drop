@@ -816,25 +816,59 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
   api.buttons[index],api.labels[index]=b,label;b:SetAttribute("ClaimDot",false)
   b.Activated:Connect(function()api.select(index)if api.changed then api.changed(index)end end)
  end
- local squashToken=0
+ -- QA 2026-11-13 (Deck style Balls tab overflowed the track's right edge): a
+ -- re-select of the tab already in flight (the owner's applyTab right after the
+ -- click) cancelled the settle half while the squash tween kept its stretched
+ -- width. Now every select owns and cancels its tweens, a re-select of the tab in
+ -- flight lets it land, the squash is clamped inside the track and the pill always
+ -- ends on the exact segment rect (Kit.tabs.pillRect).
+ local squashToken,running,inFlight=0,{},nil
+ local function cancelMotion()
+  for _,tween in ipairs(running)do tween:Cancel()end
+  table.clear(running)
+ end
+ local function play(time,goal)
+  local tween=TweenService:Create(pill,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),goal)
+  table.insert(running,tween);tween:Play()
+ end
+ local inner=width-8
+ api.pillRect=function(index)
+  -- Pure: the pill's resting x and size for `index`, inside the 4 px track inset.
+  local x0=math.floor(4+(index-1)*segment+.5)
+  local x1=math.floor(4+index*segment+.5)
+  if index>=#labels then x1=4+inner end
+  return x0,Vector2.new(x1-x0,height-8)
+ end
+ api.squashX=function(fromX,toX,stretch,w)
+  -- Pure: the mid-flight x of the stretched pill, never past either track edge.
+  local mid=math.floor((fromX+toX)/2-stretch/2+.5)
+  return math.clamp(mid,4,math.max(4,4+inner-(w+stretch)))
+ end
  function api.select(index)
   local moved=index~=api.selected
   api.selected=index
-  local goal=UDim2.fromOffset(4+(index-1)*segment,4)
+  local x,size=api.pillRect(index)
+  local goal,rest=UDim2.fromOffset(x,4),UDim2.fromOffset(size.X,size.Y)
   -- T11 squash: the pill stretches 6% along its travel at mid-flight, centred on
-  -- its path, then settles (cut under Reduced Motion, where Kit.tween snaps).
-  squashToken+=1
-  if moved and not Kit.reduced()then
-   local token,half=squashToken,Kit.Motion.tab/2
-   local stretch=math.floor(segment*.06+.5)
-   local mid=(pill.Position.X.Offset+goal.X.Offset)/2-stretch/2
-   Kit.tween(pill,half,{Position=UDim2.fromOffset(mid,4),Size=UDim2.fromOffset(segment+stretch,height-8)})
-   task.delay(half,function()
-    if token==squashToken and pill.Parent then Kit.tween(pill,half,{Position=goal,Size=UDim2.fromOffset(segment,height-8)})end
-   end)
-  else
-   pill.Size=UDim2.fromOffset(segment,height-8)
-   Kit.tween(pill,Kit.Motion.tab,{Position=goal})
+  -- its path, then settles (cut under Reduced Motion).
+  if moved or inFlight~=index then
+   squashToken+=1;cancelMotion();inFlight=nil
+   if moved and not Kit.reduced()then
+    local token,half=squashToken,Kit.Motion.tab/2
+    local stretch=math.floor(segment*.06+.5)
+    inFlight=index
+    play(half,{Position=UDim2.fromOffset(api.squashX(pill.Position.X.Offset,x,stretch,size.X),4),Size=UDim2.fromOffset(size.X+stretch,size.Y)})
+    task.delay(half,function()
+     if token~=squashToken or not pill.Parent then return end
+     cancelMotion();play(half,{Position=goal,Size=rest})
+     task.delay(half+.03,function()
+      if token==squashToken and pill.Parent then cancelMotion();inFlight=nil;pill.Position=goal;pill.Size=rest end
+     end)
+    end)
+   elseif Kit.reduced()then pill.Position=goal;pill.Size=rest
+   else
+    pill.Size=rest;play(Kit.Motion.tab,{Position=goal})
+   end
   end
   for i,label in ipairs(api.labels)do
    paint(label,"TextColor3",if i==index then "ink"else "soft")
@@ -1239,5 +1273,141 @@ end
 -- so near the breakpoint it would flip Device/CoreUI on every size change.
 function Kit.compactInsets(probeSize)
  return if probeSize.X>0 and Kit.compactRule(probeSize.X,probeSize.Y)then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
+end
+
+-- Modal shades (QA 2026-11-13 Q2.1). Every menu screen lives in an inset ScreenGui,
+-- so a 1x1-scale shade stopped under the Roblox top bar, and a screen opened over
+-- another drew a second shade on top of the first. A shade now covers the whole
+-- screen (measured from a ScreenInsets.None probe) and only the top open shade dims;
+-- the screens under it go clear and, when they ask, hide their panel until uncovered.
+Kit.ShadeAlpha=.35
+local probeFrame
+function Kit.screenProbe(anchor)
+ if probeFrame and probeFrame.Parent and probeFrame.Parent.Parent then return probeFrame end
+ local gui=anchor and anchor:FindFirstAncestorOfClass("ScreenGui")
+ local holder=gui and gui.Parent
+ if not holder then return nil end
+ local probeGui=holder:FindFirstChild("EggDropScreenProbe")
+ if not probeGui then probeGui=node("ScreenGui",holder,{Name="EggDropScreenProbe",ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.None,DisplayOrder=0,Enabled=true})end
+ probeFrame=probeGui:FindFirstChild("Screen")or node("Frame",probeGui,{Name="Screen",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Active=false})
+ return probeFrame
+end
+-- Pure: the offset rect (relative to `parentPosition`) that covers the probed screen.
+function Kit.coverRect(screenPosition,screenSize,parentPosition)
+ local origin=screenPosition-parentPosition
+ return UDim2.fromOffset(math.floor(origin.X),math.floor(origin.Y)),UDim2.fromOffset(math.ceil(screenSize.X)+1,math.ceil(screenSize.Y)+1)
+end
+-- Keeps `frame` covering the whole screen whatever insets its ScreenGui uses.
+function Kit.coverScreen(frame)
+ local probe=Kit.screenProbe(frame)
+ if not probe then frame.Position=UDim2.new();frame.Size=UDim2.fromScale(1,1);return false end
+ local function sync()
+  local parent=frame.Parent
+  if not parent or not parent:IsA("GuiBase2d")then return end
+  local position,size=Kit.coverRect(probe.AbsolutePosition,probe.AbsoluteSize,parent.AbsolutePosition)
+  if frame.Position~=position then frame.Position=position end
+  if frame.Size~=size then frame.Size=size end
+ end
+ local links={}
+ local function watch(signal)table.insert(links,signal:Connect(sync))end
+ watch(probe:GetPropertyChangedSignal("AbsoluteSize"));watch(probe:GetPropertyChangedSignal("AbsolutePosition"))
+ local parent=frame.Parent
+ if parent and parent:IsA("GuiBase2d")then watch(parent:GetPropertyChangedSignal("AbsolutePosition"))end
+ watch(frame:GetPropertyChangedSignal("Visible"))
+ frame.Destroying:Connect(function()for _,link in ipairs(links)do link:Disconnect()end end)
+ frame:SetAttribute("CoversScreen",true)
+ sync();return true
+end
+-- A black full-screen shade, hidden until Kit.shadeOpen.
+function Kit.modalShade(host,name,zIndex)
+ local shade=Kit.frame(host,name,nil,UDim2.new(),UDim2.fromScale(1,1))
+ shade.BackgroundTransparency=Kit.ShadeAlpha;shade.BackgroundColor3=Color3.new(0,0,0);shade.Active=true;shade.Visible=false
+ shade.ZIndex=zIndex or 30;shade:SetAttribute("ShadeAlpha",Kit.ShadeAlpha)
+ Kit.coverScreen(shade)
+ return shade
+end
+local shadeStack={}
+local function paintShades()
+ for i=#shadeStack,1,-1 do
+  local entry=shadeStack[i]
+  if not entry.shade.Parent then table.remove(shadeStack,i)end
+ end
+ for i,entry in ipairs(shadeStack)do
+  local top=i==#shadeStack
+  local alpha=entry.shade:GetAttribute("ShadeAlpha")or Kit.ShadeAlpha
+  entry.shade.BackgroundTransparency=if top then alpha else 1
+  entry.shade:SetAttribute("ShadeCovered",not top)
+  if entry.covered~=(not top)then
+   local first=entry.covered==nil
+   entry.covered=not top
+   if entry.onCovered and not(first and top)then task.spawn(entry.onCovered,not top)end
+  end
+ end
+end
+-- owner: any key (the screen object). onCovered(covered) runs when a later shade
+-- opens over this one (true) and when it closes again (false).
+-- Opening again while already open keeps the owner's place in the stack (a rebuilt
+-- shade frame swaps in), so a refresh under a child screen never jumps above it.
+function Kit.shadeOpen(owner,shade,onCovered)
+ local entry
+ for _,e in ipairs(shadeStack)do if e.owner==owner then entry=e end end
+ if entry then
+  if entry.shade~=shade and entry.shade.Parent then entry.shade.Visible=false end
+  entry.shade=shade;entry.onCovered=onCovered or entry.onCovered
+ else table.insert(shadeStack,{owner=owner,shade=shade,onCovered=onCovered})end
+ shade.Visible=true;paintShades()
+end
+function Kit.shadeIsOpen(owner)
+ for _,e in ipairs(shadeStack)do if e.owner==owner then return true end end
+ return false
+end
+function Kit.shadeClose(owner)
+ local found=false
+ for i=#shadeStack,1,-1 do
+  local entry=shadeStack[i]
+  if entry.owner==owner then table.remove(shadeStack,i);found=true
+   if entry.shade.Parent then entry.shade.Visible=false;entry.shade.BackgroundTransparency=entry.shade:GetAttribute("ShadeAlpha")or Kit.ShadeAlpha end
+  end
+ end
+ if found then paintShades()end
+ return found
+end
+function Kit.setShadeAlpha(shade,alpha)shade:SetAttribute("ShadeAlpha",alpha);paintShades()end
+function Kit.shadeDepth()paintShades();return #shadeStack end
+function Kit.shadeTop()local entry=shadeStack[#shadeStack];return entry and entry.owner,entry and entry.shade end
+-- How many open shades currently dim the screen (always 0 or 1).
+function Kit.dimmingShades()
+ local n=0
+ for _,entry in ipairs(shadeStack)do if entry.shade.Parent and entry.shade.Visible and entry.shade.BackgroundTransparency<1 then n+=1 end end
+ return n
+end
+
+-- Screen slide (QA Q2.2): the Pets page move, shared. Every GuiObject child of
+-- `container` (except those `skip(child)` keeps) starts `from` px to the side and
+-- eases home in Kit.Motion.screen. Reduced Motion is a cut. A slide that starts
+-- while another is still running finishes from the first one's goal.
+Kit.SlideOffset=24
+local slides=setmetatable({},{__mode="k"})
+function Kit.slideIn(container,from,skip)
+ if not container or from==0 then return 0 end
+ local count=0
+ for _,child in ipairs(container:GetChildren())do
+  if child:IsA("GuiObject")and not(skip and skip(child))then
+   local live=slides[child];local goal=child.Position
+   if live then slides[child]=nil;live.tween:Cancel();goal=live.goal;child.Position=goal end
+   if not Kit.reduced()then
+    child.Position=goal+UDim2.fromOffset(from,0)
+    local tween=TweenService:Create(child,TweenInfo.new(Kit.Motion.screen,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=goal})
+    slides[child]={tween=tween,goal=goal}
+    tween.Completed:Connect(function()if slides[child]and slides[child].tween==tween then slides[child]=nil end end)
+    tween:Play();count+=1
+   end
+  end
+ end
+ return count
+end
+-- The header stays put while a page slides (as on the Pets page).
+function Kit.headerSkip(header)
+ return function(child)return(header~=nil and child==header.root)or child.Name=="HeaderHairline"end
 end
 return Kit

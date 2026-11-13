@@ -15,6 +15,8 @@ local Config=require(Shared.BoardConfig)
 local BallThemes=require(Shared.BallThemes)
 local BallFaces=require(script.Parent.BallFaces)
 local Sprite=require(script.Parent.JellySprite)
+-- Round item icons (QA 2026-11-13 Q1 item 9) on the phone item button.
+local ItemIcons=require(script.Parent.ItemIcons)
 local L=Assets.Layout
 local Screen={}
 Screen.__index=Screen
@@ -32,9 +34,10 @@ local function rect(x,y,w,h)return{x=x,y=y,w=w,h=h}end
 -- one glass LCD between two shoulders, every HUD card inside the screen, the board
 -- centred. Mirrors frame_geometry() in scripts/deck_art/build_compact_frame_mockups.py.
 local RIM,BEZ,PAD,GAP=4,5,3,8
--- Pocket Menu rows (PocketMenu.Items): Resume, Restart, Quit, Hatch eggs, Customize,
--- Collection book (play-forever F2). Two columns fill the left column first.
-local POCKET_ITEMS=6
+-- Pocket Menu rows (PocketMenu.Items): the pause menu, Resume, Restart, Quit and
+-- Settings (QA Q5: the machines moved to the garden hub). One column when four 44 px
+-- rows fit, else two columns that fill the left column first.
+local POCKET_ITEMS=4
 local function pocketGeometry(g)
  local s=g.screen;local pad=12
  local top=math.max(s.y+pad+36,g.kh+4)
@@ -301,6 +304,7 @@ function Screen.new(options)
   local disc=Kit.frame(holder,"Disc","raised",UDim2.new(),UDim2.fromScale(1,1),999);disc.BackgroundTransparency=0
   local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
   local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3]})
+  local icon=ItemIcons.new(disc,nil,nil);icon.Size=UDim2.fromScale(.6,.6)
   local badge=Kit.frame(holder,"Badge",nil,UDim2.new(1,-4,0,4),UDim2.fromOffset(20,20),999)
   badge.AnchorPoint=Vector2.new(.5,.5);badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.ink;badge.ZIndex=disc.ZIndex+3;badge.Visible=false
   Kit.stroke(badge,nil,1.5,.3)
@@ -310,7 +314,7 @@ function Screen.new(options)
    Position=UDim2.fromScale(.5,.5),ZIndex=disc.ZIndex+5,Selectable=false})
   hit:SetAttribute("AccessibleLabel","Items")
   hit.Activated:Connect(function()local cb=self.callbacks.item;if cb then cb()end end)
-  self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,badge=badge,count=count,caption=caption,hit=hit}
+  self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,icon=icon,badge=badge,count=count,caption=caption,hit=hit}
  end
  -- Board well behind the board renderer. No border (UI-SPEC-REDESIGN-MENUS 6.1):
  -- the well reads as a recess from the LCD gradient, not from a stroke.
@@ -461,11 +465,42 @@ function Screen:flash(id)
  else self:pressDpad(id,true);task.delay(.1,function()self:pressDpad(id,false)end)end
 end
 
+-- Merge shake (QA 2026-11-13 Q1 item 8): the whole Pocket Deck (shell, LCD and
+-- HUD) follows the board's merge jolt (DeckMergeJolt offset, already scaled by the
+-- merge size and short), so the device and its screen move together. Visual only:
+-- every hardware hit rect is moved back by the same amount, so its absolute rect
+-- never changes. Reduced Motion: no shake.
+function Screen.shakeOffset(offset,reduced)
+ if reduced or typeof(offset)~="Vector2"then return Vector2.zero end
+ return Vector2.new(math.round(offset.X),math.round(offset.Y))
+end
+function Screen:shakeHits()
+ local list={self.menuHit,self.buttons.A.hit,self.buttons.B.hit}
+ for _,q in pairs(self.quadrants)do table.insert(list,q)end
+ if self.itemButton then table.insert(list,self.itemButton.hit)end
+ return list
+end
+function Screen:setShake(offset,reduced)
+ local want=Screen.shakeOffset(offset,reduced==true or Kit.reduced())
+ self.shakeWant=want
+ local have=self.shakeApplied or Vector2.zero
+ if want==have then return false end
+ local d=UDim2.fromOffset(want.X-have.X,want.Y-have.Y)
+ self.root.Position+=d
+ for _,hit in ipairs(self:shakeHits())do hit.Position-=d end
+ self.shakeApplied=want
+ return true
+end
+
 -- Round items: the phone button shows the front item's glyph and the belt count
--- (an empty belt shows a plain "B" and no badge). `glyph`/`color` come from RoundItems.
-function Screen:setItems(count,glyph,color)
+-- (an empty belt shows a plain "B" and no badge). `glyph`/`color` come from RoundItems;
+-- `id` (QA 2026-11-13) draws the item's icon over the glyph.
+function Screen:setItems(count,glyph,color,id)
  local ib=self.itemButton;if not ib then return end
  count=count or 0
+ local drawn=count>0 and id~=nil and ItemIcons.source(id)~=nil
+ ItemIcons.set(ib.icon,if drawn then id else nil)
+ ib.glyph.Visible=not drawn
  ib.glyph.Text=if count>0 and glyph then glyph else "B"
  ib.glyph.TextColor3=if count>0 and color then color else Kit.Color.soft
  ib.ring.Color=if count>0 and color then color else Color3.new(1,1,1)
@@ -521,8 +556,16 @@ function Screen:setVisible(visible)
  self:applyTransparency()
 end
 
--- Places every sprite and returns the resolved geometry (view px).
+-- Places every sprite and returns the resolved geometry (view px). A merge shake in
+-- progress is taken off first and put back after, so layout always works from rest.
 function Screen:layout(rootSize,aspect,keep)
+ local want=self.shakeWant
+ self:setShake(nil,true)
+ local g=self:placeAll(rootSize,aspect,keep)
+ if want then self:setShake(want,false)end
+ return g
+end
+function Screen:placeAll(rootSize,aspect,keep)
  local g=Screen.resolve(rootSize,aspect,keep);self.geometry=g
  Kit.touchHidesFocus=g.phone==true
  self:showShell(not g.phone)
@@ -663,10 +706,45 @@ function Screen:placeResults(r)
 end
 
 -- ── Round HUD (5.1 regular, 7 compact) ──────────────────────────────────────
-local function card(parent,name,r,label,pad)
- local c,eyebrow=Kit.card(parent,name,label,{pad=pad,labelY=pad==14 and 12 or 6})
+-- House personality (QA 2026-11-13 Q1 item 3, UI-PERSONALITY T1/T2/T5/T6/T8): every
+-- side panel is an information pane, so it carries the stitched seam (Kit hides it
+-- under 150 px); Goals and Daily quests share the quests tint (dot + eyebrow); the
+-- difficulty multiplier is the card's one sticker; the difficulty name is in the
+-- display face; the Controls card uses the deck's own hint caps. No rect, size, hit
+-- area or focus order changes.
+Screen.HudTint="quests"
+Screen.ChipKind="sticker"
+local function card(parent,name,r,label,pad,tint)
+ local c,eyebrow=Kit.card(parent,name,label,{pad=pad,labelY=pad==14 and 12 or 6,seam=true})
  c.Position,c.Size=UDim2.fromOffset(r[1],r[2]),UDim2.fromOffset(r[3],r[4])
+ if tint and eyebrow then Kit.tintEyebrow(eyebrow,tint)end
  return c,eyebrow
+end
+-- Goal text: the rich colour circles never grow past the line's own text size, so a
+-- circle cannot push its line taller and the text stays centred on its row.
+function Screen.capCircles(text,size)
+ if type(text)~="string"then return text end
+ size=math.floor(size or 16)
+ return(string.gsub(text,'size="(%d+)"',function(n)return 'size="'..math.min(tonumber(n)or size,size)..'"' end))
+end
+-- Goal rows on the regular Goals card (244 high, rows from y 40 to 230): each row is
+-- its text block (one or two 20 px lines, centred), a 6 px bar 6 px under it and the
+-- count beside the bar; the check is centred on the text block. Rows are spaced
+-- evenly (gap 14..26) whatever mix of one- and two-line goals the round has.
+Screen.GoalRows={top=40,bottom=230,line=20,gapMin=14,gapMax=26,check=22,bar=6}
+function Screen.goalRows(lines)
+ local G=Screen.GoalRows
+ local rows,sum={},0
+ for index,n in ipairs(lines)do
+  local textH=math.clamp(n,1,2)*G.line
+  rows[index]={textH=textH,h=textH+6+G.bar,checkY=math.floor((textH-G.check)/2+.5),barY=textH+6}
+  sum+=rows[index].h
+ end
+ local n=#rows
+ local gap=if n>0 then math.clamp(math.floor((G.bottom-G.top-sum)/n),G.gapMin,G.gapMax)else 0
+ local y=G.top
+ for _,row in ipairs(rows)do row.y=y;y+=row.h+gap end
+ return rows,gap
 end
 -- Next / Then: the ball as drawn on the board (pixel runs, its face, a star when it
 -- is a power-up ball). `ball` keeps the old holder contract for layout code.
@@ -723,11 +801,6 @@ function Screen:buildCompactHud(g)
   local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,hh);t.TextSize=size;return t
  end
  local right={TextXAlignment=Enum.TextXAlignment.Right}
- local function hit(parent,name,label,callback)
-  local b=Kit.node("TextButton",parent,{Name=name,Text="",BackgroundTransparency=1,AutoButtonColor=false,Size=UDim2.fromScale(1,1),ZIndex=parent.ZIndex+6,Selectable=false})
-  b:SetAttribute("AccessibleLabel",label);b.Activated:Connect(callback);return b
- end
- local function openQuests()if self.callbacks.quests then self.callbacks.quests()end end
  -- Score (label over a Counter 18); Chain shares it when the row is 130..153 wide.
  local sr=g.score
  local score=screenCard(host,"Score",sr)
@@ -786,7 +859,7 @@ function Screen:buildCompactHud(g)
  for index,bh in ipairs({10,16,22})do h.diffBars[index]=Kit.frame(diff,"Bar"..index,"stars",UDim2.fromOffset((if tight then 9 else 12)+(index-1)*9,33-bh),UDim2.fromOffset(6,bh),2)end
  h.diffName=txt(diff,"Strong","Medium","text",if tight then 40 else 46,0,dr.w-(if tight then 46 else 52),dr.h,if tight then 14 else 15)
  if dr.w>=170 and g.layout~="one"then
-  h.diffChip=Kit.chip(diff,"★ ×1","gold",22);h.diffChip.label.TextSize=12;h.diffChip.set("★ ×1","gold")
+  h.diffChip=Kit.chip(diff,"★ ×1","gold",22);h.diffChip.label.TextSize=12;h.diffChip.set("★ ×1",Screen.ChipKind)
   h.diffChip.root.AnchorPoint=Vector2.new(1,.5);h.diffChip.root.Position=UDim2.new(1,-10,.5,0)
   h.diffName.Size=UDim2.fromOffset(80,dr.h)
  end
@@ -813,6 +886,8 @@ function Screen:buildCompactHud(g)
  h.goalsCard=goals
  local gw=gr.w
  h.goalsEyebrow=txt(goals,"Label","GOALS","dim",if narrow then 10 else 12,4,gw-24,20,12)
+ -- The HUD tint (dot + eyebrow) where the wide column has room for it.
+ if g.layout=="wide"then Kit.tintEyebrow(h.goalsEyebrow,Screen.HudTint);h.tint=Screen.HudTint end
  h.goalsCount=txt(goals,"Counter","","dim",12,4,gw-24,20,12,right)
  if g.chainIn=="goals"then h.chain=txt(goals,if narrow then "Counter"else "Label",if narrow then "×0"else "CHAIN ×0",if narrow then "text"else "soft",10,4,gw-20,20,if narrow then 13 else 12,right);h.chainInGoals=true end
  h.status=txt(goals,"Body","","soft",10,26,gw-20,3*p,14,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
@@ -835,12 +910,10 @@ function Screen:buildCompactHud(g)
   end
  end
  h.goalPitch=p
- -- Daily quests card (wide, when it clears three goals) or the quest handle. Both open the quest log.
+ -- Daily quests card (wide, when it clears three goals) or the quest handle. Progress
+ -- only (QA Q5): the quest log opens from the garden hub's Quests tile, not from here.
  local function readyDot(parent,x,y)
   local dot=Kit.frame(parent,"ReadyDot","stars",UDim2.fromOffset(x,y),UDim2.fromOffset(8,8),999);dot.Visible=false;return dot
- end
- local function chevronRight(parent,x,y)
-  local c=Kit.chevron(parent,14,"up","soft");c.Position=UDim2.fromOffset(x,y);c.Rotation=90;return c
  end
  if g.quests then
   local qr=g.quests;local qp=g.questPitch
@@ -850,7 +923,6 @@ function Screen:buildCompactHud(g)
   txt(quests,"Label",title,"dim",12,4,qr.w-24,20,12)
   h.questDot=readyDot(quests,12+math.ceil(TextService:GetTextSize(title,12,Enum.Font.BuilderSansBold,Vector2.new(400,40)).X)+6,10)
   h.questCount=txt(quests,"Counter","","soft",qr.w-26-50,4,50,20,13,right)
-  chevronRight(quests,qr.w-24,7)
   h.daily={}
   for index=1,3 do
    local y=24+(index-1)*qp
@@ -866,7 +938,6 @@ function Screen:buildCompactHud(g)
    end
    h.daily[index]={name=name,count=count,bar=bar}
   end
-  h.questsHit=hit(quests,"Hit","Daily quests",openQuests)
  else
   local hr=g.handle
   local handle=screenCard(host,"QuestHandle",hr,"well",12)
@@ -874,9 +945,7 @@ function Screen:buildCompactHud(g)
   h.questDot=readyDot(icon,12,-3)
   if hr.w>=130 then txt(handle,"Strong","Quests","text",38,0,70,hr.h,14)end
   h.questCount=txt(handle,"Counter","","soft",hr.w-26-50,0,50,hr.h,13,right)
-  chevronRight(handle,hr.w-24,15)
   h.handle=handle
-  h.questsHit=hit(handle,"Hit","Daily quests",openQuests)
   h.daily={}
  end
  -- Controls: rows for the last input; the card follows the rows shown, bottom-anchored.
@@ -896,7 +965,7 @@ function Screen:buildCompactHud(g)
  self.lastHud=nil;self.controlsKey=nil
 end
 
--- v2 has no quest drawer: the quests card and handle open the quest log.
+-- v2 has no quest drawer: the quests card and handle show progress only (QA Q5).
 function Screen:closeDrawer()return false end
 
 function Screen:buildHud(g)
@@ -919,24 +988,23 @@ function Screen:buildHud(g)
   local chain=card(host,"Chain",{leftX,116,col,64},"CHAIN",pad)
   h.chain=txt(chain,"Counter","×0","text",14,30,60,24,{TextSize=22})
   h.chainBar=Kit.progress(chain,10,5);h.chainBar.root.Position=UDim2.fromOffset(84,36);h.chainBar.layout(116,4)
-  local goals,eyebrow=card(host,"Goals",{leftX,188,col,244},"GOALS",pad);h.goalsEyebrow=eyebrow
+  local goals,eyebrow=card(host,"Goals",{leftX,188,col,244},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
   h.goalsCount=txt(goals,"Counter","0/2","dim",col-74,10,60,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
   h.status=txt(goals,"Small","","soft",14,40,col-28,190,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
-  h.goals={}
+  h.goals={};h.goalWidth=col-60
+  -- Rows are re-placed by setHud (Screen:placeGoalRows) once the goal texts are known.
+  local rows=Screen.goalRows({2,2,2})
   for index=1,3 do
-   local y=38+(index-1)*68
-   local row=Kit.frame(goals,"Goal"..index,nil,UDim2.fromOffset(0,y),UDim2.fromOffset(col,64))
-   local check=Kit.check(row,22);check.root.Position=UDim2.fromOffset(14,4)
-   local text=txt(row,"BodyMedium","","text",46,0,col-60,40,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
-   local bar=Kit.progress(row,6);bar.root.Position=UDim2.fromOffset(46,44);bar.root.Size=UDim2.fromOffset(math.min(130,col-104),6)
-   local count=txt(row,"Counter","","soft",col-62,37,48,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
+   local r=rows[index]
+   local row=Kit.frame(goals,"Goal"..index,nil,UDim2.fromOffset(0,r.y),UDim2.fromOffset(col,r.h))
+   local check=Kit.check(row,22);check.root.Position=UDim2.fromOffset(14,r.checkY)
+   local text=txt(row,"BodyMedium","","text",46,0,col-60,r.textH,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Center})
+   local bar=Kit.progress(row,6);bar.root.Position=UDim2.fromOffset(46,r.barY);bar.root.Size=UDim2.fromOffset(math.min(130,col-104),6)
+   local count=txt(row,"Counter","","soft",col-62,r.barY-7,48,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
    h.goals[index]={row=row,check=check,text=text,bar=bar,count=count}
   end
-  local daily=card(host,"DailyQuests",{leftX,440,col,156},"DAILY QUESTS",pad)
-  -- The card opens the quest log (MENU opens the Pocket Menu now).
-  local qhit=Kit.node("TextButton",daily,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,Size=UDim2.fromScale(1,1),ZIndex=daily.ZIndex+6,Selectable=false})
-  qhit:SetAttribute("AccessibleLabel","Daily quests");h.questsHit=qhit
-  qhit.Activated:Connect(function()if self.callbacks.quests then self.callbacks.quests()end end)
+  local daily=card(host,"DailyQuests",{leftX,440,col,156},"DAILY QUESTS",pad,Screen.HudTint)
+  -- Progress only (QA Q5): the quest log opens from the garden hub's Quests tile.
   h.daily={}
   for index=1,3 do
    local y=38+(index-1)*38
@@ -960,8 +1028,8 @@ function Screen:buildHud(g)
   for index,bh in ipairs({10,16,22})do
    local bar=Kit.frame(diff,"Bar"..index,"stars",UDim2.fromOffset(16+(index-1)*9,25+22-bh),UDim2.fromOffset(6,bh),2);h.diffBars[index]=bar
   end
-  h.diffName=txt(diff,"Heading","Medium","text",52,0,100,72)
-  h.diffChip=Kit.chip(diff,"★ ×1","gold",26);h.diffChip.root.AnchorPoint=Vector2.new(1,.5);h.diffChip.root.Position=UDim2.new(1,-14,.5,0)
+  h.diffName=txt(diff,"Name","Medium","text",52,0,100,72)
+  h.diffChip=Kit.chip(diff,"★ ×1",Screen.ChipKind,26);h.diffChip.root.AnchorPoint=Vector2.new(1,.5);h.diffChip.root.Position=UDim2.new(1,-14,.5,0)
   local pays=card(host,"WinPays",{rightX,344,col,84},"WIN PAYS",pad)
   local star=Kit.icon(pays,"star",26);star.Position=UDim2.fromOffset(14,31)
   h.pays=txt(pays,"Counter","6–8","stars",46,30,col-60,28,{TextSize=26})
@@ -978,7 +1046,7 @@ function Screen:buildHud(g)
   -- Compact (7): authored at 417x299, padding 6.
   local score=card(host,"Score",{leftX,6,col,54},"SCORE",pad)
   h.score=txt(score,"CounterL","0","text",8,22,col-16,28)
-  local goals,eyebrow=card(host,"Goals",{leftX,66,col,136},"GOALS",pad);h.goalsEyebrow=eyebrow
+  local goals,eyebrow=card(host,"Goals",{leftX,66,col,136},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
   h.goalsCount=txt(goals,"Counter","","dim",col-50,4,42,16,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
   h.status=txt(goals,"Small","","soft",8,24,col-16,108,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
   h.goals={}
@@ -1000,7 +1068,7 @@ function Screen:buildHud(g)
   local diff=card(host,"Difficulty",{rightX,166,col,60},nil,pad)
   h.diffBars={}
   for index,bh in ipairs({8,12,16})do h.diffBars[index]=Kit.frame(diff,"Bar"..index,"stars",UDim2.fromOffset(8+(index-1)*7,10+16-bh),UDim2.fromOffset(5,bh),2)end
-  h.diffName=txt(diff,"Strong","Medium","text",34,6,col-40,22,{TextSize=15})
+  h.diffName=txt(diff,"Name","Medium","text",34,6,col-40,22,{TextSize=15})
   h.diffChip=Kit.chip(diff,"★ ×1","gold",20);h.diffChip.root.Position=UDim2.fromOffset(8,32)
   local pays=card(host,"WinPays",{rightX,232,col,61},"WIN PAYS",pad)
   local star=Kit.icon(pays,"star",18);star.Position=UDim2.fromOffset(8,30)
@@ -1010,6 +1078,43 @@ function Screen:buildHud(g)
  self.lastHud=nil;self.controlsKey=nil
 end
 
+-- The Goals eyebrow: Stars gold while a status line replaces it, else the HUD tint
+-- (or `dim` without one). Painted only when the state flips, so a theme change keeps
+-- the right colour.
+function Screen.paintEyebrow(h,statusOn,tint)
+ local state=if statusOn then "status"elseif tint then "tint"else "dim"
+ if h.eyebrowState==state then return end
+ h.eyebrowState=state
+ local color=if statusOn then Kit.Color.stars else(tint and Kit.tintColor(tint))or Kit.Color.dim
+ Kit.paint(h.goalsEyebrow,"TextColor3",function()return color end)
+end
+-- Regular Goals card: measure each visible goal (one or two lines at the row's
+-- width, synchronous Kit.measure) and place the rows evenly (Screen.goalRows).
+-- Re-placed only when the line pattern changes.
+function Screen:placeGoalRows()
+ local h=self.hud
+ local lines,key={},""
+ for index,slot in ipairs(h.goals)do
+  if slot.row.Visible then
+   local plain=BallThemes.strip(slot.text.Text)
+   local tall=Kit.measure(plain,"BodyMedium",slot.text.TextSize,h.goalWidth-4).Y>slot.text.TextSize*1.6
+   lines[index]=if tall then 2 else 1
+   key..=tostring(lines[index])
+  end
+ end
+ if h.goalKey==key then return end
+ h.goalKey=key
+ local rows=Screen.goalRows(lines)
+ for index,slot in ipairs(h.goals)do
+  local r=rows[index]
+  if r then
+   slot.row.Position=UDim2.fromOffset(0,r.y);slot.row.Size=UDim2.fromOffset(slot.row.Size.X.Offset,r.h)
+   slot.check.root.Position=UDim2.fromOffset(14,r.checkY)
+   slot.text.Size=UDim2.fromOffset(slot.text.Size.X.Offset,r.textH)
+   slot.bar.root.Position=UDim2.fromOffset(46,r.barY);slot.count.Position=UDim2.fromOffset(slot.count.Position.X.Offset,r.barY-7)
+  end
+ end
+end
 local controlRows={
  Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Items"},{"MENU","Pocket menu"}},
  Keyboard={{"← →","Aim"},{"Space","Drop"},{"B","Items"},{"M","Pocket menu"}},
@@ -1059,18 +1164,20 @@ function Screen:setHud(data)
   if goal then
    if goal.done then done+=1 end
    slot.check.set(goal.done)
-   slot.text.RichText=true;slot.text.Text=if compact then goal.short or goal.text else goal.text
+   slot.text.RichText=true;slot.text.Text=Screen.capCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize)
    slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
    if slot.bar then slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)end
    if slot.count then slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)end
   end
  end
+ if not compact and h.goalWidth then self:placeGoalRows()end
  h.goalsCount.Text=if #goals>0 and not h.status.Visible then string.format("%d/%d",done,#goals)else ""
  if compact then h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS";h.goalsCount.Text=""end
  -- Status lines ("Falling", "Settling", save waits) replace the Goals label row.
- if data.statusLabel and data.statusLabel~="" then h.goalsEyebrow.Text=string.upper(data.statusLabel);h.goalsEyebrow.TextColor3=Kit.Color.stars;h.goalsCount.Text=""
- elseif not compact then h.goalsEyebrow.Text="GOALS";h.goalsEyebrow.TextColor3=Kit.Color.dim
- else h.goalsEyebrow.TextColor3=Kit.Color.dim end
+ local statusOn=data.statusLabel~=nil and data.statusLabel~=""
+ if statusOn then h.goalsEyebrow.Text=string.upper(data.statusLabel);h.goalsCount.Text=""
+ elseif not compact then h.goalsEyebrow.Text="GOALS"end
+ Screen.paintEyebrow(h,statusOn,Screen.HudTint)
  if h.daily then
   for index,slot in ipairs(h.daily)do
    local q=data.daily and data.daily[index]
@@ -1086,7 +1193,7 @@ function Screen:setHud(data)
  local level=({Easy=1,Medium=2,Hard=3})[data.difficulty or "Medium"]or 2
  local tone=if level==1 then Kit.Color.good elseif level==3 then Kit.Color.danger else Kit.Color.stars
  for index,bar in ipairs(h.diffBars)do bar.BackgroundColor3=tone;bar.BackgroundTransparency=if index<=level then 0 else .75 end
- h.diffName.Text=data.difficulty or "Medium";h.diffChip.set("★ "..(data.multiplier or "×1"),"gold")
+ h.diffName.Text=data.difficulty or "Medium";h.diffChip.set("★ "..(data.multiplier or "×1"),if compact then "gold"else Screen.ChipKind)
  h.pays.Text=data.winPays or "6–8"
  if h.controls then
   local rows=controlRows[data.input or "Keyboard"]or controlRows.Keyboard
@@ -1097,7 +1204,7 @@ function Screen:setHud(data)
     slot.holder:ClearAllChildren()
     local row=rows[index]
     slot.text.Text=row and row[2]or ""
-    if row then Kit.glyph(slot.holder,row[1],false,22)end
+    if row then Kit.glyph(slot.holder,row[1],false,22,true)end
    end
   end
  end
@@ -1155,15 +1262,17 @@ function Screen:setCompactHud(data)
     slot.egg.circle.BackgroundTransparency=if goal.done then .45 else 0
    else
     slot.check.set(goal.done)
-    slot.text.RichText=true;slot.text.Text=goal.short or goal.text
+    slot.text.RichText=true;slot.text.Text=Screen.capCircles(goal.short or goal.text,slot.text.TextSize)
     slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
     slot.count.Text=count
    end
   end
  end
  h.goalsCount.Text=""
- if data.statusLabel and data.statusLabel~=""then h.goalsEyebrow.Text=string.upper(data.statusLabel);h.goalsEyebrow.TextColor3=Kit.Color.stars
- else h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS";h.goalsEyebrow.TextColor3=Kit.Color.dim end
+ local statusOn=data.statusLabel~=nil and data.statusLabel~=""
+ if statusOn then h.goalsEyebrow.Text=string.upper(data.statusLabel)
+ else h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS"end
+ Screen.paintEyebrow(h,statusOn,h.tint)
  -- Card height follows the goal count (a status message gets two rows, three in a narrow column).
  local n=if h.status.Visible then(if h.layout=="narrow"then 3 else 2)else math.max(1,#goals)
  local cardH=24+n*h.goalPitch+6
@@ -1208,7 +1317,7 @@ function Screen:setCompactHud(data)
  local tone=if level==1 then Kit.Color.good elseif level==3 then Kit.Color.danger else Kit.Color.stars
  for index,bar in ipairs(h.diffBars)do bar.BackgroundColor3=tone;bar.BackgroundTransparency=if index<=level then 0 else .75 end
  h.diffName.Text=data.difficulty or "Medium"
- if h.diffChip then h.diffChip.set("★ "..(data.multiplier or "×1"),"gold");h.diffChip.label.TextSize=12 end
+ if h.diffChip then h.diffChip.set("★ "..(data.multiplier or "×1"),Screen.ChipKind);h.diffChip.label.TextSize=12 end
  h.pays.Text=data.winPays or "6–8"
  if h.controls then
   local key=data.input or "Keyboard"
@@ -1229,8 +1338,8 @@ function Screen:setCompactHud(data)
       local arrow=Kit.text(chip,"Strong","↔","soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=14})
       local _=arrow
      else
-      local glyph=Kit.glyph(slot.holder,row[1],false,24)
-      if row[1]=="A"then glyph.BackgroundColor3=self.accent or Kit.color("accent");glyph.BackgroundTransparency=0;local t=glyph:FindFirstChildWhichIsA("TextLabel");if t then t.TextColor3=Kit.Color.ink end end
+      -- The deck's own hint caps (T8): A is the mint cap, B / MENU grey caps.
+      Kit.glyph(slot.holder,row[1],false,24,true)
      end
     end
    end

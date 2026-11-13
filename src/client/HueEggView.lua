@@ -982,11 +982,20 @@ function View:showChrome(on)
  if on then self.portrait.Parent=self.chromeWell;self.portrait.Position=UDim2.new();self.portrait.Size=UDim2.fromScale(1,1)
  elseif self.portrait.Parent==self.chromeWell then self.portrait.Parent=self.card end
  if not on and self.chromeRing then self.chromeRing.hide()end
+ -- QA Q2.1: the chrome's dim joins the shared shade stack (one dim at a time); a
+ -- screen opened over Customize (Wardrobe, Pets selector) hides this panel.
+ if on and self.chromeDim and self.shade.Visible then
+  Kit.shadeOpen(self,self.chromeDim,function(covered)
+   if not self.chromePanel then return end
+   self.chromePanel.Visible=not covered
+   if not covered and self.chromeBody then Kit.slideIn(self.chromeBody,-Kit.SlideOffset,Kit.headerSkip(self.header))end
+  end)
+ elseif not on and not self.rebuildingChrome then Kit.shadeClose(self)end
 end
 function View:buildChrome(view)
  if self.chromeRoot then
   -- Return borrowed nodes before the old chrome is destroyed.
-  self:showChrome(false);self.chromeRoot:Destroy()
+  self.rebuildingChrome=true;self:showChrome(false);self.rebuildingChrome=nil;self.chromeRoot:Destroy()
  end
  local phone=view~=nil
  local g=View.chromeGeometry(if phone then view.W else 848,if phone then view.H else 608,phone)
@@ -994,6 +1003,7 @@ function View:buildChrome(view)
  local root=Kit.frame(self.shade,"Customize",nil,UDim2.new(),UDim2.fromScale(1,1));root.ZIndex=self.shade.ZIndex+1;root.Visible=false
  self.chromeRoot=root
  local dim=Kit.frame(root,"Shade",nil,UDim2.new(),UDim2.fromScale(1,1));dim.BackgroundTransparency=if phone then 1 else .35;dim.BackgroundColor3=Color3.new(0,0,0);dim.Active=true
+ dim:SetAttribute("ShadeAlpha",dim.BackgroundTransparency);Kit.coverScreen(dim);self.chromeDim=dim
  local panel=Kit.frame(root,"Panel","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.W,g.H),30);panel.Active=true;panel.ZIndex=dim.ZIndex+1
  self.chromePanel=panel;self.chromeScale=Kit.node("UIScale",panel,{Scale=1})
  local body=panel
@@ -1399,7 +1409,11 @@ function View:open(state,page,petId)
   else self.confirmation={equipPetId=self.equipTargetId};self.machineSwitching=nil end
  end
  if self.page=="palette"and not self:canCustomize()and not self:hasReceiptAssignment()then return false end
- self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1;self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh();return true
+ self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1;self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh()
+ -- QA Q2.2: opened from the Companions hub, the page slides in from the right (Pets move).
+ local from=self.slideFrom;self.slideFrom=nil
+ if from and self:chromeActive()and self.chromeBody then Kit.slideIn(self.chromeBody,from,Kit.headerSkip(self.header))end
+ return true
 end
 function View:close(reason)
  self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
@@ -1430,7 +1444,8 @@ function View:close(reason)
  local pendingId=if self.assignment then self.assignment.pendingResultId elseif self.confirmation then self.confirmation.pendingResultId else nil
  if pendingId then self.resultDraft={id=pendingId,petId=self.petId,channel=self.channel,tab=self.tab,assignment=if self.assignment then table.clone(self.assignment)else nil,confirmation=if self.confirmation then table.clone(self.confirmation)else nil}end
  self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1
- self:retireTransientArt(true);self.purchaseInFlight=nil;self.shade.Visible=false;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)
+ self:retireTransientArt(true);self.purchaseInFlight=nil;self.shade.Visible=false;Kit.shadeClose(self);self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch)
+ if self.chromePanel then self.chromePanel.Visible=true end
  self.materialPanel.reveal:clear();self.materialPurchaseInFlight=nil
  self.toyPanel.reveal:clear();self.toyPurchaseInFlight=nil;self.featurePanel.reveal:clear();self.featurePurchaseInFlight=nil
  self:updateGrid(0)

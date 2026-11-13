@@ -82,6 +82,8 @@ function Art.meshes(room)
 				part:SetAttribute("WorldMotionPeriod",info.motion.period)
 				part:SetAttribute("WorldMotionPhase",info.motion.phase)
 				part:SetAttribute("WorldRestCFrame",part.CFrame)
+				-- Distant movers (castle flags, the cloud sea) animate beyond WorldMotion.Range.
+				if info.motion.far then part:SetAttribute("WorldMotionFar",true)end
 				if info.pivot then part:SetAttribute("WorldPivot",Vector3.new(table.unpack(info.pivot)))end
 			end
 		end
@@ -98,9 +100,11 @@ function Art.collision(room)
 		Vector3.new(World.Width,1,World.Depth),false):SetAttribute("PlayableWidth",World.Width)
 	room.Floor:SetAttribute("PlayableDepth",World.Depth)
 	local walls=Instance.new("Folder");walls.Name="PerimeterWall";walls.Parent=room
+	-- QA 2026-11-13: the generated boxes were mirrored across the ring tangent (walk-through gaps); the yaw is fixed
+	-- in scripts/build_world_v7_chunks.py. Walls block players only: rays (camera, pets, prompts) pass through.
 	for i,entry in ipairs(Data.perimeter)do
 		local cf,size=box(entry)
-		invisible(walls,"Wall"..i,cf,size,true)
+		invisible(walls,"Wall"..i,cf,size,true).CanQuery=false
 	end
 	local cf,size=box(Data.caveBlocker)
 	invisible(room,"CaveBlocker",cf,size,true)
@@ -210,53 +214,107 @@ function Art.careStatus(room)
 	mark(fixture and fixture:FindFirstChildOfClass("PointLight"),c.lightRest,c.lightOccupied)
 end
 
--- Flowing water overlays: beams scroll the water texture downstream and down
--- the falls. Client WorldMotion stops them when Reduced Motion is on.
+-- Moving water (QA 2026-11-13, Q3.1-4). The stream and pools keep their mesh water and gain
+-- scrolling Texture skins (the old stream beams sat 0.08 studs above the mesh, z-fought with it
+-- and stretched the texture into light-blue streaks). Each waterfall sheet gets one flat beam
+-- in its own plane (the old camera-facing beam billboarded and missed the lower sheet), and the
+-- foam where the falls land throws gentle splash and mist particles. Client WorldMotion scrolls
+-- the skins and stills skins, beams and particles while Reduced Motion is on.
+Art.WaterSkins={
+	-- part, studs per tile, transparency, flow (studs/s in the part's top-face U, V), layer name
+	{part="W7_Water__water_stream",studs=16,transparency=.5,flow={.55,-.95},name="FlowSkin"},
+	{part="W7_Water__water_stream",studs=10,transparency=.72,flow={.15,-.6},name="FlowGlint"},
+	{part="W7_Water__water_pool",studs=14,transparency=.6,flow={.18,-.12},name="FlowSkin"},
+	{part="W7_Landmarks__water",studs=8,transparency=.6,flow={.12,.08},name="FlowSkin"},
+}
+Art.FoamTexture="rbxasset://textures/particles/smoke_main.dds"
+
+local function foam(folder,entry)
+	local c,s=entry.center,entry.size
+	local area=s[1]*s[3]
+	local p=invisible(folder,entry.name,CFrame.new(c[1],c[2]+.3,c[3]),Vector3.new(math.max(s[1]*.8,1),.2,math.max(s[3]*.8,1)),false)
+	local splash=Instance.new("ParticleEmitter")
+	splash.Name="Splash"
+	splash.Texture=Art.FoamTexture
+	splash.Shape=Enum.ParticleEmitterShape.Box
+	splash.EmissionDirection=Enum.NormalId.Top
+	splash.Rate=math.clamp(area*.25,6,22)
+	splash.Lifetime=NumberRange.new(.45,.85)
+	splash.Speed=NumberRange.new(4,8)
+	splash.SpreadAngle=Vector2.new(28,28)
+	splash.Acceleration=Vector3.new(0,-24,0)
+	splash.Drag=1
+	splash.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.45),NumberSequenceKeypoint.new(1,.12)})
+	splash.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.2),NumberSequenceKeypoint.new(.7,.45),NumberSequenceKeypoint.new(1,1)})
+	splash.Color=ColorSequence.new(Color3.fromHex("#FFF8FA"))
+	splash.LightInfluence,splash.LightEmission=.6,.15
+	splash.Rotation,splash.RotSpeed=NumberRange.new(0,360),NumberRange.new(-90,90)
+	splash.Parent=p
+	local mist=Instance.new("ParticleEmitter")
+	mist.Name="Mist"
+	mist.Texture=Art.FoamTexture
+	mist.Shape=Enum.ParticleEmitterShape.Box
+	mist.EmissionDirection=Enum.NormalId.Top
+	mist.Rate=math.clamp(area*.05,2,6)
+	mist.Lifetime=NumberRange.new(2.5,4)
+	mist.Speed=NumberRange.new(.6,1.6)
+	mist.SpreadAngle=Vector2.new(35,35)
+	mist.Acceleration=Vector3.new(0,.4,0)
+	mist.Drag=.6
+	mist.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,2),NumberSequenceKeypoint.new(1,5.5)})
+	mist.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.2,.72),NumberSequenceKeypoint.new(1,1)})
+	mist.Color=ColorSequence.new(Color3.fromHex("#FFF1F4"))
+	mist.LightInfluence,mist.LightEmission=1,0
+	mist.Rotation,mist.RotSpeed=NumberRange.new(0,360),NumberRange.new(-12,12)
+	mist.Parent=p
+	return p
+end
+
 function Art.water(room)
 	local folder=Instance.new("Folder");folder.Name="WaterFlow";folder.Parent=room
-	-- `normal` is the beam's facing: a beam lies in the plane its attachments' Axis is
-	-- normal to. The stream used a sideways Axis and stood up as a curtain (QA 2026-11-12).
+	-- A beam lies in the plane its attachments' Axis is normal to; SecondaryAxis is world up.
 	local function anchor(position,normal)
 		local p=invisible(folder,"FlowAnchor",CFrame.new(position),Vector3.new(.1,.1,.1),false)
 		local a=Instance.new("Attachment")
-		local side=if math.abs(normal.X)>.9 then Vector3.zAxis else Vector3.xAxis
-		a.CFrame=CFrame.fromMatrix(Vector3.zero,normal,side)
+		local up=if math.abs(normal.Y)>.9 then Vector3.xAxis else Vector3.yAxis
+		a.CFrame=CFrame.fromMatrix(Vector3.zero,normal,up)
 		a.Parent=p
 		return a
 	end
-	local stream=Data.beams.stream
-	for i=1,#stream-1 do
-		local a,b=stream[i],stream[i+1]
-		local beam=Instance.new("Beam")
-		beam.Attachment0=anchor(Vector3.new(a[1],a[2],a[3]),Vector3.yAxis)
-		beam.Attachment1=anchor(Vector3.new(b[1],b[2],b[3]),Vector3.yAxis)
-		beam.Width0,beam.Width1=a[4],b[4]
-		beam.FaceCamera=false
-		beam.Texture=Data.waterTexture
-		beam.TextureMode=Enum.TextureMode.Static
-		beam.TextureLength=1
-		beam.TextureSpeed=.15
-		beam.Transparency=NumberSequence.new(.55)
-		beam.LightInfluence=1
-		beam.Segments=4
-		beam:SetAttribute("WorldFlowSpeed",.15)
-		beam.Parent=beam.Attachment0.Parent
+	local meshes=room:FindFirstChild("World")
+	for _,skin in ipairs(Art.WaterSkins)do
+		local part=meshes and meshes:FindFirstChild(skin.part)
+		if not part then continue end
+		local t=Instance.new("Texture")
+		t.Name=skin.name
+		t.Face=Enum.NormalId.Top
+		t.Texture=Data.waterTexture
+		t.StudsPerTileU,t.StudsPerTileV=skin.studs,skin.studs
+		t.Transparency=skin.transparency
+		t:SetAttribute("WorldFlowU",skin.flow[1])
+		t:SetAttribute("WorldFlowV",skin.flow[2])
+		t.Parent=part
 	end
-	for _,fall in ipairs(Data.beams.falls)do
+	local sheets=Data.beams.sheets or {}
+	for _,sheet in ipairs(sheets)do
+		local normal=Vector3.new(table.unpack(sheet.normal)).Unit
 		local beam=Instance.new("Beam")
-		beam.Attachment0=anchor(Vector3.new(table.unpack(fall.top)),Vector3.zAxis)
-		beam.Attachment1=anchor(Vector3.new(table.unpack(fall.bottom)),Vector3.zAxis)
-		beam.Width0,beam.Width1=fall.width,fall.width*1.1
-		beam.FaceCamera=true
+		beam.Name=sheet.name
+		beam.Attachment0=anchor(Vector3.new(table.unpack(sheet.top)),normal)
+		beam.Attachment1=anchor(Vector3.new(table.unpack(sheet.bottom)),normal)
+		beam.Width0,beam.Width1=sheet.width0,sheet.width1
+		beam.FaceCamera=false
 		beam.Texture=Data.fallTexture
 		beam.TextureMode=Enum.TextureMode.Wrap
 		beam.TextureLength=8
 		beam.TextureSpeed=1.3
-		beam.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.45),NumberSequenceKeypoint.new(.8,.55),NumberSequenceKeypoint.new(1,1)})
+		beam.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.5),NumberSequenceKeypoint.new(.85,.5),NumberSequenceKeypoint.new(1,.9)})
 		beam.LightInfluence=1
+		beam.Segments=6
 		beam:SetAttribute("WorldFlowSpeed",1.3)
 		beam.Parent=beam.Attachment0.Parent
 	end
+	for _,entry in ipairs(Data.foam or {})do foam(folder,entry)end
 end
 
 -- Frond bushes at rock bases and path edges (batch 2026-11-13, W1): clones of the

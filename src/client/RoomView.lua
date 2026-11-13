@@ -957,6 +957,9 @@ end
 
 function Room:show(mode, animate)
 	self.welcome.Visible = false
+	-- QA 2026-11-13 Q1: the world camera is frozen while the deck is up (DeckCameraLock);
+	-- the Room path lets go first so the roam camera below starts from a Custom camera.
+	if mode == "Room" and self.boardCamera then self.boardCamera:release() end
 	if mode == "Room" then
         self.endedRoomSerial=if self.progress:GetAttribute("RoundOver")==true then self.progress:GetAttribute("ResetId")else nil
 		local meet = self.requestedPet ~= nil
@@ -990,6 +993,8 @@ function Room:show(mode, animate)
   if self.affection then self.affection:setPet(nil)end
 		self.petPrompt, self.petClick, self.petTarget, self.focusMotion = nil, nil, nil, nil
 		self:restoreCamera()
+		self.boardCamera = self.boardCamera or require(script.Parent.DeckCameraLock).new()
+		self.boardCamera:freeze(workspace.CurrentCamera)
 	end
 	self.menuOpen = false
 	self:updateControls()
@@ -1082,6 +1087,7 @@ end
 
 function Room:destroy()
 	if self.destroyed then return end
+	if self.boardCamera then self.boardCamera:release() end
  if self.care then self.care:destroy();self.care=nil end
  if self.careArms then self.careArms:destroy();self.careArms=nil end
  if self.coos then self.coos:destroy();self.coos=nil end

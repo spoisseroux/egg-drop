@@ -284,12 +284,387 @@ def declutter(sources):
     return keep
 
 
+# ---------------------------------------------------------------------------------------------------------------
+# QA 2026-11-13 (Q3) world fixes, applied to the import chunks after the declutter. Every chunk a fix touches is
+# recorded in TOUCHED so its merged mesh re-exports even when tris / bounds are unchanged (normal-only edits).
+# ---------------------------------------------------------------------------------------------------------------
+TOUCHED = set()
+EXTRA_META = {}  # merged-mesh group key -> extra manifest fields (castle flag pivots)
+
+# Lamps 1 and 2 stood on the Spawn-to-Hub dirt path: moved onto the grass just off the path edge
+# (Roblox studs dx, dy, dz; dy follows the ground). src/shared/HollowWorldLayout.lua Lamps moves with them.
+LAMP_MOVES = {1: (-0.35, -0.018, 1.97), 2: (-0.56, -0.014, -3.15)}
+
+
+def obj_named(sources, name):
+    return next(o for o in sources if o.name == name)
+
+
+def move_lamps(sources):
+    from mathutils import Matrix
+    for k, (dx, dy, dz) in LAMP_MOVES.items():
+        hits = [o for o in sources if o.name.startswith(f"Stations_Lamp_{k}__") or o.name.startswith(f"Anim__Lamp_{k}_Orb_Glow__")]
+        assert len(hits) == 3, (k, [o.name for o in hits])
+        for o in hits:
+            o.data.transform(Matrix.Translation((dx, -dz, dy)))
+            o.data.update()
+            TOUCHED.add(o.name)
+    print("QA3 lamps moved", sorted(LAMP_MOVES))
+
+
+def split_castle_flags(sources):
+    """The three distant castles carry 9 pennants authored as two coincident faces of opposite winding. The merged
+    backdrop mesh renders double-sided, so the pair z-fought (the flicker while moving). Keep one face per flag as
+    its own tiny mesh (Anim__CastleFlag_N) so the client can wave it about its pole."""
+    chunk = obj_named(sources, "Backdrop_Islands__far_peak")
+    me = chunk.data
+    groups = defaultdict(list)
+    for p in me.polygons:
+        key = tuple(sorted(tuple(round(c, 3) for c in me.vertices[v].co) for v in p.vertices))
+        groups[key].append(p.index)
+    pairs = sorted(sorted(v) for v in groups.values() if len(v) == 2)
+    assert len(pairs) == 9, len(pairs)
+    made = []
+    for n, (keep, twin) in enumerate(pairs, 1):
+        flag = chunk.copy()
+        flag.data = me.copy()
+        bm = bmesh.new()
+        bm.from_mesh(flag.data)
+        bm.faces.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.index != keep], context="FACES")
+        bm.to_mesh(flag.data)
+        bm.free()
+        flag.name = f"Anim__CastleFlag_{n}__far_peak"
+        bpy.context.scene.collection.objects.link(flag)
+        pts = [v.co.copy() for v in flag.data.vertices]
+        # The pole edge: the vertices sharing one (x, y); the flag waves about that vertical line.
+        cols = defaultdict(list)
+        for v in pts:
+            cols[(round(v.x, 2), round(v.y, 2))].append(v)
+        pole = max(cols.values(), key=len)
+        mid = sum(pole, Vector()) / len(pole)
+        EXTRA_META[f"CastleFlag_{n}__far_peak"] = {"pivot": rb(mid)}
+        made.append(flag)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    gone = {i for pair in pairs for i in pair}
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.index in gone], context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    TOUCHED.add(chunk.name)
+    print("QA3 castle flags split", len(made))
+    return sources + made
+
+
+def fix_foam(sources):
+    """Foam blobs: some were wound inward (dark, see-through bottoms). Recalculate outward normals per blob."""
+    for o in sources:
+        if not o.name.endswith("__foam"):
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        before = [f.normal.copy() for f in bm.faces]
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+        flipped = sum(1 for f, n in zip(bm.faces, before) if f.normal.dot(n) < 0)
+        bm.to_mesh(o.data)
+        bm.free()
+        o.data.update()
+        if flipped:
+            TOUCHED.add(o.name)
+        print("QA3 foam normals", o.name, "flipped", flipped, "of", len(before))
+
+
+def _colour_layer(bm):
+    for layers in (bm.loops.layers.float_color, bm.loops.layers.color):
+        if layers.get("Col") is not None:
+            return "loop", layers.get("Col")
+    for layers in (bm.verts.layers.float_color, bm.verts.layers.color):
+        if layers.get("Col") is not None:
+            return "vert", layers.get("Col")
+    return None, None
+
+
+def _paint(face, uvl, uvs, domain, col, colour):
+    for loop, uv in zip(face.loops, uvs):
+        loop[uvl].uv = uv
+        if domain == "loop":
+            loop[col] = colour
+        elif domain == "vert":
+            loop.vert[col] = colour
+
+
+def _uv_scale(bm, uvl, count=60):
+    ratios = []
+    for f in list(bm.faces)[:count]:
+        for loop in f.loops:
+            nxt = loop.link_loop_next
+            d = (nxt.vert.co - loop.vert.co).length
+            if d > 0.2:
+                ratios.append((nxt[uvl].uv - loop[uvl].uv).length / d)
+    ratios.sort()
+    return ratios[len(ratios) // 2] if ratios else 0.25
+
+
+def cap_edging(sources):
+    """Stream / pool curbs are open boxes (top + inner + outer wall per segment). Where a run ends or two runs meet
+    at an angle the hollow end showed, and bends left wedge gaps. Cap every unshared segment end; where two loose
+    ends nearly touch, loft between them instead so the curb reads continuous."""
+    o = obj_named(sources, "Architecture_Edging__marble")
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.faces.ensure_lookup_table()
+    uvl = bm.loops.layers.uv.active
+    domain, col = _colour_layer(bm)
+    k = _uv_scale(bm, uvl)
+    seen, islands = set(), []
+    for f in bm.faces:
+        if f.index in seen:
+            continue
+        stack, island = [f], []
+        seen.add(f.index)
+        while stack:
+            g = stack.pop()
+            island.append(g)
+            for e in g.edges:
+                for h in e.link_faces:
+                    if h.index not in seen:
+                        seen.add(h.index)
+                        stack.append(h)
+        islands.append(island)
+
+    def key(co):
+        return (round(co.x, 3), round(co.y, 3), round(co.z, 3))
+    tops, sides = [], []
+    for isl in islands:
+        verts = {key(v.co): v.co.copy() for f in isl for v in f.verts}
+        colour = None
+        if domain == "loop":
+            colour = tuple(isl[0].loops[0][col])
+        elif domain == "vert":
+            colour = tuple(isl[0].loops[0].vert[col])
+        entry = {"verts": verts, "colour": colour}
+        (tops if abs(isl[0].normal.z) > 0.9 else sides).append(entry)
+    side_by_top = defaultdict(list)
+    for s in sides:
+        zs = [c.z for c in s["verts"].values()]
+        top_z, bot_z = max(zs), min(zs)
+        edge = tuple(sorted(kk for kk, c in s["verts"].items() if c.z > top_z - 1e-3))
+        if len(edge) == 2:
+            s["bottom"] = bot_z
+            side_by_top[edge].append(s)
+    ends, segs = [], []
+    for t in tops:
+        ks = list(t["verts"])
+        if len(ks) != 4:
+            continue
+        long_edges = []
+        for i in range(4):
+            for j in range(i + 1, 4):
+                e = tuple(sorted((ks[i], ks[j])))
+                if e in side_by_top:
+                    long_edges.append((e, side_by_top[e][0]))
+        if len(long_edges) != 2:
+            continue
+        (a, sa), (b, sb) = long_edges
+        pa = [t["verts"][x] for x in a]
+        pb = [t["verts"][x] for x in b]
+        if (pa[0] - pb[0]).length > (pa[0] - pb[1]).length:
+            pb.reverse()
+        bottom = min(sa["bottom"], sb["bottom"])
+        centre = sum(pa + pb, Vector()) / 4
+        seg = len(segs)
+        segs.append(centre)
+        for i in range(2):
+            ends.append({"seg": seg, "p": pa[i], "q": pb[i], "bottom": bottom, "centre": centre, "colour": t["colour"]})
+    count = defaultdict(int)
+    for e in ends:
+        count[frozenset((key(e["p"]), key(e["q"])))] += 1
+    loose = [e for e in ends if count[frozenset((key(e["p"]), key(e["q"])))] == 1]
+    used, lofts, caps = set(), 0, 0
+    # Loft pairs: two loose ends of different segments whose corners nearly meet.
+    pairs = []
+    for i, e in enumerate(loose):
+        for j in range(i + 1, len(loose)):
+            f2 = loose[j]
+            if f2["seg"] == e["seg"]:
+                continue
+            d1 = max((e["p"] - f2["p"]).length, (e["q"] - f2["q"]).length)
+            d2 = max((e["p"] - f2["q"]).length, (e["q"] - f2["p"]).length)
+            d = min(d1, d2)
+            if d < 1.1:
+                pairs.append((d, i, j, d2 < d1))
+    pairs.sort()
+
+    def face(points, normal_hint, colour):
+        vs = []
+        for co in points:
+            if vs and (vs[-1].co - co).length < 1e-4:
+                continue
+            vs.append(bm.verts.new(co))
+        if len(vs) > 2 and (vs[0].co - vs[-1].co).length < 1e-4:
+            vs.pop()
+        if len(vs) < 3:
+            return None
+        f = bm.faces.new(vs)
+        f.material_index = 0
+        f.smooth = False
+        f.normal_update()
+        if f.normal.dot(normal_hint) < 0:
+            f.normal_flip()
+        # Planar UVs: horizontal faces map x/y, walls map their run along the top edge and the height.
+        if abs(f.normal.z) > 0.7:
+            uvs = [(l.vert.co.x * k, l.vert.co.y * k) for l in f.loops]
+        else:
+            run = Vector((f.normal.y, -f.normal.x, 0))
+            uvs = [(l.vert.co.dot(run) * k, l.vert.co.z * k) for l in f.loops]
+        _paint(f, uvl, uvs, domain, col, colour)
+        return f
+
+    def down(co, z):
+        return Vector((co.x, co.y, z))
+    for d, i, j, swap in pairs:
+        if i in used or j in used:
+            continue
+        used.update((i, j))
+        e, g = loose[i], loose[j]
+        gp, gq = (g["q"], g["p"]) if swap else (g["p"], g["q"])
+        z = min(e["bottom"], g["bottom"])
+        mid = (e["p"] + e["q"] + gp + gq) / 4
+        face([e["p"], e["q"], gq, gp], Vector((0, 0, 1)), e["colour"])
+        for a, b in ((e["p"], gp), (e["q"], gq)):
+            wall_mid = (a + b) / 2
+            face([a, b, down(b, z), down(a, z)], Vector((wall_mid.x - mid.x, wall_mid.y - mid.y, 0)), e["colour"])
+        lofts += 1
+    for i, e in enumerate(loose):
+        if i in used:
+            continue
+        m = (e["p"] + e["q"]) / 2
+        face([e["p"], e["q"], down(e["q"], e["bottom"]), down(e["p"], e["bottom"])],
+             Vector((m.x - e["centre"].x, m.y - e["centre"].y, 0)), e["colour"])
+        caps += 1
+    bm.to_mesh(o.data)
+    bm.free()
+    o.data.update()
+    TOUCHED.add(o.name)
+    print("QA3 edging segments", len(segs), "loose ends", len(loose), "lofts", lofts, "caps", caps)
+
+
+# Dirt-path aprons so the paths run straight onto both bridge deck ends (Roblox x, z outlines, measured on a
+# top-down render of the import scene: deck x -3.6 .. 11.6, z 17.6 .. 24.4).
+APRONS = {
+    "west": [(-3.75, 17.5), (-3.75, 24.5), (-6.6, 24.6), (-8.3, 22.2), (-7.6, 19.4), (-5.6, 16.9)],
+    "east": [(11.75, 17.5), (14.6, 17.4), (17.4, 20.8), (19.6, 25.4), (15.2, 27.0), (11.75, 24.5)],
+}
+
+
+def bridge_aprons(sources):
+    import numpy as np
+    path = obj_named(sources, "Terrain_Ground__dirt_path")
+    ground = [obj_named(sources, n) for n in ("Terrain_Ground__grass", "Terrain_Ground__ground", "Terrain_Ground__dirt_path")]
+    trees = []
+    for g in ground:
+        b = bmesh.new()
+        b.from_mesh(g.data)
+        b.transform(g.matrix_world)
+        trees.append(BVHTree.FromBMesh(b))
+        b.free()
+
+    def height(x, y):
+        best = None
+        for t in trees:
+            hit = t.ray_cast(Vector((x, y, 200)), Vector((0, 0, -1)))
+            if hit[0] is not None and (best is None or hit[0].z > best):
+                best = hit[0].z
+        return best
+    bm = bmesh.new()
+    bm.from_mesh(path.data)
+    uvl = bm.loops.layers.uv.active
+    domain, col = _colour_layer(bm)
+    # The path UVs are a planar projection: fit u, v = A (x, y, 1) so the aprons tile seamlessly into it.
+    rows, us, vs, colours = [], [], [], []
+    for f in bm.faces:
+        for loop in f.loops:
+            rows.append((loop.vert.co.x, loop.vert.co.y, 1.0))
+            us.append(loop[uvl].uv.x)
+            vs.append(loop[uvl].uv.y)
+            if domain == "loop":
+                colours.append(tuple(loop[col]))
+            elif domain == "vert":
+                colours.append(tuple(loop.vert[col]))
+    A = np.array(rows)
+    fu, ru, *_ = np.linalg.lstsq(A, np.array(us), rcond=None)
+    fv, rv, *_ = np.linalg.lstsq(A, np.array(vs), rcond=None)
+    rms = math.sqrt(float((ru[0] if len(ru) else 0) + (rv[0] if len(rv) else 0)) / max(len(rows), 1))
+    colour = tuple(float(np.mean([c[i] for c in colours])) for i in range(len(colours[0]))) if colours else None
+    added = 0
+    for name, outline in APRONS.items():
+        new = bmesh.new()
+        ring = [new.verts.new((x, -z, 0)) for x, z in outline]
+        new.faces.new(ring)
+        bmesh.ops.triangulate(new, faces=new.faces[:])
+        bmesh.ops.subdivide_edges(new, edges=new.edges[:], cuts=3, use_grid_fill=True)
+        bmesh.ops.triangulate(new, faces=new.faces[:])
+        lift = {}
+        for v in new.verts:
+            h = height(v.co.x, v.co.y)
+            assert h is not None, (name, tuple(v.co))
+            lift[v.index] = h + 0.035
+        new.verts.index_update()
+        mapping = {}
+        for v in new.verts:
+            mapping[v.index] = bm.verts.new((v.co.x, v.co.y, lift[v.index]))
+        for f in new.faces:
+            nf = bm.faces.new([mapping[v.index] for v in f.verts])
+            nf.smooth = True
+            nf.normal_update()
+            if nf.normal.z < 0:
+                nf.normal_flip()
+            uvs = [(fu[0] * l.vert.co.x + fu[1] * l.vert.co.y + fu[2], fv[0] * l.vert.co.x + fv[1] * l.vert.co.y + fv[2]) for l in nf.loops]
+            _paint(nf, uvl, uvs, domain, col, colour)
+            added += 1
+        new.free()
+    bm.to_mesh(path.data)
+    bm.free()
+    path.data.update()
+    TOUCHED.add(path.name)
+    print("QA3 bridge aprons faces", added, "path uv fit rms", round(rms, 4))
+
+
+# Cliff edges: the terrain and crag chunks were smooth-shaded with no sharp edges, so normals bled across the
+# island rim and cliff creases (dark smears, lit-wrong skirts). Split normals at creases sharper than 40 degrees.
+SHARPEN = ("Terrain_Ground__ground", "Terrain_Ground__grass", "Rocks_Walls__cliff_rock", "Rocks_Walls__grass",
+           "Landmarks__cliff_rock")
+
+
+def sharpen_cliffs(sources):
+    for o in sources:
+        if o.name in SHARPEN:
+            o.data.set_sharp_from_angle(angle=math.radians(40))
+            o.data.update()
+            TOUCHED.add(o.name)
+    print("QA3 sharpened", [n for n in SHARPEN])
+
+
+def qa_fixes(sources):
+    move_lamps(sources)
+    sources = split_castle_flags(sources)
+    fix_foam(sources)
+    cap_edging(sources)
+    bridge_aprons(sources)
+    sharpen_cliffs(sources)
+    return sources
+
+
 def main():
     SLOTS.update(build_palette())
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     sources = [o for o in bpy.data.objects if o.type == "MESH" and any(c.name.startswith("Import_") for c in o.users_collection)]
     sources = declutter(sources)
+    sources = qa_fixes(sources)
     groups = defaultdict(list)
     meta = {}
     for o in sources:
@@ -348,6 +723,7 @@ def main():
                  "top": round(hi.z + 4, 4)}
         if m.get("note"):
             entry["note"] = m["note"]
+        entry.update(EXTRA_META.get(key, {}))
         assert max(entry["size"]) < 2040, (obj.name, entry["size"])
         manifest.append(entry)
     previous_path = OUT / "world-v7-manifest.json"
@@ -357,7 +733,10 @@ def main():
 
     def same(a, b):
         return a["tris"] == b["tris"] and all(abs(x - y) < 1e-3 for x, y in zip(a["center"] + a["size"], b["center"] + b["size"]))
-    changed = sorted(n for n in current if n in previous and not same(current[n], previous[n]))
+    # QA 2026-11-13: normal-only fixes keep tris and bounds, so meshes built from a touched chunk count as changed.
+    touched_keys = {key for key, m in meta.items() if TOUCHED.intersection(m["sources"])}
+    touched = {obj.name for obj, key in finals if key in touched_keys}
+    changed = sorted(n for n in current if n in previous and (not same(current[n], previous[n]) or n in touched))
     added = sorted(n for n in current if n not in previous)
     dropped = sorted(n for n in previous if n not in current)
     if previous and (changed or added or dropped):
@@ -374,6 +753,14 @@ def main():
         "parts": manifest, "count": len(manifest), "triangles": sum(e["tris"] for e in manifest)}, indent=1))
     walk_data(finals, manifest)
     print("WORLDV7", len(manifest), sum(e["tris"] for e in manifest))
+    preview = __import__("os").environ.get("WORLD_V7_PREVIEW_BLEND")
+    if preview:
+        # Review renders only: a copy holding just the merged meshes (the import .blend itself is never saved).
+        keep = {obj.name for obj, _ in finals}
+        for o in list(bpy.data.objects):
+            if o.type == "MESH" and o.name not in keep:
+                bpy.data.objects.remove(o, do_unlink=True)
+        bpy.ops.wm.save_as_mainfile(filepath=preview, copy=True)
 
 
 def export(finals, path):
@@ -432,6 +819,66 @@ def surface_map(finals):
     return grid
 
 
+ISLAND_CENTRE = Vector((4.0, 2.0))  # Blender xy of the island middle (Roblox x 4, z -2)
+
+
+def falls_planes():
+    """One flat sheet per waterfall for the scrolling beams (QA 2026-11-13: the old single camera-facing beam per
+    falls billboarded and the lower tumble sheet had none). Roblox top / bottom centres, widths and the facing
+    normal (horizontal, toward the island so it faces the players), offset 0.2 studs in front of the mesh."""
+    out = []
+    for name in ("Anim__Water_TumbleFalls_Upper__waterfall_tumble", "Anim__Water_TumbleFalls_Lower__waterfall_tumble",
+                 "Anim__Water_SkyFalls__waterfall_sky"):
+        o = bpy.data.objects[name]
+        pts = [o.matrix_world @ v.co for v in o.data.vertices]
+        zmax, zmin = max(p.z for p in pts), min(p.z for p in pts)
+        span = zmax - zmin
+        # Ignore the lip that curls over the ledge: fit the hanging part only.
+        hang = [p for p in pts if p.z < zmax - min(span * 0.08, 1.5)] or pts
+        c = sum(hang, Vector()) / len(hang)
+        cxx = sum((p.x - c.x) ** 2 for p in hang)
+        cyy = sum((p.y - c.y) ** 2 for p in hang)
+        cxy = sum((p.x - c.x) * (p.y - c.y) for p in hang)
+        ang = 0.5 * math.atan2(2 * cxy, cxx - cyy)
+        along = Vector((math.cos(ang), math.sin(ang), 0))  # width direction of the sheet
+        normal = Vector((-along.y, along.x, 0))
+        if normal.to_2d().dot(ISLAND_CENTRE - c.to_2d()) < 0:
+            normal = -normal
+        top = [p for p in hang if p.z > max(q.z for q in hang) - min(span * 0.1, 2.0)]
+        bottom = [p for p in pts if p.z < zmin + min(span * 0.1, 2.0)]
+
+        def centre(ps):
+            m = sum(ps, Vector()) / len(ps)
+            return m + normal * (max((p - m).dot(normal) for p in ps) + 0.2)
+
+        def width(ps):
+            ws = [(p - c).dot(along) for p in ps]
+            return round(max(ws) - min(ws), 3)
+        t, b = centre(top), centre(bottom)
+        # The sheets bulge: push the (possibly tilted) top-bottom plane forward until no vertex pokes through it.
+        push = 0.0
+        for p in pts:
+            f = min(max((t.z - p.z) / max(t.z - b.z, 1e-3), 0.0), 1.0)
+            push = max(push, (p - t.lerp(b, f)).dot(normal) + 0.2)
+        t, b = t + normal * push, b + normal * push
+        out.append({"name": name.split("__")[1], "top": rb(Vector((t.x, t.y, zmax))),
+                    "bottom": rb(Vector((b.x, b.y, min(p.z for p in bottom)))), "width0": width(top), "width1": width(bottom),
+                    "normal": [round(normal.x, 4), 0.0, round(-normal.y, 4)]})
+    return out
+
+
+def foam_boxes():
+    """Where the falls land and break: bounds of each foam chunk, for the splash and mist emitters."""
+    out = []
+    for name in ("Anim__Water_TumbleFalls_Foam_Bottom__foam", "Anim__Water_TumbleFalls_Foam_Ledge__foam",
+                 "Anim__Water_SkyFalls_Foam__foam"):
+        o = bpy.data.objects[name]
+        lo, hi = centre_of(o)
+        c, s = (lo + hi) / 2, hi - lo
+        out.append({"name": name.split("__")[1], "center": rb(c), "size": [round(s.x, 3), round(s.z, 3), round(s.y, 3)]})
+    return out
+
+
 def walk_data(finals, manifest):
     data = {}
     # Perimeter wall: a ring mesh. Slice it into ~6-stud boxes along its loop.
@@ -459,7 +906,10 @@ def walk_data(finals, manifest):
             continue
         lo, hi = min(a[2], b[2]), max(a[3], b[3])
         mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-        yaw = math.atan2(-(b[1] - a[1]), b[0] - a[0])  # Roblox: X along +x, Z = -y
+        # Roblox Ry(yaw) maps local X to (cos yaw, 0, -sin yaw); the run along Roblox (dx, dz) = (bx - ax, -(by - ay))
+        # needs sin yaw = by - ay. QA 2026-11-13: the old -(by - ay) mirrored every box across the ring tangent, so
+        # the wall was a row of crossed slats with walk-through gaps.
+        yaw = math.atan2(b[1] - a[1], b[0] - a[0])
         boxes.append({"center": [round(mid[0], 3), round((lo + hi) / 2 + 4, 3), round(-mid[1], 3)],
                       "size": [round(length + 1.0, 3), round(hi - lo, 3), 1.5], "yaw": round(yaw, 5)})
     data["perimeter"] = boxes
@@ -517,6 +967,8 @@ def walk_data(finals, manifest):
                                                     round(-(sy + uy * (max(along) + min(along)) / 2 + ux * (max(across) + min(across)) / 2), 3)],
                         "size": [round(max(along) - min(along), 3), 0.2, round(max(across) - min(across), 3)], "yaw": round(yaw, 5)})
     data["wet"] = wet
+    data["falls"] = falls_planes()
+    data["foam"] = foam_boxes()
     # Ground heights: top-down rays against the collidable ground-ish meshes on a 2-stud grid.
     targets = [o for o, key in finals if key.split("__")[0] in ("Ground", "Rocks", "Rotunda", "Bridge", "Architecture", "Landmarks", "Stations", "Props", "Balustrades", "Trunks", "Aqueduct")]
     trees = []

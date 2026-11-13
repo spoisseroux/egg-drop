@@ -4,9 +4,9 @@
 -- Pure rules (tab clamp, background card and pane states), then the real DeckPicker:
 -- the header never moves between tabs, Q / E (shiftStyleTab) and the tab buttons
 -- switch, the Backgrounds pane borrows the live preview only while shown, Use goes
--- through onApply("background"), trial-locked "View trials" returns to the same card,
--- the shop owns focus (no native selection), and Settings / Pocket Trials stay inside
--- the picker under the header. Fake transport only; nothing is sent.
+-- through onApply("background"), a trial lock has no button (Pocket Trials retired, QA
+-- Q5), the shop owns focus (no native selection), and Settings stays inside the picker
+-- under the header. Fake transport only; nothing is sent.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.DeckStyle)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Picker=require(client.DeckPicker);local Shop=require(client.FaceplateShop);local Backs=require(client.BackgroundShop)
@@ -37,7 +37,8 @@ return function(client,parent)
    local facts={trials=0,totalWins=0,inventoryMask=1,masteryRanks={pip=0}}
    local ctx={confirmed="canopy",facts=facts}
    assert(Backs.status("canopy",ctx).kind=="inUse"and Backs.status("canopy",ctx).button==nil)
-   local creek=Backs.status("creek",ctx);assert(creek.kind=="locked"and creek.button=="View trials"and creek.text:find("High Roller",1,true))
+   -- QA Q5: no "View trials" (Pocket Trials are retired); the rule text stays.
+   local creek=Backs.status("creek",ctx);assert(creek.kind=="locked"and creek.button==nil and not creek.enabled and creek.text:find("High Roller",1,true))
    local lantern=Backs.status("lantern",ctx);assert(lantern.kind=="locked"and lantern.button==nil and lantern.text:find("Win 10",1,true))
    assert(select(1,Backs.tileStatus("canopy",ctx))=="IN USE"and select(1,Backs.tileStatus("lantern",ctx))=="🔒 Reach Rank II")
    local unlocked={confirmed="canopy",facts={trials=Trials.HighRoller.bit,totalWins=1,inventoryMask=1,masteryRanks={pip=0}}}
@@ -89,17 +90,15 @@ return function(client,parent)
     assert(shop:move(1,0)and shop.backgrounds:focusedId()=="creek")
     v:close("back");assert(not shop.visible and not Art.isBackgroundPreviewVisible(shop.backgrounds.previewHost)and f.closed[#f.closed]=="back")
    end)
-   test(label.." Backgrounds: locked View trials returns to the card; earned Use applies once",function()
+   test(label.." Backgrounds: a trial lock has no button (Pocket Trials retired); earned Use applies once",function()
     local f=picker(size);local v=f.v
     v.customizationEntry=true;v:open("sherbet","none","Background");settle()
     local shop=v.shop;local backs=shop.backgrounds
     assert(v.active=="Background"and shop.tab==2 and backs:focusedId()=="canopy")
     assert(not shop:act(false)and #f.applied==0,"in use: nothing to do")
-    assert(backs:focusId("creek")and shop.root:GetAttribute("BackgroundPaneState")=="locked"and backs.action.Visible)
-    assert(shop:act(false)and v.active=="Trials"and v.card.Visible and not shop.visible and #f.applied==0,"View trials opens Pocket Trials")
-    assert(v.heading.Text=="Pocket Trials"and v:getControllerFocus().target()==v.cancel)
-    v:back();settle()
-    assert(v.active=="Background"and shop.visible and shop.tab==2 and backs:focusedId()=="creek","Back returns to the same card")
+    assert(backs:focusId("creek")and shop.root:GetAttribute("BackgroundPaneState")=="locked"and not backs.action.Visible)
+    assert(not shop:act(false)and v.active=="Background"and shop.visible and #f.applied==0,"a trial lock opens nothing")
+    assert(v.active=="Background"and shop.visible and shop.tab==2 and backs:focusedId()=="creek","focus stays on the card")
     backs:focusId("lantern");assert(shop.root:GetAttribute("BackgroundPaneState")=="locked"and not backs.action.Visible)
     v:updateClub(1,Trials.HighRoller.bit,0,0,"On",false,false,1,true,1,{pip=0});settle()
     backs:focusId("creek");assert(shop.root:GetAttribute("BackgroundPaneState")=="earned"and backs.action.Visible)
@@ -123,6 +122,15 @@ return function(client,parent)
     assert(balls:focusId("marbles")and shop:act(false)and #sent==1 and sent[1][1]=="ballThemeEquip"and sent[1][2].themeId=="marbles")
     assert(not shop:act(false)and #sent==1,"one request in flight")
     assert(shop:result({kind="ballTheme",id=sent[1][2].id,status="Saved"})and balls.ctx.equipped=="marbles"and shop.root:GetAttribute("BallPaneState")=="inUse")
+    -- QA Q2.4 optimistic: Use is IN USE at once (no "Applying"), a snapshot in flight
+    -- cannot flip it back, and a refusal rolls back to the previous theme.
+    local shown={};balls.callbacks.equipped=function(id)table.insert(shown,id)end
+    assert(balls:focusId("smileys")and shop:act(false)and #sent==2 and balls.ctx.equipped=="smileys"and shown[1]=="smileys")
+    -- The compact layout has no status line (statusLabel is nil there); check it only where it exists.
+    assert(shop.root:GetAttribute("BallPaneState")=="inUse"and(balls.statusLabel==nil or not balls.statusLabel.Text:find("Applying",1,true)))
+    v:setShopState(60,{},{owned={"smileys","marbles"},equipped="marbles"},7);assert(balls.ctx.equipped=="smileys","snapshot during the save keeps the choice")
+    assert(shop:result({kind="ballTheme",id=sent[2][2].id,status="Rejected",reason="Busy"})and balls.ctx.equipped=="marbles"and shown[2]=="marbles"and balls.errorId=="smileys")
+    table.remove(sent,2);balls.callbacks.equipped=nil
     assert(#f.applied==0,"ball themes never go through the deck appearance slots")
     -- Buy: first press arms the confirm, the second sends theme + fixed price.
     assert(balls:focusId("gems")and shop.root:GetAttribute("BallPaneState")=="buy")
@@ -141,7 +149,7 @@ return function(client,parent)
     assert(balls.circles[1].circle.Size.X.Scale<balls.circles[5].circle.Size.X.Scale,"circles step in size")
     v:close("forced")
    end)
-   test(label.." Settings and Pocket Trials stay inside the picker under the shared header",function()
+   test(label.." Settings stays inside the picker under the shared header; no Pocket Trials page (QA Q5)",function()
     local f=picker(size);local v=f.v
     v.customizationEntry=false;v:open("sherbet","none","Settings");settle()
     assert(v.active=="Settings"and v.card.Visible and not v.shop.visible and not v:shopOpen())
@@ -149,7 +157,7 @@ return function(client,parent)
     assert(v.cancel.AbsoluteSize==Vector2.new(44,44)and v:getControllerFocus().target()==v.sound)
     assert(not v:activateTab("Background")and not v:shiftStyleTab(1),"style tabs stay closed on the Settings route")
     assert(v:changeSetting("music")and f.settings==1)
-    v:showTab("Trials");assert(v.heading.Text=="Pocket Trials"and v.clubHeader.Visible and not v.sound.Visible)
+    assert(v:showTab("Trials")==false and v.active=="Settings"and v.heading.Text=="Settings"and v.sound.Visible,"Trials is not a page any more")
     v:back();assert(not v.shade.Visible and f.closed[#f.closed]=="back")
    end)
   end

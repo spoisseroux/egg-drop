@@ -57,7 +57,9 @@ return function(client,parent)
     end
     assert(card.slotViews[7].frame:GetAttribute("Big")and card.slotViews[7].frame:GetAttribute("Today")and card.slotViews[7].stroke.Color==Kit.Color.stars)
     assert(card.slotViews[7].reward.Text=="+12"and card.slotViews[7].reward.TextColor3==Kit.Color.stars)
-    assert(card.slotViews[1].mark.Visible and not card.slotViews[1].reward.Visible)
+    -- QA Q5: with the stamp atlas uploaded the stamped slot shows the art; without it, the vector mark.
+    local stamped=card.slotViews[1];local drawn=if View.Art.atlas then stamped.art.Visible else stamped.mark.Visible
+    assert(drawn and not stamped.reward.Visible)
     for _,node in ipairs(card.root:GetDescendants())do
      if node:IsA("GuiObject")then assert(not node.Selectable,"Selectable "..node:GetFullName())end
      if node:IsA("TextLabel")and node.Visible and node.Text~=""then assert(node.TextSize>=12,"text under 12 px: "..node:GetFullName())end
@@ -92,6 +94,59 @@ return function(client,parent)
    task.wait(View.PopSeconds+.2);assert(not card.pop.Visible)
    card:destroy();host:Destroy()
    Kit.reduced=realReduced
+  end)
+  -- QA 2026-11-13 Q5: real stamp art. Seven designs (the 7th the gold crown); with no
+  -- atlas id the vector fallback draws (a disc in the design colour, a faint ring under
+  -- an upcoming reward); with an id, stamped slots show the full-colour cell (row 0) and
+  -- upcoming ones the faint outline cell (row 1).
+  test("stamp art: seven designs, the vector fallback while the atlas id is nil",function()
+   local names={}
+   for i=1,7 do names[i]=View.design(i).name end
+   assert(table.concat(names,",")=="paw,star,egg,ball,flower,heart,crown","designs "..table.concat(names,","))
+   assert(View.design(7).color==Kit.Color.stars,"the 7th stamp is Stars gold")
+   -- QA Q5: the atlas id is set now (rbxassetid://105525503357374), so clear it to exercise the fallback.
+   local savedAtlas=View.Art.atlas;View.Art.atlas=nil
+   local okFallback,fallbackErr=pcall(function()
+   assert(View.Art.atlas==nil and View.artFor(1,true)==nil,"no id: fallback")
+   local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(400,200);host.Parent=gui
+   local card=View.new(host);card:layout(320,false);card:set(snap(3,true));settle()
+   for i,slot in ipairs(card.slotViews)do
+    assert(slot.frame:GetAttribute("StampDesign")==names[i]and slot.frame:GetAttribute("StampArt")==false)
+    assert(not slot.art.Visible and not slot.ghost.Visible,"no art images without an id")
+    if i<=3 then
+     assert(slot.mark.Visible and slot.mark.BackgroundColor3==View.design(i).color and not slot.ghostRing.Visible,"stamped: a disc in the design colour")
+    else
+     assert(not slot.mark.Visible and slot.ghostRing.Visible and slot.reward.Visible,"upcoming: a faint ring under the reward")
+    end
+   end
+   card:destroy();host:Destroy()
+   end)
+   View.Art.atlas=savedAtlas
+   assert(okFallback,fallbackErr)
+  end)
+  test("stamp art: with an atlas id, stamped = full colour cell, upcoming = faint outline cell",function()
+   local saved=View.Art.atlas
+   View.Art.atlas="rbxassetid://1"
+   local ok2,err=pcall(function()
+    local a=View.artFor(3,true);assert(a.image=="rbxassetid://1"and a.offset==Vector2.new(256,0)and a.size==Vector2.new(128,128))
+    local b=View.artFor(7,false);assert(b.offset==Vector2.new(768,128),"the crown's outline cell")
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(400,200);host.Parent=gui
+    local card=View.new(host);card:layout(226,true);card:set(snap(2,true));settle()
+    for i,slot in ipairs(card.slotViews)do
+     assert(slot.frame:GetAttribute("StampArt")==true and not slot.mark.Visible and not slot.ghostRing.Visible,"art replaces the fallback")
+     if i<=2 then
+      assert(slot.art.Visible and not slot.ghost.Visible and slot.art.ImageRectOffset==Vector2.new((i-1)*128,0),"stamped "..i)
+     else
+      assert(slot.ghost.Visible and not slot.art.Visible and slot.ghost.ImageRectOffset==Vector2.new((i-1)*128,128),"upcoming "..i)
+      assert(slot.ghost.ImageTransparency>=.5 and slot.reward.Visible,"the outline is faint and the reward reads over it")
+     end
+     assert(slot.art.AbsoluteSize.X<=slot.frame.AbsoluteSize.X+1,"the stamp stays inside its slot")
+    end
+    assert(card.slotViews[7].ghost.ImageColor3==Kit.Color.stars,"the crown's outline is gold")
+    card:destroy();host:Destroy()
+   end)
+   View.Art.atlas=saved
+   assert(ok2,err)
   end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  Kit.reduced=realReduced

@@ -17,9 +17,10 @@ local Data=require(Shared.ParkPoseData)
 local Pose={}
 local TAU=math.pi*2
 local UP=Vector3.yAxis
-Pose.MountBulge=.9 -- studs the mount/hop arc curls out in front of a seat (seats sit above the slot)
-Pose.LandOut=1.25 -- studs in front of a seat the hop lands, clear of the swinging seat
-Pose.StepBack=.6 -- the last share of the cheer walks back to the slot point the server holds
+-- QA Q4: swing and see-saw slots wait IN FRONT of their seat (ParkLayout.SeatStepOut), so the pet
+-- hops back onto the seat from where it stands and hops off forward onto the same point: no landing
+-- in front and walking back.
+Pose.MountLift=.45 -- studs the mount hop rises above the straight line to the seat
 Pose.LiftIn=.3 -- seconds to step up onto the sand or the mat
 
 -- Every actor action a park session can carry (the approach walk and each play action).
@@ -91,19 +92,6 @@ local function cheer(visual,entry,phase,position,reduced)
 	still(visual)
 	if not reduced then visual.movementBob=.09*scaleOf(visual)*math.abs(math.sin(TAU*1.6*phase.elapsed))end
 end
--- Cheer at a landing point in front of a seat, then walk back to the slot point.
-local function cheerAndStepBack(visual,entry,phase,landing,ground,yaw,reduced)
-	if phase.t<1-Pose.StepBack then
-		cheer(visual,entry,phase,landing,reduced)
-		visual.yaw=yaw
-		return
-	end
-	local u=(phase.t-(1-Pose.StepBack))/Pose.StepBack
-	visual.origin=landing:Lerp(ground,ease(u))
-	visual.yaw=yaw;visual.expression="pleased"
-	visual.gaitWeight=if reduced then 0 else .6
-	visual.gaitPhase=(u*TAU*2)%TAU;visual.movementBob=0
-end
 
 -- Seats: swing and see-saw share mount / ride / hop / cheer.
 local function seatFrame(equipment,slotId,entry,t)
@@ -115,19 +103,14 @@ local function seatFrame(equipment,slotId,entry,t)
 	local tilt=Data.seesawTilt(entry,t)
 	return Data.seesawSeat(slotId,tilt),Data.SeeSaw.pivot,Data.seesawMotion(tilt)
 end
-local function seatOut(equipment,slot)
-	-- Swings: out in front of the seat. See-saw: off the beam's side that faces the park centre (-Z).
-	if equipment=="swing"then return Data.facing(slot.yaw)end
-	return Data.Roots.SeeSaw.LookVector
-end
 local function seats(visual,slotId,entry,activity,phase,t,reduced)
-	local slot=Park.Slots[slotId];local ground=slot.approach
-	local equipment=activity.equipment;local out=seatOut(equipment,slot)
+	local slot=Park.Slots[slotId];local ground=slot.approach -- in front of the seat: start and landing
+	local equipment=activity.equipment
 	local k=scaleOf(visual)
 	visual.yaw=slot.yaw
 	if phase.action=="parkSwingMount"then
 		local seat=seatFrame(equipment,slotId,entry,t)
-		visual.origin=arc(ground,seat.Position,phase.t,out*Pose.MountBulge,(if reduced then .2 else .45)*k)
+		visual.origin=arc(ground,seat.Position,phase.t,Vector3.zero,(if reduced then .2 else Pose.MountLift)*k)
 		visual.activitySit=phase.t>.55;visual.expression="joy";still(visual)
 	elseif phase.action=="parkSwing"or phase.action=="parkSeesaw"then
 		local seat,pivot,motion=seatFrame(equipment,slotId,entry,t)
@@ -147,11 +130,10 @@ local function seats(visual,slotId,entry,activity,phase,t,reduced)
 	elseif phase.action=="parkHopOff"then
 		local start=t-phase.elapsed
 		local seat=seatFrame(equipment,slotId,entry,start)
-		local landing=ground+out*Pose.LandOut
-		visual.origin=arc(seat.Position,landing,phase.t,Vector3.zero,(if reduced then .15 else .5)*k)
+		visual.origin=arc(seat.Position,ground,phase.t,Vector3.zero,(if reduced then .15 else .5)*k)
 		visual.activitySit=phase.t<.25;visual.expression="joy";still(visual)
 	else
-		cheerAndStepBack(visual,entry,phase,ground+out*Pose.LandOut,ground,slot.yaw,reduced)
+		cheer(visual,entry,phase,ground,reduced);visual.yaw=slot.yaw
 	end
 	return true
 end

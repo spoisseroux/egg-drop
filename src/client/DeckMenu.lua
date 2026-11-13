@@ -1,3 +1,7 @@
+-- Legacy garden menu ("Pocket menu" Play / Quests pages). Retired at runtime by the
+-- machine hub (MachineHub.lua, QA 2026-11-13 Q5): init.client.lua no longer builds it.
+-- Kept, without the Pocket Trials row, for the layout specs that still exercise it;
+-- remove it with those specs in a cleanup slice.
 local Stars=require(script.Parent.StarText)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
@@ -46,8 +50,6 @@ end
 local function destinationArt(host, kind)
 	if kind == "eggs" then
 		EggArt.create(host, "meadow", UDim2.fromScale(.10, .02), UDim2.fromScale(.80, .96), host.ZIndex + 1)
-	elseif kind=="trials"then
-		FamilyCrest.create(host,"pip",1,UDim2.fromScale(.1,.1),UDim2.fromScale(.8,.8),host.ZIndex+1)
 	elseif kind=="settings"then
 		for i=1,3 do local y=.2+(i-1)*.25;decoration(host,"SettingRail",UDim2.fromScale(.12,y),UDim2.fromScale(.76,.06),"muted",2);decoration(host,"SettingKnob",UDim2.fromScale(if i==2 then .55 else .25,y-.06),UDim2.fromScale(.16,.18),Art.Amber,4)end
 	elseif kind == "pets" then
@@ -107,7 +109,7 @@ function Menu.new(parent,callbacks)
 		self.tabs[key]=button(card,"Tab_"..key,if key=="play" then "Play" elseif key=="daily" then "Quests" else "Quests",function()self:activatePage(key)end)
         self.tabs[key]:SetAttribute("AccessibleLabel",if key=="play"then "Play destinations"else "Today's quests")
 	end
-	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Trials","Pocket Trials","trials","Earn the Trial crest"},{"Settings","Settings","settings","Sound and motion"}}) do
+	for _,entry in ipairs({{"Eggs","Hatch eggs","eggs","View eggs and odds"},{"Settings","Settings","settings","Sound and motion"}}) do
 		local b=button(self.pages.play,entry[1],"",function()self:activate(entry[3])end)
 		local illustration=Art.frame(b,"Illustration","ink",UDim2.fromOffset(0,0),UDim2.fromOffset(64,64),b.ZIndex+1)
 		illustration.BackgroundTransparency=1;destinationArt(illustration,entry[3])

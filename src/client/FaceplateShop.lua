@@ -133,7 +133,7 @@ end
 
 -- host: a Frame that receives the 848x608 glass screen (scaled to fit).
 -- callbacks: equip(id), buy(order), bought(id), back(), tab(index) (a tab request:
--- the owner answers with setTab), rebuilt(), and for Backgrounds: use(id), trials(),
+-- the owner answers with setTab), rebuilt(), and for Backgrounds: use(id),
 -- retry(slot).
 function Shop.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},index=1,tab=1,ctx={equipped=Themes.Default,wallet=0,facts={}},
@@ -147,7 +147,6 @@ function Shop.new(host,callbacks)
  self.scale=Kit.node("UIScale",root,{Scale=1})
  self.backgrounds=BackgroundShop.new(self,{
   use=function(id)if self.callbacks.use then self.callbacks.use(id)end end,
-  trials=function()if self.callbacks.trials then self.callbacks.trials()end end,
   retry=function()if self.callbacks.retry then self.callbacks.retry("background")end end,
  })
  self.balls=BallShop.new(self,{
@@ -597,7 +596,7 @@ end
 function Shop:back()if self.callbacks.back then self.callbacks.back()end end
 function Shop:isOpen()return self.visible end
 -- Opens on the equipped plate (tab 1) or the background in use (tab 2);
--- `keepFocus` (back from Pocket Trials) keeps the cards that were focused.
+-- `keepFocus` (back from an inner page) keeps the cards that were focused.
 function Shop:open(equipped,tab,keepFocus)
  self.visible=true;self.root.Visible=true
  local index=if keepFocus then self.index else table.find(self.plateOrder or Themes.Order,equipped or self.ctx.equipped)or 1

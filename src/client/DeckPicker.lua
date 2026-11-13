@@ -4,8 +4,9 @@
 -- two style tab buttons, and `active`, `sound`, `music`, `cancel` keep their meaning.
 -- Faceplates and Backgrounds are the two tabs of the Deck style screen
 -- (FaceplateShop + BackgroundShop, under Kit.header); this module opens it on a tab
--- and relays equip / use / buy / save notices. Settings and Pocket Trials stay here as
--- a Kit panel under the shared header (no Stars capsule) so DeckMenu routes keep working.
+-- and relays equip / use / buy / save notices. Settings stays here as a Kit panel under
+-- the shared header (no Stars capsule). Pocket Trials are retired (QA 2026-11-13 Q5):
+-- no page, no route; the saved TrialMask is left untouched.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local GuiService=game:GetService("GuiService")
 local UserInputService=game:GetService("UserInputService")
@@ -19,9 +20,9 @@ local Shop=require(script.Parent.FaceplateShop)
 -- themes are bought and equipped through the hatching save (BallShop).
 local TabOrder={"Shell","Background","Balls"}
 local styleTab={Shell=1,Background=2,Balls=3}
-local Trials=require(Shared.PocketTrials)
 local Art=require(script.Parent.DeckArt)
 local Kit=require(script.Parent.DeckKit)
+local AppearanceIntent=require(script.Parent.AppearanceIntent)
 local SaveNotice=require(script.Parent.SaveNotice)
 local Picker={};Picker.__index=Picker
 Picker.TabOrder=TabOrder
@@ -41,12 +42,10 @@ local function button(parent,name,value,action)
  node.BackgroundColor3,node.TextColor3,node.BorderSizePixel,node.ZIndex=Art.Raised,Art.Silver,0,parent.ZIndex+1
  Art.bind(node,{BackgroundColor3="raised",TextColor3="text"});Art.button(node,10);Art.type(node,"Action");node.Activated:Connect(action);return node
 end
-local function panel(parent,name,color)
- local node=Art.frame(parent,name,color,UDim2.fromOffset(0,0),UDim2.fromOffset(100,44),parent.ZIndex+1)
- Art.corner(node,8);return node
-end
 -- Appearance intent words for a slot ("Saved" says nothing: the card already does).
-local Words={Pending="Applying...",Applied="Worn - saving...",Rejected="Not applied",Retry="Reply delayed - Retry"}
+-- QA Q2.4: a change shows as worn the moment it is chosen (optimistic), so Pending and
+-- Applied say nothing; only a refusal or a lost reply speaks up.
+local Words={Rejected="Not applied",Retry="Reply delayed - Retry"}
 local function retryable(status)
  return status~=nil and(status.status=="Retry"or(status.status=="Rejected"and status.reason~="Superseded"and status.reason~="Locked"and status.reason~="InvalidChoice"and status.reason~="Invalid"))
 end
@@ -54,7 +53,7 @@ end
 function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  local shade=Art.frame(gui,"DeckPicker","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
  shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
- -- Settings / Pocket Trials card: a Kit panel with the shared header on top.
+ -- Settings card: a Kit panel with the shared header on top.
  local card=Kit.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(100,44),30)
  card.AnchorPoint=Vector2.new(.5,0);card.Active=true;Kit.stroke(card)
  local scroll=Instance.new("ScrollingFrame");scroll.Name,scroll.Parent="Scroll",card
@@ -75,15 +74,6 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()self:refreshScrollCue()end)
  scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:refreshScrollCue()end)
  self:ensureHeader(false)
- self.clubHeader=text(scroll,"TrialHeading","Pocket trials","Heading")
- for index,goal in ipairs(Trials.Goals)do
-  local row=panel(scroll,"Trial"..goal.bit,"raised")
-  local title=text(row,"Goal",goal.hint,"Body")
-  local status=text(row,"Progress","","Supporting");Art.bind(status,{TextColor3="muted"})
-  local track=panel(row,"Track","ink");local fill=panel(track,"Fill",Art.Leaf)
-  self.rows[index]={frame=row,title=title,status=status,fill=fill}
- end
- self.reward=text(scroll,"Reward","Finish all three to earn the Trial crest","Supporting");Art.bind(self.reward,{TextColor3="muted"})
  self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
  self.music=button(scroll,"MusicSetting","Music: On",function()self:changeSetting("music")end)
  self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
@@ -96,7 +86,6 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
   back=function()self:back()end,
   tab=function(index)return self:activateTab(TabOrder[index])end,
   use=function(id)self:useBackground(id)end,
-  trials=function()self:openTrials()end,
   retry=function(slot)self:retry(slot)end,
   rebuilt=function(shop)self:syncTabs(shop)end,
   ballBought=function(id)if self.onBallBought then self.onBallBought(id)end end,
@@ -111,7 +100,7 @@ function Picker:syncTabs(shop)
  for index,tab in ipairs(TabOrder)do self.tabs[tab]=row.buttons[index]end
  local background=self.tabs.Background;if background then background:SetAttribute("AccessibleLabel","Background patterns")end
 end
--- The shared header for Settings / Pocket Trials (rebuilt when compactness changes).
+-- The shared header for Settings (rebuilt when compactness changes).
 function Picker:ensureHeader(compact)
  if self.header and self.header.compact==compact then return self.header end
  local selected=self.cancel~=nil and GuiService.SelectedObject==self.cancel
@@ -154,41 +143,25 @@ function Picker:layout()
   markerW=math.min(limit,Art.textWidth(self.saveMarker)+16)
  end
  local scrollW=usable-(if markerW>0 then markerW+12 else 0);local bodyW=scrollW-8
- header.setTitle(if self.saveNotice then self.saveNotice.short elseif self.active=="Trials"then "Pocket Trials"else "Settings","Pocket deck")
+ header.setTitle(if self.saveNotice then self.saveNotice.short else "Settings","Pocket deck")
  header.layout(width,24)
  local maximum=math.max(1,size.Y-(if short then 8 else 24))
- local function layoutBody(active)
+ local function layoutBody()
   local y=4
   if self.saveNotice then
    styleType(self.saveDetail,"Body",short);self.saveDetail.Text=self.saveNotice.detail
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  if active=="Trials"then
-   styleType(self.clubHeader,"Heading",short);local h=Art.textHeight(self.clubHeader,bodyW-8,28)
-   place(self.clubHeader,4,y,bodyW-8,h);y+=h+12
-   for _,row in ipairs(self.rows)do
-    styleType(row.title,"Body",short);styleType(row.status,if row.status:GetAttribute("ExactCounter")then "Counter"else "Supporting",short)
-    local th=Art.textHeight(row.title,bodyW-32,24);local sh=Art.textHeight(row.status,bodyW-32,22)
-    local rh=th+sh+30;place(row.frame,4,y,bodyW-8,rh)
-    place(row.title,12,8,bodyW-32,th);place(row.status,12,12+th,bodyW-32,sh)
-    place(row.fill.Parent,12,rh-10,bodyW-32,4);row.fill.Size=UDim2.fromScale(row.fill:GetAttribute("Progress") or 0,1)
-    y+=rh+8
-   end
-   styleType(self.reward,"Supporting",short);local h2=Art.textHeight(self.reward,bodyW-8,24)
-   place(self.reward,4,y,bodyW-8,h2);y+=h2+12
-  else
-   for _,control in ipairs({self.sound,self.music,self.motion})do
-    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
-    place(control,4,y,bodyW-8,h);y+=h+8
-   end
+  for _,control in ipairs({self.sound,self.music,self.motion})do
+   styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
+   place(control,4,y,bodyW-8,h);y+=h+8
   end
   return y
  end
- local heights={Trials=layoutBody("Trials"),Settings=layoutBody("Settings")}
- local y=if self.active=="Trials"then heights.Trials else heights.Settings
+ local y=layoutBody()
  if self.safeTop==nil or self.layoutRootSize~=size then
-  local tallest=headerH+math.max(heights.Trials,heights.Settings)+8
+  local tallest=headerH+y+8
   self.safeTop=math.max(0,(size.Y-math.min(maximum,tallest))/2);self.layoutRootSize=size
   -- Phones: the card starts under the Roblox controls when there is room (QA 2026-11-12).
   if compact and not short then local _,kh=Kit.keepOut();if size.Y-(kh+2)>=headerH+96 then self.safeTop=math.max(self.safeTop,kh+2)end end
@@ -226,10 +199,10 @@ function Picker:shiftStyleTab(delta)
  return self.shop:shiftTab(delta)
 end
 function Picker:showTab(active)
- if active=="Club"then active="Trials"end -- Compatibility for old callers, never a public tab.
- if self.customizationEntry==false and active~="Settings"and active~="Trials"then return false end
- if not styleTab[active]and active~="Trials"and active~="Settings"then return false end
- if not self.returningFromTrials and active~=self.active and active~="Trials"then self.inspectId,self.inspectSlot=nil,nil end
+ -- Pocket Trials ("Trials", the old "Club") are retired (QA Q5): never a tab now.
+ if self.customizationEntry==false and active~="Settings"then return false end
+ if not styleTab[active]and active~="Settings"then return false end
+ if not self.returningFromInner and active~=self.active then self.inspectId,self.inspectSlot=nil,nil end
  local changed=self.active~=active;self.active=active
  local style=styleTab[active]~=nil
  local shopping=style and self.shade.Visible
@@ -238,12 +211,10 @@ function Picker:showTab(active)
  if shopping then
   local tabIndex=styleTab[active]
   if self.shop.visible then self.shop:setTab(tabIndex)
-  else self.shop:open(self.confirmed and self.confirmed.theme,tabIndex,self.returningFromTrials==true)end
+  else self.shop:open(self.confirmed and self.confirmed.theme,tabIndex,self.returningFromInner==true)end
  else self.shop:close()end
- local trials,settings=active=="Trials",active=="Settings"
- self.clubHeader.Visible,self.reward.Visible=trials,trials
+ local settings=active=="Settings"
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
- for _,row in ipairs(self.rows)do row.frame.Visible=trials end
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
@@ -276,13 +247,6 @@ end
 function Picker:useBackground(id)
  if not self.shade.Visible or self.active~="Background"then return false end
  return self:activateChoice("Background",id)
-end
--- "View trials" on a trial-locked background: Pocket Trials, and Back returns here.
-function Picker:openTrials()
- if not self.shade.Visible then return false end
- self.innerReturn={active=self.active}
- self:showTab("Trials");if self.onAccepted then self.onAccepted("confirm")end
- return true
 end
 function Picker:retry(slot)
  if not self.shade.Visible or not self.onRetry then return false end
@@ -325,12 +289,16 @@ function Picker:appearanceText()
  return (self:slotNote(slot))or "Select to wear immediately."
 end
 function Picker:refreshAppearance()
- for tab,choices in pairs(self.choices)do for id,mark in pairs(choices)do mark.Enabled=self.confirmed[slots[tab]]==id end end
+ -- Optimistic (QA Q2.4): the choice in flight shows as worn; a refusal shows the confirmed one again.
+ local shown={}
+ for _,slot in ipairs({"theme","sticker","background"})do shown[slot]=AppearanceIntent.shown(self.appearance,slot)or self.confirmed[slot]end
+ self.shown=shown
+ for tab,choices in pairs(self.choices)do for id,mark in pairs(choices)do mark.Enabled=shown[slots[tab]]==id end end
  if not self.shop then return end
  local themeNote,themeRetry=self:slotNote("theme")
  local backgroundNote,backgroundRetry=self:slotNote("background")
- self.shop:setContext({equipped=self.confirmed.theme or Themes.Default,facts=self.facts,chosen=self.themeId or false,note=themeNote or false,retry=themeRetry})
- self.shop.backgrounds:setContext({confirmed=self.confirmed.background or Backgrounds.Default,facts=self.facts or {},themeId=self.confirmed.theme or Themes.Default,
+ self.shop:setContext({equipped=shown.theme or Themes.Default,facts=self.facts,chosen=self.themeId or false,note=themeNote or false,retry=themeRetry})
+ self.shop.backgrounds:setContext({confirmed=shown.background or Backgrounds.Default,facts=self.facts or {},themeId=shown.theme or Themes.Default,
   chosen=self.backgroundId or false,note=backgroundNote or false,retry=backgroundRetry})
 end
 function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inventoryMask,musicEnabled,totalWins,masteryRanks)
@@ -339,23 +307,10 @@ function Picker:updateClub(owned,mask,peak,score,sound,reduced,systemReduced,inv
  self.music.Text=if musicEnabled==false then "Music: Off"else "Music: On"
  self.motion.Text=if systemReduced then "Motion: Roblox"elseif reduced then "Motion: Low"else "Motion: Full"
  self.motion.Interactable,self.motion.Selectable=not systemReduced,not systemReduced
- local count=0
- for index,goal in ipairs(Trials.Goals)do
-  local done=bit32.band(mask,goal.bit)~=0;local current=if index==1 then peak elseif index==2 then score else 0
-  local row=self.rows[index]
-  row.title.Text=if goal==Trials.HighRoller then (if done then "High score trial complete"else "High score · Score "..goal.target)elseif done then goal.name else goal.hint
-  row.status:SetAttribute("ExactCounter",not done)
-  row.status.Text=if done then "✓ Complete"elseif index==3 then "0/1"else string.format("%d/%d",current,goal.target)
-  Art.bind(row.status,{TextColor3=function()return if done then Art.surfaceColor(row.status,"accent")else Art.surfaceColor(row.status,"muted") end})
-  row.fill:SetAttribute("Progress",if done then 1 else math.min(1,current/goal.target));row.fill.BackgroundColor3=if done then Art.Amber else Art.Leaf
-  count+=if done then 1 else 0
- end
- self.clubHeader.Text=string.format("Pocket trials · %d/%d",count,#Trials.Goals)
- self.reward.Text=if Trials.clubComplete(mask)then "All three Pocket Trials complete"else "Finish all three Pocket Trials"
+ -- `mask` (the saved TrialMask) still feeds the background unlock facts; Pocket
+ -- Trials have no page any more (QA Q5), so `peak` and `score` go unused here.
  self:refreshAppearance()
- local signature={self.sound.Text,self.music.Text,self.motion.Text,self.clubHeader.Text,self.reward.Text}
- for _,row in ipairs(self.rows)do table.insert(signature,row.title.Text..row.status.Text)end
- local key=table.concat(signature,"|")
+ local key=table.concat({self.sound.Text,self.music.Text,self.motion.Text},"|")
  if self.shade.Visible and self.clubLayoutKey~=key then self:layout()end
  self.clubLayoutKey=key
 end
@@ -381,7 +336,7 @@ function Picker:back()
  if self.onAccepted then self.onAccepted("back")end
  if self.innerReturn then
   local saved=self.innerReturn;self.innerReturn=nil
-  self.returningFromTrials=true;self:showTab(saved.active);self.returningFromTrials=nil
+  self.returningFromInner=true;self:showTab(saved.active);self.returningFromInner=nil
   return
  end
  self:close("back")

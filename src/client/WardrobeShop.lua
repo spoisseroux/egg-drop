@@ -82,6 +82,27 @@ function Shop.compactGrid(W,H)
  return{pw=pw,gw=gw,cols=cols,tileW=math.floor((gw-8-(cols-1)*8)/cols),paneH=H-82,gridH=H-82-48}
 end
 function Shop.viewKey(view)return if view then string.format("%dx%d:%d",view.W,view.H,view.hx)else "regular"end
+-- QA Q2.3 card previews: each visible card shows the pet wearing only that item,
+-- framed on the slot, in its own ViewportFrame. Built lazily (one per frame, visible
+-- cards only), cached per pet / item / tint while the Wardrobe is open, and the
+-- colour tile stays as the fallback when a rig cannot be built.
+-- Code review: only visible cards hold a ViewportFrame (at most CardPreviewLive at
+-- once); a card scrolled off screen has its preview detached, and past the cache size
+-- the least recently shown detached preview is destroyed (visible ones never are).
+Shop.CardPreviewLive=12
+Shop.CardPreviewCache=24
+-- Pure: where a card preview's camera looks ("head", "body" or "tail") and its zoom.
+function Shop.cardFraming(slot)
+ if slot=="Hat"or slot=="Eyes"or slot=="Mouth"or slot=="EarPiercing"then return "head",.62 end
+ if slot=="Tail"then return "tail",.85 end
+ return "body",.9
+end
+-- Pure: the cache key (a tinted item renders in the pet's own palette colour).
+function Shop.cardKey(petId,itemId,tint)return petId..":"..itemId..":"..(if tint then tint:ToHex()else "")end
+-- Pure: is a card (top y, height) inside the scroll window (top y, height), with a margin.
+function Shop.cardVisible(cardY,cardH,windowY,windowH)
+ return cardY+cardH>=windowY-8 and cardY<=windowY+windowH+8
+end
 
 local function colorOf(role)
  if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
@@ -95,10 +116,10 @@ end
 function Shop.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},tab=1,index=1,petId="pip",ctx={wallet=0,row={owned={},equipped={}}},
   visible=false,pending=nil,confirmUntil=0,columns=2},Shop)
- local shade=Kit.frame(host,"WardrobeShade",nil,UDim2.new(),UDim2.fromScale(1,1));shade.BackgroundTransparency=.35;shade.BackgroundColor3=Color3.new(0,0,0)
- shade.Active=true;shade.Visible=false;shade.ZIndex=40;self.shade=shade
- local root=Kit.frame(shade,"WardrobeShop","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
- root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=41;self.rootStroke=Kit.stroke(root)
+ -- QA Q2.1: one full-screen shade beside the panel (never its parent).
+ local shade=Kit.modalShade(host,"WardrobeShade",40);self.shade=shade
+ local root=Kit.frame(host,"WardrobeShop","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
+ root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.ClipsDescendants=true;root.ZIndex=41;root.Visible=false;self.rootStroke=Kit.stroke(root)
  local gradient=Kit.frame(root,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  self.gradient=gradient;self.root=root
@@ -136,6 +157,7 @@ function Shop:buildPane(pane,pw,ph,compact)
 end
 
 function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
+ self:detachPreviews()
  if self.tileRoot then self.tileRoot:Destroy()end
  local holder=Kit.frame(parent,"Tiles",nil,UDim2.new(),UDim2.fromScale(1,1));holder.ZIndex=parent.ZIndex+1;self.tileRoot=holder
  self.tiles={}
@@ -151,22 +173,24 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   local swatch=Kit.frame(tile,"Swatch",nil,UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);swatch.BackgroundTransparency=0
   swatch.BackgroundColor3=if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft;Kit.stroke(swatch)
   local tier=TierChip[item.tier]or TierChip.common
-  local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2]
+  local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
   local tx=10+side+12
   local nameLabel=txt(tile,"Name",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
-  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role}
+  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary}
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
  if #self.tiles==0 then txt(holder,"Body",UICopy.get("wardrobe.emptySlot"),"soft",x0,y0,300,24)end
 end
 
 function Shop:build(view)
+ self:detachPreviews()
  if self.content then self.content:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.view=view;self.key=Shop.viewKey(view);self.tileRoot=nil
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
+ Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
  local content=Kit.frame(root,"Content",nil,UDim2.new(),if phone then UDim2.fromOffset(view.W,view.H)else UDim2.fromOffset(848,608));content.ZIndex=root.ZIndex+2
  self.content=content
  local labels={};for _,tab in ipairs(Catalog.Tabs)do table.insert(labels,tab.label)end
@@ -185,7 +209,7 @@ function Shop:build(view)
    ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
   self.list=list
  else
-  self.columns=2;self.grid=nil
+  self.columns=2;self.grid=nil;self.body=content
   self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",tint="companions",width=848,onBack=function()self:back()end})
   Kit.halftone(content,"companions",false)
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
@@ -262,21 +286,160 @@ function Shop:relayout()
  self:refresh();if self.visible then self:focus(self.index,true)end
 end
 
+-- Pure (QA Q2.4): the equipped map after wearing (wear = item id) or taking off
+-- (wear = false) one item, as the server's equipWearable saves it.
+function Shop.applyEquip(petId,equipped,itemId,wear)
+ if wear then return Shop.previewWearables(petId,equipped,itemId)end
+ local result=table.clone(equipped or {})
+ local item=Catalog.item(petId,itemId);if not item then return result end
+ for _,key in ipairs(Catalog.slotKeys(petId,item.slot))do result[key]=nil end
+ return result
+end
+-- Code review: the look shown is the last server-confirmed look (`self.confirmed`)
+-- with every equip still in flight (`self.equips`, oldest first) replayed on top, so a
+-- refusal only ever undoes its own change and never a save that already succeeded.
+function Shop.replayEquips(petId,confirmed,equips)
+ local result=table.clone(confirmed or {})
+ for _,order in ipairs(equips or {})do if order.petId==petId then result=Shop.applyEquip(petId,result,order.itemId,order.wear)end end
+ return result
+end
 function Shop:setContext(ctx)
  if ctx.wallet then self.ctx.wallet=ctx.wallet end
- if ctx.row then self.ctx.row=ctx.row end
+ if ctx.row then
+  -- The server's word; an optimistic equip in flight stays on until its own result says otherwise.
+  self.confirmed=table.clone(ctx.row.equipped or {})
+  self.ctx.row={owned=ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
+ end
  if ctx.stages then self.ctx.stages=ctx.stages end
  if self.wallet then self.wallet.set(self.ctx.wallet)end
  if self.visible then self:refresh()end
 end
 
 function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.id end
+
+-- Card previews (QA Q2.3).
+-- The card's own colour tile (the pet's palette colour for tinted items).
+function Shop:swatchColor(tile)
+ if tile.role then
+  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
+  if palette and typeof(palette[tile.role])=="Color3"then return palette[tile.role]end
+ end
+ return if tile.primary then Color3.fromHex(tile.primary)else Kit.Color.soft
+end
+-- One card loses its preview (scrolled off, rebuilt or closed); the entry stays cached.
+function Shop:detachPreview(tile)
+ local entry=tile.preview
+ if not entry then return end
+ entry.viewport.Parent=nil;entry.shownAt=os.clock();tile.preview=nil
+ if tile.swatch.Parent then tile.swatch:SetAttribute("Preview",nil);tile.swatch.BackgroundColor3=self:swatchColor(tile)end
+end
+function Shop:detachPreviews()
+ for _,tile in ipairs(self.tiles or {})do self:detachPreview(tile)end
+end
+local function destroyEntry(entry)
+ if entry.visual and not entry.visual.destroyed then entry.visual:destroy()end
+ entry.viewport:Destroy()
+end
+-- Destroy the least recently shown detached preview; false when every one is on a card.
+function Shop:evictPreview()
+ local oldestKey,oldest=nil,nil
+ for key,entry in pairs(self.previews or {})do
+  if entry and entry.viewport.Parent==nil and(oldest==nil or(entry.shownAt or 0)<(oldest.shownAt or 0))then oldestKey,oldest=key,entry end
+ end
+ if not oldest then return false end
+ destroyEntry(oldest);self.previews[oldestKey]=nil;self.previewCount-=1
+ return true
+end
+function Shop:clearPreviews()
+ self:detachPreviews()
+ for _,entry in pairs(self.previews or {})do if entry then destroyEntry(entry)end end
+ self.previews,self.previewCount={},0
+end
+-- Previews currently on cards (each one a rendering ViewportFrame).
+function Shop:livePreviews()
+ local live=0
+ for _,tile in ipairs(self.tiles or {})do if tile.preview then live+=1 end end
+ return live
+end
+function Shop:poseCard(entry)
+ local v=entry.visual;if not v or v.destroyed then return end
+ v.yaw=if entry.slot=="Tail"then math.pi*.8 else -.35
+ v.reducedEffects=true;v.poseDirty=true;v:update(0)
+ entry.rig=v.rigRevision
+ local box,size=Bounds.get(v)
+ local focus,zoom=Shop.cardFraming(entry.slot)
+ local half=math.tan(math.rad(entry.camera.FieldOfView/2))
+ local distance=(math.max(size.Y,size.X)*.5/half+size.Z*.5+.3)*zoom
+ local center=box.Position+(if focus=="head"then Vector3.new(0,size.Y*.22,0)elseif focus=="body"then Vector3.new(0,-size.Y*.04,0)else Vector3.zero)
+ entry.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.1,distance),center)
+end
+function Shop:buildCardPreview(tile)
+ local pet=Pets.byId[self.petId];if not pet then return false end
+ local appearance=table.clone(self.callbacks.appearance and self.callbacks.appearance(self.petId)or {})
+ appearance.wearables=Shop.previewWearables(self.petId,{},tile.id)
+ local viewport=Instance.new("ViewportFrame");viewport.Name="CardPreview";viewport.BackgroundTransparency=1;viewport.Size=UDim2.fromScale(1,1)
+ viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ local world=Instance.new("WorldModel");world.Parent=viewport
+ local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
+ local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)
+ if not ok or not visual then viewport:Destroy();return false end
+ local entry={viewport=viewport,camera=camera,visual=visual,slot=tile.slot}
+ local posed=pcall(self.poseCard,self,entry)
+ if not posed then visual:destroy();viewport:Destroy();return false end
+ return entry
+end
+-- Runs every frame while open: detaches previews from cards scrolled off screen,
+-- attaches cached previews to visible cards, builds at most one missing one, and refits
+-- a card whose rig finished loading after it was built.
+function Shop:pumpPreviews()
+ if not self.visible or not self.list or not self.tiles then return end
+ self.previews=self.previews or {};self.previewCount=self.previewCount or 0
+ local windowY=self.list.AbsolutePosition.Y;local windowH=self.list.AbsoluteWindowSize.Y
+ if windowH<=0 then windowH=self.list.AbsoluteSize.Y end
+ local now=os.clock()
+ local visible={}
+ local live=0
+ for index,tile in ipairs(self.tiles)do
+  visible[index]=tile.button.Parent~=nil and Shop.cardVisible(tile.button.AbsolutePosition.Y,tile.button.AbsoluteSize.Y,windowY,windowH)
+  if tile.preview then
+   if not visible[index]then self:detachPreview(tile)
+   else
+    live+=1;tile.preview.shownAt=now
+    local v=tile.preview.visual
+    if v and not v.destroyed and v.rigRevision~=tile.preview.rig then self:poseCard(tile.preview)end
+   end
+  end
+ end
+ local built=false
+ for index,tile in ipairs(self.tiles)do
+  if live>=Shop.CardPreviewLive then break end
+  if tile.preview==nil and visible[index]then
+   local palette=tile.role and Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
+   local tint=if palette and typeof(palette[tile.role])=="Color3"then palette[tile.role]else nil
+   local key=Shop.cardKey(self.petId,tile.id,tint)
+   local entry=self.previews[key]
+   if entry==nil then
+    if built then continue end
+    while self.previewCount>=Shop.CardPreviewCache and self:evictPreview()do end
+    if self.previewCount>=Shop.CardPreviewCache then continue end
+    built=true
+    entry=self:buildCardPreview(tile);self.previews[key]=entry
+    if entry then self.previewCount+=1 end
+   end
+   if entry then
+    entry.viewport.ZIndex=tile.swatch.ZIndex+1;entry.viewport.Parent=tile.swatch;entry.shownAt=now
+    tile.preview=entry;tile.swatch.BackgroundColor3=Kit.color("well")
+    tile.swatch:SetAttribute("Preview",true);live+=1
+   else tile.preview=false end
+  end
+ end
+end
 function Shop:refresh()
  if self.emptyLine then self.emptyLine.Visible=Shop.ownsNothing(self.ctx.row)end
  -- Tinted items show this pet's own palette colour (its secondary, face...), not grey.
  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
-  if tile.role and palette and typeof(palette[tile.role])=="Color3"then tile.swatch.BackgroundColor3=palette[tile.role]end
+  if tile.role and palette and typeof(palette[tile.role])=="Color3"and not tile.preview then tile.swatch.BackgroundColor3=palette[tile.role]end
   local text,role=Shop.tileStatus(self.petId,tile.id,self.ctx)
   if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
@@ -334,7 +497,7 @@ function Shop:paintPane()
  self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
  local status=Shop.status(self.petId,id,self.ctx)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
- local pending=self.pending and self.pending.itemId==id
+ local pending=self.pending and self.pending.itemId==id and self.pending.action=="wearableBuy"
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
@@ -342,7 +505,7 @@ function Shop:paintPane()
  self.action.Visible=status.button~=nil
  if status.button then
   Kit.setText(self.action,if pending then "Saving…"elseif confirming then "Confirm ★ "..status.price else status.button)
-  Kit.setEnabled(self.action,status.enabled==true and not self.pending)
+  Kit.setEnabled(self.action,status.enabled==true and not(self.pending and self.pending.action=="wearableBuy"))
  end
  self.root:SetAttribute("FocusedItem",id);self.root:SetAttribute("PaneState",status.kind);self.root:SetAttribute("Tab",Catalog.Tabs[self.tab].id)
  if self.visible then self:paintPreview()end
@@ -372,7 +535,7 @@ function Shop:move(dx,dy)
 end
 function Shop:setTab(index)
  index=math.clamp(index,1,#Catalog.Tabs)
- if self.pending then self.tabs.select(self.tab);return false end
+ if self.pending and self.pending.action=="wearableBuy"then self.tabs.select(self.tab);return false end
  self.tab=index;self.tabs.select(index);self.confirmId=nil;self.errorId=nil;self.cameraKey=nil
  self:layoutTiles()
  -- Land on the item worn in this slot, else the first card.
@@ -387,14 +550,25 @@ end
 
 -- A / Enter / pane button. Buying needs one confirmation within 3 s.
 function Shop:act()
- local id=self:focusedId();if not id or self.pending then return false end
+ local id=self:focusedId();if not id then return false end
+ -- An equip in flight never blocks the next choice; a buy does.
+ if self.pending and self.pending.action~="wearableEquip"then return false end
  local item=Catalog.item(self.petId,id);local status=Shop.status(self.petId,id,self.ctx)
  local opId=game:GetService("HttpService"):GenerateGUID(false)
  if status.kind=="owned"or status.kind=="equipped"then
-  self.pending={id=opId,action="wearableEquip",petId=self.petId,slot=item.slot,itemId=id,wear=if status.kind=="owned"then id else false}
+  -- QA Q2.4: optimistic. The pet wears it (or takes it off) at once; the save runs in
+  -- the background and only a refusal puts the previous look back, with a toast.
+  self.equips=self.equips or {}
+  if #self.equips==0 or self.confirmed==nil then self.confirmed=table.clone(self.ctx.row.equipped or {})end
+  local wear=if status.kind=="owned"then id else false
+  self.pending={id=opId,action="wearableEquip",petId=self.petId,slot=item.slot,itemId=id,wear=wear}
+  table.insert(self.equips,self.pending)
+  self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
+  self.errorId,self.errorText=nil,nil
   if self.callbacks.equip then self.callbacks.equip(self.pending)end
-  self:paintPane();return true
+  self:refresh();return true
  elseif status.kind=="buy"then
+  if self.pending then return false end -- let an equip's save land first
   if self.confirmId==id and os.clock()<self.confirmUntil then
    self.confirmId=nil
    self.pending={id=opId,action="wearableBuy",petId=self.petId,itemId=id,price=status.price}
@@ -412,7 +586,29 @@ end
 local Reasons={NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NotOwned="shop.reason.notOwned",
  PriceChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
 function Shop:result(message)
- if not self.pending or type(message)~="table"or message.id~=self.pending.id then return false end
+ if type(message)~="table"then return false end
+ -- Equips: any in-flight order (an earlier one superseded by a quicker second tap still
+ -- reports, and its save counts).
+ local index=nil
+ for i,order in ipairs(self.equips or {})do if order.id==message.id then index=i end end
+ if index then
+  if message.status=="Retrying"then return false end
+  local order=table.remove(self.equips,index)
+  local latest=index>#self.equips -- nothing newer was tapped after it
+  if self.pending==order then self.pending=self.equips[#self.equips]end
+  if message.status=="Saved"then
+   if order.petId==self.petId then self.confirmed=Shop.applyEquip(order.petId,self.confirmed,order.itemId,order.wear)end
+   if latest then self.errorId,self.errorText=nil,nil end
+  else
+   -- Roll back this change only: the confirmed look with the newer equips still on top.
+   self.errorId,self.errorText,self.errorFit=order.itemId,UICopy.get(Reasons[message.reason]or "shop.failed.applied"),nil
+   if self.callbacks.rolledBack then self.callbacks.rolledBack(order)
+   else self.toaster=self.toaster or Kit.toaster(self.host);self.toaster.show(UICopy.get("shop.rolledBack"))end
+  end
+  self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
+  if self.visible then self:refresh()end;return true
+ end
+ if not self.pending or self.pending.action=="wearableEquip"or message.id~=self.pending.id then return false end
  if message.status=="Retrying"then return false end
  local order=self.pending;self.pending=nil
  if message.status~="Saved"then
@@ -429,12 +625,17 @@ function Shop:isOpen()return self.visible end
 function Shop:open(petId,ctx)
  self.petId=if petId and Catalog.hasItems(petId)then petId else "pip"
  if ctx then self:setContext(ctx)end
- self.visible=true;self.shade.Visible=true;self.confirmId,self.errorId=nil,nil
+ self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
+ Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)
+ -- QA Q2.2: in from the right like the Pets page (Reduced Motion cuts); Back is a cut
+ -- to the screen underneath, which slides back in from the left.
+ Kit.slideIn(self.body,Kit.SlideOffset,Kit.headerSkip(self.header))
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
+  if self.visible then self:pumpPreviews()end
   local v=self.visual;if not self.visible or not v or v.destroyed then return end
   if GuiService.ReducedMotionEnabled then return end
   v.cosmeticTime=os.clock();v:update(math.min(dt,.1))
@@ -443,9 +644,10 @@ function Shop:open(petId,ctx)
 end
 function Shop:back()if self.callbacks.back then self.callbacks.back()else self:close()end end
 function Shop:close()
- self.visible=false;self.shade.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil
+ self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end;self.confirmId=nil
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
+ self:clearPreviews()
 end
-function Shop:destroy()self:close();if self.sizeConnection then self.sizeConnection:Disconnect()end;self.shade:Destroy()end
+function Shop:destroy()self:close();if self.sizeConnection then self.sizeConnection:Disconnect()end;self.root:Destroy();self.shade:Destroy()end
 return Shop

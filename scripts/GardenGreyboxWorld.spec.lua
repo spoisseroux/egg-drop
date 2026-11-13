@@ -205,9 +205,64 @@ local function v7(server)
 
 	test("perimeter wall, cave blocker and fall catch enclose the island",function()
 		local walls=room.PerimeterWall:GetChildren();assert(#walls==#Data.perimeter and #walls>60)
-		for _,w in ipairs(walls)do assert(w.CanCollide and w.Transparency==1 and w.Size.Y>=10,w.Name)end
+		for _,w in ipairs(walls)do assert(w.CanCollide and not w.CanQuery and w.Transparency==1 and w.Size.Y>=10,w.Name)end
+		-- QA 2026-11-13: neighbouring boxes join along the ring (the mirrored yaw left walk-through gaps).
+		for i=1,#walls do
+			local w,n=room.PerimeterWall["Wall"..i],room.PerimeterWall["Wall"..(i%#walls+1)]
+			local endA=w.CFrame*Vector3.new(w.Size.X/2,0,0)
+			local startB=n.CFrame*Vector3.new(-n.Size.X/2,0,0)
+			local flat=Vector3.new(endA.X-startB.X,0,endA.Z-startB.Z)
+			assert(flat.Magnitude<4,w.Name.." gap "..flat.Magnitude)
+		end
 		assert(room.CaveBlocker.CanCollide and room.CaveBlocker.Transparency==1)
 		local catch=room.FallCatch;assert(catch.CanTouch and not catch.CanCollide and catch.Position.Y< -150 and catch.Size.X>=1400)
+	end)
+
+	test("code review: spawn, arrival dais, station prompts, park gateways and benches sit inside the perimeter ring",function()
+		-- The ring as a polygon through the wall centres (XZ), in wall order.
+		local ring={}
+		for i=1,#room.PerimeterWall:GetChildren()do local p=room.PerimeterWall["Wall"..i].Position;table.insert(ring,Vector2.new(p.X,p.Z))end
+		local function inside(q)
+			local hit=false
+			for i=1,#ring do
+				local a,b=ring[i],ring[i%#ring+1]
+				if(a.Y>q.Y)~=(b.Y>q.Y)and q.X<(b.X-a.X)*(q.Y-a.Y)/(b.Y-a.Y)+a.X then hit=not hit end
+			end
+			return hit
+		end
+		local function clearance(q)
+			local best=math.huge
+			for i=1,#ring do
+				local a,b=ring[i],ring[i%#ring+1];local ab=b-a
+				local t=math.clamp((q-a):Dot(ab)/math.max(ab:Dot(ab),1e-9),0,1)
+				best=math.min(best,(a+ab*t-q).Magnitude)
+			end
+			return best
+		end
+		local function check(label,position)
+			local q=Vector2.new(position.X,position.Z)
+			assert(inside(q),label.." is outside the perimeter ring "..tostring(position))
+			assert(clearance(q)>=3,label.." is "..string.format("%.1f",clearance(q)).." studs from the perimeter ring")
+		end
+		assert(#ring>60)
+		check("spawn",World.Spawn.Position)
+		check("arrival dais",World.Stations.ArrivalDais.Position)
+		for name,cf in pairs(World.Stations)do check("station "..name,cf.Position)end
+		local prompts=0
+		for _,node in ipairs(room:GetDescendants())do
+			if node:IsA("ProximityPrompt")then
+				local anchor=node.Parent
+				local position=if anchor:IsA("BasePart")then anchor.Position elseif anchor:IsA("Attachment")then anchor.WorldPosition elseif anchor:IsA("Model")then anchor:GetPivot().Position else nil
+				if position then prompts+=1;check("prompt "..anchor:GetFullName(),position)end
+			end
+		end
+		assert(prompts>=3,"station prompts found: "..prompts)
+		local Park=require(Shared.ParkLayout)
+		if Park.Enabled then
+			assert(#Park.Gateways>=1 and #Park.Benches>=1)
+			for _,gate in ipairs(Park.Gateways)do check("park gateway "..gate.id,gate.position)end
+			for _,bench in ipairs(Park.Benches)do check("park bench "..bench.id,bench.position)end
+		end
 	end)
 
 	test("the marble bridge support matches its registered crossing span",function()

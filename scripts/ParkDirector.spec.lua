@@ -258,8 +258,11 @@ return function(server)
 		local c=fixture(2);hold(c)
 		local session=force(c,"slide",{1})
 		local actor=c.garden.actors[1]
-		local bench=Park.Benches[2] -- west bench, ~22.6 studs from the slide ladder
+		-- QA Q4 left one bench (the entrance bench, ~18 studs from the ladder): the owner settles on
+		-- the far west lawn inside the kerb instead, > 22 studs from the slide ladder.
+		local bench={position=spot(math.pi,.8)}
 		local slideAt=Park.Slots.slide.approach
+		assert(Park.member(bench.position,false))
 		assert(Vector2.new(bench.position.X-slideAt.X,bench.position.Z-slideAt.Z).Magnitude>22)
 		local generation
 		for step=1,math.ceil((session.endTime-c.now)/.5)-1 do
@@ -281,6 +284,82 @@ return function(server)
 		c.garden.options.validWander=nil
 	end)
 
+	test("QA Q4: a pet left outside walks in beside its owner at the catch-up pace and starts playing",function()
+		local c=fixture(1,{at=function()return spot(-.26,1.9)end}) -- outside the east gate
+		c:step(1)
+		local actor=c.garden.actors[1]
+		-- The pet trails far behind (36 studs from the park middle) as the owner walks in.
+		local far=spot(-.26,2.6)
+		actor.from=Activity.pack(far);actor.to=actor.from;actor.path=nil;actor.startTime=c.now;actor.endTime=c.now
+		place(c.inputs[1],spot(-.26,.3));c:step(.5)
+		assert(actor.park,"owner inside the kerb: the pet is a park member")
+		local inside,startedAt
+		for _=1,40 do
+			c:step(.5)
+			local position=c.garden:position(actor,c.now)
+			if not inside and Park.inside(position,0)then inside=c.now end
+			if not startedAt and actor.park and actor.park.session then startedAt=c.now end
+			if inside and startedAt then break end
+		end
+		assert(inside and inside-1001.5<=7,"the pet took "..tostring(inside and inside-1001.5).." s to come into the park")
+		local target=Activity.vector(actor.to)
+		assert(startedAt and startedAt-1001.5<=12,"no activity within 12 s of the owner walking in")
+		assert(target~=nil)
+		-- The walk-in target is on the owner's side, clear of the equipment.
+		local entry=Director.entryPoint(spot(-.26,.3))
+		assert(Park.inside(entry,-1)and Park.clearOfKeepout(entry,0),"entry point inside and clear")
+		local entryOutside=Director.entryPoint(spot(2.2,1.05))
+		assert(Park.inside(entryOutside,-1),"entry point for an owner on the kerb is inside")
+	end)
+
+	test("QA Q4: two owners walking in 7 s apart get a duo within 45 s of the second arrival",function()
+		for _,seed in ipairs({12345,777,4242,99,31337})do
+			local c=fixture(2,{seed=seed,at=function(id)return spot(-.26+id*.2,1.6)end}) -- both outside
+			c:step(1)
+			place(c.inputs[1],spot(-.26,.4));c:step(7)
+			place(c.inputs[2],spot(-.1,.4))
+			local arrived=c.now;local duoAt
+			for _=1,90 do
+				c:step(.5);checkExclusive(c)
+				for _,session in pairs(c.park.sessions)do
+					if Catalog.ById[session.activity].kind=="duo"and #session.ownerIds==2 then duoAt=duoAt or c.now end
+				end
+				if duoAt then break end
+			end
+			assert(duoAt and duoAt-arrived<=45,"seed "..seed..": no duo within 45 s of the second owner arriving")
+			-- Then they keep playing together often: at least 3 duo sessions in the next 3 minutes.
+			local duos={}
+			for _=1,360 do
+				c:step(.5)
+				for _,session in pairs(c.park.sessions)do
+					if Catalog.ById[session.activity].kind=="duo"then duos[session.id]=true end
+				end
+			end
+			local count=0;for _ in pairs(duos)do count+=1 end
+			assert(count>=3,"seed "..seed..": only "..count.." duos in 3 minutes")
+		end
+	end)
+
+	test("QA Q4: a lone pet never waits for a partner; a busy park does not hold pets",function()
+		local c=fixture(1)
+		for _=1,120 do c:step(.5);assert(c.garden.actors[1].park.partnerWaitUntil==nil,"a lone pet waited for a partner")end
+		assert(#c.finished>=1)
+	end)
+
+	test("code review: an expired partner wait is cleared, so the pet can hold for a partner again",function()
+		local c=fixture(2);c:step(1)
+		local a=c.garden.actors[1]
+		local stale=c.now-1
+		a.park.partnerWaitUntil=stale;a.park.nextPickAt=0
+		local cleared=false
+		for _=1,40 do
+			c:step(.5)
+			if a.park and a.park.partnerWaitUntil~=stale then cleared=true;break end
+			if a.park then a.park.nextPickAt=0 end
+		end
+		assert(cleared,"an expired partner wait was left on the pet")
+	end)
+
 	test("idle park pets greet every 6 s at most; the same pair waits 45 s",function()
 		local c=fixture(2,{at=function(id)return Vector3.new(C.X-1+id*2,Park.ground(C.X-1+id*2,C.Z),C.Z)end})
 		c:step(.5);hold(c)
@@ -289,18 +368,24 @@ return function(server)
 			for _,actor in ipairs({a,b})do
 				if actor.pairId then c.park:endGreeting(actor,c.now)end
 				c.garden:transition(actor,"rest",c.garden:position(actor,c.now),.5,"wanderPause");actor.park.state="idle"
+				actor.park.waitingSince=c.now -- just went idle (a pet queueing > 8 s is not greeted)
 			end
 		end
 		-- The first decide may already have greeted them; start from a clean cadence and cooldown.
 		idle();c.park.nextGreetAt=0;table.clear(c.park.cooldowns)
 		c.park:greetings(c.now,{a,b},{})
 		assert(a.pairId and a.pairId==b.pairId and a.action=="greet","idle park pets greet")
-		idle();c.now+=6;c.park:greetings(c.now,{a,b},{})
+		c.now+=6;idle();c.park:greetings(c.now,{a,b},{})
 		assert(not a.pairId,"same pair inside 45 s")
-		idle();c.now+=40;c.park:greetings(c.now,{a,b},{})
+		c.now+=40;idle();c.park:greetings(c.now,{a,b},{})
 		assert(a.pairId and a.pairId==b.pairId,"pair greets again after 45 s")
-		local before=a.pairId;idle();c.now+=1;c.park:greetings(c.now,{a,b},{})
+		local before=a.pairId;c.now+=1;idle();c.park:greetings(c.now,{a,b},{})
 		assert(not a.pairId and before~=nil,"no second greeting inside 6 s")
+		-- QA Q4: a pet that has queued for a slot longer than GreetPatience is never greeted.
+		c.now+=60;idle();table.clear(c.park.cooldowns);c.park.nextGreetAt=0
+		a.park.waitingSince=c.now-Director.GreetPatience-1
+		c.park:greetings(c.now,{a,b},{})
+		assert(not a.pairId and not b.pairId,"the longest-waiting pet was greeted instead of queueing")
 	end)
 
 	test("never starts for petted, docked, greeting, resting-on-dais or outside-park pets",function()

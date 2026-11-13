@@ -66,15 +66,15 @@ return function(client,parent)
     for _,item in ipairs(v.destinations)do fit(item.title);fit(item.subtitle);assert(item.title.TextSize==20 and item.subtitle.TextSize==16)end
     v:close();v.shade:Destroy()
    end)
-   test(tostring(size).." Style Settings Trials preserve full labels and reachable final controls",function()
+   test(tostring(size).." Style Settings preserve full labels and reachable final controls (no Trials page, QA Q5)",function()
     local v=Picker.new(root,nil,nil,function()end,function()end,function()end,function()end)
     v:updateClub(0,0,0,0,"On",false,false,1);v:open("sherbet","none");settle()
     -- The card carries the shared Kit header (Title 26); Faceplates and Backgrounds are the Deck style screen.
     assert(v.card.AbsoluteSize.X>=680 and v.card.AbsoluteSize.X<=740 and v.heading.TextSize==26)
-    for _,page in ipairs({"Settings","Trials"})do
+    assert(v:showTab("Trials")==false)
+    for _,page in ipairs({"Settings"})do
      v:showTab(page);settle();fit(v.heading)
-     if page=="Settings"then for _,b in ipairs({v.sound,v.music,v.motion})do fit(b);assert(b.TextSize==20 and b.AbsoluteSize.Y>=44)end
-     else for _,row in ipairs(v.rows)do fit(row.title);fit(row.status)end;fit(v.reward)end
+     for _,b in ipairs({v.sound,v.music,v.motion})do fit(b);assert(b.TextSize==20 and b.AbsoluteSize.Y>=44)end
      v.scroll.CanvasPosition=Vector2.new(0,math.max(0,v.scroll.CanvasSize.Y.Offset-v.scroll.AbsoluteSize.Y));settle()
      assert(v.cancel.AbsoluteSize==Vector2.new(44,44))
     end

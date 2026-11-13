@@ -31,8 +31,8 @@
   "sand_c": "#EFC27F",
   "sand_k": "#DDA262"
  },
- "trianglesUnique": 4696,
- "trianglesPlacedSuggestedLayout": 7440,
+ "trianglesUnique": 5288,
+ "trianglesPlacedSuggestedLayout": 8032,
  "meshes": [
   {
    "name": "Park_SwingFrame",
@@ -447,6 +447,28 @@
    "tris": 504,
    "size": [
     4.5,
+    3.42,
+    1.39
+   ],
+   "offset": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pivotFromCenter": [
+    0.0,
+    -1.71,
+    0.005
+   ],
+   "baseFromCenter": 1.71
+  },
+  {
+   "name": "Park_BenchLong",
+   "group": "BenchLong",
+   "role": "static",
+   "tris": 592,
+   "size": [
+    9.57,
     3.42,
     1.39
    ],
@@ -1042,6 +1064,105 @@
      "yawDeg": 0.0
     }
    ]
+  },
+  "BenchLong": {
+   "meshes": [
+    "Park_BenchLong"
+   ],
+   "front": "sitter faces Roblox +Z; five seats along X",
+   "anchors": {
+    "seats": [
+     {
+      "center": [
+       -3.5,
+       1.7,
+       0.0
+      ],
+      "size": [
+       1.6,
+       0.2,
+       1.2
+      ]
+     },
+     {
+      "center": [
+       -1.75,
+       1.7,
+       0.0
+      ],
+      "size": [
+       1.6,
+       0.2,
+       1.2
+      ]
+     },
+     {
+      "center": [
+       0.0,
+       1.7,
+       0.0
+      ],
+      "size": [
+       1.6,
+       0.2,
+       1.2
+      ]
+     },
+     {
+      "center": [
+       1.75,
+       1.7,
+       0.0
+      ],
+      "size": [
+       1.6,
+       0.2,
+       1.2
+      ]
+     },
+     {
+      "center": [
+       3.5,
+       1.7,
+       0.0
+      ],
+      "size": [
+       1.6,
+       0.2,
+       1.2
+      ]
+     }
+    ]
+   },
+   "colliders": [
+    {
+     "center": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "size": [
+      9.47,
+      1.8,
+      1.3
+     ],
+     "pitchDeg": 0.0
+    },
+    {
+     "center": [
+      0.0,
+      2.42,
+      -0.56
+     ],
+     "size": [
+      9.47,
+      1.4,
+      0.3
+     ],
+     "pitchDeg": 0.0
+    }
+   ],
+   "fbx": "assets/park/park-bench-long.fbx"
   }
  },
  "layout": {

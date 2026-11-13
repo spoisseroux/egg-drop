@@ -8,6 +8,16 @@ function Intent.new(d)
  return self
 end
 function Intent:now()return (self.d.now or os.clock)()end
+-- Pure (QA Q2.4, optimistic): the id to show as worn for a slot of a view(). A choice
+-- in flight (Pending, or Applied before the snapshot lands) shows at once; Rejected or
+-- Retry falls back to the confirmed id, which is the rollback.
+local confirmedField={theme="confirmedTheme",sticker="confirmedSticker",background="confirmedBackground"}
+function Intent.shown(view,slot)
+ if type(view)~="table"then return nil end
+ local status=view.slots and view.slots[slot]
+ if status and(status.status=="Pending"or status.status=="Applied")and type(status.id)=="string"then return status.id end
+ return view[confirmedField[slot]or ""]
+end
 function Intent:view()
  local v={themeId=self.confirmed.theme,stickerId=self.confirmed.sticker,confirmedTheme=self.confirmed.theme,confirmedSticker=self.confirmed.sticker,backgroundId=self.confirmed.background,confirmedBackground=self.confirmed.background,revision=self.revision,slots={},fallbacks=table.clone(self.fallbacks)}
  for _,slot in ipairs(order)do local s=self.slots[slot];if s.desired then v[fields[slot]]=s.desired.id end

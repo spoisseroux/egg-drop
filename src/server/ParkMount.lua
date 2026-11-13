@@ -8,7 +8,8 @@
 -- GardenWalkability and every pet ground/wander raycast (RespectCanCollide + Include lounge) see
 -- straight through them. Players get invisible simple colliders (CanCollide true, CanQuery false:
 -- raycasts never hit a CanQuery=false part) tagged `ParkCollider`; init.server's rest-path solids
--- skip them via ParkMount.isParkPart. Benches carry Roblox Seats at the manifest anchors.
+-- skip them via ParkMount.isParkPart. Benches carry Roblox Seats at the manifest anchors (QA Q4: one
+-- five-seat bench facing the playground; every mesh frame carries ParkPoseData.ImportTurn).
 -- Moving parts (swings, see-saw beam, balls, castle stages) are created by each client
 -- (ParkClient); their anchor frames are written as CFrame attributes on the PetPark model.
 local AssetService=game:GetService("AssetService")
@@ -46,7 +47,7 @@ end
 -- A mesh (or its grey-box fallback) for one static entry.
 function Mount.makePart(name,createMesh)
 	local spec=Data.Meshes[name]
-	local template=(createMesh or Mount.meshTemplate)(spec.id)
+	local template=if spec.id then(createMesh or Mount.meshTemplate)(spec.id)else nil
 	local part
 	if template then
 		part=template:Clone()
@@ -116,7 +117,7 @@ function Mount.build(room,options)
 			if not model.Parent then return end
 			local part=Mount.makePart(entry.mesh,options.createMesh)
 			part.Name=entry.mesh.."_"..index
-			part.Size=entry.size;part.PivotOffset=CFrame.new(Data.Meshes[entry.mesh].pivot)
+			part.Size=entry.size;part.PivotOffset=Data.pivotOffset(entry.mesh)
 			part.CFrame=entry.cframe
 			if entry.mesh=="Park_GateStarOrb"then
 				local light=Instance.new("PointLight")

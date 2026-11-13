@@ -18,7 +18,8 @@ Shop.Regular={pane={24,144,328,392},grid={371,147},tile={220,96},gap=12,columns=
 Shop.Short={free="Free",firstWin="Win 1 round",rankI="Reach Rank I",rankII="Reach Rank II",highRoller="High Roller trial",chain3="Triple Pop trial",trials="All Pocket Trials"}
 Shop.Source={free="Yours from the start",firstWin="From your first win",rankI="From reaching Rank I",rankII="From reaching Rank II",
  highRoller="From the High Roller trial",chain3="From the Triple Pop trial",trials="From all three Pocket Trials"}
-local TrialRules={highRoller=true,chain3=true,trials=true}
+-- Pocket Trials have no page any more (QA 2026-11-13 Q5): a trial-locked background says
+-- its rule and offers no button (the server still unlocks it from the saved TrialMask).
 
 -- Pure: what the pane says and offers for one background.
 -- ctx = { confirmed = id, facts = AppearanceCatalog facts, chosen = id being applied,
@@ -34,7 +35,7 @@ function Shop.status(id,ctx)
   return {kind="earned",chip="EARNED",text=if ctx.chosen==id and ctx.note then ctx.note else Shop.Source[requirement.rule]or "",button="Use",enabled=true}
  end
  local text="Locked - "..requirement.text..string.format(" (%d/%d)",requirement.progress,requirement.target)
- return {kind="locked",chip="LOCKED",text=text,rule=requirement.rule,button=if TrialRules[requirement.rule]then "View trials"else nil,enabled=TrialRules[requirement.rule]==true}
+ return {kind="locked",chip="LOCKED",text=text,rule=requirement.rule,button=nil,enabled=false}
 end
 -- Pure: the card's status line.
 function Shop.tileStatus(id,ctx)
@@ -61,7 +62,7 @@ local function txt(parent,role,content,color,x,y,w,h,props)
 end
 
 -- owner: the Deck style screen (FaceplateShop): root, ring, visible, tab.
--- callbacks: use(id), trials(), retry()
+-- callbacks: use(id), retry()
 function Shop.new(owner,callbacks)
  return setmetatable({owner=owner,callbacks=callbacks or {},index=1,tiles={},
   ctx={confirmed=Backgrounds.Default,facts={},themeId=Themes.Default}},Shop)
@@ -273,7 +274,6 @@ function Shop:act()
  local s=Shop.status(id,self.ctx)
  if s.kind=="retry"then if self.callbacks.retry then self.callbacks.retry()end;return true end
  if s.kind=="earned"then if self.callbacks.use then self.callbacks.use(id)end;return true end
- if s.kind=="locked"and s.button then if self.callbacks.trials then self.callbacks.trials()end;return true end
  return false
 end
 -- Shown when the Backgrounds tab is selected; lands on the background in use.

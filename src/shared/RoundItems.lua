@@ -17,6 +17,10 @@ Items.ById=table.freeze({
 	magnet=table.freeze({id="magnet",name="Magnet",effect="Your next ball pulls its matches in.",short="Next ball pulls matches.",
 		color=Color3.fromHex("#FF6F8E"),glyph="∪",arms=true}),
 })
+-- Item icons (QA 2026-11-13): uploaded ids for assets/ui/items/<id>.png
+-- (scripts/build_item_icons.py). Empty until uploaded: ItemIcons draws the same
+-- icon with Frames. Put "rbxassetid://..." strings here after the upload.
+Items.IconImages=table.freeze({swap="rbxassetid://88437337795835",pop="rbxassetid://79285689955133",bomb="rbxassetid://97237247094508",magnet="rbxassetid://128316412669129"}) -- assets/ui/items/*.png (QA 2026-11-13)
 -- Scope A3: power-up balls per round, earliest drop and item odds per heat.
 Items.Heat=table.freeze({
 	easy=table.freeze({count=2,earliest=5,odds=table.freeze({pop=35,swap=30,bomb=20,magnet=15})}),

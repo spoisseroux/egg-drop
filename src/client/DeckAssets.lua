@@ -3,7 +3,7 @@
 local Assets={}
 Assets.Image={
  shadow="rbxassetid://121434035045264",shoulder="rbxassetid://74863712113210",band="rbxassetid://138363340781362",
- plateOverlay="rbxassetid://106306129867257",wordmark="rbxassetid://139133398634939",glass="rbxassetid://79292415073669",
+ plateOverlay="rbxassetid://101563340125925",wordmark="rbxassetid://139133398634939",glass="rbxassetid://79292415073669",
  glare="rbxassetid://117953857216158",dpadDisc="rbxassetid://106584750721351",dpadArrows="rbxassetid://71446432618436",
  dpadPress="rbxassetid://95661562301496",menuPill="rbxassetid://104999410746636",
  buttonBase="rbxassetid://85052812576271",buttonBasePressed="rbxassetid://112125787028303",

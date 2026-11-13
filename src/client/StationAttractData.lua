@@ -7,14 +7,17 @@ return table.freeze({
 		Customize = 125937977156864, -- assets/ui/attract/attract_icon_deck.png
 		Eggs = 75481788921574, -- assets/ui/attract/attract_icon_eggs.png
 		Journal = 77942657202363, -- assets/ui/attract/attract_icon_care.png
+		Park = 108874072462773, -- assets/ui/attract/attract_icon_park.png
 	}),
 	-- id = the ProximityPrompt's PocketClubStation attribute.
 	Stations = table.freeze({
 		Customize = table.freeze({ hue = "#35C7F5", light = "#B8ECFF", glyph = "▣", pitch = 1.00, iconHeight = 9.5 }),
 		Eggs = table.freeze({ hue = "#FFC83C", light = "#FFEEAA", glyph = "◒", pitch = 1.12, iconHeight = 5.6 }),
 		Journal = table.freeze({ hue = "#FF6FAE", light = "#FFC9DC", glyph = "♥", pitch = 0.89, iconHeight = 9.5 }),
+		-- Pet Park (QA Q4): over the east gateway; "used" once the player first walks in (no prompt).
+		Park = table.freeze({ hue = "#3FB98A", light = "#C9F7E2", glyph = "★", pitch = 1.06, iconHeight = 6.2 }),
 	}),
-	Order = table.freeze({ "Customize", "Eggs", "Journal" }),
+	Order = table.freeze({ "Customize", "Eggs", "Journal", "Park" }),
 	BeckonRange = 40, InviteRange = 14,
 	-- Glow breath: +-8 % learned, +-20 % beckon/invite, on a 3.2 s cycle.
 	BreathLearned = .08, BreathActive = .20, BreathPeriod = 3.2, GlowBrightness = .45, GlowRange = 9,

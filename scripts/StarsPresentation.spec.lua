@@ -41,8 +41,10 @@ return function(client,parent)
    assert(recap.totalText.Text=="+1"and recap.wallet.amount.Text=="9"and recap.wallet.root:GetAttribute("AccessibleLabel")=="9 Stars")
   end)
   test("accepted care award has single-Star accessibility and unchanged amount",function()
-   assert(affection.label.Text=="+1"and affection.label:GetAttribute("AccessibleLabel")=="1 Star saved")
-   assert(affection.plate:FindFirstChild("NectarDrop").GoldStar.Text=="★")
+   -- QA Q2.7: the plate reads "+1 ★" (UICopy pet.star) in Stars gold; the old drop glyph stays built but hidden.
+   local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
+   assert(affection.label.Text==UICopy.get("pet.star")and affection.label.Text:find("★",1,true)and affection.label:GetAttribute("AccessibleLabel")=="1 Star saved")
+   assert(affection.plate:FindFirstChild("NectarDrop").GoldStar.Text=="★"and not affection.plate.NectarDrop.Visible)
   end)
   test("rendered copy and accessibility contain no retired currency term",function()
    for _,host in ipairs({root,world})do for _,node in ipairs(host:GetDescendants())do

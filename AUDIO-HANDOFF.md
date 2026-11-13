@@ -103,6 +103,9 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 Notes:
 - The `bear_` names are historical: every pet uses these voice cues.
 - The `deck_*`, `difficulty_select`, `faceplate_swap` and `quest_*` cues are for Pocket Deck features being designed now (boot animation, faceplates, difficulty picker, quest log). They're planned, not in the game yet.
+- QA 2026-11-13: `lose` now always plays once on the results screen of a lost round (it used to be skipped when the save was still pending). It is the uploaded placeholder until the real "wah-wah" lands.
+- QA 2026-11-13: the wait for the last ball to settle (4 s) plays a soft tick each second (0, 1, 2, 3 s) with a rising pitch. It borrows the `desc_tick` placeholder for now; a dedicated `settle_tick` (very short, soft, wooden or glassy, 0.05-0.1 s, neutral pitch) would replace it. Name it `egg_drop_settle_tick.wav`.
+- QA 2026-11-13: the results flourish (`stars_total`, `new_best`, `egg_ready`) now plays to its natural end, or fades over 0.35 s when the player skips or leaves. Tails can ring out; keep them under about 1.2 s.
 
 ## Where the current sounds are
 - The source WAVs for the existing cues are in `assets/audio/` (`egg_drop_*.wav`), with measured levels in `egg_drop_audio_manifest.json`.

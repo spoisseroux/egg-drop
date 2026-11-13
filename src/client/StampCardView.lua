@@ -23,6 +23,22 @@ View.Metrics=table.freeze({
  compact=table.freeze({head=16,slot=40,line=16,gap=4,slotGap=6,label=12,reward=13,small=12}),
 })
 View.StampColor=Kit.Tint.hatch -- peach ink on the stamps (the gift lives with Hatch eggs)
+-- Stamp art (QA 2026-11-13 Q5): seven original rubber stamps, one per slot, drawn by
+-- scripts/deck_art/build_stamps.py into assets/ui/stamps/. One atlas upload: row 0 the
+-- full-colour stamps (a stamped slot), row 1 their white outlines (an upcoming slot,
+-- tinted and faded). `atlas` stays nil until the upload; then the vector fallback
+-- (a disc in the stamp's colour with a check; a faint ring under the reward) steps aside.
+View.Art={atlas="rbxassetid://105525503357374",cell=128,
+ designs=table.freeze({
+  table.freeze({name="paw",color=Color3.fromRGB(255,158,196)}),
+  table.freeze({name="star",color=Color3.fromRGB(140,200,255)}),
+  table.freeze({name="egg",color=Color3.fromRGB(255,169,143)}),
+  table.freeze({name="ball",color=Color3.fromRGB(127,224,200)}),
+  table.freeze({name="flower",color=Color3.fromRGB(201,167,255)}),
+  table.freeze({name="heart",color=Color3.fromRGB(255,122,147)}),
+  table.freeze({name="crown",color=Kit.Color.stars}),
+ })}
+View.OutlineTransparency=.62 -- an upcoming slot's outline: faint, under its reward
 
 -- Pure: the card from a snapshot.
 -- Returns {rewards, filled (0..7), nextIndex (1..7), available, full, reward, stamps}.
@@ -61,6 +77,20 @@ function View.buttonText(state)
  if model.available then return UICopy.get("stamp.button",{reward=model.reward})end
  return UICopy.get("stamp.done")
 end
+-- Pure: the design for a slot (1..7): {name, color}.
+function View.design(index)
+ local designs=View.Art.designs
+ return designs[math.clamp(math.floor(index or 1),1,#designs)]
+end
+-- Pure: the art for a slot, or nil while the atlas has no id (the vector fallback).
+-- Returns {image, offset (Vector2), size (Vector2)}; `filled` picks the full-colour
+-- row, otherwise the outline row.
+function View.artFor(index,filled)
+ local art=View.Art
+ if type(art.atlas)~="string"or art.atlas==""then return nil end
+ local column=math.clamp(math.floor(index or 1),1,#art.designs)-1
+ return{image=art.atlas,offset=Vector2.new(column*art.cell,if filled then 0 else art.cell),size=Vector2.new(art.cell,art.cell)}
+end
 -- Pure: the height the card takes at a width (layout reserves it before building).
 function View.height(compact)
  local m=if compact then View.Metrics.compact else View.Metrics.regular
@@ -82,12 +112,24 @@ function View.new(parent,options)
  for index=1,Stamp.Length do
   local slot=Kit.frame(row,"Slot"..index,"well",UDim2.new(),UDim2.fromOffset(36,52),10)
   local stroke=Kit.stroke(slot)
+  local design=View.design(index)
+  -- Upcoming: the stamp's outline (art) or a faint ring (fallback), under the reward.
+  local ghost=Kit.node("ImageLabel",slot,{Name="StampOutline",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
+   Size=UDim2.fromOffset(28,28),ImageTransparency=View.OutlineTransparency,ZIndex=slot.ZIndex+1,Visible=false})
+  local ghostRing=Kit.frame(slot,"StampGhost",nil,UDim2.fromScale(.5,.5),UDim2.fromOffset(28,28),999)
+  ghostRing.AnchorPoint=Vector2.new(.5,.5);ghostRing.Visible=false
+  Kit.node("UIStroke",ghostRing,{Name="GhostRing",Thickness=1.5,Color=design.color,Transparency=.7,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
   local reward=txt(slot,"Counter","","soft",{Name="Reward",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center})
+  reward.ZIndex=slot.ZIndex+3
+  -- Stamped: the full-colour stamp (art) or a disc in the stamp's colour with a check.
+  local art=Kit.node("ImageLabel",slot,{Name="StampArt",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
+   Size=UDim2.fromOffset(28,28),Rotation=-8,ZIndex=slot.ZIndex+2,Visible=false})
   local mark=Kit.frame(slot,"Stamp",nil,UDim2.fromScale(.5,.5),UDim2.fromOffset(28,28),999)
-  mark.AnchorPoint=Vector2.new(.5,.5);mark.BackgroundTransparency=0;mark.BackgroundColor3=View.StampColor;mark.Rotation=-8
+  mark.AnchorPoint=Vector2.new(.5,.5);mark.BackgroundTransparency=0;mark.BackgroundColor3=design.color;mark.Rotation=-8
   Kit.node("UIStroke",mark,{Name="StampRing",Thickness=2,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
   local check=Kit.icon(mark,"check",18,"ink");check.AnchorPoint,check.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
-  self.slotViews[index]={frame=slot,stroke=stroke,reward=reward,mark=mark,check=check}
+  slot:SetAttribute("StampDesign",design.name)
+  self.slotViews[index]={frame=slot,stroke=stroke,reward=reward,mark=mark,check=check,art=art,ghost=ghost,ghostRing=ghostRing,design=design}
  end
  self.lineLabel=txt(root,"Small","","soft",{Name="Line",TextTruncate=Enum.TextTruncate.AtEnd})
  -- "+N Stars" pop over the landed slot (one label, reused).
@@ -114,10 +156,13 @@ function View:layout(width,compact)
  local used=slotW*Stamp.Length+(Stamp.Length-1)*m.slotGap
  local x0=math.floor((W-used)/2)
  local disc=math.max(18,math.min(slotW,m.slot)-12)
+ -- The art is a seal with scalloped edges: a little larger than the disc, never past the slot.
+ local seal=math.max(18,math.min(slotW,m.slot)-4)
  for index,slot in ipairs(self.slotViews)do
   slot.frame.Position=UDim2.fromOffset(x0+(index-1)*(slotW+m.slotGap),0);slot.frame.Size=UDim2.fromOffset(slotW,m.slot)
   slot.reward.TextSize=m.reward
   slot.mark.Size=UDim2.fromOffset(disc,disc)
+  slot.art.Size=UDim2.fromOffset(seal,seal);slot.ghost.Size=UDim2.fromOffset(seal,seal);slot.ghostRing.Size=UDim2.fromOffset(disc,disc)
   local c=math.max(12,math.floor(disc*.62));slot.check.Size=UDim2.fromOffset(c,c)
  end
  self.slotW=slotW
@@ -132,7 +177,18 @@ function View:paint()
  local model=self.cardModel;if not model then return end
  for index,row in ipairs(View.slots(model))do
   local slot=self.slotViews[index]
-  slot.mark.Visible=row.filled
+  -- Stamped = full colour, upcoming = faint outline (art when uploaded, else vector).
+  local art=View.artFor(index,row.filled)
+  slot.art.Visible=row.filled and art~=nil
+  slot.mark.Visible=row.filled and art==nil
+  slot.ghost.Visible=not row.filled and art~=nil
+  slot.ghostRing.Visible=not row.filled and art==nil
+  if art then
+   local image=if row.filled then slot.art else slot.ghost
+   image.Image=art.image;image.ImageRectOffset=art.offset;image.ImageRectSize=art.size
+   if not row.filled then slot.ghost.ImageColor3=if row.big then Kit.Color.stars else slot.design.color end
+  end
+  slot.frame:SetAttribute("StampArt",art~=nil)
   slot.reward.Visible=not row.filled
   slot.reward.Text="+"..tostring(row.reward)
   local tone=if row.big then "stars"elseif row.today then "text"else "soft"

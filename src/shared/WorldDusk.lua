@@ -29,7 +29,9 @@ Dusk.Atmosphere=table.freeze({
 	Color=Color3.fromHex("#FFD2B8"),Decay=Color3.fromHex("#E59CC2"),
 })
 Dusk.Grade=table.freeze({Brightness=0,Contrast=.06,Saturation=.14,TintColor=Color3.fromHex("#FFF1E4")})
-Dusk.Bloom=table.freeze({Intensity=.28,Size=24,Threshold=1.05})
+-- QA 2026-11-13: bloom turned well down (was Intensity .28, Size 24, Threshold 1.05): the
+-- white marble, foam and lit grass haloed and blew out. Only near-white highlights glow now.
+Dusk.Bloom=table.freeze({Intensity=.12,Size=16,Threshold=1.4})
 Dusk.SunRays=table.freeze({Intensity=.035,Spread=.55})
 -- The engine draws the low sun over the painted sky, so the sun always sits where the
 -- key light comes from; the painted faces carry only a broad golden glow.

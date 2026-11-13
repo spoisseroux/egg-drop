@@ -4,7 +4,15 @@ local Contact={}
 Contact.__index=Contact
 Contact.Timeout=1.05
 Contact.PulseInterval=.25
-Contact.OpportunitySeconds=12
+-- QA 2026-11-13 Q2.7: petting showed no Stars because an award needed 12 unbroken
+-- seconds of rubbing and then a 50% draw (about 24 s on average), and a release
+-- before the save landed dropped the "+1". A pet now pays after 4 s of contact,
+-- every time, with 10 s between awards; the 5-a-day cap (HatchProgress) is unchanged.
+Contact.OpportunitySeconds=4
+Contact.AwardChance=1
+Contact.SpacingSeconds=10
+-- A Saved receipt still reaches the owner this long after they let go (same pet).
+Contact.LateSavedSeconds=4
 local function finiteVector(value)
 	return typeof(value)=="Vector3"and value.X==value.X and value.Y==value.Y and value.Z==value.Z
 		and math.abs(value.X)<math.huge and math.abs(value.Y)<math.huge and math.abs(value.Z)<math.huge
@@ -30,6 +38,7 @@ function Contact:valid(lease,state,proofId)
 end
 function Contact:cancel(reason)
 	local lease=self.lease;self.lease=nil
+	if lease and not lease.endedAt then lease.endedAt=self.options.now()end
 	if lease then self:reply({granted=false,requestGeneration=lease.generation,leaseId=lease.id,petId=lease.petId,reason=reason})end
 end
 function Contact:reconcile()
@@ -39,9 +48,13 @@ function Contact:reconcile()
 	if receipt and receipt.id==issued.candidate.id and receipt.sequence==issued.candidate.sequence
 		and receipt.day==issued.candidate.day and receipt.petId==issued.candidate.petId then
 		self.issued=nil -- Consume before any delivery callback can re-enter.
-		local lease=self.lease
-		if lease==issued.lease and self.options.now()-lease.lastPulse<=Contact.Timeout and self:valid(lease,state,issued.candidate.id)then
-			lease.windowStart=self.options.now()
+		local lease=issued.lease;local now=self.options.now()
+		local live=self.lease==lease and now-lease.lastPulse<=Contact.Timeout and self:valid(lease,state,issued.candidate.id)
+		-- Let go while the save was landing: same pet, same character, just now.
+		local late=self.lease~=lease and lease.endedAt~=nil and now-lease.endedAt<=Contact.LateSavedSeconds
+			and state.petId==lease.petId and state.character==lease.character and state.owned and state.alive
+		if live then lease.windowStart=now end
+		if live or late then
 			self:reply({status="Saved",requestGeneration=lease.generation,leaseId=lease.id,petId=lease.petId,
 				receipt={id=receipt.id,sequence=receipt.sequence,day=receipt.day,petId=receipt.petId}})
 		end
@@ -100,8 +113,8 @@ function Contact:pulse(id)
 	if state.capReached then self:cancel("DailyCap");return true end
 	if now-lease.windowStart<Contact.OpportunitySeconds or now<self.nextOpportunity then return true end
 	-- Consume the window and player spacing BEFORE RNG or a yielding write.
-	lease.windowStart=now;self.nextOpportunity=now+Contact.OpportunitySeconds
-	if self.options.random()>=.5 then return true end
+	lease.windowStart=now;self.nextOpportunity=now+Contact.SpacingSeconds
+	if self.options.random()>=Contact.AwardChance then return true end
 	local candidate=self.options.candidate(lease)
 	self.issued={lease=lease,candidate=candidate}
 	self.options.award(candidate)

@@ -65,7 +65,7 @@
    "name": "W7_Architecture__marble",
    "group": "Architecture__marble",
    "material": "W1_marble",
-   "tris": 3706,
+   "tris": 3744,
    "collide": true,
    "anim": null,
    "region": "Architecture",
@@ -287,41 +287,41 @@
    "name": "W7_Backdrop__far_peak_1",
    "group": "Backdrop__far_peak",
    "material": "W1_far_peak",
-   "tris": 1470,
+   "tris": 1458,
    "collide": false,
    "anim": null,
    "region": "Backdrop",
    "center": [
     -4.1913,
-    -66.5035,
+    -85.8635,
     397.9203
    ],
    "size": [
     1817.4771,
-    542.605,
+    503.885,
     1432.2607
    ],
-   "top": 204.799
+   "top": 166.079
   },
   {
    "name": "W7_Backdrop__far_peak_2",
    "group": "Backdrop__far_peak",
    "material": "W1_far_peak",
-   "tris": 1164,
+   "tris": 1140,
    "collide": false,
    "anim": null,
    "region": "Backdrop",
    "center": [
     375.7299,
-    26.7391,
+    1.3291,
     -907.9086
    ],
    "size": [
     1840.0865,
-    661.4707,
+    610.6507,
     1010.8797
    ],
-   "top": 357.4745
+   "top": 306.6545
   },
   {
    "name": "W7_Backdrop__far_peak_3",
@@ -463,6 +463,231 @@
    ],
    "top": 11.6,
    "note": "Each bubble bobs 0.4 studs out of phase; could pop and respawn."
+  },
+  {
+   "name": "W7_CastleFlag_1__far_peak",
+   "group": "CastleFlag_1__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_1",
+   "center": [
+    -433.8625,
+    184.5465,
+    -566.0195
+   ],
+   "size": [
+    16.3005,
+    29.04,
+    27.1646
+   ],
+   "top": 199.0665,
+   "pivot": [
+    -425.7122,
+    184.9865,
+    -579.6019
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_2__far_peak",
+   "group": "CastleFlag_2__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_2",
+   "center": [
+    -390.3074,
+    193.5673,
+    -621.6675
+   ],
+   "size": [
+    16.3005,
+    29.04,
+    27.1646
+   ],
+   "top": 208.0873,
+   "pivot": [
+    -382.1571,
+    194.0074,
+    -635.2499
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_3__far_peak",
+   "group": "CastleFlag_3__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_3",
+   "center": [
+    -460.2769,
+    218.0245,
+    -631.5677
+   ],
+   "size": [
+    16.3005,
+    29.04,
+    27.1646
+   ],
+   "top": 232.5445,
+   "pivot": [
+    -452.1266,
+    218.4645,
+    -645.15
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_4__far_peak",
+   "group": "CastleFlag_4__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_4",
+   "center": [
+    739.2476,
+    160.1088,
+    483.0992
+   ],
+   "size": [
+    11.1586,
+    38.72,
+    40.7395
+   ],
+   "top": 179.4688,
+   "pivot": [
+    733.6683,
+    160.6955,
+    462.7294
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_5__far_peak",
+   "group": "CastleFlag_5__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_5",
+   "center": [
+    725.7531,
+    175.4016,
+    389.8486
+   ],
+   "size": [
+    11.1586,
+    38.72,
+    40.7395
+   ],
+   "top": 194.7616,
+   "pivot": [
+    720.1738,
+    175.9882,
+    369.4789
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_6__far_peak",
+   "group": "CastleFlag_6__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_6",
+   "center": [
+    651.7394,
+    185.439,
+    448.1559
+   ],
+   "size": [
+    11.1586,
+    38.72,
+    40.7395
+   ],
+   "top": 204.799,
+   "pivot": [
+    646.1601,
+    186.0257,
+    427.7862
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_7__far_peak",
+   "group": "CastleFlag_7__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_7",
+   "center": [
+    1056.9609,
+    317.7774,
+    -737.2823
+   ],
+   "size": [
+    19.5573,
+    50.82,
+    51.8759
+   ],
+   "top": 343.1874,
+   "pivot": [
+    1047.1824,
+    318.5475,
+    -711.3444
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_8__far_peak",
+   "group": "CastleFlag_8__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_8",
+   "center": [
+    999.3992,
+    291.9918,
+    -627.8292
+   ],
+   "size": [
+    19.5573,
+    50.82,
+    51.8759
+   ],
+   "top": 317.4017,
+   "pivot": [
+    989.6205,
+    292.7618,
+    -601.8913
+   ]
+  },
+  {
+   "name": "W7_CastleFlag_9__far_peak",
+   "group": "CastleFlag_9__far_peak",
+   "material": "W1_far_peak",
+   "tris": 2,
+   "collide": false,
+   "anim": null,
+   "region": "CastleFlag_9",
+   "center": [
+    1122.9695,
+    332.0645,
+    -632.6982
+   ],
+   "size": [
+    19.5574,
+    50.82,
+    51.8759
+   ],
+   "top": 357.4745,
+   "pivot": [
+    1113.1908,
+    332.8345,
+    -606.7603
+   ]
   },
   {
    "name": "W7_Chime_1__palette",
@@ -699,7 +924,7 @@
    "name": "W7_Ground__dirt_path",
    "group": "Ground__dirt_path",
    "material": "W1_dirt_path",
-   "tris": 1182,
+   "tris": 1310,
    "collide": true,
    "anim": null,
    "region": "Ground",
@@ -1056,14 +1281,14 @@
    "anim": "pulse",
    "region": "LampOrbs",
    "center": [
-    0.0,
+    -0.175,
     9.037,
-    3.0
+    3.985
    ],
    "size": [
-    141.0375,
+    140.6875,
     1.48,
-    94.9867
+    96.9567
    ],
    "top": 9.777,
    "note": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
@@ -1497,7 +1722,7 @@
    "name": "W7_Stations__marble",
    "group": "Stations__marble",
    "material": "W1_marble",
-   "tris": 1566,
+   "tris": 1410,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1522,14 +1747,14 @@
    "anim": null,
    "region": "Stations",
    "center": [
-    0.0,
+    -0.175,
     6.2635,
-    3.0
+    3.985
    ],
    "size": [
-    140.92,
+    140.57,
     4.427,
-    94.92
+    96.89
    ],
    "top": 8.477
   },
@@ -1537,19 +1762,19 @@
    "name": "W7_Stations__palette",
    "group": "Stations__palette",
    "material": "W1_palette",
-   "tris": 2874,
+   "tris": 2158,
    "collide": false,
    "anim": null,
    "region": "Stations",
    "center": [
-    0.0,
-    7.95,
-    3.0
+    -0.175,
+    8.105,
+    3.985
    ],
    "size": [
-    141.04,
-    7.7,
-    94.9007
+    140.69,
+    7.39,
+    96.8707
    ],
    "top": 11.8
   },
@@ -1577,7 +1802,7 @@
    "name": "W7_Stations__wood_plank",
    "group": "Stations__wood_plank",
    "material": "W1_wood_plank",
-   "tris": 252,
+   "tris": 120,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1840,6 +2065,6 @@
    "note": "Fast scroll down the fall, about 1.2 tiles/s. V runs down the fall and tiles. A Beam with the same texture also works."
   }
  ],
- "count": 90,
- "triangles": 68966
+ "count": 99,
+ "triangles": 68110
 }

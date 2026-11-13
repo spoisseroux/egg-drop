@@ -124,5 +124,18 @@ return function(client)
   f.i:receive({slot="theme",seq=1,id="brick",status="Saved",revision=1,themeId="brick",stickerId="none",backgroundId="canopy"});f.i:setFallbacks({})
   assert(f.i:view().slots.background.status=="Ready"and not f.i:view().fallbacks.background and #f.sends==1);f.i:destroy()
  end)
+ test("QA Q2.4: shown() wears a choice in flight at once and falls back to confirmed on a refusal",function()
+  local f=fixture();f.i:choose("theme","brick")
+  assert(Intent.shown(f.i:view(),"theme")=="brick"and f.i:view().confirmedTheme=="sherbet","optimistic while Pending")
+  f:reply("theme",1,"brick","Rejected",0,"sherbet","none","Locked")
+  assert(Intent.shown(f.i:view(),"theme")=="sherbet","rolled back")
+  -- A real Applied reply carries the server's post-apply snapshot (server AppearanceIntent
+  -- snapshot(profile)), so it names "ice" at a newer revision; an Applied paired with an
+  -- older look is the stale/superseded case the view reports as Ready (QA Q2.4 spec fix).
+  f.i:choose("theme","ice");f:reply("theme",2,"ice","Applied",1,"ice","none")
+  assert(Intent.shown(f.i:view(),"theme")=="ice","Applied before the snapshot still shows the new look")
+  assert(Intent.shown(nil,"theme")==nil and Intent.shown({confirmedBackground="creek",slots={}},"background")=="creek")
+  f.i:destroy()
+ end)
  return{passed=#cases,cases=cases}
 end

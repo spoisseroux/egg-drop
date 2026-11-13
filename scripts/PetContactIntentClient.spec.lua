@@ -3,8 +3,11 @@ return function(client)
  local function test(name,run)run();table.insert(cases,name)end
  local function fixture()
   local now,eligible=0,true;local sent,saved={},{}
+  local capped={}
   local c=Intent.new({now=function()return now end,eligible=function()return eligible end,
-   send=function(action,value)table.insert(sent,{action,value})end,saved=function(receipt)table.insert(saved,receipt.id)end})
+   send=function(action,value)table.insert(sent,{action,value})end,saved=function(receipt)table.insert(saved,receipt.id)end,
+   capped=function(context)table.insert(capped,context)end})
+  c.cappedLog=capped
   return c,sent,saved,function(dt)now+=dt end,function(value)eligible=value end
  end
  local function grant(c,id)return{granted=true,requestGeneration=c.active.generation,leaseId=id or "lease1",petId=c.active.petId}end
@@ -52,6 +55,24 @@ return function(client)
  test("different granted lease cannot overwrite current one",function()
   local c,s=fixture();c:begin("pip",{});c:receive(grant(c));assert(not c:receive(grant(c,"other")))
   assert(c.active.lease=="lease1"and s[#s][1]=="end"and s[#s][2]=="other")
+ end)
+ test("QA Q2.7: a Saved receipt landing just after the owner lets go still shows once",function()
+  local c,s,saved,advance=fixture();c:begin("pip",{});c:receive(grant(c));local p=award(c)
+  c:cancel();assert(s[#s][1]=="end")
+  advance(1);assert(c:receive(p)and #saved==1,"late receipt for the just-released pet shows")
+  assert(not c:receive(p)and #saved==1,"never twice")
+ end)
+ test("QA Q2.7: a late receipt past the window or after a new touch is dropped",function()
+  local c,_,saved,advance=fixture();c:begin("pip",{});c:receive(grant(c));local p=award(c)
+  c:cancel();advance(Intent.LateSeconds+.5);assert(not c:receive(p)and #saved==0)
+  local d,_,saved2=fixture();d:begin("pip",{});d:receive(grant(d));local q=award(d)
+  d:cancel();d:begin("pip",{});assert(not d:receive(q)and #saved2==0)
+ end)
+ test("QA Q2.7: the server's DailyCap refusal reaches the capped hook once per touch",function()
+  local c=fixture();local context={};c:begin("pip",context);c:receive(grant(c))
+  assert(not c:receive({granted=false,requestGeneration=1,leaseId="lease1",petId="pip",reason="DailyCap"}))
+  assert(#c.cappedLog==1 and c.cappedLog[1]==context and c.active.denied)
+  c:receive({granted=false,requestGeneration=1,leaseId="lease1",petId="pip",reason="Unavailable"});assert(#c.cappedLog==1)
  end)
  test("destroy ends once disconnects intent and rejects late delivery",function()
   local c,s=fixture();c:begin("pip",{});local p=grant(c);c:receive(p);c:destroy();local n=#s;c:destroy();c:step();assert(not c:receive(p)and #s==n)

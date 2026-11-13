@@ -10,12 +10,16 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
 local Items=require(Shared.RoundItems)
+local Icons=require(script.Parent.ItemIcons)
 local Carousel={}
 Carousel.__index=Carousel
 Carousel.NoteHold=1.5
 Carousel.NoteFade=.35
 Carousel.EmptyNote=UICopy.get("items.note.empty")
 Carousel.FullNote=UICopy.get("items.note.full")
+-- QA 2026-11-13: a power-up ball merge that grants an item says so ("+ Magnet").
+Carousel.GrantLine="From a star ball"
+Carousel.GrantHold=1.8
 
 -- ── Pure helpers (spec-checked) ─────────────────────────────────────────────
 function Carousel.wrap(index,delta,count)
@@ -60,13 +64,17 @@ local function capsule(parent,name)
  c.AnchorPoint=Vector2.new(.5,.5);c.BackgroundTransparency=0
  local ring=Kit.node("UIStroke",c,{Name="Ring",Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
  local glyph=Kit.text(c,"Title","",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextScaled=false,FontFace=Kit.Type.Heading[3]})
+ -- The item's icon (ItemIcons); the glyph text stays as the fallback for an unknown id.
+ local icon=Icons.new(c,nil,nil);icon.Size=UDim2.fromScale(.62,.62)
  local hit=Kit.node("TextButton",c,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,Size=UDim2.fromScale(1,1),ZIndex=c.ZIndex+3,Selectable=false})
- return {root=c,ring=ring,glyph=glyph,hit=hit}
+ return {root=c,ring=ring,glyph=glyph,icon=icon,hit=hit}
 end
 local function paintCapsule(cap,id,lit)
  local item=id and Items.ById[id]
  cap.root.Visible=item~=nil
  if not item then return end
+ Icons.set(cap.icon,id)
+ cap.glyph.Visible=Icons.source(id)==nil
  cap.glyph.Text=item.glyph
  cap.glyph.TextColor3=item.color
  cap.ring.Color=item.color
@@ -107,13 +115,16 @@ function Carousel.new(parent,options)
  self.effect=Kit.text(panel,"Small","","soft",{Name="Effect",TextXAlignment=Enum.TextXAlignment.Center,TextWrapped=true})
  self.hint=Kit.text(panel,"Small","","dim",{Name="Hint",TextXAlignment=Enum.TextXAlignment.Center})
  -- Desktop belt chip at the board's top left (the phone has the shoulder button).
- local chip=Kit.frame(host,"BeltChip","well",UDim2.fromOffset(8,8),UDim2.fromOffset(112,26),999)
+ -- Each slot shows its item's icon (16 px) or a dim dot when empty.
+ local chip=Kit.frame(host,"BeltChip","well",UDim2.fromOffset(8,8),UDim2.fromOffset(128,26),999)
  chip.ZIndex=z+1;chip.BackgroundTransparency=.15;chip.Visible=false;Kit.stroke(chip)
  Kit.text(chip,"Label","Items","dim",{Name="Caption",Position=UDim2.fromOffset(10,0),Size=UDim2.fromOffset(40,26)})
- self.dots={}
+ self.dots,self.slotIcons={},{}
  for i=1,Items.BeltSize do
-  local dot=Kit.frame(chip,"Slot"..i,nil,UDim2.fromOffset(50+(i-1)*14,8),UDim2.fromOffset(10,10),999)
-  dot.BackgroundTransparency=0;self.dots[i]=dot
+  local slot=Kit.frame(chip,"Slot"..i,nil,UDim2.fromOffset(49+(i-1)*17,5),UDim2.fromOffset(16,16))
+  local dot=Kit.frame(slot,"Dot",nil,UDim2.fromScale(.5,.5),UDim2.fromOffset(10,10),999)
+  dot.AnchorPoint=Vector2.new(.5,.5);dot.BackgroundTransparency=0;self.dots[i]=dot
+  self.slotIcons[i]=Icons.new(slot,16,nil)
  end
  local bGlyph=Kit.glyph(chip,"B",false,18);bGlyph.Position=UDim2.new(1,-22,.5,-9)
  self.chip=chip
@@ -222,7 +233,11 @@ end
 function Carousel:refreshChip()
  self.chip.Visible=self.chipWanted==true and not self.phone and not self.isOpen
  for i,dot in ipairs(self.dots)do
-  local item=Items.ById[self.belt[i]or ""]
+  local id=self.belt[i]
+  local item=Items.ById[id or ""]
+  local drawn=item~=nil and Icons.source(id)~=nil
+  Icons.set(self.slotIcons[i],if item then id else nil)
+  dot.Visible=not drawn
   dot.BackgroundColor3=if item then item.color else Kit.Color.white
   dot.BackgroundTransparency=if item then 0 else .8
  end
@@ -279,6 +294,55 @@ function Carousel:showNote(text)
   Kit.tween(self.noteStroke,Carousel.NoteFade,{Transparency=1})
   task.delay(Carousel.NoteFade,function()if self.noteToken==token then note.Visible=false end end)
  end)
+end
+
+-- Grant toast (QA 2026-11-13): "+ Magnet" with the item's icon and where it came
+-- from, popping in over the board, held ~1.8 s, then fading (Reduced Motion: no pop,
+-- it just goes). The belt chip boings so the eye finds the new slot.
+function Carousel.grantText(id)
+ local item=Items.ById[id or ""]
+ return if item then "+ "..item.name else nil
+end
+function Carousel:showGrant(id)
+ local text=Carousel.grantText(id);if not text then return false end
+ self.grantToken=(self.grantToken or 0)+1;local token=self.grantToken
+ local toast=self.grant
+ if not toast then
+  local z=self.host.ZIndex
+  local root=Kit.frame(self.host,"Grant","well",UDim2.new(.5,0,0,0),UDim2.fromOffset(200,52),999)
+  root.AnchorPoint=Vector2.new(.5,.5);root.ZIndex=z+7;root.BackgroundTransparency=.06;root.Visible=false
+  local stroke=Kit.stroke(root,nil,1.5,0)
+  local scale=Kit.node("UIScale",root,{Scale=1})
+  local disc=Kit.frame(root,"IconDisc","raised",UDim2.fromOffset(8,8),UDim2.fromOffset(36,36),999);disc.BackgroundTransparency=0
+  local icon=Icons.new(disc,26,nil)
+  local title=Kit.text(root,"Name","",nil,{Name="Title",Position=UDim2.fromOffset(52,5),Size=UDim2.fromOffset(140,24),TextSize=18})
+  local line=Kit.text(root,"Small","","soft",{Name="Line",Position=UDim2.fromOffset(52,27),Size=UDim2.fromOffset(140,18),TextSize=12})
+  toast={root=root,stroke=stroke,scale=scale,disc=disc,icon=icon,title=title,line=line}
+  self.grant=toast
+ end
+ local item=Items.ById[id]
+ Icons.set(toast.icon,id)
+ toast.title.Text=text;toast.line.Text=Carousel.GrantLine
+ toast.title.TextColor3=item.color:Lerp(Kit.Color.text,.35);toast.stroke.Color=item.color
+ toast.disc.BackgroundColor3=Kit.color("raised"):Lerp(item.color,.22)
+ local w=math.max(Kit.measure(text,"Name",18).X,Kit.measure(Carousel.GrantLine,"Small",12).X)
+ toast.root.Size=UDim2.fromOffset(math.ceil(w)+52+18,52)
+ toast.title.Size=UDim2.fromOffset(math.ceil(w)+8,24);toast.line.Size=UDim2.fromOffset(math.ceil(w)+8,18)
+ toast.root.Position=UDim2.new(.5,0,0,math.floor(math.min((self.H or 500)*.28,(self.H or 500)*.45-30)))
+ toast.root:SetAttribute("Item",id)
+ for _,node in ipairs({toast.title,toast.line})do node.TextTransparency=0 end
+ toast.root.BackgroundTransparency=.06;toast.stroke.Transparency=0;toast.root.Visible=true
+ self.lastGrant=text
+ if Kit.reduced()then toast.scale.Scale=1
+ else toast.scale.Scale=.7;Kit.tween(toast.scale,.18,{Scale=1},Enum.EasingStyle.Back);Kit.boing(self.chip)end
+ task.delay(Carousel.GrantHold,function()
+  if self.grantToken~=token then return end
+  if Kit.reduced()then toast.root.Visible=false;return end
+  for _,node in ipairs({toast.title,toast.line})do Kit.tween(node,Carousel.NoteFade,{TextTransparency=1})end
+  Kit.tween(toast.root,Carousel.NoteFade,{BackgroundTransparency=1});Kit.tween(toast.stroke,Carousel.NoteFade,{Transparency=1})
+  task.delay(Carousel.NoteFade,function()if self.grantToken==token then toast.root.Visible=false end end)
+ end)
+ return true
 end
 
 function Carousel:destroy()self.host:Destroy()end

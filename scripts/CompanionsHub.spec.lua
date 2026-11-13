@@ -18,9 +18,8 @@ return function(client,parent)
    local c=Hub.status("customize",{newItems=1});assert(c.text=="1 NEW ITEM"and c.tone=="stars"and c.dot)
    assert(Hub.status("customize",{newItems=2}).text=="2 NEW ITEMS")
    assert(Hub.status("customize",{newItems=0}).text=="")
-   -- Play-forever F2: the Collection book row, with a gold claim dot while milestones wait.
-   local b=Hub.status("book",{bookClaimable=2});assert(b.text=="2 TO CLAIM"and b.tone=="stars"and b.dot)
-   assert(Hub.status("book",{bookClaimable=1}).text=="1 TO CLAIM"and Hub.status("book",{}).text==""and not Hub.status("book",{}).dot)
+   -- QA Q5: the Collection book left the hub (machine hub tile); no book row status.
+   assert(Hub.status("book",{bookClaimable=2}).text==""and not Hub.status("book",{bookClaimable=2}).dot)
    assert(Hub.newItems({pendingToyResult={},pendingMaterialResult={}})==2 and Hub.newItems({})==0)
    assert(Hub.ownedCount({petWearables={pip={owned={"a","b","c"}}}},"pip")==3 and Hub.ownedCount({},"pip")==0)
   end)
@@ -36,7 +35,9 @@ return function(client,parent)
    assert(Hub.step(1,1,0,3,2)==2 and Hub.step(2,0,1,3,2)==3)
    assert(Hub.backTarget("pets",false)=="hub"and Hub.backTarget("hub",false)=="close"and Hub.backTarget("pets",true)=="cancel")
    assert(Hub.DefaultRow==3 and Hub.Rows[3].id=="customize"and Hub.Rows[1].icon=="paw"and Hub.Rows[2].icon=="shirt"and Hub.Rows[3].icon=="wand")
-   assert(#Hub.Rows==4 and Hub.Rows[4].id=="book"and Hub.Rows[4].icon=="book")
+   -- QA Q5: three rows again, at the sizes from before the play-forever build.
+   assert(#Hub.Rows==3 and Hub.RowPitch.regular==156 and Hub.RowPitch.regularH==140 and Hub.RowPitch.phone==73 and Hub.RowPitch.phoneH==64)
+   for _,row in ipairs(Hub.Rows)do assert(row.id~="book","no book row")end
   end)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." hub navigation: Customize first, d-pad focus, A opens, Pets selector, Back up a level",function()
@@ -47,12 +48,19 @@ return function(client,parent)
     local state={inventoryMask=127,nectar=128,pendingToyResult={id="t"},petWearables={pip={owned={"x"}}},book={claimable={"balls.25"}}}
     local active=Pets.collection[1].id
     assert(hub:open({wallet=128,state=state,activeId=active}));settle()
-    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==4)
+    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==3)
     assert(hub.root:GetAttribute("FocusedRow")=="customize","opens on Customize the first time")
     for _,row in ipairs(hub.rows)do assert(row.button.AbsoluteSize.Y>=44,"row target under 44 px")end
     assert(hub.rows[3].status.Text=="1 NEW ITEM"and hub.rows[3].dot~=nil)
-    assert(hub.rows[4].status.Text=="1 TO CLAIM"and hub.rows[4].dot~=nil,"book row shows its claim dot")
-    -- Every row stays inside the panel / sheet (four rows under the header).
+    -- Every row stays inside the panel / sheet (three rows under the header), at the
+    -- pre-play-forever rects: desktop 456 x 140 on a 156 pitch, phone 64 high on 73.
+    local h=if size.X>=1000 then 140 else 64
+    local pitch=if size.X>=1000 then 156 else 73
+    local scale=hub.scale.Scale
+    for i,row in ipairs(hub.rows)do
+     assert(math.abs(row.button.AbsoluteSize.Y-h*scale)<=1,"row "..i.." height "..row.button.AbsoluteSize.Y)
+     if i>1 then assert(math.abs(row.button.AbsolutePosition.Y-hub.rows[i-1].button.AbsolutePosition.Y-pitch*scale)<=1,"row pitch")end
+    end
     for _,row in ipairs(hub.rows)do
      local bottom=row.button.AbsolutePosition.Y+row.button.AbsoluteSize.Y
      assert(bottom<=hub.root.AbsolutePosition.Y+hub.root.AbsoluteSize.Y+.5,"row past the panel bottom")
@@ -62,9 +70,7 @@ return function(client,parent)
     hub:input(K.Return);assert(opened[#opened]=="wardrobe","A opens the Wardrobe through the caller")
     hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="customize")
     hub:input(K.ButtonA);assert(opened[#opened]=="customize")
-    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="book")
-    hub:input(K.Return);assert(opened[#opened]=="book","A opens the Collection book through the caller")
-    hub:input(K.W)
+    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="customize","Customize is the last row")
     hub:input(K.W);hub:input(K.W);assert(hub.root:GetAttribute("FocusedRow")=="pets")
     hub:input(K.Return);settle();assert(hub.page=="pets"and hub.header.title.Text=="Pets"and #hub.cardButtons>=1)
     assert(hub.root:GetAttribute("FocusedPet")==active,"selector lands on the pet that follows you")

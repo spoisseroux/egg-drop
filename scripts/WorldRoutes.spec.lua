@@ -330,7 +330,13 @@ local function v7(server)
 		end end
 		assert(movers>=20,"movers "..movers)
 		local beams=0;for _,b in ipairs(room.WaterFlow:GetDescendants())do if b:IsA("Beam")then beams+=1;assert(b:GetAttribute("WorldFlowSpeed"))end end
-		assert(beams>=10)
+		-- QA 2026-11-13: one flat beam per waterfall sheet (the stream scrolls Texture skins instead).
+		assert(beams>=3,"beams "..beams)
+		local skins=0;for _,t in ipairs(room.World:GetDescendants())do if t:IsA("Texture")and t:GetAttribute("WorldFlowU")then skins+=1 end end
+		assert(skins>=3,"water skins "..skins)
+		local spray=0;for _,e in ipairs(room.WaterFlow:GetDescendants())do if e:IsA("ParticleEmitter")then spray+=1 end end
+		assert(spray>=4,"foam emitters "..spray)
+		for _,b in ipairs(room.WaterFlow:GetDescendants())do if b:IsA("Beam")then assert(not b.FaceCamera,b.Name.." billboards")end end
 	end)
 	return{passed=#cases,cases=cases,evidence="live v7 lounge geometry and raycasts"}
 end

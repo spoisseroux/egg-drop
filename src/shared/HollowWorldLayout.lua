@@ -85,8 +85,9 @@ local V7={
 		ArrivalToHub=points({Vector2.new(96,66),Vector2.new(60,50),Vector2.new(32,29),Vector2.new(14,21),
 			Vector2.new(-9,21),Vector2.new(-20,12),Vector2.new(-30,4)}),
 	}),
-	-- Lamp orb centres (the light sits in the orb).
-	Lamps=points({Vector3.new(70,9,50),Vector3.new(30,9,33),Vector3.new(-9,9,23),Vector3.new(-12,9,-44),
+	-- Lamp orb centres (the light sits in the orb). QA 2026-11-13: lamps 1 and 2 stood on the
+	-- arrival path; they moved onto the grass at its edge (scripts/build_world_v7_chunks.py LAMP_MOVES).
+	Lamps=points({Vector3.new(69.65,8.982,51.97),Vector3.new(29.44,8.986,29.85),Vector3.new(-9,9,23),Vector3.new(-12,9,-44),
 		Vector3.new(-70,9,-3),Vector3.new(50,9,-10),Vector3.new(-22,9.2,38)}),
 	LitLamps=table.freeze({[1]=true,[2]=true,[3]=true,[4]=true,[5]=true,[6]=true,[7]=true}),
 }

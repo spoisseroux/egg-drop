@@ -185,6 +185,10 @@ end
 -- ctx keys: owned (list), equipped (id), wallet (n), revision (n). Absent keys keep their value.
 function Shop:setContext(ctx)
  for key,value in pairs(ctx)do self.ctx[key]=value end
+ -- QA Q2.4: while an optimistic equip is in flight a snapshot cannot flip it back;
+ -- the server's word arrives as the result (Saved keeps it, a refusal rolls back).
+ local p=self.pending
+ if p and p.action=="ballThemeEquip"then self.serverEquipped=self.ctx.equipped;self.ctx.equipped=p.themeId end
  if self.body then self:refresh()end
 end
 function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.id end
@@ -218,9 +222,9 @@ function Shop:paintPane()
   local r=entry.ramps[tier];c.circle.BackgroundColor3=Color3.fromHex(r.body);c.ring.Color=Color3.fromHex(r.light)
  end
  self:paintBoard(id)
- local pending=self.pending and self.pending.themeId==id
+ local pending=self.pending and self.pending.themeId==id and self.pending.action=="ballThemeBuy"
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
- local note=if pending then(if self.pending.action=="ballThemeBuy"then "Buying…"else "Applying…")
+ local note=if pending then "Buying…"
   elseif self.errorId==id and self.errorText then self.errorText else nil
  if self.statusLabel then
   self.statusLabel.Text=note or(if s.kind=="short"then s.text else UICopy.get("style.balls.pitch"))
@@ -272,14 +276,22 @@ function Shop:send(action,payload)
 end
 -- A / Enter / the pane button. Use applies at once; buying needs one confirmation within 3 s.
 function Shop:act()
- local id=self:focusedId();if not id or self.pending then return false end
+ local id=self:focusedId();if not id then return false end
+ -- An equip in flight never blocks the next choice; a buy does.
+ if self.pending and self.pending.action~="ballThemeEquip"then return false end
  local s=Shop.status(id,self.ctx)
  local http=game:GetService("HttpService")
  if s.kind=="owned"then
-  self.pending={id=http:GenerateGUID(false),themeId=id,action="ballThemeEquip"}
+  -- QA Q2.4: optimistic. The theme is in use at once; the save runs in the background
+  -- and only a refusal puts the previous theme back (with a toast).
+  local previous=if self.pending then self.pending.previous else(self.ctx.equipped or Themes.Default)
+  self.pending={id=http:GenerateGUID(false),themeId=id,action="ballThemeEquip",previous=previous}
+  self.ctx.equipped=id;self.errorId,self.errorText=nil,nil
   self:send("ballThemeEquip",{id=self.pending.id,themeId=id})
-  self:paintPane();return true
+  if self.callbacks.equipped then self.callbacks.equipped(id)end
+  self:refresh();return true
  elseif s.kind=="buy"then
+  if self.pending then return false end -- let an equip's save land first
   if self.confirmId==id and os.clock()<self.confirmUntil then
    self.confirmId=nil
    self.pending={id=http:GenerateGUID(false),themeId=id,action="ballThemeBuy",price=s.price}
@@ -298,6 +310,17 @@ function Shop:result(message)
  if not self.pending or type(message)~="table"or message.id~=self.pending.id then return false end
  if message.status=="Retrying"then return false end
  local done=self.pending;self.pending=nil
+ if message.status~="Saved"and done.action=="ballThemeEquip"then
+  -- Roll back the optimistic equip (the server's last word, else what was worn before).
+  local back=self.serverEquipped or done.previous or Themes.Default
+  self.serverEquipped=nil;self.ctx.equipped=back
+  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get("shop.failed.applied"),nil
+  if self.callbacks.equipped then self.callbacks.equipped(back)end
+  if self.callbacks.rolledBack then self.callbacks.rolledBack(done.themeId)
+  elseif self.owner and self.owner.root then self.toaster=self.toaster or Kit.toaster(self.owner.root);self.toaster.show(UICopy.get("shop.rolledBack"))end
+  self:refresh();return true
+ end
+ self.serverEquipped=nil
  if message.status~="Saved"then
   self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get(if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
   if message.reason=="NeedStars"and done.action=="ballThemeBuy"then
@@ -311,7 +334,7 @@ function Shop:result(message)
   if done.action=="ballThemeBuy"and not table.find(owned,done.themeId)then table.insert(owned,done.themeId)end
   self.ctx.owned,self.ctx.equipped=owned,done.themeId
   if done.action=="ballThemeBuy"and self.callbacks.bought then self.callbacks.bought(done.themeId)end
-  if self.callbacks.equipped then self.callbacks.equipped(done.themeId)end
+  if done.action=="ballThemeBuy"and self.callbacks.equipped then self.callbacks.equipped(done.themeId)end
  end
  self:refresh();return true
 end

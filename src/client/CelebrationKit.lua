@@ -209,13 +209,16 @@ function C.star(parent,size,options)
   AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1.3,1.3),ZIndex=body.ZIndex+6,
   Ambient=Color3.fromRGB(196,186,168),LightColor=Color3.fromRGB(255,244,224),LightDirection=Vector3.new(-.6,-1,-1.6)})
  local api={root=root,scale=scale,body=body,rays=rays,glow=glow,main=main,size=size,mode="gold",viewport=viewport,has3D=false,yaw=0,planar=0}
+ -- QA 2026-11-13: the missed-round Star is an opaque silver token. Glass at 50%
+ -- in a ViewportFrame drew its back faces through the front (the doubled side
+ -- band) and picked up the default sky's tint (a purple flash before grey).
  local function paintPart()
   local part=api.part;if not part then return end
   local glass=api.mode=="glass"
   part.TextureID=if glass then ""else api.texture
-  part.Color=if glass then Color3.fromHex("#DDE7EE")else Color3.new(1,1,1)
-  part.Transparency=if glass then .5 else 0
-  part.Material=if glass then Enum.Material.Glass else Enum.Material.SmoothPlastic
+  part.Color=if glass then C.StarSilver else Color3.new(1,1,1)
+  part.Transparency=0
+  part.Material=Enum.Material.SmoothPlastic
  end
  function api.setMode(mode)
   api.mode=mode
@@ -238,29 +241,50 @@ function C.star(parent,size,options)
  -- Spin: `yaw` (degrees about +Y) turns the 3D token; the 2D fallback uses
  -- `planar` (in-plane degrees) instead. Writes only on change.
  function api.setSpin(yaw,planar)
+  api.wantYaw=yaw
   if api.has3D then
    if root.Rotation~=0 then root.Rotation=0 end
    if api.yaw~=yaw and api.part then api.yaw=yaw;api.part.CFrame=CFrame.Angles(0,math.rad(yaw),0)end
   elseif root.Rotation~=planar then root.Rotation=planar end
   api.planar=planar
  end
- api.setMode("gold");api.setRays(0,0)
+ api.setMode((options and options.mode)or "gold");api.setRays(0,0)
  if options==nil or options.mesh~=false then
+  local building=true -- a template that is already loaded swaps in at once
   C.loadStarMesh(function(template)
    if not template or not root.Parent or api.has3D then return end
    local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels).Star
-   local part=template:Clone();part.CFrame=CFrame.new();part.Parent=viewport
+   -- Paint (mode colour, texture) and pose before the part is parented, so the
+   -- first frame it renders in is already the final look.
+   local part=template:Clone();part.CFrame=CFrame.Angles(0,math.rad(api.wantYaw or 0),0)
+   api.part,api.texture=part,Models.colorMap
+   paintPart()
+   part.Parent=viewport
    local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
    -- Fill about 82% of the viewport height (the 164 px Star in a 200 px box).
    local distance=(Models.size.Y*.5)/math.tan(math.rad(15))/.82+Models.size.Z*.5
    camera.CFrame=CFrame.lookAt(Vector3.new(0,0,distance),Vector3.zero)
-   api.part,api.texture,api.has3D=part,Models.colorMap,true
-   paintPart();api.yaw=nil;api.setSpin(0,api.planar)
-   body.Visible=false;viewport.Visible=true
+   api.has3D=true;api.yaw=nil;api.setSpin(api.wantYaw or 0,api.planar)
+   -- A Star already on screen cross-fades from the 2D glyph (no pop); one not yet
+   -- shown swaps at once.
+   if not building and root.Visible and root.AbsoluteSize.X>0 and not Kit.reduced()then
+    viewport.ImageTransparency=1;viewport.Visible=true;root.Rotation=0
+    local tween=game:GetService("TweenService"):Create(viewport,TweenInfo.new(C.StarFade,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=0})
+    tween.Completed:Connect(function()if api.part==part then body.Visible=false end end)
+    tween:Play()
+   else
+    viewport.ImageTransparency=0;body.Visible=false;viewport.Visible=true
+   end
   end)
+  building=false
  end
  return api
 end
+C.StarSilver=Color3.fromHex("#C9D3DA")
+C.StarFade=.25
+-- Boot preload (QA 2026-11-13): build the one StarToken template early so the
+-- results Star never pops in a second late. Safe to call more than once.
+function C.preloadStarMesh()C.loadStarMesh(function()end)end
 
 -- One StarToken template per session: created once with AssetService (MeshId
 -- cannot be set from scripts), sized from EggModels (it arrives at raw scale),
@@ -277,8 +301,12 @@ function C.loadStarMesh(callback)
   local ok,result=pcall(function()
    local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels).Star
    local AssetService=game:GetService("AssetService")
-   local made,part=pcall(function()return AssetService:CreateMeshPartAsync(Content.fromUri(Models.mesh))end)
-   if not made then part=AssetService:CreateMeshPartAsync(Models.mesh)end
+   -- Precise render fidelity: the viewport camera sits far back (FOV 30), and an
+   -- automatic LOD drew a coarse side band that read as a doubled texture.
+   local meshOptions={RenderFidelity=Enum.RenderFidelity.Precise,CollisionFidelity=Enum.CollisionFidelity.Box}
+   local made,part=pcall(function()return AssetService:CreateMeshPartAsync(Content.fromUri(Models.mesh),meshOptions)end)
+   if not made then part=AssetService:CreateMeshPartAsync(Models.mesh,meshOptions)end
+   pcall(function()part.DoubleSided=false end)
    part.Name="StarToken";part.Size=Models.size;part.TextureID=Models.colorMap
    part.Material=Enum.Material.SmoothPlastic;part.Anchored=true;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.CastShadow=false
    return part

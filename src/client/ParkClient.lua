@@ -88,7 +88,7 @@ function Client:place(entry,template)
 	end
 	quiet(part);part.Name=string.gsub(entry.name,"^Park_","");part.Size=entry.spec.size
 	part.CastShadow=true;part.Material=Enum.Material.SmoothPlastic
-	part.PivotOffset=CFrame.new(entry.spec.pivot)
+	part.PivotOffset=Data.pivotOffset(entry.name)
 	entry.part=part;entry.lastFrame=nil;entry.lastSize=entry.spec.size;entry.lastTransparency=0
 	part.Parent=self.folder
 end
