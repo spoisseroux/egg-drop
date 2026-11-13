@@ -1,0 +1,18 @@
+{
+ "flowers": 112,
+ "patches": 22,
+ "removed": [
+  "Plaza_Ornament_09",
+  "Plaza_Ornament_10",
+  "Plaza_Ornament_11",
+  "Plaza_Ornament_12",
+  "Stairs_Urn_18",
+  "Stairs_Urn_19",
+  "Colonnade_Column_01",
+  "Colonnade_Column_06",
+  "Colonnade_Column_07",
+  "Colonnade_FallenDrum_08",
+  "Pad_Future_A",
+  "Pad_Future_B"
+ ]
+}

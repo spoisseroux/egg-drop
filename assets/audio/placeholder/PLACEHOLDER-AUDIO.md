@@ -53,6 +53,30 @@ Format: 44.1 kHz, mono, 16-bit WAV plus an OGG (Vorbis q6) encode. Loudness matc
 | PLACEHOLDER | `deck_move` | `egg_drop_deck_move.wav` | 0.04 |  | tiny soft tick | Deck D-pad move (handoff; uses aim now) |
 | PLACEHOLDER | `deck_back` | `egg_drop_deck_back.wav` | 0.13 |  | descending two-note blip | Deck back arrow (handoff; uses menu now) |
 
+## Ambient "feel alive" set (2026-11-13, not wired, no asset ids yet)
+
+Built by `scripts/build_ambient_placeholder_audio.py` (same primitives and finishing as the main script; it merges its entries into `manifest.json` and leaves every other entry and every `assetId` alone). Direction, mix levels and triggers: `FEEL-ALIVE-DIRECTION-2026-11-13.md`. Levels: beds -31 dBFS RMS (like `shimmer_loop`), the falls -27, birds -24, coos -22, the attract ping -21.
+
+| Status | Cue | File | Sec | Loop | Sound | Where it plays |
+|---|---|---|---|---|---|---|
+| PLACEHOLDER | `water_bed_loop` | `egg_drop_water_bed_loop.wav` | 10.0 | yes | soft brook: mid hiss, slow swells, scattered bloops | Garden ambience: global bed, heard everywhere, louder by the stream |
+| PLACEHOLDER | `waterfall_loop` | `egg_drop_waterfall_loop.wav` | 10.0 | yes | fuller rush with low body and light spray | Positional loop at Tumble Falls and Sky Falls |
+| PLACEHOLDER | `bird_chirp_1` | `egg_drop_bird_chirp_1.wav` | 0.42 |  | two-note "tsee-wit": slide down, flick up | Bird ambience from tree canopies (day) |
+| PLACEHOLDER | `bird_chirp_2` | `egg_drop_bird_chirp_2.wav` | 0.468 |  | fast eight-pip trill | Bird ambience (day) |
+| PLACEHOLDER | `bird_chirp_3` | `egg_drop_bird_chirp_3.wav` | 0.46 |  | single falling whistle with a warbled tail | Bird ambience (day and dusk) |
+| PLACEHOLDER | `bird_chirp_4` | `egg_drop_bird_chirp_4.wav` | 0.52 |  | cheerful "chip-chip-cheep" | Bird ambience (day) |
+| PLACEHOLDER | `bird_chirp_5` | `egg_drop_bird_chirp_5.wav` | 0.6 |  | liquid warble that slows down | Bird ambience (day) |
+| PLACEHOLDER | `bird_chirp_6` | `egg_drop_bird_chirp_6.wav` | 0.78 |  | low sleepy "hoo-hoo" | Bird ambience (dusk and night only) |
+| PLACEHOLDER | `pet_coo_1` | `egg_drop_pet_coo_1.wav` | 0.34 |  | rising "oo?" | Pet coo: curious, look-around beat |
+| PLACEHOLDER | `pet_coo_2` | `egg_drop_pet_coo_2.wav` | 0.5 |  | two-syllable "ah-oo" | Pet coo: happy, greeting, after petting |
+| PLACEHOLDER | `pet_coo_3` | `egg_drop_pet_coo_3.wav` | 0.52 |  | low falling "mmm-m" | Pet coo: sleepy, sit, end of a yawn |
+| PLACEHOLDER | `machine_attract` | `egg_drop_machine_attract.wav` | 0.9 |  | two soft bells a fifth apart with glitter | Station attract: walking into range of an unused machine |
+
+- `water_bed_loop` and `waterfall_loop` are circular by construction (random-phase spectrum, whole-cycle swells, bloops wrapped around the end); set `Looped = true`. The build asserts the seam step is no larger than an ordinary step inside the loop.
+- Bird chirps and coos are repitched at runtime (0.92 to 1.12), so keep replacements at a neutral pitch.
+- `machine_attract` is repitched per station (deck 1.0, eggs 1.12, care 0.89).
+- These were checked by level and spectrogram, not by ear. Listen before upload.
+
 ## Notes for replacing
 - `shimmer_loop` is a seamless 3.2 s loop (notes wrap around the end); set `Looped = true`.
 - `goal_tick`, `spin_whoosh` and `reveal_shimmer` get repitched at runtime; keep a neutral base pitch.

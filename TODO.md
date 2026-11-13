@@ -15,6 +15,7 @@ Updated 2026-11-13 ~04:40. Resumed at 04:03. A: specs green (46/53 client, 7 pre
 - To do: rerun all specs, swap the results Star's 9-slice glow, capture every screen vs mockups, Code Reviewer pass on egg/Star/audio, commit, push, publish, record in PLAY-BUILD.md.
 
 **B. "Feel alive" batch (Spencer 2026-11-13), after A publishes:**
+- Direction + mockups + 12 ambient placeholder cues done 2026-11-13: `FEEL-ALIVE-DIRECTION-2026-11-13.md`, `artifacts/feel-alive-2026-11-13/` (flower + attract icon sprites in `sprites/`), `assets/audio/placeholder/`. 4 open questions await Spencer. Not built. Hazard: re-running `scripts/build_placeholder_audio.py` rewrites `assets/audio/placeholder/manifest.json` and drops the ambient entries and every recorded `assetId`; make it merge before re-running.
 - [ ] Ambient water bed heard everywhere, louder near the waterfalls (placeholder audio).
 - [ ] Random bird chirps from trees, quieter at night (placeholder audio).
 - [ ] Pet life: tune walk, idles (look around, stretch, yawn), more faces, a cute sit, small coo sounds (coo pairing already exists: PetCooScheduler/PetCooPose).
