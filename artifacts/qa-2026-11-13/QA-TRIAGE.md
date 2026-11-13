@@ -47,3 +47,11 @@ Source: `C:\Users\skunk\Documents\obsidian-spencer\roblox qa pass nov 13.md` + 1
 ## Open (Spencer's questions, answered in chat; build after he decides)
 - Pocket menu as a hub for the machines? Is the quest log needed? Move the book out of the Care machine? Stamps need visual assets. Onboarding still to build.
 - Results "Next egg" strip: replace with a daily Stars cap meter? (No daily cap exists today.)
+
+## Q5 Machine hub (Spencer approved 2026-11-13: "Yes, machine hub") — starts after Q1 + Q2 land
+- The Pocket menu becomes one hub outside rounds: a tile per machine (Hatch eggs, Deck style, Companions), plus Quests, Collection book, Settings. During a round it stays a pause menu (Resume, Restart, Quit, Settings).
+- Pocket Trials retired (quests + the book cover it). The Quest log stops being its own entry point: Quests is a hub tile; the deck's daily-quest panel and the results strip keep showing progress.
+- Collection book moves out of the Care machine (Companions hub row removed) into the hub.
+- Stamp card gets real stamp art (Astra).
+- Results strip: "Next egg" meter replaced by "Today: ★ earned" beside the daily quest (no daily Star cap; revisit with telemetry).
+- Onboarding (full) still to build after this; the idle drop hint ships in Q1.
