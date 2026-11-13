@@ -168,8 +168,11 @@ return function(client,parent)
    tabs.select(3);-- UDim2 offsets are integers: a 170.67 px segment is stored as 171.
    assert(math.abs(tabs.root.Pill.Size.X.Offset-segment)<1 and math.abs(tabs.root.Pill.Position.X.Offset-(4+2*segment))<1,"no squash, snapped")
    motion(false)
-   tabs.select(1);task.wait(Kit.Motion.tab/4)
-   assert(tabs.root.Pill.Size.X.Offset>segment+1,"the pill stretches along its travel")
+   -- Track the widest frame over the travel (one fixed sample missed it on uneven frames).
+   tabs.select(1)
+   local widest,started=0,os.clock()
+   while os.clock()-started<Kit.Motion.tab do widest=math.max(widest,tabs.root.Pill.Size.X.Offset);game:GetService("RunService").RenderStepped:Wait()end
+   assert(widest>segment+1,"the pill stretches along its travel")
    task.wait(Kit.Motion.tab+.1);assert(math.abs(tabs.root.Pill.Size.X.Offset-segment)<1 and math.abs(tabs.root.Pill.Position.X.Offset-4)<1,"and settles")
    for _,o in ipairs({box,owned,still,chip.root,b,tile,tabs.root})do o:Destroy()end
    Kit.reduced=realReduced

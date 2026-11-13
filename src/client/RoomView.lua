@@ -21,6 +21,7 @@ local PetGreetingShot = require(script.Parent.PetGreetingShot)
 local PetPrestige = require(script.Parent.PetPrestige)
 local PetReactions = require(script.Parent.PetReactions)
 local PetRigBounds=require(script.Parent.PetRigBounds)
+local PetClickTarget=require(script.Parent.PetClickTarget)
 local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -228,6 +229,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             self.pet:update(dt)
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
+			if self.petTarget and self.petTarget.pet == self.pet then PetClickTarget.sync(self.petTarget) end
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow);self:visitorBeats()end
   if self.coos then
@@ -283,7 +285,9 @@ function Room:updateControls()
 	if self.focusUI then self.focusUI:setActive(self.focusing and self.mode == "Room") end
 	local held=self.pet and(self.pet.careState=="Carried"or self.pet.careState=="Docked")
 	if self.petPrompt then self.petPrompt.Enabled = unobscured and not held and not self:stationInReach() end
-	if self.petClick then self.petClick.MaxActivationDistance = if unobscured and not held then 9 else 0 end
+	-- The click/tap box around the whole pet reaches further than the prompt; it is
+	-- off while a station is in reach (interactPet would refuse) so no hover lies.
+	if self.petClick then self.petClick.MaxActivationDistance = if unobscured and not held and not self:stationInReach() then PetClickTarget.Reach else 0 end
 end
 
 function Room:setMenuOpen(open)
@@ -384,10 +388,12 @@ function Room:showPet(pet)
 	prompt.Triggered:Connect(function(who)
 		if (who==nil or who==Players.LocalPlayer) and self.petPrompt==prompt and prompt.Enabled and not self:stationInReach() then self:interactPet() end
 	end)
-	local click = Instance.new("ClickDetector")
-	click.MaxActivationDistance, click.Parent = 9, body
-	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then self:interactPet() end end)
-	self.petPrompt, self.petClick = prompt, click
+	-- Clicks and taps land on an invisible box around the whole pet (PetClickTarget),
+	-- not only the small body part; the box goes with the pet's model.
+	local target = PetClickTarget.attach(self.pet)
+	local click = target.click
+	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer and self.petClick == click then self:interactPet() end end)
+	self.petPrompt, self.petClick, self.petTarget = prompt, click, target
 	if not self.reduceEffects()and not dock then self.pet:greet() end
 	self.heading.Text = "Sprout Hollow · "..pet.name.." · "..Pets.collectionSummary(owned,trials,self.progress:GetAttribute("InventoryMask"))
 	self:updateControls()
@@ -969,7 +975,7 @@ function Room:show(mode, animate)
 			self.pet = nil
 		end
   if self.affection then self.affection:setPet(nil)end
-		self.petPrompt, self.petClick, self.focusMotion = nil, nil, nil
+		self.petPrompt, self.petClick, self.petTarget, self.focusMotion = nil, nil, nil, nil
 		self:restoreCamera()
 	end
 	self.menuOpen = false
@@ -1086,7 +1092,7 @@ function Room:destroy()
 	if self.stations then self.stations:destroy() end
 	self.companions:clear()
 	if self.pet then self.pet:destroy(); self.pet = nil end
-	self.petPrompt, self.petClick = nil, nil
+	self.petPrompt, self.petClick, self.petTarget = nil, nil, nil
 	self.focusUI:destroy()
 	self.controls:Destroy()
 	self.transition:hide()

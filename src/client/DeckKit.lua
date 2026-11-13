@@ -890,9 +890,12 @@ function Kit.wallet(parent,height)
   end
   star:SetAttribute("StarFace",true)
  end
+ -- From 20 px up the icon gives way to a small spinning 3D Star in the same rect
+ -- once the StarToken mesh loads (WalletStar); the 2D Star stays as the fallback.
+ local star3D=require(script.Parent.WalletStar).attach(pill,star,starSize)
  local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
  if spec then amount.TextSize=spec.text elseif height<40 then amount.TextSize=15 end
- local api={root=pill,amount=amount,height=height}
+ local api={root=pill,amount=amount,height=height,star=star,star3D=star3D}
  function api.set(value)
   amount.Text=Kit.formatStars(value)
   local w=game:GetService("TextService"):GetTextSize(amount.Text,amount.TextSize,Enum.Font.RobotoMono,Vector2.new(500,50)).X
