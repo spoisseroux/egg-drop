@@ -1007,9 +1007,9 @@ do
    stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0}}
  end
  local function syncInsets()
-  local size=wardrobeGui.AbsoluteSize
-  -- Compact phones use the device root (UI-SPEC-COMPACT 1.1), like the deck guis.
-  local wanted=if Kit.compactRule(size.X,size.Y)then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
+  -- Compact phones use the device root (UI-SPEC-COMPACT 1.1), like the deck guis,
+  -- measured from the stable DeviceSafeInsets probe (not this gui, whose size moves with its insets).
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
   if wardrobeGui.ScreenInsets~=wanted then wardrobeGui.ScreenInsets=wanted end
  end
  clientUI.wardrobe=WardrobeShop.new(host,{
@@ -1030,7 +1030,7 @@ do
   syncInsets();clientUI.wardrobe.petId=petId
   clientUI.wardrobe:open(petId,context(nurseryState));return true
  end
- wardrobeGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
  local wearableResultConnection=remotes:WaitForChild("WearableResult").OnClientEvent:Connect(function(message)
   clientUI.wardrobe:result(message)
   nurseryRequest:FireServer("snapshot")

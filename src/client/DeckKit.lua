@@ -536,4 +536,10 @@ end
 function Kit.compactRule(W,H)
  return W>=H*1.2 and(H<500 or W<1000)
 end
+-- Insets for a gui that follows the compact rule. Measure the DeviceSafeInsets
+-- probe, never the gui itself: its own size changes with the insets chosen here,
+-- so near the breakpoint it would flip Device/CoreUI on every size change.
+function Kit.compactInsets(probeSize)
+ return if probeSize.X>0 and Kit.compactRule(probeSize.X,probeSize.Y)then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
+end
 return Kit

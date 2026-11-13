@@ -201,6 +201,35 @@ return function(client,parent)
     host:Destroy();root:Destroy()
    end
   end)
+  test("wardrobe insets near the breakpoint come from the probe and never oscillate",function()
+   -- A device root just inside Compact whose CoreUI-inset view (topbar 58 off the
+   -- height, as on desktop-sized phones) falls outside it, and the reverse band.
+   local Device,Core=Enum.ScreenInsets.DeviceSafeInsets,Enum.ScreenInsets.CoreUISafeInsets
+   for _,probe in ipairs({Vector2.new(1180,540),Vector2.new(1100,520),Vector2.new(999,560),Vector2.new(1000,500),Vector2.new(640,520),Vector2.new(620,540)})do
+    local insets,changes=Core,0
+    for _=1,6 do
+     local wanted=Kit.compactInsets(probe) -- the probe never moves with the gui's insets
+     if wanted~=insets then insets=wanted;changes+=1 end
+    end
+    assert(changes<=1,"probe rule flipped "..changes.." times at "..tostring(probe))
+    assert(insets==(if Kit.compactRule(probe.X,probe.Y)then Device else Core),"settled on the probe's mode at "..tostring(probe))
+   end
+   -- The old rule measured the gui itself, whose size moves with its own insets: it flips every step.
+   local flips=0;local insets=Core
+   for _=1,6 do
+    local size=if insets==Device then Vector2.new(1180,540)else Vector2.new(1180,482)
+    local wanted=Kit.compactInsets(size);if wanted~=insets then insets=wanted;flips+=1 end
+   end
+   assert(flips>=4,"self-measuring fixture should oscillate (got "..flips..")")
+   -- Live: a real probe gui and a gui following it settle in one step.
+   local probe=Instance.new("ScreenGui");probe.ScreenInsets=Device;probe.Name="_WardrobeProbeSpec";probe.Parent=parent
+   local follower=Instance.new("ScreenGui");follower.ScreenInsets=Core;follower.Name="_WardrobeFollowerSpec";follower.Parent=parent
+   task.wait()
+   local live=0
+   for _=1,4 do local w=Kit.compactInsets(probe.AbsoluteSize);if follower.ScreenInsets~=w then follower.ScreenInsets=w;live+=1 end;task.wait()end
+   probe:Destroy();follower:Destroy()
+   assert(live<=1,"live follower flipped "..live.." times")
+  end)
   test("danger text is the lighter #FF8090 on results and 4.5:1 on raised",function()
    assert(Kit.Color.dangerText==Color3.fromHex("#FF8090"))
    local function lum(c)local function ch(v)return if v<=.03928 then v/12.92 else((v+.055)/1.055)^2.4 end;return .2126*ch(c.R)+.7152*ch(c.G)+.0722*ch(c.B)end
