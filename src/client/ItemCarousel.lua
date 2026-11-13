@@ -5,16 +5,17 @@
 -- feeds `isOpen` into syncPause). The server owns the belt; this only shows the
 -- published belt and asks to use the middle item.
 -- Also owns two small board notes: the desktop belt chip ("ITEMS ●●○ B") and the
--- fading note line ("You have no items", "Belt full").
+-- fading note line (UICopy items.note.empty / items.note.full).
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(Shared.UICopy)
 local Items=require(Shared.RoundItems)
 local Carousel={}
 Carousel.__index=Carousel
 Carousel.NoteHold=1.5
 Carousel.NoteFade=.35
-Carousel.EmptyNote="You have no items"
-Carousel.FullNote="Belt full"
+Carousel.EmptyNote=UICopy.get("items.note.empty")
+Carousel.FullNote=UICopy.get("items.note.full")
 
 -- ── Pure helpers (spec-checked) ─────────────────────────────────────────────
 function Carousel.wrap(index,delta,count)
@@ -57,7 +58,7 @@ local function capsule(parent,name)
  local c=Kit.frame(parent,name,"raised",UDim2.new(),UDim2.fromOffset(60,60),999)
  c.AnchorPoint=Vector2.new(.5,.5);c.BackgroundTransparency=0
  local ring=Kit.node("UIStroke",c,{Name="Ring",Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
- local glyph=Kit.text(c,"Title","",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextScaled=false})
+ local glyph=Kit.text(c,"Title","",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextScaled=false,FontFace=Kit.Type.Heading[3]})
  local hit=Kit.node("TextButton",c,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,Size=UDim2.fromScale(1,1),ZIndex=c.ZIndex+3,Selectable=false})
  return {root=c,ring=ring,glyph=glyph,hit=hit}
 end
@@ -101,7 +102,7 @@ function Carousel.new(parent,options)
  self.caps.mid.hit.Activated:Connect(function()if self.callbacks.use then self.callbacks.use()end end)
  self.prev=Kit.text(panel,"Heading","‹","soft",{Name="Prev",TextXAlignment=Enum.TextXAlignment.Center})
  self.nextArrow=Kit.text(panel,"Heading","›","soft",{Name="Next",TextXAlignment=Enum.TextXAlignment.Center})
- self.name=Kit.text(panel,"Heading","",nil,{Name="ItemName",TextXAlignment=Enum.TextXAlignment.Center})
+ self.name=Kit.text(panel,"Name","",nil,{Name="ItemName",TextXAlignment=Enum.TextXAlignment.Center})
  self.effect=Kit.text(panel,"Small","","soft",{Name="Effect",TextXAlignment=Enum.TextXAlignment.Center,TextWrapped=true})
  self.hint=Kit.text(panel,"Small","","dim",{Name="Hint",TextXAlignment=Enum.TextXAlignment.Center})
  -- Desktop belt chip at the board's top left (the phone has the shoulder button).
@@ -264,7 +265,7 @@ end
 function Carousel:showNote(text)
  self.noteToken+=1;local token=self.noteToken
  local note,label=self.note,self.noteText
- local size=game:GetService("TextService"):GetTextSize(text,label.TextSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100))
+ local size=Kit.measure(text,"Strong",label.TextSize)
  note.Size=UDim2.fromOffset(math.ceil(size.X)+32,math.max(32,label.TextSize+14))
  label.Text=text;note.Visible=true
  note.BackgroundTransparency=.1;label.TextTransparency=0;self.noteStroke.Transparency=Kit.Stroke.transparency

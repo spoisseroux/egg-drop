@@ -156,7 +156,7 @@ function Picker:build(view)
  local hints=Kit.frame(root,"Hints",nil,UDim2.fromOffset(24,548),UDim2.fromOffset(560,24))
  local x=0
  for _,pair in ipairs({{"◀▶","Choose"},{"MENU","Quests"},{"B","Garden"}})do
-  local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+  local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
   local w=g.Size.X.Offset
   txt(hints,"Small",pair[2],"soft",x+w+6,0,80,24)
   x+=w+6+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18

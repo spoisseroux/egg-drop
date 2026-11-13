@@ -26,6 +26,15 @@ Assets.Layout={
  a={center=Vector2.new(1432,372),diameter=176},b={center=Vector2.new(1318,548),diameter=104},
  led={173,241,34,34},
 }
+-- UI personality pass images (assets/ui/personality/, scripts/build_ui_personality_tiles.py).
+-- An id left nil means "not uploaded yet": DeckKit then creates no instance at all.
+Assets.Personality={
+ squiggle="rbxassetid://81064807653447", -- squiggle.png (24 x 12, drawn at TileSize 12 x 6): T5 title squiggle
+ halftone="rbxassetid://137101792945120", -- halftone.png (96 x 96, drawn at TileSize 48 x 48): T5 panel dot fade
+ seam="rbxassetid://134270848527181", -- seam.png (64 x 40 at 2x; scripts/build_ui_personality_surfaces.py): T2 stitched seam, corner 9-slice + dash tiles
+ dotGrid="rbxassetid://130159161932315", -- dot_grid.png (12 x 12, drawn at TileSize 6 x 6): T7 LCD dot grid in preview wells
+ starFace="rbxassetid://130943814388101", -- star_face.png (256 x 128; scripts/build_star_face.py): T9 hero face (left) + wallet eyes (right)
+}
 -- 64 px cells in ui/icons.png (ui-assets.json).
 local order={"back","quests","star","replay","reroll","lock","bars","faceplate","check","settings","clock","trophy","chain","target","close","egg"}
 Assets.Icon={}

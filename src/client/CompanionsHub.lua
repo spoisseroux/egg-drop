@@ -17,6 +17,7 @@ local MaterialCatalog=require(Shared.MaterialCatalog)
 local ToyCatalog=require(Shared.ToyCatalog)
 local WearableCatalog=require(Shared.WearableCatalog)
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local Hub={}
@@ -63,7 +64,7 @@ function Hub.summary(petId,appearance)
   end
  end
  table.sort(worn)
- local wearing=if #worn==0 then "Nothing yet"elseif #worn==1 then worn[1]else worn[1].." +"..(#worn-1)
+ local wearing=if #worn==0 then UICopy.get("companions.wearing.none")elseif #worn==1 then worn[1]else worn[1].." +"..(#worn-1)
  local charm=if appearance.charmVisible==false then "None"else(CharmCatalog.ById[CharmCatalog.renderShape(appearance.charmShape or CharmCatalog.Default)]or CharmCatalog.ById[CharmCatalog.Default]).name
  local finish=MaterialCatalog.ById[appearance.finish or MaterialCatalog.Default]or MaterialCatalog.ById[MaterialCatalog.Default]
  local toy=ToyCatalog.ById[appearance.toyId or ToyCatalog.Default]or ToyCatalog.ById[ToyCatalog.Default]
@@ -180,7 +181,7 @@ function Hub:buildHints(content,pairs_,promise)
  local hints=Kit.frame(content,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
  local x=0
  for _,pair in ipairs(pairs_)do
-  local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+  local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
   local t=txt(hints,"Small",pair[2],"soft",x+28,0,120,24);t.AutomaticSize=Enum.AutomaticSize.X
   x+=28+TextService:GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
  end
@@ -200,6 +201,7 @@ function Hub:build(view)
  local H=if phone then view.H else 608
  local content=Kit.frame(root,"Content",nil,UDim2.new(),UDim2.fromOffset(W,H));content.ZIndex=root.ZIndex+2
  self.content=content
+ Kit.halftone(content,"companions",phone)
  local body=content
  if phone then
   local sheet=Kit.sheet(content,W,H)
@@ -207,7 +209,7 @@ function Hub:build(view)
  end
  self.body=body
  local title=if self.page=="pets"then "Pets"else "Companions"
- self.header=Kit.header(body,{title=title,eyebrow=if self.page=="pets"then "Companions"else "Garden",compact=phone,width=W,left=if phone then view.hx else 24,onBack=function()self:back()end})
+ self.header=Kit.header(body,{title=title,eyebrow=if self.page=="pets"then "Companions"else "Garden",tint="companions",compact=phone,width=W,left=if phone then view.hx else 24,onBack=function()self:back()end})
  self.header.root.Name="HubHeader"
  if self.header.wallet then self.header.wallet.set(self.ctx.wallet or 0)end
  self.rows,self.cardButtons={},{}
@@ -232,7 +234,7 @@ end
 
 function Hub:buildHub(body,W,H,phone)
  local petId=self.ctx.activeId or "pip";local pet=Pets.byId[petId]
- local pane=Kit.card(body,"PetPane",nil,{pad=16})
+ local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=true})
  if phone then
   local ph=H-64-20
   pane.Position=UDim2.fromOffset(20,64);pane.Size=UDim2.fromOffset(200,ph)
@@ -258,9 +260,10 @@ function Hub:buildHub(body,W,H,phone)
  for index,row in ipairs(Hub.Rows)do
   local x,y,w,h=368,84+(index-1)*156,456,140
   if phone then x,y,w,h=232,64+(index-1)*73,W-20-232,64 end
-  local button=Kit.node("TextButton",body,{Name="Row_"..row.id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-   Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),ZIndex=body.ZIndex+1})
-  Kit.corner(button,if phone then 12 else 14);local stroke=Kit.stroke(button)
+  -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
+  local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
+   position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
+  local stroke=tileState.stroke
   button:SetAttribute("AccessibleLabel",row.name..", "..row.line)
   local discSize=if phone then 44 else 72
   local d,icon=disc(button,row.icon,if phone then 16 else 24,(h-discSize)/2,discSize)
@@ -301,7 +304,7 @@ function Hub:buildSelector(body,W,H,phone)
   pw,ph,px,py=328,452,24,84;gx,gy,gw,gh=368,84,456,452;cols=2;gap=12;cardH=96;cardW=math.floor((gw-6-gap)/2)
  end
  self.cols=cols
- local pane=Kit.card(body,"PetPane",nil,{pad=16});pane.Position=UDim2.fromOffset(px,py);pane.Size=UDim2.fromOffset(pw,ph)
+ local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=true});pane.Position=UDim2.fromOffset(px,py);pane.Size=UDim2.fromOffset(pw,ph)
  local pad=if phone then 12 else 16
  local actionH=if phone then 44 else 56
  local wellH=math.max(60,ph-pad*2-actionH-(if phone then 56 else 92))
@@ -319,19 +322,20 @@ function Hub:buildSelector(body,W,H,phone)
  self.list=list
  for index,card in ipairs(cards)do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
-  local b=Kit.node("TextButton",list,{Name="Pet_"..card.id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-   Position=UDim2.fromOffset(3+col*(cardW+gap),3+row*(cardH+gap)),Size=UDim2.fromOffset(cardW,cardH),ZIndex=list.ZIndex+1})
-  Kit.corner(b,12);local stroke=Kit.stroke(b)
+  -- T2: pressable card with a lip inside the 12 / 8 px grid gap.
+  local b,tileState=Kit.tile(list,"Pet_"..card.id,{selectable=false,radius=12,compact=phone,
+   position=UDim2.fromOffset(3+col*(cardW+gap),3+row*(cardH+gap)),size=UDim2.fromOffset(cardW,cardH)})
+  local stroke=tileState.stroke
   b:SetAttribute("AccessibleLabel",card.name);b:SetAttribute("PetId",card.id)
   local side=cardH-20
   local swatch=Kit.frame(b,"Swatch","well",UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);Kit.stroke(swatch)
   local paw=Kit.icon(swatch,"paw",math.floor(side*.5),"soft");paw.AnchorPoint=Vector2.new(.5,.5);paw.Position=UDim2.fromScale(.5,.5)
   local tx=10+side+12
-  local nameLabel=txt(b,"Strong",card.name,"text",tx,cardH/2-20,cardW-tx-8,20,{TextSize=if phone then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
+  local nameLabel=txt(b,"Name",card.name,"text",tx,cardH/2-20,cardW-tx-8,20,{TextSize=if phone then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(b,"Label","","soft",tx,cardH/2+2,cardW-tx-8,18,{Name="Status",TextSize=12})
   self.cardButtons[index]={id=card.id,button=b,stroke=stroke,name=nameLabel,status=status}
   b.Activated:Connect(function()
-   if self.cardIndex==index then self:act()else self:focusCard(index)end
+   if self.cardIndex==index then self:act()else self:focusCard(index);Kit.boing(b)end
   end)
  end
  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#cards/cols)*(cardH+gap)-gap+6)

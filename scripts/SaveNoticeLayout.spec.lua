@@ -116,7 +116,7 @@ return function(client,parent,rootSize)
 					saved.pending=true;recap:show(saved,false);settle();readable(recap.saved)
 					assert(recap.totalText.Text=="Saving…" and recap.saved.Text=="Saving…" and recap.focus==2,tostring(status))
 				end
-				saved.pending=false;recap:show(saved,false);assert(recap.saved.Text=="Saved to your wallet");recap:hide()
+				saved.pending=false;recap:show(saved,false);assert(recap.saved.Text==require(game.ReplicatedStorage.Shared.UICopy).get("results.saved.done"));recap:hide()
 				local focus=Focus.new(parent,{back=outgoing,greet=outgoing,pet=outgoing,canReact=function()return true end,canOwnInput=function()return true end})
 				focus.gui.Name="_SaveNoticeLayoutFocus";focus.gui:SetAttribute("FixtureRootSize",tostring(size))
 				table.insert(focusViews,focus);focus.root.Size=UDim2.fromOffset(size.X,size.Y);settle()

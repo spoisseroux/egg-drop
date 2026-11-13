@@ -8,8 +8,10 @@
 -- shortcut (phone), 5 Hatch.
 local RunService=game:GetService("RunService")
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local C=require(script.Parent.CelebrationKit)
 local Feedback=require(script.Parent.RecapFeedback)
+local Peek=require(script.Parent.PetPeek)
 -- Goals and quest titles name a ball size with a colour circle (batch R1).
 local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 local function questRich(text,size)return BallThemes.questText(text,size)end
@@ -101,6 +103,8 @@ function Results:buildCentre(parent,cx,starY,starSize,countY,countSize,unitY,uni
  self.star=C.star(parent,starSize,{mesh=self.options.starMesh~=false});self.star.root.Position=UDim2.fromOffset(cx,starY)
  -- Lowest sibling, so the rays and glow sit under the payout and goals cards.
  self.star.root.ZIndex=1
+ -- T9: eyes, smile and cheeks over the hero (20 px and up), following the spin.
+ self.starFace=Results.buildStarFace(self.star,starSize)
  local count=Kit.frame(parent,"Count",nil,UDim2.fromOffset(cx,countY),UDim2.fromOffset(countSize*5,countSize*1.2));count.AnchorPoint=Vector2.new(.5,.5)
  count.ZIndex=self.star.root.ZIndex+20
  self.countScale=Kit.node("UIScale",count,{Scale=1});self.countHolder=count
@@ -194,7 +198,7 @@ function Results:buildPhone(v)
  end
  self.totalLabel=txt(payout,"Strong","Total","text",12,0,100,20,{TextSize=14})
  self.totalAmount=txt(payout,"Counter","","stars",cw-112,0,100,20,{TextSize=16,TextXAlignment=Enum.TextXAlignment.Right})
- self.saved=txt(payout,"Small","Saved to your wallet","soft",12,ch-28,cw-24,20,{TextSize=12,Visible=false})
+ self.saved=txt(payout,"Small",UICopy.get("results.saved.done"),"soft",12,ch-28,cw-24,20,{TextSize=12,Visible=false})
  self.eggIcon=Kit.icon(payout,"egg",20,"stars");self.eggIcon.Position=UDim2.fromOffset(10,ch-34)
  txt(payout,"Label","NEXT EGG","dim",36,ch-38,100,14,{TextSize=12})
  self.meterStatus=txt(payout,"Strong","","soft",cw-12-100,ch-38,100,14,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
@@ -215,6 +219,7 @@ function Results:buildPhone(v)
  self.goalHint=txt(goals,"Small","","dim",40,0,cw-52,16,{TextSize=12,Visible=false})
  self.newBest=Kit.chip(goals,"NEW BEST","gold",22);self.newBest.label.TextSize=12;self.newBest.set("NEW BEST","gold")
  self.newBestScale=Kit.node("UIScale",self.newBest.root,{Scale=1})
+ self.newBest.set("NEW BEST","sticker") -- T6 sticker; its pop is the card's own newBestScale beat
  local hair=Kit.frame(goals,"MetricsHairline",nil,UDim2.fromOffset(12,ch-50),UDim2.fromOffset(cw-24,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.92
  self.metrics={};self.metricNames=if cw>=200 then {"SCORE","BEST","CHAIN"}else {"SCORE","CHAIN"}
  local n=#self.metricNames
@@ -226,7 +231,8 @@ function Results:buildPhone(v)
  -- Action row.
  local ay=v.actionY
  local narrow=W<600
- self.leave=Kit.button(body,"Leave",{text=if narrow then "Leave"else "Leave to garden",glyph="B",size=Vector2.new(if narrow then 100 else 160,48),textSize=15,selectable=false})
+ self.leave=Kit.button(body,"Leave",{text=UICopy.get("results.leave.narrow"),glyph="B",size=Vector2.new(if narrow then 100 else 160,48),textSize=15,selectable=false})
+ self:fitLeave(if narrow then 100 else 160)
  self.leave.Position=UDim2.fromOffset(20,ay)
  self.replay=Kit.button(body,"Replay",{variant="primary",text="Replay",glyph="A",size=Vector2.new(cw,48),textSize=16,selectable=false})
  self.replay.Position=UDim2.fromOffset(W-20-cw,ay)
@@ -269,11 +275,14 @@ function Results:buildDesktop()
  local W=848
  local root=Kit.frame(self.host,"Screen",nil,UDim2.new(),UDim2.fromScale(1,1));self.root=root
  self.body=root
+ -- T5 results tint (Star gold): the halftone fade only; the headline is the
+ -- CelebrationKit banner, which keeps its own look (no dot, no squiggle).
+ Kit.halftone(root,"results",false)
  -- Centrepiece first so the cards draw over the rays.
  local centre=Kit.frame(root,"Centre",nil,UDim2.new(),UDim2.fromScale(1,1))
  self:buildCentre(centre,424,212,164,332,84,386,17)
  centre.ZIndex=1
- self.missText=txt(root,"Title","No Stars this time","text",280,296,288,44,centered({TextSize=34,Visible=false}))
+ self.missText=txt(root,"Title","No Stars this time","text",280,296,288,44,centered({TextSize=34,Visible=false,FontFace=Kit.Type.Heading[3]}))
  self.warmText=txt(root,"BodyMedium","","soft",268,364,312,24,centered({TextSize=17,Visible=false}))
  self.headline=C.banner(root,{size=44,rotation=-3});self.headline.root.Position=UDim2.fromOffset(424,48)
  self.eyebrow=self.headline.label
@@ -296,7 +305,7 @@ function Results:buildDesktop()
  self.totalLabel=txt(payout,"Strong","Total","text",18,0,120,28,{TextSize=18})
  self.totalAmount=txt(payout,"Counter","","stars",cw-18-110,0,110,28,{TextSize=22,TextXAlignment=Enum.TextXAlignment.Right})
  self.nudge=txt(payout,"BodyMedium","","soft",18,chh-62,cw-36,22,{TextSize=16})
- self.saved=txt(payout,"Small","Saved to your wallet","dim",18,chh-36,cw-36,20)
+ self.saved=txt(payout,"Small",UICopy.get("results.saved.done"),"dim",18,chh-36,cw-36,20)
  -- Goals card.
  local goals,eyebrow=Kit.card(root,"Goals","GOALS",{pad=18,labelY=16})
  goals.Position,goals.Size=UDim2.fromOffset(576,124),UDim2.fromOffset(cw,chh);self.goalsEyebrow=eyebrow
@@ -313,6 +322,7 @@ function Results:buildDesktop()
  self.goalHint=txt(goals,"Small","","dim",48,0,cw-62,20,{Visible=false})
  self.newBest=Kit.chip(goals,"NEW BEST","gold",26);self.newBest.root.Position=UDim2.fromOffset(18,166)
  self.newBestScale=Kit.node("UIScale",self.newBest.root,{Scale=1})
+ self.newBest.set("NEW BEST","sticker") -- T6 sticker; its pop is the card's own newBestScale beat
  local hair=Kit.frame(goals,"Hairline",nil,UDim2.fromOffset(18,204),UDim2.fromOffset(cw-36,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.92
  self.metrics={}
  for index,name in ipairs({"SCORE","BEST","CHAIN"})do
@@ -339,7 +349,7 @@ function Results:buildDesktop()
  Kit.buttonState(self.replay).label.LayoutOrder=2
  self.replayPulse=Kit.node("UIScale",Kit.buttonState(self.replay).content,{Scale=1})
  self.hatch=C.rewardButton(root,"Hatch","Hatch egg",Vector2.new(216,64),22)
- self.leave=Kit.button(root,"Leave",{text="Leave to garden",glyph="B",size=Vector2.new(392,64),textSize=22,selectable=false})
+ self.leave=Kit.button(root,"Leave",{text=UICopy.get("results.leave.wide"),glyph="B",size=Vector2.new(392,64),textSize=22,selectable=false})
  self.replay.Position=UDim2.fromOffset(24,484)
  self.replay.Activated:Connect(function()self.focus=1;self:paintFocus();self:activate(1)end)
  self.leave.Activated:Connect(function()self.focus=2;self:paintFocus();self:activate(2)end)
@@ -348,14 +358,14 @@ function Results:buildDesktop()
  local hints=Kit.frame(root,"Hints",nil,UDim2.fromOffset(24,568),UDim2.fromOffset(800,24));self.hints=hints
  local x=0
  for _,pair in ipairs({{"◀▶","Choose"},{"A","Confirm"},{"B","Leave"}})do
-  local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+  local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
   local w=g.Size.X.Offset
   local t=txt(hints,"Small",pair[2],"soft",x+w+6,0,70,24)
   x+=w+6+game:GetService("TextService"):GetTextSize(t.Text,14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
  end
  self.hintRight=txt(hints,"Small","","soft",x,0,800-x,24,{TextXAlignment=Enum.TextXAlignment.Right})
  local skip=Kit.frame(root,"SkipHint",nil,UDim2.fromOffset(24,568),UDim2.fromOffset(300,24));self.skipHint=skip;skip.Visible=false
- local g=Kit.glyph(skip,"A",false,22);g.Position=UDim2.fromOffset(0,1)
+ local g=Kit.glyph(skip,"A",false,22,true);g.Position=UDim2.fromOffset(0,1)
  txt(skip,"Small","Skip the count","soft",g.Size.X.Offset+6,0,200,24)
  self.ring=Kit.focusRing(self.host)
 end
@@ -389,7 +399,7 @@ function Results:buildCompact()
  end
  self.totalLabel=txt(payout,"Strong","Total","text",10,62,120,24)
  self.totalAmount=txt(payout,"Counter","","stars",cardW-130,62,120,24,{TextXAlignment=Enum.TextXAlignment.Right})
- self.saved=txt(payout,"Small","Saved to your wallet","dim",10,90,cardW-150,20);self.saved.Visible=false
+ self.saved=txt(payout,"Small",UICopy.get("results.saved.done"),"dim",10,90,cardW-150,20);self.saved.Visible=false
  self.wallet=Kit.wallet(payout,32);self.wallet.root.AnchorPoint=Vector2.new(1,.5);self.wallet.root.Position=UDim2.new(1,-10,0,100)
  local goals,eyebrow=Kit.card(root,"Goals","GOALS",{pad=10,labelY=8})
  goals.Position,goals.Size=UDim2.fromOffset(W-pad-cardW,cardY),UDim2.fromOffset(cardW,cardH);self.goalsEyebrow=eyebrow
@@ -403,7 +413,8 @@ function Results:buildCompact()
  end
  self.metrics={}
  self.replay=Kit.button(root,"Replay",{variant="primary",text="Replay",glyph="A",size=Vector2.new(cardW,48),textSize=16,selectable=false})
- self.leave=Kit.button(root,"Leave",{text="Leave to garden",glyph="B",size=Vector2.new(cardW,48),textSize=16,selectable=false})
+ self.leave=Kit.button(root,"Leave",{text=UICopy.get("results.leave.narrow"),glyph="B",size=Vector2.new(cardW,48),textSize=16,selectable=false})
+ self:fitLeave(cardW)
  self.replay.Position=UDim2.fromOffset(pad,239);self.leave.Position=UDim2.fromOffset(W-pad-cardW,239)
  self.replay.Activated:Connect(function()self.focus=1;self:paintFocus();self:activate(1)end)
  self.leave.Activated:Connect(function()self.focus=2;self:paintFocus();self:activate(2)end)
@@ -412,6 +423,7 @@ end
 
 function Results:build(compact)
  self:stopIdle()
+ self:stopFace();if self.root then Peek.hide(self.root)end
  if self.root then self.root:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.key=Results.viewKey(compact)
@@ -438,6 +450,21 @@ function Results:paintFocus()
  Kit.setGlyphVisible(self.replay,glyphs);Kit.setGlyphVisible(self.leave,glyphs)
 end
 
+-- Pure: the Leave label for a button `width` wide (glyph 26 + gap 10 + label, 2 px
+-- each side): "Back to the garden", else "Leave to garden", else "Leave". The same
+-- keys in every layout branch; `measure(text)` returns the label width in px.
+function Results.leaveText(width,measure)
+ for _,key in ipairs({"results.leave.wide","results.leave.mid"})do
+  local text=UICopy.get(key)
+  if 26+10+measure(text)+4<=width then return text end
+ end
+ return UICopy.get("results.leave.narrow")
+end
+function Results:fitLeave(width)
+ local state=Kit.buttonState(self.leave);if not state then return end
+ local size=state.label.TextSize
+ Kit.setText(self.leave,Results.leaveText(width,function(text)return Kit.measure(text,"Button",size).X end))
+end
 -- Desktop buttons: Replay 392 + Leave 392, or Replay 392 + Hatch 216 + Leave 160.
 function Results:placeButtons(hatch)
  if self.phone or self.compact then return end
@@ -446,10 +473,10 @@ function Results:placeButtons(hatch)
  if hatch then
   self.hatch.Position=UDim2.fromOffset(432,484)
   self.leave.Position,self.leave.Size=UDim2.fromOffset(664,484),UDim2.fromOffset(160,64)
-  Kit.setText(self.leave,"Leave")
+  self:fitLeave(160)
  else
   self.leave.Position,self.leave.Size=UDim2.fromOffset(432,484),UDim2.fromOffset(392,64)
-  Kit.setText(self.leave,"Leave to garden")
+  self:fitLeave(392)
  end
  Kit.buttonState(self.leave).label.Size=UDim2.fromOffset(0,64)
 end
@@ -613,6 +640,7 @@ function Results:paintCount(sample)
   if self.newBest then self.newBest.root.Visible=data.newBest==true and not loss;self.newBestScale.Scale=1 end
   if self.hints then self.hints.Visible=true;self.skipHint.Visible=false end
   if self.wasCounting and not loss and not Kit.reduced()and not self.finaleClock then self.finaleClock=os.clock()end
+  if self.wasCounting and not loss then Peek.hop()end -- T4: the pet hops when the count lands
  end
  self.wasCounting=self.counting
 end
@@ -730,7 +758,7 @@ function Results:show(data,compact)
  self.headline.set(headline,if missed then grey else accent,if missed then grey else accent)
  self.subline.Text=(data.title or "Round").."  ·  "..(data.difficulty or "Medium")
  self:paintRows(data)
- if self.saved then self.saved.Text=if data.pending then "Saving…"else "Saved to your wallet";self.saved.Visible=not self.phone and not self.compact and not loss end
+ if self.saved then self.saved.Text=UICopy.get(if data.pending then "results.saved.pending"else "results.saved.done");self.saved.Visible=not self.phone and not self.compact and not loss end
  if self.nudge then self.nudge.Text=data.nudge or "";self.nudge.Position=UDim2.fromOffset(18,if loss then 92 else 214)end
  if self.saved and not self.phone and not self.compact then self.saved.Position=UDim2.fromOffset(18,240)end
  self:paintGoals(data)
@@ -777,6 +805,10 @@ function Results:show(data,compact)
   self.star.scale.Scale=.85;Kit.tween(self.star.scale,.4,{Scale=1},Enum.EasingStyle.Back)
  end
  if opening then self:startIdle()end
+ -- T4 pet peek over the come-back strip (desktop) and the T9 Star face clock.
+ self:syncPeek(data)
+ if opening and loss then Peek.droop()end
+ self:startFace()
 end
 
 -- Phone extras: metrics, NEW BEST, difficulty bars and the shortcut cell
@@ -823,6 +855,7 @@ function Results:hide()
  if not self.visible then return end
  self.visible=false;self.feedback:cancel();if self.ring then self.ring.hide()end
  self:stopIdle();self.finaleClock=nil
+ self:stopFace();if self.root then Peek.hide(self.root)end
  if self.confetti then for _,piece in ipairs(self.confetti)do piece.Visible=false end end
  self.host.Parent.Visible=false
 end
@@ -872,4 +905,123 @@ function Results:back()
  if not self.visible then return false end
  self.focus=2;self:paintFocus();self:activate(2);return true
 end
+-- ── T4 pet peek and T9 Star face ─────────────────────────────────────────────
+-- Pure: the peek slot, right of the centre stack, its bottom on the come-back
+-- strip's top edge (y 412) and 4 px left of the Goals card (x 576).
+Results.PeekSlot=table.freeze({x=496,y=326,w=76,h=86})
+-- A miss keeps the centre for "No Stars this time" and the warm line (they reach the
+-- Goals card), so the pet droops over the Goals card's top edge (y 124) instead,
+-- right of the headline and left of the wallet.
+Results.PeekSlotMiss=table.freeze({x=628,y=56,w=80,h=68})
+-- Pure: centred text rects the peek keeps clear of ({x,y,w,h} in the 848 frame).
+-- items: {{text, size, font, centreY, height}}; `width(text, size, font)` measures.
+function Results.peekAvoid(items,width,cx)
+ local out={}
+ for _,item in ipairs(items)do
+  if item[1]and item[1]~=""then
+   local w=width(item[1],item[2],item[3])
+   table.insert(out,{x=cx-w/2,y=item[4]-item[5]/2,w=w,h=item[5]})
+  end
+ end
+ return out
+end
+function Results:syncPeek(data)
+ if self.phone or self.compact or not self.strip or not self.centre then
+  if self.root then Peek.hide(self.root)end
+  return false
+ end
+ local TextService=game:GetService("TextService")
+ local function width(text,size,font)return TextService:GetTextSize(text,size,font,Vector2.new(2000,400)).X*1.1 end
+ local loss=data.loss and not data.pending
+ local c=self.centre
+ local count=if loss then "" elseif data.pending then "Saving…" else "+"..tostring(data.earned or 0)
+ local countSize=math.floor(if data.pending then self.countSize*.5 else self.countSize)
+ local unitText=if loss then "" else self.unit.Text
+ local items={
+  {count,countSize,Enum.Font.BuilderSansExtraBold,c.countY,countSize*1.2},
+  {unitText,self.unit.TextSize,Enum.Font.BuilderSansExtraBold,self.unit.Position.Y.Offset,self.unit.TextSize+8},
+ }
+ if loss and self.missText then table.insert(items,{self.missText.Text,self.missText.TextSize,Enum.Font.BuilderSansBold,self.missText.Position.Y.Offset+22,44})end
+ if loss and self.warmText then table.insert(items,{self.warmText.Text,self.warmText.TextSize,Enum.Font.BuilderSansMedium,self.warmText.Position.Y.Offset+12,24})end
+ local avoid=Results.peekAvoid(items,width,c.cx)
+ local w=self.wallet.root
+ table.insert(avoid,{x=w.Position.X.Offset-w.Size.X.Offset,y=w.Position.Y.Offset,w=w.Size.X.Offset,h=w.Size.Y.Offset})
+ -- The headline banner (rotated 3 degrees: 8 px of slack above and below).
+ local banner=self.headline.root
+ table.insert(avoid,{x=c.cx-banner.Size.X.Offset/2,y=banner.Position.Y.Offset-banner.Size.Y.Offset/2-8,w=banner.Size.X.Offset,h=banner.Size.Y.Offset+16})
+ local slot=if loss then Results.PeekSlotMiss else Results.PeekSlot
+ local z=if loss then self.goalsCard.ZIndex else self.strip.ZIndex
+ return Peek.show(self.root,{rect=slot,avoid=avoid,align="center",key="results",z=z})
+end
+
+local FaceInk=Color3.fromHex("#3B2608")
+local FaceCheek=Color3.fromHex("#FF7A8C")
+Results.FaceYaw=40 -- the face hides past 40 degrees of yaw (or planar turn)
+-- Pure: the face turn (-180..180) for a Star spin in degrees; nil hides the face.
+function Results.faceTurn(degrees)
+ local w=((degrees or 0)+180)%360-180
+ if math.abs(w)>Results.FaceYaw then return nil end
+ return w
+end
+-- Vector face over the C.star hero (no image needed): eyes with glints, a smile of
+-- three rounded bars, pink cheeks. Under 20 px: nil (plain Star).
+function Results.buildStarFace(star,size)
+ if size<20 then return nil end
+ local face=Kit.frame(star.root,"StarFace",nil,UDim2.fromScale(.5,.5),UDim2.fromScale(1,1))
+ face.AnchorPoint=Vector2.new(.5,.5);face.ZIndex=star.viewport.ZIndex+2
+ local api={face=face,eyes={},size=size,closed=false,look=false,turn=0,nextBlink=os.clock()+3+2*math.random()}
+ local function blob(parent,name,x,y,w,h,color,transparency,z)
+  local f=Kit.frame(parent,name,nil,UDim2.fromScale(x,y),UDim2.fromScale(w,h),999)
+  f.AnchorPoint=Vector2.new(.5,.5);f.BackgroundTransparency=transparency or 0;f.BackgroundColor3=color;f.ZIndex=face.ZIndex+(z or 1)
+  return f
+ end
+ local t=math.max(2,math.floor(size*.03+.5))
+ for side=-1,1,2 do
+  blob(face,"Cheek",.5+side*.21,.62,.11,.07,FaceCheek,.42,1)
+  local eye=blob(face,"Eye",.5+side*.11,.52,.11,.17,FaceInk,0,2)
+  blob(eye,"Glint",.36,.3,.34,.26,Color3.new(1,1,1),0,3)
+  table.insert(api.eyes,eye)
+  local arm=Kit.frame(face,"SmileSide",nil,UDim2.fromScale(.5+side*.05,.645),UDim2.new(.065,0,0,t),999)
+  arm.AnchorPoint=Vector2.new(.5,.5);arm.BackgroundTransparency=0;arm.BackgroundColor3=FaceInk;arm.Rotation=side*-35;arm.ZIndex=face.ZIndex+2
+ end
+ local base=Kit.frame(face,"Smile",nil,UDim2.fromScale(.5,.665),UDim2.new(.06,0,0,t),999)
+ base.AnchorPoint=Vector2.new(.5,.5);base.BackgroundTransparency=0;base.BackgroundColor3=FaceInk;base.ZIndex=face.ZIndex+2
+ -- Eye states, built once: open / closed, ahead / watching the count (down).
+ api.open,api.shut=UDim2.fromScale(.11,.17),UDim2.fromScale(.11,.025)
+ api.ahead={UDim2.fromScale(.39,.52),UDim2.fromScale(.61,.52)}
+ api.down={UDim2.fromScale(.4,.555),UDim2.fromScale(.6,.555)}
+ return api
+end
+function Results:stepFace(now)
+ local f,star=self.starFace,self.star
+ if not f or not star or not self.visible then return end
+ local turn=Results.faceTurn(if star.has3D then star.yaw else star.planar)
+ local show=turn~=nil and star.mode~="glass"
+ if f.face.Visible~=show then f.face.Visible=show end
+ if not show then return end
+ -- 3D token: the face slides and narrows with the yaw (2D: the root rotation carries it).
+ local q=if star.has3D then math.floor(turn+.5)else 0
+ if q~=f.turn then
+  f.turn=q;local r=math.rad(q)
+  f.face.Position=UDim2.new(.5,math.sin(r)*f.size*.3,.5,0);f.face.Size=UDim2.fromScale(math.cos(r),1)
+ end
+ local reduced=Kit.reduced()or(type(self.options.reduce)=="function"and self.options.reduce()==true)
+ if not reduced and now>=f.nextBlink then f.blinkUntil=now+.13;f.nextBlink=now+3+2*math.random()end
+ local closed=not reduced and now<(f.blinkUntil or 0)
+ local look=self.feedback.active==true
+ if closed~=f.closed or look~=f.look then
+  f.closed,f.look=closed,look
+  for index,eye in ipairs(f.eyes)do
+   eye.Size=if closed then f.shut else f.open
+   eye.Position=if look then f.down[index]else f.ahead[index]
+  end
+ end
+end
+function Results:startFace()
+ if not self.starFace or self.compact then return end
+ self.faceStep=self.faceStep or function(now)self:stepFace(now)end
+ Peek.subscribe("StarFace",self.faceStep)
+end
+function Results:stopFace()Peek.unsubscribe("StarFace")end
+
 return Results

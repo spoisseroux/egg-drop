@@ -69,14 +69,18 @@ return function(client,parent)
     assert(contrast(t.ui.ink,t.ui.accent)>=4.5,id.." ink on accent")
    end
   end)
-  test("button states: selected 2 px accent, disabled leaves the selection tree, press settles 2 px",function()
+  test("button states: selected 2 px accent, disabled leaves the selection tree, press drops onto the lip",function()
    Art.applyTheme(Themes.ById.ice)
    local holder=Instance.new("Frame");holder.Size=UDim2.fromOffset(400,200);holder.Parent=gui
    local b,state=Kit.button(holder,"Probe",{text="Leave",glyph="B"})
    assert(b.AbsoluteSize.Y==48 and state.stroke.Thickness==1 and near(state.stroke.Transparency,.86,.01))
    Kit.setSelected(b,true);assert(state.stroke.Thickness==2 and state.stroke.Color==Art.uiTheme().ui.accent)
    Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency>0)
-   Kit.setEnabled(b,true);state.pressed=true;Kit.paintButton(b);assert(state.content.Position.Y.Offset==2)
+   -- UI personality T2 (deliberate change): a secondary button now has a 4 px lip and
+   -- the face (Fill + Content) drops onto it in 60 ms, instead of the content settling 2 px.
+   Kit.setEnabled(b,true);state.pressed=true;Kit.paintButton(b);task.wait(.12)
+   assert(state.lip==4 and state.ledge==4 and state.edge.Visible and state.content.Position.Y.Offset==4 and state.fill.Position.Y.Offset==4,"secondary press drops the face onto its 4 px lip")
+   state.pressed=false;Kit.paintButton(b)
    local p,ps=Kit.button(holder,"Primary",{variant="primary",text="Replay",glyph="A"})
    assert(ps.fill.BackgroundColor3==Art.uiTheme().ui.accent and ps.label.TextColor3==Kit.Color.ink and ps.edge.Visible,"primary accent fill, ink label, lower edge")
    Art.applyTheme(Themes.ById.brick);assert(ps.fill.BackgroundColor3==Art.uiTheme().ui.accent,"a plate change leaves menu buttons on the house palette")

@@ -4,6 +4,7 @@
 -- Usage: require(PlayerScripts.Client.ZZSpecs.DeckResults)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Results=require(client.DeckResults);local Kit=require(client.DeckKit)
+ local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local gui=Instance.new("ScreenGui");gui.Name="_DeckResultsSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local host=Instance.new("Frame");host.Size=UDim2.fromOffset(848,608);host.BackgroundTransparency=1;host.Parent=gui
@@ -168,6 +169,28 @@ return function(client,parent)
    view:hide();view:show(data(910,6,{canHatch=false,questDone=nil}),v)
    assert(not view.hatch.Visible and view.questButton.Visible and view.questText.Text=="Win 2 rounds 1/2")
    host.Size=UDim2.fromOffset(848,608)
+  end)
+  test("Leave copy (UICopy results.leave.*): every layout branch uses the same keys and the label fits its button",function()
+   local keys={UICopy.get("results.leave.wide"),UICopy.get("results.leave.mid"),UICopy.get("results.leave.narrow")}
+   local function fits(button)
+    local s=Kit.buttonState(button);local label=s.label.Text
+    assert(table.find(keys,label),"Leave label comes from UICopy: "..label)
+    assert(26+10+Kit.measure(label,"Button",s.label.TextSize).X<=button.AbsoluteSize.X,"Leave label fits its button: "..label)
+    return label
+   end
+   -- Pure rule: wide when it fits, then mid, then narrow.
+   assert(Results.leaveText(392,function(t)return #t*10 end)==keys[1]and Results.leaveText(170,function(t)return #t*8 end)==keys[2]
+    and Results.leaveText(100,function(t)return #t*10 end)==keys[3])
+   view:hide();host.Size=UDim2.fromOffset(848,608);view:show(data(911,6,{canHatch=false}),false);task.wait()
+   assert(fits(view.leave)==keys[1],"desktop Leave 392 reads "..keys[1])
+   view:hide();view:show(data(912,6,{canHatch=true}),false);task.wait()
+   assert(fits(view.leave)==keys[3],"desktop Leave beside Hatch (160) reads "..keys[3])
+   view:hide();host.Size=UDim2.fromOffset(417,299);view:show(data(913,5),true);task.wait();fits(view.leave)
+   local v={phone=true,W=748,H=294,kx=0,kh=0,hx=26,cw=229,ch=154,actionY=228,off=32,mg=38,top=60}
+   view:hide();host.Size=UDim2.fromOffset(748,294);view:show(data(914,6),v);task.wait();fits(view.leave)
+   -- Wallet line: the voiced copy, the same key in every branch.
+   assert(view.saved.Text==UICopy.get("results.saved.done")or view.saved.Text==UICopy.get("results.saved.pending"))
+   view:hide();host.Size=UDim2.fromOffset(848,608)
   end)
  end)
  view:hide();gui:Destroy()

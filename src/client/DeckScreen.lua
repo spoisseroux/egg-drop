@@ -291,7 +291,7 @@ function Screen.new(options)
   local holder=phoneNode(Kit.node("Frame",root,{Name="ButtonItem",BackgroundTransparency=1,ZIndex=10}))
   local disc=Kit.frame(holder,"Disc","raised",UDim2.new(),UDim2.fromScale(1,1),999);disc.BackgroundTransparency=0
   local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-  local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center})
+  local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3]})
   local badge=Kit.frame(holder,"Badge",nil,UDim2.new(1,-4,0,4),UDim2.fromOffset(20,20),999)
   badge.AnchorPoint=Vector2.new(.5,.5);badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.ink;badge.ZIndex=disc.ZIndex+3;badge.Visible=false
   Kit.stroke(badge,nil,1.5,.3)

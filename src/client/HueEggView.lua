@@ -1007,7 +1007,7 @@ function View:buildChrome(view)
   Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  end
  self.chromeBody=body
- self.header=Kit.header(body,{title="Customize",eyebrow="Companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
+ self.header=Kit.header(body,{title="Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
  local tabs=View.tabList();local labels,icons={},{}
  for _,t in ipairs(tabs)do table.insert(labels,t.label);table.insert(icons,t.icon)end
  self.chromeTabs=Kit.tabs(body,labels,g.tabs.w,g.tabs.h,if phone then 14 else 16,icons);self.chromeTabs.root.Position=UDim2.fromOffset(g.tabs.x,g.tabs.y)
@@ -1058,7 +1058,7 @@ function View:buildChrome(view)
   local hints=Kit.frame(body,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
   local x=0
   for _,pair in ipairs({{"+","Browse"},{"LB","Tab"},{"A","Wear"},{"B","Back"}})do
-   local chip=Kit.glyph(hints,pair[1],false,22);chip.Position=UDim2.fromOffset(x,1)
+   local chip=Kit.glyph(hints,pair[1],false,22,true);chip.Position=UDim2.fromOffset(x,1)
    local t=Kit.text(hints,"Small",pair[2],"soft",{Position=UDim2.fromOffset(x+chip.Size.X.Offset+6,0),Size=UDim2.fromOffset(120,24),AutomaticSize=Enum.AutomaticSize.X})
    if pair[1]=="A"then self.hintVerb=t end
    x+=chip.Size.X.Offset+6+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18

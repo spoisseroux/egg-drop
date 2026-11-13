@@ -16,6 +16,7 @@ local Rules=require(Shared.PetAttachmentRules)
 local Defs=require(Shared.PetRigDefinitions)
 local Palette=require(Shared.PetPalette)
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local Shop={}
@@ -124,7 +125,7 @@ function Shop:buildPane(pane,pw,ph,compact)
  if self.visual then self.visual:destroy();self.visual=nil end
  local y=pad+viewH+(if compact then 8 else 12)
  self.name=txt(pane,"Title","","text",pad,y,pw-pad*2-96,nameH,{TextSize=if compact then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
- self.tier=Kit.chip(pane,"RARE",nil,if compact then 22 else 26);if compact then self.tier.label.TextSize=12 end
+ self.tier=Kit.chip(pane,"RARE","sticker",if compact then 22 else 26);if compact then self.tier.label.TextSize=12 end
  self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-pad,y+nameH/2)
  y+=nameH+(if compact then 0 else 4)
  self.note=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd});y+=if compact then 18 else 22
@@ -140,9 +141,10 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
  self.tiles={}
  for index,item in ipairs(self:items())do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
-  local tile=Kit.node("TextButton",holder,{Name="Tile_"..item.id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-   Position=UDim2.fromOffset(x0+col*(tileW+gap),y0+row*(tileH+gap)),Size=UDim2.fromOffset(tileW,tileH),ZIndex=holder.ZIndex+1})
-  Kit.corner(tile,12);local stroke=Kit.stroke(tile)
+  -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
+  local tile,tileState=Kit.tile(holder,"Tile_"..item.id,{selectable=false,radius=12,compact=gap<12,
+   position=UDim2.fromOffset(x0+col*(tileW+gap),y0+row*(tileH+gap)),size=UDim2.fromOffset(tileW,tileH)})
+  local stroke=tileState.stroke
   tile:SetAttribute("AccessibleLabel",item.name);tile:SetAttribute("ItemId",item.id)
   -- Swatch: the item's own colour (or the pet's secondary for tinted items).
   local side=tileH-20
@@ -151,12 +153,12 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   local tier=TierChip[item.tier]or TierChip.common
   local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2]
   local tx=10+side+12
-  local nameLabel=txt(tile,"Strong",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+  local nameLabel=txt(tile,"Name",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
   self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role}
-  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index)end end)
+  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
- if #self.tiles==0 then txt(holder,"Body","Nothing for this slot yet.","soft",x0,y0,300,24)end
+ if #self.tiles==0 then txt(holder,"Body",UICopy.get("wardrobe.emptySlot"),"soft",x0,y0,300,24)end
 end
 
 function Shop:build(view)
@@ -173,9 +175,9 @@ function Shop:build(view)
   local sheet=Kit.sheet(content,W,H)
   local body=Kit.frame(content,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3;self.body=body
   -- Shared header (redesign 0.1): title, Stars capsule and back circle, 36 drawn.
-  self.header=Kit.header(body,{title="Wardrobe",compact=true,width=W,left=view.hx,onBack=function()self:back()end})
+  self.header=Kit.header(body,{title="Wardrobe",tint="companions",compact=true,width=W,left=view.hx,onBack=function()self:back()end})
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
-  local pane=Kit.card(body,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
+  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
   self:buildPane(pane,g.pw,g.paneH,true)
   self.tabs=Kit.tabs(body,labels,g.gw,36,if g.gw<400 then 12 else 14);self.tabs.root.Position=UDim2.fromOffset(20,64)
   local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,112),
@@ -184,10 +186,11 @@ function Shop:build(view)
   self.list=list
  else
   self.columns=2;self.grid=nil
-  self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",width=848,onBack=function()self:back()end})
+  self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",tint="companions",width=848,onBack=function()self:back()end})
+  Kit.halftone(content,"companions",false)
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
   self.tabs=Kit.tabs(content,labels,800,44,16);self.tabs.root.Position=UDim2.fromOffset(24,84)
-  local pane=Kit.card(content,"Preview",nil,{pad=16});pane.Position=UDim2.fromOffset(24,144);pane.Size=UDim2.fromOffset(328,404)
+  local pane=Kit.card(content,"Preview",nil,{pad=16,seam=true});pane.Position=UDim2.fromOffset(24,144);pane.Size=UDim2.fromOffset(328,404)
   self:buildPane(pane,328,404,false)
   local list=Kit.node("ScrollingFrame",content,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(368,144),
    Size=UDim2.fromOffset(456,404),ScrollBarThickness=4,ZIndex=content.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
@@ -196,7 +199,7 @@ function Shop:build(view)
   local hints=Kit.frame(content,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
   local x=0
   for _,pair in ipairs({{"+","Browse"},{"LB","Slot"},{"A","Buy or wear"},{"B","Back"}})do
-   local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+   local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
    local t=txt(hints,"Small",pair[2],"soft",x+28,0,120,24);t.AutomaticSize=Enum.AutomaticSize.X
    x+=28+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
   end
@@ -220,6 +223,25 @@ function Shop:layoutTiles()
   list.CanvasSize=UDim2.fromOffset(0,math.max(0,math.ceil(#self.tiles/2)*108-12+6))
  end
  list.CanvasPosition=Vector2.zero
+ self:placeEmptyLine()
+end
+-- T12: this pet owns no wearables yet: one line in voice under the cards, only where
+-- the grid has room below them (no layout change; the pane already shows the pet).
+function Shop.ownsNothing(row)return not(row and type(row.owned)=="table"and #row.owned>0)end
+function Shop.emptyText(petId)
+ local pet=Pets.byId[petId]
+ return if pet then UICopy.get("wardrobe.empty",{pet=pet.name})else UICopy.get("wardrobe.emptySolo")
+end
+function Shop:placeEmptyLine()
+ self.emptyLine=nil
+ local list=self.list
+ if not list or not self.tileRoot or #self.tiles==0 then return end
+ local last=self.tiles[#self.tiles].button
+ local y=last.Position.Y.Offset+last.Size.Y.Offset+12
+ if y+22>list.Size.Y.Offset then return end
+ self.emptyLine=txt(self.tileRoot,"Body",Shop.emptyText(self.petId),"soft",3,y,list.Size.X.Offset-6,22,
+  {Name="EmptyLine",TextSize=if self.view then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
+ self.emptyLine.Visible=Shop.ownsNothing(self.ctx.row)
 end
 
 function Shop:fit(size)
@@ -250,6 +272,7 @@ end
 
 function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.id end
 function Shop:refresh()
+ if self.emptyLine then self.emptyLine.Visible=Shop.ownsNothing(self.ctx.row)end
  -- Tinted items show this pet's own palette colour (its secondary, face...), not grey.
  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
@@ -307,12 +330,13 @@ function Shop:paintPane()
  end
  local item=Catalog.item(self.petId,id);self.tier.root.Visible=true
  self.name.Text=item.name
- local tier=TierChip[item.tier]or TierChip.common;self.tier.set(tier[1]);self.tier.label.TextColor3=tier[2]
+ local tier=TierChip[item.tier]or TierChip.common;self.tier.set(tier[1],"sticker",tier[2]) -- T6: tier sticker, ink on the tier colour
  self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
  local status=Shop.status(self.petId,id,self.ctx)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.itemId==id
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
+ if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone)end)
  self.action.Visible=status.button~=nil
@@ -385,12 +409,18 @@ function Shop:act()
  return false
 end
 
-local Reasons={NeedStars="Not enough Stars",Busy="Busy, try again",Throttled="Try again in a moment",NotOwned="Buy it first",PriceChanged="Price changed",Retrying="Still saving…"}
+local Reasons={NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NotOwned="shop.reason.notOwned",
+ PriceChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
 function Shop:result(message)
  if not self.pending or type(message)~="table"or message.id~=self.pending.id then return false end
  if message.status=="Retrying"then return false end
  local order=self.pending;self.pending=nil
- if message.status~="Saved"then self.errorId,self.errorText=order.itemId,Reasons[message.reason]or "Not saved"
+ if message.status~="Saved"then
+  self.errorId,self.errorText,self.errorFit=order.itemId,UICopy.get(Reasons[message.reason]or "shop.failed.saved"),nil
+  if message.reason=="NeedStars"then
+   local item=Catalog.item(order.petId or self.petId,order.itemId)
+   self.errorFit=UICopy.starsShort(if item and item.price then item.price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
+  end
  else self.errorId,self.errorText=nil,nil;if self.callbacks.done then self.callbacks.done(order)end end
  self:refresh();return true
 end

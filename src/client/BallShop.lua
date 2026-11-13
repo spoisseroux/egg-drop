@@ -9,6 +9,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.BallThemes)
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(Shared.UICopy)
 local Sprite=require(script.Parent.JellySprite)
 local Shop={}
 Shop.__index=Shop
@@ -17,7 +18,8 @@ Shop.ConfirmSeconds=3
 Shop.Regular={pane={24,144,328,392},grid={371,147},tile={222,122},gap=12,columns=2}
 Shop.TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
-Shop.Reasons={NeedStars="Not enough Stars",Busy="Busy, try again",Throttled="Try again in a moment",PriceChanged="Price changed",Unowned="Not owned yet"}
+Shop.Reasons={NeedStars=UICopy.get("shop.reason.needStars"),Busy=UICopy.get("shop.reason.busy"),Throttled=UICopy.get("shop.reason.throttled"),
+ PriceChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned")}
 -- The pane's small board: {tier, x, bottom} in pane-board units (0..1 across, px up from the floor).
 Shop.Pile={{4,.22,0},{3,.5,0},{5,.8,0},{2,.36,40},{1,.12,44},{2,.62,52},{1,.9,64}}
 
@@ -82,14 +84,14 @@ function Shop:build(parent,view,grid)
  if view then
   local W=view.W;local g=grid
   local pw,ph=g.pw,g.paneH
-  local pane=Kit.card(body,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
   self.pane=pane
   local buttonY=ph-60
   local circlesY=buttonY-8-20
   local nameY=circlesY-6-24
   self:buildBoard(pane,12,10,pw-24,math.max(40,nameY-6-10),2)
   self.name=txt(pane,"Title","","text",12,nameY,pw-24-90,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
-  self.chip=Kit.chip(pane,"RARE",nil,22);self.chip.label.TextSize=12;self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(pw-12,nameY+12)
+  self.chip=Kit.chip(pane,"RARE","sticker",22);self.chip.label.TextSize=12;self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(pw-12,nameY+12)
   self:buildCircles(pane,12,circlesY,16,"in goals")
   self.pitch,self.statusLabel=nil,nil
   local action,state=Kit.button(pane,"Action",{variant="primary",text="Use",glyph="A",size=Vector2.new(pw-24,48),textSize=16,selectable=false})
@@ -109,13 +111,13 @@ function Shop:build(parent,view,grid)
   list.CanvasSize=UDim2.fromOffset(0,math.ceil(#Themes.Order/cols)*76-8+6)
  else
   local R=Shop.Regular
-  local pane=Kit.card(body,"Preview",nil,{pad=20});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])
+  local pane=Kit.card(body,"Preview",nil,{pad=20,seam=true});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])
   self.pane=pane
   self:buildBoard(pane,16,16,296,172,3)
   self.name=txt(pane,"Title","","text",20,196,200,30,{TextTruncate=Enum.TextTruncate.AtEnd})
-  self.chip=Kit.chip(pane,"RARE",nil,26);self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(308,211)
+  self.chip=Kit.chip(pane,"RARE","sticker",26);self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(308,211)
   self.pitch=txt(pane,"Small","","text",20,230,288,20,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-  self.statusLabel=txt(pane,"Small","Same sizes, same rules. Looks only.","soft",20,252,288,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.statusLabel=txt(pane,"Small",UICopy.get("style.balls.pitch"),"soft",20,252,288,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   self:buildCircles(pane,20,282,22,"in goals and quests")
   local action,state=Kit.button(pane,"Action",{variant="primary",text="Use",glyph="A",size=Vector2.new(288,56),selectable=false})
   action.Position=UDim2.fromOffset(20,R.pane[4]-16-56);self.action,self.actionState=action,state
@@ -133,6 +135,7 @@ end
 -- The pane's small board: a dark well with a pile of the theme's balls (faces on).
 function Shop:buildBoard(pane,x,y,w,h,px)
  local well=Kit.frame(pane,"MiniBoard","well",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well);well.ClipsDescendants=true
+ Kit.dotGrid(well) -- T7 LCD dot grid under the pile
  self.board={well=well,w=w,h=h,px=px,balls={}}
 end
 function Shop:paintBoard(themeId)
@@ -161,21 +164,22 @@ end
 
 function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  local entry=Themes.ById[id]
- local tile=Kit.node("TextButton",parent,{Name="Tile_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-  Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),ZIndex=parent.ZIndex+1})
- Kit.corner(tile,12);local stroke=Kit.stroke(tile)
+ -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
+ local tile,tileState=Kit.tile(parent,"Tile_"..id,{selectable=false,radius=12,compact=compact,position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
+ local stroke=tileState.stroke
  tile:SetAttribute("AccessibleLabel",entry.name);tile:SetAttribute("BallThemeId",id)
  -- The five sizes in a row, as they draw on the board (smaller scale on phones).
  local stripH=if compact then 30 else 66
  local strip=Kit.frame(tile,"Strip","well",UDim2.fromOffset(6,6),UDim2.fromOffset(w-12,stripH),10)
+ Kit.dotGrid(strip) -- T7: a row of balls reads as a small screen
  local px=if compact then 1 else 2
  local xs={.06,.19,.36,.59,.84}
  for tier=1,5 do ballAt(strip,id,tier,px,xs[tier]*(w-12),stripH-3)end
  local nameY=if compact then stripH+10 else stripH+14
- local nameLabel=txt(tile,"Strong",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
+ local nameLabel=txt(tile,"Name",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
  local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
- tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index)end end)
+ tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
 end
 
 -- ctx keys: owned (list), equipped (id), wallet (n), revision (n). Absent keys keep their value.
@@ -208,7 +212,7 @@ function Shop:paintPane()
  local s=Shop.status(id,self.ctx)
  self.name.Text=entry.name
  local chip=Shop.TierChip[entry.tier]or Shop.TierChip.starter
- self.chip.set(chip[1]);self.chip.label.TextColor3=chip[2]
+ self.chip.set(chip[1],"sticker",chip[2]) -- T6: the tier is the detail card's sticker (ink on the tier colour)
  if self.pitch then self.pitch.Text=entry.pitch end
  for tier,c in ipairs(self.circles or {})do
   local r=entry.ramps[tier];c.circle.BackgroundColor3=Color3.fromHex(r.body);c.ring.Color=Color3.fromHex(r.light)
@@ -218,7 +222,10 @@ function Shop:paintPane()
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local note=if pending then(if self.pending.action=="ballThemeBuy"then "Buying…"else "Applying…")
   elseif self.errorId==id and self.errorText then self.errorText else nil
- if self.statusLabel then self.statusLabel.Text=note or(if s.kind=="short"then s.text else "Same sizes, same rules. Looks only.")end
+ if self.statusLabel then
+  self.statusLabel.Text=note or(if s.kind=="short"then s.text else UICopy.get("style.balls.pitch"))
+  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.statusLabel,self.errorFit)end
+ end
  self.action.Visible=s.button~=nil
  if s.button then
   Kit.setText(self.action,if pending then "…"elseif confirming then "Confirm ★ "..s.price else s.button)
@@ -292,7 +299,11 @@ function Shop:result(message)
  if message.status=="Retrying"then return false end
  local done=self.pending;self.pending=nil
  if message.status~="Saved"then
-  self.errorId,self.errorText=done.themeId,Shop.Reasons[message.reason]or(if done.action=="ballThemeBuy"then "Not bought"else "Not applied")
+  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get(if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
+  if message.reason=="NeedStars"and done.action=="ballThemeBuy"then
+   local entry=Themes.ById[done.themeId]
+   self.errorFit=UICopy.starsShort(if entry and entry.price then entry.price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
+  end
  else
   self.errorId,self.errorText=nil,nil
   -- Optimistic until the next nursery snapshot confirms it.

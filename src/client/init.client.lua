@@ -902,6 +902,17 @@ clientUI.itemAvailable=function(own)
  return true
 end
 journal.appearanceFor=nurseryView.appearanceFor
+-- UI personality T4: the pet peek shows the equipped, owned pet (none on a fresh save).
+do
+ local PetPeek=require(script.PetPeek)
+ PetPeek.setSource(function()
+  local petId=board:GetAttribute("CompanionId")
+  if type(petId)~="string"or not Pets.byId[petId]then return nil end
+  if not nurseryState or not EggCatalog.isOwned(nurseryState.inventoryMask or 0,petId)then return nil end
+  return petId,nurseryView.appearanceFor(petId)
+ end)
+ gui.Destroying:Connect(PetPeek.destroy)
+end
 clientUI.hueIntent=clientUI.HueIntent.new({
  id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("hue")end,
@@ -1655,11 +1666,12 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local nudge
  pcall(function()
   local Config=require(ReplicatedStorage.Shared.BoardConfig)
+  local UICopy=require(ReplicatedStorage.Shared.UICopy)
   if success==true then
    local up=({easy="medium",medium="hard"})[heat.key]
-   if up then local low,high=Payout.range(up);nudge=Config.Heat[up].name.." pays "..low.." to "..high end
+   if up then local low,high=Payout.range(up);nudge=UICopy.get("results.nudge.up",{heat=Config.Heat[up].name,low=low,high=high})end
   else
-   local low,high=Payout.range(heat.key);nudge="A win on "..heat.name.." pays "..low.." to "..high
+   local low,high=Payout.range(heat.key);nudge=UICopy.get("results.nudge.again",{heat=heat.name,low=low,high=high})
   end
  end)
  local strip={}

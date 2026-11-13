@@ -12,10 +12,12 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.DeckThemes)
 local Catalog=require(Shared.AppearanceCatalog)
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(Shared.UICopy)
 local Assets=require(script.Parent.DeckAssets)
 local BackgroundShop=require(script.Parent.BackgroundShop)
 -- Third tab, Balls (batch 2026-11-13 R1): ball themes, drawn by BallShop.
 local BallShop=require(script.Parent.BallShop)
+local Peek=require(script.Parent.PetPeek)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -27,9 +29,9 @@ Shop.Tabs={{id="faceplates",label="Faceplates",icon="faceplate"},{id="background
 -- pane at 24,144 328x392, a 4x4 grid of 104x88 cards from 371,147, hints on y 566.
 Shop.Regular={tabs={24,84,800,44},pane={24,144,328,392},grid={371,147},tile={104,88},gap=12,hints=566}
 Shop.Hints={
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or equip"},{"B","Back"}},promise="Fixed prices. No random plates."},
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Use"},{"B","Back"}},promise="Backgrounds are earned, not bought."},
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or use"},{"B","Back"}},promise="Fixed prices. Looks only, never an advantage."},
+ {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or equip"},{"B","Back"}},promise=UICopy.get("style.promise.faceplates")},
+ {pairs={{"+","Browse"},{"LB","Tab"},{"A","Use"},{"B","Back"}},promise=UICopy.get("style.promise.backgrounds")},
+ {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or use"},{"B","Back"}},promise=UICopy.get("style.promise.balls")},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
@@ -149,9 +151,10 @@ end
 function Shop:buildChrome(parent,view,tabsW)
  local phone=view~=nil
  if phone then
-  self.header=Kit.header(parent,{title=Shop.Title,compact=true,width=view.W,left=view.hx,onBack=function()self:back()end})
+  self.header=Kit.header(parent,{title=Shop.Title,tint="style",compact=true,width=view.W,left=view.hx,onBack=function()self:back()end})
  else
-  self.header=Kit.header(parent,{title=Shop.Title,eyebrow=Shop.Eyebrow,width=848,onBack=function()self:back()end})
+  self.header=Kit.header(parent,{title=Shop.Title,eyebrow=Shop.Eyebrow,tint="style",width=848,onBack=function()self:back()end})
+  Kit.halftone(parent,"style",false)
  end
  self.wallet,self.backArrow,self.title=self.header.wallet,self.header.back,self.header.title
  local labels,icons={},{}
@@ -170,7 +173,7 @@ function Shop:buildChrome(parent,view,tabsW)
    local hints=Kit.frame(row,"Hints",nil,UDim2.new(),UDim2.fromOffset(560,24))
    local x=0
    for _,pair in ipairs(set.pairs)do
-    local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+    local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
     local t=txt(hints,"Small",pair[2],"soft",x+28,0,120,24);t.AutomaticSize=Enum.AutomaticSize.X
     x+=28+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
    end
@@ -181,7 +184,7 @@ function Shop:buildChrome(parent,view,tabsW)
 end
 
 function Shop:build(view)
- if self.content then self.backgrounds:releasePreview();self.content:Destroy()end
+ if self.content then Peek.hide(self.content);self.backgrounds:releasePreview();self.content:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.view=view;self.key=Shop.viewKey(view)
  local root=self.root
@@ -194,6 +197,7 @@ function Shop:build(view)
  self.ring=Kit.focusRing(root) -- root carries the UIScale the ring divides by
  self:applyTab()
  if self.callbacks.rebuilt then self.callbacks.rebuilt(self)end
+ if self.visible then self:syncPeek()end
 end
 
 function Shop:buildRegular()
@@ -204,10 +208,10 @@ function Shop:buildRegular()
  local plates=Kit.frame(content,"Faceplates",nil,UDim2.new(),UDim2.fromScale(1,1));self.plates=plates
  -- Preview pane.
  local pw,ph=R.pane[3],R.pane[4]
- local pane=Kit.card(plates,"Preview",nil,{pad=20});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(pw,ph)
+ local pane=Kit.card(plates,"Preview",nil,{pad=20,seam=true});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(pw,ph)
  self.preview=miniDeck(pane,296,UDim2.fromOffset(16,16))
  self.name=txt(pane,"Title","","text",20,170,200,30,{TextTruncate=Enum.TextTruncate.AtEnd})
- self.tier=Kit.chip(pane,"RARE",nil,26);self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(308,185)
+ self.tier=Kit.chip(pane,"RARE","sticker",26);self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(308,185)
  self.finish=txt(pane,"Small","","soft",20,204,288,20,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
  local sample=Kit.frame(pane,"Sample",nil,UDim2.fromOffset(20,234),UDim2.fromOffset(288,44),12);sample.BackgroundTransparency=0
  Kit.stroke(sample)
@@ -225,17 +229,17 @@ function Shop:buildRegular()
  self.tiles={}
  for index,id in ipairs(Themes.Order)do
   local col,row=(index-1)%4,math.floor((index-1)/4)
-  local tile=Kit.node("TextButton",plates,{Name="Tile_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-   Position=UDim2.fromOffset(R.grid[1]+col*(R.tile[1]+R.gap),R.grid[2]+row*(R.tile[2]+R.gap)),Size=UDim2.fromOffset(R.tile[1],R.tile[2]),ZIndex=plates.ZIndex+1})
-  Kit.corner(tile,12)
-  local stroke=Kit.stroke(tile)
+  -- T2: pressable tile with a 4 px lip inside the 12 px grid gap.
+  local tile,tileState=Kit.tile(plates,"Tile_"..id,{selectable=false,radius=12,
+   position=UDim2.fromOffset(R.grid[1]+col*(R.tile[1]+R.gap),R.grid[2]+row*(R.tile[2]+R.gap)),size=UDim2.fromOffset(R.tile[1],R.tile[2])})
+  local stroke=tileState.stroke
   tile:SetAttribute("AccessibleLabel",Themes.ById[id].name)
   local deck=miniDeck(tile,88,UDim2.fromOffset(8,6));deck.set(Themes.ById[id],id)
   local nameLabel=txt(tile,"Strong",Themes.ById[id].name,"text",8,51,90,16,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",8,68,90,16,{TextSize=13})
   self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
   tile.Activated:Connect(function()
-   if self.index==index then self:act(true)else self:focus(index)end
+   if self.index==index then self:act(true)else self:focus(index);Kit.boing(tile)end
   end)
  end
  self.grid=nil
@@ -269,12 +273,12 @@ function Shop:buildCompact(v)
  local plates=Kit.frame(body,"Faceplates",nil,UDim2.new(),UDim2.fromScale(1,1));self.plates=plates
  -- Preview pane (pinned).
  local pw,ph=grid.pw,grid.paneH
- local pane=Kit.card(plates,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+ local pane=Kit.card(plates,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
  local deckW=if H<340 then 144 else pw-24
  self.preview=miniDeck(pane,deckW,UDim2.fromOffset((pw-deckW)/2,10))
  local nameY=10+deckW/2+16+9
  self.name=txt(pane,"Title","","text",12,nameY-12,pw-24-90,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
- self.tier=Kit.chip(pane,"RARE",nil,22);self.tier.label.TextSize=12;self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-12,nameY)
+ self.tier=Kit.chip(pane,"RARE","sticker",22);self.tier.label.TextSize=12;self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-12,nameY)
  self.finish=txt(pane,"Small","","soft",12,nameY+22-9,pw-24,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
  local buttonY=ph-60
  local statusY=buttonY-14
@@ -308,17 +312,17 @@ function Shop:buildCompact(v)
  local tx=10+deckTile+10
  for index,id in ipairs(Themes.Order)do
   local col,row=(index-1)%grid.cols,math.floor((index-1)/grid.cols)
-  local tile=Kit.node("TextButton",list,{Name="Tile_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-   Position=UDim2.fromOffset(col*(grid.tileW+8),row*72),Size=UDim2.fromOffset(grid.tileW,64),ZIndex=list.ZIndex+1})
-  Kit.corner(tile,12)
-  local stroke=Kit.stroke(tile)
+  -- T2: pressable tile with a 3 px phone lip inside the 8 px grid gap.
+  local tile,tileState=Kit.tile(list,"Tile_"..id,{selectable=false,radius=12,compact=true,
+   position=UDim2.fromOffset(col*(grid.tileW+8),row*72),size=UDim2.fromOffset(grid.tileW,64)})
+  local stroke=tileState.stroke
   tile:SetAttribute("AccessibleLabel",Themes.ById[id].name)
   local deck=miniDeck(tile,deckTile,UDim2.fromOffset(10,(64-deckTile/2)/2));deck.set(Themes.ById[id],id)
   local nameLabel=txt(tile,"Strong",Themes.ById[id].name,"text",tx,12,grid.tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,34,grid.tileW-tx-8,18,{TextSize=13,TextTruncate=Enum.TextTruncate.AtEnd})
   self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
   tile.Activated:Connect(function()
-   if self.index==index then self:act(true)else self:focus(index)end
+   if self.index==index then self:act(true)else self:focus(index);Kit.boing(tile)end
   end)
  end
  self.backgrounds:build(body,v,grid)
@@ -401,7 +405,7 @@ function Shop:paintPane()
  self.preview.set(theme,id)
  self.name.Text=theme.name
  local tier=TierChip[theme.tier or "starter"]or TierChip.starter
- self.tier.set(tier[1]);self.tier.label.TextColor3=tier[2]
+ self.tier.set(tier[1],"sticker",tier[2]) -- T6: the tier is the detail card's sticker (ink on the tier colour)
  self.finish.Text=if self.view then finishName(theme).." finish" else finishName(theme).." finish. Tints the deck and its background."
  -- The sample is drawn in that plate's own panel and accent (live preview).
  local p=self.sampleParts
@@ -415,6 +419,7 @@ function Shop:paintPane()
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.plateId==id
  self.status.Text=if pending then "Buying…"elseif self.errorId==id and self.errorText then self.errorText elseif note then note else status.text
+ if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  local tone=if status.kind=="equipped"and not retry then "accent"elseif retry or status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone)end)
  self.action.Visible=status.button~=nil or retry
@@ -532,6 +537,12 @@ function Shop:act(fromPane)
  return false
 end
 
+-- "N Stars short. One more round?" (then "N Stars short") when the server says
+-- NeedStars and the shortfall is known; the plain reason when it is not.
+function Shop.shortText(plateId,ctx)
+ local price=Themes.price(plateId)
+ return UICopy.starsShort(if price then price-((ctx and ctx.wallet)or 0)else nil)
+end
 -- Server reply to a purchase.
 function Shop:result(message)
  if type(message)=="table"and message.kind=="ballTheme"then return self.balls:result(message)end
@@ -539,7 +550,9 @@ function Shop:result(message)
  if message.status=="Retrying"then return false end
  local plateId=self.pending.plateId;self.pending=nil
  if message.status~="Saved"then
-  self.errorId,self.errorText=plateId,({NeedStars="Not enough Stars",Busy="Busy, try again",Throttled="Try again in a moment"})[message.reason]or "Not bought"
+  local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled"})[message.reason]
+  self.errorId,self.errorText,self.errorFit=plateId,UICopy.get(reason or "shop.failed.bought"),nil
+  if message.reason=="NeedStars"then self.errorFit=Shop.shortText(plateId,self.ctx);self.errorText=self.errorFit[1]end
  else
   self.errorId,self.errorText=nil,nil
   if self.callbacks.bought then self.callbacks.bought(plateId)end
@@ -561,10 +574,28 @@ function Shop:open(equipped,tab,keepFocus)
  self:applyTab()
  if self.tab==2 then self.backgrounds:show(true,not keepFocus)elseif self.tab==3 then self.balls:show(true,not keepFocus)else self:focus(index,true)end
  if self.grid then self:scrollTo(index,2)end
+ self:syncPeek()
 end
 function Shop:close()
+ if self.content then Peek.hide(self.content)end
  self.visible=false;self.root.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil
  self.backgrounds:show(false)
  self.balls:show(false)
+end
+-- T4: the pet peeks over the tab bar (desktop only), between the title and the
+-- Stars capsule; the clip keeps clear of the title, eyebrow and wallet.
+Shop.PeekSlot=table.freeze({x=420,y=4,w=200,h=80})
+function Shop:syncPeek()
+ if not self.content then return false end
+ if not self.visible or self.view~=nil or not self.header or not self.header.geometry then Peek.hide(self.content);return false end
+ local g=self.header.geometry
+ local TextService=game:GetService("TextService")
+ local title=self.header.title
+ local tw=TextService:GetTextSize(title.Text,title.TextSize,Enum.Font.FredokaOne,Vector2.new(2000,200)).X*1.1
+ local avoid={{x=g.title.x,y=g.title.y,w=tw,h=g.title.h}}
+ if g.eyebrow then table.insert(avoid,{x=g.eyebrow.x,y=g.eyebrow.y,w=TextService:GetTextSize(self.header.eyebrow.Text,13,Enum.Font.BuilderSansBold,Vector2.new(2000,200)).X*1.1+20,h=g.eyebrow.h})end
+ if g.wallet then table.insert(avoid,g.wallet)end
+ table.insert(avoid,g.back)
+ return Peek.show(self.content,{rect=Shop.PeekSlot,avoid=avoid,align="center",key="style",compact=false})
 end
 return Shop

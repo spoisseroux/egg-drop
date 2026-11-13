@@ -37,31 +37,33 @@ Cards.colorOf=colorOf
 
 function Cards.place(node,r)node.Position=UDim2.fromOffset(r.x,r.y);node.Size=UDim2.fromOffset(r.w,r.h)end
 
--- New card button (Kit look, not selectable: the screen owns focus).
+-- New card button (Kit look, not selectable: the screen owns focus). T2: a Kit.tile
+-- with the pressable lip; `dress` sets its depth (3 px on phones). Buttons a panel
+-- built itself and hands to `dress` keep their flat look (no lip).
 function Cards.new(parent,name)
- local b=Kit.node("TextButton",parent,{Name=name,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-  Size=UDim2.fromOffset(200,96),ZIndex=parent.ZIndex+1})
- Kit.corner(b,12);Kit.stroke(b)
+ local b=Kit.tile(parent,name,{selectable=false,radius=12,size=UDim2.fromOffset(200,96)})
  return b
 end
 
 -- spec: {name, status, tone, swatch (Color3 or nil), icon (vector icon name or nil),
 -- iconColor (Color3 or nil), focused, compact}
 function Cards.dress(button,spec)
- button.Text="";button.AutoButtonColor=false;button.BackgroundTransparency=0
+ local tile=Kit.tileState(button)
+ button.Text="";button.AutoButtonColor=false;button.BackgroundTransparency=if tile then 1 else 0
  for _,child in ipairs(button:GetChildren())do if child:IsA("UIGradient")then child.Enabled=false end end
  Kit.corner(button,12)
- local stroke=button:FindFirstChild("KitStroke")or button:FindFirstChildOfClass("UIStroke")or Kit.stroke(button)
+ local stroke=if tile then tile.stroke else button:FindFirstChild("KitStroke")or button:FindFirstChildOfClass("UIStroke")or Kit.stroke(button)
+ if tile then Kit.setTileLip(button,Kit.tileLip(spec.compact==true))end
  local parts=button:FindFirstChild("CardParts")
  if not parts then
   parts=Kit.frame(button,"CardParts",nil,UDim2.new(),UDim2.fromScale(1,1));parts.ZIndex=button.ZIndex+1
   local swatch=Kit.frame(parts,"Swatch","well",UDim2.new(),UDim2.fromOffset(40,40),10);Kit.stroke(swatch)
-  Kit.text(parts,"Strong","","text",{Name="CardName",TextTruncate=Enum.TextTruncate.AtEnd})
+  Kit.text(parts,"Name","","text",{Name="CardName",TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd})
   Kit.text(parts,"Small","","soft",{Name="CardStatus",TextTruncate=Enum.TextTruncate.AtEnd})
  end
  -- Every old child (Art labels, checks) hides under the card face.
  for _,child in ipairs(button:GetChildren())do
-  if child:IsA("GuiObject")and child~=parts then child.Visible=false end
+  if child:IsA("GuiObject")and child~=parts and not(tile and(child==tile.face or child==tile.lipFrame))then child.Visible=false end
  end
  local h=button.Size.Y.Offset;local w=button.Size.X.Offset
  local side=math.max(28,h-20)

@@ -72,6 +72,7 @@ function Shop:theme()return Themes.ById[self.ctx.themeId or Themes.Default]or Th
 -- where the pattern really shows (section 5). `host` borrows the live renderer.
 function Shop:buildPreview(pane,x,y,w,h)
  local screen=Kit.frame(pane,"MiniScreen","well",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(screen)
+ Kit.dotGrid(screen) -- T7 LCD dot grid under the mini screen (nothing until the asset id lands)
  local inset=math.max(6,math.floor(h*.045))
  local boardW=math.floor(w*.37);local sideW=math.floor((w-boardW-inset*4)/2)
  local fractions={{0,.2},{.24,.62},{.66,1}}
@@ -111,7 +112,7 @@ function Shop:build(parent,view,grid)
  if view then
   local W=view.W;local g=grid
   local pw,ph=g.pw,g.paneH
-  local pane=Kit.card(body,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
   self.pane=pane
   local buttonY=ph-60
   local nameY=buttonY-6-18-24
@@ -139,7 +140,7 @@ function Shop:build(parent,view,grid)
   list.CanvasSize=UDim2.fromOffset(0,math.ceil(#items/cols)*72-8+6)
  else
   local R=Shop.Regular
-  local pane=Kit.card(body,"Preview",nil,{pad=20});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])
+  local pane=Kit.card(body,"Preview",nil,{pad=20,seam=true});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])
   self.pane=pane
   self:buildPreview(pane,16,16,296,184)
   self.name=txt(pane,"Title","","text",20,212,200,30,{TextTruncate=Enum.TextTruncate.AtEnd})
@@ -167,19 +168,19 @@ end
 
 function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  local item=Backgrounds.ById[id]
- local tile=Kit.node("TextButton",parent,{Name="Tile_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
-  Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),ZIndex=parent.ZIndex+1})
- Kit.corner(tile,12);local stroke=Kit.stroke(tile)
+ -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
+ local tile,tileState=Kit.tile(parent,"Tile_"..id,{selectable=false,radius=12,compact=compact,position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
+ local stroke=tileState.stroke
  tile:SetAttribute("AccessibleLabel",item.name);tile:SetAttribute("BackgroundId",id)
  local side=if compact then 44 else 76
  local swatch=Kit.frame(tile,"Swatch",nil,UDim2.fromOffset(10,(h-side)/2),UDim2.fromOffset(side,side),10);swatch.ClipsDescendants=true
  Kit.stroke(swatch)
  Art.backgroundThumbnail(swatch,id,self:theme())
  local tx=10+side+12
- local nameLabel=txt(tile,"Strong",item.name,"text",tx,if compact then 12 else h/2-22,w-tx-8,20,{TextSize=if compact then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
+ local nameLabel=txt(tile,"Name",item.name,"text",tx,if compact then 12 else h/2-22,w-tx-8,20,{TextSize=if compact then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
  local status=txt(tile,"Small","","soft",tx,if compact then 34 else h/2+2,w-tx-8,18,{TextSize=if compact then 13 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch}
- tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index)end end)
+ tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
 end
 
 function Shop:setContext(ctx)

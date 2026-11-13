@@ -5,6 +5,7 @@
 -- Presentation only: every action goes back through `callbacks`; the caller owns
 -- pausing, the round and the garden routes.
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local Menu={}
 Menu.__index=Menu
 Menu.Items={
@@ -79,14 +80,13 @@ function Menu:build(view)
  local t=geo.title
  local titleSize=if phone then 20 else 26
  self.title=Kit.text(content,"Title","Pocket menu","text",{Name="Title",Position=UDim2.fromOffset(t.x,t.y),Size=UDim2.fromOffset(t.w,t.h),TextSize=titleSize})
- self.subtitle=Kit.text(content,"Body","Round paused","soft",{Name="Subtitle",Position=UDim2.fromOffset(t.x,t.y),Size=UDim2.fromOffset(t.w,t.h),
+ self.subtitle=Kit.text(content,"Body",UICopy.get("menu.subtitle.paused"),"soft",{Name="Subtitle",Position=UDim2.fromOffset(t.x,t.y),Size=UDim2.fromOffset(t.w,t.h),
   TextSize=if phone then 14 else 16,TextXAlignment=Enum.TextXAlignment.Right})
  -- Keep the subtitle clear of the title; drop it when the row is too narrow.
- local TextService=game:GetService("TextService")
- local tw=TextService:GetTextSize("Pocket menu",titleSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X
+ local tw=Kit.measure(self.title.Text,"Title",titleSize).X
  local sw=0
- for _,line in ipairs({"Round not started","Win a round to unlock"})do
-  sw=math.max(sw,TextService:GetTextSize(line,self.subtitle.TextSize,Enum.Font.BuilderSans,Vector2.new(1000,100)).X)
+ for _,key in ipairs({"menu.subtitle.empty","menu.subtitle.locked"})do
+  sw=math.max(sw,Kit.measure(UICopy.get(key),"Body",self.subtitle.TextSize).X)
  end
  self.subtitle.Visible=tw+16+sw<=t.w
  self.buttons={}
@@ -116,7 +116,7 @@ function Menu:paint()
   -- activating it says why it is locked instead of doing nothing.
   button.Active,button.Interactable=true,true
  end
- self.subtitle.Text=if s.locked then "Win a round to unlock"elseif s.empty then "Round not started"else "Round paused"
+ self.subtitle.Text=UICopy.get(if s.locked then "menu.subtitle.locked"elseif s.empty then "menu.subtitle.empty"else "menu.subtitle.paused")
 end
 
 function Menu:focus(index,instant)

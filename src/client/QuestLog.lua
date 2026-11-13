@@ -6,6 +6,8 @@
 local Kit=require(script.Parent.DeckKit)
 -- Quest titles name a ball size with a colour circle, never a numeral (batch R1).
 local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+local Peek=require(script.Parent.PetPeek)
 local Log={}
 Log.__index=Log
 Log.Tabs={"daily","weekly","history"}
@@ -65,9 +67,10 @@ end
 function Log.compactTabsWidth(W,hx)return math.min(312,W-hx-174)end
 
 function Log:clear()
+ if self.footer then Peek.hide(self.footer)end
  if self.ring then self.ring.hide();self.ring.root:Destroy()end
  for _,child in ipairs(self.overlay.content:GetChildren())do if not(child:IsA("UIScale")or child:IsA("UIPadding"))then child:Destroy()end end
- self.rows={};self.title=nil;self.view=nil
+ self.rows={};self.title=nil;self.squiggle=nil;self.view=nil
 end
 
 -- Compact (phone) quest log: full-screen sheet, sticky header (tabs, reset
@@ -151,8 +154,12 @@ function Log:build(view)
  self.phone=view~=nil
  if view then return self:buildCompact(view)end
  local root=self.overlay.content
- txt(root,"Label","QUEST LOG","dim",24,16,200,16)
+ local eyebrow=txt(root,"Label","QUEST LOG","dim",24,16,200,16)
  self.title=txt(root,"Title","Today","text",24,34,300,34)
+ -- T5 Quests tint (sky): dot + eyebrow, squiggle under the title, halftone fade.
+ Kit.tintEyebrow(eyebrow,"quests")
+ self.squiggle=Kit.squiggle(root,self.title,"quests")
+ Kit.halftone(root,"quests",false)
  self.wallet=Kit.wallet(root,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(824,24)
  local more=Kit.button(root,"PocketMenu",{variant="ghost",text="Menu",size=Vector2.new(96,40),selectable=false})
  more.Position=UDim2.fromOffset(600,24);Kit.buttonState(more).label.TextSize=16
@@ -206,7 +213,7 @@ function Log:build(view)
  local hints=Kit.frame(root,"Hints",nil,UDim2.fromOffset(24,548),UDim2.fromOffset(800,24))
  local x=0
  for _,pair in ipairs({{"L","",true},{"R","Tabs"},{"+","Move"},{"A","Claim"},{"B","Back"}})do
-  local g=Kit.glyph(hints,pair[1],false,22);g.Position=UDim2.fromOffset(x,1)
+  local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
   local w=g.Size.X.Offset
   if pair[3]then x+=w+4 else
    txt(hints,"Small",pair[2],"soft",x+w+6,0,80,24)
@@ -309,6 +316,7 @@ function Log:paint()
  self.tabs.setDot(1,dailyDot);self.tabs.setDot(2,weeklyDot)
  local tab=self.tab
  if self.title then self.title.Text=if tab=="daily"then "Today"elseif tab=="weekly"then "This week"else "History"end
+ if self.squiggle then self.squiggle.update()end
  self.reset.Text=if tab=="daily"then Log.resetText(q.resetIn)elseif tab=="weekly"then Log.resetText(q.weekResetIn)else(if #(q.history or {})==1 then "Last claim"else "Last "..#(q.history or {}).." claims")
  local resetWidth=game:GetService("TextService"):GetTextSize(self.reset.Text,self.reset.TextSize,Enum.Font.BuilderSans,Vector2.new(400,40)).X
  if self.view then
@@ -329,11 +337,19 @@ function Log:paint()
  end
  self.footer.Visible=list;self.history.Visible=not list;self.historyFooter.Visible=not list
  self.bonusBar.root.Visible=tab=="weekly";self.bonusClaim.Visible=false
+ local allDone=tab=="daily"and #daily>0 and claimedCount(daily)==#daily
+ if not self.view then self.footerSub.Visible=not allDone end
  if tab=="daily"then
   self.footerIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.reroll;Kit.paint(self.footerIcon,"ImageColor3","accent")
   local left=q.rerollLeft or 0
   self.footerTitle.Text=if left>0 then "1 free reroll left today"else "No reroll left today"
   Kit.paint(self.footerTitle,"TextColor3",if left>0 then "text"elseif self.view then "soft"else "dim")
+  -- T12: every daily quest claimed: one line in voice, with the pet when there is one.
+  if allDone then
+   local name=Peek.petName()
+   self.footerTitle.Text=if name then UICopy.get("quests.allDone",{pet=name})else UICopy.get("quests.allDoneSolo")
+   Kit.paint(self.footerTitle,"TextColor3","text")
+  end
   self.footerSub.Text=if self.view then "Swaps one quest you have not started."else "Swaps one quest you have not started for another of the same kind."
   local earned,total=0,0;for _,r in ipairs(daily)do total+=r.reward;if r.claimed then earned+=r.reward end end
   self.footerLabel.Text="TODAY";self.footerValue.Text=string.format("★ %d/%d",earned,total);self.footerValue.Visible=true
@@ -361,10 +377,25 @@ function Log:paint()
   self.footerLabel.Visible=tab=="daily"
   local tw=game:GetService("TextService"):GetTextSize(self.footerTitle.Text,14,Enum.Font.BuilderSansBold,Vector2.new(600,40)).X
   self.footerSub.Position=UDim2.fromOffset(40+tw+10,0)
-  self.footerSub.Visible=self.view.W>=800 and tab=="daily"
+  self.footerSub.Visible=self.view.W>=800 and tab=="daily"and not allDone
  end
  self.wallet.set(self.walletValue or 0)
+ self:syncPeek(allDone)
  self:paintFocus()
+end
+-- T4 / T12: with every daily quest claimed the pet peeks up inside the footer strip
+-- (desktop only), clear of the footer text.
+Log.PeekSlot=table.freeze({x=440,y=0,w=200,h=64})
+function Log:syncPeek(on)
+ local footer=self.footer;if not footer then return false end
+ if not on or not self.visible or self.view then Peek.hide(footer);return false end
+ local TextService=game:GetService("TextService")
+ local function width(label,font)return TextService:GetTextSize(label.Text,label.TextSize,font,Vector2.new(2000,200)).X*1.1 end
+ local avoid={{x=52,y=8,w=width(self.footerTitle,Enum.Font.BuilderSansBold),h=24}}
+ if self.footerSub.Visible then table.insert(avoid,{x=52,y=32,w=width(self.footerSub,Enum.Font.BuilderSans),h=22})end
+ local lw=width(self.footerLabel,Enum.Font.BuilderSansBold);table.insert(avoid,{x=784-lw,y=10,w=lw,h=16})
+ local vw=width(self.footerValue,Enum.Font.RobotoMono);table.insert(avoid,{x=784-vw,y=28,w=vw,h=26})
+ return Peek.show(footer,{rect=Log.PeekSlot,avoid=avoid,align="center",key="quests"})
 end
 function Log:focusables()
  if self.tab=="history"then return {}end
@@ -426,6 +457,7 @@ end
 function Log:hide()
  if not self.visible then return end
  self.visible=false;self.overlay.layer.Visible=false;self.ring.hide()
+ if self.footer then Peek.hide(self.footer)end
 end
 -- A on the focused row: claim if ready, reroll if allowed.
 function Log:act()

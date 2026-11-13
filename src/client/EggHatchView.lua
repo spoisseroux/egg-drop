@@ -17,7 +17,9 @@ local JarArt=require(script.Parent.HueJarArt)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog);local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local ShelfEffects=require(script.Parent.EggShelfEffects)
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(ReplicatedStorage.Shared.UICopy)
 local EggPreview=require(script.Parent.EggPreview3D)
+local Peek=require(script.Parent.PetPeek)
 local FeatureFlags=require(ReplicatedStorage.Shared.FeatureFlags)
 -- v1 sells item eggs only; the Companion Egg is retired (one pet, Zivvi). The Feature
 -- Egg is hidden with the Features tab (Shared.FeatureFlags); a pending feature hatch
@@ -536,12 +538,8 @@ function View:restoreBodyFocus(previous,action,epoch)
 end
 -- ── Hatch eggs list + preview pane (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 3) ──
 -- Pure: one line and a two-line description per egg.
-View.EggCopy=table.freeze({
- toy={line="A toy to carry and chase",description="Something is rattling around in here. Hatches one toy your pet can carry and play with.",per="1 toy per egg"},
- material={line="A new body finish",description="Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",per="1 finish per egg"},
- hue={line="Fruit that shifts colour",description="It smells like fruit. Hatches one colour fruit to feed your pet.",per="1 fruit per egg"},
- feature={line="Horns, claws or wings",description="Something pointy is growing in here. Hatches one feature item to grow on any pet.",per="1 item per egg"},
-})
+-- The lines live in Shared.UICopy (hatch.egg.<id>), already frozen.
+View.EggCopy=UICopy.section("hatch.egg")
 -- Pure: the eggs on the list, in order. The Feature Egg joins only with Features on.
 function View.liveOrder(flags)
  flags=flags or FeatureFlags
@@ -621,6 +619,7 @@ end
 
 function View:buildShopChrome(view)
  if self.egg3D then self.egg3D:destroy();self.egg3D=nil end
+ if self.eggWell then Peek.hide(self.eggWell)end
  if self.shopRoot then
   if self.body.Parent~=self.card then self.body.Parent=self.card end
   self.shopRoot:Destroy()
@@ -632,6 +631,7 @@ function View:buildShopChrome(view)
  self.shopRoot=root
  local dim=Kit.frame(root,"Shade",nil,UDim2.new(),UDim2.fromScale(1,1));dim.BackgroundTransparency=if phone then 1 else .35;dim.BackgroundColor3=Color3.new(0,0,0);dim.Active=true
  local panel=Kit.frame(root,"Panel","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.W,g.H),30);panel.Active=true
+ Kit.halftone(panel,"hatch",phone)
  self.shopPanel=panel;self.shopScale=Kit.node("UIScale",panel,{Scale=1})
  local body=panel
  if phone then
@@ -644,15 +644,18 @@ function View:buildShopChrome(view)
   Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  end
  self.shopBody=body
- self.shopHeader=Kit.header(body,{title="Hatch eggs",eyebrow="Garden",compact=phone,width=g.W,left=24,onBack=function()self:close("close")end})
+ self.shopHeader=Kit.header(body,{title="Hatch eggs",eyebrow="Garden",tint="hatch",compact=phone,width=g.W,left=24,onBack=function()self:close("close")end})
  self.shopBackButton=self.shopHeader.back.root;self.shopBackButton.Selectable=true
  -- Pane: egg well, name + price chip, description, odds, need line, primary button.
- local pane=Kit.card(body,"EggPane",nil,{pad=g.pad});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
+ local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=true});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.shopPane=pane
  local p=g.pad
  local wellR=if phone then {x=p,y=p,w=150,h=g.pane.h-p*2}else {x=p,y=p,w=g.pane.w-p*2,h=152}
  local well=Kit.frame(pane,"EggWell","well",UDim2.fromOffset(wellR.x,wellR.y),UDim2.fromOffset(wellR.w,wellR.h),12);Kit.stroke(well);well.ClipsDescendants=true
+ Kit.dotGrid(well) -- T7 LCD dot grid under the egg (nothing until the asset id lands)
  self.eggWell=well
+ -- T4: the pet peeks up into the egg preview from the well's bottom edge, right of the egg (desktop only).
+ self.peekRect={x=wellR.w-140,y=0,w=128,h=wellR.h}
  local eggH=math.min(wellR.h-36,if phone then 120 else 112);local eggW=math.floor(eggH*.78)
  local floorY=if phone then wellR.h*.5+eggH*.5+8 else wellR.h-22
  local shadow=Kit.frame(well,"EggShadow",nil,UDim2.fromOffset(wellR.w/2,floorY),UDim2.fromOffset(eggW*1.1,10),999)
@@ -670,7 +673,7 @@ function View:buildShopChrome(view)
  local tw=g.pane.w-tx-p
  local y=if phone then p else wellR.y+wellR.h+12
  self.eggName=Kit.text(pane,"Title","","text",{Name="EggName",Position=UDim2.fromOffset(tx,y),Size=UDim2.fromOffset(tw-80,if phone then 24 else 30),TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
- self.eggPrice=Kit.chip(pane,"★ 0","gold",if phone then 22 else 26);self.eggPrice.root.AnchorPoint=Vector2.new(1,.5)
+ self.eggPrice=Kit.chip(pane,"★ 0","sticker",if phone then 22 else 26);self.eggPrice.root.AnchorPoint=Vector2.new(1,.5)
  self.eggPrice.root.Position=UDim2.fromOffset(tx+tw,y+(if phone then 12 else 15))
  y+=if phone then 26 else 32
  self.eggDescription=Kit.text(pane,"Body","","soft",{Name="EggDescription",Position=UDim2.fromOffset(tx,y),Size=UDim2.fromOffset(tw,if phone then 32 else 40),TextSize=if phone then 12 else 15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
@@ -689,11 +692,11 @@ function View:buildShopChrome(view)
   local hints=Kit.frame(body,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
   local x=0
   for _,pair in ipairs({{"+","Browse"},{"A","Hatch"},{"B","Back"}})do
-   local chip=Kit.glyph(hints,pair[1],false,22);chip.Position=UDim2.fromOffset(x,1)
+   local chip=Kit.glyph(hints,pair[1],false,22,true);chip.Position=UDim2.fromOffset(x,1)
    Kit.text(hints,"Small",pair[2],"soft",{Position=UDim2.fromOffset(x+28,0),Size=UDim2.fromOffset(120,24),AutomaticSize=Enum.AutomaticSize.X})
    x+=28+TextService:GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
   end
-  Kit.text(body,"Small","Fixed odds. Shown before you pay.","dim",{Name="Promise",Position=UDim2.fromOffset(424,566),Size=UDim2.fromOffset(400,24),TextXAlignment=Enum.TextXAlignment.Right})
+  Kit.text(body,"Small",UICopy.get("hatch.promise"),"dim",{Name="Promise",Position=UDim2.fromOffset(424,566),Size=UDim2.fromOffset(400,24),TextXAlignment=Enum.TextXAlignment.Right})
  end
 end
 -- Shop chrome on (list + pane) or off (the result card keeps its old frame).
@@ -754,20 +757,21 @@ function View:renderBody()
   local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
   local n=left:FindFirstChild("Recipe_"..id)
   if not n then
-   n=Kit.node("TextButton",left,{Name="Recipe_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=true,ZIndex=left.ZIndex+1})
-   Kit.corner(n,12);Kit.stroke(n)
+   -- T2: a pressable tile with a lip (4 px, 3 on phones) inside the 12 / 8 px row gap.
+   n=Kit.tile(left,"Recipe_"..id,{radius=12,compact=phone,selectable=true})
    n.Activated:Connect(function()
     if not liveShopTarget(n,self.shade)then return end
-    if self.selected==id then self:actPrimary()else self:selectRecipe(id)end
+    if self.selected==id then self:actPrimary()else self:selectRecipe(id);Kit.boing(n)end
    end)
    n.SelectionGained:Connect(function()if self.selected~=id and liveShopTarget(n,self.shade)then self:selectRecipe(id)end end)
-   local name=Kit.text(n,"Heading",recipe.name,"text",{Name="RecipeName",TextTruncate=Enum.TextTruncate.AtEnd})
+   local name=Kit.text(n,"Name",recipe.name,"text",{Name="RecipeName",TextTruncate=Enum.TextTruncate.AtEnd})
    local line=Kit.text(n,"Small",copy.line or "","soft",{Name="RecipeLine",TextTruncate=Enum.TextTruncate.AtEnd})
    local cost=Kit.text(n,"Counter","★ "..recipe.cost,"stars",{Name="Cost",TextXAlignment=Enum.TextXAlignment.Right})
    local _=name;_=line;_=cost
   end
   local h=g.rowH
   n.Position,n.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,h)
+  Kit.setTileLip(n,Kit.tileLip(phone))
   local name,line,cost=n.RecipeName,n.RecipeLine,n.Cost
   name.TextSize=if phone then 15 else 18;line.TextSize=if phone then 12 else 14;cost.TextSize=if phone then 15 else 18
   name.Position,name.Size=UDim2.fromOffset(16,h/2-(if phone then 20 else 24)),UDim2.fromOffset(w-100,if phone then 20 else 24)
@@ -775,14 +779,14 @@ function View:renderBody()
   cost.Position,cost.Size=UDim2.fromOffset(w-84,0),UDim2.fromOffset(68,h)
   local selected=self.selected==id
   Kit.paint(n,"BackgroundColor3",if selected then "selected"else "raised")
-  local stroke=n.KitStroke;stroke.Thickness=if selected then 2 else 1;stroke.Transparency=if selected then 0 else .86
+  local stroke=Kit.tileState(n).stroke;stroke.Thickness=if selected then 2 else 1;stroke.Transparency=if selected then 0 else .86
   Kit.paint(stroke,"Color",function()return if selected then Kit.color("accent")else Color3.new(1,1,1)end)
   n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",selected)
   n:SetAttribute("AccessibleLabel",recipe.name..", "..(copy.line or "")..", "..recipe.cost.." Stars")
   y+=h+g.rowGap
  end
  y+=if phone then 0 else 8
- local note=Kit.text(left,"Small",if phone then "Odds shown before you hatch"else "Every egg lists its exact odds before you hatch it.","soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
+ local note=Kit.text(left,"Small",UICopy.get(if phone then "hatch.footer.phone"else "hatch.footer.desktop"),"soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
  local _=note
  y+=28
  local daily=left:FindFirstChild("DailyNectar")
@@ -819,7 +823,7 @@ function View:paintEggPane()
   self.nextBeat=os.clock()+.6
  end
  self.eggName.Text=recipe.name
- self.eggPrice.set("★ "..recipe.cost,"gold")
+ self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
  self.eggDescription.Text=copy.description or ""
  local odds=View.oddsRows(id,self.state)
  self.oddsPer.Text=string.upper(odds.per)
@@ -869,6 +873,10 @@ end
 -- 2D shell fallback until the 3D egg shells are modelled (build plan).
 function View:syncEggClock()
  local wanted=self.shade.Visible and self.shopRoot~=nil and self.shopRoot.Visible and not self.state.lastHatch
+ if self.eggWell then
+  if wanted then Peek.show(self.eggWell,{rect=self.peekRect,align="right",key="hatch",compact=self.shopGeom==nil or self.shopGeom.phone})
+  else Peek.hide(self.eggWell)end
+ end
  if self.egg3D then self.egg3D:setActive(wanted and self.egg3D.loaded)end
  if self.egg3D and self.egg3D.loaded then wanted=false end
  if not wanted then if self.eggClock then self.eggClock:Disconnect();self.eggClock=nil end;return end

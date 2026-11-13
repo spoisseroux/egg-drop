@@ -39,14 +39,63 @@ function Kit.mix(color,toward,amount)return color:Lerp(toward,amount)end
 -- 2.2 Type. {regular size, compact size, face}
 local function face(family,weight)return Font.new("rbxasset://fonts/families/"..family..".json",weight)end
 local sans,mono=function(w)return face("BuilderSans",w)end,function(w)return face("RobotoMono",w)end
+-- UI personality T1: Fredoka One is the display face for screen titles, item and
+-- pet names and button labels. Only at 15 px and up (smaller sizes fall back to
+-- Builder Sans Bold), never sentences, never numbers. DeckArt keeps Builder Sans.
+Kit.DisplayFace=Font.new("rbxasset://fonts/families/FredokaOne.json")
+Kit.DisplayMin=15
 Kit.Type={
- Display={40,30,sans(Enum.FontWeight.ExtraBold)},Title={26,20,sans(Enum.FontWeight.Bold)},
+ Display={40,30,sans(Enum.FontWeight.ExtraBold)},Title={26,20,Kit.DisplayFace},
+ Name={20,16,Kit.DisplayFace},Button={20,16,Kit.DisplayFace},
  Heading={20,16,sans(Enum.FontWeight.Bold)},Body={16,14,sans(Enum.FontWeight.Regular)},
  BodyMedium={16,14,sans(Enum.FontWeight.Medium)},Small={14,12,sans(Enum.FontWeight.Regular)},
  Label={13,12,sans(Enum.FontWeight.Bold)},Counter={18,15,mono(Enum.FontWeight.Bold)},
  CounterL={34,22,mono(Enum.FontWeight.Bold)},Strong={16,14,sans(Enum.FontWeight.Bold)},
 }
+-- Roles drawn in the display face, and the face they use under Kit.DisplayMin.
+Kit.DisplayRoles={Title=true,Name=true,Button=true}
+local displayFallback=sans(Enum.FontWeight.Bold)
+-- The face a role actually draws with at `size` (the display roles drop to Builder
+-- Sans Bold under 15 px).
+function Kit.faceFor(role,size)
+ local spec=Kit.Type[role]or Kit.Type.Body
+ if Kit.DisplayRoles[role]and(size or spec[1])<Kit.DisplayMin then return displayFallback end
+ return spec[3]
+end
 Kit.LineHeight=1.25
+
+-- Text measuring that follows the role's face (architect review 2). Synchronous on
+-- purpose (code review 2026-11-13): GetTextBoundsAsync can yield on a cold cache,
+-- which suspended layout mid-build (results, HUD chips) and let stale updates land
+-- later. Every face the kit uses has a legacy Enum.Font twin, so GetTextSize is
+-- exact; anything unmapped measures as Builder Sans Bold widened 5%.
+local TextService=game:GetService("TextService")
+local legacyFonts={
+ ["rbxasset://fonts/families/FredokaOne.json"]={Regular=Enum.Font.FredokaOne},
+ ["rbxasset://fonts/families/BuilderSans.json"]={Regular=Enum.Font.BuilderSans,Medium=Enum.Font.BuilderSansMedium,
+  SemiBold=Enum.Font.BuilderSansBold,Bold=Enum.Font.BuilderSansBold,ExtraBold=Enum.Font.BuilderSansExtraBold,Heavy=Enum.Font.BuilderSansExtraBold},
+ ["rbxasset://fonts/families/RobotoMono.json"]={Regular=Enum.Font.RobotoMono,Medium=Enum.Font.RobotoMono,Bold=Enum.Font.RobotoMono},
+}
+function Kit.legacyFont(face)
+ local family=legacyFonts[face.Family]
+ return family and(family[face.Weight.Name]or family.Regular)or nil
+end
+local measureCache,measureCount={},0
+function Kit.measure(text,role,size,width)
+ text=tostring(text or "");role=role or "Body"
+ local face=Kit.faceFor(role,size)
+ size=size or(Kit.Type[role]or Kit.Type.Body)[1]
+ width=width or 10000
+ local key=face.Family.."|"..face.Weight.Name.."|"..size.."|"..width.."|"..text
+ local hit=measureCache[key]
+ if hit then return hit end
+ local font=Kit.legacyFont(face)
+ local bounds=TextService:GetTextSize(text,size,font or Enum.Font.BuilderSansBold,Vector2.new(width,10000))
+ if not font then bounds=Vector2.new(math.ceil(bounds.X*1.05),bounds.Y)end
+ if measureCount>=1024 then table.clear(measureCache);measureCount=0 end
+ measureCache[key]=bounds;measureCount+=1
+ return bounds
+end
 -- 2.3 Spacing, radius, border.
 Kit.Space={4,8,12,16,24,32}
 Kit.Radius={button=12,card=14,row=10,tile=12,well=14,chip=999}
@@ -92,11 +141,27 @@ function Kit.text(parent,role,content,color,props)
  label:SetAttribute("KitRole",role)
  paint(label,"TextColor3",color or(if role=="Label"then "dim"else "text"))
  if props then for key,value in pairs(props)do if key~="Name"then label[key]=value end end end
+ -- A caller that passes its own FontFace keeps it (the deck's hardware letters).
+ if props and props.FontFace then label:SetAttribute("KitFaceFixed",true)end
+ Kit.watchDisplayFace(label)
  return label
+end
+-- Display roles keep the 15 px rule whenever a caller changes TextSize later
+-- (one connection per label, set up once; nothing runs per frame).
+local function syncFace(label)
+ local role=label:GetAttribute("KitRole")
+ if role and Kit.DisplayRoles[role]and not label:GetAttribute("KitFaceFixed")then label.FontFace=Kit.faceFor(role,label.TextSize)end
+end
+function Kit.watchDisplayFace(label)
+ syncFace(label)
+ if label:GetAttribute("KitFaceWatch")or not Kit.DisplayRoles[label:GetAttribute("KitRole")or ""]then return end
+ label:SetAttribute("KitFaceWatch",true)
+ label:GetPropertyChangedSignal("TextSize"):Connect(function()syncFace(label)end)
 end
 function Kit.setFontRole(label,role)
  local spec=Kit.Type[role];if not spec then return end
- label.FontFace=spec[3];label:SetAttribute("KitRole",role)
+ label:SetAttribute("KitRole",role);label:SetAttribute("KitFaceFixed",nil);label.FontFace=spec[3]
+ Kit.watchDisplayFace(label)
 end
 function Kit.setCompact(label,compact)
  local spec=Kit.Type[label:GetAttribute("KitRole")or "Body"]
@@ -218,37 +283,114 @@ function Kit.check(parent,size)
  api.set(false);return api
 end
 
--- Chip: height 26 (22 on the board), full radius, padding 10. Kinds: plain, gold, danger, accent.
+-- Chip: height 26 (22 on the board), full radius, padding 10. Kinds: plain, gold,
+-- danger, accent, sticker. `sticker` (T6) is the one chip on a card that deserves
+-- attention (a detail pane's price, the detail card's tier, "New best"): a solid
+-- colour (Stars gold by default, or `color` = a Color3 / Kit.Tint key), ink text
+-- (11.9:1 on gold, 11.2:1 on lilac), a cream 2 px border, tilted 4 degrees, a small
+-- shadow, landing with a 120 ms overshoot. Under 22 px tall it stays a gold chip.
+-- Callers keep 3 px clearance and never put one at a scroll area's edge.
 function Kit.chip(parent,content,kind,height)
  height=height or 26
- local role=if height<=22 then "Label"else "Label"
+ local role="Label"
  local chip=Kit.frame(parent,"Chip",nil,UDim2.new(),UDim2.fromOffset(40,height),999)
  chip.BackgroundTransparency=0
  local label=Kit.text(chip,role,content,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center})
  if height<=22 then label.TextSize=11 end
+ local plainSize -- the caller's label size, kept while the chip is a sticker
+ local stroke=Kit.stroke(chip)
  local api={root=chip,label=label}
- function api.set(text,newKind)
+ local sticker -- {shadow, face}, made on first use
+ local stickerColor,lastText,lastKind
+ local function stickerParts()
+  if sticker then return sticker end
+  local z=chip.ZIndex
+  local shadow=Kit.frame(chip,"StickerShadow",nil,UDim2.fromOffset(1,2),UDim2.fromScale(1,1),999)
+  shadow.BackgroundTransparency=Kit.Sticker.shadow;shadow.BackgroundColor3=Kit.Color.black;shadow.ZIndex=z
+  local face=Kit.frame(chip,"StickerFace",nil,UDim2.new(),UDim2.fromScale(1,1),999)
+  face.BackgroundTransparency=0;face.ZIndex=z+1
+  node("UIStroke",face,{Name="StickerBorder",Thickness=Kit.Sticker.border,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+  sticker={shadow=shadow,face=face}
+  return sticker
+ end
+ function api.set(text,newKind,color)
   label.Text=string.upper(text);kind=newKind or kind
+  if kind=="sticker"and not Kit.stickerAllowed(height)then kind="gold"end
+  if color~=nil then stickerColor=color end
+  chip:SetAttribute("ChipKind",kind or "plain")
+  local isSticker=kind=="sticker"
+  if sticker or isSticker then
+   local parts=stickerParts()
+   parts.shadow.Visible=isSticker;parts.face.Visible=isSticker
+  end
+  chip.BackgroundTransparency=if isSticker then 1 else 0
+  stroke.Enabled=not isSticker
+  chip.Rotation=if isSticker then Kit.Sticker.tilt else 0
+  label.ZIndex=if isSticker then chip.ZIndex+2 else chip.ZIndex+1
+  if isSticker then
+   if lastKind~="sticker"then plainSize=label.TextSize end
+   label.TextSize=math.max(12,label.TextSize)
+  elseif lastKind=="sticker"and plainSize then label.TextSize=plainSize end
   if kind=="gold"then paint(chip,"BackgroundColor3",function()return Kit.color("well"):Lerp(Kit.Color.stars,.14)end);paint(label,"TextColor3","stars")
   elseif kind=="danger"then paint(chip,"BackgroundColor3",function()return Kit.color("well"):Lerp(Kit.Color.danger,.18)end);paint(label,"TextColor3","danger")
+  elseif isSticker then
+   sticker.face.BackgroundColor3=Kit.tintColor(stickerColor)or Kit.Color.stars;paint(label,"TextColor3","ink")
   else paint(chip,"BackgroundColor3","well");paint(label,"TextColor3","soft")end
-  local width=game:GetService("TextService"):GetTextSize(label.Text,label.TextSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X+20
+  local width=Kit.measure(label.Text,role,label.TextSize).X+20
   chip.Size=UDim2.fromOffset(math.ceil(width),height)
+  -- The sticker lands (120 ms overshoot) when it appears or its text changes.
+  -- A chip whose owner already animates its own UIScale (the results "New best" pop) is left alone.
+  local foreign=chip:FindFirstChildOfClass("UIScale")
+  if isSticker and(lastKind~="sticker"or lastText~=label.Text)and not Kit.reduced()and not(foreign and foreign.Name~="BoingScale")then
+   local scale=chip:FindFirstChild("BoingScale")or node("UIScale",chip,{Name="BoingScale",Scale=1})
+   scale.Scale=.86
+   TweenService:Create(scale,TweenInfo.new(Kit.Sticker.land,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+  end
+  lastKind,lastText=kind,label.Text
  end
- Kit.stroke(chip);api.set(content,kind);return api
+ api.set(content,kind);return api
 end
 
 -- Glyph chip: 26 px circle (pill for words) inside buttons and hint bars.
-function Kit.glyph(parent,letter,onAccent,size)
+-- `cap` (T8, hint bars only): A draws as the deck's mint cap and B / LB (any other
+-- letter word) as a grey cap, each with a 2 px darker lip under it. Symbols such
+-- as "+" and "◀▶" keep the plain chip. Size, position and text stay the same.
+Kit.CapGrey=Color3.fromHex("#4A505A")
+local function capKind(letter)
+ if letter=="A"then return "a"end
+ if string.match(letter,"^%u+$")then return "grey"end
+ return nil
+end
+function Kit.glyph(parent,letter,onAccent,size,cap)
  size=size or 26
  local wide=#letter>1
- local width=if wide then game:GetService("TextService"):GetTextSize(letter,math.floor(size*.5),Enum.Font.BuilderSansBold,Vector2.new(500,100)).X+16 else size
+ local width=if wide then Kit.measure(letter,"Strong",math.floor(size*.5)).X+16 else size
  local chip=Kit.frame(parent,"Glyph",nil,UDim2.new(),UDim2.fromOffset(width,size),999)
  chip.BackgroundTransparency=0
  local stroke=node("UIStroke",chip,{Name="KitStroke",Thickness=1})
  local text=Kit.text(chip,"Strong",letter,nil,{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(size*.54)})
+ local kind=if cap then capKind(letter)else nil
+ local lip
+ if kind then
+  -- The lip sits 2 px below the cap, behind it, inside the same footprint.
+  lip=Kit.frame(parent,"GlyphLip",nil,UDim2.new(),UDim2.fromOffset(width,size),999)
+  lip.BackgroundTransparency=0;lip.ZIndex=chip.ZIndex
+  chip.ZIndex+=1;text.ZIndex=chip.ZIndex+1
+  local function follow()lip.Position=chip.Position+UDim2.fromOffset(0,2);lip.Visible=chip.Visible end
+  chip:GetPropertyChangedSignal("Position"):Connect(follow)
+  chip:GetPropertyChangedSignal("Visible"):Connect(follow)
+  chip.Destroying:Connect(function()lip:Destroy()end)
+  follow()
+  chip:SetAttribute("GlyphCap",kind)
+ end
  local function repaint(accent)
-  if accent then chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.ink,.82;stroke.Color,stroke.Transparency=Kit.Color.ink,.65;text.TextColor3=Kit.Color.ink
+  if kind=="a"then
+   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.color("accent"),0;stroke.Transparency=1;text.TextColor3=Kit.Color.ink
+   lip.BackgroundColor3=Kit.color("accent"):Lerp(Kit.Color.black,.38)
+  elseif kind=="grey"then
+   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.CapGrey,0;stroke.Color,stroke.Transparency=Kit.Color.white,.82;text.TextColor3=Kit.Color.text
+   lip.BackgroundColor3=Kit.CapGrey:Lerp(Kit.Color.black,.45)
+  elseif accent then chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.ink,.82;stroke.Color,stroke.Transparency=Kit.Color.ink,.65;text.TextColor3=Kit.Color.ink
   else chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.white,.88;stroke.Color,stroke.Transparency=Kit.Color.white,.73;text.TextColor3=Kit.Color.text end
  end
  repaint(onAccent);return chip,repaint
@@ -275,8 +417,9 @@ function Kit.paintButton(button)
  local color,transparency=baseFill(s)
  s.fill.BackgroundColor3,s.fill.BackgroundTransparency=color,transparency
  local accent=s.enabled and(s.variant=="primary"or s.variant=="reward")
- local edge=accent and not s.pressed
- s.edge.Visible=edge;s.edge.BackgroundColor3=color:Lerp(Kit.Color.black,.38)
+ -- T2: every enabled button with a ledge shows its darker lip; on press the face
+ -- (Fill + Content) drops onto it, so the lip stays covered rather than hidden.
+ s.edge.Visible=s.enabled and s.ledge>0;s.edge.BackgroundColor3=color:Lerp(Kit.Color.black,.38)
  s.sheen.Visible=accent
  s.stroke.Enabled=s.enabled and s.variant~="ghost"and s.variant~="primary"and s.variant~="reward"or s.selected
  if s.selected then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.color("accent"),2,0
@@ -286,7 +429,28 @@ function Kit.paintButton(button)
  s.label.TextColor3=ink;s.label.TextTransparency=if s.enabled then 0 else .4
  if s.repaintGlyph then s.repaintGlyph(accent)end
  if s.glyph then s.glyph.Visible=s.showGlyph==true end
- s.content.Position=UDim2.fromOffset(0,if s.pressed then 2 else 0)
+ -- Press: 60 ms down, 100 ms up; only when the pressed state changes (never per paint).
+ local drop=if s.pressed then s.lip else 0
+ if s.drop~=drop then
+  s.drop=drop
+  local time=if s.pressed then Kit.Motion.pressDown else Kit.Motion.pressUp
+  Kit.tween(s.content,time,{Position=UDim2.fromOffset(0,drop)})
+  if s.ledge>0 then Kit.tween(s.fill,time,{Position=UDim2.fromOffset(0,drop)})end
+ end
+end
+-- T2 lips. options.ledge: the darker lip under the face (primary 6; secondary,
+-- destructive and reward 4, or 3 on phones; ghost none). options.lip: how far the
+-- face drops on press (the ledge, or 2 px for ghost buttons). `options.compact`
+-- picks the phone depth; without it a button 44 px tall or less counts as compact.
+Kit.ButtonLip=2 -- ghost settle (no ledge)
+Kit.ButtonLedge=6 -- primary ledge (was 3)
+Kit.Lip={tile=4,compact=3,primary=6}
+-- Pure: {ledge, press drop} for a button variant.
+function Kit.buttonLip(variant,compact)
+ if variant=="ghost"then return 0,Kit.ButtonLip end
+ if variant=="primary"then return Kit.ButtonLedge,Kit.ButtonLedge end
+ local depth=if compact then Kit.Lip.compact else Kit.Lip.tile
+ return depth,depth
 end
 function Kit.button(parent,name,options)
  options=options or {}
@@ -296,7 +460,10 @@ function Kit.button(parent,name,options)
  local button=node("TextButton",parent,{Name=name,Text="",AutoButtonColor=false,BackgroundTransparency=1,
   Size=UDim2.fromOffset(size.X,size.Y),ZIndex=parent.ZIndex+1,Selectable=options.selectable~=false})
  button:SetAttribute("AccessibleLabel",options.text)
- local edge=Kit.frame(button,"Edge",nil,UDim2.fromOffset(0,3),UDim2.fromScale(1,1),radius);edge.BackgroundTransparency=0
+ local compact=if options.compact~=nil then options.compact==true else size.Y<=44
+ local defaultLedge,defaultLip=Kit.buttonLip(variant,compact)
+ local ledge=options.ledge or defaultLedge
+ local edge=Kit.frame(button,"Edge",nil,UDim2.fromOffset(0,ledge),UDim2.fromScale(1,1),radius);edge.BackgroundTransparency=0
  local fill=Kit.frame(button,"Fill",nil,UDim2.new(),UDim2.new(1,0,1,0),radius);fill.BackgroundTransparency=0;fill.ZIndex=edge.ZIndex+1
  local sheen=Kit.frame(fill,"Sheen",nil,UDim2.new(),UDim2.fromScale(1,.5),radius)
  sheen.BackgroundColor3,sheen.BackgroundTransparency=Kit.Color.white,0
@@ -307,10 +474,11 @@ function Kit.button(parent,name,options)
   VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder})
  local glyph,repaintGlyph
  if options.glyph then glyph,repaintGlyph=Kit.glyph(content,options.glyph,false,if variant=="reward"then 22 else 26);glyph.LayoutOrder=1 end
- local role=if variant=="reward"then "Strong"else "Heading"
- local label=Kit.text(content,role,options.text or name,nil,{Name="Label",AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,size.Y),LayoutOrder=2,TextXAlignment=Enum.TextXAlignment.Center})
- if options.textSize then label.TextSize=options.textSize end
- local state={variant=variant,enabled=true,hover=false,pressed=false,selected=false,showGlyph=options.showGlyph~=false,
+ -- The button label role (T1): Fredoka One at 15 px and up; reward buttons keep
+ -- their 16 px default size.
+ local label=Kit.text(content,"Button",options.text or name,nil,{Name="Label",AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,size.Y),LayoutOrder=2,TextXAlignment=Enum.TextXAlignment.Center,
+  TextSize=options.textSize or(if variant=="reward"then Kit.Type.Strong[1]else Kit.Type.Button[1])})
+ local state={variant=variant,enabled=true,hover=false,pressed=false,selected=false,showGlyph=options.showGlyph~=false,lip=options.lip or(if options.ledge then options.ledge else defaultLip),ledge=ledge,drop=0,
   fill=fill,edge=edge,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list}
  buttons[button]=state
  Art.bind(fill,{BackgroundColor3=function()Kit.paintButton(button);return fill.BackgroundColor3 end})
@@ -342,10 +510,208 @@ function Kit.card(parent,name,label,options)
  options=options or {}
  local card=Kit.frame(parent,name,options.role or "raised",UDim2.new(),UDim2.fromOffset(100,100),options.radius or Kit.Radius.card)
  Kit.stroke(card)
+ -- options.seam (T2): the stitched seam 6 px inside the edge (information panes only;
+ -- no seam asset = no instance; hidden on cards under 150 px tall).
+ if options.seam then card:SetAttribute("KitSeam",true);Kit.seam(card)end
  local pad=options.pad or 20
  local eyebrow
  if label then eyebrow=Kit.text(card,"Label",label,"dim",{Name="Eyebrow",Position=UDim2.fromOffset(pad,options.labelY or 12),Size=UDim2.new(1,-pad*2,0,16)})end
  return card,eyebrow
+end
+
+-- ── P2 surfaces (UI personality T2, T6, T7, T11) ───────────────────────────
+-- Three surfaces, three meanings: things you press have a lip, things you read have
+-- a seam, preview windows stay inset (with the LCD dot grid). Every motion here is
+-- cut under Reduced Motion, and a missing asset id creates no instance at all.
+
+-- Boing (T11): 0.96 -> 1.04 -> 1 in 160 ms (Back-out on the way home) on the
+-- object's UIScale. Selection and stickers only, never text being read. Nothing
+-- under Reduced Motion. One UIScale per object, made on first use.
+Kit.BoingTime=.16
+function Kit.boing(object)
+ if not object or Kit.reduced()then return end
+ -- Never fight an owner's own UIScale (two UIScales on one object do not stack).
+ local foreign=object:FindFirstChildOfClass("UIScale")
+ if foreign and foreign.Name~="BoingScale"then return end
+ local scale=object:FindFirstChild("BoingScale")or node("UIScale",object,{Name="BoingScale",Scale=1})
+ local half=Kit.BoingTime/2
+ scale.Scale=.96
+ TweenService:Create(scale,TweenInfo.new(half,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=1.04}):Play()
+ task.delay(half,function()
+  if scale.Parent then TweenService:Create(scale,TweenInfo.new(half,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()end
+ end)
+end
+
+-- Seam (T2): a stitched line 6 px inside an information pane's edge, white at 12%.
+-- One image (Assets.Personality.seam, 64 x 40 at 2x): a 40 x 40 corner 9-slice
+-- (radius 8 at 1x) plus a horizontal and a vertical dash tile, so the stitches keep
+-- their length on any card size (a 9-slice alone would stretch them). Dropped on
+-- cards under 150 px tall.
+Kit.SeamInset=6
+Kit.SeamMinHeight=150
+Kit.SeamTransparency=.88
+Kit.SeamRects={corner={0,0,40,40},horizontal={40,0,16,4},vertical={56,0,4,16}}
+-- Pure: does a card of this height carry a seam?
+function Kit.seamAllowed(height)return(height or 0)>=Kit.SeamMinHeight end
+local function cardHeight(card)
+ if card.Size.Y.Scale==0 then return card.Size.Y.Offset end
+ return card.AbsoluteSize.Y
+end
+function Kit.seam(card)
+ local image=Assets.Personality and Assets.Personality.seam
+ if not(image and card)then return nil end
+ local existing=card:FindFirstChild("Seam")
+ if existing then return existing end
+ local inset=Kit.SeamInset
+ local z=card.ZIndex
+ local holder=node("Frame",card,{Name="Seam",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(inset,inset),
+  Size=UDim2.new(1,-inset*2,1,-inset*2),ZIndex=z,Active=false,Selectable=false})
+ local R=Kit.SeamRects
+ local function piece(name,props)
+  local p=node("ImageLabel",holder,{Name=name,BackgroundTransparency=1,Image=image,ImageTransparency=Kit.SeamTransparency,ZIndex=z,Active=false,Selectable=false})
+  for key,value in pairs(props)do p[key]=value end
+  return p
+ end
+ piece("Corners",{Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(18,18,22,22),SliceScale=.5,
+  ImageRectOffset=Vector2.new(R.corner[1],R.corner[2]),ImageRectSize=Vector2.new(R.corner[3],R.corner[4])})
+ local function strip(name,position,size,rect,tile)
+  piece(name,{Position=position,Size=size,ScaleType=Enum.ScaleType.Tile,TileSize=tile,
+   ImageRectOffset=Vector2.new(rect[1],rect[2]),ImageRectSize=Vector2.new(rect[3],rect[4])})
+ end
+ strip("Top",UDim2.fromOffset(9,0),UDim2.new(1,-18,0,2),R.horizontal,UDim2.fromOffset(8,2))
+ strip("Bottom",UDim2.new(0,9,1,-2),UDim2.new(1,-18,0,2),R.horizontal,UDim2.fromOffset(8,2))
+ strip("Left",UDim2.fromOffset(0,9),UDim2.new(0,2,1,-18),R.vertical,UDim2.fromOffset(2,8))
+ strip("Right",UDim2.new(1,-2,0,9),UDim2.new(0,2,1,-18),R.vertical,UDim2.fromOffset(2,8))
+ local function update()holder.Visible=Kit.seamAllowed(cardHeight(card))end
+ card:GetPropertyChangedSignal("Size"):Connect(update)
+ card:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)
+ update()
+ return holder
+end
+
+-- Lip (T2): the darker bottom lip under a pressable surface, 4 px (3 on phones).
+-- The surface is a transparent hit rect (TextButton) holding Lip (ZIndex - 1) and
+-- Face (ZIndex) under the caller's own children, so it draws the same under
+-- Sibling and Global ZIndexBehavior; the hit rect, size and focus order never move.
+-- The Face mirrors the hit rect's BackgroundColor3, so callers keep painting the
+-- button itself. On press the face and its contents drop onto the lip (a UIPadding
+-- with a matching negative bottom, so nothing resizes): 60 ms down, 100 ms up.
+local tiles=setmetatable({},{__mode="k"})
+-- Pure: lip depth for a pressable tile.
+function Kit.tileLip(compact)return if compact then Kit.Lip.compact else Kit.Lip.tile end
+local function pressTile(state,down)
+ if state.pressed==down then return end
+ state.pressed=down
+ local time=if down then Kit.Motion.pressDown else Kit.Motion.pressUp
+ local drop=if down then state.lip else 0
+ Kit.tween(state.pad,time,{PaddingTop=UDim.new(0,drop),PaddingBottom=UDim.new(0,-drop)})
+ Kit.tween(state.lipFrame,time,{Position=UDim2.fromOffset(0,state.lip-drop)})
+end
+Kit.pressTile=function(tile,down)local s=tiles[tile];if s then pressTile(s,down==true)end end
+-- Hardware or keyboard press on a tile (the Kit.pulse of tiles).
+function Kit.pulseTile(tile)
+ local s=tiles[tile];if not s then return end
+ pressTile(s,true)
+ task.delay(Kit.Motion.pressDown+Kit.Motion.pressUp,function()pressTile(s,false)end)
+end
+function Kit.tileState(tile)return tiles[tile]end
+-- A reused tile that moves between desktop and phone layouts changes lip depth.
+function Kit.setTileLip(tile,depth)
+ local s=tiles[tile];if not s or s.lip==depth then return end
+ s.lip=depth;s.pressed=false
+ s.pad.PaddingTop,s.pad.PaddingBottom=UDim.new(),UDim.new()
+ s.lipFrame.Position=UDim2.fromOffset(0,depth);s.lipFrame.BackgroundTransparency=if depth>0 then 0 else 1
+ tile:SetAttribute("KitLip",depth)
+end
+
+-- Tile (T2): a pressable card (radius 12, 1 px stroke) with the lip. options:
+-- position, size, radius, role ("raised"), lip (px; 0 = none), compact (3 px lip),
+-- selectable. Returns the TextButton (the hit rect) and its state {lip, face,
+-- lipFrame, stroke, setSelected(on, animate)}.
+function Kit.tile(parent,name,options)
+ options=options or {}
+ local radius=options.radius or Kit.Radius.tile
+ local tile=node("TextButton",parent,{Name=name or "Tile",Text="",AutoButtonColor=false,BackgroundTransparency=1,
+  Position=options.position or UDim2.new(),Size=options.size or UDim2.fromOffset(104,88),ZIndex=parent.ZIndex+1,Selectable=options.selectable~=false})
+ Kit.corner(tile,radius)
+ local lip=options.lip or Kit.tileLip(options.compact)
+ local lipFrame=node("Frame",tile,{Name="TileLip",BorderSizePixel=0,BackgroundTransparency=if lip>0 then 0 else 1,Position=UDim2.fromOffset(0,lip),
+  Size=UDim2.fromScale(1,1),ZIndex=tile.ZIndex-1,Active=false,Selectable=false})
+ Kit.corner(lipFrame,radius)
+ local face=node("Frame",tile,{Name="TileFace",BorderSizePixel=0,BackgroundTransparency=0,Size=UDim2.fromScale(1,1),ZIndex=tile.ZIndex,Active=false,Selectable=false})
+ Kit.corner(face,radius)
+ local stroke=Kit.stroke(face)
+ local pad=node("UIPadding",tile,{Name="PressPad"})
+ local state={lip=lip,selected=false,stroke=stroke,face=face,lipFrame=lipFrame,pad=pad,pressed=false}
+ tiles[tile]=state
+ local function mirror()
+  face.BackgroundColor3=tile.BackgroundColor3
+  lipFrame.BackgroundColor3=tile.BackgroundColor3:Lerp(Kit.Color.black,.38)
+ end
+ tile:GetPropertyChangedSignal("BackgroundColor3"):Connect(mirror)
+ -- A caller that changes the hit rect's ZIndex keeps the lip and face under its children.
+ tile:GetPropertyChangedSignal("ZIndex"):Connect(function()lipFrame.ZIndex=tile.ZIndex-1;face.ZIndex=tile.ZIndex end)
+ paint(tile,"BackgroundColor3",options.role or "raised")
+ mirror()
+ tile:SetAttribute("KitTile",true);tile:SetAttribute("KitLip",lip)
+ if lip>0 then
+  tile.MouseButton1Down:Connect(function()if tile.Interactable then pressTile(state,true)end end)
+  tile.MouseButton1Up:Connect(function()pressTile(state,false)end)
+  tile.MouseLeave:Connect(function()pressTile(state,false)end)
+  -- Never leave a tile dropped when it is disabled, hidden or loses selection mid-press (code review).
+  local function release()pressTile(state,false)end
+  tile:GetPropertyChangedSignal("Interactable"):Connect(release)
+  tile:GetPropertyChangedSignal("Visible"):Connect(release)
+  tile.SelectionLost:Connect(release)
+ end
+ function state.setSelected(on,animate)
+  local was=state.selected
+  state.selected=on==true
+  paint(tile,"BackgroundColor3",if state.selected then "selected"else(options.role or "raised"))
+  stroke.Thickness=if state.selected then 2 else 1;stroke.Transparency=if state.selected then 0 else Kit.Stroke.transparency
+  paint(stroke,"Color",if state.selected then "accent"else function()return Kit.Stroke.color end)
+  if animate and state.selected and not was then Kit.boing(tile)end
+ end
+ return tile,state
+end
+
+-- Well (T7): an inset preview window. Wells that show an egg, a board or a row of
+-- balls carry a 6 px LCD dot grid at about 6% white under the art (tiled image,
+-- Assets.Personality.dotGrid); with no id nothing extra is created.
+Kit.DotGridTransparency=.94
+function Kit.dotGrid(well)
+ local image=Assets.Personality and Assets.Personality.dotGrid
+ if not(image and well)then return nil end
+ local existing=well:FindFirstChild("DotGrid")
+ if existing then return existing end
+ local grid=node("ImageLabel",well,{Name="DotGrid",BackgroundTransparency=1,Image=image,ImageTransparency=Kit.DotGridTransparency,ScaleType=Enum.ScaleType.Tile,
+  TileSize=UDim2.fromOffset(6,6),Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex,Active=false,Selectable=false})
+ local corner=well:FindFirstChildOfClass("UICorner")
+ if corner then node("UICorner",grid,{CornerRadius=corner.CornerRadius})end
+ return grid
+end
+function Kit.well(parent,name,position,size,radius)
+ local well=Kit.frame(parent,name or "Well","well",position,size,radius or Kit.Radius.well)
+ Kit.stroke(well)
+ Kit.dotGrid(well)
+ return well
+end
+
+-- Sticker chip rules (T6): never under 22 px tall, 3 px clearance for the tilt, never
+-- at a scroll area's edge. Pure; Kit.chip falls back to a gold chip under 22 px.
+Kit.Sticker={tilt=-4,border=2,minHeight=22,clearance=3,cream=Color3.fromHex("#FFF4DC"),shadow=.72,land=.12}
+function Kit.stickerAllowed(height,clearance,atScrollEdge)
+ return(height or 0)>=Kit.Sticker.minHeight and(clearance or Kit.Sticker.clearance)>=Kit.Sticker.clearance and not atScrollEdge
+end
+-- First candidate that fits `width` at the label's role and size (UICopy fit chains:
+-- a voiced line falls back to its shorter or older wording, never wraps).
+function Kit.fitText(label,candidates,width)
+ local role=label:GetAttribute("KitRole")or "Body"
+ width=width or label.Size.X.Offset
+ for index,text in ipairs(candidates)do
+  if index==#candidates or Kit.measure(text,role,label.TextSize).X<=width then label.Text=text;return text end
+ end
+ return label.Text
 end
 
 -- Progress bar: track well + stroke, accent fill never shorter than its height.
@@ -412,10 +778,9 @@ end
 Kit.TabIconGap=7
 function Kit.tabIconsFit(labels,icons,segment,textSize)
  if not icons then return false end
- local TextService=game:GetService("TextService")
  for index,text in ipairs(labels)do
   if not icons[index]then return false end
-  local w=TextService:GetTextSize(text,textSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X
+  local w=Kit.measure(text,"Strong",textSize).X
   if(textSize+4)+Kit.TabIconGap+w+12>segment then return false end
  end
  return true
@@ -435,7 +800,7 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
   b:SetAttribute("AccessibleLabel",text)
   local label
   if withIcons then
-   local w=math.ceil(game:GetService("TextService"):GetTextSize(text,textSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X)
+   local w=math.ceil(Kit.measure(text,"Strong",textSize).X)
    local x=math.floor((segment-(iconSize+Kit.TabIconGap+w))/2)
    local icon=Kit.icon(b,icons[index],iconSize,"soft");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,x,.5,0)
    api.icons[index]=icon
@@ -447,9 +812,26 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
   api.buttons[index],api.labels[index]=b,label;b:SetAttribute("ClaimDot",false)
   b.Activated:Connect(function()api.select(index)if api.changed then api.changed(index)end end)
  end
+ local squashToken=0
  function api.select(index)
+  local moved=index~=api.selected
   api.selected=index
-  Kit.tween(pill,Kit.Motion.tab,{Position=UDim2.fromOffset(4+(index-1)*segment,4)})
+  local goal=UDim2.fromOffset(4+(index-1)*segment,4)
+  -- T11 squash: the pill stretches 6% along its travel at mid-flight, centred on
+  -- its path, then settles (cut under Reduced Motion, where Kit.tween snaps).
+  squashToken+=1
+  if moved and not Kit.reduced()then
+   local token,half=squashToken,Kit.Motion.tab/2
+   local stretch=math.floor(segment*.06+.5)
+   local mid=(pill.Position.X.Offset+goal.X.Offset)/2-stretch/2
+   Kit.tween(pill,half,{Position=UDim2.fromOffset(mid,4),Size=UDim2.fromOffset(segment+stretch,height-8)})
+   task.delay(half,function()
+    if token==squashToken and pill.Parent then Kit.tween(pill,half,{Position=goal,Size=UDim2.fromOffset(segment,height-8)})end
+   end)
+  else
+   pill.Size=UDim2.fromOffset(segment,height-8)
+   Kit.tween(pill,Kit.Motion.tab,{Position=goal})
+  end
   for i,label in ipairs(api.labels)do
    paint(label,"TextColor3",if i==index then "ink"else "soft")
    if api.icons[i]then Kit.tintIcon(api.icons[i],if i==index then "ink"else "soft")end
@@ -459,7 +841,7 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
  function api.setDot(index,on)
   local label,dot=api.labels[index],api.buttons[index].ClaimDot
   dot.Visible=on==true
-  local w=game:GetService("TextService"):GetTextSize(label.Text,textSize,Enum.Font.BuilderSansBold,Vector2.new(500,50)).X
+  local w=Kit.measure(label.Text,"Strong",textSize).X
   local dy=if textSize<17 then -9 else -11
   if withIcons then dot.Position=UDim2.new(0,label.Position.X.Offset+w+(if textSize<17 then 4 else 9),.5,dy)
   else dot.Position=UDim2.new(.5,w/2+(if textSize<17 then 4 else 9),.5,dy)end
@@ -485,6 +867,25 @@ function Kit.wallet(parent,height)
  local pill=Kit.frame(parent,"Wallet","well",UDim2.new(),UDim2.fromOffset(110,height),999);Kit.stroke(pill)
  local star=Kit.icon(pill,"star",if spec then spec.star else math.floor(height*.55));star.AnchorPoint=Vector2.new(0,.5)
  star.Position=UDim2.new(0,if spec then spec.pad else math.floor(height*.45),.5,0)
+ -- T9: the Star gets two eyes from 20 px up and stays plain below. The uploaded
+ -- eyes cell (DeckAssets.Personality.starFace, right half) when there is one, else
+ -- two ink dots; a missing id creates no ImageLabel.
+ local starSize=star.Size.X.Offset
+ if starSize>=20 then
+  local faceId=Assets.Personality and Assets.Personality.starFace
+  if faceId then
+   node("ImageLabel",star,{Name="StarFace",BackgroundTransparency=1,Image=faceId,ImageRectOffset=Vector2.new(128,0),ImageRectSize=Vector2.new(128,128),
+    Size=UDim2.fromScale(1,1),ZIndex=star.ZIndex+1,Active=false})
+  else
+   for side=-1,1,2 do
+    local eye=node("Frame",star,{Name="StarEye",BorderSizePixel=0,BackgroundColor3=Color3.fromHex("#3B2608"),AnchorPoint=Vector2.new(.5,.5),
+     Position=UDim2.fromScale(.5+side*.11,.54),Size=UDim2.fromOffset(math.max(2,math.floor(starSize*.12+.5)),math.max(3,math.floor(starSize*.18+.5))),
+     ZIndex=star.ZIndex+1,Active=false})
+    Kit.corner(eye,999)
+   end
+  end
+  star:SetAttribute("StarFace",true)
+ end
  local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
  if spec then amount.TextSize=spec.text elseif height<40 then amount.TextSize=15 end
  local api={root=pill,amount=amount,height=height}
@@ -570,7 +971,7 @@ function Kit.toaster(host)
   if api.placement then x,y,compact=api.placement()end
   local size=if compact then 14 else 17
   text.TextSize=size;amount.TextSize=size
-  local w=game:GetService("TextService"):GetTextSize(item.text,size,Enum.Font.BuilderSansBold,Vector2.new(2000,50)).X
+  local w=Kit.measure(item.text,"Strong",size).X
   local h=if compact then 40 else 48
   toast.Size=UDim2.fromOffset(math.ceil(w)+(if compact then 96 else 124)+(if item.amount then 40 else 0),h)
   check.Position=UDim2.fromOffset(if compact then 16 else 28,(h-22)/2);text.Position=UDim2.fromOffset(if compact then 46 else 60,0)
@@ -640,6 +1041,66 @@ function Kit.backArrow(parent,compact,options)
  repaint();return api
 end
 
+-- T5 one tint per screen family. Decoration only, never state: it appears in exactly
+-- three places, a dot plus the eyebrow, a squiggle under the title and a halftone
+-- dot fade along the panel's bottom edge (phones skip the halftone). Mint stays the
+-- only action colour; gold marks only Stars (the results family).
+Kit.Tint={hatch=Color3.fromHex("#FFA98F"),style=Color3.fromHex("#C9A7FF"),companions=Color3.fromHex("#FF9EC4"),
+ quests=Color3.fromHex("#8CC8FF"),results=Kit.Color.stars}
+local function tintColor(tint)
+ if typeof(tint)=="Color3"then return tint end
+ return Kit.Tint[tint]
+end
+Kit.tintColor=tintColor
+-- Dot + eyebrow: the eyebrow text takes the tint and moves 14 px right inside its
+-- own rect (a UIPadding), with an 8 px dot where the text used to start.
+function Kit.tintEyebrow(eyebrow,tint)
+ local color=tintColor(tint);if not(eyebrow and color)then return nil end
+ paint(eyebrow,"TextColor3",function()return color end)
+ local pad=eyebrow:FindFirstChild("TintPad")or node("UIPadding",eyebrow,{Name="TintPad"})
+ pad.PaddingLeft=UDim.new(0,14)
+ local dot=eyebrow:FindFirstChild("TintDot")or Kit.frame(eyebrow,"TintDot",nil,UDim2.new(0,0,.5,0),UDim2.fromOffset(8,8),999)
+ dot.AnchorPoint=Vector2.new(0,.5);dot.BackgroundTransparency=0;dot.BackgroundColor3=color
+ -- UIPadding shifts children too; pull the dot back to the rect's left edge.
+ dot.Position=UDim2.new(0,-14,.5,0)
+ eyebrow:SetAttribute("Tint",color:ToHex())
+ return dot
+end
+-- Squiggle under a title (tiled image, 12 x 6 per wave). Width follows the title's
+-- text: about 62% of it, at least 24 px, never past the title rect. Missing asset:
+-- nothing is created and nil is returned.
+function Kit.squiggle(parent,title,tint)
+ local color,image=tintColor(tint),Assets.Personality and Assets.Personality.squiggle
+ if not(color and image and title)then return nil end
+ local line=node("ImageLabel",parent,{Name="TintSquiggle",BackgroundTransparency=1,Image=image,ImageColor3=color,
+  ScaleType=Enum.ScaleType.Tile,TileSize=UDim2.fromOffset(12,6),Size=UDim2.fromOffset(24,6),ZIndex=title.ZIndex,Active=false})
+ local api={root=line}
+ function api.update()
+  local role=title:GetAttribute("KitRole")or "Title"
+  local w=if title.Text=="" then 0 else Kit.measure(title.Text,role,title.TextSize).X
+  local limit=title.Size.X.Offset
+  local width=math.min(limit,math.max(24,math.floor(w*.62/12+.5)*12))
+  line.Visible=title.Visible and w>0 and limit>=24
+  line.Position=UDim2.fromOffset(title.Position.X.Offset,title.Position.Y.Offset+title.Size.Y.Offset-1)
+  line.Size=UDim2.fromOffset(width,6)
+ end
+ api.update()
+ return api
+end
+-- Halftone dot fade along `panel`'s bottom edge, behind the hint bar, at about 10%.
+-- Phones (compact) and a missing asset create nothing.
+function Kit.halftone(panel,tint,compact,height)
+ local color,image=tintColor(tint),Assets.Personality and Assets.Personality.halftone
+ if compact or not(color and image and panel)then return nil end
+ height=height or 48
+ local fade=node("ImageLabel",panel,{Name="TintHalftone",BackgroundTransparency=1,Image=image,ImageColor3=color,ImageTransparency=.9,
+  ScaleType=Enum.ScaleType.Tile,TileSize=UDim2.fromOffset(48,48),AnchorPoint=Vector2.new(0,1),Position=UDim2.fromScale(0,1),
+  Size=UDim2.new(1,0,0,height),ZIndex=panel.ZIndex,Active=false,Selectable=false})
+ local radius=panel:FindFirstChildOfClass("UICorner")
+ if radius then node("UICorner",fade,{CornerRadius=radius.CornerRadius})end
+ return fade
+end
+
 -- 0.1 Shared header (one component; redesign menus). Pure geometry first, in the
 -- parent's units for a W-wide screen. Regular: eyebrow at left,14 (Label 13), title
 -- Title 26 centred on y 48, back circle 44 with its right edge at W-24 centred on y 44,
@@ -664,7 +1125,8 @@ function Kit.headerGeometry(W,compact,walletW,left)
  return g
 end
 -- options: title, eyebrow (regular only), wallet (false hides the capsule), compact,
--- width (W), left (title x, default 24), onBack. Returns {root, title, eyebrow,
+-- width (W), left (title x, default 24), onBack, tint (T5: a Kit.Tint key or Color3
+-- for the dot + eyebrow and the title squiggle). Returns {root, title, eyebrow,
 -- wallet = {root, amount, set}, back = Kit.backArrow api, layout(W, left), setTitle}.
 function Kit.header(parent,options)
  options=options or {}
@@ -689,7 +1151,15 @@ function Kit.header(parent,options)
   if g.eyebrow then place(api.eyebrow,g.eyebrow)end
   if inner then place(inner.root,g.wallet)end
   back.root.Position=UDim2.fromOffset(g.backHit.x,g.backHit.y)
+  if api.squiggle then api.squiggle.update()end
   return g
+ end
+ -- options.tint: a Kit.Tint key or Color3 (T5). Dot + eyebrow and the squiggle.
+ if options.tint then
+  api.tint=tintColor(options.tint)
+  api.dot=Kit.tintEyebrow(api.eyebrow,api.tint)
+  api.squiggle=Kit.squiggle(holder,api.title,api.tint)
+  holder:SetAttribute("Tint",api.tint and api.tint:ToHex())
  end
  api.wallet=if inner then{root=inner.root,amount=inner.amount,height=inner.height,set=function(value)inner.set(value);api.layout()end}else nil
  function api.setTitle(text,eyebrow)
