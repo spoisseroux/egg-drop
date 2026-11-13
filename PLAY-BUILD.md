@@ -1,5 +1,17 @@
+**Private v583 Published 2026-11-13 — runtime 73e0b9f, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v583". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/pet-park-2026-11-13/studio/`.
+# Egg Drop — Pet Park playground, easier pet click, 3D wallet Star
+
+New since v568: a **Pet Park playground** on the lawn by the east picnic table. Walk inside the flowered edge (or sit on a bench with the "Sit" prompt) and your pet plays on its own: swings, slide, see-saw (needs a second pet), sandbox (castle grows in 3 stages), ball corner; duo activities pair it with another player's pet. A small chip shows the **Play date** (3 activities a day = +4 Stars). Your pet has a much bigger click/tap area (whole body, 16 studs), and the wallet Star is a turning, glinting 3D Star. The tree and shrubs inside the playground are gone, and the hub marble and trim have their textures back (they had been plain white since v550).
+
+**Passed before publish:** server specs 25/25 (ParkDirector, PlayDate, ParkMount, garden, saves), client specs 68/68 (ParkClient, ParkPetPose, PetClickTarget, WalletStar ...). Architect review + Code Reviewer GO WITH CHANGES (all applied). Solo playground cycle seen live in Studio.
+
+**Test (two accounts):** both players stand in the playground: see-saw, sandbox together and ball toss between your two pets; one player walks out mid see-saw (the other pet hops off); sit on a bench; Play date chip reaching 3/3 and +4 Stars; Roblox chat bubbles. Also tap/click your pet from a distance, and watch the wallet Star.
+
+**Still open:** pets land a little in front of swings/see-saw and walk back; gate orbs don't bob; the playground switch (`FeatureFlags.Park`) is on in this private build only.
+
+## Historical v568 — play forever: collection book, stamp card, records
+
 **Private v568 Published 2026-11-13 — runtime a8dc779, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v568". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/play-forever-2026-11-13/studio/`.
-# Egg Drop — play forever: collection book, stamp card, records
 
 New since v558: a **Collection book** (Pocket Menu and Companions hub): Balls, Faceplates, Wardrobe, Toys and Discoveries pages with % bars; each page pays 5 / 5 / 10 / 15 Stars at 25 / 50 / 75 / 100%, once; three full pages earn the book-only **Bookworm** faceplate (placeholder art). A **Records** page shows your lifetime numbers. The daily gift is now a **stamp card**: 4, 4, 5, 5, 6, 6, then 12 on the seventh day played, never resets. Egg odds show as percentages; in regions where paid random items are restricted, Star-priced eggs give the next item in a fixed order ("Next: ...").
 
