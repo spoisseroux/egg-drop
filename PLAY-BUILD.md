@@ -1,4 +1,16 @@
-# Egg Drop — redesign: celebrations, menus, round look, 3D eggs and Star
+**Private v550 Published 2026-11-13 — runtime 0cc2c3a, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v550". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/batch-2026-11-13/captures/`.
+# Egg Drop — round items, smiley ball themes, dusk world, garden life
+
+New since v539: smiley balls by default (no numerals), Deck style **Balls** tab (Smileys and Marbles free, Gumdrops 20, Gems 40, Planets 40, Kittens 120 with cat ears), Next/Then faces animate, goal text uses colour names/circles, results count-up blips. Round items: star (power-up) balls fill a 3-slot belt; **B** opens the item carousel and pauses the round (Swap, Pop, Magnet, Bomb); phones get an item button under A ("You have no items" when empty). Items are off in the Welcome round, guided rounds and before your first win. The faceplate now tints only the deck. Garden locked at dusk with new sky, warmer textures, 12 props removed, flat flower patches and frond bushes; brook, waterfall and bird ambience (off during rounds) and a Pocket Deck music placeholder; stations pulse an icon until used; pets sit, look at you, idle and coo more. Save is now v11 (do not roll back past 0cc2c3a).
+
+**Passed before publish:** server specs 14/14 (HatchProgress 27, RoundItems 15, BallThemePurchase, ToyFeatureProgress 21, WorldRoutes 7, GardenGreyboxWorld 9, RunReturn 24, …); client 62/71 (7 pre-existing failures; JellyRenderOwner needs a new probe; HardwareDeck needs a live Ready round). Code Reviewer GO WITH CHANGES, all three fixes made. Re-uploaded world meshes got their precise collision rebuilt in Studio and the place saved (v550) before publishing.
+
+**Test:** win a round, then play another to see star balls, the belt chip and B carousel (use Swap/Pop/Bomb/Magnet); Deck style → Balls (buy Gumdrops, equip); the results count-up blips; walk the dusk garden (waterfall gets louder, birds, flower patches, bushes, nothing blocks the arrival path); stations' icons; a pet sitting by you; on your phone, the item button and "You have no items".
+
+**Still open:** carousel hint says "B Close" (your call was MENU / back arrow to leave); desktop Items card (a small board chip stands in); hub floor glare and tan rocks vs the reference; all audio placeholders; not checked on a physical phone.
+
+## Historical v539 — redesign: celebrations, menus, round look, 3D eggs and Star
+
 
 **Private v539 Published 2026-11-13 — runtime 8d4e432, committed and pushed.** Studio Output: "Sent message to server to publish" and Quick Links "Add publish notes to v539". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-13/private-published-v539.jpg) · Studio captures `artifacts/redesign-2026-11-12/studio/`.
 
