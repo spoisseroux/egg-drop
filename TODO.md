@@ -6,7 +6,7 @@ Updated November 13, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
-Updated 2026-11-13 ~12:10 (clock). Batch B+C DONE: committed 0cc2c3a, pushed, place saved v550 and published private v550. Next: UI personality pass, then play-forever v1 set (approved). Open follow-ups listed under B+C.
+Updated 2026-11-13 ~12:10 (clock). Batch B+C DONE: committed 0cc2c3a, pushed, place saved v550 and published private v550. Now: UI personality pass, plan `artifacts/ui-personality-2026-11-13/BUILD-PLAN.md` (P1 Kit + strings, P2 surfaces, P3 pet peek + Star face), architect review running. Then play-forever v1 set (approved). Open follow-ups listed under B+C.
 
 [x] **A. Redesign build: DONE, published private v539 (8d4e432) 2026-11-13.** Was: (plan + checkpoint: `artifacts/redesign-2026-11-12/BUILD-PLAN.md`). Spencer approved every mockup ("build all that") with the recommended answers.
 - Built: shared header + Deck style (Faceplates/Backgrounds tabs), hatch reveal stage (`RevealStage.lua`), results screen (`DeckResults.lua`, 3D Star with 2D fallback), round look (vivid tiers, V violet, no rings/border, fill-line danger state, `OverflowGraceLeft`), deck background inside the board, Companions hub + Customize (Charm None, Features hidden by `FeatureFlags`), Hatch eggs list + 3D egg preview (`EggPreview3D.lua`).
