@@ -21,6 +21,8 @@ local UICopy=require(ReplicatedStorage.Shared.UICopy)
 local EggPreview=require(script.Parent.EggPreview3D)
 local Peek=require(script.Parent.PetPeek)
 local FeatureFlags=require(ReplicatedStorage.Shared.FeatureFlags)
+local NextItem=require(script.Parent.NextItemText)
+local StampCardView=require(script.Parent.StampCardView)
 -- v1 sells item eggs only; the Companion Egg is retired (one pet, Zivvi). The Feature
 -- Egg is hidden with the Features tab (Shared.FeatureFlags); a pending feature hatch
 -- still opens through "Open saved feature".
@@ -547,23 +549,32 @@ function View.liveOrder(flags)
  if flags.Features then table.insert(order,2,"feature")end
  return order
 end
--- Pure: the odds block for one egg. Values always come from OddsText.format.
+-- Pure: the odds block for one egg. Values always come from OddsText.list, so the
+-- whole percentages of one egg add up to 100% (equal thirds read 34%, 33%, 33%).
 -- Returns {rows = {{id, name, value}}, per = "1 toy per egg", empty = text or nil}.
+-- Restricted players (snapshot `restricted`, F1 policy) never roll: the block is one
+-- "Next: <item>" row (or "All collected") from `nextFixed`, and `restricted` is true.
 function View.oddsRows(id,state)
  state=state or {}
- local rows={};local empty=nil
+ if NextItem.restricted(state)then
+  local notReady=id=="material"and not state.materialAvailable and NextItem.itemId("material",state)~=nil
+  return{rows={{id="next",name=NextItem.line(id,state),value=""}},per=(View.EggCopy[id]or {}).per or "",
+   empty=if notReady then "Material Eggs are not ready yet."else nil,restricted=true}
+ end
+ local rows,chances={},{};local empty=nil
+ local function add(rowId,name,probability)table.insert(rows,{id=rowId,name=name});table.insert(chances,probability)end
  if id=="toy"then
-  for _,r in ipairs(ToyCatalog.odds(state.toyUnlocks))do table.insert(rows,{id=r.id,name=ToyCatalog.ById[r.id].name,value=OddsText.format(r.probability)})end
+  for _,r in ipairs(ToyCatalog.odds(state.toyUnlocks))do add(r.id,ToyCatalog.ById[r.id].name,r.probability)end
   if #rows==0 then empty="All toys owned"end
  elseif id=="material"then
-  for _,r in ipairs(MaterialCatalog.odds(state.materialUnlocks))do table.insert(rows,{id=r.id,name=MaterialCatalog.ById[r.id].name,value=OddsText.format(r.probability)})end
+  for _,r in ipairs(MaterialCatalog.odds(state.materialUnlocks))do add(r.id,MaterialCatalog.ById[r.id].name,r.probability)end
   if #rows==0 then empty="All materials owned"elseif not state.materialAvailable then empty="Material Eggs are not ready yet."end
  elseif id=="hue"then
-  local total=0;for _,itemId in ipairs(HueCatalog.ItemOrder)do total+=HueCatalog.Items[itemId].weight end
-  for _,itemId in ipairs(HueCatalog.ItemOrder)do local item=HueCatalog.Items[itemId];table.insert(rows,{id=itemId,name=item.name,value=OddsText.format(item.weight/math.max(1,total))})end
+  for _,itemId in ipairs(HueCatalog.ItemOrder)do local item=HueCatalog.Items[itemId];add(itemId,item.name,item.weight)end
  elseif id=="feature"then
-  for _,r in ipairs(FeatureCatalog.odds())do table.insert(rows,{id=r.id,name=FeatureCatalog.ById[r.id].name,value=OddsText.format(r.probability)})end
+  for _,r in ipairs(FeatureCatalog.odds())do add(r.id,FeatureCatalog.ById[r.id].name,r.probability)end
  end
+ for index,text in ipairs(OddsText.list(chances))do rows[index].value=text end
  return{rows=rows,per=(View.EggCopy[id]or {}).per or "",empty=empty}
 end
 -- Pure: the primary button for the selected egg. With too few Stars it is disabled
@@ -746,7 +757,7 @@ function View:renderBody()
  local left=self.body:FindFirstChild("EggColumn")
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or Kit.frame(self.body,"EggColumn",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(100,100))
- local keep={DailyNectar=true,GetStars=true}
+ local keep={DailyNectar=true,GetStars=true,StampCard=true}
  for _,id in ipairs(liveOrder)do keep["Recipe_"..id]=true end
  for _,child in ipairs(left:GetChildren())do if not keep[child.Name]then child:Destroy()end end
  local w=g.list.w-10 -- 3 px inset each side plus the 4 px scrollbar
@@ -789,9 +800,19 @@ function View:renderBody()
  local note=Kit.text(left,"Small",UICopy.get(if phone then "hatch.footer.phone"else "hatch.footer.desktop"),"soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
  local _=note
  y+=28
+ -- Play-forever F2: the daily gift is the stamp card (seven slots, the 7th the bigger
+ -- gift); the row under it stamps today's slot (the `daily` action).
+ if not self.stampCard or self.stampCard.root.Parent~=left then
+  if self.stampCard then self.stampCard:destroy()end
+  self.stampCard=StampCardView.new(left)
+ end
+ local cardH=self.stampCard:layout(w-6,phone)
+ self.stampCard.root.Position=UDim2.fromOffset(6,y)
+ self.stampCard:set(self.state)
+ y+=cardH+8
  local daily=left:FindFirstChild("DailyNectar")
  if not daily then daily=button(left,"DailyNectar","",UDim2.fromOffset(3,y),UDim2.fromOffset(w,44),"raised");daily.Activated:Connect(function()local state=self.state;if liveShopTarget(daily,self.shade)and state.dailyAvailable and state.dailyDay and not self.pending then self:send("daily",state.dailyDay)end end)end
- daily.Text=if self.state.dailyAvailable then "Daily Stars +"..(self.state.dailyBonus or 6)else "Daily Stars claimed"
+ daily.Text=StampCardView.buttonText(self.state)
  daily.Visible=self.state.dailyAvailable==true
  Art.type(daily,"Action",phone);daily.Interactable,daily.Selectable=self.state.dailyAvailable==true and not self.pending,self.state.dailyAvailable==true and not self.pending;Art.control(daily,false,daily.Interactable)
  if daily.Visible then local dh=math.max(44,Art.actionHeight(daily,w));daily.Position,daily.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,dh);y+=dh+8 end
@@ -827,6 +848,7 @@ function View:paintEggPane()
  self.eggDescription.Text=copy.description or ""
  local odds=View.oddsRows(id,self.state)
  self.oddsPer.Text=string.upper(odds.per)
+ self.oddsLabel.Text=string.upper(if odds.restricted then UICopy.get("hatch.next.label")else "Odds")
  for _,child in ipairs(self.oddsHolder:GetChildren())do child:Destroy()end
  local a=View.hatchAction(id,self.state)
  local need=if self.statusText then self.statusText else a.need
@@ -844,7 +866,7 @@ function View:paintEggPane()
   local c,ri=math.floor((i-1)/perCol),(i-1)%perCol
   local row=Kit.frame(self.oddsHolder,"Odds_"..r.id,if phone then nil else "well",UDim2.fromOffset(c*(cw+8),ri*pitch),UDim2.fromOffset(cw,rowH),6)
   if not phone then row.BackgroundTransparency=0 end
-  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(if phone then 0 else 12,0),Size=UDim2.fromOffset(cw-80,rowH),TextSize=if phone then 13 else 15,TextTruncate=Enum.TextTruncate.AtEnd})
+  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(if phone then 0 else 12,0),Size=UDim2.fromOffset(if odds.restricted then cw-(if phone then 0 else 24)else cw-80,rowH),TextSize=if phone then 13 else 15,TextTruncate=Enum.TextTruncate.AtEnd})
   Kit.text(row,"Counter",r.value,"text",{Name="Value",Position=UDim2.fromOffset(cw-(if phone then 70 else 82),0),Size=UDim2.fromOffset(70,rowH),TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Right})
   row:SetAttribute("OddsText",r.value)
  end
@@ -856,7 +878,7 @@ function View:paintEggPane()
  Kit.setGlyphVisible(self.hatchButton,not phone or not Kit.lastInputTouch())
  self.shopHeader.setTitle(if self.headerTitle and self.headerTitle~="Hatch eggs"then self.headerTitle else "Hatch eggs")
  if self.shopHeader.wallet then self.shopHeader.wallet.set(self.state.nectar or 0)end
- self.shopPanel:SetAttribute("SelectedEgg",id);self.shopPanel:SetAttribute("OddsRows",#odds.rows)
+ self.shopPanel:SetAttribute("SelectedEgg",id);self.shopPanel:SetAttribute("OddsRows",#odds.rows);self.shopPanel:SetAttribute("OddsRestricted",odds.restricted==true)
 end
 function View:sync3D()
  local egg=self.egg3D;if not egg then return end

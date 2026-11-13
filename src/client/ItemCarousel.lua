@@ -47,9 +47,10 @@ Carousel.Keys={Enum.KeyCode.B,Enum.KeyCode.ButtonB,Enum.KeyCode.ButtonX,Enum.Key
  Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,
  Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA}
 -- The one pause flag (clientUI.syncPause): a modal always; a deck layer (quest
--- log, Pocket Menu, item carousel) only while the round is live.
+-- log, Pocket Menu, item carousel, the Collection book opened over the round) only
+-- while the round is live.
 function Carousel.pauseWanted(state)
- local deck=(state.questLog or state.pocketMenu or state.carousel)and not state.roundOver
+ local deck=(state.questLog or state.pocketMenu or state.carousel or state.book)and not state.roundOver
  return state.modal==true or deck==true
 end
 

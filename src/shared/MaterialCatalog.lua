@@ -13,6 +13,12 @@ function Catalog.odds(unlocks)
  local remaining=Catalog.remaining(unlocks);local result={}
  for _,id in ipairs(remaining)do table.insert(result,{id=id,probability=1/#remaining})end;return result
 end
+-- Restricted players: the first not-yet-owned finish in the published PaidOrder (no roll).
+function Catalog.fixedNext(eligible)
+ if type(eligible)~="table"then return nil end
+ for _,id in ipairs(Catalog.PaidOrder)do if table.find(eligible,id)then return id end end
+ return eligible[1]
+end
 function Catalog.roll(eligible,unit)
  if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 or #eligible<1 then return nil end
  return eligible[math.floor(unit*#eligible)+1]

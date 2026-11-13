@@ -1,6 +1,6 @@
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
-local OddsText=require(Shared.OddsText);local Catalog=require(Shared.FeatureCatalog);local Pets=require(Shared.PetCatalog)
+local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.FeatureCatalog);local Pets=require(Shared.PetCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
 local Panel={};Panel.__index=Panel
@@ -93,7 +93,8 @@ function Panel:refresh(state,petId,mode,animate)
  elseif buy and not self.art:FindFirstChild("FeatureEgg")then for _,n in ipairs(self.art:GetChildren())do n:Destroy()end;EggArt.create(self.art,"feature",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"FeatureEgg")end
  self.pool.Visible=buy;local odds={}
  for _,r in ipairs(Catalog.odds())do table.insert(odds,Catalog.ById[r.id].name.." · "..r.rarity.." · "..OddsText.format(r.probability))end
- self.pool.Text=table.concat(odds,"\n").."\nStacks hold 99 each. A rolled full stack uses no Stars. Other pets can use your stored items."
+ -- Restricted players get the fixed next feature, never a roll (F1 policy): no odds list.
+ self.pool.Text=(if NextItem.restricted(self.state)then NextItem.line("feature",self.state)else table.concat(odds,"\n")).."\nStacks hold 99 each. A rolled full stack uses no Stars. Other pets can use your stored items."
  self.shop.Visible=not receipt and not buy and not confirming;self.shop.Interactable=self.intent~=nil and not self.intent.pending and not Catalog.full(self.state.featureStock or {})
  self.useNow.Interactable=self.intent~=nil and not self.intent.pending
  self.status.Text=self.intent and self.intent.message or "";self.status.Visible=self.status.Text~=""

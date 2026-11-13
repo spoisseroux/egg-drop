@@ -15,6 +15,8 @@ local Table={
    phone="The odds are on the label",
   },
   promise="No surprises. The odds never change.",
+  -- Restricted players (paid random items): the fixed next item instead of the odds.
+  next={label="Next item",line="Next: {item}",done="All collected"},
   egg={
    toy={line="A toy to carry and chase",description="Something is rattling around in here. Hatches one toy your pet can carry and play with.",per="1 toy per egg"},
    material={line="A fresh new coat",description="Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",per="1 finish per egg"},
@@ -62,6 +64,33 @@ local Table={
  quests={allDone="All done. {pet} is impressed.",allDoneSolo="All done for today."},
  wardrobe={empty="Nothing to wear yet. {pet} doesn't mind.",emptySolo="Nothing to wear yet.",emptySlot="Nothing for this slot yet."},
  companions={wearing={none="Nothing yet"}},
+ -- Play-forever F2: collection book, stamp card, restricted eggs.
+ book={
+  title="Collection book",eyebrow="Garden",
+  entry={line="Pages to fill, Stars to find",claimOne="1 TO CLAIM",claimMany="{count} TO CLAIM"},
+  records={name="Records",line="Your lifetime numbers",empty="Play a round and your records start here."},
+  promise="Every page pays once. Nothing to buy.",
+  claim="Claim ★{reward}",claimShort="★{reward}",claimed="Claimed",pending="Saving…",retrying="Still saving…",
+  timeout="Still saving. Try again soon.",failed="Not claimed",
+  owned="{owned}/{total}",
+  found="Found",missing="Not yet",empty="Nothing on this page yet.",
+  bookworm={line="Finish any three pages: Bookworm faceplate",short="3 full pages: Bookworm",done="Bookworm faceplate is yours",count="{count}/3"},
+  toast={claimed="Page milestone",bookworm="Bookworm faceplate unlocked"},
+  hint={pages="Pages",move="Move",claim="Claim",back="Back"},
+  stats={rounds="Rounds played",winsEasy="Wins on Easy",winsMedium="Wins on Medium",winsHard="Wins on Hard",tidyWins="Tidy wins",
+   merges="Merges",bestChain="Best chain",tierFive="Tier V balls",itemsUsed="Items used",pets="Pets hatched",
+   starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
+ },
+ stamp={
+  title="Stamp card",
+  promise="No streaks. Miss a day, lose nothing.",
+  next="Today's stamp: ★ {reward}",
+  tomorrow="Next stamp tomorrow: ★ {reward}",
+  full="Card full. A fresh one tomorrow.",
+  button="Stamp today +{reward}",
+  done="Stamped for today",
+  landed="+{reward} Stars",
+ },
 }
 
 local function freeze(node)

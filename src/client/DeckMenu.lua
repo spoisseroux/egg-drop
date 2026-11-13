@@ -9,6 +9,9 @@ local Portrait = require(script.Parent.PetPortrait)
 local EggArt = require(script.Parent.EggArt)
 local SaveNotice=require(script.Parent.SaveNotice)
 local QuestCopy=require(script.Parent.FieldQuestText)
+-- Play-forever F2: the daily gift is the stamp card (StampCardView) above its button.
+local StampCardView=require(script.Parent.StampCardView)
+local UICopy=require(ReplicatedStorage.Shared.UICopy)
 local Menu = {}
 Menu.__index = Menu
 local function familyName(id)
@@ -86,7 +89,7 @@ function Menu.new(parent,callbacks)
 	EggArt.nectar(self.wallet,UDim2.fromOffset(6,4),UDim2.fromOffset(18,20),self.wallet.ZIndex+1)
 	self.nectar=text(self.wallet,"Nectar","0 Stars","Body",Art.Amber)
 	self.closeButton=Art.bareClose(button(card,"Close","×",function()self:activate("close")end))
-	self.dailyButton=button(card,"DailyBonus","Gift +6",function()self:activate("daily")end)
+	self.dailyButton=button(card,"DailyBonus","Gift",function()self:activate("daily")end)
 	local body=Instance.new("ScrollingFrame")
 	body.Name,body.BackgroundTransparency,body.BorderSizePixel,body.ZIndex="Body",1,0,30
 	body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
@@ -124,6 +127,7 @@ function Menu.new(parent,callbacks)
 		local fill=decoration(track,"Fill",UDim2.fromOffset(0,0),UDim2.fromScale(0,1),Art.Leaf,3)
 		self.daily[index]=title;self.dailyCards[index]={panel=panel,art=icon,title=title,count=count,reward=reward,fill=fill,complete=false,amount=0}
 	end
+	self.stampCard=StampCardView.new(self.pages.daily)
 	self.dailyHint=text(self.pages.daily,"GiftExplanation","Contracts pay automatically after a round. The daily gift above is separate.","Supporting","muted")
  local function watch(signal,callback)
   table.insert(self.connections,signal:Connect(function(...)if self:isLive()then callback(...)end end))
@@ -257,6 +261,9 @@ function Menu:layoutContents(wanted)
 	local giftH=Art.actionHeight(self.dailyButton,giftW)
  if self.state.dailyAvailable and giftH+y>(self.bodyBudget or math.huge)then y=0 end
 	if self.state.dailyAvailable then place(self.dailyButton,inset,y,giftW,giftH);y+=giftH+8 end
+	-- The stamp card (seven slots, the 7th the bigger gift) under the stamp button.
+	local cardH=self.stampCard:layout(usable,short)
+	place(self.stampCard.root,inset,y,usable,cardH);y+=cardH+12
 	local dailyH=if short then 44 elseif list then 96 else 176
 	for _,row in ipairs(self.dailyCards) do
 		local w=if list then usable else (usable-24)/3
@@ -308,12 +315,13 @@ function Menu:update(state, selected, runFamily, score, chain, best, recipeId)
  if not self:isLive()then return false end
 	state = state or {}; self.state = state;self.selectedFamily=selected;self.runFamily=runFamily;self.recipeId=recipeId
 	self.nectar.Text = tostring(state.nectar or 0)
-	self.dailyButton.Text = if state.dailyAvailable then "Gift +" .. (state.dailyBonus or 6) else "Gift claimed"
+	self.dailyButton.Text = StampCardView.buttonText(state)
+	self.stampCard:set(state)
 	self.dailyButton.Interactable = state.dailyAvailable == true and state.status == "Ready"
 	self.dailyButton.Selectable=self.dailyButton.Interactable
 	Art.control(self.dailyButton,true,self.dailyButton.Interactable)
-	self.dailyHint.Text = if state.dailyAvailable then "Claim your separate daily gift above. Claim finished quests in the quest log (Menu on the Pocket Deck)."
-		else "Daily gift claimed. Claim finished quests in the quest log (Menu on the Pocket Deck); new ones arrive tomorrow."
+	self.dailyHint.Text = if state.dailyAvailable then UICopy.get("stamp.promise").." Claim finished quests in the quest log (Menu on the Pocket Deck)."
+		else "Today's stamp is on the card. Claim finished quests in the quest log (Menu on the Pocket Deck); new ones arrive tomorrow."
 	for index, row in ipairs(self.dailyCards) do
 		-- Today's quests (hatching v9). Claims happen in the deck's quest log.
 		local contract = state.quests and state.quests.daily and state.quests.daily[index]

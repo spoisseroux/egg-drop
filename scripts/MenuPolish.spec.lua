@@ -134,8 +134,10 @@ return function(client, parent)
 			local menu,calls=fixture();resize(menu,390,740);menu:setPage("daily")
 			local state=snapshot();state.dailyAvailable=false
 			menu:update(state,"pip","wick",0,0,0,"meadow");task.wait(.03)
-			assert(menu.dailyButton.Text=="Gift claimed" and not menu.dailyButton.Interactable and not menu:activate("daily") and #calls==0)
+			assert(menu.dailyButton.Text==require(game:GetService("ReplicatedStorage").Shared.UICopy).get("stamp.done") and not menu.dailyButton.Interactable and not menu:activate("daily") and #calls==0)
 			assert(menu.dailyCards[2].reward.Text=="Claimed" and menu.dailyCards[1].reward.Text=="+4 Stars")
+			-- Play-forever F2: the stamp card sits on the daily page whether or not today's stamp is in.
+			assert(menu.stampCard and menu.stampCard.root.Parent==menu.pages.daily and inside(menu.stampCard.root,menu.pages.daily),"stamp card on the daily page")
 			menu:close()
 		end)
 		test("fresh open and page entry reset scroll while snapshots retain reading position",function()

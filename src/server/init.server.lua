@@ -44,6 +44,8 @@ local Economy = require(script.EconomyAnalytics)
 local HeatPayout = require(ReplicatedStorage.Shared.HeatPayout)
 local HeatRequest = require(script.HeatRequest)
 local BoardItems = require(script.BoardItems)
+local PaidRandomPolicy = require(script.PaidRandomPolicy)
+local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -539,6 +541,8 @@ local function addPlayer(player)
 	loading[player] = true
 	local profile = Progress.load(player.UserId)
 	local nursery = Nursery.load(player.UserId, profile)
+	-- Fail closed until PolicyService answers: restricted players get fixed-order eggs.
+	nursery.restricted = PaidRandomPolicy.cached(player)
 	loading[player] = nil
 	if player.Parent ~= Players then
 		Nursery.release(nursery)
@@ -572,6 +576,11 @@ local function addPlayer(player)
 	board.passes = {}
 	board.nextHeat = if Config.validHeat(profile.lastHeat) then profile.lastHeat else Config.DefaultHeat
 	StoreService.join(board)
+	PaidRandomPolicy.resolveAsync(player, function(restricted)
+		if boards[player] ~= board or board.closing then return end
+		board.nursery.restricted = restricted
+		publishNursery(board)
+	end)
 	reset(board, Config.DefaultPreset)
 	publishNursery(board)
 	publishPetAppearance(board)
@@ -934,6 +943,8 @@ local messages = {
 	Locked = "Your previous session is closing. Please wait a moment.",
 	Temporary = "Loading your save. Please wait before spending Stars.",
 	BalanceLimit = "Your Stars wallet is full, so this round's Stars could not be added.",
+	DayChanged = "A new day just started. Open the gift again for today's stamp.",
+	DailyClaimed = "Today's stamp is already on your card.",
 }
 
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
@@ -1020,6 +1031,34 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	-- Collection book milestone claim (play-forever F1): the server computes the page
+	-- percent from the save; the client sends only {id = opId, milestoneId}. Idempotent by
+	-- the op id (bound to milestone + reward). Replies ride FaceplateResult with kind="book";
+	-- `faceplate` names the book-only plate when this claim granted it.
+	if action=="bookClaim"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id<=80 then v.id else nil
+		local milestoneId=if type(v.milestoneId)=="string"and #v.milestoneId<=40 then v.milestoneId else nil
+		local milestone=BookCatalog.milestone(milestoneId)
+		local granted,paid=nil,0
+		local function reply(status,reason)faceplateResult:FireClient(player,{kind="book",action=action,id=opId,milestoneId=milestoneId,
+			reward=if paid>0 then paid else nil,faceplate=granted,
+			status=status,reason=reason,revision=board.nursery.state.revision})end
+		if not opId or not milestone then reply("Rejected","InvalidMilestone");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local plateBefore=table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)~=nil
+		local ok,reason=Nursery.bookClaim(board.nursery,opId,milestone.id,if type(v.reward)=="number"then v.reward else nil)
+		if ok and board.nursery.state.nectar>walletBefore then paid=board.nursery.state.nectar-walletBefore;Economy.source(player,paid,board.nursery.state.nectar,"Gameplay","BookMilestone")end
+		if ok and not plateBefore and table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)then granted=BookCatalog.BookOnlyFaceplate end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		reply(if ok then(if reason=="AlreadyClaimed"then "AlreadyClaimed"else "Saved")elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
 
 	-- Quests (plan sections 5 and 7). Claims are idempotent; the reroll is one a
@@ -1144,7 +1183,9 @@ local function settleReward(player, board)
 		clean = board.field.outcome.success and amount == 8, score = board.round.score, chain = board.peakChain,
 		clears = board.round.maxClears, drops = board.sim.drops, heat = board.runHeat,
 		maxTier = math.clamp(board.maxTier or 0, 0, #Config.Tiers), goalsMet = board.field.outcome.rootStage,
-		templateId = board.field.descriptor.id }
+		templateId = board.field.descriptor.id,
+		-- Lifetime counters (play-forever F1): merges this round, accepted item uses (BoardItems).
+		merges = math.clamp(board.merges or 0, 0, 10000), itemsUsed = math.clamp(board.itemSeq or 0, 0, 64) }
 	board.settledRounds = (board.settledRounds or 0) + 1
 	local boost = StoreService.boost(board)
 	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false, boost = boost }
@@ -1340,6 +1381,7 @@ task.spawn(function()
 						local candidateProfile = board.profile
 						if candidateProfile.loadFailed then candidateProfile = Progress.load(player.UserId) end
 						local replacement = Nursery.load(player.UserId, candidateProfile)
+						replacement.restricted = PaidRandomPolicy.cached(player)
 						if boards[player] ~= board or board.closing then Nursery.release(replacement); return end
 						board.nursery = replacement
 						board.nurseryBusy = false

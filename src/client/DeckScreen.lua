@@ -32,22 +32,31 @@ local function rect(x,y,w,h)return{x=x,y=y,w=w,h=h}end
 -- one glass LCD between two shoulders, every HUD card inside the screen, the board
 -- centred. Mirrors frame_geometry() in scripts/deck_art/build_compact_frame_mockups.py.
 local RIM,BEZ,PAD,GAP=4,5,3,8
+-- Pocket Menu rows (PocketMenu.Items): Resume, Restart, Quit, Hatch eggs, Customize,
+-- Collection book (play-forever F2). Two columns fill the left column first.
+local POCKET_ITEMS=6
 local function pocketGeometry(g)
  local s=g.screen;local pad=12
  local top=math.max(s.y+pad+36,g.kh+4)
  local avail=s.y+s.h-pad-top
- local cols=if 5*44+4*GAP<=avail then 1 else 2
- local rows=if cols==1 then 5 else 3
+ local n=POCKET_ITEMS
+ local cols=if n*44+(n-1)*GAP<=avail then 1 else 2
+ local rows=if cols==1 then n else math.ceil(n/2)
  local iw=if cols==1 then math.min(300,s.w-2*pad)else math.min(220,math.floor((s.w-2*pad-GAP)/2))
  local gx=s.x+math.floor((s.w-(iw*cols+GAP*(cols-1)))/2)
  local gy=top+math.max(0,math.floor((avail-(rows*44+(rows-1)*GAP))/2))
- local order=if cols==1 then {{0,0},{0,1},{0,2},{0,3},{0,4}}else {{0,0},{0,1},{0,2},{1,0},{1,1}}
  local items={}
- for i,cr in ipairs(order)do items[i]=rect(gx+cr[1]*(iw+GAP),gy+cr[2]*(44+GAP),iw,44)end
+ for i=1,n do
+  local left=cols==1 or i<=rows
+  local c=if left then 0 else 1
+  local r=if left then i-1 else i-rows-1
+  items[i]=rect(gx+c*(iw+GAP),gy+r*(44+GAP),iw,44)
+ end
  local tx=if s.y+pad<g.kh then math.max(s.x+pad,g.kx+4)else s.x+pad
  return{cols=cols,items=items,title=rect(tx,s.y+pad,s.x+s.w-pad-tx,28)}
 end
 Screen.pocketGeometry=pocketGeometry
+Screen.PocketItems=POCKET_ITEMS
 -- Plate grip either side of a phone menu sheet (UI-SPEC-COMPACT-FRAME 4).
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
 function Screen.resolveCompact(W,H,aspect,kx,kh)

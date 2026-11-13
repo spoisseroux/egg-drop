@@ -2,11 +2,11 @@
 -- Prompts are always server-initiated so the paid-random-items gate and the
 -- once-per-player starter pack are enforced here, not trusted to the client.
 local MarketplaceService = game:GetService("MarketplaceService")
-local PolicyService = game:GetService("PolicyService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalog = require(ReplicatedStorage.Shared.StoreCatalog)
 local Economy = require(script.Parent.EconomyAnalytics)
+local Policy = require(script.Parent.PaidRandomPolicy)
 
 local Store = {}
 local api -- { board(player), nursery, publish(board), onGrant(board, product, stars, balance) }
@@ -14,13 +14,9 @@ local stateRemote, resultRemote, requestRemote
 
 local function policyAllowsPacks(player)
 	-- Stars buy eggs, so every Stars product makes eggs paid random items.
-	-- Fail closed: if the policy can't be read, packs stay hidden.
-	for attempt = 1, 3 do
-		local ok, info = pcall(PolicyService.GetPolicyInfoForPlayerAsync, PolicyService, player)
-		if ok and type(info) == "table" then return info.ArePaidRandomItemsRestricted ~= true end
-		task.wait(attempt)
-	end
-	return false
+	-- Fail closed: if the policy can't be read, packs stay hidden (PaidRandomPolicy,
+	-- one cached read shared with the restricted-egg rule).
+	return not Policy.resolve(player)
 end
 
 local function ownsPass(player, pass)
@@ -165,7 +161,7 @@ function Store.start(options)
 		resultRemote:FireClient(player, { kind = "pass", key = pass.key })
 		Store.publish(board)
 	end)
-	Players.PlayerRemoving:Connect(function(player) lastPrompt[player] = nil end)
+	Players.PlayerRemoving:Connect(function(player) lastPrompt[player] = nil; Policy.forget(player) end)
 	MarketplaceService.ProcessReceipt = Store.processReceipt
 	-- Studio-only test hook: simulate a granted receipt without real product ids.
 	if game:GetService("RunService"):IsStudio() then

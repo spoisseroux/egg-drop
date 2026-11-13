@@ -11,6 +11,12 @@ end
 function Catalog.odds(unlocks)
  local pool=Catalog.remaining(unlocks);local result={};for _,id in ipairs(pool)do table.insert(result,{id=id,probability=1/#pool})end;return result
 end
+-- Restricted players: the first not-yet-owned toy in the published PaidOrder (no roll).
+function Catalog.fixedNext(eligible)
+ if type(eligible)~="table"then return nil end
+ for _,id in ipairs(Catalog.PaidOrder)do if table.find(eligible,id)then return id end end
+ return eligible[1]
+end
 function Catalog.roll(pool,unit)
  if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 or #pool<1 then return nil end;return pool[math.floor(unit*#pool)+1]
 end

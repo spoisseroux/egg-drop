@@ -18,6 +18,9 @@ return function(client,parent)
    local c=Hub.status("customize",{newItems=1});assert(c.text=="1 NEW ITEM"and c.tone=="stars"and c.dot)
    assert(Hub.status("customize",{newItems=2}).text=="2 NEW ITEMS")
    assert(Hub.status("customize",{newItems=0}).text=="")
+   -- Play-forever F2: the Collection book row, with a gold claim dot while milestones wait.
+   local b=Hub.status("book",{bookClaimable=2});assert(b.text=="2 TO CLAIM"and b.tone=="stars"and b.dot)
+   assert(Hub.status("book",{bookClaimable=1}).text=="1 TO CLAIM"and Hub.status("book",{}).text==""and not Hub.status("book",{}).dot)
    assert(Hub.newItems({pendingToyResult={},pendingMaterialResult={}})==2 and Hub.newItems({})==0)
    assert(Hub.ownedCount({petWearables={pip={owned={"a","b","c"}}}},"pip")==3 and Hub.ownedCount({},"pip")==0)
   end)
@@ -33,6 +36,7 @@ return function(client,parent)
    assert(Hub.step(1,1,0,3,2)==2 and Hub.step(2,0,1,3,2)==3)
    assert(Hub.backTarget("pets",false)=="hub"and Hub.backTarget("hub",false)=="close"and Hub.backTarget("pets",true)=="cancel")
    assert(Hub.DefaultRow==3 and Hub.Rows[3].id=="customize"and Hub.Rows[1].icon=="paw"and Hub.Rows[2].icon=="shirt"and Hub.Rows[3].icon=="wand")
+   assert(#Hub.Rows==4 and Hub.Rows[4].id=="book"and Hub.Rows[4].icon=="book")
   end)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." hub navigation: Customize first, d-pad focus, A opens, Pets selector, Back up a level",function()
@@ -40,18 +44,27 @@ return function(client,parent)
     local opened,follows,backs={},{},0
     local hub=Hub.new(host,{appearance=function()return{charmVisible=true}end,
      open=function(id)table.insert(opened,id);return true end,follow=function(id)table.insert(follows,id);return true end,back=function()backs+=1 end})
-    local state={inventoryMask=127,nectar=128,pendingToyResult={id="t"},petWearables={pip={owned={"x"}}}}
+    local state={inventoryMask=127,nectar=128,pendingToyResult={id="t"},petWearables={pip={owned={"x"}}},book={claimable={"balls.25"}}}
     local active=Pets.collection[1].id
     assert(hub:open({wallet=128,state=state,activeId=active}));settle()
-    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==3)
+    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==4)
     assert(hub.root:GetAttribute("FocusedRow")=="customize","opens on Customize the first time")
     for _,row in ipairs(hub.rows)do assert(row.button.AbsoluteSize.Y>=44,"row target under 44 px")end
     assert(hub.rows[3].status.Text=="1 NEW ITEM"and hub.rows[3].dot~=nil)
+    assert(hub.rows[4].status.Text=="1 TO CLAIM"and hub.rows[4].dot~=nil,"book row shows its claim dot")
+    -- Every row stays inside the panel / sheet (four rows under the header).
+    for _,row in ipairs(hub.rows)do
+     local bottom=row.button.AbsolutePosition.Y+row.button.AbsoluteSize.Y
+     assert(bottom<=hub.root.AbsolutePosition.Y+hub.root.AbsoluteSize.Y+.5,"row past the panel bottom")
+    end
     assert(hub.header.root:FindFirstChild("Wallet")and hub.header.title.Text=="Companions")
     hub:input(K.Up);assert(hub.root:GetAttribute("FocusedRow")=="wardrobe")
     hub:input(K.Return);assert(opened[#opened]=="wardrobe","A opens the Wardrobe through the caller")
     hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="customize")
     hub:input(K.ButtonA);assert(opened[#opened]=="customize")
+    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="book")
+    hub:input(K.Return);assert(opened[#opened]=="book","A opens the Collection book through the caller")
+    hub:input(K.W)
     hub:input(K.W);hub:input(K.W);assert(hub.root:GetAttribute("FocusedRow")=="pets")
     hub:input(K.Return);settle();assert(hub.page=="pets"and hub.header.title.Text=="Pets"and #hub.cardButtons>=1)
     assert(hub.root:GetAttribute("FocusedPet")==active,"selector lands on the pet that follows you")

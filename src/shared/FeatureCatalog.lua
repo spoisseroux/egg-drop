@@ -8,6 +8,15 @@ function Catalog.emptyRow()return{horns={earned=0,visible=0},claws={earned=0,vis
 function Catalog.odds()
  local result={};for _,id in ipairs(Catalog.Order)do local row=Catalog.ById[id];table.insert(result,{id=id,probability=row.probability,rarity=row.rarity})end;return result
 end
+-- Restricted players: the feature with the smallest stack that is not full, ties in Order (no roll).
+function Catalog.fixedNext(stock)
+ local best,count=nil,math.huge
+ for _,id in ipairs(Catalog.Order)do
+  local n=type(stock)=="table"and type(stock[id])=="number"and stock[id]or 0
+  if n<Catalog.StackLimit and n<count then best,count=id,n end
+ end
+ return best
+end
 function Catalog.full(stock)for _,id in ipairs(Catalog.Order)do if(stock[id]or 0)<Catalog.StackLimit then return false end end;return true end
 function Catalog.roll(unit)
  if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 then return nil end

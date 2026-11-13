@@ -552,7 +552,8 @@ clientUI.questLog=require(script.QuestLog).new(clientUI.deck:addOverlay("DeckQue
 -- Pocket Menu (UI-SPEC-COMPACT-FRAME 9, decision 6): on the deck screen, above the log.
 clientUI.pocketCallbacks={}
 clientUI.pocketMenu=require(script.PocketMenu).new(clientUI.deck:addOverlay("DeckPocketMenu",36,{lcd=true}),clientUI.pocketCallbacks)
-function clientUI.deckOverlayOpen()return clientUI.heatPicker.visible or clientUI.questLog.visible or clientUI.pocketMenu.visible or(clientUI.items~=nil and clientUI.items.isOpen)end
+function clientUI.deckOverlayOpen()return clientUI.heatPicker.visible or clientUI.questLog.visible or clientUI.pocketMenu.visible or(clientUI.items~=nil and clientUI.items.isOpen)
+ or(clientUI.book~=nil and clientUI.book:isOpen())end
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -1111,6 +1112,7 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
+   if rowId=="book"then return clientUI.openBook and clientUI.openBook()or false end
    if rowId=="customize"then
     clientUI.hub:close("customize")
     if clientUI.openHue("palette",petId,"hub")then return true end
@@ -1158,6 +1160,55 @@ do
   return Enum.ContextActionResult.Pass
  end,false,Enum.ContextActionPriority.High.Value+790,table.unpack(keys))
  gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropCompanions");clientUI.hub:destroy();hubGui:Destroy()end)
+end
+-- Collection book (play-forever F2): its own ScreenGui above the Wardrobe (12) and the
+-- Companions hub (11), so it opens over the hub and Back returns there. Opened from the
+-- hub's Collection book row and the Pocket Menu (over a paused round). Claims go out as
+-- HatchRequest "bookClaim"; replies ride FaceplateResult with kind = "book".
+do
+ local BookView=require(script.BookView)
+ local Kit=require(script.DeckKit)
+ local UICopy=require(ReplicatedStorage.Shared.UICopy)
+ local bookGui=make("ScreenGui","EggDropBook",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=13,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local host=make("Frame","BookHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},bookGui)
+ local function context(state)
+  state=state or {}
+  return{book=state.book,stats=state.stats,stamps=state.stamps,wallet=state.nectar or 0,revision=state.revision or 0}
+ end
+ local function syncInsets()
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
+  if bookGui.ScreenInsets~=wanted then bookGui.ScreenInsets=wanted end
+ end
+ clientUI.book=BookView.new(host,{
+  send=function(action,payload)nurseryRequest:FireServer(action,payload,nurseryState and nurseryState.revision or 0)end,
+  claimed=function(message)
+   clientUI.bookToaster=clientUI.bookToaster or Kit.toaster(host)
+   clientUI.bookToaster.show(UICopy.get("book.toast.claimed"),if type(message.reward)=="number"and message.reward>0 then message.reward else nil)
+   if message.faceplate then clientUI.bookToaster.show(UICopy.get("book.toast.bookworm"))end
+  end,
+  closed=function()clientUI.syncPause();if updateHud then task.defer(updateHud)end end,
+  back=function()clientUI.accepted("back")end})
+ clientUI.openBook=function(options)
+  if not nurseryState or roomView.busy or clientUI.book:isOpen()then return false end
+  if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+  clearPlayInputs();syncInsets()
+  local ok=clientUI.book:open(context(nurseryState),options)
+  clientUI.syncPause()
+  return ok
+ end
+ clientUI.syncBook=function(state)if clientUI.book:isOpen()then clientUI.book:setContext(context(state))end end
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
+ local keys={Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,Enum.KeyCode.W,Enum.KeyCode.S,
+  Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,
+  Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Escape,
+  Enum.KeyCode.M,Enum.KeyCode.ButtonY,Enum.KeyCode.ButtonStart,Enum.KeyCode.ButtonX,Enum.KeyCode.X}
+ -- Above the Wardrobe (High+800) and the hub (High+790): the book owns input while open.
+ ContextActionService:BindActionAtPriority("EggDropBook",function(_,state,input)
+  if not clientUI.book:isOpen()or UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+  if state==Enum.UserInputState.Begin then clientUI.book:input(input.KeyCode)end
+  return Enum.ContextActionResult.Sink
+ end,false,Enum.ContextActionPriority.High.Value+810,table.unpack(keys))
+ gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropBook");clientUI.book:destroy();bookGui:Destroy()end)
 end
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
@@ -1248,6 +1299,7 @@ local function refreshNursery(state)
     if picker then picker:setShopState(state.nectar,state.faceplates,state.ballThemes,state.revision)end
     if clientUI.syncWardrobe then clientUI.syncWardrobe(state)end
     if clientUI.syncHub then clientUI.syncHub(state)end
+    if clientUI.syncBook then clientUI.syncBook(state)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
@@ -1614,7 +1666,8 @@ function clientUI.syncPause()
  if clientUI.syncItemChip then clientUI.syncItemChip()end
  -- The item carousel is the third deck owner (BUILD-PLAN 2026-11-13 item 6).
  request:FireServer("pause",clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible,
-  pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true}))
+  pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true,
+  book=clientUI.book~=nil and clientUI.book:isOpen()and board:GetAttribute("Mode")=="Board"}))
 end
 function clientUI.pocketShouldClose()
  return recap.visible or modalShade.Visible or board:GetAttribute("Mode")~="Board"or board:GetAttribute("RoundOver")==true or roomView.busy
@@ -2331,6 +2384,8 @@ picker.onBought=function(id)
 	clientUI.shopToaster.show((theme and theme.name or "Faceplate").." equipped")
 end
 local faceplateResultConnection=remotes:WaitForChild("FaceplateResult").OnClientEvent:Connect(function(message)
+	-- Collection book claims share the remote (play-forever F1/F2).
+	if type(message)=="table"and message.kind=="book"then if clientUI.book then clientUI.book:result(message)end;return end
 	picker.shop:result(message)
 end)
 gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropFaceplateShop")end)
@@ -2525,7 +2580,8 @@ function clientUI.pocketState()
  local owned=(board:GetAttribute("OwnedPets")or 0)>0
  local over=board:GetAttribute("RoundOver")==true
  return{empty=(board:GetAttribute("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(board:GetAttribute("FieldPhase")or "Welcome")~="Welcome",
-  canQuit=owned,canHatch=owned,canCustomize=owned}
+  canQuit=owned,canHatch=owned,canCustomize=owned,canBook=owned,
+  bookClaimable=nurseryState and type(nurseryState.book)=="table"and type(nurseryState.book.claimable)=="table"and #nurseryState.book.claimable or 0}
 end
 function clientUI.openPocketMenu()
  if clientUI.pocketMenu.visible then return false end
@@ -2574,6 +2630,12 @@ end
 clientUI.pocketCallbacks.customize=function()
  clientUI.closePocketMenu(true)
  if clientUI.visitCompanions()then clientUI.accepted("confirm")end
+end
+-- Collection book over the paused round: opened before the menu closes so the pause holds.
+clientUI.pocketCallbacks.book=function()
+ local opened=clientUI.openBook~=nil and clientUI.openBook()
+ clientUI.closePocketMenu(true)
+ if opened then clientUI.accepted("confirm")end
 end
 clientUI.pocketCallbacks.armed=function()audio:play("aim",.8,.4)end
 clientUI.pocketCallbacks.locked=function(id,state)

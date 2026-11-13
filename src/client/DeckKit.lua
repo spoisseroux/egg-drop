@@ -237,6 +237,10 @@ function Vector.smiley(h,s,t)
  ink(h,"EyeL",.37,.42,S(.12,.14),0,999);ink(h,"EyeR",.63,.42,S(.12,.14),0,999)
  ink(h,"Mouth",.5,.66,UDim2.new(.34,0,0,t),0,999)
 end
+-- Collection book (play-forever F2): an open book, two tilted pages and the gap of its spine.
+function Vector.book(h)
+ ink(h,"PageL",.29,.52,S(.38,.6),-6,2);ink(h,"PageR",.71,.52,S(.38,.6),6,2)
+end
 Kit.VectorIcons=Vector
 
 -- Icons: white art in 64 px cells, tinted with ImageColor3. The star is always gold.
@@ -1045,8 +1049,10 @@ end
 -- three places, a dot plus the eyebrow, a squiggle under the title and a halftone
 -- dot fade along the panel's bottom edge (phones skip the halftone). Mint stays the
 -- only action colour; gold marks only Stars (the results family).
+-- Collection book (play-forever F2) = mint-teal #7FE0C8, kept apart from the action
+-- mint: 10.1:1 on the panel, 8.4:1 on raised cards, ink on it 12.2:1.
 Kit.Tint={hatch=Color3.fromHex("#FFA98F"),style=Color3.fromHex("#C9A7FF"),companions=Color3.fromHex("#FF9EC4"),
- quests=Color3.fromHex("#8CC8FF"),results=Kit.Color.stars}
+ quests=Color3.fromHex("#8CC8FF"),results=Kit.Color.stars,book=Color3.fromHex("#7FE0C8")}
 local function tintColor(tint)
  if typeof(tint)=="Color3"then return tint end
  return Kit.Tint[tint]

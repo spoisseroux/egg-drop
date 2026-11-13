@@ -57,6 +57,12 @@ local Plates={
   ui={panel="#1F1E2F",raised="#2C2C40",well="#14131F",selected="#483F5B",line="#B9A8C8"},overlay={image="rbxassetid://94774890275610",kind="sparkle",min=0.0,max=0.8,period=2.8},held3d={material="Foil",reflectance=0.25,transparency=0}},
  night_orb={name="Night Orb",order=16,tier="showcase",priceStars=80,texture="rbxassetid://85678618484391",finish="glass orbs and chrome rings",accent="#FF7AD9",ink="#0E0F12",deep="#1A1440",band="#6F7480",engrave="#FFFFFF",engraveOpacity=0.78,
   ui={panel="#161720",raised="#22232F",well="#0D0E15",selected="#412F47",line="#BD93BA"},overlay={image="rbxassetid://94774890275610",kind="sparkle",min=0.0,max=0.7,period=3.4},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
+ -- Book-only plate (PLAY-FOREVER BUILD-PLAN F1): never sold (no price), granted by the
+ -- collection book claim when any three pages reach 100%. Warm paper band, teal ink.
+ -- Not in Themes.Order (the shop grid's 16 sold/earned plates); listed in Themes.BookOnly.
+ -- texture: placeholder (Honey's pearl sheet) until Astra's bookworm plate art is uploaded.
+ bookworm={name="Bookworm",order=17,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://139483187822198",finish="pressed paper",accent="#7FE0CF",ink="#0E0F12",deep="#1F5E5A",band="#F2E2C2",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#1A2422",raised="#27322F",well="#101816",selected="#384A44",line="#B4C4B0"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.25,period=7.5},held3d={material="SmoothPlastic",reflectance=0.06,transparency=0}},
 }
 local hex=Color3.fromHex
 for id,plate in pairs(Plates)do
@@ -73,6 +79,7 @@ for id,plate in pairs(Plates)do
  theme.accent,theme.deep,theme.ink=hex(plate.accent),hex(plate.deep),hex(plate.ink)
  theme.bandTint,theme.engrave,theme.engraveOpacity=hex(plate.band),hex(plate.engrave),plate.engraveOpacity
  if plate.priceStars>0 then theme.rule="stars"end
+ if plate.bookOnly then theme.rule="book";theme.bookOnly=true end
  -- Glass layers lean toward deep; accent marks selection, primary and progress.
  local ui=plate.ui
  local panel,raised,inset,selected,line=hex(ui.panel),hex(ui.raised),hex(ui.well),hex(ui.selected),hex(ui.line)
@@ -95,9 +102,12 @@ for id,plate in pairs(Plates)do
   accent=theme.accent}
 end
 Themes.Plates=Plates
--- Fixed Star price for a plate, or nil when it is not sold.
+-- Plates that only the collection book grants (never sold, not in the shop grid's Order).
+Themes.BookOnly={"bookworm"}
+-- Fixed Star price for a plate, or nil when it is not sold (book-only plates never are).
 function Themes.price(id)
  local theme=Themes.ById[id]
- return if theme and (theme.priceStars or 0)>0 then theme.priceStars else nil
+ return if theme and not theme.bookOnly and (theme.priceStars or 0)>0 then theme.priceStars else nil
 end
+function Themes.isBookOnly(id)local theme=Themes.ById[id];return theme~=nil and theme.bookOnly==true end
 return Themes

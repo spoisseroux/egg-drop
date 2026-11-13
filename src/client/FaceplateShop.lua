@@ -34,7 +34,7 @@ Shop.Hints={
  {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or use"},{"B","Back"}},promise=UICopy.get("style.promise.balls")},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
- rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
+ rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},book={"BOOK",Kit.Tint.book}}
 local function finishName(theme)
  local finish=theme.finish or "gloss"
  return string.upper(string.sub(finish,1,1))..string.sub(finish,2)
@@ -54,19 +54,31 @@ function Shop.status(id,ctx)
   return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,enabled=false}
  end
  local requirement=Catalog.describeRequirement("theme",id,facts)
- if requirement.unlocked then return {kind="owned",text="",button="Equip",enabled=true}end
+ if requirement.unlocked then return {kind="owned",text=if theme.bookOnly then "From the book"else "",button="Equip",enabled=true}end
  return {kind="locked",text=requirement.text,button=nil}
 end
 -- Pure: the tile's status line.
 function Shop.tileStatus(id,ctx)
  local s=Shop.status(id,ctx)
  if s.kind=="equipped"then return "EQUIPPED","accent"end
- if s.kind=="owned"then return "✓ Owned","soft"end
+ if s.kind=="owned"then return (if Themes.isBookOnly(id)then "From the book"else "✓ Owned"),"soft"end
  if s.kind=="buy"then return "★ "..s.price,"stars"end
  if s.kind=="short"then return "★ "..s.price,"dim"end
- local short=({firstWin="Win 1",rankI="Win 3",rankII="Win 10"})[Themes.ById[id]and Themes.ById[id].rule or ""]or "Locked"
+ local short=({firstWin="Win 1",rankI="Win 3",rankII="Win 10",book="Book"})[Themes.ById[id]and Themes.ById[id].rule or ""]or "Locked"
  return "🔒 "..short,"dim"
 end
+-- Pure: the plates on the grid. The 16 sold / earned plates, then any book-only plate
+-- the player owns (play-forever F2: Bookworm shows once the book grants it).
+function Shop.order(facts)
+ local order=table.clone(Themes.Order)
+ for _,id in ipairs(Themes.BookOnly or {})do
+  if Catalog.ownsFaceplate(facts or {},id)then table.insert(order,id)end
+ end
+ return order
+end
+-- Desktop rows when the grid holds more than the 4 x 4 that fit (a book-only plate
+-- owned): the same 104 x 88 cards in a scrolling column, 100 px a row.
+Shop.ScrollGrid=table.freeze({x=368,y=144,w=466,h=400,pitch=100})
 -- Pure: grid navigation (no wrap).
 function Shop.step(index,dx,dy,count,columns)
  local cols=columns or Shop.Columns
@@ -187,6 +199,7 @@ function Shop:build(view)
  if self.content then Peek.hide(self.content);self.backgrounds:releasePreview();self.content:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.view=view;self.key=Shop.viewKey(view)
+ self.plateOrder=Shop.order(self.ctx.facts);self.orderKey=table.concat(self.plateOrder,",")
  local root=self.root
  local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone
@@ -225,13 +238,26 @@ function Shop:buildRegular()
  local action,actionState=Kit.button(pane,"Action",{variant="primary",text="Equip",glyph="A",size=Vector2.new(288,56),selectable=false})
  action.Position=UDim2.fromOffset(20,ph-16-56);self.action,self.actionState=action,actionState
  action.Activated:Connect(function()self:act(true)end)
- -- Grid: 16 plates, 4 columns of 104x88, no scroll.
+ -- Grid: 16 plates, 4 columns of 104x88, no scroll. A book-only plate the player owns
+ -- adds a fifth row: then the same cards sit in a scrolling column (Shop.ScrollGrid).
  self.tiles={}
- for index,id in ipairs(Themes.Order)do
+ local order=self.plateOrder
+ local gridParent,gx,gy=plates,R.grid[1],R.grid[2]
+ self.grid=nil;self.rowPitch,self.tileH=R.tile[2]+R.gap,R.tile[2]
+ if #order>16 then
+  local G=Shop.ScrollGrid
+  local list=Kit.node("ScrollingFrame",plates,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(G.x,G.y),
+   Size=UDim2.fromOffset(G.w,G.h),ScrollBarThickness=4,ZIndex=plates.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
+   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
+  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#order/4)*G.pitch-R.gap+3+3+Kit.Lip.tile)
+  gridParent,gx,gy=list,3,3
+  self.grid=list;self.rowPitch=G.pitch
+ end
+ for index,id in ipairs(order)do
   local col,row=(index-1)%4,math.floor((index-1)/4)
   -- T2: pressable tile with a 4 px lip inside the 12 px grid gap.
-  local tile,tileState=Kit.tile(plates,"Tile_"..id,{selectable=false,radius=12,
-   position=UDim2.fromOffset(R.grid[1]+col*(R.tile[1]+R.gap),R.grid[2]+row*(R.tile[2]+R.gap)),size=UDim2.fromOffset(R.tile[1],R.tile[2])})
+  local tile,tileState=Kit.tile(gridParent,"Tile_"..id,{selectable=false,radius=12,
+   position=UDim2.fromOffset(gx+col*(R.tile[1]+R.gap),gy+row*(R.tile[2]+R.gap)),size=UDim2.fromOffset(R.tile[1],R.tile[2])})
   local stroke=tileState.stroke
   tile:SetAttribute("AccessibleLabel",Themes.ById[id].name)
   local deck=miniDeck(tile,88,UDim2.fromOffset(8,6));deck.set(Themes.ById[id],id)
@@ -242,7 +268,6 @@ function Shop:buildRegular()
    if self.index==index then self:act(true)else self:focus(index);Kit.boing(tile)end
   end)
  end
- self.grid=nil
  self.backgrounds:build(content,nil,nil)
  self.balls:build(content,nil,nil)
 end
@@ -303,14 +328,15 @@ function Shop:buildCompact(v)
  local list=Kit.node("ScrollingFrame",plates,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,112),
   Size=UDim2.fromOffset(grid.gw,grid.gridH),ScrollBarThickness=4,ZIndex=plates.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
- local rows=math.ceil(#Themes.Order/grid.cols)
+ local order=self.plateOrder
+ local rows=math.ceil(#order/grid.cols)
  list.CanvasSize=UDim2.fromOffset(0,rows*72-8)
- self.grid=list
+ self.grid=list;self.rowPitch,self.tileH=72,64
  self.tiles={}
  -- Narrow (three-column) cards draw a 72 px deck so the name keeps room.
  local deckTile=if grid.tileW>=200 then 88 else 72
  local tx=10+deckTile+10
- for index,id in ipairs(Themes.Order)do
+ for index,id in ipairs(order)do
   local col,row=(index-1)%grid.cols,math.floor((index-1)/grid.cols)
   -- T2: pressable tile with a 3 px phone lip inside the 8 px grid gap.
   local tile,tileState=Kit.tile(list,"Tile_"..id,{selectable=false,radius=12,compact=true,
@@ -333,11 +359,12 @@ end
 function Shop:scrollTo(index,anchorRow)
  local list=self.grid;if not list then return end
  local cols=self.columns;local row=math.floor((index-1)/cols)
- local top,bottom=row*72,row*72+64
+ local pitch,tileH=self.rowPitch or 72,self.tileH or 64
+ local top,bottom=row*pitch,row*pitch+tileH
  local view=list.AbsoluteWindowSize.Y;if view<=0 then view=list.Size.Y.Offset end
  local maxY=math.max(0,list.CanvasSize.Y.Offset-view)
  local y=list.CanvasPosition.Y
- if anchorRow then y=top-72*(anchorRow-1)
+ if anchorRow then y=top-pitch*(anchorRow-1)
  elseif top-8<y then y=top-8
  elseif bottom+8>y+view then y=bottom+8-view end
  list.CanvasPosition=Vector2.new(0,math.clamp(y,0,maxY))
@@ -380,6 +407,13 @@ function Shop:setContext(ctx)
  if ctx.chosen~=nil then self.ctx.chosen=ctx.chosen end
  if ctx.note~=nil then self.ctx.note=ctx.note end
  if ctx.retry~=nil then self.ctx.retry=ctx.retry end
+ -- A book-only plate just granted (or a fresh save's facts) changes the grid: rebuild it.
+ if table.concat(Shop.order(self.ctx.facts),",")~=self.orderKey then
+  local id=self.tiles[self.index]and self.tiles[self.index].id
+  self:build(self.view);self:relayout()
+  if id and self.visible and self.tab==1 then self:focusId(id)end
+  return
+ end
  self.wallet.set(self.ctx.wallet)
  self:refresh()
 end
@@ -445,7 +479,7 @@ function Shop:focus(index,instant)
  if self.action and self.view then Kit.setGlyphVisible(self.action,not Kit.lastInputTouch())end
 end
 function Shop:focusId(id)
- local index=table.find(Themes.Order,id);if not index then return false end
+ local index=table.find(self.plateOrder or Themes.Order,id);if not index then return false end
  self:focus(index,true);return true
 end
 function Shop:focusActive(instant)
@@ -566,7 +600,7 @@ function Shop:isOpen()return self.visible end
 -- `keepFocus` (back from Pocket Trials) keeps the cards that were focused.
 function Shop:open(equipped,tab,keepFocus)
  self.visible=true;self.root.Visible=true
- local index=if keepFocus then self.index else table.find(Themes.Order,equipped or self.ctx.equipped)or 1
+ local index=if keepFocus then self.index else table.find(self.plateOrder or Themes.Order,equipped or self.ctx.equipped)or 1
  self.ctx.equipped=equipped or self.ctx.equipped
  self.confirmId,self.errorId=nil,nil
  self.tab=tab or self.tab

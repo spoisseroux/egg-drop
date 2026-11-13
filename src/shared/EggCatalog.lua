@@ -1,7 +1,7 @@
 local Pets = require(script.Parent.PetCatalog)
 
 local Catalog = {
-	DailyBonus = 6,
+	DailyBonus = 6, -- Legacy flat gift; the daily gift now pays StampCard.reward(stamps) (play-forever F1).
 	DuplicateRefund = 0.5,
 	DayOffsetSeconds = -5 * 3600,
 	RareGuarantee = 7,
@@ -69,6 +69,22 @@ function Catalog.hasRarePool(recipeId)
  if not recipe or recipe.retired then return false end
  for _,entry in ipairs(recipe.weights)do if entry.weight>0 and Pets.isActive(entry.id)and Pets.byId[entry.id].trial then return true end end
  return false
+end
+
+-- Restricted players (ArePaidRandomItemsRestricted, BUILD-PLAN F1 architect change 6) never
+-- get a random roll: the next active pet in the recipe's published order that they do not
+-- own yet, else the first. Deterministic from the save, so it can be shown before buying.
+function Catalog.fixedNext(recipeId, inventoryMask)
+	local recipe = Catalog.ById[recipeId]
+	if not recipe or recipe.retired then return nil end
+	local first
+	for _, entry in ipairs(recipe.weights) do
+		if entry.weight > 0 and Pets.isActive(entry.id) then
+			first = first or entry.id
+			if not Catalog.isOwned(inventoryMask, entry.id) then return entry.id end
+		end
+	end
+	return first
 end
 
 function Catalog.roll(recipeId, misses, unit)

@@ -2,11 +2,15 @@
 -- PLAY-FOREVER-SCOPE-2026-11-13 section 4). Counters cannot be backfilled, so they
 -- start with the v11 bump even though their screens ship later. Written only
 -- inside existing fenced transactions (HatchProgress.transact / award).
+local Book=require(game:GetService("ReplicatedStorage").Shared.BookCatalog)
 local State={}
 State.Counters={"rounds","winsEasy","winsMedium","winsHard","tidyWins","merges","bestChain","tierFive",
 	"itemsUsed","pets","parkGames","starsEarned","starsSpent"}
 State.Cap=2000000000
 State.BookLimit=256
+State.FoundMask=2^31-1 -- discovery bits 0..30 only (BUILD-PLAN architect change 4)
+State.RunMerges=10000 -- per-round bounds, mirrored by the award validator (HatchProgress.award)
+State.RunItems=64
 local known={};for _,key in ipairs(State.Counters)do known[key]=true end
 
 local function integer(value,max)
@@ -67,8 +71,27 @@ function State.recordRun(state,run,heat)
 		if run.clean then State.add(state,"tidyWins",1)end
 	end
 	if type(run.chain)=="number"then State.max(state,"bestChain",run.chain)end
-	if type(run.merges)=="number"then State.add(state,"merges",run.merges)end
+	if type(run.merges)=="number"then State.add(state,"merges",math.min(run.merges,State.RunMerges))end
+	if type(run.itemsUsed)=="number"then State.add(state,"itemsUsed",math.min(run.itemsUsed,State.RunItems))end
 	if run.maxTier==5 then State.add(state,"tierFive",1)end
+	State.setFound(state,Book.runBits(run,heat))
+end
+
+-- Discoveries: OR bits into book.found, clipped to bits 0..30.
+function State.setFound(state,bits)
+	local book=state.book
+	if type(book)~="table"or type(bits)~="number"or bits~=bits or bits<=0 or bits==math.huge then return end
+	local found=if type(book.found)=="number"and book.found==book.found and book.found>=0 then book.found else 0
+	book.found=bit32.band(bit32.bor(bit32.band(found,State.FoundMask),bit32.band(math.floor(bits),State.FoundMask)),State.FoundMask)
+end
+-- Records one milestone claim (copy-on-write list). False when already claimed or full.
+function State.claim(state,id)
+	local book=state.book
+	if type(book)~="table"or type(book.claimed)~="table"or type(id)~="string"or #id<1 or #id>40 then return false end
+	if table.find(book.claimed,id)or #book.claimed>=State.BookLimit then return false end
+	local claimed=table.clone(book.claimed);table.insert(claimed,id)
+	state.book={claimed=claimed,found=book.found}
+	return true
 end
 
 return State

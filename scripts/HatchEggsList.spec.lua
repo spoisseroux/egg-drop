@@ -1,6 +1,6 @@
 -- Studio Client. Hatch eggs (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 3): a text-only
 -- egg list without the Feature Egg while Features is flagged off, odds rows rendered
--- once in the pane through OddsText.format, the disabled Hatch button with "N more
+-- once in the pane through OddsText.list (whole percentages summing to 100), the disabled Hatch button with "N more
 -- Stars needed", the "something inside" egg beat, a pending feature hatch still
 -- opening through "Open saved feature", and the reveal-stage exit when Play again is
 -- unavailable (B falls through to close, touch gets Close).
@@ -20,13 +20,15 @@ return function(client,parent)
    assert(#order==3 and order[1]=="toy"and order[2]=="material"and order[3]=="hue")
    local on=Shop.liveOrder({Features=true});assert(on[2]=="feature"and #on==4)
   end)
-  test("pure: odds rows come from OddsText.format (equal thirds read 1 in 3)",function()
+  test("pure: odds rows come from OddsText.list (equal thirds read 34%, 33%, 33%)",function()
    local toy=Shop.oddsRows("toy",{});assert(#toy.rows==3 and toy.per=="1 toy per egg")
-   for _,r in ipairs(toy.rows)do assert(r.value==OddsText.format(1/3)and r.value=="1 in 3")end
+   local thirds=OddsText.list({1/3,1/3,1/3});assert(thirds[1]=="34%"and thirds[2]=="33%"and thirds[3]=="33%")
+   for i,r in ipairs(toy.rows)do assert(r.value==thirds[i])end
+   assert(OddsText.format(1/3)=="33%"and OddsText.format(.5)=="50%"and OddsText.format(.15)=="15%"and OddsText.format(.001)=="<1%")
    assert(Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true,sparkler=true}}).empty=="All toys owned")
    local hue=Shop.oddsRows("hue",{});assert(#hue.rows==5);for _,r in ipairs(hue.rows)do assert(r.value=="20%")end
    local material=Shop.oddsRows("material",{materialAvailable=true});assert(#material.rows>=1)
-   for _,r in ipairs(material.rows)do assert(r.value:match("%%$")or r.value:match("^1 in"))end
+   for _,r in ipairs(material.rows)do assert(r.value:match("%%$"))end
   end)
   test("pure: Hatch is disabled with N more Stars needed; receipts reopen first",function()
    local short=Shop.hatchAction("toy",{nectar=5});assert(not short.enabled and short.need=="3 more Stars needed"and short.text:find("Hatch"))
@@ -57,7 +59,7 @@ return function(client,parent)
     assert(view:selectRecipe("toy")or view.selected=="toy");frames()
     assert(view.shopPanel:GetAttribute("SelectedEgg")=="toy"and view.eggName.Text=="Toy Egg")
     local odds=view.oddsHolder:GetChildren();assert(#odds==3)
-    for _,row in ipairs(odds)do assert(row:GetAttribute("OddsText")=="1 in 3")end
+    local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="33%,33%,34%")
     assert(view:selectRecipe("hue"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==5 and view.eggName.Text=="Hue Egg")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.
     assert(view:moveRecipe(-1)and view.selected=="material"and view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))
@@ -65,6 +67,33 @@ return function(client,parent)
     view:close("close")
    end)
   end
+  -- Play-forever F2: restricted players (paid random items) see the fixed next item, never odds.
+  test("pure: a restricted player's odds block is one Next line from nextFixed",function()
+   local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
+   local Toys=require(game.ReplicatedStorage.Shared.ToyCatalog)
+   local first=Toys.PaidOrder[1]
+   local r=Shop.oddsRows("toy",{restricted=true,nextFixed={toy=first}})
+   assert(r.restricted and #r.rows==1 and r.rows[1].name==UICopy.get("hatch.next.line",{item=Toys.ById[first].name})and r.rows[1].value=="")
+   local done=Shop.oddsRows("toy",{restricted=true,nextFixed={}})
+   assert(done.restricted and done.rows[1].name==UICopy.get("hatch.next.done"),"nothing left reads All collected")
+   assert(not Shop.oddsRows("toy",{restricted=false,nextFixed={toy=first}}).restricted,"unrestricted players keep the odds")
+  end)
+  test("built: restricted pane shows Next, and the stamp card sits in the list above the stamp row",function()
+   local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
+   local Toys=require(game.ReplicatedStorage.Shared.ToyCatalog)
+   root.Size=UDim2.fromOffset(1920,1080);frames()
+   view:open({status="Ready",revision=4,nectar=128,toyUnlocks={},materialUnlocks={},materialAvailable=true,restricted=true,
+    nextFixed={toy=Toys.PaidOrder[1]},stamps=6,stampCard={rewards={4,4,5,5,6,6,12},onCard=6,next=7},dailyAvailable=true,dailyDay="20000",dailyBonus=12});frames()
+   view:selectRecipe("toy");frames()
+   assert(view.shopPanel:GetAttribute("OddsRestricted")==true and view.shopPanel:GetAttribute("OddsRows")==1)
+   assert(view.oddsLabel.Text==string.upper(UICopy.get("hatch.next.label")))
+   local column=view.body:FindFirstChild("EggColumn")
+   local card=column and column:FindFirstChild("StampCard")
+   assert(card and card:GetAttribute("Filled")==6 and card:GetAttribute("NextReward")==12,"stamp card shows six stamps and the 12 Star gift next")
+   local daily=column:FindFirstChild("DailyNectar")
+   assert(daily and daily.Visible and daily.Text==UICopy.get("stamp.button",{reward=12})and daily.AbsolutePosition.Y>=card.AbsolutePosition.Y+card.AbsoluteSize.Y)
+   view:close("close")
+  end)
   test("short on Stars: Hatch disabled with the need line",function()
    root.Size=UDim2.fromOffset(1920,1080);frames()
    view:open({status="Ready",revision=1,nectar=3,toyUnlocks={},materialUnlocks={},materialAvailable=true});frames()

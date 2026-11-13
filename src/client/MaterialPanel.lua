@@ -1,6 +1,6 @@
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
-local OddsText=require(Shared.OddsText);local Catalog=require(Shared.MaterialCatalog)
+local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.MaterialCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal)
 local Panel={};Panel.__index=Panel
@@ -66,7 +66,9 @@ function Panel:refresh(state,petId,mode,animate)
  end
  local odds={};for _,entry in ipairs(Catalog.odds(self.state.materialUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
  self.pool.Visible=buy
- self.pool.Text=if #odds==0 then "All materials owned"elseif not self.state.materialAvailable then "Material Eggs are not ready yet."else table.concat(odds,"\n")
+ self.pool.Text=if #odds==0 then "All materials owned"elseif not self.state.materialAvailable then "Material Eggs are not ready yet."
+  -- Restricted players get the fixed next finish, never a roll (F1 policy): no odds list.
+  elseif NextItem.restricted(self.state)then NextItem.line("material",self.state)else table.concat(odds,"\n")
  self.shop.Text=if #odds==0 then "All materials owned"else "Material Egg · 16 Stars"
  self.shop.Interactable=#odds>0 and self.state.materialAvailable==true and not(self.intent and self.intent.pending)
  self.useNow.Interactable=self.intent~=nil and not self.intent.pending

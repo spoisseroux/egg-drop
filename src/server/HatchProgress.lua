@@ -26,6 +26,9 @@ local BallThemes=require(script.Parent.BallThemeState)
 local Lifetime=require(script.Parent.LifetimeState)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
+local StampCard=require(ReplicatedStorage.Shared.StampCard)
+local BookCatalog=require(ReplicatedStorage.Shared.BookCatalog)
+local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 local store = require(script.Parent.ProgressStore)
@@ -317,6 +320,25 @@ function Hatching.load(userId, profile, adapter)
 	return handle
 end
 
+-- Paid-random-items policy (BUILD-PLAN F1 architect change 6). The host sets
+-- `handle.restricted` (true until PolicyService says otherwise: fail closed). A
+-- restricted player's Star-priced egg gives this fixed next item instead of a roll;
+-- the same values are published so the client can show "Next: <item>" before buying.
+function Hatching.nextFixed(state)
+	local hatch = {}
+	for id, recipe in pairs(Catalog.ById) do
+		if not recipe.retired then hatch[id] = Catalog.fixedNext(id, state.inventoryMask) end
+	end
+	return {
+		hatch = hatch,
+		toy = ToyCatalog.fixedNext(ToyCatalog.remaining(state.toyUnlocks)),
+		material = MaterialCatalog.fixedNext(MaterialCatalog.remaining(state.materialUnlocks)),
+		hue = HueCatalog.fixedNext(state.hueInventory),
+		feature = FeatureCatalog.fixedNext(state.featureStock),
+	}
+end
+local function isRestricted(handle) return handle.restricted == true end
+
 function Hatching.public(handle)
 	local state = handle.state
 	if not state then return { status = handle.status, revision = 0 } end
@@ -336,9 +358,22 @@ function Hatching.public(handle)
 		hues=clone(state.hues or {}),lastHueResult=HueState.publicReceipt(state.lastHueResult),
         heldHueEgg=clone(state.heldHueEgg),hueLastPurchase=HueState.publicReceipt(state.hueLastPurchase),
 		petDay = state.petDay, petCount = state.petCount, lastPetAward = clone(state.lastPetAward),
-		dailyDay = dayOf(handle.adapter.now()), dailyBonus = Catalog.DailyBonus,
+		-- dailyBonus: the reward of the stamp the next daily claim adds (stamps % 7).
+		dailyDay = dayOf(handle.adapter.now()), dailyBonus = StampCard.reward(state.stamps),
 		dailyAvailable = handle.status == "Ready" and tonumber(state.dailyClaimDay) < tonumber(dayOf(handle.adapter.now())),
 	}
+	-- Play-forever v1 (additive): stamp card, collection book, lifetime records, and the
+	-- paid-random-items policy view (restricted players see the fixed next item).
+	public.stamps = state.stamps or 0
+	public.stampReward = StampCard.reward(state.stamps)
+	public.stampDay = state.dailyClaimDay
+	public.stampCard = { rewards = table.clone(StampCard.Rewards), onCard = StampCard.onCard(state.stamps), next = StampCard.position(state.stamps) }
+	public.book = BookCatalog.public(state)
+	local stats = {}
+	for key, value in pairs(state.stats or {}) do if key ~= "parkGames" then stats[key] = value end end
+	public.stats = stats
+	public.restricted = handle.restricted == true
+	public.nextFixed = Hatching.nextFixed(state)
 	for key,value in pairs(HueState.public(state))do public[key]=value end
 	for key,value in pairs(MaterialState.public(state))do public[key]=value end
 	for key,value in pairs(ToyState.public(state))do public[key]=value end
@@ -513,7 +548,7 @@ function Hatching.hueCommand(handle,action,value,revision)
 		candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
 		if action=="hueBuy"then
 			local allowed,why=HueState.purchaseEligibility(handle.state);if not allowed then return false,why end
-			candidate.itemId=require(ReplicatedStorage.Shared.HueCatalog).roll(handle.adapter.random());if not candidate.itemId then return false,"InvalidRoll"end
+			candidate.itemId=if isRestricted(handle)then HueCatalog.fixedNext(handle.state.hueInventory)else HueCatalog.roll(handle.adapter.random());if not candidate.itemId then return false,"InvalidRoll"end
 			handle.pending={kind="hue",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=HueState.apply,candidate=candidate,phase="reserve"}
 			local ok,why=Hatching.reserveHue(handle,candidate)
 			local saved=if ok then HueState.find(handle.state,quote)else nil
@@ -574,7 +609,7 @@ function Hatching.materialCommand(handle,action,value,revision)
   if action=="materialBuy"then
    if quote.poolVersion~=MaterialCatalog.PoolVersion then return false,"LegacyPurchaseClosed"end
    local allowed,why=MaterialState.purchaseEligibility(handle.state,quote);if not allowed then return false,why end
-   candidate.finishId=MaterialCatalog.roll(quote.eligible,handle.adapter.random());if not candidate.finishId then return false,"InvalidRoll"end
+   candidate.finishId=if isRestricted(handle)then MaterialCatalog.fixedNext(quote.eligible)else MaterialCatalog.roll(quote.eligible,handle.adapter.random());if not candidate.finishId then return false,"InvalidRoll"end
    handle.pending={kind="material",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=MaterialState.apply,candidate=candidate,phase="materialReserve"}
    local ok,why=Hatching.reserveMaterial(handle,candidate);local saved=if ok then MaterialState.find(handle.state,quote)else nil
    return ok,why,if saved then MaterialState.publicReceipt(saved)else nil
@@ -638,7 +673,11 @@ local function itemCommand(handle,kind,action,value,revision)
   candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
   if action==kind.."Buy"then
    local allowed,why=api.purchaseEligibility(handle.state,quote);if not allowed then return false,why end
-   local awarded=if kind=="toy"then catalog.roll(quote.eligible,handle.adapter.random())else catalog.roll(handle.adapter.random())
+   local awarded
+   if isRestricted(handle)and kind=="toy"then awarded=catalog.fixedNext(quote.eligible)
+   elseif isRestricted(handle)then awarded=catalog.fixedNext(handle.state.featureStock)
+   elseif kind=="toy"then awarded=catalog.roll(quote.eligible,handle.adapter.random())
+   else awarded=catalog.roll(handle.adapter.random())end
    if not awarded then return false,"InvalidRoll"end
    candidate[if kind=="toy"then "toyId"else "featureId"]=awarded
    handle.pending={kind=kind,signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=api.apply,candidate=candidate,phase=kind.."Reserve"}
@@ -700,7 +739,12 @@ function Hatching.command(handle, action, value, expectedRevision)
 		if handle.state.lastHatch or Guard.other(handle.state,"companion") then return false, "RevealPending" end
 		if not Catalog.isOwned(handle.state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 		if handle.state.nectar < recipe.cost then return false, "NeedNectar" end
-		candidate = { id = handle.adapter.guid(), unit = handle.adapter.random() }
+		-- Restricted players draw no random number: the pet is the recipe's fixed next one.
+		if isRestricted(handle) then
+			candidate = { id = handle.adapter.guid(), unit = 0, fixed = true }
+		else
+			candidate = { id = handle.adapter.guid(), unit = handle.adapter.random() }
+		end
 	end
 	return transact(handle, signature, expectedRevision, function(state, choice)
 		if action == "ack" then
@@ -712,8 +756,14 @@ function Hatching.command(handle, action, value, expectedRevision)
 			local day = dayOf(handle.adapter.now())
 			if value ~= day then return false, "DayChanged" end
 			if tonumber(state.dailyClaimDay) >= tonumber(day) then return false, "DailyClaimed" end
-			if state.nectar + Catalog.DailyBonus > 1000000000 then return false, "BalanceLimit" end
-			state.nectar += Catalog.DailyBonus
+			-- The daily gift is the stamp card: one stamp a day, paying the reward of the
+			-- stamp being added (4,4,5,5,6,6,12 by stamps % 7). The count never resets.
+			local stamps = state.stamps or 0
+			local reward = StampCard.reward(stamps)
+			if state.nectar + reward > 1000000000 then return false, "BalanceLimit" end
+			if stamps >= Lifetime.Cap then return false, "StampLimit" end
+			state.nectar += reward
+			state.stamps = stamps + 1
 			state.dailyClaimDay = day
 			return true
 		elseif action == "hatch" then
@@ -723,7 +773,8 @@ function Hatching.command(handle, action, value, expectedRevision)
 			if state.lastHatch or Guard.other(state,"companion") then return false, "RevealPending" end
 			if not Catalog.isOwned(state.inventoryMask, "pip") then return false, "MeetPipFirst" end
 			if state.nectar < recipe.cost then return false, "NeedNectar" end
-			local petId = Catalog.roll(value, state.misses, choice.unit)
+			local petId = if choice.fixed then Catalog.fixedNext(value, state.inventoryMask) else Catalog.roll(value, state.misses, choice.unit)
+			if not petId then return false, "UnknownEgg" end
 			local pet = Pets.byId[petId]
 			local family = Catalog.family(petId)
 			local duplicate = Catalog.isOwned(state.inventoryMask, petId)
@@ -861,6 +912,65 @@ function Hatching.equipBallTheme(handle, operationId, themeId)
 	return ok, reason
 end
 
+-- Collection book (play-forever F1; BUILD-PLAN architect changes 1 and 3). The page
+-- percent is recomputed inside the transaction from the UpdateAsync snapshot (current
+-- catalogue ids only, capped 100); `book.claimed` is the double-pay guard; the
+-- book-only faceplate is granted here (never through Faceplates.apply, which charges
+-- and refuses unpriced plates) and re-checked on every claim so a missed grant repairs.
+local function bookFaceplateOwed(state)
+	local book = state.book
+	return type(book) == "table" and BookCatalog.faceplateEarned(book.claimed)
+		and not Faceplates.owns(state, BookCatalog.BookOnlyFaceplate)
+end
+local function grantBookFaceplate(state)
+	if not bookFaceplateOwed(state) or #(state.faceplates or {}) >= Faceplates.Limit then return false end
+	local owned = table.clone(state.faceplates or {})
+	table.insert(owned, BookCatalog.BookOnlyFaceplate)
+	state.faceplates = owned
+	return true
+end
+-- candidate = { milestoneId, reward, operationId }
+local function applyBookClaim(state, candidate)
+	local milestone = BookCatalog.milestone(candidate.milestoneId)
+	if not milestone then return false, "InvalidMilestone" end
+	if milestone.reward ~= candidate.reward then return false, "RewardChanged" end
+	local book = state.book
+	if type(book) ~= "table" or type(book.claimed) ~= "table" then return false, "InvalidData" end
+	if table.find(book.claimed, milestone.id) then
+		-- A repeat never pays; it only repairs a missed book-only faceplate.
+		if grantBookFaceplate(state) then return true end
+		return false, "AlreadyClaimed"
+	end
+	if BookCatalog.pagePercent(state, milestone.page) < milestone.percent then return false, "NotReached" end
+	if state.nectar + milestone.reward > 1000000000 then return false, "BalanceLimit" end
+	if not Lifetime.claim(state, milestone.id) then return false, "BookFull" end
+	state.nectar += milestone.reward
+	grantBookFaceplate(state)
+	return true
+end
+-- The client's operation id is the idempotency key; the digest binds it to milestone +
+-- reward, so a reused id for another milestone is OperationConflict, never a false Saved.
+function Hatching.bookClaim(handle, operationId, milestoneId, reward)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80
+		or type(milestoneId) ~= "string" or #milestoneId > 40 then return false, "InvalidMilestone" end
+	local milestone = BookCatalog.milestone(milestoneId)
+	if not milestone then return false, "InvalidMilestone" end
+	if reward ~= nil and reward ~= milestone.reward then return false, "RewardChanged" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "book:" .. milestone.id
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming and table.find(handle.state.book.claimed, milestone.id) and not bookFaceplateOwed(handle.state) then
+		return true, "AlreadyClaimed"
+	end
+	local candidate = if resuming then handle.pending.candidate
+		else table.freeze({ milestoneId = milestone.id, reward = milestone.reward, operationId = operationId })
+	local digest = "book:" .. candidate.milestoneId .. ":" .. tostring(candidate.reward)
+	local ok, why = transact(handle, signature, handle.state.revision, applyBookClaim, candidate, "bookop:" .. operationId, nil, digest)
+	if not ok and why == "AlreadyClaimed" then return true, why end
+	return ok, why
+end
+Hatching.bookFaceplateOwed = bookFaceplateOwed
+
 -- boost = { multiplier = 1|2, bonus = 0|1 } from the player's game passes.
 function Hatching.award(handle, runSequence, amount, summary, boost)
 	if not integer(runSequence) or runSequence < 1 or (amount ~= 0 and amount ~= 6 and amount ~= 8) then
@@ -885,6 +995,10 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 			or (summary.maxTier ~= nil and not integer(summary.maxTier, 5))
 			or (summary.goalsMet ~= nil and not integer(summary.goalsMet, 3))
 			or (summary.templateId ~= nil and (type(summary.templateId) ~= "string" or #summary.templateId > 40))
+			-- Lifetime counters (play-forever F1): bounded integers; a NaN or a huge
+			-- value is refused here rather than failing valid() inside every award.
+			or (summary.merges ~= nil and not integer(summary.merges, Lifetime.RunMerges))
+			or (summary.itemsUsed ~= nil and not integer(summary.itemsUsed, Lifetime.RunItems))
 			or amount ~= (if summary.success then (if summary.clean then 8 else 6) else 0) then
 			return false, "InvalidSummary"
 		end

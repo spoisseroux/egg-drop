@@ -18,7 +18,8 @@ end
 local definitions={free={text="Available",target=1},firstWin={text="Win one saved field round",target=1},
 	rankI={text="Win 3 saved field rounds",target=3},rankII={text="Win 10 saved field rounds",target=10},
 	highRoller={text="Complete High Roller: score 250 in one round",target=1},chain3={text="Complete Triple Pop: chain 3 merges",target=1},
-	trials={text="Complete all three Pocket Trials",target=3},stars={text="Buy with Stars",target=1}}
+	trials={text="Complete all three Pocket Trials",target=3},stars={text="Buy with Stars",target=1},
+	book={text="Fill any three collection book pages",target=1}}
 -- Bought faceplates: a bounded list of ids saved in the hatching record.
 function Catalog.ownsFaceplate(facts,id)
 	local owned=facts and facts.faceplates
@@ -52,7 +53,7 @@ function Catalog.describeRequirement(slot,id,facts)
         progress=if historical then definition.target elseif type(wins)=="number"and wins==wins and wins>=0 and wins%1==0 then math.min(wins,definition.target)else 0
 	elseif rule=="highRoller"then progress=if bit32.band(trials,Trials.HighRoller.bit)~=0 then 1 else 0
 	elseif rule=="chain3"then progress=if bit32.band(trials,Trials.Goals[1].bit)~=0 then 1 else 0
-	elseif rule=="stars"then progress=if Catalog.ownsFaceplate(facts,id)then 1 else 0
+	elseif rule=="stars"or rule=="book"then progress=if Catalog.ownsFaceplate(facts,id)then 1 else 0
 	elseif rule=="trials"then progress=0;for _,goal in ipairs(Trials.Goals)do if bit32.band(trials,goal.bit)~=0 then progress+=1 end end end
 	return {rule=rule,text=definition.text,progress=math.min(progress,definition.target),target=definition.target,unlocked=progress>=definition.target}
 end

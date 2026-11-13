@@ -153,6 +153,25 @@ return function(client,parent)
     v:back();assert(not v.shade.Visible and f.closed[#f.closed]=="back")
    end)
   end
+  -- Play-forever F2: the book-only Bookworm plate joins the grid once the book grants it.
+  test("Bookworm: hidden until owned, then a 17th card (scrolling grid on desktop) that equips",function()
+   local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
+   assert(#Shop.order({faceplates={}})==16 and Shop.order({faceplates={"bookworm"}})[17]=="bookworm")
+   local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(1920,1080);host.Parent=gui
+   local equipped={}
+   local shop=Shop.new(host,{equip=function(id)table.insert(equipped,id)end})
+   shop:setContext({facts={faceplates={}},wallet=0})
+   assert(#shop.tiles==16 and shop.grid==nil,"no book plate: the 4 x 4 grid, no scroll")
+   shop:setContext({facts={faceplates={"bookworm"}}})
+   assert(#shop.tiles==17 and shop.grid and shop.grid:IsA("ScrollingFrame"),"owned: a fifth row in a scrolling grid")
+   assert(shop.grid:FindFirstChild("Tile_bookworm"))
+   shop:open(Themes.Default,1);settle()
+   assert(shop:focusId("bookworm")and shop.root:GetAttribute("FocusedPlate")=="bookworm")
+   assert(select(1,Shop.tileStatus("bookworm",shop.ctx))=="From the book")
+   assert(shop.tiles[17].status.Text=="From the book")
+   shop:act(true);assert(equipped[1]=="bookworm","an owned book plate equips like any other")
+   shop:close();host:Destroy()
+  end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  GuiService.SelectedObject=nil
  for _,v in ipairs(views)do v:close("forced");v.shade:Destroy()end

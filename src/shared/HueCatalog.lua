@@ -78,6 +78,15 @@ function Hue.resolveTarget(counts)
  if total==0 then return nil end
  return Color3.new(srgb(r/total),srgb(g/total),srgb(b/total))
 end
+-- Restricted players: the fruit they hold fewest of, ties in ItemOrder (no roll).
+function Hue.fixedNext(inventory)
+ local best,count=nil,math.huge
+ for _,id in ipairs(Hue.ItemOrder)do
+  local n=type(inventory)=="table"and type(inventory[id])=="number"and inventory[id]or 0
+  if n<Hue.StackLimit and n<count then best,count=id,n end
+ end
+ return best
+end
 function Hue.roll(unit)
  if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 then return nil end
  return Hue.ItemOrder[math.min(5,math.floor(unit*5)+1)]

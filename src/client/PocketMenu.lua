@@ -1,7 +1,8 @@
 -- Pocket Menu (UI-SPEC-COMPACT-FRAME section 9, decision 6): a menu on the deck
 -- screen, opened by the MENU pill (and M / Y / Start) during a round. Resume,
--- Restart round, Quit to garden, Hatch eggs, Customize. Restart and Quit act at
--- once on an empty board and ask for one more tap mid-round.
+-- Restart round, Quit to garden, Hatch eggs, Customize, Collection book (play-forever
+-- F2; a gold claim dot while a book milestone waits). Restart and Quit act at once on
+-- an empty board and ask for one more tap mid-round.
 -- Presentation only: every action goes back through `callbacks`; the caller owns
 -- pausing, the round and the garden routes.
 local Kit=require(script.Parent.DeckKit)
@@ -14,33 +15,37 @@ Menu.Items={
  {id="quit",text="Quit to garden",armed="Tap again to quit"},
  {id="hatch",text="Hatch eggs"},
  {id="customize",text="Customize"},
+ {id="book",text=UICopy.get("book.title")},
 }
+Menu.Count=#Menu.Items
 Menu.OpenTime,Menu.CloseTime,Menu.ArmTime=.16,.12,3
 
 -- Pure: the regular (desktop LCD, authored 848x608) layout, one column.
 function Menu.regularGeometry()
  local items={}
- for i=1,5 do items[i]={x=244,y=150+(i-1)*72,w=360,h=60}end
+ for i=1,Menu.Count do items[i]={x=244,y=136+(i-1)*70,w=360,h=60}end
  return{cols=1,items=items,title={x=40,y=36,w=768,h=34}}
 end
--- Pure: the next focus index from `index` moving (dx, dy) on a `cols` grid,
--- skipping disabled items; stays put at an edge.
-function Menu.step(index,dx,dy,cols,enabled)
- local rows=if cols==1 then 5 else 3
+-- Pure: the next focus index from `index` moving (dx, dy) on a `cols` grid
+-- (two columns fill the left column first), skipping disabled items; stays put at
+-- an edge. `count` defaults to the menu's item count.
+function Menu.step(index,dx,dy,cols,enabled,count)
+ count=count or Menu.Count
+ local rows=if cols==1 then count else math.ceil(count/2)
  local function pos(i)
-  if cols==1 then return 0,i-1 end
-  if i<=3 then return 0,i-1 end
-  return 1,i-4
+  if cols==1 or i<=rows then return 0,i-1 end
+  return 1,i-rows-1
  end
  local function at(c,r)
-  if cols==1 then if c==0 and r>=0 and r<5 then return r+1 end;return nil end
-  if c==0 and r>=0 and r<3 then return r+1 elseif c==1 and r>=0 and r<2 then return r+4 end
-  return nil
+  if r<0 or r>=rows then return nil end
+  local i=if c==0 then r+1 elseif c==1 and cols==2 then rows+r+1 else nil
+  return if i and i<=count then i else nil
  end
  local c,r=pos(index)
  for _=1,rows do
   c+=dx;r+=dy
-  if cols==2 and dx~=0 and c==1 and r>1 then r=1 end
+  -- Into a shorter right column: land on its last row.
+  if cols==2 and dx~=0 and c==1 and rows+r+1>count then r=count-rows-1 end
   local i=at(c,r);if not i then return index end
   if enabled[i]~=false then return i end
  end
@@ -97,14 +102,23 @@ function Menu:build(view)
   button.Activated:Connect(function()self:activate(i,true)end)
   button.MouseEnter:Connect(function()if self.visible then self:focus(i)end end)
   self.buttons[i]=button
+  if item.id=="book"then
+   -- Claim dot: 10 px Stars gold, right of the centred label.
+   local label=Kit.buttonState(button).label
+   local w=Kit.measure(item.text,"Button",label.TextSize).X
+   local dot=Kit.frame(button,"ClaimDot","stars",UDim2.new(.5,math.ceil(w/2)+8,.5,-10),UDim2.fromOffset(10,10),999)
+   dot.ZIndex=button.ZIndex+6;dot.Visible=false;self.bookDot=dot
+  end
  end
  self.ring=Kit.focusRing(self.overlay.layer)
 end
 
--- state: {empty, locked, canRestart, canQuit, canHatch, canCustomize}
+-- state: {empty, locked, canRestart, canQuit, canHatch, canCustomize, canBook, bookClaimable}
 function Menu:paint()
  local s=self.state
- self.enabled={true,s.canRestart~=false,s.canQuit~=false,s.canHatch~=false,s.canCustomize~=false}
+ self.enabled={true,s.canRestart~=false,s.canQuit~=false,s.canHatch~=false,s.canCustomize~=false,s.canBook~=false}
+ -- A gold dot on the Collection book row while a milestone waits to be claimed.
+ if self.bookDot then self.bookDot.Visible=(s.bookClaimable or 0)>0 and s.canBook~=false end
  for i,button in ipairs(self.buttons)do
   local item=Menu.Items[i]
   local armed=self.armed==item.id

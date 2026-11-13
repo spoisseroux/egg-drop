@@ -1,6 +1,7 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
 -- Opened from the Care Cradle and the Pocket Menu "Customize". A pinned pet pane
--- (who am I dressing) and three large rows: Pets, Wardrobe, Customize. The Pets
+-- (who am I dressing) and four large rows: Pets, Wardrobe, Customize and the
+-- Collection book (play-forever F2; opened through the caller). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
 -- hatched material, toy, feature or jar) land on it in assign mode.
 -- Focus is owned here (as in WardrobeShop): arrows / WASD / d-pad move, A / Enter
@@ -27,7 +28,11 @@ Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
  table.freeze({id="customize",icon="wand",name="Customize",line="Hue, charm, materials and toys"}),
+ table.freeze({id="book",icon="book",name=UICopy.get("book.title"),line=UICopy.get("book.entry.line")}),
 })
+-- Row rects: desktop rows fill the 452 px column beside the pet pane; phone rows are
+-- 48 high (44 px targets) so four fit under the 60 px header.
+Hub.RowPitch={regular=116,regularH=104,phone=54,phoneH=48}
 Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
@@ -50,6 +55,11 @@ function Hub.status(rowId,ctx)
  if rowId=="customize"then
   local n=ctx.newItems or 0
   if n>0 then return{text=n..(if n==1 then " NEW ITEM"else " NEW ITEMS"),tone="stars",dot=true}end
+  return{text="",tone="dim"}
+ end
+ if rowId=="book"then
+  local n=ctx.bookClaimable or 0
+  if n>0 then return{text=if n==1 then UICopy.get("book.entry.claimOne")else UICopy.get("book.entry.claimMany",{count=n}),tone="stars",dot=true}end
   return{text="",tone="dim"}
  end
  return{text="",tone="dim"}
@@ -128,7 +138,9 @@ end
 function Hub:cards()return Hub.petCards(self.ctx.state,self.ctx.activeId)end
 function Hub:statusCtx()
  local petId=self.ctx.activeId or "pip";local pet=Pets.byId[petId]
- return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state)}
+ local book=self.ctx.state and self.ctx.state.book
+ local claimable=type(book)=="table"and type(book.claimable)=="table"and #book.claimable or 0
+ return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state),bookClaimable=claimable}
 end
 
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
@@ -258,26 +270,27 @@ function Hub:buildHub(body,W,H,phone)
  end
  local ctx=self:statusCtx()
  for index,row in ipairs(Hub.Rows)do
-  local x,y,w,h=368,84+(index-1)*156,456,140
-  if phone then x,y,w,h=232,64+(index-1)*73,W-20-232,64 end
+  local P=Hub.RowPitch
+  local x,y,w,h=368,84+(index-1)*P.regular,456,P.regularH
+  if phone then x,y,w,h=232,64+(index-1)*P.phone,W-20-232,P.phoneH end
   -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
   local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
    position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
   local stroke=tileState.stroke
   button:SetAttribute("AccessibleLabel",row.name..", "..row.line)
-  local discSize=if phone then 44 else 72
+  local discSize=if phone then 36 else 72
   local d,icon=disc(button,row.icon,if phone then 16 else 24,(h-discSize)/2,discSize)
   local tx=if phone then 72 else 116
   local name,line,status
   local s=Hub.status(row.id,ctx)
   if phone then
-   name=txt(button,"Strong",row.name,"text",tx,10,w-tx-160,22,{TextSize=16})
-   line=txt(button,"Small",row.line,"soft",tx,34,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   name=txt(button,"Strong",row.name,"text",tx,4,w-tx-160,22,{TextSize=16})
+   line=txt(button,"Small",row.line,"soft",tx,26,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
    status=txt(button,"Label",s.text,s.tone,w-190,0,150,h,{Name="Status",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
   else
-   name=txt(button,"Heading",row.name,"text",tx,32,w-tx-56,28,{TextSize=22})
-   line=txt(button,"Body",row.line,"soft",tx,62,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),90,w-tx-70,18,{Name="Status",TextSize=12})
+   name=txt(button,"Heading",row.name,"text",tx,16,w-tx-56,28,{TextSize=22})
+   line=txt(button,"Body",row.line,"soft",tx,44,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
+   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),70,w-tx-70,18,{Name="Status",TextSize=12})
   end
   Kit.paint(status,"TextColor3",function()return colorOf(s.tone)end)
   local dot
@@ -286,7 +299,7 @@ function Hub:buildHub(body,W,H,phone)
    if phone then
     local tw=TextService:GetTextSize(status.Text,12,Enum.Font.BuilderSansBold,Vector2.new(500,30)).X
     dot.Position=UDim2.fromOffset(w-40-tw-14,h/2-4)
-   else dot.Position=UDim2.fromOffset(tx,95)end
+   else dot.Position=UDim2.fromOffset(tx,75)end
   end
   chevron(button,w-(if phone then 26 else 36),h/2,if phone then 16 else 20)
   self.rows[index]={id=row.id,button=button,stroke=stroke,disc=d,icon=icon,name=name,line=line,status=status,dot=dot}

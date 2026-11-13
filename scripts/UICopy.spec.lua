@@ -9,7 +9,7 @@ return function(client,parent)
  local Kit=require(client.DeckKit)
  local TextService=game:GetService("TextService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local sample={count=3,heat="Medium",low=6,high=8,pet="Bear"}
+ local sample={count=3,heat="Medium",low=6,high=8,pet="Bear",reward=5,item="Squeaky Bone",owned=3,total=12}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000
@@ -54,6 +54,20 @@ return function(client,parent)
    local Balls=require(client.BallShop);assert(Balls.Reasons.NeedStars==UICopy.get("shop.reason.needStars"))
    local Shop=require(client.FaceplateShop);assert(Shop.Hints[3].promise==UICopy.get("style.promise.balls"))
   end)
+  test("every key the play-forever F2 call sites read exists (book, stamp card, restricted eggs)",function()
+   for _,key in ipairs({"book.title","book.eyebrow","book.entry.line","book.entry.claimOne","book.entry.claimMany","book.records.name",
+    "book.records.line","book.records.empty","book.promise","book.claim","book.claimShort","book.claimed","book.pending","book.retrying",
+    "book.timeout","book.failed","book.owned","book.found","book.missing","book.empty","book.bookworm.line","book.bookworm.short",
+    "book.bookworm.done","book.bookworm.count","book.toast.claimed","book.toast.bookworm","book.hint.pages","book.hint.move",
+    "book.hint.claim","book.hint.back","stamp.title","stamp.promise","stamp.next","stamp.tomorrow","stamp.full","stamp.button",
+    "stamp.done","stamp.landed","hatch.next.label","hatch.next.line","hatch.next.done"})do
+    assert(UICopy.has(key),"missing "..key)
+   end
+   local View=require(client.BookView)
+   for _,key in ipairs(View.StatsOrder)do assert(UICopy.has("book.stats."..key),"missing Records label "..key)end
+   assert(UICopy.has("book.stats.stamps"))
+   assert(UICopy.get("stamp.promise")=="No streaks. Miss a day, lose nothing.","the stamp card promise reads as the scope wrote it")
+  end)
   -- {key, role, size, width (px of the line it replaces), where, vars}
   local rows={
    {"hatch.footer.phone","Small",12,226-10-8,"phone list note (812 x 354)"},
@@ -70,6 +84,11 @@ return function(client,parent)
    {"results.leave.wide","Button",22,392-26-10,"desktop Leave button (392)"},
    {"shop.short.plain","Body",14,232-24,"phone shop status (812 x 354), worst price",{count=120}},
    {"items.note.full","Strong",16,260,"board note (auto-sized pill on the board)"},
+   -- Play-forever F2 (new lines; the widths are the cells they sit in).
+   {"book.claim","Button",15,113-16,"desktop book milestone button (113)",{reward=15}},
+   {"book.claim","Button",14,128-16,"phone book milestone button (128; under 15 px the label is Builder Sans Bold)",{reward=15}},
+   {"book.records.line","Small",12,192-24,"phone Records tile line (812 x 354)"},
+   {"book.entry.line","Small",12,812-20-232-72-170,"phone Companions hub row line (812 x 354)"},
   }
   test("changed lines fit the width of the line they replace (GetTextBoundsAsync, role face)",function()
    for _,row in ipairs(rows)do

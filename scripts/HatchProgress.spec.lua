@@ -124,10 +124,10 @@ return function(Hatching, Catalog)
 		local day = Hatching.public(h).dailyDay
 		local revision = h.state.revision
 		command(h, "daily", day)
-		assert(h.state.nectar == 24 and db.player_1.hatching.nectar == 24)
+		assert(h.state.nectar == 22 and db.player_1.hatching.nectar == 22)
 		writes = c.updateCalls
 		ok = Hatching.command(h, "daily", day, revision)
-		assert(not ok and h.state.nectar == 24 and c.randomCalls == 0 and c.updateCalls == writes)
+		assert(not ok and h.state.nectar == 22 and c.randomCalls == 0 and c.updateCalls == writes)
 		assert(db.player_1.hatching.mastery.pip == 0)
 	end)
 
@@ -145,9 +145,9 @@ return function(Hatching, Catalog)
 		local ok = Hatching.command(h, "daily", day, revision)
 		assert(not ok and h.status == "Retrying")
 		local committed = copy(db.player_1.hatching.lastOperation)
-		assert(db.player_1.hatching.nectar == 24)
+		assert(db.player_1.hatching.nectar == 22)
 		ok = Hatching.command(h, "daily", day, revision)
-		assert(ok and h.state.lastOperation.id == committed.id and h.state.nectar == 24)
+		assert(ok and h.state.lastOperation.id == committed.id and h.state.nectar == 22)
 		assert(h.state.dailyClaimDay == day and c.randomCalls == 0)
 	end)
 
@@ -183,9 +183,9 @@ return function(Hatching, Catalog)
 		assert(db.player_1.hatching.nectar == nectar and h.pending)
 		pendingId = h.pending.id
 		assert(Hatching.retry(h))
-		assert(h.state.nectar == nectar + 6 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
+		assert(h.state.nectar == nectar + 4 and h.state.dailyClaimDay == day and h.state.lastOperation.id == pendingId)
 		assert(not Hatching.command(h, "daily", day, h.state.revision))
-		assert(h.state.nectar == nectar + 6 and c.randomCalls == 0)
+		assert(h.state.nectar == nectar + 4 and c.randomCalls == 0)
 	end)
 
 	test("monotonic payouts reject replay beyond receipt history", function()
@@ -239,14 +239,14 @@ return function(Hatching, Catalog)
 		c.replay = true
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		local p = Hatching.public(h)
-		assert(not p.dailyAvailable and p.dailyDay == "20" and p.dailyBonus == 6)
+		assert(not p.dailyAvailable and p.dailyDay == "20" and p.dailyBonus == 4 and p.stamps == 0)
 		assert(not Hatching.command(h, "daily", p.dailyDay, h.state.revision))
 		c.now += 1
 		p = Hatching.public(h)
 		assert(p.dailyAvailable and p.dailyDay == "21")
 		local revision = h.state.revision
 		command(h, "daily", p.dailyDay)
-		assert(h.state.nectar == 12 and db.player_1.hatching.nectar == 12)
+		assert(h.state.nectar == 10 and db.player_1.hatching.nectar == 10)
 		assert(not Hatching.command(h, "daily", p.dailyDay, revision))
 		assert(not Hatching.command(h, "daily", p.dailyDay, h.state.revision))
 		assert(not Hatching.public(h).dailyAvailable)
@@ -255,11 +255,11 @@ return function(Hatching, Catalog)
 		assert(not Hatching.renew(h))
 		local nextVisit = Hatching.load(1, {}, adapter("b"))
 		command(nextVisit, "daily", "22")
-		assert(nextVisit.state.nectar == 18)
+		assert(nextVisit.state.nectar == 14)
 		c.now -= 86400
 		assert(not Hatching.public(nextVisit).dailyAvailable)
 		assert(not Hatching.command(nextVisit, "daily", "21", nextVisit.state.revision))
-		assert(nextVisit.state.nectar == 18)
+		assert(nextVisit.state.nectar == 14)
 	end)
 
 	-- v1: formerly "every active outcome grants once" (Meadow outcome grants and
