@@ -22,6 +22,7 @@ Updated 2026-11-13 ~04:40. Resumed at 04:03. A: specs green (46/53 client, 7 pre
 - [ ] Make the Pocket Deck machine, egg hatching place and Care machine eye-catching: idle attract animation, soft glow/beam, floating icon or bouncing arrow, a gentle sound nearby.
 
 **C. Round items and cuter eggs: SCOPE first (Fable), mockups to Spencer before building:**
+- **Scope written 2026-11-13, waiting on Spencer:** `ROUND-ITEMS-AND-BALL-THEMES-SCOPE-2026-11-13.md`, mockups in `artifacts/round-items-2026-11-13/` (generator `scripts/deck_art/build_round_items_mockups.py`). Recommends: power-up balls only (no Power-up Egg yet, no save change), four items first (Swap, Pop, Magnet, Bomb), B opens a freezing carousel, a phone item button under A shown only when holding an item, smiley faces replacing numerals and motifs, size-stepped colour circles in the UI, a "Balls" Deck style tab with six themes (save v11). Six open questions in section D3. Nothing built.
 - [ ] In-round items: B opens a quick-select item carousel (left/right to browse, A to use), original design. Note: phones currently have no B on the touch HUD (Compact v2 decision 4), so the scope must place it.
 - [ ] Where items come from: a Power-up Egg (hatched for items) and/or special power-up balls that grant a power-up when merged/cleared. Recommend one, with balance and save impact.
 - [ ] Cuter eggs/balls: crude smiley faces with varied expressions, a slight shaky "alive" animation, no tier numbers on the balls (size + colour carry the tier).
