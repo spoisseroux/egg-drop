@@ -102,6 +102,8 @@ Done, uncommitted on feat/egg-drop-arcade-polish (nothing committed since f443b3
 
 Update ~01:40: slice B finished the 3D Star in DeckResults (2D fallback kept; glass Transparency .5 needs a look). Its glow still uses the 9-slice focusGlow image: swap for the round Frame + UIGradient glow used in RevealStage.
 
+Update ~01:45: slice D finished the 3D egg preview (new src/client/EggPreview3D.lua, wired in EggHatchView, 2D fallback, new HatchEggsList case). All agent work is now done; nothing is in flight. Untested in Studio.
+
 Next: copy specs to ZZSpecs, fresh Play, run the full set (runner pattern: spec(client,
 freshScreenGui), own-gui specs get PlayerGui, gui/board specs get the EggDrop gui + board),
 capture every screen at 1920x1080 and 812x354 against the mockups, commit, publish via
