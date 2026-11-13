@@ -2,7 +2,7 @@
 
 Written 2026-11-12 by Fable (visual lead) for the implementer. It replaces section 7 of `UI-SPEC-2026-11-12.md` and the "Compact" lines in `UI-DESIGN-SYSTEM.md`. Tokens, components, focus rules, motion and data ownership are unchanged from the main spec; this file only says where things go on a phone.
 
-**Status.** Design spec with mockups. Nothing in `src/` has changed and nothing here has been run in Studio or on a device. The mockups are drawn by `scripts/deck_art/build_compact_mockups.py`, which evaluates the rules below at each size, so the pictures and the tables agree by construction.
+**Status.** Implemented 2026-11-12 night (Spencer approved DeviceSafeInsets with the TopbarInset keep-out, `#FF8090` danger text and the Results change-difficulty button). Studio FIXTURE captures in `artifacts/deck-rebuild/studio/compact/` (see its README for the gaps); `scripts/CompactPhone.spec.lua` asserts the tables below. Not yet run on a phone. The mockups are drawn by `scripts/deck_art/build_compact_mockups.py`, which evaluates the rules below at each size, so the pictures and the tables agree by construction.
 
 **Why.** Today a phone gets the desktop screens scaled down. The picker, quest log and results sit in a 417×299 LCD at a scale near 0.49, so 16 px body text renders at about 8 px, and the faceplate shop fits itself at about 0.6. The round board is about 282 px tall on a 740×360 phone. This spec stops scaling: the phone itself becomes the deck, every screen is authored in real pixels, and the board grows to 344 px tall on the same phone (about 22% taller, by arithmetic from `DeckScreen.resolve`, not measured).
 
