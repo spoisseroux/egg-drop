@@ -42,4 +42,17 @@ function Return.retry(board, ready, ownsPip, expectedSequence, initialize)
 	return true
 end
 
+-- Pocket Menu "Restart round" (UI-SPEC-COMPACT-FRAME 9, decision 6): forfeit a live
+-- run that has started. No payout and no settlement: the run never ended. The
+-- caller re-initialises the same field template with a fresh seed, so a learned
+-- egg queue cannot be replayed. An empty board is already fresh (refused).
+function Return.restart(board, ready, ownsPip, expectedSequence, initialize)
+	if board.mode ~= "Board" or not board.field or not board.round or board.round.over
+		or not ownsPip or board.payoutPending or type(expectedSequence) ~= "number"
+		or expectedSequence ~= expectedSequence or expectedSequence % 1 ~= 0 or expectedSequence ~= board.runSequence or not board.sim or (board.sim.drops or 0) <= 0 then return false end
+	if not available(board, ready) then return false end
+	initialize(board, board.sim.preset)
+	return true
+end
+
 return Return

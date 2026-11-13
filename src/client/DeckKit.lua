@@ -394,6 +394,9 @@ function Kit.focusRing(host)
   local t=api.target;if not t or not t.Parent or not t.Visible then ring.Visible=false;return end
   if Kit.touchHidesFocus and Kit.lastInputTouch()then ring.Visible=false;return end
   local origin=host.AbsolutePosition
+  -- A padded host (the phone sheets' plate-grip inset) shifts its children's origin.
+  local pad=host:FindFirstChildOfClass("UIPadding")
+  if pad then origin+=Vector2.new(pad.PaddingLeft.Offset,pad.PaddingTop.Offset)end
   local scale=1
   local ancestor=host:FindFirstAncestorWhichIsA("GuiObject")
   local uiScale=host:FindFirstChildOfClass("UIScale");if uiScale then scale=uiScale.Scale end

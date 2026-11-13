@@ -43,7 +43,7 @@ end
 
 function Picker:clear()
  if self.ring then self.ring.hide();self.ring.root:Destroy()end
- for _,child in ipairs(self.overlay.content:GetChildren())do if not child:IsA("UIScale")then child:Destroy()end end
+ for _,child in ipairs(self.overlay.content:GetChildren())do if not(child:IsA("UIScale")or child:IsA("UIPadding"))then child:Destroy()end end
  self.cards={};self.questButton=nil
 end
 

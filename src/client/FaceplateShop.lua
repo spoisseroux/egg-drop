@@ -294,8 +294,10 @@ function Shop:fit(size,rect)
  -- Compact phone roots get their own layout at scale 1 (UI-SPEC-COMPACT 9).
  if not rect and Kit.compactRule(size.X,size.Y)then
   local kx,kh=Kit.keepOut()
-  local view={phone=true,W=math.floor(size.X),H=math.floor(size.Y),kx=kx,kh=kh,hx=math.max(kx+12,24)}
-  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.new();self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
+  -- Compact v2 plate grips (UI-SPEC-COMPACT-FRAME 4): the sheet moves in by mg - 6.
+  local W=math.floor(size.X);local mg=require(script.Parent.DeckScreen).gripMargin(W);local off=mg-6
+  local view={phone=true,W=W-2*off,H=math.floor(size.Y),kx=kx-off,kh=kh,hx=math.max(kx+12,mg+18)-off,off=off}
+  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(off,0);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
   if self.key~=Shop.viewKey(view)then self:build(view);self:relayout()end
   return
  end

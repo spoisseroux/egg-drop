@@ -64,7 +64,7 @@ function Log.compactTabsWidth(W,hx)return math.min(312,W-hx-174)end
 
 function Log:clear()
  if self.ring then self.ring.hide();self.ring.root:Destroy()end
- for _,child in ipairs(self.overlay.content:GetChildren())do if not child:IsA("UIScale")then child:Destroy()end end
+ for _,child in ipairs(self.overlay.content:GetChildren())do if not(child:IsA("UIScale")or child:IsA("UIPadding"))then child:Destroy()end end
  self.rows={};self.title=nil;self.view=nil
 end
 

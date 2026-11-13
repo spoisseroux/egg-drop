@@ -469,7 +469,9 @@ local function reset(board, preset, sameField)
 	local descriptor
 	if field then
 		if sameField and board.field then
-			descriptor=FieldObjectives.create(board.field.descriptor.id,board.field.descriptor.seed,board.runHeat)
+			-- "template" (Pocket Menu restart): same field, fresh seed, so the egg queue is new.
+			local seed=if sameField=="template" then Random.new():NextInteger(1,2147483646) else board.field.descriptor.seed
+			descriptor=FieldObjectives.create(board.field.descriptor.id,seed,board.runHeat)
 		else
 			local count=board.fieldCount or 0
 			descriptor=FieldObjectives.create(FieldObjectives.next(count),Random.new():NextInteger(1,2147483646),board.runHeat)
@@ -745,7 +747,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if (action == "sound" or action == "motion" or action == "companion"
-		or action == "family" or action == "drop" or action == "reset" or action == "preset")
+		or action == "family" or action == "drop" or action == "reset" or action == "preset" or action == "restart")
 		and not canProgress(board) then return end
 	if action == "appearance" then
 		-- Compatibility for the previous full-pair client; new clients send slots.
@@ -859,6 +861,13 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			if board.firstSession then
 				board.firstSession:advance(2)
 			end
+		end
+	elseif action == "restart" then
+		-- Pocket Menu restart: same field template, new seed; its own 3 s cooldown.
+		if now - board.lastReset < Config.ResetInterval or now - (board.lastRestart or -math.huge) < 3 then return end
+		if RunReturn.restart(board, canProgress(board), hasPip(board), value, function(target, preset) reset(target, preset, "template") end) then
+			board.lastReset, board.lastRestart = now, now
+			board.menuPaused = false
 		end
 	elseif action == "reset" or action == "preset" then
 		if board.payoutPending then return end

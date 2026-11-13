@@ -104,5 +104,27 @@ return function(server)
 		assert(Return.retry(b,true,true,7,reset) and b.initializations==1)
 		assert(not Return.retry(b,true,true,7,reset) and b.initializations==1)
 	end)
+	-- Pocket Menu "Restart round": only a started, live run on the deck, once per sequence.
+	local function live()
+		local b,reset=fixture();b.mode="Board";b.round={over=false};b.field={phase="Playing"};b.earnedPayout=nil
+		b.sim={preset="Meadow",drops=5,pile={1},queue={2,3}}
+		return b,reset
+	end
+	test("restart forfeits a started live run once and refuses a stale sequence",function()
+		local b,reset=live()
+		assert(Return.restart(b,true,true,7,reset) and b.initializations==1 and b.runSequence==8 and b.sim.drops==0)
+		assert(not Return.restart(b,true,true,7,reset) and b.initializations==1,"stale sequence")
+	end)
+	test("restart refuses an empty board, a finished round, the garden, a pending payout and no field",function()
+		local b,reset=live();b.sim.drops=0;assert(not Return.restart(b,true,true,7,reset))
+		b,reset=live();b.round.over=true;assert(not Return.restart(b,true,true,7,reset))
+		b,reset=live();b.mode="Room";assert(not Return.restart(b,true,true,7,reset))
+		b,reset=live();b.payoutPending=true;assert(not Return.restart(b,true,true,7,reset))
+		b,reset=live();b.field=nil;assert(not Return.restart(b,true,true,7,reset))
+		b,reset=live();assert(not Return.restart(b,false,true,7,reset),"not ready")
+		b,reset=live();assert(not Return.restart(b,true,false,7,reset),"no Pip")
+		b,reset=live();b.nursery.state.lastHatch={id="h"};assert(not Return.restart(b,true,true,7,reset),"hatch pending")
+		assert(b.initializations==0)
+	end)
 	return {passed=#cases,cases=cases,evidence="production server transition API with authoritative state doubles"}
 end

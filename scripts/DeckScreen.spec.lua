@@ -28,7 +28,7 @@ return function(client,parent)
   end)
   test("phone landscape 733x307 is the Compact phone layout; 1024x768 keeps the small scaled LCD",function()
    local g=Screen.resolve(Vector2.new(733,307),aspect)
-   assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==291 and g.contentScale==1,"phone layout in real px")
+   assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==307-24 and g.contentScale==1,"phone layout in real px (Compact v2: H - 24)")
    local small=Screen.resolve(Vector2.new(1024,768),aspect)
    assert(small.mode=="Small"and small.compact and near(small.s,(768-8)/608,.001)and small.authored==Screen.Compact,"the 1024x768 band is unchanged")
   end)
@@ -37,8 +37,9 @@ return function(client,parent)
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(733,307),aspect);s:setVisible(true)
    task.wait()
    for dir,q in pairs(s.quadrants)do if q.Visible then assert(q.AbsoluteSize.X>=44 and q.AbsoluteSize.Y>=44,q.Name)else assert(dir=="Up"or dir=="Down")end end
-   for id,b in pairs(s.buttons)do assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)end
-   assert(not s.menu.Visible and s.back.root.AbsoluteSize.X==44)
+   -- Compact v2: B is not drawn on the phone HUD (decision 4); MENU is back on the left shoulder.
+   for id,b in pairs(s.buttons)do if b.holder.Visible then assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)else assert(id=="B")end end
+   assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44 and s.back.root.AbsoluteSize.X==44)
    -- Compact HUD type never goes under 12.
    for _,node in ipairs(s.hudRoot:GetDescendants())do if node:IsA("TextLabel")and node.Text~=""then assert(node.TextSize>=12,node:GetFullName())end end
    root:Destroy()
