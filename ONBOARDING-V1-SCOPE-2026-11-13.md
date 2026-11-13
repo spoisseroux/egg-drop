@@ -318,3 +318,7 @@ Mockups worth drawing before slices 3 and 6 (none made in this pass): the Welcom
 3. **One `coachMask` save field, added now?** Recommendation: yes, one bump before the launch store goes live, holding every one-time flag (fill-line card, starter skipped, garden intro done).
 4. **Store the player's UserId with a bug report?** Recommendation: yes, UserId only, purged at 30 days, with a delete-by-UserId script. Without it a "my Stars are gone" report cannot be matched to a save. The alternative is fully anonymous reports that are only good for counting.
 5. **Reports through a DataStore queue you pull, or pushed to an endpoint you run?** Recommendation: the DataStore queue for the soft launch (no HTTP, no secret, text stays on Roblox), with an agent pulling daily. Add a pushed endpoint only if volume or urgency calls for it.
+
+## Decisions (Spencer, 2026-11-13)
+
+All five recommendations accepted: one unmissable first-Stars round; +2 Stars finish pay for a missed round with at least one goal met (Easy multiplier unchanged); one `coachMask` save field before launch (also unblocks the fill-line coach card); bug reports store the UserId only, purged at 30 days; DataStore queue for the soft launch.
