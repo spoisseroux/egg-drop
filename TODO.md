@@ -1,12 +1,34 @@
 # Egg Drop — remaining work
 
-Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private build after v515 published 2026-11-12** (QA bug fixes, runtime 7e017dc; v515 before it). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+Updated November 13, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private build after v515 published 2026-11-12** (QA bug fixes, runtime 7e017dc; v515 before it). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
 ## Now working on
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
-- **In progress (2026-11-12 night): redesign mockups from the QA pass (Spencer: "start the redesigns").** Two Fable design passes, specs + PIL mockups only, no runtime yet: celebrations (hatch reveal stage, results screen) → `UI-SPEC-REDESIGN-CELEBRATIONS-2026-11-12.md`, `artifacts/redesign-2026-11-12/celebrations/`; menus and round (Companions hub, Hatch eggs list + 3D egg, shared header, deck background decision, round look and danger state) → `UI-SPEC-REDESIGN-MENUS-2026-11-12.md`, `artifacts/redesign-2026-11-12/menus/`. Mockups done 2026-11-13; waiting on Spencer's approval and the open questions in each spec before build.
+Updated 2026-11-13 ~02:00. Work paused for usage; **resumes 04:03 (scheduled in-session)**. Order: A, then B, then C, then D.
+
+**A. Redesign build: built, NOT yet tested as a whole or committed** (plan + checkpoint: `artifacts/redesign-2026-11-12/BUILD-PLAN.md`). Spencer approved every mockup ("build all that") with the recommended answers.
+- Built: shared header + Deck style (Faceplates/Backgrounds tabs), hatch reveal stage (`RevealStage.lua`), results screen (`DeckResults.lua`, 3D Star with 2D fallback), round look (vivid tiers, V violet, no rings/border, fill-line danger state, `OverflowGraceLeft`), deck background inside the board, Companions hub + Customize (Charm None, Features hidden by `FeatureFlags`), Hatch eggs list + 3D egg preview (`EggPreview3D.lua`).
+- Assets: 3D eggs + Star uploaded (`src/shared/EggModels.lua`, created at runtime with `AssetService:CreateMeshPartAsync`); 28 placeholder sounds uploaded and wired (`BoardAudio` `placeholderIds`, `assets/audio/placeholder/`).
+- Last full run: 37/53 client specs passed; fixes since then for AppearancePalette, CareMachineUI, CompactDeck, CompactEggShop, ControllerSheets, DeviceItemFront, MaterialEditor, SharedHeaders, StarsPresentation, UsableSheetWidth await a rerun. Pre-existing failures: SaveNoticeLayout, StyleJournalActions, StyleJournalLayout, VividHandheld, Onboarding, SemanticUI.
+- To do: rerun all specs, swap the results Star's 9-slice glow, capture every screen vs mockups, Code Reviewer pass on egg/Star/audio, commit, push, publish, record in PLAY-BUILD.md.
+
+**B. "Feel alive" batch (Spencer 2026-11-13), after A publishes:**
+- [ ] Ambient water bed heard everywhere, louder near the waterfalls (placeholder audio).
+- [ ] Random bird chirps from trees, quieter at night (placeholder audio).
+- [ ] Pet life: tune walk, idles (look around, stretch, yawn), more faces, a cute sit, small coo sounds (coo pairing already exists: PetCooScheduler/PetCooPose).
+- [ ] Declutter the world (fewer vases/props by the hub and deck machine); retro-style flat sprite flowers.
+- [ ] Make the Pocket Deck machine, egg hatching place and Care machine eye-catching: idle attract animation, soft glow/beam, floating icon or bouncing arrow, a gentle sound nearby.
+
+**C. Round items and cuter eggs: SCOPE first (Fable), mockups to Spencer before building:**
+- [ ] In-round items: B opens a quick-select item carousel (left/right to browse, A to use), original design. Note: phones currently have no B on the touch HUD (Compact v2 decision 4), so the scope must place it.
+- [ ] Where items come from: a Power-up Egg (hatched for items) and/or special power-up balls that grant a power-up when merged/cleared. Recommend one, with balance and save impact.
+- [ ] Cuter eggs/balls: crude smiley faces with varied expressions, a slight shaky "alive" animation, no tier numbers on the balls (size + colour carry the tier).
+- [ ] Goals and other UI that show a ball type: replace numerals with a plain coloured circle.
+
+**D. v1 scope (accepted 2026-11-13, not built):** onboarding/tutorial "win the Bear" loop + bug reporting (`ONBOARDING-V1-SCOPE-2026-11-13.md`, all recommendations accepted: one unmissable first-Stars round, +2 Stars for a missed round with a goal met, one `coachMask` save field, bug reports store UserId only and purge at 30 days, DataStore queue); Pet Park (`PET-PARK-V1-SCOPE-2026-11-13.md`, open questions await Spencer); translations (Roblox auto-translate + clipping check); live toy test with two players; fill-line coach card (needs `coachMask`).
+
 - [x] **Claude (Studio), 2026-11-12 night: QA bug batch (Spencer: "bugs first").** Pocket Menu on a fresh save: locked rows take focus and taps and say why ("Win a round to unlock" + toast), so the d-pad no longer looks dead. Phone deck glass, menu sheets (quest log, picker, results), Wardrobe and Faceplates start 2 px under the Roblox controls (`top = kh + 2`), shoulders 18 px wider (narrower screen); board is H - 80 on phones. Wardrobe tiles inset 3 px (outline clipped). Charm "Dot" is labelled Snowflake (id `dot` unchanged) with a flake icon. Hatch reveal hero hidden until its meshes/textures load (max 2.5 s) then fades in; pet assets preload 3 s after join. World: water stream beams lie flat (were vertical curtains), opaque scenery MeshParts `DoubleSided` (stairs/capitals/trees had culled inward faces), lantern rope reaches the canopy and swings with its glow, hub lights ~40% dimmer. Specs: CompactPhone 10/10 (new locked-menu case; tables updated; overlap audit clips to scroll parents), DeckScreen 8, DeckResults 8, DeckQuests 5, DeckBoot, PetAttachments 8, WorldRoutes 6, HatchProgress 27, RunReturn 24, Wearable/FaceplatePurchase pass. Captures `artifacts/qa-bugs-2026-11-12/`.
   - Not fixed here (redesign or Spencer): Wardrobe card item thumbnails (cards show the colour only), Charm "None" row, vases/crowding (needs a props re-merge in Blender), waterfall sound (audio), the "no background" on phones is the plate filling the screen (Scout plate is plain; Canopy plate has the leaf print).
 - **Spencer's QA pass on v515 (2026-11-12, 10-page PDF), triaged:**
@@ -15,7 +37,7 @@ Keep this list current: add an item when work starts, move it to done when it la
   - Round: remove the ring around eggs and the yellow board border; brighter, more exciting egg art; the red overflow line plus `overflow` warning sound reads as losing with no explanation; Easy pays only +1 too often (retention); slightly narrower screen on phones.
   - UI redesigns: hatch reveal as a dark spotlight stage, spinnable pet with damped spin, Smash-style name/description card bottom right, animated entrance with shimmer sound, reusable for every pet; Hatch eggs as a list on the left with a spinning, wobbling 3D egg, description and odds on the right; Companions gets a parent menu with icons (Pets, Wardrobe, Customize: hue, charm, materials, features, toys); Charm Off becomes a "None" option; results screen with 3D stars counting up, bigger text, animation and sound; Deck style header matches the Wardrobe style; back circle the same size as the Stars capsule (Wardrobe, Faceplates).
   - Spencer's open questions: scrap Features for now? Claws read as nothing (rework or orientation). Is the garden Pocket Menu (Play, Quests, Pocket Trials, Settings) still needed, or should the deck machine plus the deck itself carry it? Are Quests and Pocket Trials redundant? Petting mode Bear is hard to see against white (rim or fresnel).
-- **In progress (2026-11-12 pm), Spencer asked for 1+2+3 then launch prep:**
+- [x] **Done (2026-11-12 pm), Spencer asked for 1+2+3 then launch prep** (deck rebuild, pets, world polish all landed; see entries below):
   1. World polish (Studio agent): Care Cradle highlights, night clouds/horizon, live checks of companions/petting/hatch, Bear night glow.
   2. Pocket Deck rebuild, with Fable driving visuals: UI spec + mockups, slim deck art, 16 faceplates, retro boot, then implementation of the wide screen, in-deck results, back arrow, faceplates, boot, quests and difficulty (per SCOPE-2026-11-12 decisions).
   3. Pets: attachment slots + horns/wings growing S1-S5 through the Feature Egg in game.
@@ -99,6 +121,12 @@ Keep this list current: add an item when work starts, move it to done when it la
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
 
 ## v1 public launch
+
+- **Scope (Spencer, 2026-11-13): onboarding/tutorial and bug reporting for v1.** First session must be a fun, guaranteed loop to win the Bear and win players over; in-game bug reporting. Fable scoping pass done 2026-11-13 (scope only, nothing built, no mockups) → [ONBOARDING-V1-SCOPE-2026-11-13.md](ONBOARDING-V1-SCOPE-2026-11-13.md); Spencer accepted every recommendation 2026-11-13 (see its Decisions section). Not built yet.
+- **v1 (Spencer, 2026-11-13): Pet Park**, a shared play area where everyone's pets play together and players chat. Builds on the shared garden's peer actors (GardenClient, PetCooScheduler). **Scoped 2026-11-13 (no code yet):** `PET-PARK-V1-SCOPE-2026-11-13.md`, mockups in `artifacts/pet-park-2026-11-13/`. Waiting on Spencer's five answers (location, v1 activity set, shared fetch consent, Play date reward, server size + second tester).
+- **v1: translations**: turn on Roblox automatic translation (text capture + auto-translate for the top languages); check longer strings don't clip.
+- **v1: live toy test**: buy a Toy Egg, give the toy, play in the garden, with two players.
+- **Follow-up from the redesign build:** one-time fill-line coach card (needs a saved "seen" flag, so a save-format change; cut from the redesign build).
 
 Decided 2026-11-11 by Spencer. These supersede the "no public release / no paid luck" line at the end of this file for v1.
 

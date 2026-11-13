@@ -123,3 +123,10 @@ Wardrobe card thumbnails, prop crowding, Easy payout rebalance.
 4. **Declutter the world:** fewer props (vases etc. near the deck machine and hub), and retro-style flat sprite flowers (billboard/decal PNGs) instead of busy geometry.
 5. **Make the three machines obvious:** Pocket Deck machine, egg hatching place, pet (Care) machine. Idle attract animations, a soft pulsing glow/beam, floating icon or bouncing arrow, a gentle sound when near, so a new player knows these are the things to use.
 Process: Fable for art/audio direction and mockups where useful, review-driven build, Studio captures, then publish.
+
+## Also queued 2026-11-13 ~02:00 (Spencer): scope round items and cuter eggs (Fable, mockups first)
+
+- In-round items: B opens a quick-select carousel (left/right, A to use); original design. Phones have no B today (Compact v2 decision 4); place it.
+- Source of items: a Power-up Egg and/or special power-up balls granted on merge/clear. Recommend one, with balance and save impact.
+- Cuter balls: crude smiley faces, varied expressions, slight shaky alive animation, no tier numbers (size + colour carry the tier); goals and other UI use a plain coloured circle instead of numerals.
+Full queue and order: TODO.md "Now working on" (A redesign publish, B feel alive, C items/cuter eggs scope, D v1 scope).
