@@ -282,3 +282,15 @@ No server, data or asset changes. The shell sprites (d-pad, buttons, menu pill, 
 5. **MENU pill and the Daily quests card both open the quest log** in two columns. Keep both, or should MENU open a pause / pocket menu instead?
 6. **Controls card on phones** ("Aim: drag board, A: Drop, B: Leave"). Keep it for new players, or show it only for the first few rounds and leave the space empty after?
 7. **Keep the d-pad on touch?** Same question as v1. Without it the left shoulder could shrink and the screen could grow about 60 px wider.
+
+## 9. Decisions (Spencer, 2026-11-12)
+
+Spencer approved v2 ("looks great") and asked to build it with these changes. Where a decision differs from sections 2-4, the decision wins.
+
+1. **Board height.** 8 px for the frame is fine.
+2. **Shoulders a little slimmer.** Take roughly 12-16 px off each shoulder tier (about 120/108/92 to 106/94/80) and give it to the LCD. Recompute the tables.
+3. **A at mid height** on the right shoulder, as in the mockups.
+4. **B is unassigned for now.** Do not draw B on the touch round HUD; keep its space free under A. Keyboard and gamepad back/leave keep working, and the back arrow still leaves. Update the Controls card (no "B: Leave" row on touch).
+5. **Small phones (568×320, 667×375): board centred**, with icon-only goals in narrow side columns, if it stays readable (text >= 14, counters >= 13, targets >= 44, nothing in the keep-out). If centred plus icon goals fails readability at 568×320, keep the one-column layout and say why.
+6. **MENU opens a Pocket Menu screen**, not the quest log: a menu on the deck screen that animates in and out (Quad Out about 160 ms in, 120 ms out; instant under Reduced Motion). Items: **Resume**, **Restart round**, **Quit to garden**, **Hatch eggs**, **Customize**. Hatch eggs and Customize open the existing flows (the egg shop / hatch screen and the companion editor). The Daily quests card still opens the quest log. Restart and Quit ask for no extra confirm on an empty board, and a one-tap confirm mid-round.
+7. **Menus as a sheet with plate grips** and the **Controls card** stay as proposed.
