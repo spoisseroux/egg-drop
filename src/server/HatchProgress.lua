@@ -21,6 +21,7 @@ local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local Guard=require(script.Parent.HatchGuard)
 local Purchases=require(script.Parent.PurchaseState)
 local Faceplates=require(script.Parent.FaceplateState)
+local Wearables=require(script.Parent.WearableState)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 
@@ -153,7 +154,9 @@ local function validV7(state)
 end
 local function validV8(state)return validVersion(state,8,false)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 -- v9: daily contracts retired, quests added (QUESTS-DIFFICULTY-PLAN section 3).
-local function valid(state)return validVersion(state,9,false)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function validV9(state)return validVersion(state,9,false)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- v10: pet wearables (owned + equipped per pet) beside the wallet.
+local function valid(state)return validVersion(state,10,false)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -205,6 +208,14 @@ local function upgrade(state, now, userId)
 		nextState=clone(nextState);nextState.contracts=nil;nextState.version=9
 		nextState.quests=QuestRotation.fresh(userId,tonumber(dayOf(now)))
 	end
+	if nextState.version==9 then
+		-- Validate the whole v9 record (quests sanitised first, as at load), then
+		-- add an empty wearables namespace. Wallet, pets and everything else carry over.
+		if nextState.petWearables~=nil then return state end
+		local candidate=clone(nextState);candidate.quests=QuestState.sanitize(candidate.quests,dayOf(now),userId)
+		if not validV9(candidate)then return state end
+		nextState=Wearables.upgrade(candidate)
+	end
 	return nextState
 end
 
@@ -239,7 +250,7 @@ function Hatching.load(userId, profile, adapter)
 		local state = root.hatching
 		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
 		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
-		if type(state) == "table" and state.version == 9 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
+		if type(state) == "table" and state.version == 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -307,6 +318,7 @@ function Hatching.public(handle)
 	for key,value in pairs(FeatureState.public(state))do public[key]=value end
 	for key,value in pairs(Purchases.public(state))do public[key]=value end
 	for key,value in pairs(Faceplates.public(state))do public[key]=value end
+	for key,value in pairs(Wearables.public(state))do public[key]=value end
 	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
@@ -734,6 +746,44 @@ function Hatching.buyFaceplate(handle, operationId, plateId, price)
 	if candidate.plateId ~= plateId then return false, "OperationConflict" end
 	local ok, reason = transact(handle, signature, handle.state.revision, Faceplates.apply, candidate, signature)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
+	return ok, reason
+end
+
+-- Wearable Star purchase: fixed server price, debit and ownership in one fenced
+-- transact, idempotent by the client's operation id; an owned item never charges again.
+-- `equip` wears it at once in the same write.
+function Hatching.buyWearable(handle, operationId, petId, itemId, price, equip)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
+		or type(itemId) ~= "string" or #itemId > 32 then return false, "InvalidWearable" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "wearable:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if Wearables.owns(handle.state, petId, itemId) and not resuming then return true, "AlreadyOwned" end
+	local candidate = resuming and handle.pending.candidate
+		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true })
+	if candidate.petId ~= petId or candidate.itemId ~= itemId then return false, "OperationConflict" end
+	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyBuy, candidate, signature)
+	if not ok and reason == "AlreadyOwned" then return true, reason end
+	return ok, reason
+end
+
+-- Equip (itemId) or take off (itemId == false) one slot. Ownership is checked
+-- against the saved record; an unchanged slot is a success with no write.
+function Hatching.equipWearable(handle, operationId, petId, slot, itemId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
+		or type(slot) ~= "string" or #slot > 32 or (itemId ~= false and (type(itemId) ~= "string" or #itemId > 32)) then return false, "InvalidWearable" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "wear:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming then
+		local row, why = Wearables.equipResult(handle.state, petId, slot, itemId)
+		if not row then return false, why end
+		if Wearables.same(row.equipped, Wearables.equipped(handle.state, petId)) then return true, "NoChange" end
+	end
+	local candidate = resuming and handle.pending.candidate
+		or table.freeze({ petId = petId, slot = slot, itemId = itemId, operationId = operationId })
+	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyEquip, candidate, signature)
+	if not ok and reason == "NoChange" then return true, reason end
 	return ok, reason
 end
 

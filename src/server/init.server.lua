@@ -64,6 +64,7 @@ local toyResult=child("RemoteEvent","ToyResult",remotes)
 local featureResult=child("RemoteEvent","FeatureResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
+local wearableResult = child("RemoteEvent", "WearableResult", remotes)
 local questResult = child("RemoteEvent", "QuestResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
@@ -223,7 +224,7 @@ local function gardenInput(board)
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
-	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId)
+	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),root=root,character=character,
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
@@ -238,7 +239,7 @@ local function gardenInputs()
 	return inputs
 end
 local function publishPetAppearance(board)
-	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId)))
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables)))
 	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision+board.nursery.state.revision)
 end
 
@@ -926,6 +927,32 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			Progress.equip(board.profile,plateId,board.profile.sticker,board.profile.background);board.appearance.revision+=1;publishAppearance(board)
 		end
 		publishNursery(board);publishState(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+	-- Pet wearables (hatching v10): fixed Star price, server-validated, idempotent by
+	-- the client's operation id; equip/unequip one slot. Public appearance replicates.
+	if action=="wearableBuy"or action=="wearableEquip"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id<=80 then v.id else nil
+		local petId=if type(v.petId)=="string"and #v.petId<=32 then v.petId else nil
+		local itemId=if type(v.itemId)=="string"and #v.itemId<=32 then v.itemId elseif v.itemId==false then false else nil
+		local slot=if type(v.slot)=="string"and #v.slot<=32 then v.slot else nil
+		local function reply(status,reason)wearableResult:FireClient(player,{id=opId,action=action,petId=petId,itemId=itemId,slot=slot,status=status,reason=reason,revision=board.nursery.state.revision})end
+		if not opId or not petId or(action=="wearableBuy"and type(itemId)~="string")or(action=="wearableEquip"and(not slot or itemId==nil))then reply("Rejected","InvalidWearable");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason
+		if action=="wearableBuy"then
+			ok,reason=Nursery.buyWearable(board.nursery,opId,petId,itemId,if type(v.price)=="number"then v.price else nil,v.equip==true)
+			if ok and reason~="AlreadyOwned"then Economy.command(player,"Wearable_"..itemId,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+		else
+			ok,reason=Nursery.equipWearable(board.nursery,opId,petId,slot,itemId)
+		end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board);publishPetAppearance(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
 

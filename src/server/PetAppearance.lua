@@ -22,7 +22,7 @@ function Appearance.visible(profile,id)
  return if entry then entry.charmVisible else false
 end
 function Appearance.shape(profile,id)return shape(profile.petAppearance and profile.petAppearance[id])end
-function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures,confirmedPetId)
+function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures,confirmedPetId,petWearables)
  -- Public attributes and garden snapshots use only storage-confirmed choices.
  -- The desired map remains private while a write is pending or retrying.
  local result={}
@@ -36,6 +36,9 @@ function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures
   result[id].toyId=if type(petToys)=="table"then petToys[id]or "none"else "none"
   local features=type(petFeatures)=="table"and petFeatures[id]
   result[id].featureStages={horns=features and features.horns.visible or 0,claws=features and features.claws.visible or 0,wings=features and features.wings.visible or 0}
+  -- Saved wearables (hatching v10) replicate with the rest of the public appearance.
+  local worn=type(petWearables)=='table'and petWearables[id]
+  result[id].wearables=if type(worn)=='table'and type(worn.equipped)=='table'then table.clone(worn.equipped)else {}
   end
  end
  return result
