@@ -1,4 +1,16 @@
-# Egg Drop — Bear, Pocket Deck, quests, wearables
+# Egg Drop — phone deck frame, Pocket Menu, wearable fixes
+
+**Private v515 Published 2026-11-12 — runtime 30aa1ba, committed and pushed.** Studio Output: "Published new changes in Egg Drop to Roblox", v515. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-12/private-published-v515.jpg).
+
+New since v505: phones get the slim Pocket Deck frame (one wide screen between slim shoulders, A at mid height, no B on touch, centred board with icon goals on small phones; UI-SPEC-COMPACT-FRAME-2026-11-12.md section 10). MENU opens the Pocket Menu (Resume, Restart round, Quit to garden, Hatch eggs, Customize; the round pauses; Restart/Quit confirm mid-round). Quest log opens from the Daily quests card or Q. The tee's right sleeve renders; Little Hoops hang from the ear lobes; Wardrobe swatches use the pet's colours; faceplate op-id fix; sparkle-eye shine fix; odds read "1 in 3".
+
+**Passed before publish:** CompactPhone 9/9, DeckScreen 8, DeckBoot 10, DeckResults 8, DeckQuests 5, RunReturn 24, FaceplatePurchase 10, WearablePurchase 11, PetAttachments 8. Live check: deck accent matches the equipped plate.
+
+**Test:** on the phone: round HUD readability, drag-aim and A, MENU → each Pocket Menu item (Restart and Customize were not checked live), Daily quests card → quest log, results sheet; the Wardrobe (tee sleeves, hoops, swatches); a faceplate purchase.
+
+**Still open:** physical-phone check, live save/rejoin, two-player check, restart mid-round live, Customize from the Pocket Menu live, wings drop rate (15%). Audio is with Spencer.
+
+## Historical v505 — Bear, Pocket Deck, quests, wearables
 
 **Private v505 Published 2026-11-12 — runtime bf5c728, committed and pushed.** Studio Output: "Published new changes in Egg Drop to Roblox", v505. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-12/private-published-v505.jpg).
 
