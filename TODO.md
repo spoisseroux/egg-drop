@@ -1,6 +1,6 @@
 # Egg Drop — remaining work
 
-Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v505 published 2026-11-12** (Bear, deck rebuild, quests/difficulty, wearables). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
 ## Now working on
 

@@ -1,4 +1,16 @@
-# Egg Drop — round feedback and clear rewards
+# Egg Drop — Bear, Pocket Deck, quests, wearables
+
+**Private v505 Published 2026-11-12 — runtime bf5c728, committed and pushed.** Studio Output: "Published new changes in Egg Drop to Roblox", v505. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-12/private-published-v505.jpg).
+
+What is in it: the plush Bear as the v1 pet (two-tone body, night glow), World 1 floating sky island with matte materials, rebuilt Pocket Deck (wide screen, in-deck results, back arrow, faceplates for Stars, retro boot), daily/weekly quests with a saved reroll, Easy/Medium/Hard (x0.8/x1/x1.5 Stars), Feature Egg horns and wings growing S1-S5 (wings flap), 13 wearables in the Wardrobe at the Care Cradle (15/30/60 Stars, save v10), a split shirt that follows the arms, compact phone layouts.
+
+**Passed before publish:** WearablePurchase 11/11, CompactPhone 8/8, PetAttachments 8/8, HatchProgress 27/27, FaceplatePurchase 9/9 and a Play smoke test (fresh save, Space x5 earns the Bear).
+
+**Test:** play a few rounds on each difficulty → finish daily quests and reroll one → buy a faceplate → buy and wear items in the Wardrobe → check the Bear at night → try it on a phone.
+
+**Still open:** physical-phone layout check, live save/rejoin, two-player check, faceplate op-id reuse can report a false "Saved", Wardrobe swatches are grey for secondary-tinted items, the 3D deck faceplate texture did not load in Studio, the wings drop rate (15%) is grindy, and the left sparkle-eye shine sits close to the pupil. Audio is with Spencer (AUDIO-HANDOFF.md).
+
+## Historical v397 — round feedback and clear rewards
 
 **Private v397 Published — runtime b733167, committed and pushed.** Refreshed native Version History verifies **Round feedback and white zero notches - b733167**. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/round-juice-2026-11-09/private-published-v397-b733167.jpg) · [Screenshot gallery](artifacts/round-juice-2026-11-09/GALLERY.html) · [Verification](artifacts/round-juice-2026-11-09/VERIFY.md).
 
