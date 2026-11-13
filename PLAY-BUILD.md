@@ -1,5 +1,17 @@
+**Private v568 Published 2026-11-13 — runtime a8dc779, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v568". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/play-forever-2026-11-13/studio/`.
+# Egg Drop — play forever: collection book, stamp card, records
+
+New since v558: a **Collection book** (Pocket Menu and Companions hub): Balls, Faceplates, Wardrobe, Toys and Discoveries pages with % bars; each page pays 5 / 5 / 10 / 15 Stars at 25 / 50 / 75 / 100%, once; three full pages earn the book-only **Bookworm** faceplate (placeholder art). A **Records** page shows your lifetime numbers. The daily gift is now a **stamp card**: 4, 4, 5, 5, 6, 6, then 12 on the seventh day played, never resets. Egg odds show as percentages; in regions where paid random items are restricted, Star-priced eggs give the next item in a fixed order ("Next: ...").
+
+**Passed before publish:** server specs 18/18 (new BookClaim, StampCard, LifetimeCounters, RestrictedEggs), client specs 64/64 (new BookView, StampCardView). Architect review + Code Reviewer GO (policy cache fix applied).
+
+**Test:** Pocket Menu → Collection book (claim a milestone, open Records), the stamp card on the daily page and in Hatch eggs (stamp today, come back tomorrow), buy a ball theme and see the Balls page move, on desktop and phone.
+
+**Still open:** Bookworm art; book item thumbnails; the "+12 Stars" pop briefly overlaps the stamp tagline; a slow claim can show a false timeout until the next refresh.
+
+## Historical v558 — UI personality pass
+
 **Private v558 Published 2026-11-13 — runtime 9586f02, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v558". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/ui-personality-2026-11-13/studio/`.
-# Egg Drop — UI personality pass
 
 New since v550: Fredoka One for titles, names and buttons; friendlier copy (one string table, `src/shared/UICopy.lua`); a fixed house palette with one tint per screen (peach Hatch, lilac Deck style, pink Companions, sky Quests, gold results: a dot, a squiggle under the title, a halftone fade); A/B hint caps like the deck's buttons; lips on things you press and stitched seams on panels you read; tilted sticker chips for prices, tiers and "New best"; an LCD dot grid in preview windows; boing and tab squash motion (off under Reduced Motion); your pet peeks into Hatch eggs, Deck style, results and Quests on desktop; the Star has a face (wallet eyes, results hero); empty states with a line in voice.
 
