@@ -63,3 +63,25 @@ itemsUsed, pets written; caps), HatchProgress / HueProgress / ToyFeatureProgress
 ## Not in this pass
 
 Weekly Board, Bear bond, Style Egg, shop shelf, Polish, theme weeks (weeks 2-8 roadmap).
+
+## Architect review changes (2026-11-13)
+
+1. **Book claims:** recompute the page percent inside the transaction's apply (the UpdateAsync snapshot), counting only
+   ids in the current catalogues (validators keep unknown ids), capped at 100%. Signature `book:<milestoneId>`; the
+   double-pay guard is `book.claimed` (the op record keeps only the last op). Ids `page.pct` (e.g. `balls.25`).
+2. **Daily stays `daily`:** keep the action, `dailyClaimDay`, and `dailyDay`/`dailyBonus`/`dailyAvailable` snapshot
+   fields; `dailyBonus` becomes today's stamp reward from `stamps % 7` before the new stamp is added. Update
+   `DeckMenu`/`EggHatchView` hard-coded `6` fallbacks and every spec expecting +6.
+3. **Bookworm faceplate:** granted by the book claim itself (not `Faceplates.apply`, which charges and refuses
+   unpriced plates), only if not owned, when three `<page>.100` ids are in `book.claimed`; re-checked on every claim
+   so a missed grant repairs itself. Check the equip path accepts an unpriced plate.
+4. **Discoveries:** bits 0-30 only (the validator caps `found` at 2^31-1; bit 31 would fail `valid()` and lose the
+   round's Stars). Set only in `recordRun`; the goal type is looked up from the field template on the server.
+5. **Counters:** `merges` and `itemsUsed` added to the server-built run summary and to the award validator as bounded
+   integers (a NaN would fail every award). `pets` keeps meaning pets hatched (no petting counter). No new counter
+   names (every name in `State.Counters` is required by `valid()`). `parkGames` has no source yet: hidden on Records.
+6. **Policy:** Star packs already fail closed for `ArePaidRandomItemsRestricted`. Additionally, server-side: for a
+   restricted player every Star-priced egg roll (pets, toys, materials, hues, features) gives the next item in a
+   fixed published order instead of a random one; the client shows "Next: <item>" instead of odds. Odds text shows
+   percentages for everyone else.
+7. Snapshot fields are only added, never renamed.
