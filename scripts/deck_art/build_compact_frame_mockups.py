@@ -26,6 +26,8 @@ RIM, BEZ, PAD, GAP = 4, 5, 3, 8      # plate rim above and below the glass, glas
 SIZES = [(844, 390), (740, 360), (932, 430), (568, 320)]
 EXTRA = [(667, 375)]                 # not a reference root; drawn to show the one-column arrangement on a taller phone
 GOALS = [("I+I CENTER", 2, 2), ("III+ RIGHT", 1, 2), ("Tier IV", 0, 1)]
+GOAL_ICONS = [("merge", 2, False, "center"), ("merge", 3, True, "right"), ("merge", 4, True, "any")]
+MARKS = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
 QUESTS = (("Win 2 rounds", 2, 2), ("Chain 4 merges", 3, 4), ("Tier IV on Hard", 0, 1))
 
 
@@ -35,56 +37,73 @@ def R(x, y, w, h):
 
 
 def frame_geometry(W, H, kx=KX, kh=KH, goals=3):
-    """Compact v2. All rects are (x, y, w, h) in root px. Mirrors what DeckScreen.resolveCompact should return."""
+    """Compact v2 as built. All rects are (x, y, w, h) in root px. DeckScreen.resolveCompact returns the same numbers.
+
+    Spencer's decisions (spec section 9): shoulders 106 / 94 / 80, B not drawn on the touch HUD, the board is centred on
+    every phone; side columns under 144 wide use icon-only goals ("narrow"). Under 96 the v1-style one column is kept.
+    """
     g = {"W": W, "H": H, "kx": kx, "kh": kh}
     tier = 0 if H >= 380 else 1 if H >= 340 else 2
-    SW = (120, 108, 92)[tier]        # shoulder width
-    D = (96, 88, 76)[tier]           # d-pad diameter
-    A = (104, 92, 76)[tier]          # A diameter
-    B = (56, 52, 48)[tier]           # B diameter
-    g.update(tier=tier, SW=SW, D=D, A=A, B=B)
+    SW = (106, 94, 80)[tier]         # shoulder width (decision 2)
+    D = (88, 80, 68)[tier]           # d-pad diameter
+    A = (92, 82, 70)[tier]           # A diameter; with its well (+10) it stays on the shoulder
+    g.update(tier=tier, SW=SW, D=D, A=A, B=0)
     g["glass"] = R(SW, RIM, W - 2 * SW, H - 2 * RIM)                       # dark bezel, radius 16
     g["screen"] = R(SW + BEZ, RIM + BEZ, W - 2 * SW - 2 * BEZ, H - 2 * RIM - 2 * BEZ)   # lit LCD, radius 11
     x0, y0 = SW + BEZ + PAD, RIM + BEZ + PAD
     x1, y1 = W - x0, H - y0
     LW, LH = x1 - x0, y1 - y0
     g.update(x0=x0, y0=y0, x1=x1, y1=y1, LW=LW, LH=LH)
-    # board: full screen height unless that would squeeze the info column under 160
-    bw = min(round(LH * ASPECT), LW - GAP - 160)
+    # board: full screen height unless that would squeeze the side columns under 96
+    bw = min(round(LH * ASPECT), LW - 2 * GAP - 2 * 96)
     bh = LH if bw == round(LH * ASPECT) else round(bw / ASPECT)
     c2 = (LW - bw - 2 * GAP) // 2
-    two = c2 >= 144
-    g["columns"] = 2 if two else 1
+    mode = "wide" if c2 >= 144 else "narrow" if c2 >= 96 else "one"
+    if mode == "one":                                                      # odd small windows only
+        bw = min(round(LH * ASPECT), LW - GAP - 160)
+        bh = LH if bw == round(LH * ASPECT) else round(bw / ASPECT)
+    g["mode"] = mode
+    g["columns"] = 1 if mode == "one" else 2
     by = y0 + (LH - bh) // 2
     p = 34 if H >= 340 else 26                                             # goal row pitch
     g["goalPitch"] = p
-    if two:
+    t0 = max(x0, kx + 4) if y0 < kh else x0                                # first row keeps clear of the Roblox controls
+    g["t0"] = t0
+    g["quests"] = g["handle"] = g["drawer"] = g["controls"] = g["chain"] = None
+    g["controlRows"] = 0
+    if mode != "one":
         bx = x0 + (LW - bw) // 2
         L0, L1, R0, R1 = x0, bx - GAP, bx + bw + GAP, x1
-        c = L1 - L0
-        g.update(L0=L0, L1=L1, R0=R0, R1=R1, col=c, colR=R1 - R0)
-        t0 = max(L0, kx + 4) if y0 < kh else L0                            # first row keeps clear of the Roblox controls
+        c, rc = L1 - L0, R1 - R0
+        g.update(L0=L0, L1=L1, R0=R0, R1=R1, col=c, colR=rc)
         tw = L1 - t0
-        if tw >= 154:
-            g["chain"] = R(L1 - 64, y0, 64, 44)
-            g["score"] = R(t0, y0, tw - 64 - GAP, 44)
-            g["chainIn"] = "pill"
-        else:
-            g["chain"] = None
-            g["score"] = R(t0, y0, tw, 44)
-            g["chainIn"] = "score" if tw >= 130 else "goals"       # Chain shares the Score card, or drops to the Goals header
-        g["goals"] = R(L0, y0 + 52, c, 24 + goals * p + 6)
-        gmax = y0 + 52 + 24 + 3 * p + 6
+        if mode == "wide":
+            if tw >= 154:
+                g["chain"] = R(L1 - 64, y0, 64, 44)
+                g["score"] = R(t0, y0, tw - 64 - GAP, 44)
+                g["chainIn"] = "pill"
+            else:
+                g["score"] = R(t0, y0, tw, 44)
+                g["chainIn"] = "score" if tw >= 130 else "goals"   # Chain shares the Score card, or drops to the Goals header
+            gy = y0 + 52
+        else:                                                   # narrow: Chain in the first row, Score under it
+            if tw >= 64:
+                g["chain"] = R(t0, y0, tw, 44)
+                g["chainIn"] = "pill"
+            else:
+                g["chainIn"] = "goals"
+            g["score"] = R(L0, y0 + 52, c, 44)
+            gy = y0 + 104
+        g["goalsTop"] = gy
+        g["goals"] = R(L0, gy, c, 24 + goals * p + 6)
+        gmax = gy + 24 + 3 * p + 6
         qp = 36 if H >= 380 else 34
         qh = 24 + 3 * qp + 8
-        if y1 - qh >= gmax + GAP:
+        if mode == "wide" and y1 - qh >= gmax + GAP:
             g["quests"] = R(L0, y1 - qh, c, qh)
             g["questPitch"] = qp
-            g["handle"] = None
         else:
-            g["quests"] = None
-            g["handle"] = R(L0, y1 - 44, c, 44)
-        rc = R1 - R0
+            g["handle"] = R(L0, y1 - 44, c, 44)                  # opens the quest log
         nh = 64 if H >= 340 else 44
         g["next"] = R(R0, y0, rc, nh)
         g["eggs"] = R(R0, y0 + nh + GAP, rc, 44)
@@ -93,15 +112,13 @@ def frame_geometry(W, H, kx=KX, kh=KH, goals=3):
         top = y0 + nh + GAP + 156
         rows = min(3, (y1 - top - 30) // 28)
         g["controls"] = R(R0, y1 - (30 + rows * 28), rc, 30 + rows * 28) if rows >= 2 else None
-        g["controlRows"] = max(0, rows)
+        g["controlRows"] = rows if rows >= 2 else 0
         g["toast"] = (R0 + rc // 2, y1 - 48)                               # centre x, top y; covers the Controls card
-        g["drawer"] = R(L0, y0 + 52, c, y1 - y0 - 52) if g["handle"] else None
     else:
         bx = x1 - bw
         L0, L1 = x0, bx - GAP
         c = L1 - L0
         g.update(L0=L0, L1=L1, R0=None, R1=None, col=c, colR=0)
-        t0 = max(L0, kx + 4) if y0 < kh else L0
         tw = L1 - t0
         g["next"] = R(L1 - 76, y0, 76, 44)
         if tw >= 76 + GAP + 64 + GAP + 84:
@@ -109,10 +126,10 @@ def frame_geometry(W, H, kx=KX, kh=KH, goals=3):
             g["score"] = R(t0, y0, tw - 76 - 64 - 2 * GAP, 44)
             g["chainIn"] = "pill"
         else:
-            g["chain"] = None
             g["score"] = R(t0, y0, tw - 76 - GAP, 44)
             g["chainIn"] = "goals"
         gh = 24 + 3 * p + 6
+        g["goalsTop"] = y0 + 52
         g["goals"] = R(L0, y0 + 52, c, 24 + goals * p + 6)
         ry = y0 + 52 + gh + GAP
         ew = 88 if c >= 200 else 58
@@ -121,23 +138,26 @@ def frame_geometry(W, H, kx=KX, kh=KH, goals=3):
         wy = ry + 52
         g["winPays"] = R(L0, wy, c, 44 if wy + 44 <= y1 - 52 else y1 - 52 - wy)
         g["handle"] = R(L0, y1 - 44, c, 44)
-        g["quests"] = None
-        g["controls"] = None
-        g["controlRows"] = 0
         g["toast"] = (L0 + c // 2, y1 - 44 - 48)                           # covers the Win pays row
-        g["drawer"] = R(L0, y0 + 52, c, y1 - y0 - 52)
     g["board"] = R(bx, by, bw, bh)
     # shoulders
     dcy = kh + (H - kh - 52) // 2
-    g["dpad"] = R(SW // 2 - D // 2, dcy - D // 2, D, D)
-    g["menuHit"] = R(SW // 2 - 42, H - 52, 84, 44)
-    g["menu"] = R(SW // 2 - 36, H - 44, 72, 28)
+    cx = SW // 2
+    g["dpad"] = R(cx - D // 2, dcy - D // 2, D, D)
+    hw, hh = max(44, D // 2), max(44, D)                                   # each half of the d-pad is a target
+    shift = max(0, hw - cx)
+    g["dpadLeft"] = R(cx - hw + shift, dcy - hh // 2, hw, hh)
+    g["dpadRight"] = R(cx + shift, dcy - hh // 2, hw, hh)
+    mw, hwm = min(72, SW - 16), min(84, SW - 8)
+    g["menuHit"] = R(cx - hwm // 2, H - 52, hwm, 44)
+    g["menu"] = R(cx - mw // 2, H - 44, mw, 28)
     ww = SW - 28
-    g["wordmark"] = R(14, kh + 6, ww, round(ww * 16 / 41)) if ww >= 80 else None
+    g["wordmark"] = R(14, kh + 6, ww, round(ww * 16 / 41)) if ww >= 64 else None
     g["back"] = R(W - 56, 8, 44, 44)
     acy = round(H * .49)
     g["a"] = (W - SW // 2, acy)
-    g["b"] = (W - SW + 14 + B // 2, acy + A // 2 + 12 + B // 2)
+    g["aHit"] = R(W - SW // 2 - (A + 8) // 2, acy - (A + 8) // 2, A + 8, A + 8)
+    g["b"] = None                                                          # decision 4: B is unassigned on touch
     g["speaker"] = (W - 30, H - 26)
     # menu sheet: the same sheet as Compact v1, with wider plate grips left and right on wider phones
     mg = 40 if W >= 800 else 24 if W >= 700 else 6
@@ -148,7 +168,27 @@ def frame_geometry(W, H, kx=KX, kh=KH, goals=3):
     g["cw"] = (W - 2 * mg - 48) // 3
     g["ch"] = H - 140
     g["actionY"] = H - 66
+    g["pocket"] = pocket_geometry(g)
     return g
+
+
+def pocket_geometry(g):
+    """Pocket Menu inside the screen rect (decision 6). Rows 44 high, 8 apart; one column when five fit, else two."""
+    sx, sy, sw, sh = g["screen"]
+    pad = 12
+    top = max(sy + pad + 36, g["kh"] + 4)                                 # under the title and clear of the keep-out
+    avail = sy + sh - pad - top
+    cols = 1 if 5 * 44 + 4 * GAP <= avail else 2
+    rows = 5 if cols == 1 else 3
+    iw = min(300, sw - 2 * pad) if cols == 1 else min(220, (sw - 2 * pad - GAP) // 2)
+    total_w = iw * cols + GAP * (cols - 1)
+    gx = sx + (sw - total_w) // 2
+    gh = rows * 44 + (rows - 1) * GAP
+    gy = top + max(0, (avail - gh) // 2)
+    order = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)] if cols == 1 else [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1)]
+    items = [R(gx + col * (iw + GAP), gy + row * (44 + GAP), iw, 44) for col, row in order]
+    tx = max(sx + pad, g["kx"] + 4) if sy + pad < g["kh"] else sx + pad
+    return {"cols": cols, "items": items, "title": R(tx, sy + pad, sx + sw - pad - tx, 28)}
 
 
 def v1_board(W, H):
@@ -158,20 +198,25 @@ def v1_board(W, H):
 
 def targets(g):
     """Touch targets on the round HUD: name -> rect. Used for the 44 px, 8 px gap and keep-out checks."""
-    t = {}
-    x, y, w, h = g["dpad"]
-    t["dpad"] = g["dpad"]
-    t["menu"] = g["menuHit"]
-    t["back"] = g["back"]
-    A, B = g["A"], g["B"]
-    t["a"] = R(g["a"][0] - A // 2, g["a"][1] - A // 2, A, A)
-    t["b"] = R(g["b"][0] - B // 2, g["b"][1] - B // 2, B, B)
-    t["board"] = g["board"]
+    t = {"dpadLeft": g["dpadLeft"], "dpadRight": g["dpadRight"], "menu": g["menuHit"], "back": g["back"], "a": g["aHit"],
+         "board": g["board"]}
     if g["quests"]:
         t["quests"] = g["quests"]
     if g["handle"]:
         t["handle"] = g["handle"]
     return t
+
+
+def inside(r, o):
+    x, y, w, h = r
+    ox, oy, ow, oh = o
+    return x >= ox and y >= oy and x + w <= ox + ow and y + h <= oy + oh
+
+
+def apart(r, o):
+    x, y, w, h = r
+    ox, oy, ow, oh = o
+    return x + w <= ox or ox + ow <= x or y + h <= oy or oy + oh <= y
 
 
 def check(g):
@@ -184,21 +229,37 @@ def check(g):
     names = list(t)
     for i, a in enumerate(names):
         for b in names[i + 1:]:
+            if {a, b} == {"dpadLeft", "dpadRight"}:     # two halves of one control
+                continue
             ax, ay, aw, ah = t[a]
             bx, by, bw, bh = t[b]
             dx = max(bx - (ax + aw), ax - (bx + bw))
             dy = max(by - (ay + ah), ay - (by + bh))
-            if {a, b} == {"a", "b"}:      # two discs: measure centre to centre
-                d = ((g["a"][0] - g["b"][0]) ** 2 + (g["a"][1] - g["b"][1]) ** 2) ** .5 - g["A"] / 2 - g["B"] / 2
-                assert d >= 8, (W, H, "A and B closer than 8", d)
-            else:
-                assert max(dx, dy) >= 8, (W, H, a, b, "closer than 8")
-    for n in ("score", "next", "eggs", "difficulty", "winPays", "goals"):
-        x, y, w, h = g[n]
-        assert not (x < g["kx"] and y < g["kh"]), (W, H, n, "text in the keep-out")
-        assert y + h <= g["y1"] and x >= g["x0"], (W, H, n, "outside the screen")
+            assert max(dx, dy) >= 8, (W, H, a, b, "closer than 8")
+    screen = (g["x0"], g["y0"], g["LW"], g["LH"])
+    for n in ("score", "chain", "next", "eggs", "difficulty", "winPays", "goals", "quests", "handle", "controls", "board"):
+        if g.get(n):
+            x, y, w, h = g[n]
+            assert not (x < g["kx"] and y < g["kh"]), (W, H, n, "text in the keep-out")
+            assert inside(g[n], screen), (W, H, n, "outside the screen")
+    # glass: 4 px of plate above and below, hardware outside it (drawn rects)
+    gx, gy, gw, gh = g["glass"]
+    assert gy == 4 and gy + gh == H - 4 and gx == g["SW"], (W, H, "glass rim")
+    A = g["A"]
+    for n, r in (("dpad", g["dpad"]), ("menu", g["menu"]), ("back", g["back"]),
+                 ("a", (g["a"][0] - A // 2, g["a"][1] - A // 2, A, A))):
+        assert apart(r, g["glass"]), (W, H, n, "on the glass")
     bx, by, bw, bh = g["board"]
     assert abs(bw / bh - ASPECT) < .004, (W, H, "board aspect")
+    for r in g["pocket"]["items"]:
+        assert r[3] >= 44 and inside(r, g["screen"]), (W, H, "pocket row")
+        assert not (r[0] < g["kx"] and r[1] < g["kh"]), (W, H, "pocket row in the keep-out")
+    items = g["pocket"]["items"]
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            ax, ay, aw, ah = items[i]
+            bx_, by_, bw_, bh_ = items[j]
+            assert max(bx_ - (ax + aw), ax - (bx_ + bw_), by_ - (ay + ah), ay - (by_ + bh_)) >= 8, (W, H, "pocket rows closer than 8")
 
 
 # ------------------------------------------------------------------ drawing: shell
@@ -237,7 +298,7 @@ def screen_fill(cv, rect, th, r=11):
 
 
 def shoulders(cv, g, th):
-    W, H, SW, D, A, B = g["W"], g["H"], g["SW"], g["D"], g["A"], g["B"]
+    W, H, SW, D, A = g["W"], g["H"], g["SW"], g["D"], g["A"]
     p = th["plate"]
     # left: wordmark, d-pad, MENU
     if g["wordmark"]:
@@ -257,18 +318,13 @@ def shoulders(cv, g, th):
     cv.rr(mx - 3, my - 3, mw + 6, mh + 6, mh / 2 + 3, stroke=(255, 255, 255, 44), sw=1)
     cv.paste(menu_pill(mw * 3, mh * 3, 1), mx * 3, my * 3, raw=True)
     cv.text(mx + mw / 2, my + mh / 2 + .5, "MENU", "b", 12, (230, 233, 238, 255), "mm", tracking=1.2)
-    # right: back arrow, A, B, speaker seeds
+    # right: back arrow, A, speaker seeds (B is unassigned on touch: decision 4)
     back(cv, W)
     ax, ay = g["a"]
-    bx, by = g["b"]
     well(cv, ax, ay + 2, A + 10)
-    well(cv, bx, by + 1, B + 8)
     cv.paste(tint(button_base(A * 3), p["accent"]), (ax - A / 2) * 3, (ay - A / 2) * 3, raw=True)
     cv.paste(button_gloss(A * 3), (ax - A / 2) * 3, (ay - A / 2) * 3, raw=True)
     cv.text(ax, ay + A * .02, "A", "xb", A * .46, p["ink"], "mm")
-    cv.paste(tint(button_base(B * 3), "#3A3E47"), (bx - B / 2) * 3, (by - B / 2) * 3, raw=True)
-    cv.paste(button_gloss(B * 3), (bx - B / 2) * 3, (by - B / 2) * 3, raw=True)
-    cv.text(bx, by + 1, "B", "xb", B * .46, "#C3C8D0", "mm")
     sx, sy = g["speaker"]
     import math
     for ox, oy, rot in ((-34, -6, -20), (0, -16, 0), (34, -6, 20), (-18, 22, -10), (18, 22, 10)):
@@ -351,6 +407,55 @@ def row_card(cv, rect, th, name, value, vcol="text", star=False, vsize=17, sub=N
     assert x + pad + lw_ + 4 <= left, ("row card does not fit", name, w)
 
 
+def stacked(cv, rect, th, name, value, sub=None, star=False, vsize=18):
+    """Narrow column: Label 12 over a Counter (Eggs left, Win pays, Score)."""
+    x, y, w, h = rect
+    card(cv, rect, th)
+    label(cv, x + 10, y + 5, name, th, size=12)
+    vx = x + 10
+    if star:
+        icon(cv, "star", vx + vsize * .5, y + 33, vsize)
+        vx += vsize + 4
+    tw = cv.text(vx, y + 39, value, "monob", vsize, th["star"] if star else th["text"], "ls")
+    if sub:
+        tw += 2 + cv.text(vx + tw + 2, y + 39, sub, "mono", 13, th["soft"], "ls")
+    assert vx - x + tw + 8 <= w, ("stacked card does not fit", name, w)
+    assert cv.tw(name.upper(), "b", 12, .6) + 20 <= w, ("stacked label does not fit", name, w)
+
+
+def zone_glyph(cv, x, cy, zone, th):
+    """A mini tray split in thirds; the goal's third is lit. 18 x 12."""
+    cv.rr(x, cy - 6, 18, 12, 3, stroke=th["soft"], sw=1.2)
+    k = {"left": 0, "center": 1, "right": 2}[zone]
+    cv.rr(x + 1.5 + k * 5, cy - 4.5, 5, 9, 1.5, fill=th["soft"])
+
+
+def icon_goals_card(cv, rect, th, p, chain_inline):
+    """Narrow column: one icon row per goal (decision 5). Tier egg with its mark, + for 'or higher', the zone glyph."""
+    x, y, w, h = rect
+    card(cv, rect, th)
+    done = sum(1 for _, c, t in GOALS if c >= t)
+    label(cv, x + 10, y + 8, f"Goals {done}/{len(GOALS)}", th, size=12)
+    if chain_inline:
+        cv.text(x + w - 10, y + 15, "×3", "monob", 13, th["text"], "rm")
+    for i, ((_, c, gl), (kind, tier, plus, zone)) in enumerate(zip(GOALS, GOAL_ICONS)):
+        cy = y + 24 + p / 2 + i * p
+        egg_ball(cv, x + 19, cy, 11, tier, label=False)
+        cv.text(x + 19, cy + .5, MARKS[tier], "xb", 12, (255, 255, 255, 240), "mm")
+        gx = x + 33
+        if plus:
+            cv.text(gx, cy - 3, "+", "xb", 12, th["text"], "lm")
+            gx += 9
+        if zone != "any":
+            zone_glyph(cv, gx, cy, zone, th)
+        if c >= gl:
+            check_circle(cv, x + w - 20, cy, True, th, 10)
+        else:
+            cnt = f"{c}/{gl}"
+            tw = cv.text(x + w - 10, cy + .5, cnt, "monob", 13, th["soft"], "rm")
+            assert gx + 18 + 6 <= x + w - 10 - tw, ("icon goal does not fit", w)
+
+
 def goals_card(cv, rect, th, p, chain_inline):
     x, y, w, h = rect
     card(cv, rect, th)
@@ -393,14 +498,16 @@ def quests_card(cv, rect, th, qp):
 
 
 def handle(cv, rect, th):
+    """Quest handle: opens the quest log (no drawer in v2). The word goes first when the column is narrow."""
     x, y, w, h = rect
     cv.rr(x, y, w, h, 12, fill=th["well"])
     cv.rr(x, y, w, h, 12, stroke=STROKE, sw=1)
     icon(cv, "quests", x + 22, y + 22, 18, th["text"])
     cv.ell(x + 31, y + 13, 4, fill=STAR)
-    cv.text(x + 38, y + 22.5, "Quests", "b", 14, th["text"], "lm")
-    cv.text(x + w - 32, y + 22.5, "1/3", "monob", 13, th["soft"], "rm")
-    cv.line([(x + w - 23, y + 25), (x + w - 18, y + 20), (x + w - 13, y + 25)], th["soft"], 2)
+    if w >= 130:
+        cv.text(x + 38, y + 22.5, "Quests", "b", 14, th["text"], "lm")
+    cv.text(x + w - 26, y + 22.5, "1/3", "monob", 13, th["soft"], "rm")
+    cv.line([(x + w - 17, y + 17), (x + w - 12, y + 22), (x + w - 17, y + 27)], th["soft"], 2)
 
 
 def drawer(cv, rect, th):
@@ -446,19 +553,21 @@ def difficulty_card(cv, rect, th, diff):
     x, y, w, h = rect
     name, _, level, dcol, mult, pays, _ = DIFF[diff]
     card(cv, rect, th)
-    diff_bars(cv, x + 12, y + 11, level, hx(dcol), th)
-    cv.text(x + 46, y + h / 2 + .5, name, "b", 15, th["text"], "lm")
+    nx = 46 if w >= 120 else 40
+    diff_bars(cv, x + (12 if w >= 120 else 9), y + 11, level, hx(dcol), th)
+    ns = 15 if w >= 120 else 14                       # Strong 14 in a narrow column (spec 3.4 allows 14 / 15)
+    cv.text(x + nx, y + h / 2 + .5, name, "b", ns, th["text"], "lm")
     if w >= 170:
         chip(cv, x + w - 10, y + 11, f"×{mult}", mix(th["well"], STAR, .14), hx(STAR), 22, "star", anchor="r", size=12)
-    assert 46 + cv.tw("Medium", "b", 15) + 8 <= w, ("difficulty name does not fit", w)
+    assert nx + cv.tw("Medium", "b", ns) + 6 <= w, ("difficulty name does not fit", w)
 
 
-def controls_card(cv, rect, th, rows):
+def controls_card(cv, rect, th, rows, touch=True):
     x, y, w, h = rect
     card(cv, rect, th)
     label(cv, x + 12, y + 8, "Controls", th, size=12)
     p = th["plate"]
-    items = (("drag", "Drag the board", "Aim"), ("A", "", "Drop"), ("B", "", "Leave"))[:rows]
+    items = (("drag", "Drag the board", "Aim"), ("A", "", "Drop"))[:rows]      # touch: no B row (decision 4)
     for i, (k, _, what) in enumerate(items):
         cy = y + 24 + 14 + i * 28
         if k == "drag":
@@ -476,7 +585,27 @@ def controls_card(cv, rect, th, rows):
             cv.text(x + w - 12, cy + .5, "drag board", "r", 12, th["soft"], "rm")
 
 
-def screen_hud(W, H, th, diff="hard", open_drawer=False, bar=True):
+def pocket_menu(cv, g, th, armed=1):
+    """Decision 6: the Pocket Menu on the deck screen. Row `armed` shows the mid-round one-tap confirm."""
+    sx, sy, sw, sh = g["screen"]
+    cv.rr(sx, sy, sw, sh, 11, fill=th["panel"])
+    cv.paste(masked_gradient(sw, sh, 11, cv.z), sx * cv.z, sy * cv.z, raw=True)
+    pm = g["pocket"]
+    tx, ty, tw_, _ = pm["title"]
+    cv.text(tx, ty + 14, "Pocket menu", "b", 20, th["text"], "lm")
+    cv.text(sx + sw - 12, ty + 14, "Round paused", "r", 14, th["soft"], "rm")
+    names = ("Resume", "Restart round", "Quit to garden", "Hatch eggs", "Customize")
+    for i, (r, n) in enumerate(zip(pm["items"], names)):
+        x, y, w, h = r
+        if i == armed:
+            n = "Tap again to restart"
+            button(cv, x, y, w, h, n, th, "danger", "focus", size=16)
+        else:
+            button(cv, x, y, w, h, n, th, "primary" if i == 0 else "secondary", size=16)
+        assert cv.tw(n, "b", 16) + 24 <= w, ("pocket row text", n, w)
+
+
+def screen_hud(W, H, th, diff="hard", open_drawer=False, bar=True, pocket=False):
     g = frame_geometry(W, H)
     check(g)
     cv = plate_canvas(W, H, th)
@@ -484,12 +613,18 @@ def screen_hud(W, H, th, diff="hard", open_drawer=False, bar=True):
     screen_fill(cv, g["screen"], th)
     name, _, level, dcol, mult, pays, _ = DIFF[diff]
     board(cv, g["board"], th)
-    stat(cv, g["score"], th, "Score", "2,340", chain="×3" if g["chainIn"] == "score" else None)
+    narrow = g["mode"] == "narrow"
+    if narrow:
+        stacked(cv, g["score"], th, "Score", "2,340")
+    else:
+        stat(cv, g["score"], th, "Score", "2,340", chain="×3" if g["chainIn"] == "score" else None)
     if g["chain"]:
         stat(cv, g["chain"], th, "Chain", "×3")
     two = g["columns"] == 2
     next_card(cv, g["next"], th, tall=g["next"][3] >= 64)
-    if two or g["eggs"][2] >= 88:
+    if narrow:
+        stacked(cv, g["eggs"], th, "Eggs left", "14", sub="/24")
+    elif two or g["eggs"][2] >= 88:
         if two:
             row_card(cv, g["eggs"], th, "Eggs left", "14", vsize=18, sub="/24")
         else:
@@ -497,17 +632,27 @@ def screen_hud(W, H, th, diff="hard", open_drawer=False, bar=True):
     else:
         stat(cv, g["eggs"], th, "Eggs", "14")
     difficulty_card(cv, g["difficulty"], th, diff)
-    row_card(cv, g["winPays"], th, "Win pays", pays.replace(" to ", "–"), "star", star=True)
+    if narrow:
+        stacked(cv, g["winPays"], th, "Win pays", pays.replace(" to ", "–"), star=True, vsize=15)
+    else:
+        row_card(cv, g["winPays"], th, "Win pays", pays.replace(" to ", "–"), "star", star=True)
     if g["controls"]:
-        controls_card(cv, g["controls"], th, g["controlRows"])
+        x, y, w, h = g["controls"]
+        n = min(2, g["controlRows"])                       # touch rows; the card follows them, bottom-anchored
+        controls_card(cv, (x, y + h - (30 + 28 * n), w, 30 + 28 * n), th, n, touch=True)
     if open_drawer and g["drawer"]:
         drawer(cv, g["drawer"], th)
     else:
-        goals_card(cv, g["goals"], th, g["goalPitch"], chain_inline=g["chainIn"] == "goals")
+        if narrow:
+            icon_goals_card(cv, g["goals"], th, g["goalPitch"], chain_inline=g["chainIn"] == "goals")
+        else:
+            goals_card(cv, g["goals"], th, g["goalPitch"], chain_inline=g["chainIn"] == "goals")
         if g["quests"]:
             quests_card(cv, g["quests"], th, g["questPitch"])
         if g["handle"]:
             handle(cv, g["handle"], th)
+    if pocket:
+        pocket_menu(cv, g, th)
     shoulders(cv, g, th)
     if bar:
         roblox_bar(cv)
@@ -589,7 +734,7 @@ def tables():
            row("Glass (bezel)", lambda g: r(g["glass"])),
            row("Screen content `x0..x1, y0..y1`", lambda g: f"{g['x0']}..{g['x1']}, {g['y0']}..{g['y1']}"),
            row("`LW × LH`", lambda g: f"{g['LW']}×{g['LH']}"),
-           row("Columns", lambda g: g["columns"]),
+           row("Layout", lambda g: g["mode"]),
            row("Board", lambda g: r(g["board"])),
            row("Board today (v1)", lambda g: "%d×%d" % v1_board(g["W"], g["H"])),
            row("Height lost", lambda g: f"{v1_board(g['W'], g['H'])[1] - g['board'][3]} px ({(v1_board(g['W'], g['H'])[1] - g['board'][3]) / v1_board(g['W'], g['H'])[1] * 100:.1f}%)"),
@@ -601,26 +746,32 @@ def tables():
            row("Wordmark", lambda g: r(g["wordmark"])),
            row("Back arrow", lambda g: r(g["back"])),
            row("A centre, Ø", lambda g: f"{g['a'][0]}, {g['a'][1]}, {g['A']}"),
-           row("B centre, Ø", lambda g: f"{g['b'][0]}, {g['b'][1]}, {g['B']}"),
+           row("A hit", lambda g: r(g["aHit"])),
+           row("D-pad halves (hit)", lambda g: r(g["dpadLeft"]) + " / " + r(g["dpadRight"])),
            "", "### Screen cards", head, sep,
            row("Score", lambda g: r(g["score"])),
            row("Chain", lambda g: r(g["chain"]) if g["chain"] else "in the Score card" if g["chainIn"] == "score" else "in Goals header"),
            row("Goals (3 goals)", lambda g: r(g["goals"])),
            row("Daily quests card", lambda g: r(g["quests"])),
            row("Quest handle", lambda g: r(g["handle"])),
-           row("Quest drawer", lambda g: r(g["drawer"])),
+
            row("Next", lambda g: r(g["next"])),
            row("Eggs", lambda g: r(g["eggs"])),
            row("Difficulty", lambda g: r(g["difficulty"])),
            row("Win pays", lambda g: r(g["winPays"])),
-           row("Controls", lambda g: (r(g["controls"]) + f" ({g['controlRows']} rows)") if g["controls"] else "none"),
+           row("Controls (max rows; touch shows 2)", lambda g: (r(g["controls"]) + f" ({g['controlRows']} rows)") if g["controls"] else "none"),
            row("Toast (centre x, top y)", lambda g: f"{g['toast'][0]}, {g['toast'][1]}"),
            "", "### Menu sheet", head, sep,
            row("Side grip `mg`", lambda g: g["mg"]),
            row("Sheet", lambda g: r(g["sheet"])),
            row("`hx`", lambda g: g["hx"]),
            row("`cw × ch`", lambda g: f"{g['cw']}×{g['ch']}"),
-           row("Action row y", lambda g: g["actionY"])]
+           row("Action row y", lambda g: g["actionY"]),
+           "", "### Pocket Menu", head, sep,
+           row("Columns", lambda g: g["pocket"]["cols"]),
+           row("Title", lambda g: r(g["pocket"]["title"])),
+           row("Resume (first row)", lambda g: r(g["pocket"]["items"][0])),
+           row("Customize (last row)", lambda g: r(g["pocket"]["items"][4]))]
     print("\n".join(out))
 
 
@@ -628,8 +779,8 @@ def main():
     th = kit_theme("sherbet")
     for W, H in SIZES + EXTRA:
         save(screen_hud(W, H, th), f"01-round-hud-{W}x{H}", x2=(W, H) in SIZES)
-    for W, H in ((568, 320), (667, 375)):
-        save(screen_hud(W, H, th, open_drawer=True), f"01b-round-hud-quest-drawer-{W}x{H}")
+    for W, H in ((844, 390), (740, 360), (568, 320)):
+        save(screen_hud(W, H, th, pocket=True), f"05-pocket-menu-{W}x{H}")
     for W, H in SIZES:
         save(sheet_screen(C.screen_results, W, H, th), f"03-results-{W}x{H}", x2=(W, H) == (844, 390))
     for W, H in ((844, 390), (568, 320)):
@@ -657,8 +808,8 @@ def main():
     old = C.screen_hud(844, 390, th)
     roblox_bar(old)
     stack([old.out(), screen_hud(844, 390, th).out()],
-          ["Today: Compact v1, glass islands on a full-screen plate (board 223×374)",
-           "Compact v2: slim frame, one LCD between two shoulders (board %d×%d)" % frame_geometry(844, 390)["board"][2:]],
+          ["Before: Compact v1, glass islands on a full-screen plate (board 223×374)",
+           "Compact v2 as built: slim frame, one LCD between two shoulders (board %d×%d)" % frame_geometry(844, 390)["board"][2:]],
           "compare-844x390", cols=2)
     for pid in ("sherbet", "night_orb", "aqua_pop", "liquid_chrome", "brick"):
         t = kit_theme(pid)

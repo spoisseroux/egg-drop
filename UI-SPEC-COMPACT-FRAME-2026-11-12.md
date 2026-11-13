@@ -2,7 +2,7 @@
 
 Written 2026-11-12 by Fable (visual lead) for the implementer. It replaces sections 3 and 4 of `UI-SPEC-COMPACT-2026-11-12.md` (the shell and the round HUD) and changes one number in section 5 (the menu sheet's side rim). Everything else in that file still holds: the Compact rule, the insets, no `UIScale`, type, touch targets, contrast, input, and the picker, results, quest log and shop layouts.
 
-**Status.** Proposal. Nothing is implemented. The mockups are drawn by `scripts/deck_art/build_compact_frame_mockups.py`. Its `frame_geometry(W, H)` is the layout rule; the pictures are drawn from it and the tables below are printed from it (`--tables`), so they agree by construction. The script also asserts the 44 px targets, the 8 px gaps, the keep-out and the text fits at every size it draws. Not run in Studio or on a phone.
+**Status.** Implemented 2026-11-12 late (Claude) with Spencer's section 9 decisions. **Section 10 is the as-built rule and its tables win over the numbers in sections 2-4**, which are kept only as the original proposal. `scripts/deck_art/build_compact_frame_mockups.py` (`frame_geometry`) and `DeckScreen.resolveCompact` compute the same numbers and `scripts/CompactPhone.spec.lua` asserts them. Studio FIXTURE captures in `artifacts/deck-rebuild/studio/compact-frame/`. Not yet run on a phone.
 
 **Why.** Spencer played Compact v1 on his phone and said: "the pocket deck in game screenshots didn't show the wide screen? like it's still just ui on the sides". He is right. v1 made the phone the deck, so there is no deck to see: a board, and loose glass pills on a green background. Desktop reads as a handheld because there is one dark screen between two shoulders with real buttons on them. v2 brings that back on phones: a slim shell, one wide LCD, the d-pad and A / B on the shoulders, and all HUD content inside the screen. The price is 8 px of board height.
 
@@ -74,19 +74,7 @@ With `SW >= 108` the Roblox controls sit on the left shoulder like two top butto
 | A | Centre `W - SW/2, round(H * 0.49)`, Ø A. Accent cap, plate `ink` letter. The biggest thing on the shell. |
 | B | Centre `W - SW + 14 + B/2, A.y + A/2 + 12 + B/2`, Ø B. `#3A3E47` cap. |
 
-| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
-|---|---|---|---|---|---|
-| Shoulder `SW` | 120 | 108 | 120 | 92 | 108 |
-| Glass (bezel) | 120, 4, 604×382 | 108, 4, 524×352 | 120, 4, 692×422 | 92, 4, 384×312 | 108, 4, 451×367 |
-| Screen content `x0..x1, y0..y1` | 128..716, 12..378 | 116..624, 12..348 | 128..804, 12..418 | 100..468, 12..308 | 116..551, 12..363 |
-| `LW × LH` | 588×366 | 508×336 | 676×406 | 368×296 | 435×351 |
-| D-pad | 12, 150, Ø 96 | 10, 139, Ø 88 | 12, 170, Ø 96 | 8, 125, Ø 76 | 10, 146, Ø 88 |
-| MENU pill (drawn) | 24, 346, 72×28 | 18, 316, 72×28 | 24, 386, 72×28 | 10, 276, 72×28 | 18, 331, 72×28 |
-| MENU hit | 18, 338, 84×44 | 12, 308, 84×44 | 18, 378, 84×44 | 4, 268, 84×44 | 12, 323, 84×44 |
-| Wordmark | 14, 64, 92×36 | 14, 64, 80×31 | 14, 64, 92×36 | none | 14, 64, 80×31 |
-| Back arrow | 788, 8, 44×44 | 684, 8, 44×44 | 876, 8, 44×44 | 512, 8, 44×44 | 611, 8, 44×44 |
-| A centre, Ø | 784, 191, 104 | 686, 176, 92 | 872, 211, 104 | 522, 157, 76 | 613, 184, 92 |
-| B centre, Ø | 766, 283, 56 | 672, 260, 52 | 854, 303, 56 | 514, 231, 48 | 599, 268, 52 |
+*Proposal table removed: see section 10 "Shell and screen" and "Shoulders" for the as-built numbers (shoulders 106 / 94 / 80, no B).*
 
 667×375 is not a reference root. It is drawn because it is a common phone and it lands in the one-column arrangement.
 
@@ -107,13 +95,7 @@ two columns when c2 >= 144, else one column
 - **One column** (568×320, 667×375): two columns would be 88 px wide, too narrow for a goal line at 14 px. The board goes to the right end of the screen, `bx = x1 - bw`, and one info column takes `x0 .. bx - 8`. It reads like a classic handheld puzzle screen: playfield on one side, numbers on the other. The board sits by the right thumb and A.
 - The `min` in `bw` only matters on odd small windows (for example 600×480). It keeps the info column at 160 or more and centres the board vertically.
 
-| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
-|---|---|---|---|---|---|
-| Columns | 2 | 2 | 2 | 1 | 1 |
-| Board | 313, 12, 218×366 | 270, 12, 200×336 | 345, 12, 242×406 | 292, 12, 176×296 | 342, 12, 209×351 |
-| Board today (v1) | 223×374 | 205×344 | 247×414 | 181×304 | 214×359 |
-| Height lost | 8 px (2.1%) | 8 px (2.3%) | 8 px (1.9%) | 8 px (2.6%) | 8 px (2.2%) |
-| Info column width | 177 and 177 | 146 and 146 | 209 and 209 | 184 | 218 |
+*Proposal table removed: see section 10. As built, every phone has the board centred; 568×320 and 667×375 use the narrow icon-goal columns.*
 
 **What the frame costs.** v1 gave the board `H - 16`. v2 gives it `H - 24`: 4 px of plate, 5 px of bezel and 3 px of screen padding on each edge, where v1 had 2 px of plate and a 6 px bezel. That is 8 px at every size, about 2%. An egg at 844×390 goes from 18.9 px per cell to 18.5. I think that is the smallest loss that still lets the eye see a plate, a bezel and a screen as three separate things; at 2 px each they smear into one dark line. Board width follows the height, so it loses 5 px.
 
@@ -162,20 +144,7 @@ One info column `c` wide, from `L0 = x0`, top to bottom:
 
 No Controls card and no multiplier chip in one column. They are the first to go.
 
-| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
-|---|---|---|---|---|---|
-| Score | 128, 12, 105×44 | 120, 12, 142×44 | 128, 12, 137×44 | 120, 12, 80×44 | 120, 12, 130×44 |
-| Chain | 241, 12, 64×44 | in the Score card | 273, 12, 64×44 | in Goals header | in Goals header |
-| Goals (3 goals) | 128, 64, 177×132 | 116, 64, 146×132 | 128, 64, 209×132 | 100, 64, 184×108 | 116, 64, 218×132 |
-| Daily quests card | 128, 238, 177×140 | 116, 214, 146×134 | 128, 278, 209×140 | none | none |
-| Quest handle | none | none | none | 100, 264, 184×44 | 116, 319, 218×44 |
-| Quest drawer | none | none | none | 100, 64, 184×244 | 116, 64, 218×299 |
-| Next | 539, 12, 177×64 | 478, 12, 146×64 | 595, 12, 209×64 | 208, 12, 76×44 | 258, 12, 76×44 |
-| Eggs | 539, 84, 177×44 | 478, 84, 146×44 | 595, 84, 209×44 | 100, 180, 58×44 | 116, 204, 88×44 |
-| Difficulty | 539, 136, 177×44 | 478, 136, 146×44 | 595, 136, 209×44 | 166, 180, 118×44 | 212, 204, 122×44 |
-| Win pays | 539, 188, 177×44 | 478, 188, 146×44 | 595, 188, 209×44 | 100, 232, 184×24 | 116, 256, 218×44 |
-| Controls | 539, 264, 177×114 (3 rows) | 478, 262, 146×86 (2 rows) | 595, 304, 209×114 (3 rows) | none | none |
-| Toast (centre x, top y) | 627, 330 | 551, 300 | 699, 370 | 192, 216 | 225, 271 |
+*Proposal table removed: see section 10 "Screen cards".*
 
 ### 3.4 Type
 
@@ -218,13 +187,7 @@ cw    = floor((W - 2*mg - 48) / 3)        ch = H - 140        action row y = H -
 
 With `mg = 6` this is v1 exactly, so 568×320 does not change. Every v1 rule written from the sheet edge (`20`, `W - 20`, `W - 56`, `W - 66`) moves in by `mg - 6`. All v1 thresholds still pass: `cw >= 200` at 740 and up, so bullets, three metrics and full goal text stay.
 
-| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
-|---|---|---|---|---|---|
-| Side grip `mg` | 40 | 24 | 40 | 6 | 6 |
-| Sheet | 42, 8, 760×374 | 26, 8, 688×344 | 42, 8, 848×414 | 8, 8, 552×304 | 8, 8, 651×359 |
-| `hx` | 128 | 128 | 128 | 128 | 128 |
-| `cw × ch` | 238×250 | 214×220 | 268×290 | 169×180 | 202×235 |
-| Action row y | 324 | 294 | 364 | 254 | 309 |
+*Table: see section 10 "Menu sheet" (unchanged numbers).*
 
 - **Grips.** When `mg >= 24` each grip gets five moulded thumb ridges at mid height (black 30% with a white 24% lower edge), plus the plate lip and shade. The sheet gets the same shadow and lip as the HUD glass, so it reads as the same screen, grown.
 - **Transition.** Opening a menu from the HUD: the glass grows from its HUD rect to the sheet rect while the d-pad, A, B and MENU fade out, 160 ms Quad Out. Closing reverses it. Under Reduced Motion it cuts. This is what tells the player the sheet is the deck's screen and not a new window.
@@ -294,3 +257,94 @@ Spencer approved v2 ("looks great") and asked to build it with these changes. Wh
 5. **Small phones (568×320, 667×375): board centred**, with icon-only goals in narrow side columns, if it stays readable (text >= 14, counters >= 13, targets >= 44, nothing in the keep-out). If centred plus icon goals fails readability at 568×320, keep the one-column layout and say why.
 6. **MENU opens a Pocket Menu screen**, not the quest log: a menu on the deck screen that animates in and out (Quad Out about 160 ms in, 120 ms out; instant under Reduced Motion). Items: **Resume**, **Restart round**, **Quit to garden**, **Hatch eggs**, **Customize**. Hatch eggs and Customize open the existing flows (the egg shop / hatch screen and the companion editor). The Daily quests card still opens the quest log. Restart and Quit ask for no extra confirm on an empty board, and a one-tap confirm mid-round.
 7. **Menus as a sheet with plate grips** and the **Controls card** stay as proposed.
+
+## 10. As built (2026-11-12 late)
+
+Implemented in `DeckScreen.resolveCompact` / `layoutCompact` / `buildCompactHud`, `PocketMenu.lua` and `init.client.lua`. Plan, architect review and code review: `artifacts/deck-rebuild/COMPACT-FRAME-PLAN.md`.
+
+### 10.1 Rule changes from sections 2-4
+
+```
+tier = 0 when H >= 380, 1 when H >= 340, else 2
+SW   = 106 /  94 /  80      -- decision 2 (was 120 / 108 / 92)
+D    =  88 /  80 /  68      -- d-pad
+A    =  92 /  82 /  70      -- A, with its +10 well it stays on the shoulder; B is not drawn (decision 4)
+c2   = floor((LW - bw - 16) / 2)
+layout = "wide" when c2 >= 144, "narrow" when c2 >= 96, else the one-column fallback
+```
+
+- **Board centred on every phone.** `bw = round(LH * aspect)`, `bh = LH = H - 24`, centred in the screen.
+- **Narrow (decision 5): 568×320 and 667×375 stay centred.** It passed every readability floor, so the one-column layout is only a fallback for odd windows (`c2 < 96`). Left column: Chain in the first row beside the Roblox controls (from `t0`), Score under it, Goals as **icon rows** (tier egg with its mark, `+` for "or higher", a mini-tray zone glyph lit on the goal's third; a check replaces the count when done; the full goal text is the row's `AccessibleLabel`), the quest handle at the bottom (icon and count; "Quests" when 130+ wide). Right column: Next, Eggs left and Win pays as label-over-value cards, Difficulty with the name at Strong 14, Controls.
+- **No quest drawer.** The Daily quests card (wide) and the quest handle (narrow) open the quest log. The desktop Daily quests card is a click target too.
+- **D-pad halves** are `max(44, D/2)` wide and `max(44, D)` high, shifted right when they would leave the root (at tier 2 they reach 8 px into the bezel, never into screen content).
+- **MENU** is drawn `min(72, SW - 16)` wide, hit `min(84, SW - 8)` × 44. The wordmark shows when `SW - 28 >= 64`.
+- **Controls card** shows the rows of the last input, bottom-anchored: touch is Drag "Aim" and A "Drop" (no B row); keyboard and gamepad keep Leave.
+- **Sheets.** The content of every phone sheet is padded in by `mg - 6` (a `UIPadding`, so the screens' own open animations still work); the faceplate shop applies the same rule in `FaceplateShop:fit`. Grips get five ridges when `mg >= 24`. The HUD-glass-to-sheet grow transition is **not built yet**.
+- **Glare** is hidden on the phone while any sheet or the Pocket Menu is up (never over text). Desktop is unchanged.
+
+### 10.2 Pocket Menu (decision 6)
+
+- Opened by the MENU pill, M, gamepad Y / Select / Start during a round (desktop too). On results, MENU still opens the quest log; with the log open it closes it. Q / LB open the quest log mid-round (MENU no longer does).
+- Lives in the lit screen rect on a phone (the shoulders and A stay live) and in the LCD on desktop. Rows 44 high (60 on desktop), 8 apart; one column when five fit, two columns at 568×320. Title and rows keep out of the Roblox keep-out.
+- Items: Resume, Restart round, Quit to garden, Hatch eggs, Customize. Mid-round, Restart and Quit turn into "Tap again to restart / quit" (destructive) for 3 s; on an empty board they act at once (Restart on an empty board just resumes: it is already a fresh round). Hatch eggs uses the egg-shop route (`visitEggs`); Customize uses the same board-to-garden route and then the companion editor (`roomView.care.openFree`). Quit / Hatch / Customize are disabled with no pet; Restart is disabled without a field, after the round ends and for 3.5 s after a restart.
+- Motion: two panel shutters wipe open from the middle in 0.16 s (Quad Out) and close in 0.12 s (Quad In); Reduced Motion cuts. Opening pauses the round; one pause owner (`clientUI.syncPause`) covers modals, the quest log and the Pocket Menu.
+- Server `restart` action: `RunReturn.restart` accepts only a started (drops > 0), live, non-pending run on the deck with a matching sequence; it re-initialises the **same field template with a new seed** (a learned egg queue cannot be replayed), has its own 3 s cooldown and clears the menu pause. Known trade-off: a player can restart to stay on a field they like.
+
+### 10.3 Tables (printed by `build_compact_frame_mockups.py --tables`)
+
+### Shell and screen
+| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
+|---|---|---|---|---|---|
+| Shoulder `SW` | 106 | 94 | 106 | 80 | 94 |
+| Glass (bezel) | 106, 4, 632×382 | 94, 4, 552×352 | 106, 4, 720×422 | 80, 4, 408×312 | 94, 4, 479×367 |
+| Screen content `x0..x1, y0..y1` | 114..730, 12..378 | 102..638, 12..348 | 114..818, 12..418 | 88..480, 12..308 | 102..565, 12..363 |
+| `LW × LH` | 616×366 | 536×336 | 704×406 | 392×296 | 463×351 |
+| Layout | wide | wide | wide | narrow | narrow |
+| Board | 313, 12, 218×366 | 270, 12, 200×336 | 345, 12, 242×406 | 196, 12, 176×296 | 229, 12, 209×351 |
+| Board today (v1) | 223×374 | 205×344 | 247×414 | 181×304 | 214×359 |
+| Height lost | 8 px (2.1%) | 8 px (2.3%) | 8 px (1.9%) | 8 px (2.6%) | 8 px (2.2%) |
+| Info column width | 191 and 191 | 160 and 160 | 223 and 223 | 100 and 100 | 119 and 119 |
+
+### Shoulders
+| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
+|---|---|---|---|---|---|
+| D-pad | 9, 154, Ø 88 | 7, 143, Ø 80 | 9, 174, Ø 88 | 6, 129, Ø 68 | 7, 150, Ø 80 |
+| MENU pill (drawn) | 17, 346, 72×28 | 11, 316, 72×28 | 17, 386, 72×28 | 8, 276, 64×28 | 11, 331, 72×28 |
+| MENU hit | 11, 338, 84×44 | 5, 308, 84×44 | 11, 378, 84×44 | 4, 268, 72×44 | 5, 323, 84×44 |
+| Wordmark | 14, 64, 78×30 | 14, 64, 66×26 | 14, 64, 78×30 | none | 14, 64, 66×26 |
+| Back arrow | 788, 8, 44×44 | 684, 8, 44×44 | 876, 8, 44×44 | 512, 8, 44×44 | 611, 8, 44×44 |
+| A centre, Ø | 791, 191, 92 | 693, 176, 82 | 879, 211, 92 | 528, 157, 70 | 620, 184, 82 |
+| A hit | 741, 141, 100×100 | 648, 131, 90×90 | 829, 161, 100×100 | 489, 118, 78×78 | 575, 139, 90×90 |
+| D-pad halves (hit) | 9, 154, 44×88 / 53, 154, 44×88 | 3, 143, 44×80 / 47, 143, 44×80 | 9, 174, 44×88 / 53, 174, 44×88 | 0, 129, 44×68 / 44, 129, 44×68 | 3, 150, 44×80 / 47, 150, 44×80 |
+
+### Screen cards
+| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
+|---|---|---|---|---|---|
+| Score | 120, 12, 113×44 | 120, 12, 142×44 | 120, 12, 145×44 | 88, 64, 100×44 | 102, 64, 119×44 |
+| Chain | 241, 12, 64×44 | in the Score card | 273, 12, 64×44 | 120, 12, 68×44 | 120, 12, 101×44 |
+| Goals (3 goals) | 114, 64, 191×132 | 102, 64, 160×132 | 114, 64, 223×132 | 88, 116, 100×108 | 102, 116, 119×132 |
+| Daily quests card | 114, 238, 191×140 | 102, 214, 160×134 | 114, 278, 223×140 | none | none |
+| Quest handle | none | none | none | 88, 264, 100×44 | 102, 319, 119×44 |
+| Next | 539, 12, 191×64 | 478, 12, 160×64 | 595, 12, 223×64 | 380, 12, 100×44 | 446, 12, 119×64 |
+| Eggs | 539, 84, 191×44 | 478, 84, 160×44 | 595, 84, 223×44 | 380, 64, 100×44 | 446, 84, 119×44 |
+| Difficulty | 539, 136, 191×44 | 478, 136, 160×44 | 595, 136, 223×44 | 380, 116, 100×44 | 446, 136, 119×44 |
+| Win pays | 539, 188, 191×44 | 478, 188, 160×44 | 595, 188, 223×44 | 380, 168, 100×44 | 446, 188, 119×44 |
+| Controls (max rows; touch shows 2) | 539, 264, 191×114 (3 rows) | 478, 262, 160×86 (2 rows) | 595, 304, 223×114 (3 rows) | 380, 222, 100×86 (2 rows) | 446, 249, 119×114 (3 rows) |
+| Toast (centre x, top y) | 634, 330 | 558, 300 | 706, 370 | 430, 260 | 505, 315 |
+
+### Menu sheet
+| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
+|---|---|---|---|---|---|
+| Side grip `mg` | 40 | 24 | 40 | 6 | 6 |
+| Sheet | 42, 8, 760×374 | 26, 8, 688×344 | 42, 8, 848×414 | 8, 8, 552×304 | 8, 8, 651×359 |
+| `hx` | 128 | 128 | 128 | 128 | 128 |
+| `cw × ch` | 238×250 | 214×220 | 268×290 | 169×180 | 202×235 |
+| Action row y | 324 | 294 | 364 | 254 | 309 |
+
+### Pocket Menu
+| | 844×390 | 740×360 | 932×430 | 568×320 | 667×375 |
+|---|---|---|---|---|---|
+| Columns | 1 | 1 | 1 | 2 | 1 |
+| Title | 123, 21, 598×28 | 120, 21, 509×28 | 123, 21, 686×28 | 120, 21, 351×28 | 120, 21, 436×28 |
+| Resume (first row) | 272, 89, 300×44 | 220, 74, 300×44 | 316, 109, 300×44 | 97, 106, 183×44 | 183, 82, 300×44 |
+| Customize (last row) | 272, 297, 300×44 | 220, 282, 300×44 | 316, 317, 300×44 | 288, 158, 183×44 | 183, 290, 300×44 |
