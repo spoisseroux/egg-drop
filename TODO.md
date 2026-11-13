@@ -14,21 +14,13 @@ Updated 2026-11-13 ~04:40. Resumed at 04:03. A: specs green (46/53 client, 7 pre
 - Last full run: 37/53 client specs passed; fixes since then for AppearancePalette, CareMachineUI, CompactDeck, CompactEggShop, ControllerSheets, DeviceItemFront, MaterialEditor, SharedHeaders, StarsPresentation, UsableSheetWidth await a rerun. Pre-existing failures: SaveNoticeLayout, StyleJournalActions, StyleJournalLayout, VividHandheld, Onboarding, SemanticUI.
 - To do: rerun all specs, swap the results Star's 9-slice glow, capture every screen vs mockups, Code Reviewer pass on egg/Star/audio, commit, push, publish, record in PLAY-BUILD.md.
 
-**B. "Feel alive" batch (Spencer 2026-11-13), after A publishes:**
-- Direction + mockups + 12 ambient placeholder cues done 2026-11-13: `FEEL-ALIVE-DIRECTION-2026-11-13.md`, `artifacts/feel-alive-2026-11-13/` (flower + attract icon sprites in `sprites/`), `assets/audio/placeholder/`. 4 open questions await Spencer. Not built. Hazard: re-running `scripts/build_placeholder_audio.py` rewrites `assets/audio/placeholder/manifest.json` and drops the ambient entries and every recorded `assetId`; make it merge before re-running.
-- [ ] Ambient water bed heard everywhere, louder near the waterfalls (placeholder audio).
-- [ ] Random bird chirps from trees, quieter at night (placeholder audio).
-- [ ] Pet life: tune walk, idles (look around, stretch, yawn), more faces, a cute sit, small coo sounds (coo pairing already exists: PetCooScheduler/PetCooPose).
-- [ ] Declutter the world (fewer vases/props by the hub and deck machine); retro-style flat sprite flowers.
-- [ ] Make the Pocket Deck machine, egg hatching place and Care machine eye-catching: idle attract animation, soft glow/beam, floating icon or bouncing arrow, a gentle sound nearby.
-
-**C. Round items and cuter eggs: SCOPE first (Fable), mockups to Spencer before building:**
-- **Scope written 2026-11-13, waiting on Spencer:** `ROUND-ITEMS-AND-BALL-THEMES-SCOPE-2026-11-13.md`, mockups in `artifacts/round-items-2026-11-13/` (generator `scripts/deck_art/build_round_items_mockups.py`). Recommends: power-up balls only (no Power-up Egg yet, no save change), four items first (Swap, Pop, Magnet, Bomb), B opens a freezing carousel, a phone item button under A shown only when holding an item, smiley faces replacing numerals and motifs, size-stepped colour circles in the UI, a "Balls" Deck style tab with six themes (save v11). Six open questions in section D3. Nothing built.
-- [ ] In-round items: B opens a quick-select item carousel (left/right to browse, A to use), original design. Note: phones currently have no B on the touch HUD (Compact v2 decision 4), so the scope must place it.
-- [ ] Where items come from: a Power-up Egg (hatched for items) and/or special power-up balls that grant a power-up when merged/cleared. Recommend one, with balance and save impact.
-- [ ] Cuter eggs/balls: crude smiley faces with varied expressions, a slight shaky "alive" animation, no tier numbers on the balls (size + colour carry the tier).
-- [ ] Goals and other UI that show a ball type: replace numerals with a plain coloured circle.
-- [ ] **Ball themes as a buyable Pocket Deck customization** (Spencer 2026-11-13): sets of ball looks (face styles, colour palettes, textures) bought with Stars and picked in Deck style next to Faceplates and Backgrounds. Scope: theme list, price tiers, how the default smiley set fits, readability rules (tiers must stay distinct by size and colour in every theme), save impact.
+**B+C. Approved batch (Spencer 2026-11-13, "lets get building!"), IN PROGRESS.** Plan, decisions and slices: `artifacts/batch-2026-11-13/BUILD-PLAN.md`.
+- [ ] R1 ball look + themes: Smileys default (no numerals or motifs), Marbles free, Gumdrops 20 / Gems 40 / Planets 40 / Kittens 80 (fix cat ears), Deck style Balls tab, Next/Then faces animate, colour circles in UI, results count-up blips, deck theme tints only the deck + background, save v11.
+- [ ] R2 items: power-up balls only, 3-slot belt ("Belt full" toast), B carousel (round freezes), Swap / Pop / Magnet / Bomb, phone item button always shown ("You have no items" fades), leave via MENU / back arrow.
+- [ ] W1 world: day/night off, locked dusk (reference `artifacts/batch-2026-11-13/reference/spencer-9-dusk-mood.webp`), textures/colours/lighting to match, remove 12 props, flat ground flower patches island-wide, 3D frond bushes.
+- [ ] W2 life: brook + waterfalls + birds (world sound off during rounds), Pocket Deck music placeholder (+ AUDIO-HANDOFF), station attract (care as mocked; deck on the real model; egg icon right way up), stations remember use for the session, pet idles / sit / faces / coos / walk.
+- [ ] Scopes (Fable): UI personality pass ("less vibe coded"); "play forever" retention (cosmetic eggs vs direct buy, collections, rotating shop).
+- Done earlier: feel-alive direction + mockups (`FEEL-ALIVE-DIRECTION-2026-11-13.md`), items/themes scope (`ROUND-ITEMS-AND-BALL-THEMES-SCOPE-2026-11-13.md`). Hazard: re-running `scripts/build_placeholder_audio.py` rewrites the placeholder manifest; make it merge first.
 
 **D. v1 scope (accepted 2026-11-13, not built):** onboarding/tutorial "win the Bear" loop + bug reporting (`ONBOARDING-V1-SCOPE-2026-11-13.md`, all recommendations accepted: one unmissable first-Stars round, +2 Stars for a missed round with a goal met, one `coachMask` save field, bug reports store UserId only and purge at 30 days, DataStore queue); Pet Park (`PET-PARK-V1-SCOPE-2026-11-13.md`, open questions await Spencer); translations (Roblox auto-translate + clipping check); live toy test with two players; fill-line coach card (needs `coachMask`).
 
