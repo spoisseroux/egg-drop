@@ -58,3 +58,9 @@ Uploads (meshes, textures, audio) go through Open Cloud; audio quota ~100/30 day
 7. **Power-up balls (R2):** star slots from a separate random stream (seed + fixed offset) so seeds stay deterministic; `merge()` keeps the star flag from either input; Next/Then read a published per-slot flag; off in Welcome / field 0 / guided rounds.
 8. **Sequencing:** R2 lands the `PowerUp` attribute + belt schema first, R1 renders them. In init.client.lua / DeckScreen.lua, R2 owns input routing + the item button, R1 owns Next/Then; re-read before every edit. W1 lands the dusk lock in `HollowClock.sample` first; W2 tunes clock-dependent things (faces, ambience) after.
 9. **Cut/defer if needed:** Magnet last (new force code; Swap/Pop/Bomb first); frond-bush meshes if the upload quota gets tight; Pocket Deck attract last.
+
+## Spencer, later 2026-11-13: "Yes, add them; proceed with all recommended for the rest"
+
+- Save v11 also adds play-forever fields: lifetime `stats`, `stamps` (no-reset stamp card), `book` (collection book) — fields + defaults now (R1), features later.
+- Play-forever recommendations accepted (PLAY-FOREVER-SCOPE-2026-11-13.md): direct buy for themes/faceplates/wardrobe; Style Egg later (12 Stars, odds shown, no duplicates, items also sold directly); Kittens 120 Stars + a 160 tier later; everything rotates back, no one-time exclusives; v1 retention set = lifetime counters, collection book with milestone rewards, no-reset stamp card replacing the flat daily gift; weeks 1-8 roadmap per the scope.
+- UI personality recommendations accepted (UI-PERSONALITY-SCOPE-2026-11-13.md): Fredoka One display face, button lips + stitched seams, copy voice + string table, pet peek (desktop first), fixed house palette with one accent per screen; a face on the Star. Build after this batch.
