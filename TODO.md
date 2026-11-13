@@ -1,6 +1,6 @@
 # Egg Drop — remaining work
 
-Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v515 published 2026-11-12** (phone slim frame, Pocket Menu, wearable fixes; v505 before it). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+Updated November 11, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private build after v515 published 2026-11-12** (QA bug fixes, runtime 7e017dc; v515 before it). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
 ## Now working on
 

@@ -1,4 +1,16 @@
-# Egg Drop — phone deck frame, Pocket Menu, wearable fixes
+# Egg Drop — QA bug fixes after v515
+
+**Private build Published 2026-11-12 (the publish after v515) — runtime 7e017dc, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/qa-bugs-2026-11-12/private-published-qa-bugs.jpg) · captures in `artifacts/qa-bugs-2026-11-12/`.
+
+Fixes from Spencer's v515 QA pass: the Pocket Menu on a fresh save explains its locked rows and the d-pad moves through them; on phones the deck, quest log, picker, results, Wardrobe and Faceplates sit below the Roblox controls and the screen is a little narrower; Wardrobe cards are no longer clipped; the "Dot" charm is called Snowflake; the hatch reveal pet fades in once loaded (no stretched/dark Bear); water flow lies flat on the river; stairs, column tops and trees render both sides; the lantern rope reaches the tree; the hub is dimmer at night.
+
+**Passed before publish:** CompactPhone 10/10, DeckScreen 8, DeckResults 8, DeckQuests 5, DeckBoot, PetAttachments 8, WorldRoutes 6, HatchProgress 27, RunReturn 24, WearablePurchase, FaceplatePurchase. Code Reviewer GO WITH CHANGES (both changes made).
+
+**Test:** fresh-save Pocket Menu on the phone; the round, quest log and Wardrobe tops on the phone; a hatch reveal; the river, rotunda stairs and hub at night.
+
+**Still open:** Wardrobe item thumbnails, Charm "None" row, vase crowding, waterfall sound, redesigns from the QA pass (hatch reveal stage, egg screen, Companions menu, results screen, deck style header), Easy payout, physical-phone and save/rejoin checks.
+
+## Historical v515 — phone deck frame, Pocket Menu, wearable fixes
 
 **Private v515 Published 2026-11-12 — runtime 30aa1ba, committed and pushed.** Studio Output: "Published new changes in Egg Drop to Roblox", v515. [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-12/private-published-v515.jpg).
 
