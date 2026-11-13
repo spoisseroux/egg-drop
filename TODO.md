@@ -26,6 +26,7 @@ Updated 2026-11-13 ~02:00. Work paused for usage; **resumes 04:03 (scheduled in-
 - [ ] Where items come from: a Power-up Egg (hatched for items) and/or special power-up balls that grant a power-up when merged/cleared. Recommend one, with balance and save impact.
 - [ ] Cuter eggs/balls: crude smiley faces with varied expressions, a slight shaky "alive" animation, no tier numbers on the balls (size + colour carry the tier).
 - [ ] Goals and other UI that show a ball type: replace numerals with a plain coloured circle.
+- [ ] **Ball themes as a buyable Pocket Deck customization** (Spencer 2026-11-13): sets of ball looks (face styles, colour palettes, textures) bought with Stars and picked in Deck style next to Faceplates and Backgrounds. Scope: theme list, price tiers, how the default smiley set fits, readability rules (tiers must stay distinct by size and colour in every theme), save impact.
 
 **D. v1 scope (accepted 2026-11-13, not built):** onboarding/tutorial "win the Bear" loop + bug reporting (`ONBOARDING-V1-SCOPE-2026-11-13.md`, all recommendations accepted: one unmissable first-Stars round, +2 Stars for a missed round with a goal met, one `coachMask` save field, bug reports store UserId only and purge at 30 days, DataStore queue); Pet Park (`PET-PARK-V1-SCOPE-2026-11-13.md`, open questions await Spencer); translations (Roblox auto-translate + clipping check); live toy test with two players; fill-line coach card (needs `coachMask`).
 

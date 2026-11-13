@@ -130,3 +130,4 @@ Process: Fable for art/audio direction and mockups where useful, review-driven b
 - Source of items: a Power-up Egg and/or special power-up balls granted on merge/clear. Recommend one, with balance and save impact.
 - Cuter balls: crude smiley faces, varied expressions, slight shaky alive animation, no tier numbers (size + colour carry the tier); goals and other UI use a plain coloured circle instead of numerals.
 Full queue and order: TODO.md "Now working on" (A redesign publish, B feel alive, C items/cuter eggs scope, D v1 scope).
+- Ball themes as a buyable Pocket Deck customization (face styles, colour palettes, textures), a third Deck style tab beside Faceplates and Backgrounds; scope prices, readability rules and save impact with the cuter-eggs scope.
