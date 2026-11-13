@@ -1,4 +1,16 @@
-# Egg Drop — QA bug fixes after v515
+# Egg Drop — redesign: celebrations, menus, round look, 3D eggs and Star
+
+**Private v539 Published 2026-11-13 — runtime 8d4e432, committed and pushed.** Studio Output: "Sent message to server to publish" and Quick Links "Add publish notes to v539". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/publish-2026-11-13/private-published-v539.jpg) · Studio captures `artifacts/redesign-2026-11-12/studio/`.
+
+New since the QA-fix build: full-screen hatch reveal stage (spotlight, drag to spin, name plate); results screen with a 3D Star, count-up, next-egg meter, quest progress and a Hatch button; round look (no rings or yellow border, vivid eggs, tier V violet, fill line that turns amber and says "Stack too high · Merge to clear"); your Deck style background drawn in the board; Deck style screen (Faceplates | Backgrounds); Companions hub (Pets / Wardrobe / Customize) with Charm "None"; Hatch eggs as a list with a spinning 3D egg. Placeholder sounds for every new cue.
+
+**Passed before publish:** 46/53 client specs (7 pre-existing failures unrelated to this build), all server specs (OverflowGraceLeft 6, RunReturn 24, WorldRoutes 6, HatchProgress 27, HueProgress 18, Wearable/FaceplatePurchase); every module loads; board span peak 1229/1536; two Code Reviewer passes, all findings fixed.
+
+**Test:** a round to the fill line (Hard is fastest), a win and a missed round (results + 3D Star), Hatch eggs (3D egg, hatch), the hatch reveal (drag to spin), Companions → Customize → Charm None, Deck style Backgrounds, on your phone.
+
+**Still open:** the Features tab and Feature Egg are hidden on purpose; fill-line coach card (needs a save field); sounds are placeholders; not yet checked on a physical phone.
+
+## Historical — QA bug fixes after v515
 
 **Private build Published 2026-11-12 (the publish after v515) — runtime 7e017dc, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · [Publication proof](artifacts/qa-bugs-2026-11-12/private-published-qa-bugs.jpg) · captures in `artifacts/qa-bugs-2026-11-12/`.
 

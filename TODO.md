@@ -1,6 +1,6 @@
 # Egg Drop — remaining work
 
-Updated November 13, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private build after v515 published 2026-11-12** (QA bug fixes, runtime 7e017dc; v515 before it). Verified source and local Studio evidence do not establish live save or physical-device coverage.
+Updated November 13, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v539 published 2026-11-13** (redesign, runtime 8d4e432). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
 ## Now working on
 
@@ -8,7 +8,7 @@ Keep this list current: add an item when work starts, move it to done when it la
 
 Updated 2026-11-13 ~04:40. Resumed at 04:03. A: specs green (46/53 client, 7 pre-existing failures; all server specs pass), screens captured, final code review running, then commit + publish. B: Fable direction + mockups + ambient placeholder audio running. C: Fable scope + mockups running.
 
-**A. Redesign build: built, NOT yet tested as a whole or committed** (plan + checkpoint: `artifacts/redesign-2026-11-12/BUILD-PLAN.md`). Spencer approved every mockup ("build all that") with the recommended answers.
+[x] **A. Redesign build: DONE, published private v539 (8d4e432) 2026-11-13.** Was: (plan + checkpoint: `artifacts/redesign-2026-11-12/BUILD-PLAN.md`). Spencer approved every mockup ("build all that") with the recommended answers.
 - Built: shared header + Deck style (Faceplates/Backgrounds tabs), hatch reveal stage (`RevealStage.lua`), results screen (`DeckResults.lua`, 3D Star with 2D fallback), round look (vivid tiers, V violet, no rings/border, fill-line danger state, `OverflowGraceLeft`), deck background inside the board, Companions hub + Customize (Charm None, Features hidden by `FeatureFlags`), Hatch eggs list + 3D egg preview (`EggPreview3D.lua`).
 - Assets: 3D eggs + Star uploaded (`src/shared/EggModels.lua`, created at runtime with `AssetService:CreateMeshPartAsync`); 28 placeholder sounds uploaded and wired (`BoardAudio` `placeholderIds`, `assets/audio/placeholder/`).
 - Last full run: 37/53 client specs passed; fixes since then for AppearancePalette, CareMachineUI, CompactDeck, CompactEggShop, ControllerSheets, DeviceItemFront, MaterialEditor, SharedHeaders, StarsPresentation, UsableSheetWidth await a rerun. Pre-existing failures: SaveNoticeLayout, StyleJournalActions, StyleJournalLayout, VividHandheld, Onboarding, SemanticUI.
