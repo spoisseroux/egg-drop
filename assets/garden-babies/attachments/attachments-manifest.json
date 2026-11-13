@@ -2838,36 +2838,36 @@
    "fbx": "bear-attachments-piercings.fbx",
    "group": "piercings",
    "slot": "EarPiercing",
-   "anchor": "HelixL",
-   "parentAnchor": "HelixL",
+   "anchor": "LobeL",
+   "parentAnchor": "LobeL",
    "channel": "Head",
-   "role": "HelixL",
+   "role": "LobeL",
    "colorRole": "own:#FFC240",
    "material": "wear__FFC240",
    "originBlender": [
-    -0.44337,
+    -0.46326,
     0.00176,
-    1.42758
+    1.25048
    ],
    "centerBlender": [
-    -0.43064,
+    -0.46326,
     0.00176,
-    1.41485
+    1.22048
    ],
    "sizeBlender": [
-    0.10114,
-    0.137,
-    0.10114
+    0.01819,
+    0.113,
+    0.11017
    ],
    "centerRuntime": [
-    -0.43064,
-    1.41485,
+    -0.46326,
+    1.22048,
     -0.00176
    ],
    "sizeRuntime": [
-    0.10114,
-    0.10114,
-    0.137
+    0.01819,
+    0.11017,
+    0.113
    ],
    "triangles": 168,
    "hasUV": true,
@@ -2878,8 +2878,8 @@
    "displayName": "Little Hoops",
    "tier": "common",
    "price": 15,
-   "majorRadius": 0.056,
-   "minorRadius": 0.0125,
+   "majorRadius": 0.046,
+   "minorRadius": 0.0105,
    "tintBySecondary": false
   },
   {
@@ -2936,36 +2936,36 @@
    "fbx": "bear-attachments-piercings.fbx",
    "group": "piercings",
    "slot": "EarPiercing",
-   "anchor": "HelixR",
-   "parentAnchor": "HelixR",
+   "anchor": "LobeR",
+   "parentAnchor": "LobeR",
    "channel": "Head",
-   "role": "HelixR",
+   "role": "LobeR",
    "colorRole": "own:#FFC240",
    "material": "wear__FFC240",
    "originBlender": [
-    0.46106,
+    0.46425,
     -0.00101,
-    1.40933
+    1.25383
    ],
    "centerBlender": [
-    0.44834,
+    0.46425,
     -0.00101,
-    1.3966
+    1.22383
    ],
    "sizeBlender": [
-    0.10114,
-    0.137,
-    0.10114
+    0.01819,
+    0.113,
+    0.11017
    ],
    "centerRuntime": [
-    0.44834,
-    1.3966,
+    0.46425,
+    1.22383,
     0.00101
    ],
    "sizeRuntime": [
-    0.10114,
-    0.10114,
-    0.137
+    0.01819,
+    0.11017,
+    0.113
    ],
    "triangles": 168,
    "hasUV": true,
@@ -2976,8 +2976,8 @@
    "displayName": "Little Hoops",
    "tier": "common",
    "price": 15,
-   "majorRadius": 0.056,
-   "minorRadius": 0.0125,
+   "majorRadius": 0.046,
+   "minorRadius": 0.0105,
    "tintBySecondary": false
   },
   {
@@ -5232,7 +5232,7 @@
      "piece": "Main",
      "mesh": "Bear__HelixL_Ring",
      "channel": "Head",
-     "anchor": "HelixL",
+     "anchor": "LobeL",
      "colorRole": "own:#FFC240",
      "tintBySecondary": false,
      "triangles": 168
@@ -5241,7 +5241,7 @@
      "piece": "Main",
      "mesh": "Bear__HelixR_Ring",
      "channel": "Head",
-     "anchor": "HelixR",
+     "anchor": "LobeR",
      "colorRole": "own:#FFC240",
      "tintBySecondary": false,
      "triangles": 168

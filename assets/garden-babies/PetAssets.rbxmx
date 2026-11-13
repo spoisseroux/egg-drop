@@ -6632,24 +6632,24 @@
         <Properties>
           <string name="Name">Bear__HelixL_Ring</string>
           <Content name="MeshId">
-            <url>rbxassetid://78368668772341</url>
+            <url>rbxassetid://90414234707653</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.10113682</X>
-            <Y>0.10113693</Y>
-            <Z>0.13700001</Z>
+            <X>0.018186569213867188</X>
+            <Y>0.11016693115234374</Y>
+            <Z>0.11299999237060547</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>10.113682</X>
-            <Y>10.113693</Y>
-            <Z>13.700001</Z>
+            <X>1.8186569213867188</X>
+            <Y>11.016693115234375</Y>
+            <Z>11.299999237060547</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.43064</X>
-            <Y>1.41485</Y>
+            <X>0.46326</X>
+            <Y>1.22048</Y>
             <Z>0.00176</Z>
             <R00>1</R00>
             <R01>0</R01>
@@ -6710,24 +6710,24 @@
         <Properties>
           <string name="Name">Bear__HelixR_Ring</string>
           <Content name="MeshId">
-            <url>rbxassetid://119721108630979</url>
+            <url>rbxassetid://72331268273734</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.10113689000000001</X>
-            <Y>0.10113678</Y>
-            <Z>0.13700001</Z>
+            <X>0.018186569213867188</X>
+            <Y>0.11016677856445313</Y>
+            <Z>0.11299999237060547</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>10.113689</X>
-            <Y>10.113678</Y>
-            <Z>13.700001</Z>
+            <X>1.8186569213867188</X>
+            <Y>11.016677856445312</Y>
+            <Z>11.299999237060547</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.44834</X>
-            <Y>1.3966</Y>
+            <X>-0.46425</X>
+            <Y>1.22383</Y>
             <Z>-0.00101</Z>
             <R00>1</R00>
             <R01>0</R01>
@@ -7139,20 +7139,20 @@
         <Properties>
           <string name="Name">Bear__Shirt_Tee_SleeveL</string>
           <Content name="MeshId">
-            <url>rbxassetid://132109792376630</url>
+            <url>rbxassetid://73928468953441</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.27818190000000004</X>
-            <Y>0.38033089</Y>
-            <Z>0.25379185</Z>
+            <X>0.2781818962097168</X>
+            <Y>0.38033088684082034</Y>
+            <Z>0.2537918853759766</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>27.81819</X>
-            <Y>38.033089</Y>
-            <Z>25.379185</Z>
+            <X>27.81818962097168</X>
+            <Y>38.03308868408203</Y>
+            <Z>25.379188537597656</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.31055</X>
@@ -7178,20 +7178,20 @@
         <Properties>
           <string name="Name">Bear__Shirt_Tee_SleeveR</string>
           <Content name="MeshId">
-            <url>rbxassetid://92810666958843</url>
+            <url>rbxassetid://73473510621983</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.27468704</X>
-            <Y>0.38169441</Y>
-            <Z>0.2471855</Z>
+            <X>0.2746870422363281</X>
+            <Y>0.3816944885253906</Y>
+            <Z>0.24718551635742186</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>27.468704</X>
-            <Y>38.169441</Y>
-            <Z>24.71855</Z>
+            <X>27.468704223632812</X>
+            <Y>38.16944885253906</Y>
+            <Z>24.718551635742188</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.31212</X>
@@ -7295,20 +7295,20 @@
         <Properties>
           <string name="Name">Bear__Shirt_Hoodie_SleeveL</string>
           <Content name="MeshId">
-            <url>rbxassetid://95437580927838</url>
+            <url>rbxassetid://117105419445064</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.27818190000000004</X>
-            <Y>0.38033089</Y>
-            <Z>0.25379185</Z>
+            <X>0.2781818962097168</X>
+            <Y>0.38033088684082034</Y>
+            <Z>0.2537918853759766</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>27.81819</X>
-            <Y>38.033089</Y>
-            <Z>25.379185</Z>
+            <X>27.81818962097168</X>
+            <Y>38.03308868408203</Y>
+            <Z>25.379188537597656</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.31055</X>
@@ -7334,20 +7334,20 @@
         <Properties>
           <string name="Name">Bear__Shirt_Hoodie_SleeveR</string>
           <Content name="MeshId">
-            <url>rbxassetid://117612881367599</url>
+            <url>rbxassetid://71955501343026</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.27468704</X>
-            <Y>0.38169441</Y>
-            <Z>0.2471855</Z>
+            <X>0.2746870422363281</X>
+            <Y>0.3816944885253906</Y>
+            <Z>0.24718551635742186</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>27.468704</X>
-            <Y>38.169441</Y>
-            <Z>24.71855</Z>
+            <X>27.468704223632812</X>
+            <Y>38.16944885253906</Y>
+            <Z>24.718551635742188</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.31212</X>

@@ -526,6 +526,18 @@ def sleeve(side):
         v.co = middle + out * max(0.0, 1.0 - SLEEVE_LIP / out.length)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bmesh.ops.transform(bm, matrix=local(arm), verts=bm.verts[:])
+    # recalc on an open shell can pick either winding, and the right arm's mirrored transform flips it:
+    # make the faces look away from the sleeve's axis so neither side renders inside-out (backface-culled).
+    bm.normal_update()
+    centre = sum((v.co for v in bm.verts), Vector()) / len(bm.verts)
+    ax = Vector((SLEEVE_AXIS[0] * sx, SLEEVE_AXIS[1], SLEEVE_AXIS[2])).normalized()
+    score = 0.0
+    for f in bm.faces:
+        d = f.calc_center_median() - centre
+        d -= ax * d.dot(ax)
+        score += f.normal.dot(d) * f.calc_area()
+    if score < 0:
+        bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
     return bm
 
 
@@ -617,20 +629,25 @@ finish("Neck_BellCollar_Bell", bm, "Neck", C_GOLD, "bellcollar", "Necklace", "Bo
 for side in "LR":
     A = local(anchor("Helix" + side))
     ear = bvh_of("Ear" + side, "EarInner" + side)
-    # ---- Little Hoops: a gold ring that clamps the rim (anchor-local YZ plane)
+    # ---- Little Hoops: a gold ring hanging from the ear LOBE (Spencer 2026-11-12), same Ears slot, so
+    # saves keep working; the mesh keeps its Helix*_Ring name. Anchor-local YZ plane at the Lobe anchor.
+    # Built in pet-local space (not the lobe anchor's tilted frame): the hoop hangs straight down in the
+    # front-back/up plane, its top passing through the lobe, so it reads as a hoop from the side.
+    R, r = 0.046, 0.0105
+    A = Matrix.Translation(local(anchor("Lobe" + side)).to_translation() + Vector((0, 0, -(R - 0.016))))
     bm = bmesh.new()
-    R, r = 0.056, 0.0125
     rings = []
     for i in range(14):
         a = 2 * math.pi * i / 14
-        c = Vector((0, R * math.cos(a), -0.018 + R * math.sin(a)))
+        c = Vector((0, R * math.cos(a), R * math.sin(a)))
         radial = Vector((0, math.cos(a), math.sin(a)))
         rings.append([bm.verts.new(A @ (c + (radial * math.cos(2 * math.pi * k / 6) + Vector((1, 0, 0)) * math.sin(2 * math.pi * k / 6)) * r))
                       for k in range(6)])
     for i in range(14):
         ring_faces(bm, rings[i], rings[(i + 1) % 14])
-    finish(f"Helix{side}_Ring", bm, "Helix" + side, C_GOLD, "ring", "Helix" + side, "Head", majorRadius=R, minorRadius=r)
+    finish(f"Helix{side}_Ring", bm, "Lobe" + side, C_GOLD, "ring", "Lobe" + side, "Head", majorRadius=R, minorRadius=r)
     # ---- Star Studs: a puffy gold star on the front of the rim, a little ball behind
+    A = local(anchor("Helix" + side))
     bm = bmesh.new()
     c = A @ Vector((0, 0, -0.040))
     f = ear.ray_cast(Vector((c.x, -2, c.z)), Vector((0, 1, 0)))[0]

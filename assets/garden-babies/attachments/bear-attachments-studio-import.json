@@ -1,7 +1,7 @@
 {
  "assetId": "93989945223773",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914.",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416).",
  "previousAssetIds": [
   "97156894572368",
   "120398944545621"
@@ -284,16 +284,16 @@
    ]
   },
   "Bear__HelixL_Ring": {
-   "id": "rbxassetid://78368668772341",
+   "id": "rbxassetid://90414234707653",
    "rel": [
     43.066002,
     48.046112,
     -0.861779
    ],
    "ms": [
-    10.113682,
-    10.113693,
-    13.700001
+    1.8186569213867188,
+    11.016693115234375,
+    11.299999237060547
    ]
   },
   "Bear__HelixL_StarStud": {
@@ -310,16 +310,16 @@
    ]
   },
   "Bear__HelixR_Ring": {
-   "id": "rbxassetid://119721108630979",
+   "id": "rbxassetid://72331268273734",
    "rel": [
     -44.831688,
     46.220963,
     -1.13842
    ],
    "ms": [
-    10.113689,
-    10.113678,
-    13.700001
+    1.8186569213867188,
+    11.016677856445312,
+    11.299999237060547
    ]
   },
   "Bear__HelixR_StarStud": {
@@ -583,29 +583,29 @@
    ]
   },
   "Bear__Shirt_Hoodie_SleeveL": {
-   "id": "rbxassetid://95437580927838",
+   "id": "rbxassetid://117105419445064",
    "rel": [
     31.057272,
     -39.664165,
     -11.69302
    ],
    "ms": [
-    27.81819,
-    38.033089,
-    25.379185
+    27.81818962097168,
+    38.03308868408203,
+    25.379188537597656
    ]
   },
   "Bear__Shirt_Hoodie_SleeveR": {
-   "id": "rbxassetid://117612881367599",
+   "id": "rbxassetid://71955501343026",
    "rel": [
     -31.210367,
     -39.759747,
     -11.389695
    ],
    "ms": [
-    27.468704,
-    38.169441,
-    24.71855
+    27.468704223632812,
+    38.16944885253906,
+    24.718551635742188
    ]
   },
   "Bear__Shirt_Hoodie_Star": {
@@ -635,29 +635,29 @@
    ]
   },
   "Bear__Shirt_Tee_SleeveL": {
-   "id": "rbxassetid://132109792376630",
+   "id": "rbxassetid://73928468953441",
    "rel": [
     31.057272,
     -39.664165,
     -11.69302
    ],
    "ms": [
-    27.81819,
-    38.033089,
-    25.379185
+    27.81818962097168,
+    38.03308868408203,
+    25.379188537597656
    ]
   },
   "Bear__Shirt_Tee_SleeveR": {
-   "id": "rbxassetid://92810666958843",
+   "id": "rbxassetid://73473510621983",
    "rel": [
     -31.210367,
     -39.759747,
     -11.389695
    ],
    "ms": [
-    27.468704,
-    38.169441,
-    24.71855
+    27.468704223632812,
+    38.16944885253906,
+    24.718551635742188
    ]
   },
   "Bear__Shirt_Tee_Stripes": {
