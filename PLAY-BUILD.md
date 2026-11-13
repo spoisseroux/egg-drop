@@ -1,5 +1,17 @@
+**Private v558 Published 2026-11-13 — runtime 9586f02, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v558". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/ui-personality-2026-11-13/studio/`.
+# Egg Drop — UI personality pass
+
+New since v550: Fredoka One for titles, names and buttons; friendlier copy (one string table, `src/shared/UICopy.lua`); a fixed house palette with one tint per screen (peach Hatch, lilac Deck style, pink Companions, sky Quests, gold results: a dot, a squiggle under the title, a halftone fade); A/B hint caps like the deck's buttons; lips on things you press and stitched seams on panels you read; tilted sticker chips for prices, tiers and "New best"; an LCD dot grid in preview windows; boing and tab squash motion (off under Reduced Motion); your pet peeks into Hatch eggs, Deck style, results and Quests on desktop; the Star has a face (wallet eyes, results hero); empty states with a line in voice.
+
+**Passed before publish:** all 62 previously-green client specs (new UICopy 6, KitSurfaces 8, PetPeek 10). Architect review + Code Reviewer (GO WITH CHANGES: text measuring made synchronous; tiles release a stuck press).
+
+**Test:** Deck style (all three tabs), Hatch eggs, a round's results (win and miss: the pet hops or droops, the Star face watches the count), Quests with every daily claimed, the Wardrobe with nothing owned, all on desktop and phone (no peek on phone).
+
+**Still open:** icon redraw (T10); phone Deck style detail pane overlaps its finish and status lines (older); Hatch/results/Quests peek positions checked only by specs so far.
+
+## Historical v550 — round items, smiley ball themes, dusk world, garden life
+
 **Private v550 Published 2026-11-13 — runtime 0cc2c3a, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v550". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/batch-2026-11-13/captures/`.
-# Egg Drop — round items, smiley ball themes, dusk world, garden life
 
 New since v539: smiley balls by default (no numerals), Deck style **Balls** tab (Smileys and Marbles free, Gumdrops 20, Gems 40, Planets 40, Kittens 120 with cat ears), Next/Then faces animate, goal text uses colour names/circles, results count-up blips. Round items: star (power-up) balls fill a 3-slot belt; **B** opens the item carousel and pauses the round (Swap, Pop, Magnet, Bomb); phones get an item button under A ("You have no items" when empty). Items are off in the Welcome round, guided rounds and before your first win. The faceplate now tints only the deck. Garden locked at dusk with new sky, warmer textures, 12 props removed, flat flower patches and frond bushes; brook, waterfall and bird ambience (off during rounds) and a Pocket Deck music placeholder; stations pulse an icon until used; pets sit, look at you, idle and coo more. Save is now v11 (do not roll back past 0cc2c3a).
 
