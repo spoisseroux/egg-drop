@@ -80,6 +80,37 @@ return function(server)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
 	end)
 
+	test("a reused operation id with different arguments is refused, never a false Saved", function()
+		local h, db, c = fixture()
+		fund(h, 100)
+		assert(H.buyWearable(h, "w-r", "pip", "beanie", 15, true))
+		local balance, writes = h.state.nectar, c.writes
+		-- Same id, another item: no charge, no item, and not "Saved".
+		local ok, reason = H.buyWearable(h, "w-r", "pip", "sunhat", 30, true)
+		assert(not ok and reason == "OperationConflict", tostring(ok) .. " " .. tostring(reason))
+		assert(not W.owns(h.state, "pip", "sunhat") and h.state.nectar == balance and c.writes == writes)
+		-- The saved record's op signature carries the arguments, so another server holding a
+		-- stale snapshot is refused inside the callback too.
+		assert(db.player_1.hatching.lastOperation.digest == "buy:pip:beanie")
+		local h2, db2 = fixture()
+		fund(h2, 100)
+		local stale = copy(h2.state)
+		assert(H.buyWearable(h2, "w-s", "pip", "beanie", 15, true))
+		local committedState = copy(db2.player_1.hatching)
+		h2.state = stale -- this session never saw the commit (as another server would)
+		ok, reason = H.buyWearable(h2, "w-s", "pip", "sunhat", 30, true)
+		assert(not ok and reason == "OperationConflict", "callback: " .. tostring(ok) .. " " .. tostring(reason))
+		assert(db2.player_1.hatching.nectar == committedState.nectar and not W.owns(db2.player_1.hatching, "pip", "sunhat"))
+		-- Equip ids are bound to their slot and item the same way.
+		assert(H.buyWearable(h, "w-t", "pip", "sunhat", 30, false))
+		assert(H.equipWearable(h, "e-r", "pip", "Hat", "sunhat"))
+		ok, reason = H.equipWearable(h, "e-r", "pip", "Hat", "beanie")
+		assert(not ok and reason == "OperationConflict" and equipped(h).Hat == "sunhat", tostring(reason))
+		-- The same id with the same arguments is still a quiet success.
+		ok, reason = H.buyWearable(h, "w-t", "pip", "sunhat", 30, false)
+		assert(ok and reason == "AlreadyOwned")
+	end)
+
 	test("a replayed UpdateAsync callback and commit-then-error charge once", function()
 		local h, db, c = fixture()
 		fund(h, 60)
@@ -162,11 +193,21 @@ return function(server)
 		assert(again.status == "Ready" and again.state.version == 10, tostring(again.status))
 		assert(again.state.nectar == balance and type(again.state.petWearables) == "table" and next(again.state.petWearables) == nil)
 		assert(again.state.inventoryMask == old.inventoryMask and again.state.quests ~= nil)
-		-- A malformed wearables namespace on a v9 record is refused, not silently wiped.
+		-- A v9 record that somehow already carries petWearables is sanitised, never a failed load:
+		-- a malformed namespace is dropped to empty, a valid one is kept.
 		assert(H.release(again))
 		local bad = copy(old); bad.petWearables = { pip = "junk" }; db.player_1.hatching = bad
-		local refused = H.load(1, { rank = 1 }, adapter)
-		assert(refused.status ~= "Ready", "accepted a v9 record with a stray wearables field")
+		local cleaned = H.load(1, { rank = 1 }, adapter)
+		assert(cleaned.status == "Ready" and cleaned.state.version == 10, "a stray v9 wearables field failed the load: " .. tostring(cleaned.status))
+		assert(next(cleaned.state.petWearables) == nil and cleaned.state.nectar == balance)
+		assert(H.release(cleaned))
+		local kept = copy(old); kept.petWearables = { pip = { owned = { "beanie" }, equipped = { Hat = "beanie" } } }; db.player_1.hatching = kept
+		local carried = H.load(1, { rank = 1 }, adapter)
+		assert(carried.status == "Ready" and W.owns(carried.state, "pip", "beanie") and W.equipped(carried.state, "pip").Hat == "beanie")
+		assert(H.release(carried))
+		local unowned = copy(old); unowned.petWearables = { puddle = { owned = { "beanie" }, equipped = {} } }; db.player_1.hatching = unowned
+		local dropped = H.load(1, { rank = 1 }, adapter)
+		assert(dropped.status == "Ready" and next(dropped.state.petWearables) == nil, "kept wearables for an unowned pet")
 		-- v10 validation: equipped items must be owned; later catalogue ids are tolerated.
 		assert(W.valid({ inventoryMask = again.state.inventoryMask, petWearables = { pip = { owned = { "future_hat" }, equipped = { Hat = "future_hat" } } } }))
 		assert(not W.valid({ inventoryMask = again.state.inventoryMask, petWearables = { pip = { owned = {}, equipped = { Hat = "beanie" } } } }))

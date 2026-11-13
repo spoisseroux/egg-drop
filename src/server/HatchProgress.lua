@@ -113,7 +113,8 @@ local function validBase(state,version)
 	local claimDay = tonumber(state.dailyClaimDay)
 	if state.lease.expiresAt~=state.lease.expiresAt or math.abs(state.lease.expiresAt)==math.huge then return false end
 	if state.lastOperation~=nil and(type(state.lastOperation)~="table"or type(state.lastOperation.id)~="string"
-		or not integer(state.lastOperation.sequence)or state.lastOperation.sequence<1 or state.lastOperation.sequence~=state.operationSeq)then return false end
+		or not integer(state.lastOperation.sequence)or state.lastOperation.sequence<1 or state.lastOperation.sequence~=state.operationSeq
+		or(state.lastOperation.digest~=nil and(type(state.lastOperation.digest)~="string"or #state.lastOperation.digest>120)))then return false end
 	if not claimDay or claimDay ~= math.floor(claimDay) or math.abs(claimDay) > 1000000000 then return false end
 	for _, family in ipairs(Catalog.Families) do
 		if not integer(state.mastery[family], Mastery.MaxPoints)
@@ -211,10 +212,17 @@ local function upgrade(state, now, userId)
 	if nextState.version==9 then
 		-- Validate the whole v9 record (quests sanitised first, as at load), then
 		-- add an empty wearables namespace. Wallet, pets and everything else carry over.
-		if nextState.petWearables~=nil then return state end
-		local candidate=clone(nextState);candidate.quests=QuestState.sanitize(candidate.quests,dayOf(now),userId)
+		-- v9 never wrote petWearables: a stray one is sanitised (kept only if it is a
+		-- valid v10 namespace for this record), never a reason to fail the load.
+		local stray=nextState.petWearables
+		local candidate=clone(nextState);candidate.petWearables=nil
+		candidate.quests=QuestState.sanitize(candidate.quests,dayOf(now),userId)
 		if not validV9(candidate)then return state end
 		nextState=Wearables.upgrade(candidate)
+		if stray~=nil then
+			local probe=clone(nextState);probe.petWearables=clone(stray)
+			if Wearables.valid(probe)then nextState=probe end
+		end
 	end
 	return nextState
 end
@@ -343,9 +351,14 @@ local function committed(pending,state)
 	if pending.kind=="material"then return MaterialState.proof(state,pending.candidate)end
 	if pending.kind=="toy"then return ToyState.proof(state,pending.candidate)end
 	if pending.kind=="feature"then return FeatureState.proof(state,pending.candidate)end
-	return state.lastOperation and state.lastOperation.id==pending.id
+	-- The digest binds an operation id to its arguments: a reused id with other
+	-- arguments is not proof that this request committed.
+	return state.lastOperation and state.lastOperation.id==pending.id and state.lastOperation.digest==pending.digest
 end
-local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind)
+local function reusedId(pending,state)
+	return state.lastOperation and state.lastOperation.id==pending.id and state.lastOperation.digest~=pending.digest
+end
+local function transact(handle, signature, expectedRevision, apply, candidate, operationId, kind, digest)
 	if handle.busy then return false, "Busy" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
 	local pending = handle.pending
@@ -358,8 +371,9 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		if not allowed then return false, failure end
 		pending = {
 			signature = signature, id = operationId or handle.adapter.guid(), revision = expectedRevision, kind=kind,
-			sequence = handle.state.operationSeq + 1, apply = apply, candidate = candidate,
+			sequence = handle.state.operationSeq + 1, apply = apply, candidate = candidate, digest = digest,
 		}
+		if reusedId(pending, handle.state) then return false, "OperationConflict" end
 		handle.pending = pending
 	end
 	handle.busy = true
@@ -371,6 +385,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		local root = clone(previous)
 		local state = root.hatching
 		if committed(pending,state)then return root end -- Proof precedes calendar expiry.
+		if reusedId(pending,state)then reason = "OperationConflict"; return nil end
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
 			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil
 		end
@@ -378,7 +393,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil end
 		state.revision += 1
 		state.operationSeq = pending.sequence
-		state.lastOperation = { id = pending.id, sequence = pending.sequence }
+		state.lastOperation = { id = pending.id, sequence = pending.sequence, digest = pending.digest }
 		state.lease.expiresAt = handle.adapter.now() + Hatching.LeaseSeconds
 		if not valid(state)then reason="InvalidData";return previous end
 		return root
@@ -762,7 +777,8 @@ function Hatching.buyWearable(handle, operationId, petId, itemId, price, equip)
 	local candidate = resuming and handle.pending.candidate
 		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true })
 	if candidate.petId ~= petId or candidate.itemId ~= itemId then return false, "OperationConflict" end
-	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyBuy, candidate, signature)
+	local digest = "buy:" .. candidate.petId .. ":" .. candidate.itemId
+	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyBuy, candidate, signature, nil, digest)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end
@@ -782,7 +798,8 @@ function Hatching.equipWearable(handle, operationId, petId, slot, itemId)
 	end
 	local candidate = resuming and handle.pending.candidate
 		or table.freeze({ petId = petId, slot = slot, itemId = itemId, operationId = operationId })
-	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyEquip, candidate, signature)
+	local digest = "wear:" .. candidate.petId .. ":" .. candidate.slot .. ":" .. tostring(candidate.itemId)
+	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyEquip, candidate, signature, nil, digest)
 	if not ok and reason == "NoChange" then return true, reason end
 	return ok, reason
 end
