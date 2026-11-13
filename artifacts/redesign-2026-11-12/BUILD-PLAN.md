@@ -113,3 +113,13 @@ File > Publish (computer-use; minimise the Studio home window first), record in 
 
 Audio by Spencer (placeholders ship),
 Wardrobe card thumbnails, prop crowding, Easy payout rebalance.
+
+## Next batch, queued 2026-11-13 ~01:50 by Spencer (start after the redesign publish)
+
+"Everything needs to feel alive." Placeholders are fine for audio.
+1. **Ambient water bed:** a calm, persistent water sound heard everywhere at low volume, getting louder near the waterfalls (positional Sound on the falls + a quiet global bed). Placeholder audio.
+2. **Bird chirps:** random, spaced ambient chirps from trees around the island (positional, varied pitch, quieter at night). Placeholder audio. Mood reference: a calm hero-garden feel; keep it original.
+3. **Pet life:** check what exists (PetCooScheduler/PetCooPose coos between pets, `pet`/`purr` sounds, PetExpression faces) and tune: walk animation, idles (look around, stretch, yawn), facial expressions, a cute sit, small coo sounds. Placeholders for any new sounds.
+4. **Declutter the world:** fewer props (vases etc. near the deck machine and hub), and retro-style flat sprite flowers (billboard/decal PNGs) instead of busy geometry.
+5. **Make the three machines obvious:** Pocket Deck machine, egg hatching place, pet (Care) machine. Idle attract animations, a soft pulsing glow/beam, floating icon or bouncing arrow, a gentle sound when near, so a new player knows these are the things to use.
+Process: Fable for art/audio direction and mockups where useful, review-driven build, Studio captures, then publish.
