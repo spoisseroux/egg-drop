@@ -54,3 +54,27 @@ T10 icon redraw is deferred (one atlas upload, no behaviour).
 ## Not in this pass
 
 T10 icon redraw (later, one atlas upload); translations (separate v1 item).
+
+## Architect review changes (2026-11-13)
+
+1. **Pet peek (P3) is 3D, not PetPortrait.** `PetPortrait` is a 13x13 hue-only sprite with no charm or wearables, so
+   the approved "your own pet with hue, charm and wearables" needs the 3D pet: build `PetPeek` on the viewport pet in
+   `CompanionsHub.lua` / `WardrobeShop.lua`, one cached ViewportFrame reparented between hosts (never rebuilt per open),
+   camera and blink paused while hidden, destroyed at session end; off on phones and under Reduced Motion.
+2. **Text measuring follows the role font.** New `Kit.measure(text, role, size)` (font from `Kit.Type[role][3]`, via
+   `TextService:GetTextBoundsAsync`, cached); `Kit.chip`, `Kit.glyph`, `Kit.tabs`, `Kit.tabIconsFit` and the toaster
+   switch to it, so Fredoka labels never clip and tab dots stay aligned.
+3. **One owner for display type.** `Kit.Type` owns Fredoka (`Name`, `Title`, button label). `DeckArt.Art.Font` /
+   `Art.SheetFont` / `Art.type` stay Builder Sans; `CelebrationKit` and the `DeckScreen` banner are untouched.
+   `PlayfulPresentation.spec` is updated deliberately only where a Kit role changes.
+4. **Strings move with their specs.** `src/shared/UICopy.lua` with semantic nested keys (`results.leave.wide`,
+   `results.leave.narrow`, `hatch.footer.phone`) and `UICopy.get(key, vars)` with `{count}` placeholders (no string
+   concatenation; translations slot in later). Every exact-string spec (`SaveNoticeLayout`, `DeckResults`, ...) asserts
+   `UICopy.get(key)` in the same commit; all three `DeckResults` layout branches use the same keys.
+5. **Every Kit API lands in P1 as working stubs:** `Kit.measure`, `Kit.tile`, `Kit.well`, `Kit.boing`, chip kind
+   `sticker`, `Kit.card{seam=}`, `Kit.header{tint=}`. P2 and P3 only fill bodies and edit call sites.
+6. **Press depth stays compatible.** Lip depth is a parameter; secondary buttons keep the 2 px press the
+   `DeckScreen` spec checks unless that spec changes in the same commit; `buttons[button]` state keys and `Kit.pulse`
+   stay.
+7. **Rotated stickers clip:** sticker chips get 3 px clearance and never sit at a scroll area's edge.
+8. **Missing asset ids create nothing** (no empty grey ImageLabels): seam, squiggle, halftone, dot grid, Star face.
