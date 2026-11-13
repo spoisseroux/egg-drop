@@ -85,3 +85,28 @@ sandbox duo). Phone HUD capture 812x354.
 ## Not in v1
 
 Tug, follow-the-leader, park-only toy, a resident park pet for empty servers, quick chat.
+
+## Architect review changes (2026-11-13)
+
+1. **Exempt park pets from the recalls:** `Garden:sync` (~line 206, owner moved > 0.65 studs sends non-follow Room
+   pets home) and `decide` (~line 388, recall beyond 22 studs) must skip `actor.park`, like care.
+2. **Greeting and wander skip park pets.**
+3. **Hook:** one field `actor.park` set only by ParkDirector; in `decide()` right after the `actor.care` check:
+   `if actor.park then self.park:tick(actor,input,now) continue end`; the director's schedule runs once after that
+   loop, before `greeting`; `Garden:release` calls `self.park:release(actor)` (focus, reset, removal all go through
+   release). Duos reuse the existing `pairs` generation check so a half-left pair is swept.
+4. **Save:** no version bump; do NOT add to `Lifetime.Counters` (every name is required). Optional
+   `playDate = {day, count}` valid when missing; `stats.parkGames` already exists and is incremented. Award through
+   `HatchProgress.transact`, signature keyed by day; count only finished activities (kerb in/out can't farm).
+5. **Membership hysteresis:** enter ~0.5 studs inside the kerb, leave ~1.5 studs outside (2 Hz samples).
+6. **Snapshot:** park block stays inside the one `Snapshot` attribute (two attributes can arrive out of order);
+   castle stage derived from `startTime`, not stored; measure payload with 12 pets at longest paths.
+7. **Scheduler:** `waitingSince` per idle park pet, oldest first; oldest takes a free duo slot if an idle pet of a
+   different owner waits (pairs with the oldest such), else a free solo slot; no same equipment twice in a row.
+8. **Equipment:** code-mounted with `CreateMeshPartAsync` in `pcall` (grey box fallback), behind `FeatureFlags.Park`;
+   visual meshes `CanCollide/CanQuery/CanTouch=false` (else `planPath` raycasts treat them as ground) plus invisible
+   simple colliders for players; moving parts animated client-side only.
+9. **Testing:** Studio local server with 2 players covers duos, partner leaving and late join; the director is
+   specced with an injected clock and fake owners; the second-account session covers chat, real DataStore Play date
+   and the 12-player cap.
+10. **Flag off = v568 exactly:** `self.park` nil and the snapshot unchanged (spec it).
