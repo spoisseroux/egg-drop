@@ -216,20 +216,22 @@ function Shop:layoutTiles()
  local list=self.list
  if self.view then
   local g=self.grid
-  self:buildTiles(list,0,0,g.tileW,64,8,g.cols)
-  list.CanvasSize=UDim2.fromOffset(0,math.max(0,math.ceil(#self.tiles/g.cols)*72-8))
+  -- 3 px in from the scroll edges: the selected tile's outline was clipped (QA 2026-11-12).
+  self:buildTiles(list,3,3,g.tileW-6,64,8,g.cols)
+  list.CanvasSize=UDim2.fromOffset(0,math.max(0,math.ceil(#self.tiles/g.cols)*72-8+6))
  else
-  self:buildTiles(list,0,0,220,96,12,2)
-  list.CanvasSize=UDim2.fromOffset(0,math.max(0,math.ceil(#self.tiles/2)*108-12))
+  self:buildTiles(list,3,3,217,96,12,2)
+  list.CanvasSize=UDim2.fromOffset(0,math.max(0,math.ceil(#self.tiles/2)*108-12+6))
  end
  list.CanvasPosition=Vector2.zero
 end
 
 function Shop:fit(size)
  if Kit.compactRule(size.X,size.Y)then
-  local kx,kh=Kit.keepOut()
-  local view={phone=true,W=math.floor(size.X),H=math.floor(size.Y),kx=kx,kh=kh,hx=math.max(kx+12,24)}
-  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.new();self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
+  -- QA 2026-11-12: the sheet starts under the Roblox controls, so it has no keep-out.
+  local _,kh=Kit.keepOut();local top=kh+2
+  local view={phone=true,W=math.floor(size.X),H=math.floor(size.Y)-top,kx=0,kh=0,hx=24}
+  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(0,top);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
   if self.key~=Shop.viewKey(view)then self:build(view);self:relayout()end
   return
  end

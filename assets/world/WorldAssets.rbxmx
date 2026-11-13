@@ -20,6 +20,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -39,6 +40,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -58,6 +60,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -77,6 +80,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -96,6 +100,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -115,6 +120,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -134,6 +140,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -153,6 +160,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
@@ -172,6 +180,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -191,6 +200,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -210,6 +220,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -229,6 +240,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -248,6 +260,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -267,6 +280,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -286,6 +300,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -305,6 +320,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -324,6 +340,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -343,6 +360,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -362,6 +380,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -381,6 +400,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -400,6 +420,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -419,6 +440,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -438,6 +460,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">1568</token>
           <Color3uint8 name="Color3uint8">4292408831</Color3uint8>
@@ -457,6 +480,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -476,6 +500,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -495,6 +520,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -514,6 +540,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -533,6 +560,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -552,6 +580,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
@@ -571,6 +600,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -590,6 +620,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
@@ -609,6 +640,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294934735</Color3uint8>
@@ -628,6 +660,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -656,6 +689,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -684,6 +718,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -712,6 +747,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -740,6 +776,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">1312</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -759,6 +796,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -787,6 +825,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -815,6 +854,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -843,6 +883,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -871,6 +912,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -899,6 +941,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -927,6 +970,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -955,6 +999,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -974,6 +1019,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1002,6 +1048,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1030,6 +1077,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1058,6 +1106,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1086,6 +1135,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1114,6 +1164,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1133,6 +1184,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
@@ -1152,6 +1204,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1180,6 +1233,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1208,6 +1262,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1227,6 +1282,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1246,6 +1302,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1265,6 +1322,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1276,14 +1334,15 @@
           <string name="Name">W7_Lantern__bark</string>
           <Content name="MeshId"><url>rbxassetid://105789070353260</url></Content>
           <Content name="TextureID"><url>rbxassetid://131990250699654</url></Content>
-          <Vector3 name="Size"><X>0.1</X><Y>3.4</Y><Z>0.1</Z></Vector3>
+          <Vector3 name="Size"><X>0.1</X><Y>7.3</Y><Z>0.1</Z></Vector3>
           <Vector3 name="InitialSize"><X>0.10823</X><Y>3.67992</Y><Z>0.10823</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-31.78</X><Y>10.9</Y><Z>-16.7</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <CoordinateFrame name="CFrame"><X>-31.78</X><Y>12.85</Y><Z>-16.7</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1312,6 +1371,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
@@ -1331,6 +1391,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
@@ -1350,6 +1411,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1369,6 +1431,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1388,6 +1451,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1407,6 +1471,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1435,6 +1500,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1463,6 +1529,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1491,6 +1558,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1510,6 +1578,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1529,6 +1598,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1548,6 +1618,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1576,6 +1647,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4283426559</Color3uint8>
@@ -1595,6 +1667,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">288</token>
           <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
@@ -1614,6 +1687,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1633,6 +1707,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1652,6 +1727,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1671,6 +1747,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1690,6 +1767,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1718,6 +1796,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1746,6 +1825,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1774,6 +1854,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1802,6 +1883,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1830,6 +1912,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1858,6 +1941,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1886,6 +1970,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">256</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1905,6 +1990,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294638847</Color3uint8>
@@ -1924,6 +2010,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4293982972</Color3uint8>
@@ -1943,6 +2030,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1962,6 +2050,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -1981,6 +2070,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2000,6 +2090,7 @@
           <bool name="CanQuery">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">2</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2019,6 +2110,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2038,6 +2130,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2057,6 +2150,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2076,6 +2170,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2095,6 +2190,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2114,6 +2210,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2133,6 +2230,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2152,6 +2250,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2171,6 +2270,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2190,6 +2290,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2209,6 +2310,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2228,6 +2330,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2247,6 +2350,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2266,6 +2370,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2285,6 +2390,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2304,6 +2410,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2323,6 +2430,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2342,6 +2450,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2361,6 +2470,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2380,6 +2490,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2399,6 +2510,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2418,6 +2530,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2437,6 +2550,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2456,6 +2570,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2475,6 +2590,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2494,6 +2610,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2513,6 +2630,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2532,6 +2650,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2551,6 +2670,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2570,6 +2690,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2589,6 +2710,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2608,6 +2730,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2627,6 +2750,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2646,6 +2770,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2665,6 +2790,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2684,6 +2810,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2703,6 +2830,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2722,6 +2850,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2741,6 +2870,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2760,6 +2890,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2779,6 +2910,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2798,6 +2930,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2817,6 +2950,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2836,6 +2970,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2855,6 +2990,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2874,6 +3010,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2893,6 +3030,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2912,6 +3050,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2931,6 +3070,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2950,6 +3090,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2969,6 +3110,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -2988,6 +3130,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3007,6 +3150,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3026,6 +3170,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3045,6 +3190,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3064,6 +3210,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3083,6 +3230,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3102,6 +3250,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3121,6 +3270,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3140,6 +3290,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3159,6 +3310,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3178,6 +3330,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3197,6 +3350,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3216,6 +3370,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3235,6 +3390,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3254,6 +3410,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3273,6 +3430,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
@@ -3292,6 +3450,7 @@
           <bool name="CanQuery">true</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
           <token name="CollisionFidelity">3</token>
           <token name="Material">272</token>
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>

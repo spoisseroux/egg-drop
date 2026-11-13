@@ -49,13 +49,17 @@ function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else
 function Screen.resolveCompact(W,H,aspect,kx,kh)
  kx=kx or 116;kh=kh or 58
  local tier=if H>=380 then 0 elseif H>=340 then 1 else 2
- local SW=({106,94,80})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
+ -- QA 2026-11-12: the glass starts under the Roblox controls (`top`), never behind them,
+ -- and the shoulders are 18 px wider so the screen reads less wide.
+ local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
+ local top=kh+2
  local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,
   deck=rect(0,0,W,H),contentScale=1,pad=0}
- g.glass=rect(SW,RIM,W-2*SW,H-2*RIM)
- g.screen=rect(SW+BEZ,RIM+BEZ,W-2*SW-2*BEZ,H-2*RIM-2*BEZ)
- local x0,y0=SW+BEZ+PAD,RIM+BEZ+PAD
- local x1,y1=W-x0,H-y0
+ g.top=top
+ g.glass=rect(SW,top,W-2*SW,H-top-RIM)
+ g.screen=rect(SW+BEZ,top+BEZ,W-2*SW-2*BEZ,H-top-RIM-2*BEZ)
+ local x0,y0=SW+BEZ+PAD,top+BEZ+PAD
+ local x1,y1=W-x0,H-(RIM+BEZ+PAD)
  local LW,LH=x1-x0,y1-y0
  g.x0,g.y0,g.x1,g.y1,g.LW,g.LH=x0,y0,x1,y1,LW,LH
  -- Board: full screen height unless the side columns would drop under 96.
@@ -133,8 +137,11 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- Menu sheet (section 4): plate grips `mg` either side; v1 rules shift in by mg - 6.
  local mg=Screen.gripMargin(W)
  g.mg=mg;g.off=mg-6
- g.sheet=rect(mg+2,8,W-2*mg-4,H-16);g.hx=math.max(kx+12,mg+18)
- g.cw=math.floor((W-2*mg-48)/3);g.ch=H-140;g.actionY=H-66
+ -- Sheets also sit under the Roblox controls: their content is padded down by `top`
+ -- (Screen:placeOverlay), so in sheet coordinates there is no keep-out.
+ local SH=H-top
+ g.sheet=rect(mg+2,top,W-2*mg-4,SH-8);g.hx=mg+18
+ g.cw=math.floor((W-2*mg-48)/3);g.ch=SH-140;g.actionY=SH-66
  g.pocket=pocketGeometry(g)
  return g
 end
@@ -320,9 +327,9 @@ end
 -- Plate grips: a sheet's content is padded in by `off` px left and right, so the
 -- screens' v1 edge rules (20, W - 20) land at mg + 14. Padding, not Position:
 -- the screens animate their content's Position when they open.
-local function inset(content,off)
+local function inset(content,off,top)
  local pad=content:FindFirstChild("GripInset")or Kit.node("UIPadding",content,{Name="GripInset"})
- pad.PaddingLeft=UDim.new(0,off);pad.PaddingRight=UDim.new(0,off)
+ pad.PaddingLeft=UDim.new(0,off);pad.PaddingRight=UDim.new(0,off);pad.PaddingTop=UDim.new(0,top or 0)
 end
 Screen.inset=inset
 function Screen:placeOverlay(overlay)
@@ -337,7 +344,7 @@ function Screen:placeOverlay(overlay)
   -- Compact: the layer covers the whole root at scale 1; the screen draws its own sheet,
   -- moved in by the plate grips (content offset mg - 6, so v1's edge rules hold).
   overlay.layer.Position=UDim2.new();overlay.layer.Size=UDim2.fromOffset(g.W,g.H);Kit.corner(overlay.layer,0)
-  overlay.content.Size=UDim2.fromOffset(g.W,g.H);overlay.scale.Scale=1;inset(overlay.content,g.off)
+  overlay.content.Size=UDim2.fromOffset(g.W,g.H);overlay.scale.Scale=1;inset(overlay.content,g.off,g.top)
   self:dress(overlay,true)
  else
   overlay.layer.Position=UDim2.fromOffset(g.lcd.x,g.lcd.y);overlay.layer.Size=UDim2.fromOffset(g.lcd.w,g.lcd.h)
@@ -396,7 +403,8 @@ function Screen:view(overlay)
    pocket={cols=pg.cols,items=items,title=rect(pg.title.x-r.x,pg.title.y-r.y,pg.title.w,pg.title.h)}}
  end
  local off=g.off
- return{phone=true,W=g.W-2*off,H=g.H,kx=g.kx-off,kh=g.kh,hx=g.hx-off,cw=g.cw,ch=g.ch,actionY=g.actionY,off=off,mg=g.mg}
+ -- The sheet starts below the Roblox controls (content padded by g.top): no keep-out inside it.
+ return{phone=true,W=g.W-2*off,H=g.H-g.top,kx=0,kh=0,hx=g.hx-off,cw=g.cw,ch=g.ch,actionY=g.actionY,off=off,mg=g.mg,top=g.top}
 end
 
 function Screen:pressDpad(dir,down)
@@ -566,7 +574,7 @@ function Screen:layoutCompact(g)
  -- Glare on the board only; results and sheets cover the root; the boot plays in the screen.
  place(self.glare,b)
  self.results.Position=UDim2.new();self.results.Size=UDim2.fromOffset(W,H);Kit.corner(self.results,0)
- self.resultsContent.Size=UDim2.fromOffset(W,H);self.resultsScale.Scale=1;inset(self.resultsContent,g.off)
+ self.resultsContent.Size=UDim2.fromOffset(W,H);self.resultsScale.Scale=1;inset(self.resultsContent,g.off,g.top)
  self:dress(self.resultsLayer,true)
  place(self.bootHost,g.screen);Kit.corner(self.bootHost,11)
  for _,overlay in ipairs(self.overlays)do self:placeOverlay(overlay)end
@@ -577,9 +585,12 @@ function Screen:layoutCompact(g)
  self.toaster.placement=function()
   local gg=self.geometry
   if not(gg and gg.phone)then return nil,30,false end
-  local sheet=self.results.Visible
-  for _,o in ipairs(self.overlays)do if o.layer.Visible then sheet=true end end
-  if sheet then return gg.W/2,66,true end
+  local sheet,lcd=self.results.Visible,false
+  for _,o in ipairs(self.overlays)do if o.layer.Visible then if o.lcd then lcd=true else sheet=true end end end
+  -- Sheets start at gg.top (under the Roblox controls): below their header row.
+  if sheet then return gg.W/2,gg.top+66,true end
+  -- The Pocket Menu lives in the screen: toast at its foot, clear of the title row.
+  if lcd then return gg.W/2,gg.screen.y+gg.screen.h-36,true end
   return gg.toast.X,gg.toast.Y,true
  end
  return g

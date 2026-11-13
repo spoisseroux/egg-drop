@@ -8,6 +8,16 @@ local TweenService = game:GetService("TweenService")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+-- Warm the pet meshes and textures in the background (QA 2026-11-12: the first hatch
+-- reveal drew the Bear as stretched boxes, then untextured, while they downloaded).
+task.delay(3,function()
+	local assets={}
+	for _,name in ipairs({"PetAssets","PetMaterials","PetMaterialsTwoTone","PetCharmAssets"})do
+		local folder=ReplicatedStorage:FindFirstChild(name)
+		if folder then table.insert(assets,folder)end
+	end
+	pcall(function()game:GetService("ContentProvider"):PreloadAsync(assets)end)
+end)
 
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
@@ -2317,7 +2327,7 @@ end
 function clientUI.pocketState()
  local owned=(board:GetAttribute("OwnedPets")or 0)>0
  local over=board:GetAttribute("RoundOver")==true
- return{empty=(board:GetAttribute("Drops")or 0)==0,canRestart=owned and not over and(board:GetAttribute("FieldPhase")or "Welcome")~="Welcome",
+ return{empty=(board:GetAttribute("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(board:GetAttribute("FieldPhase")or "Welcome")~="Welcome",
   canQuit=owned,canHatch=owned,canCustomize=owned}
 end
 function clientUI.openPocketMenu()
@@ -2368,6 +2378,11 @@ clientUI.pocketCallbacks.customize=function()
  if clientUI.visitCompanions()then clientUI.accepted("confirm")end
 end
 clientUI.pocketCallbacks.armed=function()audio:play("aim",.8,.4)end
+clientUI.pocketCallbacks.locked=function(id,state)
+ clientUI.deck.toaster.show(if state.locked then "Win this round to meet your first pet"
+  elseif id=="restart"then(if state.empty then "The round has not started"elseif board:GetAttribute("RoundOver")==true then "The round is over"else "Restarting, one moment")else "Not available right now")
+ audio:play("aim",.6,.3)
+end
 function clientUI.toggleQuestLog()
  if clientUI.questLog.visible then return clientUI.closeQuestLog()end
  return clientUI.openQuestLog()

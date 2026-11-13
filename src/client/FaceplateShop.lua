@@ -293,11 +293,12 @@ end
 function Shop:fit(size,rect)
  -- Compact phone roots get their own layout at scale 1 (UI-SPEC-COMPACT 9).
  if not rect and Kit.compactRule(size.X,size.Y)then
-  local kx,kh=Kit.keepOut()
-  -- Compact v2 plate grips (UI-SPEC-COMPACT-FRAME 4): the sheet moves in by mg - 6.
+  local _,kh=Kit.keepOut();local top=kh+2
+  -- Compact v2 plate grips (UI-SPEC-COMPACT-FRAME 4): the sheet moves in by mg - 6,
+  -- and down under the Roblox controls (QA 2026-11-12), so it has no keep-out.
   local W=math.floor(size.X);local mg=require(script.Parent.DeckScreen).gripMargin(W);local off=mg-6
-  local view={phone=true,W=W-2*off,H=math.floor(size.Y),kx=kx-off,kh=kh,hx=math.max(kx+12,mg+18)-off,off=off}
-  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(off,0);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
+  local view={phone=true,W=W-2*off,H=math.floor(size.Y)-top,kx=0,kh=0,hx=mg+18-off,off=off}
+  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(off,top);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
   if self.key~=Shop.viewKey(view)then self:build(view);self:relayout()end
   return
  end

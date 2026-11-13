@@ -34,6 +34,13 @@ for _tile in COLLISION["parts"]:
 for _part in MANIFEST["parts"]:
     if _part["region"] == "Ground":
         _part["collide"] = False
+    # QA 2026-11-12: the hub-tree lantern rope stopped 4 studs under the canopy. Run it
+    # from the glow (bottom 9.2) up into the foliage (16.5); the mesh is a thin cylinder.
+    if _part["name"] == "W7_Lantern__bark":
+        _part["center"] = [_part["center"][0], 12.85, _part["center"][2]]
+        _part["size"] = [_part["size"][0], 7.3, _part["size"][2]]
+LANTERN_PIVOT = next([p["center"][0], p["center"][1] + p["size"][1] / 2, p["center"][2]]
+                     for p in MANIFEST["parts"] if p["name"] == "W7_Lantern__bark")
 
 # Blender base colours (sRGB) for untextured, unpaletted materials.
 FLAT = {
@@ -108,6 +115,16 @@ def xml_matte(index, texture):
     return "".join(line + "\n" for line in lines)
 
 
+SINGLE_SIDED = ("water", "glow", "cloud", "bubble", "foam", "collision")
+
+
+def double_sided(part, lk):
+    """Opaque, visible scenery only: water, glows and see-through layers stay one-sided."""
+    if part["region"] == "GroundCollision" or lk["transparency"] > 0:
+        return False
+    return not any(tag in part["material"] for tag in SINGLE_SIDED)
+
+
 def xml_part(index, part):
     name = part["name"]
     mesh_id, *raw = IMPORT[name]
@@ -134,6 +151,9 @@ def xml_part(index, part):
         f"          <bool name=\"CanQuery\">{'true' if collide else 'false'}</bool>\n"
         "          <bool name=\"CanTouch\">false</bool>\n"
         f"          <bool name=\"CastShadow\">{'true' if lk['shadow'] else 'false'}</bool>\n"
+        # QA 2026-11-12: some imported faces are wound inward (stair treads, column capitals,
+        # tree crowns) and Roblox culled them. Opaque visible scenery renders both sides.
+        f"          <bool name=\"DoubleSided\">{'true' if double_sided(part, lk) else 'false'}</bool>\n"
         f"          <token name=\"CollisionFidelity\">{FIDELITY['PreciseConvexDecomposition' if collide else 'Box']}</token>\n"
         f"          <token name=\"Material\">{MATERIAL_TOKEN[lk['material']]}</token>\n"
         f"          <Color3uint8 name=\"Color3uint8\">{color}</Color3uint8>\n"
@@ -187,7 +207,8 @@ def parts_data():
         if motion:
             entry["motion"] = motion
             if motion["kind"] in ("sway", "spin"):
-                entry["pivot"] = [p["center"][0], p["center"][1] + p["size"][1] / 2, p["center"][2]]
+                # The lantern's rope and glow swing together from the rope's top.
+                entry["pivot"] = LANTERN_PIVOT if p["region"] == "Lantern" else [p["center"][0], p["center"][1] + p["size"][1] / 2, p["center"][2]]
         out[p["name"]] = entry
     return out
 

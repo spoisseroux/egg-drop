@@ -116,6 +116,23 @@ function Cinematic:createHero()
  end
  local viewport=Instance.new("ViewportFrame");viewport.Name="PetHero3D";viewport.Size=UDim2.fromScale(1,1);viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.ZIndex=50
  viewport.Ambient=Color3.fromRGB(190,204,178);viewport.LightColor=Color3.fromRGB(255,240,212);viewport.LightDirection=Vector3.new(-1,-1.4,-3);viewport.Parent=self.heroHost;self.heroViewport=viewport
+ -- Hidden until the hero's own meshes and textures have loaded (at most 2.5 s), then
+ -- faded in: unloaded MeshParts draw as stretched boxes (QA 2026-11-12).
+ viewport.ImageTransparency=1
+ do
+  local epoch,shown=self.epoch,false
+  local function reveal()
+   if shown or self.destroyed or self.epoch~=epoch or self.heroViewport~=viewport then return end;shown=true
+   if self:reduced()then viewport.ImageTransparency=0
+   else game:GetService("TweenService"):Create(viewport,TweenInfo.new(.22,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=0}):Play()end
+  end
+  task.delay(2.5,reveal)
+  task.defer(function()
+   if self.heroViewport~=viewport then return end
+   pcall(function()game:GetService("ContentProvider"):PreloadAsync(viewport:GetDescendants())end)
+   reveal()
+  end)
+ end
  local ok=pcall(function()
   if self.forceFallback then error("isolated pixel fallback fixture")end
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport

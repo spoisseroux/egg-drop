@@ -50,10 +50,25 @@ return function(client,parent)
     end
    end
   end
+  -- Overlap is judged on what can be touched: each target clipped to its scrolling lists
+  -- (a row scrolled under the pinned footer is not on screen there).
+  local function clipped(node)
+   local x0,y0=node.AbsolutePosition.X,node.AbsolutePosition.Y
+   local x1,y1=x0+node.AbsoluteSize.X,y0+node.AbsoluteSize.Y
+   local p=node.Parent
+   while p and p~=root do
+    if p:IsA("ScrollingFrame")or(p:IsA("GuiObject")and p.ClipsDescendants)then
+     x0=math.max(x0,p.AbsolutePosition.X);y0=math.max(y0,p.AbsolutePosition.Y)
+     x1=math.min(x1,p.AbsolutePosition.X+p.AbsoluteSize.X);y1=math.min(y1,p.AbsolutePosition.Y+p.AbsoluteSize.Y)
+    end
+    p=p.Parent
+   end
+   return Vector2.new(x0,y0),Vector2.new(math.max(0,x1-x0),math.max(0,y1-y0))
+  end
   for i=1,#targets do for j=i+1,#targets do
    local a,b=targets[i],targets[j]
    if not a:IsDescendantOf(b)and not b:IsDescendantOf(a)then
-    local ap,as,bp,bs=a.AbsolutePosition,a.AbsoluteSize,b.AbsolutePosition,b.AbsoluteSize
+    local ap,as=clipped(a);local bp,bs=clipped(b)
     local overlap=ap.X<bp.X+bs.X-.5 and bp.X<ap.X+as.X-.5 and ap.Y<bp.Y+bs.Y-.5 and bp.Y<ap.Y+as.Y-.5
     assert(not overlap,label..": targets overlap "..a.Name.." / "..b.Name)
    end
@@ -82,11 +97,11 @@ return function(client,parent)
   end)
   test("frame geometry matches the spec tables at the five sizes",function()
    local want={
-    [844]={H=390,layout="wide",board={313,12,218,366},score={120,12,113,44},chain={241,12,64,44},goals={114,64,191,132},quests={114,238,191,140},handle=nil,next={539,12,191,64},eggs={539,84,191,44},difficulty={539,136,191,44},winPays={539,188,191,44},controls={539,264,191,114},dpad={9,154,88,88},dpadLeft={9,154,44,88},dpadRight={53,154,44,88},menu={17,346,72,28},menuHit={11,338,84,44},a={791,191},aHit={741,141,100,100},wordmark={14,64,78,30},mg=40,cw=238,pocketCols=1,pocketFirst={272,89,300,44},pocketLast={272,297,300,44}},
-    [740]={H=360,layout="wide",board={270,12,200,336},score={120,12,142,44},chain=nil,goals={102,64,160,132},quests={102,214,160,134},handle=nil,next={478,12,160,64},eggs={478,84,160,44},difficulty={478,136,160,44},winPays={478,188,160,44},controls={478,262,160,86},dpad={7,143,80,80},dpadLeft={3,143,44,80},dpadRight={47,143,44,80},menu={11,316,72,28},menuHit={5,308,84,44},a={693,176},aHit={648,131,90,90},wordmark={14,64,66,26},mg=24,cw=214,pocketCols=1,pocketFirst={220,74,300,44},pocketLast={220,282,300,44}},
-    [932]={H=430,layout="wide",board={345,12,242,406},score={120,12,145,44},chain={273,12,64,44},goals={114,64,223,132},quests={114,278,223,140},handle=nil,next={595,12,223,64},eggs={595,84,223,44},difficulty={595,136,223,44},winPays={595,188,223,44},controls={595,304,223,114},dpad={9,174,88,88},dpadLeft={9,174,44,88},dpadRight={53,174,44,88},menu={17,386,72,28},menuHit={11,378,84,44},a={879,211},aHit={829,161,100,100},wordmark={14,64,78,30},mg=40,cw=268,pocketCols=1,pocketFirst={316,109,300,44},pocketLast={316,317,300,44}},
-    [568]={H=320,layout="narrow",board={196,12,176,296},score={88,64,100,44},chain={120,12,68,44},goals={88,116,100,108},quests=nil,handle={88,264,100,44},next={380,12,100,44},eggs={380,64,100,44},difficulty={380,116,100,44},winPays={380,168,100,44},controls={380,222,100,86},dpad={6,129,68,68},dpadLeft={0,129,44,68},dpadRight={44,129,44,68},menu={8,276,64,28},menuHit={4,268,72,44},a={528,157},aHit={489,118,78,78},wordmark=nil,mg=6,cw=169,pocketCols=2,pocketFirst={97,106,183,44},pocketLast={288,158,183,44}},
-    [667]={H=375,layout="narrow",board={229,12,209,351},score={102,64,119,44},chain={120,12,101,44},goals={102,116,119,132},quests=nil,handle={102,319,119,44},next={446,12,119,64},eggs={446,84,119,44},difficulty={446,136,119,44},winPays={446,188,119,44},controls={446,249,119,114},dpad={7,150,80,80},dpadLeft={3,150,44,80},dpadRight={47,150,44,80},menu={11,331,72,28},menuHit={5,323,84,44},a={620,184},aHit={575,139,90,90},wordmark={14,64,66,26},mg=6,cw=202,pocketCols=1,pocketFirst={183,82,300,44},pocketLast={183,290,300,44}},
+    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={18,154,44,88},dpadRight={62,154,44,88},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={14,64,96,37},mg=40,cw=238,pocketCols=1,pocketFirst={272,115,300,44},pocketLast={272,323,300,44}},
+    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={12,143,44,80},dpadRight={56,143,44,80},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={14,64,84,33},mg=24,cw=214,pocketCols=2,pocketFirst={146,152,220,44},pocketLast={374,204,220,44}},
+    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={18,174,44,88},dpadRight={62,174,44,88},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={14,64,96,37},mg=40,cw=268,pocketCols=1,pocketFirst={316,135,300,44},pocketLast={316,343,300,44}},
+    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={5,129,44,68},dpadRight={49,129,44,68},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={14,64,70,27},mg=6,cw=169,pocketCols=2,pocketFirst={115,132,165,44},pocketLast={288,184,165,44}},
+    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={12,150,44,80},dpadRight={56,150,44,80},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={14,64,84,33},mg=6,cw=202,pocketCols=2,pocketFirst={129,159,200,44},pocketLast={337,211,200,44}},
    }
    for _,size in ipairs(sizes)do
     local w=want[size.X];local W,H=size.X,size.Y
@@ -96,11 +111,12 @@ return function(client,parent)
      assert(same(g[name],w[name]),string.format("%d %s: %s",W,name,show(g[name])))
     end
     assert(g.a.X==w.a[1]and g.a.Y==w.a[2],W.." A centre")
-    assert(g.mg==w.mg and g.cw==w.cw and g.ch==H-140 and g.actionY==H-66,W.." sheet")
+    assert(g.mg==w.mg and g.cw==w.cw and g.ch==H-g.top-140 and g.actionY==H-g.top-66,W.." sheet")
     assert(g.pocket.cols==w.pocketCols and same(g.pocket.items[1],w.pocketFirst)and same(g.pocket.items[5],w.pocketLast),W.." pocket "..show(g.pocket.items[1]))
     -- Structure: 4 px of plate above and below the glass; every card and the board in the screen;
     -- the d-pad, MENU, back and A on the shoulders; the board H - 24 high at the sim aspect.
-    assert(g.glass.y==4 and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
+    -- QA 2026-11-12: the glass starts 2 px under the Roblox controls (kh 58).
+    assert(g.top==60 and g.glass.y==g.top and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
     local screen={x=g.x0,y=g.y0,w=g.LW,h=g.LH}
     for _,name in ipairs({"board","score","chain","goals","quests","handle","next","eggs","difficulty","winPays","controls"})do
      if g[name]then assert(inside(g[name],screen),W.." "..name.." outside the screen")end
@@ -108,9 +124,10 @@ return function(client,parent)
     end
     for _,name in ipairs({"dpad","menu","back"})do assert(apart(g[name],g.glass),W.." "..name.." on the glass")end
     assert(apart({x=g.a.X-g.A/2,y=g.a.Y-g.A/2,w=g.A,h=g.A},g.glass),W.." A on the glass")
-    assert(g.board.h==H-24 and math.abs(g.board.w-g.board.h*aspect)<=.5+1e-6,W.." board height and aspect")
+    assert(g.board.h==H-g.top-20 and math.abs(g.board.w-g.board.h*aspect)<=.5+1e-6,W.." board height and aspect")
     assert(g.board.x-g.x0==g.x1-(g.board.x+g.board.w)or math.abs((g.board.x-g.x0)-(g.x1-g.board.x-g.board.w))<=1,W.." board centred")
-    assert((g.quests~=nil)==(g.layout=="wide"),W.." quests card only in two text columns")
+    assert(g.quests==nil or g.layout=="wide",W.." quests card only in two text columns")
+    assert(g.quests~=nil or g.handle~=nil,W.." a quests route on screen")
    end
   end)
   test("round HUD at each size: targets, keep-out, text, A on the right shoulder, no B",function()
@@ -126,7 +143,7 @@ return function(client,parent)
     assert(math.abs(a.X-g.a.X)<=1 and math.abs(a.Y-g.a.Y)<=1 and a.X>g.x1,label.." A on the right shoulder at mid height")
     assert(not s.buttons.B.holder.Visible,label.." B is not drawn (decision 4)")
     assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44,label.." MENU on the shoulder")
-    assert(s.lcd.AbsoluteSize.Y==size.Y-24,label.." board at H - 24")
+    assert(s.lcd.AbsoluteSize.Y==size.Y-80,label.." board at H - 80 (under the Roblox controls)")
     assert(s.hud.questDot.Visible,label.." ready dot")
     assert(s.hud.goalsEyebrow.Text=="GOALS 1/3",label.." goals header")
     -- Narrow columns use icon goals; wide columns keep the words.
@@ -160,6 +177,22 @@ return function(client,parent)
    assert(Pocket.step(1,1,0,2,all)==4 and Pocket.step(3,1,0,2,all)==5 and Pocket.step(4,-1,0,2,all)==1 and Pocket.step(5,0,1,2,all)==5)
    assert(Pocket.step(1,0,1,1,{true,false,true,true,true})==3,"skips a disabled row")
    assert(Pocket.step(1,0,1,1,{true,false,false,false,false})==1,"nothing enabled below")
+  end)
+  test("Pocket Menu on a fresh save: locked rows take focus and say why (QA 2026-11-12)",function()
+   local size=Vector2.new(844,390);local root=frame(size)
+   local s=Screen.new({parent=root,overlayParent=root,viewRoot=root})
+   local calls,locked={},{}
+   local function cb(id)return function()table.insert(calls,id)end end
+   local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{resume=cb("resume"),restart=cb("restart"),quit=cb("quit"),hatch=cb("hatch"),customize=cb("customize"),
+    locked=function(id,state)table.insert(locked,id..":"..tostring(state.locked))end})
+   s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
+   menu:open({empty=true,locked=true,canRestart=false,canQuit=false,canHatch=false,canCustomize=false});task.wait(.3)
+   assert(menu.subtitle.Text=="Win a round to unlock","subtitle explains the lock")
+   menu:move(0,1);assert(menu.focusIndex==2,"down moves onto a locked row");menu:move(0,1);menu:move(0,1);assert(menu.focusIndex==4)
+   menu:confirm();assert(#calls==0 and locked[1]=="hatch:true","a locked row reports why instead of acting")
+   assert(menu.buttons[4].Active and menu.buttons[4].Interactable,"locked rows still take taps")
+   menu:move(0,-3);menu:confirm();assert(calls[1]=="resume","Resume still works")
+   root:Destroy()
   end)
   test("Pocket Menu at 568, 740 and 844: in the screen, audit, arming, routes and close",function()
    for _,size in ipairs({Vector2.new(568,320),Vector2.new(740,360),Vector2.new(844,390)})do
@@ -263,7 +296,8 @@ return function(client,parent)
      log:setTab(tab);task.wait()
      audit(log.overlay.layer,label.." log "..tab,116,58)
     end
-    local rh,_,tops=Log.compactRows(size.Y)
+    -- Sheets start 60 px down, under the Roblox controls (QA 2026-11-12).
+    local rh,_,tops=Log.compactRows(size.Y-60)
     assert(log.rows[2].row.Position.Y.Offset==tops[2]-64 and log.rows[1].row.AbsoluteSize.Y==rh,label.." row pitch")
     assert(log.footer.AbsoluteSize.Y==44 and log.footer.AbsolutePosition.Y-log.overlay.layer.AbsolutePosition.Y==size.Y-62,label.." pinned footer")
     assert(log.footer.AbsolutePosition.X-log.overlay.layer.AbsolutePosition.X==mg+14,label.." log body edge at mg + 14")
@@ -271,9 +305,10 @@ return function(client,parent)
     local host=frame(size);host.Name="ShopHost"
     local shop=Shop.new(host,{});shop:fit(size)
     shop:setContext({equipped="sherbet",wallet=128,facts={faceplates={}}});shop:open("sherbet");task.wait()
-    local grid=Shop.compactGrid(size.X-2*off,size.Y)
+    local grid=Shop.compactGrid(size.X-2*off,size.Y-60)
     assert(shop.columns==grid.cols and shop.tiles[1].button.AbsoluteSize.X==grid.tileW and shop.tiles[1].button.AbsoluteSize.Y==64,label.." grid")
-    audit(shop.root,label.." shop",116-off,58,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
+    assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==60,label.." shop sheet under the Roblox controls")
+    audit(shop.root,label.." shop",0,0,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
     local action=shop.action.AbsolutePosition-host.AbsolutePosition
     assert(action.X+shop.action.AbsoluteSize.X==size.X-off-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")
     host:Destroy();root:Destroy()

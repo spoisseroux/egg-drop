@@ -124,7 +124,7 @@ function View.new(parent,intent,options)
   self.jars[id]={button=n,art=art,label=label,quantity=quantity,reason=reason}
  end
  self.empty=text(body,"EmptyInventory","No jars yet. Find fixed-color fruit in Hue Eggs.","Body")
- self.charmTitle=text(body,"CharmTitle","A floating Dot, colored by Secondary.","Body")
+ self.charmTitle=text(body,"CharmTitle","A floating Snowflake, colored by Secondary.","Body")
  self.charmToggle=button(card,"ShowCharm","Charm On",function()if not self.intent.pending then self:requestCharm(true)end end)
  self.charmOff=button(card,"HideCharm","Charm Off",function()if not self.intent.pending then self:requestCharm(false)end end)
  self.eggsButton=button(body,"FindEggs","Eggs",function()self:close("shop");local open=self.options.eggs or self.options.shop;if open then open()end end)
@@ -137,6 +137,11 @@ function View.new(parent,intent,options)
   Art.corner(form,if id=="pebble"then 8 else 100)
   if id=="ring"then form.BackgroundTransparency=1;local edge=Art.stroke(form,Art.Silver,0,5);edge.Name="RingEdge"end
   if id=="pebble"then form.Rotation=-18;form.Size=UDim2.fromOffset(27,21)end
+  -- The "dot" charm is the snowflake mesh: three crossed bars, tinted like the other forms.
+  if id=="dot"then form.BackgroundTransparency=1
+   for k=0,2 do local bar=Art.frame(form,"FlakeBar",Art.Silver,UDim2.fromOffset(10,0),UDim2.fromOffset(4,24),form.ZIndex+1);Art.corner(bar,2);bar.Rotation=k*60
+    Art.bind(bar,{BackgroundColor3=function()return form.BackgroundColor3 end});form:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()bar.BackgroundColor3=form.BackgroundColor3 end)end
+  end
   local label=text(node,"ShapeName",CharmCatalog.ById[id].name,"Action")
   local check=text(node,"SelectedCheck","✓","Action");check.TextXAlignment=Enum.TextXAlignment.Center;check.Visible=false
   Art.bind(label,{TextColor3=function()return node.TextColor3 end});Art.bind(check,{TextColor3=function()return node.TextColor3 end})
@@ -649,7 +654,7 @@ function View:refresh()
  self.charmToggle.Interactable=not charmPending or charmPending.retry==true;self.charmOff.Interactable=self.charmToggle.Interactable
  Art.tab(self.charmToggle,a.charmVisible~=false,self.charmToggle.Interactable);Art.tab(self.charmOff,a.charmVisible==false,self.charmOff.Interactable)
  local known=CharmCatalog.known(a.charmShape or "dot");local enabled=self:shapeSelectionsEnabled()
- self.charmTitle.Text=if known then "A floating "..CharmCatalog.ById[a.charmShape or "dot"].name..", colored by Secondary."else "Your saved charm uses a Dot here. Its original shape is preserved."
+ self.charmTitle.Text=if known then "A floating "..CharmCatalog.ById[a.charmShape or "dot"].name..", colored by Secondary."else "Your saved charm shows as a Snowflake here. Its original shape is preserved."
  for id,node in pairs(self.shapes)do
   node.Visible=charm and not confirming and(enabled or id==CharmCatalog.renderShape(a.charmShape));node.Interactable=enabled and not charmPending
   local icon=self.shapeIcons[id];local tint=Palette.resolve(self.petId,a).secondary;icon.form.BackgroundColor3=tint;local edge=icon.form:FindFirstChild("RingEdge");if edge then edge.Color=tint end

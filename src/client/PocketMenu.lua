@@ -84,7 +84,10 @@ function Menu:build(view)
  -- Keep the subtitle clear of the title; drop it when the row is too narrow.
  local TextService=game:GetService("TextService")
  local tw=TextService:GetTextSize("Pocket menu",titleSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X
- local sw=TextService:GetTextSize("Round not started",self.subtitle.TextSize,Enum.Font.BuilderSans,Vector2.new(1000,100)).X
+ local sw=0
+ for _,line in ipairs({"Round not started","Win a round to unlock"})do
+  sw=math.max(sw,TextService:GetTextSize(line,self.subtitle.TextSize,Enum.Font.BuilderSans,Vector2.new(1000,100)).X)
+ end
  self.subtitle.Visible=tw+16+sw<=t.w
  self.buttons={}
  for i,item in ipairs(Menu.Items)do
@@ -92,13 +95,13 @@ function Menu:build(view)
   local button=Kit.button(content,"Item_"..item.id,{variant=item.variant or "secondary",text=item.text,size=Vector2.new(r.w,r.h),textSize=if phone then 16 else 20,selectable=false})
   button.Position=UDim2.fromOffset(r.x,r.y)
   button.Activated:Connect(function()self:activate(i,true)end)
-  button.MouseEnter:Connect(function()if self.visible and self.enabled[i]~=false then self:focus(i)end end)
+  button.MouseEnter:Connect(function()if self.visible then self:focus(i)end end)
   self.buttons[i]=button
  end
  self.ring=Kit.focusRing(self.overlay.layer)
 end
 
--- state: {empty, canRestart, canQuit, canHatch, canCustomize}
+-- state: {empty, locked, canRestart, canQuit, canHatch, canCustomize}
 function Menu:paint()
  local s=self.state
  self.enabled={true,s.canRestart~=false,s.canQuit~=false,s.canHatch~=false,s.canCustomize~=false}
@@ -109,8 +112,11 @@ function Menu:paint()
   local st=Kit.buttonState(button)
   if st and item.armed then st.variant=if armed then "destructive"else "secondary"end
   Kit.setEnabled(button,self.enabled[i])
+  -- A locked row still takes focus and taps (QA 2026-11-12: a fresh save looked frozen);
+  -- activating it says why it is locked instead of doing nothing.
+  button.Active,button.Interactable=true,true
  end
- self.subtitle.Text=if s.empty then "Round not started"else "Round paused"
+ self.subtitle.Text=if s.locked then "Win a round to unlock"elseif s.empty then "Round not started"else "Round paused"
 end
 
 function Menu:focus(index,instant)
@@ -172,7 +178,7 @@ end
 
 function Menu:move(dx,dy)
  if not self.visible then return end
- local nextIndex=Menu.step(self.focusIndex,dx,dy,self.cols,self.enabled)
+ local nextIndex=Menu.step(self.focusIndex,dx,dy,self.cols,{})
  if nextIndex~=self.focusIndex then self:focus(nextIndex)end
 end
 function Menu:confirm()if self.visible then self:activate(self.focusIndex)end end
@@ -185,9 +191,13 @@ end
 
 -- One press acts; Restart and Quit mid-round need a second press within 3 s.
 function Menu:activate(index,pointer)
- if not self.visible or self.enabled[index]==false then return false end
+ if not self.visible then return false end
  if pointer and self.focusIndex~=index then self.focusIndex=index;if self.ring then self.ring.attach(self.buttons[index],12)end end
  local item=Menu.Items[index]
+ if self.enabled[index]==false then
+  if self.callbacks.locked then self.callbacks.locked(item.id,self.state)end
+  return false
+ end
  if item.armed and not self.state.empty and self.armed~=item.id then
   self.armed=item.id;self.armToken=(self.armToken or 0)+1;local token=self.armToken
   self:paint()

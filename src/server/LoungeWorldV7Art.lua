@@ -166,12 +166,14 @@ function Art.lights(room)
 	end
 	for i,p in ipairs(World.Lamps)do if World.LitLamps[i]then at("Lamp"..i,p,14,1.6,warm)end end
 	local s=World.Stations
-	at("EggNestLight",s.Eggs.Position+Vector3.new(0,4,0),12,1.4,warm)
-	at("CradleLight",s.Journal.Position+Vector3.new(0,5,0),12,1.3,warm)
-	at("KioskLight",s.Customize.Position+Vector3.new(0,5,0),12,1.3,warm)
+	-- QA 2026-11-12: these five overlap on the white hub marble and blew it out at night,
+	-- so each is about 40% dimmer and the plaza light no longer reaches every station.
+	at("EggNestLight",s.Eggs.Position+Vector3.new(0,4,0),10,.85,warm)
+	at("CradleLight",s.Journal.Position+Vector3.new(0,5,0),10,.8,warm)
+	at("KioskLight",s.Customize.Position+Vector3.new(0,5,0),10,.8,warm)
 	at("ToyLawnLight",s.ToyLawn.Position+Vector3.new(0,5,0),12,1,warm)
-	at("PlazaLight",World.Hub+Vector3.new(0,7,0),22,1.2,warm)
-	at("LanternLight",Vector3.new(-31.8,8.8,-16.7),10,1.2,warm)
+	at("PlazaLight",World.Hub+Vector3.new(0,7,0),14,.6,warm)
+	at("LanternLight",Vector3.new(-31.8,8.8,-16.7),8,.8,warm)
 	at("BridgeLight",Vector3.new(2.5,7,21),12,1,warm)
 	at("RotundaLight",Vector3.new(-60,19,50),16,1.2,warm)
 	at("ArrivalLight",s.ArrivalDais.Position+Vector3.new(0,3,0),14,1.6,cyan)
@@ -203,10 +205,13 @@ end
 -- the falls. Client WorldMotion stops them when Reduced Motion is on.
 function Art.water(room)
 	local folder=Instance.new("Folder");folder.Name="WaterFlow";folder.Parent=room
-	local function anchor(position,up)
+	-- `normal` is the beam's facing: a beam lies in the plane its attachments' Axis is
+	-- normal to. The stream used a sideways Axis and stood up as a curtain (QA 2026-11-12).
+	local function anchor(position,normal)
 		local p=invisible(folder,"FlowAnchor",CFrame.new(position),Vector3.new(.1,.1,.1),false)
 		local a=Instance.new("Attachment")
-		a.Axis,a.SecondaryAxis=Vector3.xAxis,up
+		local side=if math.abs(normal.X)>.9 then Vector3.zAxis else Vector3.xAxis
+		a.CFrame=CFrame.fromMatrix(Vector3.zero,normal,side)
 		a.Parent=p
 		return a
 	end
