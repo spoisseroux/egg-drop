@@ -29,7 +29,7 @@ FOLDER = ASSETS / "attachments"
 
 # Colour roles the runtime understands. "own:#hex" keeps the wearable's own colour.
 ROLE = {"secondary": "secondary", "wingTexture": "secondary", "eyeTexture": "face", "face": "face"}
-FLAGS = ("coversHorns", "hidesEars", "openCrown", "lowBrim", "printedChest", "noEyewear")
+FLAGS = ("coversHorns", "hidesEars", "openCrown", "lowBrim", "printedChest", "noEyewear", "neutralOnly")
 # A swap hides the default pieces it replaces.
 REPLACES = {"Eyes": {"L": ["EyeL"], "R": ["EyeR"]}, "Mouth": {"": ["MouthSmile"]}, "Tail": {"": ["Tail"]}}
 
@@ -58,6 +58,8 @@ def runtime_rotation(axes):
 
 
 def item_of(mesh):
+    if mesh.get("item"):
+        return mesh["item"].lower()
     if mesh.get("variant"):
         return mesh["variant"].lower()
     short = mesh["name"].split("__", 1)[1]
@@ -82,6 +84,8 @@ def definition_extension(manifest):
             entry["color"] = role[4:]
         if role == "eyeTexture":
             entry["texture"] = "eye"
+        if mesh.get("piece"):
+            entry["piece"] = mesh["piece"]
         if mesh.get("feature"):
             entry["feature"], entry["stage"] = mesh["feature"], mesh["stage"]
             entry["side"] = mesh["anchor"][-1]
@@ -110,9 +114,15 @@ def definition_extension(manifest):
             if key in rule:
                 row[key] = rule[key]
         exclusions.append(row)
+    # Shop items (manifest `items`): fixed Star prices, display names, flags. Only these are sold.
+    items = []
+    for item in manifest.get("items", []):
+        items.append({"id": item["id"], "slot": item["slot"], "name": item["displayName"], "tier": item["tier"],
+                      "price": int(item["price"]), "flags": {k: True for k, v in (item.get("flags") or {}).items() if v},
+                      "perSide": bool(item.get("perSide")), "primary": item.get("primaryColor", "")})
     return {"anchorPositions": anchors, "anchorFrames": frames, "attachmentTemplate": "BearAttachments",
             "attachmentTextures": {"eye": "rbxassetid://75513553871906"}, "attachments": attachments,
-            "slots": slots, "features": features, "exclusions": exclusions,
+            "slots": slots, "features": features, "exclusions": exclusions, "wearableItems": items,
             "charmLift": {"feature": "horns", "fromStage": 4, "lift": 0.10}}
 
 
