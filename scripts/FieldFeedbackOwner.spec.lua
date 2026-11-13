@@ -4,12 +4,11 @@ return function(gui)
  local cases={}
  assert(fx.ClipsDescendants and not fx.Active and not fx.Selectable,"feedback must be passive and clipped")
  table.insert(cases,"passive tray-local feedback owner")
+ -- Batch 2026-11-13 R1: no tier numerals on the board (faces live inside the LCD pixels).
  local marks=0
- for _,node in ipairs(overlay:GetChildren())do
-  if node.Name=="Mark"then assert(node.ZIndex>fx.ZIndex and node.Rotation==0,"feedback obscures upright tier marks");marks+=1 end
- end
- assert(marks>0,"a live piece is required for mark layering proof")
- table.insert(cases,"live upright marks above halo and fragments")
+ for _,node in ipairs(overlay:GetChildren())do if node.Name=="Mark"then marks+=1 end end
+ assert(marks==0,"a tier numeral label is still created over the board")
+ table.insert(cases,"no tier numeral labels over the board")
  local halo,fragments=0,0
  for _,node in ipairs(fx:GetChildren())do
   assert(not node.Active and not node.Selectable)

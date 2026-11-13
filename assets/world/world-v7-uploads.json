@@ -1,27 +1,27 @@
 {
  "model": "73356672911240",
  "textures": {
-  "W1_bark": "rbxassetid://131990250699654",
-  "W1_boulder_rock": "rbxassetid://74693654598989",
-  "W1_cliff_rock": "rbxassetid://72251301850844",
-  "W1_dirt_path": "rbxassetid://83138237139598",
+  "W1_bark": "rbxassetid://102384004107977",
+  "W1_boulder_rock": "rbxassetid://139261955138839",
+  "W1_cliff_rock": "rbxassetid://128753532351576",
+  "W1_dirt_path": "rbxassetid://90417914553341",
   "W1_far_peak": "rbxassetid://83686729943384",
-  "W1_foliage": "rbxassetid://111743769836742",
-  "W1_foliage_blossom": "rbxassetid://118615784897925",
-  "W1_grass": "rbxassetid://74054148466451",
+  "W1_foliage": "rbxassetid://80031701749701",
+  "W1_foliage_blossom": "rbxassetid://98997466675950",
+  "W1_grass": "rbxassetid://78952361344674",
   "W1_ground": "rbxassetid://90984704485304",
-  "W1_marble": "rbxassetid://123582108639405",
-  "W1_marble_smooth": "rbxassetid://137029596414621",
-  "W1_trim": "rbxassetid://115810962166534",
-  "W1_meadow": "rbxassetid://97493983848286",
-  "W1_pebble_bed": "rbxassetid://72228706240178",
-  "W1_water": "rbxassetid://70661948546201",
+  "W1_marble": "rbxassetid://138678016112158",
+  "W1_marble_smooth": "rbxassetid://105394164311789",
+  "W1_trim": "rbxassetid://133573568684057",
+  "W1_meadow": "rbxassetid://127743046933349",
+  "W1_pebble_bed": "rbxassetid://86225555674896",
+  "W1_water": "rbxassetid://140659517311337",
   "W1_water_pool": "rbxassetid://70661948546201",
   "W1_water_stream": "rbxassetid://70661948546201",
   "W1_waterfall_sky": "rbxassetid://104384534640492",
-  "W1_waterfall_tumble": "rbxassetid://104384534640492",
-  "W1_wood_plank": "rbxassetid://81265948353670",
-  "W1_palette": "rbxassetid://116072737988994"
+  "W1_waterfall_tumble": "rbxassetid://97090918613707",
+  "W1_wood_plank": "rbxassetid://100875286949644",
+  "W1_palette": "rbxassetid://99161618321835"
  },
  "sky": {
   "note": "Roblox-ready faces from scripts/build_world_v7_sky.py (Rt/Lf swapped, Up/Dn turned)",
@@ -40,6 +40,14 @@
    "Lf": "rbxassetid://120089995868348",
    "Rt": "rbxassetid://140570215359255",
    "Up": "rbxassetid://72754759915903"
+  },
+  "dusk": {
+   "Bk": "rbxassetid://73138888525809",
+   "Dn": "rbxassetid://80751911047917",
+   "Ft": "rbxassetid://91025473321089",
+   "Lf": "rbxassetid://93060067055981",
+   "Rt": "rbxassetid://133073554742082",
+   "Up": "rbxassetid://140405334149030"
   }
  }
 }

@@ -65,7 +65,7 @@
    "name": "W7_Architecture__marble",
    "group": "Architecture__marble",
    "material": "W1_marble",
-   "tris": 4144,
+   "tris": 3706,
    "collide": true,
    "anim": null,
    "region": "Architecture",
@@ -85,19 +85,19 @@
    "name": "W7_Architecture__marble_smooth",
    "group": "Architecture__marble_smooth",
    "material": "W1_marble_smooth",
-   "tris": 3592,
+   "tris": 2736,
    "collide": true,
    "anim": null,
    "region": "Architecture",
    "center": [
     -10.0262,
-    7.0773,
-    20.8324
+    7.0916,
+    25.2074
    ],
    "size": [
     188.3476,
-    6.1546,
-    77.5649
+    6.1261,
+    68.8149
    ],
    "top": 10.1546
   },
@@ -105,7 +105,7 @@
    "name": "W7_Architecture__palette",
    "group": "Architecture__palette",
    "material": "W1_palette",
-   "tris": 904,
+   "tris": 722,
    "collide": true,
    "anim": null,
    "region": "Architecture",
@@ -125,17 +125,17 @@
    "name": "W7_Architecture__trim",
    "group": "Architecture__trim",
    "material": "W1_trim",
-   "tris": 152,
+   "tris": 138,
    "collide": true,
    "anim": null,
    "region": "Architecture",
    "center": [
-    18.6088,
+    20.1748,
     9.05,
     18.0961
    ],
    "size": [
-    143.9172,
+    140.7852,
     9.7,
     92.1367
    ],
@@ -1497,7 +1497,7 @@
    "name": "W7_Stations__marble",
    "group": "Stations__marble",
    "material": "W1_marble",
-   "tris": 1674,
+   "tris": 1566,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1714,26 +1714,6 @@
    "top": 21.6561
   },
   {
-   "name": "W7_Vegetation__palette",
-   "group": "Vegetation__palette",
-   "material": "W1_palette",
-   "tris": 2240,
-   "collide": false,
-   "anim": null,
-   "region": "Vegetation",
-   "center": [
-    4.7849,
-    5.0643,
-    -9.0421
-   ],
-   "size": [
-    183.8319,
-    1.8259,
-    151.7823
-   ],
-   "top": 5.9772
-  },
-  {
    "name": "W7_Water__cloud",
    "group": "Water__cloud",
    "material": "W1_cloud",
@@ -1860,6 +1840,6 @@
    "note": "Fast scroll down the fall, about 1.2 tiles/s. V runs down the fall and tiles. A Beam with the same texture also works."
   }
  ],
- "count": 91,
- "triangles": 73172
+ "count": 90,
+ "triangles": 69334
 }

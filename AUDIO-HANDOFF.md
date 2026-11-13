@@ -38,6 +38,7 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 - **Petting:** the purr is a 2-second seamless loop that fades in and out while the player holds pet. Boops are one-shots on each tap.
 - **Device sounds stop** when a menu or recap covers the board.
 - Players can mute music separately from sound effects.
+- **Pocket Deck music** (`deck_music`): fades in over 1 s when a round starts and out over 0.6 s when it ends, at about 20% voice volume (the world music sits at 13%). The music mute and Sound setting apply to it. It replaces the world music and the garden ambience for the whole round, so it should be calm enough to hear for many minutes.
 
 ## Cue list (sorted by priority)
 - **Placeholder:** the game already plays a synthesised stand-in sound for this cue. Replacing it is welcome, but it isn't blocking.
@@ -68,6 +69,8 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 | `bear_boop_1/2/3` | Tapping or booping the pet | Plush squeak, 3 variants | 0.1-0.3 s | **none** |
 | `bear_chirp` | Pet is happy or cheering after a good round | Tiny rising "mew-hm" hum | 0.3-0.6 s | **none** |
 | `purr (loop)` | Held petting | Warm purr or hum, seamless loop | 2.0 s loop | placeholder |
+| `deck_music` | **Pocket Deck music.** Plays only during a Pocket Deck round; the world music, brook, falls, birds and coos all fade out while it plays (Spencer, 2026-11-13) | Calm, loopable handheld-style tune: friendly, unhurried, never busy enough to fight the merge sounds. Stereo OK | 20-60 s seamless loop | placeholder (`egg_drop_deck_music.wav`, 84 BPM chip lullaby) |
+| `count_blip` | **Results count-up blip.** One per +1 while the Star total counts up on the results screen; each blip is cut off by the next, like collecting rings (Spencer, 2026-11-13) | Tiny bright chip blip, rising feel; must sound fine repeated 20+ times a second | 40-80 ms | placeholder (`egg_drop_count_blip.wav`, G6 to C7 hop) |
 
 ### Medium priority (nice for launch)
 | Cue | When it plays | Sound | Length | Placeholder in game? |

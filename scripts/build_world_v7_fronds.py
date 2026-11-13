@@ -1,0 +1,117 @@
+"""Low-poly frond plants for the World 1 v7 ground dressing (batch 2026-11-13, W1). Original models.
+
+Run in BACKGROUND Blender only:
+  blender.exe --factory-startup -b --python scripts/build_world_v7_fronds.py
+
+Three plants built from folded leaf strips (a V-shaped midrib for depth, pointed tips, arched and drooping), each
+under 300 triangles, origin at its bounds centre like the world meshes:
+  W7D_FrondFan     broad fan of seven arching fronds, for rock bases
+  W7D_FrondSpray   five taller, more upright fronds, for path edges and corners
+  W7D_LeafTuft     low tuft of nine short broad leaves, the filler
+UVs: u across the leaf, v from base (0) to tip (1), for assets/world/textures/frond_leaf.png.
+
+Writes assets/world/world-dressing.fbx (upload as one Model, read back MeshId / MeshSize per MeshPart into
+assets/world/world-dressing-import.json) and assets/world/world-dressing-manifest.json (Roblox size, tris, colour).
+Blender (x, y, z) = Roblox (x, z, -y).
+"""
+import json
+import math
+import os
+import random
+
+import bpy
+from mathutils import Matrix, Vector
+
+ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+OUT = os.path.join(ROOT, "assets", "world")
+
+
+def leaf(verts, faces, uvs, yaw, length, width, rise, droop, segs, fold=.18, tilt=0.0):
+    """One folded leaf: midrib plus two edges per ring, tip collapsed to one point."""
+    base = len(verts)
+    rot = Matrix.Rotation(yaw, 3, "Z")
+    for i in range(segs + 1):
+        t = i / segs
+        # Arch: rises then droops toward the tip.
+        x = length * t
+        z = rise * math.sin(t * math.pi * .62) - droop * t * t
+        w = width * (math.sin(math.pi * min(1.0, t * 1.08)) ** .7) * (1 - .15 * t)
+        if i == segs:
+            w = 0.0
+        mid = Vector((x, 0, z + fold * w))
+        left = Vector((x, w, z))
+        right = Vector((x, -w, z))
+        if tilt:
+            for v in (mid, left, right):
+                v.rotate(Matrix.Rotation(tilt, 3, "X"))
+        for v, u in ((left, 0.0), (mid, .5), (right, 1.0)):
+            verts.append(rot @ v)
+            uvs.append((u, t))
+    for i in range(segs):
+        a = base + i * 3
+        b = a + 3
+        faces.append((a, a + 1, b + 1, b))
+        faces.append((a + 1, a + 2, b + 2, b + 1))
+
+
+def build(name, leaves, seed):
+    rng = random.Random(seed)
+    verts, faces, uvs = [], [], []
+    for spec in leaves:
+        leaf(verts, faces, uvs, spec["yaw"] + rng.uniform(-.12, .12), spec["length"] * rng.uniform(.92, 1.08),
+             spec["width"], spec["rise"], spec["droop"], spec["segs"], tilt=rng.uniform(-.12, .12))
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(v) for v in verts], [], faces)
+    uv = me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            uv.data[li].uv = uvs[vi]
+    me.update()
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+    # Origin at the bounds centre, as the world meshes (Roblox MeshPart pivots on its bounds).
+    lo = Vector([min(v[i] for v in verts) for i in range(3)])
+    hi = Vector([max(v[i] for v in verts) for i in range(3)])
+    c = (lo + hi) / 2
+    me.transform(Matrix.Translation(-c))
+    tris = sum(len(p.vertices) - 2 for p in me.polygons)
+    size = hi - lo
+    return obj, {"name": name, "tris": tris, "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)],
+                 "baseOffset": round(c.z - lo.z, 4)}
+
+
+def ring(n, length, width, rise, droop, segs, phase=0.0):
+    return [{"yaw": phase + k * math.tau / n, "length": length, "width": width, "rise": rise, "droop": droop, "segs": segs}
+            for k in range(n)]
+
+
+def main():
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+    plants = [
+        ("W7D_FrondFan", ring(7, 1.6, .34, 1.5, .8, 6), 11, [52, 168, 74]),
+        ("W7D_FrondSpray", ring(5, 1.3, .26, 2.3, .6, 7, .3), 23, [61, 184, 86]),
+        ("W7D_LeafTuft", ring(5, 1.0, .34, .8, .45, 4) + ring(4, .8, .3, 1.0, .3, 4, .6), 37, [46, 156, 70]),
+    ]
+    meshes, objs = [], []
+    for name, leaves, seed, color in plants:
+        obj, info = build(name, leaves, seed)
+        assert info["tris"] < 300, info
+        info["color"] = color
+        meshes.append(info)
+        objs.append(obj)
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objs:
+        o.select_set(True)
+    bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, "world-dressing.fbx"), use_selection=True, axis_forward="-Z",
+                             axis_up="Y", global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False,
+                             object_types={"MESH"}, add_leaf_bones=False, bake_anim=False, path_mode="STRIP",
+                             mesh_smooth_type="FACE")
+    with open(os.path.join(OUT, "world-dressing-manifest.json"), "w") as fh:
+        json.dump({"note": "Generated by scripts/build_world_v7_fronds.py. size = Roblox studs (x, height, z); "
+                           "baseOffset = studs from the mesh centre down to its base. Texture: textures/frond_leaf.png.",
+                   "meshes": meshes}, fh, indent=1)
+    print("FRONDS", [(m["name"], m["tris"], m["size"]) for m in meshes])
+
+
+main()

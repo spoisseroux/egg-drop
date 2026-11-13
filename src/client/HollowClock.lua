@@ -1,20 +1,35 @@
 local Lighting = game:GetService("Lighting")
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local World = require(Shared:WaitForChild("HollowWorldLayout"))
+local Flags = require(Shared:WaitForChild("FeatureFlags"))
+local Dusk = require(Shared:WaitForChild("WorldDusk"))
 
 local Clock = {}
 -- A shared world timezone, fixed year-round. This is a real 24-hour day.
 Clock.TimeZoneOffsetHours = -5
+-- FeatureFlags.DayNight=false (batch 2026-11-13) locks the garden at dusk: sample()
+-- returns WorldDusk's hour and daylight and environment() paints the dusk look.
+Clock.DayNight = Flags.DayNight == true
 
-function Clock.sample(unixSeconds)
+-- The real 24-hour cycle, kept for when DayNight comes back on.
+function Clock.cycle(unixSeconds)
 	local hour = (unixSeconds / 3600 + Clock.TimeZoneOffsetHours) % 24
 	local sunlight = math.clamp((math.sin((hour - 6) * math.pi / 12) + 0.08) / 0.6, 0, 1)
 	return hour, sunlight * sunlight * (3 - 2 * sunlight)
 end
 
+function Clock.sample(unixSeconds)
+	if not Clock.DayNight then return Dusk.Hour, Dusk.Daylight end
+	return Clock.cycle(unixSeconds)
+end
+
 function Clock.environment(unixSeconds)
 	local hour, daylight = Clock.sample(unixSeconds)
  Clock.lastHour,Clock.lastDaylight=hour,daylight
+	if not Clock.DayNight then
+		Clock.dusk()
+		return hour,daylight
+	end
 	Lighting.ClockTime = hour
 	Lighting.Brightness = 1.0 + 1.13 * daylight
 	Lighting.ExposureCompensation = 0.13 * (1 - daylight)
@@ -35,6 +50,12 @@ function Clock.environment(unixSeconds)
 		Clock.island(daylight)
 	end
  return hour,daylight
+end
+-- Locked dusk: WorldDusk's lighting, grade, bloom and sky (the dusk faces once uploaded),
+-- then the backdrop clouds in the dusk pink. The far peaks keep their texture.
+function Clock.dusk()
+	Dusk.apply(Lighting, require(Shared:WaitForChild("WorldV7Data")))
+	Clock.backdrop(Dusk.Daylight)
 end
 -- v7 island: blue-violet night ambient and the painted day or night skybox.
 -- A Sky cannot blend two face sets, so the faces switch at dusk and dawn
@@ -93,11 +114,11 @@ function Clock.backdrop(daylight)
 			end
 		end
 	end
-	local color = Clock.cloudColor(daylight)
+	local color = if Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
 	for _, part in ipairs(Clock.clouds) do
 		if part.Color ~= color then part.Color = color end
 	end
-	local night = daylight < Clock.SkyThreshold
+	local night = Clock.DayNight and daylight < Clock.SkyThreshold
 	local slate = Clock.PeakNight:Lerp(Clock.PeakDusk, math.clamp(daylight / Clock.SkyThreshold, 0, 1))
 	for _, part in ipairs(Clock.peaks) do
 		local texture = if night then "" else part:GetAttribute("DayTextureID") or ""
@@ -107,7 +128,8 @@ function Clock.backdrop(daylight)
 	return color
 end
 -- Studio-only inspection hook: workspace attribute StudioClockHour (0-24) pins
--- the garden clock to that hour, so day, dusk and night can be checked in Play.
+-- the garden clock to that hour, so day, dusk and night can be checked in Play
+-- (only while DayNight is on; the locked dusk ignores it).
 function Clock.now()
  if game:GetService("RunService"):IsStudio()then
   local hour=workspace:GetAttribute("StudioClockHour")
@@ -157,7 +179,7 @@ function Controller:bind(room)
  self.scans+=1;for _,item in ipairs(room:GetDescendants())do self:track(item)end
 end
 function Controller:apply(unixSeconds)
- local hour,daylight=Clock.sample(unixSeconds);self.daylight=daylight
+ local hour,daylight=self.sample(unixSeconds);self.daylight=daylight
  self.environment(unixSeconds)
  for light,record in pairs(self.lights)do self:paint(light,record)end
  self.samples+=1;return hour,daylight
@@ -181,7 +203,8 @@ end
 function Clock.new(options)
  options=options or {};local world=options.world or workspace
  local self=setmetatable({world=world,now=options.now or Clock.now,
-  environment=options.environment or Clock.environment,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0,daylight=select(2,Clock.sample((options.now or Clock.now)()))},Controller)
+  environment=options.environment or Clock.environment,sample=options.sample or Clock.sample,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0},Controller)
+ self.daylight=select(2,self.sample(self.now()))
  table.insert(self.connections,world.ChildAdded:Connect(function(item)if not self.destroyed and item.Name=="EggDropLounge"then self:bind(item)end end))
  table.insert(self.connections,world.ChildRemoved:Connect(function(item)if not self.destroyed and self.room==item then self:bind(nil)end end))
  self:bind(world:FindFirstChild("EggDropLounge"));self:apply(self.now())
@@ -199,6 +222,9 @@ function Clock.start()
  if not bloom then
   bloom=Instance.new("BloomEffect");bloom.Name,bloom.Intensity,bloom.Size,bloom.Threshold="HollowBloom",.12,12,1.4;bloom.Parent=Lighting;controller.ownsBloom=true
  end
- controller.bloom=bloom;return controller
+ controller.bloom=bloom
+ -- Ground flower patches (batch 2026-11-13, W1) start alongside the garden clock (once, v7 only).
+ require(script.Parent.WorldDressingClient).start()
+ return controller
 end
 return Clock

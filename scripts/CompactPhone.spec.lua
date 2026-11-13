@@ -162,10 +162,10 @@ return function(client,parent)
     -- The quests card / handle opens the quest log.
     local hit=s.hud.questsHit;assert(hit and hit.AbsoluteSize.X>=44 and hit.AbsoluteSize.Y>=44,label.." quests target")
     s.callbacks.quests();assert(quests>=1,label.." quests callback")
-    -- Keyboard: three rows with Leave (wide columns have room).
+    -- Keyboard: three rows; B is Items in a round (BUILD-PLAN 2026-11-13, leaving is MENU / back arrow).
     if s.hud.controls and #s.hud.controls>=3 then
      local data=table.clone(hudData);data.input="Keyboard";s:setHud(data);task.wait()
-     assert(s.hud.controls[3].text.Text=="Leave",label.." keyboard keeps Leave")
+     assert(s.hud.controls[3].text.Text=="Items",label.." keyboard B row is Items")
      audit(root,label.." HUD keyboard",116,58)
     end
     root:Destroy()

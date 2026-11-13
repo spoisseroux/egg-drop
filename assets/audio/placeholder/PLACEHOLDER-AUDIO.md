@@ -77,6 +77,16 @@ Built by `scripts/build_ambient_placeholder_audio.py` (same primitives and finis
 - `machine_attract` is repitched per station (deck 1.0, eggs 1.12, care 0.89).
 - These were checked by level and spectrogram, not by ear. Listen before upload.
 
+## Pocket Deck round music (2026-11-13, W2)
+
+Built by `scripts/build_deck_music_placeholder.py` (its own script; it never rewrites `manifest.json`, whose `deck_music` entry was added by hand). Played by `src/client/AmbientAudio.lua` only during a Pocket Deck round (Board mode): it fades in over 1 s, the world music and all garden ambience fade out, and both come back when the round ends. See `AUDIO-HANDOFF.md` ("Pocket Deck music") for what Spencer's track should be.
+
+| Status | Cue | File | Sec | Loop | Sound | Where it plays |
+|---|---|---|---|---|---|---|
+| PLACEHOLDER | `deck_music` | `egg_drop_deck_music.wav` | 22.857 | yes | calm 84 BPM chip lullaby: triangle bass, soft pad, sparse pentatonic bells | Pocket Deck rounds only, replacing the world music and ambience |
+
+- Circular by construction (every note tail wraps around the loop end); set `Looped = true`. File RMS -24 dBFS; the runtime voice volume is 0.2.
+
 ## Notes for replacing
 - `shimmer_loop` is a seamless 3.2 s loop (notes wrap around the end); set `Looped = true`.
 - `goal_tick`, `spin_whoosh` and `reveal_shimmer` get repitched at runtime; keep a neutral base pitch.

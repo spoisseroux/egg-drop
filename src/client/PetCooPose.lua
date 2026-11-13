@@ -6,7 +6,8 @@ function Pose.family(id)return families[id]end
 function Pose.sample(visual)
  local entry,start=visual.cooFamily,visual.cooStart
  if not visual.worldContext or not entry or not start or visual.petting or visual.focusPose or visual.gardenFocus or(visual.affection or 0)>.15 then return 0,0,0,0,1 end
- if visual.expression~="neutral"and visual.expression~="sleepy"then return 0,0,0,0,1 end
+ local face=visual.expression or "neutral"
+ if face~="neutral"and face~="sleepy"and face~="content"and face~="dozy"then return 0,0,0,0,1 end
  if(visual.greeting or 2)<1.2 or(visual.gardenAction and visual.gardenAction~="wanderPause"and visual.gardenAction~="nookRest"and visual.gardenAction~="settle"and visual.gardenAction~="rest"and visual.gardenAction~="none")then return 0,0,0,0,1 end
  local t=(visual.cosmeticTime or visual.time or 0)-start
  if t<0 or t>=entry.duration then return 0,0,0,0,1 end

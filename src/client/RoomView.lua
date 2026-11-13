@@ -10,6 +10,7 @@ local FocusTransition=require(script.Parent.FocusTransition)
 local FocusCharacterVisibility=require(script.Parent.FocusCharacterVisibility)
 local PetAffection=require(script.Parent.PetAffection)
 local HollowAmbience=require(script.Parent.HollowAmbience)
+local function HollowClockDaylight()return require(script.Parent.HollowClock).daylight()end
 
 local PetFactory=require(script.Parent.PetFactory)
 local GardenClient=require(script.Parent.GardenClient)
@@ -94,7 +95,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		reduceEffects = reduceEffects, connections = {},
 	}, Room)
 	self.garden=GardenClient.new(progress.Parent)
- self.coos=require(script.Parent.PetCooScheduler).new(audio)
+ -- Coos speak through AmbientAudio's mood cues when the client entry created it first.
+ self.coos=require(script.Parent.PetCooScheduler).new(audio,{voice=require(script.Parent.AmbientAudio).shared})
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
  self.companions.garden=self.garden
 	self.ambience=HollowAmbience.new()
@@ -215,6 +217,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             if still then self.ownerStillSince=self.ownerStillSince or serverNow else self.ownerStillSince=nil end
             self.pet.idleBeatsEnabled=self.mode=="Room"and not self.focusing
             self.pet.ownerNearStill=still and serverNow-self.ownerStillSince>=1 and(root.Position-self.pet.origin).Magnitude<=6
+            -- FEEL-ALIVE B2/B3: look-at-owner and the owner-still sit (8 studs, 6 s).
+            self.pet.ownerPosition=root and root.Position or nil;self.pet.ownerMoving=not still
+            self.pet.ownerStillNearFor=if still and(root.Position-self.pet.origin).Magnitude<=8 then serverNow-self.ownerStillSince else 0
             if self.pet.idleBeat and self.pet.idleBeat.kind then self.pet.poseDirty=true end
             self.pet.cosmeticTime=serverNow
             -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
@@ -224,11 +229,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 		end
-		if self.mode=="Room"then self.companions:update(dt,serverNow)end
+		if self.mode=="Room"then self.companions:update(dt,serverNow);self:visitorBeats()end
   if self.coos then
    local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
    local humanoid=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-   self.coos:step(serverNow,{enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0,listener=root and root.Position,identity=root,camera=workspace.CurrentCamera},self.pet,self.companions.active)
+   self.coos:step(serverNow,{enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0,listener=root and root.Position,identity=root,camera=workspace.CurrentCamera,daylight=HollowClockDaylight()},self.pet,self.companions.active)
   end
 		if not self.focusKey then self.focusKey=PetFocusKey.new()end
         self.focusKey:update(workspace.CurrentCamera,self.pet,gardenFocus)
@@ -244,6 +249,27 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	return self
 end
 
+-- Idle beats on the 4 nearest visitor pets within 40 studs (seeded, local; B2).
+Room.VisitorBeats,Room.VisitorBeatRange=4,40
+function Room:visitorBeats()
+ local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
+ local near={}
+ for _,entry in pairs(self.companions.active)do
+  local v=entry.visual
+  if v then
+   v.idleBeatsEnabled=false
+   if root and(not entry.board or entry.board:GetAttribute("Mode")=="Room")then
+    local d=(v.origin-root.Position).Magnitude
+    if d<=Room.VisitorBeatRange then table.insert(near,{visual=v,d=d})end
+   end
+  end
+ end
+ table.sort(near,function(a,b)return a.d<b.d end)
+ for i=1,math.min(Room.VisitorBeats,#near)do
+  local v=near[i].visual;v.idleBeatsEnabled=true
+  if v.idleBeat and v.idleBeat.kind then v.poseDirty=true end
+ end
+end
 function Room:stationInReach()
 	return self.stations~=nil and self.stations:inReach()
 end
@@ -919,6 +945,11 @@ function Room:show(mode, animate)
 		local equipped = Pets.byId[self.progress:GetAttribute("CompanionId")]
 		self:showPet(self.requestedPet or equipped)
 		self.requestedPet = nil
+		-- Back from a Pocket Deck round: a moment of joy and a happy coo (B2).
+		if self.wasOnDeck and self.pet then
+			self.pet.joyUntil=(self.pet.time or 0)+2.5;self.pet.pendingCoo="pet_coo_2"
+		end
+		self.wasOnDeck = nil
 		self:useRoomCamera(animate,true)
 		if meet then
 			local epoch, visual = self.focusEpoch, self.pet
@@ -930,6 +961,7 @@ function Room:show(mode, animate)
 	else
 		if self.arrivalPlacementPending then self.returnRoamShot=nil end
 		self.arrivalPlacementPending=nil
+		if self.mode=="Room"or self.pet then self.wasOnDeck=true end
 		self.companions:clear()
 		if self.pet then
 			self.pet.focusPose=false

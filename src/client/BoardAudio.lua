@@ -30,7 +30,7 @@ local assetIds = {
 -- PLACEHOLDER sounds (assets/audio/placeholder/, uploaded 2026-11-13). Spencer's own
 -- audio replaces these; see assets/audio/placeholder/PLACEHOLDER-AUDIO.md.
 local placeholderIds = {
-	danger_enter = 71704518273465, danger_clear = 86858776986054, danger_tick = 122357660151659,
+	count_blip = 108647439201867, danger_enter = 71704518273465, danger_clear = 86858776986054, danger_tick = 122357660151659,
 	deck_boot = 121880800893112, quest_complete = 112750571745350, bear_boop = 110282522210689,
 	reveal_hush = 75961612982659, spot_on = 93433115588030, streak_whoosh = 122156273335998,
 	reveal_shimmer = 71554174288583, tag_slam = 90906080983451, name_slam = 131679952336458,
@@ -57,6 +57,9 @@ local cues = {
 	"desc_tick", "spin_whoosh", "shimmer_loop", "reveal_out", "goal_tick", "row_flip", "star_land",
 	"stars_total", "new_best", "egg_ready", "meter_fill", "win", "lose",
 	"egg_wobble", "egg_crack_glint", "egg_select",
+	-- Results count-up: one very short blip per +1 Star, each cut by the next
+	-- (batch 2026-11-13 R1). No id yet; the coordinator uploads a placeholder.
+	"count_blip",
 }
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.

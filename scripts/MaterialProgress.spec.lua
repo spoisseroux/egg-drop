@@ -18,7 +18,7 @@ return function(server)
    if c.blockSettlement and output and output.hatching.materialReservation then c.blockSettlement=false;c.failBefore=true end
    return copy(output)
   end
-  local h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==10)
+  local h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==11)
   for n=1,8 do assert(H.award(h,n,8))end
   return h,db,c,a
  end
@@ -33,9 +33,9 @@ return function(server)
  local function test(name,run)run();table.insert(cases,name)end
  test("v6 migration preserves frozen Hue fields proofs and root siblings exactly",function()
   local h,db,c,a=fixture();assert(H.release(h));local old=db.player_1.hatching
-  old.version=6;old.quests=nil;old.petWearables=nil;old.contracts={day="20",progress={runs=0,chain=0,score=0},claimedMask=0};for _,k in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","pendingMaterialResult","materialReservation","lastMaterialResult"})do old[k]=nil end
+  old.version=6;old.quests=nil;old.petWearables=nil;old.ballThemes,old.stats,old.stamps,old.book=nil,nil,nil,nil;old.contracts={day="20",progress={runs=0,chain=0,score=0},claimedMask=0};for _,k in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","pendingMaterialResult","materialReservation","lastMaterialResult"})do old[k]=nil end
   assert(Hue.valid(old));local preserved=copy(old)
-  h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==10 and next(h.state.materialUnlocks)==nil)
+  h=H.load(1,{},a);assert(h.status=="Ready"and h.state.version==11 and next(h.state.materialUnlocks)==nil)
   for _,k in ipairs({"nectar","inventoryMask","hues","petHues","hueInventory","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","heldHueEgg","legacyHueEgg","legacyHueRedemption","legacyLastHueResult","misses","operationSeq","lastAwardSeq","lastRunReward"})do assert(same(h.state[k],preserved[k]),"v6 field changed "..k)end
   assert(db.player_1.custom=="kept"and not db.player_1.petAppearance.pip.charmVisible and db.player_1.petAppearance.pip.charmShape=="ring")
  end)

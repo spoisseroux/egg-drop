@@ -4,6 +4,8 @@
 -- between rows, L / R (Q / E) switch tabs, A claims or rerolls the focused row,
 -- B goes back. Touch and mouse use the tabs and row buttons directly.
 local Kit=require(script.Parent.DeckKit)
+-- Quest titles name a ball size with a colour circle, never a numeral (batch R1).
+local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 local Log={}
 Log.__index=Log
 Log.Tabs={"daily","weekly","history"}
@@ -222,7 +224,8 @@ function Log:paintRow(slot,row,scope)
  slot.row.Visible=row~=nil
  if not row then return end
  local q=self.quests
- slot.title.Text=row.title
+ slot.title.RichText=true;slot.title.Text=BallThemes.questText(row.title,slot.title.TextSize)
+ slot.row:SetAttribute("AccessibleLabel",BallThemes.questText(row.title,nil,true))
  slot.sub.Text=if row.claimed then "Claimed" elseif row.ready then (row.sub or "") .. " · ready to claim" elseif scope=="daily"and row.progress==0 then (row.sub or "").."  ·  Not started"else row.sub or ""
  slot.bar.set(row.progress,row.target,true,true)
  slot.count.Text=string.format("%d/%d",row.progress,row.target)
@@ -258,7 +261,7 @@ function Log:paintHistory()
    header.TextYAlignment=Enum.TextYAlignment.Bottom
   end
   order+=1
-  local row=Kit.listRow(self.history,if entry.a then "AUTO"else(if entry.weekly then "WEEK"else "DAY"),(if entry.weekly then "Weekly: "else "")..entry.title,entry.s)
+  local row=Kit.listRow(self.history,if entry.a then "AUTO"else(if entry.weekly then "WEEK"else "DAY"),(if entry.weekly then "Weekly: "else "")..BallThemes.questText(entry.title,nil,true),entry.s)
   row.LayoutOrder=order;row.Selectable=false
  end
  if #(q.history or {})==0 then
@@ -286,7 +289,7 @@ function Log:paintCompactHistory(q)
   local row=Kit.frame(self.history,"ListRow",nil,UDim2.new(),UDim2.fromOffset(w,44));row.LayoutOrder=order
   local hair=Kit.frame(row,"Hairline",nil,UDim2.new(0,0,1,-1),UDim2.new(1,0,0,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.95
   txt(row,"Counter",if entry.a then "AUTO"else(if entry.weekly then "WEEK"else "DAY"),"dim",12,0,56,44,{TextSize=12})
-  txt(row,"Body",(if entry.weekly then "Weekly: "else "")..entry.title,"text",72,0,w-72-120,44,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+  txt(row,"Body",(if entry.weekly then "Weekly: "else "")..BallThemes.questText(entry.title,nil,true),"text",72,0,w-72-120,44,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   txt(row,"Counter","★ +"..entry.s,"stars",w-120,0,80,44,{TextSize=14,TextXAlignment=right.TextXAlignment})
   local mark=Kit.icon(row,"check",18,"accent");mark.Position=UDim2.fromOffset(w-30,13)
  end

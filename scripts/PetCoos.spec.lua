@@ -15,7 +15,8 @@ return function(client)
   local s,a,c,p=fixture();local owner=p("pip");local visitors={{visual=p("puddle",2)}}
   s:step(0,c,owner,visitors);s:step(34.9,c,owner,visitors);assert(#a.plays==0)
   s:step(35,c,owner,visitors);s:step(35.1,c,owner,visitors)
-  assert(#a.plays==1 and a.plays[1].cue=="pet"and a.plays[1].pitch==.85 and a.plays[1].gain==.18 and owner.cooStart==35)
+  -- FEEL-ALIVE B2: audible (0.30); with no AmbientAudio voice the family cue stays the fallback.
+  assert(#a.plays==1 and a.plays[1].cue=="pet"and a.plays[1].pitch==.85 and math.abs(a.plays[1].gain-Scheduler.Gain)<1e-9 and owner.cooStart==35)
   s:destroy()
  end)
  test("mute blur board menus and focus drop opportunities without a return burst",function()
@@ -49,7 +50,7 @@ return function(client)
   local s,a,c,p=fixture();local owner=p("pip");owner.petting=true
   local near,far=p("orbit",5),p("puddle",12)
   s:step(0,c,owner,{{visual=far},{visual=near}});s:step(35,c,owner,{{visual=far},{visual=near}})
-  assert(#a.plays==1 and a.plays[1].cue=="orbit"and a.plays[1].gain<.18 and near.cooStart==35)
+  assert(#a.plays==1 and a.plays[1].cue=="orbit"and a.plays[1].gain<Scheduler.Gain and near.cooStart==35)
   s:destroy();local preview=p("pip");preview.worldContext=false
   assert(not Scheduler.eligible(preview,nil,Vector3.zero)and not Scheduler.eligible(p("pip",29),nil,Vector3.zero))
  end)

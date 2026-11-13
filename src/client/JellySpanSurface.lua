@@ -94,6 +94,27 @@ function Surface:resize()
 	end
 	self.dirty=false
 end
+-- The span count `paint` would need for this frame, without touching any
+-- Instance (JellyLCD's pre-count for the span budget fallback).
+function Surface:demand(pixels)
+	local count,width,background=0,self.width,self.background
+	for y=0,self.height-1 do
+		local x=0
+		while x<width do
+			local offset=(y*width+x)*4;local c=buffer.readu32(pixels,offset)
+			if c==buffer.readu32(background,offset)then x+=1 else
+				x+=1
+				while x<width do
+					local nextOffset=(y*width+x)*4
+					if buffer.readu32(pixels,nextOffset)~=c or c==buffer.readu32(background,nextOffset)then break end
+					x+=1
+				end
+				count+=1
+			end
+		end
+	end
+	return count
+end
 function Surface:paint(pixels)
 	if self.failed then return false end
 	local stats=self.stats;stats.propertyWrites=0

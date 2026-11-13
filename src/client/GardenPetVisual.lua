@@ -15,6 +15,8 @@ local PersonalPlay=require(script.Parent.PetPlayVisual)
 local Reactions=require(script.Parent.PetReactions)
 local IdleBeats=require(script.Parent.PetIdleBeats)
 local Attachments=require(script.Parent.PetAttachments)
+local Sit=require(script.Parent.PetSitPose)
+local Look=require(script.Parent.PetLookAt)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -228,7 +230,12 @@ function Visual:applyAppearance(appearance)
  Charms.apply(self,appearance);PersonalPlay.apply(self,appearance);self.poseDirty=true;self:update(0)
 end
 function Visual:applyGardenPose(sample)
- self.gardenAction,self.actionPhase,self.expression=sample.action,sample.actionPhase or sample.phase or 0,sample.expression or "neutral"
+ self.gardenAction,self.actionPhase=sample.action,sample.actionPhase or sample.phase or 0
+ -- FEEL-ALIVE B2/B3: a rest sits with a content face (dozy, then sleepy after 20 s);
+ -- settle, nookRest and rests of 4 s+ sit. Age/length come from the replicated action.
+ local resting=sample.behavior=="rest"or sample.action=="settle"or sample.action=="nookRest"
+ self.expression=Expression.garden(sample.expression or "neutral",resting,self.gardenActionAge,Face.daylight(),self.ownerOnDeck)
+ self.activitySit=resting and Sit.fromActivity(sample.action,sample.behavior,self.gardenActionLength)
  self.gardenFocus=sample.action=="focus"
  self.gardenBehavior=sample.behavior
  self.toyRole,self.toyTime=sample.toyRole,sample.toyTime
@@ -251,9 +258,24 @@ function Visual:update(dt)
  local beatEligible=self.idleBeatsEnabled==true and self.worldContext and not reduced and not self.focusPose and not self.gardenFocus and not self.focused
   and not self.careState and not self.petting and not personal and toyReach==0 and reactExpression==nil
   and self.gardenAction~="greet"and self.gardenAction~="shove"and self.gardenAction~="toyReturn"and self.gardenAction~="focus"
- local beat,beatPhase=IdleBeats.step(self,dt,beatEligible,self.ownerNearStill==true,(self.gaitWeight or 0)<.03 and not self.gardenPivot)
- local beatPitch,beatYaw,beatHandL,beatHandR,beatStretch,beatEye,beatMouth,beatExpression=IdleBeats.pose(beat,beatPhase or 0)
- local expression=toyExpression or reactExpression or beatExpression or Expression.name(self);local pose=Expression.get(expression)
+ local daylight=Face.daylight()
+ local beat,beatPhase=IdleBeats.step(self,dt,beatEligible,self.ownerNearStill==true,(self.gaitWeight or 0)<.03 and not self.gardenPivot,daylight)
+ local beatPitch,beatYaw,beatHandL,beatHandR,beatStretch,beatEye,beatMouth,beatExpression,beatRise,beatHip,beatWag=IdleBeats.pose(beat,beatPhase or 0,self.idleBeat and self.idleBeat.side)
+ -- The cute sit (B3): idle beat, a resting activity, or the owner standing still nearby.
+ local sitAllowed=self.worldContext and not self.focusPose and not self.gardenFocus and not self.focused and not self.careState and not self.petting
+  and not personal and toyReach==0 and reactExpression==nil and(self.gaitWeight or 0)<.03 and not self.gardenPivot
+  and self.gardenAction~="greet"and self.gardenAction~="shove"and self.gardenAction~="toyReturn"and self.gardenAction~="focus"
+ if not sitAllowed and(self.careState or self.focusPose or self.gardenFocus or self.petting)then self.sitBlend=0 end
+ local sit=Sit.step(self,dt,sitAllowed and(self.activitySit==true or Sit.fromOwner(self.ownerStillNearFor,self.gaitWeight)),if beat=="sit"then IdleBeats.sitWeight(self.idleBeat)else 0)
+ if not sitAllowed and sit>0 and not self.reducedEffects then self.poseDirty=true end
+ local expression=toyExpression or reactExpression or beatExpression or Expression.name(self)
+ if sit>.5 and not toyExpression and not reactExpression and not self.petting then expression=Sit.face(self.sitAge)or(if expression=="neutral"then "content"else expression)end
+ local pose=Expression.get(expression)
+ -- Look at owner (B2): the head turns toward a nearby owner who starts or stops moving.
+ local lookAllowed=self.worldContext and not self.focusPose and not self.gardenFocus and not self.focused and not self.careState and not self.petting and not personal and(beat==nil or beat=="sit")
+ local lookYaw=Look.step(self,dt,lookAllowed)
+ if math.abs(lookYaw-(self.lastLookYaw or 0))>.002 or(sit>0 and sit<1)then self.poseDirty=true end
+ self.lastLookYaw=lookYaw
  local cooRoll,cooNod,cooHand,cooMouth,cooEye=CooPose.sample(self)
  local mouth=if cooMouth>.12 then "open"else pose.mouth
  if personal and self.personalToyId=="bone"and personal.phase>=.58 and personal.phase<=1.02 and not reduced then
@@ -262,8 +284,14 @@ function Visual:update(dt)
  local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  if beat then headPitch+=beatPitch;headYaw+=beatYaw;bodyStretch+=beatStretch;eye*=beatEye;if beatMouth then mouth="open"end end
+ headYaw+=lookYaw;headPitch-=Sit.HeadUp*sit
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
+ local wagBoost=self.wagBoost;if beatWag and beatWag>0 then self.wagBoost=math.max(wagBoost or 0,beatWag)end
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
+ self.wagBoost=wagBoost
+ -- Sitting perks the ears; a scamper (over 7 studs a second) lays them back 10 degrees.
+ local scamper=if self.reducedEffects then 0 else math.clamp(((self.travelSpeed or 0)-7)/1.5,0,1)*(self.gaitWeight or 0)
+ earL+=Sit.EarPerk*sit-math.rad(10)*scamper;earR+=Sit.EarPerk*sit-math.rad(10)*scamper
  local hinges=self.appendageHinges
  if not hinges or hinges.scale~=self.scale then
   local anchors=self.definition.anchors
@@ -279,7 +307,6 @@ function Visual:update(dt)
  local gait=if reduced then 0 else(self.gaitWeight or 0)
  local step=math.sin(self.gaitPhase or 0)*gait
  local shove=if self.gardenAction=="shove"then math.sin(math.clamp(self.actionPhase or 0,0,1)*math.pi*4)else 0
- local daylight=Face.daylight()
  local root=CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0)*CFrame.Angles(self.carePitch or 0,0,0)
  local u=((self.gaitPhase or 0)/(math.pi*2))%1;local support=0
  if not reduced and not self.focusPose and not self.gardenFocus then
@@ -291,14 +318,23 @@ function Visual:update(dt)
  local weightRoll=support*math.rad(3)
  self.weightShift,self.weightRoll=weightX,weightRoll
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
- local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0),0)*CFrame.new(hipAnchor)*CFrame.Angles(0,0,weightRoll)*CFrame.new(-hipAnchor)
+ -- Walk body (B2): lean 4 degrees into travel; sitting lowers 0.22 and leans back 6.
+ local lean=math.rad(4)*gait-Sit.Pitch*sit
+ local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0)-Sit.Lower*self.scale*sit,0)*CFrame.new(hipAnchor)*CFrame.Angles(lean,0,weightRoll+(beatHip or 0))*CFrame.new(-hipAnchor)
+ -- A 0.12 s settle squash at half the boop when a walk stops.
+ if(self.lastGait or 0)>.3 and gait<.05 and not reduced then self.settleAt=os.clock()end
+ self.lastGait=gait
  -- Boop (C2): a 0.15 s squash, body wider and shorter with the head dipping.
  local boopAge=if self.boopAt and not reduced then os.clock()-self.boopAt else nil
  local boop=if boopAge and boopAge>=0 and boopAge<.15 then math.sin(boopAge/.15*math.pi)else 0
+ local settleAge=if self.settleAt and not reduced then os.clock()-self.settleAt else nil
+ if settleAge and settleAge>=0 and settleAge<.12 then boop=math.max(boop,.5*math.sin(settleAge/.12*math.pi))end
  self.boopSquash=boop
- local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0))*self.scale
+ -- Head nods 2 degrees a quarter cycle behind the two-bounce walk.
+ headPitch+=math.rad(2)*math.sin(2*(self.gaitPhase or 0)-math.pi*.5)*gait
+ local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0))*CFrame.new(-headAnchor)
+ local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit)*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
@@ -331,11 +367,11 @@ function Visual:update(dt)
    local side=if string.sub(name,-1)=="L"then -1 else 1
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
-   local fold=pose.hand+greet*.5+shove*.7+toyReach*.50+(if side<0 then beatHandL else beatHandR)
+   local fold=pose.hand+greet*.5+shove*.7+toyReach*.50+(if side<0 then beatHandL else beatHandR)+Sit.HandFold*sit
    cf=upper*CFrame.new(0,hop+cooHand+toyReach*.045*self.scale+(self.careHand or 0),toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
-   cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale+(self.careFootLift or 0),step*side*.075*self.scale+(self.careFootForward or 0))*entry.frame
+   cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale+(self.careFootLift or 0),step*side*.075*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then

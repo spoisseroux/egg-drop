@@ -34,9 +34,12 @@ return function(client, parent)
 	end
 	local function clockFixture()
 		local owner,reduced,last=true,false,nil
-		local audio={group={Volume=1},deviceActive=true,deviceEpoch=0,cues={},stops=0}
+		local audio={group={Volume=1},deviceActive=true,deviceEpoch=0,cues={},stops=0,blip=true}
 		function audio:play(name,pitch,volume,token)
-			if self.group.Volume>0 and self.deviceActive then table.insert(self.cues,{name=name,pitch=pitch,volume=volume,owner=token})end
+			-- Like BoardAudio: a cue with no voice (count_blip before its upload) plays nothing.
+			if name=="count_blip"and not self.blip then return false end
+			if self.group.Volume>0 and self.deviceActive then table.insert(self.cues,{name=name,pitch=pitch,volume=volume,owner=token});return true end
+			return false
 		end
 		function audio:stopOwner()self.stops+=1 end
 		local f=Feedback.new(function(sample)last=sample end,audio,function()return reduced end,function()return owner end)
@@ -68,11 +71,25 @@ return function(client, parent)
 			advance(f,.3);assert(a.cues[3].name=="star_land");local mid=last().counted;assert(mid>0 and mid<14,"no partial count "..tostring(mid))
 			advance(f,1.5);assert(not f.active and last()==nil)
 			local ticks,pitch=0,0
-			for i=4,#a.cues-2 do local cue=a.cues[i];assert(cue.name=="charge"and cue.volume<=.18 and cue.owner==f);ticks+=1;assert(math.abs(cue.pitch-(1+ticks*.03))<1e-6 and cue.pitch>pitch,"tick pitch");pitch=cue.pitch end
+			-- Count blips (batch 2026-11-13): one very short count_blip per +1, rising.
+			for i=4,#a.cues-2 do local cue=a.cues[i];assert(cue.name==Feedback.BlipCue and cue.volume<=.25 and cue.owner==f,"blip "..tostring(cue.name));ticks+=1;assert(math.abs(cue.pitch-math.min(1.6,1+ticks*.02))<1e-6 and cue.pitch>pitch,"blip pitch");pitch=cue.pitch end
 			assert(ticks==14,"ticks="..ticks)
 			assert(a.cues[#a.cues-1].name=="bank"and a.cues[#a.cues-1].volume<=.14 and a.cues[#a.cues].name=="stars_total","finale cadence")
 			assert(packet.reward.total==14 and packet.balance==20)
 			local count=#a.cues;assert(not observe(packet,true)and #a.cues==count)
+		end)
+		test("count blips: one per +1, each cut by the next (one voice), and the old tick stands in when the blip has no voice",function()
+			local f,a,observe=clockFixture();local packet=result(805)
+			assert(observe(packet,true));advance(f,3)
+			local blips,charges=0,0
+			for _,cue in ipairs(a.cues)do if cue.name=="count_blip"then blips+=1 elseif cue.name=="charge"then charges+=1 end end
+			assert(blips==14 and charges==0,"blips="..blips.." charges="..charges)
+			-- BoardAudio registers count_blip with one voice: a new play restarts it (cut by the next).
+			local BoardAudio=require(client.BoardAudio);assert(not BoardAudio.PendingCues.count_blip,"count_blip is uploaded (108647439201867)")
+			local g,b,observe2=clockFixture();b.blip=false;assert(observe2(result(806),true));advance(g,3)
+			blips,charges=0,0
+			for _,cue in ipairs(b.cues)do if cue.name=="count_blip"then blips+=1 elseif cue.name=="charge"then charges+=1 end end
+			assert(blips==0 and charges==14,"fallback charges="..charges)
 		end)
 		test("owner loss or skipped resume lands final and cannot emit delayed cues",function()
 			for _,mode in ipairs({"covered","skipped","deviceEpoch"})do

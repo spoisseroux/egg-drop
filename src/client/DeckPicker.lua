@@ -15,7 +15,10 @@ local AppearanceCatalog=require(Shared.AppearanceCatalog)
 local catalogs={Shell=Themes,Background=Backgrounds}
 local slots={Shell="theme",Background="background"}
 local Shop=require(script.Parent.FaceplateShop)
-local TabOrder={"Shell","Background"}
+-- Balls (batch 2026-11-13 R1) is a style tab but not an appearance slot: ball
+-- themes are bought and equipped through the hatching save (BallShop).
+local TabOrder={"Shell","Background","Balls"}
+local styleTab={Shell=1,Background=2,Balls=3}
 local Trials=require(Shared.PocketTrials)
 local Art=require(script.Parent.DeckArt)
 local Kit=require(script.Parent.DeckKit)
@@ -96,6 +99,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
   trials=function()self:openTrials()end,
   retry=function(slot)self:retry(slot)end,
   rebuilt=function(shop)self:syncTabs(shop)end,
+  ballBought=function(id)if self.onBallBought then self.onBallBought(id)end end,
+  ballEquipped=function(id)if self.onBallEquipped then self.onBallEquipped(id)end end,
  })
  self:syncTabs(self.shop)
  self:showTab("Shell");return self
@@ -119,14 +124,17 @@ function Picker:ensureHeader(compact)
  return header
 end
 -- Owned faceplates and the wallet come from the nursery snapshot.
-function Picker:setShopState(wallet,faceplates)
+-- ballThemes = { owned, equipped } and the snapshot revision (hatching v11).
+function Picker:setShopState(wallet,faceplates,ballThemes,revision)
  self.faceplates=faceplates or {};self.wallet=wallet or 0
+ local balls=if type(ballThemes)=="table"then ballThemes else {}
+ self.shop.balls:setContext({wallet=self.wallet,owned=balls.owned or {},equipped=balls.equipped,revision=revision})
  if self.facts then self.facts.faceplates=self.faceplates end
  self.shop:setContext({wallet=self.wallet,facts=self.facts or {faceplates=self.faceplates}})
  self.shop.backgrounds:setContext({facts=self.facts or {faceplates=self.faceplates}})
 end
 -- True while the Deck style screen (either tab) owns input.
-function Picker:shopOpen()return self.shade.Visible and slots[self.active]~=nil end
+function Picker:shopOpen()return self.shade.Visible and styleTab[self.active]~=nil end
 function Picker:layout()
  if self.layingOut then return end;self.layingOut=true
  local size=self.shade.AbsoluteSize;local short=size.Y<220
@@ -208,7 +216,7 @@ function Picker:setSaveNotice(notice)
 end
 -- A style tab press (tab row, Q / E, LB / RB): Shell <-> Background only.
 function Picker:activateTab(active)
- if not self.shade.Visible or self.active==active or not slots[active]then return false end
+ if not self.shade.Visible or self.active==active or not styleTab[active]then return false end
  if self:showTab(active)~=true then return false end
  if self.onAccepted then self.onAccepted("tab")end;return true
 end
@@ -220,15 +228,15 @@ end
 function Picker:showTab(active)
  if active=="Club"then active="Trials"end -- Compatibility for old callers, never a public tab.
  if self.customizationEntry==false and active~="Settings"and active~="Trials"then return false end
- if not slots[active]and active~="Trials"and active~="Settings"then return false end
+ if not styleTab[active]and active~="Trials"and active~="Settings"then return false end
  if not self.returningFromTrials and active~=self.active and active~="Trials"then self.inspectId,self.inspectSlot=nil,nil end
  local changed=self.active~=active;self.active=active
- local style=slots[active]~=nil
+ local style=styleTab[active]~=nil
  local shopping=style and self.shade.Visible
  self.card.Visible=not style
  self:refreshAppearance()
  if shopping then
-  local tabIndex=if active=="Background"then 2 else 1
+  local tabIndex=styleTab[active]
   if self.shop.visible then self.shop:setTab(tabIndex)
   else self.shop:open(self.confirmed and self.confirmed.theme,tabIndex,self.returningFromTrials==true)end
  else self.shop:close()end
@@ -357,7 +365,7 @@ end
 function Picker:getControllerFocus()
  if not self.shade.Visible then return nil end
  -- The Deck style screen owns its focus ring; the coordinator selects nothing native.
- if slots[self.active]then return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,target=function()return nil end}end
+ if styleTab[self.active]then return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,target=function()return nil end}end
  return{root=self.shade,epoch=self.shade:GetAttribute("ControllerEpoch")or 0,
   target=function()return if self.active=="Settings"then self.sound else self.cancel end,fallback=self.cancel}
 end

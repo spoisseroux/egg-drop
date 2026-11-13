@@ -12,12 +12,13 @@ Palette.White=Color3.new(1,1,1)
 -- Motif ids (white at 23% inside the body): a second tier cue besides colour.
 Palette.Motifs=table.freeze({plain=1,bands=2,speckles=3,stars=4,dots=5})
 Palette.MotifOpacity=.23
--- Tier marks: white with a deep drop shadow, shown only at radius >= 12 px.
-Palette.MarkMinRadius=12
+-- No tier numerals any more (batch 2026-11-13 R1): size, colour and the ball's
+-- face carry the tier; the UI names a ball with a flat colour circle (BallThemes).
+-- Motifs survive only in the free Marbles theme.
 local function snap(c)return Color3.fromRGB(math.round(c.R*255),math.round(c.G*255),math.round(c.B*255))end
 local function entry(deep,body,light,motif)
  return table.freeze({deep=deep,lower=snap(deep:Lerp(body,.55)),body=body,light=light,glint=Palette.White,
-  motif=snap(body:Lerp(Palette.White,Palette.MotifOpacity)),motifKind=motif,mark=Palette.White,markShadow=deep,
+  motif=snap(body:Lerp(Palette.White,Palette.MotifOpacity)),motifKind=motif,
   rim=deep,upper=light})
 end
 local function key(color)return math.round(color.R*255)+math.round(color.G*255)*256+math.round(color.B*255)*65536 end
@@ -39,5 +40,19 @@ function Palette.resolve(value)
  roles=entry(snap(Color3.fromHSV(h,math.min(1,s+.12),v*.7)),value,snap(value:Lerp(Palette.White,.45)),1)
  if customCount<64 then custom[packed]=roles;customCount+=1 end
  return roles
+end
+-- Roles for one size in a ball theme (BallThemes ramps; Marbles is byTier).
+local Themes=require(script.Parent.BallThemes)
+local themed={}
+function Palette.forTheme(themeId,tier)
+ tier=math.clamp(math.floor(tonumber(tier)or 1),1,#Palette.byTier)
+ local theme=Themes.get(themeId)
+ if theme.texture=="motif"then return Palette.byTier[tier]end
+ local key=theme.id..tier
+ if not themed[key]then
+  local r=theme.ramps[tier]
+  themed[key]=entry(Color3.fromHex(r.deep),Color3.fromHex(r.body),Color3.fromHex(r.light),1)
+ end
+ return themed[key]
 end
 return table.freeze(Palette)

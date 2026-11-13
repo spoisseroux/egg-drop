@@ -27,6 +27,8 @@ Pico8.Heart, Pico8.Sleepy = Pico8[14], Pico8[13]
 -- Jelly tier ramps (UI-SPEC-REDESIGN-MENUS 6.2): vivid deep / body / light hex
 -- triples plus a motif per tier, so colour is never the only tier cue. These
 -- replace the PICO-8 rim ramps for eggs; tier V is violet, not yellow.
+-- Batch 2026-11-13 R1: these are the Smileys / Marbles ramps (BallThemes `vivid`);
+-- the motifs now draw only in the free Marbles theme, and no theme draws numerals.
 Pico8.TierRamps = table.freeze({
 	table.freeze({ deep = "#0A3FD6", body = "#2E8BFF", light = "#8FE1FF", motif = "plain" }),
 	table.freeze({ deep = "#E0400A", body = "#FF8A1A", light = "#FFD45C", motif = "bands" }),

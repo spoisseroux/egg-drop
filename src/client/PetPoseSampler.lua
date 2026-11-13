@@ -17,6 +17,8 @@ function Sampler.attach(visual)
  local function plant(self,slot,frame,root)
   local side=slot.side;if not side or not self.worldContext then return frame end
   if self.careState=="Carried"or self.careState=="Docked"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
+  -- A sitting pet (PetSitPose) pushes its feet forward, soles up: released like Docked.
+  if(self.sitWeight or 0)>.01 and(self.gaitWeight or 0)<.035 then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
   local weight=self.gaitWeight or 0;local focus=self.focusPose or self.gardenFocus or self.gardenAction=="focus"
   local scale=self.worldScale or 1
   if focus or self.gardenAction=="greet"or self.gardenAction=="shove"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end

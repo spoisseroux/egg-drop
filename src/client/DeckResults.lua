@@ -10,6 +10,9 @@ local RunService=game:GetService("RunService")
 local Kit=require(script.Parent.DeckKit)
 local C=require(script.Parent.CelebrationKit)
 local Feedback=require(script.Parent.RecapFeedback)
+-- Goals and quest titles name a ball size with a colour circle (batch R1).
+local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
+local function questRich(text,size)return BallThemes.questText(text,size)end
 local Results={}
 Results.__index=Results
 
@@ -490,7 +493,7 @@ function Results:paintGoals(data)
   if goal then
    if goal.done then done+=1 end
    local short=self.compact or(self.phone and self.payout.Size.X.Offset<200)
-   slot.check.set(goal.done);slot.text.Text=if short then goal.short or goal.text else goal.text
+   slot.check.set(goal.done);slot.text.RichText=true;slot.text.Text=if short then goal.short or goal.text else goal.text
    slot.text.TextColor3=if goal.done then Kit.Color.text else Kit.Color.soft
    if not goal.done and goal.hint and not hintAt then hintAt=index end
   end
@@ -528,12 +531,12 @@ function Results:paintQuest(data)
  if self.phone or self.compact or not self.questTitle then return end
  if quest then
   self.questScope.Text=if quest.scope=="weekly"then "WEEKLY QUEST"else "DAILY QUEST"
-  self.questTitle.Text=quest.title or "Quest"
+  self.questTitle.RichText=true;self.questTitle.Text=questRich(quest.title or "Quest",self.questTitle.TextSize)
   self.questMoved.Text=if quest.done then "Claim in the log"elseif(quest.moved or 0)>0 then "+"..quest.moved.." this round"else ""
   self.questBar.root.Visible=true;self.questBar.set(quest.count or 0,math.max(1,quest.target or 1),quest.done)
   self.questCountText.Text=string.format("%d/%d",quest.count or 0,quest.target or 0)
  else
-  self.questScope.Text="QUESTS";self.questTitle.Text=data.strip or "Win a round to earn Stars"
+  self.questScope.Text="QUESTS";self.questTitle.RichText=true;self.questTitle.Text=questRich(data.strip or "Win a round to earn Stars",self.questTitle.TextSize)
   self.questMoved.Text="";self.questBar.root.Visible=false;self.questCountText.Text=data.questCount or ""
  end
 end
@@ -799,7 +802,7 @@ function Results:paintPhone(data)
   self.questStroke.Thickness,self.questStroke.Transparency=1.5,0;Kit.paint(self.questStroke,"Color","stars")
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.check;Kit.paint(self.questIcon,"ImageColor3","stars")
   if w<200 then self.questText.Text="Claim 1 quest";self.questText.Size=UDim2.fromOffset(w-50,48)
-  else self.questText.Text=data.questDone;self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end
+  else self.questText.RichText=true;self.questText.Text=questRich(data.questDone,self.questText.TextSize);self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  else
   self.questTarget="log"
@@ -807,12 +810,12 @@ function Results:paintPhone(data)
   self.questStroke.Thickness,self.questStroke.Transparency=1,.86;self.questStroke.Color=Color3.new(1,1,1)
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.quests;Kit.paint(self.questIcon,"ImageColor3","text")
   local quest=data.quest
-  self.questText.Text=if quest then string.format("%s %d/%d",quest.title or "Quest",quest.count or 0,quest.target or 0)else "Quests "..(data.questCount or "")
+  self.questText.RichText=true;self.questText.Text=if quest then string.format("%s %d/%d",BallThemes.questText(quest.title or "Quest",self.questText.TextSize),quest.count or 0,quest.target or 0)else "Quests "..(data.questCount or "")
   self.questText.Size=UDim2.fromOffset(w-50,48)
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  end
  if self.questTarget then self.questText.Position=UDim2.fromOffset(40,0)end
- q.Active=self.questTarget~=nil;q:SetAttribute("AccessibleLabel",if self.questTarget then self.questText.Text else nil)
+ q.Active=self.questTarget~=nil;q:SetAttribute("AccessibleLabel",if self.questTarget then BallThemes.strip(self.questText.Text)else nil)
  if self.focus==4 and not self.questTarget then self.focus=if hatch then 5 else 1 end
 end
 

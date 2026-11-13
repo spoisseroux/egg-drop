@@ -8,6 +8,9 @@ local ServerStorage=game:GetService("ServerStorage")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local World=require(Shared.HollowWorldLayout)
 local Data=require(Shared.WorldV7Data)
+local Flags=require(Shared.FeatureFlags)
+local Dusk=require(Shared.WorldDusk)
+local Dressing=require(Shared.WorldDressing)
 
 local Art={}
 
@@ -28,6 +31,12 @@ local function box(entry)
 end
 
 function Art.lighting()
+	-- Day/night off (FeatureFlags.DayNight=false): the locked dusk from WorldDusk, which the
+	-- client clock repaints with the same values.
+	if not Flags.DayNight then
+		Dusk.apply(Lighting,Data)
+		return
+	end
 	Lighting.ClockTime=14.5
 	Lighting.Brightness=2.3
 	Lighting.Ambient=Color3.fromHex("#9C9C92")
@@ -250,6 +259,32 @@ function Art.water(room)
 	end
 end
 
+-- Frond bushes at rock bases and path edges (batch 2026-11-13, W1): clones of the
+-- ServerStorage.WorldAssets.Dressing templates at WorldDressing.Bushes. Decoration only:
+-- no collision, queries or shadows. Skipped (with one warning) until the meshes are uploaded.
+function Art.dressing(room)
+	local assets=ServerStorage:FindFirstChild("WorldAssets")
+	local templates=assets and assets:FindFirstChild("Dressing")
+	if not templates then warn("[World v7] WorldAssets.Dressing is missing; frond bushes skipped")return nil end
+	local folder=Instance.new("Folder");folder.Name="Dressing"
+	local count=0
+	for index,entry in ipairs(Dressing.Bushes)do
+		if index>Dressing.MaxBushes then break end
+		local template=templates:FindFirstChild(Dressing.BushKinds[entry[4]])
+		if not template then continue end
+		local cframe,size=Dressing.bushPlacement(entry)
+		local bush=template:Clone()
+		bush.Anchored,bush.CanCollide,bush.CanQuery,bush.CanTouch,bush.CastShadow=true,false,false,false,false
+		bush.Size,bush.CFrame=size,cframe
+		bush:SetAttribute("WorldDressing","bush")
+		bush.Parent=folder
+		count+=1
+	end
+	folder:SetAttribute("Bushes",count)
+	folder.Parent=room
+	return folder
+end
+
 function Art.build(room)
 	Art.lighting()
 	Art.meshes(room)
@@ -258,6 +293,7 @@ function Art.build(room)
 	Art.lights(room)
 	Art.careStatus(room)
 	Art.water(room)
+	Art.dressing(room)
 	room:SetAttribute("WorldVersion","v7")
 end
 

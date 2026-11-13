@@ -4,7 +4,11 @@ Inputs (assets/world/):
 - world-v7-manifest.json       from scripts/build_world_v7_chunks.py (Roblox centre/size per merged mesh)
 - world-v7-walk.json           perimeter wall, cave blocker, fall catch, wet boxes, ground heights
 - world-v7-studio-import.json  mesh asset id and raw MeshSize per part, read back from the Open Cloud insert
-- world-v7-uploads.json        texture and sky image ids
+- world-v7-uploads.json        texture and sky image ids ("sky"."dusk" once the locked-dusk faces are uploaded)
+- world-v7-pending.json        (optional) meshes the last chunk merge changed: until their new ids are read back into
+                               world-v7-studio-import.json, the previous geometry is kept so old ids never stretch
+- world-dressing-manifest.json (optional) frond bush meshes from scripts/build_world_v7_fronds.py, mounted as
+                               WorldAssets.Dressing templates once world-dressing-import.json carries their ids
 
 Outputs:
 - assets/world/WorldAssets.rbxmx  Folder WorldAssets > Model WorldV7 of MeshParts, mounted at ServerStorage.WorldAssets.
@@ -31,6 +35,21 @@ for _tile in COLLISION["parts"]:
     IMPORT[_tile["name"]] = COLLISION_IMPORT[_tile["name"]]
     MANIFEST["parts"].append({"name": _tile["name"], "group": "GroundCollision", "material": "W1_collision", "tris": _tile["tris"],
                               "collide": True, "anim": None, "region": "GroundCollision", "center": _tile["center"], "size": _tile["size"]})
+# Declutter merge (batch 2026-11-13, W1): keep the previous geometry for changed meshes until their ids are updated.
+PENDING_PATH = WORLD / "world-v7-pending.json"
+if PENDING_PATH.exists():
+    _pending = json.loads(PENDING_PATH.read_text())
+    _held = []
+    for _i, _part in enumerate(MANIFEST["parts"]):
+        if _part["name"] in _pending["changed"]:
+            MANIFEST["parts"][_i] = _pending["previous"][_part["name"]]
+            _held.append(_part["name"])
+    _missing = [p["name"] for p in MANIFEST["parts"] if p["name"] not in IMPORT]
+    MANIFEST["parts"] = [p for p in MANIFEST["parts"] if p["name"] in IMPORT]
+    MANIFEST["count"] = len(MANIFEST["parts"])
+    MANIFEST["triangles"] = sum(p["tris"] for p in MANIFEST["parts"])
+    print("PENDING: kept the previous geometry for", _held, "and skipped (no id yet)", _missing,
+          "- upload assets/world/world-v7-declutter.fbx, update world-v7-studio-import.json, delete world-v7-pending.json")
 for _part in MANIFEST["parts"]:
     if _part["region"] == "Ground":
         _part["collide"] = False
@@ -42,11 +61,15 @@ for _part in MANIFEST["parts"]:
 LANTERN_PIVOT = next([p["center"][0], p["center"][1] + p["size"][1] / 2, p["center"][2]]
                      for p in MANIFEST["parts"] if p["name"] == "W7_Lantern__bark")
 
-# Blender base colours (sRGB) for untextured, unpaletted materials.
+# Blender base colours (sRGB) for untextured, unpaletted materials. Dusk (batch 2026-11-13, W1): the cloud sea
+# below the island is pink (matches WorldDusk.CloudColor) and foam/bubbles take a faint warm cast.
 FLAT = {
     "W1_glow_warm": (255, 216, 137), "W1_glow_aqua": (79, 230, 255), "W1_glow_pink": (255, 128, 207),
-    "W1_cloud": (250, 252, 255), "W1_foam": (240, 250, 252), "W1_bubble": (216, 245, 255),
+    "W1_cloud": (246, 194, 216), "W1_foam": (250, 244, 246), "W1_bubble": (222, 243, 255),
 }
+# Dusk palette grade: the warm haze greys out saturated props, so coloured swatches gain a little saturation;
+# near-whites (egg, cream, white) are left alone so they still read as white in the golden light.
+PALETTE_SATURATION = 1.1
 MATERIAL_TOKEN = {"SmoothPlastic": 272, "Plastic": 256, "Fabric": 1312, "Neon": 288, "Glass": 1568}
 # Matte finish (polish 2026-11-12): SmoothPlastic read glossy on foliage, grass, ground and rock.
 # Textured natural surfaces get a SurfaceAppearance with their own colour map, a uniformly white
@@ -163,13 +186,52 @@ def xml_part(index, part):
         + "      </Item>\n")
 
 
+# Ground dressing (batch 2026-11-13, W1): frond bush templates the server clones at WorldDressing.Bushes.
+DRESSING_MANIFEST = WORLD / "world-dressing-manifest.json"
+DRESSING_IMPORT = WORLD / "world-dressing-import.json"
+
+
+def xml_dressing():
+    if not (DRESSING_MANIFEST.exists() and DRESSING_IMPORT.exists()):
+        return ""
+    manifest = json.loads(DRESSING_MANIFEST.read_text())
+    ids = json.loads(DRESSING_IMPORT.read_text())
+    texture = ids.get("texture", "")
+    out = ["    <Item class=\"Folder\" referent=\"WorldDressing\">\n      <Properties>\n        <string name=\"Name\">Dressing</string>\n      </Properties>\n"]
+    for i, mesh in enumerate(manifest["meshes"]):
+        if mesh["name"] not in ids:
+            continue
+        mesh_id, *raw = ids[mesh["name"]]
+        sx, sy, sz = mesh["size"]
+        r, g, b = mesh["color"]
+        color = (0xFF << 24) | (r << 16) | (g << 8) | b
+        out.append(
+            f"      <Item class=\"MeshPart\" referent=\"WD{i}\">\n        <Properties>\n"
+            f"          <string name=\"Name\">{mesh['name']}</string>\n"
+            f"          <Content name=\"MeshId\"><url>rbxassetid://{mesh_id}</url></Content>\n"
+            f"          <Content name=\"TextureID\">{f'<url>{texture}</url>' if texture else '<url />'}</Content>\n"
+            f"          <Vector3 name=\"Size\"><X>{sx!r}</X><Y>{sy!r}</Y><Z>{sz!r}</Z></Vector3>\n"
+            f"          <Vector3 name=\"InitialSize\"><X>{raw[0]!r}</X><Y>{raw[1]!r}</Y><Z>{raw[2]!r}</Z></Vector3>\n"
+            "          <bool name=\"Anchored\">true</bool>\n          <bool name=\"CanCollide\">false</bool>\n"
+            "          <bool name=\"CanQuery\">false</bool>\n          <bool name=\"CanTouch\">false</bool>\n"
+            "          <bool name=\"CastShadow\">false</bool>\n          <bool name=\"DoubleSided\">true</bool>\n"
+            f"          <token name=\"CollisionFidelity\">{FIDELITY['Box']}</token>\n"
+            f"          <token name=\"Material\">{MATERIAL_TOKEN['SmoothPlastic']}</token>\n"
+            f"          <Color3uint8 name=\"Color3uint8\">{color}</Color3uint8>\n"
+            "        </Properties>\n      </Item>\n")
+    out.append("    </Item>\n")
+    return "".join(out)
+
+
 def rbxmx():
     out = ["<roblox version=\"4\">\n",
            "  <Item class=\"Folder\" referent=\"WorldAssets\">\n    <Properties>\n      <string name=\"Name\">WorldAssets</string>\n    </Properties>\n",
            "    <Item class=\"Model\" referent=\"WorldV7\">\n      <Properties>\n        <string name=\"Name\">WorldV7</string>\n      </Properties>\n"]
     for i, part in enumerate(MANIFEST["parts"]):
         out.append(xml_part(i, part))
-    out.append("    </Item>\n  </Item>\n</roblox>\n")
+    out.append("    </Item>\n")
+    out.append(xml_dressing())
+    out.append("  </Item>\n</roblox>\n")
     return "".join(out)
 
 
@@ -247,8 +309,12 @@ def palette_png():
     pal = json.loads((WORLD / "world-v7-palette.json").read_text())
     side, px = pal["side"], pal["px"]
     img = Image.new("RGB", (side * px, side * px), (255, 0, 255))
+    import colorsys
     for i, name in enumerate(pal["order"]):
-        c = tuple(round(v * 255) for v in pal["srgb"][name])
+        h, sat, val = colorsys.rgb_to_hsv(*pal["srgb"][name])
+        if sat > 0.25:
+            sat = min(1.0, sat * PALETTE_SATURATION)
+        c = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(h, sat, val))
         sx, sy = i % side, side - 1 - i // side
         for y in range(sy * px, sy * px + px):
             for x in range(sx * px, sx * px + px):

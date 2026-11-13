@@ -30,7 +30,7 @@ return function(gui,board)
 				end
 				for _,slot in ipairs({b.PieceQueue.Dropping,b.PieceQueue.Next})do
 					if slot.Caption.Visible then readable(slot.Caption)end
-					if slot.Piece.Visible then readable(slot.Piece.Mark);assert(slot.Piece.AbsolutePosition.Y+slot.Piece.AbsoluteSize.Y<=b.PieceQueue.AbsolutePosition.Y+b.PieceQueue.AbsoluteSize.Y-1.9,"queue bottom clipping")end
+					if slot.Piece.Visible then assert(not slot.Piece.Mark.Visible,"no tier numeral on the queue piece (batch R1)");assert(slot.Piece.AbsolutePosition.Y+slot.Piece.AbsoluteSize.Y<=b.PieceQueue.AbsolutePosition.Y+b.PieceQueue.AbsoluteSize.Y-1.9,"queue bottom clipping")end
 				end
 				local drops=b.HatchTrack.BallDispenser;readable(drops.Remaining)
 				if drops.Channel.Visible then

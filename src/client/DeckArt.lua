@@ -29,7 +29,13 @@ Art.Cyan = Art.Leaf
 local roleNames={panel="Surface",raised="Raised",inset="Inset",ink="Ink",text="Silver",muted="Muted",line="Line",selected="Selected",focus="Focus",accent="Accent",reward="Amber"}
 Art.Selected,Art.Accent=Art.Inset,Color3.fromHex("#76F6B0")
 local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,writes=0}
-function Art.paletteColor(role)return (currentTheme and currentTheme.ui and currentTheme.ui[role])or Art[roleNames[role]or role]end
+-- Batch 2026-11-13 (Spencer): the Pocket Deck faceplate tints only the deck and its
+-- background. Menus, cards, tabs and buttons always use the house palette (the
+-- default plate's glass); `currentTheme` stays for the hardware readers (getTheme).
+local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
+local uiTheme=Themes.ById[Themes.Default]
+function Art.uiTheme()return uiTheme end
+function Art.paletteColor(role)return (uiTheme.ui and uiTheme.ui[role])or Art[roleNames[role]or role]end
 local contentDefaults={contentPanel=Color3.fromHex("#16201E"),contentRaised=Color3.fromHex("#232D2C"),contentInset=Color3.fromHex("#0C1311"),contentText=Color3.fromHex("#F3F4F6"),contentMuted=Color3.fromHex("#C3C8D0"),contentLine=Color3.fromHex("#69F4B3"),contentSelected=Color3.fromHex("#3A5249"),contentFocus=Color3.fromHex("#A3F4FF"),contentReward=Color3.fromHex("#FFC14D")}
 local scoped={panel="contentPanel",raised="contentRaised",inset="contentInset",text="contentText",muted="contentMuted",line="contentLine",selected="contentSelected",focus="contentFocus",reward="contentReward"}
 local function contentOwner(object)
@@ -50,7 +56,7 @@ end
 function Art.surfaceColor(object,role)
  if(role=="text"or role=="muted")and onPrimaryFill(object)then return Art.paletteColor("ink")end
  local mapped=contentOwner(object)and scoped[role]
- return if mapped then currentTheme and currentTheme.ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
+ return if mapped then uiTheme.ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
 end
 local function paintBinding(node,entry)
  for property,role in pairs(entry.properties)do
@@ -143,8 +149,8 @@ function Art.control(button,primary,enabled)
 end
 function Art.tab(button,selected,enabled)
  Art.control(button,false,enabled)
- Art.bind(button,{BackgroundColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
- TextColor3=function()local t=currentTheme and currentTheme.ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
+ Art.bind(button,{BackgroundColor3=function()local t=uiTheme.ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
+ TextColor3=function()local t=uiTheme.ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
  button:SetAttribute("SelectedTab",selected)
 
 end
@@ -718,7 +724,8 @@ function Art.jellyPreview(parent,tier,mark)
  if not previewGradients[tier]then previewGradients[tier]=ColorSequence.new({ColorSequenceKeypoint.new(0,palette.light),ColorSequenceKeypoint.new(.45,palette.body),ColorSequenceKeypoint.new(1,palette.deep)})end
  parent.BackgroundColor3=Color3.new(1,1,1);state.gradient.Color=previewGradients[tier];state.gradient.Rotation=55
  state.rim.Color=palette.deep;state.glint.BackgroundColor3=palette.glint;parent:SetAttribute("JellyTier",tier)
- if mark then mark.TextColor3=palette.mark;mark.TextStrokeColor3=palette.markShadow;mark.TextStrokeTransparency=.45 end
+ -- No tier numerals any more (batch 2026-11-13 R1): an old mark label is hidden.
+ if mark then mark.Visible=false end
 end
 
 function Art.wordmark(parent,z)return require(script.Parent.DeckWordmark).new(parent,z or parent.ZIndex+1,Art)end

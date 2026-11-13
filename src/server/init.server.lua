@@ -43,6 +43,7 @@ local StoreService = require(script.StoreService)
 local Economy = require(script.EconomyAnalytics)
 local HeatPayout = require(ReplicatedStorage.Shared.HeatPayout)
 local HeatRequest = require(script.HeatRequest)
+local BoardItems = require(script.BoardItems)
 
 local function child(className, name, parent)
 	local instance = Instance.new(className)
@@ -372,6 +373,7 @@ local function publishState(board)
 	board.folder:SetAttribute("NextTier", Simulation.nextTier(board.sim))
 	board.folder:SetAttribute("PreviewTier1", Simulation.nextTier(board.sim, 1))
 	board.folder:SetAttribute("PreviewTier2", Simulation.nextTier(board.sim, 2))
+	BoardItems.publish(board, board.folder)
 	board.folder:SetAttribute("Merges", board.merges)
 	board.folder:SetAttribute("Chain", board.chain)
 	board.folder:SetAttribute("PeakChain", board.peakChain)
@@ -436,6 +438,11 @@ local function syncVisuals(board)
 			board.parts[egg.id] = part
 		end
 		if part:GetAttribute("BoardSerial")~=runSerial then part:SetAttribute("BoardSerial",runSerial)end
+		-- Round items (R1 renders): PowerUp = a star ball; ItemMark = an armed Bomb, or a Magnet still pulling.
+		local powerUp=egg.powerUp~=nil
+		if part:GetAttribute("PowerUp")~=powerUp then part:SetAttribute("PowerUp",powerUp)end
+		local mark=if egg.mark=="magnet"and egg.hasContact and(egg.magnetLeft or 0)<=0 then nil else egg.mark
+		if part:GetAttribute("ItemMark")~=mark then part:SetAttribute("ItemMark",mark)end
 		local position = Vector3.new(egg.position.X, egg.position.Y, 0)
 		if part.Position ~= position then
 			part.Position = position
@@ -489,8 +496,17 @@ local function reset(board, preset, sameField)
 	board.folder:SetAttribute("RunSequence", board.runSequence)
 	board.nursery.nextRunSeq += 1
 	board.field=if field then FieldRun.new({descriptor=descriptor,sequence=board.runSequence,heat=board.runHeat})else nil
-	board.sim = Simulation.new(preset, board.sim and board.sim.serial,
-		if field then FieldObjectives.simulationOptions(descriptor,preset,board.runHeat) else nil)
+	-- Round items: power-up balls only in real fields (BUILD-PLAN item 7).
+	local itemsOn=BoardItems.enabled({field=field==true,guided=board.heatGuided,totalWins=board.nursery.state.totalWins})
+	local simOptions=nil
+	if field then
+		simOptions={}
+		for key,value in pairs(FieldObjectives.simulationOptions(descriptor,preset,board.runHeat))do simOptions[key]=value end
+		if itemsOn then simOptions.powerUps=board.runHeat end
+	end
+	board.sim = Simulation.new(preset, board.sim and board.sim.serial, simOptions)
+	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
+	BoardItems.reset(board, itemsOn)
 	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) else nil)
 	board.maxTier = 0
 	board.startBest = board.profile.bestScore
@@ -510,6 +526,7 @@ local function reset(board, preset, sameField)
 	board.folder:SetAttribute("DailyAward", 0)
 	board.folder:SetAttribute("MasteryAward", 0)
 	board.folder:SetAttribute("RewardStatus", "")
+	board.folder:SetAttribute("ItemEvent", "")
 	publishHeat(board)
 	publishState(board)
 	syncVisuals(board)
@@ -748,7 +765,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if (action == "sound" or action == "motion" or action == "companion"
-		or action == "family" or action == "drop" or action == "reset" or action == "preset" or action == "restart")
+		or action == "family" or action == "drop" or action == "reset" or action == "preset" or action == "restart" or action == "item")
 		and not canProgress(board) then return end
 	if action == "appearance" then
 		-- Compatibility for the previous full-pair client; new clients send slots.
@@ -863,6 +880,19 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 				board.firstSession:advance(2)
 			end
 		end
+	elseif action == "item" then
+		-- Round items: accepted while paused (the carousel freezes the round).
+		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
+			ready = canProgress(board), now = now, budget = board.field and board.field.budget })
+		if ok then
+			local position = result.position
+			BoardItems.event(board, board.folder, { kind = "used", id = result.id, eggId = result.eggId,
+				x = position and position.X or nil, y = position and position.Y or nil, lostStar = result.lostStar ~= nil })
+			publishState(board)
+			syncVisuals(board)
+		elseif result ~= "Stale" and result ~= "Malformed" and result ~= "Throttled" then
+			BoardItems.event(board, board.folder, { kind = "refused", id = type(value) == "table" and BoardItems.safeId(value.id) or nil, reason = result })
+		end
 	elseif action == "restart" then
 		-- Pocket Menu restart: same field template, new seed; its own 3 s cooldown.
 		if now - board.lastReset < Config.ResetInterval or now - (board.lastRestart or -math.huge) < 3 then return end
@@ -963,6 +993,32 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board);publishPetAppearance(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	-- Ball themes (hatching v11, batch R1): fixed Star price, server-validated,
+	-- idempotent by the client's operation id (bound to theme + price); equip any
+	-- owned or free theme. Replies ride FaceplateResult with kind="ballTheme".
+	if action=="ballThemeBuy"or action=="ballThemeEquip"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id<=80 then v.id else nil
+		local themeId=if type(v.themeId)=="string"and #v.themeId<=32 then v.themeId else nil
+		local function reply(status,reason)faceplateResult:FireClient(player,{kind="ballTheme",action=action,id=opId,themeId=themeId,status=status,reason=reason,revision=board.nursery.state.revision})end
+		if not opId or not themeId then reply("Rejected","InvalidBallTheme");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason
+		if action=="ballThemeBuy"then
+			ok,reason=Nursery.buyBallTheme(board.nursery,opId,themeId,if type(v.price)=="number"then v.price else nil,v.equip~=false)
+			if ok and reason~="AlreadyOwned"then Economy.command(player,"BallTheme_"..themeId,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+		else
+			ok,reason=Nursery.equipBallTheme(board.nursery,opId,themeId)
+		end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
 
@@ -1199,6 +1255,18 @@ RunService.Heartbeat:Connect(function(dt)
 					board.firstSession:advance(3)
 				end
 				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"))
+				for _, id in ipairs(merge.powerUps or {}) do
+					local granted = BoardItems.grant(board, id)
+					if granted then BoardItems.event(board, board.folder, { kind = granted, id = id, x = merge.position.X, y = merge.position.Y }) end
+				end
+			end
+			-- Bomb bursts happen inside the step, outside `merged`: nothing scores.
+			if board.sim.bursts then
+				for _, burst in ipairs(board.sim.bursts) do
+					BoardItems.event(board, board.folder, { kind = "burst", id = "bomb", x = burst.position.X, y = burst.position.Y, count = #burst.ids })
+				end
+				board.sim.bursts = nil
+				publishState(board)
 			end
 			if board.profile.rank >= 1 and not hasPip(board) then grantWelcome(player, board) end
 			if board.field then
@@ -1318,15 +1386,42 @@ end)
 if RunService:IsStudio() then
 	local hook = Instance.new("BindableFunction")
 	hook.Name = "EggDropRoundTestHook"
-	hook.OnInvoke = function(player, action)
+	hook.OnInvoke = function(player, action, value)
 		local board = boards[player]
-		if not board or not board.field or board.round.over then return nil, "NoField" end
+		if not board or board.round.over then return nil, "NoRound" end
+		-- itemsOn/grant also work in the Welcome round (no field) so the belt chip and
+		-- carousel can be checked on a fresh Studio save; using an item still needs a
+		-- field (BoardItems.request refuses NotLive), and `star` needs the field queue.
+		local itemAction = action == "itemsOn" or action == "star" or action == "grant"
+		if not board.field and not itemAction then return nil, "NoField" end
 		if action == "plain" or action == "tidy" then
 			board.field.rootStage = board.field.goalCount
 			board.sim.drops = FieldRun.Budget
 			if action == "plain" then board.field.bonusHeight = -1 else table.clear(board.sim.eggs) end
 			publishState(board)
 			return board.runHeat
+		end
+		-- Studio only: switch items on for this round (guided/first rounds keep them off).
+		if action == "itemsOn" then
+			board.itemsOn = true
+			publishState(board)
+			return true
+		end
+		-- Round items: "star" marks Next and Then as power-up balls (item `value`,
+		-- default pop); "grant" puts `value` straight on the belt. Items must be on.
+		if action == "star" or action == "grant" then
+			local id = BoardItems.safeId(value) or "pop"
+			if not board.itemsOn then return nil, "ItemsOff" end
+			if action == "grant" then
+				local granted = BoardItems.grant(board, id)
+				if granted then BoardItems.event(board, board.folder, { kind = granted, id = id }) end
+			else
+				if not board.sim.queue then return nil, "NoQueue" end
+				board.sim.stars = board.sim.stars or {}
+				for lookahead = 0, 1 do board.sim.stars[(board.sim.drops + lookahead) % #board.sim.queue + 1] = id end
+			end
+			publishState(board)
+			return id
 		end
 		return nil, "UnknownAction"
 	end

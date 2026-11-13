@@ -107,10 +107,10 @@ return function(client)
    end
    return seen,starts,v
   end
-  test("idle beats start after 8 s idle and are at least 10 s apart",function()
+  test("idle beats start after 5 s idle and are at least 7 s apart (FEEL-ALIVE B2 retune)",function()
    local seen,starts=beats(77,120,false)
-   assert(#seen>=5,"too few beats "..#seen);assert(starts[1]>8 and starts[1]<=10.1,"first beat at "..starts[1])
-   for i=2,#starts do assert(starts[i]-starts[i-1]>=10,"beats too close")end
+   assert(#seen>=5,"too few beats "..#seen);assert(starts[1]>Beats.IdleAfter and starts[1]<=Beats.IdleAfter+2.1,"first beat at "..starts[1])
+   for i=2,#starts do assert(starts[i]-starts[i-1]>=Beats.Gap,"beats too close")end
   end)
   test("wave only when the owner stands still nearby; the sequence is seeded per pet",function()
    local moving=beats(77,400,false);for _,kind in ipairs(moving)do assert(kind~="wave","waved at a moving owner")end
@@ -121,8 +121,8 @@ return function(client)
    assert(not same,"different pets share one sequence")
   end)
   test("losing eligibility (carry, care, toy, focus) cancels and resets the idle clock",function()
-   local seen,starts=beats(5,40,false,function(t)return not(t>7 and t<12)end)
-   assert(#seen>=1 and starts[1]>12+8,"beat ran or resumed early: "..tostring(starts[1]))
+   local seen,starts=beats(5,40,false,function(t)return not(t>4 and t<12)end)
+   assert(#seen>=1 and starts[1]>12+Beats.IdleAfter,"beat ran or resumed early: "..tostring(starts[1]))
   end)
   test("the idle clock runs through wandering, but a beat only plays while the pet stands still",function()
    local v={petId="pip",cosmeticSeed=77};local kind

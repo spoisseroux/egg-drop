@@ -44,6 +44,9 @@ local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
 local Stars=require(script.StarText)
 local clientUI={HueIntent=require(script.HueIntent),HueEggView=require(script.HueEggView),PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
+-- Ball themes + faces (batch 2026-11-13 R1): the equipped theme comes from the nursery snapshot.
+clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
+clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
 function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())end
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
@@ -54,7 +57,10 @@ local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 local DeckMenu = require(script.DeckMenu)
 local audio = Audio.new()
+-- W2 feel alive: garden ambience + Pocket Deck round music (before RoomView, whose coos use it).
+clientUI.ambient=require(script.AmbientAudio).new(audio)
 clientUI.JellyPalette=require(ReplicatedStorage.Shared.JellyPalette)
+clientUI.ItemCarousel=require(script.ItemCarousel);clientUI.RoundItems=require(ReplicatedStorage.Shared.RoundItems)
 clientUI.Pico8=require(ReplicatedStorage.Shared.Pico8)
 clientUI.uiSequence=0
 clientUI.accepted=function(kind)
@@ -546,7 +552,7 @@ clientUI.questLog=require(script.QuestLog).new(clientUI.deck:addOverlay("DeckQue
 -- Pocket Menu (UI-SPEC-COMPACT-FRAME 9, decision 6): on the deck screen, above the log.
 clientUI.pocketCallbacks={}
 clientUI.pocketMenu=require(script.PocketMenu).new(clientUI.deck:addOverlay("DeckPocketMenu",36,{lcd=true}),clientUI.pocketCallbacks)
-function clientUI.deckOverlayOpen()return clientUI.heatPicker.visible or clientUI.questLog.visible or clientUI.pocketMenu.visible end
+function clientUI.deckOverlayOpen()return clientUI.heatPicker.visible or clientUI.questLog.visible or clientUI.pocketMenu.visible or(clientUI.items~=nil and clientUI.items.isOpen)end
 local function isGamepad(inputType)
 	return string.match(inputType.Name, "^Gamepad") ~= nil
 end
@@ -557,6 +563,10 @@ local picker
 local journal
 local nurseryView
 local nurseryState
+function clientUI.equippedBallTheme()
+ local row=nurseryState and nurseryState.ballThemes
+ return if row and clientUI.BallThemes.ById[row.equipped]then row.equipped else clientUI.BallThemes.Default
+end
 local currentSaveNotice=clientUI.SaveNotice.resolve(board:GetAttribute("SaveStatus"),nil)
 local saveNoticeOwner
 local refreshSaveNotice
@@ -618,6 +628,10 @@ roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	triggered=ProximityPromptService.PromptTriggered,routes={
 		Customize=function()if openPicker("Shell",nil,"workbench")then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
 	}})
+-- W2 station attract (icon, shaft, ring, ping); "used" is session memory on this client.
+clientUI.attract=require(script.StationAttract).new({player=player,read=stationContext,triggered=ProximityPromptService.PromptTriggered,
+	voice=clientUI.ambient,reduced=reduceEffects,cradleBusy=function()return roomView.care~=nil and roomView.care.artToken~=nil and roomView.care.artToken~=false end})
+gui.Destroying:Connect(function()clientUI.attract:destroy();clientUI.ambient:destroy()end)
 
 do
 	local handoff = gui.DeckHandoff
@@ -1220,7 +1234,7 @@ local function refreshNursery(state)
  if nurseryState and type(state.revision)=="number"and type(nurseryState.revision)=="number"and state.revision<nurseryState.revision then return end
  nurseryState = state
     if clientUI.onQuests then clientUI.onQuests(state)end
-    if picker then picker:setShopState(state.nectar,state.faceplates)end
+    if picker then picker:setShopState(state.nectar,state.faceplates,state.ballThemes,state.revision)end
     if clientUI.syncWardrobe then clientUI.syncWardrobe(state)end
     if clientUI.syncHub then clientUI.syncHub(state)end
     clientUI.hueIntent:update(state)
@@ -1349,7 +1363,7 @@ local function updateClub()
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
-	if nurseryState then picker:setShopState(nurseryState.nectar,nurseryState.faceplates)end
+	if nurseryState then picker:setShopState(nurseryState.nectar,nurseryState.faceplates,nurseryState.ballThemes,nurseryState.revision)end
 end
 
 openPicker = function(mode,back,source)
@@ -1476,10 +1490,7 @@ local function project(position)
 		size.Y / 2 - (position.Y - Config.Height / 2) * pixelsPerStud), pixelsPerStud
 end
 rendererPresentation.restoreCheap=function(now,reduced)
- for source,view in pairs(eggViews)do
-  local position=view.gel:render(source.Position,0,now,project,true,reduced)
-  local point=project(Vector2.new(position.X,position.Y));view.mark.Position=UDim2.fromOffset(point.X,point.Y)
- end
+ for source,view in pairs(eggViews)do view.gel:render(source.Position,0,now,project,true,reduced)end
 end
 
 
@@ -1495,13 +1506,14 @@ local function drawAim()
  end
 	ghost.Position = UDim2.fromOffset(position.X, position.Y)
 	ghost.Size = UDim2.fromOffset(diameter, diameter)
-	ghost.Text = Config.Tiers[tier].mark
+	ghost.Text = ""
 	ghost.BackgroundColor3 = clientUI.JellyPalette.byTier[tier].body
-	nextReadout.Text = Config.Tiers[tier].mark .. " · " .. Config.Tiers[board:GetAttribute("PreviewTier1") or 1].mark
-		.. " · " .. Config.Tiers[board:GetAttribute("PreviewTier2") or 1].mark
+	-- No numerals (batch R1): the size's colour word.
+	nextReadout.Text = clientUI.BallThemes.word(tier) .. " · " .. clientUI.BallThemes.word(board:GetAttribute("PreviewTier1") or 1)
+		.. " · " .. clientUI.BallThemes.word(board:GetAttribute("PreviewTier2") or 1)
 	nextReadout.TextColor3 = clientUI.JellyPalette.byTier[tier].body
 	if queuePieces then
-		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);Art.jellyPreview(piece,t,piece.Mark);piece.Mark.Text=Config.Tiers[t].mark
+		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);Art.jellyPreview(piece,t,piece.Mark);piece.Mark.Text=clientUI.BallThemes.word(t)
 			if queueHost:GetAttribute("InlineTiers") then piece.Parent.Caption.Text=(if index==1 then "Now " else "Next ")..piece.Mark.Text;piece.Parent.Caption.TextColor3=clientUI.JellyPalette.byTier[t].body end
 		end
 		if queueHost:GetAttribute("CombinedTiers") then
@@ -1532,11 +1544,11 @@ function clientUI.deckGoals(view,stage)
  local goals={}
  if not view or view.empty or type(view.goals)~="table"then return goals end
  for index,goal in ipairs(view.goals)do
-  local full,candidates=clientUI.FieldQuestText.goal(goal)
+  local full,candidates=clientUI.FieldQuestText.goal(goal,nil,true,14)
   local done=if stage then index<=stage else(view.complete==true or index<(view.step or 1))
   local current=not stage and index==view.step and not view.complete
   local zone=type(goal.zone)=="table"and goal.zone.kind or "any"
-  goals[index]={text=full,short=candidates[1]or full,done=done,progress=if current then view.progress or 0 else 0,target=goal.target or 1,
+  goals[index]={text=full,short=candidates[1]or full,spoken=(clientUI.FieldQuestText.goal(goal)),done=done,progress=if current then view.progress or 0 else 0,target=goal.target or 1,
    icon={kind=goal.kind or "merge",tier=goal.tier or goal.minTier or 1,plus=goal.minTier~=nil,zone=zone}}
  end
  return goals
@@ -1588,8 +1600,10 @@ end
 -- The round is paused while a modal, the quest log or the Pocket Menu is up
 -- (the server keeps one flag, so every owner goes through here).
 function clientUI.syncPause()
- local deck=(clientUI.questLog.visible or clientUI.pocketMenu.visible)and not board:GetAttribute("RoundOver")
- request:FireServer("pause",modalShade.Visible or deck==true)
+ if clientUI.syncItemChip then clientUI.syncItemChip()end
+ -- The item carousel is the third deck owner (BUILD-PLAN 2026-11-13 item 6).
+ request:FireServer("pause",clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible,
+  pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true}))
 end
 function clientUI.pocketShouldClose()
  return recap.visible or modalShade.Visible or board:GetAttribute("Mode")~="Board"or board:GetAttribute("RoundOver")==true or roomView.busy
@@ -1805,7 +1819,7 @@ updateHud = function()
 	status.TextSize=if instrumentLayout and instrumentLayout.roomy then 20 elseif backdrop:GetAttribute("CompactInstruction") then 12 else 16
 	status.TextWrapped=true
 	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
-		Config.Tiers[nextTier()].mark, canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
+		clientUI.BallThemes.word(nextTier()), canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
 	local fieldActive = nurseryActive and owned > 0
@@ -2093,6 +2107,7 @@ layout = function()
 		clientUI.deck:placeResults(l.shell)
 	end
 	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
+	if clientUI.items then clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true and wide)end
 	if recap.visible and recap.key~=recap.viewKey(clientUI.deckView)then task.defer(updateHud)end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
@@ -2292,6 +2307,11 @@ end, false, priority + 600, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.
 picker.onBuy=function(order)
 	nurseryRequest:FireServer("faceplateBuy",{id=order.id,plateId=order.plateId,price=order.price},nurseryState and nurseryState.revision or 0)
 end
+picker.onBallBought=function(id)
+	local theme=clientUI.BallThemes.ById[id]
+	clientUI.shopToaster=clientUI.shopToaster or require(script.DeckKit).toaster(picker.shade)
+	clientUI.shopToaster.show((theme and theme.name or "Balls").." in use")
+end
 picker.onBought=function(id)
 	local theme=Themes.ById[id]
 	-- The toast lives on the picker overlay so it shows in the garden too.
@@ -2319,9 +2339,81 @@ recap:on("quests",function(kind)
 	local scope=recap.data and recap.data.questDone and select(2,clientUI.finishedQuest(RunReceipt.select(nurseryState,board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),true)))
 	if clientUI.openQuestLog(if kind=="claim"and scope=="weekly"then "weekly"else "daily")then clientUI.accepted("confirm")end
 end)
+-- ── Round items (BUILD-PLAN 2026-11-13, R2) ─────────────────────────────────
+-- B (keyboard B, gamepad B or X, the deck's B, the phone item button) opens the
+-- carousel in a live round; it freezes the round through syncPause. The server
+-- owns the belt: the client asks with {resetId, seq, id} and shows what comes back.
+clientUI.items=clientUI.ItemCarousel.new(clientUI.deviceRoot,{z=38})
+clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true)
+function clientUI.itemsInRound()
+ return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
+  and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not nurseryView:isOpen()and not clientUI.isHueOpen()
+  and board:GetAttribute("RoundOver")~=true and not clientUI.heatPicker.visible and not clientUI.questLog.visible
+  and not clientUI.pocketMenu.visible and not GuiService.MenuIsOpen
+end
+function clientUI.openItems()
+ if clientUI.items.isOpen or not clientUI.itemsInRound()then return false end
+ -- An empty belt shows "You have no items" and leaves the round running.
+ if not clientUI.items:open()then audio:play("aim",.6,.3);return false end
+ clearPlayInputs();clientUI.syncPause();clientUI.accepted("confirm")
+ if updateHud then task.defer(updateHud)end
+ return true
+end
+function clientUI.closeItems(instant)
+ if not clientUI.items:close(instant)then return false end
+ clientUI.syncPause()
+ if not instant then clientUI.accepted("back")end
+ if updateHud then task.defer(updateHud)end
+ return true
+end
+function clientUI.toggleItems()
+ if clientUI.items.isOpen then return clientUI.closeItems()end
+ return clientUI.openItems()
+end
+function clientUI.useItem()
+ local id=clientUI.items:selected()
+ if not id then return false end
+ request:FireServer("item",{resetId=board:GetAttribute("ResetId"),seq=board:GetAttribute("ItemSeq")or 0,id=id})
+ clientUI.closeItems(true);clientUI.accepted("confirm")
+ return true
+end
+clientUI.items:on("use",function()clientUI.useItem()end)
+clientUI.items:on("close",function()clientUI.closeItems()end)
+clientUI.items:on("moved",function()audio:play("aim",1.05,.35)end)
+-- The desktop belt chip shows only while items are usable: hidden under the
+-- Pocket menu, quest log, pickers and every other cover (QA 2026-11-13).
+function clientUI.syncItemChip()
+ if not clientUI.items then return end
+ clientUI.items:setChipVisible(board:GetAttribute("ItemsOn")==true and clientUI.itemsInRound())
+end
+function clientUI.refreshItems()
+ local belt=clientUI.RoundItems.decodeBelt(board:GetAttribute("ItemBelt"))
+ clientUI.items:setBelt(belt)
+ local front=clientUI.RoundItems.ById[belt[1]or ""]
+ clientUI.deck:setItems(#belt,front and front.glyph,front and front.color)
+ clientUI.syncItemChip()
+ if clientUI.items.isOpen and(#belt==0 or not clientUI.itemsInRound())then clientUI.closeItems(true)end
+end
+for _,name in ipairs({"ItemBelt","ItemsOn","Mode","RoundOver","ResetId"})do
+ board:GetAttributeChangedSignal(name):Connect(clientUI.refreshItems)
+end
+board:GetAttributeChangedSignal("ItemEvent"):Connect(function()
+ local ok,event=pcall(function()return HttpService:JSONDecode(board:GetAttribute("ItemEvent")or "")end)
+ if not ok or type(event)~="table"or event.resetId~=board:GetAttribute("ResetId")then return end
+ local item=clientUI.RoundItems.ById[event.id or ""]
+ if event.kind=="full"then clientUI.items:showNote(clientUI.ItemCarousel.FullNote);audio:play("aim",.6,.3)
+ elseif event.kind=="granted"and item then clientUI.items:showNote(item.name.."!");audio:play("quest_complete",1.2,.5)
+ elseif event.kind=="refused"then
+  clientUI.items:showNote(({Budget="No ball left for that",Empty="Nothing to pop",Armed="An item is already armed",NotLive="Not right now"})[event.reason]or "Not right now")
+ end
+end)
+clientUI.refreshItems()
 -- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.
+clientUI.deck:on("item",function()clientUI.toggleItems()end)
 clientUI.deck:on("dpad",function(dir,input)
-	if clientUI.pocketMenu.visible then
+	if clientUI.items.isOpen then
+		if dir=="Left"or dir=="Right"then clientUI.items:move(if dir=="Left"then -1 else 1)end
+	elseif clientUI.pocketMenu.visible then
 		clientUI.pocketMenu:move(if dir=="Left"then -1 elseif dir=="Right"then 1 else 0,if dir=="Up"then -1 elseif dir=="Down"then 1 else 0)
 	elseif clientUI.questLog.visible then
 		if dir=="Up"or dir=="Down"then clientUI.questLog:move(if dir=="Up"then -1 else 1)else clientUI.questLog:cycleTab(if dir=="Left"then -1 else 1)end
@@ -2332,15 +2424,20 @@ clientUI.deck:on("dpad",function(dir,input)
 	elseif dir=="Left" or dir=="Right" then startAim(input,if dir=="Left" then -1 else 1) end
 end)
 clientUI.deck:on("A",function()
-	if clientUI.pocketMenu.visible then clientUI.pocketMenu:confirm()
+	if clientUI.items.isOpen then clientUI.useItem()
+	elseif clientUI.pocketMenu.visible then clientUI.pocketMenu:confirm()
 	elseif clientUI.questLog.visible then clientUI.questLog:act()elseif clientUI.heatPicker.visible then clientUI.heatPicker:confirm()
 	elseif recap.visible then recap:confirm() else dropEgg() end end)
 clientUI.deck:on("B",function()
+	-- In a live round B is Items (leaving is MENU or the back arrow).
+	if clientUI.items.isOpen then clientUI.closeItems();return end
+	if clientUI.itemsInRound()then clientUI.openItems();return end
 	if clientUI.closePocketMenu()then return end
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
 -- MENU: the Pocket Menu in a round; the quest log from results (UI-SPEC 5.4) or
 -- when it is already open (closes it); the garden menu outside the deck.
 clientUI.deck:on("menu",function()
+	if clientUI.items.isOpen then clientUI.closeItems(true)end
 	if board:GetAttribute("Mode")=="Board"then
 		if clientUI.pocketMenu.visible then clientUI.closePocketMenu()
 		elseif clientUI.questLog.visible or recap.visible then if clientUI.toggleQuestLog()then clientUI.accepted("confirm")end
@@ -2348,6 +2445,7 @@ clientUI.deck:on("menu",function()
 	elseif openMenu()then clientUI.accepted("confirm")end end)
 clientUI.deck:on("quests",function()if clientUI.openQuestLog()then clientUI.accepted("confirm")end end)
 clientUI.deck:on("back",function()
+	if clientUI.closeItems()then return end
 	if clientUI.closePocketMenu()then return end
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
 
@@ -2393,6 +2491,7 @@ clientUI.heatCallbacks.start=function(key)
 end
 function clientUI.openQuestLog(tab)
  if clientUI.pocketMenu.visible then return false end
+ if clientUI.items.isOpen then clientUI.closeItems(true)end
  if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or isPickerOpen()or gameMenu.shade.Visible or nurseryView:isOpen()or clientUI.isHueOpen()then return false end
  clearPlayInputs()
  clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab)
@@ -2418,6 +2517,7 @@ function clientUI.pocketState()
 end
 function clientUI.openPocketMenu()
  if clientUI.pocketMenu.visible then return false end
+ if clientUI.items.isOpen then clientUI.closeItems(true)end
  if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or recap.visible or isPickerOpen()or gameMenu.shade.Visible
   or nurseryView:isOpen()or clientUI.isHueOpen()or board:GetAttribute("RoundOver")==true then return false end
  if clientUI.questLog.visible then return false end
@@ -2570,6 +2670,23 @@ end,false,priority+700,Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum
  Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,
  Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,
  Enum.KeyCode.M,Enum.KeyCode.ButtonY,Enum.KeyCode.ButtonSelect,Enum.KeyCode.ButtonStart)
+-- Round items: below the deck overlays (+700) so the Pocket Menu, quest log and
+-- picker keep their keys; above aim/drop/back so B is Items in a live round.
+ContextActionService:BindActionAtPriority("EggDropItems",function(_,state,input)
+ if UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen or roomView.busy then return Enum.ContextActionResult.Pass end
+ local items=clientUI.items
+ if items.isOpen and not clientUI.itemsInRound()then clientUI.closeItems(true);return Enum.ContextActionResult.Pass end
+ local act=clientUI.ItemCarousel.keyAction(input.KeyCode,items.isOpen)
+ if not act or(act=="open"and not clientUI.itemsInRound())then return Enum.ContextActionResult.Pass end
+ if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
+ if act=="open"then clientUI.deck:flash("B");clientUI.openItems()
+ elseif act=="left"or act=="right"then
+  if items:move(if act=="left"then -1 else 1)then clientUI.deck:flash(if act=="left"then "Left"else "Right")end
+ elseif act=="use"then clientUI.deck:flash("A");clientUI.useItem()
+ elseif act=="close"then clientUI.deck:flash("B");clientUI.closeItems()end
+ return Enum.ContextActionResult.Sink
+end,false,priority+650,table.unpack(clientUI.ItemCarousel.Keys))
+gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropItems");clientUI.items:destroy()end)
 ContextActionService:BindActionAtPriority("EggDropLeft", handleControl, false, priority,
 	Enum.KeyCode.Left, Enum.KeyCode.A, Enum.KeyCode.DPadLeft)
 ContextActionService:BindActionAtPriority("EggDropRight", handleControl, false, priority,
@@ -2702,18 +2819,9 @@ local function addView(source)
 		return
 	end
 	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
-		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width})
-	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
-	mark.AnchorPoint = Vector2.new(0.5, 0.5)
-	-- White ExtraBold with a deep shadow (UI-SPEC-REDESIGN-MENUS 6.2).
-	local roles = clientUI.JellyPalette.byTier[tier]
-	mark.Font = Sprite.MarkFont
-	mark.TextColor3 = roles.mark
-	mark.TextStrokeColor3 = roles.markShadow
-	mark.TextStrokeTransparency = 0.35
-	mark.Size = Sprite.markSize(mark.Text)
-	mark.ZIndex = 7
-	eggViews[source] = { gel = gel, mark = mark, id = id, radius = Config.Tiers[tier].radius }
+		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width,themeId=clientUI.equippedBallTheme()})
+	-- No tier numerals (batch R1): size, colour and the ball's face carry the tier.
+	eggViews[source] = { gel = gel, id = id, tier = tier, radius = Config.Tiers[tier].radius, faceInput = { id = id, tier = tier, x = 0, y = 0, radius = Config.Tiers[tier].radius }, face = { tier = tier, expr = "idle", dx = 0 } }
 	viewsById[id] = gel
 end
 
@@ -2722,7 +2830,6 @@ local function removeView(source)
 	local view = eggViews[source]
 	if view then
 		view.gel:destroy()
-		view.mark:Destroy()
 		viewsById[view.id] = nil
 		eggViews[source] = nil
 	end
@@ -2734,17 +2841,6 @@ roomView.boardContentReady=function(previousSerial)
 end
 table.insert(rendererPresentation.connections,board.ChildAdded:Connect(addView))
 table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(removeView))
-table.insert(rendererPresentation.connections,GuiService:GetPropertyChangedSignal("PreferredTextSize"):Connect(function()
-	if rendererPresentation.markRefreshQueued then return end
-	rendererPresentation.markRefreshQueued=true
-	task.defer(function()
-		RunService.Heartbeat:Wait();rendererPresentation.markRefreshQueued=false
-		if rendererPresentation.destroyed or not gui.Parent then return end
-		-- Native font metrics settle with the preference before populating its cache.
-		Sprite.invalidateMarkSizes()
-		for _,view in pairs(eggViews)do view.mark.Size=Sprite.markSize(view.mark.Text)end
-	end)
-end))
 if RunService:IsStudio() then
 	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
 		for _, source in ipairs(board:GetChildren()) do
@@ -2792,6 +2888,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  if not rendererPresentation.canPresent(serial)then return end
  local now=os.clock()
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
+ clientUI.ballFaces:merged(id,now)
  audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
  if(chain>1 or cleared)and now-lastChainAccent>=.18 then
   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),.30)
@@ -2801,7 +2898,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
   if #pixelMerges>=6 then table.remove(pixelMerges,1)end
   table.insert(pixelMerges,{first=pixelPoint(first),second=pixelPoint(second),point=pixelPoint(position),
    radius=Config.Tiers[tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[tier].radius*JellyLCD.Width/(Config.Width+.8),
-   color=clientUI.JellyPalette.byTier[tier].body,start=now,id=id})
+   color=clientUI.JellyPalette.byTier[tier].body,tier=tier,start=now,id=id})
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
  rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared,Config.mergeScore(tier,chain,cleared))
@@ -2862,6 +2959,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 		table.clear(pixelMerges)
 	end
 	roomView:setMode(mode)
+	clientUI.ambient:setRound(mode=="Board") -- W2: world ambience off, deck music on, during a round
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
  for source in pairs(eggViews)do removeView(source)end
@@ -2974,6 +3072,17 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local distance = math.huge
 	local markScale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
 	local tier = nextTier()
+	-- Ball faces (batch R1): one mood for the tick, expressions per ball, Next / Then too.
+	local ballTheme=clientUI.equippedBallTheme()
+	if clientUI.BallThemes.current~=ballTheme then clientUI.BallThemes.setCurrent(ballTheme);task.defer(updateHud)end
+	if lcd then lcd:setBallTheme(ballTheme)end
+	local faceMood=clientUI.faceMood or {};clientUI.faceMood=faceMood
+	faceMood.dangerY,faceMood.pressure,faceMood.graceLeft=board:GetAttribute("DangerY")or Config.OverflowY,pressure,graceLeft
+	faceMood.itemsOpen,faceMood.reduced=clientUI.items~=nil and clientUI.items.isOpen==true,reduced
+	table.clear(clientUI.faceList)
+	for source,view in pairs(eggViews)do local input=view.faceInput;input.x,input.y=source.Position.X,source.Position.Y;table.insert(clientUI.faceList,input)end
+	clientUI.ballFaces:update(now,clientUI.faceList,faceMood)
+	if clientUI.deck.stepNext then clientUI.deck:stepNext(now,faceMood,ballTheme,board)end
 	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and canPlay()
 	local flightTarget = Config.flightPoint(aim,.8)
 	local drawLCD = false
@@ -3006,7 +3115,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			local color = clientUI.JellyPalette.byTier[tier].body
 			local center = pixelPoint(Config.launchPosition())
 			lcd:drawGuide(aim)
-			lcd:draw(center, radius, radius, 0, color, 0)
+			local held=clientUI.heldFace;held.tier=tier;held.expr,held.dx=clientUI.ballFaces.preview(0,now,faceMood);held.star=board:GetAttribute("NextPowerUp")==true;held.mark=nil
+			lcd:draw(center, radius, radius, 0, color, 0, nil, held)
 		end
 	elseif lcd then
 		lcd.label.Visible = false
@@ -3015,12 +3125,6 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	for source, view in pairs(eggViews) do
 		local position, widthScale, heightScale, angle, ripple = view.gel:render(source.Position, dt, now, project, not useLCD, reduced)
 		local point = project(Vector2.new(position.X, position.Y))
-		if drawLCD or not useLCD then
-			view.mark.Position = UDim2.fromOffset(point.X, point.Y)
-			-- Tier marks only at radius >= 12 px; below that the motif and colour carry the tier.
-			local markShown = view.radius * markScale >= clientUI.JellyPalette.MarkMinRadius
-			if view.markShown ~= markShown then view.markShown = markShown; view.mark.Visible = markShown end
-		end
 		if drawLCD and widthScale then
 			local center = pixelPoint(position)
 			local inMerge = false
@@ -3032,7 +3136,9 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			end
 			if not inMerge then
 				local radius = source.Size.X / 2 * JellyLCD.Width / (Config.Width + 0.8)
-				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple, view.id == rendererPresentation.matchId)
+				local face=view.face;face.expr,face.dx=clientUI.ballFaces:get(view.id)
+				face.star=source:GetAttribute("PowerUp")==true;face.mark=source:GetAttribute("ItemMark")
+				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple, view.id == rendererPresentation.matchId, face)
 			end
 		end
 		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
@@ -3047,7 +3153,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	if drawLCD then
 		for _, merge in ipairs(pixelMerges) do
 			lcd:merge(merge.first, merge.second, merge.point, merge.radius, merge.resultRadius,
-				merge.color, now - merge.start)
+				merge.color, now - merge.start, merge.tier)
 		end
 		if lcd:finishFrame() then
 			lcd.label.Visible = true
@@ -3056,10 +3162,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			lcd = nil
 			-- Preallocated cheap pieces take over in this same frame, including a
 			-- first-paint failure; never expose zero-size or stale cached children.
-			for source,view in pairs(eggViews)do
-				local position=view.gel:render(source.Position,0,now,project,true,reduced)
-				local point=project(Vector2.new(position.X,position.Y));view.mark.Position=UDim2.fromOffset(point.X,point.Y)
-			end
+			for source,view in pairs(eggViews)do view.gel:render(source.Position,0,now,project,true,reduced)end
 		end
 	end
 	local pixelVisible = lcd ~= nil and lcd.label.Visible
@@ -3092,9 +3195,10 @@ gui.Destroying:Connect(function()
 	table.clear(rendererPresentation.connections)
 	if rendererConnection then rendererConnection:Disconnect();rendererConnection=nil end
 	if lcd then lcd:destroy();lcd=nil end
-	for _,view in pairs(eggViews)do view.gel:destroy();view.mark:Destroy()end
+	for _,view in pairs(eggViews)do view.gel:destroy()end
 	table.clear(eggViews);table.clear(viewsById);table.clear(pixelMerges)
 end)
 layout()
 updateHud()
 roomView:startPresentation(board:GetAttribute("Mode"))
+clientUI.ambient:setRound(board:GetAttribute("Mode")=="Board")

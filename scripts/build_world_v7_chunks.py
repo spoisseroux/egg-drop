@@ -6,7 +6,15 @@ Run in BACKGROUND Blender only (never the live session):
 Reads the 249 single-material chunks (identity transforms, origin at the world origin) and writes:
 - assets/world/world-v7.fbx            merged meshes, origin at each mesh's bounds centre
 - assets/world/world-v7-manifest.json  name, material, tris, Roblox centre/size, collide class, anim, pivot
-- assets/world/world-v7-walk.json      perimeter wall boxes, cave blocker, fall catch, wet boxes, ground heights
+- assets/world/world-v7-walk.json      perimeter wall boxes, cave blocker, fall catch, wet boxes, ground heights,
+                                       and a 1-stud top-surface map (grass / path / water / rock / structure)
+Declutter (batch 2026-11-13, W1): faces listed in assets/world/world-v7-declutter.json (scripts/build_world_v7_declutter.py:
+12 hub props and the 3D flower clusters) are deleted from the import chunks before merging. When the merge changes
+meshes, it also writes
+- assets/world/world-v7-declutter.fbx  only the changed / new meshes, for upload
+- assets/world/world-v7-pending.json   changed names + their previous manifest entries; build_world_v7_assets.py
+                                       keeps the previous geometry for these until their new mesh ids are in
+                                       world-v7-studio-import.json (then delete the pending file)
 The .blend is never saved.
 
 Coordinates: Blender (x, y, z) = Roblox (x, z + 4, -y).
@@ -22,6 +30,7 @@ import bmesh
 import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from mathutils.kdtree import KDTree
 
 ROOT = Path(bpy.data.filepath).resolve().parents[3]
 OUT = ROOT / "assets" / "world"
@@ -224,11 +233,63 @@ def recentre(obj):
     return lo, hi, c
 
 
+def declutter(sources):
+    """Delete import faces whose vertices all match a removed source face (world-v7-declutter.json)."""
+    path = OUT / "world-v7-declutter.json"
+    if not path.exists():
+        return sources
+    data = json.loads(path.read_text())
+    points, owner = [], []
+    for name, entry in data["objects"].items():
+        for v in entry["verts"]:
+            points.append(v)
+            owner.append(name)
+    kd = KDTree(len(points))
+    for i, p in enumerate(points):
+        kd.insert(p, i)
+    kd.balance()
+    removed = defaultdict(int)
+    keep = []
+    for o in sources:
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        kill = []
+        for f in bm.faces:
+            names = []
+            for v in f.verts:
+                _, index, dist = kd.find(o.matrix_world @ v.co)
+                if index is None or dist > 2e-3:
+                    names = None
+                    break
+                names.append(owner[index])
+            if names:
+                kill.append(f)
+                removed[names[0]] += 1
+        if kill:
+            bmesh.ops.delete(bm, geom=kill, context="FACES")
+            bm.to_mesh(o.data)
+            o.data.update()
+        bm.free()
+        if len(o.data.polygons) == 0:
+            print("DECLUTTER emptied", o.name)
+            bpy.data.objects.remove(o, do_unlink=True)
+            continue
+        keep.append(o)
+    for name, entry in data["objects"].items():
+        got = removed.get(name, 0)
+        print("DECLUTTER", name, got, "/", entry["faces"])
+        # The entablature span also owns one end face per material whose centre sits nearer the next span (its
+        # vertices are all span-01 vertices, so it goes too): 21 import faces for the 18 listed.
+        assert entry["faces"] <= got <= entry["faces"] + 3, (name, got, entry["faces"])
+    return keep
+
+
 def main():
     SLOTS.update(build_palette())
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     sources = [o for o in bpy.data.objects if o.type == "MESH" and any(c.name.startswith("Import_") for c in o.users_collection)]
+    sources = declutter(sources)
     groups = defaultdict(list)
     meta = {}
     for o in sources:
@@ -289,17 +350,86 @@ def main():
             entry["note"] = m["note"]
         assert max(entry["size"]) < 2040, (obj.name, entry["size"])
         manifest.append(entry)
-    bpy.ops.object.select_all(action="DESELECT")
-    for obj, _ in finals:
-        obj.select_set(True)
-    bpy.ops.export_scene.fbx(filepath=str(OUT / "world-v7.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
-                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
-                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
-    (OUT / "world-v7-manifest.json").write_text(json.dumps({
+    previous_path = OUT / "world-v7-manifest.json"
+    previous = {e["name"]: e for e in json.loads(previous_path.read_text())["parts"]} if previous_path.exists() else {}
+    export(finals, OUT / "world-v7.fbx")
+    current = {e["name"]: e for e in manifest}
+
+    def same(a, b):
+        return a["tris"] == b["tris"] and all(abs(x - y) < 1e-3 for x, y in zip(a["center"] + a["size"], b["center"] + b["size"]))
+    changed = sorted(n for n in current if n in previous and not same(current[n], previous[n]))
+    added = sorted(n for n in current if n not in previous)
+    dropped = sorted(n for n in previous if n not in current)
+    if previous and (changed or added or dropped):
+        export([(o, k) for o, k in finals if o.name in changed or o.name in added], OUT / "world-v7-declutter.fbx")
+        (OUT / "world-v7-pending.json").write_text(json.dumps({
+            "note": "Meshes changed by the last build_world_v7_chunks.py run. Upload world-v7-declutter.fbx, read back each "
+                    "MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then delete this file and rerun "
+                    "scripts/build_world_v7_assets.py.",
+            "changed": changed, "added": added, "dropped": dropped,
+            "previous": {n: previous[n] for n in changed + dropped}}, indent=1))
+        print("WORLDV7 changed", changed, "added", added, "dropped", dropped)
+    previous_path.write_text(json.dumps({
         "note": "Generated by scripts/build_world_v7_chunks.py. center/size in Roblox studs (Blender (x,y,z) = Roblox (x, z+4, -y)).",
         "parts": manifest, "count": len(manifest), "triangles": sum(e["tris"] for e in manifest)}, indent=1))
     walk_data(finals, manifest)
     print("WORLDV7", len(manifest), sum(e["tris"] for e in manifest))
+
+
+def export(finals, path):
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj, _ in finals:
+        obj.select_set(True)
+    bpy.ops.export_scene.fbx(filepath=str(path), use_selection=True, axis_forward="-Z", axis_up="Y",
+                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
+                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
+
+
+SURFACE = {"grass": "G", "meadow": "G", "ground": "g", "dirt_path": "P", "pebble_bed": "P", "sand_pebble": "P",
+           "stone_tile": "P", "cliff_rock": "R", "boulder_rock": "R", "bark": "T"}
+
+
+def surface_code(name):
+    group, mat = name[len("W7_"):].split("__", 1)
+    if mat.rsplit("_", 1)[-1].isdigit():
+        mat = mat.rsplit("_", 1)[0]
+    if group == "Water" or mat.startswith("water") or mat == "foam":
+        return "W"
+    if group in ("Ground", "Rocks", "Trunks"):
+        return SURFACE.get(mat, "M")
+    return "M"
+
+
+def surface_map(finals):
+    """Top surface per 1-stud cell (G grass, g soft ground, P path, W water, R rock, T trunk, M structure, . none)
+    with its height, for the ground dressing scatter (scripts/build_world_v7_dressing.py)."""
+    skip = ("Backdrop", "Underside", "Vegetation", "IsletsA", "IsletsB", "DriftRocksA", "DriftRocksB", "Lantern",
+            "CradleMobile", "LampOrbs", "Bubbles", "Crystals", "ArrivalGlow", "NestHalo", "Chime", "Pennant")
+    trees = []
+    for o, key in finals:
+        group = key.split("__")[0]
+        if group.startswith(skip) or key == "Water__cloud":
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bm.transform(o.matrix_world)
+        trees.append((surface_code(o.name), BVHTree.FromBMesh(bm)))
+        bm.free()
+    grid = {"x0": -114, "z0": -112, "step": 1, "nx": 236, "nz": 206, "rows": [], "h": []}
+    for j in range(grid["nz"]):
+        row, hs = [], []
+        for i in range(grid["nx"]):
+            x, z = grid["x0"] + i, grid["z0"] + j
+            best, code = None, "."
+            for c, tree in trees:
+                hit = tree.ray_cast(Vector((x, -z, 200)), Vector((0, 0, -1)))
+                if hit[0] is not None and (best is None or hit[0].z > best):
+                    best, code = hit[0].z, c
+            row.append(code)
+            hs.append(-999 if best is None else round(best + 4, 2))
+        grid["rows"].append("".join(row))
+        grid["h"].append(hs)
+    return grid
 
 
 def walk_data(finals, manifest):
@@ -427,6 +557,7 @@ def walk_data(finals, manifest):
             row.append(None if best is None else round(best + 4, 2))
         gg["heights"].append(row)
     data["ground"] = gg
+    data["surface"] = surface_map(finals)
     (OUT / "world-v7-walk.json").write_text(json.dumps(data))
 
 

@@ -22,8 +22,8 @@ return function(client,parent)
     assert(Palette.resolve(tier)==roles and Palette.resolve(Config.Tiers[tier].color)==roles and Palette.resolve(roles.body)==roles)
     assert(Config.Tiers[tier].radius==expected[tier] and Config.Tiers[tier].mark==({"I","II","III","IV","V"})[tier])
     assert(luminance(roles.rim)<luminance(roles.lower)and luminance(roles.lower)<luminance(roles.body)and luminance(roles.body)<luminance(roles.upper))
-    -- Marks are white over a deep drop shadow (redesign 6.2); TierRamps.spec covers the 3:1.
-    assert((luminance(roles.mark)+.05)/(luminance(roles.markShadow)+.05)>=3,"tier "..tier.." mark lost its shadow contrast")
+    -- No tier numerals any more (batch 2026-11-13 R1): no mark roles, no mark threshold.
+    assert(roles.mark==nil and roles.markShadow==nil and Palette.MarkMinRadius==nil,"tier "..tier.." still carries a numeral mark")
    end
    local color=Color3.fromHex("#35BCA8");assert(Palette.resolve(color)==Palette.resolve(color)and Palette.resolve(color).body==color)
    assert(Config.DropInterval==.35 and Config.FixedStep==1/120 and Config.MaxEggs==32)

@@ -293,9 +293,34 @@ local function v7(server)
 		assert(lights>=#World.Lamps and lights<=20,"lights "..lights)
 	end)
 
-	test("the painted day sky is installed",function()
-		local sky=game:GetService("Lighting"):FindFirstChild("WorldSky");assert(sky and sky:IsA("Sky"))
-		for _,face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"})do assert(sky["Skybox"..face]==Data.sky.day[face],face)end
+	test("the painted sky is installed: locked dusk while day/night is off",function()
+		local Lighting=game:GetService("Lighting")
+		local sky=Lighting:FindFirstChild("WorldSky");assert(sky and sky:IsA("Sky"))
+		local Flags=require(Shared.FeatureFlags)
+		if Flags.DayNight then
+			for _,face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"})do assert(sky["Skybox"..face]==Data.sky.day[face],face)end
+			return
+		end
+		local Dusk=require(Shared.WorldDusk)
+		local faces=Dusk.skyFaces(Data)
+		for _,face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"})do assert(sky["Skybox"..face]==faces[face],face)end
+		assert(sky.CelestialBodiesShown and sky.StarCount==0,"the engine sun marks the key light")
+		assert(math.abs(Lighting.ClockTime-Dusk.Hour)<1e-3,"clock "..Lighting.ClockTime)
+		assert(Lighting.ColorShift_Top==Dusk.Lighting.ColorShift_Top and math.abs(Lighting.EnvironmentSpecularScale-.2)<1e-3)
+		local air=Lighting:FindFirstChildOfClass("Atmosphere");assert(air and air.Color==Dusk.Atmosphere.Color and air.Decay==Dusk.Atmosphere.Decay)
+		assert(Lighting:FindFirstChild("HollowBloom")and Lighting:FindFirstChild("SproutHollowGrade"))
+	end)
+
+	test("decluttered hub: no hidden props, and the frond bushes never collide",function()
+		assert(not Data.parts.W7_Vegetation__palette,"3D flower clusters are gone")
+		local dressing=room:FindFirstChild("Dressing")
+		if dressing then
+			local count=0
+			for _,bush in ipairs(dressing:GetChildren())do
+				count+=1;assert(bush:IsA("MeshPart")and bush.Anchored and not bush.CanCollide and not bush.CanQuery and not bush.CastShadow,bush.Name)
+			end
+			assert(count==dressing:GetAttribute("Bushes")and count<=require(Shared.WorldDressing).MaxBushes,"bushes "..count)
+		end
 	end)
 
 	test("movers never collide and rest where they were authored on the server",function()

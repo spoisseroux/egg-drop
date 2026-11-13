@@ -14,19 +14,22 @@ local Catalog=require(Shared.AppearanceCatalog)
 local Kit=require(script.Parent.DeckKit)
 local Assets=require(script.Parent.DeckAssets)
 local BackgroundShop=require(script.Parent.BackgroundShop)
+-- Third tab, Balls (batch 2026-11-13 R1): ball themes, drawn by BallShop.
+local BallShop=require(script.Parent.BallShop)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
 Shop.Columns=4
 Shop.ConfirmSeconds=3
 Shop.Title,Shop.Eyebrow="Deck style","Pocket deck"
-Shop.Tabs={{id="faceplates",label="Faceplates",icon="faceplate"},{id="backgrounds",label="Backgrounds",icon="pattern"}}
+Shop.Tabs={{id="faceplates",label="Faceplates",icon="faceplate"},{id="backgrounds",label="Backgrounds",icon="pattern"},{id="balls",label="Balls",icon="smiley"}}
 -- Desktop rects in panel units (section 4): tabs where Wardrobe's slot tabs sit, the
 -- pane at 24,144 328x392, a 4x4 grid of 104x88 cards from 371,147, hints on y 566.
 Shop.Regular={tabs={24,84,800,44},pane={24,144,328,392},grid={371,147},tile={104,88},gap=12,hints=566}
 Shop.Hints={
  {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or equip"},{"B","Back"}},promise="Fixed prices. No random plates."},
  {pairs={{"+","Browse"},{"LB","Tab"},{"A","Use"},{"B","Back"}},promise="Backgrounds are earned, not bought."},
+ {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or use"},{"B","Back"}},promise="Fixed prices. Looks only, never an advantage."},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
@@ -133,6 +136,11 @@ function Shop.new(host,callbacks)
   trials=function()if self.callbacks.trials then self.callbacks.trials()end end,
   retry=function()if self.callbacks.retry then self.callbacks.retry("background")end end,
  })
+ self.balls=BallShop.new(self,{
+  bought=function(id)if self.callbacks.ballBought then self.callbacks.ballBought(id)end end,
+  equipped=function(id)if self.callbacks.ballEquipped then self.callbacks.ballEquipped(id)end end,
+  send=self.callbacks.ballSend,
+ })
  self:build(nil)
  return self
 end
@@ -232,6 +240,7 @@ function Shop:buildRegular()
  end
  self.grid=nil
  self.backgrounds:build(content,nil,nil)
+ self.balls:build(content,nil,nil)
 end
 
 -- Pure (UI-SPEC-COMPACT 9, redesign 4): pane width, grid width, columns and tile width.
@@ -313,6 +322,7 @@ function Shop:buildCompact(v)
   end)
  end
  self.backgrounds:build(body,v,grid)
+ self.balls:build(body,v,grid)
 end
 -- Keep the selected tile fully in view with 8 px to spare; `anchorRow` puts it
 -- in that visible row (the equipped plate opens in the second row).
@@ -331,7 +341,7 @@ end
 -- Repaint after a rebuild.
 function Shop:relayout()
  self.wallet.set(self.ctx.wallet)
- self:refresh();self.backgrounds:refresh()
+ self:refresh();self.backgrounds:refresh();self.balls:refresh()
  if self.visible then self.root.Visible=true;self:applyTab();self:focusActive(true)end
 end
 
@@ -392,7 +402,7 @@ function Shop:paintPane()
  self.name.Text=theme.name
  local tier=TierChip[theme.tier or "starter"]or TierChip.starter
  self.tier.set(tier[1]);self.tier.label.TextColor3=tier[2]
- self.finish.Text=if self.view then finishName(theme).." finish" else finishName(theme).." finish. Tints your menus."
+ self.finish.Text=if self.view then finishName(theme).." finish" else finishName(theme).." finish. Tints the deck and its background."
  -- The sample is drawn in that plate's own panel and accent (live preview).
  local p=self.sampleParts
  if p then
@@ -434,11 +444,12 @@ function Shop:focusId(id)
  self:focus(index,true);return true
 end
 function Shop:focusActive(instant)
- if self.tab==2 then self.backgrounds:focus(self.backgrounds.index,instant)else self:focus(self.index,instant)end
+ if self.tab==2 then self.backgrounds:focus(self.backgrounds.index,instant)elseif self.tab==3 then self.balls:focus(self.balls.index,instant)else self:focus(self.index,instant)end
 end
 -- D-pad / arrows / WASD on the selected tab's grid.
 function Shop:move(dx,dy)
  if self.tab==2 then return self.backgrounds:move(dx,dy)end
+ if self.tab==3 then return self.balls:move(dx,dy)end
  local nextIndex=Shop.step(self.index,dx,dy,#self.tiles,self.columns)
  if nextIndex==self.index then return false end
  self:focus(nextIndex);return true
@@ -450,7 +461,8 @@ function Shop:applyTab()
  if self.plates then self.plates.Visible=faces end
  for index,row in pairs(self.hints or {})do row.Visible=index==self.tab end
  if self.tabs then self.tabs.select(self.tab)end
- self.backgrounds:show(self.visible and not faces,false)
+ self.backgrounds:show(self.visible and self.tab==2,false)
+ self.balls:show(self.visible and self.tab==3,false)
  self.root:SetAttribute("Tab",Shop.Tabs[self.tab].id)
 end
 function Shop:setTab(index,landOnConfirmed)
@@ -463,6 +475,11 @@ function Shop:setTab(index,landOnConfirmed)
   if changed and not Kit.reduced()then
    -- Tab change: the grid cross-fades in (redesign 0.5); a short rise stands in for it.
    local body=self.backgrounds.body;if body then body.Position=UDim2.fromOffset(0,6);Kit.tween(body,.09,{Position=UDim2.new()})end
+  end
+ elseif index==3 then
+  if self.visible then self.balls:show(true,landOnConfirmed or changed)end
+  if changed and not Kit.reduced()then
+   local body=self.balls.body;if body then body.Position=UDim2.fromOffset(0,6);Kit.tween(body,.09,{Position=UDim2.new()})end
   end
  elseif self.visible then
   self:focus(self.index,true)
@@ -490,6 +507,7 @@ end
 -- A / Enter / pane button. Buying needs one confirmation within 3 s.
 function Shop:act(fromPane)
  if self.tab==2 then return self.backgrounds:act()end
+ if self.tab==3 then return self.balls:act()end
  local id=self.tiles[self.index].id
  local status=Shop.status(id,self.ctx)
  if self.pending then return false end
@@ -516,6 +534,7 @@ end
 
 -- Server reply to a purchase.
 function Shop:result(message)
+ if type(message)=="table"and message.kind=="ballTheme"then return self.balls:result(message)end
  if not self.pending or type(message)~="table"or message.id~=self.pending.id then return false end
  if message.status=="Retrying"then return false end
  local plateId=self.pending.plateId;self.pending=nil
@@ -540,11 +559,12 @@ function Shop:open(equipped,tab,keepFocus)
  self.tab=tab or self.tab
  self.anchoring=true;self.index=index;self:refresh();self.anchoring=false
  self:applyTab()
- if self.tab==2 then self.backgrounds:show(true,not keepFocus)else self:focus(index,true)end
+ if self.tab==2 then self.backgrounds:show(true,not keepFocus)elseif self.tab==3 then self.balls:show(true,not keepFocus)else self:focus(index,true)end
  if self.grid then self:scrollTo(index,2)end
 end
 function Shop:close()
  self.visible=false;self.root.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil
  self.backgrounds:show(false)
+ self.balls:show(false)
 end
 return Shop

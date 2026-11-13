@@ -1,6 +1,11 @@
 -- Run in a real LocalScript + enabled ScreenGui, same Studio device/profile for every backend.
 -- Baseline can be root's cloned frozen JellySprite ModuleScript via options.sprite.
 -- Measures this isolated renderer's CPU; RenderStepped dt includes the entire running client/Studio.
+-- Batch 2026-11-13 R1: options.faces = a BallThemes id (default "smileys") draws every ball in that theme
+-- with faces (danger faces in `falling`), as the board does; options.faces=false keeps the legacy
+-- vivid draw. Tier numerals are gone from the board, so marks are only drawn when options.marks=true.
+-- Gate (scope B4): `falling` with faces peaks at or under 1440 spans; reports carry the pre-count
+-- (peakPreDemand) and how many frames were re-rastered with simpler faces (simplifiedFrames).
 return function(client,parent,options)
 	options=options or {}
 	assert(parent:IsA("ScreenGui") and parent.Enabled,"enabled ScreenGui required")
@@ -10,7 +15,9 @@ return function(client,parent,options)
 	local RunService=game:GetService("RunService")
 	local backend=options.backend or "baseline"
 	local procedural=backend=="baseline"or backend=="cheap"
-	local count=24
+	local count=options.count or 24
+	local facesTheme=if options.faces==false then nil else(options.faces or "smileys")
+	local drawMarks=options.marks==true
 	local root=Instance.new("Frame");root.Name="_RendererBenchmark_"..backend
 	root.BackgroundColor3=Color3.fromHex("#C6DFA0");root.BorderSizePixel=0;root.ClipsDescendants=true
 	local fitH=math.min(594,math.max(1,parent.AbsoluteSize.Y-40),math.max(1,parent.AbsoluteSize.X-40)*(Config.Height+.8)/(Config.Width+.8))
@@ -56,17 +63,18 @@ return function(client,parent,options)
 		return Vector2.new(LCD.Width*(.5+point.X/worldW),LCD.Height*(.5-(point.Y-Config.Height/2)/worldH))
 	end
 	for index=1,count do
-		local tier=1+(index-1)%4;local source=Instance.new("Part")
+		local tier=1+(index-1)%(options.tiers or 4);local source=Instance.new("Part")
 		source.Name="BenchmarkGel"..index;source.Size=Vector3.one*(Config.Tiers[tier].radius*2)
 		source.Color=Config.Tiers[tier].color;source.Position=Vector3.new((index%6-2.5)*1.4,1+math.floor((index-1)/6)*1.4,0)
-		source:SetAttribute("EggId",index);sources[index]=source;gels[index]=Sprite.new(spriteHost,source,{gridWidth=LCD.Width})
+		source:SetAttribute("EggId",index);source:SetAttribute("Tier",tier);sources[index]=source;gels[index]=Sprite.new(spriteHost,source,{gridWidth=LCD.Width})
 		local mark=Instance.new("TextLabel");mark.BackgroundTransparency=1;mark.Size=UDim2.fromOffset(26,24);mark.AnchorPoint=Vector2.new(.5,.5)
-		mark.Font,mark.TextSize,mark.Text,mark.ZIndex=Enum.Font.GothamBold,12,Config.Tiers[tier].mark,10;mark.Parent=root;marks[index]=mark
+		mark.Font,mark.TextSize,mark.Text,mark.ZIndex=Enum.Font.GothamBold,12,Config.Tiers[tier].mark,10;mark.Parent=root;marks[index]=mark;mark.Visible=drawMarks
 	end
 	local lcd
 	if not procedural then
 		lcd=LCD.new(root,{backend=backend,maxSpans=options.maxSpans or 4096})
 		assert(lcd,"requested LCD backend unavailable: "..backend)
+		if facesTheme and lcd.setBallTheme then lcd:setBallTheme(facesTheme)end
 	end
 	local function percentile(samples,p)
 		if #samples==0 then return 0 end
@@ -85,7 +93,7 @@ return function(client,parent,options)
    if fx then fx:clear()end
    local fxBefore=if fx then fx:getStats()else nil
 			local cpu,paintCpu,frameMs,rasterMs,scanMs,commitMs,backgroundCpu,fxCpu={},{},{},{},{},{},{},{}
-			local peakUsed,peakAllocated,peakStatic,peakWrites,peakDemand=0,0,0,0,0
+			local peakUsed,peakAllocated,peakStatic,peakWrites,peakDemand,peakPre,simplifiedStart=0,0,0,0,0,0,(stats().simplifiedFrames or 0)
 			local startCreated,postWarmCreated,painted,failures=0,0,0,0
 			for frame=1,warmup+measuredFrames do
 				local dt=RunService.RenderStepped:Wait();local t=frame/60
@@ -99,7 +107,7 @@ return function(client,parent,options)
 						x=(pair-1.5)*2.2+(if index%2==0 then 1 else -1)*(.8*(1-cycle));y=8+math.sin(cycle*math.pi)*.3
 					end
 					source.Position=Vector3.new(x,y,0)
-					local shown=index<=used;if marks[index].Visible~=shown then marks[index].Visible=shown end
+					local shown=index<=used;if marks[index].Visible~=(shown and drawMarks)then marks[index].Visible=shown and drawMarks end
 					if gels[index].body.Visible~=shown then gels[index].body.Visible=shown end
 				end
 				spriteHost.Visible=procedural or fallback
@@ -115,10 +123,16 @@ return function(client,parent,options)
 					if index<=used then
 						local position,sx,sy,angle,ripple=gel:render(sources[index].Position,dt,t,project,procedural or fallback,false)
 						if procedural or fallback then spriteWrites+=gel.propertyWrites or 4 end
-						if procedural or fallback or draw then local p=project(Vector2.new(position.X,position.Y));marks[index].Position=UDim2.fromOffset(p.X,p.Y);markWrites+=1 end
+						if drawMarks and(procedural or fallback or draw)then local p=project(Vector2.new(position.X,position.Y));marks[index].Position=UDim2.fromOffset(p.X,p.Y);markWrites+=1 end
 						if draw and not(scenario=="multiMerge"and index<=8)then
 							local radius=sources[index].Size.X/2*LCD.Width/worldW
-							lcd:draw(pixelPoint(Vector2.new(position.X,position.Y)),radius*sx,radius*sy,angle,sources[index].Color,ripple)
+							local face=nil
+							if facesTheme and lcd.setBallTheme then
+								-- The busiest look: worried faces shiver in `falling`, idle/blink elsewhere.
+								local expr=if scenario=="falling"then(if index%2==0 then "danger"else "last")elseif frame%40<4 then "blink"else "idle"
+								face={tier=sources[index]:GetAttribute("Tier"),expr=expr,dx=if scenario=="falling"then(frame%2)*2-1 else 0,star=index==3}
+							end
+							lcd:draw(pixelPoint(Vector2.new(position.X,position.Y)),radius*sx,radius*sy,angle,sources[index].Color,ripple,nil,face)
 						end
 					end
 				end
@@ -147,12 +161,12 @@ return function(client,parent,options)
 					table.insert(cpu,milliseconds);table.insert(frameMs,dt*1000);table.insert(backgroundCpu,backgroundMs);table.insert(fxCpu,fxMs)
 					if draw then table.insert(paintCpu,milliseconds);painted+=1;table.insert(rasterMs,sample.rasterMs or 0);table.insert(scanMs,sample.scanMs or 0);table.insert(commitMs,sample.commitMs or 0)end
 					peakUsed=math.max(peakUsed,sample.spansUsed or 0);peakAllocated=math.max(peakAllocated,sample.dynamicAllocated or 0)
-					peakStatic=math.max(peakStatic,sample.staticAllocated or 0);peakDemand=math.max(peakDemand,sample.lastDemand or sample.peakDemand or 0)
+					peakPre=math.max(peakPre,sample.preDemand or 0);peakStatic=math.max(peakStatic,sample.staticAllocated or 0);peakDemand=math.max(peakDemand,sample.lastDemand or sample.peakDemand or 0)
 					peakWrites=math.max(peakWrites,(if procedural or fallback then spriteWrites else sample.propertyWrites or 0)+markWrites)
 					postWarmCreated=math.max(postWarmCreated,(sample.dynamicCreated or 0)-startCreated)
 				end
 			end
-			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),backgroundCpuMs=distribution(backgroundCpu),fieldEffectsCpuMs=distribution(fxCpu),fieldEffectsStats=if fx then {accepted=fx.stats.accepted-fxBefore.accepted,rejected=fx.stats.rejected-fxBefore.rejected,evicted=fx.stats.evicted-fxBefore.evicted,writes=fx.stats.writes-fxBefore.writes,instances=fx.stats.instances,active=fx.stats.active,scope="scenario including warmup"}else nil,peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
+			local report={scenario=scenario,rendererAtEnd=if fallback then "procedural-fallback"else backend,backend=backend,frames=measuredFrames,paintedFrames=painted,cpuAllMs=distribution(cpu),cpuPaintMs=distribution(paintCpu),rasterCpuMs=distribution(rasterMs),spanScanCpuMs=distribution(scanMs),spanCommitCpuMs=distribution(commitMs),wholeClientFrameMs=distribution(frameMs),backgroundCpuMs=distribution(backgroundCpu),fieldEffectsCpuMs=distribution(fxCpu),fieldEffectsStats=if fx then {accepted=fx.stats.accepted-fxBefore.accepted,rejected=fx.stats.rejected-fxBefore.rejected,evicted=fx.stats.evicted-fxBefore.evicted,writes=fx.stats.writes-fxBefore.writes,instances=fx.stats.instances,active=fx.stats.active,scope="scenario including warmup"}else nil,peakUsed=peakUsed,peakAllocated=peakAllocated,staticAllocated=peakStatic,peakDemand=peakDemand,peakPreDemand=peakPre,simplifiedFrames=(stats().simplifiedFrames or 0)-simplifiedStart,faces=facesTheme or false,peakPropertyWrites=peakWrites,createdAfterWarmup=postWarmCreated,failures=failures,fallback=fallback}
 			table.insert(reports,report);if options.progress then options.progress(report)end
 		end
 	end)

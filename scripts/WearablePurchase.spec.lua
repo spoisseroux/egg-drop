@@ -187,10 +187,10 @@ return function(server)
 		local balance = h.state.nectar
 		assert(H.release(h))
 		local old = copy(db.player_1.hatching)
-		old.version = 9; old.petWearables = nil; old.lease = { token = "", expiresAt = 0 }
+		old.version = 9; old.petWearables = nil;old.ballThemes,old.stats,old.stamps,old.book=nil,nil,nil,nil; old.lease = { token = "", expiresAt = 0 }
 		db.player_1.hatching = old
 		local again = H.load(1, { rank = 1 }, adapter)
-		assert(again.status == "Ready" and again.state.version == 10, tostring(again.status))
+		assert(again.status == "Ready" and again.state.version == 11, tostring(again.status))
 		assert(again.state.nectar == balance and type(again.state.petWearables) == "table" and next(again.state.petWearables) == nil)
 		assert(again.state.inventoryMask == old.inventoryMask and again.state.quests ~= nil)
 		-- A v9 record that somehow already carries petWearables is sanitised, never a failed load:
@@ -198,7 +198,7 @@ return function(server)
 		assert(H.release(again))
 		local bad = copy(old); bad.petWearables = { pip = "junk" }; db.player_1.hatching = bad
 		local cleaned = H.load(1, { rank = 1 }, adapter)
-		assert(cleaned.status == "Ready" and cleaned.state.version == 10, "a stray v9 wearables field failed the load: " .. tostring(cleaned.status))
+		assert(cleaned.status == "Ready" and cleaned.state.version == 11, "a stray v9 wearables field failed the load: " .. tostring(cleaned.status))
 		assert(next(cleaned.state.petWearables) == nil and cleaned.state.nectar == balance)
 		assert(H.release(cleaned))
 		local kept = copy(old); kept.petWearables = { pip = { owned = { "beanie" }, equipped = { Hat = "beanie" } } }; db.player_1.hatching = kept

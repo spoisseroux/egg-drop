@@ -4,22 +4,8 @@ local Config=require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local JellyPalette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette)
 local Sprite={};Sprite.__index=Sprite
 Sprite.GridWidth=64
--- Separate upright native glyphs keep the authored font and center. The small
--- bounded catalog is measured only on creation or a preference invalidation.
--- Marks are white ExtraBold over the egg (UI-SPEC-REDESIGN-MENUS 6.2).
-Sprite.MarkFont=Enum.Font.BuilderSansExtraBold
-local markSizes={}
-function Sprite.invalidateMarkSizes()table.clear(markSizes)end
-function Sprite.markSize(mark)
-	local preference=game:GetService("GuiService").PreferredTextSize
-	local byMark=markSizes[preference]
-	if not byMark then byMark={};markSizes[preference]=byMark end
-	local cached=byMark[mark]
-	if cached then return cached end
-	local bounds=game:GetService("TextService"):GetTextSize(mark,15,Sprite.MarkFont,Vector2.new(10000,10000))
-	cached=UDim2.fromOffset(math.max(30,math.ceil(bounds.X)+2),math.max(22,math.ceil(bounds.Y)+2))
-	byMark[mark]=cached;return cached
-end
+-- No tier numerals (batch 2026-11-13 R1): the old Mark glyph API is gone.
+-- Sprite.preview draws one themed ball with its face (Next / Then, theme cards).
 local function frame(parent,name,color)
 	local node=Instance.new("Frame");node.Name,node.BackgroundColor3,node.BorderSizePixel=name,color,0
 	node.Active,node.Selectable,node.Visible=false,false,false;node.ZIndex=parent.ZIndex;node.Parent=parent
@@ -42,7 +28,9 @@ function Sprite.new(parent,source,options)
 	options=options or {}
 	-- No outline (UI-SPEC-REDESIGN-MENUS 6.1): the silhouette rows are the body
 	-- colour on top and the deep shade along the lower third.
-	local palette=JellyPalette.resolve(source.Color);local color,deep=palette.body,palette.deep
+	local tier=source:GetAttribute("Tier")
+	local palette=if options.themeId and tier then JellyPalette.forTheme(options.themeId,tier)else JellyPalette.resolve(source.Color)
+	local color,deep=palette.body,palette.deep
 	local body=frame(parent,source.Name,deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
 	local gridWidth=options.gridWidth or Sprite.GridWidth
 	local gridHeight=math.round(gridWidth*(Config.Height+.8)/(Config.Width+.8))
@@ -169,6 +157,46 @@ function Sprite.setSurfacePalette(parent,colors)
  host.BackgroundColor3=colors.guide
  -- Cached static grain only; never visit or recolor gel/tier descendants.
  for _,dot in ipairs(host:GetChildren())do if dot:IsA("Frame")then dot.BackgroundColor3=colors.dither end end
+end
+-- One themed ball as pixel runs (JellyLCD.ballRuns), scaled to fill `parent`.
+-- Frames are pooled; only changed runs are written, so a blink or shiver costs a
+-- handful of property writes. Returns { root, set(themeId, tier, expr, dx, star), writes }.
+function Sprite.preview(parent,z)
+	local LCD=require(script.Parent.JellyLCD)
+	local root=Instance.new("Frame");root.Name="BallPreview";root.BackgroundTransparency=1;root.BorderSizePixel=0
+	root.Size=UDim2.fromScale(1,1);root.ZIndex=z or parent.ZIndex+1;root.Active=false;root.Parent=parent
+	local pool,shown,colors,key={},0,{},nil
+	local api={root=root,writes=0}
+	function api.set(themeId,tier,expr,dx,star,mark)
+		local nextKey=tostring(themeId).."|"..tostring(tier).."|"..tostring(expr).."|"..tostring(dx).."|"..tostring(star).."|"..tostring(mark)
+		if nextKey==key then return 0 end
+		key=nextKey
+		local look=LCD.ballRuns(themeId,tier,expr,dx,star,mark)
+		local size,writes=look.size,0
+		for index,run in ipairs(look.runs)do
+			local slot=pool[index]
+			if not slot then
+				local f=Instance.new("Frame");f.Name="Run";f.BorderSizePixel=0;f.ZIndex=root.ZIndex;f.Active=false;f.Parent=root
+				slot={node=f};pool[index]=slot
+			end
+			local runKey=run[1]*65536+run[2]*256+run[3]
+			if slot.key~=runKey or slot.size~=size then
+				slot.node.Position=UDim2.fromScale(run[1]/size,run[2]/size);slot.node.Size=UDim2.fromScale(run[3]/size,1/size)
+				slot.key,slot.size=runKey,size;writes+=2
+			end
+			if slot.color~=run[4]then
+				local c=colors[run[4]];if not c then c=LCD.packedColor(run[4]);colors[run[4]]=c end
+				slot.node.BackgroundColor3=c;slot.color=run[4];writes+=1
+			end
+			if not slot.visible then slot.node.Visible=true;slot.visible=true;writes+=1 end
+		end
+		for index=#look.runs+1,shown do local slot=pool[index];if slot.visible then slot.node.Visible=false;slot.visible=false;writes+=1 end end
+		shown=math.max(shown,#look.runs)
+		root:SetAttribute("BallTier",tier);root:SetAttribute("BallExpression",expr);root:SetAttribute("BallTheme",themeId)
+		api.writes+=writes
+		return writes
+	end
+	return api
 end
 function Sprite:destroy()if self.destroyed then return end;self.destroyed=true;self.body:Destroy()end
 return Sprite

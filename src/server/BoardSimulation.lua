@@ -1,4 +1,5 @@
 local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local Items = require(game:GetService("ReplicatedStorage").Shared.RoundItems)
 
 local Simulation = {}
 local halfWidth = Config.Width / 2
@@ -34,6 +35,9 @@ function Simulation.new(preset, serial, options)
 			for _, tier in ipairs(bag) do table.insert(board.queue, tier) end
 		end
 		board.seed = options.seed
+		-- Power-up (star) slots come from their own stream, so the queue above is
+		-- the same with or without items (BUILD-PLAN item 7).
+		if options.powerUps then board.stars = Items.plan(options.seed, options.powerUps, #board.queue) end
 	end
 	if options.kick ~= nil or options.bounce~=nil then
 		board.physics = table.clone(Config.Presets[preset])
@@ -49,6 +53,12 @@ end
 function Simulation.nextTier(board, lookahead)
 	local queue = board.queue or Config.Queue
 	return queue[(board.drops + (lookahead or 0)) % #queue + 1]
+end
+
+-- Whether the ball `lookahead` drops ahead carries a star (Next = 0, Then = 1).
+function Simulation.powerUpAt(board, lookahead)
+	if not board.stars or not board.queue then return false end
+	return board.stars[(board.drops + (lookahead or 0)) % #board.queue + 1] ~= nil
 end
 
 function Simulation.canDrop(board)
@@ -72,6 +82,15 @@ function Simulation.drop(board, aim)
 		end
 	end
 	local dropped = addEgg(board, position, tier, Config.launchVelocity(aim))
+	if board.stars and board.queue then
+		local slot = board.drops % #board.queue + 1
+		dropped.powerUp, board.stars[slot] = board.stars[slot], nil
+	end
+	-- An armed Bomb or Magnet rides on this ball (the item was debited when used).
+	if board.armed then
+		dropped.mark, board.armed = board.armed, nil
+		if dropped.mark == "magnet" then dropped.magnetLeft = Items.Magnet.seconds end
+	end
 	board.fallingId, board.dropAge = dropped.id, 0
 	board.drops += 1
 	return true
@@ -115,6 +134,11 @@ local function merge(board, firstIndex, secondIndex, preset)
 	table.remove(board.eggs, secondIndex)
 	table.remove(board.eggs, firstIndex)
 	local cleared = first.tier == #Config.Tiers
+	-- A star on either input grants its item (the merge result is a plain ball).
+	local powerUps = nil
+	for _, egg in ipairs({ first, second }) do
+		if egg.powerUp then powerUps = powerUps or {}; table.insert(powerUps, egg.powerUp) end
+	end
 	local result
 	if not cleared then
 		result = addEgg(board, position, first.tier + 1, velocity)
@@ -134,7 +158,7 @@ local function merge(board, firstIndex, secondIndex, preset)
 	return {
 		position = position, tier = if result then result.tier else first.tier,
 		from = first.position, other = second.position, id = if result then result.id else nil,
-		cleared = cleared,
+		cleared = cleared, powerUp = first.powerUp or second.powerUp, powerUps = powerUps,
 	}
 end
 
@@ -151,7 +175,8 @@ local function resolvePairs(board, preset, merged, impacts)
 				first.hasContact, second.hasContact = true, true
 				local normal = if distance > 0 then delta / distance else Vector2.xAxis
 				local speed = (second.velocity - first.velocity):Dot(normal)
-				if first.tier == second.tier then
+				-- A bomb never merges: touching anything sets it off instead.
+				if first.tier == second.tier and first.mark ~= "bomb" and second.mark ~= "bomb" then
 					table.insert(merged, merge(board, firstIndex, secondIndex, preset))
 					return true
 				end
@@ -171,9 +196,88 @@ local function resolvePairs(board, preset, merged, impacts)
 	return false
 end
 
+-- ── Items (server rules live in BoardItems) ───────────────────────────────
+-- Removals never go through merge(): no score, goals, chains or charge.
+local function removeEggs(board, victims)
+	local gone = {}
+	for _, egg in ipairs(victims) do gone[egg] = true end
+	for index = #board.eggs, 1, -1 do
+		if gone[board.eggs[index]] then table.remove(board.eggs, index) end
+	end
+end
+
+-- Swap: Next and Then trade places, star marks travel with their tiers.
+function Simulation.swapNext(board)
+	if not board.queue then return false end
+	local n = #board.queue
+	local a, b = board.drops % n + 1, (board.drops + 1) % n + 1
+	if a == b then return false end
+	board.queue[a], board.queue[b] = board.queue[b], board.queue[a]
+	if board.stars then board.stars[a], board.stars[b] = board.stars[b], board.stars[a] end
+	return true
+end
+
+-- Pop: the resting ball (it has touched the tray or a ball) with the highest top edge.
+function Simulation.popTarget(board)
+	local best, top = nil, -math.huge
+	for _, egg in ipairs(board.eggs) do
+		if egg.hasContact and egg.position.Y + egg.radius > top then best, top = egg, egg.position.Y + egg.radius end
+	end
+	return best
+end
+function Simulation.pop(board)
+	local target = Simulation.popTarget(board)
+	if not target then return nil end
+	removeEggs(board, { target })
+	return target
+end
+
+-- Bomb: on first contact the bomb and up to Items.Bomb.max nearest balls whose
+-- centres lie within its radius + reach are removed.
+function Simulation.burst(board, bomb)
+	local candidates = {}
+	for _, egg in ipairs(board.eggs) do
+		if egg ~= bomb then
+			local distance = (egg.position - bomb.position).Magnitude
+			if distance <= bomb.radius + Items.Bomb.reach then table.insert(candidates, { egg = egg, distance = distance }) end
+		end
+	end
+	table.sort(candidates, function(a, b)
+		if a.distance ~= b.distance then return a.distance < b.distance end
+		return a.egg.id < b.egg.id
+	end)
+	local victims = { bomb }
+	for index = 1, math.min(Items.Bomb.max, #candidates) do table.insert(victims, candidates[index].egg) end
+	removeEggs(board, victims)
+	local ids = {}
+	for _, egg in ipairs(victims) do table.insert(ids, egg.id) end
+	board.bursts = board.bursts or {}
+	table.insert(board.bursts, { position = bomb.position, ids = ids })
+	return victims
+end
+
+-- Magnet: for its seconds after landing, same-size balls within reach are pulled in.
+local function pullMagnets(board, dt)
+	for _, magnet in ipairs(board.eggs) do
+		if magnet.mark == "magnet" and magnet.hasContact and (magnet.magnetLeft or 0) > 0 then
+			magnet.magnetLeft -= dt
+			for _, other in ipairs(board.eggs) do
+				if other ~= magnet and other.tier == magnet.tier then
+					local delta = magnet.position - other.position
+					local distance = delta.Magnitude
+					if distance > 0 and distance < Items.Magnet.reach then
+						other.velocity += delta / distance * Items.Magnet.pull * dt
+					end
+				end
+			end
+		end
+	end
+end
+
 function Simulation.step(board, dt, merged, impacts)
 	local preset = board.physics or Config.Presets[board.preset]
 	board.dropAge = (board.dropAge or 0) + dt
+	pullMagnets(board, dt)
 	for _, egg in ipairs(board.eggs) do
 		egg.position,egg.velocity=Config.advanceFlight(egg.position,egg.velocity,dt)
 		collideWithTray(egg, preset.bounce, impacts)
@@ -187,6 +291,10 @@ function Simulation.step(board, dt, merged, impacts)
 		if not didMerge then
 			break
 		end
+	end
+	for index = #board.eggs, 1, -1 do
+		local egg = board.eggs[index]
+		if egg and egg.mark == "bomb" and egg.hasContact then Simulation.burst(board, egg) end
 	end
 end
 

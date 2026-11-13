@@ -1,6 +1,7 @@
 -- Studio Client. Vivid egg tier ramps (UI-SPEC-REDESIGN-MENUS 6.2): the five
--- deep/body/light hexes, tier V violet, a motif per tier, white marks that hold
--- 3:1 over their deep shadow, no outline role, and the LCD shading/bloom rules.
+-- deep/body/light hexes, tier V violet, a motif per tier (drawn only by the free Marbles
+-- theme since batch 2026-11-13), no tier numerals, no outline role, and the LCD shading/bloom
+-- rules. Every ball theme keeps the hue family per size and five distinct sizes (BallThemes).
 -- Pure data plus an isolated span LCD on a scratch frame; never touches the live board.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.TierRamps)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
@@ -36,12 +37,19 @@ return function(client,parent)
    local h2=Palette.byTier[2].body:ToHSV();local star=Color3.fromHex("#FFC14D"):ToHSV()
    assert(math.abs(h-h2)>.3 and math.abs(h-star)>.3)
   end)
-  test("white marks keep 3:1 over their deep drop shadow; mark threshold is 12 px",function()
-   for tier,roles in ipairs(Palette.byTier)do
-    assert(roles.mark==Color3.new(1,1,1)and roles.markShadow==roles.deep)
-    assert(contrast(roles.mark,roles.markShadow)>=3,"tier "..tier.." mark contrast "..contrast(roles.mark,roles.markShadow))
+  test("no tier numerals: no mark roles or threshold (batch 2026-11-13 R1)",function()
+   for _,roles in ipairs(Palette.byTier)do assert(roles.mark==nil and roles.markShadow==nil)end
+   assert(Palette.MarkMinRadius==nil)
+  end)
+  test("Smileys and Marbles use these ramps; Marbles alone keeps the motifs",function()
+   local Themes=require(game.ReplicatedStorage.Shared.BallThemes)
+   for tier,row in ipairs(expected)do
+    for _,id in ipairs({"smileys","marbles"})do
+     local r=Themes.ById[id].ramps[tier];assert(r.deep==row[1]and r.body==row[2]and r.light==row[3],id.." tier "..tier)
+    end
+    assert(LCD.themeTones(Themes.get("marbles"),tier)[6]==Palette.byTier[tier].motifKind,"Marbles motif "..tier)
+    assert(LCD.themeTones(Themes.get("smileys"),tier)[6]==1,"Smileys has no motif "..tier)
    end
-   assert(Palette.MarkMinRadius==12)
   end)
   test("motif is white 23% over the body and every tier past I has one",function()
    local kinds={}

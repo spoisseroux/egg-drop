@@ -1,5 +1,6 @@
 -- Analytic cosmetics sampled by the existing renderer owner. No tasks or clocks.
-local Motion={Version=1,Breath=.014,BodyStretch=.012,HeadAngle=math.rad(2),DotRise=.045,DotSide=.018,DotStretch=.04}
+-- Micro-glance raised from 2 to 5 degrees (FEEL-ALIVE B2) so it reads in the garden.
+local Motion={Version=2,Breath=.014,BodyStretch=.012,HeadAngle=math.rad(5),DotRise=.045,DotSide=.018,DotStretch=.04}
 local tau=math.pi*2
 local function smooth(t)return t*t*(3-2*t)end
 local function seedOf(visual)
@@ -38,7 +39,7 @@ end
 Motion.EarPerk,Motion.EarDroop,Motion.EarFlick,Motion.EarFlickTime=math.rad(10),math.rad(15),math.rad(12),.22
 Motion.TailWag,Motion.TailCalm,Motion.TailHappy=math.rad(18),1,3
 Motion.EarMax=Motion.EarDroop+Motion.EarFlick
-local tailRate={pleased=Motion.TailHappy,affectionate=Motion.TailHappy,sleepy=0}
+local tailRate={pleased=Motion.TailHappy,affectionate=Motion.TailHappy,joy=Motion.TailHappy,content=.6,dozy=.3,sleepy=0}
 function Motion.appendages(visual,expression,dt)
  -- Frozen (capture) and reduced frames rest at zero without touching the live
  -- state, so a focus capture restores the exact in-flight pose afterwards.
@@ -51,7 +52,7 @@ function Motion.appendages(visual,expression,dt)
  visual.tailAmp=amp
  visual.tailPhase=((visual.tailPhase or 0)+dt*rate*tau)%tau
  local tail=math.sin(visual.tailPhase)*Motion.TailWag*amp
- local target=if expression=="curious"then Motion.EarPerk elseif expression=="sleepy"then -Motion.EarDroop else 0
+ local target=if expression=="curious"or expression=="joy"then Motion.EarPerk elseif expression=="sleepy"then -Motion.EarDroop elseif expression=="dozy"then -Motion.EarDroop*.5 else 0
  local pose=visual.earPose or 0
  pose+=(target-pose)*math.min(1,dt*5)
  visual.earPose=pose
@@ -85,14 +86,14 @@ Motion.WingIdle,Motion.WingExcited,Motion.WingSleepy=math.rad(10),math.rad(14),m
 Motion.WingIdleRate,Motion.WingExcitedRate,Motion.WingSleepyRate=1/1.8,2.6,.3
 Motion.WingLag=.45
 Motion.WingMax=Motion.WingExcited
-local wingExcited={pleased=true,affectionate=true}
+local wingExcited={pleased=true,affectionate=true,joy=true}
 function Motion.wings(visual,expression,dt)
  if visual.reducedEffects or visual.idleMotionFrozen then return 0,0 end
  dt=math.clamp(dt or 0,0,.25)
  local excited=wingExcited[expression]==true or visual.petting==true
  local amp,rate
  if excited then amp,rate=Motion.WingExcited,Motion.WingExcitedRate
- elseif expression=="sleepy"then amp,rate=Motion.WingSleepy,Motion.WingSleepyRate
+ elseif expression=="sleepy"or expression=="dozy"then amp,rate=Motion.WingSleepy,Motion.WingSleepyRate
  else amp,rate=Motion.WingIdle,Motion.WingIdleRate end
  local k=math.min(1,dt*4)
  local a=(visual.wingAmp or amp)+(amp-(visual.wingAmp or amp))*k

@@ -51,7 +51,7 @@ return function(gui,board)
 					assert(slot.Caption.Text==(if index==1 then "Now " else "Next ")..slot.Piece.Mark.Text and not slot.Piece.Visible,"inline queue lost actual tier")
 				else
 					assert(slot.Piece.Visible and inside(slot.Piece,slot) and slot.Piece.AbsoluteSize.X>=18,"queue piece clipped")
-					assert(slot.Piece.Mark.TextFits and not slot.Piece.Mark.TextScaled,"tier mark clipped "..tostring(size))
+					assert(not slot.Piece.Mark.Visible,"no tier numeral on the queue piece (batch R1) "..tostring(size))
 				end
 			end
 			assert(node("AimRail").GameReadout.TextFits,"exact wallet/score clipped "..tostring(size))

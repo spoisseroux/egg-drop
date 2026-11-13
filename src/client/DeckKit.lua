@@ -16,9 +16,10 @@ Kit.Color={text=Color3.fromHex("#F3F4F6"),soft=Color3.fromHex("#C3C8D0"),dim=Col
  good=Color3.fromHex("#7BE495"),focus=Color3.fromHex("#FFFFFF"),white=Color3.new(1,1,1),black=Color3.new(0,0,0)}
 local fallback={panel=Color3.fromHex("#152525"),raised=Color3.fromHex("#213335"),well=Color3.fromHex("#0D1818"),
  selected=Color3.fromHex("#2D4E46"),line=Color3.fromHex("#8DBEAC"),accent=Color3.fromHex("#76F6B0"),ink=Color3.fromHex("#0E0F12")}
--- Plate-leaning glass layers and the accent come from the confirmed theme.
+-- Glass layers and the accent come from the house palette (the default plate):
+-- the equipped faceplate tints only the deck and its background (batch 2026-11-13).
 function Kit.color(role)
- local theme=Art.getTheme();local ui=theme and theme.ui
+ local theme=Art.uiTheme();local ui=theme and theme.ui
  if ui then
   local value=if role=="well"then ui.inset else ui[role]
   if value then return value end
@@ -164,6 +165,12 @@ end
 function Vector.wand(h)
  ink(h,"Stick",.4,.6,S(.11,.66),45,999)
  ink(h,"Star",.72,.28,S(.26,.26),45,2)
+end
+-- Deck style "Balls" tab (batch 2026-11-13 R1): a crude smiley.
+function Vector.smiley(h,s,t)
+ outline(h,"Ring",.5,.5,S(.8,.8),t,999)
+ ink(h,"EyeL",.37,.42,S(.12,.14),0,999);ink(h,"EyeR",.63,.42,S(.12,.14),0,999)
+ ink(h,"Mouth",.5,.66,UDim2.new(.34,0,0,t),0,999)
 end
 Kit.VectorIcons=Vector
 

@@ -72,7 +72,7 @@ return function(client,parent)
    assert(view.hintRight.Text:find("Replay keeps Medium.",1,true))
    assert(view.star.root and view.unit.Visible and not view.missText.Visible)
   end)
-  test("Stars count up from 0 once per saved receipt, one rising charge tick per Star; wallet and meter count with it",function()
+  test("Stars count up from 0 once per saved receipt, one rising count blip per Star; wallet and meter count with it",function()
    assert(view.feedback.active and view.totalText.Text=="+0","count starts at 0")
    assert(view.wallet.amount.Text=="128","wallet starts at the balance before this payout")
    step(.75);local mid=tonumber(view.totalText.Text:match("%+(%d+)"));assert(mid and mid>0 and mid<12,"partial "..view.totalText.Text)
@@ -80,7 +80,7 @@ return function(client,parent)
    step(2);assert(not view.feedback.active and view.totalText.Text=="+12"and view.wallet.amount.Text=="140")
    assert(view.hints.Visible and not view.skipHint.Visible and view.newBest.root.Visible)
    local ticks,land,total=0,0,0
-   for _,cue in ipairs(cues)do if cue.name=="charge"then ticks+=1 elseif cue.name=="star_land"then land+=1 elseif cue.name=="stars_total"then total+=1 end end
+   for _,cue in ipairs(cues)do if cue.name=="count_blip"then ticks+=1 elseif cue.name=="star_land"then land+=1 elseif cue.name=="stars_total"then total+=1 end end
    assert(ticks>=1 and ticks<=12 and land==1 and total==1)
    local starts=view.feedback.starts;view:hide();view:show(data(901,12),false)
    assert(view.feedback.starts==starts and view.totalText.Text=="+12","reopening the same receipt cannot replay")

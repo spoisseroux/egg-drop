@@ -22,6 +22,8 @@ local Guard=require(script.Parent.HatchGuard)
 local Purchases=require(script.Parent.PurchaseState)
 local Faceplates=require(script.Parent.FaceplateState)
 local Wearables=require(script.Parent.WearableState)
+local BallThemes=require(script.Parent.BallThemeState)
+local Lifetime=require(script.Parent.LifetimeState)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 
@@ -157,7 +159,11 @@ local function validV8(state)return validVersion(state,8,false)and MaterialState
 -- v9: daily contracts retired, quests added (QUESTS-DIFFICULTY-PLAN section 3).
 local function validV9(state)return validVersion(state,9,false)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 -- v10: pet wearables (owned + equipped per pet) beside the wallet.
-local function valid(state)return validVersion(state,10,false)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function validV10(state)return validVersion(state,10,false)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- v11 (batch 2026-11-13): ball themes (owned + equipped) and the play-forever
+-- lifetime fields (`stats` counters, `stamps`, collection `book` claims).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
 -- duplicate marks and already-earned sparkle finishes survive without new credits.
@@ -224,6 +230,19 @@ local function upgrade(state, now, userId)
 			if Wearables.valid(probe)then nextState=probe end
 		end
 	end
+	if nextState.version==10 then
+		-- Validate the whole v10 record (quests sanitised first, as at load), then add
+		-- the v11 namespaces with empty defaults. v10 never wrote them: a stray field is
+		-- dropped, never a reason to fail the load. Wallet, pets and everything else carry over.
+		local candidate=clone(nextState)
+		candidate.ballThemes,candidate.stats,candidate.stamps,candidate.book=nil,nil,nil,nil
+		candidate.quests=QuestState.sanitize(candidate.quests,dayOf(now),userId)
+		if not validV10(candidate)then return state end
+		candidate.version=11
+		candidate.ballThemes=BallThemes.fresh()
+		candidate.stats=Lifetime.freshStats();candidate.stamps=0;candidate.book=Lifetime.freshBook()
+		nextState=candidate
+	end
 	return nextState
 end
 
@@ -258,7 +277,7 @@ function Hatching.load(userId, profile, adapter)
 		local state = root.hatching
 		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
 		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
-		if type(state) == "table" and state.version == 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
+		if type(state) == "table" and type(state.version) == "number" and state.version >= 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -327,6 +346,7 @@ function Hatching.public(handle)
 	for key,value in pairs(Purchases.public(state))do public[key]=value end
 	for key,value in pairs(Faceplates.public(state))do public[key]=value end
 	for key,value in pairs(Wearables.public(state))do public[key]=value end
+	for key,value in pairs(BallThemes.public(state))do public[key]=value end
 	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
@@ -389,8 +409,10 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
 			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil
 		end
+		local before = { nectar = state.nectar, inventoryMask = state.inventoryMask }
 		local allowed, failure = pending.apply(state, pending.candidate)
 		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil end
+		Lifetime.record(before, state, pending.signature)
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence, digest = pending.digest }
@@ -806,6 +828,39 @@ function Hatching.equipWearable(handle, operationId, petId, slot, itemId)
 	return ok, reason
 end
 
+-- Ball theme Star purchase (hatching v11). Same pattern as buyFaceplate: the client's
+-- operation id is the idempotency key and the digest binds it to theme + price, so
+-- a reused id for another theme or price is OperationConflict, never a false Saved.
+function Hatching.buyBallTheme(handle, operationId, themeId, price, equip)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(themeId) ~= "string" or #themeId > 32
+		or type(price) ~= "number" then return false, "InvalidBallTheme" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "balltheme:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if BallThemes.owns(handle.state, themeId) and not resuming then return true, "AlreadyOwned" end
+	local candidate = resuming and handle.pending.candidate
+		or table.freeze({ themeId = themeId, price = price, operationId = operationId, equip = equip == true })
+	if candidate.themeId ~= themeId or candidate.price ~= price then return false, "OperationConflict" end
+	local digest = "ball:" .. candidate.themeId .. ":" .. tostring(candidate.price)
+	local ok, reason = transact(handle, signature, handle.state.revision, BallThemes.applyBuy, candidate, signature, nil, digest)
+	if not ok and reason == "AlreadyOwned" then return true, reason end
+	return ok, reason
+end
+
+-- Equip an owned (or free) ball theme. An unchanged choice is a success with no write.
+function Hatching.equipBallTheme(handle, operationId, themeId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(themeId) ~= "string" or #themeId > 32 then return false, "InvalidBallTheme" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "balluse:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming and BallThemes.equipped(handle.state) == themeId then return true, "NoChange" end
+	local candidate = resuming and handle.pending.candidate or table.freeze({ themeId = themeId, operationId = operationId })
+	if candidate.themeId ~= themeId then return false, "OperationConflict" end
+	local ok, reason = transact(handle, signature, handle.state.revision, BallThemes.applyEquip, candidate, signature, nil, "balluse:" .. candidate.themeId)
+	if not ok and reason == "NoChange" then return true, reason end
+	return ok, reason
+end
+
 -- boost = { multiplier = 1|2, bonus = 0|1 } from the player's game passes.
 function Hatching.award(handle, runSequence, amount, summary, boost)
 	if not integer(runSequence) or runSequence < 1 or (amount ~= 0 and amount ~= 6 and amount ~= 8) then
@@ -850,6 +905,7 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 				-- Saved wins still unlock independent cosmetics; family facts are archived.
 				state.totalWins += 1
 			end
+			Lifetime.recordRun(state, run, heat)
 		end
 		-- Quests: roll the calendar (auto-credit) and count this run, atomically
 		-- with the payout. Quest Stars are claimed by hand, never added here.

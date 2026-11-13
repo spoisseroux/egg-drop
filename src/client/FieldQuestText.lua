@@ -2,6 +2,7 @@ local Stars=require(script.Parent.StarText)
 -- Public, sequence-bound presentation only. Never creates/chooses a field.
 local HttpService=game:GetService("HttpService")
 local Objectives=require(game:GetService("ReplicatedStorage").Shared.FieldObjectives)
+local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 local Text={}
 Text.NoField=table.freeze({empty=true,key="no-field"})
 function Text.valid(value,sequence)
@@ -29,8 +30,12 @@ function Text.read(board,cache)
  if cache.value then cache.value.key=raw end
  return cache.value
 end
-local marks={"I","II","III","IV","V"}
-function Text.goal(goal,progress)
+-- No tier numerals (batch 2026-11-13 R1). `rich` (deck labels with RichText) names a
+-- ball with a flat colour circle stepped in size; plain text uses the colour word.
+local function ball(tier,rich,size)
+ return if rich then BallThemes.circle(tier,size)else BallThemes.word(tier)
+end
+function Text.goal(goal,progress,rich,size)
  if not goal then return "Field loading…",{"Loading…"}end
  local zone=goal.zone.kind;local place=if zone=="center"then "in CENTER"elseif zone=="any"then "anywhere"else "on "..zone:upper()
  if goal.kind=="count"then
@@ -42,13 +47,15 @@ function Text.goal(goal,progress)
   local count=string.format("%d/%d",progress,goal.target)
   return "Connect "..goal.target.." new merges in one chain · "..count,{"Link "..count,"Chain "..count}
  end
- local tier=goal.tier or goal.minTier;local mark=marks[tier]
- local full=if goal.tier==2 and goal.id=="center_ii"then "Match I + I "..place else "Make "..mark..(if goal.minTier then " or higher "else " ")..place
- local pair=if tier>1 then marks[tier-1].."+"..marks[tier-1]else mark
+ local tier=goal.tier or goal.minTier;local mark=ball(tier,rich,size)
+ local made=if rich then mark else BallThemes.aBall(tier)
+ local full=if goal.tier==2 and goal.id=="center_ii"then "Match "..ball(1,rich,size).." + "..ball(1,rich,size).." "..place else "Make "..made..(if goal.minTier then " or bigger "else " ")..place
+ local pair=if tier>1 then ball(tier-1,rich,size).."+"..ball(tier-1,rich,size)else mark
  local candidates={}
  if goal.minTier then
-  table.insert(candidates,mark.."+ "..zone:upper())
-  if zone=="left"then table.insert(candidates,"←"..mark.."+")elseif zone=="right"then table.insert(candidates,mark.."+→")end
+  -- "Or bigger" is an up arrow when space is short (a plus now means "and").
+  table.insert(candidates,mark.."↑ "..zone:upper())
+  if zone=="left"then table.insert(candidates,"←"..mark.."↑")elseif zone=="right"then table.insert(candidates,mark.."↑→")end
  end
  table.insert(candidates,pair.." "..zone:upper())
  if zone=="left"then table.insert(candidates,"←"..pair)elseif zone=="right"then table.insert(candidates,pair.."→")elseif zone=="center"then table.insert(candidates,pair.." mid")end
@@ -60,7 +67,7 @@ function Text.nextGoalHint(nextGoal)
  if nextGoal.kind=="chain"then return "Next, link two new merges in one chain"end
  if nextGoal.kind=="count"then return "Next, make two merges anywhere"end
  local tier=nextGoal.tier or nextGoal.minTier
- return "Next, make "..marks[tier]..(if nextGoal.minTier then "+"else "")..(if nextGoal.zone.kind=="center"then " in CENTER"else " on "..nextGoal.zone.kind:upper())
+ return "Next, make "..BallThemes.aBall(tier)..(if nextGoal.minTier then " or bigger"else "")..(if nextGoal.zone.kind=="center"then " in CENTER"else " on "..nextGoal.zone.kind:upper())
 end
 function Text.describe(view,phase)
  if not view then return{instruction="Field loading…",candidates={"Field loading…","Loading…"},ticker="",dynamics="",title="Field",zone="any",key="loading"}end

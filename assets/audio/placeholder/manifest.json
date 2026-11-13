@@ -445,7 +445,8 @@
   "rms_dbfs": -31.0,
   "where": "Garden ambience: global brook bed, heard everywhere (not wired)",
   "description": "seamless 10 s soft brook: mid hiss, slow swells, scattered bloops",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 71747963121003
  },
  {
   "cue": "waterfall_loop",
@@ -457,7 +458,8 @@
   "rms_dbfs": -27.0,
   "where": "Positional loop at Tumble Falls and Sky Falls (not wired)",
   "description": "seamless 10 s fuller rush with low body and light spray",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 110993560996896
  },
  {
   "cue": "bird_chirp_1",
@@ -469,7 +471,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience from tree canopies, day (not wired)",
   "description": "two-note 'tsee-wit': slide down, flick up",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 137226970817959
  },
  {
   "cue": "bird_chirp_2",
@@ -481,7 +484,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience, day (not wired)",
   "description": "fast eight-pip trill",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 71904536727966
  },
  {
   "cue": "bird_chirp_3",
@@ -493,7 +497,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience, day and dusk (not wired)",
   "description": "single falling whistle with a warbled tail",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 89108953015660
  },
  {
   "cue": "bird_chirp_4",
@@ -505,7 +510,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience, day (not wired)",
   "description": "cheerful 'chip-chip-cheep'",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 139852680764636
  },
  {
   "cue": "bird_chirp_5",
@@ -517,7 +523,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience, day (not wired)",
   "description": "liquid warble that slows down",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 107104950878309
  },
  {
   "cue": "bird_chirp_6",
@@ -529,7 +536,8 @@
   "rms_dbfs": -24.0,
   "where": "Bird ambience, dusk and night only (not wired)",
   "description": "low sleepy 'hoo-hoo'",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 85365315991550
  },
  {
   "cue": "pet_coo_1",
@@ -541,7 +549,8 @@
   "rms_dbfs": -22.0,
   "where": "Pet coo: curious / look-around beat (not wired)",
   "description": "rising 'oo?'",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 133263306024551
  },
  {
   "cue": "pet_coo_2",
@@ -553,7 +562,8 @@
   "rms_dbfs": -22.0,
   "where": "Pet coo: happy / greeting / after petting (not wired)",
   "description": "two-syllable 'ah-oo'",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 95664039612347
  },
  {
   "cue": "pet_coo_3",
@@ -565,7 +575,8 @@
   "rms_dbfs": -22.0,
   "where": "Pet coo: sleepy / sit / yawn tail (not wired)",
   "description": "low falling 'mmm-m'",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 136397644383191
  },
  {
   "cue": "machine_attract",
@@ -577,6 +588,30 @@
   "rms_dbfs": -21.0,
   "where": "Station attract: walking into range of an unused machine (not wired)",
   "description": "two soft bells a fifth apart with glitter",
-  "placeholder": true
+  "placeholder": true,
+  "assetId": 75991665557379
+ },
+ {
+  "cue": "deck_music",
+  "file": "egg_drop_deck_music.wav",
+  "ogg": "egg_drop_deck_music.ogg",
+  "seconds": 22.857,
+  "loop": true,
+  "peak_dbfs": -9.3,
+  "rms_dbfs": -24.0,
+  "where": "Pocket Deck round music: AmbientAudio plays it only in Board mode and ducks the world music and ambience there",
+  "description": "calm 84 BPM chip lullaby: triangle bass, soft pad, sparse pentatonic bells (8-bar seamless loop)",
+  "placeholder": true,
+  "assetId": 114810234817689
+ },
+ {
+  "cue": "count_blip",
+  "file": "egg_drop_count_blip.wav",
+  "seconds": 0.07,
+  "loop": false,
+  "where": "RecapFeedback: results Star count-up, one per +1, each cut by the next",
+  "description": "tiny two-step chip ring blip (G6 to C7)",
+  "placeholder": true,
+  "assetId": 108647439201867
  }
 ]

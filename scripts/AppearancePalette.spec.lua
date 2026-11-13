@@ -52,11 +52,13 @@ return function(client,parent,onlySize)
   local function resultsData(sequence)return{outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=20,goals={{text="Goal",done=true}}}end
   recap:show(resultsData(9),false)
   focus.panel.Visible=true;focus.back.Visible=true;focus.helper.Visible=true
-  test(tostring(size).." open sheets adopt each palette without identity/focus/receipt changes",function()
+  test(tostring(size).." open sheets keep the house palette under every faceplate (the plate tints only the deck and its background)",function()
    local recipe=shop.body.EggColumn.Recipe_hue;local pending=shop.pending
    local amber=shop.nectar.TextColor3
    for _,id in ipairs(Themes.Order)do
-    local t=Themes.ById[id];Art.applyTheme(t);settle()
+    local plate=Themes.ById[id];Art.applyTheme(plate);settle()
+    -- Batch 2026-11-13: menus never take the plate's glass; the hardware still reads the plate.
+    local t=Art.uiTheme();assert(Art.getTheme()==plate and t==Themes.ById[Themes.Default])
     assert(menu.card.BackgroundColor3==t.ui.contentPanel and menu.tabs.daily.BackgroundColor3==t.ui.tab and menu.tabs.daily.TextColor3==t.ui.tabInk)
     assert(shop.action.BackgroundColor3==t.ui.accent and shop.action.TextColor3==t.ui.ink,"actual refreshed shop CTA retained fixed reward color")
     assert(menu.card:FindFirstChildOfClass("UIGradient").Rotation==100 and menu.nectar.Font==Art.Font.Counter)
@@ -66,14 +68,14 @@ return function(client,parent,onlySize)
     -- Redesign 3: Hatch eggs is a Kit panel; the selected row takes the plate's `selected` glass, its text stays neutral.
     local Kit=require(client.DeckKit)
     assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==Kit.Color.text and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
-    assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass follows the plate; text stays neutral")
+    assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass stays house; text stays neutral")
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
     assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe and shop.nectar.TextColor3==amber)
     assert(Art.Surface==defaults[1]and Art.Ink==defaults[2]and Art.Silver==defaults[3]and Art.Focus==defaults[4],"public art constants changed")
    end
   end)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
-   local t=Themes.ById.copperleaf;Art.applyTheme(t);local recipe=shop.body.EggColumn.Recipe_hue
+   local plate=Themes.ById.copperleaf;Art.applyTheme(plate);local t=Art.uiTheme();local recipe=shop.body.EggColumn.Recipe_hue
    local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:show(resultsData(10),false);settle()
    assert(shop.body.EggColumn.Recipe_hue==recipe and (recipe.RecipeName.TextColor3==t.ui.ink or recipe.RecipeName.TextColor3==t.ui.text)and shop.selected=="hue",
     "recipe name colour "..tostring(recipe.RecipeName.TextColor3).." vs ink "..tostring(t.ui.ink).." / text "..tostring(t.ui.text))
@@ -81,7 +83,7 @@ return function(client,parent,onlySize)
    -- Deck style tab hit frames are 44 in panel units; the regular screen scales as a whole (UIScale).
    for _,tab in pairs(picker.tabs)do assert(tab.Size.Y.Offset>=44);fit(tab)end
    assert(picker.tabs.Background:GetAttribute("AccessibleLabel")=="Background patterns")
-   assert(not Art.applyTheme(t),"unchanged confirmed theme reapplied registry")
+   assert(not Art.applyTheme(plate),"unchanged confirmed theme reapplied registry")
   end)
  end
  end)

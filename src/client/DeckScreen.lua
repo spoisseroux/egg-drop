@@ -10,7 +10,11 @@ local Kit=require(script.Parent.DeckKit)
 local Assets=require(script.Parent.DeckAssets)
 local Boot=require(script.Parent.DeckBoot)
 local Config=require(Shared.BoardConfig)
-local JellyPalette=require(Shared.JellyPalette)
+-- Ball themes (batch 2026-11-13 R1): Next / Then are live themed balls with faces;
+-- goals name a ball type with a flat colour circle that also steps in size.
+local BallThemes=require(Shared.BallThemes)
+local BallFaces=require(script.Parent.BallFaces)
+local Sprite=require(script.Parent.JellySprite)
 local L=Assets.Layout
 local Screen={}
 Screen.__index=Screen
@@ -134,6 +138,11 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  g.back=rect(W-56,8,44,44)
  g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
  g.aHit=rect(W-cx-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
+ -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button, always under A.
+ local ib=({58,54,52})[tier+1]
+ local iy=math.min(g.aHit.y+g.aHit.h+4+math.floor((ib+8)/2),H-6-math.floor((ib+8)/2))
+ g.item=rect(W-cx-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
+ g.itemHit=rect(W-cx-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
  -- Menu sheet (section 4): plate grips `mg` either side; v1 rules shift in by mg - 6.
  local mg=Screen.gripMargin(W)
  g.mg=mg;g.off=mg-6
@@ -275,6 +284,24 @@ function Screen.new(options)
    if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton(id,false)end
   end)
   hit.Activated:Connect(function()local cb=self.callbacks[id];if cb then cb()end end)
+ end
+ -- Phone item button under A (round items): front item's glyph and a count badge.
+ -- Always drawn on the phone; with an empty belt the caller shows "You have no items".
+ do
+  local holder=phoneNode(Kit.node("Frame",root,{Name="ButtonItem",BackgroundTransparency=1,ZIndex=10}))
+  local disc=Kit.frame(holder,"Disc","raised",UDim2.new(),UDim2.fromScale(1,1),999);disc.BackgroundTransparency=0
+  local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+  local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center})
+  local badge=Kit.frame(holder,"Badge",nil,UDim2.new(1,-4,0,4),UDim2.fromOffset(20,20),999)
+  badge.AnchorPoint=Vector2.new(.5,.5);badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.ink;badge.ZIndex=disc.ZIndex+3;badge.Visible=false
+  Kit.stroke(badge,nil,1.5,.3)
+  local count=Kit.text(badge,"Label","",nil,{Name="Count",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Kit.Color.text})
+  local caption=Kit.text(holder,"Label","Items","soft",{Name="Caption",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,2),Size=UDim2.new(1,24,0,17),TextXAlignment=Enum.TextXAlignment.Center})
+  local hit=Kit.node("TextButton",holder,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,AnchorPoint=Vector2.new(.5,.5),
+   Position=UDim2.fromScale(.5,.5),ZIndex=disc.ZIndex+5,Selectable=false})
+  hit:SetAttribute("AccessibleLabel","Items")
+  hit.Activated:Connect(function()local cb=self.callbacks.item;if cb then cb()end end)
+  self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,badge=badge,count=count,caption=caption,hit=hit}
  end
  -- Board well behind the board renderer. No border (UI-SPEC-REDESIGN-MENUS 6.1):
  -- the well reads as a recess from the LCD gradient, not from a stroke.
@@ -425,6 +452,19 @@ function Screen:flash(id)
  else self:pressDpad(id,true);task.delay(.1,function()self:pressDpad(id,false)end)end
 end
 
+-- Round items: the phone button shows the front item's glyph and the belt count
+-- (an empty belt shows a plain "B" and no badge). `glyph`/`color` come from RoundItems.
+function Screen:setItems(count,glyph,color)
+ local ib=self.itemButton;if not ib then return end
+ count=count or 0
+ ib.glyph.Text=if count>0 and glyph then glyph else "B"
+ ib.glyph.TextColor3=if count>0 and color then color else Kit.Color.soft
+ ib.ring.Color=if count>0 and color then color else Color3.new(1,1,1)
+ ib.ring.Transparency=if count>0 then 0 else .55
+ ib.badge.Visible=count>0;ib.count.Text=tostring(count)
+ ib.hit:SetAttribute("AccessibleLabel",if count>0 then "Items: "..count else "Items: none")
+end
+
 function Screen:applyTransparency()
  -- Reduce transparency: the glare could cost contrast, so it goes.
  -- Phone: the glare sits on the board only and never over text, so any sheet or
@@ -572,6 +612,10 @@ function Screen:layoutCompact(g)
  A.letter.TextSize=math.floor(.46*dia);A.letter.Size=UDim2.fromOffset(dia,dia);A.letter.Position=UDim2.new(.5,0,0,dia/2)
  A.hit.Size=UDim2.fromOffset(g.aHit.w,g.aHit.h);A.hit.Position=UDim2.new(.5,0,0,dia/2)
  place(self.wells.A,rect(g.a.X-dia/2-5,g.a.Y-dia/2-3,dia+10,dia+10))
+ -- Item button under A (round items); its hit area is 8 px wider than the drawn disc.
+ local ib=self.itemButton
+ place(ib.holder,g.item);ib.hit.Size=UDim2.fromOffset(g.itemHit.w,g.itemHit.h)
+ ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+19<=g.H-2
  -- Glare on the board only; results and sheets cover the root; the boot plays in the screen.
  place(self.glare,b)
  self.results.Position=UDim2.new();self.results.Size=UDim2.fromOffset(W,H);Kit.corner(self.results,0)
@@ -615,12 +659,31 @@ local function card(parent,name,r,label,pad)
  c.Position,c.Size=UDim2.fromOffset(r[1],r[2]),UDim2.fromOffset(r[3],r[4])
  return c,eyebrow
 end
+-- Next / Then: the ball as drawn on the board (pixel runs, its face, a star when it
+-- is a power-up ball). `ball` keeps the old holder contract for layout code.
 local function egg(parent,diameter)
- local ball=Kit.frame(parent,"Egg",nil,UDim2.new(),UDim2.fromOffset(diameter,diameter),999);ball.BackgroundTransparency=0
- local mark=Kit.text(ball,"Strong","I",nil,{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.max(12,math.floor(diameter*.42))})
- Art.jellyPreview(ball,1,mark)
- return{ball=ball,mark=mark}
+ local ball=Kit.frame(parent,"Egg",nil,UDim2.new(),UDim2.fromOffset(diameter,diameter))
+ local preview=Sprite.preview(ball)
+ preview.set(BallThemes.current,1,"idle",0,false)
+ return{ball=ball,preview=preview,tier=1,expr="idle",dx=0,star=false}
 end
+-- Goals: a flat circle in the size's colour with a thin lighter ring, stepped in
+-- size inside a fixed slot (scope B5: 52 / 64 / 76 / 88 / 100 %).
+local function dot(parent,diameter)
+ local ball=Kit.frame(parent,"Egg",nil,UDim2.new(),UDim2.fromOffset(diameter,diameter))
+ local circle=Kit.frame(ball,"Circle",nil,UDim2.fromScale(.5,.5),UDim2.fromScale(1,1),999)
+ circle.AnchorPoint=Vector2.new(.5,.5);circle.BackgroundTransparency=0
+ local ring=Instance.new("UIStroke");ring.Name="Ring";ring.Thickness=1;ring.Transparency=.35;ring.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;ring.Parent=circle
+ return{ball=ball,circle=circle,ring=ring}
+end
+local function dotPaint(slot,tier)
+ tier=math.clamp(tier or 1,1,#Config.Tiers)
+ local scale=BallThemes.CircleScale[tier]
+ slot.circle.Size=UDim2.fromScale(scale,scale)
+ slot.circle.BackgroundColor3=BallThemes.color(tier);slot.ring.Color=BallThemes.lightColor(tier)
+ slot.ball:SetAttribute("BallTier",tier);slot.ball:SetAttribute("AccessibleLabel",BallThemes.spoken(tier))
+end
+Screen.dotPaint=dotPaint
 local function commas(n)
  local s=tostring(math.floor(n or 0));local out=s:reverse():gsub("(%d%d%d)","%1,"):reverse()
  return(out:gsub("^,",""))
@@ -748,7 +811,7 @@ function Screen:buildCompactHud(g)
  for index=1,3 do
   local row=Kit.frame(goals,"Goal"..index,nil,UDim2.fromOffset(0,24+(index-1)*p),UDim2.fromOffset(gw,p))
   if narrow then
-   local mark=egg(row,22);mark.ball.Position=UDim2.fromOffset(8,math.floor((p-22)/2))
+   local mark=dot(row,22);mark.ball.Position=UDim2.fromOffset(8,math.floor((p-22)/2))
    local glyph=Kit.icon(row,"chain",20,"text");glyph.Position=UDim2.fromOffset(9,math.floor((p-20)/2));glyph.Visible=false
    local plus=txt(row,"Strong","+","text",33,math.floor(p/2)-12,8,16,12)
    local zone=zoneGlyph(row,42,math.floor((p-12)/2))
@@ -939,15 +1002,33 @@ function Screen:buildHud(g)
 end
 
 local controlRows={
- Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Pause and leave"},{"MENU","Pocket menu"}},
- Keyboard={{"← →","Aim"},{"Space","Drop"},{"Bksp","Leave"},{"M","Pocket menu"}},
+ Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Items"},{"MENU","Pocket menu"}},
+ Keyboard={{"← →","Aim"},{"Space","Drop"},{"B","Items"},{"M","Pocket menu"}},
  Touch={{"Drag","Drag to aim"},{"A","A or release to drop"},{"MENU","Pocket menu"},{"←","Back arrow leaves"}},
 }
+-- A Next / Then slot shows `tier` with its current face (stepNext animates it).
 local function eggPaint(slot,tier)
- tier=math.clamp(tier or 1,1,#Config.Tiers)
- Art.jellyPreview(slot.ball,tier,slot.mark);slot.mark.Text=Config.Tiers[tier].mark
- -- White mark with a deep shadow, as on the board (UI-SPEC-REDESIGN-MENUS 6.2).
- local roles=JellyPalette.byTier[tier];slot.mark.TextColor3=roles.mark;slot.mark.TextStrokeColor3=roles.markShadow;slot.mark.TextStrokeTransparency=.45
+ slot.tier=math.clamp(tier or 1,1,#Config.Tiers)
+ slot.preview.set(BallThemes.current,slot.tier,slot.expr,slot.dx,slot.star)
+ slot.ball:SetAttribute("AccessibleLabel",BallThemes.spoken(slot.tier))
+end
+-- Per frame from the renderer: Next / Then faces blink, worry and shiver like the
+-- board's balls (BallFaces.preview, 10 ticks a second). Slot 1 is the held ball
+-- (same phase as the board's held ball), 2 and 3 are Then. Stars mirror the
+-- power-up flags R2 publishes (NextPowerUp, PreviewPowerUp1, PreviewPowerUp2).
+local starAttributes={"NextPowerUp","PreviewPowerUp1","PreviewPowerUp2"}
+function Screen:stepNext(now,mood,themeId,board)
+ local h=self.hud;if not h or not h.next or not self.visible then return 0 end
+ local tick=math.floor(now/BallFaces.Tick)
+ if self.nextTick==tick and self.nextTheme==themeId then return 0 end
+ self.nextTick,self.nextTheme=tick,themeId
+ local writes=0
+ for index,slot in ipairs(h.next)do
+  slot.expr,slot.dx=BallFaces.preview(index-1,now,mood)
+  slot.star=board~=nil and board:GetAttribute(starAttributes[index])==true
+  writes+=slot.preview.set(themeId or BallThemes.current,slot.tier or 1,slot.expr,slot.dx,slot.star)
+ end
+ return writes
 end
 -- data: score,best,chain,goals{text,short,done,progress,target},status,daily{title,progress,target},
 -- next{t1,t2,t3},eggsLeft,budget,difficulty,multiplier,winPays,input("Gamepad"|"Keyboard"|"Touch")
@@ -969,7 +1050,7 @@ function Screen:setHud(data)
   if goal then
    if goal.done then done+=1 end
    slot.check.set(goal.done)
-   slot.text.Text=if compact then goal.short or goal.text else goal.text
+   slot.text.RichText=true;slot.text.Text=if compact then goal.short or goal.text else goal.text
    slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
    if slot.bar then slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)end
    if slot.count then slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)end
@@ -985,7 +1066,7 @@ function Screen:setHud(data)
   for index,slot in ipairs(h.daily)do
    local q=data.daily and data.daily[index]
    slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
-   if q then slot.name.Text=q.title;slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end
+   if q then slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end
   end
  end
  for index,slot in ipairs(h.next)do eggPaint(slot,data.next and data.next[index])end
@@ -1016,8 +1097,8 @@ end
 -- Compact HUD paint: same data contract as setHud. Goals may carry
 -- icon={kind,tier,plus,zone} for the narrow icon rows.
 local compactRows={
- Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Leave"}},
- Keyboard={{"← →","Aim"},{"Space","Drop"},{"Bksp","Leave"}},
+ Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Items"}},
+ Keyboard={{"← →","Aim"},{"Space","Drop"},{"B","Items"}},
  -- Decision 4: B is unassigned on touch, so no "B: Leave" row.
  Touch={{"Drag","Aim"},{"A","Drop"}},
 }
@@ -1029,7 +1110,7 @@ local function paintIconGoal(slot,goal)
  local tier=math.clamp(icon.tier or 1,1,#Config.Tiers)
  local isMerge=kind=="merge"
  slot.egg.ball.Visible=isMerge;slot.glyph.Visible=not isMerge
- if isMerge then eggPaint(slot.egg,tier)
+ if isMerge then dotPaint(slot.egg,tier)
  else
   slot.glyph.ImageRectOffset=Assets.Icon[if kind=="chain"then "chain"else "egg"]or Vector2.zero
  end
@@ -1040,7 +1121,7 @@ local function paintIconGoal(slot,goal)
   slot.zone.root.Position=UDim2.fromOffset(if slot.plus.Visible then 42 else 34,slot.zone.root.Position.Y.Offset)
   slot.zone.lit.Position=UDim2.fromOffset(1.5+third*5,1.5)
  end
- slot.row:SetAttribute("AccessibleLabel",goal.text or goal.short or "")
+ slot.row:SetAttribute("AccessibleLabel",goal.spoken or BallThemes.strip(goal.text or goal.short or ""))
 end
 function Screen:setCompactHud(data)
  local h=self.hud;local g=h.geometry
@@ -1062,10 +1143,10 @@ function Screen:setCompactHud(data)
     -- Done: the check takes the count's place and the row dims.
     slot.check.root.Visible=goal.done==true;slot.check.set(true)
     slot.count.Visible=not goal.done;slot.count.Text=count
-    slot.egg.ball.BackgroundTransparency=if goal.done then .45 else 0
+    slot.egg.circle.BackgroundTransparency=if goal.done then .45 else 0
    else
     slot.check.set(goal.done)
-    slot.text.Text=goal.short or goal.text
+    slot.text.RichText=true;slot.text.Text=goal.short or goal.text
     slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
     slot.count.Text=count
    end
@@ -1094,7 +1175,7 @@ function Screen:setCompactHud(data)
   local q=daily[index]
   slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
   if q then
-   slot.name.Text=q.title;slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target)
+   slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target)
    slot.count.TextColor3=if q.done then Kit.Color.stars else Kit.Color.soft
    slot.bar.set(q.progress,q.target,q.done,true)
   end

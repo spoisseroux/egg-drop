@@ -19,6 +19,7 @@ Feedback.CountStart,Feedback.CountSpan,Feedback.CountStep=.6,.9,.08
 Feedback.DropAt,Feedback.FinaleDelay,Feedback.FinaleSpan=.45,.08,.5
 Feedback.GoalAt,Feedback.GoalGap,Feedback.RowAt,Feedback.RowGap=.15,.09,.30,.12
 Feedback.PopSpan,Feedback.FlightSpan=.09,.18
+Feedback.BlipCue="count_blip"
 
 -- Count spacing and the last tick for `earned` Stars.
 function Feedback.spacingFor(earned)
@@ -93,7 +94,8 @@ end
 
 function Feedback:cue(name, pitch, volume)
 	-- BoardAudio owns the SoundGroup and suppresses playback while muted.
-	if self.audio and self.audio.deviceActive~=false and(not self.owns or self.owns())then self.audio:play(name, pitch, volume,self)end
+	if self.audio and self.audio.deviceActive~=false and(not self.owns or self.owns())then return self.audio:play(name, pitch, volume,self)==true end
+	return false
 end
 
 function Feedback:step(dt)
@@ -107,10 +109,15 @@ function Feedback:step(dt)
 		if before<threshold and self.age>=threshold then self:cue("bank",1+(index-1)*.18,.18)end
 	end
 	if before<Feedback.DropAt and self.age>=Feedback.DropAt then self:cue("star_land",1,.4)end
-	-- Star count-up: one charge tick per Star, pitch +3% each. Several Stars crossing in
-	-- one frame share a single tick so a long payout never stacks voices.
+	-- Star count-up (batch 2026-11-13): a very short `count_blip` per +1, like rings
+	-- counting up. The cue has one voice, so each blip is cut by the next. Several
+	-- Stars crossing in one frame share a single blip so voices never stack. Until the
+	-- blip's sound is uploaded, the old charge tick stands in.
 	local counted=self:countAt(self.age)
-	if counted>self.counted then self.counted=counted;self:cue("charge",math.min(2,1+counted*.03),.14)end
+	if counted>self.counted then
+		self.counted=counted
+		if not self:cue(Feedback.BlipCue,math.min(1.6,1+counted*.02),.22)then self:cue("charge",math.min(2,1+counted*.03),.14)end
+	end
 	local finale=Feedback.finaleAt(self.countEnd)
 	if before<finale and self.age>=finale then self:cue("bank",1.36,.14);self:cue("stars_total",1,.5)end
 	for _,beat in ipairs(self.beats)do

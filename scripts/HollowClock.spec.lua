@@ -1,4 +1,6 @@
 -- Isolated cache/lifecycle fixture. No production Lighting or clock is changed.
+-- Lamp fixtures sample the real 24-hour cycle (Clock.cycle) so day and night stay testable while
+-- FeatureFlags.DayNight=false locks the live garden at dusk (batch 2026-11-13, W1).
 return function(client)
  local Clock=require(client.HollowClock);local cases={};local cleanup={}
  local function test(n,f)f();table.insert(cases,n)end
@@ -6,7 +8,7 @@ return function(client)
  local function fixture()
   local f={time=17*3600,sky=0};f.world=Instance.new("Folder");f.world.Name="_ClockFixture";f.world.Parent=workspace
   f.room=Instance.new("Folder");f.room.Name="EggDropLounge";f.room.Parent=f.world
-  f.c=Clock.new({world=f.world,now=function()return f.time end,environment=function()f.sky+=1 end})
+  f.c=Clock.new({world=f.world,now=function()return f.time end,sample=Clock.cycle,environment=function()f.sky+=1 end})
   table.insert(cleanup,function()f.c:destroy();f.world:Destroy()end)
   return f
  end
@@ -17,8 +19,20 @@ return function(client)
  end
  local ok,err=pcall(function()
  test("fixed UTCminus5 real24hour day preserves midnight noon and wrap",function()
-  local midnight,dark=Clock.sample(5*3600);local noon,day=Clock.sample(17*3600);local nextMidnight=Clock.sample(29*3600)
+  local midnight,dark=Clock.cycle(5*3600);local noon,day=Clock.cycle(17*3600);local nextMidnight=Clock.cycle(29*3600)
   assert(midnight==0 and noon==12 and nextMidnight==0 and dark==0 and day==1 and Clock.TimeZoneOffsetHours==-5)
+ end)
+ test("day/night off locks every sample to dusk",function()
+  local Shared=game:GetService("ReplicatedStorage").Shared
+  local Flags,Dusk=require(Shared.FeatureFlags),require(Shared.WorldDusk)
+  assert(Flags.DayNight==false and Clock.DayNight==false,"DayNight flag")
+  for _,t in ipairs({0,5*3600,11*3600,17*3600,23*3600})do
+   local hour,daylight=Clock.sample(t);assert(hour==Dusk.Hour and daylight==Dusk.Daylight,"sample "..t)
+  end
+  assert(Dusk.Daylight>=.5 and Dusk.Daylight>Clock.SkyThreshold,"dusk keeps day faces, no night focus key, no fireflies")
+  local f=fixture();local c=Clock.new({world=f.world,now=function()return 5*3600 end,environment=function()end})
+  local l=light(f.room,true);settle();c:apply(5*3600)
+  assert(math.abs(l.Brightness-(1.55+(.65-1.55)*Dusk.Daylight))<1e-4,"lamps glow at the dusk mix");c:destroy()
  end)
  test("incremental marked lamp cache paints exact day and night only",function()
   local f=fixture();local l=light(f.room,true);local other=light(f.room,false);local originalOther=other.Brightness;settle()

@@ -4,6 +4,24 @@ local Activity=require(game:GetService("ReplicatedStorage").Shared.GardenActivit
 local Layout=require(game:GetService("ReplicatedStorage").Shared.GardenLayout)
 local Follow = {}
 
+-- Walk retune (FEEL-ALIVE-DIRECTION-2026-11-13 B2): stride grows with speed so the
+-- feet stop sliding at the cadence cap, and the body bounces twice per cycle, once
+-- per footfall (Ovelle a little less). Above 7 studs a second the bob is 1.5x (a
+-- scamper). Shared by both gait paths.
+Follow.StrideSlow, Follow.StrideFast, Follow.CadenceCap = 1.5, 3.2, 3
+Follow.Bob, Follow.BobOvelle, Follow.ScamperSpeed = .05, .042, 7
+function Follow.stride(speed, scale)
+	local t = math.clamp(((speed or 0) - 3) / 6, 0, 1)
+	return (Follow.StrideSlow + (Follow.StrideFast - Follow.StrideSlow) * t) * (scale or 1)
+end
+function Follow.bob(visual, reduced)
+	if reduced then return 0 end
+	local phase = visual.gaitPhase or 0
+	local amount = if visual.petId == "puddle" then Follow.BobOvelle else Follow.Bob
+	local scamper = if (visual.travelSpeed or 0) > Follow.ScamperSpeed then 1.5 else 1
+	return (1 - math.cos(2 * phase)) * .5 * amount * scamper * (visual.gaitWeight or 0)
+end
+
 function Follow.ground(position, visual, fallback)
 	local params = RaycastParams.new()
 	local exclude = { visual.model }
@@ -18,11 +36,13 @@ end
 
 function Follow.rest(visual)
 	visual.gaitPhase,visual.gaitWeight,visual.movementBob=0,0,0
+	visual.travelSpeed=0
 end
 
 function Follow.step(visual, root, dt, state, reduced)
  require(script.Parent.PetCarePose).set(visual,nil)
  visual.gardenPivot=false;visual.gardenPivotPhase=0;visual.gardenPivotTurn=0
+ visual.activitySit=false;visual.gardenActionAge=nil;visual.gardenActionLength=nil
 	if visual.gardenFocus or visual.gardenAction then
 		visual.gardenFocus=false
 		if visual.applyGardenPose then visual:applyGardenPose({expression="neutral",actionPhase=0})end
@@ -66,11 +86,12 @@ function Follow.step(visual, root, dt, state, reduced)
 		if visual.gaitWeight==0 then visual.gaitPhase=0
 		else
 			-- Distance drives slow steps; fast following never aliases into a tremor.
-			local cycles=math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3)
+			local cycles=math.min(traveled/Follow.stride(state.travelSpeed,visual.worldScale),dt*Follow.CadenceCap)
 			visual.gaitPhase=((visual.gaitPhase or 0)+cycles*math.pi*2)%(math.pi*2)
 		end
+		visual.travelSpeed=state.travelSpeed
 	end
- visual.movementBob=(if reduced then 0 else 1-math.cos(visual.gaitPhase or 0))*(if visual.petId=="puddle"then .055 else .065)*(visual.gaitWeight or 0)
+ visual.movementBob=Follow.bob(visual,reduced)
 	local toward=Vector3.new(velocity.X,0,velocity.Z)
 	if toward.Magnitude > 0.05 then
 		local wanted = math.atan2(toward.X, toward.Z) -- pet fronts face +Z
@@ -110,11 +131,16 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
 		local speed=traveled/math.max(.001,dt)
 		state.travelSpeed=(state.travelSpeed or 0)+(speed-(state.travelSpeed or 0))*(1-math.exp(-12*dt))
 		visual.gaitWeight=math.clamp((state.travelSpeed-.025)/3.5,0,1)
-		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/(1.45*(visual.worldScale or 1)),dt*3)*math.pi*2)%(math.pi*2)
-		visual.movementBob=(if reduced then 0 else 1-math.cos(visual.gaitPhase))*(if visual.petId=="puddle"then .055 else .065)*visual.gaitWeight
+		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/Follow.stride(state.travelSpeed,visual.worldScale),dt*Follow.CadenceCap)*math.pi*2)%(math.pi*2)
+		visual.travelSpeed=state.travelSpeed
+		visual.movementBob=Follow.bob(visual,reduced)
 	end
 	state.generation,state.mode=sample.generation,sample.mode
 	visual.gardenFocus=sample.action=="focus"
+	-- Shared-clock age and length of the current action: every player sees the same sit.
+	local started,ended=actor.startTime,actor.endTime
+	visual.gardenActionAge=if type(started)=="number"then sampleTime-started else nil
+	visual.gardenActionLength=if type(started)=="number"and type(ended)=="number"then ended-started else nil
 	if visual.applyGardenPose then visual:applyGardenPose(sample)
 	else
 		visual.gardenAction,visual.actionPhase,visual.expression=sample.action,sample.actionPhase,sample.expression
