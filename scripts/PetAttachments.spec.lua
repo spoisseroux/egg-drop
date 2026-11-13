@@ -42,7 +42,7 @@ return function(client,parent)
    end
   end)
   test("authored attachments sit on their anchors and ride the anchor channel",function()
-   local wear={Hat="beanie",Shirt="tee",Neck="beads",EarPiercingL="ring",EarPiercingR="ring",Eyes="button",Mouth="o",Tail="arrow"}
+   local wear={Hat="beanie",Shirt="tee",Neck="beads",EarPiercingL="ring",EarPiercingR="ring",Eyes="sparkle",Mouth="blep",Tail="heart"}
    local v=make(Pets.byId.pip,appearance(0,3,wear));assert(v.backend=="AuthoredMesh"and v.model:GetAttribute("FeatureBackend")=="AuthoredAttachments")
    local placed=0
    for _,a in ipairs(bear.attachments)do local e=find(v,a.name);if e then
@@ -53,18 +53,19 @@ return function(client,parent)
     -- Every part sits within 0.6 studs (rig size) of its anchor (shirts and tails reach furthest).
     local anchor=Vector3.new(table.unpack(bear.anchors[a.anchor]))*v.scale;assert((e.frame.Position-anchor).Magnitude<.6*v.scale,"far from anchor "..a.name)
    end end
-   assert(placed==13,"expected 13 parts (11 wearable meshes + 2 wings), got "..placed)
+   -- beanie 2 + tee 4 + beads 2 + rings 2 + sparkle 8 + blep 2 + heart 1 = 21 pieces, + 2 wings.
+   assert(placed==23,"expected 23 parts (21 wearable pieces + 2 wings), got "..placed)
    -- Head-channel parts follow a head turn; body parts do not.
-   v.affectionTilt=4;v.poseDirty=true;v:update(0);local turned=find(v,"Hat_Beanie").part.CFrame;local shirt=find(v,"Shirt_Torso").part.CFrame
+   v.affectionTilt=4;v.poseDirty=true;v:update(0);local turned=find(v,"Hat_Beanie").part.CFrame;local shirt=find(v,"Shirt_Tee_Torso").part.CFrame
    v.affectionTilt=0;v.poseDirty=true;v:update(0)
    assert((find(v,"Hat_Beanie").part.CFrame.Position-turned.Position).Magnitude>.01,"hat ignored the head channel")
-   assert((find(v,"Shirt_Torso").part.CFrame.Position-shirt.Position).Magnitude<1e-4,"shirt followed the head")
-   assert(find(v,"HelixL_Ring").earSide=="L"and find(v,"Tail_AltArrow").tailWag)
+   assert((find(v,"Shirt_Tee_Torso").part.CFrame.Position-shirt.Position).Magnitude<1e-4,"shirt followed the head")
+   assert(find(v,"HelixL_Ring").earSide=="L"and find(v,"Tail_AltHeart").tailWag)
    -- The tee is three pieces; each sleeve rides its arm channel, so a wave folds arm and sleeve together.
-   assert(shown(find(v,"Shirt_Torso"))and shown(find(v,"Shirt_SleeveL"))and shown(find(v,"Shirt_SleeveR")),"tee is not three shown pieces")
-   assert(find(v,"Shirt_Torso").channel=="Body"and find(v,"Shirt_SleeveL").channel=="HandL"and find(v,"Shirt_SleeveR").channel=="HandR")
-   local function grip(s)return find(v,"Hand"..s).part.CFrame:ToObjectSpace(find(v,"Shirt_Sleeve"..s).part.CFrame)end
-   local function arm(s)return find(v,"Shirt_Torso").part.CFrame:ToObjectSpace(find(v,"Hand"..s).part.CFrame)end
+   assert(shown(find(v,"Shirt_Tee_Torso"))and shown(find(v,"Shirt_Tee_SleeveL"))and shown(find(v,"Shirt_Tee_SleeveR")),"tee is not three shown pieces")
+   assert(find(v,"Shirt_Tee_Torso").channel=="Body"and find(v,"Shirt_Tee_SleeveL").channel=="HandL"and find(v,"Shirt_Tee_SleeveR").channel=="HandR")
+   local function grip(s)return find(v,"Hand"..s).part.CFrame:ToObjectSpace(find(v,"Shirt_Tee_Sleeve"..s).part.CFrame)end
+   local function arm(s)return find(v,"Shirt_Tee_Torso").part.CFrame:ToObjectSpace(find(v,"Hand"..s).part.CFrame)end
    local gripL,gripR,armL,armR=grip("L"),grip("R"),arm("L"),arm("R")
    v.reducedEffects=false;v:greet();v.poseDirty=true;v:update(.6)
    for s,rest in pairs({L={gripL,armL},R={gripR,armR}})do
@@ -97,14 +98,37 @@ return function(client,parent)
    assert(find(v,"WingL_S5").part.MeshId==template.Bear__WingL.MeshId)
    v:applyAppearance(appearance(0,0));v:update(0);assert(#v.pieces==before and v.featureHaloLift==0)
   end)
-  test("horns, wings and the arrow tail take the pet's secondary colour; wearables keep their own",function()
-   local a=appearance(4,2,{Tail="arrow",Shirt="tee"});a.mainDoses=H.emptyCounts();a.secondaryDoses=H.emptyCounts();a.secondaryDoses.tide=5
+  test("multi-piece items: own colour, secondary-tinted and face-ink pieces; horns and wings take the secondary",function()
+   local a=appearance(4,2,{Tail="heart",Shirt="tee",Hat="flowercrown",Eyes="sparkle",Mouth="blep"});a.mainDoses=H.emptyCounts();a.secondaryDoses=H.emptyCounts();a.secondaryDoses.tide=5
    local v=make(Pets.byId.pip,a)
-   for _,name in ipairs({"HornL_S4","HornR_S4","WingL_S2","WingR_S2","Tail_AltArrow"})do
+   for _,name in ipairs({"HornL_S4","HornR_S4","WingL_S2","WingR_S2"})do
     local e=assert(find(v,name),name);assert(e.colorRole=="secondary"and(e.color or e.part.Color)==v.secondaryColor,name)
    end
+   -- Tinted wearable pieces take the secondary but leave the night-glow group (wearables never glow).
+   for _,name in ipairs({"Tail_AltHeart","Hat_FlowerCrown_Petals","Shirt_Tee_Stripes","EyeL_AltSparkle_Iris","EyeR_AltSparkle_Iris"})do
+    local e=assert(find(v,name),name);assert(e.colorRole=="wearSecondary"and e.part.Color==v.secondaryColor,name.." "..tostring(e.colorRole))
+   end
    assert(v.secondaryColor==H.ById.tide.color and v.twoTone==true)
-   assert(find(v,"Shirt_Torso").part.Color==Color3.fromHex("#1A8C9E")and find(v,"Shirt_Torso").colorRole=="own")
+   for name,hex in pairs({Shirt_Tee_Torso="#33539E",Shirt_Tee_SleeveL="#33539E",Hat_FlowerCrown="#58B368",Hat_FlowerCrown_Centers="#FFD23F",EyeL_AltSparkle_White="#FFFFFF",Mouth_AltBlep_Tongue="#FF7C9C"})do
+    local e=assert(find(v,name),name);assert(e.colorRole=="own"and e.part.Color:ToHex()==Color3.fromHex(hex):ToHex(),name)
+   end
+   for _,name in ipairs({"EyeL_AltSparkle","EyeR_AltSparkle","Mouth_AltBlep"})do
+    local e=assert(find(v,name),name);assert(e.colorRole=="face"and e.part.Color==v.colors.face,name)
+   end
+   -- Every piece of an item shares its item id.
+   assert(find(v,"Hat_FlowerCrown").item=="flowercrown"and find(v,"Hat_FlowerCrown_Petals").item=="flowercrown"and find(v,"Hat_FlowerCrown_Petals").piece=="Petals")
+   -- A squint scales the whole sparkle eye about one centre: shine and iris stay inside the white.
+   v.expression="pleased";for _=1,40 do v.poseDirty=true;v:update(.1)end
+   for _,s in ipairs({"L","R"})do
+    local white=find(v,"Eye"..s.."_AltSparkle_White").part
+    for _,piece in ipairs({"Shine","Iris"})do
+     local p=find(v,"Eye"..s.."_AltSparkle_"..piece).part;local y=white.CFrame:PointToObjectSpace(p.Position).Y
+     assert(math.abs(y)<=white.Size.Y/2+1e-3,piece.." "..s.." left the eye while squinting")
+    end
+   end
+   v.expression="neutral";for _=1,40 do v.poseDirty=true;v:update(.1)end
+   -- The open crown keeps the S4 horns shown under it.
+   assert(shown(find(v,"HornL_S4"))and v.model:GetAttribute("VisibleHorns")==4)
    a.secondaryDoses=H.emptyCounts();a.secondaryDoses.rose=5;v:applyAppearance(a);v:update(0)
    assert(find(v,"HornL_S4").part.Color==H.ById.rose.color or find(v,"HornL_S4").color==H.ById.rose.color,"horn ignored the new secondary")
   end)
@@ -114,11 +138,16 @@ return function(client,parent)
    assert(v.attachmentState.charmCenterHidden==true and shown(find(v,"Hat_Beanie")))
    v:applyAppearance(appearance(5,0,{}));v:update(0)
    assert(shown(find(v,"HornL_S5"))and not find(v,"Hat_Beanie")and math.abs(v.featureHaloLift-.1*v.scale)<1e-6,"horns did not return / charm lift")
-   v:applyAppearance(appearance(0,0,{Eyes="round",Mouth="w",Tail="arrow",EarPiercingR="ring"}));v:update(0)
+   v:applyAppearance(appearance(0,0,{Eyes="sleepy",Mouth="blep",Tail="heart",EarPiercingR="starstud"}));v:update(0)
    for _,name in ipairs({"EyeL","EyeR","MouthSmile","Tail"})do assert(find(v,name).part.Transparency==1,"default not replaced "..name)end
-   for _,name in ipairs({"EyeL_AltRound","EyeR_AltRound","Mouth_AltW","Tail_AltArrow","HelixR_Ring"})do assert(shown(find(v,name)),name)end
-   assert(not find(v,"HelixL_Ring")and not find(v,"EyeL_AltButton"))
-   assert(find(v,"EyeL_AltRound").part.TextureID==bear.attachmentTextures.eye)
+   for _,name in ipairs({"EyeL_AltSleepy","EyeR_AltSleepy","Mouth_AltBlep","Mouth_AltBlep_Tongue","Tail_AltHeart","HelixR_StarStud"})do assert(shown(find(v,name)),name)end
+   assert(not find(v,"HelixL_StarStud")and not find(v,"EyeL_AltSparkle")and not find(v,"HelixL_Ring"))
+   -- The Blep is neutralOnly: another mood brings the default mouth back and hides the Blep.
+   assert(find(v,"MouthSmile").neutralSuppressed==true and not find(v,"MouthSmile").suppressed)
+   v.expression="sleepy";for _=1,40 do v.poseDirty=true;v:update(.1)end
+   assert(not shown(find(v,"Mouth_AltBlep"))and not shown(find(v,"Mouth_AltBlep_Tongue")),"blep shown off the neutral face")
+   v.expression="neutral";for _=1,40 do v.poseDirty=true;v:update(.1)end
+   assert(shown(find(v,"Mouth_AltBlep"))and find(v,"MouthSmile").part.Transparency==1,"blep did not return on the neutral face")
    v:applyAppearance(appearance(0,0,{}));v:update(0)
    for _,name in ipairs({"EyeL","EyeR","MouthSmile","Tail"})do assert(find(v,name).part.Transparency==0,"default did not return "..name)end
   end)
@@ -161,8 +190,17 @@ return function(client,parent)
    end
   end)
   test("rules: normalise unknown items, one item per slot, a Back wearable hides wings, flags drive exclusions",function()
-   assert(next(Rules.normalize(bear,{Hat="crown",Wings="beanie",Eyes="button",EarPiercing="ring"}))=="Eyes")
-   local items=Rules.items(bear);assert(#items==11,#items)
+   assert(next(Rules.normalize(bear,{Hat="crown",Wings="beanie",Eyes="sparkle",EarPiercing="ring",Mouth="o",Tail="arrow"}))=="Eyes","placeholder ids must be gone")
+   -- 3 hats, 2 shirts, 2 necklaces, 2 helix pairs x 2 sides, 4 eyes (2 unsold face alts + sparkle, sleepy), 2 mouths, 1 tail.
+   local items=Rules.items(bear);assert(#items==18,#items)
+   local sold=require(Shared.WearableCatalog).forPet("pip").order;assert(#sold==13,"manifest items "..#sold)
+   for _,item in ipairs(sold)do assert(item.price==({common=15,rare=30,showcase=60})[item.tier],item.id)end
+   -- Real manifest flags: full hats hide horns; the Flower Crown is an open crown (horns and the centre charm stay) with a low brim.
+
+   local r0=Rules.resolve(bear,{horns=3},{Hat="sunhat"});assert(r0.stages.horns==0 and r0.charmCenterHidden,"sun hat kept horns")
+   r0=Rules.resolve(bear,{horns=3},{Hat="flowercrown"});assert(r0.stages.horns==3 and not r0.charmCenterHidden and r0.blocked.Forehead,"flower crown hid horns or kept the forehead")
+   r0=Rules.resolve(bear,{},{Shirt="hoodie",Neck="bellcollar"});assert(r0.blocked.Chest,"printedChest did not block the chest slot")
+   local neckShown=false;for _,a in ipairs(r0.show)do if a.slot=="Neck"then neckShown=true end end;assert(neckShown,"a necklace draws over a shirt")
    assert(Rules.hasFeature(bear,"horns")and Rules.hasFeature(bear,"wings")and not Rules.hasFeature(bear,"claws"))
    local fake=table.clone(bear);fake.attachments=table.clone(bear.attachments)
    table.insert(fake.attachments,{name="Back_Pack",slot="Back",anchor="Back",channel="Body",colorRole="own",color="#FFFFFF",item="pack",center={0,.5,-.3},size={.3,.3,.2}})

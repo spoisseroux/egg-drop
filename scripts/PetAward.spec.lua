@@ -19,7 +19,7 @@ return function(server)
 					return copy(value)
 				end}
 		end
-		local h=H.load(1,{rank=1},adapter("a"));assert(h.status=="Ready"and h.state.version==9)
+		local h=H.load(1,{rank=1},adapter("a"));assert(h.status=="Ready"and h.state.version==10)
 		return h,db,c,adapter
 	end
 	local function candidate(h)return H.petCandidate(h,"server-lease","pip")end
@@ -98,13 +98,13 @@ return function(server)
 	end)
 	test("authentic v3 upgrades preserve every old nested fact and sibling",function()
 		local h,db,_,adapter=fixture();assert(H.release(h));local old=db.player_1.hatching
-		old.version=3;old.quests=nil;old.contracts={day="20",progress={runs=0,chain=0,score=0},claimedMask=0};old.petDay,old.petCount,old.lastPetAward=nil,nil,nil
+		old.version=3;old.quests=nil;old.petWearables=nil;old.contracts={day="20",progress={runs=0,chain=0,score=0},claimedMask=0};old.petDay,old.petCount,old.lastPetAward=nil,nil,nil
 		-- Authentic v3 input: the fixture root is now v8, so drop the later Hue/Material/Toy/Feature namespaces.
 		for _,key in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","materialReservation","pendingMaterialResult","lastMaterialResult","hueInventory","petHues","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyLastHueResult","legacyHueEgg","legacyHueRedemption","pendingHueResult","hueReservation","hueAssignments"})do old[key]=nil end
 		old.mastery.pip=10;old.masteryChallenges.pip=7;old.masteryLegacyMask=1;old.totalWins=4
 		old.lastHatch={id="old-result",petId="pip",duplicate=true};db.player_1.keep={value=17}
 		local captured=copy(old)
-		h=H.load(1,{},adapter("b"));assert(h.status=="Ready"and h.state.version==9)
+		h=H.load(1,{},adapter("b"));assert(h.status=="Ready"and h.state.version==10)
 		assert(h.state.nectar==captured.nectar and h.state.inventoryMask==captured.inventoryMask and h.state.mastery.pip==10)
 		assert(h.state.masteryChallenges.pip==7 and h.state.masteryLegacyMask==1 and h.state.totalWins==4)
 		assert(h.state.contracts==nil and h.state.quests.v==1 and h.state.lastHatch.id=="old-result"and db.player_1.keep.value==17)

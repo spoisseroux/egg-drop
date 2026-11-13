@@ -308,13 +308,13 @@ return function(Hatching, Catalog)
 		assert(Hatching.release(h))
 		local old = db.player_1.hatching
 		old.version, old.mastery.pip, old.mastery.wick = 2, 3, 2
-		old.quests = nil -- authentic v2 input (v2 upgrade adds contracts)
+		old.quests, old.petWearables = nil, nil -- authentic v2 input (v2 upgrade adds contracts)
 		for _,key in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","materialReservation","pendingMaterialResult","lastMaterialResult","hueInventory","petHues","hueItemReceipts","hueReceiptOrder","hueMigrationId","hueMigrationAcknowledged","legacyLastHueResult","legacyHueEgg","legacyHueRedemption","pendingHueResult","hueReservation"})do old[key]=nil end
 		old.hueAssignments=nil;old.petDay,old.petCount,old.lastPetAward=nil,nil,nil -- Authentic pre-pet v2 input.
 		old.masteryChallenges, old.masteryLegacyMask, old.contracts, old.totalWins = nil, nil, nil, nil
 		db.player_1.keep, old.nectar = "untouched", 47
 		h = Hatching.load(1, {}, adapter("b"))
-		assert(h.status == "Ready" and h.state.version == 9 and h.state.nectar == 47)
+		assert(h.status == "Ready" and h.state.version == 10 and h.state.nectar == 47)
 		assert(h.state.petCount==0 and h.state.petDay==Hatching.public(h).dailyDay)
 		local public = Hatching.public(h)
 		assert(public.mastery.pip == 3 and public.mastery.wick == 2 and public.masteryLegacyMask == 1)
@@ -353,7 +353,7 @@ return function(Hatching, Catalog)
 		local _, c, adapter = fixture()
 		c.replay = true
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
-		assert(h.state.version==9 and h.state.contracts==nil and h.state.quests.v==1)
+		assert(h.state.version==10 and h.state.contracts==nil and h.state.quests.v==1)
 		assert(Hatching.award(h, 1, 8, runSummary(h)))
 		assert(h.state.nectar == 14 and h.state.lastRunReward.total == 8 and h.state.lastRunReward.questAuto == 0)
 		assert(h.state.totalWins == 1 and type(h.state.lastRunReward.quests)=="table")
@@ -478,11 +478,11 @@ return function(Hatching, Catalog)
 		local db, _, adapter = fixture()
 		local h = Hatching.load(1, { rank = 1 }, adapter("a"))
 		assert(Hatching.release(h))
-		local v8=copy(db.player_1.hatching);v8.version=8;v8.quests=nil
+		local v8=copy(db.player_1.hatching);v8.version=8;v8.quests=nil;v8.petWearables=nil
 		v8.contracts={day="20",progress={runs=1,chain=3,score=500},claimedMask=6}
 		db.player_1.hatching=v8
 		h=Hatching.load(1,{},adapter("b"))
-		assert(h.status=="Ready"and h.state.version==9 and h.state.contracts==nil and h.state.quests.v==1)
+		assert(h.status=="Ready"and h.state.version==10 and h.state.contracts==nil and h.state.quests.v==1)
 		for _,broken in ipairs({"junk",{v=1},{v=1,catalog=0},"catalog"})do
 			assert(Hatching.release(h))
 			if broken=="catalog"then db.player_1.hatching.quests.catalog=QuestCatalog.CatalogVersion+1
