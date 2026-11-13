@@ -657,8 +657,10 @@ for side, sx in (("L", -1.0), ("R", 1.0)):
     bm = bmesh.new()
     star4 = [(0.036 * (1.0 if i % 2 == 0 else 0.36) * math.cos(math.pi / 2 + math.pi * i / 4),
               0.044 * (1.0 if i % 2 == 0 else 0.36) * math.sin(math.pi / 2 + math.pi * i / 4)) for i in range(8)]
-    face_patch(bm, e.x + 0.020, e.z + 0.040, star4, rise=0.042, rim=0.034, sink=-0.026, mid=0.0)
-    face_patch(bm, e.x - 0.026, e.z - 0.006, ellipse_outline(6, 0.012, 0.014), rise=0.040, rim=0.034, sink=-0.026, mid=0.0)
+    # Mirrored per side (outer upper corner): the same +x offset sat toward the face centre on the left
+    # eye, where the head curves forward, and sank that shine into the pupil.
+    face_patch(bm, e.x + sx * 0.020, e.z + 0.040, star4, rise=0.042, rim=0.034, sink=-0.026, mid=0.0)
+    face_patch(bm, e.x - sx * 0.026, e.z - 0.006, ellipse_outline(6, 0.012, 0.014), rise=0.040, rim=0.034, sink=-0.026, mid=0.0)
     finish(f"Eye{side}_AltSparkle_Shine", bm, "Eye" + side, C_WHITE, "sparkle", "Eye" + side, "Head", piece="Shine", facing=Vector((0, -1, 0)))
     # ---- Sleepy Eyes: a closed, drooping lid with two lashes at the outer corner (face ink)
     bm = bmesh.new()

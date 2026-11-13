@@ -7919,25 +7919,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSparkle_Shine</string>
           <Content name="MeshId">
-            <url>rbxassetid://97372428522029</url>
+            <url>rbxassetid://127409760942346</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.09399998999999999</X>
-            <Y>0.10212433000000001</Y>
-            <Z>0.037215609999999996</Z>
+            <X>0.09399999618530273</X>
+            <Y>0.10212432861328125</Y>
+            <Z>0.06896095275878907</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>9.399999</X>
-            <Y>10.212433</Y>
-            <Z>3.721561</Z>
+            <X>9.399999618530273</X>
+            <Y>10.212432861328125</Y>
+            <Z>6.896095275878906</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2055</X>
+            <X>0.2235</X>
             <Y>1.06294</Y>
-            <Z>-0.44844</Z>
+            <Z>-0.44015</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>

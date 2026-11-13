@@ -759,7 +759,9 @@ function Hatching.buyFaceplate(handle, operationId, plateId, price)
 	local candidate = handle.pending and handle.pending.signature == signature and handle.pending.candidate
 		or table.freeze({ plateId = plateId, price = price, operationId = operationId })
 	if candidate.plateId ~= plateId then return false, "OperationConflict" end
-	local ok, reason = transact(handle, signature, handle.state.revision, Faceplates.apply, candidate, signature)
+	-- The digest binds the id to its plate, so a reused id for another plate is
+	-- refused as OperationConflict instead of matching lastOperation as "Saved".
+	local ok, reason = transact(handle, signature, handle.state.revision, Faceplates.apply, candidate, signature, nil, "plate:" .. candidate.plateId)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end

@@ -1,6 +1,6 @@
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
-local Catalog=require(Shared.ToyCatalog);local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
+local OddsText=require(Shared.OddsText);local Catalog=require(Shared.ToyCatalog);local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
 local Panel={};Panel.__index=Panel
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
@@ -51,7 +51,7 @@ function Panel:refresh(state,petId,mode,animate)
   n.Text=(if selected==id then "✓ "else "")..Catalog.ById[id].name;n.Interactable=self.intent~=nil and not self.intent.pending and selected~=id
   Art.tab(n,selected==id,n.Interactable)
  end
- local odds={};for _,entry in ipairs(Catalog.odds(self.state.toyUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..string.format("%.3g%%",entry.probability*100))end
+ local odds={};for _,entry in ipairs(Catalog.odds(self.state.toyUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
  self.pool.Visible=buy;self.pool.Text=if #odds==0 then "All toys owned"else table.concat(odds,"\n")
  self.shop.Visible=not receipt and not buy;self.shop.Text=if #odds==0 then "All toys owned"else "Toy Egg · 8 Stars"
  self.shop.Interactable=#odds>0 and self.intent~=nil and not self.intent.pending;self.useNow.Interactable=self.intent~=nil and not self.intent.pending

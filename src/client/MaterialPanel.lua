@@ -1,6 +1,6 @@
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
-local Catalog=require(Shared.MaterialCatalog)
+local OddsText=require(Shared.OddsText);local Catalog=require(Shared.MaterialCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal)
 local Panel={};Panel.__index=Panel
@@ -64,7 +64,7 @@ function Panel:refresh(state,petId,mode,animate)
   Art.tab(node,selected==id,node.Interactable)
   node:SetAttribute("AccessibleLabel",Catalog.ById[id].name..(if selected==id then " · Current"else " · Use for "..(petId or "this pet")))
  end
- local odds={};for _,entry in ipairs(Catalog.odds(self.state.materialUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..string.format("%.2g",entry.probability*100).."%")end
+ local odds={};for _,entry in ipairs(Catalog.odds(self.state.materialUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
  self.pool.Visible=buy
  self.pool.Text=if #odds==0 then "All materials owned"elseif not self.state.materialAvailable then "Material Eggs are not ready yet."else table.concat(odds,"\n")
  self.shop.Text=if #odds==0 then "All materials owned"else "Material Egg · 16 Stars"

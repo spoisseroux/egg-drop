@@ -25,7 +25,9 @@ function Catalog.forPet(petId)
     local item=table.freeze({id=raw.id,slot=raw.slot,name=raw.name or raw.id,tier=raw.tier or "common",price=raw.price,
      flags=table.freeze(table.clone(raw.flags or {})),perSide=perSide,
      keys=table.freeze(if perSide then {raw.slot.."L",raw.slot.."R"}else {raw.slot}),
-     primary=if type(raw.primary)=="string"and string.sub(raw.primary,1,4)=="own:"then string.sub(raw.primary,5)else nil})
+     primary=if type(raw.primary)=="string"and string.sub(raw.primary,1,4)=="own:"then string.sub(raw.primary,5)else nil,
+     -- Tinted items name the pet palette role their main piece takes ("secondary", "face").
+     role=if type(raw.primary)=="string"and string.sub(raw.primary,1,4)~="own:"then raw.primary else nil})
     table.insert(order,item);byId[item.id]=item
    end
   end

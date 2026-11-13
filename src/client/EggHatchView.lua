@@ -10,6 +10,7 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 local Catalog = require(ReplicatedStorage.Shared.EggCatalog)
 local EggArt = require(script.Parent.EggArt)
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
+local OddsText=require(ReplicatedStorage.Shared.OddsText)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 local JarArt=require(script.Parent.HueJarArt)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog);local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
@@ -575,18 +576,18 @@ function View:renderBody()
  if self.selected=="toy"then
   copy("PoolHeading","New toys · no duplicates","Action")
   local odds=ToyCatalog.odds(self.state.toyUnlocks)
-  if #odds==0 then copy("ToyCollection","All toys owned","Body")else for _,r in ipairs(odds)do copy("ToyOdds_"..r.id,ToyCatalog.ById[r.id].name.." · "..string.format("%.3g%%",r.probability*100),"Body")end end
+  if #odds==0 then copy("ToyCollection","All toys owned","Body")else for _,r in ipairs(odds)do copy("ToyOdds_"..r.id,ToyCatalog.ById[r.id].name.." · "..OddsText.format(r.probability),"Body")end end
   copy("ToyRules","Unlock once for all your pets. Choose one owned toy or None per pet at the cradle for free. Garden play gives no rewards.","Body")
  elseif self.selected=="feature"then
   copy("PoolHeading","One stored feature item · fixed odds","Action")
-  for _,r in ipairs(FeatureCatalog.odds())do copy("FeatureOdds_"..r.id,FeatureCatalog.ById[r.id].name.." · "..r.rarity.." · "..string.format("%.0f%%",r.probability*100),"Body")end
+  for _,r in ipairs(FeatureCatalog.odds())do copy("FeatureOdds_"..r.id,FeatureCatalog.ById[r.id].name.." · "..r.rarity.." · "..OddsText.format(r.probability),"Body")end
   copy("FeatureRules","Grow any owned pet one stage, up to 5. Freely show any earned size, or hide it. Stacks hold 99 each; a rolled full stack uses no Stars. Store items for other or future pets.","Body")
  elseif self.selected=="material"then
   copy("PoolHeading","New materials · no duplicates","Action")
   local odds=MaterialCatalog.odds(self.state.materialUnlocks)
   if #odds==0 then copy("MaterialCollection","All materials owned","Body")
   elseif not self.state.materialAvailable then copy("MaterialAvailability","Material Eggs are not ready yet.","Body")
-  else for _,entry in ipairs(odds)do copy("MaterialOdds_"..entry.id,MaterialCatalog.ById[entry.id].name.." · "..string.format("%.2g%%",entry.probability*100),"Body")end end
+  else for _,entry in ipairs(odds)do copy("MaterialOdds_"..entry.id,MaterialCatalog.ById[entry.id].name.." · "..OddsText.format(entry.probability),"Body")end end
   copy("MaterialRules","Unlock once for all your pets. Choose any owned material for free in Materials. Standard is always available.","Body")
  elseif self.selected=="hue"then
   copy("PoolHeading","One saved jar · all possible items","Action")

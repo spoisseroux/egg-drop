@@ -77,6 +77,27 @@ return function(server)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
 	end)
 
+	test("a reused operation id with another plate is refused, never a false Saved", function()
+		local h, db, c = fixture()
+		fund(h, 200)
+		assert(H.buyFaceplate(h, "buy-r", "night_orb", 80))
+		local balance, writes = h.state.nectar, c.writes
+		local ok, reason = H.buyFaceplate(h, "buy-r", "tidepool", 40)
+		assert(not ok and reason == "OperationConflict", tostring(ok) .. " " .. tostring(reason))
+		assert(not Faceplates.owns(h.state, "tidepool") and h.state.nectar == balance and c.writes == writes)
+		assert(db.player_1.hatching.lastOperation.digest == "plate:night_orb")
+		-- Another server with a stale snapshot is refused inside the callback too.
+		local h2, db2 = fixture()
+		fund(h2, 200)
+		local stale = copy(h2.state)
+		assert(H.buyFaceplate(h2, "buy-s", "night_orb", 80))
+		local committedNectar = db2.player_1.hatching.nectar
+		h2.state = stale
+		ok, reason = H.buyFaceplate(h2, "buy-s", "tidepool", 40)
+		assert(not ok and reason == "OperationConflict", "callback: " .. tostring(ok) .. " " .. tostring(reason))
+		assert(db2.player_1.hatching.nectar == committedNectar and not Faceplates.owns(db2.player_1.hatching, "tidepool"))
+	end)
+
 	test("a replayed UpdateAsync callback and commit-then-error charge once", function()
 		local h, db, c = fixture()
 		fund(h, 60)

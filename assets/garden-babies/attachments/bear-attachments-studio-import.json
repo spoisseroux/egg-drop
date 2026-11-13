@@ -1,7 +1,7 @@
 {
  "assetId": "93989945223773",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids.",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914.",
  "previousAssetIds": [
   "97156894572368",
   "120398944545621"
@@ -76,16 +76,16 @@
    ]
   },
   "Bear__EyeL_AltSparkle_Shine": {
-   "id": "rbxassetid://97372428522029",
+   "id": "rbxassetid://127409760942346",
    "rel": [
-    20.551842,
+    22.348154,
     12.854485,
-    -45.881195
+    -45.052483
    ],
    "ms": [
-    9.399999,
-    10.212433,
-    3.721561
+    9.399999618530273,
+    10.212432861328125,
+    6.896095275878906
    ]
   },
   "Bear__EyeL_AltSparkle_White": {

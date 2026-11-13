@@ -14,6 +14,7 @@ local Catalog=require(Shared.WearableCatalog)
 local Pets=require(Shared.PetCatalog)
 local Rules=require(Shared.PetAttachmentRules)
 local Defs=require(Shared.PetRigDefinitions)
+local Palette=require(Shared.PetPalette)
 local Kit=require(script.Parent.DeckKit)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
@@ -152,7 +153,7 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   local tx=10+side+12
   local nameLabel=txt(tile,"Strong",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
-  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke}
+  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role}
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index)end end)
  end
  if #self.tiles==0 then txt(holder,"Body","Nothing for this slot yet.","soft",x0,y0,300,24)end
@@ -251,7 +252,10 @@ end
 
 function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.id end
 function Shop:refresh()
+ -- Tinted items show this pet's own palette colour (its secondary, face...), not grey.
+ local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
+  if tile.role and palette and typeof(palette[tile.role])=="Color3"then tile.swatch.BackgroundColor3=palette[tile.role]end
   local text,role=Shop.tileStatus(self.petId,tile.id,self.ctx)
   if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
