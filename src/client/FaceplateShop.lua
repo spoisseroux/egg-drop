@@ -48,8 +48,8 @@ function Shop.tileStatus(id,ctx)
  return "🔒 "..short,"dim"
 end
 -- Pure: grid navigation (no wrap).
-function Shop.step(index,dx,dy,count)
- local cols=Shop.Columns
+function Shop.step(index,dx,dy,count,columns)
+ local cols=columns or Shop.Columns
  local col,row=(index-1)%cols,math.floor((index-1)/cols)
  local rows=math.ceil(count/cols)
  col=math.clamp(col+dx,0,cols-1);row=math.clamp(row+dy,0,rows-1)
@@ -101,14 +101,30 @@ end
 -- callbacks: equip(id), buy(id, price) -> bool sent, back(), backgrounds()
 function Shop.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},index=1,ctx={equipped=Themes.Default,wallet=0,facts={}},
-  visible=false,pending=nil,confirmUntil=0},Shop)
+  visible=false,pending=nil,confirmUntil=0,columns=Shop.Columns},Shop)
  local root=Kit.frame(host,"FaceplateShop","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
- root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.Visible=false;root.ClipsDescendants=true;Kit.stroke(root)
+ root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.Visible=false;root.ClipsDescendants=true;self.rootStroke=Kit.stroke(root)
  local gradient=Kit.frame(root,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
- local content=Kit.frame(root,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));content.ZIndex=root.ZIndex+2
- self.root,self.content=root,content
+ self.gradient=gradient
+ self.root=root
  self.scale=Kit.node("UIScale",root,{Scale=1})
+ self:build(nil)
+ return self
+end
+
+function Shop:build(view)
+ if self.content then self.content:Destroy()end
+ if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
+ self.view=view;self.key=Shop.viewKey(view)
+ local root=self.root
+ local phone=view~=nil
+ root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone
+ root.ClipsDescendants=not phone
+ local content=Kit.frame(root,"Content",nil,UDim2.new(),if phone then UDim2.fromOffset(view.W,view.H)else UDim2.fromOffset(848,608));content.ZIndex=root.ZIndex+2
+ self.content=content
+ if phone then return self:buildCompact(view)end
+ self.columns=Shop.Columns
  txt(content,"Label","DECK STYLE","dim",24,14,200,16)
  txt(content,"Title","Faceplates","text",24,32,300,32)
  self.wallet=Kit.wallet(content,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(824,24)
@@ -153,6 +169,7 @@ function Shop.new(host,callbacks)
   end)
  end
  self.ring=Kit.focusRing(root) -- root carries the UIScale the ring divides by
+ self.grid=nil
  -- Hint bar.
  local hints=Kit.frame(content,"Hints",nil,UDim2.fromOffset(24,560),UDim2.fromOffset(500,24))
  local x=0
@@ -162,10 +179,127 @@ function Shop.new(host,callbacks)
   x+=28+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
  end
  txt(content,"Small","Fixed prices. No random plates.","dim",524,560,300,24,{TextXAlignment=Enum.TextXAlignment.Right})
- return self
+end
+
+-- Pure (UI-SPEC-COMPACT 9): pane width, grid width, columns and tile width.
+function Shop.compactGrid(W,H)
+ local pw=if W<700 then 200 else 232
+ local gw=W-pw-52
+ local cols=if gw>=420 then 2 else 1
+ return{pw=pw,gw=gw,cols=cols,tileW=math.floor((gw-8-(cols-1)*8)/cols),paneH=H-82,gridH=H-82}
+end
+function Shop.viewKey(view)
+ return if view then string.format("%dx%d:%d",view.W,view.H,view.hx)else "regular"
+end
+
+-- Compact (phone) shop: a scrolling grid on the left, a pinned preview pane with
+-- Buy / Equip on the right, all in one menu sheet.
+function Shop:buildCompact(v)
+ local content=self.content
+ local W,H=v.W,v.H
+ local grid=Shop.compactGrid(W,H)
+ self.columns=grid.cols
+ local sheet=Kit.sheet(content,W,H)
+ local body=Kit.frame(content,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3
+ txt(body,"Title","Faceplates","text",v.hx,18,200,24,{TextSize=20})
+ local titleW=game:GetService("TextService"):GetTextSize("Faceplates",20,Enum.Font.BuilderSansBold,Vector2.new(400,40)).X
+ self.wallet=Kit.wallet(body,32);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(W-66,14)
+ local backgrounds=Kit.button(body,"Backgrounds",{variant="ghost",text="Backgrounds",size=Vector2.new(122,44),textSize=14,selectable=false})
+ backgrounds.Position=UDim2.fromOffset(v.hx+math.ceil(titleW)+14,8)
+ local bs=Kit.buttonState(backgrounds)
+ -- Drawn 36 high with a 1 px stroke inside the 44-high hit frame.
+ bs.fill.Position=UDim2.fromOffset(0,4);bs.fill.Size=UDim2.new(1,0,0,36);bs.edge.Visible=false
+ Kit.setFontRole(bs.label,"Strong")
+ local outline=Kit.frame(backgrounds,"Outline",nil,UDim2.fromOffset(0,4),UDim2.new(1,0,0,36),12);Kit.stroke(outline)
+ backgrounds.Activated:Connect(function()if self.callbacks.backgrounds then self.callbacks.backgrounds()end end)
+ self.backgroundsButton=backgrounds
+ local back=Kit.backArrow(body,true);back.root.Position=UDim2.fromOffset(W-12,8);back.root.ZIndex=body.ZIndex+5
+ back.root.Activated:Connect(function()if self.callbacks.back then self.callbacks.back()end end)
+ self.backArrow=back
+ -- Preview pane (pinned).
+ local pw,ph=grid.pw,grid.paneH
+ local pane=Kit.card(body,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+ local deckW=if H<340 then 144 else pw-24
+ self.preview=miniDeck(pane,deckW,UDim2.fromOffset((pw-deckW)/2,10))
+ local nameY=10+deckW/2+16+9
+ self.name=txt(pane,"Title","","text",12,nameY-12,pw-24-90,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
+ self.tier=Kit.chip(pane,"RARE",nil,22);self.tier.label.TextSize=12;self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-12,nameY)
+ self.finish=txt(pane,"Small","","soft",12,nameY+22-9,pw-24,18,{TextSize=12})
+ local buttonY=ph-60
+ local statusY=buttonY-14
+ -- Tint sample only when at least 44 px is free above the status line.
+ self.sampleParts=nil
+ local sampleTop=nameY+38
+ if (statusY-10)-(sampleTop+36)>=8 and (statusY-10)-(nameY+22+9)>=44 then
+  local sample=Kit.frame(pane,"Sample",nil,UDim2.fromOffset(12,sampleTop),UDim2.fromOffset(pw-24,36),10);sample.BackgroundTransparency=0
+  Kit.stroke(sample)
+  local samplePrimary=Kit.frame(sample,"Primary",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(70,24),8);samplePrimary.BackgroundTransparency=0
+  local sampleLabel=txt(samplePrimary,"Strong","Primary",nil,0,0,70,24,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Center})
+  local track=Kit.frame(sample,"Track",nil,UDim2.fromOffset(86,15),UDim2.fromOffset(pw-24-86-34,6),999);track.BackgroundTransparency=0
+  local trackFill=Kit.frame(track,"Fill",nil,UDim2.new(),UDim2.fromScale(.68,1),999);trackFill.BackgroundTransparency=0
+  local star=Kit.icon(sample,"star",14);star.Position=UDim2.fromOffset(pw-24-24,11)
+  self.sampleParts={sample=sample,primary=samplePrimary,label=sampleLabel,track=track,fill=trackFill}
+ end
+ self.status=txt(pane,"Body","","soft",12,statusY-10,pw-24,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+ local action,actionState=Kit.button(pane,"Action",{variant="primary",text="Equip",glyph="A",size=Vector2.new(pw-24,48),textSize=16,selectable=false})
+ action.Position=UDim2.fromOffset(12,buttonY);self.action,self.actionState=action,actionState
+ action.Activated:Connect(function()self:act(true)end)
+ -- Grid: a vertical ScrollingFrame, 4 px bar inside an 8 px gutter.
+ local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,64),
+  Size=UDim2.fromOffset(grid.gw,grid.gridH),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
+  ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
+ local rows=math.ceil(#Themes.Order/grid.cols)
+ list.CanvasSize=UDim2.fromOffset(0,rows*72-8)
+ self.grid=list
+ self.tiles={}
+ for index,id in ipairs(Themes.Order)do
+  local col,row=(index-1)%grid.cols,math.floor((index-1)/grid.cols)
+  local tile=Kit.node("TextButton",list,{Name="Tile_"..id,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
+   Position=UDim2.fromOffset(col*(grid.tileW+8),row*72),Size=UDim2.fromOffset(grid.tileW,64),ZIndex=list.ZIndex+1})
+  Kit.corner(tile,12)
+  local stroke=Kit.stroke(tile)
+  tile:SetAttribute("AccessibleLabel",Themes.ById[id].name)
+  local deck=miniDeck(tile,88,UDim2.fromOffset(10,9));deck.set(Themes.ById[id],id)
+  local nameLabel=txt(tile,"Strong",Themes.ById[id].name,"text",108,12,grid.tileW-116,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+  local status=txt(tile,"Counter","","soft",108,34,grid.tileW-116,18,{TextSize=13})
+  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
+  tile.Activated:Connect(function()
+   if self.index==index then self:act(true)else self:focus(index)end
+  end)
+ end
+ self.ring=Kit.focusRing(self.root)
+end
+-- Keep the selected tile fully in view with 8 px to spare; `anchorRow` puts it
+-- in that visible row (the equipped plate opens in the second row).
+function Shop:scrollTo(index,anchorRow)
+ local list=self.grid;if not list then return end
+ local cols=self.columns;local row=math.floor((index-1)/cols)
+ local top,bottom=row*72,row*72+64
+ local view=list.AbsoluteWindowSize.Y;if view<=0 then view=list.Size.Y.Offset end
+ local maxY=math.max(0,list.CanvasSize.Y.Offset-view)
+ local y=list.CanvasPosition.Y
+ if anchorRow then y=top-72*(anchorRow-1)
+ elseif top-8<y then y=top-8
+ elseif bottom+8>y+view then y=bottom+8-view end
+ list.CanvasPosition=Vector2.new(0,math.clamp(y,0,maxY))
+end
+-- Repaint after a rebuild.
+function Shop:relayout()
+ self.wallet.set(self.ctx.wallet)
+ self:refresh()
+ if self.visible then self.root.Visible=true;self:focus(self.index,true)end
 end
 
 function Shop:fit(size,rect)
+ -- Compact phone roots get their own layout at scale 1 (UI-SPEC-COMPACT 9).
+ if not rect and Kit.compactRule(size.X,size.Y)then
+  local kx,kh=Kit.keepOut()
+  local view={phone=true,W=math.floor(size.X),H=math.floor(size.Y),kx=kx,kh=kh,hx=math.max(kx+12,24)}
+  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.new();self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
+  if self.key~=Shop.viewKey(view)then self:build(view);self:relayout()end
+  return
+ end
+ if self.view then self.root.Size=UDim2.fromOffset(848,608);self:build(nil);self:relayout()end
  -- Inside the deck LCD when given its rect (view px); otherwise centred and fitted.
  if rect then
   self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(rect.x,rect.y)
@@ -187,6 +321,7 @@ end
 function Shop:refresh()
  for index,tile in ipairs(self.tiles)do
   local text,role=Shop.tileStatus(tile.id,self.ctx)
+  if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
@@ -208,13 +343,15 @@ function Shop:paintPane()
  self.finish.Text=finishName(theme)
  -- The sample is drawn in that plate's own panel and accent (live preview).
  local p=self.sampleParts
- p.sample.BackgroundColor3=theme.ui.inset;p.primary.BackgroundColor3=theme.accent;p.label.TextColor3=theme.ink
- p.track.BackgroundColor3=theme.ui.raised;p.fill.BackgroundColor3=theme.accent
+ if p then
+  p.sample.BackgroundColor3=theme.ui.inset;p.primary.BackgroundColor3=theme.accent;p.label.TextColor3=theme.ink
+  p.track.BackgroundColor3=theme.ui.raised;p.fill.BackgroundColor3=theme.accent
+ end
  local status=Shop.status(id,self.ctx)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.plateId==id
  self.status.Text=if pending then "Buying…"elseif self.errorId==id and self.errorText then self.errorText else status.text
- local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then "danger"else "soft"
+ local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone)end)
  self.action.Visible=status.button~=nil
  if status.button then
@@ -229,11 +366,13 @@ function Shop:focus(index,instant)
  if index~=self.index then self.confirmId=nil;self.errorId=nil end
  self.index=index
  self:refresh()
+ if self.grid and not self.anchoring then self:scrollTo(index)end
  self.ring.attach(self.tiles[index].button,12)
- if instant then self.ring.root.Visible=self.visible end
+ if instant then self.ring.root.Visible=self.visible and self.ring.root.Visible end
+ if self.action and self.view then Kit.setGlyphVisible(self.action,not Kit.lastInputTouch())end
 end
 function Shop:move(dx,dy)
- local nextIndex=Shop.step(self.index,dx,dy,#self.tiles)
+ local nextIndex=Shop.step(self.index,dx,dy,#self.tiles,self.columns)
  if nextIndex==self.index then return false end
  self:focus(nextIndex);return true
 end
@@ -280,7 +419,8 @@ function Shop:open(equipped)
  local index=table.find(Themes.Order,equipped or self.ctx.equipped)or 1
  self.ctx.equipped=equipped or self.ctx.equipped
  self.confirmId,self.errorId=nil,nil
- self:focus(index,true)
+ self.anchoring=true;self:focus(index,true);self.anchoring=false
+ if self.grid then self:scrollTo(index,2)end
 end
 function Shop:close()
  self.visible=false;self.root.Visible=false;self.ring.hide();self.confirmId=nil

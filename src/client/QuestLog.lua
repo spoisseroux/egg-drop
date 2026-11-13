@@ -37,7 +37,118 @@ local function claimedCount(rows)local n=0;for _,r in ipairs(rows or {})do if r.
 
 function Log.new(overlay,callbacks)
  local self=setmetatable({overlay=overlay,callbacks=callbacks or {},tab="daily",focusIndex=1,visible=false,rows={},pendingRows={}},Log)
- local root=overlay.content
+ self:build(nil)
+ overlay.onLayout=function(view)
+  local key=if view then string.format("%dx%d:%d",view.W,view.H,view.hx)else "regular"
+  if key==self.key then return end
+  self:build(view)
+  if self.visible then self.tabs.select(table.find(Log.Tabs,self.tab)or 1);self:paint()end
+ end
+ return self
+end
+
+-- Pure (UI-SPEC-COMPACT 8): row height, gap and row tops for a root H.
+function Log.compactRows(H)
+ local g=if H<340 then 6 else 8
+ local rh=math.clamp(math.floor((H-134-2*g)/3),56,76)
+ return rh,g,{64,64+rh+g,64+2*(rh+g)}
+end
+-- Compact type floor: the reward button's 22 px glyph letter goes to 12.
+local function glyph12(button)
+ local g=Kit.buttonState(button).glyph
+ local t=g and g:FindFirstChildWhichIsA("TextLabel")
+ if t then t.TextSize=12 end
+end
+-- Pure: tab track width in the header.
+function Log.compactTabsWidth(W,hx)return math.min(312,W-hx-174)end
+
+function Log:clear()
+ if self.ring then self.ring.hide();self.ring.root:Destroy()end
+ for _,child in ipairs(self.overlay.content:GetChildren())do if not child:IsA("UIScale")then child:Destroy()end end
+ self.rows={};self.title=nil;self.view=nil
+end
+
+-- Compact (phone) quest log: full-screen sheet, sticky header (tabs, reset
+-- timer, wallet, back arrow), single-column rows that scroll, pinned footer.
+function Log:buildCompact(v)
+ local root=self.overlay.content
+ local W,H=v.W,v.H
+ self.view=v
+ local sheet=Kit.sheet(root,W,H)
+ local body=Kit.frame(root,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3
+ self.wallet=Kit.wallet(body,32);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(W-66,14)
+ local tw=Log.compactTabsWidth(W,v.hx)
+ self.tabs=Kit.tabs(body,{"Daily 0/3","Weekly 0/3","History"},tw,36,14);self.tabs.root.Position=UDim2.fromOffset(v.hx,12)
+ self.tabs.changed=function(index)self:setTab(Log.Tabs[index])end
+ self.tabsRight=v.hx+tw
+ local clock=Kit.icon(body,"clock",15,"soft");self.clock=clock
+ self.reset=txt(body,"Small","","soft",0,20,160,20,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
+ -- Rows in a scrolling frame between the pinned header and footer.
+ local rh,g=Log.compactRows(H)
+ local footerY=H-62
+ local list=Kit.node("ScrollingFrame",body,{Name="Rows",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,64),
+  Size=UDim2.fromOffset(W-40,footerY-8-64),CanvasSize=UDim2.fromOffset(0,3*rh+2*g),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,
+  ScrollingDirection=Enum.ScrollingDirection.Y,ElasticBehavior=Enum.ElasticBehavior.WhenScrollable})
+ self.rowList=list
+ local w=W-40
+ local small=rh<64
+ for index=1,3 do
+  local y=(index-1)*(rh+g)
+  local row=Kit.node("TextButton",list,{Name="Quest"..index,Text="",AutoButtonColor=false,BackgroundTransparency=0,Selectable=false,
+   Position=UDim2.fromOffset(0,y),Size=UDim2.fromOffset(w,rh),ZIndex=list.ZIndex+1})
+  Kit.corner(row,14);local stroke=Kit.stroke(row)
+  local well=Kit.frame(row,"IconWell","well",UDim2.fromOffset(12,(rh-44)/2),UDim2.fromOffset(44,44),12)
+  local icon=Kit.icon(well,"trophy",22,"text");icon.AnchorPoint,icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
+  local ty=if small then 16 else 19
+  local title=txt(row,"Strong","","text",68,ty-11,w-68-220,22,{TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd})
+  local sub=txt(row,"Small","","soft",68,ty+20-9,w-68-220,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+  local barY=if small then rh-11 else rh-14
+  local bar=Kit.progress(row,6);bar.root.Position=UDim2.fromOffset(68,barY);bar.root.Size=UDim2.fromOffset(math.max(40,w-318),6)
+  local count=txt(row,"Counter","","soft",68+math.max(40,w-318)+10,barY-7,50,20,{TextSize=13})
+  local reward=txt(row,"Counter","","stars",w-128-80,0,80,rh,{TextSize=15,TextXAlignment=Enum.TextXAlignment.Right})
+  local claim=Kit.button(row,"Claim",{variant="reward",text="Claim",glyph="A",size=Vector2.new(104,44),textSize=16,selectable=false})
+  claim.Position=UDim2.fromOffset(w-116,(rh-44)/2);glyph12(claim)
+  local reroll=Kit.button(row,"Reroll",{text="Reroll",size=Vector2.new(104,44),textSize=15,selectable=false});reroll.Position=claim.Position
+  local chip=Kit.chip(row,"CLAIMED",nil,24);chip.label.TextSize=12;chip.set("CLAIMED")
+  chip.root.AnchorPoint=Vector2.new(.5,.5);chip.root.Position=UDim2.fromOffset(w-116+52,rh/2)
+  local slot={row=row,stroke=stroke,well=well,icon=icon,title=title,sub=sub,bar=bar,count=count,reward=reward,claim=claim,reroll=reroll,chip=chip}
+  self.rows[index]=slot
+  claim.Activated:Connect(function()self.focusIndex=index;self:paintFocus();self:act()end)
+  reroll.Activated:Connect(function()self.focusIndex=index;self:paintFocus();self:act()end)
+  row.Activated:Connect(function()self.focusIndex=index;self:paintFocus()end)
+ end
+ -- Pinned footer.
+ local fw=W-40
+ local footer=Kit.frame(body,"Footer","well",UDim2.fromOffset(20,footerY),UDim2.fromOffset(fw,44),12);Kit.stroke(footer)
+ self.footerIcon=Kit.icon(footer,"reroll",18,"accent");self.footerIcon.Position=UDim2.fromOffset(13,13)
+ self.footerTitle=txt(footer,"Strong","","text",40,0,220,44,{TextSize=14,AutomaticSize=Enum.AutomaticSize.X})
+ self.footerSub=txt(footer,"Small","","soft",0,0,280,44,{TextSize=12,Visible=W>=800})
+ local menu=Kit.button(footer,"PocketMenu",{variant="ghost",text="Menu ›",size=Vector2.new(84,44),textSize=15,selectable=false})
+ menu.Position=UDim2.fromOffset(fw-84,0)
+ menu.Activated:Connect(function()if self.callbacks.menu then self.callbacks.menu()end end)
+ local divider=Kit.frame(footer,"Divider",nil,UDim2.fromOffset(fw-86,10),UDim2.fromOffset(1,24));divider.BackgroundTransparency=.88;divider.BackgroundColor3=Color3.new(1,1,1)
+ self.footerValue=txt(footer,"Counter","","stars",fw-96-90,0,90,44,{TextSize=15,TextXAlignment=Enum.TextXAlignment.Right})
+ self.footerLabel=txt(footer,"Label","TODAY","dim",fw-96-90-8-80,0,80,44,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
+ self.bonusBar=Kit.progress(footer,8,3);self.bonusBar.layout(84,4);self.bonusBar.root.Position=UDim2.fromOffset(fw-96-90-8-84,18)
+ self.bonusClaim=Kit.button(footer,"BonusClaim",{variant="reward",text="Claim",glyph="A",size=Vector2.new(104,44),textSize=16,selectable=false})
+ self.bonusClaim.Position=UDim2.fromOffset(fw-96-104,0);glyph12(self.bonusClaim)
+ self.bonusClaim.Activated:Connect(function()self.focusIndex=4;self:paintFocus();self:act()end)
+ self.footer=footer
+ -- History.
+ local history=Kit.node("ScrollingFrame",body,{Name="History",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,64),
+  Size=UDim2.fromOffset(W-40,H-110),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=4,Visible=false,ZIndex=body.ZIndex+1,Selectable=false})
+ Kit.node("UIListLayout",history,{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,0)})
+ self.history=history
+ self.historyFooter=txt(body,"Small","","soft",20,H-40,W-40,20,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
+ self.ring=Kit.focusRing(self.overlay.layer)
+end
+
+function Log:build(view)
+ self:clear()
+ self.key=if view then string.format("%dx%d:%d",view.W,view.H,view.hx)else "regular"
+ self.phone=view~=nil
+ if view then return self:buildCompact(view)end
+ local root=self.overlay.content
  txt(root,"Label","QUEST LOG","dim",24,16,200,16)
  self.title=txt(root,"Title","Today","text",24,34,300,34)
  self.wallet=Kit.wallet(root,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(824,24)
@@ -100,8 +211,7 @@ function Log.new(overlay,callbacks)
    x+=w+6+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
   end
  end
- self.ring=Kit.focusRing(overlay.layer)
- return self
+ self.ring=Kit.focusRing(self.overlay.layer)
 end
 
 function Log:rowsFor(tab)
@@ -134,6 +244,7 @@ end
 function Log:paintHistory()
  for _,child in ipairs(self.history:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
  local q=self.quests;if not q then return end
+ if self.view then return self:paintCompactHistory(q)end
  local today=tonumber(q.day)or 0
  local lastDay,order,weekStars=nil,0,0
  local week=tonumber(q.week)or 0
@@ -155,6 +266,35 @@ function Log:paintHistory()
  end
  self.historyFooter.Text=weekStars.." Stars from quests this week"
 end
+-- Compact history (UI-SPEC-COMPACT 8): 44-high rows, 28-high group headers.
+function Log:paintCompactHistory(q)
+ local w=self.view.W-44
+ local today=tonumber(q.day)or 0
+ local lastDay,order,weekStars=nil,0,0
+ local week=tonumber(q.week)or 0
+ local right={TextXAlignment=Enum.TextXAlignment.Right}
+ for _,entry in ipairs(q.history or {})do
+  local d=tonumber(entry.d)or today
+  if (d+3)//7==week then weekStars+=entry.s end
+  if d~=lastDay then
+   lastDay=d;order+=1
+   local ago=today-d
+   local header=Kit.text(self.history,"Label",if ago<=0 then "TODAY"elseif ago==1 then "YESTERDAY"else ago.." DAYS AGO","dim",{TextSize=12,Size=UDim2.fromOffset(w,28),LayoutOrder=order})
+   header.TextYAlignment=Enum.TextYAlignment.Bottom
+  end
+  order+=1
+  local row=Kit.frame(self.history,"ListRow",nil,UDim2.new(),UDim2.fromOffset(w,44));row.LayoutOrder=order
+  local hair=Kit.frame(row,"Hairline",nil,UDim2.new(0,0,1,-1),UDim2.new(1,0,0,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.95
+  txt(row,"Counter",if entry.a then "AUTO"else(if entry.weekly then "WEEK"else "DAY"),"dim",12,0,56,44,{TextSize=12})
+  txt(row,"Body",(if entry.weekly then "Weekly: "else "")..entry.title,"text",72,0,w-72-120,44,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+  txt(row,"Counter","★ +"..entry.s,"stars",w-120,0,80,44,{TextSize=14,TextXAlignment=right.TextXAlignment})
+  local mark=Kit.icon(row,"check",18,"accent");mark.Position=UDim2.fromOffset(w-30,13)
+ end
+ if #(q.history or {})==0 then
+  Kit.text(self.history,"Body","Claimed quests show up here.","soft",{TextSize=14,Size=UDim2.fromOffset(w,44),LayoutOrder=1})
+ end
+ self.historyFooter.Text=weekStars.." Stars from quests this week"
+end
 function Log:paint()
  local q=self.quests or {daily={},weekly={},history={}}
  local daily,weekly=q.daily or {},q.weekly or {}
@@ -165,10 +305,21 @@ function Log:paint()
  for _,r in ipairs(weekly)do if r.ready then weeklyDot=true end end
  self.tabs.setDot(1,dailyDot);self.tabs.setDot(2,weeklyDot)
  local tab=self.tab
- self.title.Text=if tab=="daily"then "Today"elseif tab=="weekly"then "This week"else "History"
+ if self.title then self.title.Text=if tab=="daily"then "Today"elseif tab=="weekly"then "This week"else "History"end
  self.reset.Text=if tab=="daily"then Log.resetText(q.resetIn)elseif tab=="weekly"then Log.resetText(q.weekResetIn)else(if #(q.history or {})==1 then "Last claim"else "Last "..#(q.history or {}).." claims")
-local resetWidth=game:GetService("TextService"):GetTextSize(self.reset.Text,self.reset.TextSize,Enum.Font.BuilderSans,Vector2.new(400,40)).X
- self.clock.Position=UDim2.fromOffset(824-resetWidth-24,97)
+ local resetWidth=game:GetService("TextService"):GetTextSize(self.reset.Text,self.reset.TextSize,Enum.Font.BuilderSans,Vector2.new(400,40)).X
+ if self.view then
+  -- Compact: right edge 12 px left of the wallet, only with 130+ px of gap after the tabs.
+  self.wallet.set(self.walletValue or 0)
+  local walletLeft=self.view.W-66-self.wallet.root.Size.X.Offset
+  local rightEdge=walletLeft-12
+  local show=walletLeft-self.tabsRight>=130
+  self.reset.Visible,self.clock.Visible=show,show
+  self.reset.Position=UDim2.fromOffset(rightEdge-160,20)
+  self.clock.Position=UDim2.fromOffset(rightEdge-resetWidth-21,23)
+ else
+  self.clock.Position=UDim2.fromOffset(824-resetWidth-24,97)
+ end
  local list=tab~="history"
  for index,slot in ipairs(self.rows)do
   if list then self:paintRow(slot,self:rowsFor(tab)[index],tab)else slot.row.Visible=false end
@@ -179,8 +330,8 @@ local resetWidth=game:GetService("TextService"):GetTextSize(self.reset.Text,self
   self.footerIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.reroll;Kit.paint(self.footerIcon,"ImageColor3","accent")
   local left=q.rerollLeft or 0
   self.footerTitle.Text=if left>0 then "1 free reroll left today"else "No reroll left today"
-  Kit.paint(self.footerTitle,"TextColor3",if left>0 then "text"else "dim")
-  self.footerSub.Text="Swaps one quest you have not started for another of the same kind."
+  Kit.paint(self.footerTitle,"TextColor3",if left>0 then "text"elseif self.view then "soft"else "dim")
+  self.footerSub.Text=if self.view then "Swaps one quest you have not started."else "Swaps one quest you have not started for another of the same kind."
   local earned,total=0,0;for _,r in ipairs(daily)do total+=r.reward;if r.claimed then earned+=r.reward end end
   self.footerLabel.Text="TODAY";self.footerValue.Text=string.format("★ %d/%d",earned,total);self.footerValue.Visible=true
  elseif tab=="weekly"then
@@ -192,9 +343,23 @@ local resetWidth=game:GetService("TextService"):GetTextSize(self.reset.Text,self
   local done=claimedCount(weekly);self.bonusBar.set(done)
   self.footerLabel.Text="BONUS";self.footerValue.Text="★ +"..(bonus.reward or 5)
   self.bonusClaim.Visible=q.bonusReady==true;self.footerValue.Visible=not self.bonusClaim.Visible
-  self.bonusBar.root.Position=UDim2.fromOffset(if self.bonusClaim.Visible then 470 else 560,26)
+  if self.view then
+   -- Compact weekly: gold segments, ★ +5 or a Claim in that slot; no BONUS label.
+   for i,cell in ipairs(self.bonusBar.cells)do if i<=done then Kit.paint(cell,"BackgroundColor3","stars")end end
+   self.footerLabel.Visible=false
+   local fw=self.view.W-40
+   self.bonusBar.root.Position=UDim2.fromOffset(if self.bonusClaim.Visible then fw-96-104-8-84 else fw-96-90-8-84,18)
+  else
+   self.bonusBar.root.Position=UDim2.fromOffset(if self.bonusClaim.Visible then 470 else 560,26)
+  end
   Kit.setEnabled(self.bonusClaim,not self.pendingRows["weekly:0"])
  else self:paintHistory()end
+ if self.view then
+  self.footerLabel.Visible=tab=="daily"
+  local tw=game:GetService("TextService"):GetTextSize(self.footerTitle.Text,14,Enum.Font.BuilderSansBold,Vector2.new(600,40)).X
+  self.footerSub.Position=UDim2.fromOffset(40+tw+10,0)
+  self.footerSub.Visible=self.view.W>=800 and tab=="daily"
+ end
  self.wallet.set(self.walletValue or 0)
  self:paintFocus()
 end

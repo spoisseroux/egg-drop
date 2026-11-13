@@ -114,6 +114,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
 		buy=function(order)if self.onBuy then self.onBuy(order)end;if self.onAccepted then self.onAccepted("confirm")end end,
 		bought=function(id)if self.onBought then self.onBought(id)end end,
 		backgrounds=function()self:activateTab("Background")end,
+		back=function()self:back()end,
 	})
 	self:showTab("Shell");return self
 end

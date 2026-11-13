@@ -502,9 +502,34 @@ clientUI.railReadouts=make("Frame","Readouts",{BackgroundTransparency=1,Size=UDi
 for _,node in ipairs({walletFace,readout,scoreCaption,rail.ReadoutDivider})do node.Parent=clientUI.railReadouts end
 -- The sprite shell and HUD sit in their own Sibling-ordered gui just under the
 -- board gui (DisplayOrder 10), so the board renderer draws over the LCD well.
-clientUI.deckGui=make("ScreenGui","EggDropDeck",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=9,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},gui.Parent)
+clientUI.deckGui=make("ScreenGui","EggDropDeck",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=9,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
 bleed.DisplayOrder=8
-clientUI.deck=DeckScreen.new({parent=clientUI.deckGui,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
+-- The deck host mirrors the backdrop so the deck, board and overlays share one
+-- root (also when a fixture forces the backdrop's size).
+clientUI.deckHost=make("Frame","DeckHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},clientUI.deckGui)
+do
+ local function mirror()
+  local origin=backdrop.AbsolutePosition-clientUI.deckGui.AbsolutePosition
+  clientUI.deckHost.Position=UDim2.fromOffset(origin.X,origin.Y);clientUI.deckHost.Size=UDim2.fromOffset(backdrop.AbsoluteSize.X,backdrop.AbsoluteSize.Y)
+ end
+ backdrop:GetPropertyChangedSignal("AbsolutePosition"):Connect(mirror);backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(mirror)
+ clientUI.deckGui:GetPropertyChangedSignal("AbsolutePosition"):Connect(mirror);mirror()
+end
+-- Compact (UI-SPEC-COMPACT 1.1): on a phone-sized device root the board, deck
+-- and overlay guis move to DeviceSafeInsets while the deck is up, so the band
+-- beside the Roblox controls is ours. A DeviceSafeInsets probe measures that root.
+clientUI.insetProbe=make("ScreenGui","EggDropInsetProbe",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.DeviceSafeInsets,Enabled=true,DisplayOrder=0},gui.Parent)
+function clientUI.refreshInsets()
+ local size=clientUI.insetProbe.AbsoluteSize
+ local want=if board:GetAttribute("Mode")=="Board"and size.X>0 and require(script.DeckKit).compactRule(size.X,size.Y)
+  then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
+ if gui.ScreenInsets~=want then gui.ScreenInsets=want end
+ if clientUI.deckGui.ScreenInsets~=want then clientUI.deckGui.ScreenInsets=want end
+end
+clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(clientUI.refreshInsets)
+board:GetAttributeChangedSignal("Mode"):Connect(clientUI.refreshInsets)
+clientUI.refreshInsets()
+clientUI.deck=DeckScreen.new({parent=clientUI.deckHost,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
 clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
 -- Part 2b: difficulty picker and quest log, full-LCD layers above the board.
 clientUI.heatCallbacks,clientUI.questCallbacks={}, {}
@@ -1359,7 +1384,7 @@ function clientUI.dailyRows()
  local quests=nurseryState and nurseryState.quests
  for index,row in ipairs(quests and quests.daily or {})do
   if index>3 then break end
-  rows[index]={title=row.title,progress=row.progress or 0,target=row.target or 1,done=row.claimed==true or row.ready==true}
+  rows[index]={title=row.title,progress=row.progress or 0,target=row.target or 1,done=row.claimed==true or row.ready==true,ready=row.ready==true}
  end
  return rows
 end
@@ -1373,6 +1398,33 @@ end
 function clientUI.questTitle(id)
  local def=require(game:GetService("ReplicatedStorage").Shared.QuestCatalog).ById[id]
  return def and def.title
+end
+-- Compact shortcuts: "1/3" daily claimed count, any quest ready, and the first
+-- quest this round finished (title) for the results shortcut.
+function clientUI.questCount()
+ local q=nurseryState and nurseryState.quests
+ local daily=q and q.daily or {}
+ local done=0;for _,r in ipairs(daily)do if r.claimed then done+=1 end end
+ return string.format("%d/%d",done,#daily)
+end
+function clientUI.anyQuestReady()
+ local q=nurseryState and nurseryState.quests;if not q then return false end
+ for _,scope in ipairs({"daily","weekly"})do for _,r in ipairs(q[scope]or {})do if r.ready then return true end end end
+ return q.bonusReady==true
+end
+function clientUI.finishedQuest(reward)
+ local q=nurseryState and nurseryState.quests
+ local function claimed(scope,id)
+  for _,r in ipairs(q and q[scope]or {})do if r.id==id then return r.claimed==true end end
+  return false
+ end
+ for _,moved in ipairs(reward and reward.quests or {})do
+  if moved.done and not claimed(moved.scope or "daily",moved.id)then return(if moved.scope=="weekly"then "Weekly: "else "")..(clientUI.questTitle(moved.id)or moved.id),moved.scope end
+ end
+ return nil
+end
+function clientUI.drawerShouldClose()
+ return recap.visible or clientUI.deckOverlayOpen()or modalShade.Visible or board:GetAttribute("Mode")~="Board"
 end
 function clientUI.weeklyLine()
  local q=nurseryState and nurseryState.quests
@@ -1414,7 +1466,8 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
   strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
   stripRight=if recipe and balance>=recipe.cost then "You can hatch an egg"else clientUI.weeklyLine(),
-  canLeave=owned>0,
+  canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=recipe~=nil and balance>=recipe.cost,
+  questDone=clientUI.finishedQuest(reward),
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
 -- The view's back arrow: shown on every deck screen, hidden under sheets and the
@@ -1573,7 +1626,7 @@ updateHud = function()
 	local resultsOpen=over and not sheetOpen and not roomView.busy and not clientUI.questLog.visible
 	local resultsOpened=resultsOpen and not recap.visible
 	if resultsOpen then
-		recap:show(clientUI.resultsData(final,runReceipt,score,best,peakChain),clientUI.deckCompact==true)
+		recap:show(clientUI.resultsData(final,runReceipt,score,best,peakChain),if clientUI.deckView~=nil then clientUI.deckView else clientUI.deckCompact==true)
 	else recap:hide() end
 	if resultsOpened then GuiService.SelectedObject=nil;if layout then task.defer(layout)end end
 	modalTitle.Text = "You hatched " .. (hatchName or "") .. "!"
@@ -1628,6 +1681,7 @@ updateHud = function()
 		eggsLeft=remaining,budget=budget,difficulty=clientUI.heatInfo(board:GetAttribute("Heat")).name,multiplier=select(2,clientUI.heatInfo(board:GetAttribute("Heat"))),
 		winPays=board:GetAttribute("WinPays")or "…",input=clientUI.inputKind()})
 	if clientUI.refreshDeckOverlays then clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)end
+	if clientUI.drawerShouldClose()then clientUI.deck:closeDrawer()end
 	clientUI.refreshBack()
 	drawAim()
 	if showHatch and not over and revealedPet ~= hatchName then
@@ -1833,17 +1887,19 @@ layout = function()
 	clientUI.legacyDeck.Visible=not wide;clientUI.railReadouts.Visible=not wide
 	clientUI.deck:setVisible(wide)
 	if wide then
-		local g=clientUI.deck:layout(screen,ratio)
+		local kx,kh=require(script.DeckKit).keepOut()
+		local g=clientUI.deck:layout(screen,ratio,{kx=kx,kh=kh})
 		clientUI.deckCompact=g.compact
+		clientUI.deckView=clientUI.deck:view() or g.compact
 		place(viewport,g.board);overlay.Position,overlay.Size=viewport.Position,viewport.Size
 		place(rail,g.board)
 		Art.setBackdropCase(backing,{x=g.deck.x+backdrop.AbsolutePosition.X-backing.AbsolutePosition.X,y=g.deck.y+backdrop.AbsolutePosition.Y-backing.AbsolutePosition.Y,w=g.deck.w,h=g.deck.h})
 	else
-		clientUI.deckCompact=true
+		clientUI.deckCompact=true;clientUI.deckView=true
 		clientUI.deck:placeResults(l.shell)
 	end
 	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
-	if recap.visible and recap.compact~=clientUI.deckCompact then task.defer(updateHud)end
+	if recap.visible and recap.key~=recap.viewKey(clientUI.deckView)then task.defer(updateHud)end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
 	if refreshSaveNotice then refreshSaveNotice()end
@@ -2065,6 +2121,15 @@ gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextA
 -- Replay keeps the difficulty (no picker); Up on Replay picks again.
 recap:on("replay",function()clientUI.keepHeatAfter=board:GetAttribute("RunSequence");requestRetry()end)
 recap:on("leave",function()clientUI.leaveDeck()end)
+-- Compact results: change difficulty (the touch route for "Up on Replay") and the quest shortcut.
+recap:on("picker",function()
+	if recap.data and recap.data.pending then return end
+	clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
+end)
+recap:on("quests",function(kind)
+	local scope=recap.data and recap.data.questDone and select(2,clientUI.finishedQuest(RunReceipt.select(nurseryState,board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),true)))
+	if clientUI.openQuestLog(if kind=="claim"and scope=="weekly"then "weekly"else "daily")then clientUI.accepted("confirm")end
+end)
 -- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.
 clientUI.deck:on("dpad",function(dir,input)
 	if clientUI.questLog.visible then
@@ -2079,11 +2144,13 @@ clientUI.deck:on("A",function()
 	if clientUI.questLog.visible then clientUI.questLog:act()elseif clientUI.heatPicker.visible then clientUI.heatPicker:confirm()
 	elseif recap.visible then recap:confirm() else dropEgg() end end)
 clientUI.deck:on("B",function()
+	if clientUI.deck:closeDrawer()then return end
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
 clientUI.deck:on("menu",function()
 	if board:GetAttribute("Mode")=="Board"then if clientUI.toggleQuestLog()then clientUI.accepted("confirm")end
 	elseif openMenu()then clientUI.accepted("confirm")end end)
 clientUI.deck:on("back",function()
+	if clientUI.deck:closeDrawer()then return end
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
 
 -- ── Part 2b: difficulty picker and quest log ────────────────────────────────
@@ -2114,11 +2181,12 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
   local ok,pays=pcall(function()return HttpService:JSONDecode(board:GetAttribute("HeatPays")or "{}")end)
   picker:show({selected=clientUI.pickedHeat or board:GetAttribute("NextHeat"),pays=if ok then pays else nil,
    wallet=nurseryState and nurseryState.nectar or 0,goal=clientUI.fieldView and not clientUI.fieldView.empty and clientUI.fieldView.title or nil,
-   quest=clientUI.questLine()})
+   quest=clientUI.questLine(),questCount=clientUI.questCount(),questReady=clientUI.anyQuestReady()})
   -- An open quest log covers the picker (both are translucent LCD layers).
   if log.visible then picker.overlay.layer.Visible=false end
  else picker:hide()end
 end
+clientUI.heatCallbacks.quests=function()if clientUI.openQuestLog()then clientUI.accepted("confirm")end end
 clientUI.heatCallbacks.select=function(key)clientUI.pickedHeat=key;audio:play("aim",1.1,.35)end
 clientUI.heatCallbacks.start=function(key)
  if board:GetAttribute("Heat")~=key or board:GetAttribute("NextHeat")~=key then request:FireServer("heat",key)end
@@ -2254,7 +2322,7 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 		return Enum.ContextActionResult.Sink
 	end
 	if board:GetAttribute("Mode") == "Board" and backdrop.Visible and not modal.Visible and clientUI.deck.back.root.Visible then
-		if state == Enum.UserInputState.Begin and clientUI.deck.back.enabled then clientUI.deck:flash("B");clientUI.leaveDeck() end
+		if state == Enum.UserInputState.Begin and clientUI.deck.back.enabled then clientUI.deck:flash("B");if not clientUI.deck:closeDrawer() then clientUI.leaveDeck() end end
 		return Enum.ContextActionResult.Sink
 	end
 	return Enum.ContextActionResult.Pass
@@ -2546,6 +2614,7 @@ for _,attribute in ipairs({"FieldObjective","RunSequence"})do
  end)
 end
 backdrop:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
+GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(function()task.defer(layout)end)
 Art.watchTextPreference(backdrop,function()return backdrop.Visible end,function()layout();updateHud()end)
 backdrop:GetPropertyChangedSignal("Visible"):Connect(function()if backdrop.Visible and backdrop:GetAttribute("TextPreferenceDirty") then layout();updateHud();backdrop:SetAttribute("TextPreferenceDirty",false)end end)
 status:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(updateHud) end)

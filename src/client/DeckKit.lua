@@ -12,7 +12,7 @@ local Kit={}
 -- 2.1 Colour. `dim` is #959BA5 rather than the spec's #8A909A so 13 px labels keep
 -- 4.5:1 on every plate's `raised` card (#8A909A measures 4.1:1 on Scout).
 Kit.Color={text=Color3.fromHex("#F3F4F6"),soft=Color3.fromHex("#C3C8D0"),dim=Color3.fromHex("#959BA5"),
- ink=Color3.fromHex("#0E0F12"),stars=Color3.fromHex("#FFC14D"),danger=Color3.fromHex("#FF5A6E"),
+ ink=Color3.fromHex("#0E0F12"),stars=Color3.fromHex("#FFC14D"),danger=Color3.fromHex("#FF5A6E"),dangerText=Color3.fromHex("#FF8090"),
  good=Color3.fromHex("#7BE495"),focus=Color3.fromHex("#FFFFFF"),white=Color3.new(1,1,1),black=Color3.new(0,0,0)}
 local fallback={panel=Color3.fromHex("#152525"),raised=Color3.fromHex("#213335"),well=Color3.fromHex("#0D1818"),
  selected=Color3.fromHex("#2D4E46"),line=Color3.fromHex("#8DBEAC"),accent=Color3.fromHex("#76F6B0"),ink=Color3.fromHex("#0E0F12")}
@@ -54,6 +54,10 @@ Kit.Stroke={color=Color3.new(1,1,1),transparency=.86,thickness=1}
 Kit.Motion={screen=.16,focus=.09,pressDown=.06,pressUp=.10,hover=.08,tab=.14,toggle=.11,progress=.45,toastIn=.24,toastHold=2.4,toastOut=.16}
 
 function Kit.reduced()return GuiService.ReducedMotionEnabled end
+local UserInputService=game:GetService("UserInputService")
+function Kit.lastInputTouch()return UserInputService:GetLastInputType()==Enum.UserInputType.Touch end
+-- Compact screens hide the focus ring and glyph chips after touch input (UI-SPEC-COMPACT 2.5).
+Kit.touchHidesFocus=false
 function Kit.tween(object,time,goal,style)
  if Kit.reduced()then for key,value in pairs(goal)do object[key]=value end;return end
  TweenService:Create(object,TweenInfo.new(time,style or Enum.EasingStyle.Quad,Enum.EasingDirection.Out),goal):Play()
@@ -88,6 +92,10 @@ function Kit.text(parent,role,content,color,props)
  paint(label,"TextColor3",color or(if role=="Label"then "dim"else "text"))
  if props then for key,value in pairs(props)do if key~="Name"then label[key]=value end end end
  return label
+end
+function Kit.setFontRole(label,role)
+ local spec=Kit.Type[role];if not spec then return end
+ label.FontFace=spec[3];label:SetAttribute("KitRole",role)
 end
 function Kit.setCompact(label,compact)
  local spec=Kit.Type[label:GetAttribute("KitRole")or "Body"]
@@ -312,15 +320,17 @@ function Kit.toggle(parent,name)
 end
 
 -- Tabs: 520x44 track, accent pill inset 4 under the selected label.
-function Kit.tabs(parent,labels,width)
- width=width or 520
- local track=Kit.frame(parent,"Tabs","well",UDim2.new(),UDim2.fromOffset(width,44),999);Kit.stroke(track)
+-- Compact: `height` 36 with 14 px labels; every segment keeps a 44-high hit frame.
+function Kit.tabs(parent,labels,width,height,textSize)
+ width=width or 520;height=height or 44;textSize=textSize or 17
+ local track=Kit.frame(parent,"Tabs","well",UDim2.new(),UDim2.fromOffset(width,height),999);Kit.stroke(track)
  local segment=(width-8)/#labels
- local pill=Kit.frame(track,"Pill","accent",UDim2.fromOffset(4,4),UDim2.fromOffset(segment,36),999)
+ local pill=Kit.frame(track,"Pill","accent",UDim2.fromOffset(4,4),UDim2.fromOffset(segment,height-8),999)
  local api={root=track,buttons={},selected=1,labels={}}
  for index,text in ipairs(labels)do
-  local b=node("TextButton",track,{Name="Tab"..index,Text="",AutoButtonColor=false,BackgroundTransparency=1,Position=UDim2.fromOffset(4+(index-1)*segment,4),Size=UDim2.fromOffset(segment,36),ZIndex=pill.ZIndex+1})
-  local label=Kit.text(b,"Strong",text,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=17})
+  local hitH=math.max(44,height-8)
+  local b=node("TextButton",track,{Name="Tab"..index,Text="",AutoButtonColor=false,BackgroundTransparency=1,Position=UDim2.fromOffset(4+(index-1)*segment,(height-hitH)/2),Size=UDim2.fromOffset(segment,hitH),ZIndex=pill.ZIndex+1})
+  local label=Kit.text(b,"Strong",text,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
   local dot=Kit.frame(b,"ClaimDot","stars",UDim2.new(.5,0,.5,-11),UDim2.fromOffset(8,8),999);dot.Visible=false
   api.buttons[index],api.labels[index]=b,label;b:SetAttribute("ClaimDot",false)
   b.Activated:Connect(function()api.select(index)if api.changed then api.changed(index)end end)
@@ -333,8 +343,8 @@ function Kit.tabs(parent,labels,width)
  function api.setDot(index,on)
   local label,dot=api.labels[index],api.buttons[index].ClaimDot
   dot.Visible=on==true
-  local w=game:GetService("TextService"):GetTextSize(label.Text,17,Enum.Font.BuilderSansBold,Vector2.new(500,50)).X
-  dot.Position=UDim2.new(.5,w/2+9,.5,-11)
+  local w=game:GetService("TextService"):GetTextSize(label.Text,textSize,Enum.Font.BuilderSansBold,Vector2.new(500,50)).X
+  dot.Position=UDim2.new(.5,w/2+(if textSize<17 then 4 else 9),.5,if textSize<17 then -9 else -11)
  end
  api.select(1);return api
 end
@@ -382,6 +392,7 @@ function Kit.focusRing(host)
  local connection
  local function place(instant)
   local t=api.target;if not t or not t.Parent or not t.Visible then ring.Visible=false;return end
+  if Kit.touchHidesFocus and Kit.lastInputTouch()then ring.Visible=false;return end
   local origin=host.AbsolutePosition
   local scale=1
   local ancestor=host:FindFirstAncestorWhichIsA("GuiObject")
@@ -418,10 +429,19 @@ function Kit.toaster(host)
   if busy then return end
   local item=table.remove(queue,1);if not item then return end
   busy=true;text.Text=item.text;amount.Text=if item.amount then "★ +"..item.amount else ""
-  local w=game:GetService("TextService"):GetTextSize(item.text,17,Enum.Font.BuilderSansBold,Vector2.new(2000,50)).X
-  toast.Size=UDim2.fromOffset(math.ceil(w)+124+(if item.amount then 40 else 0),48)
-  toast.Position=UDim2.new(.5,0,0,if Kit.reduced()then 30 else 14);toast.Visible=true
-  Kit.tween(toast,Kit.Motion.toastIn,{Position=UDim2.new(.5,0,0,30)})
+  -- Compact (UI-SPEC-COMPACT 3): 40 high, Strong 14, centred where `api.placement` says.
+  local x,y,compact=nil,30,false
+  if api.placement then x,y,compact=api.placement()end
+  local size=if compact then 14 else 17
+  text.TextSize=size;amount.TextSize=size
+  local w=game:GetService("TextService"):GetTextSize(item.text,size,Enum.Font.BuilderSansBold,Vector2.new(2000,50)).X
+  local h=if compact then 40 else 48
+  toast.Size=UDim2.fromOffset(math.ceil(w)+(if compact then 96 else 124)+(if item.amount then 40 else 0),h)
+  check.Position=UDim2.fromOffset(if compact then 16 else 28,(h-22)/2);text.Position=UDim2.fromOffset(if compact then 46 else 60,0)
+  amount.Size=UDim2.fromOffset(80,h)
+  local function at(dy)return if x then UDim2.new(0,x,0,y+dy)else UDim2.new(.5,0,0,y+dy)end
+  toast.Position=at(if Kit.reduced()then 0 else -16);toast.Visible=true
+  Kit.tween(toast,Kit.Motion.toastIn,{Position=at(0)})
   task.delay(Kit.Motion.toastIn+Kit.Motion.toastHold,function()
    toast.Visible=false;busy=false;nextToast()
   end)
@@ -461,5 +481,59 @@ function Kit.backArrow(parent,compact)
   icon.Size=UDim2.fromOffset(if isCompact then 22 else 26,if isCompact then 22 else 26)
  end
  repaint();return api
+end
+
+-- ── Compact (UI-SPEC-COMPACT-2026-11-12) ────────────────────────────────────
+-- Glass island (section 3): the content rect in `panel` (or `well`) with the
+-- 1 px white 14% stroke, set in a bezel grown by `bezel` px (#090A0C, radius +
+-- bezel, 1 px white 18%). Returns the inner frame and the bezel frame.
+function Kit.island(parent,name,r,radius,role,bezel)
+ bezel=bezel or 3;radius=radius or 12
+ local outer=Kit.frame(parent,name,nil,UDim2.fromOffset(r.x-bezel,r.y-bezel),UDim2.fromOffset(r.w+bezel*2,r.h+bezel*2),radius+bezel)
+ outer.BackgroundTransparency=0;outer.BackgroundColor3=Color3.fromHex("#090A0C")
+ Kit.stroke(outer,nil,1,.82).Color=Color3.new(1,1,1)
+ local inner=Kit.frame(outer,"Glass",role or "panel",UDim2.fromOffset(bezel,bezel),UDim2.fromOffset(r.w,r.h),radius)
+ Kit.stroke(inner)
+ return inner,outer
+end
+-- Chevron from two short bars; direction "up" or "down".
+function Kit.chevron(parent,size,direction,color)
+ local holder=Kit.frame(parent,"Chevron",nil,UDim2.new(),UDim2.fromOffset(size,size))
+ local arm=math.max(6,math.floor(size*.6));local sign=if direction=="up"then -1 else 1
+ for side=-1,1,2 do
+  local bar=Kit.frame(holder,"Arm",nil,UDim2.new(.5,side*arm*.36,.5,0),UDim2.fromOffset(arm,2),999)
+  bar.AnchorPoint=Vector2.new(.5,.5);bar.BackgroundTransparency=0
+  paint(bar,"BackgroundColor3",color or "text")
+  bar.Rotation=side*sign*-40
+ end
+ return holder
+end
+-- Menu sheet (section 5) in a root of W x H: rim 0..6 (whatever is behind),
+-- bezel at 6, the panel sheet at 8 with its gradient and stroke, header hairline at y 60.
+function Kit.sheet(parent,W,H)
+ local bezel=Kit.frame(parent,"SheetBezel",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(W-12,H-12),18)
+ bezel.BackgroundTransparency=0;bezel.BackgroundColor3=Color3.fromHex("#090A0C")
+ local sheet=Kit.frame(parent,"Sheet","panel",UDim2.fromOffset(8,8),UDim2.fromOffset(W-16,H-16),16);Kit.stroke(sheet)
+ local tint=Kit.frame(sheet,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1),16);tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
+ node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
+ local hair=Kit.frame(parent,"HeaderHairline",nil,UDim2.fromOffset(20,60),UDim2.fromOffset(W-40,1))
+ hair.BackgroundTransparency=.93;hair.BackgroundColor3=Color3.new(1,1,1);hair.ZIndex=sheet.ZIndex+3
+ return sheet,bezel
+end
+-- Keep-out for the Roblox controls (section 1.1): kx = TopbarInset.Min.X,
+-- kh = TopbarInset.Height; 116 x 58 when the API returns an empty rect.
+function Kit.keepOut()
+ -- Studio fixtures can pin the phone keep-out (PlayerGui attribute FixtureKeepOut, a Vector2).
+ local player=game:GetService("Players").LocalPlayer
+ local fixture=player and player:FindFirstChild("PlayerGui")and player.PlayerGui:GetAttribute("FixtureKeepOut")
+ if typeof(fixture)=="Vector2"then return math.floor(fixture.X),math.floor(fixture.Y)end
+ local inset=GuiService.TopbarInset
+ local kx,kh=inset.Min.X,inset.Height
+ if kx<=0 or kh<=0 then kx,kh=116,58 end
+ return math.floor(kx),math.floor(kh)
+end
+-- Section 1: compact = landscape and (H < 500 or W < 1000).
+function Kit.compactRule(W,H)
+ return W>=H*1.2 and(H<500 or W<1000)
 end
 return Kit

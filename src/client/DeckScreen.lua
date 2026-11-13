@@ -21,8 +21,49 @@ local function rect(x,y,w,h)return{x=x,y=y,w=w,h=h}end
 -- Section 1. `root` is the inset interactive root in view px; `aspect` is the
 -- simulation's (Width + .8) / (Height + .8). The deck never grows past 1:1 so
 -- the 1920x1080 reference keeps the mockup's s = 1.0.
-function Screen.resolve(root,aspect)
+-- Compact (phone landscape, UI-SPEC-COMPACT-2026-11-12 sections 1, 4 and 5):
+-- no deck body and no UIScale; every rect is in root px. `kx, kh` is the
+-- Roblox-controls keep-out at the top left (116 x 58 when unknown).
+function Screen.resolveCompact(W,H,aspect,kx,kh)
+ kx=kx or 116;kh=kh or 58
+ local bh=H-16;local bw=math.floor(bh*aspect+.5)
+ local bx=math.floor((W-bw)/2)
+ local board=rect(bx,8,bw,bh)
+ local L0,L1=12,bx-14;local R0,R1=bx+bw+14,W-12
+ local D=if H>=380 then 104 elseif H>=340 then 96 else 88
+ -- 4.2 top strip, left wing.
+ local x0=math.max(kx+8,L0);local wing=L1-x0
+ local score,chain;local scoreWide,chainInGoals,goalsTop=false,false,60
+ if wing>=154 then
+  local sw=math.min(132,wing-70);chain=rect(L1-64,8,64,44);score=rect(L1-64-6-sw,8,sw,44)
+ elseif wing>=84 then
+  local sw=math.min(132,wing);score=rect(L1-sw,8,sw,44);chainInGoals=true
+ else score=rect(L0,60,L1-L0,44);scoreWide,chainInGoals,goalsTop=true,true,112 end
+ -- Right wing (the back arrow owns the last 56).
+ local wr=W-64-R0;local eggsW=if wr<150 then 58 else 88
+ local nw=math.min(140,wr-eggsW-6)
+ -- Eggs sits 6 px after Next (flush with the back arrow's gutter unless Next is capped at 140).
+ local eggs=rect(R0+nw+6,8,eggsW,44)
+ local m=if H<340 then 8 else 12
+ local hx=16+D+12
+ local a=Vector2.new(W-16-D/2,H-16-D/2)
+ return{s=1,compact=false,phone=true,mode="Compact",W=W,H=H,kx=kx,kh=kh,aspect=aspect,
+  deck=rect(0,0,W,H),lcd=board,board=board,boardLocal=rect(0,0,bw,bh),authored=Vector2.new(bw,bh),contentScale=1,pad=0,column=L1-L0,
+  L0=L0,L1=L1,R0=R0,R1=R1,D=D,
+  score=score,chain=chain,scoreWide=scoreWide,chainInGoals=chainInGoals,goalsTop=goalsTop,goalPitch=if H<340 then 26 else 34,
+  eggs=eggs,next=rect(R0,8,nw,44),eggsCompact=eggsW<88,
+  difficulty=rect(R0,60,R1-R0,44),winPays=rect(R0,112,R1-R0,44),
+  dpad=rect(16,H-m-D,D,D),handle=rect(hx,H-56,math.max(44,L1-hx),44),drawer=rect(L0,60,L1-L0,H-72),
+  a=a,b=Vector2.new(a.X-D/2-42,H-44),back=rect(W-56,8,44,44),
+  -- 5 menu sheet.
+  sheet=rect(8,8,W-16,H-16),hx=math.max(kx+12,24),cw=math.floor((W-60)/3),ch=H-140,actionY=H-66}
+end
+
+function Screen.resolve(root,aspect,keep)
  local W,H=root.X,root.Y
+ if W>=H*1.2 and(H<500 or W<1000)then
+  return Screen.resolveCompact(W,H,aspect,keep and keep.kx,keep and keep.kh)
+ end
  local s=math.min((W-48)/1600,(H-48-12)/800,1)
  local compact=s<.75
  if compact then s=(H-8)/608 end
@@ -35,7 +76,7 @@ function Screen.resolve(root,aspect)
  local bh=authored.Y-pad*2;local bw=math.floor(bh*aspect+.5)
  local board=rect(math.floor((authored.X-bw)/2+.5),pad,bw,bh)
  local column=math.floor((authored.X-pad*4-bw)/2)
- return{s=s,compact=compact,mode=if compact then "Compact"else "Regular",deck=deck,lcd=lcd,authored=authored,
+ return{s=s,compact=compact,mode=if compact then "Small"else "Regular",deck=deck,lcd=lcd,authored=authored,
   contentScale=scale,pad=pad,column=column,boardLocal=board,
   board=rect(lcd.x+board.x*scale,lcd.y+board.y*scale,board.w*scale,board.h*scale)}
 end
@@ -65,6 +106,11 @@ function Screen.new(options)
  self.glass=image(root,"Glass",I.glass,7)
  self.led=image(root,"Led",I.led,11)
  -- LCD: panel glass with one white 3% to black 12% overlay gradient.
+ -- Compact: the board island's bezel (the LCD frame becomes the board island).
+ self.boardBezel=Kit.frame(root,"BoardBezel",nil,UDim2.new(),UDim2.new(),18);self.boardBezel.ZIndex=7
+ self.boardBezel.BackgroundTransparency=0;self.boardBezel.BackgroundColor3=Color3.fromHex("#090A0C");self.boardBezel.Visible=false
+ Kit.stroke(self.boardBezel,nil,1,.82)
+ self.rims={}
  local lcd=Kit.frame(root,"LCD","panel",UDim2.new(),UDim2.fromOffset(848,608),30);lcd.ZIndex=8;lcd.ClipsDescendants=true
  local tint=Kit.frame(lcd,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
@@ -133,6 +179,7 @@ function Screen.new(options)
  local rcontent=Kit.frame(results,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));rcontent.ZIndex=results.ZIndex+2
  self.resultsScale=Kit.node("UIScale",rcontent,{Scale=1})
  self.results,self.resultsContent=results,rcontent
+ self.resultsLayer={layer=results,tint=rtint,rim=self:rim(results)}
  self.overlays={}
  -- Boot (section 6): above every LCD layer, below the glare.
  local bootHost=Kit.frame(options.overlayParent or parent,"DeckBoot",nil,UDim2.new(),UDim2.fromOffset(848,608),30)
@@ -158,16 +205,43 @@ function Screen:addOverlay(name,z)
  Kit.node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  local content=Kit.frame(layer,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));content.ZIndex=layer.ZIndex+2
  local scale=Kit.node("UIScale",content,{Scale=1})
- local overlay={layer=layer,content=content,scale=scale}
+ local overlay={layer=layer,content=content,scale=scale,tint=tint,rim=self:rim(layer)}
  table.insert(self.overlays,overlay)
  if self.geometry then self:placeOverlay(overlay)end
  return overlay
 end
 function Screen:placeOverlay(overlay)
  local g=self.geometry;if not g then return end
- overlay.layer.Position=UDim2.fromOffset(g.lcd.x,g.lcd.y);overlay.layer.Size=UDim2.fromOffset(g.lcd.w,g.lcd.h)
- Kit.corner(overlay.layer,math.floor(L.lcdRadius*g.s))
- overlay.content.Size=UDim2.fromOffset(848,608);overlay.scale.Scale=g.lcd.w/848
+ if g.phone then
+  -- Compact: the layer covers the whole root at scale 1; the screen draws its own sheet.
+  overlay.layer.Position=UDim2.new();overlay.layer.Size=UDim2.fromOffset(g.W,g.H);Kit.corner(overlay.layer,0)
+  overlay.content.Size=UDim2.fromOffset(g.W,g.H);overlay.scale.Scale=1
+ else
+  overlay.layer.Position=UDim2.fromOffset(g.lcd.x,g.lcd.y);overlay.layer.Size=UDim2.fromOffset(g.lcd.w,g.lcd.h)
+  Kit.corner(overlay.layer,math.floor(L.lcdRadius*g.s))
+  overlay.content.Size=UDim2.fromOffset(848,608);overlay.scale.Scale=g.lcd.w/848
+ end
+ self:dress(overlay,g.phone)
+ if overlay.onLayout then overlay.onLayout(self:view())end
+end
+-- A phone layer is transparent with the plate as its rim; regular layers are LCD glass.
+function Screen:dress(layer,phone)
+ layer.layer.BackgroundTransparency=if phone then 1 else 0
+ layer.layer.ClipsDescendants=not phone
+ layer.tint.Visible=not phone;layer.rim.Visible=phone==true
+end
+-- The plate texture cropped to its middle 80% x 76% (UI-SPEC-COMPACT 3).
+local PlateCrop={offset=Vector2.new(102,60),size=Vector2.new(819,379)}
+function Screen:rim(parent)
+ local i=image(parent,"Rim",Assets.Faceplate.sherbet,parent.ZIndex+1,{Size=UDim2.fromScale(1,1),Visible=false,
+  ImageRectOffset=PlateCrop.offset,ImageRectSize=PlateCrop.size})
+ table.insert(self.rims,i);return i
+end
+-- What a screen needs to lay itself out: nil (regular / small LCD) or the compact root.
+function Screen:view()
+ local g=self.geometry
+ if not(g and g.phone)then return nil end
+ return{phone=true,W=g.W,H=g.H,kx=g.kx,kh=g.kh,hx=g.hx,cw=g.cw,ch=g.ch,actionY=g.actionY}
 end
 
 function Screen:pressDpad(dir,down)
@@ -194,6 +268,7 @@ end
 
 function Screen:setTheme(id,theme)
  self.plate.Image=Assets.Faceplate[id]or Assets.Faceplate.sherbet
+ for _,r in ipairs(self.rims)do r.Image=self.plate.Image end
  local band=theme.bandTint or Color3.new(1,1,1)
  self.band.ImageColor3=band;for _,s in ipairs(self.shoulders)do s.ImageColor3=band end
  self.wordmark.ImageColor3=theme.engrave or Kit.Color.ink;self.wordmark.ImageTransparency=1-(theme.engraveOpacity or .42)
@@ -227,8 +302,11 @@ function Screen:setVisible(visible)
 end
 
 -- Places every sprite and returns the resolved geometry (view px).
-function Screen:layout(rootSize,aspect)
- local g=Screen.resolve(rootSize,aspect);self.geometry=g
+function Screen:layout(rootSize,aspect,keep)
+ local g=Screen.resolve(rootSize,aspect,keep);self.geometry=g
+ Kit.touchHidesFocus=g.phone==true
+ self:showShell(not g.phone)
+ if g.phone then return self:layoutCompact(g)end
  local s=g.s
  self.root.Position=UDim2.fromOffset(g.deck.x,g.deck.y);self.root.Size=UDim2.fromOffset(g.deck.w,g.deck.h)
  placeU(self.shadow,L.shadow,s);self.shadow.SliceScale=s
@@ -267,7 +345,70 @@ function Screen:layout(rootSize,aspect)
  self.back.setCompact(g.compact);self.back.root.Position=UDim2.new(1,-inset,0,inset)
  local b=g.boardLocal
  self.well.Position=UDim2.fromOffset(b.x,b.y);self.well.Size=UDim2.fromOffset(b.w,b.h)
+ self:dress(self.resultsLayer,false)
  if self.builtMode~=g.mode then self:buildHud(g)end
+ return g
+end
+
+-- Shell sprites the compact phone does not draw (UI-SPEC-COMPACT 3).
+function Screen:showShell(on)
+ for _,node in ipairs({self.shadow,self.shoulders[1],self.shoulders[2],self.band,self.plateOverlay,self.wordmarkShadow,self.glass,self.led,self.menu})do node.Visible=on end
+ self.quadrants.Up.Visible=on;self.quadrants.Down.Visible=on
+ self.boardBezel.Visible=not on
+ if on then self.wordmark.Visible=true;Kit.corner(self.well,14)end
+ self.plate.ImageRectOffset=if on then Vector2.zero else PlateCrop.offset
+ self.plate.ImageRectSize=if on then Vector2.zero else PlateCrop.size
+ self.plate.ScaleType=Enum.ScaleType.Stretch
+end
+
+-- Compact: the phone is the deck. Plate fills the root, the LCD frame becomes
+-- the board island, the hardware sits under the thumbs, and the HUD is built as
+-- islands on the root (section 4).
+function Screen:layoutCompact(g)
+ local W,H=g.W,g.H
+ self.root.Position=UDim2.new();self.root.Size=UDim2.fromOffset(W,H)
+ local bleed=48
+ for _,node in ipairs({self.plate,self.finish})do
+  node.Position=UDim2.fromOffset(-bleed,-bleed);node.Size=UDim2.fromOffset(W+bleed*2,H+bleed*2)
+ end
+ local b=g.board
+ self.lcd.Position=UDim2.fromOffset(b.x,b.y);self.lcd.Size=UDim2.fromOffset(b.w,b.h);Kit.corner(self.lcd,12)
+ self.boardBezel.Position=UDim2.fromOffset(b.x-6,b.y-6);self.boardBezel.Size=UDim2.fromOffset(b.w+12,b.h+12)
+ self.content.Size=UDim2.fromOffset(b.w,b.h);self.contentScale.Scale=1
+ self.well.Position=UDim2.new();self.well.Size=UDim2.fromOffset(b.w,b.h);Kit.corner(self.well,12)
+ -- D-pad: during a round the left and right halves are the hit areas.
+ local d=g.dpad
+ self.dpad.Position=UDim2.fromOffset(d.x,d.y);self.dpad.Size=UDim2.fromOffset(d.w,d.h)
+ self.quadrants.Left.Position=UDim2.fromOffset(d.x,d.y);self.quadrants.Left.Size=UDim2.fromOffset(d.w/2,d.h)
+ self.quadrants.Right.Position=UDim2.fromOffset(d.x+d.w/2,d.y);self.quadrants.Right.Size=UDim2.fromOffset(d.w/2,d.h)
+ for id,btn in pairs(self.buttons)do
+  local dia=if id=="A"then g.D else 56;btn.diameter=dia
+  local c=if id=="A"then g.a else g.b
+  btn.holder.Position=UDim2.fromOffset(c.X-dia/2,c.Y-dia/2);btn.holder.Size=UDim2.fromOffset(dia,dia*1.07)
+  btn.letter.TextSize=math.floor(.46*dia);btn.letter.Size=UDim2.fromOffset(dia,dia);btn.letter.Position=UDim2.new(.5,0,0,dia/2)
+  local hit=if id=="A"then dia+8 else 56
+  btn.hit.Size=UDim2.fromOffset(hit,hit);btn.hit.Position=UDim2.new(.5,0,0,dia/2)
+ end
+ -- Glare on the board island only; the results, boot and sheets cover the root.
+ self.glare.Position=UDim2.fromOffset(b.x,b.y);self.glare.Size=UDim2.fromOffset(b.w,b.h)
+ self.results.Position=UDim2.new();self.results.Size=UDim2.fromOffset(W,H);Kit.corner(self.results,0)
+ self.resultsContent.Size=UDim2.fromOffset(W,H);self.resultsScale.Scale=1
+ self:dress(self.resultsLayer,true)
+ local sh=g.sheet
+ self.bootHost.Position=UDim2.fromOffset(sh.x,sh.y);self.bootHost.Size=UDim2.fromOffset(sh.w,sh.h);Kit.corner(self.bootHost,16)
+ for _,overlay in ipairs(self.overlays)do self:placeOverlay(overlay)end
+ self.back.setCompact(true);self.back.root.Position=UDim2.new(1,-12,0,8)
+ local key=string.format("Compact:%dx%d:%d",W,H,g.kx)
+ if self.builtMode~=key then self:buildHud(g);self.builtMode=key end
+ -- Toasts: in the right column on the HUD, at the top of a sheet otherwise.
+ self.toaster.placement=function()
+  local gg=self.geometry
+  if not(gg and gg.phone)then return nil,30,false end
+  local sheet=self.results.Visible
+  for _,o in ipairs(self.overlays)do if o.layer.Visible then sheet=true end end
+  if sheet then return gg.W/2,66,true end
+  return (gg.R0+gg.R1)/2,164,true
+ end
  return g
 end
 
@@ -291,12 +432,191 @@ local function card(parent,name,r,label,pad)
 end
 local function egg(parent,diameter)
  local ball=Kit.frame(parent,"Egg",nil,UDim2.new(),UDim2.fromOffset(diameter,diameter),999);ball.BackgroundTransparency=0
- local mark=Kit.text(ball,"Strong","I",nil,{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.max(11,math.floor(diameter*.42))})
+ local mark=Kit.text(ball,"Strong","I",nil,{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.max(12,math.floor(diameter*.42))})
  Art.jellyPreview(ball,1,mark)
  return{ball=ball,mark=mark}
 end
+local function commas(n)
+ local s=tostring(math.floor(n or 0));local out=s:reverse():gsub("(%d%d%d)","%1,"):reverse()
+ return(out:gsub("^,",""))
+end
+Screen.commas=commas
+
+-- Compact round HUD (UI-SPEC-COMPACT 4): islands on the root around the board.
+function Screen:buildCompactHud(g)
+ local host=Kit.frame(self.root,"CompactHUD",nil,UDim2.new(),UDim2.fromScale(1,1));host.ZIndex=14;self.hudRoot=host
+ local h={phone=true};self.hud=h
+ local TextService=game:GetService("TextService")
+ local function txt(parent,role,content,color,x,y,w,hh,size,props)
+  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,hh);t.TextSize=size;return t
+ end
+ local right={TextXAlignment=Enum.TextXAlignment.Right}
+ -- 4.2 strip.
+ local sr=g.score
+ local score=Kit.island(host,"Score",sr,12)
+ if g.scoreWide then
+  txt(score,"Label","SCORE","dim",12,0,80,sr.h,12)
+  h.score=txt(score,"Counter","0","text",12,0,sr.w-24,sr.h,18,right)
+ else
+  txt(score,"Label","SCORE","dim",12,6,sr.w-24,14,12)
+  h.score=txt(score,"Counter","0","text",12,21,sr.w-24,22,18)
+ end
+ if g.chain then
+  local chain=Kit.island(host,"Chain",g.chain,12)
+  txt(chain,"Label","CHAIN","dim",10,6,g.chain.w-20,14,12)
+  h.chain=txt(chain,"Counter","×0","text",10,21,g.chain.w-20,22,18)
+ end
+ local nr=g.next
+ local nextCard=Kit.island(host,"Next",nr,12)
+ local items={}
+ if nr.w>=124 then
+  local label=txt(nextCard,"Label","NEXT","dim",0,0,34,nr.h,12);table.insert(items,{node=label,w=TextService:GetTextSize("NEXT",12,Enum.Font.BuilderSansBold,Vector2.new(200,40)).X})
+ end
+ h.next={egg(nextCard,32)};table.insert(items,{node=h.next[1].ball,w=32,egg=true})
+ if nr.w>=80 then h.next[2]=egg(nextCard,22);table.insert(items,{node=h.next[2].ball,w=22,egg=true})end
+ local total=-8;for _,item in ipairs(items)do total+=item.w+8 end
+ local x=math.floor((nr.w-total)/2)
+ for _,item in ipairs(items)do
+  local hh=if item.egg then item.w else nr.h
+  item.node.Position=UDim2.fromOffset(x,math.floor((nr.h-hh)/2));if not item.egg then item.node.Size=UDim2.fromOffset(item.w,nr.h)end
+  x+=item.w+8
+ end
+ local er=g.eggs
+ local eggs=Kit.island(host,"EggsLeft",er,12)
+ txt(eggs,"Label","EGGS","dim",12,6,er.w-20,14,12)
+ h.eggs=txt(eggs,"Counter","0","text",12,21,40,22,18)
+ if not g.eggsCompact then h.budget=txt(eggs,"Counter","/24","soft",40,24,40,20,13)end
+ -- 4.3 left column.
+ local goals=Kit.island(host,"Goals",{x=g.L0,y=g.goalsTop,w=g.L1-g.L0,h=24+3*g.goalPitch+6},12)
+ h.goalsCard=goals;h.goalsBezel=goals.Parent
+ local gw=g.L1-g.L0
+ h.goalsEyebrow=txt(goals,"Label","GOALS","dim",12,4,gw-24,20,12)
+ h.goalsCount=txt(goals,"Counter","","dim",12,4,gw-24,20,12,right)
+ if g.chainInGoals then h.chain=txt(goals,"Label","CHAIN ×0","soft",12,4,gw-24,20,12,right);h.chainInGoals=true end
+ h.status=txt(goals,"Body","","soft",12,26,gw-24,3*g.goalPitch,14,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
+ h.goals={}
+ local p=g.goalPitch
+ for index=1,3 do
+  local row=Kit.frame(goals,"Goal"..index,nil,UDim2.fromOffset(0,24+(index-1)*p),UDim2.fromOffset(gw,p))
+  local check=Kit.check(row,20);check.root.Position=UDim2.fromOffset(12,math.floor((p-20)/2))
+  local text=txt(row,"BodyMedium","","text",40,0,gw-40-56,p,14,{TextTruncate=Enum.TextTruncate.AtEnd})
+  local count=txt(row,"Counter","","soft",gw-56,0,44,p,13,right)
+  h.goals[index]={row=row,check=check,text=text,count=count}
+ end
+ h.goalPitch=p;h.geometry=g
+ -- Quest handle.
+ local hr=g.handle
+ local handle,handleBezel=Kit.island(host,"QuestHandle",hr,22,"well")
+ local hit=Kit.node("TextButton",handle,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,Size=UDim2.fromScale(1,1),ZIndex=handle.ZIndex+5,Selectable=false})
+ hit:SetAttribute("AccessibleLabel","Daily quests")
+ local icon=Kit.icon(handle,"quests",18,"text");icon.Position=UDim2.fromOffset(13,13)
+ h.questDot=Kit.frame(icon,"ReadyDot","stars",UDim2.fromOffset(12,-3),UDim2.fromOffset(8,8),999);h.questDot.Visible=false
+ if hr.w>=110 then txt(handle,"Strong","Quests","text",40,0,70,hr.h,14)end
+ if hr.w>=150 then h.questCount=txt(handle,"Counter","","text",hr.w-92,0,56,hr.h,13,right)
+ elseif hr.w>=84 and hr.w<110 then h.questCount=txt(handle,"Counter","","text",40,0,40,hr.h,13)end
+ local chev=Kit.chevron(handle,14,"up","text");chev.Position=UDim2.fromOffset(hr.w-30,15)
+ h.handle,h.handleBezel=handle,handleBezel
+ hit.Activated:Connect(function()self:setDrawer(not self.drawerOpen)end)
+ -- 4.5 right column.
+ local dr=g.difficulty
+ local diff=Kit.island(host,"Difficulty",dr,12)
+ h.diffBars={}
+ for index,bh in ipairs({10,16,22})do h.diffBars[index]=Kit.frame(diff,"Bar"..index,"stars",UDim2.fromOffset(12+(index-1)*9,33-bh),UDim2.fromOffset(6,bh),2)end
+ h.diffName=txt(diff,"Strong","Medium","text",46,0,120,dr.h,15)
+ if dr.w>=190 then
+  h.diffChip=Kit.chip(diff,"★ ×1","gold",22);h.diffChip.label.TextSize=12;h.diffChip.set("★ ×1","gold")
+  h.diffChip.root.AnchorPoint=Vector2.new(1,.5);h.diffChip.root.Position=UDim2.new(1,-10,.5,0)
+ end
+ local pr=g.winPays
+ local pays=Kit.island(host,"WinPays",pr,12)
+ txt(pays,"Label","WIN PAYS","dim",12,0,100,pr.h,12)
+ local pair=Kit.frame(pays,"Amount",nil,UDim2.new(1,-12,.5,0),UDim2.fromOffset(0,24));pair.AnchorPoint=Vector2.new(1,.5);pair.AutomaticSize=Enum.AutomaticSize.X
+ Kit.node("UIListLayout",pair,{FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})
+ local star=Kit.icon(pair,"star",17);star.LayoutOrder=1
+ h.pays=Kit.text(pair,"Counter","6–8","stars",{TextSize=17,AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,24),LayoutOrder=2})
+ -- 4.4 quest drawer (built hidden; covers the Goals card, d-pad and handle).
+ local wr=g.drawer
+ local drawer,drawerBezel=Kit.island(host,"QuestDrawer",wr,14)
+ drawerBezel.ZIndex=host.ZIndex+20;drawer.Active=true;drawerBezel.Visible=false
+ for _,node in ipairs(drawerBezel:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex+=20 end end
+ local function dz(node)node.ZIndex=drawer.ZIndex+1;return node end
+ dz(txt(drawer,"Label","DAILY QUESTS","dim",12,16,wr.w-60,14,12))
+ local close=Kit.node("TextButton",drawer,{Name="Close",Text="",BackgroundTransparency=1,AutoButtonColor=false,Position=UDim2.fromOffset(wr.w-44,0),Size=UDim2.fromOffset(44,44),ZIndex=drawer.ZIndex+3,Selectable=false})
+ close:SetAttribute("AccessibleLabel","Close daily quests")
+ local cchev=Kit.chevron(close,14,"down","text");cchev.Position=UDim2.fromOffset(15,15)
+ for _,node in ipairs(cchev:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=close.ZIndex+1 end end;cchev.ZIndex=close.ZIndex+1
+ close.Activated:Connect(function()self:setDrawer(false)end)
+ h.daily={}
+ for index=1,3 do
+  local y=46+(index-1)*44
+  local name=dz(txt(drawer,"Body","","text",12,y,wr.w-24-56,20,14,{TextTruncate=Enum.TextTruncate.AtEnd}))
+  local count=dz(txt(drawer,"Counter","","soft",wr.w-68,y,56,20,13,right))
+  local bar=Kit.progress(drawer,4);bar.root.Position=UDim2.fromOffset(12,y+28);bar.root.Size=UDim2.fromOffset(wr.w-24,4)
+  bar.root.ZIndex=drawer.ZIndex+1;for _,node in ipairs(bar.root:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=drawer.ZIndex+2 end end
+  h.daily[index]={name=name,count=count,bar=bar}
+ end
+ local open=Kit.button(drawer,"OpenQuestLog",{text="Open quest log",size=Vector2.new(wr.w-24,44),textSize=15,selectable=false})
+ open.Position=UDim2.fromOffset(12,wr.h-12-44)
+ open.Activated:Connect(function()self:setDrawer(false);if self.callbacks.menu then self.callbacks.menu()end end)
+ h.drawer,h.drawerBezel=drawer,drawerBezel
+ drawer.InputBegan:Connect(function()self.drawerTouched=os.clock()end)
+ self.drawerOpen=false
+ -- Wordmark: decoration that leaves first (placed by setHud once the goal count is known).
+ self.wordmark.Visible=false
+ self.lastHud=nil;self.controlsKey=nil
+end
+
+-- Drawer open / close (UI-SPEC-COMPACT 4.4). Returns true when it changed.
+function Screen:setDrawer(open)
+ local h=self.hud;if not(h and h.drawerBezel)then return false end
+ open=open==true
+ if open==self.drawerOpen then return false end
+ self.drawerOpen=open;self.drawerTouched=os.clock()
+ local bezel=h.drawerBezel;local home=bezel.Position
+ self.root:SetAttribute("QuestDrawerOpen",open)
+ if open then
+  bezel.Visible=true
+  if not Kit.reduced()then
+   bezel.Position=home+UDim2.fromOffset(0,24);Kit.tween(bezel,.14,{Position=home})
+  end
+  local token=self.drawerTouched
+  task.spawn(function()
+   while self.drawerOpen do
+    task.wait(.5)
+    if self.drawerOpen and os.clock()-(self.drawerTouched or 0)>=6 then self:setDrawer(false)end
+   end
+   local _=token
+  end)
+  if not self.outsideTap then
+   local UIS=game:GetService("UserInputService")
+   self.outsideTap=UIS.InputBegan:Connect(function(input)
+    if not self.drawerOpen then return end
+    local t=input.UserInputType
+    if t~=Enum.UserInputType.MouseButton1 and t~=Enum.UserInputType.Touch then return end
+    local hh=self.hud;if not(hh and hh.drawerBezel)then return end
+    local p=input.Position
+    local gui=hh.drawerBezel:FindFirstAncestorWhichIsA("PlayerGui")
+    local inside=false
+    if gui then
+     for _,node in ipairs(gui:GetGuiObjectsAtPosition(p.X,p.Y))do
+      if node==hh.drawerBezel or node:IsDescendantOf(hh.drawerBezel)or node==hh.handleBezel or node:IsDescendantOf(hh.handleBezel)then inside=true;break end
+     end
+    end
+    if inside then self.drawerTouched=os.clock()else self:setDrawer(false)end
+   end)
+  end
+ else
+  bezel.Visible=false
+ end
+ return true
+end
+-- Back (B, Backspace, the back arrow) closes an open drawer first.
+function Screen:closeDrawer()return self:setDrawer(false)end
+
 function Screen:buildHud(g)
  if self.hudRoot then self.hudRoot:Destroy()end
+ self.drawerOpen=false
+ if g.phone then return self:buildCompactHud(g)end
  self.builtMode=g.mode;local compact=g.compact
  local host=Kit.frame(self.content,"HUD",nil,UDim2.new(),UDim2.fromScale(1,1));self.hudRoot=host
  local h={};self.hud=h
@@ -415,6 +735,7 @@ end
 -- next{t1,t2,t3},eggsLeft,budget,difficulty,multiplier,winPays,input("Gamepad"|"Keyboard"|"Touch")
 function Screen:setHud(data)
  local h=self.hud;if not h.score then return end
+ if h.phone then return self:setCompactHud(data)end
  local compact=self.geometry and self.geometry.compact
  h.score.Text=tostring(data.score or 0)
  if h.best then h.best.Text="BEST "..tostring(data.best or 0)end
@@ -471,6 +792,84 @@ function Screen:setHud(data)
     if row then Kit.glyph(slot.holder,row[1],false,22)end
    end
   end
+ end
+end
+
+-- Compact HUD paint: same data contract as setHud.
+function Screen:setCompactHud(data)
+ local h=self.hud;local g=h.geometry
+ h.score.Text=commas(data.score)
+ h.chain.Text=(if h.chainInGoals then "CHAIN ×"else "×")..tostring(data.chain or 0)
+ local goals=data.goals or {}
+ local status=data.message
+ h.status.Visible=status~=nil and status~=""
+ if h.status.Visible then h.status.Text=status end
+ local done=0
+ for index,slot in ipairs(h.goals)do
+  local goal=goals[index]
+  slot.row.Visible=goal~=nil and not h.status.Visible
+  if goal then
+   if goal.done then done+=1 end
+   slot.check.set(goal.done)
+   slot.text.Text=goal.short or goal.text
+   slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
+   slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)
+  end
+ end
+ h.goalsCount.Text=""
+ if data.statusLabel and data.statusLabel~=""then h.goalsEyebrow.Text=string.upper(data.statusLabel);h.goalsEyebrow.TextColor3=Kit.Color.stars
+ else h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS";h.goalsEyebrow.TextColor3=Kit.Color.dim end
+ -- Card height follows the goal count (two rows for a status message).
+ local n=if h.status.Visible then 2 else math.max(1,#goals)
+ local cardH=24+n*h.goalPitch+6
+ if h.cardH~=cardH then
+  h.cardH=cardH
+  h.goalsCard.Size=UDim2.fromOffset(h.goalsCard.Size.X.Offset,cardH);h.goalsBezel.Size=UDim2.fromOffset(h.goalsBezel.Size.X.Offset,cardH+6)
+  h.status.Size=UDim2.fromOffset(h.status.Size.X.Offset,n*h.goalPitch)
+  self:placeCompactWordmark(g.goalsTop+cardH)
+ end
+ -- Drawer rows and the handle.
+ local daily=data.daily or {}
+ local claimed,ready=0,false
+ for index,slot in ipairs(h.daily)do
+  local q=daily[index]
+  slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
+  if q then
+   slot.name.Text=q.title;slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target)
+   slot.count.TextColor3=if q.done then Kit.Color.stars else Kit.Color.soft
+   slot.bar.set(q.progress,q.target,q.done,true)
+   if q.done then claimed+=1 end
+   if q.ready then ready=true end
+  end
+ end
+ if h.questCount then h.questCount.Text=string.format("%d/%d",claimed,#daily)end
+ h.questDot.Visible=ready
+ for index,slot in ipairs(h.next)do eggPaint(slot,data.next and data.next[index])end
+ h.eggs.Text=tostring(data.eggsLeft or 0)
+ if h.budget then
+  h.budget.Text="/"..tostring(data.budget or 24)
+  local digits=game:GetService("TextService"):GetTextSize(h.eggs.Text,18,Enum.Font.RobotoMono,Vector2.new(500,80)).X
+  h.budget.Position=UDim2.fromOffset(12+digits+4,24)
+ end
+ local level=({Easy=1,Medium=2,Hard=3})[data.difficulty or "Medium"]or 2
+ local tone=if level==1 then Kit.Color.good elseif level==3 then Kit.Color.danger else Kit.Color.stars
+ for index,bar in ipairs(h.diffBars)do bar.BackgroundColor3=tone;bar.BackgroundTransparency=if index<=level then 0 else .75 end
+ h.diffName.Text=data.difficulty or "Medium"
+ if h.diffChip then h.diffChip.set("★ "..(data.multiplier or "×1"),"gold");h.diffChip.label.TextSize=12 end
+ h.pays.Text=data.winPays or "6–8"
+end
+
+-- The wordmark sits between the Goals card and the handle, right of the d-pad,
+-- only when that gap is 100+ wide and tall enough with 10 px to spare.
+function Screen:placeCompactWordmark(goalsBottom)
+ local g=self.geometry;if not(g and g.phone)then return end
+ local x0,x1=g.handle.x,g.L1;local y0,y1=goalsBottom,g.handle.y
+ local w=math.min(123,x1-x0);local hh=w*16/41
+ local fits=(x1-x0)>=100 and(y1-y0)>=hh+20
+ self.wordmark.Visible=fits
+ if fits then
+  self.wordmark.Position=UDim2.fromOffset(math.floor(x0+(x1-x0-w)/2),math.floor(y0+(y1-y0-hh)/2))
+  self.wordmark.Size=UDim2.fromOffset(w,hh)
  end
 end
 return Screen
