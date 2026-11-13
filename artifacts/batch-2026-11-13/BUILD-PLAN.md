@@ -14,7 +14,7 @@ Round
 - Next / Then balls animate their faces like the board balls.
 - Results count-up: a very short blip per +1 ("rings counting up"), fast, each blip cut by the next.
 - Items come only from power-up balls (star-marked ball in the normal queue; merging it grants an item). No Power-up Egg in v1. 3-slot belt per round; full belt = new item lost with a "Belt full" toast.
-- B opens the item carousel during a round (round freezes); leaving is MENU or the back arrow.
+- B opens the item carousel during a round (round freezes); B closes it again, and MENU or the back arrow also leave (Spencer, after v550).
 - Phones: the item button is ALWAYS there (under A). Pressed with no items: a "You have no items" note appears on screen and softly fades after 1-2 s.
 - First items: Swap, Pop, Magnet, Bomb.
 - Ball themes: Deck style "Balls" tab (mockup approved). Prices: Smileys + Marbles free, Gumdrops 20, Gems 40, Planets 40, Kittens 80. No fruit theme. Save v11.

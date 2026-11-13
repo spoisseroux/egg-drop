@@ -7,7 +7,7 @@ New since v539: smiley balls by default (no numerals), Deck style **Balls** tab 
 
 **Test:** win a round, then play another to see star balls, the belt chip and B carousel (use Swap/Pop/Bomb/Magnet); Deck style → Balls (buy Gumdrops, equip); the results count-up blips; walk the dusk garden (waterfall gets louder, birds, flower patches, bushes, nothing blocks the arrival path); stations' icons; a pet sitting by you; on your phone, the item button and "You have no items".
 
-**Still open:** carousel hint says "B Close" (your call was MENU / back arrow to leave); desktop Items card (a small board chip stands in); hub floor glare and tan rocks vs the reference; all audio placeholders; not checked on a physical phone.
+**Still open:** desktop Items card (a small board chip stands in); hub floor glare and tan rocks vs the reference; all audio placeholders; not checked on a physical phone.
 
 ## Historical v539 — redesign: celebrations, menus, round look, 3D eggs and Star
 
