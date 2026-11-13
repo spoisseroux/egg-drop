@@ -26,21 +26,21 @@ return function(client,parent)
    assert(Screen.resolve(Vector2.new(1649,971),aspect).s==1)
    local g=Screen.resolve(Vector2.new(1300,700),aspect);assert(g.s<1 and g.s>=.75 and not g.compact)
   end)
-  test("phone landscape 733x307 is Compact: the LCD fills the safe height and the case bleeds",function()
+  test("phone landscape 733x307 is the Compact phone layout; 1024x768 keeps the small scaled LCD",function()
    local g=Screen.resolve(Vector2.new(733,307),aspect)
-   assert(g.compact and near(g.s,(307-8)/608,.001))
-   assert(near(g.lcd.h,299)and near(g.lcd.y,4)and g.deck.w>733,"LCD fills, body bleeds past the root")
-   assert(g.authored==Screen.Compact and near(g.contentScale,1,.01))
+   assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==291 and g.contentScale==1,"phone layout in real px")
+   local small=Screen.resolve(Vector2.new(1024,768),aspect)
+   assert(small.mode=="Small"and small.compact and near(small.s,(768-8)/608,.001)and small.authored==Screen.Compact,"the 1024x768 band is unchanged")
   end)
   test("every hardware target is at least 44 px on the phone and the back arrow is 44",function()
    local root=Instance.new("Frame");root.Size=UDim2.fromOffset(733,307);root.BackgroundTransparency=1;root.Parent=gui
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(733,307),aspect);s:setVisible(true)
    task.wait()
-   for _,q in pairs(s.quadrants)do assert(q.AbsoluteSize.X>=44 and q.AbsoluteSize.Y>=44,q.Name)end
+   for dir,q in pairs(s.quadrants)do if q.Visible then assert(q.AbsoluteSize.X>=44 and q.AbsoluteSize.Y>=44,q.Name)else assert(dir=="Up"or dir=="Down")end end
    for id,b in pairs(s.buttons)do assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)end
-   assert(s.menuHit.AbsoluteSize.Y>=44 and s.back.root.AbsoluteSize.X==44)
-   -- HUD content is authored at 417x299 and keeps compact type at 12 or more.
-   for _,node in ipairs(s.hudRoot:GetDescendants())do if node:IsA("TextLabel")and node.Text~=""then assert(node.TextSize>=11,node:GetFullName())end end
+   assert(not s.menu.Visible and s.back.root.AbsoluteSize.X==44)
+   -- Compact HUD type never goes under 12.
+   for _,node in ipairs(s.hudRoot:GetDescendants())do if node:IsA("TextLabel")and node.Text~=""then assert(node.TextSize>=12,node:GetFullName())end end
    root:Destroy()
   end)
   test("HUD fills from replicated data without inventing numbers",function()
