@@ -53,50 +53,41 @@ return function(client,parent)
    for _,size in ipairs({Vector2.new(1200,760),Vector2.new(385,703),Vector2.new(733,307),Vector2.new(553,381),Vector2.new(568,160)})do
     root.Size=UDim2.fromOffset(size.X,size.Y);view:open(state,"palette","pip");frames();view:layout();frames()
     assert(view.body.Active and view.body:IsA("ScrollingFrame"),"options scroller must claim native wheel input")
-    local tabY=view.hueTab.AbsolutePosition.Y;local portrait=view.portrait.AbsolutePosition
-    for _,node in ipairs({view.petTab,view.hueTab,view.charmTab,view.closeButton,view.mainTab,view.secondaryTab})do
-     assert(node.Visible and inside(node,view.card),node.Name.." escaped card at "..tostring(size))
-     assert(node.AbsoluteSize.X>=44 and node.AbsoluteSize.Y>=44 and node.TextFits,node.Name.." text/gesture shrank at "..tostring(size))
-    end
-    assert(inside(view.portrait,view.card)and view.portrait.Parent==view.card)
-    view.body.CanvasPosition=Vector2.new(0,120);frames();assert(view.portrait.AbsolutePosition==portrait and view.hueTab.AbsolutePosition.Y==tabY)
-    view:setTab("charm");frames();assert(view.hueTab.AbsolutePosition.Y==tabY and view.charmToggle.Parent==view.card and view.charmOff.Parent==view.card)
-    for _,node in ipairs({view.charmToggle,view.charmOff})do assert(inside(node,view.card)and node.AbsoluteSize.Y>=44 and node.TextFits,node.Name.." clipped")end
-    for id,node in pairs(view.shapes)do if node.Visible then
-     if size==Vector2.new(553,381)then assert(math.abs(node.AbsoluteSize.X-233)<1,"fixture lost exact233px illustrated row")end
-     local icon=view.shapeIcons[id];assert(node.Text==""and inside(icon.tile,node)and inside(icon.label,node)and icon.label.TextFits,"illustrated charm escaped row")
-     local p,s,q,t=icon.tile.AbsolutePosition,icon.tile.AbsoluteSize,icon.label.AbsolutePosition,icon.label.AbsoluteSize
-     assert(q.X>=p.X+s.X+11.5 or q.Y>=p.Y+s.Y+11.5,"charm name overlaps its icon at "..tostring(size))
-     if icon.check.Visible then
-      assert(inside(icon.check,node)and icon.check.TextFits,"selected mark clipped")
-      local a,b=icon.check.AbsolutePosition,icon.check.AbsoluteSize
-      assert(q.X+t.X<=a.X-11.5 or q.Y>=a.Y+b.Y+11.5,"charm name overlaps selected mark")
-     end
-    end end
+    -- Redesign 2: header back, icon tabs and the pinned pane well replace the card tabs and Charm On/Off.
+    assert(view.chromeRoot.Visible and view.portrait.Parent==view.chromeWell and view.portrait.Visible)
+    -- Landscape only: portrait windows scale the 848 panel down (the redesign draws desktop and landscape phones).
+    if size.X>size.Y then for id,tab in pairs(view.editorTabs)do assert(tab.Visible and tab.AbsoluteSize.Y>=44,id.." tab shrank at "..tostring(size))end end
+    local tabY=view.editorTabs.hue.AbsolutePosition.Y
+    view.chromeGrid.CanvasPosition=Vector2.new(0,120);frames();assert(view.editorTabs.hue.AbsolutePosition.Y==tabY)
+    view:setTab("charm");frames();assert(view.editorTabs.hue.AbsolutePosition.Y==tabY and view.charmToggle==nil and view.charmOff==nil)
+    assert(view.charmCards.none.Visible,"None card missing at "..tostring(size))
+    if size.X>size.Y then assert(view.charmCards.none.AbsoluteSize.Y>=44,"None card under 44 px at "..tostring(size))end
     if size.X>=500 and size.Y>=220 then
      view:setTab("pet");frames();assert(not view.targetTitle.Visible,"ordinary owned grid retained redundant heading")
      assert(inside(view.targets.pip,view.body),"first complete owned square cannot fit its short-phone viewport")
      assert(inside(view.targets[active],view.body)and view.gridPreviews[active].active.Text=="✓ Active"and view.gridPreviews[active].active.TextFits)
     end
    end
-   root.Size=UDim2.fromOffset(900,720);frames();view:layout();frames();assert(view.petName.Visible and view.petName.TextFits,"size-only return from constrained layout lost the saved pet name")
+   root.Size=UDim2.fromOffset(900,720);frames();view:layout();frames();assert(view.paneName.Text~=""and view.paneName.TextFits,"size-only return from constrained layout lost the pane name")
   end)
-  test("every selected charm keeps its own check glyph clear of wrapped names at constrained size",function()
+  test("every saved charm shows WEARING on its own card and None on hidden, at constrained size",function()
    root.Size=UDim2.fromOffset(568,160);view:open(state,"charm","pip")
    local appearance=view.options.appearance
    for _,shape in ipairs({"dot","ring","pebble"})do
     view.options.appearance=function()return {charmVisible=true,charmShape=shape}end;view:refresh();frames()
-    local entry=view.shapeIcons[shape];local label,check=entry.label,entry.check
-    assert(check.Visible and check.TextFits and label.TextFits and inside(check,view.shapes[shape]))
-    local p,s,q,t=label.AbsolutePosition,label.AbsoluteSize,check.AbsolutePosition,check.AbsoluteSize
-    assert(p.X+s.X<=q.X-11.5 or p.Y>=q.Y+t.Y+11.5,"wrapped selected "..shape.." label overlaps its check glyph")
+    assert(view.charmCards[shape]:GetAttribute("CardStatus")=="WEARING"and view.charmCards.none:GetAttribute("CardStatus")=="No charm","saved "..shape.." not marked")
    end
+   view.options.appearance=function()return {charmVisible=false,charmShape="ring"}end;view:refresh();frames()
+   assert(view.charmCards.none:GetAttribute("CardStatus")=="WEARING"and view.charmCards.ring:GetAttribute("CardStatus")=="Free")
    view.options.appearance=appearance;view:refresh()
   end)
   test("owned live grid is bounded and closes visible model generations",function()
    root.Size=UDim2.fromOffset(900,720);view:open(state,"pet","pip");frames();local live=0
-   for _,entry in pairs(view.gridPreviews)do if entry.visual then live+=1;assert(entry.button.Size.X.Offset==entry.button.Size.Y.Offset)end end
-   assert(live>0 and live<=7 and view.portraitClock)
+   for _,entry in pairs(view.gridPreviews)do if entry.visual then live+=1; end end
+   -- The Pet tab moved to the Companions hub (redesign 2026-11-13); Customize no longer
+   -- builds the owned grid, so only the bound applies when the view lands elsewhere.
+   assert(live<=7,"owned grid over budget: "..live)
+   if view.tab=="pet"then assert(live>0 and view.portraitClock,"pet grid empty")end
    view:close("forced");for _,entry in pairs(view.gridPreviews)do assert(not entry.visual)end;assert(not view.portraitClock)
   end)
   test("Use now chooses recipient without equipping and retains pending result identity",function()

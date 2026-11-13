@@ -1,0 +1,325 @@
+{
+ "schema": 1,
+ "asset": "eggs",
+ "builtBy": [
+  "scripts/build_egg_models.py",
+  "scripts/build_egg_textures.py",
+  "scripts/egg_types.py"
+ ],
+ "sourceBlend": "assets/art-source/eggs/eggs.blend",
+ "axes": "FBX axis_forward=-Z axis_up=Y, same as bear.fbx. Blender: up +Z, front -Y, 1 unit = 1 stud. The egg stands on the origin (base centre at 0,0,0), its long axis is +Y in Roblox.",
+ "conversions": {
+  "blenderToRuntime": "(x, y, z) -> (x, z, -y)  [runtime: front +Z, up +Y]",
+  "scaleNote": "As for the Bear: Studio's default FBX units import these at 100x. Set Size = MeshSize/100 (or use sizeStuds below). centerFromEggBase is where each MeshPart's centre goes, relative to the egg's base centre, at 1x."
+ },
+ "files": {
+  "eggs": "eggs.fbx",
+  "star": "star.fbx",
+  "fx": "EGG-PREVIEW-FX.md",
+  "textures": "textures/"
+ },
+ "egg": {
+  "sizeStuds": [
+   1.0,
+   1.3,
+   1.0
+  ],
+  "pivotFromEggBase": [
+   0,
+   0,
+   0
+  ],
+  "spinPivotFromEggBase": [
+   0,
+   0.546,
+   0
+  ],
+  "seam": {
+   "heightFromBase": 0.7537,
+   "zigZagHalfHeight": 0.0698,
+   "teeth": 12,
+   "radiusAtSeam": 0.4689
+  },
+  "shellThickness": 0.035,
+  "triangles": 1424,
+  "meshes": [
+   {
+    "name": "Egg__TopShell",
+    "fbx": "eggs.fbx",
+    "role": "top shell: pops up on Hatch",
+    "triangles": 528,
+    "hasUV": true,
+    "sizeStuds": [
+     0.9371,
+     0.6238,
+     0.9371
+    ],
+    "centerFromEggBase": [
+     0.0,
+     0.9881,
+     0.0
+    ],
+    "sizeBlender": [
+     0.9371,
+     0.9371,
+     0.6238
+    ],
+    "centerBlender": [
+     0.0,
+     0.0,
+     0.9881
+    ],
+    "material": "SurfaceAppearance (ColorMap = the type's texture, RoughnessMap = egg-roughness.png)",
+    "liftAxis": "+Y",
+    "doubleSided": false,
+    "note": "Has an inner skin and a cut rim, so it is solid from below when it lifts."
+   },
+   {
+    "name": "Egg__BottomShell",
+    "fbx": "eggs.fbx",
+    "role": "bottom shell: the cup that stays",
+    "triangles": 576,
+    "hasUV": true,
+    "sizeStuds": [
+     0.9949,
+     0.8235,
+     0.9949
+    ],
+    "centerFromEggBase": [
+     0.0,
+     0.4117,
+     0.0
+    ],
+    "sizeBlender": [
+     0.9949,
+     0.9949,
+     0.8235
+    ],
+    "centerBlender": [
+     0.0,
+     0.0,
+     0.4117
+    ],
+    "material": "SurfaceAppearance (same maps as the top shell)",
+    "doubleSided": false
+   },
+   {
+    "name": "Egg__Core",
+    "fbx": "eggs.fbx",
+    "role": "inner glow core",
+    "triangles": 320,
+    "hasUV": false,
+    "sizeStuds": [
+     0.8,
+     0.8,
+     0.8
+    ],
+    "centerFromEggBase": [
+     0.0,
+     0.7,
+     0.0
+    ],
+    "sizeBlender": [
+     0.8,
+     0.8,
+     0.8
+    ],
+    "centerBlender": [
+     0.0,
+     0.0,
+     0.7
+    ],
+    "material": "Neon, no texture; Color = types[id].core",
+    "castShadow": false,
+    "note": "Sits behind the seam. Lifting the top shell 0.04 studs shows it through the crack."
+   }
+  ],
+  "uv": {
+   "outer": "u round the egg (u = 0.5 is the front), v 0.08..1 from bottom pole to top pole",
+   "inner": "v 0.02..0.05 (inside of the shell)",
+   "rim": "v 0.062 (cut edge)",
+   "note": "Both shells and every type share this layout, so a type swap is one ColorMap swap."
+  },
+  "roughnessMap": "textures/egg-roughness.png",
+  "roughnessPlan": "Glossy toy plastic: roughness 0.27 outside, 0.78 inside the shell. No MetalnessMap, no NormalMap. If SurfaceAppearance is too costly in the ViewportFrame, use the ColorMap as MeshPart.TextureID with Material SmoothPlastic and Reflectance 0.08."
+ },
+ "order": [
+  "companion",
+  "toy",
+  "material",
+  "hue",
+  "feature"
+ ],
+ "types": {
+  "companion": {
+   "name": "Companion Egg",
+   "look": "warm cream shell, big royal-blue polka dots, one lime ribbon round the belly",
+   "colorMap": "textures/egg-companion-color.png",
+   "textureSize": 1024,
+   "roughnessMap": "textures/egg-roughness.png",
+   "roughness": 0.3,
+   "base": "#FFF0B0",
+   "deep": "#F2C766",
+   "light": "#FFFBE6",
+   "accents": [
+    "#3355DA",
+    "#A8C922"
+   ],
+   "core": "#FFE58A",
+   "bloom": "#FFD86B",
+   "crackLight": "#FFFBE6",
+   "particles": [
+    "#FFFFFF",
+    "#FFE58A",
+    "#7C9BFF"
+   ]
+  },
+  "toy": {
+   "name": "Toy Egg",
+   "look": "sunny yellow toy plastic, two bouncing teal wave stripes, coral and white dots",
+   "colorMap": "textures/egg-toy-color.png",
+   "textureSize": 1024,
+   "roughnessMap": "textures/egg-roughness.png",
+   "roughness": 0.26,
+   "base": "#FFC94A",
+   "deep": "#F09A1E",
+   "light": "#FFE9A6",
+   "accents": [
+    "#1F6F8C",
+    "#F16F65",
+    "#FFFFFF"
+   ],
+   "core": "#FFB340",
+   "bloom": "#FF9F2E",
+   "crackLight": "#FFE9A6",
+   "particles": [
+    "#FFFFFF",
+    "#FFD45C",
+    "#F16F65",
+    "#49C7E0"
+   ]
+  },
+  "material": {
+   "name": "Material Egg",
+   "look": "polished lavender marble with teal and blue veins and a pearly sheen",
+   "colorMap": "textures/egg-material-color.png",
+   "textureSize": 1024,
+   "roughnessMap": "textures/egg-roughness.png",
+   "roughness": 0.18,
+   "base": "#DCD0EF",
+   "deep": "#A893D6",
+   "light": "#F7F2FF",
+   "accents": [
+    "#21B6AD",
+    "#527BDC"
+   ],
+   "core": "#8FF0E4",
+   "bloom": "#6FDCD2",
+   "crackLight": "#F7F2FF",
+   "particles": [
+    "#FFFFFF",
+    "#BFF7F0",
+    "#C8B8F5"
+   ]
+  },
+  "hue": {
+   "name": "Hue Egg",
+   "look": "candy rainbow swirl: pink, yellow, teal, blue and violet ribbons spiralling up the shell",
+   "colorMap": "textures/egg-hue-color.png",
+   "textureSize": 1024,
+   "roughnessMap": "textures/egg-roughness.png",
+   "roughness": 0.26,
+   "base": "#56D4DD",
+   "deep": "#1C9FB5",
+   "light": "#C9F6F8",
+   "accents": [
+    "#FF327A",
+    "#FFCC00",
+    "#56D4DD",
+    "#008DFF",
+    "#9350FF"
+   ],
+   "core": "#FF7AB8",
+   "bloom": "#FF5FA8",
+   "crackLight": "#C9F6F8",
+   "particles": [
+    "#FFFFFF",
+    "#FF7AB8",
+    "#FFDD4A",
+    "#5FD0FF",
+    "#B58BFF"
+   ]
+  },
+  "feature": {
+   "name": "Feature Egg",
+   "look": "deep plum night-sky shell fading to lavender, mint and white four-point stars, fine glitter",
+   "colorMap": "textures/egg-feature-color.png",
+   "textureSize": 1024,
+   "roughnessMap": "textures/egg-roughness.png",
+   "roughness": 0.24,
+   "base": "#6E3F8C",
+   "deep": "#3F2259",
+   "light": "#C9A8E8",
+   "accents": [
+    "#88D7BD",
+    "#FFFFFF",
+    "#DCD0EF"
+   ],
+   "core": "#9CFFDD",
+   "bloom": "#74E8C4",
+   "crackLight": "#C9A8E8",
+   "particles": [
+    "#FFFFFF",
+    "#9CFFDD",
+    "#E3C8FF"
+   ]
+  }
+ },
+ "star": {
+  "name": "StarToken",
+  "fbx": "star.fbx",
+  "role": "results-screen Star token",
+  "triangles": 640,
+  "hasUV": true,
+  "sizeStuds": [
+   1.0097,
+   0.9714,
+   0.45
+  ],
+  "centerFromEggBase": [
+   0.0,
+   0.0435,
+   0.0
+  ],
+  "sizeBlender": [
+   1.0097,
+   0.45,
+   0.9714
+  ],
+  "centerBlender": [
+   0.0,
+   0.0,
+   0.0435
+  ],
+  "material": "SurfaceAppearance (ColorMap star-color.png, RoughnessMap star-roughness.png)",
+  "colorMap": "textures/star-color.png",
+  "textureSize": 512,
+  "roughnessMap": "textures/star-roughness.png",
+  "roughness": 0.25,
+  "pivot": "mesh centre; the star faces the camera along -Z in the FBX (front +Z at runtime)",
+  "uv": "planar from the front, mirrored on the back, so both faces show the same facets",
+  "colors": {
+   "light": "#FFE9A0",
+   "gold": "#FFD069",
+   "mid": "#FFB93A",
+   "deep": "#F0941A",
+   "edge": "#B8650C"
+  },
+  "missedRound": "same mesh, Transparency 0.6, Color #DDE7EE, no ColorMap tint change needed (spec 2.4)",
+  "particles": [
+   "#FFFFFF",
+   "#FFE9A0",
+   "#FFD069"
+  ]
+ }
+}

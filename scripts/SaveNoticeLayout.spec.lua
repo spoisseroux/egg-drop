@@ -89,7 +89,8 @@ return function(client,parent,rootSize)
 				end)
 				assert((menu.heading.Text=="Pocket menu" or menu.heading.Text=="Menu") and not menu.playHint.Text:find("retry",1,true));menu:close()
 				local picker=Picker.new(root,nil,nil,outgoing,outgoing,outgoing,outgoing);table.insert(views,picker)
-				picker:updateClub(1,0,0,0,"On",false,false,1);picker:open("brick","star");settle()
+				-- The notice shows on the picker card (Settings / Trials); Deck style keeps its fixed header.
+				picker:updateClub(1,0,0,0,"On",false,false,1);picker:open("brick","star","Settings");settle()
 				cycle(picker,function(v,n)
 					assert(v.themeId=="brick" and v.stickerId=="star" and inside(v.cancel,v.card) and not v.card:FindFirstChild("Apply"))
 					assert(v.scroll.AbsoluteSize.Y>=44 and inside(v.scroll,v.card));readable(v.saveDetail);reach(v.saveDetail,v.scroll)
@@ -109,7 +110,7 @@ return function(client,parent,rootSize)
 				table.insert(views,{shade=host,close=function()end});local inner=Instance.new("Frame");inner.Size=UDim2.fromScale(1,1);inner.BackgroundTransparency=1;inner.Parent=host
 				local recap=Results.new(inner,{audio=audio,reduce=function()return true end})
 				local saved={outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=24,goals={}}
-				recap:show(saved,false);settle();assert(recap.totalText.Text=="+14 Stars" and recap.wallet.amount.Text=="24")
+				recap:show(saved,false);settle();assert(recap.totalText.Text=="+14" and recap.unit.Visible and recap.wallet.amount.Text=="24")
 				for _,status in ipairs(statuses)do
 					-- A save that is still pending keeps Leave usable and never shows a receipt.
 					saved.pending=true;recap:show(saved,false);settle();readable(recap.saved)

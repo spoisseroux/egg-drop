@@ -8,7 +8,7 @@ function Round.new(options)
 	return setmetatable({ score = 0, maxClears = 0, over = false, overflowTime = 0,
 		overflowY = options.overflowY or Config.OverflowY, grace = options.grace or Config.OverflowGrace,
 		armAfterDrops = options.armAfterDrops or 0, warningMargin = options.warningMargin or 2,
-		danger = 0, settledHeight = 0 }, Round)
+		danger = 0, settledHeight = 0, graceLeft = 0 }, Round)
 end
 
 function Round:step(eggs, dt, drops)
@@ -31,6 +31,9 @@ function Round:step(eggs, dt, drops)
 	self.danger = if not armed then 0 else math.max(self.overflowTime / self.grace,
 		math.clamp((maximum - self.overflowY + self.warningMargin) / self.warningMargin, 0, 0.85))
 	self.over = self.overflowTime >= self.grace or #eggs >= Config.MaxEggs
+	-- Presentation only (published as OverflowGraceLeft): seconds of grace left
+	-- while the stack is over the line, 0 when it is not. Rules are unchanged.
+	self.graceLeft = if self.overflowTime > 0 and not self.over then math.max(0, self.grace - self.overflowTime) else 0
 end
 
 return Round

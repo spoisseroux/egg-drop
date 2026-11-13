@@ -21,12 +21,13 @@ return function(client,parent)
 		test("all five sprite fallbacks use shared vivid roles in the existing bands",function()
 			for tier=1,#Config.Tiers do
 				local view,source=fixture(tier);local colors=Palette.byTier[tier]
-				assert(view.rims[1].node.BackgroundColor3==colors.rim and view.glint.BackgroundColor3==colors.glint)
+				-- No dark outline (redesign 6.1): top silhouette rows are body, the lower third deep.
+				assert(view.rims[1].node.BackgroundColor3==colors.body and view.rims[#view.rims].node.BackgroundColor3==colors.deep and view.glint.BackgroundColor3==colors.glint)
 				local upper,body,lower=false,false,false
 				for _,fill in ipairs(view.fills)do
 					local gradient=fill.node:FindFirstChildOfClass("UIGradient")
 					if fill.node.BackgroundColor3==colors.lower then lower=true elseif fill.node.BackgroundColor3==colors.body then body=true
-					elseif gradient.Color.Keypoints[1].Value==colors.upper then upper=true end
+					elseif gradient.Color.Keypoints[1].Value==colors.light then upper=true end
 				end
 				assert(upper and body and lower,"missing sprite material role tier "..tier)
 				local count=#view.body:GetDescendants();view:impact(Vector2.new(1,0),20)

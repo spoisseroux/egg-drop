@@ -15,7 +15,7 @@ return function(gui)
   assert(not node.Active and not node.Selectable)
   if node.Name=="ChainFeedback"then assert(node:IsA("TextLabel")and not node.TextScaled)end
   if node.Name:match("^Halo")then halo+=1 elseif node.Name:match("^Fragment")then fragments+=1 end
-  assert(node.ZIndex<overlay.DangerText.ZIndex,"feedback obscures overflow words")
+  assert(node.ZIndex<overlay.DangerChip.ZIndex,"feedback obscures the danger chip")
  end
  assert(halo==4 and fragments==24,"unexpected feedback pool capacity")
  table.insert(cases,"four halos and twenty-four fragments below pressure words")

@@ -22,24 +22,38 @@ return function(client,parent,onlySize)
   local sends,settings,closes={},{},{}
   local v=Picker.new(root,nil,nil,function()error("preview must not paint hardware")end,function(reason)table.insert(closes,reason)end,function(slot,id)table.insert(sends,{slot,id})end,function(key)table.insert(settings,key)end)
   table.insert(views,v);v:updateClub(1,0,5,900,"On",false,false,Catalog.bit("pip"),true);v:open("sherbet","none");settle()
-  test(tostring(size).." Style two tabs and first choice fit without Equip",function()
-   assert(not v.card:FindFirstChild("Apply")and not v.tabs.Club and not v.tabs.Trials and v.tabs.Background)
-   local y=v.tabs.Shell.AbsolutePosition.Y
-   -- Faceplates (Shell) open the glass shop screen (FaceplateDeck spec); the card hosts Background.
-   for _,tab in ipairs({"Background"})do
-    v:showTab(tab);settle();assert(inside(v.card,root)and inside(v.cancel,v.card)and v.cancel.AbsoluteSize==Vector2.new(44,44));assert(inside(v.scroll,v.card)and v.scroll.AbsoluteSize.Y>=44)
-    assert(v.tabs.Shell.AbsolutePosition.Y==y and not v.sound.Visible and not v.clubHeader.Visible)
-    local first=v.choices[tab].canopy.Parent
-    assert(inside(first,v.scroll)and inside(first.Caption,v.scroll),"first row clipped "..tab);readable(first.Caption)
-    for _,stroke in pairs(v.choices[tab])do local swatch=stroke.Parent;assert(swatch.AbsoluteSize.Y>=44 and swatch.Interactable);readable(swatch.Caption);reach(swatch,v.scroll)end
-    v.scroll.CanvasPosition=Vector2.new(0,math.max(0,v.scroll.CanvasSize.Y.Offset-v.scroll.AbsoluteSize.Y));settle();assert(not v.moreCue.Visible)
+  test(tostring(size).." Deck style: two icon tabs, cards reachable, no Equip on the card",function()
+   -- Faceplates and Backgrounds are one Deck style screen (redesign 4) under the shared header.
+   assert(not v.card:FindFirstChild("Apply")and not v.tabs.Club and not v.tabs.Trials and v.tabs.Background and v.tabs.Shell)
+   local shop=v.shop;local back=shop.backArrow.root.AbsolutePosition
+   for _,tab in ipairs({"Background","Shell"})do
+    v.customizationEntry=true;v:showTab(tab);settle()
+    assert(shop.visible and not v.card.Visible and not v.sound.Visible and not v.clubHeader.Visible)
+    -- Sub-pixel tolerance: the centred, scaled panel lands on half pixels at odd widths.
+    assert((shop.backArrow.root.AbsolutePosition-back).Magnitude<=.5 and shop.backArrow.root.Size==UDim2.fromOffset(44,44),"header back moved on "..tab)
+    -- 44 hit frames in panel units; the regular screen scales as a whole (UIScale), like Wardrobe.
+    -- The 568x160 fixture leaves a 100 px sheet under the Roblox controls: the tab row (y 64..108)
+    -- cannot fit, so there only the hit size and the left/right edges are checked.
+    local short=shop.view~=nil and shop.view.H<112
+    for _,b in pairs(v.tabs)do
+     assert(b.Size.Y.Offset>=44,"tab hit under 44 on "..tab)
+     if short then assert(b.AbsolutePosition.X>=shop.root.AbsolutePosition.X-1 and b.AbsolutePosition.X+b.AbsoluteSize.X<=shop.root.AbsolutePosition.X+shop.root.AbsoluteSize.X+1)
+     else assert(inside(b,shop.root),"tab outside the screen on "..tab)end
+    end
+    local tiles=if tab=="Background"then shop.backgrounds.tiles else shop.tiles
+    -- Panel units: at 385x703 the regular screen scales to ~0.43 as a whole (cards were scaled there before too).
+    for _,tile in ipairs(tiles)do
+     assert(tile.button.Size.Y.Offset>=44,"card under 44 (panel units) "..tile.id.." on "..tab)
+     assert(tile.button.Interactable,"card not interactable "..tile.id.." on "..tab)
+    end
+    readable(tiles[1].name)
    end
    assert(#sends==0 and #settings==0)
   end)
   test(tostring(size).." leaf modes expose existing actions and no hidden Style targets",function()
    for _,mode in ipairs({"Trials","Settings"})do
     v:showTab(mode);settle();assert(inside(v.cancel,v.card)and inside(v.scroll,v.card)and v.scroll.AbsoluteSize.Y>=44)
-    assert(not v.tabs.Shell.Visible and not v.tabs.Background.Visible and not v.display.Visible)
+    assert(not v.shop.visible and v.card.Visible)
     if mode=="Trials"then
      assert(v.clubHeader.Visible and not v.sound.Visible and v.reward.Text:find("Pocket Trials",1,true));for _,row in ipairs(v.rows)do readable(row.title);readable(row.status);reach(row.frame,v.scroll)end;readable(v.reward);reach(v.reward,v.scroll)
     else for _,n in ipairs({v.sound,v.music,v.motion})do assert(n.Visible and n.AbsoluteSize.Y>=44);readable(n);reach(n,v.scroll)end end
@@ -50,18 +64,17 @@ return function(client,parent,onlySize)
    local function state(bg,confirmed,status)return{themeId="sherbet",stickerId="none",backgroundId=bg,confirmedTheme="sherbet",confirmedSticker="none",confirmedBackground=confirmed,slots={background=status}}end
    v:showTab("Background");v:setAppearance(state("creek","canopy",{status="Pending"}));settle()
    assert(v.choices.Background.canopy.Enabled and not v.choices.Background.creek.Enabled)
-   if v.saveMarker.Visible then readable(v.saveMarker)else readable(v.heading)end
+   assert(v.shop.backgrounds.tiles[1].status.Text=="IN USE")
    v:setAppearance(state("creek","canopy",{status="Retry",reason="NoReply"}));settle()
-   assert(v.retryButton.Visible);readable(v.appearanceStatus);reach(v.appearanceStatus,v.scroll);readable(v.retryButton);reach(v.retryButton,v.scroll)
+   v.shop.backgrounds:focusId("creek");settle()
+   assert(v.shop.root:GetAttribute("BackgroundPaneState")=="retry"and v.shop.backgrounds.action.Visible and v.shop.backgrounds.status.Text:find("Retry",1,true))
    v:close("forced");v:open("sherbet","none","Background");settle();assert(v.backgroundId=="creek"and #sends==0)
    v:setAppearance(state("creek","creek",{status="Applied"}));settle()
-   assert(v.choices.Background.creek.Enabled)
-   local selected=v.choices.Background.creek;local edge=selected.Parent:FindFirstChild("UIStroke")
-   assert(selected.ApplyStrokeMode==Enum.ApplyStrokeMode.Border and selected.Color==Art.Amber and selected.Transparency==0 and selected.ZIndex>edge.ZIndex,"confirmed border must render above ordinary edge")
-   reach(selected.Parent,v.scroll);Gui.SelectedObject=selected.Parent;settle()
-   assert(Gui.SelectedObject==selected.Parent and edge.Color==Art.paletteColor("focus") and edge.Thickness>selected.Thickness and selected.Enabled and selected.Color~=edge.Color,string.format("focus must remain distinct: selected=%s target=%s edgeColor=%s expected=%s edgeWidth=%s confirmedWidth=%s confirmedEnabled=%s confirmedColor=%s",tostring(Gui.SelectedObject),tostring(selected.Parent),tostring(edge.Color),tostring(Art.paletteColor("focus")),tostring(edge.Thickness),tostring(selected.Thickness),tostring(selected.Enabled),tostring(selected.Color)))
-   -- Rest border is the spec's 1 px white at 14% (UI-SPEC 2.3).
-   Gui.SelectedObject=nil;settle();assert(edge.Color==Color3.new(1,1,1) and edge.Transparency>.8 and edge.Thickness<selected.Thickness)
+   assert(v.choices.Background.creek.Enabled and v.shop.backgrounds:focusedId()~=nil)
+   local creek=v.shop.backgrounds.tiles[2];assert(creek.id=="creek"and creek.status.Text=="IN USE")
+   -- Focus is the shop's ring (2.5 px white), distinct from the selected card's accent outline.
+   v.shop.backgrounds:focusId("creek");settle()
+   assert(v.shop.ring.target==creek.button and creek.stroke.Thickness==2)
    v:close("back");assert(closes[#closes]=="back"and #sends==0)
   end)
  end
@@ -70,15 +83,16 @@ return function(client,parent,onlySize)
   local v=Picker.new(root,nil,nil,function()end,function()end,function()calls+=1 end,function()calls+=1 end);table.insert(views,v)
   -- Stickers are retired; locked Background art carries the inspect/Trials route.
   v:updateClub(0,0,0,0,"On",false,false,0);v:open("sherbet","none","Background");settle()
-  assert(v:activateChoice("Background","creek")and v.trialsLink.Visible and v.previewNote.Text=="Locked preview"and calls==0)
-  assert(v:activateChoice("Background","lantern")and v.previewNote.Text=="Locked preview")
+  local backs=v.shop.backgrounds
+  assert(v:activateChoice("Background","creek")and backs.action.Visible and v:appearanceText():find("Locked",1,true)and calls==0)
+  assert(v:activateChoice("Background","lantern")and v:appearanceText():find("Locked",1,true))
   local before=calls;v.onApply=function(slot,id)assert(slot=="background"and id=="canopy")end
-  assert(v:activateChoice("Background","canopy")and calls==before and v.inspectId==nil and v.previewNote.Text=="Selection applies immediately")
-  v:activateChoice("Background","creek")
-  local item=v.choices.Background.creek.Parent;Gui.SelectedObject=item
-  local savedScroll=v.scroll.CanvasPosition;v.innerReturn={active="Background",scroll=savedScroll,focus=item};v:showTab("Trials");v:back();settle()
-  assert(v.active=="Background"and v.shade.Visible and Gui.SelectedObject==item and calls==0)
-  v:showTab("Shell");assert(v.inspectId==nil and v.previewNote.Text=="Selection applies immediately"and not v.trialsLink.Visible and not v.appearanceStatus.Text:find("Locked",1,true));v:close("forced");assert(not v.shade.Visible)
+  assert(v:activateChoice("Background","canopy")and calls==before and v.inspectId==nil and v:appearanceText()=="Select to wear immediately.")
+  v:activateChoice("Background","creek");assert(backs:focusedId()=="creek")
+  assert(v.shop:act(false)and v.active=="Trials"and v.innerReturn~=nil and calls==0)
+  v:back();settle()
+  assert(v.active=="Background"and v.shade.Visible and backs:focusedId()=="creek"and calls==0)
+  v:showTab("Shell");assert(v.inspectId==nil and v:appearanceText()=="Select to wear immediately."and not v:appearanceText():find("Locked",1,true));v:close("forced");assert(not v.shade.Visible)
  end)
  end)
  Gui.SelectedObject=nil;for _,v in ipairs(views)do v:close("forced");v.shade:Destroy()end;root:Destroy()

@@ -109,12 +109,90 @@ function Kit.frame(parent,name,role,position,size,radius)
  return f
 end
 
+-- Vector icons (redesign menus 0.2 / 7: paw, shirt, wand, drop, sparkle, sphere,
+-- ball, none, pattern, chevron). The atlas cells for these need a new Open Cloud
+-- upload, so until then they are drawn with Frames and UIStrokes inside a size x
+-- size holder. Every inked part carries the IconInk attribute; Kit.tintIcon paints them.
+local Vector={}
+local function ink(holder,name,x,y,size,rotation,radius)
+ local f=node("Frame",holder,{Name=name,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(x,y),Size=size,
+  Rotation=rotation or 0,BackgroundTransparency=0,ZIndex=holder.ZIndex,Active=false})
+ if radius then Kit.corner(f,radius)end
+ f:SetAttribute("IconInk",true);return f
+end
+local function outline(holder,name,x,y,size,thickness,radius)
+ local f=node("Frame",holder,{Name=name,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(x,y),Size=size,
+  BackgroundTransparency=1,ZIndex=holder.ZIndex,Active=false})
+ Kit.corner(f,radius or 999)
+ local s=node("UIStroke",f,{Name="IconStroke",Thickness=thickness,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ s:SetAttribute("IconInk",true);return f
+end
+local S=UDim2.fromScale
+function Vector.pattern(h,s,t)
+ outline(h,"Frame",.5,.5,S(.84,.66),t,math.max(2,math.floor(s*.14)))
+ for i,p in ipairs({{.36,.42},{.64,.42},{.36,.6},{.64,.6}})do ink(h,"Dot"..i,p[1],p[2],S(.16,.1),0,999)end
+end
+function Vector.chevron(h,s,t)
+ ink(h,"Upper",.46,.36,UDim2.new(.42,0,0,t),45,999);ink(h,"Lower",.46,.64,UDim2.new(.42,0,0,t),-45,999)
+end
+function Vector.none(h,s,t)
+ outline(h,"Ring",.5,.5,S(.76,.76),t,999);ink(h,"Slash",.5,.5,UDim2.new(.76,0,0,t),-45,999)
+end
+function Vector.drop(h)ink(h,"Bulb",.5,.62,S(.58,.58),0,999);ink(h,"Tip",.5,.42,S(.41,.41),45,2)end
+function Vector.sparkle(h)
+ ink(h,"Tall",.44,.54,S(.16,.7),0,999);ink(h,"Wide",.44,.54,S(.7,.16),0,999)
+ ink(h,"SmallTall",.8,.2,S(.08,.3),0,999);ink(h,"SmallWide",.8,.2,S(.3,.08),0,999)
+end
+function Vector.sphere(h)
+ ink(h,"Body",.5,.5,S(.78,.78),0,999)
+ local shine=node("Frame",h,{Name="Shine",BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=S(.38,.36),Size=S(.22,.22),
+  BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.45,ZIndex=h.ZIndex+1,Active=false})
+ Kit.corner(shine,999)
+end
+function Vector.ball(h,s,t)
+ outline(h,"Ring",.5,.5,S(.76,.76),t,999)
+ ink(h,"Seam",.5,.5,UDim2.new(0,t,.76,0),0);ink(h,"Band",.5,.5,UDim2.new(.76,0,0,t),0)
+end
+function Vector.paw(h)
+ ink(h,"Pad",.5,.68,S(.46,.36),0,999)
+ for i,p in ipairs({{.24,.4},{.5,.26},{.76,.4}})do ink(h,"Toe"..i,p[1],p[2],S(.18,.22),0,999)end
+end
+function Vector.shirt(h)
+ ink(h,"Body",.5,.58,S(.44,.6),0,3)
+ ink(h,"SleeveL",.24,.36,S(.3,.18),-28,3);ink(h,"SleeveR",.76,.36,S(.3,.18),28,3)
+end
+function Vector.wand(h)
+ ink(h,"Stick",.4,.6,S(.11,.66),45,999)
+ ink(h,"Star",.72,.28,S(.26,.26),45,2)
+end
+Kit.VectorIcons=Vector
+
 -- Icons: white art in 64 px cells, tinted with ImageColor3. The star is always gold.
+-- Names without an atlas cell but with a vector drawing return a Frame instead.
 function Kit.icon(parent,name,size,color)
+ if not Assets.Icon[name]and Vector[name]then
+  local holder=node("Frame",parent,{Name="Icon_"..name,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromOffset(size,size),ZIndex=parent.ZIndex+1,Active=false})
+  holder:SetAttribute("VectorIcon",true)
+  Vector[name](holder,size,math.max(1.5,math.floor(size*.09*2+.5)/2))
+  Kit.tintIcon(holder,color or "text")
+  return holder
+ end
  local image=node("ImageLabel",parent,{Name="Icon_"..name,BackgroundTransparency=1,Image=Assets.Image.icons,
   ImageRectOffset=Assets.Icon[name]or Vector2.zero,ImageRectSize=Vector2.new(64,64),Size=UDim2.fromOffset(size,size),ZIndex=parent.ZIndex+1})
  paint(image,"ImageColor3",if name=="star"then "stars"else color or "text")
  return image
+end
+-- Tint an icon from Kit.icon (atlas image or vector holder) with a colour role.
+function Kit.tintIcon(icon,color)
+ if icon:IsA("ImageLabel")then
+  if icon.Name~="Icon_star"then paint(icon,"ImageColor3",color)end
+  return
+ end
+ for _,part in ipairs(icon:GetDescendants())do
+  if part:GetAttribute("IconInk")then
+   if part:IsA("UIStroke")then paint(part,"Color",color)elseif part:IsA("GuiObject")then paint(part,"BackgroundColor3",color)end
+  end
+ end
 end
 
 -- Check circle (22): done = accent disc with an ink check; open = 2 px dim ring.
@@ -321,16 +399,43 @@ end
 
 -- Tabs: 520x44 track, accent pill inset 4 under the selected label.
 -- Compact: `height` 36 with 14 px labels; every segment keeps a 44-high hit frame.
-function Kit.tabs(parent,labels,width,height,textSize)
+-- `icons` (optional, one name per label, redesign 0.2): icon (label size + 4) and
+-- label side by side, 7 px apart, centred in the segment. When any segment cannot fit
+-- icon + label with 6 px each side, the whole row drops its icons (never the labels).
+Kit.TabIconGap=7
+function Kit.tabIconsFit(labels,icons,segment,textSize)
+ if not icons then return false end
+ local TextService=game:GetService("TextService")
+ for index,text in ipairs(labels)do
+  if not icons[index]then return false end
+  local w=TextService:GetTextSize(text,textSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X
+  if(textSize+4)+Kit.TabIconGap+w+12>segment then return false end
+ end
+ return true
+end
+function Kit.tabs(parent,labels,width,height,textSize,icons)
  width=width or 520;height=height or 44;textSize=textSize or 17
  local track=Kit.frame(parent,"Tabs","well",UDim2.new(),UDim2.fromOffset(width,height),999);Kit.stroke(track)
  local segment=(width-8)/#labels
  local pill=Kit.frame(track,"Pill","accent",UDim2.fromOffset(4,4),UDim2.fromOffset(segment,height-8),999)
- local api={root=track,buttons={},selected=1,labels={}}
+ local api={root=track,buttons={},selected=1,labels={},icons={}}
+ local withIcons=Kit.tabIconsFit(labels,icons,segment,textSize)
+ local iconSize=textSize+4
+ api.hasIcons=withIcons;track:SetAttribute("TabIcons",withIcons)
  for index,text in ipairs(labels)do
   local hitH=math.max(44,height-8)
   local b=node("TextButton",track,{Name="Tab"..index,Text="",AutoButtonColor=false,BackgroundTransparency=1,Position=UDim2.fromOffset(4+(index-1)*segment,(height-hitH)/2),Size=UDim2.fromOffset(segment,hitH),ZIndex=pill.ZIndex+1})
-  local label=Kit.text(b,"Strong",text,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
+  b:SetAttribute("AccessibleLabel",text)
+  local label
+  if withIcons then
+   local w=math.ceil(game:GetService("TextService"):GetTextSize(text,textSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100)).X)
+   local x=math.floor((segment-(iconSize+Kit.TabIconGap+w))/2)
+   local icon=Kit.icon(b,icons[index],iconSize,"soft");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,x,.5,0)
+   api.icons[index]=icon
+   label=Kit.text(b,"Strong",text,"soft",{Position=UDim2.fromOffset(x+iconSize+Kit.TabIconGap,0),Size=UDim2.new(0,w+2,1,0),TextSize=textSize})
+  else
+   label=Kit.text(b,"Strong",text,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
+  end
   local dot=Kit.frame(b,"ClaimDot","stars",UDim2.new(.5,0,.5,-11),UDim2.fromOffset(8,8),999);dot.Visible=false
   api.buttons[index],api.labels[index]=b,label;b:SetAttribute("ClaimDot",false)
   b.Activated:Connect(function()api.select(index)if api.changed then api.changed(index)end end)
@@ -338,30 +443,51 @@ function Kit.tabs(parent,labels,width,height,textSize)
  function api.select(index)
   api.selected=index
   Kit.tween(pill,Kit.Motion.tab,{Position=UDim2.fromOffset(4+(index-1)*segment,4)})
-  for i,label in ipairs(api.labels)do paint(label,"TextColor3",if i==index then "ink"else "soft")end
+  for i,label in ipairs(api.labels)do
+   paint(label,"TextColor3",if i==index then "ink"else "soft")
+   if api.icons[i]then Kit.tintIcon(api.icons[i],if i==index then "ink"else "soft")end
+  end
+  track:SetAttribute("Selected",index)
  end
  function api.setDot(index,on)
   local label,dot=api.labels[index],api.buttons[index].ClaimDot
   dot.Visible=on==true
   local w=game:GetService("TextService"):GetTextSize(label.Text,textSize,Enum.Font.BuilderSansBold,Vector2.new(500,50)).X
-  dot.Position=UDim2.new(.5,w/2+(if textSize<17 then 4 else 9),.5,if textSize<17 then -9 else -11)
+  local dy=if textSize<17 then -9 else -11
+  if withIcons then dot.Position=UDim2.new(0,label.Position.X.Offset+w+(if textSize<17 then 4 else 9),.5,dy)
+  else dot.Position=UDim2.new(.5,w/2+(if textSize<17 then 4 else 9),.5,dy)end
  end
  api.select(1);return api
 end
 
--- Wallet pill: height 40, well + stroke, star 22, Counter 18.
+-- Stars with thousands separators ("1,280"); the accessible label keeps the raw number.
+function Kit.formatStars(value)
+ if type(value)=="number"and value>=1000 and value%1==0 and value<1e15 then
+  local text=string.format("%d",value):reverse():gsub("(%d%d%d)","%1,"):reverse()
+  return(text:gsub("^,",""))
+ end
+ return tostring(value)
+end
+-- Wallet pill (Stars capsule). The shared header heights (redesign 0.1): 44 with
+-- star 22, Counter 18 and padding 18; 36 (compact) with star 18, Counter 15 and
+-- padding 15. Other heights keep the older proportions their screens were built with.
+Kit.WalletSpec={[44]={star=22,text=18,pad=18},[36]={star=18,text=15,pad=15}}
 function Kit.wallet(parent,height)
- height=height or 40
+ height=height or 44
+ local spec=Kit.WalletSpec[height]
  local pill=Kit.frame(parent,"Wallet","well",UDim2.new(),UDim2.fromOffset(110,height),999);Kit.stroke(pill)
- local star=Kit.icon(pill,"star",math.floor(height*.55));star.AnchorPoint=Vector2.new(0,.5);star.Position=UDim2.new(0,math.floor(height*.45),.5,0)
- local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-18,.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
- if height<40 then amount.TextSize=15 end
- local api={root=pill,amount=amount}
+ local star=Kit.icon(pill,"star",if spec then spec.star else math.floor(height*.55));star.AnchorPoint=Vector2.new(0,.5)
+ star.Position=UDim2.new(0,if spec then spec.pad else math.floor(height*.45),.5,0)
+ local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
+ if spec then amount.TextSize=spec.text elseif height<40 then amount.TextSize=15 end
+ local api={root=pill,amount=amount,height=height}
  function api.set(value)
-  amount.Text=tostring(value)
+  amount.Text=Kit.formatStars(value)
   local w=game:GetService("TextService"):GetTextSize(amount.Text,amount.TextSize,Enum.Font.RobotoMono,Vector2.new(500,50)).X
-  pill.Size=UDim2.fromOffset(math.ceil(w+height*.45+height*.55+12+18),height)
-  pill:SetAttribute("AccessibleLabel",value.." Stars")
+  amount.Size=UDim2.fromOffset(math.ceil(w)+2,height)
+  pill.Size=if spec then UDim2.fromOffset(math.ceil(spec.pad+spec.star+8+w+spec.pad),height)
+   else UDim2.fromOffset(math.ceil(w+height*.45+height*.55+12+18),height)
+  pill:SetAttribute("AccessibleLabel",require(script.Parent.StarText).amount(value))
  end
  api.set(0);return api
 end
@@ -454,22 +580,40 @@ function Kit.toaster(host)
 end
 
 -- Back arrow: 56 px circle (44 compact) at the top right of the view.
-function Kit.backArrow(parent,compact)
- local size=if compact then 44 else 56
+-- options.header (redesign 0.1): the shared header's circle, 44 drawn on regular
+-- screens and 36 drawn inside a 44x44 hit frame on compact ones. The TextButton is
+-- always the hit frame; `Disc` draws the circle.
+function Kit.backArrowSizes(compact,header)
+ local drawn=if header then(if compact then 36 else 44)elseif compact then 44 else 56
+ return drawn,math.max(44,drawn)
+end
+function Kit.backArrow(parent,compact,options)
+ local header=options and options.header==true
+ local drawn,hit=Kit.backArrowSizes(compact,header)
  local button=node("TextButton",parent,{Name="BackArrow",Text="",AutoButtonColor=false,AnchorPoint=Vector2.new(1,0),
-  Size=UDim2.fromOffset(size,size),BackgroundColor3=Color3.fromHex("#15171B"),BackgroundTransparency=.28,ZIndex=60,Selectable=false})
+  Size=UDim2.fromOffset(hit,hit),BackgroundColor3=Color3.fromHex("#15171B"),BackgroundTransparency=.28,ZIndex=60,Selectable=false})
  button:SetAttribute("AccessibleLabel","Back")
- Kit.corner(button,999)
- local stroke=node("UIStroke",button,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.white,Transparency=.76})
- local shadow=node("ImageLabel",button,{Name="Shadow",BackgroundTransparency=1,Image=Assets.Image.focusGlow,ImageColor3=Kit.Color.black,ImageTransparency=.55,
+ local disc=button
+ if header then
+  button.BackgroundTransparency=1
+  disc=node("Frame",button,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(drawn,drawn),
+   BorderSizePixel=0,BackgroundColor3=Color3.fromHex("#15171B"),BackgroundTransparency=.28,ZIndex=button.ZIndex,Active=false})
+  button:GetPropertyChangedSignal("ZIndex"):Connect(function()disc.ZIndex=button.ZIndex
+   for _,child in ipairs(disc:GetChildren())do if child:IsA("GuiObject")then child.ZIndex=if child.Name=="Shadow"then button.ZIndex-1 else button.ZIndex+1 end end
+  end)
+ end
+ Kit.corner(disc,999)
+ local stroke=node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.white,Transparency=.76})
+ local shadow=node("ImageLabel",disc,{Name="Shadow",BackgroundTransparency=1,Image=Assets.Image.focusGlow,ImageColor3=Kit.Color.black,ImageTransparency=.55,
   ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(40,40,56,56),Position=UDim2.fromOffset(-14,-9),Size=UDim2.new(1,28,1,28),ZIndex=59})
- local icon=Kit.icon(button,"back",26,"text");icon.AnchorPoint,icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
- local api={root=button,enabled=true,size=size}
+ local iconSize=if drawn>=56 then 26 elseif drawn>=44 then 22 else 18
+ local icon=Kit.icon(disc,"back",iconSize,"text");icon.AnchorPoint,icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
+ local api={root=button,disc=disc,enabled=true,size=hit,drawn=drawn,header=header}
  local hover,pressed=false,false
  local function repaint()
-  button.BackgroundColor3=if hover and api.enabled then Color3.fromHex("#282B32")else Color3.fromHex("#15171B")
-  button.BackgroundTransparency=if not api.enabled then .65 elseif hover then .22 else .28
-  if pressed then button.BackgroundColor3=button.BackgroundColor3:Lerp(Kit.Color.black,.08)end
+  disc.BackgroundColor3=if hover and api.enabled then Color3.fromHex("#282B32")else Color3.fromHex("#15171B")
+  disc.BackgroundTransparency=if not api.enabled then .65 elseif hover then .22 else .28
+  if pressed then disc.BackgroundColor3=disc.BackgroundColor3:Lerp(Kit.Color.black,.08)end
   icon.Position=UDim2.new(.5,0,.5,if pressed then 2 else 0)
   icon.ImageTransparency=if api.enabled then 0 else .65;stroke.Transparency=if api.enabled then .76 else .9
   shadow.Visible=not Kit.reduced()
@@ -480,10 +624,75 @@ function Kit.backArrow(parent,compact)
  button.MouseButton1Up:Connect(function()pressed=false;repaint()end)
  function api.setEnabled(enabled)api.enabled=enabled~=false;button.Active=api.enabled;button.Interactable=api.enabled;repaint()end
  function api.setCompact(isCompact)
-  api.size=if isCompact then 44 else 56;button.Size=UDim2.fromOffset(api.size,api.size)
-  icon.Size=UDim2.fromOffset(if isCompact then 22 else 26,if isCompact then 22 else 26)
+  local d,h=Kit.backArrowSizes(isCompact,header)
+  api.size,api.drawn=h,d;button.Size=UDim2.fromOffset(h,h)
+  if disc~=button then disc.Size=UDim2.fromOffset(d,d)end
+  local s=if d>=56 then 26 elseif d>=44 then 22 else 18
+  icon.Size=UDim2.fromOffset(s,s)
  end
  repaint();return api
+end
+
+-- 0.1 Shared header (one component; redesign menus). Pure geometry first, in the
+-- parent's units for a W-wide screen. Regular: eyebrow at left,14 (Label 13), title
+-- Title 26 centred on y 48, back circle 44 with its right edge at W-24 centred on y 44,
+-- the Stars capsule 44 high 8 px left of it. Compact: no eyebrow, title Title 20
+-- centred on y 34, back drawn 36 (hit 44) with its right edge at W-20, capsule 36.
+-- The title stops 12 px before the capsule (or the back circle with no wallet).
+function Kit.headerGeometry(W,compact,walletW,left)
+ compact=compact==true
+ local h=if compact then 36 else 44
+ local cy=if compact then 34 else 44
+ local right=W-(if compact then 20 else 24)
+ left=left or 24
+ local g={compact=compact,height=if compact then 60 else 84,centerY=cy,controlH=h,right=right}
+ g.back={x=right-h,y=cy-h/2,w=h,h=h}
+ g.backHit={x=right-h/2-22,y=cy-22,w=44,h=44}
+ g.wallet=if walletW then{x=g.back.x-8-walletW,y=cy-h/2,w=walletW,h=h}else nil
+ local limit=(if g.wallet then g.wallet.x else g.back.x)-12
+ local th=if compact then 24 else 32
+ local tcy=if compact then 34 else 48
+ g.title={x=left,y=tcy-th/2,w=math.max(0,limit-left),h=th}
+ g.eyebrow=if compact then nil else{x=left,y=14,w=math.max(0,limit-left),h=16}
+ return g
+end
+-- options: title, eyebrow (regular only), wallet (false hides the capsule), compact,
+-- width (W), left (title x, default 24), onBack. Returns {root, title, eyebrow,
+-- wallet = {root, amount, set}, back = Kit.backArrow api, layout(W, left), setTitle}.
+function Kit.header(parent,options)
+ options=options or {}
+ local compact=options.compact==true
+ local api={compact=compact,W=options.width or 848,left=options.left or 24}
+ local holder=Kit.frame(parent,"Header",nil,UDim2.new(),UDim2.fromOffset(api.W,if compact then 60 else 84))
+ api.root=holder
+ api.eyebrow=Kit.text(holder,"Label",options.eyebrow or "","dim",{Name="Eyebrow",TextTruncate=Enum.TextTruncate.AtEnd})
+ api.title=Kit.text(holder,"Title",options.title or "","text",{Name="Title",TextSize=if compact then 20 else 26,TextTruncate=Enum.TextTruncate.AtEnd})
+ local inner
+ if options.wallet~=false then inner=Kit.wallet(holder,if compact then 36 else 44);inner.root.AnchorPoint=Vector2.zero end
+ local back=Kit.backArrow(holder,compact,{header=true});back.root.AnchorPoint=Vector2.zero;back.root.ZIndex=holder.ZIndex+5
+ api.back=back
+ local function place(object,r)object.Position=UDim2.fromOffset(r.x,r.y);object.Size=UDim2.fromOffset(r.w,r.h)end
+ function api.layout(W,left)
+  api.W=W or api.W;api.left=left or api.left
+  holder.Size=UDim2.fromOffset(api.W,if compact then 60 else 84)
+  local g=Kit.headerGeometry(api.W,compact,inner and inner.root.Size.X.Offset or nil,api.left)
+  api.geometry=g
+  place(api.title,g.title)
+  api.eyebrow.Visible=g.eyebrow~=nil and api.eyebrow.Text~=""
+  if g.eyebrow then place(api.eyebrow,g.eyebrow)end
+  if inner then place(inner.root,g.wallet)end
+  back.root.Position=UDim2.fromOffset(g.backHit.x,g.backHit.y)
+  return g
+ end
+ api.wallet=if inner then{root=inner.root,amount=inner.amount,height=inner.height,set=function(value)inner.set(value);api.layout()end}else nil
+ function api.setTitle(text,eyebrow)
+  api.title.Text=text or "";if eyebrow~=nil then api.eyebrow.Text=string.upper(eyebrow)end
+  api.layout()
+ end
+ if options.onBack then back.root.Activated:Connect(options.onBack)end
+ holder:SetAttribute("HeaderCompact",compact)
+ api.layout()
+ return api
 end
 
 -- ── Compact (UI-SPEC-COMPACT-2026-11-12) ────────────────────────────────────

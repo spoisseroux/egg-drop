@@ -11,11 +11,12 @@ return function(client,parent)
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end
  local ok,problem=pcall(function()
-  test("six measured tabs retain readable targets and Materials owns saved preview without a paid selection",function()
+  test("Customize icon tabs keep 44 px targets and Materials owns saved preview without a paid selection",function()
    view:open(state,"materials","pip");frames()
-   for _,tab in pairs(view.editorTabs)do assert(tab.Visible and tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44 and tab.TextFits)end
-   local rail=view.tabRail.scroll;local selected=view.materialTab
-   assert(view.tab=="materials"and selected.AbsolutePosition.X>=rail.AbsolutePosition.X+5.9 and selected.AbsolutePosition.X+selected.AbsoluteSize.X<=rail.AbsolutePosition.X+rail.AbsoluteSize.X-5.9)
+   -- Redesign 2.1: Kit.tabs segments (Hue / Charm / Materials / Toys), no rail, no Pet or Wardrobe tab.
+   for _,tab in pairs(view.editorTabs)do assert(tab.Visible and tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44)end
+   assert(view.editorTabs.pet==nil and view.editorTabs.wardrobe==nil and view.tabRail==nil)
+   assert(view.tab=="materials"and view.chromeTabs.selected==3 and view.chromeRoot.Visible and not view.card.Visible)
    assert(view.materialPanel.root.Visible and view.portrait.Visible and view:appearance().finish=="standard"and #sent==0 and equips==0)
    assert(view.materialPanel.rows.standard.Visible and view.materialPanel.rows.gloss.Visible and not view.materialPanel.rows.metal.Visible)
   end)
@@ -61,19 +62,23 @@ return function(client,parent)
   test("short landscape Materials starts with complete choices and retires receipt art on Use now",function()
    root.Size=UDim2.fromOffset(749,381);view:open(state,"materials","pip");frames()
    local panel=view.materialPanel
-   assert(not panel.title.Visible and not panel.note.Visible and panel.rows.standard.Position.Y.Offset==0)
-   assert(panel.rows.gloss.AbsolutePosition.Y+panel.rows.gloss.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y)
+   -- Redesign 2.3: owned finishes are cards in the chrome grid, 3 px in from its edges.
+   assert(not panel.title.Visible and not panel.note.Visible and panel.rows.standard.Position.Y.Offset==3)
+   local grid=view.chromeGrid
+   assert(panel.rows.gloss.AbsolutePosition.Y+panel.rows.gloss.AbsoluteSize.Y<=grid.AbsolutePosition.Y+grid.AbsoluteSize.Y)
    state.pendingMaterialResult={id="sample-retire-target",finishId="gloss",revision=state.revision,catalogVersion=1};view:open(state,"materials","pip");frames()
    local sample=panel.reveal.jar;panel.options.useNow(state.pendingMaterialResult);frames()
    assert(not sample.Parent and not panel.reveal.resultId and not panel.useNow.Visible)
    state.pendingMaterialResult=nil;view:close("forced")
   end)
   test("Materials keeps its live pet fixed during right-pane scrolling at compact and portrait sizes",function()
-   for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(350,703)})do
+   for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(812,354)})do
     root.Size=UDim2.fromOffset(size.X,size.Y);view:open(state,"materials","pip");frames();local p=view.portrait.AbsolutePosition
-    assert(view.materialTab.TextFits and view.materialTab.AbsoluteSize.Y>=44 and view.body.Active)
-    view.body.CanvasPosition=Vector2.new(0,100);frames();assert(view.portrait.AbsolutePosition==p)
-    for _,node in pairs(view.materialPanel.rows)do if node.Visible then assert(node.TextFits and node.AbsoluteSize.Y>=44)end end
+    local tab=view.editorTabs.materials
+    assert(tab and tab.AbsoluteSize.Y>=44,"Materials tab under 44 px at "..tostring(size))
+    assert(view.chromeGrid.Active,"card grid must claim native wheel input")
+    view.chromeGrid.CanvasPosition=Vector2.new(0,100);frames();assert(view.portrait.AbsolutePosition==p,"pinned portrait moved with the grid at "..tostring(size))
+    for id,node in pairs(view.materialPanel.rows)do if node.Visible then assert(node.CardParts.CardName.TextFits and node.AbsoluteSize.Y>=44,id.." card clipped at "..tostring(size))end end
    end
   end)
   test("full and unavailable purchase states never offer a paid action",function()

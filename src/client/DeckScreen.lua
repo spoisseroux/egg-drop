@@ -276,8 +276,9 @@ function Screen.new(options)
   end)
   hit.Activated:Connect(function()local cb=self.callbacks[id];if cb then cb()end end)
  end
- -- Board well behind the board renderer.
- self.well=Kit.frame(content,"BoardWell","well",UDim2.new(),UDim2.new(),14);Kit.stroke(self.well)
+ -- Board well behind the board renderer. No border (UI-SPEC-REDESIGN-MENUS 6.1):
+ -- the well reads as a recess from the LCD gradient, not from a stroke.
+ self.well=Kit.frame(content,"BoardWell","well",UDim2.new(),UDim2.new(),14)
  -- The glare floats above every LCD layer, including the board and results.
  -- The overlay parent uses Global ZIndex (board renderer at 1 to 8, its corner mask at 100).
  self.glare=image(options.overlayParent or parent,"LCDGlare",I.glare,120,{ImageTransparency=.15})
@@ -945,7 +946,8 @@ local controlRows={
 local function eggPaint(slot,tier)
  tier=math.clamp(tier or 1,1,#Config.Tiers)
  Art.jellyPreview(slot.ball,tier,slot.mark);slot.mark.Text=Config.Tiers[tier].mark
- slot.mark.TextColor3=JellyPalette.Ink or Kit.Color.ink
+ -- White mark with a deep shadow, as on the board (UI-SPEC-REDESIGN-MENUS 6.2).
+ local roles=JellyPalette.byTier[tier];slot.mark.TextColor3=roles.mark;slot.mark.TextStrokeColor3=roles.markShadow;slot.mark.TextStrokeTransparency=.45
 end
 -- data: score,best,chain,goals{text,short,done,progress,target},status,daily{title,progress,target},
 -- next{t1,t2,t3},eggsLeft,budget,difficulty,multiplier,winPays,input("Gamepad"|"Keyboard"|"Touch")

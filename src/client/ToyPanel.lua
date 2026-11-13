@@ -72,5 +72,29 @@ function Panel:layout(width,compact,availableHeight)
  copy(self.note,"Body");copy(self.pool,"Body");for _,id in ipairs(Catalog.Order)do action(self.rows[id])end;action(self.useNow);action(self.shop);copy(self.status,"Body")
  self.root.Size=UDim2.fromOffset(width,y);return y
 end
+-- Card grid for the Customize Toys tab (redesign 2.3): the owned toys
+-- as cards (None first), WEARING on this pet's saved toy. Returns the used
+-- height and the focus list ({button, id, act}).
+function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
+ local Cards=require(script.Parent.CustomizeCards)
+ self.title.Visible=false;self.note.Visible=false;self.pool.Visible=false;self.art.Visible=false;self.useNow.Visible=false
+ local selected=(self.state and self.state.petToys or {})[self.petId]or Catalog.Default
+ local live={}
+ for _,id in ipairs(Catalog.Order)do if self.rows[id].Visible then table.insert(live,id)end end
+ local rects,h=Cards.rects(#live,width,cols,cardH,gap,3)
+ local focus={}
+ for i,id in ipairs(live)do
+  local node=self.rows[id];Cards.place(node,rects[i])
+  local wearing=selected==id
+  Cards.dress(node,{name=Catalog.ById[id].name,status=if wearing then "WEARING"else "Owned",tone=if wearing then "accent"else "soft",icon=if id=="none"then "none"else "ball",focused=i==focusIndex,compact=compact})
+  table.insert(focus,{button=node,id=id,wearing=wearing,name=Catalog.ById[id].name,act=function()return self:choose(id)end})
+ end
+ local y=h+12
+ if self.shop.Visible then
+  Art.type(self.shop,"Action");local sh=math.max(44,Art.actionHeight(self.shop,width-6));place(self.shop,3,y,width-6,sh);y+=sh+8
+ end
+ if self.status.Visible then Art.type(self.status,"Body",compact);local sh=Art.textHeight(self.status,width-6,24);place(self.status,3,y,width-6,sh);y+=sh+8 end
+ self.root.Size=UDim2.fromOffset(width,y);return y,focus
+end
 function Panel:destroy()self.reveal:destroy();self.root:Destroy()end
 return Panel

@@ -23,7 +23,7 @@ return function(client,parent)
     assert(label.AbsolutePosition.Y+label.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteWindowSize.Y-.9,"first-row name or Active clipped: "..label.Text)
    end
   end
-  assert(view.petTab.TextFits and view.petTab.AbsoluteSize.Y>=44,"tab type or target changed")
+  assert(view.petTab==nil and view.editorTabs.pet==nil,"Pet is a Companions hub row, not a Customize tab (redesign 2.1)")
  end)
  view:destroy();root:Destroy();assert(ok,problem)
  return {"749x381 first-row four names and Active visible before scroll with centered square previews"}

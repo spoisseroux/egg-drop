@@ -70,9 +70,10 @@ return function(client,parent)
   test("locked art remains inspectable with concrete unlock and no appearance send",function()
    -- Stickers are retired; the locked Lantern background carries the same rule.
    local f=picker();local v=f.view;v:showTab("Background")
-   assert(v:activateChoice("Background","creek")and v.trialsLink.Visible and v.appearanceStatus.Text:find("High Roller",1,true))
-   assert(v:activateChoice("Background","lantern")and v.appearanceStatus.Text:find("Win 10",1,true)and #f.applied==0)
-   v:showTab("Trials");assert(not v.sound.Visible and not v.tabs.Shell.Visible);v:close()
+   -- Deck style Backgrounds pane: the trial lock offers "View trials"; a rank lock offers nothing.
+   assert(v:activateChoice("Background","creek")and v.shop.backgrounds.action.Visible and v:appearanceText():find("High Roller",1,true))
+   assert(v:activateChoice("Background","lantern")and not v.shop.backgrounds.action.Visible and v:appearanceText():find("Win 10",1,true)and #f.applied==0)
+   v:showTab("Trials");assert(not v.sound.Visible and not v.shop.visible);v:close()
   end)
 		test("Settings apply once immediately and persist through closing",function()
 			local f=picker();local view=f.view;view:showTab("Settings")

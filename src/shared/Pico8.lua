@@ -24,13 +24,15 @@ Pico8.Focus = Pico8[12]
 Pico8.Primary = Pico8[11]
 Pico8.Heart, Pico8.Sleepy = Pico8[14], Pico8[13]
 
--- Jelly tier ramps: PICO-8 indices for rim / body / highlight.
+-- Jelly tier ramps (UI-SPEC-REDESIGN-MENUS 6.2): vivid deep / body / light hex
+-- triples plus a motif per tier, so colour is never the only tier cue. These
+-- replace the PICO-8 rim ramps for eggs; tier V is violet, not yellow.
 Pico8.TierRamps = table.freeze({
-	table.freeze({ 1, 12, 6 }),
-	table.freeze({ 4, 9, 15 }),
-	table.freeze({ 3, 11, 7 }),
-	table.freeze({ 2, 14, 15 }),
-	table.freeze({ 4, 10, 7 }),
+	table.freeze({ deep = "#0A3FD6", body = "#2E8BFF", light = "#8FE1FF", motif = "plain" }),
+	table.freeze({ deep = "#E0400A", body = "#FF8A1A", light = "#FFD45C", motif = "bands" }),
+	table.freeze({ deep = "#04963F", body = "#22E06A", light = "#B4FF7A", motif = "speckles" }),
+	table.freeze({ deep = "#C4126F", body = "#FF4DA6", light = "#FFB0DC", motif = "stars" }),
+	table.freeze({ deep = "#5B21D6", body = "#A66BFF", light = "#E3C8FF", motif = "dots" }),
 })
 
 -- Chain caption colours as a chain grows: 9 -> 10 -> 8.

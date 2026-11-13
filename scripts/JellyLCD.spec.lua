@@ -10,11 +10,16 @@ return function(client,parent)
 	local function fixture(limit)
 		local lcd=assert(LCD.new(root,{backend="span",maxSpans=limit or 1536}));table.insert(instances,lcd);settle();return lcd
 	end
+	-- With no tone: every gel pixel (the bloom halo around an egg is not gel).
+	local function isGel(pixel)
+		for _,entry in ipairs(Config.Tiers)do local t=LCD.tones(entry.color);for role=1,5 do if t[role]==pixel then return true end end end
+		return false
+	end
 	local function bounds(lcd,tone)
 		local x0,y0,x1,y1,count=LCD.Width,LCD.Height,-1,-1,0
 		for y=0,LCD.Height-1 do for x=0,LCD.Width-1 do
 			local offset=(y*LCD.Width+x)*4;local pixel=buffer.readu32(lcd.pixels,offset)
-			if (tone and pixel==tone)or(not tone and pixel~=buffer.readu32(lcd.background,offset))then
+			if (tone and pixel==tone)or(not tone and pixel~=buffer.readu32(lcd.background,offset)and isGel(pixel))then
 				x0,y0,x1,y1,count=math.min(x0,x),math.min(y0,y),math.max(x1,x),math.max(y1,y),count+1
 			end
 		end end
@@ -23,14 +28,14 @@ return function(client,parent)
 	local function rgba(c)return math.floor(c.R*255+.5)+math.floor(c.G*255+.5)*256+math.floor(c.B*255+.5)*65536+4278190080 end
 	local ok,problem=pcall(function()
 		local lcd=fixture()
-		test("all five tier hues retain rim lower body upper and tight cream light at authored small size",function()
+		test("all five tier hues retain deep body light and a tight white glint at authored small size",function()
 			local center=Vector2.new(LCD.Width/2,LCD.Height*.45)
 			for tier,entry in ipairs(Config.Tiers)do
 				local radius=entry.radius*LCD.Width/(Config.Width+.8);lcd:beginFrame();lcd:draw(center,radius,radius,0,entry.color,0)
 				local roles=Palette.byTier[tier]
-				for _,role in ipairs({"rim","lower","body","upper","glint"})do assert(bounds(lcd,rgba(roles[role])).count>0,"missing "..role.." in tiny tier "..tier)end
+				for _,role in ipairs({"deep","body","light","glint"})do assert(bounds(lcd,rgba(roles[role])).count>0,"missing "..role.." in tiny tier "..tier)end
 				local light=bounds(lcd,rgba(roles.glint));local gel=bounds(lcd)
-				assert(light.count<gel.count*.12 and light.x1<center.X and light.y1<center.Y,"cream light covers mark center or dominates tier "..tier)
+				assert(light.count<gel.count*.12 and light.x1<center.X and light.y1<center.Y,"white glint covers mark center or dominates tier "..tier)
 			end
 		end)
 		test("automatic backend proves a writable first frame before selecting its owner",function()

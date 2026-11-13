@@ -492,11 +492,36 @@ function Art.backgroundThumbnail(host,id,theme)return PatternBackdrop.thumbnail(
 function Art.backdropStats(parent)local m=backdropMotion[parent];return m and m.surface and not m.surface.destroyed and m.surface.root.Parent and m.surface.stats end
 function Art.setBackdropCase(parent,rect)
  local motion=backdropMotion[parent];if not motion then return end
+ -- Compact (phone) rule: the plate fills the root there, so the exterior
+ -- pattern is never visible; skip it (the board pattern still draws).
+ local size=parent.AbsoluteSize;motion.compact=size.X>=size.Y*1.2 and(size.Y<500 or size.X<1000)
  motion.case=rect;if motion.surface then motion.surface:setCase(rect)end
 end
+-- The confirmed background also feeds every registered in-board pattern layer.
+local boardPatterns=setmetatable({},{__mode="k"})
+local boardBackground
 function Art.setBackground(parent,id,theme)
+ if not boardBackground or boardBackground.id~=id or boardBackground.theme~=theme then boardBackground={id=id,theme=theme}end
+ for _,pattern in pairs(boardPatterns)do if not pattern.destroyed then pattern:configure(id,theme);pattern:setVisible(true)end end
  local motion=backdropMotion[parent];if not motion then return end
  motion.confirmed,motion.theme=id,theme
+end
+-- Register the board well (the tray overlay) once; returns the pattern root.
+-- The layer is drawn on every device, under the fill line and the danger haze.
+function Art.boardPattern(host)
+ local pattern=boardPatterns[host]
+ if not pattern or pattern.destroyed then
+  pattern=PatternBackdrop.board(host);boardPatterns[host]=pattern
+  if boardBackground then pattern:configure(boardBackground.id,boardBackground.theme);pattern:setVisible(true)end
+ end
+ return pattern.root
+end
+-- Global ZIndex depth of the board pattern (it must stay below the gel layer).
+function Art.setBoardPatternDepth(host,z)
+ local pattern=boardPatterns[host];if pattern and not pattern.destroyed then pattern:setZIndex(z)end
+end
+function Art.boardPatternStats(host)
+ local pattern=boardPatterns[host];return pattern and not pattern.destroyed and pattern.stats or nil
 end
 local function returnPreview(host)
  -- This is a cached-owner registry, visited only on an explicit handoff. Return
@@ -538,6 +563,7 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
  local owner=if preview then previewBackground.host else motion.host
  local id=if preview then previewBackground.id else motion.confirmed
  local theme=if preview then previewBackground.theme else motion.theme
+ if motion.compact and not preview then visible=false end
  local wanted=preview or visible
  local canopyAlive=motion.art and motion.art.Parent~=nil
  local surfaceAlive=motion.surface and not motion.surface.destroyed and motion.surface.root.Parent~=nil
@@ -560,6 +586,7 @@ function Art.updateBackdrop(parent,now,visible,reduced,previewAllowed)
  -- path cleared it so it would not double its own floor).
  local floor=Art.glassTransparency(1-PatternBackdrop.ExteriorOpacity)
  if motion.host.BackgroundTransparency~=floor then motion.host.BackgroundTransparency=floor end
+ if motion.compact and not preview then if motion.art.Visible then motion.art.Visible=false end;return end
  canopyOwner(motion,motion.host,owner);if not motion.art.Visible then motion.art.Visible=true end
  visible=preview or visible
  if motion.owner~=owner then
@@ -679,15 +706,19 @@ function Art.jellyPreview(parent,tier,mark)
  local palette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette).byTier[tier]
  local state=previewGel[parent]
  if not state then
-  state={gradient=parent:FindFirstChildOfClass("UIGradient")or node("UIGradient",parent,{}),rim=Art.stroke(parent,palette.rim,0,1),glint=Art.frame(parent,"GelGlint",palette.glint,UDim2.fromScale(.18,.13),UDim2.fromScale(.22,.085),parent.ZIndex+1)}
+  -- No outline any more (UI-SPEC-REDESIGN-MENUS 6.1): the stroke stays for
+  -- existing readers but is fully transparent.
+  state={gradient=parent:FindFirstChildOfClass("UIGradient")or node("UIGradient",parent,{}),rim=Art.stroke(parent,palette.deep,0,1),glint=Art.frame(parent,"GelGlint",palette.glint,UDim2.fromScale(.18,.13),UDim2.fromScale(.22,.085),parent.ZIndex+1)}
+  state.rim.Transparency=1
   Art.corner(state.glint,100);previewGel[parent]=state
   parent.Destroying:Connect(function()previewGel[parent]=nil end)
  end
  if state.tier==tier then return end;state.tier=tier
- if not previewGradients[tier]then previewGradients[tier]=ColorSequence.new({ColorSequenceKeypoint.new(0,palette.upper),ColorSequenceKeypoint.new(.48,palette.body),ColorSequenceKeypoint.new(1,palette.lower)})end
- parent.BackgroundColor3=Color3.new(1,1,1);state.gradient.Color=previewGradients[tier];state.gradient.Rotation=90
- state.rim.Color=palette.rim;state.glint.BackgroundColor3=palette.glint;parent:SetAttribute("JellyTier",tier)
- if mark then mark.TextColor3=palette.mark end
+ -- Same ramp as the board sprites: light upper-left, body, deep lower-right.
+ if not previewGradients[tier]then previewGradients[tier]=ColorSequence.new({ColorSequenceKeypoint.new(0,palette.light),ColorSequenceKeypoint.new(.45,palette.body),ColorSequenceKeypoint.new(1,palette.deep)})end
+ parent.BackgroundColor3=Color3.new(1,1,1);state.gradient.Color=previewGradients[tier];state.gradient.Rotation=55
+ state.rim.Color=palette.deep;state.glint.BackgroundColor3=palette.glint;parent:SetAttribute("JellyTier",tier)
+ if mark then mark.TextColor3=palette.mark;mark.TextStrokeColor3=palette.markShadow;mark.TextStrokeTransparency=.45 end
 end
 
 function Art.wordmark(parent,z)return require(script.Parent.DeckWordmark).new(parent,z or parent.ZIndex+1,Art)end

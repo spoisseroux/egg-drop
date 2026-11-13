@@ -14,7 +14,9 @@ return function(client,parent,onlySize)
  local function visible(n)while n and n~=root do if n:IsA("GuiObject")and not n.Visible then return false end;n=n.Parent end;return n==root end
  local function fit(n)assert(n.TextFits,n:GetFullName().." text does not fit: "..n.Text)end
  local function check()
-  fit(view.title);assert(view.closeButton.AbsoluteSize.X>=44 and view.closeButton.AbsoluteSize.Y>=44)
+  -- The palette page is the Customize chrome (redesign 2); transactions keep the card.
+  if view:chromeActive()then fit(view.header.title);assert(view.header.back.root.AbsoluteSize.X>=44 and view.header.back.root.AbsoluteSize.Y>=44)
+  else fit(view.title);assert(view.closeButton.AbsoluteSize.X>=44 and view.closeButton.AbsoluteSize.Y>=44)end
   for _,n in ipairs(view.shade:GetDescendants())do if n:IsA("GuiObject")and visible(n)then
    if n:IsA("TextLabel")then fit(n)end
    if n:IsA("TextButton")then fit(n);assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44,"small action "..n.Name)end
@@ -23,12 +25,12 @@ return function(client,parent,onlySize)
  end
  local function test(n,f)f();table.insert(cases,n)end
  local ok,err=pcall(function()
-  for i,size in ipairs(if onlySize then{onlySize}else{Vector2.new(1649,971),Vector2.new(350,703),Vector2.new(568,210)})do
+  for i,size in ipairs(if onlySize then{onlySize}else{Vector2.new(1649,971),Vector2.new(812,354),Vector2.new(568,210)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);settle()
    test(tostring(size).." one saved pet, independent channels and four five-notch rows",function()
     view:open(state(i*1000),"palette","puddle");settle();check();assert(view.petId=="puddle"and view.channel=="main")
     assert(not view.body:FindFirstChild("Current")and not view.body:FindFirstChild("After"))
-    view:chooseChannel("secondary");settle();assert(view.bars.rose.value.Text==(if size.Y<436 and size.X>=540 then "3 jars"else "2/5"))
+    view:chooseChannel("secondary");settle();assert(view.hueCards.rose:GetAttribute("CardStatus")=="2 of 5 · ×3","hue card shows dose and stock")
     for _,bar in pairs(view.bars)do assert(#bar.ticks==6 and bar.stages[0])end
    end)
    test(tostring(size).." inventory selection asks exact item pet channel; cancel spends nothing",function()
@@ -45,13 +47,14 @@ return function(client,parent,onlySize)
     assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:choosePet("puddle")and view.action.Text=="Store");assert(view:chooseChannel("main"));settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id and view.action.Text=="Use one");view:cancelConfirmation();assert(view.page=="palette"and view.tab=="hue"and view.assignment.pendingResultId==s.pendingHueResult.id)
    end)
   end
-  test("short landscape right pane starts with stock and six full swatches without duplicated channel instructions",function()
+  test("short landscape hue cards start at the top of the grid with dose and stock",function()
    root.Size=UDim2.fromOffset(749,381);view:open(state(4999),"palette","puddle");settle();check()
-   assert(not view.channelTitle.Visible and not view.inspection.Visible and view.bars.rose.value.Text=="3 jars")
-   assert(view.bars.rose.row.Position.Y.Offset==0 and view.bars.rose.stages[0]:GetAttribute("SavedStage"))
-   assert(view.bars.rose.row:GetAttribute("AccessibleLabel"):find("Current 0/5",1,true))
-   for _,tick in ipairs(view.bars.rose.ticks)do assert(tick.AbsolutePosition.Y>=view.body.AbsolutePosition.Y and tick.AbsolutePosition.Y+tick.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y)end
-   root.Size=UDim2.fromOffset(900,720);settle();assert(view.channelTitle.Visible and view.inspection.Visible and view.bars.rose.value.Text=="0/5","Resize did not restore roomy channel copy")
+   assert(view:chromeActive()and view.channelTabs.root.Visible and view.hueCards.rose:GetAttribute("CardStatus")=="0 of 5 · ×3")
+   local grid=view.chromeGrid
+   for _,id in ipairs({"rose","tide"})do local card=view.hueCards[id]
+    assert(card.AbsolutePosition.Y>=grid.AbsolutePosition.Y and card.AbsolutePosition.Y+card.AbsoluteSize.Y<=grid.AbsolutePosition.Y+grid.AbsoluteSize.Y,"first row below the fold")
+   end
+   root.Size=UDim2.fromOffset(900,720);settle();assert(view:chromeActive()and view.hueCards.rose:GetAttribute("CardStatus")=="0 of 5 · ×3")
   end)
   test("short landscape Reset and fruit receipts keep name stock and adjacent Use now Store above the fold",function()
    root.Size=UDim2.fromOffset(733,307)

@@ -394,7 +394,8 @@ local function publishState(board)
 	board.folder:SetAttribute("RunFamily", board.runFamily or "pip")
 	board.folder:SetAttribute("SelectedFamily", board.selectedFamily or "pip")
 	board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
-	board.folder:SetAttribute("OverflowPressure", board.round.danger or 0)
+	board.folder:SetAttribute("OverflowPressure", if board.round.over then 0 else board.round.danger or 0)
+	board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else board.round.graceLeft or 0)
 	board.folder:SetAttribute("FieldPhase", board.field and board.field.phase or "Welcome")
 	board.folder:SetAttribute("FieldStage", board.field and board.field.rootStage or 0)
 	board.folder:SetAttribute("FieldBudget", board.field and board.field.budget or nil)
@@ -1224,7 +1225,8 @@ RunService.Heartbeat:Connect(function(dt)
 		if now - (board.lastPressurePublish or 0) >= .1 then
 			board.lastPressurePublish = now
 			board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
-			board.folder:SetAttribute("OverflowPressure", board.round.danger or 0)
+			board.folder:SetAttribute("OverflowPressure", if board.round.over then 0 else board.round.danger or 0)
+			board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else board.round.graceLeft or 0)
 		end
 		local batch = {}
 		for id, impact in pairs(board.impacts) do

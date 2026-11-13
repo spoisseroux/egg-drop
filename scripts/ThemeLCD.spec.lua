@@ -15,12 +15,14 @@ return function(client,parent)
   assert(v:setPalette(Themes.ById[id].lcd));assert(v.surface.pool==pool and pool[1].node==first and #v.surface.root:GetDescendants()==count)
   assert(v:getStats().dynamicCreated==1536 and v.label.Visible and not v.failed)
   for offset,n in pairs(gel)do assert(buffer.readu32(v.pixels,offset)==n,"live gel recolored by chrome palette")end
-  -- x=0,y=0 is the authored outer rim (edge~-1.67), not exterior.
-  -- Bottom-left lies outside the sloped bank; verify every static role separately.
-  for _,sample in ipairs({{0,0,"rim"},{0,LCD.Height-1,"outside"},{1,0,"rail"},{3,7,"dither"},{math.floor(LCD.Width/2),math.floor(LCD.Height/2),"base"}})do
+  -- Redesigned well: no rail or rim rows. Every static role is one of the
+  -- plate's derived tones (top shadow band, gradient bands, lighter bank).
+  local tones=LCD.boardTones(Themes.ById[id].lcd);assert(v.tones.bank==tones.bank and v.guideColor==tones.guide)
+  for _,sample in ipairs({{0,0},{1,0},{LCD.Width-1,3},{3,7},{math.floor(LCD.Width/2),math.floor(LCD.Height/2)},{0,LCD.Height-1}})do
    local offset=(sample[2]*LCD.Width+sample[1])*4
-   assert(buffer.readu32(v.background,offset)==packed(Themes.ById[id].lcd[sample[3]]),id.." static "..sample[3].." sample ("..sample[1]..","..sample[2]..")")
+   assert(buffer.readu32(v.background,offset)==tones.bands[LCD.bandOfRow(sample[2])],id.." band sample ("..sample[1]..","..sample[2]..")")
   end
+  assert(buffer.readu32(v.background,((LCD.Height-6)*LCD.Width+1)*4)==tones.bank,id.." bank sample")
   for _,offset in ipairs(guideOffsets)do assert(buffer.readu32(v.pixels,offset)==packed(Themes.ById[id].lcd.guide),"angled guide retained old palette")end
  end)end
  test("failed repaint is explicit sticky failure for existing cheap-owner bridge",function()

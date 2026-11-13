@@ -182,4 +182,99 @@ function Backdrop.thumbnail(host,id,theme)
  return root
 end
 function Backdrop:destroy()if self.destroyed then return end;self.destroyed=true;self.root:Destroy()end
+
+-- In-board pattern (UI-SPEC-REDESIGN-MENUS 5): the chosen background drawn in
+-- the board well in one tone (plate accent 25% toward white) at 6%. One bounded
+-- pool of single-piece motifs, built once; geometry is written only when the
+-- size or the pattern changes. Static: no animation during a round.
+Backdrop.BoardOpacity=.06
+Backdrop.BoardCellRatio=.141 -- 23 px on the 163 px phone board
+Backdrop.BoardCellMax=40 -- 40 px on desktop
+Backdrop.BoardColumns,Backdrop.BoardRows=11,18
+local Board={};Board.__index=Board
+Backdrop.Board=Board
+function Backdrop.boardTone(theme)
+ local accent=theme and(theme.accent or theme.trim)or Color3.fromHex("#8FD9B6")
+ return accent:Lerp(Color3.new(1,1,1),.25)
+end
+function Backdrop.boardCell(width)
+ return math.clamp(math.floor(width*Backdrop.BoardCellRatio+.5),12,Backdrop.BoardCellMax)
+end
+function Backdrop.board(parent)
+ local root=frame(parent,"BoardPattern");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true;root.Visible=false
+ local self=setmetatable({root=root,pieces={},stats={created=1,writes=0,visible=0}},Board)
+ -- The arc fade hides the lower half of a ring so Creek reads as ripples.
+ local fade=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.54,1),NumberSequenceKeypoint.new(1,1)})
+ for index=1,Backdrop.BoardColumns*Backdrop.BoardRows do
+  local shape=frame(root,"Motif");shape.Visible=false;shape.ZIndex=root.ZIndex
+  local corner=Instance.new("UICorner");corner.Parent=shape
+  local stroke=Instance.new("UIStroke");stroke.Enabled=false;stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;stroke.Parent=shape
+  local gradient=Instance.new("UIGradient");gradient.Rotation=90;gradient.Transparency=fade;gradient.Enabled=false;gradient.Parent=stroke
+  self.pieces[index]={shape=shape,corner=corner,stroke=stroke,gradient=gradient,col=(index-1)%Backdrop.BoardColumns,row=math.floor((index-1)/Backdrop.BoardColumns)}
+  self.stats.created+=4
+ end
+ self.connection=root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
+ root.Destroying:Connect(function()self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end end)
+ return self
+end
+-- Global ZIndex: the motifs share the root's depth so they never rise above the
+-- gel spans (the caller picks the depth per renderer backend).
+function Board:setZIndex(z)
+ if self.destroyed or self.z==z then return end;self.z=z
+ assign(self,self.root,"ZIndex",z,"layerWrites")
+ for _,p in ipairs(self.pieces)do assign(self,p.shape,"ZIndex",z,"layerWrites")end
+end
+function Board:configure(id,theme)
+ if self.destroyed then return false end
+ local tone=Backdrop.boardTone(theme)
+ if self.id==id and self.tone==tone then return false end
+ self.id,self.tone=id,tone;self.size=nil
+ local fill=1-Backdrop.BoardOpacity
+ for _,p in ipairs(self.pieces)do
+  local creek=id=="creek"
+  assign(self,p.shape,"BackgroundColor3",tone,"colorWrites");assign(self,p.stroke,"Color",tone,"colorWrites")
+  assign(self,p.shape,"BackgroundTransparency",if creek then 1 else fill,"styleWrites")
+  assign(self,p.stroke,"Enabled",creek,"styleWrites");assign(self,p.gradient,"Enabled",creek,"styleWrites")
+  assign(self,p.stroke,"Transparency",fill,"styleWrites")
+  assign(self,p.corner,"CornerRadius",if id=="lantern"then UDim.new(.38,0)else UDim.new(.5,0),"styleWrites")
+  assign(self,p.shape,"Rotation",if id=="canopy"then 30 else 0,"geometryWrites")
+ end
+ self:layout();return true
+end
+-- Canopy: paired seeds; Creek: staggered ripple arcs; Lantern: small lanterns.
+function Board.place(id,col,row,cell)
+ local stagger=if row%2==1 then cell*.5 else 0
+ if id=="creek"then
+  return col*cell+stagger+cell*.18,row*cell*.85+cell*.2,cell*.64,cell*.64
+ elseif id=="lantern"then
+  return col*cell+stagger+cell*.36,row*cell+cell*.3,cell*.28,cell*.38
+ end
+ -- Seeds pair across two columns: a tight pair, then a wider gap.
+ local x=col*cell+(if col%2==0 then cell*.55 else cell*.08)-(if row%2==1 then cell else 0)
+ return x,row*cell+cell*.27,cell*.2,cell*.46
+end
+function Board:layout()
+ if self.destroyed or not self.id then return end
+ local size=self.root.AbsoluteSize
+ if self.size==size then return end;self.size=size
+ local cell=Backdrop.boardCell(size.X);self.stats.cell=cell
+ local thickness=math.max(1,math.floor(cell*.06+.5))
+ local shown=0
+ for _,p in ipairs(self.pieces)do
+  local x,y,w,h=Board.place(self.id,p.col,p.row,cell)
+  local visible=size.X>0 and x<size.X and y<size.Y and x+w>0
+  if visible then
+   assign(self,p.shape,"Position",UDim2.fromOffset(math.floor(x+.5),math.floor(y+.5)),"geometryWrites")
+   assign(self,p.shape,"Size",UDim2.fromOffset(math.floor(w+.5),math.floor(h+.5)),"geometryWrites")
+   assign(self,p.stroke,"Thickness",thickness,"styleWrites");shown+=1
+  end
+  assign(self,p.shape,"Visible",visible,"visibilityWrites")
+ end
+ self.stats.visible=shown
+end
+function Board:setVisible(visible)
+ if self.destroyed then return end
+ assign(self,self.root,"Visible",visible==true and self.id~=nil,"visibilityWrites")
+end
+function Board:destroy()if self.destroyed then return end;self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end;self.root:Destroy()end
 return Backdrop

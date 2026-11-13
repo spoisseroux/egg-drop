@@ -16,42 +16,42 @@ return function(client,parent)
  local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
  local function test(n,f)f();table.insert(cases,n)end
  local function fit(n)assert(n.TextFits,n:GetFullName().." text clipped: "..n.Text)end
+ -- The Features tab is hidden behind Shared.FeatureFlags (not removed): drive the panel directly.
+ local function showFeatures()if not view:canCustomize()then return false end;view.tab="features";view:refresh();return view.featurePanel.root.Visible end
  local ok,problem=pcall(function()
   for _,size in ipairs({Vector2.new(1649,971),Vector2.new(390,740),Vector2.new(733,307),Vector2.new(600,360),Vector2.new(568,160)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);settle()
-   test(tostring(size).." all six tabs reachable both directions and active tab fully visible",function()
-    allowed=true;assert(view:open(state(),"pet","pip"));settle()
-    for _,order in ipairs({{"pet","hue","charm","materials","toys","features"},{"features","toys","materials","charm","hue","pet"}})do for _,id in ipairs(order)do
-     assert(view:setTab(id));settle();local tab=view.editorTabs[id];local rail=view.tabRail;fit(tab)
-     assert(tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44)
-     local stroke=tab:FindFirstChildOfClass("UIStroke");local half=if stroke then stroke.Thickness*.5 else 0
-     assert(tab.AbsolutePosition.Y-half>=rail.scroll.AbsolutePosition.Y and tab.AbsolutePosition.Y+tab.AbsoluteSize.Y+half<=rail.scroll.AbsolutePosition.Y+rail.scroll.AbsoluteSize.Y,"tab outline clipped vertically")
-     assert(tab.AbsolutePosition.X>=rail.scroll.AbsolutePosition.X+5.9 and tab.AbsolutePosition.X+tab.AbsoluteSize.X<=rail.scroll.AbsolutePosition.X+rail.scroll.AbsoluteSize.X-5.9,"active tab obscured: "..id)
-     assert(view.body.AbsoluteSize.Y>=43.9,"tabs leave no usable44px choice window")
+   test(tostring(size).." Customize icon tabs reachable both directions, Features hidden by the flag",function()
+    allowed=true;assert(view:open(state(),"hue","pip"));settle()
+    for _,order in ipairs({{"hue","charm","materials","toys"},{"toys","materials","charm","hue"}})do for _,id in ipairs(order)do
+     view:setTab(id);settle();assert(view.tab==id,"tab not reached: "..id);local tab=view.editorTabs[id]
+     assert(tab and tab.Visible,"tab missing: "..id)
+     -- Portrait windows scale the 848 desktop panel down; 44 px targets hold in landscape.
+     if size.X>size.Y then assert(tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44,id.." tab under 44 px at "..tostring(size))end
+     -- A 160 px tall emulator window has no room for a choice grid under the header and tabs.
+     if size.Y>=200 then assert(view.chromeGrid.AbsoluteSize.Y>=43.9,"tabs leave no usable 44 px choice window at "..tostring(size))end
     end end
-    if view.tabRail.overflow then
-     view.tabRail:scrollBy(-100);assert(not view.tabRail.left.Interactable and view.tabRail.right.Interactable)
-     view.tabRail:scrollBy(100);assert(not view.tabRail.right.Interactable and view.tabRail.left.Interactable)
-    end
+    assert(not view:setTab("features")and view.editorTabs.features==nil and view.editorTabs.pet==nil)
     view:close()
    end)
    test(tostring(size).." five egg families disclose actual pool and full feature odds",function()
     local s=state();s.toyUnlocks={ball=true};shop:open(s);settle()
-    for _,id in ipairs({"meadow","hue","material","toy","feature"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
-    shop:selectRecipe("toy");settle();local column=shop.body.EggColumn;assert(not column:FindFirstChild("ToyOdds_ball")and column.ToyOdds_bone.Text:find("50%%")and column.ToyOdds_sparkler.Text:find("50%%"))
-    shop:selectRecipe("feature");settle();column=shop.body.EggColumn
-    assert(column.FeatureOdds_horns.Text:find("50%%")and column.FeatureOdds_claws.Text:find("35%%")and column.FeatureOdds_wings.Text:find("15%%"))
-    assert(column.FeatureRules.Text:find("99",1,true)and column.FeatureRules.Text:find("no Stars",1,true));shop:close()
+    for _,id in ipairs({"hue","material","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
+    -- Redesign 3: odds render once, in the pane; the Feature Egg row is hidden by the flag.
+    shop:selectRecipe("toy");settle();local odds=shop.oddsHolder;assert(not odds:FindFirstChild("Odds_ball")and odds.Odds_bone:GetAttribute("OddsText")=="50%"and odds.Odds_sparkler:GetAttribute("OddsText")=="50%")
+    assert(not shop:selectRecipe("feature")and shop.body.EggColumn:FindFirstChild("Recipe_feature")==nil)
+    local feature={};for _,r in ipairs(shop.oddsRows("feature",s).rows)do feature[r.id]=r.value end
+    assert(feature.horns=="50%"and feature.claws=="35%"and feature.wings=="15%");shop:close()
    end)
   end
   test("private unselected pet preview uses its own toy and visible feature stages",function()
    allowed=true;view:open(state(),"hue","puddle");local a=view:appearance();assert(a.toyId=="bone"and a.featureStages.horns==1 and a.featureStages.wings==0)
-   assert(view:setTab("features")and view.featurePanel:preview("horns",5));assert(view:appearance().featureStages.horns==5 and #sent==0)
+   assert(showFeatures()and view.featurePanel:preview("horns",5));assert(view:appearance().featureStages.horns==5 and #sent==0)
    assert(view:setTab("toys")and view:appearance().featureStages.horns==1)
   end)
   test("stale Toy and Feature handlers check live cradle before mutation",function()
    allowed=true;assert(view:setTab("toys"));assert(view:setTab("hue"));assert(not view.toyPanel:choose("ball")and #sent==0)
-   assert(view:setTab("features"));assert(view.featurePanel:requestUse("horns"));view:close()
+   assert(showFeatures());assert(view.featurePanel:requestUse("horns"));view:close()
    assert(not view.featurePanel:confirmUse()and not view.featurePanel:show("horns")and not view.featurePanel:preview("horns",3)and #sent==0,"closed still-docked feature row mutated")
    allowed=false;assert(not view.toyPanel:choose("bone")and not view.featurePanel:requestUse("horns")and not view.featurePanel:preview("horns",3)and not view.featurePanel:show("horns")and #sent==0)
    view:close()

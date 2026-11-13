@@ -21,8 +21,20 @@ Pets.collection = table.clone(Pets)
 for _, pet in ipairs(Pets.rares) do
 	table.insert(Pets.collection, pet)
 end
+-- One line under the reveal name plate (UI-SPEC-REDESIGN-CELEBRATIONS 1.4),
+-- 60 characters at most, in the garden's warm and quirky voice.
+local descriptions = {
+	pip = "Soft as a nap. Hugs first, asks questions never.",
+	puddle = "Hums to puddles. The puddles have started humming back.",
+	wick = "Ticks like a tiny clock. Always early for snacks.",
+	orbit = "Floats in slow circles, collecting quiet thoughts.",
+	bloom_pip = "A bear in bloom. Smells faintly of tomorrow's picnic.",
+	foxfire_wick = "Glows when happy. Glows a lot, honestly.",
+	eclipse_orbit = "Borrows the night sky and always gives it back.",
+}
 Pets.byId = {}
 for index, pet in ipairs(Pets.collection) do
+	pet.description = descriptions[pet.id] or "A brand new friend for your garden."
 	pet.index = index
 	pet.color, pet.accent = BaseColors.body, BaseColors.secondary
 	Pets.byId[pet.id] = pet

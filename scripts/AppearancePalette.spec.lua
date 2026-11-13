@@ -60,9 +60,12 @@ return function(client,parent,onlySize)
     assert(menu.card.BackgroundColor3==t.ui.contentPanel and menu.tabs.daily.BackgroundColor3==t.ui.tab and menu.tabs.daily.TextColor3==t.ui.tabInk)
     assert(shop.action.BackgroundColor3==t.ui.accent and shop.action.TextColor3==t.ui.ink,"actual refreshed shop CTA retained fixed reward color")
     assert(menu.card:FindFirstChildOfClass("UIGradient").Rotation==100 and menu.nectar.Font==Art.Font.Counter)
-    assert(picker.card.BackgroundColor3==t.ui.contentPanel and picker.tabs.Shell.BackgroundColor3==t.ui.tab)
+    -- The Deck style screen and the Settings / Trials card are Kit panels (plate glass).
+    assert(picker.card.BackgroundColor3==t.ui.panel and picker.shop.root.BackgroundColor3==t.ui.panel)
     assert(journal.card.BackgroundColor3==t.ui.contentPanel and journal.cards[1].BackgroundColor3==t.ui.contentRaised and journal.cards[1].Species.TextColor3==t.ui.contentText)
-    assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==t.ui.accent and recipe.RecipeName.TextColor3==t.ui.ink)
+    -- Redesign 3: Hatch eggs is a Kit panel; the selected row takes the plate's `selected` glass, its text stays neutral.
+    local Kit=require(client.DeckKit)
+    assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==Kit.Color.text and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
     assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass follows the plate; text stays neutral")
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
     assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe and shop.nectar.TextColor3==amber)
@@ -72,9 +75,11 @@ return function(client,parent,onlySize)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
    local t=Themes.ById.copperleaf;Art.applyTheme(t);local recipe=shop.body.EggColumn.Recipe_hue
    local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:show(resultsData(10),false);settle()
-   assert(shop.body.EggColumn.Recipe_hue==recipe and recipe.RecipeName.TextColor3==t.ui.ink and shop.selected=="hue")
+   assert(shop.body.EggColumn.Recipe_hue==recipe and (recipe.RecipeName.TextColor3==t.ui.ink or recipe.RecipeName.TextColor3==t.ui.text)and shop.selected=="hue",
+    "recipe name colour "..tostring(recipe.RecipeName.TextColor3).." vs ink "..tostring(t.ui.ink).." / text "..tostring(t.ui.text))
    assert(recap.payout.BackgroundColor3==t.ui.raised)
-   for _,tab in pairs(picker.tabs)do assert(tab.AbsoluteSize.Y>=44);fit(tab)end
+   -- Deck style tab hit frames are 44 in panel units; the regular screen scales as a whole (UIScale).
+   for _,tab in pairs(picker.tabs)do assert(tab.Size.Y.Offset>=44);fit(tab)end
    assert(picker.tabs.Background:GetAttribute("AccessibleLabel")=="Background patterns")
    assert(not Art.applyTheme(t),"unchanged confirmed theme reapplied registry")
   end)

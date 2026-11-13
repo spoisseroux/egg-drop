@@ -62,13 +62,15 @@ return function(client,parent)
 			end
 			close(view)
 		end)
-		test("pointer-open Style seeds active Background or Settings without appearance or settings writes",function()
+		test("pointer-open Style seeds Settings; Deck style tabs own focus without appearance or settings writes",function()
 			local view=picker()
-			for _,tab in ipairs({"Background","Settings"})do
-				view:showTab(tab);local f=coordinator(view);local before=total();f:pad();f:flush()
-				assert(GuiService.SelectedObject==(view.tabs[tab]or view.sound) and f.writes==1 and total()==before,tab)
-				f.co:destroy()
+			-- Faceplates and Backgrounds are the Deck style screen: it owns its focus ring.
+			for _,tab in ipairs({"Shell","Background"})do
+				view.customizationEntry=true;view:showTab(tab);assert(view:getControllerFocus().target()==nil,tab)
 			end
+			view:showTab("Settings");local f=coordinator(view);local before=total();f:pad();f:flush()
+			assert(GuiService.SelectedObject==view.sound and f.writes==1 and total()==before,"Settings")
+			f.co:destroy()
 			close(view)
 		end)
 		test("sparse rare-only Journal seeds and scrolls first owned row without equipping or tracking",function()
@@ -86,12 +88,14 @@ return function(client,parent)
 				for _,id in ipairs({"bloom_pip","foxfire_wick","eclipse_orbit"})do local n=view.cards[Pets.byId[id].index];assert(not n.Visible and not n.Track.Visible and not n.Selectable)end;close(view)
 			end
 		end)
-		test("ordinary shop acquires neutral X on first released A with no purchase or acknowledgement",function()
+		test("ordinary shop acquires the selected egg row on first released A with no purchase or acknowledgement",function()
 			local view=eggs();settle();local f=coordinator(view);local before=total()
 			-- CAS can see an unequivocal gamepad A before UIS's last-input notification.
 			assert(f:press(S.Begin)==R.Sink);f:pad();f:flush();assert(GuiService.SelectedObject==nil)
 			assert(f:press(S.End)==R.Sink);f:flush()
-			assert(GuiService.SelectedObject==view.closeButton and f.writes==1 and total()==before)
+			-- Redesign 3: first focus lands on the selected egg row (selecting never hatches).
+			local row=view.body.EggColumn["Recipe_"..view.selected]
+			assert(GuiService.SelectedObject==row and f.writes==1 and total()==before,"egg shop A-release: selected="..tostring(GuiService.SelectedObject).." row="..tostring(row).." writes="..f.writes)
 			assert(view.state.nectar==24 and view.state.lastHatch==nil);close(view)
 		end)
 		test("direct controller Journal opening retains its valid existing owned selection",function()

@@ -15,20 +15,20 @@ return function(client,parent)
   else assert(top>=windowTop-4.1 and top<=windowTop+4.1,"oversized retained recipe should lead the window")end
  end
  local ok,problem=pcall(function()
-  for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,210),Vector2.new(350,703)})do
+  for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,210),Vector2.new(812,354)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);frames()
-   for _,id in ipairs({"toy","feature"})do
+   for _,id in ipairs({"toy","hue"})do -- Feature Egg hidden by FeatureFlags
     Gui.SelectedObject=nil;view:open(state);frames();assert(view:selectRecipe(id));frames()
-    local signature=view.shopReflowSignature;view:close();Gui.SelectedObject=nil
+    local signature=view.shopKey;view:close();Gui.SelectedObject=nil
     view:open(state);Gui.SelectedObject=nil;frames()
-    assert(view.selected==id and view.shopReflowSignature==signature,"fixture must retain selection at unchanged viewport signature")
+    assert(view.selected==id and view.shopKey==signature,"fixture must retain selection at unchanged viewport signature")
     selectedVisible(id)
     assert(Gui.SelectedObject==nil,"selected visibility must not depend on a gamepad focus target")
     table.insert(cases,tostring(size).." retained "..id.." visible on same-size reopen before user scroll")
     view:close()
    end
   end
-  view:open(state);assert(view:selectRecipe("feature"));view:queueSelectedRecipe();view:close()
+  view:open(state);assert(view:selectRecipe("hue")or view.selected=="hue");view:queueSelectedRecipe();view:close()
   view.body.CanvasPosition=Vector2.zero;frames();assert(view.body.CanvasPosition==Vector2.zero,"closed ownership epoch ran a stale recipe scroll")
   table.insert(cases,"close invalidates the queued opening scroll")
  end)

@@ -1,37 +1,43 @@
 -- Presentation colors only. Tier radii, identities and game rules stay in BoardConfig.
+-- Vivid egg ramps (UI-SPEC-REDESIGN-MENUS 6.2): deep (lower-right shade), body,
+-- light (upper-left, rim light and bloom), a white glint and a white 23% motif.
+-- There is no outline role any more; `rim`, `lower` and `upper` stay as aliases
+-- so older readers keep working (rim = deep, upper = light).
 local Config=require(script.Parent.BoardConfig)
 local Palette={byTier={}}
 local Pico8=require(script.Parent.Pico8)
--- PICO-8 ink (0) and cream highlight (7). Tier ramps are PICO-8 rim/body/highlight
--- indices; the lower band sits between rim and body so the shading order holds.
 Palette.Ink=Pico8[0]
 Palette.Cream=Pico8[7]
-local colors={}
-for tier,ramp in ipairs(Pico8.TierRamps)do
- local rim,body=Pico8[ramp[1]],Pico8[ramp[2]]
- -- Snap blends to 8-bit so Part.Color and framebuffer writes round-trip exactly.
- local function snap(c)return Color3.fromRGB(math.round(c.R*255),math.round(c.G*255),math.round(c.B*255))end
- local upper=Pico8[ramp[3]]
- -- A cream (7) highlight IS the glint; the upper band then blends body toward
- -- it so the tight cream light stays a distinct, small spot.
- if upper==Pico8[7]then upper=snap(body:Lerp(upper,.5))end
- colors[tier]={rim,snap(rim:Lerp(body,.55)),body,upper}
+Palette.White=Color3.new(1,1,1)
+-- Motif ids (white at 23% inside the body): a second tier cue besides colour.
+Palette.Motifs=table.freeze({plain=1,bands=2,speckles=3,stars=4,dots=5})
+Palette.MotifOpacity=.23
+-- Tier marks: white with a deep drop shadow, shown only at radius >= 12 px.
+Palette.MarkMinRadius=12
+local function snap(c)return Color3.fromRGB(math.round(c.R*255),math.round(c.G*255),math.round(c.B*255))end
+local function entry(deep,body,light,motif)
+ return table.freeze({deep=deep,lower=snap(deep:Lerp(body,.55)),body=body,light=light,glint=Palette.White,
+  motif=snap(body:Lerp(Palette.White,Palette.MotifOpacity)),motifKind=motif,mark=Palette.White,markShadow=deep,
+  rim=deep,upper=light})
 end
 local function key(color)return math.round(color.R*255)+math.round(color.G*255)*256+math.round(color.B*255)*65536 end
 local known,custom={},{}
 local customCount=0
-for tier,hex in ipairs(colors)do
- local entry=table.freeze({rim=hex[1],lower=hex[2],body=hex[3],upper=hex[4],glint=Palette.Cream,mark=Palette.Ink})
- Palette.byTier[tier]=entry;known[key(Config.Tiers[tier].color)]=entry;known[key(entry.body)]=entry
+for tier,ramp in ipairs(Pico8.TierRamps)do
+ local hex=Color3.fromHex
+ local roles=entry(hex(ramp.deep),hex(ramp.body),hex(ramp.light),Palette.Motifs[ramp.motif]or 1)
+ Palette.byTier[tier]=roles
+ -- The server still colours egg Parts with the legacy BoardConfig colour; both resolve here.
+ known[key(Config.Tiers[tier].color)]=roles;known[key(roles.body)]=roles
 end
 table.freeze(Palette.byTier)
 function Palette.resolve(value)
  if type(value)=="number"then return Palette.byTier[math.clamp(math.floor(value),1,#Palette.byTier)]end
- local packed=key(value);local entry=known[packed]or custom[packed]
- if entry then return entry end
+ local packed=key(value);local roles=known[packed]or custom[packed]
+ if roles then return roles end
  local h,s,v=value:ToHSV()
- entry=table.freeze({rim=Color3.fromHSV(h,math.min(1,s+.16),v*.34),lower=Color3.fromHSV(h,math.min(1,s+.12),v*.75),body=value,upper=value:Lerp(Palette.Cream,.38),glint=Palette.Cream,mark=Palette.Ink})
- if customCount<64 then custom[packed]=entry;customCount+=1 end
- return entry
+ roles=entry(snap(Color3.fromHSV(h,math.min(1,s+.12),v*.7)),value,snap(value:Lerp(Palette.White,.45)),1)
+ if customCount<64 then custom[packed]=roles;customCount+=1 end
+ return roles
 end
 return table.freeze(Palette)

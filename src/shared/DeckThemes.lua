@@ -90,7 +90,9 @@ for id,plate in pairs(Plates)do
  -- bright PICO-8 jelly tiers keep their contrast on every plate.
  local white=Color3.new(1,1,1)
  theme.lcd={outside=inset:Lerp(Color3.new(0,0,0),.3),base=inset,dither=inset:Lerp(white,.035),
-  rail=inset:Lerp(white,.16),rim=inset:Lerp(white,.26),guide=inset:Lerp(white,.42)}
+  rail=inset:Lerp(white,.16),rim=inset:Lerp(white,.26),guide=inset:Lerp(white,.42),
+  -- The redesigned well lifts 7% toward the plate accent at the top (JellyLCD).
+  accent=theme.accent}
 end
 Themes.Plates=Plates
 -- Fixed Star price for a plate, or nil when it is not sold.

@@ -311,6 +311,23 @@ return function(client,parent)
     audit(shop.root,label.." shop",0,0,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
     local action=shop.action.AbsolutePosition-host.AbsolutePosition
     assert(action.X+shop.action.AbsoluteSize.X==size.X-off-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")
+    -- Deck style (redesign 0.1 / 4): shared header, 36 capsule and circle on one centre
+    -- line, 44 hit; the icon tab row at y 64 over the grid at y 112; no ghost button.
+    local top=shop.root.AbsolutePosition
+    local disc,wallet=shop.backArrow.disc,shop.wallet.root
+    assert(disc.AbsoluteSize.Y==36 and wallet.AbsoluteSize.Y==36 and shop.backArrow.root.AbsoluteSize==Vector2.new(44,44),label.." header heights")
+    assert(math.abs((disc.AbsolutePosition.Y+18)-(wallet.AbsolutePosition.Y+18))<=.5 and math.abs(disc.AbsolutePosition.Y+18-top.Y-34)<=.5,label.." header centre y 34")
+    assert(math.abs(disc.AbsolutePosition.X+36-(top.X+shop.root.AbsoluteSize.X-20))<=.5,label.." back right edge at W - 20")
+    assert(shop.title.AbsolutePosition.X+shop.title.AbsoluteSize.X<=wallet.AbsolutePosition.X-12+.5,label.." title clear of the capsule")
+    assert(shop.tabs.root.AbsolutePosition.Y-top.Y==64 and shop.grid.AbsolutePosition.Y-top.Y==112,label.." tab row over the grid")
+    for _,node in ipairs(shop.root:GetDescendants())do assert(not(node:IsA("TextButton")and node.Name=="Backgrounds"),label.." ghost Backgrounds button")end
+    -- The Backgrounds tab: same sheet, same pane slot, Use pinned bottom right.
+    shop:setTab(2);task.wait(.25) -- let the 90 ms tab settle finish
+    local backs=shop.backgrounds
+    assert(shop.tab==2 and backs.body.Visible and not shop.plates.Visible,label.." backgrounds tab")
+    audit(shop.root,label.." backgrounds",0,0,function(node)return node:IsDescendantOf(backs.grid)and(node.AbsolutePosition.Y<backs.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>backs.grid.AbsolutePosition.Y+backs.grid.AbsoluteSize.Y)end)
+    assert(backs.pane.AbsolutePosition==shop.action.Parent.AbsolutePosition and backs.grid.AbsolutePosition.Y-top.Y==112,label.." backgrounds share the pane and grid slots")
+    shop:close()
     host:Destroy();root:Destroy()
    end
   end)

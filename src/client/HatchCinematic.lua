@@ -95,7 +95,23 @@ function Cinematic:clearHero()
  if self.heroViewport then self.heroViewport:Destroy();self.heroViewport=nil end
  self.heroCamera,self.heroPoints,self.envelopeFrame,self.envelopeSize,self.sweptPoints,self.outlineCenter=nil,nil,nil,nil,nil,nil
 end
+-- Reveal stage hand-off (UI-SPEC-REDESIGN-CELEBRATIONS 1.8). The egg beats stay
+-- here; once the shell splits (or the intro is skipped or already seen) a host
+-- that set `stageHandoff` shows the full-screen RevealStage over this scene.
+-- The card scene keeps its clock, receipt and completion rules unchanged; only
+-- its hero stops drawing under the stage. `stageClear` runs on every cancel.
+function Cinematic:handoff(instant)
+ if self.handedOff or not self.stageHandoff or not self.result or self.kind~="companion"or self.hideLabels or self.itemBuilder then return false end
+ self.handedOff=true
+ local ok,shown=pcall(self.stageHandoff,{result=self.result,pet=self.pet,displayName=self.displayName,appearance=self.appearance,
+  instant=instant==true,fresh=self.freshReveal==true,rare=self.result.rare==true,kind=self.kind})
+ if not ok then warn("Reveal stage failed: "..tostring(shown))end
+ if ok and shown==true and self.heroHost then self.heroHost.Visible=false end
+ return ok and shown==true
+end
 function Cinematic:cancel()
+ local wasHanded=self.handedOff;self.handedOff=false
+ if wasHanded and self.stageClear then pcall(self.stageClear)end
  self.epoch+=1;self:disconnectClock();self:stopAudio();self.active=false;self.onComplete=nil;self.onPresented=nil;self.presented=false
  self:clearHero();if self.stage then self.stage:Destroy();self.stage=nil end;if self.resultRoot then self.resultRoot:Destroy();self.resultRoot=nil end
  self.result=nil;self.liveBits=0;self.frame.Visible=false;self.heroGraphic=nil
@@ -374,6 +390,7 @@ function Cinematic:finishStatic()
  if not self.resultRoot then return end
  self.active=false;self:disconnectClock();self.age=math.max(self.age,self.duration or 0);self:stopAudio()
  if self.heroVisual then self.heroVisual.reducedEffects=self:reduced();rest(self.heroVisual,self.pet)end
+ local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end
  self:paint();self.quietPainted=not self:owned()or self:reduced();self:complete()
 end
 function Cinematic:refreshOwner()
@@ -405,7 +422,9 @@ function Cinematic:step(dt)
  if self.active then
   local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
   for _,beat in ipairs(self.beats)do
-   if before<beat[1]and self.age>=beat[1]then self:cue(beat[2],beat[3],beat[4]);if self.epoch~=epoch then return end;if beat[1]==split and self.heroVisual then self.heroVisual:greet()end end
+   if before<beat[1]and self.age>=beat[1]then self:cue(beat[2],beat[3],beat[4]);if self.epoch~=epoch then return end;if beat[1]==split and self.heroVisual then self.heroVisual:greet()end
+    if beat[1]==split then self:handoff(false);if self.epoch~=epoch then return end end
+   end
   end
   if self.age>=self.duration then self:finishStatic();if self.epoch~=epoch then return end end
  end
@@ -422,8 +441,9 @@ function Cinematic:play(result,onComplete,options)
  self.kind=options.kind or "companion";self.recipeId=options.recipeId or "meadow";self.displayName=options.displayName;self.itemBuilder=options.resultBuilder;self.hideLabels=options.hideLabels==true
  self.receiptKey=self.kind..":"..tostring(result.id);self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets.byId.pip
  self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
+ self.freshReveal=not options.skipIntro and not seen[self.receiptKey]
  self.active=not options.skipIntro and not seen[self.receiptKey]and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
- if not self.active then self.age=self.duration;self:paint()end
+ if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()

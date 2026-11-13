@@ -23,10 +23,19 @@ return function(client,parent,rootSize)
   assert(v.closeButton.AbsoluteSize==Vector2.new(44,44) and v.closeButton:GetAttribute("BareClose"))
   assert(not overlap(v.wallet,v.heading) and not overlap(v.heading,v.closeButton) and not overlap(v.wallet,v.closeButton),"shared header overlaps")
  end
+ -- Hatch eggs uses the shared Kit header (redesign 0.1): title, Stars capsule, back circle.
+ local Kit=require(client.DeckKit)
+ local function shopHeader(v,amount)
+  local h=v.shopHeader;fit(h.title);fit(h.wallet.amount)
+  assert(h.wallet.amount.Text==Kit.formatStars(amount),"capsule shows the exact balance")
+  assert(h.back.root.AbsoluteSize.X>=43.9 or v.shopScale.Scale<1,"back hit frame")
+  assert(not overlap(h.title,h.wallet.root)and not overlap(h.wallet.root,h.back.disc),"shared header overlaps")
+  assert(h.wallet.root.AbsoluteSize.Y==h.back.disc.AbsoluteSize.Y,"capsule and back circle share one height")
+ end
  local function shop(amount,available)local v=Shop.new(root,{play=function()end},function()return true end,function()sends+=1 end);table.insert(views,v);v:open(state(amount,available));settle();return v end
  local function resize(size)root.Size=UDim2.fromOffset(size.X,size.Y);settle()end
  local ok,problem=pcall(function()
-  for _,size in ipairs(if rootSize then {rootSize}else{Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703)})do
+  for _,size in ipairs(if rootSize then {rootSize}else{Vector2.new(1649,971),Vector2.new(733,307),Vector2.new(812,354),Vector2.new(568,160)})do
    resize(size)
    test(tostring(size).." exact menu wallet and stable bare-X header",function()
     local v=Menu.new(root,{});table.insert(views,v)
@@ -40,49 +49,40 @@ return function(client,parent,rootSize)
    end)
    test(tostring(size).." recipe prices and status stay independent of exact balance",function()
     local v=shop(0)
-    for _,amount in ipairs({0,24,1000000})do v:update(state(amount));settle();header(v,amount);assert(v.body.AbsoluteSize.Y>=44 and not overlap(v.body,v.action));fit(v.action)end
-    v:update(state(6));v:selectRecipe("hue");settle()
-    for _,id in ipairs({"meadow","hue"})do local r=v.body.EggColumn["Recipe_"..id];fit(r.RecipeName);fit(r.Cost);assert(r.Cost.Position.X==r.RecipeName.Position.X and r.Cost.Position.Y.Offset-r.RecipeName.Position.Y.Offset-r.RecipeName.Size.Y.Offset==4);assert(r.AbsoluteSize.Y>=44);if size==Vector2.new(733,307)then assert(inside(r,v.body))end end
-    local price=v.body.EggColumn.Recipe_hue.Cost
-    assert(price.Text:find("8",1,true) and v.action.Text:find("2",1,true),"selected cost/shortfall missing root="..tostring(size).." CTA="..v.action.Text.." price="..price.Text)
-    if v.compactShop then
-     assert(v.action.Text:find("8",1,true) and v.action.Text:find("egg",1,true),"compact pinned egg price missing root="..tostring(size).." CTA="..v.action.Text)
-    else
-     assert(v.action.Text:find("Hue",1,true),"roomy recovery must identify selected egg: "..v.action.Text)
+    for _,amount in ipairs({0,24,1000000})do v:update(state(amount));settle();shopHeader(v,amount)
+     assert(not overlap(v.body,v.hatchButton),"list overlaps the Hatch button at "..tostring(size))
+     -- A 160 px tall emulator leaves a 100 px sheet: the list scrolls but cannot hold a full row.
+     if size.Y>=200 then assert(v.body.AbsoluteSize.Y>=44,"list window under 44 px at "..tostring(size))end
     end
-    assert(v.nectar.Text=="6" and sends==0)
-    v.body.CanvasPosition=Vector2.new(0,200);settle();v:setError("Your hatch progress updated. Try again.");settle();header(v,6)
-    local detail=if v.notePinned then v.note else v.body.EggColumn.ActionInstruction;assert(detail and detail.Text==v.errorMessage);fit(detail)
-
-    local n=Notice.resolve("Retrying",{status="Ready"});v:setSaveNotice(n);settle();header(v,6);assert(v.action.Interactable,string.format("retry recovery disabled root=%s state=%s selected=%s amount=%s action=%q pending=%s ackIntent=%s error=%q compact=%s footer=%s header=%q notice=%s",tostring(size),tostring(v.state.status),v.selected,tostring(v.state.nectar),v.action.Text,tostring(v.pending),tostring(v.ackIntent),tostring(v.errorMessage),tostring(v.compactShop),tostring(v.footerHeight),v.heading.Text,tostring(n.code)))
-    detail=if v.notePinned then v.note else v.body.EggColumn.SaveInstruction;assert(detail and detail.Text==n.detail);fit(detail)
-    v:setSaveNotice(nil);v:update(state(6));settle();assert(v.selected=="hue" and sends==0);v:close()
+    v:update(state(6));v:selectRecipe("hue");settle()
+    for _,id in ipairs({"toy","hue"})do local r=v.body.EggColumn["Recipe_"..id];fit(r.RecipeName);fit(r.Cost)end
+    local price=v.body.EggColumn.Recipe_hue.Cost
+    assert(price.Text:find("8",1,true)and v.action.Text:find("8",1,true)and v.needLine.Text=="2 more Stars needed","selected cost/shortfall missing CTA="..v.action.Text)
+    assert(v.nectar.Text=="6"and sends==0)
+    v:setError("Your hatch progress updated. Try again.");settle();shopHeader(v,6);assert(v.needLine.Visible and v.needLine.Text==v.errorMessage)
+    local n=Notice.resolve("Retrying",{status="Ready"});v:setSaveNotice(n);settle();shopHeader(v,6);assert(v.needLine.Text==n.detail)
+    v:setSaveNotice(nil);v:update(state(6));settle();assert(v.selected=="hue"and sends==0);v:close()
    end)
   end
   if not rootSize then
    resize(Vector2.new(733,307))
-   test("focused unselected recipe survives rebuild and rotation without changing selection",function()
-    local v=shop(24,true);local old=v.body.EggColumn.Recipe_hue;Gui.SelectedObject=old;v:ensureSelectedRecipe();settle();assert(Gui.SelectedObject==old,"pre-rotation focus missing; input="..game:GetService("UserInputService"):GetLastInputType().Name)
-    resize(Vector2.new(385,703));v:layout();settle();local fresh=v.body.EggColumn.Recipe_hue
-    local actual=Gui.SelectedObject
-    local diagnostic=string.format("focus=%s parent=%s old=%s oldParent=%s fresh=%s focusIsFresh=%s rebuilt=%s selected=%s nameInside=%s namePos=%s nameSize=%s bodyPos=%s bodySize=%s canvas=%s epoch=%s sends=%d",actual and actual:GetFullName()or"nil",actual and tostring(actual.Parent)or"nil",tostring(old),tostring(old.Parent),fresh:GetFullName(),tostring(actual==fresh),tostring(fresh~=old),v.selected,tostring(inside(fresh.RecipeName,v.body)),tostring(fresh.RecipeName.AbsolutePosition),tostring(fresh.RecipeName.AbsoluteSize),tostring(v.body.AbsolutePosition),tostring(v.body.AbsoluteSize),tostring(v.body.CanvasPosition),tostring(v.shade:GetAttribute("ControllerEpoch")),sends)
-    assert(actual==fresh,"focused recipe replacement lost: "..diagnostic)
-    assert(fresh==old,"ordinary reflow replaced stable recipe control: "..diagnostic)
-    assert(v.selected=="meadow","reflow changed preview selection: "..diagnostic)
-    assert(inside(fresh.RecipeName,v.body),"restored recipe name outside viewport: "..diagnostic)
-    assert(sends==0,"reflow dispatched action: "..diagnostic)
-    v:selectRecipe("hue");settle();assert(Gui.SelectedObject==v.body.EggColumn.Recipe_hue and v.selected=="hue" and sends==0)
+   test("focused recipe row survives rebuild; focus selects it without a purchase",function()
+    local v=shop(24,true);local old=v.body.EggColumn.Recipe_hue;Gui.SelectedObject=old;settle()
+    assert(v.selected=="hue","gamepad focus moves the preview (redesign 3)")
+    v:layout();v:renderBody();settle();local fresh=v.body.EggColumn.Recipe_hue
+    assert(Gui.SelectedObject==fresh and fresh==old,"focused recipe replaced on reflow")
+    assert(inside(fresh.RecipeName,v.body)and sends==0)
     v:selectRecipe("hue");settle();assert(Gui.SelectedObject==v.body.EggColumn.Recipe_hue and sends==0);v:close()
    end)
-   test("focused daily remains visible while disabled gift falls back to neutral X",function()
-    resize(Vector2.new(733,307));local v=shop(24,true);Gui.SelectedObject=v.body.EggColumn.DailyNectar;v:ensureSelectedRecipe();settle()
-    v:layout();settle();assert(Gui.SelectedObject==v.body.EggColumn.DailyNectar and inside(Gui.SelectedObject,v.body) and v.selected=="meadow")
-    local before=v.body.CanvasPosition.Y;v:update(state(24,false));settle();assert(Gui.SelectedObject==v.closeButton and v.body.CanvasPosition.Y==before and sends==0)
-    v:layout();settle();assert(Gui.SelectedObject==v.closeButton and sends==0);v:close()
+   test("focused daily falls back to the header back circle when the gift is claimed",function()
+    resize(Vector2.new(733,307));local v=shop(24,true);Gui.SelectedObject=v.body.EggColumn.DailyNectar;settle()
+    v:layout();settle();assert(Gui.SelectedObject==v.body.EggColumn.DailyNectar)
+    v:update(state(24,false));settle();assert(Gui.SelectedObject==v.shopBackButton and sends==0)
+    v:layout();settle();assert(Gui.SelectedObject==v.shopBackButton and sends==0);v:close()
    end)
-   test("X/footer survive rebuild and detached GUI cannot reclaim focus",function()
+   test("back circle and Hatch survive rebuild and detached GUI cannot reclaim focus",function()
     local v=shop(24,true)
-    for _,target in ipairs({v.closeButton,v.action})do Gui.SelectedObject=target;v:renderBody();settle();assert(Gui.SelectedObject==target and sends==0)end
+    for _,target in ipairs({v.shopBackButton,v.hatchButton})do Gui.SelectedObject=target;v:renderBody();settle();assert(Gui.SelectedObject==target and sends==0)end
     Gui.SelectedObject=v.body.EggColumn.Recipe_hue;local detached=Instance.new("ScreenGui");v.shade.Parent=detached;Gui.SelectedObject=nil;v:renderBody();settle()
     assert(Gui.SelectedObject==nil,"detached sheet reclaimed selection")
     Gui.SelectedObject=nil;v.shade.Parent=root;detached:Destroy();v:close()

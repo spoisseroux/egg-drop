@@ -68,13 +68,14 @@ function Surface:setBackground(background,replacements)
  for i,r in ipairs(self.rectangles)do r.c=replacements[r.c];self.static[i].BackgroundColor3=color(r.c)end
  self.background=background;return true
 end
--- Reuse the actual quest underlay. Existing outside/rail rectangles mask it;
--- existing opaque gel spans stay above it. No pool, span or canvas is added.
-function Surface:attachRegions(host,colors)
+-- Reuse the actual quest underlay. Existing foreground rectangles (the banks;
+-- `foreground` is a set of packed tones) mask it; existing opaque gel spans stay
+-- above it. No pool, span or canvas is added.
+function Surface:attachRegions(host,foreground)
     self.root.ZIndex=3
     for i,r in ipairs(self.rectangles)do
-        local foreground=r.c==colors.outside or r.c==colors.rail or r.c==colors.rim
-        self.static[i].ZIndex=if foreground then 4 else 2
+        local masks=foreground[r.c]==true
+        self.static[i].ZIndex=if masks then 4 else 2
     end
     host.Parent=self.root;host.ZIndex=3
     for _,node in ipairs(host:GetDescendants())do if node:IsA("GuiObject")then node.ZIndex=3 end end
@@ -150,7 +151,7 @@ function Surface:paint(pixels)
 			local c=self.colors[run]
 			if slot.c~=c then
 				local tint=self.colorCache[c]
-				if not tint then tint=color(c);if (self.colorCount or 0)<128 then self.colorCache[c]=tint;self.colorCount=(self.colorCount or 0)+1 end end
+				if not tint then tint=color(c);if (self.colorCount or 0)<256 then self.colorCache[c]=tint;self.colorCount=(self.colorCount or 0)+1 end end
 				node.BackgroundColor3=tint;slot.c=c;stats.propertyWrites+=1
 			end
 			local shown=w>0 and self.edgesY[y]>self.edgesY[y-1]

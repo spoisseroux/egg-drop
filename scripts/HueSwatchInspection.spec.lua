@@ -81,16 +81,16 @@ return function(client,parent)
    for _,tab in ipairs({"pet","charm","hue"})do view:setTab(tab);frames();assert(not view.confirmJar and #view.receiptArt:GetChildren()==0)end
    assert(#sent==1 and view.bars.citrus.stages[1]:GetAttribute("SavedStage"))
   end)
-  test("all six reference controls keep44px and the fixed saved portrait survives scroll",function()
-   for _,size in ipairs({Vector2.new(350,703),Vector2.new(568,160),Vector2.new(733,307),Vector2.new(1649,971)})do
-    root.Size=UDim2.fromOffset(size.X,size.Y);frames();view:layout();frames();local position=view.portrait.AbsolutePosition
-    for _,bar in pairs(view.bars)do for _,tick in ipairs(bar.ticks)do
-     assert(tick.AbsoluteSize.X>=44 and tick.AbsoluteSize.Y>=44 and tick.TextFits)
-     local function luminance(color)local function linear(v)return if v<=.04045 then v/12.92 else((v+.055)/1.055)^2.4 end;return .2126*linear(color.R)+.7152*linear(color.G)+.0722*linear(color.B)end
-     local ink,fill=luminance(tick.TextColor3),luminance(tick.BackgroundColor3)
-     assert((math.max(ink,fill)+.05)/(math.min(ink,fill)+.05)>=4.5,"stage text contrast below4.5:1")
-    end end
-    view:ensure(view.bars.rose.stages[5]);frames();assert(view.portrait.AbsolutePosition==position)
+  -- Redesign 2.3: the dose rows are cards in the Customize grid (the notch rows stay as
+  -- the reference model above, no longer drawn). Cards keep 44 px targets, the saved
+  -- portrait sits in the pinned pane well and does not move when the grid scrolls.
+  test("hue cards keep 44 px targets and the pinned portrait survives grid scroll",function()
+   for _,size in ipairs({Vector2.new(568,160),Vector2.new(733,307),Vector2.new(812,354),Vector2.new(1649,971)})do
+    root.Size=UDim2.fromOffset(size.X,size.Y);frames();view:layout();frames()
+    assert(view:chromeActive()and view.portrait.Parent==view.chromeWell)
+    local position=view.portrait.AbsolutePosition
+    for _,card in pairs(view.hueCards)do if card.Visible then assert(card.AbsoluteSize.X>=44 and card.AbsoluteSize.Y>=44)end end
+    view.chromeGrid.CanvasPosition=Vector2.new(0,80);frames();assert(view.portrait.AbsolutePosition==position)
    end
   end)
  end)

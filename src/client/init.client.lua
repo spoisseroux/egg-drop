@@ -44,7 +44,7 @@ local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
 local Stars=require(script.StarText)
 local clientUI={HueIntent=require(script.HueIntent),HueEggView=require(script.HueEggView),PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
-function clientUI.isHueOpen()return clientUI.hueView~=nil and clientUI.hueView:isOpen()end
+function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())end
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -184,6 +184,8 @@ for _,side in ipairs({"Min","Max"})do
 end
 Art.lcdCorners(overlay,bezel.BackgroundColor3)
 local lcd = JellyLCD.new(overlay)
+-- The chosen deck background, drawn in the board well at 6% (UI-SPEC-REDESIGN-MENUS 5).
+Art.boardPattern(overlay)
 local lcdStep = 1 / 30
 local lcdElapsed = lcdStep
 local pixelMerges = {}
@@ -400,24 +402,20 @@ Art.corner(goalEgg, 20); Art.stroke(goalEgg, Art.Silver, .3)
 local eggGoalText = Art.text(eggGoal, "Caption", "MEADOW EGG", UDim2.fromOffset(40, 3), UDim2.new(1, -42, 0, 42), Art.Ink, 12)
 eggGoalText.TextXAlignment = Enum.TextXAlignment.Left
 Art.fitText(eggGoalText, 13, 9, 0, true)
-local overflowLine = make("Frame", "OverflowLine", {
-	BackgroundColor3 = clientUI.Pico8.Danger, BackgroundTransparency = 0.45,
-	BorderSizePixel = 0, ZIndex = 5,
-}, overlay)
-local pressureTrack = Art.frame(overlay, "DangerTrack", Art.Ink, UDim2.new(1, -7, 0, 4), UDim2.new(0, 4, .22, 0), 7)
-local pressureFill = Art.frame(pressureTrack, "Fill", clientUI.Pico8.Danger, UDim2.new(0, 0, 1, 0), UDim2.fromScale(1, 0), 8)
-pressureFill.AnchorPoint = Vector2.new(0, 1)
-pressureTrack.Visible = false
--- Dark-well board (UI-SPEC 5.1): the warning is a danger-red word on the well.
-local pressureText = Art.text(overlay, "DangerText", "CLEAR THE LINE", UDim2.new(0, 3, 0, 3), UDim2.new(1, -14, 0, 16), Color3.fromHex("#FF5A6E"), 11)
-pressureText.ZIndex=8
-pressureText.TextWrapped=true
-pressureText.Visible = false
-local targetRing = make("Frame", "MatchHint", {
-	AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, ZIndex = 4,
-}, overlay)
-make("UICorner", "Round", { CornerRadius = UDim.new(0.5, 0) }, targetRing)
-make("UIStroke", "Outline", { Color = Palette.Amber, Thickness = 2, Transparency = 0.25 }, targetRing)
+-- Round danger state (UI-SPEC-REDESIGN-MENUS 6.3): calm / near / over fill line,
+-- haze and chip in BoardDanger; one entry cue and a cleared chime, no blip.
+clientUI.danger=require(script.BoardDanger).new(overlay,{audio=audio})
+-- Match hint without a ring (6.2): the LCD gives the matching egg a stronger
+-- bloom; two small white sparkles twinkle beside it (steady under Reduced Motion).
+clientUI.matchSparkles={}
+for index=1,2 do
+	local sparkle=make("Frame","MatchSparkle"..index,{AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=1,Size=UDim2.fromOffset(9,9),Visible=false,ZIndex=7},overlay)
+	local rays={}
+	for _,size in ipairs({UDim2.new(1,0,0,2),UDim2.new(0,2,1,0)})do
+		table.insert(rays,make("Frame","Ray",{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=size,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7},sparkle))
+	end
+	clientUI.matchSparkles[index]={node=sparkle,rays=rays}
+end
 local function utilityButton(name, titleText)
 	local button = label("TextButton", name, "", clientUI.deviceRoot)
 	local well = Art.frame(button, "KeyWell", Art.Ink, UDim2.fromOffset(4, 5), UDim2.new(1, -8, 1, -7))
@@ -663,6 +661,7 @@ board:GetAttributeChangedSignal("CompanionId"):Connect(function()
 		audio:play(pet.cue)
 	end
  if clientUI.hueView then clientUI.hueView:syncActive();if clientUI.hueView:isOpen()then clientUI.hueView:refresh()end end
+ if clientUI.syncHub then clientUI.syncHub(nurseryState)end
 end)
 roomButton.Activated:Connect(function()
 	cancelHatchNavigation()
@@ -910,7 +909,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   local actor=roomView.care and roomView.care:actor()
   petId=petId or(clientUI.hueView and clientUI.hueView.petId)
   -- Opened from the cradle with free hands: edit the pet without docking it.
-  if clientUI.hueReturn=="companions"and roomView.mode=="Room"and not roomView.busy and petId~=nil then return true end
+  if(clientUI.hueReturn=="companions"or clientUI.hueReturn=="hub")and roomView.mode=="Room"and not roomView.busy and petId~=nil then return true end
   return roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy and actor~=nil and actor.care~=nil and actor.care.state=="Docked"and actor.petId==petId
  end,
  appearance=nurseryView.appearanceFor,
@@ -951,6 +950,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   return {petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq}
  end,
  earn=function()if hatchNavigation then hatchNavigation:play()end end,
+ petsSelector=function(assign)return clientUI.openHub and clientUI.openHub({page="pets",assign=assign})or false end,
  pendingHatch=function()if openNursery then openNursery()end end,
  closed=function(reason)
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
@@ -960,11 +960,12 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   end
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
    if back=="eggs"and openNursery then openNursery()end
+   if back=="hub"and clientUI.openHub then clientUI.openHub()end
   end
  end})
 clientUI.openHue=function(page,petId,back)
  local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
- if not purchasePage and back~="companions"then
+ if not purchasePage and back~="companions"and back~="hub"then
   local actor=roomView.care and roomView.care:actor()
   if back~="machine"or not actor or not actor.care or actor.care.state~="Docked"or actor.petId~=petId then return false end
  end
@@ -980,6 +981,7 @@ roomView.care.revision=function()return nurseryState and nurseryState.revision e
 roomView.care.openFree=function()
  local petId=board:GetAttribute("CompanionId")
  if not petId or not nurseryState or not EggCatalog.isOwned(nurseryState.inventoryMask or 0,petId)then return false end
+ if clientUI.openHub then return clientUI.openHub()end
  return clientUI.openHue("palette",petId,"companions")
 end
 roomView.care.isMachineOpen=function(claimId)return clientUI.hueReturn=="machine"and clientUI.hueView.shade.Visible and clientUI.hueView.machine and clientUI.hueView.machine.claimId==claimId end
@@ -1065,6 +1067,72 @@ do
   Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,
   Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace)
  gui.Destroying:Connect(function()wearableResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropWardrobe");clientUI.wardrobe:destroy();wardrobeGui:Destroy()end)
+end
+-- Companions hub (redesign menus 1): its own ScreenGui under the Wardrobe (12), so the
+-- Wardrobe opens over it and Back returns to it. Customize closes the hub and returns
+-- to it on Back. Receipts open it on the Pets selector in assign mode.
+do
+ local CompanionsHub=require(script.CompanionsHub)
+ local Kit=require(script.DeckKit)
+ local hubGui=make("ScreenGui","EggDropCompanions",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=11,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local host=make("Frame","CompanionsHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},hubGui)
+ local function context(state)return{wallet=state and state.nectar or 0,state=state or {},activeId=board:GetAttribute("CompanionId")}end
+ local function syncInsets()
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
+  if hubGui.ScreenInsets~=wanted then hubGui.ScreenInsets=wanted end
+ end
+ clientUI.hub=CompanionsHub.new(host,{
+  appearance=function(petId)return nurseryView.appearanceFor(petId)end,
+  open=function(rowId,petId)
+   petId=petId or board:GetAttribute("CompanionId")
+   if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
+   if rowId=="customize"then
+    clientUI.hub:close("customize")
+    if clientUI.openHue("palette",petId,"hub")then return true end
+    clientUI.openHub();return false
+   end
+   return false
+  end,
+  follow=function(petId)request:FireServer("companion",petId);return true end})
+ clientUI.openHub=function(options)
+  if not nurseryState or roomView.busy then return false end
+  options=options or {}
+  if not options.assign and(nurseryState.lastHatch)then if openNursery then openNursery()end;return false end
+  if not options.assign then cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")end
+  if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+  syncInsets()
+  return clientUI.hub:open(context(nurseryState),options)
+ end
+ clientUI.syncHub=function(state)if clientUI.hub:isOpen()then clientUI.hub:setContext(context(state))end end
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
+ local keys={Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,Enum.KeyCode.W,Enum.KeyCode.S,
+  Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.X,Enum.KeyCode.ButtonX,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,
+  Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Escape}
+ -- Below the Wardrobe (High+800), above the sheet handoff and the game controls.
+ ContextActionService:BindActionAtPriority("EggDropCompanions",function(_,state,input)
+  if UserInputService:GetFocusedTextBox()or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+  if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return Enum.ContextActionResult.Pass end
+  local key=input.KeyCode
+  if clientUI.hub:isOpen()then
+   if key==Enum.KeyCode.Q or key==Enum.KeyCode.E or key==Enum.KeyCode.X or key==Enum.KeyCode.ButtonX or key==Enum.KeyCode.ButtonL1 or key==Enum.KeyCode.ButtonR1 then return Enum.ContextActionResult.Sink end
+   if state==Enum.UserInputState.Begin then clientUI.hub:input(key)end
+   return Enum.ContextActionResult.Sink
+  end
+  local view=clientUI.hueView
+  if view and view:chromeActive()then
+   if key==Enum.KeyCode.Escape then return Enum.ContextActionResult.Pass end
+   if state==Enum.UserInputState.Begin then view:chromeInput(key)end
+   return Enum.ContextActionResult.Sink
+  end
+  -- Hatch eggs list: keyboard W / S / Up / Down move the selection, Enter hatches.
+  if nurseryView:isOpen()and not(nurseryView.state and nurseryView.state.lastHatch)and not nurseryView:isStoreOpen()then
+   local delta=if key==Enum.KeyCode.Up or key==Enum.KeyCode.W then -1 elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S then 1 else 0
+   if delta~=0 then if state==Enum.UserInputState.Begin then nurseryView:moveRecipe(delta)end;return Enum.ContextActionResult.Sink end
+   if key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter then if state==Enum.UserInputState.Begin then nurseryView:actPrimary()end;return Enum.ContextActionResult.Sink end
+  end
+  return Enum.ContextActionResult.Pass
+ end,false,Enum.ContextActionPriority.High.Value+790,table.unpack(keys))
+ gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropCompanions");clientUI.hub:destroy();hubGui:Destroy()end)
 end
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
@@ -1154,6 +1222,7 @@ local function refreshNursery(state)
     if clientUI.onQuests then clientUI.onQuests(state)end
     if picker then picker:setShopState(state.nectar,state.faceplates)end
     if clientUI.syncWardrobe then clientUI.syncWardrobe(state)end
+    if clientUI.syncHub then clientUI.syncHub(state)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
@@ -1441,8 +1510,7 @@ local function drawAim()
 		end
 	end
 	local overflow = project(Vector2.new(0, board:GetAttribute("DangerY") or Config.OverflowY))
-	overflowLine.Position = UDim2.fromOffset(scale * 0.4, overflow.Y)
-	overflowLine.Size = UDim2.fromOffset(scale * Config.Width, 2)
+	clientUI.danger:place(scale * 0.4, scale * Config.Width, overflow.Y)
 end
 
 local lastTrialMask = board:GetAttribute("TrialMask") or 0
@@ -1543,31 +1611,60 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local pending=field and status~="Refused"and(status~="Saved"or runReceipt==nil)
  local rows,reward={},runReceipt
  local heat,heatLabel=clientUI.heatInfo(reward and reward.heat or board:GetAttribute("Heat"))
+ local Payout=require(ReplicatedStorage.Shared.HeatPayout)
  if reward then
-  -- Payout rows: the round amount (with the tidy +2), the difficulty
-  -- multiplier's share, then any pass or Supporter Stars (server receipt).
+  -- Payout rows (celebrations 2.6): "Round win" is a plain win at this
+  -- difficulty, "Tidy stack" the tidy share on top, then 2x Stars and
+  -- Supporter. Same total as the receipt and never a minus row.
   local base=reward.base or 0
-  table.insert(rows,{name=if base>=8 then "Round win + tidy stack"else "Round win",amount=base})
   local roundStars=reward.roundStars or base
-  if roundStars~=base then table.insert(rows,{name=heat.name.." "..heatLabel,amount=roundStars-base,signed=true})end
-  if(reward.bonus or 0)>0 then table.insert(rows,{name="Pass bonus",amount=reward.bonus})end
+  local ok,win=pcall(Payout.roundStars,math.min(base,Payout.Win),heat.key)
+  win=if ok then math.min(win,roundStars)else roundStars
+  table.insert(rows,{name="Round win",amount=win})
+  if roundStars>win then table.insert(rows,{name="Tidy stack",amount=roundStars-win,signed=true})end
+  local doubled=(reward.total or roundStars)-roundStars-(reward.bonus or 0)
+  if doubled>0 then table.insert(rows,{name="2× Stars",amount=doubled,signed=true})end
+  if(reward.bonus or 0)>0 then table.insert(rows,{name="Supporter",amount=reward.bonus,signed=true})end
  end
+ -- The quest this round moved (come-back strip), first daily then weekly.
+ local quest
+ for _,moved in ipairs(reward and reward.quests or {})do
+  if not quest or(quest.scope=="weekly"and moved.scope~="weekly")then
+   quest={scope=moved.scope or "daily",title=clientUI.questTitle(moved.id)or moved.id,count=moved.count or 0,target=moved.target or 1,moved=1,done=moved.done==true}
+  end
+ end
+ -- Cheapest egg on sale (Toy Egg until every toy is owned, then Hue Egg).
+ local egg={name="Toy Egg",cost=require(ReplicatedStorage.Shared.ToyCatalog).Cost}
+ local okToys,toysLeft=pcall(require(ReplicatedStorage.Shared.ToyCatalog).remaining,nurseryState and nurseryState.toyUnlocks)
+ if okToys and type(toysLeft)=="table"and #toysLeft==0 then egg={name="Hue Egg",cost=require(ReplicatedStorage.Shared.HueCatalog).Cost}end
+ -- Difficulty nudge: the next step up after a win, this difficulty after a miss.
+ local nudge
+ pcall(function()
+  local Config=require(ReplicatedStorage.Shared.BoardConfig)
+  if success==true then
+   local up=({easy="medium",medium="hard"})[heat.key]
+   if up then local low,high=Payout.range(up);nudge=Config.Heat[up].name.." pays "..low.." to "..high end
+  else
+   local low,high=Payout.range(heat.key);nudge="A win on "..heat.name.." pays "..low.." to "..high
+  end
+ end)
  local strip={}
  for _,moved in ipairs(reward and reward.quests or {})do
   if #strip>=2 then break end
   table.insert(strip,(if moved.scope=="weekly"then "Weekly: "else "")..(clientUI.questTitle(moved.id)or moved.id).." "..moved.count.."/"..moved.target..(if moved.done then "  · CLAIM IN LOG"else ""))
  end
  local balance=nurseryState and nurseryState.nectar or 0
- local recipe=EggCatalog.ById[nurseryView.selected]or EggCatalog.ById.meadow
  return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
   title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,multiplierLine=heat.name.." "..heatLabel,
   pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
   loss=not pending and(reward==nil or(reward.total or 0)==0),goals=clientUI.deckGoals(objective,stage or 0),
   score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
   strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
-  stripRight=if recipe and balance>=recipe.cost then "You can hatch an egg"else clientUI.weeklyLine(),
-  canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=recipe~=nil and balance>=recipe.cost,
+  stripRight=if balance>=egg.cost then "You can hatch an egg"else clientUI.weeklyLine(),
+  canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=owned>0 and balance>=egg.cost,
   questDone=clientUI.finishedQuest(reward),
+  tidy=success==true and reward~=nil and(reward.base or 0)>=Payout.TidyWin,eggName=egg.name,eggCost=egg.cost,
+  quest=quest,nudge=nudge,petName=(Pets.byId.pip and Pets.byId.pip.name)or "Bear",
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
 -- The view's back arrow: shown on every deck screen, hidden under sheets and the
@@ -1841,10 +1938,6 @@ layout = function()
 	backdrop:SetAttribute("SideGoalLayout",true)
 	local function place(node,r)node.Position,node.Size=UDim2.fromOffset(r.x,r.y),UDim2.fromOffset(r.w,r.h)end
 	place(shell,l.shell);place(bezel,l.bezel);place(viewport,l.tray);overlay.Position,overlay.Size=viewport.Position,viewport.Size
-	-- Native preferred text may exceed the authored 16px warning well. Measure
-	-- on layout/preferences only, retaining font11 and its original Y=3.
-	local warningBounds=TextService:GetTextSize(pressureText.Text,pressureText.TextSize,pressureText.Font,Vector2.new(math.max(1,math.floor(l.tray.w)-14),10000))
-	pressureText.Size=UDim2.new(1,-14,0,math.max(16,math.ceil(warningBounds.Y)+2))
 	local showEtching=not l.lateral or (l.left.w>=160 and Art.textWidth(title)+40<=l.left.w)
 	for _,name in ipairs({"SproutLeaf","DropMark","ModelStamp"}) do
 		local etching=shell:FindFirstChild(name)
@@ -2072,23 +2165,6 @@ rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
 })
 rendererPresentation.roundEnd:observe()
 
--- Overflow danger: the line pulses PICO-8 red while armed (solid under Reduced
--- Effects) and the warning blip repeats no faster than every 0.65 s. The cue only
--- plays on a presented board, never under a menu, modal or hidden deck.
-clientUI.overflowArmed,clientUI.overflowNext=false,0
-function clientUI.overflowLineTransparency(pressure,now,reduced)
- if pressure<=0 then return .55 end
- if reduced then return .05 end
- return .05+.3*(.5+.5*math.cos(now*math.pi*5))
-end
-function clientUI.overflowCue(pressure,now,audible)
- local armed=pressure>0
- if not armed then clientUI.overflowArmed=false;return end
- if not clientUI.overflowArmed then clientUI.overflowArmed=true;clientUI.overflowNext=0 end
- if audible and now>=clientUI.overflowNext then
-  if audio:play("overflow",1,.5)then clientUI.overflowNext=now+.65 end
- end
-end
 local function requestRetry()
 	cancelHatchNavigation()
 	local sequence=RunReceipt.replaySequence(board:GetAttribute("RunSequence"),board:GetAttribute("RewardStatus"),(board:GetAttribute("OwnedPets")or 0)==0)
@@ -2139,6 +2215,7 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		local owner
 		-- The Wardrobe owns its own focus (ContextAction "EggDropWardrobe").
 		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
+		if clientUI.hub and clientUI.hub:isOpen()then return{blocked=true}end
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
         elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
 		elseif isPickerOpen()then owner=picker:getControllerFocus()
@@ -2192,8 +2269,9 @@ ContextActionService:BindActionAtPriority("EggDropResults", function(_, state, i
 end, false, priority + 1, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.A, Enum.KeyCode.D, Enum.KeyCode.Up, Enum.KeyCode.Down,
 	Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown, Enum.KeyCode.Space, Enum.KeyCode.Return,
 	Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
--- Faceplate shop (UI-SPEC 5.5): it owns focus while open. D-pad / arrows / WASD
--- browse the grid, A / Enter / Space buy or equip, B / Backspace back out.
+-- Deck style (redesign 4): Faceplates and Backgrounds own focus while open. D-pad /
+-- arrows / WASD browse the grid, Q / E and LB / RB switch tabs, A / Enter / Space buy,
+-- equip or use, B / Backspace back out.
 ContextActionService:BindActionAtPriority("EggDropFaceplateShop", function(_, state, input)
 	if not picker:shopOpen() or UserInputService:GetFocusedTextBox() or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
 	if state ~= Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
@@ -2202,11 +2280,14 @@ ContextActionService:BindActionAtPriority("EggDropFaceplateShop", function(_, st
 	elseif key==Enum.KeyCode.Right or key==Enum.KeyCode.D or key==Enum.KeyCode.DPadRight then shop:move(1,0)
 	elseif key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then shop:move(0,-1)
 	elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then shop:move(0,1)
+	elseif key==Enum.KeyCode.Q or key==Enum.KeyCode.ButtonL1 then picker:shiftStyleTab(-1)
+	elseif key==Enum.KeyCode.E or key==Enum.KeyCode.ButtonR1 then picker:shiftStyleTab(1)
 	elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then picker:back()
 	else shop:act(false)end
 	return Enum.ContextActionResult.Sink
 end, false, priority + 600, Enum.KeyCode.Left, Enum.KeyCode.Right, Enum.KeyCode.Up, Enum.KeyCode.Down, Enum.KeyCode.A, Enum.KeyCode.D,
-	Enum.KeyCode.W, Enum.KeyCode.S, Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown,
+	Enum.KeyCode.W, Enum.KeyCode.S, Enum.KeyCode.Q, Enum.KeyCode.E, Enum.KeyCode.ButtonL1, Enum.KeyCode.ButtonR1,
+	Enum.KeyCode.DPadLeft, Enum.KeyCode.DPadRight, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown,
 	Enum.KeyCode.Space, Enum.KeyCode.Return, Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
 picker.onBuy=function(order)
 	nurseryRequest:FireServer("faceplateBuy",{id=order.id,plateId=order.plateId,price=order.price},nurseryState and nurseryState.revision or 0)
@@ -2224,6 +2305,11 @@ gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextA
 -- Replay keeps the difficulty (no picker); Up on Replay picks again.
 recap:on("replay",function()clientUI.keepHeatAfter=board:GetAttribute("RunSequence");requestRetry()end)
 recap:on("leave",function()clientUI.leaveDeck()end)
+-- Results Hatch button (celebrations 2.6): the same garden route as Menu > Eggs.
+recap:on("hatch",function()
+	if recap.data and recap.data.pending then return end
+	if visitEggs()then recap:hide();clientUI.accepted("confirm")end
+end)
 -- Compact results: change difficulty (the touch route for "Up on Replay") and the quest shortcut.
 recap:on("picker",function()
 	if recap.data and recap.data.pending then return end
@@ -2501,7 +2587,8 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 		return Enum.ContextActionResult.Sink
 	end
 	if nurseryView:isOpen() then
-		if state == Enum.UserInputState.Begin then nurseryView:close() end
+		-- On the hatch reveal stage, B / Esc is "Play again" (celebrations 1.6).
+		if state == Enum.UserInputState.Begin and not nurseryView:revealBack() then nurseryView:close() end
 		return Enum.ContextActionResult.Sink
 	end
 	if journal.shade.Visible then
@@ -2618,10 +2705,15 @@ local function addView(source)
 		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width})
 	local mark = label("TextLabel", "Mark", Config.Tiers[tier].mark, overlay)
 	mark.AnchorPoint = Vector2.new(0.5, 0.5)
-	mark.TextColor3 = clientUI.JellyPalette.Ink
+	-- White ExtraBold with a deep shadow (UI-SPEC-REDESIGN-MENUS 6.2).
+	local roles = clientUI.JellyPalette.byTier[tier]
+	mark.Font = Sprite.MarkFont
+	mark.TextColor3 = roles.mark
+	mark.TextStrokeColor3 = roles.markShadow
+	mark.TextStrokeTransparency = 0.35
 	mark.Size = Sprite.markSize(mark.Text)
 	mark.ZIndex = 7
-	eggViews[source] = { gel = gel, mark = mark, id = id }
+	eggViews[source] = { gel = gel, mark = mark, id = id, radius = Config.Tiers[tier].radius }
 	viewsById[id] = gel
 end
 
@@ -2855,10 +2947,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		return
 	end
 	local pressure = board:GetAttribute("OverflowPressure") or 0
-	pressureTrack.Visible = pressure > 0
-	pressureText.Visible = pressure > 0
-	pressureFill.Size = UDim2.fromScale(1, math.clamp(pressure, 0, 1))
-	overflowLine.BackgroundTransparency = clientUI.overflowLineTransparency(pressure, now, reduced)
+	local graceLeft = board:GetAttribute("OverflowGraceLeft") or 0
 	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
 		mascotMood = mood
@@ -2870,7 +2959,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
  rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
  if audio.deviceActive==false then rendererPresentation.jolt:reset()else rendererPresentation.jolt:update(now)end
- clientUI.overflowCue(pressure, now, presented)
+ -- The danger cues only play on a presented board, never under a menu, modal or hidden deck.
+ clientUI.danger:update(pressure, graceLeft, now, reduced, presented, board:GetAttribute("RoundOver") == true)
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
  rendererPresentation.fx:update(now)
 	if not rendererPresentation.visible then
@@ -2880,8 +2970,9 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		lcdElapsed=lcdStep
 	end
 	rendererPresentation.visible=true
-	local closest
+	local closest, closestId
 	local distance = math.huge
+	local markScale = viewport.AbsoluteSize.X / (Config.Width + 0.8)
 	local tier = nextTier()
 	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and canPlay()
 	local flightTarget = Config.flightPoint(aim,.8)
@@ -2890,6 +2981,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
     local zoneBackend=if useLCD then lcd.backend else "sprite"
     if rendererPresentation.zoneBackend~=zoneBackend then
         rendererPresentation.zoneBackend=zoneBackend
+        -- Global ZIndex: above the well, below the gel (span rows 4, image label 3, sprites 3).
+        Art.setBoardPatternDepth(overlay,if zoneBackend=="span"then 3 elseif zoneBackend=="image"then 4 else 2)
         if useLCD and lcd.surface then lcd:attachRegions(zoneLayer)
         else
             zoneLayer.Parent=overlay;zoneLayer.ZIndex=2
@@ -2924,6 +3017,9 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		local point = project(Vector2.new(position.X, position.Y))
 		if drawLCD or not useLCD then
 			view.mark.Position = UDim2.fromOffset(point.X, point.Y)
+			-- Tier marks only at radius >= 12 px; below that the motif and colour carry the tier.
+			local markShown = view.radius * markScale >= clientUI.JellyPalette.MarkMinRadius
+			if view.markShown ~= markShown then view.markShown = markShown; view.mark.Visible = markShown end
 		end
 		if drawLCD and widthScale then
 			local center = pixelPoint(position)
@@ -2936,7 +3032,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			end
 			if not inMerge then
 				local radius = source.Size.X / 2 * JellyLCD.Width / (Config.Width + 0.8)
-				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple)
+				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple, view.id == rendererPresentation.matchId)
 			end
 		end
 		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
@@ -2944,6 +3040,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			if delta < distance then
 				distance = delta
 				closest = point
+				closestId = view.id
 			end
 		end
 	end
@@ -2969,13 +3066,18 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	sprites.Visible = not pixelVisible
 	track.Visible = not pixelVisible
  for _,dot in ipairs(aimDots)do dot.Visible=not pixelVisible end
-	overflowLine.Visible = true
 	ghost.BackgroundTransparency = if pixelVisible then 1 else 0
-	targetRing.Visible = closest ~= nil
-	if closest then
-		local diameter = Config.Tiers[tier].radius * 2 * viewport.AbsoluteSize.X / (Config.Width + 0.8) + 7
-		targetRing.Position = UDim2.fromOffset(closest.X, closest.Y)
-		targetRing.Size = UDim2.fromOffset(diameter, diameter)
+	rendererPresentation.matchId = closestId
+	for index, hint in ipairs(clientUI.matchSparkles) do
+		local sparkle = hint.node
+		if sparkle.Visible ~= (closest ~= nil) then sparkle.Visible = closest ~= nil end
+		if closest then
+			local r = Config.Tiers[tier].radius * markScale
+			sparkle.Position = UDim2.fromOffset(closest.X + (if index == 1 then r * 0.85 else -r * 0.95), closest.Y + (if index == 1 then -r * 0.75 else r * 0.2))
+			-- 1.2 Hz twinkle, opposite phases; steady under Reduced Motion.
+			local twinkle = if reduced then 0.15 else 0.15 + 0.7 * (0.5 + 0.5 * math.sin(now * math.pi * 2.4 + index * math.pi))
+			for _, ray in ipairs(hint.rays) do ray.BackgroundTransparency = twinkle end
+		end
 	end
 end)
 gui.Destroying:Connect(function()

@@ -6,6 +6,8 @@ local Sprite={};Sprite.__index=Sprite
 Sprite.GridWidth=64
 -- Separate upright native glyphs keep the authored font and center. The small
 -- bounded catalog is measured only on creation or a preference invalidation.
+-- Marks are white ExtraBold over the egg (UI-SPEC-REDESIGN-MENUS 6.2).
+Sprite.MarkFont=Enum.Font.BuilderSansExtraBold
 local markSizes={}
 function Sprite.invalidateMarkSizes()table.clear(markSizes)end
 function Sprite.markSize(mark)
@@ -14,7 +16,7 @@ function Sprite.markSize(mark)
 	if not byMark then byMark={};markSizes[preference]=byMark end
 	local cached=byMark[mark]
 	if cached then return cached end
-	local bounds=game:GetService("TextService"):GetTextSize(mark,15,Enum.Font.GothamMedium,Vector2.new(10000,10000))
+	local bounds=game:GetService("TextService"):GetTextSize(mark,15,Sprite.MarkFont,Vector2.new(10000,10000))
 	cached=UDim2.fromOffset(math.max(30,math.ceil(bounds.X)+2),math.max(22,math.ceil(bounds.Y)+2))
 	byMark[mark]=cached;return cached
 end
@@ -38,7 +40,9 @@ local function place(slot,x,y,w,h,cellX,cellY)
 end
 function Sprite.new(parent,source,options)
 	options=options or {}
-	local palette=JellyPalette.resolve(source.Color);local color,deep=palette.body,palette.rim
+	-- No outline (UI-SPEC-REDESIGN-MENUS 6.1): the silhouette rows are the body
+	-- colour on top and the deep shade along the lower third.
+	local palette=JellyPalette.resolve(source.Color);local color,deep=palette.body,palette.deep
 	local body=frame(parent,source.Name,deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
 	local gridWidth=options.gridWidth or Sprite.GridWidth
 	local gridHeight=math.round(gridWidth*(Config.Height+.8)/(Config.Width+.8))
@@ -47,12 +51,12 @@ function Sprite.new(parent,source,options)
 	local self=setmetatable({body=body,radius=radius,position=source.Position,axis=Vector2.yAxis,strength=.16,age=0,
 		phase=source:GetAttribute("EggId")*.73,gridWidth=gridWidth,gridHeight=gridHeight,bandCount=bands,rims={},fills={},fillBounds={}},Sprite)
 	for index=1,bands do
-		self.rims[index]=frame(body,"Rim"..index,deep)
+		self.rims[index]=frame(body,"Rim"..index,if index>bands*.65 then deep else color)
 		local upper=index<=bands*.45
 		local fill=frame(body,"Gel"..index,if index>bands*.65 then palette.lower else color)
 		self.fills[index]=fill
 		local gradient=Instance.new("UIGradient")
-		if upper then fill.node.BackgroundColor3=Color3.new(1,1,1);gradient.Color=ColorSequence.new(palette.upper,palette.body)end
+		if upper then fill.node.BackgroundColor3=Color3.new(1,1,1);gradient.Color=ColorSequence.new(palette.light,palette.body)end
 		gradient.Parent=fill.node
 		self.fillBounds[index]={}
 	end

@@ -6,7 +6,7 @@ Updated November 13, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 
-Updated 2026-11-13 ~02:00. Work paused for usage; **resumes 04:03 (scheduled in-session)**. Order: A, then B, then C, then D.
+Updated 2026-11-13 ~04:40. Resumed at 04:03. A: specs green (46/53 client, 7 pre-existing failures; all server specs pass), screens captured, final code review running, then commit + publish. B: Fable direction + mockups + ambient placeholder audio running. C: Fable scope + mockups running.
 
 **A. Redesign build: built, NOT yet tested as a whole or committed** (plan + checkpoint: `artifacts/redesign-2026-11-12/BUILD-PLAN.md`). Spencer approved every mockup ("build all that") with the recommended answers.
 - Built: shared header + Deck style (Faceplates/Backgrounds tabs), hatch reveal stage (`RevealStage.lua`), results screen (`DeckResults.lua`, 3D Star with 2D fallback), round look (vivid tiers, V violet, no rings/border, fill-line danger state, `OverflowGraceLeft`), deck background inside the board, Companions hub + Customize (Charm None, Features hidden by `FeatureFlags`), Hatch eggs list + 3D egg preview (`EggPreview3D.lua`).

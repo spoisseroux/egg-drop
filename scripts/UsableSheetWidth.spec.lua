@@ -46,25 +46,27 @@ return function(client,parent)
     for _,e in ipairs(entries)do contained(e.button,hue.body);assert(e.button.AbsoluteSize.X>=44 and e.button.AbsoluteSize.Y>=44);fit(e.caption);fit(e.active)end
     hue:layout();settle();contained(first,hue.body);assert(first.AbsolutePosition.X==hue.body.AbsolutePosition.X+rect.x,"reflow accumulated origin")
    end)
-   test(tostring(size).." hue stock and confirmation remain inside real scrolling window",function()
-    hue:setTab("hue");settle();hue:layout();settle();checkChildren(hue.body)
+   -- Redesign 2 / 3: Customize hue cards and the Hatch eggs rows stay inside their scroll windows.
+   local function inside(n,scroll)
+    local x=n.AbsolutePosition.X-scroll.AbsolutePosition.X
+    assert(x>=-.1 and x+n.AbsoluteSize.X<=scroll.AbsoluteWindowSize.X+.1,n:GetFullName().." outside its scroll window")
+   end
+   test(tostring(size).." hue cards and confirmation remain inside real scrolling window",function()
+    hue:open(snapshot(),"hue","pip");settle()
+    for _,card in pairs(hue.hueCards)do if card.Visible then inside(card,hue.chromeGrid);local parts=card:FindFirstChild("CardParts");if parts then fit(parts.CardName)end end end
     for _,n in ipairs(hue.card:GetDescendants())do assert(n.Name~="SelectedGlint"and n.Name~="SelectedEdge"and n.Name~="SavedMark","decorative selected streak: "..n:GetFullName())end
-    for _,j in pairs(hue.jars)do if j.button.Visible then
-     fit(j.label);fit(j.quantity);fit(j.reason)
-     for _,n in ipairs({j.label,j.quantity,j.reason})do assert(n.AbsolutePosition.X+n.AbsoluteSize.X<=j.button.AbsolutePosition.X+j.button.AbsoluteSize.X-.9)end
-    end end
     assert(hue:chooseItem("rose"));settle();checkChildren(hue.body);fit(hue.action);fit(hue.cancel);hue:cancelConfirmation();hue:close()
    end)
-   test(tostring(size).." all egg cards and odds preserve clear right stroke gutter",function()
+   test(tostring(size).." all egg rows and odds stay inside the list and pane",function()
     shop:open(snapshot());settle()
-    for _,recipe in ipairs({"meadow","hue","material"})do
-     shop:selectRecipe(recipe);settle();shop:renderBody();settle()
-     local column=shop.body.EggColumn
-     for _,n in ipairs(column:GetChildren())do if n:IsA("GuiObject")and n.Visible then
-      contained(n,shop.body)
-      if n:IsA("TextLabel")or n:IsA("TextButton")then fit(n)end
-      for _,label in ipairs(n:GetChildren())do if label:IsA("TextLabel")and label.Visible then fit(label)end end
+    for _,recipe in ipairs({"toy","hue","material"})do
+     shop:selectRecipe(recipe);settle()
+     for _,n in ipairs(shop.body.EggColumn:GetChildren())do if n:IsA("GuiObject")and n.Visible and n.Name:match("^Recipe_")then
+      inside(n,shop.body);fit(n.RecipeName);fit(n.Cost)
      end end
+     for _,row in ipairs(shop.oddsHolder:GetChildren())do
+      assert(row.AbsolutePosition.X+row.AbsoluteSize.X<=shop.shopPane.AbsolutePosition.X+shop.shopPane.AbsoluteSize.X+.1,"odds row escaped the pane")
+     end
     end
     shop:close()
    end)

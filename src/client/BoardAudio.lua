@@ -27,14 +27,40 @@ local assetIds = {
 	retry = 80753325038930,
 	menu = 74679010378287,
 }
+-- PLACEHOLDER sounds (assets/audio/placeholder/, uploaded 2026-11-13). Spencer's own
+-- audio replaces these; see assets/audio/placeholder/PLACEHOLDER-AUDIO.md.
+local placeholderIds = {
+	danger_enter = 71704518273465, danger_clear = 86858776986054, danger_tick = 122357660151659,
+	deck_boot = 121880800893112, quest_complete = 112750571745350, bear_boop = 110282522210689,
+	reveal_hush = 75961612982659, spot_on = 93433115588030, streak_whoosh = 122156273335998,
+	reveal_shimmer = 71554174288583, tag_slam = 90906080983451, name_slam = 131679952336458,
+	desc_tick = 75005899109415, spin_whoosh = 88149004355893, shimmer_loop = 120156969856514,
+	reveal_out = 88912365203095, goal_tick = 103058048084589, row_flip = 135375361476574,
+	star_land = 134977919634272, stars_total = 86488710361812, new_best = 130207329583484,
+	egg_ready = 84150737933826, meter_fill = 71482588822934, win = 118201763537475,
+	lose = 103783283368544, egg_wobble = 103643084989292, egg_crack_glint = 73765307779351,
+	egg_select = 133779589657893,
+}
+for cue, id in pairs(placeholderIds) do assetIds[cue] = id end
+Audio.PlaceholderIds = placeholderIds
 local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
-	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "overflow", "retry", "menu",
+	"charge", "hatch_rise", "hatch", "pet", "puddle", "wick", "orbit", "retry", "menu",
 	"deck_boot", "quest_complete",
+	-- Round danger (UI-SPEC-REDESIGN-MENUS 6.3): one soft entry cue when the stack
+	-- goes over the fill line and a short chime when it clears. They replace the
+	-- repeating `overflow` blip.
+	"danger_enter", "danger_clear", "danger_tick",
+	-- Celebrations (UI-SPEC-REDESIGN-CELEBRATIONS 1.7, 2.9; CelebrationKit.Cues) and the
+	-- Hatch eggs preview. Placeholder sounds until Spencer's land.
+	"bear_boop", "reveal_hush", "spot_on", "streak_whoosh", "reveal_shimmer", "tag_slam", "name_slam",
+	"desc_tick", "spin_whoosh", "shimmer_loop", "reveal_out", "goal_tick", "row_flip", "star_land",
+	"stars_total", "new_best", "egg_ready", "meter_fill", "win", "lose",
+	"egg_wobble", "egg_crack_glint", "egg_select",
 }
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
-Audio.PendingCues = { deck_boot = true, quest_complete = true }
+Audio.PendingCues = {}
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 
 function Audio.uri(cue)

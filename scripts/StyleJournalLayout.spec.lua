@@ -47,58 +47,29 @@ return function(client,parent)
 	local ok,problem=pcall(function()
 		for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(385,703),Vector2.new(1649,971)})do
 			root.Size=UDim2.fromOffset(size.X,size.Y);settle()
-			test(tostring(size).." Style pins X and tabs around reachable preferred-text content",function()
+			test(tostring(size).." Style Settings and Trials pin the header back around reachable preferred-text content",function()
 				local events=0
 				local view=Picker.new(root,nil,nil,function()end,function()end,function()events+=1 end,function()events+=1 end)
-				table.insert(views,view);club(view);view:open("brick","none");settle()
-				local tabY=view.tabs.Shell.AbsolutePosition.Y;local closeY=view.cancel.AbsolutePosition.Y
-				for _,tab in ipairs({"Background","Trials","Settings","Background"})do -- Shell is the faceplate shop screen
+				table.insert(views,view);club(view);view:open("brick","none","Settings");settle()
+				-- Faceplates and Backgrounds are the Deck style screen (DeckStyle spec); the card hosts Settings and Trials.
+				local closeY=view.cancel.AbsolutePosition.Y
+				for _,tab in ipairs({"Trials","Settings","Trials"})do
 					view:showTab(tab);settle()
 					assert(inside(view.card,root) and inside(view.scroll,view.card) and view.scroll.AbsoluteSize.Y>=44)
-					assert(view.cancel.AbsoluteSize==Vector2.new(44,44) and inside(view.cancel,view.card) and not view.cancel:IsDescendantOf(view.scroll));readable(view.cancel)
-					if tab=="Background"then assert(view.tabs.Shell.AbsolutePosition.Y==tabY and view.cancel.AbsolutePosition.Y==closeY,"Style tab band moved")end
-					for _,button in pairs(view.tabs)do
-						assert(button.AbsoluteSize.Y>=44 and inside(button,view.card));readable(button)
-						if button.AbsolutePosition.Y<view.cancel.AbsolutePosition.Y+44 then assert(button.AbsolutePosition.X+button.AbsoluteSize.X<=view.cancel.AbsolutePosition.X,"tab overlaps X")end
-					end
-					if tab=="Background"then
-						assert(not view.card:FindFirstChild("Apply"),"obsolete Equip remains")
-						assert(inside(view.scroll,view.card))
-						if view.display.Visible then
-							assert(inside(view.display,view.scroll));readable(view.previewName)
-							if view.previewNote.Visible then readable(view.previewNote)end
-						end
-						if size==Vector2.new(1649,971)then assert(view.previewMode=="full","roomy preview changed")end
-						local catalog=Backgrounds
-						local first=view.choices[tab][catalog.Order[1]].Parent
-						assert(view.scroll.CanvasPosition.Y==0)
-						for _,id in ipairs(catalog.Order)do
-							local swatch=view.choices[tab][id].Parent
-							if swatch.Position.Y.Offset==first.Position.Y.Offset then
-								assert(inside(swatch,view.scroll) and inside(swatch.Caption,view.scroll),"first complete "..tab.." row lost below preview at "..tostring(size))
-							end
-						end
-						local overflow=view.scroll.CanvasSize.Y.Offset>view.scroll.AbsoluteSize.Y+1
-						assert(view.moreCue.Visible==overflow and not view.moreCue.Active and not view.moreCue.Selectable,"Style overflow cue missing or interactive")
-						for _,stroke in pairs(view.choices[tab])do
-							local swatch=stroke.Parent;assert(swatch.AbsoluteSize.Y>=44);readable(swatch.Caption)
-							assert(inside(swatch.Chip,swatch));reach(swatch,view.scroll)
-						end
-						view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle()
-						assert(not view.moreCue.Visible,"Style cue persists at end")
-					else
-      assert(not view.card:FindFirstChild("Apply")and not view.tabs.Shell.Visible and not view.tabs.Background.Visible)
-      if tab=="Trials"then
-       assert(not view.sound.Visible);for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
-       readable(view.reward);reach(view.reward,view.scroll)
-      else
-       assert(not view.clubHeader.Visible);readable(view.sound);readable(view.music);readable(view.motion)
-       assert(view.music.AbsoluteSize.Y>=44 and view.music.Selectable and view.music.Interactable)
-       reach(view.music,view.scroll);reach(view.motion,view.scroll)
-      end
-      local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged data reset reading")
-      view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
-					end
+					assert(view.cancel.AbsoluteSize==Vector2.new(44,44) and inside(view.cancel,view.card) and not view.cancel:IsDescendantOf(view.scroll))
+					assert(view.cancel.AbsolutePosition.Y==closeY,"header back moved between pages")
+					assert(view.heading.AbsolutePosition.X+view.heading.AbsoluteSize.X<=view.cancel.AbsolutePosition.X,"title overlaps back")
+     assert(not view.card:FindFirstChild("Apply")and not view.shop.visible)
+     if tab=="Trials"then
+      assert(not view.sound.Visible);for _,row in ipairs(view.rows)do readable(row.title);readable(row.status);reach(row.frame,view.scroll)end
+      readable(view.reward);reach(view.reward,view.scroll)
+     else
+      assert(not view.clubHeader.Visible);readable(view.sound);readable(view.music);readable(view.motion)
+      assert(view.music.AbsoluteSize.Y>=44 and view.music.Selectable and view.music.Interactable)
+      reach(view.music,view.scroll);reach(view.motion,view.scroll)
+     end
+     local before=view.scroll.CanvasPosition.Y;club(view);settle();assert(view.scroll.CanvasPosition.Y==before,"unchanged data reset reading")
+     view.scroll.CanvasPosition=Vector2.new(0,math.max(0,view.scroll.CanvasSize.Y.Offset-view.scroll.AbsoluteSize.Y));settle();assert(not view.moreCue.Visible)
 					assert(view.themeId=="brick" and view.stickerId=="none" and events==0,"layout or scroll submitted an action")
 				end
 				view:close()

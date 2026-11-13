@@ -139,5 +139,17 @@ function Panel:layout(width,compact,availableHeight)
  end end
  action(self.useNow);action(self.shop);copy(self.status,"Body");self.root.Size=UDim2.fromOffset(width,y);return y
 end
+-- Customize card grid (redesign 2.3; the tab is hidden behind FeatureFlags.Features).
+-- Each feature keeps its own stage controls; its card takes the Kit card face.
+function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
+ local Kit=require(script.Parent.DeckKit)
+ local y=self:layout(width,compact)
+ for _,row in pairs(self.rows)do
+  Kit.paint(row.root,"BackgroundColor3","raised");Kit.corner(row.root,12)
+  local stroke=row.root:FindFirstChildOfClass("UIStroke")or Kit.stroke(row.root)
+  stroke.Color=Color3.new(1,1,1);stroke.Transparency=.86;stroke.Thickness=1
+ end
+ return y,{}
+end
 function Panel:destroy()self.reveal:destroy();self.root:Destroy()end
 return Panel

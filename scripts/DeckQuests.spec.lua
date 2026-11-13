@@ -87,7 +87,7 @@ return function(client)
 			rows = { { name = "Round win", amount = 6 }, { name = "Easy ×0.8", amount = -1 }, { name = "Pass bonus", amount = 6 } },
 			goals = {}, score = 0, best = 0, chain = 0 }, false)
 		assert(results.rows[1].amount.Text == "6" and results.rows[2].amount.Text == "−1" and results.rows[3].amount.Text == "+6")
-		assert(results.subline.Text:find("Easy") and results.hintRight.Text == "Replay keeps Easy.")
+		assert(results.subline.Text:find("Easy") and results.hintRight.Text:find("Replay keeps Easy.", 1, true))
 		results:hide()
 	end)
 

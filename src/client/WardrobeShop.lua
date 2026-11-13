@@ -172,10 +172,9 @@ function Shop:build(view)
   local W,H=view.W,view.H;local g=Shop.compactGrid(W,H);self.columns=g.cols;self.grid=g
   local sheet=Kit.sheet(content,W,H)
   local body=Kit.frame(content,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3;self.body=body
-  self.title=txt(body,"Title","Wardrobe","text",view.hx,18,220,24,{TextSize=20})
-  self.wallet=Kit.wallet(body,32);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(W-66,14)
-  local back=Kit.backArrow(body,true);back.root.Position=UDim2.fromOffset(W-12,8);back.root.ZIndex=body.ZIndex+5
-  back.root.Activated:Connect(function()self:back()end);self.backArrow=back
+  -- Shared header (redesign 0.1): title, Stars capsule and back circle, 36 drawn.
+  self.header=Kit.header(body,{title="Wardrobe",compact=true,width=W,left=view.hx,onBack=function()self:back()end})
+  self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
   local pane=Kit.card(body,"Preview",nil,{pad=12});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
   self:buildPane(pane,g.pw,g.paneH,true)
   self.tabs=Kit.tabs(body,labels,g.gw,36,if g.gw<400 then 12 else 14);self.tabs.root.Position=UDim2.fromOffset(20,64)
@@ -185,11 +184,8 @@ function Shop:build(view)
   self.list=list
  else
   self.columns=2;self.grid=nil
-  txt(content,"Label","COMPANIONS","dim",24,14,200,16)
-  self.title=txt(content,"Title","Wardrobe","text",24,32,400,32)
-  self.wallet=Kit.wallet(content,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(756,24)
-  local back=Kit.backArrow(content,false);back.root.Position=UDim2.fromOffset(824,16);back.root.ZIndex=content.ZIndex+5
-  back.root.Activated:Connect(function()self:back()end);self.backArrow=back
+  self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",width=848,onBack=function()self:back()end})
+  self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
   self.tabs=Kit.tabs(content,labels,800,44,16);self.tabs.root.Position=UDim2.fromOffset(24,84)
   local pane=Kit.card(content,"Preview",nil,{pad=16});pane.Position=UDim2.fromOffset(24,144);pane.Size=UDim2.fromOffset(328,404)
   self:buildPane(pane,328,404,false)

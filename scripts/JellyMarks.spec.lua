@@ -10,7 +10,7 @@ return function(client,parent)
 		settle();Sprite.invalidateMarkSizes()
 		for _,tier in ipairs(Config.Tiers)do
 			local label=Instance.new("TextLabel");label.Name="Mark_"..tier.mark;label.Text=tier.mark
-			label.Font,label.TextSize,label.BackgroundTransparency=Enum.Font.GothamMedium,15,1
+			label.Font,label.TextSize,label.BackgroundTransparency=Sprite.MarkFont,15,1
 			label.AnchorPoint,label.Position,label.Size=Vector2.new(.5,.5),UDim2.fromScale(.5,.5),UDim2.fromOffset(30,22)
 			label.Parent=root;settle()
 			legacyBounds[tier.mark]={labelSize=tostring(label.AbsoluteSize),nativeContent=tostring(label.TextBounds),textFits=label.TextFits}
@@ -18,7 +18,7 @@ return function(client,parent)
 			local bounds,size=label.TextBounds,label.AbsoluteSize
 			assert(size.X>=bounds.X+2-.01 and size.Y>=bounds.Y+2-.01,tier.mark.." native content "..tostring(bounds).." exceeds mark well "..tostring(size))
 			assert(size.X>=30 and size.Y>=22 and label.TextFits)
-			assert(label.TextSize==15 and label.Font==Enum.Font.GothamMedium and not label.TextScaled and label.Rotation==0)
+			assert(label.TextSize==15 and label.Font==Enum.Font.BuilderSansExtraBold and not label.TextScaled and label.Rotation==0)
 			assert(label.Position==original and label.AnchorPoint==Vector2.new(.5,.5),"mark projection changed")
 			local actual=label.AbsolutePosition+label.AbsoluteSize/2;local expected=root.AbsolutePosition+root.AbsoluteSize/2
 			assert((actual-expected).Magnitude<=1,"native size adjustment moved center")
