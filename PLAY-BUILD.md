@@ -1,5 +1,17 @@
+**Private v590 Published 2026-11-13 — runtime cf7d99d, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v590". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/qa-2026-11-13/studio/`.
+# Egg Drop — QA pass fixes and the machine hub
+
+Fixes from Spencer's 2026-11-13 QA pass (`artifacts/qa-2026-11-13/QA-TRIAGE.md`): the camera stays still in the Pocket Deck; no screws; cleaner goals and side panels; a lose sound; the results Star no longer flashes, pops in or resets its spin; the flourish plays out; "Settling…" while the last ball lands; the whole deck shakes on merges; item icons and a "+ Magnet" toast; an aim/drop hint for new players. Menus: one dim layer, Wardrobe/Customize/Book slide in, Wardrobe shows item previews, style changes apply instantly, alt-tab keeps your cursor and the music, petting pays +1 ★ after ~4 s (still 5 a day). World: you can no longer walk off the edge, flags wave without flicker, clouds bob, less bloom, scrolling water, flat animated waterfalls with foam, lamps off the paths, bridges meet the paths, river lining capped, hub benches/toys and kiosk joysticks gone. Pet Park: slide and benches face the right way (one 5-seat bench inside), a park icon, pets walk in with you, and pets pair up. **Machine hub:** M opens tiles for Hatch eggs, Deck style, Companions, Quests, Collection book and Settings (a pause menu in rounds); Pocket Trials gone; real stamp art; results show "Today: ★ earned".
+
+**Passed before publish:** server 26/26; client 75 (7 long-standing failures unchanged). Code Reviewer GO WITH CHANGES, all applied. Place saved v590 with world collision and textures restored.
+
+**Test:** everything in the QA list; two accounts in the park for duos; the hub from the garden and pause in a round; petting for ~4 s.
+
+**Still open:** onboarding (beyond the idle hint), bug reporting, translations; Bookworm faceplate art; book thumbnails.
+
+## Historical v583 — Pet Park playground, easier pet click, 3D wallet Star
+
 **Private v583 Published 2026-11-13 — runtime 73e0b9f, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v583". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/pet-park-2026-11-13/studio/`.
-# Egg Drop — Pet Park playground, easier pet click, 3D wallet Star
 
 New since v568: a **Pet Park playground** on the lawn by the east picnic table. Walk inside the flowered edge (or sit on a bench with the "Sit" prompt) and your pet plays on its own: swings, slide, see-saw (needs a second pet), sandbox (castle grows in 3 stages), ball corner; duo activities pair it with another player's pet. A small chip shows the **Play date** (3 activities a day = +4 Stars). Your pet has a much bigger click/tap area (whole body, 16 studs), and the wallet Star is a turning, glinting 3D Star. The tree and shrubs inside the playground are gone, and the hub marble and trim have their textures back (they had been plain white since v550).
 
