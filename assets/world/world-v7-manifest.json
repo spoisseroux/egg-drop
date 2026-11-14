@@ -12,15 +12,15 @@
    "center": [
     39.0789,
     24.1023,
-    -21.0026
+    -20.9926
    ],
    "size": [
     97.5996,
     56.9046,
-    166.496
+    166.5159
    ],
    "top": 52.5546,
-   "hash": "50efcc5c2236087a"
+   "hash": "55a1219b08b3e56d"
   },
   {
    "name": "W7_Aqueduct__marble_smooth",
@@ -62,7 +62,7 @@
     166.6237
    ],
    "top": 58.4946,
-   "hash": "7f27632e06f4c8be"
+   "hash": "23663a6abcbaa3e9"
   },
   {
    "name": "W7_Architecture__marble",
@@ -83,7 +83,7 @@
     145.7914
    ],
    "top": 18.8075,
-   "hash": "67aedc96191435f8"
+   "hash": "8d2bfde93d7ee424"
   },
   {
    "name": "W7_Architecture__marble_smooth",
@@ -125,7 +125,7 @@
     145.401
    ],
    "top": 19.8075,
-   "hash": "8bbedceddae754d3"
+   "hash": "b6d218d788cd745c"
   },
   {
    "name": "W7_Architecture__trim",
@@ -137,16 +137,16 @@
    "region": "Architecture",
    "center": [
     20.1748,
-    9.05,
+    9.06,
     18.0961
    ],
    "size": [
     140.7852,
-    9.7,
+    9.72,
     92.1367
    ],
-   "top": 13.9,
-   "hash": "611576c00c6b8ccb"
+   "top": 13.92,
+   "hash": "216c6387caa17e22"
   },
   {
    "name": "W7_ArrivalGlow__glow_aqua",
@@ -2116,7 +2116,7 @@
     165.8256
    ],
    "top": 52.1046,
-   "hash": "a49b3e7bbab727c6",
+   "hash": "24d09a897808f18e",
    "note": "Scroll the texture along V (downstream) about 0.15 tiles/s: Texture.OffsetStudsV on a Texture, or tween SurfaceAppearance offsets."
   },
   {

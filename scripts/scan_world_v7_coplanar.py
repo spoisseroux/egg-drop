@@ -5,6 +5,8 @@ Run in BACKGROUND Blender only:
 Reports every pair of same-plane faces whose outlines overlap, grouped by chunk pair, with the overlap
 area and the Roblox-space bounds (Blender (x, y, z) = Roblox (x, z + 4, -y)). Only pairs with at least
 one face in a chunk matching the regex (default: built structures) are listed. Read-only.
+With --fixed the declutter and qa_fixes of scripts/build_world_v7_chunks.py are applied in memory first (nothing is
+saved or exported), so the scan shows what the merged meshes will really contain.
 """
 import re
 import sys
@@ -47,10 +49,18 @@ def area(poly):
     return abs(sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1] for i in range(len(poly)))) / 2
 
 
+OBJECTS = list(bpy.data.objects)
+if "--fixed" in ARGS:
+    from pathlib import Path
+    _src = Path(__file__).with_name("build_world_v7_chunks.py").read_text(encoding="utf-8")
+    _ns = {"__name__": "world_v7_chunks", "__file__": str(Path(__file__).with_name("build_world_v7_chunks.py"))}
+    exec(compile(_src.rsplit(chr(10) + "main()", 1)[0], _ns["__file__"], "exec"), _ns)
+    OBJECTS = [o for o in bpy.data.objects if o.type == "MESH" and any(c.name.startswith("Import_") for c in o.users_collection)]
+    OBJECTS = _ns["qa_fixes"](_ns["declutter"](OBJECTS))
 t0 = time.time()
 planes = defaultdict(list)
 names = []
-for o in bpy.data.objects:
+for o in OBJECTS:
     if o.type != "MESH":
         continue
     oi = len(names)

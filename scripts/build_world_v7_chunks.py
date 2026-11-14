@@ -777,6 +777,127 @@ def channel_water(sources):
     print("R5 sky-falls channel water lowered", len(o.data.vertices), "verts")
 
 
+# ---------------------------------------------------------------------------------------------------------------
+# World flicker (2026-11-14): the same-facing coplanar pairs scripts/scan_world_v7_coplanar.py still found after the
+# fixes above (28, "-- 'Colonnade|Aqueduct' --detail --fixed"). Faces are picked by their Roblox-space bounds so an
+# index shift cannot move a fix onto another face. All chunks here are loose quads (no shared vertices).
+# - Colonnade entablature (y 13.0..14.48): three overlapping spans, each a trim / gold / marble stack. Gold caps that
+#   faced into the strip are turned outward, then the middle span is lifted 0.02 so no layer shares a plane at a joint.
+# - High spring (y 52): the channel water's underside leaves the basin disc's plane (raised 0.02 into the water), the
+#   two gold diamonds stand 0.02 proud of the slab undersides, the three post faces start just above the wall top (51.71).
+# - Sky-falls channel (y 2.1): the three wall posts stand 0.02 proud of the wall face; the two piers under the floor
+#   drop their top to 2.13 (off the 2.15 floor strip, still above the 2.10 pebble bed) and inset the side that
+#   shared the wall's plane by 0.02.
+# ---------------------------------------------------------------------------------------------------------------
+def _rb_bounds(face):
+    pts = [(v.co.x, v.co.z + 4, -v.co.y) for v in face.verts]
+    return [min(p[i] for p in pts) for i in range(3)], [max(p[i] for p in pts) for i in range(3)]
+
+
+def _pick(bm, lo, hi, normal_y=None, tol=0.02):
+    """The one face whose Roblox bounds are (lo, hi); normal_y (+1 / -1) also fixes the facing of a flat face."""
+    hits = []
+    for f in bm.faces:
+        flo, fhi = _rb_bounds(f)
+        if all(abs(a - b) < tol for a, b in zip(flo + fhi, list(lo) + list(hi))):
+            if normal_y is None or f.normal.z * normal_y > 0.9:
+                hits.append(f)
+    assert len(hits) == 1, (lo, hi, len(hits))
+    return hits[0]
+
+
+SPAN_B = {  # middle entablature span: xz bounds of its caps per chunk (Roblox)
+    "Architecture_Colonnade__trim": ((-44.88, -27.25), (-35.36, -21.36)),
+    "Architecture_Colonnade__gold": ((-45.02, -27.38), (-35.23, -21.22)),
+    "Architecture_Colonnade__marble": ((-45.15, -27.51), (-35.09, -21.09)),
+}
+
+
+def coplanar_fixes(sources):
+    def edit(name):
+        o = obj_named(sources, name)
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        return o, bm
+
+    def done(o, bm):
+        bm.normal_update()
+        bm.to_mesh(o.data)
+        bm.free()
+        o.data.update()
+        TOUCHED.add(o.name)
+
+    # Colonnade: gold caps outward, then lift the middle span.
+    flipped = lifted = 0
+    for name, ((x0, z0), (x1, z1)) in SPAN_B.items():
+        o, bm = edit(name)
+        if name.endswith("__gold"):
+            turn = []
+            for f in bm.faces:
+                lo, hi = _rb_bounds(f)
+                if abs(f.normal.z) < 0.999 or f.calc_area() < 15 or not (-54 < lo[0] and hi[0] < -27 and -29 < lo[2] and hi[2] < -8):
+                    continue
+                want = -1 if abs(lo[1] - 13.9) < 0.01 else 1 if abs(lo[1] - 14.12) < 0.01 else 0
+                if want and f.normal.z * want < 0:
+                    turn.append(f)
+            bmesh.ops.reverse_faces(bm, faces=turn)
+            flipped = len(turn)
+        corners, verts = set(), set()
+        for f in bm.faces:
+            lo, hi = _rb_bounds(f)
+            if abs(f.normal.z) > 0.999 and all(abs(a - b) < 0.02 for a, b in zip((lo[0], lo[2], hi[0], hi[2]), (x0, z0, x1, z1))):
+                corners.update((round(v.co.x, 2), round(v.co.y, 2)) for v in f.verts)
+        assert len(corners) == 4, (name, len(corners))
+        count = 0
+        for f in bm.faces:
+            lo, hi = _rb_bounds(f)
+            if lo[1] > 12.99 and hi[1] < 14.49 and all((round(v.co.x, 2), round(v.co.y, 2)) in corners for v in f.verts):
+                verts.update(f.verts)
+                count += 1
+        assert 5 <= count <= 6, (name, count)
+        for v in verts:
+            v.co.z += 0.02
+        lifted += count
+        done(o, bm)
+
+    # High spring.
+    o, bm = edit("Anim__Water_AqueductChannel__water_stream")
+    for v in _pick(bm, (37.90, 52.00, -103.55), (85.40, 52.00, -82.54), -1).verts:
+        v.co.z += 0.02
+    done(o, bm)
+    o, bm = edit("Architecture_Aqueduct__gold")
+    for lo, hi in (((78.16, 52.20, -85.93), (79.43, 52.20, -84.66)), ((84.66, 52.20, -79.43), (85.93, 52.20, -78.16))):
+        for v in _pick(bm, lo, hi, -1).verts:
+            v.co.z -= 0.02
+    done(o, bm)
+    o, bm = edit("Architecture_Aqueduct__marble")
+    for lo, hi in (((37.27, 51.65, -100.99), (37.47, 52.55, -100.48)), ((84.54, 51.65, -82.35), (84.74, 52.55, -81.84)),
+                   ((85.82, 51.65, -85.61), (86.03, 52.55, -85.10))):
+        for v in _pick(bm, lo, hi).verts:
+            if v.co.z + 4 < 51.66:
+                v.co.z = 51.71 - 4
+    # Sky-falls channel posts: 0.02 proud of the wall face.
+    for lo, hi in (((-0.55, 2.10, 46.24), (0.25, 4.00, 46.31)), ((-1.95, 2.10, 62.18), (-1.15, 4.00, 62.25)),
+                   ((-8.32, 2.10, 45.55), (-7.52, 4.00, 45.62))):
+        f = _pick(bm, lo, hi)
+        step = f.normal * 0.02
+        for v in f.verts:
+            v.co += step
+    # Piers under the channel floor: top to 2.13, wall-plane side inset 0.02.
+    for lo, hi in (((-9.61, 2.15, 58.01), (-0.85, 2.15, 60.95)),):
+        for v in _pick(bm, lo, hi, 1).verts:
+            v.co.z -= 0.02
+    for lo, hi in (((-1.04, -4.35, 58.76), (-0.85, 2.15, 60.95)), ((-9.61, -4.35, 58.01), (-9.41, 2.15, 60.20))):
+        f = _pick(bm, lo, hi)
+        step = f.normal * -0.02
+        for v in f.verts:
+            v.co += step
+            if v.co.z + 4 > 2.14:
+                v.co.z -= 0.02
+    done(o, bm)
+    print("FLICKER colonnade gold caps turned", flipped, "span faces lifted", lifted, "+ high spring and sky-falls channel nudges")
+
+
 def qa_fixes(sources):
     move_lamps(sources)
     sources = split_castle_flags(sources)
@@ -787,6 +908,7 @@ def qa_fixes(sources):
     sharpen_cliffs(sources)
     aqueduct_bed(sources)
     channel_water(sources)
+    coplanar_fixes(sources)
     return sources
 
 
