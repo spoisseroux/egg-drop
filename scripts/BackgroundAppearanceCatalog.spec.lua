@@ -67,6 +67,8 @@ return function(server)
 			return .2126*c(color.R)+.7152*c(color.G)+.0722*c(color.B)
 		end
 		assert(#Themes.Order==18) -- +grape_soda, rose_chrome (overnight 2026-11-14)
+		assert(#Themes.BookOnly==2) -- bookworm, stargazer: book-only, never in Order
+		for _,id in ipairs(Themes.BookOnly)do assert(table.find(Themes.Order,id)==nil and typeof(Themes.ById[id].ui.panel)=="Color3"and typeof(Themes.ById[id].lcd.base)=="Color3",id)end
 		for _,id in ipairs(Themes.Order)do
 			local t=Themes.ById[id]
 			for _,key in ipairs({"panel","raised","inset","ink","text","muted","line","selected","focus","accent"})do assert(typeof(t.ui[key])=="Color3",id..key)end

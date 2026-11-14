@@ -96,7 +96,7 @@ local Table={
   owned="{owned}/{total}",
   found="Found",missing="Not yet",empty="Nothing on this page yet.",
   bookworm={line="Finish any three pages: Bookworm faceplate",short="3 full pages: Bookworm",done="Bookworm faceplate is yours",count="{count}/3"},
-  toast={claimed="Page milestone",bookworm="Bookworm faceplate unlocked"},
+  toast={claimed="Page milestone",bookworm="Bookworm faceplate unlocked",plate="{name} faceplate unlocked"},
   hint={pages="Pages",move="Move",claim="Claim",back="Back"},
   stats={rounds="Rounds played",winsEasy="Wins on Easy",winsMedium="Wins on Medium",winsHard="Wins on Hard",tidyWins="Tidy wins",
    merges="Merges",bestChain="Best chain",tierFive="Tier V balls",itemsUsed="Items used",pets="Pets hatched",
@@ -272,10 +272,14 @@ local Table={
   },
  },
  bond={
-  -- Lane U (F-cli): bond pips, the level-up toast and the trick names (levels 1-5).
+  -- Lane U (F-cli): bond pips, the level-up toast and the trick names (levels 1-10).
   title="Bond",level="Bond level {count}",short="Lv {count}",max="Lv {count} · more soon",
   levelUp="Bond level {count} · New trick: {name}",levelUpPlain="Bond level {count}",
-  trick={l1="Hello",l2="Sit",l3="Wiggle dance",l4="Big stretch",l5="Happy hop"},
+  trick={l1="Hello",l2="Sit",l3="Wiggle dance",l4="Big stretch",l5="Happy hop",
+   -- Follow-up 2026-11-14: levels 6-10 [PLACEHOLDER names].
+   l6="Peekaboo",l7="Cosy stretch",l8="Sneezy wiggle",l9="Show-off",l10="Best friends"},
+  -- The last level: nothing more is promised.
+  top="Lv {count} · Best friends",
  },
 }
 

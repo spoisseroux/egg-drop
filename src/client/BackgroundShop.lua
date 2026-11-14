@@ -140,7 +140,9 @@ function Shop:build(parent,view,grid)
    -- 3 px in from the scroll edges so the selected outline is never clipped.
    self:buildTile(list,index,id,3+col*(tileW+2),3+row*72,tileW-6,64,true)
   end
-  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#items/cols)*72-8+6)
+  -- QA v2 R3.2 (follow-up 2026-11-14): room for the first cards' top and left edges (stroke, lip, shadow); tiles keep their place.
+  local bleed=Kit.scrollBleed(list,4)
+  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#items/cols)*72-8+6+bleed*2)
  else
   local R=Shop.Regular
   local pane=Kit.card(body,"Preview",nil,{pad=20,seam=true});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])

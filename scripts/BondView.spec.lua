@@ -8,8 +8,10 @@
 --  * The flourish: six pooled hearts in the lightened secondary colour, none under Reduced
 --    Effects (the pip and the toast carry it).
 --  * The focus card (PetFocusUI) and the Companions pane show the pips; no bond data, no pips.
---  * Tricks 1-2 (RoomView.bondTricks): Hello waves once per session per pet; the owner-still
---    sit needs level 2; without bond data nothing is gated.
+--  * Tricks (RoomView.bondTricks): Hello waves once per session per pet; the owner-still sit
+--    is every pet's at any level (follow-up 2026-11-14), level 2 only makes it sooner;
+--    levels 3-10 play their routine beat by beat while the owner stands near.
+--  * Ten levels on five hearts: levels 6-10 turn the hearts gold (follow-up 2026-11-14).
 -- Usage: require(PlayerScripts.Client.ZZSpecs.BondView)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Shared=game:GetService("ReplicatedStorage").Shared
@@ -19,6 +21,7 @@ return function(client,parent)
  local Pets=require(Shared.PetCatalog)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local gui=Instance.new("ScreenGui");gui.Name="_BondViewSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
+ local screen=gui;gui=Instance.new("Frame");gui.Name="Host";gui.BackgroundTransparency=1;gui.Size=UDim2.fromScale(1,1);gui.Parent=screen -- pips live in frames in game
  local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
  -- The spec's own catalogue (the scope's numbers), so it does not depend on tuning.
  local Catalog={MaxLevelShipped=5,Thresholds={0,25,75,150,250,350}}
@@ -38,8 +41,28 @@ return function(client,parent)
    local e=Pips.info({[petId]=99999},petId,Catalog);assert(e.shown==5 and e.max,"XP past the cap still shows five")
    local f=Pips.info({},petId,Catalog);assert(f.level==1 and f.xp==0,"a pet with no XP yet is level 1")
    local g=Pips.info({[petId]="x"},petId,Catalog);assert(g.xp==0,"malformed XP reads 0")
-   assert(Pips.cap({MaxLevelShipped=9})==5 and Pips.cap({MaxLevelShipped=3})==3 and Pips.cap({})==5,"never more pips than hearts")
+   assert(Pips.cap({MaxLevelShipped=9})==9 and Pips.cap({MaxLevelShipped=12})==10 and Pips.cap({MaxLevelShipped=3})==3 and Pips.cap({})==5,"never more levels than two rounds of hearts")
    assert(Pips.label(a)==UICopy.get("bond.short",{count=1})and Pips.label(d)==UICopy.get("bond.max",{count=5})and Pips.label(nil)=="")
+   -- Follow-up 2026-11-14: ten levels on the same five hearts (6-10 turn them gold).
+   local Ten={MaxLevelShipped=10,Thresholds={0,25,75,150,250,350,475,600,725,850}}
+   function Ten.level(xp)local level=1;for index=2,10 do if xp>=Ten.Thresholds[index]then level=index end end;return level end
+   local h=Pips.info({[petId]=250},petId,Ten);assert(h.shown==5 and not h.max and not h.top and h.progress==0,"level 5 has a next level now")
+   local i=Pips.info({[petId]=412},petId,Ten);assert(i.level==6 and i.shown==6 and math.abs(i.progress-62/125)<1e-6)
+   local j=Pips.info({[petId]=850},petId,Ten);assert(j.shown==10 and j.max and j.top and j.progress==1)
+   assert(Pips.info({[petId]=100000},petId,Ten).shown==10,"an old save's banked XP reads level 10")
+   assert(Pips.label(j)==UICopy.get("bond.top",{count=10})and Pips.label(i)==UICopy.get("bond.short",{count=6}))
+   for shown,want in pairs({[0]={0,0},[1]={1,0},[5]={5,0},[6]={5,1},[9]={5,4},[10]={5,5},[14]={5,5}})do
+    local full,gold=Pips.hearts(shown);assert(full==want[1]and gold==want[2],"hearts at "..shown)
+   end
+   for level=1,10 do assert(Pips.trickName(level)==UICopy.get("bond.trick.l"..level)and string.find(Pips.toastText(level),Pips.trickName(level),1,true),"trick "..level)end
+   assert(Pips.trickName(11)==nil and Pips.toastText(11)==UICopy.get("bond.levelUpPlain",{count=11}))
+   local w,_=Pips.extent(Pips.Size.compact);assert(w==5*14+4*4,"the phone row is still five hearts wide (86 px)")
+   local row=Pips.new(gui,true)
+   row.set(i);assert(row.pips[1].root:GetAttribute("Gold")==true and row.pips[1].gem.Visible and row.pips[2].root:GetAttribute("Gold")==false and row.pips[5].root:GetAttribute("Filled")==true,"level 6: five filled, the first gold")
+   row.set(j);for index=1,5 do assert(row.pips[index].gem.Visible and row.pips[index].root:GetAttribute("Gold")==true,index)end
+   assert(row.bar.root.Visible==false and row.root:GetAttribute("BondLevel")==10,"no bar at the last level")
+   row.set(a);assert(not row.pips[1].gem.Visible and row.pips[1].root:GetAttribute("Filled")==true and row.pips[2].root:GetAttribute("Filled")==false,"back to level 1")
+   row.root:Destroy()
    Pips.override=nil
    -- The real catalogue (lane K), when it is in the build.
    if Pips.catalog()then
@@ -69,12 +92,12 @@ return function(client,parent)
    events=Pips.levelUps(fresh,{[petId]=25},Catalog);assert(#events==1 and events[1].level==2)
   end)
   test("pure: the toast names the trick; every shipped level has a trick name",function()
-   for level=1,5 do
+   for level=1,10 do
     local trick=Pips.trickName(level)
     assert(type(trick)=="string"and trick~=""and trick==UICopy.get("bond.trick.l"..level),"trick "..level)
     assert(Pips.toastText(level)==UICopy.get("bond.levelUp",{count=level,name=trick}))
    end
-   assert(Pips.trickName(6)==nil and Pips.toastText(6)==UICopy.get("bond.levelUpPlain",{count=6}))
+   assert(Pips.trickName(11)==nil and Pips.toastText(11)==UICopy.get("bond.levelUpPlain",{count=11}))
    assert(Pips.toastText(2)=="Bond level 2 · New trick: Sit")
   end)
   for _,compact in ipairs({false,true})do
@@ -173,7 +196,7 @@ return function(client,parent)
     hub:destroy();host:Destroy()
    end
   end)
-  test("tricks 1-2: Hello waves once per pet per session; Sit needs level 2; no bond data gates nothing",function()
+  test("tricks: Hello waves once per pet per session; the owner-still sit is never gated (level 2 sits sooner); no bond data changes nothing",function()
    local Room=require(client.RoomView)
    local Beats=require(client.PetIdleBeats)
    local function room(bond)
@@ -189,19 +212,84 @@ return function(client,parent)
    local self,pet=room(nil);self:bondTricks(false)
    assert(pet.bondLevel==nil and pet.ownerStillNearFor==9 and pet.idleBeat==nil,"no bond in the snapshot: behaviour as before")
    self,pet=room({[petId]=0});self:bondTricks(false)
-   assert(pet.bondLevel==1 and pet.ownerStillNearFor==0,"level 1: no owner-still sit yet")
+   assert(pet.bondLevel==1 and pet.ownerStillNearFor==9,"level 1 keeps the owner-still sit it always had")
+   assert(require(client.PetSitPose).fromOwner(pet.ownerStillNearFor,0),"and that sit still triggers")
    assert(pet.idleBeat and pet.idleBeat.kind=="wave"and pet.idleBeat.duration==Beats.Durations.wave,"Hello: a wave")
    pet.idleBeat.kind=nil;self:bondTricks(false);assert(pet.idleBeat.kind==nil,"only the first time this session")
    local threshold=require(Shared.BondCatalog).Thresholds[2]
    self,pet=room({[petId]=threshold});self.bondHello={[petId]=true};self:bondTricks(false)
-   assert(pet.bondLevel==2 and pet.ownerStillNearFor==9,"level 2: the owner-still sit is unlocked")
+   assert(pet.bondLevel==2 and pet.ownerStillNearFor==9+Room.BondSitHead,"level 2 Sit: the same sit, sooner")
+   self,pet=room({[petId]=threshold});self.bondHello={[petId]=true};pet.ownerStillNearFor=0;self:bondTricks(false)
+   assert(pet.ownerStillNearFor==0,"the head start never makes a pet sit while the owner is away or moving")
+   assert(pet.idleBeat==nil and self.bondRoutine==nil,"level 2 has no routine")
    self,pet=room({[petId]=0});self:bondTricks(true);assert(pet.idleBeat==nil,"Reduced Effects: no wave")
    self,pet=room({[petId]=0});pet.ownerNearStill=false;self:bondTricks(false);assert(pet.idleBeat==nil,"the owner must stand near")
    -- playBeat never interrupts a running beat and refuses unknown beats.
    self,pet=room({[petId]=0});assert(self:playBeat("stretch")and pet.idleBeat.kind=="stretch"and not self:playBeat("wave")and not self:playBeat("nope"))
+   -- A trick's sit is the short one.
+   self,pet=room({[petId]=0});assert(self:playBeat("sit")and pet.idleBeat.kind=="sit"and pet.idleBeat.duration==Beats.SitIn+Beats.SitHoldMin+Beats.SitOut)
+  end)
+  test("tricks 3-10: routines play beat by beat near a still owner, newest first, hearts where the unlock says so, and stop when the owner leaves",function()
+   local Room=require(client.RoomView)
+   local Catalog=Pips.catalog()
+   if not Catalog or type(Catalog.Unlocks)~="table"then return end
+   local bursts=0
+   local function room(xp)
+    local pet={idleBeatsEnabled=true,ownerNearStill=true,gaitWeight=0,ownerStillNearFor=0,model=Instance.new("Model")}
+    local self=setmetatable({pet=pet,shownPet={id=petId,name="Bear"},bond={[petId]=xp},mode="Room",target="Room",reduceEffects=function()return false end,
+     bondHello={[petId]=true},affection={bondBurst=function()bursts+=1;return 6 end}},Room)
+    return self,pet
+   end
+   -- Pure: which routines a level has (level 3 and up), newest first.
+   assert(#Room.bondRoutines(1)==0 and #Room.bondRoutines(2)==0 and #Room.bondRoutines(3)==1 and Room.bondRoutines(3)[1].id=="wiggle")
+   local top=Catalog.MaxLevelShipped
+   local all=Room.bondRoutines(top);assert(#all==top-2 and all[1].level==top and all[#all].level==3)
+   assert(#Room.bondRoutines(99)==top-2 and #Room.bondRoutines(nil)==0)
+   -- Every routine beat is one playBeat accepts.
+   for _,unlock in ipairs(all)do for _,kind in ipairs(unlock.beats)do
+    local self=room(0);assert(self:playBeat(kind),unlock.id.." uses "..kind)
+   end end
+   -- Runs one whole routine: finishing each beat by hand (the visual's scheduler does it in the game).
+   local function run(self,pet)
+    local played={}
+    self.bondTrickAt=os.clock()-1;self:bondTricks(false)
+    assert(self.bondRoutine and(pet.idleBeat==nil or pet.idleBeat.kind==nil),"the routine is queued; its first beat starts on the next step")
+    for _=1,12 do
+     self:bondTricks(false)
+     if not self.bondRoutine then break end
+     table.insert(played,pet.idleBeat.kind)
+     self:bondTricks(false);assert(played[#played]==pet.idleBeat.kind,"a running beat is never cut short")
+     pet.idleBeat.kind=nil;self.bondRoutine.endsAt=0
+    end
+    return table.concat(played,">")
+   end
+   local level3=Catalog.Thresholds[3]
+   local self,pet=room(level3)
+   self:bondTricks(false);assert(self.bondRoutine==nil and pet.idleBeat==nil,"not at once: a few seconds near the owner first")
+   assert(run(self,pet)=="wiggle>wiggle"and bursts==0 and pet.model:GetAttribute("BondTrickDone")=="wiggle","level 3: the wiggle dance, no hearts")
+   self:bondTricks(false);assert(self.bondRoutine==nil and pet.idleBeat.kind==nil,"then a gap before the next one")
+   -- Level 5: Happy hop first (the newest), with hearts; then the others in turn.
+   self,pet=room(Catalog.Thresholds[5])
+   assert(run(self,pet)==table.concat(Catalog.Unlocks[5].beats,">")and bursts==1,"level 5 ends in the heart burst")
+   assert(run(self,pet)==table.concat(Catalog.Unlocks[4].beats,">")and bursts==1,"next turn: the level 4 trick, no hearts")
+   assert(run(self,pet)==table.concat(Catalog.Unlocks[3].beats,">")and run(self,pet)==table.concat(Catalog.Unlocks[5].beats,">")and bursts==2,"round and round")
+   -- The top level plays its own routine first.
+   self,pet=room(Catalog.Thresholds[top]);bursts=0
+   assert(run(self,pet)==table.concat(Catalog.Unlocks[top].beats,">")and bursts==(if Catalog.Unlocks[top].hearts then 1 else 0))
+   -- The owner walks off mid-routine: it stops, no hearts, and the wait starts again.
+   self,pet=room(Catalog.Thresholds[5]);bursts=0
+   self.bondTrickAt=os.clock()-1;self:bondTricks(false);self:bondTricks(false);assert(pet.idleBeat.kind==Catalog.Unlocks[5].beats[1])
+   pet.ownerNearStill=false;self:bondTricks(false);assert(self.bondRoutine==nil and bursts==0)
+   pet.idleBeat.kind=nil;self:bondTricks(false);assert(self.bondTrickAt==nil,"the wait restarts when the owner comes back")
+   -- A beat the pet's scheduler cut off early (it got busy) drops the routine without hearts.
+   self,pet=room(Catalog.Thresholds[5])
+   self.bondTrickAt=os.clock()-1;self:bondTricks(false);self:bondTricks(false);pet.idleBeat.kind=nil
+   self:bondTricks(false);assert(self.bondRoutine==nil and bursts==0 and pet.idleBeat.kind==nil,"cut off: dropped quietly")
+   -- Reduced Effects: no routines at all.
+   self,pet=room(Catalog.Thresholds[5]);self.bondTrickAt=os.clock()-1;self:bondTricks(true);assert(self.bondRoutine==nil and pet.idleBeat==nil)
   end)
  end,function(e)Pips.override=nil;return tostring(e).." | "..debug.traceback()end)
- gui:Destroy()
+ screen:Destroy()
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}
 end

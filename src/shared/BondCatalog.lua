@@ -5,11 +5,17 @@
 --   Bond.progress(xp)   {level, xp, floor, next, fraction, capped} toward the next shipped level
 --   Bond.unlock(level)  the trick a level unlocks
 --
--- XP keeps accruing past the last shipped level (to MaxXP), so raising MaxLevelShipped later
+-- XP keeps accruing past the last shipped level (to MaxXP), so raising MaxLevelShipped
 -- needs no migration: the display simply caps at the shipped level until then.
 -- Every number here is [PLACEHOLDER] until tuned (SYSTEMS-SCOPE 8 #13).
-local Bond={Version=1,MaxXP=100000,MaxLevelShipped=5}
--- xp needed to BE each level. Levels 6..10 are reserved for a later update.
+--
+-- Follow-up 2026-11-14: levels 6..10 ship (Version 2, MaxLevelShipped 10). The save is
+-- unchanged (xp per pet, v11): a pet that already had 350+ xp simply reads its new level.
+local Bond={Version=2,MaxXP=100000,MaxLevelShipped=10}
+-- xp needed to BE each level.
+-- Levels 1..5: 25 / 50 / 75 / 100 apart. Levels 6..10 [PLACEHOLDER, gentle]: 100, then a
+-- flat 125 apart, so at about 35 xp a day each late level is 3 to 4 days and level 10
+-- is about 24 days of play (casual, 13 xp a day: about 9 weeks).
 Bond.Thresholds=table.freeze({0,25,75,150,250,350,475,600,725,850})
 -- XP sources (the server adds these inside transactions that already exist).
 Bond.XP=table.freeze({pet=1,round=2,win=3,playDate=5})
@@ -21,6 +27,13 @@ Bond.Unlocks=table.freeze({
  table.freeze({level=3,id="wiggle",copy="bond.trick.l3",beats=table.freeze({"wiggle","wiggle"})}),
  table.freeze({level=4,id="stretch",copy="bond.trick.l4",beats=table.freeze({"stretch","sit"})}),
  table.freeze({level=5,id="hop",copy="bond.trick.l5",beats=table.freeze({"stretch","wiggle","wave"}),hearts=true}),
+ -- Levels 6..10 [PLACEHOLDER routines for Astra's review]: existing idle beats only, no new
+ -- poses or models (VISUAL-BRIEF 5).
+ table.freeze({level=6,id="peekaboo",copy="bond.trick.l6",beats=table.freeze({"look","wave"})}),
+ table.freeze({level=7,id="cosy",copy="bond.trick.l7",beats=table.freeze({"yawn","stretch","sit"})}),
+ table.freeze({level=8,id="sneezy",copy="bond.trick.l8",beats=table.freeze({"sneeze","wiggle","wiggle"})}),
+ table.freeze({level=9,id="showoff",copy="bond.trick.l9",beats=table.freeze({"scratch","stretch","wave"}),hearts=true}),
+ table.freeze({level=10,id="bestFriends",copy="bond.trick.l10",beats=table.freeze({"wave","wiggle","wiggle","stretch","sit"}),hearts=true}),
 })
 do
  assert(Bond.Thresholds[1]==0 and Bond.MaxLevelShipped>=1 and Bond.MaxLevelShipped<=#Bond.Thresholds,"BondCatalog: bad level range")

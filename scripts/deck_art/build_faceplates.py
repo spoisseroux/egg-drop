@@ -1,4 +1,4 @@
-"""Pocket Deck faceplates: 16 shop textures + the book-only Bookworm, 4 shared overlay textures, faceplates.json and a contact sheet.
+"""Pocket Deck faceplates: 18 shop textures + the book-only Bookworm and Stargazer, 4 shared overlay textures, faceplates.json and a contact sheet.
 
 Run: python scripts/deck_art/build_faceplates.py            (everything)
      python scripts/deck_art/build_faceplates.py bookworm   (one plate; json rewritten)
@@ -555,6 +555,78 @@ def bookworm():
     return finish(img, 0.12)
 
 
+def stargazer():
+    """Stargazer (collection book reward for the Discoveries page at 100%): a foil-stamped night sky.
+
+    Night gradient, about 90 seeded stars (six of them four-point glints), one gold constellation
+    (an egg outline with a star above it) in the free corner of the left grip between the menu
+    button and the glass, and a thin double gold rule round the plate as on Bookworm.
+    """
+    img = base3("#3A2F7A", "#262663", "#1B1F4A", angle=70)
+    img = img * (0.95 + 0.10 * fbm(4, 2301, 3))[..., None]             # faint sky mottle
+    px = 1.0 / H                                                       # one output pixel in plate heights
+    rng = np.random.default_rng(2311)
+    glints = 0
+    for i in range(90):
+        x, y = rng.random() * ASPECT, rng.random()
+        col = "#FFE9A8" if rng.random() < 0.35 else "#FFFFFF"
+        if i % 15 == 7:                                                # six four-point glints, 10 to 14 px
+            arm = (5 + rng.random() * 2) * px
+            g = blob(x, y, 2.6 * px, 1.4) + (np.exp(-((XA - x) / arm) ** 2 - ((Y - y) / (0.9 * px)) ** 2)
+                                             + np.exp(-((XA - x) / (0.9 * px)) ** 2 - ((Y - y) / arm) ** 2)) * 0.9
+            img = over(img, col, np.clip(g, 0, 1) * 0.95)
+            glints += 1
+        else:                                                          # 1 to 3 px dots
+            r = (0.5 + rng.random() ** 2 * 1.0) * px
+            img = over(img, col, np.clip(blob(x, y, r * 1.8, 1.5) * 1.6, 0, 1) * (0.55 + 0.45 * rng.random()))
+
+    # thin double gold rule (foil stamp)
+    def rule(inset, radius, width):
+        m = Image.new("L", (GW, GH), 0)
+        d = ImageDraw.Draw(m)
+        i, r = inset * GH, radius * GH
+        d.rounded_rectangle([i, i, GW - 1 - i, GH - 1 - i], r, outline=255, width=max(1, int(width * GH)))
+        return np.asarray(m.filter(ImageFilter.GaussianBlur(GH * 0.0014))).astype(np.float32) / 255
+
+    for inset, radius, width, a in ((0.040, 0.135, 0.0045, 0.85), (0.060, 0.117, 0.0028, 0.70)):
+        g = rule(inset, radius, width)
+        img = over(img, "#FFE9A8", g * a)
+        img = over(img, "#FFF8DC", np.clip(np.roll(g, -int(GH * 0.002), axis=0) - g, 0, 1) * 0.4)
+
+    # gold constellation: an egg outline (seven nodes) with a star above it. Deck units, so it
+    # stays clear of the menu button (x 128..252), the d-pad well (to y 540) and the glass (x 360).
+    cx, cy, rx, ry = 306.0, 668.0, 36.0, 48.0
+    egg = []
+    for k in range(7):
+        a = -math.pi / 2 + k * 2 * math.pi / 7
+        squeeze = 0.80 if math.sin(a) < -0.3 else 1.0                  # narrower toward the top
+        egg.append((cx + math.cos(a) * rx * squeeze, cy + math.sin(a) * ry))
+    star = (306.0, 580.0)
+    m = Image.new("L", (GW, GH), 0)
+    d = ImageDraw.Draw(m)
+
+    def pt(q):
+        u, v = deck_uv(*q)
+        return u * (GW - 1), v * (GH - 1)
+
+    for a, b in list(zip(egg, egg[1:] + egg[:1])) + [(star, egg[0])]:
+        d.line([pt(a), pt(b)], fill=255, width=2 * SS)
+    for q in egg:
+        x, y = pt(q)
+        d.ellipse([x - 2.5 * SS, y - 2.5 * SS, x + 2.5 * SS, y + 2.5 * SS], fill=255)
+    lines = np.asarray(m.filter(ImageFilter.GaussianBlur(SS * 0.45))).astype(np.float32) / 255
+    img = over(img, "#FFE9A8", lines * 0.95)
+    su, sv = deck_uv(*star)
+    sx, sy = su * ASPECT, sv
+    arm = 9 * px
+    g = blob(sx, sy, 4.5 * px, 1.3) + (np.exp(-((XA - sx) / arm) ** 2 - ((Y - sy) / (1.3 * px)) ** 2)
+                                       + np.exp(-((XA - sx) / (1.3 * px)) ** 2 - ((Y - sy) / arm) ** 2))
+    img = over(img, "#FFE9A8", np.clip(g, 0, 1))
+    img = over(img, "#FFFFFF", blob(sx, sy, 2.2 * px, 1.5) * 0.9)
+    assert glints == 6
+    return finish(img, 0.14)
+
+
 # ------------------------------------------------------------------ shared overlay textures (pulse opacity only)
 def save_overlay(name, color, alpha):
     a = np.clip(alpha, 0, 1)
@@ -608,10 +680,12 @@ PLATES = [
     # Overnight 2026-11-14 (VISUAL-BRIEF section 2): palette variants. Appended so no earlier `order` moves.
     ("grape_soda", "Grape Soda", grape_soda, "common", "#C9A6FF", "#5A3FA8", S, "glossy bubbles", "SmoothPlastic", ("gloss", 0.0, 0.40, 5.0), None),
     ("rose_chrome", "Rose Chrome", rose_chrome, "rare", "#FFC2D4", "#8A4660", RS, "rose chrome", "Metal", ("gloss", 0.0, 0.50, 4.0), None),
+    # Follow-up 2026-11-14: second book-only plate (Discoveries page at 100%). Appended: order 20.
+    ("stargazer", "Stargazer", stargazer, "book", "#B9C6FF", "#1B1F4A", G, "foil-stamped night sky", "SmoothPlastic", None, "book"),
 ]
 PRICE = {"starter": 0, "common": 20, "rare": 40, "showcase": 80, "book": 0}
 # Engrave (wordmark) colour and opacity; dark ink unless listed.
-ENGRAVE = {"aurora_glass": ("#FFFFFF", 0.78), "night_orb": ("#FFFFFF", 0.78), "tidepool": ("#FFFFFF", 0.78), "bookworm": ("#F2CF7A", 0.85)}
+ENGRAVE = {"aurora_glass": ("#FFFFFF", 0.78), "night_orb": ("#FFFFFF", 0.78), "tidepool": ("#FFFFFF", 0.78), "bookworm": ("#F2CF7A", 0.85), "stargazer": ("#FFE9A8", 0.85)}
 BAND_NAME = {S: "silver", GM: "gunmetal", G: "gold", RS: "rose", P: "paper"}
 OVERLAY_FILE = {"gloss": "overlay-gloss-sweep.png", "water": "overlay-water.png", "aurora": "overlay-aurora.png", "sparkle": "overlay-sparkle.png"}
 

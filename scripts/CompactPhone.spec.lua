@@ -440,7 +440,7 @@ return function(client,parent)
     local backs=shop.backgrounds
     assert(shop.tab==2 and backs.body.Visible and not shop.plates.Visible,label.." backgrounds tab")
     audit(shop.root,label.." backgrounds",0,0,function(node)return node:IsDescendantOf(backs.grid)and(node.AbsolutePosition.Y<backs.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>backs.grid.AbsolutePosition.Y+backs.grid.AbsoluteSize.Y)end)
-    assert(backs.pane.AbsolutePosition==shop.action.Parent.AbsolutePosition and backs.grid.AbsolutePosition.Y-top.Y==112,label.." backgrounds share the pane and grid slots")
+    assert(backs.pane.AbsolutePosition==shop.action.Parent.AbsolutePosition and backs.grid.AbsolutePosition.Y-top.Y==112-(backs.grid:GetAttribute("ScrollBleed")or 0),label.." backgrounds share the pane and grid slots")
     shop:close()
     host:Destroy();root:Destroy()
    end

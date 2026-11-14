@@ -4,11 +4,17 @@ ui.bond.levelUp,Bond level {count} · New trick: {name},,Menu text; e.g. Bond le
 ui.bond.max,Lv {count} · more soon,,Menu text; e.g. Lv 3 · more soon
 ui.bond.short,Lv {count},,Menu text; e.g. Lv 3
 ui.bond.title,Bond,,Menu text
+ui.bond.top,Lv {count} · Best friends,,Menu text; e.g. Lv 3 · Best friends
 ui.bond.trick.l1,Hello,,Menu text
+ui.bond.trick.l10,Best friends,,Menu text
 ui.bond.trick.l2,Sit,,Menu text
 ui.bond.trick.l3,Wiggle dance,,Menu text
 ui.bond.trick.l4,Big stretch,,Menu text
 ui.bond.trick.l5,Happy hop,,Menu text
+ui.bond.trick.l6,Peekaboo,,Menu text
+ui.bond.trick.l7,Cosy stretch,,Menu text
+ui.bond.trick.l8,Sneezy wiggle,,Menu text
+ui.bond.trick.l9,Show-off,,Menu text
 ui.book.bookworm.count,{count}/3,,Collection book; e.g. 3/3
 ui.book.bookworm.done,Bookworm faceplate is yours,,Collection book
 ui.book.bookworm.line,Finish any three pages: Bookworm faceplate,,Collection book
@@ -52,6 +58,7 @@ ui.book.timeout,Still saving. Try again soon.,,Collection book
 ui.book.title,Collection book,,"Collection book; also ui.coach.book.title, ui.r3.help.book.title"
 ui.book.toast.bookworm,Bookworm faceplate unlocked,,Collection book
 ui.book.toast.claimed,Page milestone,,Collection book
+ui.book.toast.plate,{name} faceplate unlocked,,Collection book; e.g. Pet Park faceplate unlocked
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
 ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
@@ -358,6 +365,7 @@ catalog.DeckThemes.ById.prism_flare.name,Prism Flare,,"Catalogue DeckThemes (nam
 catalog.DeckThemes.ById.rose_chrome.name,Rose Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.rose_chrome.name, catalog.BookCatalog.Pages.faceplates.items.10.name"
 catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
 catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
+catalog.DeckThemes.ById.stargazer.name,Stargazer,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name
 catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
@@ -392,9 +400,9 @@ catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name
 catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
 catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name)
 catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.ById.leaf.name,Leaf,,Catalogue PetCharmCatalog (name)
 catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name)
 catalog.PetCharmCatalog.ById.star.name,Star,,Catalogue PetCharmCatalog (name)
-catalog.PetCharmCatalog.Reserved.leaf.name,Leaf,,Catalogue PetCharmCatalog (name)
 catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.3.label,Neck,,Catalogue WearableCatalog (label)

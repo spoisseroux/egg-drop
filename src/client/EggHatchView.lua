@@ -864,7 +864,8 @@ function View:layoutShop()
  local size=self.shade.AbsoluteSize
  local phone=Kit.compactRule(size.X,size.Y)
  local view=nil
- if phone then local _,kh=Kit.keepOut();view={W=math.floor(size.X),H=math.floor(size.Y)-(kh+2),top=kh+2}end
+ -- QA v2 R3.2 (follow-up 2026-11-14): the phone sheet starts at Kit.sheetTop, so an inset host is not pushed down twice.
+ if phone then local top=Kit.sheetTop(self.shade);view={W=math.floor(size.X),H=math.max(1,math.floor(size.Y)-top),top=top}end
  local key=if view then string.format("%dx%d",view.W,view.H)else "regular"
  if self.shopKey~=key or not self.shopRoot then self:buildShopChrome(view)end
  local panel=self.shopPanel

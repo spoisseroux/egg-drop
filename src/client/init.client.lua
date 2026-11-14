@@ -1223,7 +1223,7 @@ do
   claimed=function(message)
    clientUI.bookToaster=clientUI.bookToaster or Kit.toaster(host)
    clientUI.bookToaster.show(UICopy.get("book.toast.claimed"),if type(message.reward)=="number"and message.reward>0 then message.reward else nil)
-   if message.faceplate then clientUI.bookToaster.show(UICopy.get("book.toast.bookworm"))end
+   if message.faceplate then do local plate=require(ReplicatedStorage.Shared.DeckThemes).ById[message.faceplate];clientUI.bookToaster.show(if plate and message.faceplate~="bookworm"then UICopy.get("book.toast.plate",{name=plate.name})else UICopy.get("book.toast.bookworm"))end end
   end,
   closed=function(reason)
    clientUI.syncPause();if updateHud then task.defer(updateHud)end

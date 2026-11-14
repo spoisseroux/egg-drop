@@ -835,6 +835,42 @@
     "reflectance": 0.25,
     "transparency": 0
    }
+  },
+  {
+   "id": "stargazer",
+   "name": "Stargazer",
+   "order": 20,
+   "tier": "book",
+   "priceStars": 0,
+   "texture": "stargazer.png",
+   "finish": "foil-stamped night sky",
+   "accent": "#B9C6FF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 11.48,
+   "deep": "#1B1F4A",
+   "band": {
+    "name": "gold",
+    "tint": "#EBC978"
+   },
+   "engrave": {
+    "color": "#FFE9A8",
+    "opacity": 0.85
+   },
+   "ui": {
+    "panel": "#161822",
+    "raised": "#222531",
+    "well": "#0E0F16",
+    "selected": "#373C4E",
+    "line": "#A5ADC8"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "bookOnly": true,
+   "unlock": "book"
   }
  ]
 }

@@ -39,6 +39,12 @@ return function(server)
 
 	test("the catalogue: 18 plates, 8 free starters with the saved ids, 10 at 20/40/80", function()
 		assert(#Themes.Order == 18)
+		-- Book-only plates are counted apart from the 18 on the grid: Bookworm, Stargazer.
+		assert(#Themes.BookOnly == 2 and Themes.BookOnly[1] == "bookworm" and Themes.BookOnly[2] == "stargazer")
+		for _, id in ipairs(Themes.BookOnly) do
+			local plate = Themes.ById[id]
+			assert(plate and plate.bookOnly and plate.rule == "book" and plate.texture and Themes.price(id) == nil and table.find(Themes.Order, id) == nil, id)
+		end
 		local prices = {}
 		for index, id in ipairs(Themes.Order) do
 			local theme = Themes.ById[id]

@@ -16,12 +16,12 @@ Affection.BurstCount=22
 -- from head height, rise 0.6 studs over 0.9 s, drift +-0.25, size 0.14 -> 0.20 -> 0 studs,
 -- in the pet's secondary colour lightened 20% toward white. Pooled (built on first use,
 -- never per burst); nothing shows under Reduced Effects (the pip and the toast carry it).
--- The heart is the "♥" glyph until the 64 px heart PNG is uploaded (set BondHeartImage).
+-- The heart is the 64 px PIL heart sprite (BondHeartImage); the "♥" glyph is the fallback when it is nil.
 Affection.BondHearts=6
 Affection.BondSeconds=.9
 Affection.BondRise=.6
 Affection.BondDrift=.25
-Affection.BondHeartImage=nil
+Affection.BondHeartImage="rbxassetid://78220417355081" -- assets/ui/bond/heart-burst.png (build_bond_heart.py), white, tinted by ImageColor3
 -- Pure: one bond heart at `t` (0..1): {rise (studs), size (studs), alpha (0 = solid)}.
 function Affection.bondHeart(t)
  t=math.clamp(t,0,1)

@@ -9,19 +9,27 @@
 --
 -- Levels come from Shared.BondCatalog (lane K) and the XP from the snapshot's `bond`
 -- (lane S). While either is missing `info` returns nil and callers show nothing.
+--
+-- Follow-up 2026-11-14, ten levels: the row stays five hearts wide (ten 14 px hearts
+-- are 176 px, more than a phone pane has beside a name). Levels 1-5 fill the hearts;
+-- levels 6-10 go round again and turn them gold, one by one, each with a small cream
+-- star-dot in its middle so a gold heart reads apart from a filled one without colour.
+-- The "Lv N" label beside the row carries the exact number.
 local TweenService=game:GetService("TweenService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local Pips={}
-Pips.Count=5
+Pips.Count=5          -- hearts in the row
+Pips.Rounds=2         -- times the row fills (levels shown = Count * Rounds)
+Pips.GemScale=.3      -- the gold heart's centre dot, as a share of the pip
 Pips.Gap=4
 Pips.Bar=3
 Pips.Size={regular=18,compact=14}
 Pips.EmptyAlpha=.6    -- `line` at 40%
 Pips.EmptyScale=.8
 Pips.PopSeconds=.2    -- 1.0 -> 1.25 -> 1.0
-Pips.Tricks=table.freeze({"l1","l2","l3","l4","l5"})
+Pips.Tricks=table.freeze({"l1","l2","l3","l4","l5","l6","l7","l8","l9","l10"})
 
 local function optional(name)
  local module=Shared:FindFirstChild(name)
@@ -31,11 +39,16 @@ local function optional(name)
 end
 function Pips.catalog()return Pips.override or optional("BondCatalog")end
 
--- Pure: the levels shown (the catalogue's shipped cap, never more than the five pips).
+-- Pure: the levels shown (the catalogue's shipped cap, never more than the row can show).
 function Pips.cap(catalog)
  catalog=catalog or Pips.catalog()
  local shipped=catalog and tonumber(catalog.MaxLevelShipped)or Pips.Count
- return math.clamp(math.floor(shipped),1,Pips.Count)
+ return math.clamp(math.floor(shipped),1,Pips.Count*Pips.Rounds)
+end
+-- Pure: how many hearts are filled and how many of those are gold at a shown level.
+function Pips.hearts(shown)
+ shown=math.clamp(math.floor(tonumber(shown)or 0),0,Pips.Count*Pips.Rounds)
+ return math.min(shown,Pips.Count),math.max(0,shown-Pips.Count)
 end
 -- Pure: one pet's bond for display, or nil while bond data is not there.
 -- Returns {xp, level (true level), shown (1..cap), progress (0..1 to the next level), max}.
@@ -53,7 +66,7 @@ function Pips.info(bond,petId,catalog)
   local span=thresholds[level+1]-thresholds[level]
   progress=if span>0 then math.clamp((xp-thresholds[level])/span,0,1)else 1
  end
- return{xp=xp,level=level,shown=shown,progress=progress,max=level>=cap}
+ return{xp=xp,level=level,shown=shown,progress=progress,max=level>=cap,top=level>=cap and cap>=Pips.Count*Pips.Rounds}
 end
 -- Pure: the trick a level unlocks (nil past the shipped tricks).
 function Pips.trickName(level)
@@ -66,10 +79,11 @@ function Pips.toastText(level)
  if trick then return UICopy.get("bond.levelUp",{count=level,name=trick})end
  return UICopy.get("bond.levelUpPlain",{count=level})
 end
--- Pure: the short line beside the pips ("Lv 3", or "Lv 5 · more soon" at the cap).
+-- Pure: the short line beside the pips ("Lv 3"; at the shipped cap "Lv 5 · more soon",
+-- or "Lv 10 · Best friends" when the cap is the last level the row can show).
 function Pips.label(info)
  if not info then return ""end
- return UICopy.get(if info.max then "bond.max"else "bond.short",{count=info.shown})
+ return UICopy.get(if info.top then "bond.top"elseif info.max then "bond.max"else "bond.short",{count=info.shown})
 end
 -- Level-up detection (SYSTEMS-SCOPE 5.4): `seen` is the caller's table (clientUI.bondSeen).
 -- The first snapshot only sets the baseline; after that a pet whose shown level is higher
@@ -100,8 +114,9 @@ end
 -- One heart, `size` px square: white pieces in a CanvasGroup (GroupColor3 tints them).
 -- Centre-anchored, so the empty (smaller) pip and the level-up pop scale about its middle.
 local function heart(parent,index,size)
+ local baseZ=if parent:IsA("GuiObject")then parent.ZIndex else 0
  local pip=Kit.node("CanvasGroup",parent,{Name="Pip"..index,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromOffset(size,size),
-  AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset((index-1)*(size+Pips.Gap)+size/2,size/2),ZIndex=parent.ZIndex+1,Active=false})
+  AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset((index-1)*(size+Pips.Gap)+size/2,size/2),ZIndex=baseZ+1,Active=false})
  local a=.586 -- lobe diameter and square side, as a share of the pip
  local function piece(name,x,y,rotation,round)
   local f=Kit.node("Frame",pip,{Name=name,BorderSizePixel=0,BackgroundColor3=Color3.new(1,1,1),AnchorPoint=Vector2.new(.5,.5),
@@ -112,7 +127,13 @@ local function heart(parent,index,size)
  piece("LobeL",.5-.3536*a,.543-.3536*a,0,true)
  piece("LobeR",.5+.3536*a,.543-.3536*a,0,true)
  local scale=Kit.node("UIScale",pip,{Name="PipScale",Scale=1})
- return{root=pip,scale=scale}
+ -- The gold round's mark: a cream dot in the heart's middle. It sits outside the tinted
+ -- CanvasGroup (a sibling over it), so the group colour does not dye it.
+ local gem=Kit.node("Frame",parent,{Name="Gem"..index,BorderSizePixel=0,BackgroundColor3=Color3.fromHex("#FFF6DC"),AnchorPoint=Vector2.new(.5,.5),
+  Position=UDim2.fromOffset((index-1)*(size+Pips.Gap)+size/2,math.floor(size*.46+.5)),Size=UDim2.fromOffset(math.max(3,math.floor(size*Pips.GemScale+.5)),math.max(3,math.floor(size*Pips.GemScale+.5))),
+  ZIndex=baseZ+2,Visible=false,Active=false})
+ Kit.corner(gem,999)
+ return{root=pip,scale=scale,gem=gem}
 end
 
 -- parent: any GuiObject. compact: phone size. Returns {root, set(info, animate), info}.
@@ -128,22 +149,26 @@ function Pips.new(parent,compact)
  bar.root.Name="BondBar";bar.root.Position=UDim2.fromOffset(0,size+Pips.Gap);bar.root.Size=UDim2.fromOffset(width,Pips.Bar)
  if bar.minimum then bar.minimum.MinSize=Vector2.new(Pips.Bar,0)end
  api.bar=bar
- local function paintPip(index,filled)
+ local function paintPip(index,filled,gold)
   local pip=api.pips[index]
-  Kit.paint(pip.root,"GroupColor3",function()return Kit.color(if filled then "accent"else "line")end)
+  Kit.paint(pip.root,"GroupColor3",function()return if gold then Kit.Color.stars else Kit.color(if filled then "accent"else "line")end)
   pip.root.GroupTransparency=if filled then 0 else Pips.EmptyAlpha
   pip.scale.Scale=if filled then 1 else Pips.EmptyScale
-  pip.root:SetAttribute("Filled",filled)
+  pip.gem.Visible=gold
+  pip.root:SetAttribute("Filled",filled);pip.root:SetAttribute("Gold",gold)
  end
  function api.set(info,animate)
   api.info=info
   root.Visible=info~=nil
   if not info then api.filled=nil;root:SetAttribute("BondLevel",nil);return end
   local before=api.filled
+  local full,golden=Pips.hearts(info.shown)
   for index=1,Pips.Count do
-   local filled=index<=info.shown
-   paintPip(index,filled)
-   if animate and filled and before~=nil and index>before then
+   local filled=index<=full
+   local gold=index<=golden
+   paintPip(index,filled,gold)
+   -- The heart this level changed pops: a newly filled one, or one that just turned gold.
+   if animate and filled and before~=nil and(index>before or(gold and index+Pips.Count>before))then
     local pip=api.pips[index]
     if Kit.reduced()then
      -- Reduced Motion: no pop, the pip fades in.

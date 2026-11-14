@@ -278,7 +278,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             -- FEEL-ALIVE B2/B3: look-at-owner and the owner-still sit (8 studs, 6 s).
             self.pet.ownerPosition=root and root.Position or nil;self.pet.ownerMoving=not still
             self.pet.ownerStillNearFor=if still and(root.Position-self.pet.origin).Magnitude<=8 then serverNow-self.ownerStillSince else 0
-            self:bondTricks(reduced) -- slice F: Hello (level 1) and Sit (level 2)
+            self:bondTricks(reduced) -- slice F: Hello, the quicker sit and the routines
             if self.pet.idleBeat and self.pet.idleBeat.kind then self.pet.poseDirty=true end
             self.pet.cosmeticTime=serverNow
             -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
@@ -503,12 +503,14 @@ end
 -- carries it on; it ends at once when the pet is not free to play a beat.
 function Room:playBeat(kind)
 	local pet=self.pet
-	if not pet or pet.destroyed or not PetIdleBeats.Durations[kind]then return false end
+	-- A trick's sit is a short one: in, the shortest hold, out.
+	local duration=if kind=="sit"then PetIdleBeats.SitIn+PetIdleBeats.SitHoldMin+PetIdleBeats.SitOut else PetIdleBeats.Durations[kind]
+	if not pet or pet.destroyed or not duration then return false end
 	local s=pet.idleBeat
 	if not s then s={idle=0,clock=0,last=-math.huge};pet.idleBeat=s end
 	if s.kind then return false end
 	s.kind,s.age,s.previous,s.landed=kind,0,kind,false
-	s.duration=PetIdleBeats.Durations[kind];s.side=s.side or 1;s.count=(s.count or 0)+1
+	s.duration=duration;s.side=s.side or 1;s.count=(s.count or 0)+1
 	if pet.model then pet.model:SetAttribute("IdleBeat",kind)end
 	pet.poseDirty=true
 	return true
@@ -539,22 +541,76 @@ function Room:bondFlourish()
 	if self.pet.model then self.pet.model:SetAttribute("BondLevelUp",pending.level)end
 	return true
 end
--- Tricks 1-2 (local presentation only; gated on the snapshot's bond, so nothing changes
--- while the server sends none). Level 1 "Hello": a wave the first time the owner stands
--- near this session. Level 2 "Sit": the owner-still sit needs level 2.
+-- Tricks (local presentation only; gated on the snapshot's bond, so nothing changes
+-- while the server sends none).
+--   Level 1 "Hello": a wave the first time the owner stands near this session.
+--   The owner-still sit (FEEL-ALIVE B3, 6 s) is every pet's again, at any level
+--   (follow-up 2026-11-14: gating it took a behaviour away from level-1 pets).
+--   Level 2 "Sit": the pet settles sooner, Room.BondSitHead seconds early.
+--   Level 3 and up: routines (BondCatalog.Unlocks[n].beats, existing beats only). While
+--   the owner stands near and still, the pet shows one unlocked routine every
+--   Room.BondTrickGap seconds, newest first, then round the others.
+Room.BondSitHead=3      -- [PLACEHOLDER] level 2+: sits after 3 s instead of 6 s
+Room.BondTrickGap=24    -- [PLACEHOLDER] seconds between routines
+Room.BondTrickFirst=6   -- [PLACEHOLDER] seconds near the owner before the first one
+Room.BondTrickFrom=3    -- the first level whose unlock is a routine
+-- Pure: the routine unlocks reached at `level`, newest first.
+function Room.bondRoutines(level,catalog)
+	local list={}
+	catalog=catalog or BondPips.catalog()
+	if not catalog or type(catalog.Unlocks)~="table"or type(level)~="number"then return list end
+	for index=math.min(level,#catalog.Unlocks),Room.BondTrickFrom,-1 do
+		local unlock=catalog.Unlocks[index]
+		if type(unlock)=="table"and type(unlock.beats)=="table"and #unlock.beats>0 then table.insert(list,unlock)end
+	end
+	return list
+end
 function Room:bondTricks(reduced)
 	local pet=self.pet
 	local info=self:bondInfo()
 	pet.bondLevel=info and info.shown or nil
 	if self.pendingBond then self:bondFlourish()end
-	if not info then return end
-	if info.shown<2 then pet.ownerStillNearFor=0 end
+	if not info then self.bondRoutine=nil;return end
+	if info.shown>=2 and(pet.ownerStillNearFor or 0)>0 then pet.ownerStillNearFor+=Room.BondSitHead end
 	local id=self.shownPet.id
+	local free=not reduced and pet.idleBeatsEnabled and pet.ownerNearStill and(pet.gaitWeight or 0)<.03
+	local running=pet.idleBeat and pet.idleBeat.kind
 	self.bondHello=self.bondHello or {}
-	if not self.bondHello[id]and not reduced and pet.idleBeatsEnabled and pet.ownerNearStill
-		and(pet.gaitWeight or 0)<.03 and not(pet.idleBeat and pet.idleBeat.kind)then
-		if self:playBeat("wave")then self.bondHello[id]=true end
+	if not self.bondHello[id]and free and not running then
+		if self:playBeat("wave")then self.bondHello[id]=true;self.bondTrickAt=os.clock()+Room.BondTrickGap end
+		return
 	end
+	-- A routine in progress: the next beat starts when the last one ends. It stops when
+	-- the owner walks off, the pet moves or another pet is shown.
+	local routine=self.bondRoutine
+	if routine then
+		if routine.petId~=id or not free then self.bondRoutine=nil;return end
+		if running then return end
+		-- A beat that ended early was cut off (the pet got busy): drop the routine quietly.
+		if routine.endsAt and os.clock()<routine.endsAt then self.bondRoutine=nil;return end
+		routine.step+=1
+		local kind=routine.unlock.beats[routine.step]
+		if kind and self:playBeat(kind)then
+			routine.endsAt=os.clock()+pet.idleBeat.duration*.8
+		else
+			self.bondRoutine=nil
+			if not kind and routine.unlock.hearts and self.affection then self.lastBondBurst=self.affection:bondBurst(pet.secondaryColor,false)end
+			if not kind and pet.model then pet.model:SetAttribute("BondTrickDone",routine.unlock.id)end
+		end
+		return
+	end
+	if info.shown<Room.BondTrickFrom then return end
+	if not free then self.bondTrickAt=nil;return end
+	local now=os.clock()
+	self.bondTrickAt=self.bondTrickAt or now+Room.BondTrickFirst
+	if running or now<self.bondTrickAt then return end
+	local routines=Room.bondRoutines(info.shown)
+	if #routines==0 then return end
+	self.bondTrickTurn=(self.bondTrickTurn or 0)+1
+	local unlock=routines[(self.bondTrickTurn-1)%#routines+1]
+	self.bondRoutine={petId=id,unlock=unlock,step=0}
+	self.bondTrickAt=now+Room.BondTrickGap
+	if pet.model then pet.model:SetAttribute("BondTrick",unlock.id)end
 end
 function Room:setCharmVisible(visible)
 	if type(visible)~="boolean"or self.charmPending or not self.focusing or self.mode~="Room"or self.busy or self.overlayOpen()then return false end
@@ -1119,6 +1175,10 @@ function Room:show(mode, animate)
 		self:restoreCamera()
 		self.boardCamera = self.boardCamera or require(script.Parent.DeckCameraLock).new()
 		self.boardCamera:freeze(workspace.CurrentCamera)
+		-- Follow-up 2026-11-14: park the frozen camera on a clean view across the garden
+		-- (it used to sit behind the avatar against the invisible perimeter wall).
+		local _,parkRoot=self:cameraIdentity()
+		if parkRoot then self.boardCamera:park(parkRoot.Position,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)end
 	end
 	self.menuOpen = false
 	self:updateControls()

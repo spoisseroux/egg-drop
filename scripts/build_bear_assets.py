@@ -45,7 +45,7 @@ PIECES = {
     "FootR": ("FootR", "body", "ellipsoid"),
     "CharmDot": ("Charm", "secondary", "ellipsoid"),
 }
-TEMPLATE_EXTRA = ("WingL", "WingR", "CharmStar", "CharmHeart", "CharmButton")
+TEMPLATE_EXTRA = ("WingL", "WingR", "CharmStar", "CharmHeart", "CharmButton", "CharmLeaf")
 ANCHORS = {"Head": "Head", "Body": "Body", "HandL": "HandL", "HandR": "HandR", "FootL": "FootL", "FootR": "FootR",
            "EyeLine": "EyeLine", "HandCatch": "HandCatch", "CharmAnchor": "CharmFloat", "Tail": "Tail",
            "EarL": "EarL", "EarR": "EarR", "WingL": "WingL", "WingR": "WingR",
@@ -119,7 +119,7 @@ def xml_block() -> str:
     for index, name in enumerate(list(PIECES) + list(TEMPLATE_EXTRA)):
         key = "Bear__" + name
         o, p = objects[key], parts[key]
-        pos = charm if name in ("CharmStar", "CharmHeart", "CharmButton") else to_template(o["centerBlender"])
+        pos = charm if name in ("CharmStar", "CharmHeart", "CharmButton", "CharmLeaf") else to_template(o["centerBlender"])
         raw = p["ms"]
         size = [raw[0] / 100, raw[1] / 100, raw[2] / 100]
         # Cut-out textures (the mouth) need a SurfaceAppearance in Transparency mode:

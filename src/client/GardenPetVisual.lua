@@ -386,6 +386,8 @@ function Visual:update(dt)
    if entry.eyeOffsetY then cf*=CFrame.new(0,-entry.eyeOffsetY*(1-eye*blink),0)end
   elseif string.find(name,"Glint")then hidden=hidden or eye*blink<.4
   elseif entry.mouthAlt then hidden=hidden or mouth=="open"or(entry.neutralOnly==true and mouth~="smile")
+   -- A full-time mouth swap (Kitty W) follows the smile's line/soft squash, so the face still reads.
+   if not entry.neutralOnly then if mouth=="line"then size=Vector3.new(size.X*.5,size.Y*.24,size.Z)elseif mouth=="soft"then size=Vector3.new(size.X*.82,size.Y*.75,size.Z)end end
   elseif name=="MouthO"then hidden=hidden or mouth~="open";if cooMouth>.12 then size*=.45+.55*cooMouth end
   elseif name=="MouthSmile"then
    hidden=hidden or mouth=="open"or(entry.neutralSuppressed==true and mouth=="smile")

@@ -30,6 +30,41 @@ return function(client,parent)
    assert(not lock:freeze(nil),"no camera, no freeze")
    camera:Destroy()
   end)
+  test("round camera (follow-up 2026-11-14): the frozen camera parks above the avatar looking in toward the hub, and the old view comes back on exit",function()
+   local Lock=require(client.DeckCameraLock)
+   local hub=Vector3.new(-30,4,4)
+   -- Pure: at the island's edge (the old bad spot: behind the avatar, against the perimeter wall).
+   local origin=Vector3.new(110,7,60)
+   local cf=Lock.parkCFrame(origin,hub,Vector3.new(1,0,0))
+   local inward=Vector3.new(hub.X-origin.X,0,hub.Z-origin.Z).Unit
+   assert(math.abs(cf.Position.Y-(origin.Y+Lock.ParkRise))<1e-4,"above the head")
+   assert((Vector3.new(cf.Position.X,0,cf.Position.Z)-Vector3.new(origin.X,0,origin.Z)).Magnitude<=Lock.ParkLead+1e-4,"near the player")
+   local flat=Vector3.new(cf.LookVector.X,0,cf.LookVector.Z).Unit
+   assert(flat:Dot(inward)>.999,"looking in across the garden, never out over the wall")
+   assert(cf.LookVector.Y<0 and cf.LookVector.Y>-.3,"a slight downward tilt")
+   assert((origin-cf.Position).Unit:Dot(cf.LookVector)<0,"the avatar is behind the lens")
+   -- At the hub itself: keep the current heading; a straight-down look falls back to a fixed one.
+   local at=Lock.parkCFrame(hub+Vector3.new(2,3,0),hub,Vector3.new(0,-.2,1).Unit)
+   assert(Vector3.new(at.LookVector.X,0,at.LookVector.Z).Unit:Dot(Vector3.new(0,0,1))>.999)
+   local down=Lock.parkCFrame(hub,hub,Vector3.new(0,-1,0));assert(down and down.Position==down.Position and down.LookVector.Magnitude>.99)
+   assert(Lock.parkCFrame(nil,hub)==nil and Lock.parkCFrame(origin,nil)==nil,"no avatar or no layout hub: no parking")
+   -- On a camera.
+   local camera=Instance.new("Camera");camera.CameraType=Enum.CameraType.Custom
+   local view=CFrame.new(118,9,64)*CFrame.Angles(0,.4,0);camera.CFrame=view
+   local lock=Lock.new()
+   assert(not lock:park(origin,hub),"only a frozen camera parks")
+   lock:freeze(camera);assert(lock:park(origin,hub)and camera.CFrame.Position:FuzzyEq(cf.Position,1e-3),"parked")
+   local parked=camera.CFrame
+   assert(not lock:park(Vector3.new(0,7,0),hub)and camera.CFrame==parked,"once per freeze")
+   assert(lock:freeze(camera)and camera.CFrame==parked,"freezing again does not move it")
+   assert(lock:release()and camera.CameraType==Enum.CameraType.Custom and camera.CFrame==view,"exit: the view the player left comes back")
+   lock:freeze(camera);assert(not lock:park(origin,nil)and camera.CFrame==view,"no hub: the camera only freezes")
+   lock:release()
+   -- A camera someone else took over while parked is left alone on exit.
+   lock:freeze(camera);lock:park(origin,hub);camera.CameraType=Enum.CameraType.Fixed;parked=camera.CFrame
+   lock:release();assert(camera.CameraType==Enum.CameraType.Fixed and camera.CFrame==parked)
+   camera:Destroy()
+  end)
   test("Kit.tabs: the pill never leaves the track (click + the owner's re-select, rapid switches) and lands on its segment",function()
    motion(false)
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(500,100);host.BackgroundTransparency=1;host.Parent=gui

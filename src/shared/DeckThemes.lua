@@ -73,6 +73,11 @@ local Plates={
   ui={panel="#1F1D2F",raised="#2C2A40",well="#14121F",selected="#423B5B",line="#AAA2C8"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.4,period=5.0},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
  rose_chrome={name="Rose Chrome",order=19,tier="rare",priceStars=40,texture="rbxassetid://120581388184665",finish="rose chrome",accent="#FFC2D4",ink="#0E0F12",deep="#8A4660",band="#F0B8B0",engrave="#0E0F12",engraveOpacity=0.42,
   ui={panel="#251E25",raised="#332B34",well="#191318",selected="#50404A",line="#BDACB9"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.5,period=4.0},held3d={material="Metal",reflectance=0.25,transparency=0}},
+ -- Second book-only plate (follow-up 2026-11-14, VISUAL-BRIEF 2): granted with the Discoveries
+ -- page 100% claim (BookCatalog.StargazerPlate). Foil-stamped night sky: seeded stars, six glints,
+ -- a gold egg-and-star constellation, double gold rule (build_faceplates.py stargazer). Order 20.
+ stargazer={name="Stargazer",order=20,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://75553254311335",finish="foil-stamped night sky",accent="#B9C6FF",ink="#0E0F12",deep="#1B1F4A",band="#EBC978",engrave="#FFE9A8",engraveOpacity=0.85,
+  ui={panel="#161822",raised="#222531",well="#0E0F16",selected="#373C4E",line="#A5ADC8"},overlay=nil,held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
 }
 local hex=Color3.fromHex
 for id,plate in pairs(Plates)do
@@ -113,7 +118,7 @@ for id,plate in pairs(Plates)do
 end
 Themes.Plates=Plates
 -- Plates that only the collection book grants (never sold, not in the shop grid's Order).
-Themes.BookOnly={"bookworm"}
+Themes.BookOnly={"bookworm","stargazer"}
 -- Fixed Star price for a plate, or nil when it is not sold (book-only plates never are).
 function Themes.price(id)
  local theme=Themes.ById[id]

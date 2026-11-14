@@ -397,6 +397,11 @@
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
   },
+  "catalog.DeckThemes.ById.stargazer.name": {
+   "source": "Stargazer",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name"
+  },
   "catalog.DeckThemes.ById.stone.name": {
    "source": "Pebble",
    "context": "",
@@ -582,6 +587,11 @@
    "context": "",
    "example": "Catalogue PetCharmCatalog (name)"
   },
+  "catalog.PetCharmCatalog.ById.leaf.name": {
+   "source": "Leaf",
+   "context": "",
+   "example": "Catalogue PetCharmCatalog (name)"
+  },
   "catalog.PetCharmCatalog.ById.ring.name": {
    "source": "Ring",
    "context": "",
@@ -589,11 +599,6 @@
   },
   "catalog.PetCharmCatalog.ById.star.name": {
    "source": "Star",
-   "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
-  },
-  "catalog.PetCharmCatalog.Reserved.leaf.name": {
-   "source": "Leaf",
    "context": "",
    "example": "Catalogue PetCharmCatalog (name)"
   },
@@ -1197,8 +1202,18 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.bond.top": {
+   "source": "Lv {count} · Best friends",
+   "context": "",
+   "example": "Menu text; e.g. Lv 3 · Best friends"
+  },
   "ui.bond.trick.l1": {
    "source": "Hello",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.bond.trick.l10": {
+   "source": "Best friends",
    "context": "",
    "example": "Menu text"
   },
@@ -1219,6 +1234,26 @@
   },
   "ui.bond.trick.l5": {
    "source": "Happy hop",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.bond.trick.l6": {
+   "source": "Peekaboo",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.bond.trick.l7": {
+   "source": "Cosy stretch",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.bond.trick.l8": {
+   "source": "Sneezy wiggle",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.bond.trick.l9": {
+   "source": "Show-off",
    "context": "",
    "example": "Menu text"
   },
@@ -1436,6 +1471,11 @@
    "source": "Page milestone",
    "context": "",
    "example": "Collection book"
+  },
+  "ui.book.toast.plate": {
+   "source": "{name} faceplate unlocked",
+   "context": "",
+   "example": "Collection book; e.g. Pet Park faceplate unlocked"
   },
   "ui.coach.book.line": {
    "source": "Fill the pages as you collect. Every page pays once.",

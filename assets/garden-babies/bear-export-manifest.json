@@ -310,6 +310,20 @@
     0.20971
    ],
    "triangles": 72
+  },
+  {
+   "name": "Bear__CharmLeaf",
+   "centerBlender": [
+    0.00441,
+    0.0,
+    0.0
+   ],
+   "sizeBlender": [
+    0.188,
+    0.11,
+    0.236
+   ],
+   "triangles": 78
   }
  ],
  "anchorsBlender": {

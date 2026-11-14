@@ -161,6 +161,21 @@ return function(server)
 		assert(third.state.bond==nil and H.playDateDone(third))
 	end)
 
+	test("levels 6 to 10 (follow-up 2026-11-14): no save change; XP an old save banked past 250 is valid and reads its new level",function()
+		local Catalog=require(Shared.BondCatalog)
+		assert(Catalog.MaxLevelShipped==10 and Catalog.Thresholds[10]<=Bond.MaxXP and Bond.MaxXP==Catalog.MaxXP,"every level fits under the XP cap the save validates")
+		local base,db=fixture()
+		-- A save from the five-level build: XP kept counting past level 5.
+		for xp,level in pairs({[250]=5,[349]=5,[350]=6,[600]=8,[850]=10,[5000]=10,[Bond.MaxXP]=10})do
+			local old=fixture(reseed(db,{bond={pip=xp}}))
+			assert(old.status=="Ready"and H.valid(old.state)and bond(old)==xp,"old save loads with "..xp)
+			assert(old.state.version==base.state.version and base.state.version==11 and H.public(old).bond.pip==xp and Catalog.level(H.public(old).bond.pip)==level,"level at "..xp)
+		end
+		-- A new save climbs through level 6 by the same writes; the award still pays.
+		local h=fixture(reseed(db,{bond={pip=348}}))
+		assert(H.award(h,1,6,summary(h),nil,"pip")and bond(h)>=350 and Catalog.level(bond(h))==6 and H.valid(h.state))
+	end)
+
 	test("XP stops at MaxXP and a full bond never fails a write",function()
 		local _,db=fixture()
 		local h=fixture(reseed(db,{bond={pip=Bond.MaxXP-1}}))
