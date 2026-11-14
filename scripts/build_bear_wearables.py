@@ -18,7 +18,12 @@ from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
 
 D = bpy.data.objects
-root = D["PetBear"]
+# The same items rebuild against another pet on the Bear base (overnight 2026-11-14: pet-blip.blend, root
+# `PetBlip`): every item is projected onto that pet's own anchors and surfaces, so a "refit" is a rebuild.
+ROOT_NAME = "PetBlip" if "PetBlip" in D else "PetBear"
+PRE, MAT_PRE = ROOT_NAME + "__", ("petBlip" if ROOT_NAME == "PetBlip" else "petBear")
+HAS_EARS = ROOT_NAME == "PetBear"            # ear items need an outer ear; Blip has antennae
+root = D[ROOT_NAME]
 TIERS = {"common": 15, "rare": 30, "showcase": 60}   # suggested Star prices
 
 # item id -> shop data. Order is the lineup order.
@@ -39,12 +44,20 @@ ITEMS = {
     # Slice A (2026-11-14): replace the beady Wide Eyes (Spencer: "creepy"); cozy-sim conventions, original shapes.
     "happy":       dict(slot="Eyes", name="Happy Eyes", tier="common", flags={}),
     "lash":        dict(slot="Eyes", name="Lash Eyes", tier="common", flags={}),
+    # Slice B (overnight 2026-11-14, VISUAL-BRIEF.md section 1): six new models, three new slots.
+    "blush":       dict(slot="Cheek", name="Blush Stickers", tier="common", flags={}),
+    "partyhat":    dict(slot="Hat", name="Party Hat", tier="common", flags=dict(coversHorns=True)),
+    "bowtail":     dict(slot="Tail", name="Bow Tail", tier="rare", flags={}),
+    "acorn":       dict(slot="Neck", name="Acorn Pendant", tier="rare", flags={}),
+    "bands":       dict(slot="Wrist", name="Friendship Bands", tier="common", flags={}),
+    "specs":       dict(slot="Eyewear", name="Round Specs", tier="common", flags={}),
 }
 
 # own colours (sRGB hex). Everything else is the pet's secondary or the face ink.
 C_BEANIE, C_STRAW, C_LEAF, C_POLLEN = "#E9574C", "#F3D37E", "#58B368", "#FFD23F"
 C_TEE, C_HOODIE, C_PEARL, C_GOLD = "#33539E", "#8E7BE8", "#FFF2D6", "#FFC240"
 C_WHITE, C_TONGUE = "#FFFFFF", "#FF7C9C"
+C_PARTY, C_RIBBON, C_NUT, C_CAP, C_BLUSH, C_BAND = "#45C2E0", "#F2596B", "#D9A05B", "#8B5A34", "#FF9FB2", "#4FC3C8"
 
 SHELL = 0.024                # shirt torso above the body
 SLEEVE_OFFSET = 0.020        # sleeve surface above the arm surface
@@ -70,13 +83,13 @@ def local(o):
 
 
 def anchor(name):
-    return D["PetBear__Anchor_" + name]
+    return D[PRE + "Anchor_" + name]
 
 
 def bvh_of(*names):
     vs, ts = [], []
     for n in names:
-        o = D["PetBear__" + n]
+        o = D[PRE + n]
         m = local(o)
         base = len(vs)
         vs += [m @ v.co for v in o.data.vertices]
@@ -120,10 +133,10 @@ def ink_material():
     return mat
 
 
-SECONDARY = bpy.data.materials["petBear__secondary"]
+SECONDARY = bpy.data.materials[MAT_PRE + "__secondary"]
 
 # ---------------------------------------------------------------- collection reset
-for cname in ("PetBear_AttachPlaceholders", "PetBear_Wearables"):
+for cname in (ROOT_NAME + "_AttachPlaceholders", ROOT_NAME + "_Wearables"):
     col = bpy.data.collections.get(cname)
     if col:
         for o in list(col.objects):
@@ -132,7 +145,7 @@ for cname in ("PetBear_AttachPlaceholders", "PetBear_Wearables"):
             if me.users == 0:
                 bpy.data.meshes.remove(me)
         bpy.data.collections.remove(col)
-WEAR = bpy.data.collections.new("PetBear_Wearables")
+WEAR = bpy.data.collections.new(ROOT_NAME + "_Wearables")
 bpy.context.scene.collection.children.link(WEAR)
 BUILT = []
 
@@ -154,7 +167,7 @@ def finish(short, bm, anchor_name, color, item, role, channel, piece="Main", fix
     for f in bm.faces:
         for l in f.loops:
             l[uv].uv = ((l.vert.co[ua] - lo[ua]) / size[ua], (l.vert.co[va] - lo[va]) / size[va])
-    name = "PetBear__" + short
+    name = PRE + short
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
@@ -478,7 +491,7 @@ finish("Hat_FlowerCrown_Centers", centers, "HatCrown", C_POLLEN, "flowercrown", 
 # ================================================================= SHIRTS
 def torso_shell():
     """Body pushed out SHELL along its normals, cut flat at the hem and the collar. Pet-local."""
-    body = D["PetBear__Body"]
+    body = D[PRE + "Body"]
     bm = bmesh.new()
     bm.from_mesh(body.data)
     bm.normal_update()
@@ -506,7 +519,7 @@ def band_split(bm, bands):
 def sleeve(side):
     """A shell of the arm mesh, cut by a slanted cuff plane, with the cuff lip turned in. Pet-local."""
     sx = 1.0 if side == "L" else -1.0
-    arm = D["PetBear__Hand" + side]
+    arm = D[PRE + "Hand" + side]
     bm = bmesh.new()
     bm.from_mesh(arm.data)
     bm.normal_update()
@@ -629,7 +642,7 @@ finish("Neck_BellCollar_Bell", bm, "Neck", C_GOLD, "bellcollar", "Necklace", "Bo
 
 
 # ================================================================= HELIX PIERCINGS
-for side in "LR":
+for side in ("LR" if HAS_EARS else ""):
     A = local(anchor("Helix" + side))
     ear = bvh_of("Ear" + side, "EarInner" + side)
     # ---- Little Hoops: a gold ring hanging from the ear LOBE (Spencer 2026-11-12), same Ears slot, so
@@ -738,6 +751,123 @@ puff(bm, hc, hx, hy, face, heart_outline(16), 0.125, 0.048, mid=0.62, back=None)
 puff(bm, hc, hx, hy, -face, [(-u, v) for u, v in heart_outline(16)], 0.125, 0.048, mid=0.62, back=None)
 bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
 finish("Tail_AltHeart", bm, "Tail", "secondary", "heart", "Tail", "Body")
+
+
+# ================================================================= SLICE B (overnight 2026-11-14)
+# ---- Blush Stickers: two soft ovals on the cheeks (own pink: an undyed grey secondary would look dirty).
+# Wider than tall and paler than the ink, below the eye's lower edge and outside the muzzle.
+for side, sx in (("L", -1.0), ("R", 1.0)):
+    bm = bmesh.new()
+    face_patch(bm, sx * 0.352, 0.848, ellipse_outline(10, 0.064, 0.037), rise=0.016, rim=0.009, sink=0.008, tree=HEAD)
+    finish(f"Cheek{side}_Blush", bm, "Cheek" + side, C_BLUSH, "blush", "Cheek" + side, "Head", facing=Vector((0, -1, 0)))
+
+# ---- Party Hat: a stubby cone (own blue) tipped 8 degrees to the pet's right, pom and ruffle (secondary)
+tilt = Matrix.Translation(CROWN_P) @ Matrix.Rotation(math.radians(8), 4, "Y")
+bm = bmesh.new()
+lathe(bm, [(0.120, -0.036), (0.116, 0.000), (0.064, 0.085), (0.0, 0.140)], 10, tilt)
+finish("Hat_PartyHat", bm, "HatCrown", C_PARTY, "partyhat", "Hat", "Head", height=0.176)
+bm = bmesh.new()
+ruffle = []
+for i in range(12):
+    a = 2 * math.pi * i / 12
+    p = tilt @ Vector((0.122 * math.cos(a), 0.122 * math.sin(a), 0.0))
+    top = head_top(p.x, p.y)[0]
+    ruffle.append(Vector((p.x, p.y, top.z + 0.012 + (0.006 if i % 2 else -0.004))))
+tube(bm, ruffle, [0.024 if i % 2 else 0.019 for i in range(12)], sides=3, closed=True)
+ball(bm, tilt @ Vector((0, 0, 0.146)), 0.032, segs=6, rings=2)
+finish("Hat_PartyHat_Trim", bm, "HatCrown", "secondary", "partyhat", "Hat", "Head", piece="Trim")
+
+# ---- Bow Tail: a big ribbon bow (own red) on a round nub (secondary). Replaces the species tail.
+t = local(anchor("Tail")).translation
+nub = t + Vector((0, 0.065, 0))
+face = Vector((0, 0.90, 0.44)).normalized()             # the bow looks back and up
+bx = Vector((1, 0, 0))
+by = face.cross(bx).normalized()
+if by.z < 0:
+    by = -by
+knot = nub + face * 0.088 + Vector((0, 0, 0.012))
+bm = bmesh.new()
+for sx in (-1, 1):
+    loop = [(0.0, 0.0), (0.55, 0.60), (1.0, 0.46), (1.0, -0.46), (0.55, -0.60)]
+    puff(bm, knot, bx * sx, by, face, loop, 0.138, 0.042, mid=0.6, rim=0.004, back=0.026)
+    d = (bx * sx * math.sin(math.radians(25)) - by * math.cos(math.radians(25))).normalized()   # ribbon ends
+    e = face.cross(d).normalized()
+    puff(bm, knot - face * 0.004, d, e, face, [(0.0, 0.16), (1.0, 0.36), (0.82, 0.0), (1.0, -0.36), (0.0, -0.16)], 0.088, 0.018,
+         mid=0.0, rim=0.0, back=0.014)
+ball(bm, knot + face * 0.016, 0.034, segs=6, rings=2)
+finish("Tail_AltBow", bm, "Tail", C_RIBBON, "bowtail", "Tail", "Body", piece="Ribbon")
+bm = bmesh.new()
+ball(bm, nub, 0.085, segs=7, rings=3)
+finish("Tail_AltBow_Nub", bm, "Tail", "secondary", "bowtail", "Tail", "Body", piece="Nub")
+
+# ---- Acorn Pendant: one plump acorn (own nut, own cap) on a thin cord (secondary). Hangs straight down.
+acorn = neck_path(16, 0.046)[0] + Vector((0, -0.024, -0.056))
+A = Matrix.Translation(acorn)
+bm = bmesh.new()
+lathe(bm, [(0.0, -0.046), (0.020, -0.037), (0.031, -0.014), (0.032, 0.006)], 7, A)
+finish("Neck_Acorn", bm, "Neck", C_NUT, "acorn", "Necklace", "Body", piece="Nut")
+bm = bmesh.new()
+lathe(bm, [(0.027, -0.006), (0.036, 0.000), (0.038, 0.011), (0.028, 0.026), (0.009, 0.032), (0.007, 0.046), (0.0, 0.048)], 7, A)
+finish("Neck_Acorn_Cap", bm, "Neck", C_CAP, "acorn", "Necklace", "Body", piece="Cap")
+bm = bmesh.new()
+tube(bm, neck_path(16, 0.030), 0.008, sides=3, closed=True)
+finish("Neck_Acorn_Cord", bm, "Neck", "secondary", "acorn", "Necklace", "Body", piece="Cord")
+
+# ---- Friendship Bands: a chunky band (own teal) low on each arm, three beads (secondary) on the outside.
+# The Wrist anchor (0.20 along the arm) is under a sleeve; the band sits at BAND_T, below both cuffs.
+BAND_T = 0.305
+for side, sx in (("L", 1.0), ("R", -1.0)):
+    arm = bvh_of("Hand" + side)
+    axis = Vector((SLEEVE_AXIS[0] * sx, SLEEVE_AXIS[1], SLEEVE_AXIS[2])).normalized()
+    s_ax = axis.cross(Vector((0, 0, 1))).normalized()
+    u_ax = s_ax.cross(axis).normalized()
+    centre = local(anchor("Hand" + side)).translation + axis * BAND_T
+
+    def around(angle, lift):
+        d = s_ax * math.cos(angle) + u_ax * math.sin(angle)
+        hit = arm.ray_cast(centre + d, -d)[0]
+        return hit + d * lift, d
+
+    centre = sum((around(2 * math.pi * i / 10, 0.0)[0] for i in range(10)), Vector()) / 10     # the arm's own middle
+    bm = bmesh.new()
+    tube(bm, [around(2 * math.pi * i / 10, 0.011)[0] for i in range(10)], 0.019, sides=4, closed=True, flat=0.62, up=axis)
+    finish(f"Wrist{side}_Bands", bm, "Wrist" + side, C_BAND, "bands", "Wrist" + side, "Hand" + side)
+    out = Vector((-0.80 * sx, -0.60, 0.0))                     # outside of the arm, turned to the front
+    out = (out - axis * out.dot(axis)).normalized()
+    a0 = math.atan2(out.dot(u_ax), out.dot(s_ax))
+    bm = bmesh.new()
+    for k in (-1, 0, 1):
+        p, d = around(a0 + k * 0.40, 0.022)
+        ball(bm, p, 0.021 if k == 0 else 0.018, segs=5, rings=2)
+    finish(f"Wrist{side}_Bands_Beads", bm, "Wrist" + side, "secondary", "bands", "Wrist" + side, "Hand" + side, piece="Beads")
+
+# ---- Round Specs: gold wire frames, a little oval so they hold the tall eye. No lenses.
+SPEC_LIFT = 0.024
+bm = bmesh.new()
+for sx in (-1.0, 1.0):
+    rim = []
+    for i in range(14):
+        a = 2 * math.pi * i / 14
+        x, z = sx * 0.2145 + 0.120 * math.cos(a), 1.03 + 0.140 * math.sin(a)
+        rim.append(Vector((x, face_y(x, z) - SPEC_LIFT, z)))
+    y_front = min(p.y for p in rim)                       # the muzzle pushes the lower inner rim forward:
+    rim = [Vector((p.x, p.y * 0.45 + y_front * 0.55, p.z)) for p in rim]   # flatten toward a wire plane
+    tube(bm, rim, 0.013, sides=4, closed=True, up=Vector((0, 1, 0)))
+    temple = []
+    for a_deg, lift in ((-36, 0.016), (-18, 0.014), (-4, 0.000), (4, -0.030)):   # 0 = straight out to the side
+        a = math.radians(a_deg)
+        d = Vector((sx * math.cos(a), math.sin(a), 0))
+        hit = HEAD.ray_cast(Vector((0, -0.03, 1.05)) + d * 2.0, -d)[0]
+        temple.append(hit + d * lift)
+    outer = min(rim, key=lambda p: -abs(p.x))
+    tube(bm, [outer.copy()] + temple, 0.010, sides=4, cap=True)
+pts = []
+for i in range(3):
+    x = -0.096 + 0.096 * i
+    z = 1.052 + (0.016 if i == 1 else 0.0)
+    pts.append(Vector((x, face_y(x, z) - SPEC_LIFT - (0.004 if i == 1 else 0.0), z)))
+tube(bm, pts, 0.011, sides=4, cap=True)
+finish("Eyewear_RoundSpecs", bm, "FaceBridge", C_GOLD, "specs", "Eyewear", "Head")
 
 bpy.context.view_layer.update()
 for ob in BUILT:

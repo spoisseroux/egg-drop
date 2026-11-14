@@ -146,7 +146,8 @@ def shoot(scene, others, name):
 
 
 # Per-item overrides of the slot view (the flower crown is wider than the other hats).
-ITEM_VIEWS = {"flowercrown": ((1.04, -0.05, 1.10), 1.36, 0, 22), "starstud": ((0.64, -0.02, 1.36), 0.46, -38, 10)}
+ITEM_VIEWS = {"flowercrown": ((1.04, -0.05, 1.10), 1.36, 0, 22), "starstud": ((0.64, -0.02, 1.36), 0.46, -38, 10),
+              "acorn": ((1.04, -0.2, 0.555), 0.34, 0, 10), "bowtail": ((1.04, 0.2, 0.50), 0.92, 168, 16)}
 # Per-slot camera: target (Blender world), ortho scale, yaw (degrees; negative turns the
 # camera toward the Bear's left ear), pitch.
 HEAD = (1.04, -0.05, 1.08)
@@ -158,12 +159,38 @@ VIEWS = {
     "Eyes": ((1.04, -0.3, 1.04), 1.24, 0, 6),
     "Mouth": ((1.04, -0.42, 0.93), 0.80, -10, 2),
     "Tail": ((1.04, 0.2, 0.52), 1.0, 160, 14),
+    # Slice B slots (overnight 2026-11-14): cheeks and eyewear use the face view, wrists the left arm.
+    "Cheek": ((1.04, -0.3, 0.98), 1.10, 0, 4),
+    "Eyewear": ((1.04, -0.3, 1.04), 1.24, 0, 6),
+    "Wrist": ((0.66, -0.14, 0.47), 0.56, -32, 10),
 }
 # Small pieces read better on their own, filling the cell: (yaw, pitch, side filter).
 ALONE = {"beads": (0, 22, None), "bellcollar": (0, 16, None), "ring": (-72, 6, "L"), "starstud": (-15, 6, "L"),
          "heart": (160, 10, None)}
 # Icon exaggeration: pieces too small to read at 48 px are drawn bigger (thumbnail only).
 ITEM_SCALE = {"blep": 2.2}
+# Toys built from the game's sphere primitives (PetToyGeometry builders, slice D toy pool 2). They are
+# mirrored here in memory for their book cell, not saved in toys.blend: (name, size, steps, colour) with
+# steps a chain of ("r", radians about the toy's facing axis) and ("t", x, y, z) in the game's axes
+# (Y up, +Z facing), exactly as the Luau CFrame chain reads.
+PRIMITIVE_TOYS = {
+    "Wobble_Top": [
+        ("TealBody", (.20, .15, .20), [("r", .18)], "#3FB7B0"),
+        ("CreamEquator", (.205, .04, .205), [("r", .18), ("t", 0, .01, 0)], "#FFF0C9"),
+        ("CoralFoot", (.05, .07, .05), [("r", .18), ("t", 0, -.09, 0)], "#EF786B"),
+        ("BrassStem", (.04, .10, .04), [("r", .18), ("t", 0, .11, 0)], "#C69A45"),
+        ("CitrineKnob", (.06, .06, .06), [("r", .18), ("t", 0, .17, 0)], "#F6D759"),
+    ],
+    "Squeaky_Carrot": [
+        ("CarrotTop", (.085, .11, .085), [("r", -.62), ("t", 0, .075, 0)], "#FF8A3C"),
+        ("CarrotMiddle", (.07, .10, .07), [("r", -.62)], "#FF8A3C"),
+        ("CarrotTip", (.05, .09, .05), [("r", -.62), ("t", 0, -.075, 0)], "#FF8A3C"),
+        ("LeafProng-1", (.03, .08, .03), [("r", -.62), ("t", -.018, .128, 0), ("r", .5), ("t", 0, .03, 0)], "#58B368"),
+        ("LeafProng0", (.03, .08, .03), [("r", -.62), ("t", 0, .128, 0), ("t", 0, .03, 0)], "#58B368"),
+        ("LeafProng1", (.03, .08, .03), [("r", -.62), ("t", .018, .128, 0), ("r", -.5), ("t", 0, .03, 0)], "#58B368"),
+        ("SqueakerDot", (.03, .03, .03), [("r", -.62), ("t", 0, .02, .034)], "#FFF0C9"),
+    ],
+}
 REPLACES = {"Eyes": ["PetBear__EyeL", "PetBear__EyeR"], "Mouth": ["PetBear__Mouth"], "Tail": ["PetBear__Tail"]}
 
 
@@ -255,8 +282,38 @@ def bear():
             s.material = body
 
 
+def build_primitive_toys():
+    """Create the sphere-primitive toys under an Empty each, like the modelled ones in toys.blend."""
+    from mathutils import Matrix
+    to_blender = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))   # game (x, y, z) -> (x, -z, y)
+    sphere = bpy.data.meshes.new("ToyUnitSphere")
+    import bmesh
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=24, v_segments=14, radius=0.5)
+    for f in bm.faces:
+        f.smooth = True
+    bm.to_mesh(sphere)
+    bm.free()
+    for index, (gid, parts) in enumerate(PRIMITIVE_TOYS.items()):
+        root = bpy.data.objects.new(gid, None)
+        root.location = (4.0 + index, 0.0, 0.2)
+        bpy.context.scene.collection.objects.link(root)
+        for name, size, steps, colour in parts:
+            m = Matrix.Identity(4)
+            for step in steps:
+                m = m @ (Matrix.Rotation(step[1], 4, "Z") if step[0] == "r" else Matrix.Translation(step[1:]))
+            ob = bpy.data.objects.new(gid + "_" + name, sphere.copy())
+            ob.data.materials.append(flat("toyprim_" + colour.lstrip("#"), colour, rough=0.5))
+            bpy.context.scene.collection.objects.link(ob)
+            ob.parent = root
+            ob.matrix_parent_inverse = Matrix.Identity(4)
+            ob.matrix_basis = to_blender @ m @ Matrix.Diagonal((*size, 1.0))
+    bpy.context.view_layer.update()
+
+
 def toys():
     scene, cam = setup_scene()
+    build_primitive_toys()
     groups = {}
     for o in bpy.data.objects:
         if o.type == "MESH":
@@ -271,9 +328,9 @@ def toys():
         extent = max(mx.x - mn.x, mx.y - mn.y, mx.z - mn.z)
         for o in objs:
             o.hide_render = False
-        yaw = {"Bone": -28, "Ball": -24, "Sparkler": -30}.get(gid, -25)
+        yaw = {"Bone": -28, "Ball": -24, "Sparkler": -30, "Wobble_Top": -12, "Squeaky_Carrot": -10}.get(gid, -25)
         roll = {"Sparkler": -38, "Bone": 20}.get(gid, 0)        # long toys lie on the diagonal
-        fit = {"Sparkler": 1.0, "Bone": 1.05}.get(gid, 1.28)
+        fit = {"Sparkler": 1.0, "Bone": 1.05, "Wobble_Top": 1.12, "Squeaky_Carrot": 1.08}.get(gid, 1.28)
         frame(cam, centre, extent * fit, yaw, 18, roll)
         render(scene, os.path.join(RAW, "toy-" + gid.lower() + ".png"))
         for o in objs:

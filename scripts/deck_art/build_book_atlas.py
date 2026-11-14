@@ -19,7 +19,7 @@ badge's icon is solid over a 30% disc, so "missing" still says what goes where.
 Outputs:
   assets/ui/book/book-atlas.png                 the upload
   assets/ui/book/book-atlas.json                slot order (mirrors BookView.Art.slots)
-  artifacts/v1-art/book-atlas-preview.png       review sheet at 128 / 48 px, owned + missing
+  artifacts/overnight-2026-11-14/art/book-atlas-preview.png   review sheet at 128 / 48 px, owned + missing
 Usage: python scripts/deck_art/build_book_atlas.py   (run render_book_icons.py first)
 """
 from __future__ import annotations
@@ -33,7 +33,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BOOK = os.path.join(ROOT, "assets", "ui", "book")
 RAW = os.path.join(BOOK, "raw")
-ART = os.path.join(ROOT, "artifacts", "v1-art")
+ART = os.path.join(ROOT, "artifacts", "overnight-2026-11-14", "art")
 CELL, COLS, ROWS = 128, 8, 4
 SS = 4
 N = CELL * SS
@@ -47,8 +47,13 @@ DISCOVERIES = ["tier_five", "chain_five", "win_bank_pair", "win_creek_crossing",
 # Slice A (2026-11-14): face items sold later. Appended after the discoveries so no existing slot
 # moves; slots past 32 land on page 2 (book-atlas-2.png, BookView.Art.atlas2).
 WARDROBE_LATE = ["round", "happy", "w", "lash"]   # slot 32 was Wide Eyes (never published)
+# Overnight 2026-11-14 (slices B and D): appended again, so slots 1..34 never move. Page 2 holds 35..48.
+WARDROBE_B = ["blush", "partyhat", "bowtail", "acorn", "bands", "specs"]
+TOYS_B = ["wobble_top", "squeaky_carrot"]
+DISCOVERIES_B = ["pet_night", "play_date", "full_outfit", "win_each_item", "tidy_25", "rounds_100"]
 SLOTS = (["pip:" + i for i in WARDROBE] + ["toy:" + i for i in TOYS] + ["finish:" + i for i in FINISHES] + DISCOVERIES
-         + ["pip:" + i for i in WARDROBE_LATE])
+         + ["pip:" + i for i in WARDROBE_LATE] + ["pip:" + i for i in WARDROBE_B] + ["toy:" + i for i in TOYS_B]
+         + DISCOVERIES_B)
 PER_PAGE = 32
 
 CREAM = (255, 244, 220, 255)
@@ -58,6 +63,11 @@ TIER_DEEP = [(10, 63, 214), (224, 64, 10), (4, 150, 63), (196, 18, 111), (91, 33
 GOLD, GOLD_RIM = (255, 193, 77), (201, 138, 30)
 TEAL, TEAL_RIM = (127, 224, 200), (40, 140, 122)
 GOOD, STARS, DANGER = (123, 228, 149), (255, 193, 77), (255, 90, 110)
+# Slice D medal families: rose for pet moments, night for after dark, violet for round items.
+ROSE, ROSE_RIM = (255, 143, 177), (214, 84, 128)
+NIGHT, NIGHT_RIM = (70, 76, 160), (40, 43, 104)
+VIOLET, VIOLET_RIM = (166, 107, 255), (91, 33, 214)
+CLEAR = (0, 0, 0, 0)          # ImageDraw overwrites in RGBA: drawing with CLEAR cuts a hole in the icon layer
 WATER = (110, 196, 255)
 
 
@@ -324,6 +334,122 @@ def icon_bars(d, level):
     star(d, N * 0.5, N * 0.24, N * 0.08, INK, k=0.45)
 
 
+# ---- slice D badges (overnight 2026-11-14)
+def stroke(d, pts, t, fill):
+    """A polyline with round ends and joints, t wide."""
+    d.line(pts, fill=fill, width=int(t), joint="curve")
+    for x, y in pts:
+        d.ellipse([x - t / 2, y - t / 2, x + t / 2, y + t / 2], fill=fill)
+
+
+def heart(d, cx, cy, size, fill):
+    """The wearables' heart_outline formula (build_bear_wearables.py), so 2D and 3D hearts match."""
+    pts = []
+    for i in range(48):
+        t = 2 * math.pi * i / 48
+        pts.append((cx + size * 16 * math.sin(t) ** 3 / 17.0,
+                    cy - size * (13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t) + 2.5) / 17.0))
+    d.polygon(pts, fill=fill)
+
+
+def bear_head(d, cx, cy, r, fill, gap=0.0):
+    """Round head with two round ears. gap > 0 first clears a halo, so overlapping heads stay apart."""
+    for rr, col in (((r + gap), CLEAR), (r, fill)) if gap else ((r, fill),):
+        k = rr / r
+        for sx in (-1, 1):
+            ex, ey, er = cx + sx * r * 0.74, cy - r * 0.72, r * 0.375 * k
+            d.ellipse([ex - er, ey - er, ex + er, ey + er], fill=col)
+        d.ellipse([cx - rr, cy - rr * 0.94, cx + rr, cy + rr * 0.94], fill=col)
+
+
+def digit(d, ch, cx, cy, h, t, fill):
+    """Rounded numerals 0, 1, 2, 5: h tall, strokes t wide. Returns nothing; widths are in DIGIT_W."""
+    w = h * DIGIT_W[ch]
+    top, bot = cy - h / 2 + t / 2, cy + h / 2 - t / 2
+    x0, x1 = cx - w / 2 + t / 2, cx + w / 2 - t / 2
+    if ch == "0":
+        d.rounded_rectangle([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2], w / 2, outline=fill, width=int(t))
+    elif ch == "1":
+        stroke(d, [(x0, top + h * 0.16), (x1, top), (x1, bot)], t, fill)
+    elif ch == "2":
+        r = (x1 - x0) / 2
+        d.arc([x0 - t / 2, top - t / 2, x1 + t / 2, top + 2 * r + t / 2], 180, 360 + 35, fill=fill, width=int(t))
+        ex, ey = cx + r * math.cos(math.radians(35)), top + r + r * math.sin(math.radians(35))
+        stroke(d, [(ex, ey), (x0, bot), (x1, bot)], t, fill)
+        d.ellipse([x0 - t / 2, top + r - t / 2, x0 + t / 2, top + r + t / 2], fill=fill)
+    elif ch == "5":
+        mid = cy - h * 0.06
+        stroke(d, [(x1, top), (x0, top), (x0, mid)], t, fill)
+        r = (bot - mid) / 2
+        d.arc([x1 - 2 * r - t / 2, mid - t / 2, x1 + t / 2, bot + t / 2], 270 - 55, 90 + 55, fill=fill, width=int(t))
+        d.ellipse([x0 - t / 2, mid - t / 2, x0 + t / 2, mid + t / 2], fill=fill)
+
+
+DIGIT_W = {"0": 0.62, "1": 0.36, "2": 0.62, "5": 0.62}
+
+
+def number(d, text, cx, cy, h, t, fill, gap=0.16):
+    widths = [h * DIGIT_W[c] for c in text]
+    x = cx - (sum(widths) + h * gap * (len(text) - 1)) / 2
+    for c, w in zip(text, widths):
+        digit(d, c, x + w / 2, cy, h, t, fill)
+        x += w + h * gap
+
+
+def icon_pet_night(d):
+    # crescent upper right: a cream disc with a bite cut out of it
+    mx, my, mr = N * 0.66, N * 0.31, N * 0.135
+    d.ellipse([mx - mr, my - mr, mx + mr, my + mr], fill=CREAM)
+    d.ellipse([mx - mr * 0.45, my - mr * 1.25, mx + mr * 1.55, my + mr * 0.75], fill=CLEAR)
+    star(d, N * 0.36, N * 0.25, N * 0.075, CREAM, k=0.42)
+    star(d, N * 0.52, N * 0.47, N * 0.045, CREAM, k=0.42)
+    # the pet, low left, in cream (ink would vanish on the dark face), asleep
+    hx, hy, hr = N * 0.40, N * 0.66, N * 0.19
+    bear_head(d, hx, hy, hr, CREAM, gap=N * 0.02)
+    for sx in (-1, 1):
+        d.arc([hx + sx * hr * 0.42 - hr * 0.2, hy - hr * 0.22, hx + sx * hr * 0.42 + hr * 0.2, hy + hr * 0.14], 20, 160,
+              fill=NIGHT_RIM + (255,), width=int(N * 0.022))
+
+
+def icon_play_date(d):
+    bear_head(d, N * 0.615, N * 0.635, N * 0.158, INK)                      # the friend, a little smaller, behind
+    bear_head(d, N * 0.395, N * 0.655, N * 0.186, INK, gap=N * 0.024)
+    heart(d, N * 0.52, N * 0.31, N * 0.115, CREAM)
+
+
+def icon_full_outfit(d):
+    # T-shirt: rounded body, two short sleeves, a cream star on the chest
+    d.rounded_rectangle([N * 0.355, N * 0.47, N * 0.645, N * 0.80], N * 0.05, fill=INK)
+    for sx in (-1, 1):
+        d.polygon([(N * 0.5 + sx * N * 0.10, N * 0.47), (N * 0.5 + sx * N * 0.27, N * 0.545), (N * 0.5 + sx * N * 0.215, N * 0.655),
+                   (N * 0.5 + sx * N * 0.12, N * 0.61)], fill=INK)
+        cx, cy, r = N * 0.5 + sx * N * 0.243, N * 0.60, N * 0.058
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=INK)
+    d.pieslice([N * 0.43, N * 0.41, N * 0.57, N * 0.53], 0, 180, fill=CLEAR)   # neck scoop
+    star(d, N * 0.5, N * 0.645, N * 0.085, CREAM, k=0.5)
+    # pom beanie above: dome, cream cuff, pom
+    d.pieslice([N * 0.385, N * 0.215, N * 0.615, N * 0.465], 180, 360, fill=INK)
+    d.rounded_rectangle([N * 0.365, N * 0.325, N * 0.635, N * 0.385], N * 0.03, fill=CREAM)
+    d.ellipse([N * 0.455, N * 0.150, N * 0.545, N * 0.240], fill=CREAM)
+
+
+def icon_win_each_item(d):
+    for (x, y, r), tier in (((0.50, 0.335, 0.150), 4), ((0.335, 0.635, 0.135), 1), ((0.665, 0.635, 0.135), 2)):
+        ball(d, N * x, N * y, N * r, tier, face=False)
+        star(d, N * x, N * y + N * 0.008, N * r * 0.62, CREAM, k=0.5)
+
+
+def icon_tidy_25(d):
+    star(d, N * 0.335, N * 0.295, N * 0.125, INK, k=0.36)
+    star(d, N * 0.665, N * 0.245, N * 0.060, CREAM, k=0.36)
+    number(d, "25", N * 0.515, N * 0.60, N * 0.31, N * 0.066, INK)
+
+
+def icon_rounds_100(d):
+    number(d, "100", N * 0.5, N * 0.43, N * 0.29, N * 0.064, INK, gap=0.15)
+    ball(d, N * 0.5, N * 0.715, N * 0.088, 1, face=False)
+
+
 BADGES = {
     "tier_five": (GOLD, GOLD_RIM, icon_tier_five),
     "chain_five": (GOLD, GOLD_RIM, icon_chain_five),
@@ -336,6 +462,12 @@ BADGES = {
     "win_easy": (GOOD, (52, 160, 86), lambda d: icon_bars(d, 1)),
     "win_medium": (STARS, GOLD_RIM, lambda d: icon_bars(d, 2)),
     "win_hard": (DANGER, (186, 40, 64), lambda d: icon_bars(d, 3)),
+    "pet_night": (NIGHT, NIGHT_RIM, icon_pet_night),
+    "play_date": (ROSE, ROSE_RIM, icon_play_date),
+    "full_outfit": (ROSE, ROSE_RIM, icon_full_outfit),
+    "win_each_item": (VIOLET, VIOLET_RIM, icon_win_each_item),
+    "tidy_25": (GOLD, GOLD_RIM, icon_tidy_25),
+    "rounds_100": (GOLD, GOLD_RIM, icon_rounds_100),
 }
 
 
@@ -378,8 +510,12 @@ def cells():
         out.append(render_cell("finish-" + fin, box=CELL - 4, sparkle=fin == "gloss", round_window=True))
     for bid in DISCOVERIES:
         out.append(badge_cell(bid))
-    for item in WARDROBE_LATE:
+    for item in WARDROBE_LATE + WARDROBE_B:
         out.append(wear(item))
+    for toy in TOYS_B:
+        out.append(render_cell("toy-" + toy, box=CELL - 14))
+    for bid in DISCOVERIES_B:
+        out.append(badge_cell(bid))
     return out
 
 

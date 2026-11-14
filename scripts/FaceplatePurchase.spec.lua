@@ -37,8 +37,8 @@ return function(server)
 		assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false))
 	end
 
-	test("the catalogue: 16 plates, 8 free starters with the saved ids, 8 at 20/40/80", function()
-		assert(#Themes.Order == 16)
+	test("the catalogue: 18 plates, 8 free starters with the saved ids, 10 at 20/40/80", function()
+		assert(#Themes.Order == 18)
 		local prices = {}
 		for index, id in ipairs(Themes.Order) do
 			local theme = Themes.ById[id]

@@ -1,7 +1,7 @@
 {
  "assetId": "93989945223773",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416). Happy Eyes and Lash Eyes added 2026-11-14 (Open Cloud asset 121849094985091; rel from the manifest centre with the shared import offset).",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416). Happy Eyes and Lash Eyes added 2026-11-14 (Open Cloud asset 121849094985091; rel from the manifest centre with the shared import offset). Slice B wearables (blush, party hat, bow tail, acorn pendant, friendship bands, round specs; 14 meshes) added 2026-11-14 from bear-attachments-slice-b.fbx (Open Cloud asset 123556704488674; rel from the manifest centre with the shared import offset).",
  "previousAssetIds": [
   "97156894572368",
   "120398944545621"
@@ -905,6 +905,188 @@
     7.9,
     10.909409,
     3.917885
+   ]
+  },
+  "Bear__CheekL_Blush": {
+   "id": "rbxassetid://104763963175021",
+   "rel": [
+    35.202,
+    -8.639,
+    -28.206
+   ],
+   "ms": [
+    12.800003,
+    7.037819,
+    16.326263
+   ]
+  },
+  "Bear__CheekR_Blush": {
+   "id": "rbxassetid://133632326281119",
+   "rel": [
+    -35.198,
+    -8.639,
+    -28.206
+   ],
+   "ms": [
+    12.800003,
+    7.037819,
+    16.326263
+   ]
+  },
+  "Bear__Hat_PartyHat": {
+   "id": "rbxassetid://111935733785399",
+   "rel": [
+    0.451,
+    49.116,
+    -4.038
+   ],
+   "ms": [
+    23.871349,
+    19.098801,
+    22.825356
+   ]
+  },
+  "Bear__Hat_PartyHat_Trim": {
+   "id": "rbxassetid://87785804345248",
+   "rel": [
+    0.002,
+    52.739,
+    -4.038
+   ],
+   "ms": [
+    26.062542,
+    19.440201,
+    26.799999
+   ]
+  },
+  "Bear__Tail_AltBow": {
+   "id": "rbxassetid://108119110033211",
+   "rel": [
+    0.002,
+    -55.839,
+    38.229
+   ],
+   "ms": [
+    27.599998,
+    16.157873,
+    8.276634
+   ]
+  },
+  "Bear__Tail_AltBow_Nub": {
+   "id": "rbxassetid://95546655344317",
+   "rel": [
+    -0.419,
+    -60.439,
+    29.462
+   ],
+   "ms": [
+    16.158236,
+    17.0,
+    16.573772
+   ]
+  },
+  "Bear__Neck_Acorn": {
+   "id": "rbxassetid://88333156684846",
+   "rel": [
+    -0.756,
+    -38.826,
+    -41.509
+   ],
+   "ms": [
+    6.0831,
+    5.199997,
+    6.23954
+   ]
+  },
+  "Bear__Neck_Acorn_Cap": {
+   "id": "rbxassetid://78813388584570",
+   "rel": [
+    -0.786,
+    -34.726,
+    -41.509
+   ],
+   "ms": [
+    7.223681,
+    5.399998,
+    7.409454
+   ]
+  },
+  "Bear__Neck_Acorn_Cord": {
+   "id": "rbxassetid://138074773933839",
+   "rel": [
+    0.002,
+    -28.515,
+    -12.903
+   ],
+   "ms": [
+    46.591698,
+    8.34679,
+    50.437668
+   ]
+  },
+  "Bear__WristL_Bands": {
+   "id": "rbxassetid://121519824839054",
+   "rel": [
+    39.971,
+    -51.757,
+    -15.241
+   ],
+   "ms": [
+    17.488222,
+    13.585804,
+    19.827888
+   ]
+  },
+  "Bear__WristL_Bands_Beads": {
+   "id": "rbxassetid://82317013755116",
+   "rel": [
+    45.177,
+    -46.001,
+    -20.64
+   ],
+   "ms": [
+    7.880623,
+    5.164722,
+    9.563832
+   ]
+  },
+  "Bear__WristR_Bands": {
+   "id": "rbxassetid://139439941356299",
+   "rel": [
+    -39.919,
+    -51.641,
+    -15.317
+   ],
+   "ms": [
+    17.563839,
+    13.412235,
+    20.166912
+   ]
+  },
+  "Bear__WristR_Bands_Beads": {
+   "id": "rbxassetid://98950796507091",
+   "rel": [
+    -45.485,
+    -45.968,
+    -20.74
+   ],
+   "ms": [
+    7.829945,
+    5.060177,
+    9.709625
+   ]
+  },
+  "Bear__Eyewear_RoundSpecs": {
+   "id": "rbxassetid://101088743280480",
+   "rel": [
+    0.002,
+    9.567,
+    -25.385
+   ],
+   "ms": [
+    97.15596,
+    29.19339,
+    49.846539
    ]
   }
  }

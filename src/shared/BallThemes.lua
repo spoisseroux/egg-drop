@@ -6,7 +6,8 @@
 -- renderer (JellyLCD) and the UI colour circles read the rest.
 -- Every theme keeps the hue family per size: blue, orange, green, pink, violet.
 local Themes={Default="smileys",Limit=64}
-Themes.Order={"smileys","marbles","gumdrops","gems","planets","kittens"}
+-- Bubbles (slice C, overnight 2026-11-14) is appended so the saved order of the first six never moves.
+Themes.Order={"smileys","marbles","gumdrops","gems","planets","kittens","bubbles"}
 -- Icon circles step in size inside a fixed slot so colour is never the only cue
 -- (scope B5/B6: blue and violet look alike without red-green vision).
 Themes.CircleScale=table.freeze({.52,.64,.76,.88,1})
@@ -40,6 +41,11 @@ Themes.ById={
   ramps={ramp("#63A6F5","#2A5FC2","#CFE6FF"),ramp("#FF9A3C","#D1560F","#FFE0A8"),ramp("#4FD98A","#149A52","#CFFFD6"),
    ramp("#FF7FB6","#CC2F7C","#FFD8EA"),ramp("#A77BFF","#5A2BD0","#E6D6FF")},
   pitch="Pointed ears and a pink nose.",names={"Blue kitten","Ginger","Matcha","Sakura","Plum"}},
+ -- Pale bodies with near-white lights, so they read as soap bubbles next to Gumdrops' candy.
+ bubbles={name="Bubbles",tier="rare",price=40,face="dots",texture="none",ink="#2A2450",
+  ramps={ramp("#8FD0FF","#4A9BE8","#F0FAFF"),ramp("#FFC48A","#F08A4A","#FFF1DC"),ramp("#9FF0C0","#3FC486","#EFFFF2"),
+   ramp("#FFA8D0","#E85FA0","#FFEAF4"),ramp("#CDB0FF","#8B5FE8","#F5ECFF")},
+  pitch="Soft and shiny. Two little eyes.",names={"Sky","Peach","Melon","Blossom","Violet"}},
 }
 for index,id in ipairs(Themes.Order)do
  local entry=Themes.ById[id];entry.id=id;entry.order=index

@@ -1,7 +1,9 @@
 local Themes={
 	Default = "sherbet",
 	Order = { "sherbet", "stone", "ice", "brick", "moss", "honey", "gloaming", "copperleaf",
-		"aqua_pop", "lime_gel", "sorbet_sky", "liquid_chrome", "tidepool", "aurora_glass", "prism_flare", "night_orb" },
+		"aqua_pop", "lime_gel", "sorbet_sky", "liquid_chrome", "tidepool", "aurora_glass", "prism_flare", "night_orb",
+		-- Overnight 2026-11-14 (slice C): palette variants, appended so the first 16 keep their places.
+		"grape_soda", "rose_chrome" },
 	ById = {
 		sherbet = { name="Scout", highlight=Color3.fromHex("#69F4B3"), face=Color3.fromHex("#23BF89"), shell=Color3.fromHex("#147863"),
 			trim=Color3.fromHex("#69F4B3"), buttons=Color3.fromHex("#76F6B0"), rocker=Color3.fromHex("#76F6B0"), backdrop=Color3.fromHex("#123C35"), band=Color3.fromHex("#147863") },
@@ -65,6 +67,12 @@ local Plates={
   -- texture: assets/deck/faceplates/bookworm.png (uploaded 2026-11-13).
  bookworm={name="Bookworm",order=17,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://124980468376325",finish="cloth-bound",accent="#7FE0CF",ink="#0E0F12",deep="#1F5E5A",band="#F2E2C2",engrave="#F2CF7A",engraveOpacity=0.85,
   ui={panel="#162124",raised="#222F33",well="#0E1517",selected="#2F4849",line="#91B6B7"},overlay=nil,held3d={material="Fabric",reflectance=0.08,transparency=0}},
+ -- Slice C (overnight 2026-11-14, VISUAL-BRIEF 2): palette variants of Aqua Pop and Liquid Chrome
+ -- (build_faceplates.py grape_soda / rose_chrome). Orders 18 and 19: Bookworm keeps 17.
+ grape_soda={name="Grape Soda",order=18,tier="common",priceStars=20,texture="rbxassetid://99091469418481",finish="glossy bubbles",accent="#C9A6FF",ink="#0E0F12",deep="#5A3FA8",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#1F1D2F",raised="#2C2A40",well="#14121F",selected="#423B5B",line="#AAA2C8"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.4,period=5.0},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
+ rose_chrome={name="Rose Chrome",order=19,tier="rare",priceStars=40,texture="rbxassetid://120581388184665",finish="rose chrome",accent="#FFC2D4",ink="#0E0F12",deep="#8A4660",band="#F0B8B0",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#251E25",raised="#332B34",well="#191318",selected="#50404A",line="#BDACB9"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.5,period=4.0},held3d={material="Metal",reflectance=0.25,transparency=0}},
 }
 local hex=Color3.fromHex
 for id,plate in pairs(Plates)do

@@ -66,7 +66,7 @@ return function(server)
 			local function c(value)return if value<=.04045 then value/12.92 else ((value+.055)/1.055)^2.4 end
 			return .2126*c(color.R)+.7152*c(color.G)+.0722*c(color.B)
 		end
-		assert(#Themes.Order==16)
+		assert(#Themes.Order==18) -- +grape_soda, rose_chrome (overnight 2026-11-14)
 		for _,id in ipairs(Themes.Order)do
 			local t=Themes.ById[id]
 			for _,key in ipairs({"panel","raised","inset","ink","text","muted","line","selected","focus","accent"})do assert(typeof(t.ui[key])=="Color3",id..key)end

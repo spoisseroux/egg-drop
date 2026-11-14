@@ -46,6 +46,20 @@
   "pip:round": 31,
   "pip:happy": 32,
   "pip:w": 33,
-  "pip:lash": 34
+  "pip:lash": 34,
+  "pip:blush": 35,
+  "pip:partyhat": 36,
+  "pip:bowtail": 37,
+  "pip:acorn": 38,
+  "pip:bands": 39,
+  "pip:specs": 40,
+  "toy:wobble_top": 41,
+  "toy:squeaky_carrot": 42,
+  "pet_night": 43,
+  "play_date": 44,
+  "full_outfit": 45,
+  "win_each_item": 46,
+  "tidy_25": 47,
+  "rounds_100": 48
  }
 }

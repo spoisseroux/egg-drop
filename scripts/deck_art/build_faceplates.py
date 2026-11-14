@@ -291,6 +291,17 @@ def aqua_pop():
     return finish(gloss_arc(img, 0.30), 0.06)
 
 
+def grape_soda():
+    """Palette variant of Aqua Pop (overnight 2026-11-14): the same wave, violet soda, a different bubble seed."""
+    img = ramp3(Y, [(0, "#6A3FD0"), (0.45, "#9B6BFF"), (0.78, "#D4BFFF"), (1, "#F4EEFF")])
+    img = over(img, "#FFFFFF", blob(0.18 * ASPECT, 1.15, 0.9, 1.4) * 0.35)
+    img = over(img, "#FF9CE0", blob(0.9 * ASPECT, 1.1, 0.8, 1.6) * 0.30)
+    wave = np.exp(-((Y - (0.62 + 0.10 * np.sin(X * 5.2 + 1.0))) / 0.045) ** 2)
+    img = over(img, "#FFFFFF", wave * 0.22)
+    img = bubbles(img, rand_bubbles(7, 26, 0.022, 0.13))
+    return finish(gloss_arc(img, 0.30), 0.06)
+
+
 def lime_gel():
     img = ramp3(Y, [(0, "#D8FF5E"), (0.4, "#93E01F"), (1, "#3F9A12")])
     edge = np.minimum(np.minimum(X, 1 - X) * ASPECT, np.minimum(Y, 1 - Y))
@@ -325,6 +336,21 @@ def liquid_chrome():
               (0.68, "#8E7660"), (0.86, "#D9CDBE"), (1, "#F6F8FC")]
     img = ramp3(t, chrome)
     img = img * 0.84 + ramp3(Y, [(0, "#E4EEFC"), (1, "#8794AE")]) * 0.16
+    hot = np.exp(-((t - 0.5) / 0.02) ** 2) * (0.5 + 0.5 * np.sin(XA * 3.0 + 0.5))
+    img = over(img, "#FFFFFF", np.clip(hot, 0, 1) * 0.5)
+    return finish(gloss_arc(img, 0.14), 0.08)
+
+
+def rose_chrome():
+    """Palette variant of Liquid Chrome (overnight 2026-11-14): the same bands, rose-gold stops."""
+    n = fbm(2, 40, 2)
+    m = fbm(3, 47, 2)
+    phase = Y * 5.2 + np.sin(XA * 2.3 + n * 4.0) * 1.25 + np.sin(XA * 0.9 - Y * 2.0 + 1.0) * 0.9 + (m - 0.5) * 1.8
+    t = 0.5 + 0.5 * np.sin(phase * 3.3)
+    chrome = [(0, "#6E3149"), (0.22, "#B9647F"), (0.42, "#F2A7BC"), (0.50, "#FFFFFF"), (0.57, "#8A4660"),
+              (0.68, "#C98297"), (0.86, "#FFD3DE"), (1, "#FFE9EF")]
+    img = ramp3(t, chrome)
+    img = img * 0.84 + ramp3(Y, [(0, "#FFE9EF"), (1, "#B9647F")]) * 0.16
     hot = np.exp(-((t - 0.5) / 0.02) ** 2) * (0.5 + 0.5 * np.sin(XA * 3.0 + 0.5))
     img = over(img, "#FFFFFF", np.clip(hot, 0, 1) * 0.5)
     return finish(gloss_arc(img, 0.14), 0.08)
@@ -579,6 +605,9 @@ PLATES = [
     ("night_orb", "Night Orb", night_orb, "showcase", "#FF7AD9", "#1A1440", GM, "glass orbs and chrome rings", "SmoothPlastic", ("sparkle", 0.0, 0.70, 3.4), None),
     # Book-only (play-forever F1): granted by the collection book, never sold, not in the shop's 16.
     ("bookworm", "Bookworm", bookworm, "book", "#7FE0CF", "#1F5E5A", P, "cloth-bound", "Fabric", None, "book"),
+    # Overnight 2026-11-14 (VISUAL-BRIEF section 2): palette variants. Appended so no earlier `order` moves.
+    ("grape_soda", "Grape Soda", grape_soda, "common", "#C9A6FF", "#5A3FA8", S, "glossy bubbles", "SmoothPlastic", ("gloss", 0.0, 0.40, 5.0), None),
+    ("rose_chrome", "Rose Chrome", rose_chrome, "rare", "#FFC2D4", "#8A4660", RS, "rose chrome", "Metal", ("gloss", 0.0, 0.50, 4.0), None),
 ]
 PRICE = {"starter": 0, "common": 20, "rare": 40, "showcase": 80, "book": 0}
 # Engrave (wordmark) colour and opacity; dark ink unless listed.

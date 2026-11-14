@@ -21,7 +21,8 @@
   "piercings": "bear-attachments-piercings.fbx",
   "wearables": "bear-attachments-wearables.fbx",
   "face-alts": "bear-attachments-face-alts.fbx",
-  "tails": "bear-attachments-tails.fbx"
+  "tails": "bear-attachments-tails.fbx",
+  "slice-b": "bear-attachments-slice-b.fbx"
  },
  "anchors": [
   {
@@ -5214,6 +5215,683 @@
    "price": 30,
    "alternate": true,
    "tintBySecondary": true
+  },
+  {
+   "name": "Bear__CheekL_Blush",
+   "source": "PetBear__CheekL_Blush",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Cheek",
+   "anchor": "CheekL",
+   "parentAnchor": "CheekL",
+   "channel": "Head",
+   "role": "CheekL",
+   "colorRole": "own:#FF9FB2",
+   "material": "wear__FF9FB2",
+   "originBlender": [
+    -0.36,
+    -0.30616,
+    0.88
+   ],
+   "centerBlender": [
+    -0.352,
+    -0.27168,
+    0.848
+   ],
+   "sizeBlender": [
+    0.128,
+    0.16326,
+    0.07038
+   ],
+   "centerRuntime": [
+    -0.352,
+    0.848,
+    0.27168
+   ],
+   "sizeRuntime": [
+    0.128,
+    0.07038,
+    0.16326
+   ],
+   "triangles": 50,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "blush",
+   "item": "blush",
+   "piece": "Main",
+   "displayName": "Blush Stickers",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__CheekR_Blush",
+   "source": "PetBear__CheekR_Blush",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Cheek",
+   "anchor": "CheekR",
+   "parentAnchor": "CheekR",
+   "channel": "Head",
+   "role": "CheekR",
+   "colorRole": "own:#FF9FB2",
+   "material": "wear__FF9FB2",
+   "originBlender": [
+    0.36,
+    -0.30616,
+    0.88
+   ],
+   "centerBlender": [
+    0.352,
+    -0.27168,
+    0.848
+   ],
+   "sizeBlender": [
+    0.128,
+    0.16326,
+    0.07038
+   ],
+   "centerRuntime": [
+    0.352,
+    0.848,
+    0.27168
+   ],
+   "sizeRuntime": [
+    0.128,
+    0.07038,
+    0.16326
+   ],
+   "triangles": 50,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "blush",
+   "item": "blush",
+   "piece": "Main",
+   "displayName": "Blush Stickers",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_PartyHat",
+   "source": "PetBear__Hat_PartyHat",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "own:#45C2E0",
+   "material": "wear__45C2E0",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    -0.00449,
+    -0.03,
+    1.42555
+   ],
+   "sizeBlender": [
+    0.23871,
+    0.22825,
+    0.19099
+   ],
+   "centerRuntime": [
+    -0.00449,
+    1.42555,
+    0.03
+   ],
+   "sizeRuntime": [
+    0.23871,
+    0.19099,
+    0.22825
+   ],
+   "triangles": 50,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "partyhat",
+   "item": "partyhat",
+   "piece": "Main",
+   "displayName": "Party Hat",
+   "tier": "common",
+   "price": 15,
+   "height": 0.176,
+   "coversHorns": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Hat_PartyHat_Trim",
+   "source": "PetBear__Hat_PartyHat_Trim",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Hat",
+   "anchor": "HatCrown",
+   "parentAnchor": "HatCrown",
+   "channel": "Head",
+   "role": "Hat",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "centerBlender": [
+    0.0,
+    -0.03,
+    1.46178
+   ],
+   "sizeBlender": [
+    0.26063,
+    0.268,
+    0.1944
+   ],
+   "centerRuntime": [
+    0.0,
+    1.46178,
+    0.03
+   ],
+   "sizeRuntime": [
+    0.26063,
+    0.1944,
+    0.268
+   ],
+   "triangles": 96,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "partyhat",
+   "item": "partyhat",
+   "piece": "Trim",
+   "displayName": "Party Hat",
+   "tier": "common",
+   "price": 15,
+   "coversHorns": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Tail_AltBow",
+   "source": "PetBear__Tail_AltBow",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Tail",
+   "anchor": "Tail",
+   "parentAnchor": "Tail",
+   "channel": "Body",
+   "role": "Tail",
+   "colorRole": "own:#F2596B",
+   "material": "wear__F2596B",
+   "originBlender": [
+    0.0,
+    0.24,
+    0.33
+   ],
+   "centerBlender": [
+    0.0,
+    0.39267,
+    0.376
+   ],
+   "sizeBlender": [
+    0.276,
+    0.08277,
+    0.16158
+   ],
+   "centerRuntime": [
+    0.0,
+    0.376,
+    -0.39267
+   ],
+   "sizeRuntime": [
+    0.276,
+    0.16158,
+    0.08277
+   ],
+   "triangles": 84,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bowtail",
+   "item": "bowtail",
+   "piece": "Ribbon",
+   "displayName": "Bow Tail",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Tail_AltBow_Nub",
+   "source": "PetBear__Tail_AltBow_Nub",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Tail",
+   "anchor": "Tail",
+   "parentAnchor": "Tail",
+   "channel": "Body",
+   "role": "Tail",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    0.24,
+    0.33
+   ],
+   "centerBlender": [
+    0.00421,
+    0.305,
+    0.33
+   ],
+   "sizeBlender": [
+    0.16158,
+    0.16574,
+    0.17
+   ],
+   "centerRuntime": [
+    0.00421,
+    0.33,
+    -0.305
+   ],
+   "sizeRuntime": [
+    0.16158,
+    0.17,
+    0.16574
+   ],
+   "triangles": 42,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bowtail",
+   "item": "bowtail",
+   "piece": "Nub",
+   "displayName": "Bow Tail",
+   "tier": "rare",
+   "price": 30,
+   "alternate": true,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Neck_Acorn",
+   "source": "PetBear__Neck_Acorn",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "own:#D9A05B",
+   "material": "wear__D9A05B",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.00758,
+    -0.40471,
+    0.54613
+   ],
+   "sizeBlender": [
+    0.06083,
+    0.0624,
+    0.052
+   ],
+   "centerRuntime": [
+    0.00758,
+    0.54613,
+    0.40471
+   ],
+   "sizeRuntime": [
+    0.06083,
+    0.052,
+    0.0624
+   ],
+   "triangles": 35,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "acorn",
+   "item": "acorn",
+   "piece": "Nut",
+   "displayName": "Acorn Pendant",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Neck_Acorn_Cap",
+   "source": "PetBear__Neck_Acorn_Cap",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "own:#8B5A34",
+   "material": "wear__8B5A34",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.00788,
+    -0.40471,
+    0.58713
+   ],
+   "sizeBlender": [
+    0.07224,
+    0.07409,
+    0.054
+   ],
+   "centerRuntime": [
+    0.00788,
+    0.58713,
+    0.40471
+   ],
+   "sizeRuntime": [
+    0.07224,
+    0.054,
+    0.07409
+   ],
+   "triangles": 77,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "acorn",
+   "item": "acorn",
+   "piece": "Cap",
+   "displayName": "Acorn Pendant",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__Neck_Acorn_Cord",
+   "source": "PetBear__Neck_Acorn_Cord",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Neck",
+   "anchor": "Neck",
+   "parentAnchor": "Neck",
+   "channel": "Body",
+   "role": "Necklace",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "centerBlender": [
+    0.0,
+    -0.11865,
+    0.64924
+   ],
+   "sizeBlender": [
+    0.46592,
+    0.50438,
+    0.08347
+   ],
+   "centerRuntime": [
+    0.0,
+    0.64924,
+    0.11865
+   ],
+   "sizeRuntime": [
+    0.46592,
+    0.08347,
+    0.50438
+   ],
+   "triangles": 96,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "acorn",
+   "item": "acorn",
+   "piece": "Cord",
+   "displayName": "Acorn Pendant",
+   "tier": "rare",
+   "price": 30,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__WristL_Bands",
+   "source": "PetBear__WristL_Bands",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Wrist",
+   "anchor": "WristL",
+   "parentAnchor": "WristL",
+   "channel": "HandL",
+   "role": "WristL",
+   "colorRole": "own:#4FC3C8",
+   "material": "wear__4FC3C8",
+   "originBlender": [
+    -0.32756,
+    -0.10896,
+    0.4893
+   ],
+   "centerBlender": [
+    -0.39969,
+    -0.14203,
+    0.41682
+   ],
+   "sizeBlender": [
+    0.17488,
+    0.19828,
+    0.13586
+   ],
+   "centerRuntime": [
+    -0.39969,
+    0.41682,
+    0.14203
+   ],
+   "sizeRuntime": [
+    0.17488,
+    0.13586,
+    0.19828
+   ],
+   "triangles": 80,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bands",
+   "item": "bands",
+   "piece": "Main",
+   "displayName": "Friendship Bands",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__WristL_Bands_Beads",
+   "source": "PetBear__WristL_Bands_Beads",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Wrist",
+   "anchor": "WristL",
+   "parentAnchor": "WristL",
+   "channel": "HandL",
+   "role": "WristL",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    -0.32756,
+    -0.10896,
+    0.4893
+   ],
+   "centerBlender": [
+    -0.45175,
+    -0.19602,
+    0.47438
+   ],
+   "sizeBlender": [
+    0.07881,
+    0.09564,
+    0.05165
+   ],
+   "centerRuntime": [
+    -0.45175,
+    0.47438,
+    0.19602
+   ],
+   "sizeRuntime": [
+    0.07881,
+    0.05165,
+    0.09564
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bands",
+   "item": "bands",
+   "piece": "Beads",
+   "displayName": "Friendship Bands",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__WristR_Bands",
+   "source": "PetBear__WristR_Bands",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Wrist",
+   "anchor": "WristR",
+   "parentAnchor": "WristR",
+   "channel": "HandR",
+   "role": "WristR",
+   "colorRole": "own:#4FC3C8",
+   "material": "wear__4FC3C8",
+   "originBlender": [
+    0.32476,
+    -0.10465,
+    0.4901
+   ],
+   "centerBlender": [
+    0.39921,
+    -0.14279,
+    0.41798
+   ],
+   "sizeBlender": [
+    0.17564,
+    0.20167,
+    0.13412
+   ],
+   "centerRuntime": [
+    0.39921,
+    0.41798,
+    0.14279
+   ],
+   "sizeRuntime": [
+    0.17564,
+    0.13412,
+    0.20167
+   ],
+   "triangles": 80,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bands",
+   "item": "bands",
+   "piece": "Main",
+   "displayName": "Friendship Bands",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__WristR_Bands_Beads",
+   "source": "PetBear__WristR_Bands_Beads",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Wrist",
+   "anchor": "WristR",
+   "parentAnchor": "WristR",
+   "channel": "HandR",
+   "role": "WristR",
+   "colorRole": "secondary",
+   "material": "petBear__secondary",
+   "originBlender": [
+    0.32476,
+    -0.10465,
+    0.4901
+   ],
+   "centerBlender": [
+    0.45487,
+    -0.19702,
+    0.47471
+   ],
+   "sizeBlender": [
+    0.0783,
+    0.0971,
+    0.0506
+   ],
+   "centerRuntime": [
+    0.45487,
+    0.47471,
+    0.19702
+   ],
+   "sizeRuntime": [
+    0.0783,
+    0.0506,
+    0.0971
+   ],
+   "triangles": 60,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "bands",
+   "item": "bands",
+   "piece": "Beads",
+   "displayName": "Friendship Bands",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": true
+  },
+  {
+   "name": "Bear__Eyewear_RoundSpecs",
+   "source": "PetBear__Eyewear_RoundSpecs",
+   "fbx": "bear-attachments-slice-b.fbx",
+   "group": "slice-b",
+   "slot": "Eyewear",
+   "anchor": "FaceBridge",
+   "parentAnchor": "FaceBridge",
+   "channel": "Head",
+   "role": "Eyewear",
+   "colorRole": "own:#FFC240",
+   "material": "wear__FFC240",
+   "originBlender": [
+    0.0,
+    -0.46051,
+    1.04
+   ],
+   "centerBlender": [
+    0.0,
+    -0.24347,
+    1.03006
+   ],
+   "sizeBlender": [
+    0.97156,
+    0.49847,
+    0.29193
+   ],
+   "centerRuntime": [
+    0.0,
+    1.03006,
+    0.24347
+   ],
+   "sizeRuntime": [
+    0.97156,
+    0.29193,
+    0.49847
+   ],
+   "triangles": 328,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "specs",
+   "item": "specs",
+   "piece": "Main",
+   "displayName": "Round Specs",
+   "tier": "common",
+   "price": 15,
+   "tintBySecondary": false
   }
  ],
  "priceTiers": {
@@ -5823,6 +6501,213 @@
      "colorRole": "own:#FFFFFF",
      "tintBySecondary": false,
      "triangles": 48
+    }
+   ]
+  },
+  {
+   "id": "blush",
+   "slot": "Cheek",
+   "displayName": "Blush Stickers",
+   "tier": "common",
+   "price": 15,
+   "triangles": 100,
+   "tintBySecondary": false,
+   "primaryColor": "own:#FF9FB2",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__CheekL_Blush",
+     "channel": "Head",
+     "anchor": "CheekL",
+     "colorRole": "own:#FF9FB2",
+     "tintBySecondary": false,
+     "triangles": 50
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__CheekR_Blush",
+     "channel": "Head",
+     "anchor": "CheekR",
+     "colorRole": "own:#FF9FB2",
+     "tintBySecondary": false,
+     "triangles": 50
+    }
+   ]
+  },
+  {
+   "id": "partyhat",
+   "slot": "Hat",
+   "displayName": "Party Hat",
+   "tier": "common",
+   "price": 15,
+   "triangles": 146,
+   "tintBySecondary": true,
+   "primaryColor": "own:#45C2E0",
+   "flags": {
+    "coversHorns": true
+   },
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Hat_PartyHat",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "own:#45C2E0",
+     "tintBySecondary": false,
+     "triangles": 50
+    },
+    {
+     "piece": "Trim",
+     "mesh": "Bear__Hat_PartyHat_Trim",
+     "channel": "Head",
+     "anchor": "HatCrown",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 96
+    }
+   ]
+  },
+  {
+   "id": "bowtail",
+   "slot": "Tail",
+   "displayName": "Bow Tail",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 126,
+   "tintBySecondary": true,
+   "primaryColor": "own:#F2596B",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Ribbon",
+     "mesh": "Bear__Tail_AltBow",
+     "channel": "Body",
+     "anchor": "Tail",
+     "colorRole": "own:#F2596B",
+     "tintBySecondary": false,
+     "triangles": 84
+    },
+    {
+     "piece": "Nub",
+     "mesh": "Bear__Tail_AltBow_Nub",
+     "channel": "Body",
+     "anchor": "Tail",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 42
+    }
+   ]
+  },
+  {
+   "id": "acorn",
+   "slot": "Neck",
+   "displayName": "Acorn Pendant",
+   "tier": "rare",
+   "price": 30,
+   "triangles": 208,
+   "tintBySecondary": true,
+   "primaryColor": "own:#D9A05B",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Nut",
+     "mesh": "Bear__Neck_Acorn",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "own:#D9A05B",
+     "tintBySecondary": false,
+     "triangles": 35
+    },
+    {
+     "piece": "Cap",
+     "mesh": "Bear__Neck_Acorn_Cap",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "own:#8B5A34",
+     "tintBySecondary": false,
+     "triangles": 77
+    },
+    {
+     "piece": "Cord",
+     "mesh": "Bear__Neck_Acorn_Cord",
+     "channel": "Body",
+     "anchor": "Neck",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 96
+    }
+   ]
+  },
+  {
+   "id": "bands",
+   "slot": "Wrist",
+   "displayName": "Friendship Bands",
+   "tier": "common",
+   "price": 15,
+   "triangles": 280,
+   "tintBySecondary": true,
+   "primaryColor": "own:#4FC3C8",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__WristL_Bands",
+     "channel": "HandL",
+     "anchor": "WristL",
+     "colorRole": "own:#4FC3C8",
+     "tintBySecondary": false,
+     "triangles": 80
+    },
+    {
+     "piece": "Beads",
+     "mesh": "Bear__WristL_Bands_Beads",
+     "channel": "HandL",
+     "anchor": "WristL",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 60
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__WristR_Bands",
+     "channel": "HandR",
+     "anchor": "WristR",
+     "colorRole": "own:#4FC3C8",
+     "tintBySecondary": false,
+     "triangles": 80
+    },
+    {
+     "piece": "Beads",
+     "mesh": "Bear__WristR_Bands_Beads",
+     "channel": "HandR",
+     "anchor": "WristR",
+     "colorRole": "secondary",
+     "tintBySecondary": true,
+     "triangles": 60
+    }
+   ],
+   "perSide": true
+  },
+  {
+   "id": "specs",
+   "slot": "Eyewear",
+   "displayName": "Round Specs",
+   "tier": "common",
+   "price": 15,
+   "triangles": 328,
+   "tintBySecondary": false,
+   "primaryColor": "own:#FFC240",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Eyewear_RoundSpecs",
+     "channel": "Head",
+     "anchor": "FaceBridge",
+     "colorRole": "own:#FFC240",
+     "tintBySecondary": false,
+     "triangles": 328
     }
    ]
   },

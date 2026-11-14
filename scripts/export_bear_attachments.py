@@ -122,14 +122,20 @@ for o in sorted(D, key=lambda o: o.name):
         "note": o.get("note", ""),
     })
 
+# Slice B (2026-11-14) items go in their own FBX whatever their slot, so one upload carries them and
+# the earlier group files keep their contents.
+SLICE_B = {"blush", "partyhat", "bowtail", "acorn", "bands", "specs"}
+_late = [n for n in WEARABLES if D["PetBear__" + n].get("item") in SLICE_B]
+WEARABLES_EARLY = [n for n in WEARABLES if n not in _late]
 GROUPS = {
     "horns": [f"Horn{s}_S{i}" for i in range(1, 6) for s in "LR"],
     "wings": [f"Wing{s}_S{i}" for i in range(1, 6) for s in "LR"],
-    "piercings": [n for n in WEARABLES if n.startswith("Helix")],
-    "wearables": [n for n in WEARABLES if n.split("_")[0] in ("Shirt", "Neck", "Hat")],
+    "piercings": [n for n in WEARABLES_EARLY if n.startswith("Helix")],
+    "wearables": [n for n in WEARABLES_EARLY if n.split("_")[0] in ("Shirt", "Neck", "Hat")],
     "face-alts": ["EyeL_AltRound", "EyeR_AltRound", "EyeL_AltSmallWide", "EyeR_AltSmallWide", "Mouth_AltW"]
-                 + [n for n in WEARABLES if n.startswith(("Eye", "Mouth"))],
-    "tails": [n for n in WEARABLES if n.startswith("Tail")],
+                 + [n for n in WEARABLES_EARLY if n.startswith(("Eye", "Mouth"))],
+    "tails": [n for n in WEARABLES_EARLY if n.startswith("Tail")],
+    "slice-b": _late,
 }
 SLOT_FIX = {"Horn": "Horns", "Wing": "Back", "Eye": "Eyes", "Mouth": "Mouth", "Tail": "Tail"}
 SLOT_ANCHOR = {"EyeL": "EyeL", "EyeR": "EyeR", "Mouth": "Mouth"}
@@ -218,7 +224,7 @@ for item_id, info in ITEMS.items():
     if info["slot"] == "Shirt":
         need = {("Torso", "Body"), ("SleeveL", "HandL"), ("SleeveR", "HandR")}
         assert need <= {(p["piece"], p["channel"]) for p in row["pieces"]}, row
-    if info["slot"] == "EarPiercing":
+    if info["slot"] in ("EarPiercing", "Wrist"):
         row["perSide"] = True
     assert row["triangles"] <= 600, row
     items.append(row)

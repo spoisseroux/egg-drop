@@ -747,6 +747,94 @@
    },
    "bookOnly": true,
    "unlock": "book"
+  },
+  {
+   "id": "grape_soda",
+   "name": "Grape Soda",
+   "order": 18,
+   "tier": "common",
+   "priceStars": 20,
+   "texture": "grape_soda.png",
+   "finish": "glossy bubbles",
+   "accent": "#C9A6FF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 9.47,
+   "deep": "#5A3FA8",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#1F1D2F",
+    "raised": "#2C2A40",
+    "well": "#14121F",
+    "selected": "#423B5B",
+    "line": "#AAA2C8"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.4
+    ],
+    "periodSeconds": 5.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
+  },
+  {
+   "id": "rose_chrome",
+   "name": "Rose Chrome",
+   "order": 19,
+   "tier": "rare",
+   "priceStars": 40,
+   "texture": "rose_chrome.png",
+   "finish": "rose chrome",
+   "accent": "#FFC2D4",
+   "ink": "#0E0F12",
+   "accentInkContrast": 12.7,
+   "deep": "#8A4660",
+   "band": {
+    "name": "rose",
+    "tint": "#F0B8B0"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#251E25",
+    "raised": "#332B34",
+    "well": "#191318",
+    "selected": "#50404A",
+    "line": "#BDACB9"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.5
+    ],
+    "periodSeconds": 4.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Metal",
+    "reflectance": 0.25,
+    "transparency": 0
+   }
   }
  ]
 }
