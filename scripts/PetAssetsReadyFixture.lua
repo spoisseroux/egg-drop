@@ -5,7 +5,8 @@ return function(client,ids,timeout)
  local folder=Instance.new("Folder");folder.Name="_AuthoredReadyPrerequisite"
  local visuals={};local ok,problem=pcall(function()
   for _,pet in ipairs(Pets.collection)do
-   if not ids or table.find(ids,pet.id)then table.insert(visuals,Factory.new(folder,Vector3.zero,pet,.72,{charmVisible=false}))end
+   -- A collection pet without a rig in this build (the earned pet Blip, slice E) has no backend to wait for.
+   if(not ids or table.find(ids,pet.id))and require(game.ReplicatedStorage.Shared.PetRigDefinitions)[pet.id]then table.insert(visuals,Factory.new(folder,Vector3.zero,pet,.72,{charmVisible=false}))end
   end
   local deadline=os.clock()+(timeout or 30)
   while true do
