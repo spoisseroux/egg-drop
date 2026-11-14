@@ -1,3 +1,16 @@
+**Private v609 Published 2026-11-13 — runtime 6c77cb4, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." Place saved v609. Phone results capture `artifacts/qa-2026-11-13-v2/studio/phone-results-748x294.jpg`.
+# Egg Drop — QA pass v2 fixes (PC + phone)
+
+Every item in `artifacts/qa-2026-11-13-v2/QA-TRIAGE.md`: full-screen reveal with confetti; first Bear's Back goes to the garden; Meet Bear framed in front of you; garden tips wait until you're idle (replay from Settings / ?); Hatch eggs shine and sparkles on the egg, the Bear cheers on Hatch, the list scrolls. No walking with any menu, reveal or the deck up; the camera no longer clips the island; Menu/Deck buttons moved bottom-right; hints show your device's real keys. One full-screen dim per menu on PC and phone, taller phone menus, the 3D Star in every menu, a new Quests screen (stamp card now lives there), a ? "How it works" on every machine. None per Wardrobe slot, hats sit on the head, Customize previews, brighter colours and a free "Original colour", ball previews drop in, Equipped is a greyed button, tab labels no longer vanish. One-piece station pins with names (Hatch eggs marker back), desk thumbsticks gone, marble lining flicker fixed, petting +1 ★ after 1.5 s (10 a day) with a sparkle and chime. Phone deck: the full handheld, big left/right in rounds, up/down in menus, B = Back in menus. Board tips are a small fading pill; the phone results headline and Star moved down.
+
+**Passed before publish:** server 31/31; client green except the 7 long-standing failures; LocalizationFit 0 clip (13 screens x 2 sizes); translations synced (453 strings). Architect re-cut + Code Reviewer GO WITH CHANGES, all applied. World meshes re-uploaded with precise collision.
+
+**Test:** the whole QA v2 list on PC and phone; hold W while opening a machine; orbit the camera into the ground; each machine's ?; Settings > Show tips again; petting for ~1.5 s.
+
+**Note:** forward-only build (petting cap 10 and "Original colour" receipts fail v600's checks); fine while fresh saves are on.
+
+## Historical v600 (v1 batch)
+
 **Private v600 Published 2026-11-13 — runtime 2bf12d6, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero on this build.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v600". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · capture `artifacts/v1-2026-11-13/welcome-card-desktop.jpg`.
 # Egg Drop — v1 batch: onboarding, bug reports, translations, book art
 
