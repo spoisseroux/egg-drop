@@ -193,6 +193,8 @@ Never cut slice A or the one-pet generalization.
 
 ## 6. Open questions for Spencer
 
+**Decided 2026-11-14: Spencer, "Go with all five recs".** All five recommendations below are accepted as written.
+
 1. **How is the second pet earned?** Recommended: free on the first complete stamp card, with no Stars or Robux price.
 2. **Which concept: Blip, Sprig or Puff?** Recommended: Blip (your stated direction, brief already written).
 3. **Should a wardrobe item bought for the Bear be owned again for the new pet?** Recommended: yes, per-pet as built, with 10 refits at launch.
