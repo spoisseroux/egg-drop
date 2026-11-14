@@ -18,11 +18,12 @@
 -- atan2(direction.X, direction.Z) (the same convention as GardenActivity). Pose positions
 -- are the pet root's ground point (sole height) unless named seat/pivot/top.
 local World=require(script.Parent.HollowWorldLayout)
-local Park={}
+local function makeLayout(CX,CZ,siteId,rotation)
+local Park={Id=siteId}
 Park.Enabled=World.WorldVersion=="v7"
 Park.Version=1
 
-local CX,CZ=36,66 -- Studio raycast sweep 2026-11-13: every anchor, the rim and a ring 2 studs outside it land on flat W7C ground (y 4.55); (45,67) clipped a collision hole at x 54-62, z 64-72, and (39,70) put the south-west gate on the trunk at (30,59.5)
+-- Original arrival centre (36,66). -- Studio raycast sweep 2026-11-13: every anchor, the rim and a ring 2 studs outside it land on flat W7C ground (y 4.55); (45,67) clipped a collision hole at x 54-62, z 64-72, and (39,70) put the south-west gate on the trunk at (30,59.5)
 local function ground(x,z)return World.groundY(x,z)+.025 end -- [RAYCAST in Studio]
 local function at(dx,dz)return Vector3.new(CX+dx,ground(CX+dx,CZ+dz),CZ+dz)end
 local function lift(position,height)return position+Vector3.new(0,height,0)end
@@ -200,4 +201,41 @@ function Park.ground(x,z)return ground(x,z)end
 -- Client helper: pose CFrame (position + yaw).
 function Park.cframe(position,yaw)return CFrame.new(position)*CFrame.Angles(0,yaw or 0,0)end
 
-return table.freeze(Park)
+if rotation~=0 then
+	local function moved(value,key)
+		if typeof(value)=="Vector3"then
+			local dx,dz=value.X-CX,value.Z-CZ
+			local x,z=CX+dx*math.cos(rotation)+dz*math.sin(rotation),CZ-dx*math.sin(rotation)+dz*math.cos(rotation)
+			return Vector3.new(x,ground(x,z)+value.Y-ground(value.X,value.Z),z)
+		elseif typeof(value)=="Vector2"and key=="center"then
+			local dx,dz=value.X-CX,value.Y-CZ
+			return Vector2.new(CX+dx*math.cos(rotation)+dz*math.sin(rotation),CZ-dx*math.sin(rotation)+dz*math.cos(rotation))
+		elseif type(value)=="number"and(key=="yaw"or key=="angle")then return value+rotation
+		elseif type(value)=="table"then
+			local result={};for k,v in pairs(value)do result[k]=moved(v,k)end;return table.freeze(result)
+		end
+		return value
+	end
+	for key,value in pairs(Park)do Park[key]=moved(value,key)end
+	-- Choreography/bench rotate toward the hub, while the primary gateway still
+	-- opens east onto the measured through-path. Kerb derives from these actual gaps.
+	Park.Gateways=table.freeze({gateway("east",-.26,4),Park.Gateways[2]})
+end
+return Park
+end
+
+local arrival=makeLayout(36,66,"arrival",0)
+-- Development site surveyed against precise world ground 2026-11-14. Landscape/camera
+-- acceptance remains a coordinator gate; never infer clearances from the exported grid.
+local grove=makeLayout(-38,-46,"grove",math.pi)
+local sites=table.freeze({arrival,grove})
+local byId=table.freeze({arrival=arrival,grove=grove})
+arrival.Sites=sites;arrival.ById=byId
+function arrival.siteAt(position,currentId)
+	local current=byId[currentId]
+	if current and current.member(position,true)then return current end
+	for _,site in ipairs(sites)do if site.member(position,false)then return site end end
+	return nil
+end
+table.freeze(grove)
+return table.freeze(arrival)

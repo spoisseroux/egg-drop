@@ -1,0 +1,25 @@
+{
+  "file": "roughness-jelly-025.png",
+  "bytes": 96,
+  "sha256": "a08b617a91bac9c9bd785f201e6fa45e1a7d071f1c08cf9e1305de03d7c0e2fc",
+  "width": 32,
+  "height": 32,
+  "channels": 3,
+  "pixel": [
+    64,
+    64,
+    64
+  ],
+  "targetScalar": 0.25,
+  "encodedScalar": 0.25098039215686274,
+  "generator": "scripts/build_pet_material_maps.py png((64,64,64)) only; main not executed",
+  "purpose": "Jelly fixture-only roughness candidate; all other profile maps/Overlay gradient unchanged",
+  "sourceAssetsChanged": false,
+  "uploadedId": "rbxassetid://75946070025172",
+  "colorManagementMetadata": false,
+  "decalWrapperId": "rbxassetid://91575369316154",
+  "coordinatorStatus": "Typed mounted ImageLabel preload Success; actualrender gray64 proven. Raw URI transport failure corrected. New production-owner/render review pending.",
+  "nativeReady": false,
+  "nativeVerified": false,
+  "typedImageReady": true
+}

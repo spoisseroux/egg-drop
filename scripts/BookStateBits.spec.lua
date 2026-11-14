@@ -110,10 +110,19 @@ return function(_, shared)
 		local state = { petWearables = { pip = { owned = { "beanie_mint", "tee_berry", "sunhat_peach" }, equipped = {} } } }
 		assert(Book.pageProgress(state, "wardrobe").owned == 0)
 		table.insert(state.petWearables.pip.owned, "beanie"); assert(Book.pageProgress(state, "wardrobe").owned == 1)
-		local toys, finishes = 0, 0
-		for _, item in ipairs(Book.Pages.toys.items) do if item.kind == "toy" then toys += 1 else finishes += 1 end end
-		assert(toys == #Toys.Pools[Toys.PoolVersion] and toys == 5 and finishes == #Finishes.Pools[Finishes.PoolVersion] and finishes == 2)
-		assert(Book.pageProgress({ toyUnlocks = { wobble_top = true, squeaky_carrot = true }, materialUnlocks = { pearl_edge = true } }, "toys").owned == 2, "pool 3 finishes are not sold yet")
+		local toys, finishes, finishIds = 0, 0, {}
+		for _, item in ipairs(Book.Pages.toys.items) do
+			if item.kind == "toy" then toys += 1 else finishes += 1; table.insert(finishIds, item.itemId) end
+		end
+		assert(toys == #Toys.Pools[Toys.PoolVersion] and toys == 5 and finishes == #Finishes.Pools[Finishes.PoolVersion] and finishes == 3)
+		assert(Finishes.PoolVersion == 4 and table.concat(finishIds, ",") == "gloss,jelly,matte", "the Book must list the exact active pool4 finishes")
+		assert(table.concat(Finishes.Pools[2], ",") == "gloss,matte" and table.concat(Finishes.Pools[3], ",") == "gloss,matte,pearl_edge,speckle_satin", "historical pool data changed")
+		local owned = { toyUnlocks = { wobble_top = true, squeaky_carrot = true }, materialUnlocks = { metal = true, pearl_edge = true, speckle_satin = true } }
+		assert(Book.pageProgress(owned, "toys").owned == 2, "legacy Metal and inactive pool3 finishes must not count")
+		owned.materialUnlocks.gloss = true; owned.materialUnlocks.matte = true
+		assert(Book.pageProgress(owned, "toys").owned == 4, "old pool2 ownership must count its two actual finishes")
+		owned.materialUnlocks.jelly = true
+		assert(Book.pageProgress(owned, "toys").owned == 5, "Jelly must count once in the current Book")
 	end)
 
 	test("book-only plates: Bookworm for three finished pages, Stargazer for Discoveries 100%, owed until held", function()

@@ -5,7 +5,8 @@ local Config=require(script.Parent.PetMaterialConfig)
 local Materials={};local Owner={};Owner.__index=Owner
 local white=Color3.new(1,1,1)
 local function release(entry)
- if entry.materialSurface then entry.materialSurface:Destroy();entry.materialSurface=nil;entry.materialProfile=nil end
+ if entry.materialSurface then entry.materialSurface:Destroy()end
+ entry.materialSurface=nil;entry.materialProfile=nil
  entry.materialTint=nil;entry.materialStrength=nil;entry.materialPartColor=nil
 end
 local function profile(entry)
@@ -63,6 +64,39 @@ function Owner:status()
  local pack=self.templates or ReplicatedStorage:FindFirstChild("PetMaterials")
  return if pack then "AuthoredPackAvailable"else "TemplateUnavailable"
 end
+local function validTemplate(template,name,allowUnverified)
+ return template~=nil and template:IsA("SurfaceAppearance")and template:GetAttribute("MaterialVersion")==Config.Version
+  and template:GetAttribute("MaterialProfile")==name and(template:GetAttribute("NativeVerified")==true or allowUnverified==true)
+end
+function Owner:jellyReady(visual)
+ local pack=self.templates or ReplicatedStorage:FindFirstChild("PetMaterials")
+ if not validTemplate(Materials.template(pack,"BodyJelly"),"BodyJelly",visual.allowUnverifiedFinish)then return false end
+ if visual.twoTone then
+  local two=self.twoToneTemplates or ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone")
+  if not validTemplate(Materials.template(two,"BodyTwoToneJelly"),"BodyTwoToneJelly",visual.allowUnverifiedFinish)then return false end
+ end
+ return true
+end
+local definitionPieces=setmetatable({},{__mode="k"})
+function Materials.jellyAlpha(entry,visual)
+ if not visual or not visual.appearance or visual.appearance.finish~="jelly"or visual.materialsEnabled==false
+  or entry.role~=nil or entry.faceRole~=nil or(entry.colorRole~="body"and entry.colorRole~="secondary")
+  or(entry.materialProfile~="BodyJelly"and entry.materialProfile~="BodyTwoToneJelly")then return 0 end
+ local surface=entry.materialSurface
+ if entry.materialFailure~=nil or typeof(surface)~="Instance"or surface.Parent~=entry.part
+  or not validTemplate(surface,entry.materialProfile,visual.allowUnverifiedFinish)then return 0 end
+ local definition=visual.definition;if not definition then return 0 end
+ local pieces=definitionPieces[definition]
+ if not pieces then
+  pieces={};for _,piece in ipairs(definition.pieces or {})do pieces[piece.name]=true end;definitionPieces[definition]=pieces
+ end
+ return if pieces[entry.name]then Config.JellyAlphaByPart[entry.name]or 0 else 0
+end
+function Materials.transparency(entry,visual,hidden)
+ if hidden then return 1 end
+ local base=entry.baseTransparency or 0;local alpha=Materials.jellyAlpha(entry,visual)
+ return if alpha==0 then base else 1-(1-base)*(1-alpha)
+end
 function Owner:paint(entry,visual,daylight)
  local key=profile(entry)
  if visual.materialsEnabled==false then
@@ -74,6 +108,7 @@ function Owner:paint(entry,visual,daylight)
  local templateKey=key
  if key=="Body"then
   local finish=visual.appearance and visual.appearance.finish or "standard"
+  if finish=="jelly"and(entry.role~=nil or not self:jellyReady(visual))then finish="standard"end
   local candidate=Config.FinishProfiles[finish]
   local selected=candidate and Materials.template(pack,candidate)
   if candidate~="Body"and selected and selected:IsA("SurfaceAppearance")and selected:GetAttribute("MaterialVersion")==Config.Version and selected:GetAttribute("MaterialProfile")==candidate and (selected:GetAttribute("NativeVerified")==true or visual.allowUnverifiedFinish==true)then templateKey=candidate end
@@ -87,9 +122,9 @@ function Owner:paint(entry,visual,daylight)
  if key=="Body"and visual.twoTone==true and entry.colorRole=="body"then
   local twoPack=if self.twoToneTemplates then self.twoToneTemplates else ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone")
   local name=Config.TwoToneProfiles[templateKey]
-  local candidate=name and twoPack and twoPack:FindFirstChild(name)
+  local candidate=name and Materials.template(twoPack,name)
   if candidate and name~="BodyTwoTone"and candidate:GetAttribute("NativeVerified")~=true and visual.allowUnverifiedFinish~=true then
-   name="BodyTwoTone";candidate=twoPack:FindFirstChild(name)
+   name="BodyTwoTone";candidate=Materials.template(twoPack,name)
   end
   if candidate and candidate:IsA("SurfaceAppearance")and candidate:GetAttribute("MaterialVersion")==Config.Version and candidate:GetAttribute("MaterialProfile")==name then
    template,templateKey,twoTone=candidate,name,true
@@ -129,15 +164,15 @@ function Owner:paint(entry,visual,daylight)
  end
  return true
 end
-local default=Materials.new()
-function Materials.paint(entry,visual,daylight)
- local ok,bound=pcall(default.paint,default,entry,visual,daylight)
+function Owner:paintSafely(entry,visual,daylight)
+ local ok,bound=pcall(self.paint,self,entry,visual,daylight)
  if not ok then
-  if entry.materialSurface then entry.materialSurface:Destroy();entry.materialSurface=nil end
-  entry.materialFailure=tostring(bound);return false
+  release(entry);entry.materialFailure=tostring(bound);return false
  end
  return bound
 end
+local default=Materials.new()
+function Materials.paint(entry,visual,daylight)return default:paintSafely(entry,visual,daylight)end
 function Materials.status()return default:status()end
 function Materials.start()default:begin();return default:status()end
 Materials.profile=profile

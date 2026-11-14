@@ -33,6 +33,7 @@ function Panel:useResult()
  local result=self.state and self.state.pendingToyResult
  if not result or not self.root.Visible or self.mode~="receipt"or(self.options.receiptOpen and not self.options.receiptOpen(result))then return false end
  if self.reveal:consumeSkipInput()or self.reveal:skip()then return false end
+ if self.options.storeFirst and self.options.storeFirst(result)then return true end
  if self.options.useNow then self.options.useNow(result);return true end;return false
 end
 function Panel:refresh(state,petId,mode,animate)

@@ -12,7 +12,8 @@
 -- this build lacks are returned as "SKIPPED ...". Isolated adapters only.
 -- Usage (Server): require(ServerScriptService.Server.ZZSpecs.CharmRules)(ServerScriptService.Server)
 return function(server)
-	local H=require(server.HatchProgress)
+	local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
 	local L=require(server.LifetimeState)
 	local A=require(server.PetAppearance)
 	local Shared=game:GetService("ReplicatedStorage").Shared

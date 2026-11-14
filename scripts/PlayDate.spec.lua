@@ -115,5 +115,55 @@ return function(server)
 		assert(db.player_1.hatching.playDate.op=="y2"and H.valid(h.state))
 	end)
 
+	test("completion receipt belongs only to target crossing and survives later batches/recovery",function()
+		local h,_,c=fixture()
+		assert(play(h,"before",2)and H.parkCompletion(h,"before")==nil)
+		c.failNext="after"
+		assert(not play(h,"cross",1)and H.parkCompletion(h,"cross")==nil)
+		assert(H.retry(h))
+		local proof=H.parkCompletion(h,"cross")
+		assert(proof and proof.amount==4 and proof.balance==h.state.nectar)
+		assert(play(h,"after",5))
+		assert(H.parkCompletion(h,"after")==nil and H.parkCompletion(h,"cross").amount==4)
+		assert(P.sanitize(h.state.playDate).completion.op=="cross"and H.valid(h.state))
+	end)
+	test("completion proof expires on day rollover and is not created by old-day retry",function()
+		local state={stats={},nectar=10}
+		assert(P.apply(state,{id="cross",day="5",count=3},"5"))
+		assert(P.completion(state,"cross").amount==4)
+		assert(P.apply(state,{id="rollback",day="4",count=1},"4"))
+		assert(P.completion(state,"cross")and state.playDate.day=="5","rollback preserves newer receipt")
+		assert(P.apply(state,{id="expired",day="5",count=3},"6"))
+		assert(state.playDate.count==0 and state.playDate.completion==nil)
+		state.nectar=1000000000
+		assert(P.apply(state,{id="cap",day="6",count=3},"6"))
+		assert(P.completion(state,"cap").amount==0 and state.nectar==1000000000,"completion event need not imply payment at cap")
+		local fixed=P.sanitize({day="6",count=3,completion={op="bad",amount=99,balance=10}})
+		assert(fixed.count==3 and fixed.completion==nil,"bad optional proof never discards earned progress")
+		assert(not P.valid({playDate={day="6",count=3,completion={op="partial",amount=2,balance=10}}}))
+		local known=P.sanitize({day="6",count=3,completion={op="good",amount=4,balance=14,unknown="drop"}})
+		assert(known.completion.unknown==nil,"receipt sanitize keeps known fields only")
+	end)
+	test("one finalizer dispatches immediate/recovered flights once without using later wallet delta",function()
+		local C=require(server.ParkGameCommit)
+		local events,sources=0,{}
+		local proofs={cross={op="cross",amount=4,balance=14}}
+		local nursery={parkCommitted=function(_,id)return id~="pending"end,parkCompletion=function(_,id)return proofs[id]end}
+		local options={now=function()return 25 end,event=function(value)assert(value==1);events+=1 end,source=function(amount,balance)table.insert(sources,{amount,balance})end}
+		local board={nursery={state={nectar=900}},parkPending=10}
+		for _,id in ipairs({"before","cross","after"})do
+			local flight={id=id,count=1};board.parkInFlight=flight
+			assert(C.finish(board,flight,nursery,options))
+			assert(not C.finish(board,flight,nursery,options),"same local flight clears once")
+		end
+		assert(events==1 and #sources==1 and sources[1][1]==4 and sources[1][2]==14,"receipt amount/balance, never current wallet 900")
+		assert(board.parkPending==7 and board.parkSavedAt==25)
+		local pending={id="pending",count=1};board.parkInFlight=pending
+		assert(not C.finish(board,pending,nursery,options)and board.parkInFlight==pending)
+		local failure={id="cross",count=1};board.parkInFlight=failure
+		assert(C.finish(board,failure,nursery,{now=options.now,event=function()error("analytics unavailable")end,source=function()error("analytics unavailable")end}))
+		assert(board.parkInFlight==nil,"best-effort analytics never blocks saves")
+	end)
+
 	return {passed=#cases,cases=cases}
 end

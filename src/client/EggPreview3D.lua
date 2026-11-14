@@ -8,6 +8,7 @@ local RunService=game:GetService("RunService")
 local GuiService=game:GetService("GuiService")
 local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels)
 local Kit=require(script.Parent.DeckKit)
+local Warmup=require(script.Parent.UIAssetWarmup)
 local Preview={};Preview.__index=Preview
 local Parts={"BottomShell","TopShell","Core"}
 
@@ -18,6 +19,14 @@ end
 local templates,loadState,waiters,generation={},"idle",{},0
 function Preview.resetCache()templates={};loadState="idle";waiters={};generation+=1 end
 function Preview.loadState()return loadState end
+-- Borrow immutable ready prototypes without another loader or callback. The
+-- caller owns/destroys these independent clones; cache templates stay private.
+function Preview.cloneTemplates()
+ if loadState~="ready"then return nil end
+ for _,key in ipairs(Parts)do if not templates[key]then return nil end end
+ local copies={};for _,key in ipairs(Parts)do copies[key]=templates[key]:Clone()end
+ return copies
+end
 -- Loads the three templates once; `done(ok)` runs (deferred) when they are ready or failed.
 function Preview.loadTemplates(done)
  if loadState=="ready"or loadState=="failed"then local ok=loadState=="ready";task.defer(done,ok);return end
@@ -105,7 +114,13 @@ function Preview.new(well,options)
  well:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:measure()end)
  well:GetPropertyChangedSignal("Size"):Connect(function()self:measure()end)
  self:measure();self:showOverlays(false);self:paintStatic()
- Preview.loadTemplates(function(ok)if ok and not self.destroyed then self:build()end end)
+ Preview.loadTemplates(function(ok)
+  if self.destroyed then return end
+  if ok then self:build()else self.loadReason="MeshLoadFailed";if self.options.onLoaded then self.options.onLoaded()end end
+ end)
+ task.delay(1.2,function()
+  if not self.destroyed and not self.built then self.loadReason="MeshLoadTimeout";if self.options.onLoaded then self.options.onLoaded()end end
+ end)
  return self
 end
 -- The 3D egg's own glow, shadow and glint show only once the meshes are in.
@@ -139,7 +154,7 @@ function Preview:measure()
  self.sheenClip.Size=UDim2.fromOffset(math.floor(g.ew*.82),math.floor(g.eh*.86));self.sheenClip.Position=UDim2.fromOffset(math.floor(g.cx),math.floor(g.cy))
 end
 function Preview:build()
- if self.loaded then return end
+ if self.built then return end
  for _,key in ipairs(Parts)do
   local spec=Models.Egg[key]
   local part=templates[key]:Clone()
@@ -150,15 +165,28 @@ function Preview:build()
   part.CFrame=CFrame.new(spec.center);part.Parent=self.world
   self.parts[key]=part
  end
- self.loaded=true;self.viewport.Visible=true;self:showOverlays(true)
+ self.built=true
  self:setType(self.type,true)
- if self.options.onLoaded then self.options.onLoaded()end
  self:paintStatic()
 end
 -- One ColorMap swap on both shells plus the core and glow colours.
 function Preview:setType(id,quiet)
+ if id==self.type and self.loaded then return end
  local t=Models.Types[id]or Models.Types.toy
  local changed=id~=self.type;self.type=id;self.rhythm=Preview.rhythm(id)
+ self.textureEpoch=(self.textureEpoch or 0)+1;local epoch=self.textureEpoch
+ if self.textureTicket then self.textureTicket:cancel()end
+ self.loaded=false;self.viewport.Visible=false;self:showOverlays(false)
+ if self.options.onLoaded then self.options.onLoaded()end
+ local request=if self.forceRetry then Warmup.shared.retry else Warmup.shared.request;self.forceRetry=nil
+ self.textureTicket=request(Warmup.shared,{t.colorMap},function(ok,reason)
+  if self.destroyed or epoch~=self.textureEpoch then return end
+  self.textureReady=ok;self.loadReason=reason
+  self.loaded=ok and self.built==true
+  self.viewport.Visible=self.loaded;self:showOverlays(self.loaded)
+  if self.options.onLoaded then self.options.onLoaded()end
+  self:paintStatic()
+ end,2)
  if self.parts.TopShell then
   self.parts.TopShell.TextureID=t.colorMap;self.parts.BottomShell.TextureID=t.colorMap
   self.parts.Core.Color=t.core
@@ -345,9 +373,20 @@ function Preview:hatch()
  self.hatchStart=self.clock;self.burstDone=nil;self.staticPainted=false
  return true
 end
+function Preview:retry()
+ if self.destroyed or loadState=="loading"then return false end
+ self.forceRetry=true
+ if loadState=="failed"then loadState="idle"end
+ Preview.loadTemplates(function(ok)if ok and not self.destroyed then if not self.built then self:build()else self:setType(self.type,true)end end end)
+ return true
+end
+function Preview.prewarm()
+ Preview.loadTemplates(function()end)
+ for _,id in ipairs({"toy","material","hue","feature"})do local t=Models.Types[id];if t then Warmup.shared:request({t.colorMap},function()end,0)end end
+end
 function Preview:destroy()
  if self.destroyed then return end
- self.destroyed=true;self:setActive(false)
+ self.destroyed=true;if self.textureTicket then self.textureTicket:cancel();self.textureTicket=nil end;self:setActive(false)
  for _,part in pairs(self.parts)do part:Destroy()end
 end
 return Preview

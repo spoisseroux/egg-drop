@@ -7,7 +7,7 @@ return function(client,parent)
  local hue=Hue.new({id=function()return "unused"end,send=function()error("material UI sent a hue operation")end,changed=changed})
  local material=Material.new({id=function()serial+=1;return "material-ui-"..serial end,send=function(action,value,revision)table.insert(sent,{action=action,value=value,revision=revision})end,changed=changed})
  view=View.new(root,hue,{materialIntent=material,activePet=function()return "pip"end,equipPet=function()equips+=1;return true end,appearance=function()return{charmVisible=false}end})
- local state={revision=1,status="Ready",inventoryMask=127,nectar=64,hueInventory={},petHues={},materialAvailable=true,materialUnlocks={gloss=true},petMaterials={pip="standard",puddle="gloss"}}
+ local state={revision=1,status="Ready",inventoryMask=127,nectar=64,hueInventory={},petHues={},materialAvailable=true,materialPoolVersion=Catalog.PoolVersion,restricted=false,materialSelectionMode="random",materialUnlocks={gloss=true},petMaterials={pip="standard",puddle="gloss"}}
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end
  local ok,problem=pcall(function()
@@ -38,7 +38,7 @@ return function(client,parent)
   test("Material receipt fits its round finish sample and adjacent measured actions without a blank footer gap",function()
    for _,size in ipairs({Vector2.new(900,720),Vector2.new(749,381),Vector2.new(568,160),Vector2.new(350,703)})do
     root.Size=UDim2.fromOffset(size.X,size.Y)
-    for _,id in ipairs({"gloss","matte"})do
+    for _,id in ipairs({"gloss","matte","jelly"})do
      state.pendingMaterialResult={id="sample-"..id..tostring(size),finishId=id,revision=state.revision,catalogVersion=1}
      view:open(state,"materials","pip");frames()
      local use=view.materialPanel.useNow;local keep=view.action;local sample=view.materialPanel.reveal.jar

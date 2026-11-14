@@ -1,17 +1,23 @@
 return function(client,parent)
  local Preview=require(client.MaterialFinishPreview);local Config=require(client.PetMaterialConfig)
  local root=Instance.new("Frame");root.Size=UDim2.fromOffset(500,240);root.Parent=parent
- local owners={};local cases={};local function test(name,f)f();table.insert(cases,name)end
- local source=game.ReplicatedStorage.PetAssets.Zivvi:FindFirstChild("Zivvi__CharmDot",true)
+ local owners={};local temporaryPacks={};local cases={};local function test(name,f)f();table.insert(cases,name)end
+ local source=game.ReplicatedStorage.PetAssets.Bear:FindFirstChild("Bear__CharmDot",true)
  local function make(finish,options)
   options=options or {};options.autoLoad=false
+  if finish=="jelly"and not options.templates then
+   local pack=game.ReplicatedStorage.PetMaterials:Clone();local candidate=pack:FindFirstChild("BodyJelly")
+   assert(candidate,"current Jelly template missing");candidate:SetAttribute("NativeVerified",true)
+   options.templates=pack;table.insert(temporaryPacks,pack) -- isolated lifecycle fixture, no production flag mutation
+  end
   local o=Preview.new(root,{finishId=finish},UDim2.fromOffset(0,0),UDim2.fromOffset(200,200),3,options);table.insert(owners,o);return o
  end
  local ok,err=pcall(function()
-  test("Matte and Gloss immediately show teal shaded sphere slate tile and ground shadow",function()
-   for _,finish in ipairs({"matte","gloss"})do local o=make(finish)
+  test("all finishes immediately show an honestly labeled opaque fallback and ground shadow",function()
+   for _,finish in ipairs({"matte","gloss","jelly"})do local o=make(finish)
     assert(o.root:GetAttribute("PreviewBackend")=="ShadedFallback"and o.fallback.Parent==o.world and o.fallback.Shape==Enum.PartType.Ball)
     assert(o.fallback.Color==Color3.fromHex("#69D7D5")and o.root.BackgroundColor3==Color3.fromHex("#314E59")and o.root.GroundShadow.Visible)
+    assert(o.root:GetAttribute("AccessibleLabel")==({matte="Matte",gloss="Gloss",jelly="Jelly"})[finish].." material sample"and o.fallback.Transparency==0)
     assert(not o.fallback:FindFirstChildWhichIsA("SurfaceAppearance")and math.abs(o.highlight.Transparency-(if finish=="gloss"then .06 else 1))<.00001)
    end
   end)
@@ -22,20 +28,28 @@ return function(client,parent)
    local distance=av.CurrentCamera.CFrame.Position.Z;assert(math.abs(1/(distance*math.tan(math.rad(15)))-.70)<.001)
   end)
   test("cold readiness success swaps exact verified production profiles only onto MeshParts",function()
-   for _,finish in ipairs({"matte","gloss"})do
+   for _,finish in ipairs({"matte","gloss","jelly"})do
     local complete;local cancelled=false;local queue={request=function(_,key,mesh,signature,parts,priority,callback)complete=callback;return{cancel=function()cancelled=true end}end}
     local o=make(finish,{readiness=queue,meshSource=source});assert(o:tryUpgrade()and complete and o.fallback.Parent==o.world)
     complete(true);local mesh=o.world:FindFirstChild("ProductionFinishSphere");assert(mesh and mesh:IsA("MeshPart")and o.ready and not o.fallback.Parent)
     local surface=mesh:FindFirstChildWhichIsA("SurfaceAppearance");assert(surface and surface:GetAttribute("NativeVerified")==true and surface:GetAttribute("MaterialProfile")==Config.FinishProfiles[finish])
-    assert(o.root:GetAttribute("PreviewBackend")=="ProductionPBR");o:destroy();assert(cancelled)
+    assert(o.root:GetAttribute("PreviewBackend")=="ProductionPBR"and math.abs(mesh.Transparency-(if finish=="jelly"then .15 else 0))<1e-6);o:destroy();assert(cancelled)
    end
   end)
   test("failed and unverified loads leave immediate fallback and destroy prevents late resurrection",function()
    local callback;local queue={request=function(_,a,b,c,d,e,f)callback=f;return{cancel=function()end}end}
    local o=make("gloss",{readiness=queue,meshSource=source});assert(o:tryUpgrade());callback(false);assert(not o.ready and o.fallback.Parent==o.world)
    o:destroy();callback(true);assert(not o.root.Parent and not o.ready)
-   local pack=game.ReplicatedStorage.PetMaterials:Clone();local template=pack:FindFirstChild(Config.FinishProfiles.gloss);template:SetAttribute("NativeVerified",false)
-   local unverified=make("gloss",{templates=pack,readiness=queue,meshSource=source});assert(not unverified:tryUpgrade()and not unverified.ready);unverified:destroy();pack:Destroy()
+   for _,finish in ipairs({"gloss","matte","jelly"})do
+    local pack=game.ReplicatedStorage.PetMaterials:Clone();local profile=Config.FinishProfiles[finish];local count=0
+    for _,template in ipairs(pack:GetChildren())do
+     if template.Name==profile or template:GetAttribute("MaterialProfile")==profile then template:SetAttribute("NativeVerified",false);count+=1 end
+    end
+    assert(count>0,"fixture finish profile missing")
+    local unverified=make(finish,{templates=pack,readiness=queue,meshSource=source})
+    assert(not unverified:tryUpgrade()and not unverified.ready and unverified.fallback.Transparency==0)
+    unverified:destroy();pack:Destroy()
+   end
   end)
   test("receipt sample has no input physics queries lights particles or independent frame clock",function()
    local o=make("gloss");for _,node in ipairs(o.root:GetDescendants())do
@@ -45,5 +59,5 @@ return function(client,parent)
    end
   end)
  end)
- for _,o in ipairs(owners)do o:destroy()end;root:Destroy();assert(ok,err);return{passed=#cases,cases=cases}
+ for _,o in ipairs(owners)do o:destroy()end;for _,p in ipairs(temporaryPacks)do p:Destroy()end;root:Destroy();assert(ok,err);return{passed=#cases,cases=cases}
 end

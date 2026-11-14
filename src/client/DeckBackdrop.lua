@@ -1,4 +1,5 @@
 -- One bounded exterior/preview surface: 16 bands, no instance churn after new().
+local Moonpond=require(script.Parent.MoonpondBackdrop)
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
 Backdrop.MotifOpacity=.88
@@ -8,6 +9,14 @@ Backdrop.ExteriorOpacity=.68 -- About 32% of the garden shows through the exteri
 local function frame(parent,name)
  local f=Instance.new("Frame");f.Name,f.BorderSizePixel,f.BackgroundTransparency=name,0,1
  f.Active,f.Selectable,f.ZIndex=false,false,parent.ZIndex+1;f.Parent=parent;return f
+end
+local function roundedRoot(parent,name)
+ if parent:IsA("CanvasGroup")then return frame(parent,name)end
+ local root=Instance.new("CanvasGroup");root.Name=name;root.BackgroundTransparency=1;root.BorderSizePixel=0
+ root.Active,root.Selectable=false,false;root.ZIndex=parent.ZIndex+1;root.ClipsDescendants=true;root.Parent=parent
+ local source=parent:FindFirstChildOfClass("UICorner")
+ local corner=Instance.new("UICorner");corner.CornerRadius=if source then source.CornerRadius else UDim.new(0,8);corner.Parent=root
+ return root
 end
 local function assign(self,node,property,value,category)
  if node[property]==value then return end
@@ -38,6 +47,9 @@ end
 function Backdrop:configure(id,theme)
  if self.id==id and self.theme==theme then return false end
  self.id,self.theme=id,theme;self.bucket=nil;self.colorBucket=nil;self.resting=false
+ if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root)end
+ if self.moonpond then self.moonpond.root.Visible=id=="moonpond"end
+ for _,band in ipairs(self.bands)do band.host.Visible=id~="moonpond"end
  self:floor();assign(self,self.root,"BackgroundColor3",theme.backdrop,"colorWrites")
  self.colorsApplied=false
  for _,b in ipairs(self.bands)do for _,p in ipairs(b.pieces)do
@@ -62,6 +74,7 @@ function Backdrop:floor()
  assign(self,self.root,"BackgroundTransparency",if seeThrough then (1-Backdrop.ExteriorOpacity)*math.clamp(game:GetService("GuiService").PreferredTransparency,0,1) else 0,"styleWrites")
 end
 function Backdrop:colors(phase)
+ if self.id=="moonpond"then return end
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true
  for _,b in ipairs(self.bands)do
   local tone=if self.id=="lantern"then self.theme.buttons:Lerp(self.theme.trim,(math.sin(phase*math.pi*2*b.layer)+1)/2)else self.theme.face:Lerp(self.theme.highlight,if b.layer==1 then .55 else .9)
@@ -70,6 +83,11 @@ function Backdrop:colors(phase)
 end
 function Backdrop:resize()
  local size=self.root.AbsoluteSize;if self.size==size then return end;self.size=size;self.resting=false
+ if self.id=="moonpond"and self.moonpond then
+  local c=self.case
+  local excluded=if c and self.exterior and self.root.Parent==self.home then Rect.new(c.x,c.y,c.x+c.w,c.y+c.h)else false
+  self.moonpond:resize(size,excluded);return
+ end
  local pitch=if size.X>=1000 then 64 else 46
  local motif=if size.X>=1000 then 28 else 22
  self.stats.pitch,self.stats.motifWidth=pitch,motif
@@ -102,6 +120,7 @@ function Backdrop:resize()
    end
    local w=if self.id=="creek"then motif elseif self.id=="canopy"then motif*.56 else motif*.72
    local h=if self.id=="creek"then motif*.4 elseif self.id=="canopy"then motif*.86 else motif*.85
+   p.bounds={x=x,y=y,w=w,h=h}
    assign(self,p.body,"Position",UDim2.fromOffset(x,y),"geometryWrites");assign(self,p.body,"Size",UDim2.fromOffset(w,h),"geometryWrites")
   end
  end
@@ -113,12 +132,23 @@ function Backdrop:setCase(rect)
  self.case=rect;self.size=nil
 end
 function Backdrop:pose(phase)
+ if self.id=="moonpond"then return end
  local size=self.size
  for _,b in ipairs(self.bands)do
   local amplitude=if b.layer==1 then 13 else 20
   local direction=if self.id=="lantern"and b.row%2==0 then -1 else 1
   local offset=math.sin(phase*math.pi*2*b.layer+b.row*.56)*amplitude*direction
-  assign(self,b.canvas,"Position",UDim2.fromOffset(offset,math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 8 else 12)),"poseWrites")
+  local dy=math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 8 else 12)
+  assign(self,b.canvas,"Position",UDim2.fromOffset(offset,dy),"poseWrites")
+  for _,piece in ipairs(b.pieces)do
+   local r=piece.bounds;local c=self.case
+   local visible=true
+   if r and c and self.root.Parent==self.home then
+    local margin=math.max(r.w,r.h)*.8+2 -- rotated motif/highlight extends beyond its nominal box
+    visible=r.x+r.w+offset+margin<=c.x or r.x+offset-margin>=c.x+c.w or r.y+r.h+dy+margin<=c.y or r.y+dy-margin>=c.y+c.h
+   end
+   assign(self,piece.body,"Visible",visible,"visibilityWrites")
+  end
  end
  self.stats.ticks+=1
 end
@@ -130,6 +160,7 @@ function Backdrop:setOwner(owner)
  self.layerOwner,self.ownerZ=owner,owner.ZIndex
  local base=owner.ZIndex+(if owner==self.home then self.homeOffset else 1)
  for _,entry in ipairs(self.layers)do assign(self,entry.node,"ZIndex",base+entry.offset,"layerWrites")end
+ if self.moonpond then self.moonpond:setZIndex(base+1)end
 end
 function Backdrop:releaseOwner(owner)
  if self.destroyed or self.root.Parent~=owner or not self.home.Parent then return end
@@ -163,10 +194,21 @@ end
 function Backdrop.thumbnail(host,id,theme)
  local root=host:FindFirstChild("PatternThumbnail")
  if not root then
-  root=frame(host,"PatternThumbnail");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true
+  root=roundedRoot(host,"PatternThumbnail");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true
   for i=1,2 do local body=frame(root,"Body"..i);frame(body,"Core");local c=Instance.new("UICorner");c.Parent=body;local inner=Instance.new("UICorner");inner.Parent=body.Core end
  end
  root.BackgroundTransparency=0;root.BackgroundColor3=theme.backdrop
+ local moon=root:FindFirstChild("Moonpond")
+ if id=="moonpond"then
+  if not moon then
+   local renderer=Moonpond.new(root,{thumbnail=true})
+   root:SetAttribute("MoonpondThumbnail",true)
+  else moon.Visible=true end
+  root.Body1.Visible=false;root.Body2.Visible=false
+  return root
+ end
+ if moon then moon.Visible=false end
+ root.Body1.Visible=true;root.Body2.Visible=true
  for i=1,2 do
   local body=root["Body"..i];body.BackgroundTransparency=if i==1 then .25 else .55
   body.BackgroundColor3=if id=="lantern"then theme.buttons else theme.trim
@@ -181,7 +223,7 @@ function Backdrop.thumbnail(host,id,theme)
  end
  return root
 end
-function Backdrop:destroy()if self.destroyed then return end;self.destroyed=true;self.root:Destroy()end
+function Backdrop:destroy()if self.destroyed then return end;self.destroyed=true;if self.moonpond then self.moonpond:destroy()end;self.root:Destroy()end
 
 -- In-board pattern (UI-SPEC-REDESIGN-MENUS 5): the chosen background drawn in
 -- the board well in one tone (plate accent 25% toward white) at 6%. One bounded
@@ -201,7 +243,7 @@ function Backdrop.boardCell(width)
  return math.clamp(math.floor(width*Backdrop.BoardCellRatio+.5),12,Backdrop.BoardCellMax)
 end
 function Backdrop.board(parent)
- local root=frame(parent,"BoardPattern");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true;root.Visible=false
+ local root=roundedRoot(parent,"BoardPattern");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true;root.Visible=false
  local self=setmetatable({root=root,pieces={},stats={created=1,writes=0,visible=0}},Board)
  -- The arc fade hides the lower half of a ring so Creek reads as ripples.
  local fade=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.54,1),NumberSequenceKeypoint.new(1,1)})
@@ -221,6 +263,7 @@ end
 -- gel spans (the caller picks the depth per renderer backend).
 function Board:setZIndex(z)
  if self.destroyed or self.z==z then return end;self.z=z
+ if self.moonpond then self.moonpond:setZIndex(z)end
  assign(self,self.root,"ZIndex",z,"layerWrites")
  for _,p in ipairs(self.pieces)do assign(self,p.shape,"ZIndex",z,"layerWrites")end
 end
@@ -229,6 +272,8 @@ function Board:configure(id,theme)
  local tone=Backdrop.boardTone(theme)
  if self.id==id and self.tone==tone then return false end
  self.id,self.tone=id,tone;self.size=nil
+ if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root,{field=true})end
+ if self.moonpond then self.moonpond.root.Visible=id=="moonpond"end
  local fill=1-Backdrop.BoardOpacity
  for _,p in ipairs(self.pieces)do
   local creek=id=="creek"
@@ -257,6 +302,10 @@ function Board:layout()
  if self.destroyed or not self.id then return end
  local size=self.root.AbsoluteSize
  if self.size==size then return end;self.size=size
+ if self.id=="moonpond"and self.moonpond then
+  for _,piece in ipairs(self.pieces)do piece.shape.Visible=false end
+  self.moonpond:resize(size,false);self.stats.visible=0;return
+ end
  local cell=Backdrop.boardCell(size.X);self.stats.cell=cell
  local thickness=math.max(1,math.floor(cell*.06+.5))
  local shown=0
@@ -276,5 +325,5 @@ function Board:setVisible(visible)
  if self.destroyed then return end
  assign(self,self.root,"Visible",visible==true and self.id~=nil,"visibilityWrites")
 end
-function Board:destroy()if self.destroyed then return end;self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end;self.root:Destroy()end
+function Board:destroy()if self.destroyed then return end;self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end;if self.moonpond then self.moonpond:destroy()end;self.root:Destroy()end
 return Backdrop

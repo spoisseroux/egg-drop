@@ -98,7 +98,7 @@ function Kit.measure(text,role,size,width)
  local face=Kit.faceFor(role,size)
  size=size or(Kit.Type[role]or Kit.Type.Body)[1]
  width=width or 10000
- local key=face.Family.."|"..face.Weight.Name.."|"..size.."|"..width.."|"..text
+ local key=face.Family.."|"..face.Weight.Name.."|"..GuiService.PreferredTextSize.Name.."|"..size.."|"..width.."|"..text
  local hit=measureCache[key]
  if hit then return hit end
  local font=Kit.legacyFont(face)
@@ -496,7 +496,7 @@ end
 local buttons=setmetatable({},{__mode="k"})
 local function baseFill(state)
  local v=state.variant
- if not state.enabled then return Kit.color("raised"),.4 end
+ if not state.enabled then return Color3.fromHex("#344545"),0 end
  local color=if v=="primary"then Kit.color("accent")elseif v=="reward"then Kit.Color.stars
   elseif v=="destructive"then Kit.color("raised"):Lerp(Kit.Color.danger,.10)
   elseif state.selected then Kit.color("selected")else Kit.color("raised")
@@ -513,14 +513,15 @@ function Kit.paintButton(button)
  local accent=s.enabled and(s.variant=="primary"or s.variant=="reward")
  -- T2: every enabled button with a ledge shows its darker lip; on press the face
  -- (Fill + Content) drops onto it, so the lip stays covered rather than hidden.
- s.edge.Visible=s.enabled and s.ledge>0;s.edge.BackgroundColor3=color:Lerp(Kit.Color.black,.38)
+ s.edge.Visible=s.ledge>0;s.edge.BackgroundColor3=if s.enabled then color:Lerp(Kit.Color.black,.38)else Color3.fromHex("#1F3030")
  s.sheen.Visible=accent
- s.stroke.Enabled=s.enabled and s.variant~="ghost"and s.variant~="primary"and s.variant~="reward"or s.selected
- if s.selected then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.color("accent"),2,0
+ s.stroke.Enabled=not s.enabled or(s.variant~="ghost"and s.variant~="primary"and s.variant~="reward")or s.selected
+ if not s.enabled then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Color3.fromHex("#60716E"),1,0
+ elseif s.selected then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.color("accent"),2,0
  elseif s.variant=="destructive"then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.Color.danger,1.5,0
  else s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.Color.white,1,.86 end
  local ink=if accent then Kit.Color.ink elseif s.variant=="destructive"then Kit.Color.danger elseif s.enabled then Kit.Color.text else Kit.Color.dim
- s.label.TextColor3=ink;s.label.TextTransparency=if s.enabled then 0 else .4
+ s.label.TextColor3=if s.enabled then ink else Color3.fromHex("#AAB8B5");s.label.TextTransparency=0
  if s.repaintGlyph then s.repaintGlyph(accent)end
  if s.glyph then s.glyph.Visible=s.showGlyph==true end
  if s.cap then Kit.capButtonLabel(button)end
@@ -591,7 +592,7 @@ function Kit.button(parent,name,options)
   Kit.capButtonLabel(button)
  end
  Art.bind(fill,{BackgroundColor3=function()Kit.paintButton(button);return fill.BackgroundColor3 end})
- button.MouseEnter:Connect(function()state.hover=true;Kit.paintButton(button)end)
+ button.MouseEnter:Connect(function()if state.enabled then state.hover=true;Kit.paintButton(button)end end)
  button.MouseLeave:Connect(function()state.hover=false;state.pressed=false;Kit.paintButton(button)end)
  button.MouseButton1Down:Connect(function()if state.enabled then state.pressed=true;Kit.paintButton(button)end end)
  button.MouseButton1Up:Connect(function()if state.pressed then task.delay(Kit.Motion.pressUp,function()state.pressed=false;Kit.paintButton(button)end)end end)
@@ -602,7 +603,7 @@ function Kit.buttonState(button)return buttons[button]end
 function Kit.setEnabled(button,enabled)
  local s=buttons[button];if not s then return end
  s.enabled=enabled~=false;button.Active=s.enabled;button.Interactable=s.enabled
- if not s.enabled then s.pressed=false end;Kit.paintButton(button)
+ if not s.enabled then s.pressed=false;s.hover=false end;Kit.paintButton(button)
 end
 function Kit.setSelected(button,selected)local s=buttons[button];if s then s.selected=selected==true;Kit.paintButton(button)end end
 function Kit.setText(button,text)local s=buttons[button];if s then s.label.Text=text;button:SetAttribute("AccessibleLabel",text)end end
@@ -626,6 +627,21 @@ function Kit.card(parent,name,label,options)
  local eyebrow
  if label then eyebrow=Kit.text(card,"Label",label,"dim",{Name="Eyebrow",Position=UDim2.fromOffset(pad,options.labelY or 12),Size=UDim2.new(1,-pad*2,0,16)})end
  return card,eyebrow
+end
+
+-- Border stays outside a single rounded compositor mask. Unlike a Frame corner,
+-- CanvasGroup's rounded mask clips descendant viewports/images at the corners.
+function Kit.previewWell(parent,name,position,size,radius)
+ radius=radius or 12
+ local outer=Kit.frame(parent,name,"well",position,size,radius);Kit.stroke(outer)
+ local clip=Kit.node("CanvasGroup",outer,{Name="RoundedContent",BackgroundTransparency=1,BorderSizePixel=0,
+  Position=UDim2.fromOffset(2,2),Size=UDim2.new(1,-4,1,-4),ClipsDescendants=true,GroupTransparency=0,
+  ZIndex=outer.ZIndex+1,Active=false,Selectable=false})
+ Kit.corner(clip,math.max(1,radius-2))
+ clip:SetAttribute("RequiresSiblingMask",true)
+ local owner=clip:FindFirstAncestorWhichIsA("LayerCollector")
+ clip:SetAttribute("SiblingMaskOwnerValid",owner~=nil and owner.ZIndexBehavior==Enum.ZIndexBehavior.Sibling)
+ return outer,clip
 end
 
 -- ── P2 surfaces (UI personality T2, T6, T7, T11) ───────────────────────────
@@ -1098,38 +1114,16 @@ function Kit.focusRing(host)
  return api
 end
 
--- Toast: top centre of the view, y 30, 48 high, gold stroke, 2.4 s, queued.
-function Kit.toaster(host)
- local queue,busy={},false
- local toast=Kit.frame(host,"Toast","well",UDim2.new(.5,0,0,30),UDim2.fromOffset(300,48),999)
- toast.AnchorPoint=Vector2.new(.5,0);toast.Visible=false;toast.ZIndex=300
- Kit.stroke(toast,"stars",1.5)
- local check=Kit.icon(toast,"check",22,"stars");check.Position=UDim2.fromOffset(28,13)
- local text=Kit.text(toast,"Strong","","text",{Name="Message",TextSize=17,Position=UDim2.fromOffset(60,0),Size=UDim2.new(1,-150,1,0)})
- local amount=Kit.text(toast,"Counter","","stars",{Name="Amount",TextSize=17,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-20,0,0),Size=UDim2.fromOffset(80,48),TextXAlignment=Enum.TextXAlignment.Right})
- local api={root=toast}
- local function nextToast()
-  if busy then return end
-  local item=table.remove(queue,1);if not item then return end
-  busy=true;text.Text=item.text;amount.Text=if item.amount then "★ +"..item.amount else ""
-  -- Compact (UI-SPEC-COMPACT 3): 40 high, Strong 14, centred where `api.placement` says.
-  local x,y,compact=nil,30,false
-  if api.placement then x,y,compact=api.placement()end
-  local size=if compact then 14 else 17
-  text.TextSize=size;amount.TextSize=size
-  local w=Kit.measure(item.text,"Strong",size).X
-  local h=if compact then 40 else 48
-  toast.Size=UDim2.fromOffset(math.ceil(w)+(if compact then 96 else 124)+(if item.amount then 40 else 0),h)
-  check.Position=UDim2.fromOffset(if compact then 16 else 28,(h-22)/2);text.Position=UDim2.fromOffset(if compact then 46 else 60,0)
-  amount.Size=UDim2.fromOffset(80,h)
-  local function at(dy)return if x then UDim2.new(0,x,0,y+dy)else UDim2.new(.5,0,0,y+dy)end
-  toast.Position=at(if Kit.reduced()then 0 else -16);toast.Visible=true
-  Kit.tween(toast,Kit.Motion.toastIn,{Position=at(0)})
-  task.delay(Kit.Motion.toastIn+Kit.Motion.toastHold,function()
-   toast.Visible=false;busy=false;nextToast()
-  end)
+-- Compatibility adapter: all former per-screen queues now share the topbar rail.
+-- `placement` is accepted by old callers but deliberately cannot move this owner.
+local toastSerial=0
+function Kit.toaster(host,rail)
+ local Rail=rail or require(script.Parent.NotificationRail)
+ local api={root=host}
+ function api.show(message,stars,eventKey)
+  toastSerial+=1
+  return Rail.enqueue(host,if eventKey~=nil then eventKey else "toast:"..toastSerial,{text=message,amount=stars})
  end
- function api.show(message,stars)table.insert(queue,{text=message,amount=stars});nextToast()end
  return api
 end
 

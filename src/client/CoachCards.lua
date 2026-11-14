@@ -326,32 +326,36 @@ end
 -- Garden card: kind "beat" (the guided step) or "once" (a one-time card). `machine` ties a
 -- first-visit card to its screen, so it leaves with it.
 function Cards:showGarden(id,kind,vars,now,machine)
- local view=self.gardenView
- local title,line=Cards.copy(id,vars)
- paintCard(view,id,title,line,self:gardenWidth())
- local beatIndex=if kind=="beat"then table.find(Coach.GardenBeats,id)else nil
- self.dotsRoot.Visible=beatIndex~=nil
- for i,d in ipairs(self.dots)do d.BackgroundColor3=if beatIndex and i<=beatIndex then Kit.Color.stars else Kit.Color.dim end
- self.skipLabel.Text=string.upper(if kind=="beat"then UICopy.get("coach.skip")else UICopy.get("coach.gotIt"))
- self.skip.Size=UDim2.fromOffset(math.ceil(Kit.measure(self.skipLabel.Text,"Label",13).X)+20,28)
- view.title.Size=UDim2.new(1,-80-self.skip.Size.X.Offset,0,24)
- -- Slice E: the arrival card grows a button row under its line.
- local arrival=kind=="arrival"
- self.sayHiButton.Visible=arrival
- if arrival then
-  local height=view.root.Size.Y.Offset
-  local buttonW=math.min(150,view.root.Size.X.Offset-66-16)
-  self.sayHiButton.Size=UDim2.fromOffset(buttonW,40);self.sayHiButton.Position=UDim2.fromOffset(66,height-12)
-  view.root.Size=UDim2.fromOffset(view.root.Size.X.Offset,height+40)
- end
- view.root.Visible=true
- self.garden={id=id,kind=kind,shownAt=now,elapsed=0,machine=machine,petId=if arrival and type(vars)=="table"then vars.petId else nil,
-  duration=if kind=="beat"then Cards.BeatSeconds elseif arrival then Cards.ArrivalSeconds else Cards.Duration}
- if not Kit.reduced()then view.scale.Scale=.9;Kit.tween(view.scale,Kit.Motion.toastIn,{Scale=1})end
- view.root:SetAttribute("CoachCard",id)
+ self:hideGarden()
+ local Rail=require(script.Parent.NotificationRail)
+ local title=Cards.copy(id,vars)
+ local current={id=id,kind=kind,shownAt=now,elapsed=0,machine=machine,
+  petId=if kind=="arrival"and type(vars)=="table"then vars.petId else nil,duration=3.86}
+ self.garden=current
+ local helpId=if machine then machine elseif id=="park"then "park"elseif id=="questDone"then "quests"else "companions"
+ local text=if kind=="arrival"then UICopy.get("qa.coach.sayHi",{pet=vars.pet})else title
+ current.rail=Rail.enqueue(self.host,"garden:"..id,{text=text,priority=-1,active=false,
+  activate=function()
+   if self.garden~=current then return end
+   if kind=="arrival"then self:sayHi()
+   else self:dismiss("tap");require(script.Parent.HowItWorks).open(helpId)end
+  end,
+  onShown=function()
+   if self.garden==current then current.presented=true;if kind=="once"then self:mark(id)end end
+  end,
+  onDone=function()
+   if self.garden~=current then return end
+   self:hideGarden()
+   if kind=="beat"then self:advance(id)elseif kind=="arrival"then self:mark("petArrived")end
+  end})
+ -- Legacy visual instances stay hidden for old host references and are destroyed
+ -- with the owner. Every presented notice belongs to the shared topbar rail.
+ self.gardenView.root.Visible=false
 end
 function Cards:hideGarden()
+ local current=self.garden
  self.garden=nil
+ if current and current.rail then current.rail:cancel()end
  self.gardenView.root.Visible=false
  self.gardenView.root:SetAttribute("CoachCard",nil)
  if self.sayHiButton then self.sayHiButton.Visible=false end
@@ -411,7 +415,8 @@ function Cards:step(now,ctx)
  -- Garden ----------------------------------------------------------------
  local current=self.garden
  if current then
-  if Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
+  if current.rail then current.rail:update({active=Cards.clockRuns(ctx,current.kind),paused=not Cards.clockRuns(ctx,current.kind)})end
+  if current.rail and current.rail:isVisible()and Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
   local elapsed=current.elapsed
   local gone=elapsed>=current.duration
    or((current.kind=="beat"or current.kind=="arrival")and not Cards.gardenOpen(ctx))
@@ -434,7 +439,7 @@ function Cards:step(now,ctx)
   local machine=Cards.machineDue(ctx.open,ctx.used,base)
   local roomFor=if self.roomSince then now-self.roomSince else 0
   if machine then
-   self:mark(machine);self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
+   self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
   elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying) then
    self.beat=self.beat or Coach.nextBeat(nil)
    if self.beat then self:showGarden(self.beat,"beat",vars,now)end
@@ -450,9 +455,9 @@ function Cards:step(now,ctx)
    else self:showGarden("petArrived","arrival",{pet=Pets.byId[petId].name,petId=petId},now)end
   elseif self.questToldPending and(ctx.mode~="Board"or ctx.over==true)then
    self.questToldPending=false
-   if Coach.wants("questDone",base)then self:mark("questDone");self:showGarden("questDone","once",vars,now)end
+   if Coach.wants("questDone",base)then self:showGarden("questDone","once",vars,now)end
   elseif ctx.canRoam and ctx.used and ctx.used.Park and Coach.wants("park",base)then
-   self:mark("park");self:showGarden("park","once",vars,now)
+   self:showGarden("park","once",vars,now)
   end
  end
  -- Board ------------------------------------------------------------------
@@ -462,79 +467,32 @@ end
 -- The Welcome pill (QA v2 R6.2): shown once per session in the Welcome round, from the
 -- first presented frame until ~5 s pass or the first drop (or merge), then it fades.
 function Cards:stepWelcome(now,ctx,wanted)
- local pill=self.welcomePill;if not pill then return end
- if wanted and((ctx.drops or 0)>0 or(ctx.merges or 0)>0)and self.welcomeAt then self.welcomeOutAt=self.welcomeOutAt or now end
- if wanted and not self.welcomeDone and not self.welcomeAt then
-  self.welcomeAt=now;self.welcomeOutAt=nil
-  local width=math.floor(math.clamp((self.boardW or 300)-16,120,340))
-  self.sticker.Text="★ +"..Coach.WelcomeStars
-  local starW=math.ceil(Kit.measure(self.sticker.Text,"Counter",13).X)+10
-  local text=Cards.welcomeText(width-30-starW-14)
-  self.pillText.Text=text
-  local textW=math.ceil(Kit.measure(text,"Strong",13).X)+2
-  pill.Size=UDim2.fromOffset(math.min(width,30+textW+8+starW+10),28)
-  self.pillText.Size=UDim2.new(0,textW,1,0)
-  pill.Visible=true;pill:SetAttribute("CoachCard","welcome")
- end
- if not self.welcomeAt or self.welcomeDone then
-  if pill.Visible then pill.Visible=false;pill:SetAttribute("CoachCard",nil)end
+ if self.welcomePill then self.welcomePill.Visible=false end
+ if not wanted or(ctx.drops or 0)>0 or(ctx.merges or 0)>0 then
+  if self.welcomeRail then self.welcomeRail:cancel();self.welcomeRail=nil end
   return
  end
- local reduced=Kit.reduced()
- local fade=Cards.welcomeFade(now-self.welcomeAt,reduced)
- -- Leaving early (the first drop, the round over, the board gone): a quick fade out.
- if not wanted and not self.welcomeOutAt then self.welcomeOutAt=now end
- if self.welcomeOutAt then
-  local out=if reduced then 1 else math.clamp((now-self.welcomeOutAt)/.25,0,1)
-  fade=math.max(fade,out)
- end
- pill.GroupTransparency=fade
- if fade>=1 and now-self.welcomeAt>Cards.WelcomeFadeIn then
-  self.welcomeDone=true;pill.Visible=false;pill:SetAttribute("CoachCard",nil)
- end
+ if self.welcomeDone or self.welcomeRail then return end
+ self.welcomeRail=require(script.Parent.NotificationRail).enqueue(self.host,"welcome",{
+  text=UICopy.get("qa.coach.welcome"),priority=-1,
+  onShown=function()self.welcomeDone=true end})
 end
 function Cards:stepBoard(now,ctx,base)
- local view=self.boardView
+ if self.boardView then self.boardView.root.Visible=false end
+ if self.boardPill then self.boardPill.Visible=false end
  local due=Cards.boardDue(base)
  self:stepWelcome(now,ctx,due=="welcome")
- local shown=self.boardCard
- if shown then
-  if ctx.mode=="Board"and ctx.presented and now-shown.shownAt<Cards.BoardSeconds then
-   view.bar.Size=UDim2.new(math.clamp(1-(now-shown.shownAt)/Cards.BoardSeconds,0,1),-32,0,2)
-   return
-  end
-  self.boardCard=nil;view.root.Visible=false;view.root:SetAttribute("CoachCard",nil)
+ if self.boardRail then
+  local active=ctx.mode=="Board"and ctx.presented==true
+  self.boardRail:update({active=active,paused=not active})
+  if not active then self.boardRail:cancel();self.boardRail=nil end
  end
- local tip=self.boardPill
- if tip and tip.Visible then
-  local age=now-(self.tipAt or now)
-  local fade=Cards.welcomeFade(age,Kit.reduced())
-  if ctx.mode~="Board"then fade=1 end
-  tip.GroupTransparency=fade
-  if fade>=1 and age>Cards.WelcomeFadeIn then tip.Visible=false;tip:SetAttribute("CoachCard",nil)end
-  return
- end
- if not due or due=="welcome"then return end
- self:mark(due)
- if tip then
-  local width=math.floor(math.clamp((self.boardW or 300)-16,120,340))
-  local text=UICopy.get("coach."..due..".short")
-  self.tipText.Text=text
-  local textW=math.ceil(Kit.measure(text,"Strong",13).X)+2
-  tip.Size=UDim2.fromOffset(math.min(width,textW+24),28)
-  tip.Visible=true;tip.GroupTransparency=1;tip:SetAttribute("CoachCard",due)
-  self.tipAt=now
-  return
- end
- local width=math.floor(math.clamp((self.boardW or 300)-16,200,380))
- local title,line=Cards.copy(due,{pet=ctx.pet,input=ctx.input,reward=Coach.WelcomeStars})
- paintCard(view,due,title,line,width)
- view.bar.Visible=true
- view.bar.Size=UDim2.new(1,-32,0,2)
- view.title.Size=UDim2.new(1,-80,0,24)
- view.root.Visible=true;view.root:SetAttribute("CoachCard",due)
- if not Kit.reduced()then view.scale.Scale=.9;Kit.tween(view.scale,Kit.Motion.toastIn,{Scale=1})end
- self.boardCard={id=due,shownAt=now}
+ if not due or due=="welcome"or self.boardRail or ctx.mode~="Board"or not ctx.presented then return end
+ self.boardRail=require(script.Parent.NotificationRail).enqueue(self.host,"board:"..due,{
+  text=UICopy.get("coach."..due..".short"),priority=-1,
+  activate=function()require(script.Parent.HowItWorks).open("hatch")end,
+  onShown=function()self:mark(due)end,
+  onDone=function()self.boardRail=nil end})
 end
 
 function Cards:destroy()

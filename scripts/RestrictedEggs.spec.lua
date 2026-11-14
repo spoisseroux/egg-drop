@@ -51,7 +51,16 @@ return function(server)
 		assert(ok, action .. " " .. tostring(why))
 	end
 	local function buyToy(h, c) command(h, c, "toy", "toyBuy", { poolVersion = Toys.PoolVersion, eligible = Toys.remaining(h.state.toyUnlocks) }); command(h, c, "toy", "toyAck", { resultId = h.state.pendingToyResult.id }) end
-	local function buyFinish(h, c) command(h, c, "material", "materialBuy", { poolVersion = Finishes.PoolVersion, eligible = Finishes.remaining(h.state.materialUnlocks) }); command(h, c, "material", "materialAck", { resultId = h.state.pendingMaterialResult.id }) end
+	local function buyFinish(h, c)
+		local eligible = Finishes.remaining(h.state.materialUnlocks)
+		local fields = { poolVersion = Finishes.PoolVersion, eligible = eligible }
+		if fields.poolVersion == 4 then
+			fields.price = Finishes.cost(4); fields.selectionMode = Finishes.selectionMode(h.restricted)
+			if fields.selectionMode == "fixed" then fields.fixedFinishId = Finishes.fixedNext(eligible, 4) end
+		end
+		command(h, c, "material", "materialBuy", fields)
+		command(h, c, "material", "materialAck", { resultId = h.state.pendingMaterialResult.id })
+	end
 	local function buyFruit(h, c) command(h, c, "hue", "hueBuy", {}); command(h, c, "hue", "hueStore", { resultId = h.state.pendingHueResult.id }) end
 	local function buyFeature(h, c) command(h, c, "feature", "featureBuy", { poolVersion = Features.PoolVersion }); command(h, c, "feature", "featureAck", { resultId = h.state.pendingFeatureResult.id }) end
 

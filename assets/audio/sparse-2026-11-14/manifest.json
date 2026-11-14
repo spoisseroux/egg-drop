@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "status": "approved and runtime mapped; coordinator native loaded proof; listening preference remains unclaimed",
+  "uploaded": true,
+  "runtime_mapped": true,
+  "creation_universe_id": "10774758591",
+  "expected_price": 0,
+  "source": "Astra sparse v3 direction; attributed CC0 recordings plus original additions",
+  "candidate_report": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-full\\candidate-report.json",
+  "candidate_report_sha256": "b56944cd51746ece8befcef91203eabde5084e333a3e44220633ccc36cf6a43c",
+  "provenance": {
+    "retrieved_utc": "2026-11-14",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sources": [
+      {
+        "author": "bart",
+        "source_url": "https://opengameart.org/content/squeak-toy-sounds",
+        "license_page_sha256": "acdb04a73fe4200f09c5baa6e5779d565ba274d5b3ade1d27e3b932929ff8ee1",
+        "license_page_file": "squeak-toy-sounds.html",
+        "files": [
+          {
+            "source_filename": "squeak_toy.zip",
+            "download_url": "https://opengameart.org/sites/default/files/squeak_toy.zip",
+            "bytes": 898071,
+            "sha256": "3ba6419b05ebf8e0b7dd4395b3c10f26811c037e357143f10a159acdb2dabfb8",
+            "extracted_wavs": [
+              {
+                "archive_member": "squeak toy/squeak toy - squeak1.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak1.wav",
+                "sha256": "a89853f355ce7c6c60ee9695f5e725250c6a74f4a177b549afa0a30ff98ff362",
+                "bytes": 271388
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak2.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak2.wav",
+                "sha256": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+                "bytes": 172012
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak3.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak3.wav",
+                "sha256": "bb51223dc20b0f4e691ce624330747a2c866edaf1150c2cdd2b53280154b7212",
+                "bytes": 298500
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak5.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak5.wav",
+                "sha256": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+                "bytes": 226212
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "author": "BMacZero",
+        "source_url": "https://opengameart.org/content/bubble-sound-effects",
+        "license_page_sha256": "9ab1602f48dd7f3a1c73afb66a873a98f54ee72281e9bfdd7e6815cbbec24d14",
+        "license_page_file": "bubble-sound-effects.html",
+        "files": [
+          {
+            "source_filename": "bubbles-single1.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single1.wav",
+            "bytes": 28386,
+            "sha256": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5"
+          },
+          {
+            "source_filename": "bubbles-single2.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single2.wav",
+            "bytes": 38468,
+            "sha256": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8"
+          },
+          {
+            "source_filename": "bubbles-single3.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single3.wav",
+            "bytes": 35884,
+            "sha256": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b"
+          },
+          {
+            "source_filename": "bubbles-loop1-amp.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-loop1-amp.wav",
+            "bytes": 428076,
+            "sha256": "94eaef4afc1146dcdfd3077cc7a6cbe6dc97daac62b8f6560dfc913dd57488a9"
+          }
+        ]
+      }
+    ]
+  },
+  "old_seven_audio_ids": "HOLD / unmapped",
+  "assets": {
+    "garden": {
+      "file": "garden-texture-72s.wav",
+      "sha256": "0c8f1370e2ccd447af6d14768c9268f5f2ee63d8a83ecc76f0440aa8caf420dd",
+      "frames": 3456000,
+      "sample_rate": 48000,
+      "channels": 2,
+      "seconds": 72,
+      "loop": true,
+      "expected_price": 0,
+      "asset_id": "73327108010209",
+      "operation_id": "aefce42d-5dbb-45d7-b04f-bef1118c047c",
+      "native_sound_loaded": true,
+      "measurements": {
+        "integrated_lufs": -38.06,
+        "true_peak_dbfs": -15.53,
+        "loudness_range_lu": 12.6,
+        "meter_only_no_normalization_applied": true
+      },
+      "approval_status": "Approved",
+      "native_sound_time_length": 72,
+      "runtime_owner": "src/client/BoardAudio.lua: Music"
+    },
+    "pocket-deck": {
+      "file": "pocket-deck-texture-72s.wav",
+      "sha256": "7e3f6540f73416f85dd0388e43a2fd876a79ef37cefd7288d29719c8dcedc6b0",
+      "frames": 3456000,
+      "sample_rate": 48000,
+      "channels": 2,
+      "seconds": 72,
+      "loop": true,
+      "expected_price": 0,
+      "asset_id": "108432047352639",
+      "operation_id": "ade603fa-7f89-4a72-af30-49c16097e7fc",
+      "native_sound_loaded": true,
+      "measurements": {
+        "integrated_lufs": -38.64,
+        "true_peak_dbfs": -15.82,
+        "loudness_range_lu": 14.1,
+        "meter_only_no_normalization_applied": true
+      },
+      "approval_status": "Approved",
+      "native_sound_time_length": 72,
+      "runtime_owner": "src/client/AmbientAudio.lua: deck_music"
+    }
+  },
+  "upload_verification": {
+    "date": "2026-11-14",
+    "reported_by": "coordinator /root",
+    "expected_price": 0,
+    "creation_universe_id": "10774758591",
+    "master_sha256_rechecked_before_mapping": true,
+    "native_proof": "Target client typed Sound Preload: IsLoaded true, TimeLength 72 for both. Coordinator reported approval and exact stable-master upload.",
+    "post_mapping_owner_regression": "Coordinator actual fresh Audio16 + Ambient7 + Duck3 PASS",
+    "subjective_listening_approval_claimed": false,
+    "place_publish_performed": false
+  }
+}

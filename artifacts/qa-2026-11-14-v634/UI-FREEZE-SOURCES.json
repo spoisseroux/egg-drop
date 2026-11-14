@@ -1,0 +1,142 @@
+{
+  "src/client/NotificationQueue.lua": {
+    "bytes": 2553,
+    "sha256": "2f25246bc3d1590fc1eb5eecdc88488ef26ff92b1c98aaa78ae2fb5321bf1655"
+  },
+  "src/client/NotificationRail.lua": {
+    "bytes": 5819,
+    "sha256": "201bc8896d8b1738bd5d2dcdf824c015dcfa1cc041779590aedb46c6d3350ce0"
+  },
+  "src/client/UIAssetWarmup.lua": {
+    "bytes": 3052,
+    "sha256": "230c90229c65d8abf2dcc56c23b0abe998ed31bd0f10a2bf13085bcdb09a0bf6"
+  },
+  "src/client/ShopPriceState.lua": {
+    "bytes": 364,
+    "sha256": "fee4c8e5e034875dbbaa195d34e1adae997f03e7bb04463108ba320f48bc9739"
+  },
+  "src/client/PreviewFeedback.lua": {
+    "bytes": 1467,
+    "sha256": "b58a824462972a519e1e262f0e5608925367295b82e6126c916d2e9edb327043"
+  },
+  "src/client/FocusRow.lua": {
+    "bytes": 627,
+    "sha256": "a73d277b867b4932270584efcdc6a65c44d46ef87a1bf59626c8be4f0d5cb6b7"
+  },
+  "src/client/MoonpondBackdrop.lua": {
+    "bytes": 4913,
+    "sha256": "96ebc15b35a05ab37934a72f023c1913f1e1c75d889593357419b201ca745a44"
+  },
+  "src/client/DeckKit.lua": {
+    "bytes": 94467,
+    "sha256": "d5f31457febb692c9702720aaa73c793b49164622922a74e991f198ffc9c7893"
+  },
+  "src/client/HowItWorks.lua": {
+    "bytes": 17205,
+    "sha256": "bd5912d51cd25112c29aede94981cf39b842a8e205da2c7b5e762e3d9612379a"
+  },
+  "src/client/CoachCards.lua": {
+    "bytes": 28441,
+    "sha256": "95a7ac90f9befee47f997a154c0930d9e2b097044fd54596e81ac62a2f800d25"
+  },
+  "src/client/PetFocusUI.lua": {
+    "bytes": 31751,
+    "sha256": "272f77e9322f886a4e39e660ce9fb075157fc0d03bbd87df51811fe768dcfff7"
+  },
+  "src/client/GardenCareClient.lua": {
+    "bytes": 12008,
+    "sha256": "0f762cfe0d8176227697b14cefcfa9234bf17bf4a8c348c153dd50a19c0e76ab"
+  },
+  "src/client/FaceplateShop.lua": {
+    "bytes": 40205,
+    "sha256": "6c9c355780b07e321f29db9049ab1a1d619c56d2814f0caddac47ce5f045631f"
+  },
+  "src/client/BackgroundShop.lua": {
+    "bytes": 17184,
+    "sha256": "26ef8e0259e90a268e44a6f2ff90b4b1e04687953c098818810b5fe276b6f194"
+  },
+  "src/client/BallShop.lua": {
+    "bytes": 23680,
+    "sha256": "6214e8309f0c16e3702e5ff8f1868d5615df618843e148bf856c038aa17cdd1c"
+  },
+  "src/client/WardrobeShop.lua": {
+    "bytes": 50492,
+    "sha256": "fdf1bd3a49fe58927e09e3d9df162f427ba0da9d5fbb681932eb5ae458930ac3"
+  },
+  "src/client/EggPreview3D.lua": {
+    "bytes": 21997,
+    "sha256": "3430809adba6a88d5a5698ed7f3435189eab85811274fbc5206781851db484f6"
+  },
+  "src/client/EggHatchView.lua": {
+    "bytes": 73285,
+    "sha256": "1fc9ed3ddd0f719d331b5a2150ea14612cbfd65adb962021d5cb359e98d4a9dc"
+  },
+  "src/client/HueEggView.lua": {
+    "bytes": 129321,
+    "sha256": "51500e68f79a0f92778fd5d219001ca2a205f80995dd467734bcbc9124bd55f7"
+  },
+  "src/client/init.client.lua": {
+    "bytes": 223013,
+    "sha256": "2b2a7f787bdeebacf2e9e981ffb78093d24839e64e066825ce8bc1f0ca2685f3"
+  },
+  "src/shared/UICopy.lua": {
+    "bytes": 22423,
+    "sha256": "874e8dd37cc9bbcb762f3e45366f240f8ea36682cf6395d1b6b4cdd9930aeba5"
+  },
+  "src/shared/DeckBackgrounds.lua": {
+    "bytes": 322,
+    "sha256": "00c1194b5e7cccec771a606863eda7cbf9c14c7937159359a0201b0be68985b8"
+  },
+  "scripts/NotificationQueue.spec.lua": {
+    "bytes": 1565,
+    "sha256": "dbced39b642305821fb2622de0b99a1b54943813c9b7c0bf899012964bd0cedc"
+  },
+  "scripts/QAUIState.spec.lua": {
+    "bytes": 1311,
+    "sha256": "3ba1880eab940c5b3f76d42d2b4c4c85910d921342c263347f76bfeb3d0a07a7"
+  },
+  "scripts/UIAssetWarmup.spec.lua": {
+    "bytes": 2342,
+    "sha256": "c79b3809618f8e452535b00de70bad91f7e399c04398129ad2967d9e893afe1f"
+  },
+  "scripts/GlobalUIBounds.spec.lua": {
+    "bytes": 3349,
+    "sha256": "95f885cd468174e228c2ac03c39255e56c7d4e05009f38245ba8601d979ce83f"
+  },
+  "scripts/HelpCardsBounds.spec.lua": {
+    "bytes": 2444,
+    "sha256": "30047b0c1c3d5ae76d5396c095811266616cb4b04505d61dd65fa409ed30d68d"
+  },
+  "scripts/QAPreviewBounds.spec.lua": {
+    "bytes": 4155,
+    "sha256": "80f570b90b5d4bbef86154168e9d448de730fe0c7ce5eed6c454a5d6af36321a"
+  },
+  "src/client/FirstSpendGuide.lua": {
+    "bytes": 5867,
+    "sha256": "6bc6e36bbf504bb652da67983dc765554cbbd3704241d76e71c6c6d5d49a878a"
+  },
+  "src/client/FirstSpendToyHost.lua": {
+    "bytes": 1685,
+    "sha256": "f84c8f7390428bcbd5380ec9a14ebcf103c7fb43b6b7573cd9f187b100a6ee40"
+  },
+  "scripts/FirstSpendGuide.spec.lua": {
+    "bytes": 5457,
+    "sha256": "193b1ba884c79210f22d8fc562dc89a7b7abc4c39cf1fc506d24acad423320a2"
+  },
+  "scripts/FirstSpendToyHost.spec.lua": {
+    "bytes": 4504,
+    "sha256": "a8d85cdba7b0a3841aab1884992b5d83c9fc52e787e301bfaf8def10731d7b83"
+  },
+  "src/client/HueItemReveal.lua": {
+    "bytes": 3470,
+    "sha256": "1ebc8beb67dc73838e11e5484a288d1b699baaf27e85ce6d074a5fd9ad227c40"
+  },
+  "scripts/HueItemReveal.spec.lua": {
+    "bytes": 3700,
+    "sha256": "cd2f3e2de09378cd92730da4cca95085ea129dd447d2b7554a2262329dbb8deb"
+  },
+  "scripts/HatchNativeHost.spec.lua": {
+    "bytes": 4045,
+    "sha256": "e93150f27be6fd3915e17f0b619289cf918866ad63904825be46a4389d8689d5"
+  }
+}

@@ -25,7 +25,7 @@ Ambient.Ids = {
 	bird_chirp_4 = 139852680764636, bird_chirp_5 = 107104950878309, bird_chirp_6 = 85365315991550,
 	pet_coo_1 = 133263306024551, pet_coo_2 = 95664039612347, pet_coo_3 = 136397644383191,
 	machine_attract = 75991665557379,
-	deck_music = 114810234817689,
+	deck_music = 108432047352639,
 }
 Ambient.OneShots = { "pet_coo_1", "pet_coo_2", "pet_coo_3", "machine_attract" }
 
@@ -364,7 +364,7 @@ function Ambient:step(dt)
 	self.deckMix = if deckTarget > self.deckMix then math.min(1, self.deckMix + dt / Ambient.RoundIn) else math.max(0, self.deckMix - dt / Ambient.RoundOut)
 	self.group.Volume = master * device * (if self.level > 0 then 1 else 0)
 	self.ambience.Volume = master * device * self.level * duck * self.mix
-	self.deckGroup.Volume = master * device
+	self.deckGroup.Volume = master * device * duck
 	local listener = self:listener()
 	-- Bed: 4 Hz distance sample, eased.
 	self.bedClock += dt

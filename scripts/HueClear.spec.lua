@@ -4,7 +4,9 @@
 -- hatching record valid. Isolated stores only (the HueProgress fixture).
 -- Usage: require(ServerScriptService.Server.ZZSpecs.HueClear)(ServerScriptService.Server)
 return function(server)
- local H=require(server.HatchProgress);local S=require(server.HueState)
+ local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
+ local S=require(server.HueState)
  local Hue=require(game.ReplicatedStorage.Shared.HueCatalog)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
  local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end

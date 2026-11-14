@@ -1,0 +1,233 @@
+{
+  "planOnly": true,
+  "userDecision": "Lucky Material Egg outcome",
+  "proposedPoolVersion": 4,
+  "cost": 16,
+  "weights": {
+    "gloss": 45,
+    "jelly": 10,
+    "matte": 45
+  },
+  "allOwnershipCases": [
+    {
+      "owned": [],
+      "remaining": [
+        "gloss",
+        "jelly",
+        "matte"
+      ],
+      "totalWeight": 100,
+      "outcomes": [
+        {
+          "id": "gloss",
+          "weight": 45,
+          "numerator": 9,
+          "denominator": 20,
+          "percent": 45.0
+        },
+        {
+          "id": "jelly",
+          "weight": 10,
+          "numerator": 1,
+          "denominator": 10,
+          "percent": 10.0
+        },
+        {
+          "id": "matte",
+          "weight": 45,
+          "numerator": 9,
+          "denominator": 20,
+          "percent": 45.0
+        }
+      ],
+      "fixedNext": "gloss",
+      "price": 16
+    },
+    {
+      "owned": [
+        "gloss"
+      ],
+      "remaining": [
+        "jelly",
+        "matte"
+      ],
+      "totalWeight": 55,
+      "outcomes": [
+        {
+          "id": "jelly",
+          "weight": 10,
+          "numerator": 2,
+          "denominator": 11,
+          "percent": 18.1818
+        },
+        {
+          "id": "matte",
+          "weight": 45,
+          "numerator": 9,
+          "denominator": 11,
+          "percent": 81.8182
+        }
+      ],
+      "fixedNext": "matte",
+      "price": 16
+    },
+    {
+      "owned": [
+        "jelly"
+      ],
+      "remaining": [
+        "gloss",
+        "matte"
+      ],
+      "totalWeight": 90,
+      "outcomes": [
+        {
+          "id": "gloss",
+          "weight": 45,
+          "numerator": 1,
+          "denominator": 2,
+          "percent": 50.0
+        },
+        {
+          "id": "matte",
+          "weight": 45,
+          "numerator": 1,
+          "denominator": 2,
+          "percent": 50.0
+        }
+      ],
+      "fixedNext": "gloss",
+      "price": 16
+    },
+    {
+      "owned": [
+        "matte"
+      ],
+      "remaining": [
+        "gloss",
+        "jelly"
+      ],
+      "totalWeight": 55,
+      "outcomes": [
+        {
+          "id": "gloss",
+          "weight": 45,
+          "numerator": 9,
+          "denominator": 11,
+          "percent": 81.8182
+        },
+        {
+          "id": "jelly",
+          "weight": 10,
+          "numerator": 2,
+          "denominator": 11,
+          "percent": 18.1818
+        }
+      ],
+      "fixedNext": "gloss",
+      "price": 16
+    },
+    {
+      "owned": [
+        "gloss",
+        "jelly"
+      ],
+      "remaining": [
+        "matte"
+      ],
+      "totalWeight": 45,
+      "outcomes": [
+        {
+          "id": "matte",
+          "weight": 45,
+          "numerator": 1,
+          "denominator": 1,
+          "percent": 100.0
+        }
+      ],
+      "fixedNext": "matte",
+      "price": 16
+    },
+    {
+      "owned": [
+        "gloss",
+        "matte"
+      ],
+      "remaining": [
+        "jelly"
+      ],
+      "totalWeight": 10,
+      "outcomes": [
+        {
+          "id": "jelly",
+          "weight": 10,
+          "numerator": 1,
+          "denominator": 1,
+          "percent": 100.0
+        }
+      ],
+      "fixedNext": "jelly",
+      "price": 16
+    },
+    {
+      "owned": [
+        "jelly",
+        "matte"
+      ],
+      "remaining": [
+        "gloss"
+      ],
+      "totalWeight": 45,
+      "outcomes": [
+        {
+          "id": "gloss",
+          "weight": 45,
+          "numerator": 1,
+          "denominator": 1,
+          "percent": 100.0
+        }
+      ],
+      "fixedNext": "gloss",
+      "price": 16
+    },
+    {
+      "owned": [
+        "gloss",
+        "jelly",
+        "matte"
+      ],
+      "remaining": [],
+      "totalWeight": 0,
+      "outcomes": [],
+      "fixedNext": null,
+      "price": null
+    }
+  ],
+  "tradeoffs": [
+    {
+      "initialJelly": "1/10",
+      "jellyAtPurchase": [
+        "1/10",
+        "9/55",
+        "81/110"
+      ],
+      "jellyByPurchase2": "29/110",
+      "expectedPurchases": "29/11",
+      "expectedStars": "464/11",
+      "maxStars": 48
+    },
+    {
+      "initialJelly": "1/20",
+      "jellyAtPurchase": [
+        "1/20",
+        "19/210",
+        "361/420"
+      ],
+      "jellyByPurchase2": "59/420",
+      "expectedPurchases": "59/21",
+      "expectedStars": "944/21",
+      "maxStars": 48
+    }
+  ],
+  "calculation": "Exact rational weighted sampling without replacement; not Monte Carlo; no source/catalog/save mutation"
+}

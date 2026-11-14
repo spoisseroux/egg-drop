@@ -39,4 +39,32 @@ function OddsText.list(probabilities)
  return out
 end
 
+-- Material pool4 needs actual conditional fractions (18.1818%,81.8182%).
+-- A separate API preserves all existing whole-percent disclosures.
+function OddsText.preciseList(probabilities,places)
+ places=places or 4
+ assert(type(places)=="number"and places%1==0 and places>=1 and places<=6,"Invalid odds precision")
+ local factor=10^places;local target=100*factor;local total=0
+ for _,p in ipairs(probabilities)do if valid(p)and p<math.huge then total+=p end end
+ local result={};if total<=0 then for i=1,#probabilities do result[i]="0%"end;return result end
+ local units,remainder,order,used={},{},{},0
+ for i,p in ipairs(probabilities)do
+  local exact=if valid(p)and p<math.huge then p/total*target else 0
+  units[i]=if exact>0 then math.max(1,math.floor(exact))else 0
+  remainder[i]=exact-math.floor(exact);used+=units[i];table.insert(order,i)
+ end
+ table.sort(order,function(a,b)if math.abs(remainder[a]-remainder[b])>1e-9 then return remainder[a]>remainder[b]end;return a<b end)
+ local left=target-used
+ if left>=0 then
+  for _,i in ipairs(order)do if left<=0 then break end;if units[i]>0 then units[i]+=1;left-=1 end end
+ else
+  table.sort(order,function(a,b)return units[a]>units[b]end)
+  for _,i in ipairs(order)do if left>=0 then break end;local take=math.min(units[i]-1,-left);if take>0 then units[i]-=take;left+=take end end
+ end
+ for i,u in ipairs(units)do
+  local number=string.format("%."..places.."f",u/factor):gsub("0+$",""):gsub("%.$","")
+  result[i]=number.."%"
+ end
+ return result
+end
 return table.freeze(OddsText)

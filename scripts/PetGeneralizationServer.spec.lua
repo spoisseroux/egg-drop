@@ -25,6 +25,8 @@ return function(server)
 			'NurseryCatalog.family(board.profile.companionId) or "pip"',   -- #7, #11: an earned pet has no family
 			'then selected else "pip"',                                    -- #7: rounds report an owned family
 			'board.profile.companionId = "pip"',                           -- #10: after the starter grant
+			'board.profile.companionId="pip"',                             -- #10: saved starter commit / Welcome retry normalization
+			'NurseryCatalog.isOwned(inventory(board),"pip")then return "Applied"end', -- #3: duplicate Welcome skip acknowledges saved starter proof
 		},
 		HatchProgress={
 			'"MeetPipFirst"',                                              -- #2: retired hatch recipes

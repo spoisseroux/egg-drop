@@ -15,10 +15,12 @@
 local AssetService=game:GetService("AssetService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Flags=require(Shared.FeatureFlags)
-local Park=require(Shared.ParkLayout)
-local Data=require(Shared.ParkPoseData)
+local DefaultPark=require(Shared.ParkLayout)
+local DataModule=require(Shared.ParkPoseData)
+local function build(Park)
+local Data=DataModule.forSite(Park)
 local Mount={}
-Mount.ModelName="PetPark"
+Mount.ModelName=if Park.Id=="arrival"then "PetPark"else "PetPark_"..Park.Id
 Mount.Grey=Color3.fromHex("#C9C2D6")
 
 local cache={}
@@ -81,6 +83,7 @@ function Mount.build(room,options)
 	local layout=Data.layout()
 	local model=Instance.new("Model");model.Name=Mount.ModelName
 	model:SetAttribute("ParkVersion",Park.Version)
+	model:SetAttribute("ParkId",Park.Id)
 	for key,frame in pairs(layout.anchors)do model:SetAttribute(key,frame)end
 	local meshes=folder(model,"Meshes")
 	local colliders=folder(model,"Colliders")
@@ -132,4 +135,28 @@ function Mount.build(room,options)
 	return model
 end
 
+return Mount
+end
+local Mount=build(DefaultPark)
+local singleBuild=Mount.build
+local cache={}
+function Mount.build(room,options)
+	options=options or {}
+	if options.siteId then
+		local layout=DefaultPark.ById[options.siteId]
+		if not layout then return nil end
+		if layout.Id==DefaultPark.Id then return singleBuild(room,options)end
+		cache[layout.Id]=cache[layout.Id]or build(layout)
+		return cache[layout.Id].build(room,options)
+	end
+	local primary=singleBuild(room,options)
+	if not primary then return nil end
+	for _,layout in ipairs(DefaultPark.Sites)do
+		if layout.Id~=DefaultPark.Id then
+			cache[layout.Id]=cache[layout.Id]or build(layout)
+			cache[layout.Id].build(room,options)
+		end
+	end
+	return primary
+end
 return Mount

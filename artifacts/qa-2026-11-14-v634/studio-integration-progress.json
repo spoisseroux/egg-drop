@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-14",
+  "placeId": "96451847774961",
+  "published": false,
+  "client": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"1\":{\"ok\":true,\"name\":\"GlobalUIBounds\",\"result\":{\"passed\":10,\"rail\":\"topbar=208, 0, 1649, 58 rail=216, 9 size=125, 40\"}},\"3\":{\"ok\":true,\"name\":\"InPlaceResults\",\"result\":{\"passed\":5,\"cases\":{\"1\":\"phone and desktop results use the exact gameplay LCD and region coordinates\",\"3\":\"wrapped payout and goal rows include actual label line spacing\",\"2\":\"four-direction results focus never buys or restarts on difficulty arrows\",\"5\":\"instance count window ends by650ms and default feedback stays unchanged\",\"4\":\"positive loss receipt is gold and zero receipt is silver\"}}},\"2\":{\"ok\":true,\"name\":\"HelpCardsBounds\",\"result\":{\"passed\":36}},\"5\":{\"ok\":true,\"name\":\"DeckResults\",\"result\":{\"passed\":16,\"cases\":{\"1\":\"headline: first match wins (tidy, new best, Hard, win, missed, overflow)\",\"15\":\"phone results: Hatch takes the shortcut cell and joins the focus order; the quest cell is progress only\",\"3\":\"focus order: desktop Replay, Hatch, Leave; phone Leave, shortcut or Hatch, Difficulty, Replay\",\"2\":\"Today: Stars earned from rounds today, counting with the payout, no cap (QA Q5)\",\"5\":\"results open on Replay with the exact Stars total, payout rows, goals, metrics and strip\",\"4\":\"warm line uses the pet's name and rotates\",\"7\":\"first A finishes the count-up, the second replays; B always leaves\",\"6\":\"Stars count up from 0 once per saved receipt, one rising count blip per Star; wallet and meter count with it\",\"9\":\"an affordable egg adds the gold Hatch button between Replay and Leave\",\"8\":\"left/right move between exactly two targets and never wrap\",\"16\":\"Leave copy (UICopy results.leave.*): every layout branch uses the same keys and the label fits its button\",\"14\":\"compact results (417x299) keep Replay/Leave at 48 px and the short goal copy\",\"13\":\"Star token: 3D mesh when it loads, the 2D glyph Star as the fallback, glass on a miss\",\"12\":\"Reduced Motion shows the final value with no count-up\",\"11\":\"a loss shows the glass Star, No Stars this time, the warm line and Try again\",\"10\":\"a pending save disables Replay and Hatch, reads Saving… and moves focus to Leave\"}}},\"4\":{\"ok\":true,\"name\":\"RecapFeedback\",\"result\":{\"passed\":11,\"cases\":{\"1\":\"feedback has a separate exact-value lane and bounded 1100ms four-stage sample\",\"3\":\"count blips: one per +1, each cut by the next (one voice), and the old tick stands in when the blip has no voice\",\"2\":\"committed timeline uses two source notes, one rising tick per Star and one quiet cadence\",\"5\":\"matching late receipt starts once while pending stale and repeated Saved packets cannot replay\",\"4\":\"owner loss or skipped resume lands final and cannot emit delayed cues\",\"7\":\"zero is one quiet accent only while hidden reduced muted and background receipts stay quiet\",\"6\":\"cancel inside first render cannot install an inactive clock or emit a zero cue after close\",\"9\":\"count rule holds for every payout: at most 80 ms a Star, all within 900 ms, finale after the last\",\"8\":\"owned pooled voices stop on cancel without stopping a newer ordinary or owned cue\",\"11\":\"view beats fire once at their time, finale beats after the finale\",\"10\":\"celebration lanes: entrance, drop, per-Star pop and finale phases\"}}},\"7\":{\"ok\":true,\"name\":\"FirstSpendGuide\",\"result\":{\"passed\":3,\"cases\":{\"1\":\"saved state reconstructs optional stages without timers/daily pet counts\",\"3\":\"explicit same-screen tab navigation, rejection and destruction cancel delayed work\",\"2\":\"exact saved equip and actor readiness gate one garden handoff\"}}},\"6\":{\"ok\":true,\"name\":\"WelcomePresentation\",\"result\":{\"passed\":5}},\"9\":{\"ok\":false,\"name\":\"QAPreviewBounds\",\"result\":\"Players.keehar01.PlayerGui.__QAClientFresh.Client.ZZSpecs.QAPreviewBounds:24: case excludes arc\\nPlayers.keehar01.PlayerGui.__QAClientFresh.Client.ZZSpecs.QAPreviewBounds:24\\nAssistantCommand:9\\nAssistantCommand:9\\n\"},\"8\":{\"ok\":true,\"name\":\"ParkClient\",\"result\":{\"passed\":10,\"cases\":{\"1\":\"flag off creates nothing and returns nil; companions keep the old six-pet rule\",\"3\":\"swings follow the swinging pet's pendulum from server times and settle after the hop\",\"2\":\"QA Q4: local moving parts carry the import turn; their pivot sits on the group pivot\",\"5\":\"the castle grows through three stages, holds, crumbles and clears\",\"4\":\"the see-saw tilts in counter-phase: one seat up while the other is down\",\"7\":\"a late joiner lands mid-phase on exactly the same frames\",\"6\":\"balls bounce for a solo player and arc between two pets for a toss\",\"9\":\"ring, chip and equipment allocate no instances per frame over 60 frames\",\"8\":\"drive puts a garden pet on its swing seat and hands the server origin back each frame\",\"10\":\"late join routes grove slot/pose without using colliding arrival slot names\"}}}}"
+      }
+    ],
+    "isError": false
+  },
+  "previewAfterCulling": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ok\":true,\"result\":{\"created\":113,\"passed\":7,\"kept\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "firstToySavedEquip": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"toys\":{\"squeaky_carrot\":true},\"petToys\":{\"pip\":\"squeaky_carrot\"},\"appearance\":{\"featureStages\":{\"horns\":0,\"wings\":0,\"claws\":0},\"body\":\"original\",\"finish\":\"standard\",\"bodyRank\":0,\"toyId\":\"squeaky_carrot\",\"charmShape\":\"dot\",\"charmVisible\":false,\"wearables\":[],\"secondary\":\"default\"},\"ui\":false,\"nectar\":4,\"markers\":[],\"lastToy\":{\"revision\":6,\"action\":\"toyEquip\",\"cost\":0,\"id\":\"5:toy-e5b9cb8e-dba4-4bb3-8b27-a5685b97bcba\",\"balanceAfter\":4,\"catalogVersion\":1,\"balanceBefore\":4,\"toyId\":\"squeaky_carrot\",\"selectedAfter\":\"squeaky_carrot\",\"petId\":\"pip\",\"acknowledgedResultId\":\"3:toy-2958fca3-5ccb-4b29-8500-1755d86bfed0\",\"selectedBefore\":\"none\"}}"
+      }
+    ],
+    "isError": false
+  },
+  "fetchAndEarlierStoreSnapshot": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"toys\":{\"sparkler\":true},\"revision\":11,\"lastToy\":{\"action\":\"toyAck\",\"revision\":9,\"balanceBefore\":8,\"acknowledgedResultId\":\"7:toy-cbfb0723-65e8-4eff-ba1b-eb9fe7e003c5\",\"id\":\"8:toy-e395d82a-328f-4ee3-8ac5-caa88c5a7baf\",\"balanceAfter\":8,\"cost\":0,\"catalogVersion\":1},\"petToys\":[],\"status\":\"Ready\",\"material\":[],\"playDate\":{\"count\":3,\"target\":3,\"done\":true,\"day\":\"20771\",\"reward\":4},\"nectar\":8}"
+      }
+    ],
+    "isError": false
+  },
+  "limits": [
+    "Studio memory backend; no service rejoin proof",
+    "QAPreview structural PASS does not yet pass visual sentinel Z-order check",
+    "First Toy saved equip passed; cosmetic beat still under investigation",
+    "No physical-device or two-account claim"
+  ]
+}

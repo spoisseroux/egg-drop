@@ -26,7 +26,7 @@ local function hideToy(v)
  v.personalToyActive=false;v.personalToyPhase=nil
 end
 function Play.cancel(v)
- hideToy(v);v.personalQuietSince=nil;v.personalPlayStarted=nil
+ hideToy(v);v.personalQuietSince=nil;v.personalPlayStarted=nil;v.personalPlayToken=nil;v.personalClipDuration=nil
 end
 function Play.reset(v)
  Play.cancel(v);v.personalPlayIdentity=nil;v.personalNextOpportunity=nil
@@ -107,8 +107,10 @@ end
 local function eligible(v)
  return v.personalPlayEnabled==true and v.worldContext and v.personalToyId~="none"and not v.destroyed
   and not v.focusPose and not v.gardenFocus and not v.careState and not v.gardenPivot
-  and(v.gaitWeight or 0)<.025 and(v.greeting or 2)>=1.2
-  and(v.gardenBehavior==nil or v.gardenBehavior=="follow")and(v.gardenAction==nil or v.gardenAction=="follow")
+  and not v.ownerMoving and(v.gaitWeight or 0)<.025 and(v.greeting or 2)>=1.2
+  and(not v.personalOpportunityManaged or v.personalOpportunityReady==true)
+  and((v.gardenBehavior==nil or v.gardenBehavior=="follow")and(v.gardenAction==nil or v.gardenAction=="follow")
+   or(v.personalRestAllowed==true and v.gardenBehavior=="rest"and(v.gardenAction=="wanderPause"or v.gardenAction=="nookRest")))
 end
 function Play.sample(v,now)
  local seed=math.abs(v.cosmeticSeed or 0)%997
@@ -117,19 +119,24 @@ function Play.sample(v,now)
   Play.reset(v);v.personalPlayIdentity=identity;v.personalNextOpportunity=now
  end
  if not eligible(v)then Play.cancel(v);return nil end
+ if v.personalOpportunityManaged and v.personalQuietToken~=v.personalOpportunityToken then
+  Play.cancel(v);v.personalQuietToken=v.personalOpportunityToken
+ end
  if not v.personalQuietSince then v.personalQuietSince=now end
  -- The authoritative garden starts wandering at3.5s. Settle briefly first,
  -- then preserve the9–16s opportunity deadline across ordinary interruptions.
- if now-v.personalQuietSince<.75 then hideToy(v);return nil end
- if v.personalPlayStarted and now-v.personalPlayStarted>=1.8 then hideToy(v);v.personalPlayStarted=nil end
+ if now-v.personalQuietSince<(v.personalOpportunityQuiet or .75)then hideToy(v);return nil end
+ if v.personalPlayStarted and now-v.personalPlayStarted>=(v.personalClipDuration or 1.8)then hideToy(v);v.personalPlayStarted=nil end
  if not v.personalPlayStarted then
   if now<(v.personalNextOpportunity or now)then hideToy(v);return nil end
   -- Only begin with room for a complete action before the already-published
   -- follow path can yield to autonomous wandering. An overdue chance waits.
-  if v.personalIdleUntil and v.personalIdleUntil-now<1.95 then hideToy(v);return nil end
-  v.personalPlayStarted=now;v.personalNextOpportunity=now+9+(seed%701)/100
+  local duration=v.personalOpportunityDuration or 1.8
+  if v.personalIdleUntil and v.personalIdleUntil-now<duration+(v.personalOpportunityGuard or .15)then hideToy(v);return nil end
+  v.personalPlayStarted=now;v.personalClipDuration=duration;v.personalPlayToken=v.personalOpportunityToken
+  v.personalNextOpportunity=now+9+(seed%701)/100
  end
- local t=if v.reducedEffects then .43 else now-v.personalPlayStarted
+ local t=if v.reducedEffects then .43 else(now-v.personalPlayStarted)*1.8/(v.personalClipDuration or 1.8)
  if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,v.personalToyId,seats.height);v.personalToyHeight=seats.height end
  if not v.personalToy then return nil end
  v.personalToyActive=true;v.personalToyPhase=t

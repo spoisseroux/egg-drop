@@ -69,7 +69,8 @@ return function(server,hostSource)
  module.Parent=server;local ok,run=pcall(realRequire,module);module:Destroy();assert(ok,run)
  run({game=fakeGame,script=server,task=taskShim,Instance=instanceShim,workspace=world,os={clock=function()return c.now end},
   Random={new=function()return{NextInteger=function()return 1234 end,NextNumber=function()return .1 end}end},require=function(target)
-   if target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
+   if target==server.PaidRandomPolicy then return{cached=function()return false end,resolveAsync=function(_,callback)callback(false)end,forget=function()end}
+   elseif target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
    elseif target==server.Lounge then return{create=function()end,spawn=function()end,setMode=function()end,setAppearance=function()end}
    elseif target==server.FirstSession then return{new=function()return nil end}end
    return realRequire(target)

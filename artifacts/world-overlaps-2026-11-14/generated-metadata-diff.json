@@ -1,0 +1,235 @@
+{
+  "all_bounds_materials_collision_animations_unchanged": true,
+  "changed_parts": {
+    "W7_Architecture__marble": {
+      "hash": [
+        "8d2bfde93d7ee424",
+        "86ce5ddaa49860a2"
+      ],
+      "tris": [
+        2676,
+        2674
+      ]
+    },
+    "W7_Balustrades__marble": {
+      "hash": [
+        "81364ff645be87c8",
+        "740a59334ac0253d"
+      ],
+      "tris": [
+        3924,
+        4438
+      ]
+    },
+    "W7_Bridge__marble": {
+      "hash": [
+        "d755096c80d0d6e9",
+        "578e663df88a3816"
+      ],
+      "tris": [
+        372,
+        374
+      ]
+    },
+    "W7_Landmarks__marble": {
+      "hash": [
+        "7ac082a1c345a5c5",
+        "02d0997a261971b7"
+      ],
+      "tris": [
+        180,
+        190
+      ]
+    },
+    "W7_Rotunda__marble": {
+      "hash": [
+        "74f5f89d2bd0878c",
+        "9e6ff1efd7a82778"
+      ],
+      "tris": [
+        1250,
+        1304
+      ]
+    },
+    "W7_Stations__marble": {
+      "hash": [
+        "6c420dc0bc030b43",
+        "0a55be270ebc0f77"
+      ],
+      "tris": [
+        1410,
+        1414
+      ]
+    },
+    "W7_Stations__marble_smooth": {
+      "hash": [
+        "33497111ee97de8a",
+        "97d9f4e4544858a1"
+      ],
+      "tris": [
+        984,
+        978
+      ]
+    },
+    "W7_Stations__palette": {
+      "hash": [
+        "d4f371b0b896ae21",
+        "eaa342ed0545397a"
+      ],
+      "tris": [
+        2030,
+        2068
+      ]
+    },
+    "W7_Trunks__bark": {
+      "hash": [
+        "4c67fd81454228b3",
+        "15ef81e15cb2f62c"
+      ],
+      "tris": [
+        2164,
+        2004
+      ]
+    },
+    "W7_Vegetation__foliage": {
+      "hash": [
+        "6e8e1a400245bb2c",
+        "d193ab5cffb4fda3"
+      ],
+      "tris": [
+        3940,
+        3660
+      ]
+    },
+    "W7_Vegetation__foliage_blossom": {
+      "hash": [
+        "331654629fa058e5",
+        "33c5209953f4b5a3"
+      ],
+      "tris": [
+        2260,
+        2020
+      ]
+    }
+  },
+  "maximum_part_triangles": 5612,
+  "palette_unchanged": true,
+  "parts_after": 99,
+  "parts_before": 99,
+  "triangles_after": 66844,
+  "triangles_before": 66910,
+  "walk_changes": {
+    "grid": [
+      {
+        "after": [
+          4.8,
+          "W7_Ground"
+        ],
+        "before": [
+          10.71,
+          "W7_Trunks"
+        ],
+        "x": -36,
+        "z": -52
+      },
+      {
+        "after": [
+          4.66,
+          "W7_Ground"
+        ],
+        "before": [
+          12.48,
+          "W7_Trunks"
+        ],
+        "x": -50,
+        "z": -42
+      }
+    ],
+    "surface": [
+      {
+        "after": [
+          4.8,
+          "G"
+        ],
+        "before": [
+          10.69,
+          "T"
+        ],
+        "x": -36,
+        "z": -53
+      },
+      {
+        "after": [
+          4.8,
+          "G"
+        ],
+        "before": [
+          5.42,
+          "T"
+        ],
+        "x": -37,
+        "z": -52
+      },
+      {
+        "after": [
+          4.8,
+          "G"
+        ],
+        "before": [
+          10.71,
+          "T"
+        ],
+        "x": -36,
+        "z": -52
+      },
+      {
+        "after": [
+          4.79,
+          "G"
+        ],
+        "before": [
+          5.4,
+          "T"
+        ],
+        "x": -36,
+        "z": -51
+      },
+      {
+        "after": [
+          4.66,
+          "G"
+        ],
+        "before": [
+          5.73,
+          "T"
+        ],
+        "x": -51,
+        "z": -42
+      },
+      {
+        "after": [
+          4.66,
+          "G"
+        ],
+        "before": [
+          12.48,
+          "T"
+        ],
+        "x": -50,
+        "z": -42
+      },
+      {
+        "after": [
+          4.66,
+          "G"
+        ],
+        "before": [
+          5.47,
+          "T"
+        ],
+        "x": -50,
+        "z": -41
+      }
+    ]
+  }
+}

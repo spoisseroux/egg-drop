@@ -211,6 +211,32 @@ return function(client,parent)
 		c:destroy()
 	end)
 
+	test("late join routes grove slot/pose without using colliding arrival slot names",function()
+		local grove=Park.ById.grove;local gd=Data.forSite(grove)
+		local arrival=session("arrival:1","swing",41,100)
+		local remote=session("grove:1","swing",42,100)
+		local garden={snapshot={park={version=2,sites={arrival={slots={swing1=arrival}},grove={slots={swing1=remote}}},slots={swing1=arrival}}}}
+		local folder=Instance.new("Folder");folder.Parent=root
+		local c=ParkClient.new({enabled=true,parent=folder,gui=folder,createMesh=fakeMesh,garden=garden})
+		local actor={ownerId=42,parkId="grove",mode="Room",behavior="play",action="parkSwing",from=Activity.pack(grove.Slots.swing1.approach),to=Activity.pack(grove.Slots.swing1.approach),startTime=100,endTime=120,yaw=grove.Slots.swing1.yaw,generation=1,actionId="grove:1"}
+		local visual={origin=grove.Slots.swing1.approach,yaw=0,worldScale=.72,greet=function()end}
+		local t=103.3
+		c:drive(visual,actor,t+gd.Delay,1/60,nil,false)
+		local expected=gd.swingSeat("swing1",gd.swingAngle("swing1",remote,t))
+		assert((visual.origin-expected.Position).Magnitude<.001,"grove rider posed at arrival")
+		assert(c.sites.grove:slotFor(42)=="swing1"and c:slotFor(42)==nil)
+		garden.snapshot.park.sites.grove=nil
+		assert(c.sites.grove:slotFor(41)==nil,"missing v2 site never falls back to arrival alias")
+		-- Exercise the production facade, including its shared status provider: injected
+		-- single-site fixtures intentionally bypass this path. A first snapshot may
+		-- omit actors while the owner data is still arriving.
+		c:step(104,{ownerPosition=grove.Center,active=true})
+		assert(c.statusActive==true and type(c.statusText)=="string"and #c.statusText>0,"live facade status did not resolve localized copy")
+		garden.snapshot.actors={};c:step(104.1,{ownerPosition=Park.Center+Vector3.new(500,0,0),active=true})
+		assert(c.statusActive==false,"production facade status stayed active outside both parks")
+		c:destroy()
+	end)
+
 	end)
 	root:Destroy()
 	assert(ok,err)

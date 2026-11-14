@@ -1,0 +1,43 @@
+{
+  "modelId": "92208437364308",
+  "operation": "9c1ca716-f326-45ab-818c-e64e80c65031",
+  "moderation": "Approved",
+  "parts": [
+    {
+      "name": "HatchLowerLeft",
+      "meshId": "138813947452098",
+      "rawSize": [
+        49.743682861328125,
+        82.3486328125,
+        99.48736572265625
+      ],
+      "importedCenter": [
+        80,
+        0.000003814697265625,
+        0.0000019073486328125
+      ]
+    },
+    {
+      "name": "HatchLowerRight",
+      "meshId": "106574437908727",
+      "rawSize": [
+        49.743682861328125,
+        82.3486328125,
+        99.48736572265625
+      ],
+      "importedCenter": [
+        -80,
+        0.000003814697265625,
+        0.0000019073486328125
+      ]
+    }
+  ],
+  "importedRotation": "identity both",
+  "correctedResourceRotation": "local Y 180 degrees per half; semantic centers preserved",
+  "evidence": [
+    "native-halves-local-rotation-comparison.png",
+    "native-halves-direct-front.png",
+    "native-halves-direct-back.png"
+  ],
+  "placePublished": false
+}

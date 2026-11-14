@@ -76,6 +76,9 @@ end
 
 -- Extra cues the view schedules for one result: {at, cue, pitch, volume,
 -- finale=true for an offset from the finale}. Set before observe().
+function Feedback:setCountWindow(start,span)
+ self.countStart=start;self.countSpan=span
+end
 function Feedback:setBeats(beats)
 	self.beats=beats or {}
 end
@@ -142,8 +145,9 @@ function Feedback:step(dt)
 end
 
 function Feedback:countAt(age)
-	if age<Feedback.CountStart then return 0 end
-	return math.min(self.earned,1+math.floor((age-Feedback.CountStart)/self.spacing+1e-6))
+	local start=self.countStart or Feedback.CountStart
+	if age<start then return 0 end
+	return math.min(self.earned,1+math.floor((age-start)/self.spacing+1e-6))
 end
 function Feedback:paint(age)
 	local sample=Feedback.sample(age,self.countEnd);sample.counted=self.counted
@@ -176,8 +180,8 @@ function Feedback:observe(result, visible)
 		if self.serial==serial and self.key==key then self:cue("bank",.92,.12)end
 		return false
 	end
-	self.spacing=Feedback.spacingFor(self.earned)
-	self.countEnd=Feedback.countEndFor(self.earned)
+	self.spacing=math.min(Feedback.CountStep,(self.countSpan or Feedback.CountSpan)/math.max(1,self.earned))
+	self.countEnd=(self.countStart or Feedback.CountStart)+(math.max(1,self.earned)-1)*self.spacing
 	self.duration=Feedback.durationFor(self.earned)
 	self.counted=0
 	self.active, self.age, self.starts = true, 0, self.starts + 1

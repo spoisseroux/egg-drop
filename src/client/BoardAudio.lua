@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local DisplayAssets=require(script.Parent.HatchDisplayAssets)
 
 local Audio = {}
 Audio.__index = Audio
@@ -65,6 +66,12 @@ local cues = {
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
 Audio.PendingCues = {}
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
+-- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held
+-- music and superseded 6s/4s bursts are never mapped by this owner.
+for _,kind in ipairs({"bear","toy","hue","material","feature"})do
+ local id=DisplayAssets.Audio["hatch_"..kind]
+ if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end
+end
 
 function Audio.uri(cue)
 	local id = assetIds[cue]
@@ -83,7 +90,7 @@ function Audio.new()
 	group.Parent = SoundService
 	local self = setmetatable({ voices = {}, indices = {}, group = group,
 		musicEnabled = true, deviceActive = true, ducks = {}, connections = {} }, Audio)
-	for name, id in pairs({ Music = 98540058987296, Purr = 80835586668229 }) do
+	for name, id in pairs({ Music = 73327108010209, Purr = 80835586668229 }) do
 		local loopGroup = Instance.new("SoundGroup")
 		loopGroup.Name, loopGroup.Volume, loopGroup.Parent = "EggDrop" .. name, 0, SoundService
 		local voice = Instance.new("Sound")
@@ -299,11 +306,48 @@ end
 -- Ownership is attached to an existing pooled voice, never to a new Sound.
 -- A later ordinary or owned play replaces the tag before starting that voice.
 function Audio:stopOwner(owner)
+ self:setDisplayDuck(owner,false)
 	local stopped=0
 	for voice,token in pairs(self.voiceOwners or {})do
 		if token==owner then voice:Stop();self.voiceOwners[voice]=nil;stopped+=1 end
 	end
 	return stopped
+end
+-- One bounded recovery connection for all reveal owners. Every refresh still
+-- takes the minimum of surviving boot/round/reveal gains and current settings.
+function Audio:stepDisplayDucks(dt)
+ local recovering=false
+ for owner,entry in pairs(self.displayDucks or {})do
+  if not entry.active then
+   entry.elapsed=math.min(.6,entry.elapsed+math.clamp(dt or 0,0,.25))
+   local gain=entry.from+(1-entry.from)*entry.elapsed/.6
+   if entry.elapsed>=.6 then self.ducks[entry]=nil;self.displayDucks[owner]=nil
+   else self.ducks[entry]=gain;recovering=true end
+  end
+ end
+ self:refreshLoops()
+ if not recovering and self.displayRecovery then self.displayRecovery:Disconnect();self.displayRecovery=nil end
+end
+function Audio:setDisplayDuck(owner,active)
+ if self.destroyed or owner==nil then return end
+ self.displayDucks=self.displayDucks or {};self.ducks=self.ducks or {}
+ local entry=self.displayDucks[owner]
+ if active then
+  if entry and entry.active then return end
+  entry=entry or {};entry.active=true;entry.elapsed=0
+  self.displayDucks[owner]=entry;self.ducks[entry]=10^(-6/20);self:refreshLoops()
+ else
+  if not entry or not entry.active then return end
+  entry.active=false;entry.elapsed=0;entry.from=self.ducks[entry]or 10^(-6/20)
+  if not self.manualDisplayDucks and not self.displayRecovery then
+   self.displayRecovery=RunService.Heartbeat:Connect(function(dt)self:stepDisplayDucks(dt)end)
+  end
+ end
+end
+function Audio:clearDisplayDucks()
+ for _,entry in pairs(self.displayDucks or {})do self.ducks[entry]=nil end
+ self.displayDucks=nil
+ if self.displayRecovery then self.displayRecovery:Disconnect();self.displayRecovery=nil end
 end
 
 -- Results flourish (QA 2026-11-13): when the count-up finishes on its own, its
@@ -429,6 +473,7 @@ end
 function Audio:stop()
 	if self.destroyed then return end
 	self:cancelBoot()
+ self:clearDisplayDucks()
 	self:setPurr(false)
 	if self.ducks then
 		self.ducks.hatch = nil
@@ -446,6 +491,7 @@ end
 function Audio:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
+ self:clearDisplayDucks()
 	self.voiceOwners=nil
 	self.uiTokens,self.uiRing=nil,nil
 	self:cancelBoot()

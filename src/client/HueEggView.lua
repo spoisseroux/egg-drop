@@ -237,6 +237,7 @@ function View:appearance()
 end
 function View:activePet()return if self.machine then self.machine.petId elseif self.options.activePet then self.options.activePet()else self.state.companionId or self.petId end
 function View:choosePet(id)
+ if self.options.routeChanged then self.options.routeChanged("pet")end
  if id~=self.petId then self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.featurePreview=nil end
  if self.intent.pending or self.machineSwitching or not self:owned(id)or not Hues.Supported[id]then return false end
  if not self:canCustomize()and not self:hasReceiptAssignment()then return false end
@@ -307,6 +308,7 @@ function View:machineEquipFinished(status,binding)
  return true
 end
 function View:chooseChannel(channel)
+ if self.options.routeChanged then self.options.routeChanged("channel")end
  if not self:canCustomize()and not self:hasHueAssignment()then return false end
  if self.intent.pending or(channel~="main"and channel~="secondary")then return false end;self.scrollPositions[self.tab..":"..self.channel]=self.body.CanvasPosition;self.channel=channel;self.inspected=nil
  if self.assignment then
@@ -318,6 +320,7 @@ function View:chooseChannel(channel)
  self:refresh();if not self.confirmation then self.body.CanvasPosition=self.scrollPositions[self.tab..":"..self.channel]or Vector2.zero end;return true
 end
 function View:setTab(tab)
+ if self.options.routeChanged then self.options.routeChanged("tab")end
  if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not((self:hasMaterialAssignment()or self:hasToyAssignment()or self:hasFeatureAssignment())and tab=="pet")then return false end
  if tab=="features"and not FeatureFlags.Features then return false end
  if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials"and tab~="toys"and tab~="features")then return false end
@@ -483,7 +486,13 @@ end
 function View:activate()
  if not self.shade.Visible or not self.action.Visible or not self.action.Interactable or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return false end
  for _,reveal in ipairs({self.itemReveal,self.materialPanel.reveal,self.toyPanel.reveal,self.featurePanel.reveal})do if reveal:consumeSkipInput()or reveal:skip()then return false end end
- if self.page=="toyReceipt"then local r=self.state.pendingToyResult;return self.toyIntent and r and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:ack(r.id))or false end
+ if self.page=="toyReceipt"then
+  local r=self.state.pendingToyResult
+  if self.options.firstToyGive and r and self.options.firstToyReady and self.options.firstToyReady(r)then
+   return if self.toyIntent and self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.options.firstToyGive(r)
+  end
+  return self.toyIntent and r and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:ack(r.id))or false
+ end
  if self.page=="toyBuy"then return self.toyIntent and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:buy())or false end
  if self.page=="featureReceipt"then local r=self.state.pendingFeatureResult;return self.featureIntent and r and(if self.featureIntent.status=="Retrying"then self.featureIntent:retry()else self.featureIntent:ack(r.id))or false end
  if self.page=="featureBuy"then return self.featureIntent and(if self.featureIntent.status=="Retrying"then self.featureIntent:retry()else self.featureIntent:buy())or false end
@@ -646,6 +655,7 @@ function View:clearColour()
  self:layout();return true
 end
 function View:stopPortraitClock()
+ if self.previewFeedback then self.previewFeedback:cancel()end
  if self.portraitClock then self.portraitClock:Disconnect();self.portraitClock=nil end
 end
 function View:syncPortraitClock()
@@ -658,12 +668,16 @@ function View:syncPortraitClock()
   self:updateGrid(math.min(dt,.1))
   self:pumpCardPreviews()
   local visual=self.visual;if not self.portrait.Visible or not visual or visual.destroyed then return end
+  self.previewFeedback=self.previewFeedback or require(script.Parent.PreviewFeedback).new()
   local reduced=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
+  local input=game:GetService("UserInputService")
+  local idle=not input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)and #input:GetTouches()==0
+  self.previewFeedback:step(os.clock(),idle and not reduced and not self.fruitEating.active,visual)
   if visual.reducedEffects~=reduced then visual.reducedEffects=reduced;visual.poseDirty=true;visual:update(0)end
   if not reduced then visual.cosmeticTime=os.clock();visual:update(math.min(dt,.1))end
   if self.fruitEating.active then
-   if self.fruitEating.token.binding~=self:eatingBinding()then self.fruitEating:cancel();if self.boundedEating then self:close("receipt-finished");return end end
-   if self.fruitEating.active and not self.fruitEating:step(math.min(dt,.1))and self.boundedEating then self:close("receipt-finished");return end
+   if self.fruitEating.token.binding~=self:eatingBinding()then self.fruitEating:cancel();if self.boundedEating then self:close("receipt-finished",true);return end end
+   if self.fruitEating.active and not self.fruitEating:step(math.min(dt,.1))and self.boundedEating then self:close("receipt-finished",true);return end
   end
  end)
 end
@@ -711,7 +725,7 @@ function View:refresh()
  if r and self.page=="buy"then self.page="receipt"end
  if self.page=="receipt"and not r then self.page="palette"end
  if self.page=="palette"and not self:canCustomize()and not self:hasReceiptAssignment()and not self.boundedEating then
-  self:close("receipt-finished");return
+  self:close("receipt-finished",true);return
  end
  local owned=self:owned(self.petId);if not owned then for _,p in ipairs(Pets.collection)do if self:owned(p.id)then self.petId=p.id;owned=true;break end end end
  local migration=self.page=="migration";local customization=self.page=="palette";local hue=customization and self.tab=="hue";local charm=customization and self.tab=="charm";local confirming=self.confirmation~=nil
@@ -842,10 +856,14 @@ function View:refresh()
   self.action.Visible=materialMode=="receipt"or materialMode=="buy"or(self.materialIntent and self.materialIntent.status=="Retrying")or false
   self.action.Text=if self.materialIntent and self.materialIntent.status=="Retrying"then "Try again"elseif materialMode=="receipt"then "Keep"else "Hatch · 16 Stars"
   if materialMode=="buy"and not(self.materialIntent and self.materialIntent.status=="Retrying")then
-   if #MaterialCatalog.remaining(self.state.materialUnlocks)==0 then self.action.Text="All materials owned"elseif not self.state.materialAvailable then self.action.Text="Materials not ready"end
+   if #MaterialCatalog.remaining(self.state.materialUnlocks,self.state.materialPoolVersion)==0 then self.action.Text="All materials owned"elseif not self.state.materialAvailable then self.action.Text="Materials not ready"end
   end
-  self.action.Interactable=self.materialIntent~=nil and self.materialIntent:ready()and(materialMode~="buy"or(self.state.materialAvailable==true and #MaterialCatalog.remaining(self.state.materialUnlocks)>0 and(self.state.nectar or 0)>=MaterialCatalog.Cost))
+  self.action.Interactable=self.materialIntent~=nil and self.materialIntent:ready()and(materialMode~="buy"or(self.state.materialAvailable==true and require(script.Parent.MaterialDisclosure).ready(self.state)and #MaterialCatalog.remaining(self.state.materialUnlocks,self.state.materialPoolVersion)>0 and(self.state.nectar or 0)>=MaterialCatalog.Cost))
   if self.materialIntent and self.materialIntent.status=="Retrying"then self.action.Interactable=true end
+  if materialMode=="buy"and #MaterialCatalog.remaining(self.state.materialUnlocks,self.state.materialPoolVersion)>0 then
+   local need=require(script.Parent.ShopPriceState).need(MaterialCatalog.Cost,self.state.nectar)
+   if need~=""then self.status.Text=need;self.status.Visible=true end
+  end
   Art.control(self.action,true,self.action.Interactable)
  end
  for _,entry in ipairs({{self.toyPanel,self.toyIntent,"toy",toyResult,ToyCatalog},{self.featurePanel,self.featureIntent,"feature",featureResult,FeatureCatalog}})do
@@ -857,10 +875,19 @@ function View:refresh()
   if mode then
    self.action.Visible=mode=="receipt"or mode=="buy"or(intent and intent.status=="Retrying")or false
    self.action.Text=if intent and intent.status=="Retrying"then "Try again"elseif mode=="receipt"then "Store"else "Hatch · "..catalog.Cost.." Stars"
+   if kind=="toy"and mode=="receipt"and self.options.firstToyReady and self.options.firstToyReady(result)then
+    local pet=Pets.byId[self:activePet()or ""]or Pets.byId.pip
+    self.action.Text=if intent and intent.status=="Retrying"then "Try again"else UICopy.get("onboarding.spend.give",{pet=pet.name})
+    panel.useNow.Text=UICopy.get("onboarding.spend.store")
+   end
    self.action.Interactable=intent~=nil and intent:ready()and(mode~="buy"or(self.state.nectar or 0)>=catalog.Cost)
    if mode=="buy"and kind=="toy"and #catalog.remaining(self.state.toyUnlocks)==0 then self.action.Text="All toys owned";self.action.Interactable=false end
    if mode=="buy"and kind=="feature"and catalog.full(self.state.featureStock or {})then self.action.Text="All stacks full";self.action.Interactable=false end
    if intent and intent.status=="Retrying"then self.action.Interactable=true end
+   if mode=="buy"and self.action.Text~="All toys owned"and self.action.Text~="All stacks full"then
+    local need=require(script.Parent.ShopPriceState).need(catalog.Cost,self.state.nectar)
+    if need~=""then self.status.Text=need;self.status.Visible=true end
+   end
    Art.control(self.action,true,self.action.Interactable)
   end
  end
@@ -1163,7 +1190,7 @@ function View:buildChrome(view)
  local pane=Kit.card(body,"Preview",nil,{pad=g.pad});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.chromePane=pane
  local p=g.pad;local iw=g.pane.w-p*2
- local well=Kit.frame(pane,"PreviewWell","well",UDim2.fromOffset(p,p),UDim2.fromOffset(iw,g.well),12);Kit.stroke(well);self.chromeWell=well
+ local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(p,p),UDim2.fromOffset(iw,g.well),12);self.chromeWell=well
  local y=p+g.well+(if phone then 6 else 12)
  local nameH=if phone then 22 else 30
  self.paneName=Kit.text(pane,"Title","","text",{Name="PaneName",Position=UDim2.fromOffset(p,y),Size=UDim2.fromOffset(iw-80,nameH),TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
@@ -1566,6 +1593,7 @@ function View:layoutTransaction()
 end
 function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)
+ if self.options.routeChanged then self.options.routeChanged("open")end
  self.materialAssignment=nil;self.toyAssignment=nil;self.featureAssignment=nil;self.featurePreview=nil
  self.intent:update(state);self.state=state or {}
  if self.materialIntent then self.materialIntent:update(self.state)end
@@ -1594,10 +1622,11 @@ function View:open(state,page,petId)
  if self.legend and self:chromeActive()then self.legend.open()end
  return true
 end
-function View:close(reason)
+function View:close(reason,reconciled)
  self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
  self:stopPortraitClock()
  if not self.shade.Visible then return end
+ if self.options.routeChanged then self.options.routeChanged(if reconciled==true and reason=="receipt-finished"then "receipt-reconciled"else "close",reason)end
  if reason=="back"then
   if self.confirmation and not self.machineSwitching then self:cancelConfirmation();return false end
   if self.machine and self.machineSwitching then self.closeAfterEquip=true;return false end

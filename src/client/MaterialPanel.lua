@@ -47,7 +47,7 @@ function Panel:refresh(state,petId,mode,animate)
  if not mode then return end
  local result=self.state.pendingMaterialResult;local receipt=mode=="receipt";local buy=mode=="buy"
  self.title.Text=if receipt and result then Catalog.ById[result.finishId].name.." unlocked!"elseif buy then "Material Egg"else "Materials"
- self.note.Text=if receipt then "Choose a pet for this material."elseif buy then "16 Stars · one new material. No duplicates."else "Choose a material for this pet."
+ self.note.Text=if receipt then "Choose a pet for this material."elseif buy then require(script.Parent.MaterialDisclosure).note(self.state)else "Choose a material for this pet."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("MaterialEgg")then
@@ -64,13 +64,12 @@ function Panel:refresh(state,petId,mode,animate)
   Art.tab(node,selected==id,node.Interactable)
   node:SetAttribute("AccessibleLabel",Catalog.ById[id].name..(if selected==id then " · Current"else " · Use for "..(petId or "this pet")))
  end
- local odds={};for _,entry in ipairs(Catalog.odds(self.state.materialUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
- self.pool.Visible=buy
- self.pool.Text=if #odds==0 then "All materials owned"elseif not self.state.materialAvailable then "Material Eggs are not ready yet."
-  -- Restricted players get the fixed next finish, never a roll (F1 policy): no odds list.
-  elseif NextItem.restricted(self.state)then NextItem.line("material",self.state)else table.concat(odds,"\n")
- self.shop.Text=if #odds==0 then "All materials owned"else "Material Egg · 16 Stars"
- self.shop.Interactable=#odds>0 and self.state.materialAvailable==true and not(self.intent and self.intent.pending)
+ local disclosure=require(script.Parent.MaterialDisclosure).rows(self.state)
+ local entries=Catalog.remaining(self.state.materialUnlocks,self.state.materialPoolVersion);local odds={}
+ for _,entry in ipairs(disclosure.rows)do table.insert(odds,entry.name..(if entry.value~=""then " · "..entry.value else ""))end
+ self.pool.Visible=buy;self.pool.Text=disclosure.empty or table.concat(odds,"\n")
+ self.shop.Text=if #entries==0 then "All materials owned"else "Material Egg · 16 Stars"
+ self.shop.Interactable=#entries>0 and self.state.materialAvailable==true and require(script.Parent.MaterialDisclosure).ready(self.state) and not(self.intent and self.intent.pending)
  self.useNow.Interactable=self.intent~=nil and not self.intent.pending
  self.status.Text=self.intent and self.intent.message or "";self.status.Visible=self.status.Text~=""
 end

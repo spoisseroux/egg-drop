@@ -62,5 +62,16 @@ return function()
 		assert(Payout.rangeText("hard") == "9–12" and Payout.rangeText("easy", { multiplier = 2 }) == "10–12")
 		assert(not pcall(Payout.roundStars, 6, "nope"))
 	end)
+	test("qualified loss effort is one, a goal stays two, wins receive no consolation",function()
+		local run={score=100,merges=3,drops=6}
+		assert(Payout.missStars(false,0,run)==1)
+		assert(Payout.missStars(false,1,run)==2 and Payout.missStars(true,0,run)==0)
+		assert(Payout.missStars(false,0)==0,"historical calls without summary preserve zero")
+		for key,minimum in pairs({score=100,merges=3,drops=6})do
+			local bad=table.clone(run);bad[key]=minimum-1;assert(Payout.missStars(false,0,bad)==0,key)
+			bad[key]=0/0;assert(Payout.missStars(false,0,bad)==0,key.." NaN")
+		end
+	end)
+
 	return { passed = #passed, cases = passed }
 end

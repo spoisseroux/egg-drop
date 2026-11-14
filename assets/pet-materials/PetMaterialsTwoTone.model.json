@@ -55,7 +55,7 @@
         "MaterialProfile": "BodyTwoToneGloss",
         "MaterialVersion": 1,
         "TwoTone": true,
-        "NativeVerified": false
+        "NativeVerified": true
       }
     },
     {
@@ -82,7 +82,7 @@
         "MaterialProfile": "BodyTwoToneMatte",
         "MaterialVersion": 1,
         "TwoTone": true,
-        "NativeVerified": false
+        "NativeVerified": true
       }
     },
     {
@@ -111,6 +111,34 @@
         "TwoTone": true,
         "NativeVerified": false
       }
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://75946070025172",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneJelly",
+        "MaterialVersion": 1,
+        "NativeVerified": true,
+        "Candidate": "Jelly-v2-approved-native-2026-11-14",
+        "TwoTone": true
+      },
+      "name": "BodyTwoToneJelly"
     }
   ]
 }

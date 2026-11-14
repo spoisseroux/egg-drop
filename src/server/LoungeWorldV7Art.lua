@@ -70,6 +70,10 @@ function Art.meshes(room)
 		if not part:IsA("BasePart")then continue end
 		count+=1
 		part.Anchored=true
+		-- Native Jelly review: these two island-wide transparent batches sorted
+		-- through pet heads. Keep their authored assets intact; only the live
+		-- cloned substrate is opaque. Flow Texture layers retain their alpha.
+		if part.Name=="W7_Water__water_stream"or part.Name=="W7_Water__water_pool"then part.Transparency=0 end
 		local info=Data.parts[part.Name]
 		-- Merged meshes span the island: bounds-based queries (overlap boxes,
 		-- camera blockers, rest-path solids) skip them and use rays instead.

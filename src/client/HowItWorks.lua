@@ -68,37 +68,27 @@ end
 -- picture, titleSize, lineSize, lineH}.
 function How.layout(W,H,cards)
  local compact=Kit.compactRule(W,H)
- local n=math.max(1,#cards)
- local pad=if compact then 16 else 24
- local gap=if compact then 10 else 16
+ local n=math.max(1,#cards);local columns=if W<600 and H>420 then 1 else n
+ local pad=if compact then 16 else 24;local gap=if compact then 10 else 16
  local panelW=math.floor(math.min(W-(if compact then 24 else 48),if n<=2 then 640 else 820))
- local cardW=math.floor((panelW-pad*2-gap*(n-1))/n)
- local inner=cardW-(if compact then 24 else 32)
- local titleSize=if compact then 15 else 18
- local lineSize=if compact then 13 else 15
- local lineH=0
+ local cardW=math.floor((panelW-pad*2-gap*(columns-1))/columns)
+ local cardPad=if compact then 12 else 16;local inner=cardW-cardPad*2
+ local titleSize=if compact then 15 else 18;local lineSize=if compact then 13 else 15
+ local lineH,titleH=0,0
  for _,card in ipairs(cards)do
-  lineH=math.max(lineH,Kit.measure(card.line,"Small",lineSize,inner).Y)
+  -- Labels draw LineHeight1.25; GetTextSize does not include that spacing.
+  lineH=math.max(lineH,math.ceil(Kit.measure(card.line,"Small",lineSize,inner).Y*Kit.LineHeight)+3)
+  titleH=math.max(titleH,math.ceil(Kit.measure(card.title,"Name",titleSize,inner).Y*Kit.LineHeight)+3)
  end
- lineH=math.ceil(lineH)
- local picture=if compact then 44 else 64
- local hasStamps=false
- for _,card in ipairs(cards)do if card.art=="stamps"then hasStamps=true end end
- local pictureH=picture
- if hasStamps then pictureH=math.max(picture,require(script.Parent.StampCardView).height(true))end
- local cardPad=if compact then 12 else 16
- local cardH=cardPad+pictureH+(if compact then 8 else 12)+math.ceil(titleSize*1.3)+4+lineH+cardPad
- local headerH=if compact then 52 else 72
- local footerH=if compact then 64 else 80
- local panelH=headerH+cardH+footerH
- -- Very short screens: the lines keep their height; the card loses picture room first.
- local room=H-(if compact then 12 else 48)
- if panelH>room then
-  local cut=math.min(panelH-room,pictureH-28)
-  pictureH-=cut;cardH-=cut;panelH-=cut
- end
+ local pictureH=32
+ for _,card in ipairs(cards)do if card.art=="stamps"then pictureH=math.max(pictureH,require(script.Parent.StampCardView).height(true))end end
+ local cardH=cardPad+pictureH+8+titleH+4+lineH+cardPad
+ local headerH=if compact then 52 else 72;local footerH=if compact then 64 else 80
+ local contentH=math.ceil(n/columns)*(cardH+gap)-gap
+ local panelH=math.min(headerH+contentH+footerH,H-(if compact then 12 else 48))
  return{compact=compact,pad=pad,gap=gap,headerH=headerH,footerH=footerH,panelW=panelW,panelH=panelH,cardW=cardW,cardH=cardH,
-  picture=math.min(picture,pictureH),pictureH=pictureH,cardPad=cardPad,titleSize=titleSize,lineSize=lineSize,lineH=lineH,inner=inner}
+  picture=32,pictureH=pictureH,cardPad=cardPad,titleSize=titleSize,titleH=titleH,lineSize=lineSize,lineH=lineH,inner=inner,
+  columns=columns,contentH=contentH,viewportH=math.max(40,panelH-headerH-footerH)}
 end
 
 -- ── Overlay ──────────────────────────────────────────────────────────────────
@@ -127,6 +117,7 @@ local function ensureGui()
   if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then How.close("outside")end
  end)
  root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if state.open then How.build()end end)
+ GuiService:GetPropertyChangedSignal("PreferredTextSize"):Connect(function()if state.open then How.build()end end)
  return gui
 end
 
@@ -157,11 +148,17 @@ function How.build()
  close.root.Position=UDim2.fromOffset(g.panelW-(if g.compact then 10 else 16),if g.compact then 4 else 14);close.root.ZIndex=panel.ZIndex+5
  close.root:SetAttribute("AccessibleLabel",UICopy.get("r3.help.close"))
  close.root.Activated:Connect(function()How.close("back")end)
- -- Cards, side by side.
+ -- Text is fully allocated inside a scrolling body; the footer never scrolls.
+ local body=make("ScrollingFrame",panel,{Name="Cards",BackgroundTransparency=1,BorderSizePixel=0,
+  Position=UDim2.fromOffset(g.pad-2,g.headerH-2),Size=UDim2.fromOffset(g.panelW-g.pad*2+4,g.viewportH+4),
+  CanvasSize=UDim2.fromOffset(0,g.contentH+4),ScrollBarThickness=3,ScrollingDirection=Enum.ScrollingDirection.Y,
+  ZIndex=panel.ZIndex+1,ClipsDescendants=true})
+ state.body=body
  for index,card in ipairs(cards)do
-  local x=g.pad+(index-1)*(g.cardW+g.gap)
-  local tile=Kit.card(panel,"Card_"..card.key,nil,{role="raised",radius=14})
-  tile.Position=UDim2.fromOffset(x,g.headerH);tile.Size=UDim2.fromOffset(g.cardW,g.cardH);tile.ZIndex=panel.ZIndex+1
+  local x=2+((index-1)%g.columns)*(g.cardW+g.gap)
+  local y=2+math.floor((index-1)/g.columns)*(g.cardH+g.gap)
+  local tile=Kit.card(body,"Card_"..card.key,nil,{role="raised",radius=14})
+  tile.Position=UDim2.fromOffset(x,y);tile.Size=UDim2.fromOffset(g.cardW,g.cardH);tile.ZIndex=panel.ZIndex+1
   local step=Kit.chip(tile,tostring(index),nil,22);step.root.AnchorPoint=Vector2.new(1,0);step.root.Position=UDim2.fromOffset(g.cardW-8,8)
   step.label.TextSize=12;Kit.fixedText(step.label)
   local py=g.cardPad
@@ -175,19 +172,19 @@ function How.build()
    Kit.stroke(well)
    local tint=Kit.tintColor(set.tint)
    well.BackgroundColor3=Kit.color("well"):Lerp(tint or Kit.Color.stars,.18)
-   local icon=Kit.icon(well,card.icon,math.floor(g.picture*.56),if card.icon=="star"then "stars"else "text")
+   local icon=Kit.icon(well,card.icon,24,if card.icon=="star"then "stars"else "text")
    icon.AnchorPoint,icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
    if tint and card.icon~="star"then Kit.tintIcon(icon,function()return tint end)end
   end
-  py+=g.pictureH+(if g.compact then 8 else 12)
-  local th=math.ceil(g.titleSize*1.3)
-  txt(tile,"Name",card.title,"text",{Name="CardTitle",Position=UDim2.fromOffset(g.cardPad,py),Size=UDim2.fromOffset(g.inner,th),TextSize=g.titleSize,TextTruncate=Enum.TextTruncate.AtEnd})
+  py+=g.pictureH+8
+  local th=g.titleH
+  txt(tile,"Name",card.title,"text",{Name="CardTitle",Position=UDim2.fromOffset(g.cardPad,py),Size=UDim2.fromOffset(g.inner,th),TextSize=g.titleSize,TextTruncate=Enum.TextTruncate.None,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
   py+=th+4
   txt(tile,"Small",card.line,"soft",{Name="CardLine",Position=UDim2.fromOffset(g.cardPad,py),Size=UDim2.fromOffset(g.inner,g.lineH),TextSize=g.lineSize,
-   TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
+   TextWrapped=true,TextTruncate=Enum.TextTruncate.None,TextYAlignment=Enum.TextYAlignment.Top})
  end
  -- Footer: one line in voice and "Got it".
- local fy=g.headerH+g.cardH+(if g.compact then 10 else 16)
+ local fy=g.panelH-g.footerH+(if g.compact then 10 else 16)
  local bw,bh=if g.compact then 140 else 180,if g.compact then 44 else 48
  local done=Kit.button(panel,"GotIt",{variant="primary",text=UICopy.get("r3.help.done"),glyph="A",size=Vector2.new(bw,bh),textSize=if g.compact then 15 else 17})
  done.Position=UDim2.fromOffset(g.panelW-g.pad-bw,fy);done.ZIndex=panel.ZIndex+2
@@ -214,12 +211,22 @@ end
 
 local function gamepad()return string.match(UserInputService:GetLastInputType().Name,"^Gamepad")~=nil end
 
+function How.scroll(direction)
+ local body=state.body
+ if not state.open or not body or not body.Parent then return false end
+ local maximum=math.max(0,body.CanvasSize.Y.Offset-body.AbsoluteSize.Y)
+ body.CanvasPosition=Vector2.new(0,math.clamp(body.CanvasPosition.Y+math.sign(direction)*math.max(48,body.AbsoluteSize.Y*.6),0,maximum))
+ return true
+end
+
 local function bind()
  ContextActionService:BindActionAtPriority(How.Action,function(_,inputState,input)
   if not state.open then return Enum.ContextActionResult.Pass end
   if inputState~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
   local key=input.KeyCode
-  if key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then How.close("back")
+  if key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then How.scroll(-1)
+  elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then How.scroll(1)
+  elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then How.close("back")
   elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.Space or key==Enum.KeyCode.KeypadEnter then How.close("done")
   elseif key==Enum.KeyCode.ButtonA then How.close("done")end
   return Enum.ContextActionResult.Sink
@@ -259,7 +266,7 @@ function How.close(reason)
  Kit.shadeClose(owner)
  if state.stamp then state.stamp:destroy();state.stamp=nil end
  if state.panel then state.panel:Destroy();state.panel=nil end
- state.done=nil
+ state.done=nil;state.body=nil
  local previous=state.previous;state.previous=nil
  if previous and previous.Parent and gamepad()then GuiService.SelectedObject=previous end
  local id,callback=state.id,state.onClosed

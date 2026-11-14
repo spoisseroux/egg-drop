@@ -2,10 +2,14 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.MaterialCatalog);local Eggs=require(Shared.EggCatalog)
 local Intent={};Intent.__index=Intent
-local messages={Insufficient="You need more Stars.",NeedStars="You need more Stars.",AllOwned="All materials owned",Full="All materials owned",Unavailable="Materials are not ready yet.",NotOwned="Choose a pet you own.",Locked="You do not own this material yet.",Stale="Your items changed. Choose again.",RevisionChanged="Your items changed. Choose again.",PendingResult="Store or use your saved egg first."}
+local messages={PolicyChanged="Your egg options changed. Choose again.",Insufficient="You need more Stars.",NeedStars="You need more Stars.",AllOwned="All materials owned",Full="All materials owned",Unavailable="Materials are not ready yet.",NotOwned="Choose a pet you own.",Locked="You do not own this material yet.",Stale="Your items changed. Choose again.",RevisionChanged="Your items changed. Choose again.",PendingResult="Store or use your saved egg first."}
 local function matches(p,r)
  if type(r)~="table"or r.id~=p.value.id or r.action~=p.action or r.petId~=p.value.petId or type(r.revision)~="number"or r.revision<=p.revision or r.catalogVersion~=Catalog.CatalogVersion then return false end
- if p.action=="materialBuy"then return r.cost==Catalog.Cost and table.find(p.value.eligible,r.finishId)~=nil and r.resultId==r.id end
+ if p.action=="materialBuy"then
+  if p.value.poolVersion==4 and(r.poolVersion~=4 or r.selectionMode~=p.value.selectionMode or r.quotedPrice~=p.value.price)then return false end
+  return r.cost==Catalog.cost(p.value.poolVersion)and table.find(p.value.eligible,r.finishId)~=nil and r.resultId==r.id
+   and(p.value.selectionMode~="fixed"or r.finishId==p.value.fixedFinishId)
+ end
  if p.action=="materialAck"then return r.cost==0 and r.acknowledgedResultId==p.value.resultId end
  return r.cost==0 and r.finishId==p.value.finishId and r.selectedBefore==p.value.expectedFinish and r.selectedAfter==p.value.finishId and r.acknowledgedResultId==p.value.resultId
 end
@@ -43,10 +47,22 @@ end
 function Intent:buy()
  if not self.state.materialAvailable then self.message=messages.Unavailable;self:notify();return false end
  if self.state.pendingHueResult or self.state.pendingMaterialResult then self.message=messages.PendingResult;self:notify();return false end
- local eligible=Catalog.remaining(self.state.materialUnlocks);table.sort(eligible)
+ local pool=self.state.materialPoolVersion or Catalog.PoolVersion
+ local eligible=Catalog.remaining(self.state.materialUnlocks,pool);table.sort(eligible)
  if #eligible==0 then self.message="All materials owned";self:notify();return false end
- if(self.state.nectar or 0)<Catalog.Cost then self.message=messages.Insufficient;self:notify();return false end
- return self:begin("materialBuy",{poolVersion=Catalog.PoolVersion,eligible=eligible})
+ local price=Catalog.cost(pool);if not price then self.message=messages.Unavailable;self:notify();return false end
+ if(self.state.nectar or 0)<price then self.message=messages.Insufficient;self:notify();return false end
+ local quote={poolVersion=pool,eligible=eligible}
+ if pool==4 then
+  quote.price=price;quote.selectionMode=Catalog.selectionMode(self.state.restricted)
+  if self.state.materialSelectionMode~=quote.selectionMode then self.message=messages.PolicyChanged;self:notify();return false end
+  if quote.selectionMode=="fixed"then
+   local advertised=self.state.nextFixed and self.state.nextFixed.material
+   if advertised~=Catalog.fixedNext(eligible,pool)then self.message=messages.PolicyChanged;self:notify();return false end
+   quote.fixedFinishId=advertised
+  end
+ end
+ return self:begin("materialBuy",quote)
 end
 function Intent:ack(resultId)
  local result=self.state.pendingMaterialResult;if not result or result.id~=resultId then return false end

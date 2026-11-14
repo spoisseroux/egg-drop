@@ -1,0 +1,42 @@
+{
+  "concept_only": true,
+  "native_render_proof": false,
+  "events": [
+    {
+      "time": 0.15,
+      "label": "wood toy tap"
+    },
+    {
+      "time": 1.15,
+      "label": "fruit plop"
+    },
+    {
+      "time": 2.15,
+      "label": "cloth flutter"
+    },
+    {
+      "time": 3.15,
+      "label": "finish shimmer"
+    }
+  ],
+  "meter": {
+    "integrated_lufs": -16.11,
+    "true_peak_dbfs": -3.71,
+    "loudness_range": 1.8
+  },
+  "loudest_3s_shortterm_lufs": -18.0,
+  "sources": [
+    "src/client/HueJarArt.lua:3-24",
+    "src/client/PetToyGeometry.lua:45-53",
+    "src/shared/HueCatalog.lua:3-8,67-71",
+    "src/shared/MaterialCatalog.lua:10-15",
+    "src/shared/WearableCatalog.lua:1-4",
+    "src/client/FaceplateShop.lua:1-7",
+    "src/client/BackgroundShop.lua:1-5"
+  ],
+  "limitations": [
+    "Fruit reproduces existing flat native UI art, not a new 3D fruit mesh.",
+    "Gloss is a Blender scalar-map equivalent, not native Roblox acceptance.",
+    "Wearable remains a direct purchase and faceplate/background are intentionally not fabricated egg outcomes."
+  ]
+}

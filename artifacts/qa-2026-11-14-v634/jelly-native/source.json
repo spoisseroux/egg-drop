@@ -1,0 +1,10 @@
+{
+  "file": "scripts/JellyMaterialPreview.lua",
+  "bytes": 20345,
+  "sha256": "550d816df7d16d53828453fad10bd2848e6c8b3d47b5db94b1664c3194f2104a",
+  "version": 3,
+  "nativeProfileOption": true,
+  "actualOpacityOwnerOption": true,
+  "compile": "luau-compile --null PASS",
+  "nativeVerified": false
+}

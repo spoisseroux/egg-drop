@@ -286,7 +286,7 @@ function Hatching.load(userId, profile, adapter)
 	adapter = adapter or defaultAdapter()
 	local handle = {
 		key = "player_" .. userId, userId = userId, adapter = adapter, token = adapter.guid(),
-		status = "Loading", busy = false, nextRunSeq = 1,
+		status = "Loading", busy = false, nextRunSeq = 1, restricted = true,
 	}
 	if profile and profile.loadFailed then
 		handle.state = upgrade(migrate(legacyRecord(profile), adapter.now()), adapter.now(), userId)
@@ -363,7 +363,7 @@ function Hatching.nextFixed(state)
 		feature = FeatureCatalog.fixedNext(state.featureStock),
 	}
 end
-local function isRestricted(handle) return handle.restricted == true end
+local function isRestricted(handle) return handle.restricted ~= false end
 
 function Hatching.public(handle)
 	local state = handle.state
@@ -409,7 +409,7 @@ function Hatching.public(handle)
 	public.shelfWeek = shelfWeek(handle.adapter.now())
 	-- QA Q5: Stars from rounds saved today in this session (not saved; no daily cap).
 	public.todayEarned = Hatching.roundStarsToday(handle, dayOf(handle.adapter.now()))
-	public.restricted = handle.restricted == true
+	public.restricted = isRestricted(handle)
 	public.nextFixed = Hatching.nextFixed(state)
 	for key,value in pairs(HueState.public(state))do public[key]=value end
 	for key,value in pairs(MaterialState.public(state))do public[key]=value end
@@ -419,7 +419,8 @@ function Hatching.public(handle)
 	for key,value in pairs(Faceplates.public(state))do public[key]=value end
 	for key,value in pairs(Wearables.public(state))do public[key]=value end
 	for key,value in pairs(BallThemes.public(state))do public[key]=value end
-	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))
+	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"),ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone"))
+ public.materialSelectionMode=MaterialCatalog.selectionMode(handle.restricted)
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
 end
@@ -642,6 +643,7 @@ function Hatching.reserveMaterial(handle,candidate)
   if state.materialReservation then
    if not MaterialState.same(state.materialReservation,candidate)then reason="PurchasePending"end;return root
   end
+  if candidate.quote.poolVersion==4 and candidate.quote.selectionMode~=MaterialCatalog.selectionMode(handle.restricted)then reason="PolicyChanged";return root end
   if state.revision~=candidate.quote.revision or state.operationSeq+1~=candidate.sequence then reason="RevisionChanged";return root end
   local allowed,why=MaterialState.purchaseEligibility(state,candidate.quote);if not allowed then reason=why;return root end
   state.materialReservation=clone(candidate)
@@ -670,7 +672,8 @@ function Hatching.materialCommand(handle,action,value,revision)
   if action=="materialBuy"then
    if quote.poolVersion~=MaterialCatalog.PoolVersion then return false,"LegacyPurchaseClosed"end
    local allowed,why=MaterialState.purchaseEligibility(handle.state,quote);if not allowed then return false,why end
-   candidate.finishId=if isRestricted(handle)then MaterialCatalog.fixedNext(quote.eligible)else MaterialCatalog.roll(quote.eligible,handle.adapter.random());if not candidate.finishId then return false,"InvalidRoll"end
+   if quote.poolVersion==4 and quote.selectionMode~=MaterialCatalog.selectionMode(handle.restricted)then return false,"PolicyChanged"end
+   candidate.finishId=if isRestricted(handle)then MaterialCatalog.fixedNext(quote.eligible,quote.poolVersion)else MaterialCatalog.roll(quote.eligible,handle.adapter.random(),quote.poolVersion);if not candidate.finishId then return false,"InvalidRoll"end
    handle.pending={kind="material",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=MaterialState.apply,candidate=candidate,phase="materialReserve"}
    local ok,why=Hatching.reserveMaterial(handle,candidate);local saved=if ok then MaterialState.find(handle.state,quote)else nil
    return ok,why,if saved then MaterialState.publicReceipt(saved)else nil
@@ -1213,7 +1216,7 @@ function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 		state.quests = quests
 		-- Heat multiplier on the round amount (base and tidy), before the pass. A missed
 		-- round with a goal met adds the flat finish pay (onboarding v1, no heat multiplier).
-		local missPay = if run then HeatPayout.missStars(run.success, run.goalsMet) else 0
+		local missPay = if run then HeatPayout.missStars(run.success, run.goalsMet, run) else 0
 		local roundStars = HeatPayout.roundStars(amount, heat) + missPay
 		local total = roundStars * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
 		if state.nectar + total + credited > 1000000000 then return false, "BalanceLimit" end
@@ -1269,6 +1272,7 @@ function Hatching.parkPlay(handle, operationId, count, petId)
 	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count)
 end
 function Hatching.parkCommitted(handle, operationId) return PlayDate.committed(handle.state, operationId) end
+function Hatching.parkCompletion(handle, operationId) return PlayDate.completion(handle.state, operationId) end
 function Hatching.playDateDone(handle) return PlayDate.done(handle.state, dayOf(handle.adapter.now())) end
 
 -- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.

@@ -74,7 +74,7 @@ function Shop:theme()return Themes.ById[self.ctx.themeId or Themes.Default]or Th
 -- The mini screen: three side panels each side and the board well in the middle,
 -- where the pattern really shows (section 5). `host` borrows the live renderer.
 function Shop:buildPreview(pane,x,y,w,h)
- local screen=Kit.frame(pane,"MiniScreen","well",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(screen)
+ local _,screen=Kit.previewWell(pane,"MiniScreen",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12)
  Kit.dotGrid(screen) -- T7 LCD dot grid under the mini screen (nothing until the asset id lands)
  local inset=math.max(6,math.floor(h*.045))
  local boardW=math.floor(w*.37);local sideW=math.floor((w-boardW-inset*4)/2)

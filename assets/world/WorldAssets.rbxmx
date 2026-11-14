@@ -70,10 +70,10 @@
       <Item class="MeshPart" referent="W7P3">
         <Properties>
           <string name="Name">W7_Architecture__marble</string>
-          <Content name="MeshId"><url>rbxassetid://111525815070510</url></Content>
+          <Content name="MeshId"><url>rbxassetid://112224834513733</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>188.6049</X><Y>17.0075</Y><Z>145.7914</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1981.5061</X><Y>178.68362</Y><Z>1531.7019</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1781.0147705078125</X><Y>160.6041717529297</Y><Z>1376.7222900390625</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-3.2581</X><Y>10.3038</Y><Z>-8.2543</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -350,10 +350,10 @@
       <Item class="MeshPart" referent="W7P17">
         <Properties>
           <string name="Name">W7_Balustrades__marble</string>
-          <Content name="MeshId"><url>rbxassetid://132004804505425</url></Content>
+          <Content name="MeshId"><url>rbxassetid://90370694053328</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>216.8779</X><Y>3.2336</Y><Z>110.5057</Z></Vector3>
-          <Vector3 name="InitialSize"><X>234.73323</X><Y>3.49984</Y><Z>119.60348</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2047.9998779296875</X><Y>30.535358428955078</Y><Z>1043.51611328125</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>2.0708</X><Y>5.5769</Y><Z>28.4388</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -390,10 +390,10 @@
       <Item class="MeshPart" referent="W7P19">
         <Properties>
           <string name="Name">W7_Bridge__marble</string>
-          <Content name="MeshId"><url>rbxassetid://71683609399980</url></Content>
+          <Content name="MeshId"><url>rbxassetid://112550427460522</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>25.2</X><Y>7.99</Y><Z>7.4</Z></Vector3>
-          <Vector3 name="InitialSize"><X>27.27468</X><Y>8.64781</Y><Z>8.00923</Z></Vector3>
+          <Vector3 name="InitialSize"><X>237.9661102294922</X><Y>75.45037078857422</Y><Z>69.87895202636719</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>4.0</X><Y>3.245</Y><Z>21.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1432,10 +1432,10 @@
       <Item class="MeshPart" referent="W7P63">
         <Properties>
           <string name="Name">W7_Landmarks__marble</string>
-          <Content name="MeshId"><url>rbxassetid://132927533124516</url></Content>
+          <Content name="MeshId"><url>rbxassetid://111377172193133</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>71.972</X><Y>7.2</Y><Z>106.9901</Z></Vector3>
-          <Vector3 name="InitialSize"><X>77.89738</X><Y>7.79275</Y><Z>115.79848</Z></Vector3>
+          <Vector3 name="InitialSize"><X>679.638916015625</X><Y>67.99016571044922</Y><Z>1010.3182983398438</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>20.314</X><Y>7.3</Y><Z>-47.8291</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1728,10 +1728,10 @@
       <Item class="MeshPart" referent="W7P76">
         <Properties>
           <string name="Name">W7_Rotunda__marble</string>
-          <Content name="MeshId"><url>rbxassetid://70893765710500</url></Content>
+          <Content name="MeshId"><url>rbxassetid://119765879062476</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>35.741</X><Y>19.3647</Y><Z>41.4027</Z></Vector3>
-          <Vector3 name="InitialSize"><X>38.68352</X><Y>20.95894</Y><Z>44.81131</Z></Vector3>
+          <Vector3 name="InitialSize"><X>337.505859375</X><Y>182.86253356933594</Y><Z>390.9696044921875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-51.3295</X><Y>13.4167</Y><Z>38.4987</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1857,10 +1857,10 @@
       <Item class="MeshPart" referent="W7P82">
         <Properties>
           <string name="Name">W7_Stations__marble</string>
-          <Content name="MeshId"><url>rbxassetid://132034112780999</url></Content>
+          <Content name="MeshId"><url>rbxassetid://126589987182505</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>163.6559</X><Y>7.32</Y><Z>105.5423</Z></Vector3>
-          <Vector3 name="InitialSize"><X>182.14761</X><Y>8.1471</Y><Z>117.46768</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1545.41943359375</X><Y>69.12351989746094</Y><Z>996.6467895507812</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>18.472</X><Y>7.41</Y><Z>17.5288</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1877,10 +1877,10 @@
       <Item class="MeshPart" referent="W7P83">
         <Properties>
           <string name="Name">W7_Stations__marble_smooth</string>
-          <Content name="MeshId"><url>rbxassetid://84761345601618</url></Content>
+          <Content name="MeshId"><url>rbxassetid://119204983359532</url></Content>
           <Content name="TextureID"><url>rbxassetid://105394164311789</url></Content>
           <Vector3 name="Size"><X>140.57</X><Y>4.427</Y><Z>96.89</Z></Vector3>
-          <Vector3 name="InitialSize"><X>156.45317</X><Y>4.92723</Y><Z>107.83771</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1327.4166259765625</X><Y>41.80475997924805</Y><Z>914.9419555664062</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>6.2635</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1897,10 +1897,10 @@
       <Item class="MeshPart" referent="W7P84">
         <Properties>
           <string name="Name">W7_Stations__palette</string>
-          <Content name="MeshId"><url>rbxassetid://71576879662786</url></Content>
+          <Content name="MeshId"><url>rbxassetid://116040760150477</url></Content>
           <Content name="TextureID"><url>rbxassetid://99161618321835</url></Content>
           <Vector3 name="Size"><X>140.69</X><Y>7.39</Y><Z>96.8707</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1527.7076</X><Y>80.2457</Y><Z>1051.8875</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1328.5496826171875</X><Y>69.78453063964844</Y><Z>914.7593383789062</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>8.105</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
@@ -1966,10 +1966,10 @@
       <Item class="MeshPart" referent="W7P87">
         <Properties>
           <string name="Name">W7_Trunks__bark</string>
-          <Content name="MeshId"><url>rbxassetid://90764302843268</url></Content>
+          <Content name="MeshId"><url>rbxassetid://136929554219571</url></Content>
           <Content name="TextureID"><url>rbxassetid://102384004107977</url></Content>
           <Vector3 name="Size"><X>204.8081</X><Y>21.2147</Y><Z>121.2968</Z></Vector3>
-          <Vector3 name="InitialSize"><X>2048.0</X><Y>212.13867</Y><Z>1212.91992</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1934.0234375</X><Y>200.33258056640625</Y><Z>1145.417724609375</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-1.0969</X><Y>13.2474</Y><Z>-3.0865</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -2082,10 +2082,10 @@
       <Item class="MeshPart" referent="W7P91">
         <Properties>
           <string name="Name">W7_Vegetation__foliage</string>
-          <Content name="MeshId"><url>rbxassetid://118226242181820</url></Content>
+          <Content name="MeshId"><url>rbxassetid://107244050589043</url></Content>
           <Content name="TextureID"><url>rbxassetid://80031701749701</url></Content>
           <Vector3 name="Size"><X>182.948</X><Y>25.0835</Y><Z>141.3016</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1829.40796</X><Y>250.82497</Y><Z>1412.95984</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1727.596435546875</X><Y>236.8658905029297</Y><Z>1334.3248291015625</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>12.273</X><Y>16.3707</Y><Z>-9.8192</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
@@ -2111,10 +2111,10 @@
       <Item class="MeshPart" referent="W7P92">
         <Properties>
           <string name="Name">W7_Vegetation__foliage_blossom</string>
-          <Content name="MeshId"><url>rbxassetid://111128518961406</url></Content>
+          <Content name="MeshId"><url>rbxassetid://136715169285013</url></Content>
           <Content name="TextureID"><url>rbxassetid://98997466675950</url></Content>
           <Vector3 name="Size"><X>185.0393</X><Y>17.6778</Y><Z>128.7833</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1850.31995</X><Y>176.7709</Y><Z>1287.78174</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1747.3447265625</X><Y>166.93313598632812</Y><Z>1216.1131591796875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-15.1646</X><Y>12.8172</Y><Z>-1.1917</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>

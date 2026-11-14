@@ -1,0 +1,2187 @@
+{
+  "place": 96451847774961,
+  "published": false,
+  "verification": "Full runs plus targeted corrections/reruns; initial reports retained.",
+  "server": {
+    "passed": 56,
+    "failed": 0,
+    "suites": [
+      {
+        "ok": true,
+        "name": "BackgroundAppearanceCatalog",
+        "result": {
+          "passed": 8,
+          "persistentWrites": false,
+          "cases": {
+            "1": "five historic themes stay free while new themes require exact saved facts",
+            "2": "unowned and legacy effects cannot manufacture new rank II eligibility",
+            "3": "backgrounds and Lantern stamp distinguish High Roller from Triple Pop",
+            "4": "existing Wick and complete-trial crest locks preserve sparse and legacy behavior",
+            "5": "raw and public HatchState facts produce the same real mastery ranks",
+            "6": "newly committed facts refresh eligibility without another purchase or grant",
+            "7": "new saved-win thresholds replace active ranks while preserving historical eligibility",
+            "8": "all sixteen faceplates expose complete semantic palettes and readable muted/text states"
+          },
+          "evidence": "fresh shared catalogs; derived facts only"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BallThemePurchase",
+        "result": {
+          "1": "catalogue: six themes, Smileys default, fixed prices 0/0/20/40/40/120, no fruit",
+          "2": "a fresh save is v11 with Smileys equipped, free themes owned, zeroed counters",
+          "3": "buying debits the fixed price once, records ownership, equips and counts Stars spent",
+          "4": "the same operation id and an owned theme never charge twice; a free theme is never sold",
+          "5": "a reused operation id with another theme or price is OperationConflict, never a false Saved",
+          "6": "a replayed UpdateAsync callback and commit-then-error charge once",
+          "7": "refuses when short, at a wrong price or for an unknown theme, without writing",
+          "8": "equip: owned and free themes only; an unchanged choice writes nothing",
+          "9": "v11 validation: tolerant of later ids, strict on shape, equipped must be owned or free",
+          "10": "a v10 save upgrades to v11: wallet, pets, quests and wearables kept; never a failed load",
+          "11": "quest cleanup runs on v11 (version >= 10): an old-catalogue quest record is a fresh draw, not InvalidData",
+          "12": "lifetime counters ride the fenced round award: rounds, wins by difficulty, tidy, best chain, tier V, Stars earned"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BondCatalog",
+        "result": {
+          "1": "thresholds rise strictly: 0 / 25 / 75 / 150 / 250, then the gentle placeholders 350 / 475 / 600 / 725 / 850",
+          "2": "level(xp): every boundary, and the display caps at 10 however much xp accrues",
+          "3": "progress(xp): the bar toward the next shipped level, full and capped at level 10",
+          "4": "one unlock per shipped level, named in UICopy and built from existing beats",
+          "5": "charm shapes: three free; Heart, Star and Leaf earned by monotonic rules; nothing reserved",
+          "6": "facts(state) reads a save or its snapshot: stamps, claimed, stats, bond"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BondProgress",
+        "result": {
+          "1": "the numbers: pet 1, round 2, win 3, Play date 5; XP caps at 100000",
+          "2": "no bond field is valid and reads {}; a malformed one is repaired at load, never a failed load",
+          "3": "+1 per paid pet, capped by the daily petting cap",
+          "4": "a saved round gives the companion +2, or +3 on a win, in the award write",
+          "5": "an unowned or unknown companion earns nothing and never fails the award",
+          "6": "XP is per pet",
+          "7": "an ambiguous award or pet write counts its XP exactly once",
+          "8": "Play date: +5 once, in the write that completes it",
+          "9": "levels 6 to 10 (follow-up 2026-11-14): no save change; XP an old save banked past 250 is valid and reads its new level",
+          "10": "XP stops at MaxXP and a full bond never fails a write",
+          "11": "BondState.add is a no-op for bad input and repairs a malformed field in place"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BookClaim",
+        "result": {
+          "1": "catalogue: five pages while the Bear is the only pet, 20 milestones paying 5/5/10/15 (175), fixed discovery bits",
+          "2": "bookworm: book-only, never sold, not in the shop grid, equippable once owned",
+          "3": "percent comes from the save; old saves see every reached milestone at once",
+          "4": "unknown, retired and free ids never count toward a page",
+          "5": "a milestone pays once: same op, another op, wrong reward and bad ids",
+          "6": "op-id retry after an ambiguous write and a replayed callback pay once; a reused id conflicts",
+          "7": "claims survive a page dropping below them (catalogue growth); nothing is clawed back",
+          "8": "bookworm at three pages at 100%, once, equippable; Faceplates.apply never involved",
+          "9": "a missed grant repairs itself on any later claim, even of a claimed milestone"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BookStateBits",
+        "result": {
+          "1": "seventeen Discoveries: the old eleven keep bits 0..10, the six state ones take 11..16",
+          "2": "the garden hour is the real UTC-5 clock; night is 20:00 to 06:00",
+          "3": "pet_night: only the pet write itself, only that day, only at night",
+          "4": "play_date, tidy_25, rounds_100 and win_each_item read the save",
+          "5": "full_outfit: five distinct slots on one pet, a pair counts once, variants count, unknown ids do not",
+          "6": "the Wardrobe page counts base items only; the Toys page follows the live pools",
+          "7": "book-only plates: Bookworm for three finished pages, Stargazer for Discoveries 100%, owed until held"
+        }
+      },
+      {
+        "ok": true,
+        "name": "BugReports",
+        "result": {
+          "1": "form ids match the server, and every label and reply line exists in UICopy",
+          "2": "validation: malformed packets drop, every field is checked, unknown fields ignored",
+          "3": "notes: trimmed, control characters and runs of space collapsed, 200 characters, UTF-8 safe",
+          "4": "filtering: the note goes through the injected filter for the reporter; anything hidden or failed is not stored",
+          "5": "records hold the UserId and checked context only; size is capped; one console line per report",
+          "6": "rate limits: 20 s gap, 3 per 10 minutes, 20 per day across servers, server hourly cap, duplicates, one in flight",
+          "7": "store failure: the player is thanked, the report waits on the server and lands on retry, or is dropped after 3 tries",
+          "8": "shards: deterministic UserId routing, same user shares cross-server window, full shard is independent",
+          "9": "legacy routing is fail closed, preserves legacy daily limits, and empty legacy permits shards",
+          "10": "immutable retries stay on original day and route; identity dedupes before full/window/day caps",
+          "11": "merged recent reads all day keys, sorts and dedupes before limiting; strict purge and erasure",
+          "12": "purge: day keys 30 or more days old are removed, once a day across servers",
+          "13": "owner-only read: recent reports newest first, filters, 30-day window, erase by UserId",
+          "14": "form: send needs a kind and a category, waits out the cooldown; defaults; chip flow; log lines; packet"
+        }
+      },
+      {
+        "ok": true,
+        "name": "CharmRules",
+        "result": {
+          "1": "facts come from the save: stamps, claimed milestones, stats, bond",
+          "2": "a locked shape is rejected as Locked and changes nothing; earned and free shapes save",
+          "3": "the rule is read from the save through PetAppearance.earned",
+          "4": "weeklyBonuses counts only a paid weekly bonus claim; a save without the key is valid",
+          "5": "item kinds: one bit per round item, OR-ed into itemWinKinds only on a win",
+          "6": "itemKinds out of range is InvalidSummary, never a failed save",
+          "7": "a save that already qualifies earns its Discoveries on the next committed write",
+          "8": "pet_night is set by a pet write at night, never by another write or a daytime pet",
+          "9": "toy pools: every pool is strictly ascending and pool 1 is kept",
+          "10": "a new Toy Egg purchase quoting an old pool is LegacyPurchaseClosed; the current pool buys"
+        }
+      },
+      {
+        "ok": true,
+        "name": "CoachMask",
+        "result": {
+          "1": "missing coachMask is valid and reads 0; a malformed one is dropped at load, never a failed load",
+          "2": "a coach bit saves once, ORs in, is never cleared, and repeats cost no write",
+          "3": "an ambiguous coach write resumes and commits exactly once",
+          "4": "each card shows once: a saved or session-seen bit never shows again; veterans see none",
+          "5": "the Welcome round pays its Stars with the Bear, once, in the starter transaction",
+          "6": "+2 Stars for a missed round with a goal met, inside the award transaction",
+          "7": "the Welcome board is safe: the fill line never ends it; a field round still can",
+          "8": "petArrived is bit 10: it saves, survives a reload and never disturbs the older bits"
+        }
+      },
+      {
+        "ok": true,
+        "name": "EarnedPet",
+        "result": {
+          "1": "Blip is collection bit 0x80, outside the legacy rank array; the gate is flag AND rig",
+          "2": "gate closed: nothing is owed at 7+ stamps and the grant is refused with no write",
+          "3": "a save with bit 0x80 loads whatever the gate says; saves at or under 127 still load",
+          "4": "the 7th stamp makes Blip owed; the grant saves once, counts a pet and writes no reveal",
+          "5": "an ambiguous grant write resumes and commits exactly once",
+          "6": "repair: a save already past the rule is granted on a later join, once across servers",
+          "7": "flag, rule and ownership are re-checked inside the write"
+        }
+      },
+      {
+        "ok": true,
+        "name": "FaceplatePurchase",
+        "result": {
+          "1": "the catalogue: 18 plates, 8 free starters with the saved ids, 10 at 20/40/80",
+          "2": "buying debits the fixed price once and records ownership",
+          "3": "the same operation id and an owned plate never charge twice",
+          "4": "a reused operation id with another plate is refused, never a false Saved",
+          "5": "a replayed UpdateAsync callback and commit-then-error charge once",
+          "6": "refuses when the wallet is short, without writing",
+          "7": "starters are free and not sold; prices are server-side",
+          "8": "ownership survives a fresh session",
+          "9": "stickers are retired: only the blank id remains, old ids resolve to none",
+          "10": "faceplate state validation tolerates later plate ids but rejects junk"
+        }
+      },
+      {
+        "ok": true,
+        "name": "FirstSessionFunnel",
+        "result": {
+          "1": "nine named steps, numbered 1..9",
+          "2": "steps log once each, in the order they happen (no holding)",
+          "3": "step 9 is the first round started after the Bear",
+          "4": "returning or failed saves get no funnel; Studio needs force",
+          "5": "milestones log once",
+          "6": "custom fields use the AnalyticsCustomFieldKeys names, capped at three and 50 chars",
+          "7": "the sink hook fires even in Studio, and a failing hook never breaks a sink"
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenCare",
+        "result": {
+          "passed": 15,
+          "cases": {
+            "1": "forged character pet and actor generations reject without changing the actor",
+            "2": "pickup preserves one actor and moving owner cannot reset a held pet",
+            "3": "two-owner placement contention leaves losing pet held with independent controls",
+            "4": "unsafe set-down preflight makes no generation position or bay mutation",
+            "5": "supported setdown is Placed until departure then resumes ordinary follow",
+            "6": "exact replay returns original result and a conflicting same sequence cannot act",
+            "7": "old claim release cannot evict the next occupant after a bay expires",
+            "8": "late saved equip follows new truth without reclaiming a superseded bay",
+            "9": "durable equip while exact live claim exists replaces just its one actor",
+            "10": "an uncommitted equip failure preserves old pet and exact dock session",
+            "11": "closing during an unresolved equip releases bay but does not cancel committed truth",
+            "12": "death character replacement and disconnect retire only owned reservation",
+            "13": "unsafe editor close frees its exact bay and keeps the pet safely held",
+            "14": "late saved equipment with no dry point stays safely carried and never uses arbitrary anchor",
+            "15": "lost carried UI lease releases on next supported point without stranding attachment"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenGreyboxWorld",
+        "result": {
+          "passed": 11,
+          "cases": {
+            "1": "the island replaces the greybox: bounds floor, meshes and no legacy scenery",
+            "2": "foliage, grass, ground and rock are matte; marble keeps a slight sheen and water stays glossy",
+            "3": "only the two broad water substrates are opaque; authored assets and animated skins stay intact",
+            "4": "ground tiles, rocks and architecture collide; leaves, water and decoration do not",
+            "5": "perimeter wall, cave blocker and fall catch enclose the island",
+            "6": "code review: spawn, arrival dais, station prompts, park gateways and benches sit inside the perimeter ring",
+            "7": "the marble bridge support matches its registered crossing span",
+            "8": "stream, pools and spring are wet; knoll and stairs are blocked; lawns are open",
+            "9": "a pet follows from the arrival dais to the hub across the bridge, and back",
+            "10": "a pet walks around the knoll instead of over it",
+            "11": "same-bank walks never detour over the bridge"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenMotion",
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "reverse nearly-opposed perpendicular and tight turns have finite bounded control hulls",
+            "2": "closed chord via is finite and the Lawn join has exact shared velocity",
+            "3": "opposed outgoing Lawn tangent falls back to a stopped join without throwing",
+            "4": "a missing follow snapshot finishes its published braking tail and holds forever",
+            "5": "one sender focus sync cannot advance another owner's cached observation time",
+            "6": "sustained16 owner travel has bounded recovery and settles after stopping without teleports",
+            "7": "2Hz reversals preserve position velocity heading and finite JSON-safe paths",
+            "8": "stationary shove turns toward the shared toy instead of discarding its authored heading",
+            "9": "90 and 180 degree pivots complete on the spot before accelerating",
+            "10": "reversal publishes brake then in-place pivot; moving curve heading follows its actual tangent"
+          },
+          "metrics": {
+            "walk16": {
+              "maxGap": 13.323240280151367,
+              "seconds": 60,
+              "maxSpeed": 17.599964141845703,
+              "maxReplacementYaw": 0,
+              "finalGap": 0
+            }
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenNook",
+        "result": {
+          "passed": 19,
+          "cases": {
+            "1": "nearby idle baby approaches the supported nook then settles facing its owner",
+            "2": "walking or focus preempts nook rest without moving another owner or toy",
+            "3": "distant owner does not send a baby across the garden just to use the nook",
+            "4": "actual nearby owner discovers nook even when lateral follow anchor is farther than4",
+            "5": "a planner safety hold is never reported as arriving at the nook",
+            "6": "second nearby rest retains six seconds and a distinct internal identity",
+            "7": "spring walking and focus interruptions clear the selected rest identity",
+            "8": "invalid rest path does not mutate identity or consume the shared cooldown",
+            "9": "a safety-stop leg followed by an apparent final rest endpoint still rejects",
+            "10": "a validated approach is planned once and committed without a second route decision",
+            "11": "height owner radius and pet radius independently fence the new rest",
+            "12": "eighteen-second cooldown is retained across different rest anchors",
+            "13": "replacing character or pet retires the selected spring rest",
+            "14": "two nearby owners deterministically take distinct spring approach and rest targets",
+            "15": "occupied spring slots reject a third rest and release when an owner leaves",
+            "16": "focused occupant keeps its held target clear without a rest reservation protocol",
+            "17": "a rejected first slot leaves its claim free for another owner's valid preflight",
+            "18": "solid approach rejection precedes all rest identity and cooldown changes",
+            "19": "greeting never resumes an unclaimed spring rest after a third owner takes the slot"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenState",
+        "result": {
+          "passed": 12,
+          "cases": {
+            "1": "solo garden investigates, shoves twice, rests and returns without a reward path",
+            "2": "a distant owner rests locally instead of repeatedly starting an unreachable central toy trip",
+            "3": "paired greeting is one atomic action and focus cancels both reservations",
+            "4": "Board is observable and cannot acquire focus, toy or an automatic reward",
+            "5": "focus is owner/pet/range/generation validated and its lease expires",
+            "6": "moved owners and replaced character cannot refresh a stale focus hold",
+            "7": "a superseded participant generation explicitly retires the paired greeting",
+            "8": "equip, character replacement and leave invalidate old generations exactly once",
+            "9": "a delayed first acquisition cannot revive the same alias after equip-away and back",
+            "10": "only one toy reservation exists and another waiting pet gets a turn",
+            "11": "decision budget is2Hz and stationary Board snapshots perform no recurring writes",
+            "12": "late join samples the current shared path, not a replayed beginning"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchProgress",
+        "result": {
+          "passed": 28,
+          "cases": {
+            "1": "v1 roster is Zivvi only and the retired Meadow egg offers no odds",
+            "2": "legacy seven-pet migration and one-time credits",
+            "3": "starter grant, persistent reveal, exact acknowledgement",
+            "4": "ambiguous session acquire resumes the same lease",
+            "5": "retired egg never spends; stale commands and callback retries",
+            "6": "ambiguous committed daily claim cannot credit twice",
+            "7": "pre-commit starter, acknowledgement and daily failures resume unchanged",
+            "8": "monotonic payouts reject replay beyond receipt history",
+            "9": "lease takeover fences stale commands and renewals",
+            "10": "local overlap, sparse inventory and public isolation",
+            "11": "failed legacy load cannot spend or overwrite",
+            "12": "daily reward is once per Hollow day and survives callback retry",
+            "13": "retired Meadow egg is refused at any pity level with no state change",
+            "14": "paid retired outcome receipts survive reload and acknowledge without reroll or regrant",
+            "15": "v2 mastery upgrade preserves marks, sparkles and all legacy fields",
+            "16": "saved wins preserve archived mastery points challenges and rank without promotions",
+            "17": "saved wins and quest progress commit atomically once per run; quests never pay inside award",
+            "18": "progress only comes from the server summary; overflowed rounds and other days do not count",
+            "19": "claims pay once, doubled by the pass, including after an ambiguous retry",
+            "20": "weekly claims and the all-three bonus",
+            "21": "one free reroll a day, saved across sessions and refused once used",
+            "22": "day and week rollover auto-credit unclaimed finished quests inside the next transaction",
+            "23": "old saves never crash: v8 with contracts, malformed quests and an old catalogue",
+            "24": "compound award retries immutable stats and original day before or after commit",
+            "25": "unowned family, malformed stats and mismatched payouts cannot alter a profile",
+            "26": "rare-only ownership earns saved wins and refused retired egg preserves archived marks",
+            "27": "heat multiplier sits inside award before the pass and Supporter",
+            "28": "todayEarned counts saved rounds this session today, never saved, a new day reads 0"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HueClear",
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "clears one channel for free: no Stars, no jars, the other channel kept",
+            "2": "refuses already-original, stale counts, unowned or malformed requests without writing",
+            "3": "a forged hueClear receipt (counts after not empty) fails validation"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HuePalette",
+        "result": {
+          "1": "linear-light blend uses the standard independent black-white reference",
+          "2": "every learned grade protects facial roles and Original restores neutral channels",
+          "3": "sparse defaults and invalid tokens cannot add arbitrary colors or mutate rank maps",
+          "4": "canonical vivid swatches and six fixed recipes use the lesser learned grade without recoloring face",
+          "5": "all 1296 legal dose combinations resolve finite colors and preserve authored protected roles on all seven pets",
+          "6": "layered mixture uses pigment mass in linear light and equal bars hit exact shared anchors"
+        }
+      },
+      {
+        "ok": true,
+        "name": "HueProgress",
+        "result": {
+          "persistentWrites": false,
+          "passed": 18,
+          "cases": {
+            "1": "fresh v6 has five private stacks and seven independent color capabilities",
+            "2": "each 25-percent server roll stores exactly one item, one debit and no companion pity change",
+            "3": "stored duplicates stack, pending results block new purchases and result use acknowledges once",
+            "4": "five-dose cap and reset affect exactly one channel, reject empty/noop/stale use without spend",
+            "5": "reservation and settlement retry the frozen draw before and after ambiguous writes",
+            "6": "durable reservation survives writer takeover and settles its original result once",
+            "7": "v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",
+            "8": "held legacy token redeems exactly once without roll/debit and original buy proof survives",
+            "9": "invalid v5 proof or fabricated old seven-rig ranks fail closed; all 24 old slots remain valid",
+            "10": "v2 v3 v4 migrate once while pending Focused duplicate and sparse ownership survive",
+            "11": "bounded receipt eviction and capacity refusal cannot reroll, replay old uses, or debit",
+            "12": "malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",
+            "13": "each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",
+            "14": "two uses of last jar at one revision have one winner and rejected request cannot strand next intent",
+            "15": "v5 zero-cost assignments retain their exact token proof after upgrade and later reset",
+            "16": "corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",
+            "17": "migration notice acknowledgment persists and historical entitlements cannot lose marker rows or held-token proof",
+            "18": "a sparse Ovelle-only veteran can buy and apply without owning the welcome pet"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "LifetimeCounters",
+        "result": {
+          "1": "merges and itemsUsed from the run summary are written inside the award and add up",
+          "2": "NaN, fractional, negative and oversized counters are refused before any write",
+          "3": "discoveries: tier V, chain 5, a win per field template and per difficulty set fixed bits",
+          "4": "found stays within bits 0..30: bit 31 and junk are ignored, a full mask stays valid",
+          "5": "counters cap at LifetimeState.Cap; bestChain keeps the maximum",
+          "6": "pets stays pets hatched: the starter grant counts one, petting adds none"
+        }
+      },
+      {
+        "ok": true,
+        "name": "LossPayout",
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "effort and goal awards retain existing pass and supporter order",
+            "2": "score, merge and drop boundaries do not pay effort early",
+            "3": "ambiguous writes and frozen candidate recovery pay exactly once",
+            "4": "normal win reward remains unchanged"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialProgress",
+        "result": {
+          "persistentWrites": false,
+          "passed": 14,
+          "cases": {
+            "1": "Lucky pool4 sells only verified paired assets and keeps historical pool literals",
+            "2": "v6 migration preserves frozen Hue fields proofs and root siblings exactly",
+            "3": "v6 cannot smuggle a preexisting Material namespace into the v7 upgrade",
+            "4": "three weighted no-dupe rolls debit16 once each and exhausted pool never spends",
+            "5": "exact saved replay is read-only and same-ID changed quote is a conflict",
+            "6": "reserve and settlement ambiguous responses retain one winner and one debit",
+            "7": "durable reservation resumes after release/rejoin without another roll",
+            "8": "free whole-pet selections are independent and atomically acknowledge Use now",
+            "9": "stale selection unowned target and wrong result cannot mutate any pigment or charm",
+            "10": "lease expiry takeover and authoritative revision changes fence new purchases",
+            "11": "pending Material result blocks Hue/Companion purchases and compaction retains referenced proof",
+            "12": "UpdateAsync callback reentry never rerolls or duplicates unlocks",
+            "13": "historical v1 three-choice reservation can grant Metal after rejoin and replay its proof",
+            "14": "new legacy buys and forged current Metal eligibility cannot roll write or debit"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "MultipleParks",
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "site data is independent, complete and rotated as one choreography",
+            "2": "same local slots have distinct sessions and route into exact site snapshot",
+            "3": "twelve owners progress independently and releases never leak across sites",
+            "4": "duo transition, focus, care and generation cleanup are confined to the correct site"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "NeutralPetRoster",
+        "result": {
+          "passed": 7,
+          "cases": {
+            "1": "all seven saved IDs and ownership bits remain permanent while only the Bear (pip) is active",
+            "2": "active collection target excludes retained owners without changing total ownership semantics",
+            "3": "white Main and achromatic grey Secondary agree across canonical and direct definitions, protected colors stay exact",
+            "4": "hands cuffs feet and floating charm use Secondary without changing semantic geometry",
+            "5": "four pigment anchors and six equal-pair recipes retain their prior exact colors",
+            "6": "partial doses start at new neutral base, reset independently, and retained pets still receive full dyes",
+            "7": "retired Meadow egg publishes no odds and cannot roll even with frozen guarantee counter"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "OverflowGraceLeft",
+        "result": {
+          "passed": 6,
+          "cases": {
+            "1": "zero before any overflow and while the stack is only near the line",
+            "2": "counts down by the elapsed overflow time and matches the default grace",
+            "3": "resets to zero the moment the stack drops back under the line",
+            "4": "zero when the grace runs out and the round ends (rules unchanged)",
+            "5": "unarmed rounds and trial grace follow the existing options",
+            "6": "the server publishes it beside OverflowPressure"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "ParkDirector",
+        "result": {
+          "passed": 18,
+          "cases": {
+            "1": "catalogue: every play timeline is 8-20 s and every slot exists on the layout",
+            "2": "membership has hysteresis: join 0.5 inside the kerb, leave only 1.5 outside",
+            "3": "one pet alone cycles solo equipment, never twice in a row, and never a duo",
+            "4": "duos only start with two eligible pets of different owners, and both play",
+            "5": "12 pets share 9 slots oldest-first: exclusive slots, no starvation, no repeats",
+            "6": "timelines end on time, free the slot and credit only the finished pet",
+            "7": "owner leaving the kerb or the server frees the slot; the see-saw partner hops off",
+            "8": "petting, a superseded generation or care release the slot; a half-left toss finishes solo",
+            "9": "castle stage derives from startTime: 3 stages, then crumble, then gone",
+            "10": "park pets are not recalled by owner shuffling or a far bench; greeting and wander skip slotted pets",
+            "11": "QA Q4: a pet left outside walks in beside its owner at the catch-up pace and starts playing",
+            "12": "QA Q4: two owners walking in 7 s apart get a duo within 45 s of the second arrival",
+            "13": "QA Q4: a lone pet never waits for a partner; a busy park does not hold pets",
+            "14": "code review: an expired partner wait is cleared, so the pet can hold for a partner again",
+            "15": "idle park pets greet every 6 s at most; the same pair waits 45 s",
+            "16": "never starts for petted, docked, greeting, resting-on-dais or outside-park pets",
+            "17": "flag off: no director and a byte-identical snapshot",
+            "18": "payload: 12 actors on long paths with a full park stays one bounded attribute"
+          },
+          "payload": {
+            "bytes": 16448,
+            "baselineBytes": 17463,
+            "parkBlockBytes": 3347,
+            "writesPerSecond": 1.025,
+            "actors": 12,
+            "slots": 9,
+            "meanBytes": 14424
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "ParkFetch",
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "solo fetch follows authoritative stages and credits one completed game",
+            "2": "up to three nearby idle pets join; own pet preferred and busy slots untouched",
+            "3": "partial preflight failure reserves nothing; no eligible pet rejects cleanly",
+            "4": "winner or initiator departure/contact cancels everyone without credit",
+            "5": "orphaned companion is released; remaining pets finish once",
+            "6": "two parks throw independently and never invite the other site",
+            "7": "remote validates generations/Room, applies once and bounds repeated requests",
+            "8": "real automatic scheduling leaves a usable fetch window during post-activity rest"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "ParkMount",
+        "result": {
+          "passed": 11,
+          "cases": {
+            "1": "flag off builds nothing",
+            "2": "visual meshes are anchored and invisible to raycasts, collisions and touches",
+            "3": "kerb leaves both gateways open",
+            "4": "players get invisible colliders and bench Seats",
+            "5": "QA Q4: one five-seat bench by the entrance, every seat facing the playground centre",
+            "6": "QA Q4: every mesh carries the import turn, so the slide's ladder is where pets climb",
+            "7": "anchor frames for the client are published as attributes",
+            "8": "ground and path raycasts ignore every park part",
+            "9": "rest-path solids skip park colliders (pets are visuals)",
+            "10": "a failed mesh becomes a grey box of the same size",
+            "11": "rebuilding replaces the old model"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "PetAward",
+        "result": {
+          "passed": 15,
+          "persistentWrites": false,
+          "cases": {
+            "1": "one exact pet operation adds one once, independent of field reward and hatch state",
+            "2": "cap-1 to cap is atomic and further candidates do no storage work",
+            "3": "immutable captured candidate survives mutation and repeated store callbacks",
+            "4": "forged amount unknown pet and missing lease are rejected before a write",
+            "5": "commit-before-error is proved by exact receipt before midnight expiry",
+            "6": "precommit midnight expiry clears only proved noncommit and restores Ready",
+            "7": "a newer day resets allowance only in its admitted award; rollback never resets it",
+            "8": "a second epoch fences the old writer and awards exactly once",
+            "9": "pending field or hatch operations retain their sole owner",
+            "10": "close drains retained pet proof before releasing without a second award",
+            "11": "authentic v3 upgrades preserve every old nested fact and sibling",
+            "12": "future and malformed persisted schemas are not overwritten",
+            "13": "A then B then replay A cannot reuse an old admitted operation sequence",
+            "14": "A followed by a non-pet operation retains exact A proof without a second award",
+            "15": "renew may prove and clear a committed pet pending operation exactly once"
+          },
+          "evidence": "isolated fenced v4 adapter transactions, clocks and exact commit receipts"
+        }
+      },
+      {
+        "ok": true,
+        "name": "PetContact",
+        "result": {
+          "passed": 17,
+          "persistentWrites": false,
+          "cases": {
+            "1": "a short continuous pet (W s) always pays one exact live Saved receipt",
+            "2": "a tuned-down chance still consumes the opportunity without storage or a promised award",
+            "3": "idle focus stationary timeout and a tap cannot earn",
+            "4": "interrupted windows and rapid new contacts never carry elapsed time or reroll",
+            "5": "restarting after a missed opportunity needs a new full window and the player spacing",
+            "6": "awards are spaced S seconds apart while contact continues",
+            "7": "stale cross-player and replaced lease ids cannot extend a new contact",
+            "8": "duplicate begin reuses grant without refreshing its continuity clock",
+            "9": "room ownership pet root generation death movement conflict and epoch invalidate contact",
+            "10": "forged payload and unreachable anchor do no RNG or storage work",
+            "11": "same held context may receive retry or renew proof once but cannot draw while saving",
+            "12": "QA Q2.7: letting go while the commit lands still shows its glyph once; a replaced pet or a stale end never does",
+            "13": "proved noncommit expiry clears broker ownership without a stranded retry or immediate reroll",
+            "14": "cap mute and reduced effects are independent, capped draws stop and the cap is said",
+            "15": "destroy cancels display and future work while retained ledger work belongs elsewhere",
+            "16": "wrong ids and early-rate pulses are rejected before any state read or reconciliation",
+            "17": "unrelated pending or busy operations cannot preserve contact or emit a Saved popup"
+          },
+          "evidence": "pure server contact continuity and live receipt broker; not proof of human touch"
+        }
+      },
+      {
+        "ok": true,
+        "name": "PetContactHost",
+        "result": {
+          "passed": 4,
+          "persistentWrites": false,
+          "cases": {
+            "1": "actual begin pulse and saved wire derive grounded anchor and publish committed balance first",
+            "2": "a historical receipt cannot display again on a new grant and mode departure cancels pulses",
+            "3": "wrong equipped pet is rejected through the real host before RNG or storage",
+            "4": "existing retry worker proves an ended commit and shows its one late glyph (QA Q2.7) without a second worker"
+          },
+          "evidence": "actual host remote callbacks with private actor/ground/DB; controlled positive RNG fixture"
+        }
+      },
+      {
+        "ok": true,
+        "name": "PetGeneralizationServer",
+        "result": {
+          "1": "every \"pip\" literal in the server is on an allowlisted line",
+          "2": "the companion rules follow Pets.active, not a pet id",
+          "3": "per-pet data sites list every collection pet, the earned one included"
+        }
+      },
+      {
+        "ok": true,
+        "name": "PlayDate",
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "missing playDate is valid; a malformed one is dropped at load, never a failed load",
+            "2": "three finished activities pay +4 Stars once; parkGames counts every one",
+            "3": "next day resets; a batch that crosses 3 pays once; repeats are idempotent",
+            "4": "transact signature is park:<day>; an ambiguous write retries without double counting",
+            "5": "a write that settles after the day rolls counts parkGames but not the new day's Play date",
+            "6": "completion receipt belongs only to target crossing and survives later batches/recovery",
+            "7": "completion proof expires on day rollover and is not created by old-day retry",
+            "8": "one finalizer dispatches immediate/recovered flights once without using later wallet delta"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "RestrictedEggs",
+        "result": {
+          "1": "policy read fails closed: restricted unless the policy says false",
+          "2": "policy cache: unknown is restricted; one read per player; forget clears",
+          "3": "restricted toys and finishes follow the published PaidOrder with no random draw",
+          "4": "restricted fruit and features give the item held fewest of, in published order",
+          "5": "unrestricted players still roll (snapshot says restricted = false)",
+          "6": "pet hatch: fixed next pet by recipe order; retired recipes stay refused with no draw"
+        }
+      },
+      {
+        "ok": true,
+        "name": "RoundItems",
+        "result": {
+          "passed": 15,
+          "evidence": "production BoardSimulation + BoardItems with board doubles",
+          "cases": {
+            "1": "star slots are deterministic per seed, inside earliest..20, and per-heat counts",
+            "2": "the ball queue is identical with and without power-ups (separate stream); Welcome has none",
+            "3": "Next / Then flags follow the plan and a dropped star ball carries its item",
+            "4": "merge keeps the star from either input and the result is a plain ball",
+            "5": "belt holds 3; a fourth item is lost ('full'); items off grants nothing",
+            "6": "reset clears belt, sequence and armed item; attributes publish the cleared state",
+            "7": "enabled only in won-before fields that are not guided (off in Welcome, field 0, guided)",
+            "8": "requests: stale ResetId, wrong sequence, malformed, not on belt, armed, off are refused",
+            "9": "requests: only a live round (not over, no payout pending, field not complete, mode Board, ready)",
+            "10": "requests are accepted while paused (the carousel freezes the round)",
+            "11": "Swap trades Next and Then with their star marks; refused past the 24-drop budget",
+            "12": "Pop removes the highest resting ball outside merged: no score, no merge record; a popped star is lost",
+            "13": "Bomb arms the next ball, bursts on first contact, never merges, removes at most 4 others",
+            "14": "Magnet arms the next ball and pulls same-size balls in for 2 s after it lands",
+            "15": "Bomb / Magnet refused when no ball is left to carry them (budget or settling)"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "RunReturn",
+        "result": {
+          "passed": 24,
+          "evidence": "production server transition API with authoritative state doubles",
+          "cases": {
+            "1": "matching saved 0 return initializes once and rejects old retry",
+            "2": "matching saved 8 return initializes once and rejects old retry",
+            "3": "live and settling outings retain exact simulation queue pile and elapsed time",
+            "4": "closing preserves state on return and explicit retry",
+            "5": "nursery host busy preserves state on return and explicit retry",
+            "6": "handle busy preserves state on return and explicit retry",
+            "7": "pending write preserves state on return and explicit retry",
+            "8": "retrying handle preserves state on return and explicit retry",
+            "9": "payout pending preserves state on return and explicit retry",
+            "10": "unacked hatch preserves state on return and explicit retry",
+            "11": "missing earned receipt preserves state on return and explicit retry",
+            "12": "unsaved earned receipt preserves state on return and explicit retry",
+            "13": "stale earned sequence preserves state on return and explicit retry",
+            "14": "missing durable receipt preserves state on return and explicit retry",
+            "15": "stale durable sequence preserves state on return and explicit retry",
+            "16": "unusable profile cannot start on either route",
+            "17": "starter acknowledgment admits first field without a field receipt",
+            "18": "welcome overflow retry survives without Pip or field receipt",
+            "19": "retry requires the sequence captured at intent, rejects malformed and stale packets",
+            "20": "save completes after return without a background reset; next intentional return starts",
+            "21": "save-before-return and ack-before-return permit only the current intentional entry",
+            "22": "a permanently refused payout (BalanceLimit) lets the board replay once",
+            "23": "restart forfeits a started live run once and refuses a stale sequence",
+            "24": "restart refuses an empty board, a finished round, the garden, a pending payout and no field"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "SessionRecovery",
+        "result": {
+          "persistentWrites": false,
+          "passed": 8,
+          "cases": {
+            "1": "dirty outgoing profile drains before release and a stale reader hydrates the acquired root",
+            "2": "profile save failure times out without releasing the lease and later recovers",
+            "3": "failed initial load cannot write defaults or acquire a persistent hatch session",
+            "4": "hydrate rejects dirty and in-flight profiles but fromRecord decodes authoritative defaults safely",
+            "5": "locked and unavailable sessions preserve provisional rare and sticker choices",
+            "6": "a setting changed during an in-flight autosave drains before lease release",
+            "7": "a temporary profile recovers through a fresh read and authoritative acquisition",
+            "8": "the actual Studio store keeps both writers in one isolated cloned root"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "ShelfPurchase",
+        "result": {
+          "1": "the snapshot carries the server's shelf week; without a shelf every price is the catalogue price",
+          "2": "wearable: the shelf price is accepted on its week and is what the wallet pays",
+          "3": "wearable: an item that is not on the shelf pays the catalogue price, never a made-up discount",
+          "4": "wearable: the week after, the same item is full price again",
+          "5": "wearable: a week boundary between the request and the write is ShelfChanged and charges nothing",
+          "6": "wearable: an ambiguous write retried after the boundary still pays exactly once",
+          "7": "wearable: one operation id is bound to one price",
+          "8": "faceplate: the shelf price is accepted on its week and is what the wallet pays",
+          "9": "faceplate: an item that is not on the shelf pays the catalogue price, never a made-up discount",
+          "10": "faceplate: the week after, the same item is full price again",
+          "11": "faceplate: a week boundary between the request and the write is ShelfChanged and charges nothing",
+          "12": "faceplate: an ambiguous write retried after the boundary still pays exactly once",
+          "13": "faceplate: one operation id is bound to one price",
+          "14": "ball: the shelf price is accepted on its week and is what the wallet pays",
+          "15": "ball: an item that is not on the shelf pays the catalogue price, never a made-up discount",
+          "16": "ball: the week after, the same item is full price again",
+          "17": "ball: a week boundary between the request and the write is ShelfChanged and charges nothing",
+          "18": "ball: an ambiguous write retried after the boundary still pays exactly once",
+          "19": "ball: one operation id is bound to one price",
+          "20": "a recolour variant on the shelf is priced like any wearable",
+          "21": "book-only plates: the list always starts with Bookworm, and only its ids can be granted",
+          "22": "Discoveries at 100% grants Stargazer with the claim; a repeat claim repairs a missed plate"
+        }
+      },
+      {
+        "ok": true,
+        "name": "StampCard",
+        "result": {
+          "1": "catalogue: rewards 4,4,5,5,6,6,12 = 42 a week; reward(stamps) is the stamp being added",
+          "2": "one stamp per day; the snapshot shows today's reward, stamps and the card",
+          "3": "rewards cycle 4,4,5,5,6,6,12 then start over; Stars earned counted",
+          "4": "missed days never reset the count; a reload keeps it",
+          "5": "a stale day is DayChanged with no write; the client refreshes and claims",
+          "6": "an ambiguous write or a replayed callback adds one stamp and pays once"
+        }
+      },
+      {
+        "ok": true,
+        "name": "StudioStore",
+        "result": {
+          "persistentWrites": false,
+          "passed": 1,
+          "cases": {
+            "1": "actual default Studio writers preserve settings and one reveal across reacquisition"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "ToyFeatureProgress",
+        "result": {
+          "persistentWrites": false,
+          "passed": 22,
+          "cases": {
+            "1": "catalog fixed boundaries remaining uniform odds and no stats",
+            "2": "toy pools: sorted, pool 1 kept for stored receipts, new toys only join the fixed order at the end",
+            "3": "new v8 profile neutral state and permanent uniform toy exhaustion costs 8 a toy",
+            "4": "all seven pet toy choices are independent free and require exact result ownership",
+            "5": "toy same ID exact replay no writes changed payload conflict and stripped private proof",
+            "6": "both namespaces retain the exact roll across reservation and settlement reply loss",
+            "7": "durable reservations rejoin without another roll in either namespace",
+            "8": "feature full rolled stack durable refusal zero debit no reroll and all full disables",
+            "9": "feature growth consumes one stock shows earned stage and supports simultaneous features",
+            "10": "feature free hidden display preserves earned stage and exact stale stage protection",
+            "11": "feature exact pending use clears only matching result and cap never consumes stock",
+            "12": "toy and feature pending results block old Hue Material Companion routes symmetrically",
+            "13": "new families respect existing Hue Material and Companion pending results",
+            "14": "revision takeover expiry and callback reentry cannot double charge",
+            "15": "new receipt eviction makes old ids stale without regrant and pending proof remains exact",
+            "16": "public appearance exposes only selected toy and visible feature stages",
+            "17": "malformed namespace quote unknown ids stages and unowned recipients reject without mutation",
+            "18": "frozen actual v370 writer cannot renew write or release upgraded v8 root",
+            "19": "frozen old writer rejects v8 even when supplied matching lease metadata",
+            "20": "v7 durable Hue and historical Material reservations settle once after v8 acquisition",
+            "21": "v7 upgrade refuses smuggled new namespaces and malformed historical proof",
+            "22": "v7 migration preserves pending historical outcomes and exact receipts without reroll"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "WearablePurchase",
+        "result": {
+          "1": "the catalogue: every rig item (the 17 through slice A, plus slice B's) at fixed 15/30/60 prices, recolour variants after their base",
+          "2": "recolour variants: their own ids at the base price; owning the base does not own the variant; one hat at a time",
+          "3": "buying debits the fixed price once, records ownership and equips",
+          "4": "the same operation id and an owned item never charge twice",
+          "5": "a reused operation id with different arguments is refused, never a false Saved",
+          "6": "a replayed UpdateAsync callback and commit-then-error charge once",
+          "7": "refuses when the wallet is short, a wrong price, an unknown item or an unowned pet, without writing",
+          "8": "equip and unequip per slot; a pair fills both ears; only owned items equip",
+          "9": "exclusions hide, never unequip: a full hat hides horns, the Flower Crown keeps them",
+          "10": "a v9 save migrates to v10: wallet, pets and quests kept, empty wearables, never a failed load",
+          "11": "ownership and the equipped set survive a fresh session",
+          "12": "replication: the public appearance carries the active pet's equipped wearables"
+        }
+      },
+      {
+        "ok": true,
+        "name": "WearableVariants",
+        "result": {
+          "1": "rows: ten valid recolours with the brief's exact colours; bad rows are refused",
+          "2": "the Bear lists all ten at the base price, each right after its base, sharing the base's slot and keys",
+          "3": "a `from` week hides a row until that week; a price override applies; a pet without the base lists none",
+          "4": "renderMap maps variants to base ids with a tint; base and unknown ids pass through",
+          "5": "the main-piece rule: own pieces in the base's main colour change, a named piece wins, secondary trim never changes",
+          "6": "tabs: eleven known slots, only tabs with an item are shown, and take-off still validates on a hidden slot"
+        }
+      },
+      {
+        "ok": true,
+        "name": "WeeklyShelf",
+        "result": {
+          "1": "the week is the weekly quests' week: Monday 05:00 UTC, from a time or a day number",
+          "2": "the price table: 20% off, rounded to the nearest Star",
+          "3": "three slots: a variant, a non-variant wearable, then a faceplate (even weeks) or a ball theme (odd weeks)",
+          "4": "off the shelf, another kind, another week or junk: no shelf price",
+          "5": "adjacent weeks differ and no slot repeats last week's pick; the shelf moves through the catalogue",
+          "6": "pools are sorted by id and hold only priced, sellable items",
+          "7": "a fresh variant (from == week) takes slot 1 that week",
+          "8": "rendezvous: one new catalogue id changes at most one slot, and leaves the shelf alone in at least 90% of 200 weeks",
+          "9": "the hash is a stable 32-bit value (the shelf never depends on the platform)"
+        }
+      },
+      {
+        "ok": true,
+        "name": "WelcomeSeed",
+        "result": {
+          "tested": 2002,
+          "universalProof": false,
+          "maxFirstMerge": 3.5166666666666666,
+          "minFirstMerge": 0.8666666666666667,
+          "passed": 4,
+          "aimSteps": 1000
+        }
+      },
+      {
+        "ok": true,
+        "name": "WelcomeState",
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "active time, inactive reset, one replay, input epoch cancels demo",
+            "2": "grant single flight and refresh-independent state survive retries",
+            "3": "authoritative stages and silent reconstruction",
+            "4": "Applied reply is terminal across late retry/rebuild; a new run resets it"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "WorldRoutes",
+        "result": {
+          "passed": 7,
+          "evidence": "live v7 lounge geometry and raycasts",
+          "cases": {
+            "1": "three station prompts sit at the v7 station frames",
+            "2": "the arrival-to-hub route stays on supported ground with nothing at walking height",
+            "3": "toy reach excludes every spawn and station disk",
+            "4": "every lamp and station light is managed and shadowless",
+            "5": "the painted sky is installed: locked dusk while day/night is off",
+            "6": "decluttered hub: no hidden props, and the frond bushes never collide",
+            "7": "movers never collide and rest where they were authored on the server"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "JellyMaterialPool",
+        "result": {
+          "passed": 9,
+          "mountedPoolUnchanged": true,
+          "cases": {
+            "1": "mounted current pool and immutable legacy pools remain unchanged",
+            "2": "pool4 quote is exact while legacy quotes keep their original shape",
+            "3": "public unknown policy stays restricted and matches fixed material mode",
+            "4": "accepted random reservation survives policy flip and retries exactly once",
+            "5": "new stale mode rejects before roll and reserve-time flip cannot charge",
+            "6": "restricted or unknown modes disclose and grant fixed next with zero RNG",
+            "7": "old pool1 and2 reservations round-trip through future catalogue without reroll",
+            "8": "pending Jelly receipt survives bounded eviction and per-pet equip stays free",
+            "9": "both existing common finishes make the next Jelly egg certain"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "PersonalToyGardenTimeline",
+        "result": {
+          "productionGardenTimeline": true,
+          "passed": 4,
+          "cases": {
+            "1": "real wander timeline permits a first play before3.5s and spaced later opportunities",
+            "2": "seven real Follow seeds finish full actions and preserve stationary wandering",
+            "3": "unchanged follow retarget does not move the settled idle deadline",
+            "4": "actual owner movement cancels prop and preserves deadline through the next arrival"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialHost",
+        "result": {
+          "passed": 5,
+          "persistentWrites": false,
+          "cases": {
+            "1": "unverified profiles reject new purchases before any roll write or debit",
+            "2": "durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+            "3": "background completion publishes unlock before receipt and conflict cannot clear waiter",
+            "4": "lost free-equip response reconciles exact selected finish without changing hues or charm",
+            "5": "owner snapshots contain no private grant proofs and another player cannot select this profile"
+          },
+          "evidence": "actual host callbacks/render gate/owner projection and retry coroutine; isolated store"
+        }
+      },
+      {
+        "name": "ToyFeatureHostfeature",
+        "ok": true,
+        "result": {
+          "passed": 5,
+          "persistentWrites": false,
+          "cases": {
+            "1": "feature durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+            "2": "feature background completion publishes private state before receipt and conflict cannot clear waiter",
+            "3": "feature lost apply response reconciles exact confirmed appearance and historical replay preserves next result",
+            "4": "feature exact acknowledgement stores result without spending or changing appearance",
+            "5": "feature owner snapshots contain no private grant proofs and foreign player cannot operate profile"
+          },
+          "evidence": "actual typed host callbacks and retry coroutine; isolated store"
+        }
+      },
+      {
+        "name": "HueHost",
+        "ok": true,
+        "result": {
+          "passed": 4,
+          "persistentWrites": false,
+          "cases": {
+            "1": "actual random buy reservation lost response preserves confirmed stock and same-quote throttle stays Retrying",
+            "2": "background retry held in storage preserves waiter and changed same-ID quote cannot replace candidate",
+            "3": "lost use event recovers committed vectors, replay never consumes later stock and altered pending ID conflicts",
+            "4": "private snapshot is owner-targeted and snapshot requests cannot select another profile"
+          },
+          "evidence": "actual host callbacks and retry coroutine; isolated durable reservation/store suspension"
+        }
+      },
+      {
+        "name": "ToyFeatureHosttoy",
+        "ok": true,
+        "result": {
+          "passed": 5,
+          "persistentWrites": false,
+          "cases": {
+            "1": "toy durable lost-response reservation keeps exact waiter and same-pending throttle retryable",
+            "2": "toy background completion publishes private state before receipt and conflict cannot clear waiter",
+            "3": "toy lost apply response reconciles exact confirmed appearance and historical replay preserves next result",
+            "4": "toy exact acknowledgement stores result without spending or changing appearance",
+            "5": "toy owner snapshots contain no private grant proofs and foreign player cannot operate profile"
+          },
+          "evidence": "actual typed host callbacks and retry coroutine; isolated store"
+        }
+      },
+      {
+        "name": "HeatPayout",
+        "ok": true,
+        "result": {
+          "passed": 6,
+          "cases": {
+            "1": "medium is today's round",
+            "2": "the tidy line moves with the overflow line",
+            "3": "win and tidy win per heat",
+            "4": "every heat x tidy x pass x supporter",
+            "5": "labels",
+            "6": "qualified loss effort is one, a goal stays two, wins receive no consolation"
+          }
+        }
+      }
+    ]
+  },
+  "client": {
+    "passed": 36,
+    "failed": 0,
+    "suites": [
+      {
+        "ok": true,
+        "name": "HatchNativeHost",
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "item receipt unlocks while decorative owner remains active",
+            "2": "companion host borrows exact scene and never destroys cinematic ownership",
+            "3": "destroyed result host rejects queued layout and update without reparenting Notice"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchNativeCinematic",
+        "result": {
+          "passed": 1,
+          "cases": {
+            "1": "one scene borrowed once, ready while tail active, cancel releases before destroy"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchDisplayPose",
+        "result": {
+          "passed": 4,
+          "cases": {
+            "1": "one generic forward reveal clears same-side shells before recognition settles",
+            "2": "receipt unlock is separate from decorative tail and exact per payload",
+            "3": "visible smile eyes survive joy and full blink compresses complete eye owner",
+            "4": "reduced effects has one bounded fade and no hop or shell movement"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchNativeFrustum",
+        "result": {
+          "passed": 1,
+          "cases": {
+            "1": "native swept corner frustum fits entrance/hop/waves at three aspects"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchNativeItemFit",
+        "result": {
+          "passed": 2,
+          "cases": {
+            "1": "200px Wobble Top fitted hero",
+            "2": "200px Ball fitted hero"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchAudioDuck",
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "one owner's600ms release cannot unduck a surviving quieter owner",
+            "2": "reactivation replaces recovery and mute/focus use current master",
+            "3": "two reveal owners release independently and cleanup is bounded"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "LoopAudio",
+        "result": {
+          "passed": 16,
+          "evidence": "deterministic scheduler/voice doubles; not an audible audition",
+          "cases": {
+            "1": "unresolved master and fast ready assets are silent",
+            "2": "master 1 music true",
+            "3": "master 1 music false",
+            "4": "master 0.4 music true",
+            "5": "master 0.4 music false",
+            "6": "master 0 music true",
+            "7": "master 0 music false",
+            "8": "independent ducks do not overwrite master or session choice",
+            "9": "old same-name duck expiry cannot remove replacement",
+            "10": "one purr owner and old fade cannot stop a new gesture",
+            "11": "mute consumes purr without deferred unmute start",
+            "12": "asset readiness never queues purr and starts only one music",
+            "13": "inactive device never accepts purr",
+            "14": "QA Q2.6: unfocus pauses the world music and refocus resumes it in place",
+            "15": "retry stops effects but preserves independent music preference",
+            "16": "destroy invalidates delayed ducks fades and future starts"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "AmbientAudio",
+        "result": {
+          "passed": 7,
+          "cases": {
+            "1": "bed gain follows the A3 table and never goes silent",
+            "2": "stream distance tests segments, not just points, and subtracts the half width",
+            "3": "round mix fades out over 0.6 s and back over 1.0 s",
+            "4": "bird gaps stay inside each daylight band and night uses only the hoo-hoo",
+            "5": "birds pick among the 6 nearest perches within 70 studs and never the same tree twice running",
+            "6": "an inactive scheduler (deck round) cancels pending chirps and queues nothing",
+            "7": "a deck round mutes every ambient layer, cues and birds; leaving brings them back"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "RevealStage",
+        "result": {
+          "passed": 13,
+          "cases": {
+            "1": "timeline: each beat starts on its millisecond and every lane stays bounded",
+            "2": "Reduced Motion: one 150 ms cross-fade to the settled frame, no flash, burst or spin-in",
+            "3": "accent: undyed grey becomes Stars gold, dyed secondaries are lifted to read on black",
+            "4": "spin: exponential decay (0.55 s), stop under 4°/s, 80 ms release window, 1080°/s cap, spring home",
+            "5": "headline and tag strip follow the result",
+            "6": "layout: desktop and phone match the mockup numbers; phone stays under the Roblox controls",
+            "7": "pet descriptions exist, one line of at most 60 characters; Bear's is the approved line",
+            "8": "live stage: a press before the buttons settles without acting; then Meet and Play again act",
+            "9": "Reduced Motion live stage: cross-fade, still idle, spin stops on release",
+            "10": "EggHatchView hands the hatch to the full-screen stage and Meet acknowledges through it",
+            "11": "QA v2 R1.1: the confetti popper fires from both bottom corners, arcs up and falls out",
+            "12": "QA v2 R1.1: a first view pops once with its cue; a reopen and Reduced Motion never do",
+            "13": "QA v2 R1.2/R1.5: the stage layer covers the screen; the first Bear's B is Back, not Play again"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HatchCinematic",
+        "result": {
+          "fixtureOnly": true,
+          "geometry": {
+            "1": {
+              "normalFitShortfallPixels": 0,
+              "sweptPoints": 6272,
+              "pet": "pip",
+              "reason": "target",
+              "stageHeight": 360,
+              "bandHeight": 344,
+              "fraction": 0.589999973281456,
+              "normalFitPixelBudget": 0,
+              "preparationMs": 6.72360003227368,
+              "limited": false,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "2": {
+              "normalFitShortfallPixels": 0,
+              "sweptPoints": 4704,
+              "pet": "puddle",
+              "reason": "swept width",
+              "stageHeight": 360,
+              "bandHeight": 344,
+              "fraction": 0.5689108207906277,
+              "normalFitPixelBudget": 0,
+              "preparationMs": 8.762100012972951,
+              "limited": true,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "3": {
+              "sweptPoints": 5880,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 344,
+              "fraction": 0.5899999635740631,
+              "pet": "wick",
+              "preparationMs": 6.777699978556484,
+              "stageHeight": 360,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "4": {
+              "sweptPoints": 4704,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 344,
+              "fraction": 0.5705061463596333,
+              "pet": "orbit",
+              "preparationMs": 5.551000009290874,
+              "stageHeight": 360,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "5": {
+              "sweptPoints": 5880,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 344,
+              "fraction": 0.5899999826912321,
+              "pet": "bloom_pip",
+              "preparationMs": 7.646500016562641,
+              "stageHeight": 360,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "6": {
+              "sweptPoints": 6272,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 344,
+              "fraction": 0.5899999702270367,
+              "pet": "foxfire_wick",
+              "preparationMs": 6.964200001675636,
+              "stageHeight": 360,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "7": {
+              "sweptPoints": 5096,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 344,
+              "fraction": 0.5412335749072363,
+              "pet": "eclipse_orbit",
+              "preparationMs": 5.755699996370822,
+              "stageHeight": 360,
+              "preference": "Medium",
+              "size": "600, 360"
+            },
+            "8": {
+              "sweptPoints": 6272,
+              "limited": true,
+              "reason": "full greeting",
+              "bandHeight": 330,
+              "fraction": 0.5712014592517376,
+              "pet": "pip",
+              "preparationMs": 7.1094000013545156,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "9": {
+              "sweptPoints": 4704,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.4801947028998567,
+              "pet": "puddle",
+              "preparationMs": 6.438300013542175,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "10": {
+              "sweptPoints": 5880,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 330,
+              "fraction": 0.5899999738789072,
+              "pet": "wick",
+              "preparationMs": 6.643700005952269,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "11": {
+              "sweptPoints": 4704,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.4820914380431915,
+              "pet": "orbit",
+              "preparationMs": 5.312699999194592,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "12": {
+              "sweptPoints": 5880,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.5692640106674427,
+              "pet": "bloom_pip",
+              "preparationMs": 6.356000027153641,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "13": {
+              "sweptPoints": 6272,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 330,
+              "fraction": 0.5899999686970033,
+              "pet": "foxfire_wick",
+              "preparationMs": 6.819300004281104,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "14": {
+              "sweptPoints": 5096,
+              "limited": true,
+              "reason": "swept width",
+              "bandHeight": 330,
+              "fraction": 0.45700266689040936,
+              "pet": "eclipse_orbit",
+              "preparationMs": 6.400100013706833,
+              "stageHeight": 420,
+              "preference": "Medium",
+              "size": "338, 420"
+            },
+            "15": {
+              "normalFitShortfallPixels": 0,
+              "sweptPoints": 6272,
+              "pet": "pip",
+              "reason": "target",
+              "stageHeight": 180,
+              "bandHeight": 164,
+              "fraction": 0.5899999636442845,
+              "normalFitPixelBudget": 0,
+              "preparationMs": 6.251900049392134,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "16": {
+              "normalFitShortfallPixels": 0,
+              "sweptPoints": 4704,
+              "pet": "puddle",
+              "reason": "target",
+              "stageHeight": 180,
+              "bandHeight": 164,
+              "fraction": 0.589999997821905,
+              "normalFitPixelBudget": 0,
+              "preparationMs": 5.260900012217462,
+              "limited": false,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "17": {
+              "sweptPoints": 5880,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999578628038,
+              "pet": "wick",
+              "preparationMs": 6.443199992645532,
+              "stageHeight": 180,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "18": {
+              "sweptPoints": 4704,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999586217535,
+              "pet": "orbit",
+              "preparationMs": 5.331899970769882,
+              "stageHeight": 180,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "19": {
+              "sweptPoints": 5880,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999881376629,
+              "pet": "bloom_pip",
+              "preparationMs": 7.637200003955513,
+              "stageHeight": 180,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "20": {
+              "sweptPoints": 6272,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999433280401,
+              "pet": "foxfire_wick",
+              "preparationMs": 6.374999997206032,
+              "stageHeight": 180,
+              "preference": "Medium",
+              "size": "500, 180"
+            },
+            "21": {
+              "sweptPoints": 5096,
+              "limited": false,
+              "reason": "target",
+              "bandHeight": 164,
+              "fraction": 0.5899999787163847,
+              "pet": "eclipse_orbit",
+              "preparationMs": 5.995500017888844,
+              "stageHeight": 180,
+              "preference": "Medium",
+              "size": "500, 180"
+            }
+          },
+          "cases": {
+            "1": "short-landscape484x203 keeps final name and caption inside host beside hero",
+            "2": "all seven real subjects fit the rectangular viewport through every greeting frame",
+            "3": "all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",
+            "4": "common and rare split within1.5/1.7s and settle with no idle clock or audio replay",
+            "5": "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+            "6": "covered first play defers marker while presented owner loss lands final and stops its clock",
+            "7": "resize keeps exact hero and epoch and device discontinuity settles only once",
+            "8": "candidate minimum height is independent of previous stage and painted text sizes",
+            "9": "pixel fallback and twenty canceled cycles retain a fixed passive pool",
+            "10": "QA v2 R1.3: a bleed host draws no panel or corner, so no card rect shows before the stage"
+          },
+          "passed": 10
+        }
+      },
+      {
+        "ok": true,
+        "name": "HueItemReveal",
+        "result": {
+          "1": "new paid jar uses shared1.5s timeline and same receipt never replays",
+          "2": "clear destroys transient scene and reopen stays static and silent",
+          "3": "reduced motion or saved joined result owns no animation clock",
+          "4": "skip settles but never performs a purchase store use or acknowledgment",
+          "5": "Material Toy and Feature adapters use the same registered kind and one owner clock"
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialDisclosure",
+        "result": {
+          "passed": 4
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialIntent",
+        "result": {
+          "passed": 9,
+          "cases": {
+            "1": "purchase captures sorted remaining pool version and blocks duplicate purchase",
+            "2": "full collection and unverified pool cannot send or debit",
+            "3": "lost response timeout and retry retain exact quote object and revision",
+            "4": "Saved cannot unlock early and malformed same-ID finish cannot clear exact receipt wait",
+            "5": "free equip captures per-pet expected finish and cannot equip locked or unowned pet",
+            "6": "Use now preserves result identity and selected finish before snapshot proof",
+            "7": "destroyed owner cannot revive a pending timeout or send another command",
+            "8": "historical pool2 public proof retains its exact legacy receipt shape",
+            "9": "current pool4 binds mode price and exact public receipt proof"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialEditor",
+        "result": {
+          "passed": 9,
+          "cases": {
+            "1": "Customize icon tabs keep 44 px targets and Materials owns saved preview without a paid selection",
+            "2": "free per-pet material choice stays visually current until exact owner snapshot",
+            "3": "Material receipt Use now chooses recipient without making that pet active",
+            "4": "Material receipt fits its round finish sample and adjacent measured actions without a blank footer gap",
+            "5": "short landscape Materials starts with complete choices and retires receipt art on Use now",
+            "6": "Materials keeps its live pet fixed during right-pane scrolling at compact and portrait sizes",
+            "7": "full and unavailable purchase states never offer a paid action",
+            "8": "reopened Keep retry resends the captured acknowledgement instead of starting a blocked new one",
+            "9": "closing Use now then keeping its receipt cannot hijack later ordinary Pet selection"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "MaterialFinishPreview",
+        "result": {
+          "passed": 5,
+          "cases": {
+            "1": "all finishes immediately show an honestly labeled opaque fallback and ground shadow",
+            "2": "both finishes retain identical camera framing upper-left key and fill",
+            "3": "cold readiness success swaps exact verified production profiles only onto MeshParts",
+            "4": "failed and unverified loads leave immediate fallback and destroy prevents late resurrection",
+            "5": "receipt sample has no input physics queries lights particles or independent frame clock"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "JellyMaterials",
+        "result": {
+          "gpuAppearanceClaim": false,
+          "passed": 5,
+          "cases": {
+            "1": "verified pair preserves Overlay pigment and exact body head ear secondary alpha",
+            "2": "faces accessories features charms and unknown core pieces remain opaque",
+            "3": "missing or unverified paired profile falls back opaque and recovers once",
+            "4": "detached or failed material binding cannot leave a translucent body",
+            "5": "authored opacity composes once and Standard restore leaves Hue untouched"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "FirstSpendGuide",
+        "result": {
+          "passed": 5,
+          "cases": {
+            "1": "saved state reconstructs optional stages without timers/daily pet counts",
+            "2": "exact saved equip and actor readiness gate one garden handoff",
+            "3": "explicit same-screen tab navigation, rejection and destruction cancel delayed work",
+            "4": "safe host frame does not consume handoff before normal toy owner starts",
+            "5": "automatic receipt reconciliation preserves only the exact pending equip flight"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "FirstSpendToyHost",
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "saved Give starts a real short prop in ordinary rest on shared clock",
+            "2": "an already active normal beat keeps its original cooldown",
+            "3": "park or replaced actor cannot inherit a pending saved handoff"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "PersonalToyOpportunity",
+        "result": {
+          "passed": 5,
+          "cases": {
+            "1": "published follow and ordinary rest retain distinct bounded timings",
+            "2": "park care pair focus contact reservation movement and malformed windows reject",
+            "3": "real normal prop fits 1.5 second rest without resetting autonomous cooldown",
+            "4": "takeover and owner movement cancel actual prop and preserve cooldown",
+            "5": "late short rest waits instead of forcing an incomplete beat"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "PetPersonalPlay",
+        "result": {
+          "passed": 17,
+          "cases": {
+            "1": "shared hero handles have exact bounded lifetimes without physics queries; only the sparkler tip lights and emits",
+            "2": "pip native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "3": "puddle native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "4": "wick native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "5": "orbit native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "6": "bloom_pip native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "7": "foxfire_wick native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "8": "eclipse_orbit native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "9": "pip authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "10": "puddle authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "11": "wick authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "12": "orbit authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "13": "bloom_pip authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "14": "foxfire_wick authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "15": "eclipse_orbit authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+            "16": "each toy uses one prop and stops on every live interruption including reduced motion",
+            "17": "matching owner and visitor seeds share phase without a prop network clock"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GlobalUIBounds",
+        "result": {
+          "passed": 11,
+          "rail": "topbar=208, 0, 1649, 58 guiInset=0, 58 guiRail=216, -49 physicalRail=216, 9 size=125, 40"
+        }
+      },
+      {
+        "ok": true,
+        "name": "ItemCarousel",
+        "result": {
+          "passed": 8,
+          "cases": {
+            "1": "closed: B, gamepad B and X open; Backspace, A and arrows pass through",
+            "2": "open: Left/Right browse, A/Space/Enter use, B/X/Backspace close, the rest is swallowed",
+            "3": "pause: the carousel is a third owner; a finished round never pauses; a modal always does",
+            "4": "wrap and neighbours: one item alone, two show the other, three show both sides",
+            "5": "empty belt: refusal uses the global rail without a board overlay",
+            "6": "browse, use and close: selection wraps, follows the belt, closes when the belt empties",
+            "7": "phone: the item button is always under A (44+ target, no overlap), hidden on desktop",
+            "8": "controls cards: B reads Items (leaving is MENU or the back arrow)"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "DeckRoundQA",
+        "result": {
+          "passed": 10,
+          "cases": {
+            "1": "camera freeze: Scriptable while the deck is up, the previous type back on exit, never stealing a camera someone else took",
+            "2": "round camera (follow-up 2026-11-14): the frozen camera parks above the avatar looking in toward the hub, and the old view comes back on exit",
+            "3": "Kit.tabs: the pill never leaves the track (click + the owner's re-select, rapid switches) and lands on its segment",
+            "4": "merge shake: the whole deck moves with the jolt, hardware hit rects stay put, Reduced Motion cuts it, layout keeps it",
+            "5": "Goals rows: even gaps for 1-3 goals, check centred on the text, colour circles capped at the text size",
+            "6": "side panels: seams on the tall panes, quests tint on Goals and Daily quests, a sticker multiplier, Fredoka name, hint caps; rects unchanged",
+            "7": "item icons: four vector icons inside their box, on the carousel, belt chip, phone button and the + Magnet toast",
+            "8": "settle feedback and the first-drop idle hint: rules, ticks, device glyphs, first drop hides it, Reduced Motion is static",
+            "9": "results Star: one constant spin from opening (re-shows never reset it), silver on a miss from the first frame, lose cue once",
+            "10": "flourish: a finished count-up releases its voices (they play out); an interrupted one fades them"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenCareClient",
+        "result": {
+          "passed": 13,
+          "cases": {
+            "1": "captured request has exact identity claim revision and independent sequence",
+            "2": "same-kind pending request cannot accumulate or become a second equip",
+            "3": "pending then saved invokes one captured completion and duplicate terminal is ignored",
+            "4": "stale character or mismatched packet cannot close another character focus",
+            "5": "an equip can stay unresolved while exact claim release is independently sent",
+            "6": "exact carried snapshot confirms pending pickup before generic dock cleanup and late receipt is inert",
+            "7": "pickup receipt first and wrong-generation snapshots cannot manufacture a second confirmation",
+            "8": "refused setdown preserves hold and gives a clear dry-space reason",
+            "9": "only accepted place opens the machine and no synthetic saved result mutates equipment",
+            "10": "destroyed transport ignores late callbacks and cannot send",
+            "11": "board-first and snapshot-first equip replication preserve the exact current editor claim",
+            "12": "teardown sends one best-effort exact release and retires all UI resources",
+            "13": "navigation teardown inside rejection callback cannot enqueue a stale notice"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "GardenCareStartup",
+        "result": {
+          "passed": 2,
+          "cases": {
+            "1": "actual Care.new owns safe carry controls and delegates feedback outside the focus GUI",
+            "2": "actual Room.new and render steps complete with production ScreenGui before any companion or profile action"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "RailFeedback",
+        "result": {
+          "passed": 3,
+          "cases": {
+            "1": "identical item grants preserve two independently timed queue entries",
+            "2": "empty and full feedback defer under narrow free space without owning a board widget",
+            "3": "destroy removes queued feedback and rejects late grants and notes"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "UIAssetWarmup",
+        "result": {
+          "passed": 10
+        }
+      },
+      {
+        "ok": true,
+        "name": "QAUIState",
+        "result": {
+          "passed": 4
+        }
+      },
+      {
+        "ok": true,
+        "name": "NotificationQueue",
+        "result": {
+          "passed": 8
+        }
+      },
+      {
+        "ok": true,
+        "name": "QAPreviewBounds",
+        "result": {
+          "created": 113,
+          "passed": 7,
+          "kept": false
+        }
+      },
+      {
+        "ok": true,
+        "name": "WelcomePresentation",
+        "result": {
+          "passed": 5
+        }
+      },
+      {
+        "ok": true,
+        "name": "InPlaceResults",
+        "result": {
+          "passed": 5,
+          "cases": {
+            "1": "phone and desktop results use the exact gameplay LCD and region coordinates",
+            "2": "four-direction results focus never buys or restarts on difficulty arrows",
+            "3": "wrapped payout and goal rows include actual label line spacing",
+            "4": "positive loss receipt is gold and zero receipt is silver",
+            "5": "instance count window ends by650ms and default feedback stays unchanged"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "DeckResults",
+        "result": {
+          "passed": 16,
+          "cases": {
+            "1": "headline: first match wins (tidy, new best, Hard, win, missed, overflow)",
+            "2": "Today: Stars earned from rounds today, counting with the payout, no cap (QA Q5)",
+            "3": "focus order: desktop Replay, Hatch, Leave; phone Leave, shortcut or Hatch, Difficulty, Replay",
+            "4": "warm line uses the pet's name and rotates",
+            "5": "results open on Replay with the exact Stars total, payout rows, goals, metrics and strip",
+            "6": "Stars count up from 0 once per saved receipt, one rising count blip per Star; wallet and meter count with it",
+            "7": "first A finishes the count-up, the second replays; B always leaves",
+            "8": "left/right move between exactly two targets and never wrap",
+            "9": "an affordable egg adds the gold Hatch button between Replay and Leave",
+            "10": "a pending save disables Replay and Hatch, reads Saving… and moves focus to Leave",
+            "11": "a loss shows the glass Star, No Stars this time, the warm line and Try again",
+            "12": "Reduced Motion shows the final value with no count-up",
+            "13": "Star token: 3D mesh when it loads, the 2D glyph Star as the fallback, glass on a miss",
+            "14": "compact results (417x299) keep Replay/Leave at 48 px and the short goal copy",
+            "15": "phone results: Hatch takes the shortcut cell and joins the focus order; the quest cell is progress only",
+            "16": "Leave copy (UICopy results.leave.*): every layout branch uses the same keys and the label fits its button"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "name": "HelpCardsBounds",
+        "result": {
+          "passed": 36
+        }
+      },
+      {
+        "ok": true,
+        "name": "WelcomeHUDBounds",
+        "result": {
+          "passed": 3,
+          "bounds": {
+            "1": {
+              "visible": true,
+              "active": true,
+              "contentScale": 1,
+              "meter": {
+                "y": 140,
+                "h": 44,
+                "w": 197,
+                "x": 495
+              },
+              "authoredHost": {
+                "y": 48,
+                "x": 180
+              },
+              "skipReady": true,
+              "authoredHit": {
+                "y": 48,
+                "x": 72
+              },
+              "coach": {
+                "y": 120,
+                "h": 132,
+                "w": 196,
+                "x": 120
+              },
+              "geometryScale": 1,
+              "width": 812,
+              "layoutBlocked": false,
+              "phone": true,
+              "viewScale": 1,
+              "height": 354,
+              "skip": {
+                "y": 200,
+                "h": 48,
+                "w": 72,
+                "x": 236
+              },
+              "skipHost": {
+                "y": 200,
+                "h": 48,
+                "w": 180,
+                "x": 128
+              },
+              "egg": {
+                "y": 148,
+                "h": 28,
+                "w": 28,
+                "x": 579.5
+              }
+            },
+            "2": {
+              "visible": true,
+              "active": true,
+              "contentScale": 0.7699999809265137,
+              "meter": {
+                "y": 258.20001220703125,
+                "h": 73.91999816894531,
+                "w": 174.01998901367188,
+                "x": 782.699951171875
+              },
+              "authoredHost": {
+                "y": 63,
+                "x": 210
+              },
+              "skipReady": true,
+              "authoredHit": {
+                "y": 63,
+                "x": 94
+              },
+              "coach": {
+                "y": 279.760009765625,
+                "h": 187.87998962402344,
+                "w": 174.01998901367188,
+                "x": 322.239990234375
+              },
+              "geometryScale": 0.77,
+              "width": 1280,
+              "layoutBlocked": false,
+              "phone": false,
+              "viewScale": 0.7699999809265137,
+              "height": 720,
+              "skip": {
+                "y": 414.510009765625,
+                "h": 48.5099983215332,
+                "w": 72.37999725341797,
+                "x": 417.719970703125
+              },
+              "skipHost": {
+                "y": 414.510009765625,
+                "h": 48.5099983215332,
+                "w": 161.6999969482422,
+                "x": 328.3999938964844
+              },
+              "egg": {
+                "y": 266.2850036621094,
+                "h": 57.75,
+                "w": 57.75,
+                "x": 840.8349609375
+              }
+            },
+            "3": {
+              "visible": true,
+              "active": true,
+              "contentScale": 1,
+              "meter": {
+                "y": 140,
+                "h": 44,
+                "w": 109,
+                "x": 411
+              },
+              "authoredHost": {
+                "y": 48,
+                "x": 92
+              },
+              "skipReady": true,
+              "authoredHit": {
+                "y": 48,
+                "x": 72
+              },
+              "coach": {
+                "y": 172,
+                "h": 132,
+                "w": 108,
+                "x": 120
+              },
+              "geometryScale": 1,
+              "width": 640,
+              "layoutBlocked": false,
+              "phone": true,
+              "viewScale": 1,
+              "height": 360,
+              "skip": {
+                "y": 252,
+                "h": 48,
+                "w": 72,
+                "x": 148
+              },
+              "skipHost": {
+                "y": 252,
+                "h": 48,
+                "w": 92,
+                "x": 128
+              },
+              "egg": {
+                "y": 148,
+                "h": 28,
+                "w": 28,
+                "x": 451.5
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "FirstSpendReconcile",
+        "ok": true,
+        "result": {
+          "passed": 2,
+          "cases": {
+            "1": "automatic close before typed Saved preserves exactly one validated handoff",
+            "2": "explicit closes and stale operations cancel; automatic close never weakens Saved proof"
+          }
+        }
+      }
+    ]
+  },
+  "collision": {
+    "total": 20920,
+    "source": "fresh complete Rojo build extracted world, no ApplyMesh",
+    "meshes": {
+      "1": {
+        "positiveHits": 29,
+        "name": "W7_Architecture__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "2": {
+        "positiveHits": 2,
+        "name": "W7_Balustrades__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "3": {
+        "positiveHits": 576,
+        "name": "W7_Bridge__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "4": {
+        "positiveHits": 65,
+        "name": "W7_Landmarks__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 16384
+      },
+      "5": {
+        "positiveHits": 206,
+        "name": "W7_Rotunda__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "6": {
+        "positiveHits": 16,
+        "name": "W7_Stations__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "7": {
+        "positiveHits": 1,
+        "name": "W7_Stations__marble_smooth",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "8": {
+        "positiveHits": 4,
+        "name": "W7_Trunks__bark",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      }
+    }
+  },
+  "actualFirstToy": {
+    "events": {
+      "1": {
+        "key": "installed",
+        "t": 0.000001500011421740055
+      },
+      "2": {
+        "key": "update",
+        "generation": 11,
+        "t": 0.07138090004445985,
+        "stage": "receipt",
+        "detail": "6"
+      },
+      "3": {
+        "key": "update",
+        "generation": 11,
+        "t": 0.08048560004681349,
+        "stage": "receipt",
+        "detail": "6"
+      },
+      "4": {
+        "key": "update",
+        "generation": 11,
+        "t": 4.037920600036159,
+        "stage": "receipt",
+        "detail": "6"
+      },
+      "5": {
+        "key": "update",
+        "generation": 11,
+        "t": 4.046399200044107,
+        "stage": "receipt",
+        "detail": "6"
+      },
+      "6": {
+        "key": "route",
+        "generation": 11,
+        "t": 18.898995199997444,
+        "stage": "receipt",
+        "detail": "nil:nil"
+      },
+      "7": {
+        "key": "update",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.899057400005404,
+        "stage": "receipt",
+        "detail": "6"
+      },
+      "8": {
+        "key": "give",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.902493700035848,
+        "stage": "receipt",
+        "detail": "true"
+      },
+      "9": {
+        "key": "step",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.903140900016297,
+        "stage": "receipt",
+        "detail": "false:false:1:1"
+      },
+      "10": {
+        "key": "update",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.96973180002533,
+        "stage": "free",
+        "detail": "6"
+      },
+      "11": {
+        "key": "update",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.97826050000731,
+        "stage": "free",
+        "detail": "6"
+      },
+      "12": {
+        "key": "route",
+        "generation": 12,
+        "phase": "equip",
+        "t": 18.983689400018193,
+        "stage": "free",
+        "detail": "receipt-reconciled:receipt-finished"
+      },
+      "13": {
+        "key": "update",
+        "generation": 12,
+        "phase": "room",
+        "t": 18.985303800029214,
+        "stage": "done",
+        "detail": "7"
+      },
+      "14": {
+        "key": "update",
+        "generation": 12,
+        "phase": "room",
+        "t": 18.98859960003756,
+        "stage": "done",
+        "detail": "7"
+      },
+      "15": {
+        "key": "step",
+        "generation": 12,
+        "phase": "room",
+        "t": 18.99229640001431,
+        "stage": "done",
+        "detail": "true:false:1:1"
+      },
+      "16": {
+        "key": "step",
+        "generation": 12,
+        "phase": "room",
+        "t": 21.3156469000387,
+        "stage": "done",
+        "detail": "true:true:1:1"
+      },
+      "17": {
+        "stage": "done",
+        "t": 21.582367299997713,
+        "key": "play-confirmed",
+        "generation": 12
+      },
+      "18": {
+        "key": "update",
+        "generation": 12,
+        "t": 24.04854010004783,
+        "stage": "done",
+        "detail": "7"
+      },
+      "19": {
+        "key": "update",
+        "generation": 12,
+        "t": 24.051302000007126,
+        "stage": "done",
+        "detail": "7"
+      }
+    },
+    "found": {
+      "1": {
+        "toy": "wobble_top",
+        "path": "Workspace.Bear"
+      }
+    }
+  },
+  "audio": {
+    "approved": true,
+    "actualTargetLoads": {
+      "garden": "73327108010209",
+      "deck": "108432047352639",
+      "seconds": 72
+    },
+    "subjectiveUserApproval": false
+  },
+  "finalEditAndSave": {
+    "file": "build/egg-drop-native-final-unpublished-2026-11-14.rbxl",
+    "bytes": 1663457,
+    "sha256": "6db803df41e9f7c9e7b7ff0d9e18828ada7e4fdc540a905f7142effb14814ab2",
+    "published": false,
+    "observedOutput": "Saved new changes in Egg Drop to Roblox; Place file downloaded. No Publish action.",
+    "compiledEditContainers": 498,
+    "compileErrors": 0,
+    "temporaryProbes": 0,
+    "runtimeSourcesCompared": 301,
+    "runtimeSourceMismatches": 0
+  },
+  "pipelineTests": {
+    "nativeCollision": 11,
+    "uploadProof": 12,
+    "failed": 0,
+    "invocation": "python scripts/world_native_collision_test.py; python scripts/world_overlap_upload_test.py"
+  }
+}

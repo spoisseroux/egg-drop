@@ -141,8 +141,21 @@ function Art.control(button,primary,enabled)
  primary,enabled=primary==true,enabled~=false
  if button:GetAttribute("PrimaryAction")==primary and button:GetAttribute("ActionEnabled")==enabled then return end
  button:SetAttribute("PrimaryAction",primary);button:SetAttribute("ActionEnabled",enabled)
- Art.bind(button,{BackgroundColor3=function()return if primary and enabled then Art.paletteColor("accent")else Art.surfaceColor(button,"raised")end,
-  TextColor3=function()return if primary then Art.paletteColor("ink")else Art.surfaceColor(button,if enabled then "text"else "muted")end})
+ button.BackgroundTransparency=0;button.AutoButtonColor=false
+ button.Interactable=enabled;button.Active=enabled
+ Art.bind(button,{BackgroundColor3=function()return if not enabled then Color3.fromHex("#344545")elseif primary then Art.paletteColor("accent")else Art.surfaceColor(button,"raised")end,
+  TextColor3=function()return if not enabled then Color3.fromHex("#AAB8B5")elseif primary then Art.paletteColor("ink")else Art.surfaceColor(button,"text")end})
+ local lip=button:FindFirstChild("DisabledLip")
+ if not enabled and not lip then
+  lip=Art.frame(button,"DisabledLip",Color3.fromHex("#1F3030"),UDim2.new(0,1,1,-4),UDim2.new(1,-2,0,3),button.ZIndex+1)
+  lip.Active,lip.Selectable=false,false
+ end
+ if lip then lip.Visible=not enabled end
+ local border=button:FindFirstChildOfClass("UIStroke")
+ if border then
+  Art.bind(border,{Color=function()return if not enabled then Color3.fromHex("#60716E")elseif button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Color3.new(1,1,1)end})
+  border.Transparency=if enabled then .86 else 0
+ end
  Art.surfaceGradient(button,if primary and enabled then "primary"else "raised")
  -- Labels inside the control follow its fill.
  for _,child in ipairs(button:GetDescendants())do local entry=bindings[child];if entry then paintBinding(child,entry)end end
@@ -689,6 +702,9 @@ function Art.button(button, radius)
 		end
 	end)
 	local function focusPaint(focused)
+  if button:GetAttribute("ActionEnabled")==false then
+   border.Color=Color3.fromHex("#60716E");border.Transparency=0;border.Thickness=1;inner.Transparency=1;return
+  end
   -- Focus: the 2.5 px white ring; rest: the 1 px white 14% border.
   border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2.5 else 1;inner.Transparency=if focused then 0 else 1
 		border.Transparency=if focused then 0 else .86

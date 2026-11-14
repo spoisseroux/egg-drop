@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"place\":96451847774961,\"meshes\":{\"1\":{\"probes\":648,\"name\":\"W7_Architecture__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":29},\"8\":{\"probes\":648,\"name\":\"W7_Trunks__bark\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":4},\"3\":{\"probes\":648,\"name\":\"W7_Bridge__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":576},\"2\":{\"probes\":648,\"name\":\"W7_Balustrades__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":2},\"5\":{\"probes\":648,\"name\":\"W7_Rotunda__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":206},\"4\":{\"probes\":648,\"name\":\"W7_Landmarks__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":0},\"7\":{\"probes\":648,\"name\":\"W7_Stations__marble_smooth\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":1},\"6\":{\"probes\":648,\"name\":\"W7_Stations__marble\",\"hitMismatches\":0,\"maxPositionDelta\":0,\"matchedHits\":16}},\"nativeExportBytes\":325417,\"probes\":5184}"
+    }
+  ],
+  "isError": false
+}

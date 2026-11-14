@@ -1,0 +1,126 @@
+{
+  "concept_only": true,
+  "not_live_game": true,
+  "kind": "bear",
+  "duration": 6,
+  "fps": 12,
+  "render_size": [
+    470,
+    296
+  ],
+  "composite_size": [
+    812,
+    354
+  ],
+  "bear_visible": true,
+  "source_hashes": {
+    "assets\\art-source\\pets\\pet-bear-attachments.blend": "170ddfc037ced0322dac876576fe242ba2550af25a633899eee7e8ac576cff65",
+    "assets\\art-source\\eggs\\eggs.blend": "1bf7620d763912e9ef770e16d0b481ed89e18acc60bbe4af3e3da9cc530699b0"
+  },
+  "source_unchanged": true,
+  "bear_parts": [
+    "Body",
+    "Head",
+    "HandL",
+    "HandR",
+    "FootL",
+    "FootR",
+    "EarL",
+    "EarR",
+    "EarInnerL",
+    "EarInnerR",
+    "EyeL",
+    "EyeR",
+    "Mouth",
+    "Muzzle",
+    "Nose",
+    "Tail"
+  ],
+  "bear_height": 1.4794908463954926,
+  "bear_original_scale": true,
+  "pose_metrics": [
+    {
+      "time": 0.2,
+      "expression": "curious",
+      "eye_scale": 1.16,
+      "bear_scale": 0.72,
+      "hop": 0.0,
+      "minimum_mesh_z": 0.009397454559803009,
+      "target_z": 0.009397454231977463,
+      "shell_opacity": 1,
+      "bear_opacity": 0
+    },
+    {
+      "time": 1.0,
+      "expression": "curious",
+      "eye_scale": 1.16,
+      "bear_scale": 0.72,
+      "hop": 0.0,
+      "minimum_mesh_z": 0.009397454559803009,
+      "target_z": 0.009397454231977463,
+      "shell_opacity": 1,
+      "bear_opacity": 0
+    },
+    {
+      "time": 1.75,
+      "expression": "curious",
+      "eye_scale": 1.16,
+      "bear_scale": 0.9765597667638484,
+      "hop": 0.0,
+      "minimum_mesh_z": 0.009397454559803009,
+      "target_z": 0.009397454231977463,
+      "shell_opacity": 1,
+      "bear_opacity": 0.8332063201747697
+    },
+    {
+      "time": 1.95,
+      "expression": "curious",
+      "eye_scale": 0.0696,
+      "bear_scale": 1.0172802404207364,
+      "hop": 0.0,
+      "minimum_mesh_z": 0.009397454559803009,
+      "target_z": 0.009397454231977463,
+      "shell_opacity": 1,
+      "bear_opacity": 1
+    },
+    {
+      "time": 2.6666666667,
+      "expression": "joy",
+      "eye_scale": 0.95,
+      "bear_scale": 1.0,
+      "hop": 0.16241233016666973,
+      "minimum_mesh_z": 0.17180977761745453,
+      "target_z": 0.1718097843986472,
+      "shell_opacity": 0,
+      "bear_opacity": 1
+    },
+    {
+      "time": 3.6,
+      "expression": "pleased",
+      "eye_scale": 0.9,
+      "bear_scale": 1.0,
+      "hop": 0.0,
+      "minimum_mesh_z": 0.009397454559803009,
+      "target_z": 0.009397454231977463,
+      "shell_opacity": 0,
+      "bear_opacity": 1
+    }
+  ],
+  "bear_uniform_scale": 1,
+  "camera_fov_degrees": 38,
+  "camera_distance_heights": 3.6,
+  "camera_elevation_degrees": 8,
+  "times": [
+    0.2,
+    1.0,
+    1.75,
+    1.95,
+    2.6666666667,
+    3.6
+  ],
+  "limitations": [
+    "Lower shell is split only in copied diagnostic meshes; production rig/receipt routing unchanged.",
+    "Bear uses rigid copied-part expression equivalents; full textured eye meshes compress together during blink. Astra actual-frame revision keeps authored smile and joy/pleased eyes at .95/.90. No native rig proof claimed.",
+    "Authored base Bear materials/geometry retained."
+  ]
+}

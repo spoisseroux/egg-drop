@@ -1,0 +1,3901 @@
+{
+  "title": "Little Afternoon",
+  "composer": "Original Astra score / Sol synthesis",
+  "key": "F major",
+  "bpm": 104,
+  "bars": 32,
+  "sample_rate": 48000,
+  "channels": 2,
+  "duration": 73.84615384615384,
+  "pcm_samples": 3544615,
+  "actual_pcm_duration": 73.84614583333334,
+  "production_installed": false,
+  "tracks": {
+    "garden": {
+      "file": "little-afternoon-garden-104bpm-full.wav",
+      "integrated_lufs": -20.0,
+      "true_peak_dbfs": -9.3,
+      "loudness_range": 5.5,
+      "sample_peak_dbfs": -9.298818476843163,
+      "rms_dbfs": -22.389861073534014,
+      "mono_rms_dbfs": -22.391901252793968,
+      "mono_peak_dbfs": -9.298818476843163,
+      "mono_vs_stereo_rms_db": -0.0020401792599557696,
+      "dc": 1.2828581252843918e-10,
+      "boundary_jump": 0.0,
+      "derivative_p9999": 0.028046511113643646,
+      "clipped_samples": 0,
+      "sha256": "b4b723b089e59345c2e715393cb1a3e1e6f5032bb2c7cc2375223ed94e570932",
+      "score": [
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.25,
+          "note": "G4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.5,
+          "note": "F4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 4,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed-scoop"
+        },
+        {
+          "role": "answer",
+          "bar": 4,
+          "beat": 3.25,
+          "note": "C5",
+          "beats": 0.75,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.25,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "answer",
+          "bar": 8,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 8,
+          "beat": 3.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.0,
+          "note": "E5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.25,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.25,
+          "note": "G4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 20,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed-scoop"
+        },
+        {
+          "role": "answer",
+          "bar": 20,
+          "beat": 3.25,
+          "note": "r",
+          "beats": 0.75,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.25,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "flute"
+        },
+        {
+          "role": "answer",
+          "bar": 24,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 24,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.0,
+          "note": "E5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.25,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "reed"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "wood"
+        }
+      ],
+      "preview20s": {
+        "integrated_lufs": -20.01,
+        "true_peak_dbfs": -10.36,
+        "loudness_range": 5.1
+      }
+    },
+    "pocket-deck": {
+      "file": "little-afternoon-pocket-deck-104bpm-full.wav",
+      "integrated_lufs": -19.0,
+      "true_peak_dbfs": -7.29,
+      "loudness_range": 1.2,
+      "sample_peak_dbfs": -7.288695733172893,
+      "rms_dbfs": -21.50443012917526,
+      "mono_rms_dbfs": -21.504679584014852,
+      "mono_peak_dbfs": -7.288695733172893,
+      "mono_vs_stereo_rms_db": -0.00024945483959227176,
+      "dc": -2.0152761237568484e-08,
+      "boundary_jump": 0.0,
+      "derivative_p9999": 0.031159400939941406,
+      "clipped_samples": 0,
+      "sha256": "cad8bc0e6df33e9d74a0d5e4da7dd37a40a8c0c91f4ad6cdc7b76884d75da50f",
+      "score": [
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 1,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 2,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.25,
+          "note": "G4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 2,
+          "beat": 3.5,
+          "note": "F4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 3,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 4,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 4,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-scoop"
+        },
+        {
+          "role": "answer",
+          "bar": 4,
+          "beat": 3.25,
+          "note": "C5",
+          "beats": 0.75,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 5,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 6,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 7,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.25,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 7,
+          "beat": 3.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 8,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 8,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 8,
+          "beat": 3.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 9,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 10,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 11,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 12,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.0,
+          "note": "E5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.25,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 12,
+          "beat": 3.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 13,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 14,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 15,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 16,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 17,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 18,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.25,
+          "note": "G4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 18,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 19,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 20,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 20,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-scoop"
+        },
+        {
+          "role": "answer",
+          "bar": 20,
+          "beat": 3.25,
+          "note": "r",
+          "beats": 0.75,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 21,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 22,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 23,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.25,
+          "note": "A4",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 23,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 24,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 24,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 24,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 25,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 26,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 27,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 28,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.0,
+          "note": "E5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.25,
+          "note": "D5",
+          "beats": 0.25,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "answer",
+          "bar": 28,
+          "beat": 3.5,
+          "note": "r",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.23062870300182406,
+          "voice": "deck-reed"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 29,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 30,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "gate": 0.92,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "gate": 0.8,
+          "gain": 0.55,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 31,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.78,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        },
+        {
+          "role": "principal",
+          "bar": 32,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "gate": 0.92,
+          "gain": 0.65,
+          "voice": "deck"
+        }
+      ],
+      "preview20s": {
+        "integrated_lufs": -20.0,
+        "true_peak_dbfs": -8.22,
+        "loudness_range": 0.8
+      }
+    }
+  }
+}

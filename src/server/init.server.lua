@@ -77,6 +77,8 @@ local questResult = child("RemoteEvent", "QuestResult", remotes)
 local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
 local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
+local parkResult = child("RemoteEvent", "ParkResult", remotes)
+local welcomeResult = child("RemoteEvent", "WelcomeResult", remotes)
 local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
 -- v1 track B: bug reports / suggestions (remote BugReport, owner tool ServerStorage.EggDropReportsTool).
 do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes)end);if not ok then warn("[EggDropReport] not mounted: "..tostring(problem))end end
@@ -384,7 +386,18 @@ local function publishNursery(board)
 	board.folder:SetAttribute("MasteryMask", masteryMask)
 end
 
+local function publishWelcome(board)
+	local welcome=board.welcome
+	local snapshot=welcome and welcome:snapshot()
+	board.folder:SetAttribute("WelcomeSkipReady",snapshot~=nil and snapshot.skipReady==true and not hasPet(board))
+	board.folder:SetAttribute("WelcomeGrantPending",snapshot~=nil and snapshot.grantPending==true and not hasPet(board))
+	board.folder:SetAttribute("WelcomeDemoUsed",snapshot~=nil and snapshot.demoUsed==true)
+	board.folder:SetAttribute("WelcomeInputEpoch",snapshot and snapshot.inputEpoch or 0)
+	board.folder:SetAttribute("WelcomeActiveSeconds",snapshot and math.floor(snapshot.activeSeconds*10)/10 or 0)
+	board.folder:SetAttribute("WelcomeReplay",board.welcomeReplay or 0)
+end
 local function publishState(board)
+	publishWelcome(board)
 	board.folder:SetAttribute("Preset", board.sim.preset)
 	board.folder:SetAttribute("Drops", board.sim.drops)
 	board.folder:SetAttribute("NextTier", Simulation.nextTier(board.sim))
@@ -521,7 +534,12 @@ local function reset(board, preset, sameField)
 		for key,value in pairs(FieldObjectives.simulationOptions(descriptor,preset,board.runHeat))do simOptions[key]=value end
 		if itemsOn then simOptions.powerUps=board.runHeat end
 	end
-	board.sim = Simulation.new(preset, board.sim and board.sim.serial, simOptions)
+	if board.welcome then board.welcome:destroy();board.welcome=nil end
+	if not field and not hasPet(board)then
+		board.sim=require(script.WelcomeSeed).create(Simulation,preset,board.sim and board.sim.serial)
+		board.welcome=require(script.WelcomeState).new(board.runSequence)
+		board.welcomeReplay=0;board.welcomeWindowActive=false
+	else board.sim=Simulation.new(preset,board.sim and board.sim.serial,simOptions)end
 	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
 	BoardItems.reset(board, itemsOn)
 	board.itemKinds = 0
@@ -550,6 +568,8 @@ local function reset(board, preset, sameField)
 	publishState(board)
 	syncVisuals(board)
 end
+
+local grantWelcome
 
 -- Earned pets (slice E; SYSTEMS-SCOPE 1.3): one loop grants every pet EarnedPets.owed() names
 -- (Blip on the 7th stamp). Started after a daily claim, and on join / save reload as a repair
@@ -741,6 +761,7 @@ local function closeBoard(board)
 	if board.closing then return end
 	closing[board] = true
 	board.closing = true
+	if board.welcome then board.welcome:destroy()end
 	garden:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
@@ -803,6 +824,14 @@ gardenIntentRemote.OnServerEvent:Connect(function(player,packet)
 	if not board or board.closing or type(packet)~="table" then return end
 	local now=os.clock()
 	local kind=packet.kind
+	if kind=="parkThrow"then
+		local result=require(script.ParkThrowHost).request(board,garden,player.UserId,packet,now,function()
+			garden:syncOne(player.UserId,gardenInput(board))
+		end)
+		if result and player.Parent then parkResult:FireClient(player,result)end
+		garden:publish()
+		return
+	end
 	if type(kind)=="string"and string.sub(kind,1,4)=="care"then gardenCareHost:request(board,packet);return end
 	if kind=="toyStart"or kind=="toyJoin"or kind=="toyCancel"then
         gardenToyResult:FireClient(player,{kind=kind,seq=packet.seq,status="Rejected",reason="ActivityRetired",actionId=packet.actionId});return
@@ -825,6 +854,30 @@ end)
 
 for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(addPlayer, player)
+end
+
+-- Saved ownership is stronger than the transient pending latch. Duplicate Skip
+-- acknowledgements must never regress Applied back to Retrying after commit.
+local function settledWelcomeStatus(board,sequence)
+	if not board.welcome or sequence~=board.runSequence then return nil end
+	if NurseryCatalog.isOwned(inventory(board),"pip")then return "Applied"end
+	if board.welcome.grantPending then return "Retrying"end
+	return nil
+end
+local function acceptedDrop(board,value,now,isDemo)
+	if board.closing or board.mode~="Board"or board.menuPaused or board.round.over or not canProgress(board)
+		or(board.field and(not board.field:canDrop(board.sim.drops)or not Simulation.canDrop(board.sim)))
+		or typeof(value)~="number"or not(value>=0 and value<=1)or now-board.lastDrop<Config.DropInterval then return false end
+	board.lastDrop=now
+	if not Simulation.drop(board.sim,value)then return false end
+	board.runDay=RunDay.onDrop(board.runDay,board.sim.drops,Daily.dayOf(board.nursery.adapter.now()))
+	if board.welcome and not isDemo then board.welcome:acceptedDrop()end
+	publishState(board)
+	if board.firstSession then
+		board.firstSession:advance(2)
+		if board.sim.drops==1 then board.firstSession:roundStarted()end
+	end
+	return true
 end
 
 request.OnServerEvent:Connect(function(player, action, value, sticker)
@@ -886,6 +939,31 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			Progress.setSetting(board.profile, "reduced", reduced)
 			board.folder:SetAttribute("ReducedEffects", reduced)
 		end
+		return
+	end
+	if action=="welcomeActive"then
+		if type(value)=="boolean"and board.welcome and not hasPet(board)then board.welcomeWindowActive=value end
+		return
+	elseif action=="welcomeInput"then
+		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
+			board.welcomeInputAt=now;board.welcome:input();publishWelcome(board)
+		end
+		return
+	elseif action=="welcomeSkip"then
+		local sequence=type(value)=="table"and value.sequence or nil
+		local welcome=board.welcome
+		local settled=settledWelcomeStatus(board,sequence)
+		if settled then
+			if player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status=settled})end
+			return
+		end
+		if not welcome or sequence~=board.runSequence or board.mode~="Board"or board.menuPaused or hasPet(board)
+			or not canProgress(board)or not welcome:requestGrant("skip",sequence)then
+			if player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status="Rejected",reason="Unavailable"})end
+			return
+		end
+		if board.firstSession then board.firstSession:record("OnbSkipWelcome")end
+		publishWelcome(board);grantWelcome(player,board)
 		return
 	end
 	if action == "pause" then
@@ -958,21 +1036,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "drop" then
-		if board.menuPaused or board.round.over or (hasPet(board) and board.nursery.status ~= "Ready")
-			or (board.field and (not board.field:canDrop(board.sim.drops) or not Simulation.canDrop(board.sim)))
-			or typeof(value) ~= "number" or not (value >= 0 and value <= 1)
-			or now - board.lastDrop < Config.DropInterval then
-			return
-		end
-		board.lastDrop = now
-		if Simulation.drop(board.sim, value) then
-			board.runDay = RunDay.onDrop(board.runDay, board.sim.drops, Daily.dayOf(board.nursery.adapter.now()))
-			publishState(board)
-			if board.firstSession then
-				board.firstSession:advance(2)
-				if board.sim.drops == 1 then board.firstSession:roundStarted() end
-			end
-		end
+		if board.welcome then board.welcome:input()end
+		acceptedDrop(board,value,now,false)
 	elseif action == "item" then
 		-- Round items: accepted while paused (the carousel freezes the round).
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
@@ -1260,7 +1325,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		local pending=board.nursery.pending
 		local samePending=pending and pending.kind=="material"and MaterialState.same(pending.candidate.quote,canonical)
 		if samePending and(board.nurseryBusy or board.nursery.busy or board.payoutPending or os.clock()-(board.lastHatchRequest or -math.huge)<.3)then sendMaterialResult(board,quote,"Retrying","Busy");return end
-		if action=="materialBuy"and not samePending and not MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"))then sendMaterialResult(board,quote,"Rejected","MaterialsUnavailable");return end
+		if action=="materialBuy"and not samePending and not MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"),ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone"))then sendMaterialResult(board,quote,"Rejected","MaterialsUnavailable");return end
 		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then sendMaterialResult(board,quote,"Rejected","Throttled");return end
 		board.lastHatchRequest=os.clock()
 		if board.nurseryBusy or board.payoutPending then sendMaterialResult(board,quote,"Rejected","Busy");return end
@@ -1398,31 +1463,52 @@ local function settleReward(player, board)
 	end)
 end
 
-local function grantWelcome(player, board)
-	if board.starterRunning or hasPet(board) then return end
-	board.starterRunning = true
+grantWelcome=function(player,board)
+	if board.starterRunning or hasPet(board)then return end
+	local welcome=board.welcome
+	local sequence=board.runSequence
+	if welcome and not welcome.grantPending and not welcome:requestGrant("charge",sequence)then return end
+	board.starterRunning=true;publishWelcome(board)
 	task.spawn(function()
-		while boards[player] == board and not board.closing and not hasPet(board) do
-			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
-				local walletBefore = board.nursery.state.nectar
-				local ok = Nursery.grantStarter(board.nursery)
-				if boards[player] ~= board then break end
-				publishNursery(board)
-				publishState(board)
-				if ok then
-					-- Onboarding v1: the Welcome round's Stars arrive with the Bear.
-					if board.nursery.state.nectar > walletBefore then Economy.source(player, board.nursery.state.nectar - walletBefore, board.nursery.state.nectar, "Gameplay", "WelcomeRound") end
-					board.profile.companionId = "pip"
+		while boards[player]==board and not board.closing and not hasPet(board)and board.runSequence==sequence and board.welcome==welcome do
+			if board.profileReady and not board.nurseryBusy and not board.nursery.busy then
+				local handle=board.nursery
+				local walletBefore=handle.state.nectar
+				local ok,reason=Nursery.grantStarter(handle)
+				if boards[player]~=board or board.closing or board.nursery~=handle then break end
+				-- The save is authoritative even if a reset happened during the yielding write.
+				-- A stale Welcome owner cannot replay a cinematic or another reward.
+				local owned=hasPet(board)
+				if owned then
+					if handle.state.nectar>walletBefore then Economy.source(player,handle.state.nectar-walletBefore,handle.state.nectar,"Gameplay","WelcomeRound")end
+					-- Skip starts at legacy rank0: normalize only AFTER atomic Bear/+6 proof.
+					if board.profile.rank<1 then Progress.chargeHatch(board.profile,math.max(0,Pets.byId.pip.charge-board.profile.charge))end
+					board.profile.companionId="pip"
 					publishCompanion(board)
-					if board.firstSession then board.firstSession:advance(4) end
-					break
+					if board.firstSession then board.firstSession:advance(4)end
 				end
+				publishNursery(board);publishState(board)
+				if board.runSequence~=sequence or board.welcome~=welcome then break end
+				if owned then
+					break
+				elseif not ok and(reason=="InvalidData"or reason=="InvalidStarter")then
+					if welcome then welcome:grantRejected()end
+					if player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status="Rejected",reason=reason})end
+					publishWelcome(board);break
+				elseif not ok and player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status="Retrying",reason=reason})end
 			end
 			task.wait(2)
 		end
-		-- A grant that first reported Retrying and committed later still logs step 4 (idempotent).
-		if boards[player] == board and hasPet(board) and board.firstSession then board.firstSession:advance(4) end
-		board.starterRunning = false
+		-- Nursery's independent retry loop can prove ownership while this task sleeps;
+		-- reconcile the legacy profile and ack from that same saved proof as well.
+		if boards[player]==board and not board.closing and hasPet(board)then
+			if board.profile.rank<1 then Progress.chargeHatch(board.profile,math.max(0,Pets.byId.pip.charge-board.profile.charge))end
+			board.profile.companionId="pip";publishCompanion(board)
+			publishNursery(board);publishState(board)
+			if board.firstSession then board.firstSession:advance(4)end
+			if board.runSequence==sequence and board.welcome==welcome and player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status="Applied"})end
+		end
+		board.starterRunning=false
 	end)
 end
 
@@ -1431,6 +1517,15 @@ end
 -- date count and +4 Stars once a day at 3. After today's Play date is paid, further counts
 -- coalesce into one write a minute. Each write carries an op id; playDate.op proves what
 -- committed, so a retried (ambiguous) write is subtracted exactly once.
+-- Both immediate and recovered commits use one durable receipt/finalizer. A later wallet
+-- purchase cannot inflate or hide the original Play date payment in analytics.
+local function finishParkFlight(player, board, flight)
+	return require(script.ParkGameCommit).finish(board, flight, Nursery, {
+		now = os.clock,
+		source = function(amount, balance) Economy.source(player, amount, balance, "Gameplay", "PlayDate") end,
+		event = function() Economy.event(player, "PlayDateDone", 1) end,
+	})
+end
 local function flushParkGames(player, board)
 	if board.parkFlushing then return end
 	board.parkFlushing = true
@@ -1439,7 +1534,7 @@ local function flushParkGames(player, board)
 			local pause = 2
 			local flight = board.parkInFlight
 			if flight and Nursery.parkCommitted(board.nursery, flight.id) then
-				board.parkPending = math.max(0, (board.parkPending or 0) - flight.count); board.parkInFlight = nil; board.parkSavedAt = os.clock()
+				finishParkFlight(player, board, flight)
 			elseif flight and board.nursery.pending and board.nursery.pending.id == flight.id then
 				-- Ambiguous write: the background Nursery.retry loop settles it; wait for its proof.
 			else
@@ -1450,17 +1545,14 @@ local function flushParkGames(player, board)
 					local nextFlight = { id = HttpService:GenerateGUID(false), count = board.parkPending }
 					board.parkInFlight = nextFlight
 					board.nurseryBusy = true; publishNursery(board)
-					local walletBefore = board.nursery.state.nectar
 					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count, board.profile.companionId)
 					board.nurseryBusy = false
 					if boards[player] ~= board then break end
 					if Nursery.parkCommitted(board.nursery, nextFlight.id) then
-						board.parkPending = math.max(0, board.parkPending - nextFlight.count); board.parkInFlight = nil; board.parkSavedAt = os.clock()
-						if board.nursery.state.nectar > walletBefore then Economy.source(player, board.nursery.state.nectar - walletBefore, board.nursery.state.nectar, "Gameplay", "PlayDate") end
-						Economy.event(player, "PlayDateDone", nextFlight.count)
+						finishParkFlight(player, board, nextFlight)
 					elseif not ok and reason ~= "Retrying" then
 						board.parkInFlight = nil
-						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0 end
+						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0;board.folder:SetAttribute("ParkGamesPending",0)end
 					end
 					publishNursery(board); publishState(board)
 				elseif quiet then pause = 5 end
@@ -1480,6 +1572,7 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
 		if not board or board.closing then return end
 		board.parkPending = (board.parkPending or 0) + 1
+		board.folder:SetAttribute("ParkGamesPending",board.parkPending)
 		flushParkGames(player, board)
 	end })
 
@@ -1491,6 +1584,25 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
+			if board.welcome and not hasPet(board)then
+				local welcome=board.welcome
+				local active=not board.closing and board.mode=="Board"and not board.round.over and not board.menuPaused and canProgress(board)and board.welcomeWindowActive==true
+				welcome:step(Config.FixedStep,active)
+				if welcome:replayDue()then board.welcomeReplay=(board.welcomeReplay or 0)+1 end
+				if active and require(script.WelcomeSeed).needsRefresh(board.sim)then
+					board.sim=require(script.WelcomeSeed).refresh(Simulation,board.sim)
+					-- Same run/charge/score/demo epoch. Only bounded simulation contents refresh.
+					syncVisuals(board);publishState(board)
+				end
+				local ticket=welcome:demoTicket()
+				if ticket and active and welcome:tryDemo(ticket,function()
+					if board.welcome~=welcome or board.runSequence~=ticket.generation or hasPet(board)then return false end
+					return acceptedDrop(board,require(script.WelcomeSeed).DemoAim,os.clock(),true)
+				end)then
+					if board.firstSession then board.firstSession:record("OnbIdleDemo")end
+					publishWelcome(board)
+				end
+			end
 			if board.closing or board.mode ~= "Board" or board.round.over or board.menuPaused
 				or not canProgress(board) then
 				continue
@@ -1501,6 +1613,7 @@ RunService.Heartbeat:Connect(function(dt)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
 			board.round:step(board.sim.eggs, Config.FixedStep, board.sim.drops)
 			for _, merge in ipairs(merged) do
+				if board.welcome then require(script.WelcomeSeed).afterMerge(board.sim)end
 				board.chain = if board.playTime - board.lastMerge <= 1.25 then board.chain + 1 else 1
 				board.peakChain = math.max(board.peakChain, board.chain)
 				board.maxTier = math.max(board.maxTier or 0, merge.tier)
@@ -1533,7 +1646,7 @@ RunService.Heartbeat:Connect(function(dt)
 				board.sim.bursts = nil
 				publishState(board)
 			end
-			if board.profile.rank >= 1 and not hasPet(board) then grantWelcome(player, board) end
+			if not hasPet(board)and(board.profile.rank>=1 or(board.welcome and board.welcome.grantPending))then grantWelcome(player,board)end
 			if board.field then
 				local oldPhase, oldStage = board.field.phase, board.field.rootStage
 				local expired=board.field:expireChain(board.playTime,board.lastMerge)
@@ -1556,6 +1669,7 @@ RunService.Heartbeat:Connect(function(dt)
 		if board.petContact then board.petContact:update()end
 		syncVisuals(board)
 		if now - (board.lastPressurePublish or 0) >= .1 then
+			publishWelcome(board)
 			board.lastPressurePublish = now
 			board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
 			board.folder:SetAttribute("OverflowPressure", if board.round.over then 0 else board.round.danger or 0)

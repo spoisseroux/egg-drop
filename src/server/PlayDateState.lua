@@ -18,18 +18,29 @@ end
 local function integer(value,maximum)
 	return type(value)=="number"and value==value and value%1==0 and value>=0 and value<=maximum
 end
+local function validCompletion(value)
+	return value==nil or(type(value)=="table"and type(value.op)=="string"and #value.op>=1 and #value.op<=100
+		and(value.amount==0 or value.amount==State.Reward)and integer(value.balance,1000000000))
+end
 local function validOp(value)return value==nil or(type(value)=="string"and #value>=1 and #value<=100)end
 
 -- Tolerant: nil is valid; unknown extra keys are ignored (a later build may add some).
 function State.valid(state)
 	local entry=state.playDate
 	if entry==nil then return true end
-	return type(entry)=="table"and canonicalDay(entry.day)and integer(entry.count,State.Target)and validOp(entry.op)
+	return type(entry)=="table"and canonicalDay(entry.day)and integer(entry.count,State.Target)and validOp(entry.op)and validCompletion(entry.completion)
 end
 -- Load-time repair: a malformed field becomes nil (never a failed load); known fields only.
 function State.sanitize(entry)
 	if type(entry)~="table"or not canonicalDay(entry.day)or not integer(entry.count,State.Target)or not validOp(entry.op)then return nil end
-	return {day=entry.day,count=entry.count,op=entry.op}
+	local completion=if validCompletion(entry.completion)and entry.completion then {op=entry.completion.op,amount=entry.completion.amount,balance=entry.completion.balance}else nil
+	return {day=entry.day,count=entry.count,op=entry.op,completion=completion}
+end
+-- Durable completion receipt belongs to the crossing transaction, not the latest batch.
+function State.completion(state,operationId)
+	local entry=state and state.playDate
+	local proof=entry and entry.completion
+	return if validCompletion(proof)and proof and proof.op==operationId then proof else nil
 end
 function State.committed(state,operationId)
 	local entry=state and state.playDate
@@ -47,20 +58,23 @@ function State.apply(state,candidate,today)
 	local current=State.sanitize(state.playDate)
 	if current and tonumber(current.day)>tonumber(today)then
 		-- Clock rollback: leave the newer day alone; only record the proof.
-		state.playDate={day=current.day,count=current.count,op=candidate.id}
+		state.playDate={day=current.day,count=current.count,op=candidate.id,completion=current.completion}
 		return true
 	end
 	if candidate.day~=today then
 		local kept=if current and current.day==today then current.count else 0
-		state.playDate={day=today,count=kept,op=candidate.id}
+		state.playDate={day=today,count=kept,op=candidate.id,completion=if current and current.day==today then current.completion else nil}
 		return true
 	end
 	local before=if current and current.day==today then current.count else 0
 	local after=math.min(State.Target,before+candidate.count)
-	if before<State.Target and after>=State.Target and state.nectar+State.Reward<=1000000000 then
-		state.nectar+=State.Reward
+	local completion=if current and current.day==today then current.completion else nil
+	if before<State.Target and after>=State.Target then
+		local amount=if state.nectar+State.Reward<=1000000000 then State.Reward else 0
+		state.nectar+=amount
+		completion={op=candidate.id,amount=amount,balance=state.nectar}
 	end
-	state.playDate={day=today,count=after,op=candidate.id}
+	state.playDate={day=today,count=after,op=candidate.id,completion=completion}
 	return true
 end
 

@@ -1,0 +1,518 @@
+{
+  "title": "Sparse garden texture audition",
+  "audition_only": true,
+  "installed": false,
+  "uploaded": false,
+  "sample_rate": 48000,
+  "frames": 1152000,
+  "seconds": 24,
+  "seed": 20261114,
+  "actual_recorded_sources": {
+    "retrieved_utc": "2026-11-14",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sources": [
+      {
+        "author": "bart",
+        "source_url": "https://opengameart.org/content/squeak-toy-sounds",
+        "license_page_sha256": "acdb04a73fe4200f09c5baa6e5779d565ba274d5b3ade1d27e3b932929ff8ee1",
+        "license_page_file": "squeak-toy-sounds.html",
+        "files": [
+          {
+            "source_filename": "squeak_toy.zip",
+            "download_url": "https://opengameart.org/sites/default/files/squeak_toy.zip",
+            "bytes": 898071,
+            "sha256": "3ba6419b05ebf8e0b7dd4395b3c10f26811c037e357143f10a159acdb2dabfb8",
+            "extracted_wavs": [
+              {
+                "archive_member": "squeak toy/squeak toy - squeak1.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak1.wav",
+                "sha256": "a89853f355ce7c6c60ee9695f5e725250c6a74f4a177b549afa0a30ff98ff362",
+                "bytes": 271388
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak2.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak2.wav",
+                "sha256": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+                "bytes": 172012
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak3.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak3.wav",
+                "sha256": "bb51223dc20b0f4e691ce624330747a2c866edaf1150c2cdd2b53280154b7212",
+                "bytes": 298500
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak5.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak5.wav",
+                "sha256": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+                "bytes": 226212
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "author": "BMacZero",
+        "source_url": "https://opengameart.org/content/bubble-sound-effects",
+        "license_page_sha256": "9ab1602f48dd7f3a1c73afb66a873a98f54ee72281e9bfdd7e6815cbbec24d14",
+        "license_page_file": "bubble-sound-effects.html",
+        "files": [
+          {
+            "source_filename": "bubbles-single1.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single1.wav",
+            "bytes": 28386,
+            "sha256": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5"
+          },
+          {
+            "source_filename": "bubbles-single2.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single2.wav",
+            "bytes": 38468,
+            "sha256": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8"
+          },
+          {
+            "source_filename": "bubbles-single3.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single3.wav",
+            "bytes": 35884,
+            "sha256": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b"
+          },
+          {
+            "source_filename": "bubbles-loop1-amp.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-loop1-amp.wav",
+            "bytes": 428076,
+            "sha256": "94eaef4afc1146dcdfd3077cc7a6cbe6dc97daac62b8f6560dfc913dd57488a9"
+          }
+        ]
+      }
+    ]
+  },
+  "source_hashes": {
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_toy.zip": "3ba6419b05ebf8e0b7dd4395b3c10f26811c037e357143f10a159acdb2dabfb8",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak1.wav": "a89853f355ce7c6c60ee9695f5e725250c6a74f4a177b549afa0a30ff98ff362",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak2.wav": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak3.wav": "bb51223dc20b0f4e691ce624330747a2c866edaf1150c2cdd2b53280154b7212",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak5.wav": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single1.wav": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single2.wav": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single3.wav": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-loop1-amp.wav": "94eaef4afc1146dcdfd3077cc7a6cbe6dc97daac62b8f6560dfc913dd57488a9"
+  },
+  "sample_bank": {
+    "rubber-squeak-main": {
+      "file": "sample-bank\\rubber-squeak-main.wav",
+      "seconds": 0.205,
+      "sha256": "dca48831301e5aa4b1432e497d4d19790df517da10c38d96cdceb5df86f0e571",
+      "sample_peak_dbfs": -16.174377976098803,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak2.wav",
+      "source_sha256": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+      "source_region_seconds": [
+        0.04,
+        0.245
+      ],
+      "fixed_gain": 0.18,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "rubber-squeak-small": {
+      "file": "sample-bank\\rubber-squeak-small.wav",
+      "seconds": 0.235,
+      "sha256": "b22aa245b471a3455ded1b332ac4260dfd9ac879635d0375e59f35cde8f72f45",
+      "sample_peak_dbfs": -18.991777249363626,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak5.wav",
+      "source_sha256": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+      "source_region_seconds": [
+        0.1,
+        0.335
+      ],
+      "fixed_gain": 0.14,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "rubber-grain": {
+      "file": "sample-bank\\rubber-grain.wav",
+      "seconds": 0.08,
+      "sha256": "c1a6c253ced4fe3429b6dc05cf7d5e509f4a6e5f6c09259945e0c5ccd8560016",
+      "sample_peak_dbfs": -29.96806683685837,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak2.wav",
+      "source_sha256": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+      "source_region_seconds": [
+        0.265,
+        0.345
+      ],
+      "fixed_gain": 0.045213955767172444,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "water-plop-one": {
+      "file": "sample-bank\\water-plop-one.wav",
+      "seconds": 0.26,
+      "sha256": "eab77e1812913772a4084f9e6db139bdbcc3d9657dfc34f64b58d7929ad244b6",
+      "sample_peak_dbfs": -14.862299488375584,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single1.wav",
+      "source_sha256": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5",
+      "source_region_seconds": [
+        0.035,
+        0.295
+      ],
+      "fixed_gain": 0.9,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "water-plop-two": {
+      "file": "sample-bank\\water-plop-two.wav",
+      "seconds": 0.307,
+      "sha256": "f915b43a77c5e90a2178de86071d41e8793938aae3097e8c5f2be3aca4784794",
+      "sample_peak_dbfs": -12.767068489820968,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single2.wav",
+      "source_sha256": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8",
+      "source_region_seconds": [
+        0.018,
+        0.325
+      ],
+      "fixed_gain": 0.75,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "water-plop-three": {
+      "file": "sample-bank\\water-plop-three.wav",
+      "seconds": 0.285,
+      "sha256": "b0b49f468924592f2f81bb4e93701b4f996537c70635d9d33d7e042ef88db0bd",
+      "sample_peak_dbfs": -23.523680942179986,
+      "kind": "third-party CC0 recording edit",
+      "source": "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single3.wav",
+      "source_sha256": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b",
+      "source_region_seconds": [
+        0.115,
+        0.4
+      ],
+      "fixed_gain": 0.85,
+      "boundary_fade_ms": 10,
+      "no_gain_normalization": true
+    },
+    "hollow-knock": {
+      "file": "sample-bank\\hollow-knock.wav",
+      "seconds": 0.19,
+      "sha256": "2266cbef98f0290f509777102d286fe25ad890a9b8ba61723a5818d4521a7cf1",
+      "sample_peak_dbfs": -14.353691049819764,
+      "kind": "original synthetic addition",
+      "seed": 20261114,
+      "recipe": "Inharmonic180/620/1040/1730Hz damped body with2.5ms contact and short noise impulse; not a pitched MIDI instrument"
+    },
+    "hollow-knock-low": {
+      "file": "sample-bank\\hollow-knock-low.wav",
+      "seconds": 0.19,
+      "sha256": "229c4f970de8766b3547ff847c0428d73522669f161891b75ca64ae65ecbe0d6",
+      "sample_peak_dbfs": -15.476248472757737,
+      "kind": "original synthetic addition",
+      "seed": 20261114,
+      "recipe": "Same hollow-object resonances at0.83 ratio; no equal-tempered assignment"
+    },
+    "soft-rattle": {
+      "file": "sample-bank\\soft-rattle.wav",
+      "seconds": 0.25,
+      "sha256": "6108dc0518173186de8d446a71bac1438e0ac0114ce39faf54f083ebb8f12fbd",
+      "sample_peak_dbfs": -20.82732355853311,
+      "kind": "original synthetic addition",
+      "seed": 20261114,
+      "recipe": "Four quiet irregular hollow ticks at0/37/108/173ms; no shaker or percussion loop"
+    },
+    "secondary-tick": {
+      "file": "sample-bank\\secondary-tick.wav",
+      "seconds": 0.07,
+      "sha256": "564d37b6fcc5d8bfa686366499dcf7bcafe33c95eef1b4f123d08c6f850246b7",
+      "sample_peak_dbfs": -28.454320729151995,
+      "kind": "original synthetic addition",
+      "seed": 20261114,
+      "recipe": "One very quiet original hollow tick"
+    },
+    "rounded-f2": {
+      "file": "sample-bank\\rounded-f2.wav",
+      "seconds": 0.29,
+      "sha256": "4207ae55e0fcc6e6e6abddaca7fd536c4bab3697f7de3fe4b418b806dadd96f9",
+      "sample_peak_dbfs": -30.00992662697525,
+      "kind": "original synthetic shadow",
+      "seed": 20261114,
+      "recipe": "One roundedF2 sine body with75ms decay; occurs once, no bass pattern"
+    },
+    "shadow-a4": {
+      "file": "sample-bank\\shadow-a4.wav",
+      "seconds": 0.25,
+      "sha256": "7ba94b3b3848756b0265e8eebc35e20177e309f573e13dc4c5721643226ef8a5",
+      "sample_peak_dbfs": -31.958623431783046,
+      "kind": "original synthetic hidden motif",
+      "seed": 20261114,
+      "recipe": "Subdued fundamental and6% second partial; originalA4-C5-D5 fragment only"
+    },
+    "shadow-c5": {
+      "file": "sample-bank\\shadow-c5.wav",
+      "seconds": 0.35,
+      "sha256": "604c0a65745a4542cb7d1ad692d9c2cfe4a7532cae449f0712d3fbc72c739ad8",
+      "sample_peak_dbfs": -31.958623431783046,
+      "kind": "original synthetic hidden motif",
+      "seed": 20261114,
+      "recipe": "Subdued fundamental and6% second partial; originalA4-C5-D5 fragment only"
+    },
+    "shadow-d5": {
+      "file": "sample-bank\\shadow-d5.wav",
+      "seconds": 0.4,
+      "sha256": "d8f40d91da5d6d53a668ff9c65b70bcba451bdbf8f14c85d7efce00baa96e882",
+      "sample_peak_dbfs": -31.958623431783046,
+      "kind": "original synthetic hidden motif",
+      "seed": 20261114,
+      "recipe": "Subdued fundamental and6% second partial; originalA4-C5-D5 fragment only"
+    }
+  },
+  "events": [
+    {
+      "time_seconds": 1.802578813534266,
+      "bank": "hollow-knock",
+      "playback_speed": 1.0055215075135782,
+      "semitones": 0.09532728445912828,
+      "pan": -0.09,
+      "prominent": true,
+      "duration_seconds": 0.18895833333333334
+    },
+    {
+      "time_seconds": 3.101846840561854,
+      "bank": "water-plop-one",
+      "playback_speed": 0.9945460788520237,
+      "semitones": -0.09467855995190795,
+      "pan": 0.08,
+      "prominent": true,
+      "duration_seconds": 0.2614375
+    },
+    {
+      "time_seconds": 5.503665626565635,
+      "bank": "soft-rattle",
+      "playback_speed": 0.9926554437475894,
+      "semitones": -0.12762069307245688,
+      "pan": -0.04,
+      "prominent": true,
+      "duration_seconds": 0.25185416666666666
+    },
+    {
+      "time_seconds": 7.203576754925768,
+      "bank": "rubber-squeak-main",
+      "playback_speed": 0.9697257533403337,
+      "semitones": -0.5322155554363335,
+      "pan": -0.02,
+      "prominent": true,
+      "duration_seconds": 0.21141666666666667
+    },
+    {
+      "time_seconds": 7.353195450030062,
+      "bank": "rubber-grain",
+      "playback_speed": 1.0322661455401472,
+      "semitones": 0.5497798043463411,
+      "pan": 0.01,
+      "prominent": true,
+      "duration_seconds": 0.0775
+    },
+    {
+      "time_seconds": 9.300093521786073,
+      "bank": "rounded-f2",
+      "playback_speed": 1.003988815039898,
+      "semitones": 0.06891836401773382,
+      "pan": 0,
+      "prominent": true,
+      "duration_seconds": 0.2888541666666667
+    },
+    {
+      "time_seconds": 11.603047674892332,
+      "bank": "shadow-a4",
+      "playback_speed": 0.971408018359708,
+      "semitones": -0.5022083992816339,
+      "pan": -0.04,
+      "prominent": false,
+      "duration_seconds": 0.257375
+    },
+    {
+      "time_seconds": 11.902380737409175,
+      "bank": "shadow-c5",
+      "playback_speed": 1.0022684631791372,
+      "semitones": 0.039227930193093924,
+      "pan": 0.02,
+      "prominent": false,
+      "duration_seconds": 0.34920833333333334
+    },
+    {
+      "time_seconds": 12.301172001429897,
+      "bank": "shadow-d5",
+      "playback_speed": 1.0295910327730504,
+      "semitones": 0.5048567228174082,
+      "pan": -0.02,
+      "prominent": false,
+      "duration_seconds": 0.3885208333333333
+    },
+    {
+      "time_seconds": 14.402332909498462,
+      "bank": "water-plop-two",
+      "playback_speed": 1.0341916425220592,
+      "semitones": 0.5820426158149182,
+      "pan": -0.07,
+      "prominent": true,
+      "duration_seconds": 0.29685416666666664
+    },
+    {
+      "time_seconds": 16.70304515335513,
+      "bank": "rubber-squeak-small",
+      "playback_speed": 1.0215219312310415,
+      "semitones": 0.3686421344762222,
+      "pan": 0.07,
+      "prominent": true,
+      "duration_seconds": 0.2300625
+    },
+    {
+      "time_seconds": 20.400249608758944,
+      "bank": "hollow-knock-low",
+      "playback_speed": 0.9836016632378597,
+      "semitones": -0.28624704482084506,
+      "pan": -0.08,
+      "prominent": true,
+      "duration_seconds": 0.1931875
+    },
+    {
+      "time_seconds": 20.53346218047475,
+      "bank": "secondary-tick",
+      "playback_speed": 1.0014167252975994,
+      "semitones": 0.024509473234935658,
+      "pan": 0.03,
+      "prominent": true,
+      "duration_seconds": 0.06991666666666667
+    },
+    {
+      "time_seconds": 22.602719679550617,
+      "bank": "water-plop-three",
+      "playback_speed": 1.0024586304333671,
+      "semitones": 0.04251240744265933,
+      "pan": 0.09,
+      "prominent": true,
+      "duration_seconds": 0.2843125
+    }
+  ],
+  "bank_strip": [
+    {
+      "name": "rubber-squeak-main",
+      "start_seconds": 0.0,
+      "duration_seconds": 0.205
+    },
+    {
+      "name": "rubber-squeak-small",
+      "start_seconds": 0.855,
+      "duration_seconds": 0.235
+    },
+    {
+      "name": "rubber-grain",
+      "start_seconds": 1.74,
+      "duration_seconds": 0.08
+    },
+    {
+      "name": "water-plop-one",
+      "start_seconds": 2.47,
+      "duration_seconds": 0.26
+    },
+    {
+      "name": "water-plop-two",
+      "start_seconds": 3.38,
+      "duration_seconds": 0.307
+    },
+    {
+      "name": "water-plop-three",
+      "start_seconds": 4.337,
+      "duration_seconds": 0.285
+    },
+    {
+      "name": "hollow-knock",
+      "start_seconds": 5.272,
+      "duration_seconds": 0.19
+    },
+    {
+      "name": "hollow-knock-low",
+      "start_seconds": 6.112,
+      "duration_seconds": 0.19
+    },
+    {
+      "name": "soft-rattle",
+      "start_seconds": 6.952,
+      "duration_seconds": 0.25
+    },
+    {
+      "name": "secondary-tick",
+      "start_seconds": 7.852,
+      "duration_seconds": 0.07
+    },
+    {
+      "name": "rounded-f2",
+      "start_seconds": 8.572,
+      "duration_seconds": 0.29
+    },
+    {
+      "name": "shadow-a4",
+      "start_seconds": 9.512,
+      "duration_seconds": 0.25
+    },
+    {
+      "name": "shadow-c5",
+      "start_seconds": 10.412,
+      "duration_seconds": 0.35
+    },
+    {
+      "name": "shadow-d5",
+      "start_seconds": 11.412,
+      "duration_seconds": 0.4
+    }
+  ],
+  "measurements": {
+    "garden-texture-audition-24s.wav": {
+      "integrated_lufs": -37.19,
+      "true_peak_dbfs": -15.49,
+      "loudness_range_lu": 11.4,
+      "meter_only_no_normalization_applied": true
+    },
+    "garden-texture-audition-mono-24s.wav": {
+      "integrated_lufs": -40.21,
+      "true_peak_dbfs": -15.95,
+      "loudness_range_lu": 11.4,
+      "meter_only_no_normalization_applied": true
+    },
+    "sample-bank-strip.wav": {
+      "integrated_lufs": -36.14,
+      "true_peak_dbfs": -12.76,
+      "loudness_range_lu": 12.0,
+      "meter_only_no_normalization_applied": true
+    }
+  },
+  "final_gain_normalization": false,
+  "max_foreground_layers": 2,
+  "fraction_without_foreground_sample": 0.9069765625,
+  "mono_vs_stereo_per_channel_rms_db": -0.007170417230826473,
+  "dc_per_channel": [
+    1.5170772253925652e-06,
+    1.3630806146427332e-06
+  ],
+  "room": {
+    "predelay_ms": 14,
+    "early_reflections_ms": [
+      23,
+      41,
+      67
+    ],
+    "tail_t60_seconds": 0.55,
+    "wet": 0.14
+  },
+  "limitations": [
+    "No subjective listening approval claimed; Spencer's actual audition is the acceptance gate.",
+    "Third-party CC0 recordings are attributed, not described as our own recorded foley.",
+    "A24-second passage, not an installed seamless long loop or a deck arrangement."
+  ],
+  "output_sha256": {
+    "garden-texture-audition-24s.wav": "b07fd003705814dff18b64889a908e8c823025873718b39f0eb751b61af24a03",
+    "garden-texture-audition-mono-24s.wav": "90ba3ec80e9790251263391f42d3ba8d9cdf6641ca515e430e773a19d4e598f5",
+    "sample-bank-strip.wav": "755d87f725189b9a4fb1d85709c9cbe91ce6bcbe3c83d11a90f4d89f668b17cd"
+  }
+}

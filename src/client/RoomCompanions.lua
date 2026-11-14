@@ -109,7 +109,7 @@ function Companions:update(dt,serverNow)
 		local actor=self.garden and self.garden:renderActor(entry.visual.model:GetAttribute("CompanionOwnerId"),entry.pet.id,entry.root.Parent)
 		entry.visual.personalPlayEnabled=actor~=nil and actor.mode=="Room"and entry.board:GetAttribute("Mode")=="Room"
         entry.visual.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
-        entry.visual.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
+        require(script.Parent.PersonalToyOpportunity).apply(entry.visual,actor,serverNow)
 		if actor and self.park then entry.followState=self.park:drive(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
 		elseif actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)

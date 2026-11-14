@@ -1,6 +1,8 @@
 -- v6 item inventory, immutable legacy rights, durable roll reservation. Isolated stores only.
 return function(server)
- local H=require(server.HatchProgress);local S=require(server.HueState);local L=require(server.LegacyHueState)
+ local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
+ local S=require(server.HueState);local L=require(server.LegacyHueState)
  local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
  -- Slice E (2026-11-14): Hue.Supported also lists the earned pet (blip), which these

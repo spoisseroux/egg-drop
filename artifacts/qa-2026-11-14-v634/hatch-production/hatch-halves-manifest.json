@@ -1,0 +1,48 @@
+{
+  "source": "assets\\art-source\\eggs\\eggs.blend",
+  "source_sha256": "1bf7620d763912e9ef770e16d0b481ed89e18acc60bbe4af3e3da9cc530699b0",
+  "source_unchanged": true,
+  "fbx": "hatch-lower-halves.fbx",
+  "fbx_sha256": "185316365d667c5a1e35e595932fb111a710e49a6611f6d70f8a2515e40f2ee3",
+  "parts": [
+    {
+      "name": "HatchLowerLeft",
+      "triangles": 312,
+      "size": [
+        0.49743685126304626,
+        0.8234862685203552,
+        0.9948737025260925
+      ],
+      "center": [
+        -0.24871842563152313,
+        0.4117431342601776,
+        -0.0
+      ],
+      "closed": true,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "new_cut_faces": 1
+    },
+    {
+      "name": "HatchLowerRight",
+      "triangles": 312,
+      "size": [
+        0.49743685126304626,
+        0.8234862685203552,
+        0.9948737025260925
+      ],
+      "center": [
+        0.24871842563152313,
+        0.4117431342601776,
+        -0.0
+      ],
+      "closed": true,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "new_cut_faces": 1
+    }
+  ],
+  "note": "UV-preserving bisected copies; closed planar cut faces use UV .02,.02. No source blend save. Coordinator uploads/imports and verifies sizes/IDs before activation."
+}

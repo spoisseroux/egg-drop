@@ -1,0 +1,65 @@
+{
+  "garden": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/28666d3c-c93c-4646-9407-fbbb64ebb84a -> 200 OK\n\n{\"path\":\"operations/28666d3c-c93c-4646-9407-fbbb64ebb84a\",\"operationId\":\"28666d3c-c93c-4646-9407-fbbb64ebb84a\",\"done\":true,\"response\":{\"path\":\"assets/92939734532987\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:24.507Z\",\"assetId\":\"92939734532987\",\"displayName\":\"Egg Drop Original garden 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "deck": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/d3c8bf2d-f900-4e95-a29f-435a9c2ca2e6 -> 200 OK\n\n{\"path\":\"operations/d3c8bf2d-f900-4e95-a29f-435a9c2ca2e6\",\"operationId\":\"d3c8bf2d-f900-4e95-a29f-435a9c2ca2e6\",\"done\":true,\"response\":{\"path\":\"assets/81978947933288\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:26.863Z\",\"assetId\":\"81978947933288\",\"displayName\":\"Egg Drop Original deck 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "hatch_bear": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/8cedf224-5b0c-44bc-874b-54957f9b1995 -> 200 OK\n\n{\"path\":\"operations/8cedf224-5b0c-44bc-874b-54957f9b1995\",\"operationId\":\"8cedf224-5b0c-44bc-874b-54957f9b1995\",\"done\":true,\"response\":{\"path\":\"assets/102009887087311\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:25.743Z\",\"assetId\":\"102009887087311\",\"displayName\":\"Egg Drop Original hatch bear 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "hatch_toy": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/e72f7af2-d2b1-4c76-88c3-6ed87d33c6d0 -> 200 OK\n\n{\"path\":\"operations/e72f7af2-d2b1-4c76-88c3-6ed87d33c6d0\",\"operationId\":\"e72f7af2-d2b1-4c76-88c3-6ed87d33c6d0\",\"done\":true,\"response\":{\"path\":\"assets/133854370498728\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:26.450Z\",\"assetId\":\"133854370498728\",\"displayName\":\"Egg Drop Original hatch toy 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "hatch_hue": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/4b7824ce-3bef-4856-bc1d-31878f610f64 -> 200 OK\n\n{\"path\":\"operations/4b7824ce-3bef-4856-bc1d-31878f610f64\",\"operationId\":\"4b7824ce-3bef-4856-bc1d-31878f610f64\",\"done\":true,\"response\":{\"path\":\"assets/115696588754120\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:26.869Z\",\"assetId\":\"115696588754120\",\"displayName\":\"Egg Drop Original hatch hue 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "hatch_material": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/a9ff402e-eab4-4c8b-a02e-79bbfb2a184d -> 200 OK\n\n{\"path\":\"operations/a9ff402e-eab4-4c8b-a02e-79bbfb2a184d\",\"operationId\":\"a9ff402e-eab4-4c8b-a02e-79bbfb2a184d\",\"done\":true,\"response\":{\"path\":\"assets/129105377140990\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:27.355Z\",\"assetId\":\"129105377140990\",\"displayName\":\"Egg Drop Original hatch material 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  },
+  "hatch_feature": {
+    "content": [
+      {
+        "type": "text",
+        "text": "GET https://apis.roblox.com/assets/v1/operations/90035e44-089e-49da-a663-db5d44c6d079 -> 200 OK\n\n{\"path\":\"operations/90035e44-089e-49da-a663-db5d44c6d079\",\"operationId\":\"90035e44-089e-49da-a663-db5d44c6d079\",\"done\":true,\"response\":{\"path\":\"assets/104280347507209\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T21:38:27.742Z\",\"assetId\":\"104280347507209\",\"displayName\":\"Egg Drop Original hatch feature 20261114\",\"description\":\"Original synthesized Egg Drop score and reveal audio. No external samples or transcription.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Reviewing\"},\"state\":\"Active\",\"isPublished\":true}}"
+      }
+    ],
+    "isError": false
+  }
+}

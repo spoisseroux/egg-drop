@@ -23,7 +23,7 @@ return function(server,shared,modules)
 	end
 	local function fixture(db)
 		db=db or {}
-		local c={now=START,serial=0,filterCalls=0,fail=false,logs={},filter=function(_,text)return true,text end}
+		local c={now=START,serial=0,filterCalls=0,fail=false,logs={},updates={},gets={},filter=function(_,text)return true,text end}
 		local adapter={
 			now=function()return c.now end,
 			guid=function()c.serial+=1;return "guid-"..c.serial end,
@@ -32,12 +32,14 @@ return function(server,shared,modules)
 			log=function(line)table.insert(c.logs,line)end,
 			filter=function(userId,text)c.filterCalls+=1;c.filterUser=userId;return c.filter(userId,text)end,
 			update=function(key,transform)
+				table.insert(c.updates,key)
 				if c.fail then error("store down")end
 				local value=transform(copy(db[key]))
 				if value~=nil then db[key]=copy(value)end
+				if c.ambiguous then c.ambiguous=false;error("write committed but reply lost")end
 				return copy(value)
 			end,
-			get=function(key)if c.fail then error("store down")end;return copy(db[key])end,
+			get=function(key)table.insert(c.gets,key);if c.fail or c.getFail then error("store down")end;return copy(db[key])end,
 			remove=function(key)db[key]=nil end,
 			listKeys=function(prefix)
 				local out={}
@@ -55,8 +57,13 @@ return function(server,shared,modules)
 		return p
 	end
 	local function stored(db,day)
-		local value=db[Reports.dayKey(day or Reports.dayOf(START))]
-		return if value then value.reports else {}
+		local out={}
+		for _,key in ipairs(Reports.keysForDay(day or Reports.dayOf(START)))do
+			local value=db[key]
+			for _,record in ipairs(if value then value.reports else {})do table.insert(out,record)end
+		end
+		table.sort(out,function(a,b)return a.t<b.t end)
+		return out
 	end
 
 	test("form ids match the server, and every label and reply line exists in UICopy",function()
@@ -215,6 +222,94 @@ return function(server,shared,modules)
 		service:retryPending();service:retryPending();service:retryPending()
 		assert(#service.pendingQueue==0 and string.find(c.logs[#c.logs],"LOST",1,true),"dropped after "..Reports.PendingAttempts.." tries")
 		assert(service.inFlight[8]==nil,"never stuck in flight")
+	end)
+
+	test("shards: deterministic UserId routing, same user shares cross-server window, full shard is independent",function()
+		local day=Reports.dayOf(START)
+		assert(Reports.ShardCount==16 and Reports.recordKey(day,1)==Reports.recordKey(day,17))
+		assert(Reports.recordKey(day,1)~=Reports.recordKey(day,2))
+		local service,db,c=fixture()
+		for i=1,3 do
+			local server=Reports.new(service.adapter)
+			assert(server:submit(42,packet({note="different"..i})).status=="Sent")
+			c.now+=21
+		end
+		local reply=Reports.new(service.adapter):submit(42,packet({note="fourth"}))
+		assert(reply.status=="Limited"and reply.reason=="Window")
+		assert(#db[Reports.recordKey(day,42)].reports==3 and db[Reports.dayKey(day)]==nil)
+		db[Reports.recordKey(day,4)]={v=1,reports=table.create(Reports.Limits.dayCap,{uid=0,t=0})}
+		assert(service:submit(4,packet()).status=="Full")
+		assert(service:submit(5,packet()).status=="Sent","another shard retains capacity")
+	end)
+
+	test("legacy routing is fail closed, preserves legacy daily limits, and empty legacy permits shards",function()
+		local day=Reports.dayOf(START)
+		local legacyKey=Reports.dayKey(day)
+		local service,db,c=fixture()
+		c.getFail=true
+		assert(service:submit(42,packet()).status=="Queued"and #c.updates==0,"no write if legacy read fails")
+		c.getFail=false
+		db[legacyKey]={v=1,reports={}}
+		assert(service:retryPending()==1 and db[Reports.recordKey(day,42)],"empty legacy is not a report day")
+		local old,oldDb,oldClock=fixture()
+		oldDb[legacyKey]={v=1,reports={}}
+		for i=1,20 do table.insert(oldDb[legacyKey].reports,{id="old"..i,uid=7,t=START-700,kind="bug",cat="other",note="old"..i})end
+		local reply=old:submit(7,packet({note="new"}))
+		assert(reply.status=="Limited"and reply.reason=="Daily")
+		assert(old:submit(8,packet()).status=="Sent"and #oldDb[legacyKey].reports==21)
+		assert(oldDb[Reports.recordKey(day,8)]==nil,"nonempty legacy days stay legacy")
+		oldClock.now+=86400
+		assert(old:submit(8,packet({note="tomorrow"})).status=="Sent"and oldDb[Reports.recordKey(day+1,8)])
+		local malformed,badDb,badClock=fixture()
+		badDb[legacyKey]={v=1,reports="bad"}
+		assert(malformed:submit(9,packet()).status=="Queued"and #badClock.updates==0)
+	end)
+
+	test("immutable retries stay on original day and route; identity dedupes before full/window/day caps",function()
+		local day=Reports.dayOf(START)
+		local service,db,c=fixture()
+		c.now=(day+1)*86400-1
+		c.ambiguous=true
+		local reply=service:submit(42,packet({note="committed"}))
+		local key=Reports.recordKey(day,42)
+		assert(reply.status=="Queued"and #db[key].reports==1)
+		-- An out-of-date server creating legacy later must not reroute an in-flight retry.
+		db[Reports.dayKey(day)]={v=1,reports={{id="legacy",uid=99,t=c.now}}}
+		for i=2,Reports.Limits.dayCap do table.insert(db[key].reports,{uid=42,t=c.now,id="filled"..i})end
+		c.now+=5
+		assert(service:retryPending()==0 and #service.pendingQueue==0)
+		assert(#db[key].reports==Reports.Limits.dayCap and #db[Reports.dayKey(day)].reports==1)
+		assert(db[Reports.recordKey(day+1,42)]==nil and c.updates[#c.updates]==key)
+		assert(Reports.checkStored(db[key].reports,42,c.now,db[key].reports[1])=="Duplicate")
+		local legacy,legacyDb,legacyClock=fixture()
+		local legacyKey=Reports.dayKey(day)
+		legacyDb[legacyKey]={v=1,reports={{id="seed",uid=99,t=START}}}
+		legacyClock.ambiguous=true
+		assert(legacy:submit(7,packet()).status=="Queued")
+		legacyClock.now+=86400
+		assert(legacy:retryPending()==0 and #legacyDb[legacyKey].reports==2)
+		assert(legacyDb[Reports.recordKey(day,7)]==nil,"legacy pending retains route too")
+	end)
+
+	test("merged recent reads all day keys, sorts and dedupes before limiting; strict purge and erasure",function()
+		local day=Reports.dayOf(START)
+		local service,db,c=fixture()
+		local function record(id,t,uid,cat)return {id=id,t=t,uid=uid,kind="bug",cat=cat or "garden"}end
+		db[Reports.dayKey(day)]={v=1,reports={record("a",START-5,42),record("shared",START-2,42)}}
+		db[Reports.recordKey(day,42)]={v=1,reports={record("shared",START-2,42),record("b",START-1,42,"pets")}}
+		db[Reports.recordKey(day,1)]={v=1,reports={record("c",START,1)}}
+		local recent=service:recent(OWNER,{days=1,limit=3})
+		assert(#recent==3 and recent[1].id=="c"and recent[2].id=="b"and recent[3].id=="shared")
+		assert(#c.gets==17 and #service:recent(OWNER,{days=1,category="pets"})==1)
+		local malformed={"day_0_s16","day_0_s01","day_00","day_0_suffix","day_-1","day_0_s-1"}
+		for _,key in ipairs(malformed)do db[key]={v=1,reports={record("bad",0,42)}};assert(Reports.parseKey(key)==nil)end
+		local oldKey=Reports.recordKey(day-30,7)
+		db[oldKey]={v=1,reports={record("expired",0,42)}}
+		db[Reports.recordKey(day-29,7)]={v=1,reports={record("retained",START-29*86400,7)}}
+		assert(service:eraseUser(1,42)==nil and service:eraseUser(OWNER,42)==5)
+		for _,key in ipairs(malformed)do assert(#db[key].reports==1,"malformed prefix left alone")end
+		local removed=service:sweep(true)
+		assert(#removed==1 and removed[1]==oldKey)
 	end)
 
 	test("purge: day keys 30 or more days old are removed, once a day across servers",function()

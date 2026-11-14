@@ -1,6 +1,8 @@
 -- Current fenced backend, isolated root records only; never real user writes.
 return function(server)
- local H=require(server.HatchProgress);local S=require(server.MaterialState);local Hue=require(server.HueState)
+ local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
+ local S=require(server.MaterialState);local Hue=require(server.HueState)
  local C=require(game.ReplicatedStorage.Shared.MaterialCatalog);local cases={}
  local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
  local function same(a,b)return S.same(a,b)end
@@ -23,7 +25,9 @@ return function(server)
   return h,db,c,a
  end
  local function quote(h,c,fields)
-  c.quoteSerial+=1;local r=h.state.revision;local value=copy(fields);value.id=tostring(r)..":material-test-"..c.quoteSerial;value.catalogVersion=C.CatalogVersion;return value,r
+  c.quoteSerial+=1;local r=h.state.revision;local value=copy(fields)
+  if value.poolVersion==4 then value.price=C.cost(4);value.selectionMode=C.selectionMode(h.restricted);if value.selectionMode=="fixed"then value.fixedFinishId=C.fixedNext(value.eligible,4)end end
+  value.id=tostring(r)..":material-test-"..c.quoteSerial;value.catalogVersion=C.CatalogVersion;return value,r
  end
  local function command(h,c,action,fields)
   local value,r=quote(h,c,fields);local ok,why,receipt=H.materialCommand(h,action,value,r);assert(ok,why);assert(S.valid(h.state)and Hue.valid(h.state),"invalid state after "..action);return value,r,receipt
@@ -31,24 +35,33 @@ return function(server)
  local function buy(h,c)return command(h,c,"materialBuy",{poolVersion=C.PoolVersion,eligible=C.remaining(h.state.materialUnlocks)})end
  local function ack(h,c)return command(h,c,"materialAck",{resultId=h.state.pendingMaterialResult.id})end
  local function test(name,run)run();table.insert(cases,name)end
- test("finish pools: pool 3 is data only, the selling pool stays 2, every pool sorted and kept",function()
-  assert(C.PoolVersion==2 and C.CatalogVersion==1 and C.Cost==16,"finish pool 3 must not sell until its templates are verified")
+ test("Lucky pool4 sells only verified paired assets and keeps historical pool literals",function()
+  assert(C.PoolVersion==4 and C.CatalogVersion==1 and C.cost(4)==16,"Lucky pool4 contract changed")
   assert(table.concat(C.Pools[1],",")=="gloss,matte,metal"and table.concat(C.Pools[2],",")=="gloss,matte")
   assert(table.concat(C.Pools[3],",")=="gloss,matte,pearl_edge,speckle_satin")
   for version,pool in pairs(C.Pools)do
    local previous=""
    for _,id in ipairs(pool)do assert(C.known(id)and id~=C.Default and id>previous,"pool "..version.." unsorted at "..id);previous=id end
   end
-  -- Nothing lists or sells the new finishes: available() still needs only Gloss and Matte.
-  assert(table.concat(C.PaidOrder,",")=="gloss,matte"and table.concat(C.Order,",")=="standard,gloss,matte,metal")
+  -- Restricted fixed order differs from sorted weighted eligible order.
+  assert(table.concat(C.PaidOrder,",")=="gloss,matte,jelly"and table.concat(C.Order,",")=="standard,gloss,matte,metal,jelly")
   assert(C.ById.pearl_edge.name=="Pearl Edge"and C.ById.pearl_edge.profile=="BodyPearl"and C.ById.speckle_satin.name=="Speckle Satin"and C.ById.speckle_satin.profile=="BodySpeckle")
-  assert(#C.remaining({})==2 and #C.odds({})==2 and #C.remaining({},3)==4)
-  local pack=Instance.new("Folder")
-  for _,id in ipairs({"gloss","matte"})do
+  assert(#C.remaining({})==3 and #C.odds({})==3 and #C.remaining({},2)==2 and #C.remaining({},3)==4)
+  local pack=Instance.new("Folder");local two=Instance.new("Folder")
+  for _,id in ipairs(C.PaidOrder)do
    local surface=Instance.new("SurfaceAppearance");surface.Name=C.ById[id].profile
    surface:SetAttribute("NativeVerified",true);surface:SetAttribute("MaterialVersion",1);surface:SetAttribute("MaterialProfile",C.ById[id].profile);surface.Parent=pack
   end
-  assert(C.available(pack)==true,"available() must not need the pool 3 templates");pack:Destroy()
+  assert(not C.available(pack,two),"one-color only cannot activate paired material capability")
+  for _,id in ipairs(C.PaidOrder)do
+   local name=C.ById[id].twoToneProfile or("BodyTwoTone"..string.sub(C.ById[id].profile,5))
+   local surface=Instance.new("SurfaceAppearance");surface.Name=name;surface:SetAttribute("NativeVerified",true);surface:SetAttribute("MaterialVersion",1);surface:SetAttribute("MaterialProfile",name);surface.Parent=two
+  end
+  assert(C.available(pack,two),"verified current3 pairs should enable pool4 without future pool3 templates")
+  pack.BodyJelly:SetAttribute("NativeVerified",false)
+  assert(not C.available(pack,two),"unverified Jelly must hold current capability")
+  assert(C.available(pack,nil,2),"historical pool2 capability remains independent of two-tone profiles")
+  pack:Destroy();two:Destroy()
  end)
  test("v6 migration preserves frozen Hue fields proofs and root siblings exactly",function()
   local h,db,c,a=fixture();assert(H.release(h));local old=db.player_1.hatching
@@ -62,16 +75,17 @@ return function(server)
   local h,db,_,a=fixture();assert(H.release(h));db.player_1.hatching.version=6
   local refused=H.load(1,{},a);assert(refused.status=="InvalidData"and db.player_1.hatching.version==6)
  end)
- test("two sorted remaining-only rolls debit16 once each and exhausted pool never spends",function()
+ test("three weighted no-dupe rolls debit16 once each and exhausted pool never spends",function()
   local h,_,c=fixture();local initial=h.state.nectar
-  for i,id in ipairs({"gloss","matte"})do
-   local pool=C.remaining(h.state.materialUnlocks);local odds=C.odds(h.state.materialUnlocks);assert(#pool==3-i and pool[1]==id)
-   for _,row in ipairs(odds)do assert(row.probability==1/#pool)end
+  for i,id in ipairs({"gloss","jelly","matte"})do
+   local pool=C.remaining(h.state.materialUnlocks);local odds=C.odds(h.state.materialUnlocks);assert(#pool==4-i and pool[1]==id)
+   local expected=({{.45,.10,.45},{10/55,45/55},{1}})[i]
+   for n,row in ipairs(odds)do assert(math.abs(row.probability-expected[n])<1e-9)end
    local _,_,receipt=buy(h,c);assert(receipt.finishId==id and receipt.cost==16 and h.state.materialUnlocks[id]and h.state.pendingMaterialResult.finishId==id);ack(h,c)
   end
-  assert(h.state.nectar==initial-32 and c.rolls==2)
+  assert(h.state.nectar==initial-48 and c.rolls==3)
   local value,r=quote(h,c,{poolVersion=C.PoolVersion,eligible={"gloss"}});local writes=c.writes
-  local ok,why=H.materialCommand(h,"materialBuy",value,r);assert(not ok and why=="AllUnlocked"and c.writes==writes and c.rolls==2)
+  local ok,why=H.materialCommand(h,"materialBuy",value,r);assert(not ok and why=="AllUnlocked"and c.writes==writes and c.rolls==3)
  end)
  test("exact saved replay is read-only and same-ID changed quote is a conflict",function()
   local h,_,c=fixture();local q,r,receipt=buy(h,c);local balance,rolls,writes=h.state.nectar,c.rolls,c.writes
@@ -144,12 +158,14 @@ return function(server)
   command(h,c,"materialEquip",{petId="pip",finishId="metal",expectedFinish="standard",resultId=value.id})
   local prior=copy(h.state.materialReceipts[value.id]);assert(H.release(h));h=H.load(1,{},a)
   assert(h.status=="Ready"and h.state.petMaterials.pip=="metal"and same(h.state.materialReceipts[value.id],prior))
-  assert(table.concat(C.remaining(h.state.materialUnlocks),",")=="gloss,matte","Metal leaked into current sellable pool")
+  assert(table.concat(C.remaining(h.state.materialUnlocks),",")=="gloss,jelly,matte"and table.concat(C.remaining(h.state.materialUnlocks,2),",")=="gloss,matte","Metal leaked into sellable pools")
  end)
- test("new v1 buy and forged v2 Metal eligibility cannot roll write or debit",function()
+ test("new legacy buys and forged current Metal eligibility cannot roll write or debit",function()
   local h,_,c=fixture();local writes,rolls,balance=c.writes,c.rolls,h.state.nectar
   local value,r=quote(h,c,{poolVersion=1,eligible={"gloss","matte","metal"}})
   local ok,why=H.materialCommand(h,"materialBuy",value,r);assert(not ok and why=="LegacyPurchaseClosed")
+  value,r=quote(h,c,{poolVersion=2,eligible={"gloss","matte"}})
+  ok,why=H.materialCommand(h,"materialBuy",value,r);assert(not ok and why=="LegacyPurchaseClosed")
   value,r=quote(h,c,{poolVersion=C.PoolVersion,eligible={"gloss","matte","metal"}})
   ok,why=H.materialCommand(h,"materialBuy",value,r);assert(not ok and why=="InvalidMaterial")
   assert(c.writes==writes and c.rolls==rolls and h.state.nectar==balance)

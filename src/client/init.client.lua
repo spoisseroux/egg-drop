@@ -58,6 +58,7 @@ local Portrait = require(script.PetPortrait)
 -- QA Q5: the garden "Pocket menu" is the machine hub (DeckMenu is retired).
 local MachineHub = require(script.MachineHub)
 local audio = Audio.new()
+task.delay(1,function()require(script.EggPreview3D).prewarm()end)
 -- W2 feel alive: garden ambience + Pocket Deck round music (before RoomView, whose coos use it).
 clientUI.ambient=require(script.AmbientAudio).new(audio)
 clientUI.JellyPalette=require(ReplicatedStorage.Shared.JellyPalette)
@@ -66,8 +67,21 @@ clientUI.Pico8=require(ReplicatedStorage.Shared.Pico8)
 clientUI.uiSequence=0
 clientUI.accepted=function(kind)
  if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return end
- clientUI.uiSequence+=1;audio:ui(kind,clientUI.uiSequence)
+ if os.clock()-(clientUI.lastAcceptedSound or -math.huge)<.06 then return end
+ clientUI.lastAcceptedSound=os.clock();clientUI.uiSequence+=1;audio:ui(kind,clientUI.uiSequence)
 end
+-- One quiet cue for an enabled logical press, including legacy/native menu buttons.
+-- Existing accepted-action handlers share the same short dedupe window above.
+task.defer(function()
+ local pg=player:WaitForChild("PlayerGui")
+ local function bind(node)
+  if not node:IsA("GuiButton")or node:GetAttribute("EggDropClickBound")then return end
+  node:SetAttribute("EggDropClickBound",true)
+  node.Activated:Connect(function()if node.Interactable and node.Active and node.Visible then clientUI.accepted("confirm")end end)
+ end
+ for _,node in ipairs(pg:GetDescendants())do bind(node)end
+ pg.DescendantAdded:Connect(bind)
+end)
 clientUI.clock=HollowClock.start()
 clientUI.worldMotion=require(script.WorldMotion).start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -113,6 +127,7 @@ local backing = Art.frame(bleed, "BoardBacking", Art.Backdrop, UDim2.fromScale(0
 -- Full-screen visuals and safe interactive content need separate coordinate spaces.
 local overlayGui = make("ScreenGui", "EggDropOverlays", {
 	ResetOnSpawn = false, ScreenInsets = Enum.ScreenInsets.None, ClipToDeviceSafeArea = false, DisplayOrder = 11,
+ ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
 }, gui.Parent)
 local modalShade = Art.frame(overlayGui, "ModalShade", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 1)
 modalShade.BackgroundTransparency = 0.40
@@ -605,6 +620,8 @@ local layout
 local hatchNavigation
 local function cancelHatchNavigation()
 	if hatchNavigation then hatchNavigation:cancel() end
+ if clientUI.cancelFirstSpend then clientUI.cancelFirstSpend()end
+ if clientUI.welcomeInput then clientUI.welcomeInput()end
 end
 local function isPickerOpen()
 	return picker ~= nil and picker.shade.Visible
@@ -948,7 +965,7 @@ clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return 
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.toyIntent=require(script.ToyIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
- changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+ changed=function()if clientUI.syncFirstSpend then clientUI.syncFirstSpend(clientUI.toyIntent.state)end;if clientUI.hueView then clientUI.hueView:refresh()end end})
 clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
@@ -1389,6 +1406,7 @@ local function refreshNursery(state)
 	roomView.stations:refresh()
 	roomView.transition:refresh()
 	nurseryView:update(state)
+ if clientUI.syncFirstSpend then clientUI.syncFirstSpend(state)end
 	local result = state.lastHatch
  if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end
 	if result and result.id ~= shownNurseryHatch then
@@ -1856,6 +1874,23 @@ function clientUI.weeklyLine()
  local done=0;for _,r in ipairs(q.weekly or {})do if r.claimed or r.ready then done+=1 end end
  return "Weekly "..done.."/"..#(q.weekly or {})
 end
+function clientUI.resultsHeatName()
+ local choice=clientUI.resultsHeat
+ local confirmed=board:GetAttribute("NextHeat")or Config.DefaultHeat
+ if choice and(choice.sequence~=board:GetAttribute("RunSequence")or os.clock()-choice.at>2 or choice.key==confirmed)then clientUI.resultsHeat=nil;choice=nil end
+ local key=if choice then choice.key else confirmed
+ return(Config.Heat[key]or Config.Heat[Config.DefaultHeat]).name
+end
+function clientUI.cycleResultsHeat(delta)
+ if not recap.visible or not recap.data or recap.data.pending then return false end
+ local choice=clientUI.resultsHeat;local key=if choice and choice.sequence==board:GetAttribute("RunSequence")and os.clock()-choice.at<2 then choice.key else board:GetAttribute("NextHeat")or Config.DefaultHeat
+ local index=table.find(Config.HeatOrder,key)or 2
+ local nextKey=Config.HeatOrder[math.clamp(index+delta,1,#Config.HeatOrder)]
+ if nextKey==key then return false end
+ clientUI.resultsHeat={key=nextKey,sequence=board:GetAttribute("RunSequence"),at=os.clock()}
+ request:FireServer("heat",nextKey);clientUI.accepted("tab");if updateHud then task.defer(updateHud)end
+ return true
+end
 function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  local owned=board:GetAttribute("OwnedPets")or 0
  local field=board:GetAttribute("HatchActive")==true and owned>0
@@ -1878,7 +1913,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   win=if ok then math.min(win,roundStars)else roundStars
   -- Onboarding v1: a missed round with a goal met pays a flat finish pay ("Goal met").
   local missPay=if type(reward.missPay)=="number"then reward.missPay else 0
-  if missPay>0 then table.insert(rows,{name=require(ReplicatedStorage.Shared.UICopy).get("coach.missPay"),amount=missPay})
+  if missPay>0 then table.insert(rows,{name=require(ReplicatedStorage.Shared.UICopy).get(if missPay==1 then "coach.effortPay"else "coach.missPay"),amount=missPay})
   else
   table.insert(rows,{name="Round win",amount=win})
   if roundStars>win then table.insert(rows,{name="Tidy stack",amount=roundStars-win,signed=true})end
@@ -1917,7 +1952,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
  end
  local balance=nurseryState and nurseryState.nectar or 0
  return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
-  title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,multiplierLine=heat.name.." "..heatLabel,
+  title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,nextDifficulty=clientUI.resultsHeatName(),multiplierLine=heat.name.." "..heatLabel,
   pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
   -- QA Q5 results strip: Stars from rounds saved today (server snapshot; includes this
   -- round once its receipt is in the same snapshot).
@@ -1926,7 +1961,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   score=score,best=best,chain=peakChain,newBest=board:GetAttribute("NewBest")==true,
   strip=if #strip>0 then table.concat(strip,"   ")else(if field then "No quest finished this round"else "Win a round to earn Stars"),
   stripRight=if balance>=egg.cost then "You can hatch an egg"else clientUI.weeklyLine(),
-  canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=owned>0 and balance>=egg.cost,
+  canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=owned>0,
   questDone=clientUI.finishedQuest(reward),
   tidy=success==true and reward~=nil and(reward.base or 0)>=Payout.TidyWin,eggName=egg.name,eggCost=egg.cost,
   quest=quest,nudge=nudge,petName=(Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.active[1]or Pets[1]).name,
@@ -2125,6 +2160,7 @@ updateHud = function()
 	-- In-LCD HUD (wide deck) and the view's back arrow.
 	local blocked=dropCaption:GetAttribute("BlockedCaption")
 	clientUI.deck:setHud({score=score,best=best,chain=chain,goals=if fieldActive then clientUI.deckGoals(clientUI.fieldView)else {},
+		welcome=owned==0 and board:GetAttribute("FieldPhase")=="Welcome",
 		message=if not fieldActive then status.Text else nil,statusLabel=if blocked then status.Text else nil,daily=clientUI.dailyRows(),
 		next={nextTier(),board:GetAttribute("PreviewTier1")or 1,board:GetAttribute("PreviewTier2")or 1},
 		eggsLeft=remaining,budget=budget,difficulty=clientUI.heatInfo(board:GetAttribute("Heat")).name,multiplier=select(2,clientUI.heatInfo(board:GetAttribute("Heat"))),
@@ -2335,10 +2371,11 @@ layout = function()
 		local kx,kh=require(script.DeckKit).keepOut()
 		local g=clientUI.deck:layout(screen,ratio,{kx=kx,kh=kh})
 		clientUI.deckCompact=g.compact
-		clientUI.deckView=clientUI.deck:view() or g.compact
+		clientUI.deckView=clientUI.deck:resultsView()
 		place(viewport,g.board);overlay.Position,overlay.Size=viewport.Position,viewport.Size
 		place(rail,g.board)
-		Art.setBackdropCase(backing,{x=g.deck.x+backdrop.AbsolutePosition.X-backing.AbsolutePosition.X,y=g.deck.y+backdrop.AbsolutePosition.Y-backing.AbsolutePosition.Y,w=g.deck.w,h=g.deck.h})
+		local case=clientUI.deck:caseBounds()
+		Art.setBackdropCase(backing,{x=case.x+backdrop.AbsolutePosition.X-backing.AbsolutePosition.X,y=case.y+backdrop.AbsolutePosition.Y-backing.AbsolutePosition.Y,w=case.w,h=case.h})
 	else
 		clientUI.deckCompact=true;clientUI.deckView=true
 		clientUI.deck:placeResults(l.shell)
@@ -2355,6 +2392,7 @@ layout = function()
 end
 
 local function aimFromScreen(x)
+ if clientUI.welcomeInput then clientUI.welcomeInput()end
  -- Hardware/hit targets recoil visibly; normalized launch aim uses the logical
  -- unjolted tray so motion under a stationary finger cannot steer the shot.
  aim=rendererPresentation.jolt:pointerAim(x,viewport.AbsolutePosition.X,viewport.AbsoluteSize.X)
@@ -2363,11 +2401,13 @@ end
 
 local function dropEgg()
 	if canPlay() and not drag then
+  if clientUI.welcomeInput then clientUI.welcomeInput()end
 		request:FireServer("drop", aim)
 	end
 end
 
 local function moveAim(delta)
+ if clientUI.welcomeInput then clientUI.welcomeInput()end
 	aim = math.clamp(aim + delta, 0, 1)
 	drawAim()
 end
@@ -2510,14 +2550,11 @@ ContextActionService:BindActionAtPriority("EggDropResults", function(_, state, i
 	if not recap.visible or not recapOwnsInput() or UserInputService:GetFocusedTextBox() then return Enum.ContextActionResult.Pass end
 	if state == Enum.UserInputState.Begin then
 		local key = input.KeyCode
-		if key == Enum.KeyCode.Left or key == Enum.KeyCode.A or key == Enum.KeyCode.DPadLeft then recap:move(-1);clientUI.deck:flash("Left")
-		elseif key == Enum.KeyCode.Right or key == Enum.KeyCode.D or key == Enum.KeyCode.DPadRight then recap:move(1);clientUI.deck:flash("Right")
+		if key == Enum.KeyCode.Left or key == Enum.KeyCode.A or key == Enum.KeyCode.DPadLeft then recap:move2D(-1,0);clientUI.deck:flash("Left")
+		elseif key == Enum.KeyCode.Right or key == Enum.KeyCode.D or key == Enum.KeyCode.DPadRight then recap:move2D(1,0);clientUI.deck:flash("Right")
 		elseif key == Enum.KeyCode.ButtonB or key == Enum.KeyCode.Backspace then clientUI.deck:flash("B");recap:back()
-			elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp or key == Enum.KeyCode.Down or key == Enum.KeyCode.DPadDown then
-				-- Up on Replay starts the next round on the difficulty picker.
-				if (key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp) and recap.focus == 1 and recap.data and not recap.data.pending then
-					clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;clientUI.deck:flash("Up");requestRetry()
-				end
+		elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.DPadUp then recap:move2D(0,-1);clientUI.deck:flash("Up")
+  elseif key == Enum.KeyCode.Down or key == Enum.KeyCode.DPadDown then recap:move2D(0,1);clientUI.deck:flash("Down")
 		else clientUI.deck:flash("A");recap:confirm() end
 	end
 	return Enum.ContextActionResult.Sink
@@ -2576,8 +2613,10 @@ end)
 -- Compact results: change difficulty (the touch route for "Up on Replay") and the quest shortcut.
 recap:on("picker",function()
 	if recap.data and recap.data.pending then return end
-	clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
+	if recap.inPlace then clientUI.cycleResultsHeat(1);return end
+ clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
 end)
+recap:on("heatShift",function(delta)clientUI.cycleResultsHeat(delta)end)
 -- The results quest cell is progress only (QA Q5): no route to the quest log here.
 -- ── Round items (BUILD-PLAN 2026-11-13, R2) ─────────────────────────────────
 -- B (keyboard B, gamepad B or X, the deck's B, the phone item button) opens the
@@ -2649,6 +2688,143 @@ do
    drops=board:GetAttribute("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
  gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
+end
+-- Remaining Welcome/first-spend work: contained ownership keeps the top-level
+-- Luau local budget unchanged. Server owns timer/demo/grant and all toy writes.
+do
+ (function()
+ local Kit=require(script.DeckKit)
+ local Copy=require(ReplicatedStorage.Shared.UICopy)
+ local Welcome=require(script.WelcomePresentation)
+ local WelcomeProgress=require(ReplicatedStorage.Shared.WelcomeProgress)
+ local welcomeReplies={}
+ local Coach=require(ReplicatedStorage.Shared.CoachMarks)
+ local focused=true
+ local lastInput,lastActive,lastGeneration=-math.huge,nil,nil
+ local internal=false
+ local legacySkip=make("Frame","WelcomeLegacySkipWell",{BackgroundTransparency=1,Size=UDim2.fromOffset(0,0),Active=false,ZIndex=40},clientUI.deviceRoot)
+ local legacyGesture=make("Frame","WelcomeLegacyGestureWell",{BackgroundTransparency=1,Size=UDim2.fromOffset(0,44),Active=false,ZIndex=40},clientUI.deviceRoot)
+ local dependencies={copy=Copy.get,
+  skip=function(sequence)request:FireServer("welcomeSkip",{sequence=sequence})end,
+  cue=function(pitch,gain)audio:play("charge",pitch,gain)end,
+  quietCue=function()audio:play("aim",1,.25)end}
+ -- Set before RoomView can start the initial deck boot, not on its first frame.
+ clientUI.deck.boot.maxMs=if(board:GetAttribute("OwnedPets")or 0)==0 then 1200 else nil
+ local legacy=Welcome.new({meter=meter,gesture=legacyGesture,skip=legacySkip},dependencies)
+ local context={}
+ clientUI.welcomeInput=function()
+  clientUI.deck:welcomeInput();legacy:input()
+  if(board:GetAttribute("OwnedPets")or 0)==0 and os.clock()-lastInput>=.1 then
+   lastInput=os.clock();request:FireServer("welcomeInput",{sequence=board:GetAttribute("RunSequence")})
+  end
+ end
+ clientUI.cancelFirstSpend=function(kind,reason)
+  if not internal and clientUI.firstSpend then clientUI.firstSpend:routeChanged(kind,reason)end
+ end
+ clientUI.firstSpend=require(script.FirstSpendGuide).new({intent=clientUI.toyIntent,
+  actorIdentity=function()
+   local petId=board:GetAttribute("CompanionId")
+   local actor=petId and roomView.garden:renderActor(player.UserId,petId,player.Character)
+   return require(script.FirstSpendToyHost).identity(actor)
+  end,
+  openEggs=function(kind)if not openNursery then return false end;openNursery();return nurseryView:selectRecipe(kind)end,
+  enterRoom=function()
+   internal=true
+   clientUI.hueView:close("first-toy");nurseryView:close("first-toy");clearPlayInputs()
+   internal=false
+   if board:GetAttribute("Mode")~="Room"then request:FireServer("mode","Room")end
+  end,
+  play=function(_,toyId)
+   return require(script.FirstSpendToyHost).try(clientUI.firstSpend,roomView.pet,toyId,require(script.PetPlayVisual),workspace:GetServerTimeNow())
+  end})
+ clientUI.syncFirstSpend=function(state)
+  return clientUI.firstSpend:update(state,{eligible=not Coach.veteran(state and state.totalWins)})
+ end
+ clientUI.syncFirstSpend(nurseryState or {})
+ nurseryView.onRouteChanged=clientUI.cancelFirstSpend
+ clientUI.hueView.options.routeChanged=clientUI.cancelFirstSpend
+ clientUI.hueView.options.firstToyReady=function(result)
+  return clientUI.firstSpend.stage=="receipt"and clientUI.firstSpend.proof~=nil and result~=nil and clientUI.firstSpend.proof.id==result.id
+ end
+ clientUI.hueView.options.firstToyGive=function()
+  return clientUI.firstSpend:give(board:GetAttribute("CompanionId")or "pip")
+ end
+ clientUI.hueView.toyPanel.options.storeFirst=function(result)
+  if not clientUI.hueView.options.firstToyReady(result)then return false end
+  if clientUI.toyIntent.status=="Retrying"then clientUI.toyIntent:retry()else clientUI.toyIntent:ack(result.id)end
+  return true
+ end
+ local spendButton=Kit.button(clientUI.coach.host,"FirstSpendHatch",{variant="quiet",text=Copy.get("onboarding.spend.hatch"),size=Vector2.new(172,48),textSize=16})
+ spendButton.Visible=false;spendButton.AnchorPoint=Vector2.new(.5,0);spendButton.ZIndex=42
+ spendButton.Activated:Connect(function()clientUI.firstSpend:openEggs()end)
+ local links={
+  UserInputService.WindowFocused:Connect(function()focused=true end),
+  UserInputService.WindowFocusReleased:Connect(function()focused=false;clientUI.welcomeInput();clientUI.cancelFirstSpend()end),
+  GuiService.MenuOpened:Connect(function()clientUI.welcomeInput();clientUI.cancelFirstSpend()end),
+ }
+ local result=remotes:WaitForChild("WelcomeResult")
+ table.insert(links,result.OnClientEvent:Connect(function(packet)
+  if type(packet)~="table"or packet.sequence~=board:GetAttribute("RunSequence")then return end
+  local pending=WelcomeProgress.reply(welcomeReplies,packet.sequence,packet.status)
+  if pending~=nil then clientUI.deck:welcomeResult(pending);legacy:setSkipPending(pending)end
+ end))
+ local function updateWelcome()
+  local welcome=(board:GetAttribute("OwnedPets")or 0)==0 and board:GetAttribute("FieldPhase")=="Welcome"
+  local active=welcome and canAim()and not isPickerOpen()and focused and audio.deviceActive~=false and not GuiService.MenuIsOpen
+   and not UserInputService:GetFocusedTextBox()and not roomView.transition.shade.Visible
+  local generation=board:GetAttribute("RunSequence")
+  if welcome and(lastActive~=active or lastGeneration~=generation)then lastActive,lastGeneration=active,generation;request:FireServer("welcomeActive",active)
+  elseif not welcome then lastActive,lastGeneration=nil,nil end
+  context.generation=board:GetAttribute("RunSequence");context.charge=board:GetAttribute("HatchCharge")or 0
+  context.threshold=Pets.byId.pip.charge;context.owned=board:GetAttribute("OwnedPets")or 0;context.phase=board:GetAttribute("FieldPhase")
+  context.drops=board:GetAttribute("Drops")or 0;context.skipReady=board:GetAttribute("WelcomeSkipReady")==true
+  context.grantPending=board:GetAttribute("WelcomeGrantPending")==true;context.revealPending=nurseryState and nurseryState.lastHatch~=nil
+  context.device=clientUI.inputKind();context.reduced=reduceEffects()
+  context.active=active and clientUI.deck.visible==true
+  clientUI.deck:setWelcome(context,dependencies)
+  context.active=active and clientUI.legacyDeck.Visible
+  legacy:update(context)
+  -- Portrait fallback also uses existing wells, without changing any input rect.
+  legacyGesture.Position=viewport.Position+UDim2.fromOffset(0,viewport.Size.Y.Offset*.72);legacyGesture.Size=UDim2.fromOffset(viewport.Size.X.Offset,44)
+  legacySkip.Position=status.Position+UDim2.fromOffset(8,status.Size.Y.Offset-52)
+  legacySkip.Size=UDim2.fromOffset(if status.Size.X.Offset>=88 and status.Size.Y.Offset>=80 then status.Size.X.Offset-16 else 0,if status.Size.Y.Offset>=80 then 48 else 0)
+  if welcome then
+   meterText.Visible=false;dispenser.host.Visible=false
+   clientUI.deck.boot.maxMs=1200
+  else clientUI.deck.boot.maxMs=nil end
+  local stage=clientUI.firstSpend.stage
+  local canOffer=stage=="purchase"and board:GetAttribute("Mode")=="Room"and roomView.canRoam()and focused
+   and not clientUI.coach.gardenView.root.Visible and not roomView.focusing and not roomView.busy
+  spendButton.Visible=false
+  if canOffer then
+   if not clientUI.firstSpendRail then
+    clientUI.firstSpendRail=require(script.NotificationRail).status(clientUI.coach.host,"firstSpend",{text=Copy.get("onboarding.spend.hatch"),priority=1,
+     activate=function()clientUI.firstSpend:openEggs()end})
+   end
+   clientUI.firstSpendRail:update({active=true})
+  elseif clientUI.firstSpendRail then clientUI.firstSpendRail:update({active=false})end
+  local flight=clientUI.firstSpend.flight
+  if flight then
+   local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+   if humanoid and humanoid.MoveDirection.Magnitude>.05 then clientUI.cancelFirstSpend()
+   else
+    local pet=roomView.pet;local petId=board:GetAttribute("CompanionId")
+    local actor=petId and roomView.garden:renderActor(player.UserId,petId,player.Character)
+    local Host=require(script.FirstSpendToyHost)
+    local identity=Host.identity(actor)
+    local ready=Host.ready(pet,actor,flight)
+    clientUI.firstSpend:step({mode=board:GetAttribute("Mode"),ready=not roomView.busy and not clientUI.isHueOpen()and not nurseryView:isOpen(),
+     petId=petId,actorReady=ready,actorIdentity=identity})
+   end
+  end
+ end
+ table.insert(links,RunService.RenderStepped:Connect(function(dt)updateWelcome();clientUI.deck:stepWelcome(dt);legacy:step(dt)end))
+ gui.Destroying:Connect(function()
+  for _,link in ipairs(links)do link:Disconnect()end
+  if clientUI.firstSpendRail then clientUI.firstSpendRail:cancel();clientUI.firstSpendRail=nil end
+  clientUI.firstSpend:destroy();clientUI.deck:destroyWelcome();legacy:destroy();legacySkip:Destroy();legacyGesture:Destroy();spendButton:Destroy()
+ end)
+ end)()
 end
 -- Overnight 2026-11-14 slice F: bond levels. The snapshot's `bond` ({petId = xp}) feeds the
 -- garden pet (focus card pips, tricks 1-2) and the level-up moment: a toast under the coach
@@ -2741,6 +2917,7 @@ function clientUI.deckBack()
 	if clientUI.closePocketMenu()then return end
 	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end
 end
+clientUI.deck:on("quests",function()clientUI.openQuestLog("daily")end)
 clientUI.deck:on("item",function()
 	if not clientUI.items.isOpen and clientUI.deck:menuActive()then clientUI.deckBack()else clientUI.toggleItems()end end)
 clientUI.deck:on("dpad",function(dir,input)
@@ -2754,7 +2931,7 @@ clientUI.deck:on("dpad",function(dir,input)
 		-- QA v2 R2.4: the phone d-pad's Up / Down rows select in menus too (Up = back a card).
 		clientUI.heatPicker:move(if dir=="Left"or dir=="Up"then -1 else 1)
 	elseif recap.visible then
-		recap:move(if dir=="Left" or dir=="Up" then -1 else 1)
+		recap:move2D(if dir=="Left"then -1 elseif dir=="Right"then 1 else 0,if dir=="Up"then -1 elseif dir=="Down"then 1 else 0)
 	elseif dir=="Left" or dir=="Right" then startAim(input,if dir=="Left" then -1 else 1) end
 end)
 clientUI.deck:on("A",function()

@@ -65,7 +65,7 @@ function Shop.status(petId,itemId,ctx)
  -- Slice C: an item on this week's shelf sells at the shelf price (`full` = the struck price).
  local price,full=Deal.quote("wearable",itemId,item.price,ctx.week)
  if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
- return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
+ return {kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
 end
 function Shop.tileStatus(petId,itemId,ctx,slot)
  if itemId==Shop.NoneId then
@@ -255,7 +255,7 @@ function Shop:buildPane(pane,pw,ph,compact)
  local actionH=if compact then 48 else 56
  local lower=(if compact then 22+18+20+12 else 30+22+24+16)+actionH+pad
  local viewH=math.max(80,ph-lower-pad)
- local well=Kit.frame(pane,"PreviewWell","well",UDim2.fromOffset(pad,pad),UDim2.fromOffset(pw-pad*2,viewH),12);Kit.stroke(well)
+ local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(pad,pad),UDim2.fromOffset(pw-pad*2,viewH),12)
  local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
   Ambient=Color3.fromRGB(175,184,183),LightColor=Color3.fromRGB(255,250,231),LightDirection=Vector3.new(-1,-1.4,-3)})
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
@@ -291,13 +291,13 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   tile:SetAttribute("AccessibleLabel",item.name);tile:SetAttribute("ItemId",item.id)
   -- Swatch: the item's own colour (or the pet's secondary for tinted items).
   local side=tileH-20
-  local swatch=Kit.frame(tile,"Swatch",nil,UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);swatch.BackgroundTransparency=0
+  local _,swatch=Kit.previewWell(tile,"Swatch",UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);swatch.BackgroundTransparency=0
   if item.none then
-   Kit.paint(swatch,"BackgroundColor3","well");Kit.stroke(swatch)
+   Kit.paint(swatch,"BackgroundColor3","well")
    local mark=Kit.icon(swatch,"none",math.floor(side*.5),"soft");mark.AnchorPoint=Vector2.new(.5,.5);mark.Position=UDim2.fromScale(.5,.5)
   else
    local variant=Shop.variantColor(item)
-   swatch.BackgroundColor3=variant or(if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft);Kit.stroke(swatch)
+   swatch.BackgroundColor3=variant or(if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft)
    local tier=TierChip[item.tier]or TierChip.common
    local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
    -- Slice B: a recolour carries its colour as a dot over the card preview (cream ring).
@@ -828,9 +828,13 @@ function Shop:open(petId,ctx)
  Kit.slideIn(self.body,Kit.SlideOffset,Kit.headerSkip(self.header))
  if self.legend then self.legend.open()end
  if self.clock then self.clock:Disconnect()end
+ self.previewFeedback=self.previewFeedback or require(script.Parent.PreviewFeedback).new()
  self.clock=RunService.RenderStepped:Connect(function(dt)
   if self.visible then self:pumpPreviews()end
   local v=self.visual;if not self.visible or not v or v.destroyed then return end
+  local input=game:GetService("UserInputService")
+  local idle=not input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)and #input:GetTouches()==0
+  self.previewFeedback:step(os.clock(),self.root.Visible and idle and not GuiService.ReducedMotionEnabled and not GuiService.MenuIsOpen,v)
   if GuiService.ReducedMotionEnabled then return end
   v.cosmeticTime=os.clock();v:update(math.min(dt,.1))
  end)
@@ -838,6 +842,7 @@ function Shop:open(petId,ctx)
 end
 function Shop:back()if self.callbacks.back then self.callbacks.back()else self:close()end end
 function Shop:close()
+ if self.previewFeedback then self.previewFeedback:cancel()end
  self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end;self.confirmId=nil
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end

@@ -1,0 +1,724 @@
+{
+  "schemaVersion": 1,
+  "nativePath": "assets/world/WorldAssetsNative.rbxm",
+  "nativeBytes": 325417,
+  "nativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+  "xmlSha256": "7804473c9d9c4e5d3539a4fb48fcf285890b24e7985b508028448e67d05263aa",
+  "luaSha256": "a375dcbd69d62d7539ea057a87be342f2f2fb9161a887b8b36b47f68d87e7d3d",
+  "inputs": {
+    "assets/world/world-v7-manifest.json": "952100767ffed1c99e55ea1f06422045a4e19d6298d8b82d38f2e3cefec6828d",
+    "assets/world/world-v7-walk.json": "872a161e73a38e6dbb93ac62f8013cf30e64a4836b4377ec25f8f9165b6c548b",
+    "assets/world/world-v7-studio-import.json": "33118e99282c80a573062b028b1493590b23433ad922a9855fbeded3c864ebe6",
+    "assets/world/world-v7-uploads.json": "2b1822bfb3e7583b922d462dadbff7688d0a3fa8ab66ecc72573d226f7579c9e",
+    "assets/world/world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
+    "assets/world/world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
+    "assets/world/world-v7-pending.json": "7d4ff177f218087ac11f329ab65f8ebcc430e84d63b9c527fca7ea59f3c9603f",
+    "assets/world/world-v7-palette.json": "7d00ea01fd910a4f2f99a8e83714dfc864996804ef5b264ce51514c4c86d77a9",
+    "assets/world/world-dressing-manifest.json": "832ba41771a3e3c028d5042379ebcf0f220fac90f6c90591a06ff78c434f36b3",
+    "assets/world/world-dressing-import.json": "10565b2ef1b558e59c56c0f16c3a9e735be188dbc9cd6ecd7890cf5df9dc3b92",
+    "assets/world/world-v7.fbx": "4ea2e02b002e94c8511449125237e36bdd6dce5e2c0b9fb1b3569f5e38fce214",
+    "assets/world/world-v7-declutter.fbx": "09aa885f05e0fb73be21379786403d33de26a82dfe0e388428c7e4c9e0c44e04",
+    "assets/world/world-v7-collision.fbx": "3ebfb766d0d9fa0e5ee65b92a696dd756cd42e2e8a52a6e03d7d4ac807055ba8",
+    "assets/world/world-dressing.fbx": "00bab0f2e37b7299f11593c056708e947b55329884fb9771c0416ceae09ad174",
+    "assets/world/textures/palette-roblox.png": "702f605a8413c7f8228bd78bb9128ed05536fc756a624990963e98122bec4153"
+  },
+  "physicalConfigData": {
+    "W7_CastleFlag_3__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Aqueduct__marble_smooth": {
+      "bytes": 597,
+      "sha256": "f857a83af59667847482053c78ad6a315856e3db8ec331caa28e55f0561686b8"
+    },
+    "W7_Water__water_stream": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7C_Ground_67": {
+      "bytes": 1115,
+      "sha256": "491b49f6b23d5eb92715b71428ba72ffdadad92b4038b76500f285348bb7ac1b"
+    },
+    "W7_CastleFlag_1__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Architecture__marble_smooth": {
+      "bytes": 11286,
+      "sha256": "9c700d9ba51fbb09d1067030775e693f574c61286468b203eef91120be761828"
+    },
+    "W7_Aqueduct__palette": {
+      "bytes": 921,
+      "sha256": "c5a11c506af5e91390975921312836ec92e315d902a36ce0be56edbc12c56b21"
+    },
+    "W7_ArrivalGlow__glow_aqua": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_ArrivalGlow__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__cloud_1": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__cloud_2": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__cloud_3": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__cloud_4": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__cloud_5": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Architecture__palette": {
+      "bytes": 3168,
+      "sha256": "f6d53fe47bb7b197098d179ea3b78a9136c09e1d94016ca0b4b2ac8df1a1830d"
+    },
+    "W7_Backdrop__far_peak_1": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__far_peak_2": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Architecture__marble": {
+      "bytes": 9499,
+      "sha256": "767b24d670406e490baa84ec8ce596736c1a5cc502a26ae1223fbf31ba4f69a2"
+    },
+    "W7_Balustrades__palette": {
+      "bytes": 1324,
+      "sha256": "97f6acb62b9d5ec5e6d9378311a5cb8c46a1c02a9e475fffdf66970a4e355d48"
+    },
+    "W7_Balustrades__marble": {
+      "bytes": 28819,
+      "sha256": "e64393c316cb1d8591685e03d402c6eab212f1355a2c4c4fc4074ec2c35f58d3"
+    },
+    "W7_Bridge__palette": {
+      "bytes": 347,
+      "sha256": "216672bbc73054e1c91a65d1f2b6629c7409bdef27df8d8e814b7b9c7c37deda"
+    },
+    "W7_Bridge__trim": {
+      "bytes": 231,
+      "sha256": "60ee5372afb27982e65fa69f5a9c6607a8e8bb6c330ea96c5ec585633446922f"
+    },
+    "W7_Bubbles__bubble": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Chime_1__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Chime_2__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Chime_3__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Chime_4__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Chime_5__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CradleMobile__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CradleMobile__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Crystals__glow_aqua": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Crystals__glow_pink": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_DriftRocksA__cliff_rock": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_DriftRocksB__cliff_rock": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Backdrop__far_peak_3": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Ground__dirt_path": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Ground__grass": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Ground__meadow": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Ground__pebble_bed": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__bark": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__cliff_rock": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__foliage": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__foliage_blossom": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__grass": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsA__marble": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__bark": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__cliff_rock": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__foliage": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__foliage_blossom": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__grass": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_IsletsB__marble": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Ground__ground": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_LampOrbs__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Landmarks__grass": {
+      "bytes": 1174,
+      "sha256": "0d9e845658077ae082526c65612f6685242038198305bb9e91c5874f05ac1f33"
+    },
+    "W7_Bridge__marble": {
+      "bytes": 2037,
+      "sha256": "e31fdd1bcbfdf83161b1e33f0257bf615a32d0ec374ff0fbdba250348df0df83"
+    },
+    "W7_Landmarks__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Landmarks__trim": {
+      "bytes": 184,
+      "sha256": "9cefbd79fa2ab2071465fe0ed59b7b50e6991ab8264b3ade0d31be5882caacc2"
+    },
+    "W7_Landmarks__water": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Lantern__bark": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Lantern__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_NestHalo__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Pennant_1__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Pennant_2__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Props__marble": {
+      "bytes": 798,
+      "sha256": "b9fbec9c2a967a02d7b4e46cbabbdbd6c4525110920931ce90d3ae418af192ed"
+    },
+    "W7_Rocks__boulder_rock": {
+      "bytes": 4357,
+      "sha256": "042be8d30932a56cc886602ffae26d611e8d8e9e5034bf67ace458488536f8a2"
+    },
+    "W7_Landmarks__cliff_rock": {
+      "bytes": 8517,
+      "sha256": "128de9ace89157c7fbda58ab7632fbbc4eee70ce05b88b4fc5a41749651ebb3d"
+    },
+    "W7_Rocks__cliff_rock": {
+      "bytes": 28910,
+      "sha256": "0692b63fbc84fb5ae340108e547d18ce3ff964833bf71ebe921f95d17eff9782"
+    },
+    "W7_Landmarks__marble": {
+      "bytes": 1242,
+      "sha256": "cd35b5c2301951319f8e16c3a7d1f75622e823f4b2ebea8d796fb14546a36b26"
+    },
+    "W7_Rotunda__palette": {
+      "bytes": 2635,
+      "sha256": "3796d42695ae48d5080ee3819105de35f2331861745906a1f6e0c6ed8e0d7dd4"
+    },
+    "W7_Rotunda__trim": {
+      "bytes": 291,
+      "sha256": "25555c400035fc70fa919b3867b5e09ca64eeb3ea0cdfea74f6ed585ccc6a3e5"
+    },
+    "W7_Stations__foliage": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Stations__glow_aqua": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Stations__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Aqueduct__marble": {
+      "bytes": 3800,
+      "sha256": "d3ad12cd16099d9017f761b01349a0064c7d444a6a641594888126e8de795aa4"
+    },
+    "W7_Rocks__grass": {
+      "bytes": 4563,
+      "sha256": "5cff52588da8f7dc6afd1a6e3cf023e23852cd6d95b747b3633e96007e8fc8a8"
+    },
+    "W7_Rotunda__marble": {
+      "bytes": 8130,
+      "sha256": "5c2ef6aa7f62cc8759448e03a6297a8e1b155157211da6fce67d7223a1aa79cc"
+    },
+    "W7_Stations__trim": {
+      "bytes": 1620,
+      "sha256": "d53290ef4ed86248e6486177f179a43f64b420246c94204e28f84b18f45b21ed"
+    },
+    "W7_Architecture__trim": {
+      "bytes": 1589,
+      "sha256": "e186fd47960798cfa0bcd3e6cec5f096865e75142dddcba90dfdd493268e371f"
+    },
+    "W7_Stations__wood_plank": {
+      "bytes": 614,
+      "sha256": "c4b45f0caca7025dead6596b2dd6352aab23ab49ff856fca0634fe7f30ea4b42"
+    },
+    "W7_Underside__bark": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Underside__cliff_rock": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Underside__foliage": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Stations__marble_smooth": {
+      "bytes": 2204,
+      "sha256": "63887a51afd06dad2fac3bc50e5dd9d767741c789cd3607e2be478a132a7d833"
+    },
+    "W7_Trunks__bark": {
+      "bytes": 15323,
+      "sha256": "5893bfe95f64014daa4208ae242df15d7b3202629cc5d9c87460d509bf1677d3"
+    },
+    "W7C_Ground_68": {
+      "bytes": 127,
+      "sha256": "97dfe14459c7db4630915369e958267105935c753f78a712ecd9942f4950c14f"
+    },
+    "W7_Water__cloud": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Water__foam": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Water__water_pool": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Vegetation__foliage": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Water__waterfall_sky": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Water__waterfall_tumble": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7C_Ground_01": {
+      "bytes": 635,
+      "sha256": "6b9dd187512c3713b58109755b6c3633bb8b8147e9ed1a2cb8665fe9360b9e9b"
+    },
+    "W7C_Ground_02": {
+      "bytes": 998,
+      "sha256": "6627146a691a5978704fd025edae3509bc8c0321962ca5e4b1a75662ea7741c5"
+    },
+    "W7C_Ground_03": {
+      "bytes": 1148,
+      "sha256": "fa909dc4c58bc899c0655714b1ef233d64a058610534d1b461922791c2623a68"
+    },
+    "W7C_Ground_04": {
+      "bytes": 1328,
+      "sha256": "ca7ab6ab7bcb27cffd934c4d99da732fe2439d7e26d23032f72b3f9aba5bb7bf"
+    },
+    "W7C_Ground_05": {
+      "bytes": 1366,
+      "sha256": "705fa92f654eb069f9d3b2635246c83cd668821e474efab4d1bbe8ccfffa78c9"
+    },
+    "W7C_Ground_06": {
+      "bytes": 161,
+      "sha256": "70d24ccc4585936e517f58fe6d27e6dcda07daf3ccf2fbb24412360ca130393f"
+    },
+    "W7C_Ground_07": {
+      "bytes": 975,
+      "sha256": "04e15d1e26612fe3b15e20895ffc37cdb6bdae8f131390a577a747e0d280e413"
+    },
+    "W7C_Ground_08": {
+      "bytes": 2605,
+      "sha256": "52db1427f37c8503895e48919b73c00c8094c2813749019df685808ff8d09e26"
+    },
+    "W7C_Ground_09": {
+      "bytes": 1503,
+      "sha256": "cf1b23f5eae636a7e35fde5812a74fe6b82330b633613daa0cffc5ec25738641"
+    },
+    "W7C_Ground_10": {
+      "bytes": 2944,
+      "sha256": "aa68ed51dbeddb3f069f66b49ddaa952091322b60937368d61f6ebe3a978e199"
+    },
+    "W7C_Ground_11": {
+      "bytes": 3061,
+      "sha256": "5ab64ffe0f5737ce660b8a1400103b3b4badc96c181dad0cf9132bf29b69ccb1"
+    },
+    "W7C_Ground_12": {
+      "bytes": 2403,
+      "sha256": "e976ffeb9e6012153a766326caef940fb0f1016f3b471c52ce4a307910b91736"
+    },
+    "W7C_Ground_13": {
+      "bytes": 1416,
+      "sha256": "9a2bc0721b67794ed11f34d34d90f5b91cc872174295537571efc6c6d682fa09"
+    },
+    "W7C_Ground_14": {
+      "bytes": 1604,
+      "sha256": "0cc9f71ee9fcabbf99cc0c906b72bc54c2664ad68a422a85611d9dca8d5a7adf"
+    },
+    "W7C_Ground_15": {
+      "bytes": 3950,
+      "sha256": "ce606c09b2b0a1cd41cb03a55838829c0db4d46c2e61f8e146e3da4c47a4cae9"
+    },
+    "W7C_Ground_16": {
+      "bytes": 4426,
+      "sha256": "9b6c0e9feaedfd0b4d1b663b15475f9fda3e1fb9647640223781314119b09277"
+    },
+    "W7C_Ground_17": {
+      "bytes": 2281,
+      "sha256": "2e3e31b84693225f3cb6067465a90903836caa649dd12127981688682da9af99"
+    },
+    "W7C_Ground_18": {
+      "bytes": 2091,
+      "sha256": "422c694a9c806c1ec921512df5e2afaf197e98883bec705cf4e2058764659bc1"
+    },
+    "W7C_Ground_19": {
+      "bytes": 3060,
+      "sha256": "aec6aea655618534822cfcd2e5254862de63dd6e3f56a4d89a5366a822a02f96"
+    },
+    "W7C_Ground_20": {
+      "bytes": 2494,
+      "sha256": "250781715284988c8d2c8044c46ee58028b7e5e2ce58eb8fb3b0c91719026821"
+    },
+    "W7C_Ground_21": {
+      "bytes": 1248,
+      "sha256": "b95172a1958cc5fd9235c64af15153ddd93ae97af6fe1a34af1bb5d06ff55cd9"
+    },
+    "W7C_Ground_22": {
+      "bytes": 789,
+      "sha256": "fb4f9cdd10ab8b977ff26c74ec27d3ca1620edc32ad577e20c348cd48e3386da"
+    },
+    "W7C_Ground_23": {
+      "bytes": 2926,
+      "sha256": "ca2dd2315844aed373ffab5bb0d56b8509d85fabd4febe918a237f541a0b9627"
+    },
+    "W7C_Ground_24": {
+      "bytes": 4244,
+      "sha256": "c866fd70765a9a7e31851d83ba6691078c603092464620157b01dbfb6392f22a"
+    },
+    "W7C_Ground_25": {
+      "bytes": 2810,
+      "sha256": "dc539964c2bfe4a30702d667619d78afb32816bcb15ea094bba457d753e82ac0"
+    },
+    "W7C_Ground_26": {
+      "bytes": 3407,
+      "sha256": "3a947f9e4eec9a50b21237a87cc8f01b9ca8384b8d91dbf0f04cc14abc71664e"
+    },
+    "W7C_Ground_27": {
+      "bytes": 2450,
+      "sha256": "c9de3a819609e514016bd6cab5984bec5d3f292b5f41fd9251e6e13459311e45"
+    },
+    "W7C_Ground_28": {
+      "bytes": 3009,
+      "sha256": "a8d801d9c6958e726dc8bc409ec2f315b7cd066eb566fa359772cc5af547756f"
+    },
+    "W7C_Ground_29": {
+      "bytes": 2274,
+      "sha256": "5649f8df23d69b4797c04322fd3eae27bfd3f5d075ade7e40eb75e294205741b"
+    },
+    "W7C_Ground_30": {
+      "bytes": 1445,
+      "sha256": "47d4faaf51647b82ead040ca3b7589f6f4840498fcab9fcfc218189484a21628"
+    },
+    "W7C_Ground_31": {
+      "bytes": 2797,
+      "sha256": "266e6b413822ab063ec6b0021298287ba5843a2738a83845f50fcce2502a67c9"
+    },
+    "W7C_Ground_32": {
+      "bytes": 2615,
+      "sha256": "53b345c4c2e737e9146b54bada9f5419926beaffe817ce80de56f0906f14193f"
+    },
+    "W7C_Ground_33": {
+      "bytes": 2833,
+      "sha256": "cbc4e8dd293d972d7e5b442ba99152d9e14fc0c7ab4684a4da4a9d69fbb1fdd4"
+    },
+    "W7C_Ground_34": {
+      "bytes": 3150,
+      "sha256": "a5663a69896b5f1454b08aca88555803d45432771d7ba7c0dd6c80907647dda7"
+    },
+    "W7C_Ground_35": {
+      "bytes": 678,
+      "sha256": "5810a9f84aeaa8b10960846a919b71dc37d868382c2f680cce75659452c10c48"
+    },
+    "W7C_Ground_36": {
+      "bytes": 2696,
+      "sha256": "8516553a1e42728127f2ead9cf3962857a8d04047c1b4894ea2b8ef3c560cd44"
+    },
+    "W7C_Ground_37": {
+      "bytes": 1832,
+      "sha256": "1a979cd82f49bf53fbba588bdd8c2653ae06a09f489fdbb20080bb597aac0018"
+    },
+    "W7C_Ground_38": {
+      "bytes": 1028,
+      "sha256": "ba453e69eee74f40a6246765f662a9d07d8de52d7ff964888bb714a5e27fff79"
+    },
+    "W7C_Ground_39": {
+      "bytes": 4525,
+      "sha256": "c1c73df6dc17e7971eef218a7d145416f9031efca62e9d46648642178a761c5b"
+    },
+    "W7C_Ground_40": {
+      "bytes": 4441,
+      "sha256": "d5db873a430e83916cfa567fabfac1fccea7afe0bb7e6c0c5bb2d8eb7be36864"
+    },
+    "W7C_Ground_41": {
+      "bytes": 3633,
+      "sha256": "b5ae71ebca2a1c9864a5ae93f1d38545994b1ee02f7932b38b2c6f7a20242489"
+    },
+    "W7C_Ground_42": {
+      "bytes": 3421,
+      "sha256": "edc0c44a04270cede68d31334f891c28d2c551a7f3163a9cc2e6199ce44b8b9d"
+    },
+    "W7C_Ground_43": {
+      "bytes": 2887,
+      "sha256": "70199c48559bd286a5e97b31c59ed0ec3f5c4aafb7559898f8c5b583ac4a45c9"
+    },
+    "W7C_Ground_44": {
+      "bytes": 2914,
+      "sha256": "9e91bf0a1e9028680836b13004e848f03a695295fe598b0ba77eb1559b3673f0"
+    },
+    "W7C_Ground_45": {
+      "bytes": 1400,
+      "sha256": "f1e587ad6c4e0dfb800800cb2525c7aa2e88fec8feb6a4fa3013959878acec1f"
+    },
+    "W7C_Ground_46": {
+      "bytes": 2049,
+      "sha256": "79e17e1dce8cd5710bc8945aeb75ce4128ee182ece6882424c873bcb490f917a"
+    },
+    "W7C_Ground_47": {
+      "bytes": 3384,
+      "sha256": "d53daccf3506f38870ff1c2c69bf4ecbad9d1adb3a9329dbf3c48f366b67715d"
+    },
+    "W7C_Ground_48": {
+      "bytes": 2073,
+      "sha256": "c9d8fc0bd9a188e992e45f649f26e3ac5f812b718454c420c7ec65a26341edab"
+    },
+    "W7C_Ground_49": {
+      "bytes": 3337,
+      "sha256": "7688c1c5fdecd99215723781b6c2545ba5c307128cb8c66258c2d8d2c9e70a6a"
+    },
+    "W7C_Ground_50": {
+      "bytes": 3301,
+      "sha256": "54693c342b878aaf37d8f2adef33e957be7db7d80c526d6f159fdcc2109c9c45"
+    },
+    "W7C_Ground_51": {
+      "bytes": 2929,
+      "sha256": "1f82b3230914874d97b5e78de4802d9be7aca054c60c52b51d99583eecf7b5c8"
+    },
+    "W7C_Ground_52": {
+      "bytes": 2522,
+      "sha256": "a9c9aeb18727a583ed9ab0432e1d62e8a99eddb7da10089c5599e8b40284f76a"
+    },
+    "W7C_Ground_53": {
+      "bytes": 1170,
+      "sha256": "c1f2258562574252dc63faaad902ecb53cc4d9f966c96a51dc6c30b149c24aca"
+    },
+    "W7C_Ground_54": {
+      "bytes": 1320,
+      "sha256": "31b8f1aa6d4713f648334cdf215df278d9c1c55a3928fc274bcada0af86aa046"
+    },
+    "W7C_Ground_55": {
+      "bytes": 1916,
+      "sha256": "d2fd931fd86b8954039c91319141293b03bba8fa8bc15e534bec9697a62db003"
+    },
+    "W7C_Ground_56": {
+      "bytes": 3087,
+      "sha256": "e2ea8699252d2ad2414ec803e84f349d6a942106707b1795c60bfeed75ca03ed"
+    },
+    "W7C_Ground_57": {
+      "bytes": 2637,
+      "sha256": "975554bf8e45e08215fe777405208e0e532eae4db0e67d740f27f7478b9bd008"
+    },
+    "W7C_Ground_58": {
+      "bytes": 2610,
+      "sha256": "d7142eb5ee19591b2f7b40e80ad2251714e27d49d5783f39c5dda25608347cfd"
+    },
+    "W7C_Ground_59": {
+      "bytes": 2407,
+      "sha256": "2f36c265aeabd737f9d418d1c573d0621be99000fa33754120c5999343aa4448"
+    },
+    "W7C_Ground_60": {
+      "bytes": 2090,
+      "sha256": "5a11e094c337d4fcffac8ead63688855fc2ac566f84f9addb22184435ddb4187"
+    },
+    "W7C_Ground_61": {
+      "bytes": 1038,
+      "sha256": "f406f3b7f931ce2f97b78344928142ee8efca46b591782cacf11f3ec45c0aeba"
+    },
+    "W7C_Ground_62": {
+      "bytes": 719,
+      "sha256": "2b1ff400033e2976a316ad46ca7becdd7e286e876a61f9aa06cc82f1543b41e9"
+    },
+    "W7C_Ground_63": {
+      "bytes": 1773,
+      "sha256": "d2e5e587b350aca121082e248c2f8187883a1dfb9366dd6bd281cb6995b8aad4"
+    },
+    "W7C_Ground_64": {
+      "bytes": 971,
+      "sha256": "027105179713b4c84691f61c6492d249bdf73e62faf236d22c7dc582508ab96b"
+    },
+    "W7C_Ground_65": {
+      "bytes": 893,
+      "sha256": "a3632d75f4b741199cdad49f4af7461e11ca811e10601fe88e3b4d7a3f1f2fed"
+    },
+    "W7C_Ground_66": {
+      "bytes": 1195,
+      "sha256": "c9fa2bf62cb9d293acbbfd9f9cbdb7d3dcd92ed6c01a0103f923a73605b2b63f"
+    },
+    "W7_Stations__palette": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Vegetation__foliage_blossom": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_5__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_2__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_6__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_9__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_8__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_7__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_CastleFlag_4__far_peak": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7_Stations__marble": {
+      "bytes": 5292,
+      "sha256": "ba0bfbab053558f7dedbd83b4c1a532984740f813d97da9b95aa5d37ebaef13c"
+    },
+    "W7D_FrondFan": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7D_FrondSpray": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7D_LeafTuft": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    }
+  },
+  "provenance": {
+    "source": "artifacts/world-overlaps-2026-11-14/WorldAssets-native-collision.rbxm",
+    "method": "Root Studio Server SerializationService.SerializeInstancesAsync current WorldAssets after native precise ApplyMesh rebuild",
+    "descendants": 202,
+    "meshParts": 170,
+    "surfaceAppearances": 30,
+    "coordinatorReportedRayComparison": {
+      "rays": 5184,
+      "nativeRoundtripHitMismatches": 0,
+      "nativeRoundtripMaxPositionDelta": 0,
+      "sourceOnlyHitMismatches": 4302,
+      "sourceOnlyMaxPositionDelta": 17.76,
+      "coverageLimitation": "Landmarks zero positive hits in original bbox grid; do not claim full mesh coverage"
+    },
+    "evidence": "artifacts/world-overlaps-2026-11-14/COLLISION-PORTABILITY-EVIDENCE.json"
+  },
+  "promotion": "Explicit root-coordinated native export checkpoint; validator never rewrites this manifest."
+}

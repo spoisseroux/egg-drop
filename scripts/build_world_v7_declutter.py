@@ -40,6 +40,10 @@ REMOVE = ["Plaza_Ornament_09", "Plaza_Ornament_10", "Plaza_Ornament_11", "Plaza_
           # Pet Park interior (Spencer 2026-11-13): the tree by the sandbox (trunk at Roblox (30, 59.5), bark + canopy
           # in one object) and the two pink blossom shrubs inside the kerb (Bush_24 touched the ball mat).
           "Tree_11_round", "Bush_08", "Bush_24",
+          # Second Pet Park (Spencer/Astra 2026-11-14): approved lawn centred (-38,-46).
+          # Whole original objects (trunks AND canopy), surveyed in vegetation-survey.json;
+          # no canopy clipping/stumps. Three small bushes intersect the equipment/kerb area.
+          "Tree_02_tall", "Tree_03_blossom", "Bush_06", "Bush_09", "Bush_22",
           # QA 2026-11-13 (Q3.9): the two hub benches and the toy-lawn toys beside the hub plaza (the picnic tables
           # stay). The toy lawn itself (Ground_ToyLawn) and its gameplay anchors (GardenLayout) are unchanged.
           "Station_BenchEast_Seat_Slats", "Station_BenchEast_Supports",

@@ -3,10 +3,10 @@ return function(client)
  local Client=require(client.GardenCareClient);local cases={};local function test(name,run)run();table.insert(cases,name)end
  local function fixture()
   local character={};local actor={petId="pip",characterId=1,petGeneration=2,generation=3,mode="Docked",care={state="Docked",claimId="bay-A"}}
-  local sent={};local remote={FireServer=function(_,packet)table.insert(sent,table.clone(packet))end}
+  local sent,notices={},{};local cancelled;local remote={FireServer=function(_,packet)table.insert(sent,table.clone(packet))end}
   local self=setmetatable({seq=0,operations={},remote=remote,actorProvider=function()return actor end,characterProvider=function()return character end,
-   revision=function()return 4 end,notice={},room={}},Client)
-  return self,actor,sent,function(value)character=value end
+   revision=function()return 4 end,room={},notifications={enqueue=function(owner,key,data)table.insert(notices,{owner=owner,key=key,data=data})end,cancelOwner=function(owner)cancelled=owner end}},Client)
+  return self,actor,sent,function(value)character=value end,notices,function()return cancelled end
  end
  test("captured request has exact identity claim revision and independent sequence",function()
   local c,_,sent=fixture();assert(c:request("careEquip","puddle"));local p=sent[1]
@@ -45,8 +45,11 @@ return function(client)
   c:receive({kind="carePickup",seq=1,status="Accepted"});assert(done==1 and not c:reconcilePickup(actor))
  end)
  test("refused setdown preserves hold and gives a clear dry-space reason",function()
-  local c,actor=fixture();actor.mode="Carried";actor.care={state="Carried"};c:request("careSetDown")
-  c:receive({kind="careSetDown",seq=1,status="Rejected",reason="NoDrySpace"});assert(actor.mode=="Carried"and c.notice.Text:find("dry",1,true)and not c.operations[1])
+  local c,actor,_,_,notices=fixture();actor.mode="Carried";actor.care={state="Carried"};c:request("careSetDown")
+  local packet={kind="careSetDown",seq=1,status="Rejected",reason="NoDrySpace"}
+  c:receive(packet);assert(actor.mode=="Carried"and #notices==1 and notices[1].data.text:find("dry",1,true)and not c.operations[1])
+  assert(notices[1].owner==c and notices[1].key=="care:1"and notices[1].data.reason=="NoDrySpace")
+  c:receive(packet);assert(#notices==1,"duplicate terminal response queued another notice")
  end)
  test("only accepted place opens the machine and no synthetic saved result mutates equipment",function()
   local c,actor=fixture();c:request("carePlace");c:receive({kind="carePlace",seq=1,status="Accepted"});assert(c.wantMachine and actor.petId=="pip")
@@ -63,9 +66,13 @@ return function(client)
   assert(not c:keepsDock(nil,{id="bay-B",ownerId=124}));replace({});assert(not c:keepsDock(nil,old))
  end)
  test("teardown sends one best-effort exact release and retires all UI resources",function()
-  local c,_,sent=fixture();local retired=0;c.connections={};c.room.focusUI={};c.pickup={Destroy=function()retired+=1 end};c.setDown=c.pickup;c.notice=c.pickup
-  c:destroy();assert(c.destroyed and #sent==1 and sent[1].kind=="careRelease"and sent[1].claimId=="bay-A"and retired==3)
+  local c,_,sent,_,_,cancelled=fixture();local retired=0;c.connections={};c.room.focusUI={bindPickup=function()end};c.pickup={Destroy=function()retired+=1 end};c.setDown=c.pickup
+  c:destroy();assert(c.destroyed and #sent==1 and sent[1].kind=="careRelease"and sent[1].claimId=="bay-A"and retired==2 and cancelled()==c)
   c:destroy();assert(#sent==1)
+ end)
+ test("navigation teardown inside rejection callback cannot enqueue a stale notice",function()
+  local c,_,_,_,notices=fixture();c:request("careSetDown",nil,function()c.destroyed=true end)
+  c:receive({kind="careSetDown",seq=1,status="Rejected",reason="NoDrySpace"});assert(#notices==0)
  end)
  return {passed=#cases,cases=cases}
 end

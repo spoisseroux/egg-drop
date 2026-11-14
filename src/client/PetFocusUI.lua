@@ -96,7 +96,7 @@ function Focus.new(parentGui, callbacks)
 	local panel = frame(root, "FocusControls", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), "ink", 2)
 	panel.BackgroundTransparency, panel.Visible = 1, false
 	local back = button(panel, "Back", "", Vector2.zero, UDim2.fromOffset(12, 12), "panel")
-	back.Size=UDim2.fromOffset(44,44);back:SetAttribute("AccessibleLabel","Back to roaming")
+	back.Size=UDim2.fromOffset(48,48);back:SetAttribute("AccessibleLabel","Back to roaming")
 	Art.carryArrow(back,"back")
 	local helper = Instance.new("TextLabel")
 	helper.Name, helper.Text, helper.Font, helper.TextSize = "PettingHint", "Hold and rub to pet", Enum.Font.GothamMedium, 12
@@ -149,7 +149,7 @@ function Focus.new(parentGui, callbacks)
  table.insert(self.connections,UserInputService.WindowFocused:Connect(function()self:gainWindowFocus()end))
 	table.insert(self.connections,UserInputService.GamepadDisconnected:Connect(function(kind)if self.openingADevice==kind then self.openingADevice=nil end;if self.heldGreet and self.heldGreet.device==kind then self:cancelPointer()end;if self.openingGreetDevice==kind then self.openingGreetDevice=nil end end))
 	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
-	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper();if self.bondInfo then self:setBond(self.bondInfo)end end))
+	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper();self:layoutFocusRow();if self.bondInfo then self:setBond(self.bondInfo)end end))
 	Art.watchTextPreference(gui,function()return self.hint.Visible or self.helper.Visible end,function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper()end)
 	self:layoutRoamHint()
 	return self
@@ -173,28 +173,44 @@ function Focus:setBond(info,animate)
 	if self.destroyed or not self.bondCard then return end
 	self.bondInfo=info
 	if not info or not info.bond then self.bondCard.Visible=false;return end
-	local size=self.root.AbsoluteSize
-	local compact=size.Y>0 and size.Y<420
-	if self.bondPips==nil or self.bondCompact~=compact then
-		if self.bondPips then self.bondPips.root:Destroy()end
-		self.bondPips=BondPips.new(self.bondCard,compact);self.bondCompact=compact
-		self.bondPips.root.ZIndex=self.bondCard.ZIndex+1
-		animate=false
-	end
-	local pips=self.bondPips
-	local label=BondPips.label(info.bond)
-	local labelW=math.ceil(Kit.measure(label,"Small",12).X)+4
-	local width=math.max(120,12+pips.width+10+labelW+12)
-	local nameH=if compact then 18 else 20
-	self.bondName.Text=info.name or "";self.bondName.Size=UDim2.new(1,-24,0,nameH);self.bondName.TextSize=if compact then 14 else 16
-	pips.root.Position=UDim2.fromOffset(12,6+nameH+4)
-	self.bondLevel.Text=label
-	self.bondLevel.Position=UDim2.fromOffset(12+pips.width+6,6+nameH+2);self.bondLevel.Size=UDim2.fromOffset(width-12-pips.width-6-12,pips.size+4)
-	self.bondCard.Size=UDim2.fromOffset(width,6+nameH+4+pips.height+8)
-	self.bondCard.Visible=true
-	pips.set(info.bond,animate==true)
-	self.bondCard:SetAttribute("BondLevel",info.bond.shown)
+	local compact=true -- five hearts and their progress bar fit the shared48px row.
+ if self.bondPips==nil or self.bondCompact~=compact then
+  if self.bondPips then self.bondPips.root:Destroy()end
+  self.bondPips=BondPips.new(self.bondCard,compact);self.bondCompact=compact
+  self.bondPips.root.ZIndex=self.bondCard.ZIndex+1;animate=false
+ end
+ local pips=self.bondPips;local label=BondPips.label(info.bond)
+ local labelW=math.ceil(Kit.measure(label,"Small",12).X)+4
+ self.bondWidth=math.clamp(12+pips.width+8+labelW+12,150,190)
+ self.bondName.Text=info.name or "";self.bondName.Position=UDim2.fromOffset(12,3)
+ self.bondName.Size=UDim2.new(1,-24,0,18);self.bondName.TextSize=14
+ pips.root.Position=UDim2.fromOffset(12,23)
+ self.bondLevel.Text=label;self.bondLevel.TextSize=12
+ self.bondLevel.Position=UDim2.fromOffset(12+pips.width+6,21)
+ self.bondLevel.Size=UDim2.fromOffset(self.bondWidth-12-pips.width-6-8,20)
+ self.bondCard.Visible=true;pips.set(info.bond,animate==true)
+ self.bondCard:SetAttribute("BondLevel",info.bond.shown)
+ self:layoutFocusRow()
 end
+-- GardenCare supplies its existing button; this is its only geometry owner.
+function Focus:bindPickup(pickup)
+ self.pickupButton=pickup
+ self.carePickupWidth=if pickup then 48 else nil
+ self:layoutFocusRow()
+end
+function Focus:layoutFocusRow()
+ if not self.bondCard then return end
+ local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible)
+ for _,entry in ipairs({{self.back,row.back},{self.bondCard,row.bond},{self.pickupButton,row.pickup}})do
+  local object,g=entry[1],entry[2]
+  if object then object.AnchorPoint=Vector2.zero;object.Position=UDim2.fromOffset(g.x,g.y);object.Size=UDim2.fromOffset(g.w,g.h)end
+ end
+ self.controlHeight=row.height
+ if self.bondPips and self.bondLevel then
+  self.bondLevel.Size=UDim2.fromOffset(math.max(12,row.bond.w-12-self.bondPips.width-6-8),20)
+ end
+end
+
 function Focus:now()return if self.clock then self.clock()else os.clock()end
 function Focus:retireFocusHint()
 	self.focusLessonRetired=true
@@ -250,7 +266,7 @@ end
 function Focus:inside(point)
 	local at,size=self.hit.Position,self.hit.Size
 	if point.X<at.X.Offset or point.Y<at.Y.Offset or point.X>at.X.Offset+size.X.Offset or point.Y>at.Y.Offset+size.Y.Offset then return false end
-	for _,node in ipairs({self.back,self.helper})do
+	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton})do
 		if node and node.Visible then
 			local p,s=node.AbsolutePosition-self.root.AbsolutePosition,node.AbsoluteSize
 			if point.X>=p.X and point.X<=p.X+s.X and point.Y>=p.Y and point.Y<=p.Y+s.Y then return false end

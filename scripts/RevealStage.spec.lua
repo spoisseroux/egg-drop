@@ -123,6 +123,7 @@ return function(client,parent)
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
    local sent={}
    local view=View.new(host,{play=function()end},function()return true end,function(command,value)table.insert(sent,{command=command,value=value})end)
+   view.nativeDisplay=false -- Legacy Stage/button contract; native delegation has its own host/scene fixtures.
    view:open({status="Ready",revision=10,lastHatch={id="stage-fixture",petId="pip",starter=true},nectar=6})
    local stage=view.reveal
    assert(stage and view.stageLayer.Visible and not view.card.Interactable,"stage covers the card")
@@ -182,6 +183,7 @@ return function(client,parent)
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
    local sent={}
    local view=View.new(host,{play=function()end},function()return true end,function(command,value)table.insert(sent,{command=command,value=value})end)
+   view.nativeDisplay=false -- This case inspects the legacy Stage/DeckKit button implementation.
    assert(view.stageLayer:GetAttribute("CoversScreen")and view.revealBackdrop:GetAttribute("CoversScreen"),"full-screen layers")
    view:open({status="Ready",revision=10,lastHatch={id="starter-fixture",petId="pip",starter=true},nectar=6})
    local stage=view.reveal;assert(stage,"stage open")

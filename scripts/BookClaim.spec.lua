@@ -186,6 +186,10 @@ return function(server)
 			local toys = require(Shared.ToyCatalog)
 			s.toyUnlocks = {}; for _, toyId in ipairs(toys.Pools[toys.PoolVersion]) do s.toyUnlocks[toyId] = true end
 			s.materialUnlocks = { gloss = true, matte = true }
+			assert(Book.pagePercent(s, "toys") < 100, "the old two-finish collection must not complete active pool4")
+			local finishes = require(Shared.MaterialCatalog)
+			for _, finishId in ipairs(finishes.Pools[finishes.PoolVersion]) do s.materialUnlocks[finishId] = true end
+			assert(Book.pagePercent(s, "toys") == 100, "all active toys and finishes must complete the page")
 			s.book.found = allFound()
 		end)
 		local before = h.state.nectar

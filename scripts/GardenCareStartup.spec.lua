@@ -14,19 +14,20 @@ return function(client,parentGui)
   return {deviceActive=true,group={Volume=1},play=function()error("startup must not play a care cue")end,stopOwner=function()end,petSpeechBusy=function()return false end}
  end
  local ok,problem=pcall(function()
-  test("actual Care.new accepts production ScreenGui and owns a full safe Frame for notice and setdown",function()
+  test("actual Care.new owns safe carry controls and delegates feedback outside the focus GUI",function()
    local gui=screen();local focus=Focus.new(gui,{canOwnInput=function()return false end,canReact=function()return false end})
    table.insert(cleanups,function()if not focus.destroyed then focus:destroy()end end)
    local room={focusUI=focus,mode="Board",target="Board",shownPet={id="pip",name="Zivvi"},garden={get=function()return nil end,snapshot={}},overlayOpen=function()return false end}
-   local care=Care.new(room,gui);table.insert(cleanups,function()if not care.destroyed then care:destroy()end end)
+   local cancelled
+   local care=Care.new(room,gui,{notifications={enqueue=function()error("startup has no feedback")end,cancelOwner=function(owner)cancelled=owner end}});table.insert(cleanups,function()if not care.destroyed then care:destroy()end end)
    settle();care:step()
    assert(care.gui:IsA("ScreenGui")and care.uiRoot:IsA("Frame")and care.uiRoot.Parent==gui)
-   assert(care.notice.Parent==care.uiRoot and care.setDown.Parent==care.uiRoot and care.uiRoot.Size==UDim2.fromScale(1,1)and not care.uiRoot.Active)
-   assert(care.pickup.Parent==focus.panel and not care.notice.Visible and not care.setDown.Visible)
+   assert(care.setDown.Parent==care.uiRoot and care.uiRoot.Size==UDim2.fromScale(1,1)and not care.uiRoot.Active)
+   assert(care.pickup.Parent==focus.panel and care.uiRoot:FindFirstChild("CareNotice")==nil and not care.setDown.Visible)
    assert(care.pickup.CarryArrow.Rotation==0 and care.setDown.CarryArrow.Rotation==180 and focus.back.CarryArrow.Rotation==-90)
    for _,node in ipairs({care.pickup,care.setDown,focus.back})do assert(node.Size.X.Offset>=44 and node.Size.Y.Offset>=44 and node.CarryArrow.Stem.Size.X.Offset==4 and node.CarryArrow.Head8.Size.X.Offset==16)end
    focus.gui.Enabled=false;care:step();assert(care.uiRoot.Parent==gui,"carry controls borrowed the retiring focus GUI")
-   care:destroy();assert(care.controls.Parent==nil and care.notice.Parent==nil and care.pickup.Parent==nil);focus:destroy()
+   care:destroy();assert(care.controls.Parent==nil and care.pickup.Parent==nil and cancelled==care.controls);focus:destroy()
   end)
   test("actual Room.new and render steps complete with production ScreenGui before any companion or profile action",function()
    local gui=screen();local board=Instance.new("Frame");board.Name="Backdrop";board.Size=UDim2.fromScale(1,1);board.Parent=gui
@@ -36,7 +37,7 @@ return function(client,parentGui)
    local sent=0;local room=Room.new(gui,board,progress,audio(),function()sent+=1 end,function()sent+=1 end,function()sent+=1 end,function()return false end,function()return true end)
    table.insert(cleanups,function()if not room.destroyed then room:destroy()end end)
    room.garden.remote={FireServer=function()sent+=1 end}
-   settle();assert(room.care and room.care.controls:IsDescendantOf(gui)and room.care.notice.Parent==room.care.controls)
+   settle();assert(room.care and room.care.controls:IsDescendantOf(gui)and room.care.controls:FindFirstChild("CareNotice")==nil and room.care.notifications)
    assert(room.mode=="Board"and room.pet==nil and sent==0 and not room.care.pickup.Visible and not room.care.setDown.Visible)
    room:destroy();assert(room.destroyed and gui:FindFirstChild("GardenCareControls")==nil)
    settle();assert(sent==0,"constructor/teardown emitted an unrelated operation")

@@ -9,7 +9,11 @@
 local UICopy={}
 
 local Table={
+ care={notice={busy="Machine busy · keep carrying",dry="Find a clear dry patch",closer="Move closer to your pet or machine",changed="Your pet changed · try again",ended="Machine session ended",saving="Wait for your pet save",retry="Couldn't complete · try again"}},
+ qa={coach={welcome="Match eggs. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
  hatch={
+  material={random="16 Stars · one unowned finish. No duplicates.",fixed="16 Stars · one guaranteed finish. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next finish is shown above."},
+  display={wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   footer={
    desktop="Give one a shake. The odds are on the label.",
    phone="The odds are on the label",
@@ -33,6 +37,7 @@ local Table={
   balls={pitch="Same sizes, same rules. Only cuter."},
  },
  results={
+  inPlace={noStars="No Stars this round",total="Total  ★ {count}",metrics="Score {score} · Best {best} · Chain ×{chain}",replay="Replay",hatch="Hatch eggs"},
   leave={
    wide="Back to the garden",
    mid="Leave to garden",
@@ -64,7 +69,7 @@ local Table={
  items={note={empty="You have no items",full="Belt's full. Use one first."}},
  menu={subtitle={locked="Win a round and this opens up",empty="Round not started",paused="Round paused"}},
  -- QA Q5 machine hub: the Pocket menu outside rounds, one tile per machine.
- hub={
+ hub={quests={title="Quests"},
   title="Pocket menu",eyebrow="Garden",
   promise="Every machine, one tap away.",
   tile={
@@ -103,10 +108,15 @@ local Table={
    starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
  },
  -- Pet Park K3: the park chip (shown only while the owner is inside the kerb).
- park={name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today"},
+ park={waitIdle="Pets are playing",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
+ -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
+ onboarding={
+  welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
+  spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
+ },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
- coach={
+ coach={effortPay="Good effort",
   skip="Skip",gotIt="Got it",next="Next",
   welcome={title="Hatch your first friend",line="Merge to crack the egg. Stars come with it."},
   firstStars={toast="First round cleared"},
@@ -182,7 +192,7 @@ local Table={
    button="How it works",eyebrow="How it works",
    done="Got it",close="Close",replay="Tap ? any time to see this again.",
    hatch={title="Hatch eggs",
-    a={title="Earn Stars",line="Win rounds, finish quests and stamp your card. Stars pay for eggs."},
+    a={title="Earn Stars",line="Rounds and quests earn Stars. Open Quests for your once-daily stamp."},
     b={title="Pick an egg",line="Each egg hatches one kind of thing. The odds are on the label."},
     c={title="Hatch it",line="Press Hatch and watch it crack. What comes out is yours to keep."}},
    style={title="Deck style",
@@ -190,7 +200,7 @@ local Table={
     b={title="Backgrounds",line="Earned by playing, never bought. Pick the one behind your deck."},
     c={title="Balls",line="New looks for the balls. Same sizes, same rules. Only cuter."}},
    companions={title="Companions",
-    a={title="Your pets",line="Everyone you hatch lives here. Visit them and swap who tags along."},
+    a={title="Bond hearts",line="Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks."},
     b={title="Wardrobe",line="Hats and bits to wear, bought with Stars. Looks only."},
     c={title="Customize",line="Feed colour fruit, add a charm, try a finish or hand over a toy."}},
    quests={title="Quests",

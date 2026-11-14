@@ -220,6 +220,7 @@ local function fill(parent,name,color,transparency)
 end
 
 function Stage.show(parent,options)
+ if options and options.scene then return require(script.Parent.HatchReceiptStage).show(parent,options)end
  options=options or {}
  local pet=options.pet or Pets.byId.pip
  local self=setmetatable({options=options,parent=parent,pet=pet,age=0,yaw=Stage.Spin.home,omega=0,velocity=0,homed=true,

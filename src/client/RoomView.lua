@@ -259,7 +259,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 				local actor=self.garden:renderActor(Players.LocalPlayer.UserId,self.shownPet.id,character)
                 self.pet.personalPlayEnabled=self.pet.personalPlayEnabled and actor~=nil and actor.mode=="Room"
                 self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
-                self.pet.personalIdleUntil=if actor and actor.behavior=="follow"then actor.endTime+3.5 else 0
+                require(script.Parent.PersonalToyOpportunity).apply(self.pet,actor,serverNow)
 				if actor and self.park then self.followState=self.park:drive(self.pet,actor,serverNow,dt,self.followState,reduced)
 				elseif actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
@@ -295,6 +295,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			local camera=workspace.CurrentCamera
 			local context=self.parkContext or {};self.parkContext=context -- reused, no table per frame
 			context.camera,context.ownerPosition,context.ownPet=camera and camera.CFrame,root and root.Position,self.pet
+			context.dockPosition=self.controls.Position
 			context.active=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.menuOpen and not self.overlayOpen()and not GuiService.MenuIsOpen
 			self.park:step(serverNow,context)
 		end

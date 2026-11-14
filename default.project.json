@@ -14,7 +14,10 @@
         "$path": "assets/garden-babies/PetAssets.rbxmx"
       },
       "PetMaterials": {
-        "$path": "assets/pet-materials/PetMaterials.rbxm"
+        "$path": "assets/pet-materials/PetMaterials.rbxm",
+        "BodyJelly": {
+          "$path": "assets/pet-materials/BodyJelly.model.json"
+        }
       },
       "PetMaterialsTwoTone": {
         "$path": "assets/pet-materials/PetMaterialsTwoTone.model.json"
@@ -26,7 +29,7 @@
     "ServerStorage": {
       "$className": "ServerStorage",
       "WorldAssets": {
-        "$path": "assets/world/WorldAssets.rbxmx"
+        "$path": "assets/world/WorldAssetsNative.rbxm"
       },
       "PocketDeckSlim": {
         "$path": "assets/deck/PocketDeckSlim.rbxmx"

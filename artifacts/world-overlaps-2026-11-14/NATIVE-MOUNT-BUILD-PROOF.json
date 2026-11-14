@@ -1,0 +1,77 @@
+{
+  "freshFullProjectRojoBuild": "build\\native-collision-integrated.rbxlx",
+  "nativeMount": "assets/world/WorldAssetsNative.rbxm",
+  "physicalConfigDataParts": 170,
+  "allPayloadsMatchApprovedNativeExport": true,
+  "nativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+  "worldDescendants": 202,
+  "engineRayVerification": {
+    "total": 20920,
+    "source": "fresh complete Rojo build extracted world, no ApplyMesh",
+    "meshes": {
+      "1": {
+        "positiveHits": 29,
+        "name": "W7_Architecture__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "2": {
+        "positiveHits": 2,
+        "name": "W7_Balustrades__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "3": {
+        "positiveHits": 576,
+        "name": "W7_Bridge__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "4": {
+        "positiveHits": 65,
+        "name": "W7_Landmarks__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 16384
+      },
+      "5": {
+        "positiveHits": 206,
+        "name": "W7_Rotunda__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "6": {
+        "positiveHits": 16,
+        "name": "W7_Stations__marble",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "7": {
+        "positiveHits": 1,
+        "name": "W7_Stations__marble_smooth",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      },
+      "8": {
+        "positiveHits": 4,
+        "name": "W7_Trunks__bark",
+        "hitMismatches": 0,
+        "maxPositionDelta": 0,
+        "probes": 648
+      }
+    }
+  },
+  "tests": "23/23 upload+native checkpoint tests PASS; independent UI Sol source review GO",
+  "freshFullBuildExtraction": {
+    "path": "artifacts\\world-overlaps-2026-11-14\\FreshFullBuildWorldAssets.rbxm",
+    "bytes": 325848,
+    "sha256": "54e988c3a9bedb5414f54a24e2dbb6634fbec25d88dad5be9743af2f96298f3c",
+    "all170PhysicalHashesMatchAfterBinaryReadback": true
+  }
+}

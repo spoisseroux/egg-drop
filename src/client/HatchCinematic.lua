@@ -11,6 +11,7 @@ local Shot=require(script.Parent.PetGreetingShot)
 local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+local DisplayPose=require(script.Parent.HatchDisplayPose)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
@@ -46,6 +47,7 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  local skip=Instance.new("TextButton");skip.Name="SkipReveal";skip.Text="";skip.BackgroundTransparency=1;skip.BorderSizePixel=0;skip.Size=UDim2.fromScale(1,1);skip.ZIndex=60;skip:SetAttribute("AccessibleLabel","Skip hatch reveal");skip.Parent=root
  local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
  local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
+ self.skipButton=skip
  live[self]=true;skip.Activated:Connect(function()self:skip()end)
  for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
  local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
@@ -57,7 +59,7 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  watch(Input.WindowFocused,function()self.windowActive=true;self:refreshOwner()end)
  watch(Input.InputBegan,function(input)
   if self.active and self:owned()and(input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA)then
-   self.skipInput=input;drainInput=input;self:skip()
+   self:skipInputBegan(input)
   end
  end)
  watch(Input.InputEnded,function(input)if self.skipInput==input then task.defer(function()if self.skipInput==input then self.skipInput=nil end end)end end)
@@ -110,6 +112,17 @@ end
 -- The card scene keeps its clock, receipt and completion rules unchanged; only
 -- its hero stops drawing under the stage. `stageClear` runs on every cancel.
 function Cinematic:handoff(instant)
+ if self.nativeScene then
+  if self.handedOff or not self.stageHandoff or self.kind~="companion"then return false end
+  local ok,stage=pcall(self.stageHandoff,{scene=self.nativeScene,externalClock=true,result=self.result,pet=self.pet,
+   displayName=self.displayName,appearance=self.appearance,kind=self.kind,instant=instant==true,fresh=self.freshReveal==true,
+   consumeSkipInput=function()return self:consumeSkipInput()end})
+  if ok and type(stage)=="table"and type(stage.updateExternal)=="function"then
+   self.handedOff=true;self.borrowedStage=stage;return true
+  end
+  if not ok then warn("Native reveal stage failed: "..tostring(stage))end
+  return false
+ end
  if self.handedOff or not self.stageHandoff or not self.result or self.kind~="companion"or self.hideLabels or self.itemBuilder then return false end
  self.handedOff=true
  local ok,shown=pcall(self.stageHandoff,{result=self.result,pet=self.pet,displayName=self.displayName,appearance=self.appearance,
@@ -121,6 +134,8 @@ end
 function Cinematic:cancel()
  local wasHanded=self.handedOff;self.handedOff=false
  if wasHanded and self.stageClear then pcall(self.stageClear)end
+ if self.nativeScene then self.nativeScene:destroy();self.nativeScene=nil end
+ self.borrowedStage=nil;self.presentationSample=nil;self.nativePrepared=nil;self.nativeFailed=nil
  self.epoch+=1;self:disconnectClock();self:stopAudio();self.active=false;self.onComplete=nil;self.onPresented=nil;self.presented=false
  self:clearHero();if self.stage then self.stage:Destroy();self.stage=nil end;if self.resultRoot then self.resultRoot:Destroy();self.resultRoot=nil end
  self.result=nil;self.liveBits=0;self.frame.Visible=false;self.heroGraphic=nil
@@ -224,6 +239,7 @@ function Cinematic:fitHero(width,height,stageHeight)
 
 end
 function Cinematic:minimumHeightForWidth(width,height)
+ if self.nativeDisplay then return 1 end
  if self.hideLabels then return 1 end
  if not self.caption then return 160 end
  -- Candidate geometry owns its font contract. Never read the last painted sizes:
@@ -243,6 +259,7 @@ function Cinematic:minimumHeightForWidth(width,height)
 end
 
 function Cinematic:layout()
+ if self.nativeScene then self.nativeScene:layout();if self.borrowedStage then self.borrowedStage:layout()end;return end
  if not self.resultRoot then return end
  local w,h=math.max(1,self.frame.AbsoluteSize.X),math.max(1,self.frame.AbsoluteSize.Y);self.layoutWidth,self.layoutHeight=w,h
  self.landscapeLayout=self.compactLandscape or(w>=360 and w/h>=2)or(w>=540 and w/h>=1.5)
@@ -276,6 +293,20 @@ function Cinematic:layout()
 end
 
 function Cinematic:buildScene()
+ if self.nativeDisplay then
+  local epoch=self.epoch
+  self.duration=if self.kind=="companion"then DisplayPose.BearDuration else DisplayPose.ItemDuration
+  self.nativeEndAt=if self.reducedIntro then .15 else self.duration
+  local create=self.displaySceneFactory or require(script.Parent.HatchDisplayScene).new
+  self.nativeScene=create(self.frame,{pet=self.pet,result=self.result,kind=self.kind,
+   appearance=self.appearance,resultBuilder=self.itemBuilder,reduced=self:reduced(),onReady=function(ok)
+    task.defer(function()
+     if self.destroyed or self.epoch~=epoch or not self.nativeScene then return end
+     self.nativePrepared=true;self.nativeFailed=not ok;self:refreshOwner()
+    end)
+   end})
+  self.renderMode="NativeSharedScene";self.minimumHeight=1;self:handoff(not self.active);return
+ end
  self.pet=Pets.byId[self.result.petId]or Pets.byId.pip
  self.stage=Art.frame(self.frame,"HatchStage","inset",UDim2.fromScale(0,0),UDim2.fromScale(1,1),43);self.stage.BackgroundTransparency=1
  self.discoveryArt=CompanionArt.new(self.stage,self.result.rare==true,self.recipeId)
@@ -317,6 +348,14 @@ function Cinematic:publishDiagnostics(phase)
  end end
 end
 function Cinematic:paint()
+ if self.nativeScene then
+  local sample=DisplayPose.sample(self.age,self.kind,self:reduced());self.presentationSample=sample
+  self.nativeScene:render(sample)
+  if self.borrowedStage then self.borrowedStage:updateExternal(self.age,sample)end
+  if self.skipButton then self.skipButton.Visible=sample.inputLocked and not self.borrowedStage;self.skipButton.Active=sample.inputLocked end
+  if self.audio and self.audio.setDisplayDuck then self.audio:setDisplayDuck(self.audioOwner,sample.duck and self.active==true)end
+  return
+ end
  if not self.stage then return end
  local rare=self.result.rare==true;local split=self.splitAt or(if rare then .95 else .75)
  local heroAt=split+Cinematic.HeroDelay;local revealed=not self.active or self.age>=heroAt;local opened=not self.active or self.age>=split
@@ -396,6 +435,10 @@ function Cinematic:paintBits(revealed,quiet)
 end
 
 function Cinematic:finishStatic()
+ if self.nativeScene then
+  self.active=false;self:disconnectClock();self.age=if self:reduced()then .15 else self.duration
+  self:stopAudio();self:paint();self:complete();return
+ end
  if not self.resultRoot then return end
  self.active=false;self:disconnectClock();self.age=math.max(self.age,self.duration or 0);self:stopAudio()
  if self.heroVisual then self.heroVisual.reducedEffects=self:reduced();rest(self.heroVisual,self.pet)end
@@ -403,6 +446,25 @@ function Cinematic:finishStatic()
  self:paint();self.quietPainted=not self:owned()or self:reduced();self:complete()
 end
 function Cinematic:refreshOwner()
+ if self.nativeScene then
+  if self.destroyed or not self.result or self.building then return end
+  if not self:owned()then self:disconnectClock();self:stopAudio();if self.presented then self:finishStatic()end;return end
+  if not self.nativeScene.ready then return end
+  if not self.presented then
+   self.presented=true;local callback=self.onPresented;self.onPresented=nil;if callback then callback()end
+   if not self.result or not self.nativeScene then return end
+   if self.receiptKey and not seen[self.receiptKey]then
+    seen[self.receiptKey]=true;table.insert(seenOrder,self.receiptKey);if #seenOrder>64 then seen[table.remove(seenOrder,1)]=nil end
+   end
+   if self.active and not self:reduced()and not self.nativeFailed then self:cue("hatch_display_"..(if self.kind=="companion"then "bear"else self.kind),1,1)end
+  end
+  if self.nativeFailed or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())or not self.active then self:finishStatic();return end
+  if not self.connection then
+   local epoch=self.epoch;self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0
+   self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)
+  end
+  return
+ end
  self:publishDiagnostics("refreshOwner")
  if self.destroyed or not self.result or self.building then return end
  if not self:owned()then
@@ -424,6 +486,18 @@ function Cinematic:refreshOwner()
  self:publishDiagnostics("clockReady")
 end
 function Cinematic:step(dt)
+ if self.nativeScene then
+  if not self.active then self:disconnectClock();return end
+  if not self:owned()or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())then self:refreshOwner();return end
+  if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
+  self.age+=math.max(0,dt);self.sampleAge=(self.sampleAge or 0)+dt
+  if self.sampleAge>=1/30 then self.sampleAge=0;self:paint()end
+  local sample=self.presentationSample
+  local epoch=self.epoch
+  if sample and sample.receiptReady then self:complete();if self.epoch~=epoch then return end end
+  if self.age>=(self.nativeEndAt or self.duration)then self:finishStatic()end
+  return
+ end
  if not self.active then self:disconnectClock();return end
  if not self.result or not self:owned()or self:reduced()then self:refreshOwner();return end
  if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self:finishStatic();return end
@@ -448,19 +522,44 @@ function Cinematic:play(result,onComplete,options)
  self:cancel();options=options or {}
  if visibleOwner and visibleOwner~=self then visibleOwner:finishStatic()end;visibleOwner=self
  self.kind=options.kind or "companion";self.recipeId=options.recipeId or "meadow";self.displayName=options.displayName;self.itemBuilder=options.resultBuilder;self.hideLabels=options.hideLabels==true
+ self.nativeDisplay=options.nativeDisplay==true
+ self.displaySceneFactory=options.sceneFactory
  self.receiptKey=self.kind..":"..tostring(result.id);self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets.byId.pip
  self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
  self.freshReveal=not options.skipIntro and not seen[self.receiptKey]
- self.active=not options.skipIntro and not seen[self.receiptKey]and not self:reduced();self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
+ self.reducedIntro=self.nativeDisplay and self.freshReveal and self:reduced()
+ self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
  if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()
+ if self.nativeScene and self.presentationSample and self.presentationSample.receiptReady then return false end
  if not self.active or not self:owned()then return false end;self:finishStatic();return true
 end
+function Cinematic:skipInputBegan(input)
+ -- A decorative tail must never arm the global drain after the receipt opens.
+ if not self.active or not self:owned()or not self:getPresentationState().inputLocked then return false end
+ self.skipInput=input;drainInput=input
+ if self:skip()then return true end
+ if drainInput==input then drainInput=nil end;if self.skipInput==input then self.skipInput=nil end
+ return false
+end
+function Cinematic:releaseSkipInput(input)
+ if self.skipInput==input then self.skipInput=nil end
+ if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end
+end
+function Cinematic:getPresentationState()
+ if self.nativeScene then
+  local sample=self.presentationSample or DisplayPose.sample(self.age,self.kind,self:reduced())
+  return {inputLocked=sample.inputLocked,receiptReady=sample.receiptReady,decorativeActive=sample.decorativeActive and self.active==true,age=self.age,resultId=self.result and self.result.id}
+ end
+ return {inputLocked=self.active==true,receiptReady=self.result~=nil and not self.active,decorativeActive=self.active==true,age=self.age,resultId=self.result and self.result.id}
+end
+function Cinematic:getItemGraphic()return if self.nativeScene then self.nativeScene:getItemGraphic()else self.heroGraphic end
 function Cinematic:consumeSkipInput()return drainInput~=nil end
 function Cinematic:setAppearance(appearance)
  self.appearance=appearance
+ if self.nativeScene and self.nativeScene.setAppearance then self.nativeScene:setAppearance(appearance)end
  if self.heroVisual and self.heroVisual.applyAppearance then self.heroVisual:applyAppearance(appearance)end
  if self.portrait then Portrait.apply(self.portrait,appearance)end
 end

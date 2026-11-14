@@ -1,0 +1,7 @@
+{
+  "savedPlace": "build/egg-drop-native-unpublished-2026-11-14-1745.rbxl",
+  "savedPlaceSha256": "c4c4f4ff5902b6591f9d8bda5d831de8063e88a384187f4dc753dca1bacf8c8c",
+  "savedPlaceBytes": 1642295,
+  "all170WorldPayloadsMatchApprovedExport": true,
+  "inspectionNote": "Rojo requires one root; inspection-only copy modifies PRNT top-level service parents, no property chunks; original .rbxl unchanged. Rojo warns unknown Terrain.VoxelGridAssetContentMap type35; no Terrain used in WorldAssets payload comparison."
+}

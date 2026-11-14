@@ -2,7 +2,8 @@
 -- section 4, Spencer's decisions: UserId only, purged at 30 days, DataStore queue).
 --
 -- Storage: its own DataStore (`EggDropReportsV1`, never the economy save). One key per
--- UTC day, `day_<n>` = {v=1, reports={...}}, appended with UpdateAsync. The per-player
+-- UTC day and stable UserId shard, `day_<n>_s<0..15>` = {v=1, reports={...}},
+-- appended with UpdateAsync. Nonempty legacy `day_<n>` days stay legacy. The per-player
 -- daily and 10-minute limits are counted inside that transform, so they hold across
 -- servers without a second key. A sweep (at most once a day across all servers, gated
 -- by the `sweep` key) lists `day_` keys and removes every day 30 or more days old.
@@ -39,6 +40,7 @@ Reports.MaxErrors=5
 Reports.ErrorLength=160
 Reports.MaxRecordBytes=2000
 Reports.PendingAttempts=3
+Reports.ShardCount=16
 
 local KindSet,CategorySet,DeviceSet={},{},{}
 for _,id in ipairs(Reports.Kinds)do KindSet[id]=true end
@@ -47,6 +49,26 @@ for _,id in ipairs(Reports.Devices)do DeviceSet[id]=true end
 
 function Reports.dayOf(t)return math.floor(t/86400)end
 function Reports.dayKey(day)return "day_"..tostring(day)end
+function Reports.recordKey(day,userId)return Reports.dayKey(day).."_s"..tostring(userId%Reports.ShardCount)end
+-- Exact canonical names only: tooling must never mutate similarly prefixed keys.
+function Reports.parseKey(key)
+	if type(key)~="string"then return nil end
+	local digits,shard=string.match(key,"^day_(%d+)_s(%d+)$")
+	if not digits then digits=string.match(key,"^day_(%d+)$")end
+	local day=tonumber(digits)
+	if not day or tostring(day)~=digits then return nil end
+	if shard then
+		local n=tonumber(shard)
+		if not n or n>=Reports.ShardCount or tostring(n)~=shard then return nil end
+		return day,n
+	end
+	return day
+end
+function Reports.keysForDay(day)
+	local keys={Reports.dayKey(day)}
+	for shard=0,Reports.ShardCount-1 do table.insert(keys,Reports.recordKey(day,shard))end
+	return keys
+end
 function Reports.canRead(userId)return type(userId)=="number"and userId==Reports.Owner end
 
 -- Pure: a player's note, trimmed and cleaned, or nil when empty / not text.
@@ -130,6 +152,11 @@ end
 -- Returns "ok" | "Daily" | "Window" | "Duplicate" | "Full", and seconds to wait.
 function Reports.checkStored(reports,userId,now,record)
 	local L=Reports.Limits
+	-- Ambiguous UpdateAsync success can be retried after any limit is reached.
+	-- Identity proof must precede caps and content/window duplicate checks.
+	if record and record.id then
+		for _,report in ipairs(reports)do if report.id==record.id then return "Duplicate",0 end end
+	end
 	if #reports>=L.dayCap then return "Full",0 end
 	local daily,inWindow,oldest=0,0,nil
 	for _,report in ipairs(reports)do
@@ -170,7 +197,7 @@ end
 function Reports.expiredKeys(keys,today)
 	local out={}
 	for _,key in ipairs(keys)do
-		local day=tonumber(string.match(key,"^day_(%d+)$"))
+		local day=Reports.parseKey(key)
 		if day and today-day>=Reports.RetentionDays then table.insert(out,key)end
 	end
 	table.sort(out)
@@ -192,7 +219,8 @@ Service.__index=Service
 --   encode(value) -> string (JSON, for the size cap), log(line)
 -- }
 function Reports.new(adapter)
-	return setmetatable({adapter=adapter,sessionSent={},serverSent={},inFlight={},pendingQueue={},lastEvent={},lastSweepDay=nil},Service)
+	return setmetatable({adapter=adapter,sessionSent={},serverSent={},inFlight={},pendingQueue={},lastEvent={},lastSweepDay=nil,
+		recordRoutes=setmetatable({},{__mode="k"})},Service)
 end
 
 -- Filter the note for the reporter (adapter.filter returns ok, text and may error).
@@ -211,7 +239,17 @@ Reports.filterWith=filterWith
 -- "Window", "Full") or nil, error when the store call fails.
 function Service:append(record)
 	local status,wait="Sent",0
-	local key=Reports.dayKey(Reports.dayOf(record.t))
+	local key=self.recordRoutes[record]
+	if not key then
+		local day=Reports.dayOf(record.t)
+		local legacyKey=Reports.dayKey(day)
+		-- A failed/malformed legacy read must not silently bypass historical limits.
+		local read,legacy=pcall(self.adapter.get,legacyKey)
+		if not read then return nil,legacy end
+		if legacy~=nil and(type(legacy)~="table"or type(legacy.reports)~="table")then return nil,"MalformedLegacy"end
+		key=if legacy and #legacy.reports>0 then legacyKey else Reports.recordKey(day,record.uid)
+		self.recordRoutes[record]=key -- pending retries retain this decision, including midnight
+	end
 	local ok,problem=pcall(self.adapter.update,key,function(old)
 		local value=if type(old)=="table"and type(old.reports)=="table"then old else {v=1,reports={}}
 		local verdict,seconds=Reports.checkStored(value.reports,record.uid,record.t,record)
@@ -341,7 +379,8 @@ function Service:recent(requesterId,options)
 	local limit=math.clamp(math.floor(tonumber(options.limit)or 50),1,200)
 	local out={}
 	for day=today,today-days+1,-1 do
-		local ok,value=pcall(self.adapter.get,Reports.dayKey(day))
+		for _,key in ipairs(Reports.keysForDay(day))do
+		local ok,value=pcall(self.adapter.get,key)
 		if ok and type(value)=="table"and type(value.reports)=="table"then
 			for index=#value.reports,1,-1 do
 				local report=value.reports[index]
@@ -351,8 +390,22 @@ function Service:recent(requesterId,options)
 				end
 			end
 		end
+		end
 	end
-	table.sort(out,function(a,b)return a.t>b.t end)
+	table.sort(out,function(a,b)
+		if a.t~=b.t then return a.t>b.t end
+		if tostring(a.id)~=tostring(b.id)then return tostring(a.id)<tostring(b.id)end
+		return a.uid<b.uid
+	end)
+	local seen={}
+	local merged={}
+	for _,report in ipairs(out)do
+		if not report.id or not seen[report.id]then
+			table.insert(merged,report)
+			if report.id then seen[report.id]=true end
+		end
+	end
+	out=merged
 	while #out>limit do table.remove(out)end
 	return out
 end
@@ -365,6 +418,7 @@ function Service:eraseUser(requesterId,userId)
 	if not listed then return nil,keys end
 	local total=0
 	for _,key in ipairs(keys)do
+		if Reports.parseKey(key)==nil then continue end
 		local removed=0
 		local ok=pcall(self.adapter.update,key,function(old)
 			removed=0

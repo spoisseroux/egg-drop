@@ -35,7 +35,7 @@ ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
 ui.book.missing,Not yet,,Collection book
 ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
-ui.book.pending,Saving…,,Collection book; also ui.results.saved.pending
+ui.book.pending,Saving…,,"Collection book; also ui.onboarding.welcome.saving, ui.results.saved.pending"
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
 ui.book.records.empty,Play a round and your records start here.,,Collection book
 ui.book.records.line,Your lifetime numbers,,Collection book
@@ -59,16 +59,24 @@ ui.book.title,Collection book,,"Collection book; also ui.coach.book.title, ui.r3
 ui.book.toast.bookworm,Bookworm faceplate unlocked,,Collection book
 ui.book.toast.claimed,Page milestone,,Collection book
 ui.book.toast.plate,{name} faceplate unlocked,,Collection book; e.g. Pet Park faceplate unlocked
+ui.care.notice.busy,Machine busy · keep carrying,,Menu text
+ui.care.notice.changed,Your pet changed · try again,,Menu text
+ui.care.notice.closer,Move closer to your pet or machine,,Menu text
+ui.care.notice.dry,Find a clear dry patch,,Menu text
+ui.care.notice.ended,Machine session ended,,Menu text
+ui.care.notice.retry,Couldn't complete · try again,,Menu text
+ui.care.notice.saving,Wait for your pet save,,Menu text
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
 ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
+ui.coach.effortPay,Good effort,,First-round coaching
 ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
 ui.coach.fillLine.title,Fill line,,First-round coaching
 ui.coach.firstStars.toast,First round cleared,,First-round coaching
 ui.coach.gotIt,Got it,,First-round coaching; also ui.r3.help.done
 ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
-ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
+ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
 ui.coach.hub.pad,"Press Y for every machine, any time.",,First-round coaching
 ui.coach.hub.title,Pocket menu,,First-round coaching; also ui.hub.title
@@ -83,11 +91,11 @@ ui.coach.next,Next,,First-round coaching
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
 ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name, ui.report.category.park"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
-ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title, ui.r3.quests.eyebrow"
+ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title"
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,First-round coaching
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
-ui.coach.skip,Skip,,First-round coaching
+ui.coach.skip,Skip,,First-round coaching; also ui.onboarding.welcome.skip
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
@@ -100,6 +108,13 @@ ui.e2.hub.none,No companion yet. Play your first rounds to meet your Bear.,,Menu
 ui.e2.tease.many,Someone's on the way… {count} more stamps,,Menu text; e.g. Someone's on the way… 3 more stamps
 ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
 ui.e2.tease.short,Someone's on the way…,,Menu text
+ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
+ui.hatch.display.friend,New friend,,Hatch eggs screen
+ui.hatch.display.line,The display wakes up,,Hatch eggs screen
+ui.hatch.display.loading,Preparing your surprise…,,Hatch eggs screen
+ui.hatch.display.owned,Already owned,,Hatch eggs screen
+ui.hatch.display.refund,Already owned · {count} Stars back,,Hatch eggs screen; e.g. Already owned · 3 Stars back
+ui.hatch.display.wait,A little surprise,,Hatch eggs screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
 ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen
@@ -114,6 +129,10 @@ ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
 ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
 ui.hatch.footer.desktop,Give one a shake. The odds are on the label.,,Hatch eggs screen
 ui.hatch.footer.phone,The odds are on the label,,Hatch eggs screen
+ui.hatch.material.fixed,16 Stars · one guaranteed finish. No duplicates.,,Hatch eggs screen
+ui.hatch.material.nextPromise,No duplicates. Your next finish is shown above.,,Hatch eggs screen
+ui.hatch.material.oddsPromise,No duplicates. Odds update with your collection.,,Hatch eggs screen
+ui.hatch.material.random,16 Stars · one unowned finish. No duplicates.,,Hatch eggs screen
 ui.hatch.next.done,All collected,,Hatch eggs screen
 ui.hatch.next.label,Next item,,Hatch eggs screen
 ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
@@ -140,8 +159,28 @@ ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
 ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
 ui.menu.subtitle.paused,Round paused,,Pause menu
+ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear
+ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
+ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
+ui.onboarding.spend.store,Store,,First-round coaching
+ui.onboarding.welcome.egg,Mystery egg,,First-round coaching
+ui.onboarding.welcome.friend,Hatch a friend,,First-round coaching; also ui.r1.welcomePill.narrow
+ui.onboarding.welcome.gamepad,D-pad · A,,First-round coaching
+ui.onboarding.welcome.keyboard,← → · SPACE,,First-round coaching
+ui.onboarding.welcome.match,Match,,First-round coaching
+ui.onboarding.welcome.more,One more!,,First-round coaching
+ui.onboarding.welcome.static,↓,,First-round coaching
+ui.park.ballOut,Ball is out,,Pet Park chip
 ui.park.done,+{reward} ★ today,,Pet Park chip; e.g. +5 ★ today
+ui.park.fetchUnavailable,The ball needs a clear lane.,,Pet Park chip
+ui.park.fetchWait,Give them a moment.,,Pet Park chip
+ui.park.fetching,They’re on it.,,Pet Park chip
+ui.park.games,Games {count}/{target},,Pet Park chip; e.g. Games 3/3
 ui.park.playDate,Play date {count}/{target},,Pet Park chip; e.g. Play date 3/3
+ui.park.playing,Playing · {count}/{target},,Pet Park chip; e.g. Playing · 3/3
+ui.park.saving,Saving · {count}/{target},,Pet Park chip; e.g. Saving · 3/3
+ui.park.throw,Throw,,Pet Park chip
+ui.park.waitIdle,Pets are playing,,Pet Park chip
 ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
 ui.pet.star,+1 ★,,Petting reward
@@ -152,10 +191,15 @@ ui.pool3.charm.heart.rule,Finish the Wardrobe page in the book,,Menu text
 ui.pool3.charm.leaf.rule,Collect 14 daily stamps,,Menu text
 ui.pool3.charm.locked,Locked,,Menu text
 ui.pool3.charm.star.rule,Claim 4 weekly bonuses,,Menu text
+ui.qa.coach.sayHi,Say hi to {pet},,Menu text; e.g. Say hi to Bear
+ui.qa.coach.welcome,Match eggs. Hatch a friend.,,Menu text
+ui.qa.loading,Getting the preview ready…,,Menu text
+ui.qa.retryPreview,Retry preview,,Menu text
+ui.qa.shortfall,{count} more Stars needed,,Menu text; e.g. 3 more Stars needed
+ui.qa.shortfallOne,{count} more Star needed,,Menu text; e.g. 3 more Star needed
 ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
 ui.quests.allDoneSolo,All done for today.,,Quest log
 ui.r1.hatchHints.hatch,Hatch,,Menu text
-ui.r1.welcomePill.narrow,Hatch a friend,,Menu text
 ui.r1.welcomePill.wide,Merge to hatch your first friend,,Menu text
 ui.r3.help.book.a.line,"Every ball, plate, outfit and toy you own gets a spot in the book.",,Menu text
 ui.r3.help.book.a.title,Collect,,Menu text
@@ -164,13 +208,13 @@ ui.r3.help.book.b.title,Milestones,,Menu text
 ui.r3.help.book.c.line,"Your best rounds and big totals, kept for good.",,Menu text
 ui.r3.help.button,How it works,,Menu text; also ui.r3.help.eyebrow
 ui.r3.help.close,Close,,Menu text
-ui.r3.help.companions.a.line,Everyone you hatch lives here. Visit them and swap who tags along.,,Menu text
-ui.r3.help.companions.a.title,Your pets,,Menu text
+ui.r3.help.companions.a.line,"Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks.",,Menu text
+ui.r3.help.companions.a.title,Bond hearts,,Menu text
 ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
 ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Pages.wardrobe.name
 ui.r3.help.companions.c.line,"Feed colour fruit, add a charm, try a finish or hand over a toy.",,Menu text
 ui.r3.help.companions.c.title,Customize,,Menu text
-ui.r3.help.hatch.a.line,"Win rounds, finish quests and stamp your card. Stars pay for eggs.",,Menu text
+ui.r3.help.hatch.a.line,Rounds and quests earn Stars. Open Quests for your once-daily stamp.,,Menu text
 ui.r3.help.hatch.a.title,Earn Stars,,Menu text
 ui.r3.help.hatch.b.line,Each egg hatches one kind of thing. The odds are on the label.,,Menu text
 ui.r3.help.hatch.b.title,Pick an egg,,Menu text
@@ -253,6 +297,10 @@ ui.report.thanks.queued,Thanks! It'll go out shortly.,,Bug report sheet
 ui.report.thanks.suggestion,"Ooh, noted. Thank you!",,Bug report sheet
 ui.report.title,Tell us,,Bug report sheet; also ui.report.titleShort
 ui.report.wait,Send again soon,,Bug report sheet
+ui.results.inPlace.metrics,Score {score} · Best {best} · Chain ×{chain},,Round results screen; e.g. Score {score} · Best {best} · Chain ×{chain}
+ui.results.inPlace.noStars,No Stars this round,,Round results screen
+ui.results.inPlace.replay,Replay,,Round results screen
+ui.results.inPlace.total,Total  ★ {count},,Round results screen; e.g. Total  ★ 3
 ui.results.leave.mid,Leave to garden,,Round results screen
 ui.results.leave.narrow,Leave,,Round results screen
 ui.results.leave.wide,Back to the garden,,Round results screen
@@ -369,9 +417,11 @@ catalog.DeckThemes.ById.stargazer.name,Stargazer,,Catalogue DeckThemes (name); a
 catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
+catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
 catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
 catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name
-catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
+catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
+catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name
 catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)

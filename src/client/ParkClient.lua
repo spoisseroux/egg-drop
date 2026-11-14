@@ -14,12 +14,16 @@
 local Players=game:GetService("Players")
 local AssetService=game:GetService("AssetService")
 local Shared=game:GetService("ReplicatedStorage").Shared
-local Flags=require(Shared.FeatureFlags)
-local Park=require(Shared.ParkLayout)
-local Data=require(Shared.ParkPoseData)
 local UICopy=require(Shared.UICopy)
+local Flags=require(Shared.FeatureFlags)
+local DefaultPark=require(Shared.ParkLayout)
+local DataModule=require(Shared.ParkPoseData)
+local PoseModule=require(script.Parent.ParkPetPose)
+local FetchMotion=require(Shared.ParkFetchMotion)
+local function build(Park)
+local Data=DataModule.forSite(Park)
 local Follow=require(script.Parent.PetFollow)
-local PetPose=require(script.Parent.ParkPetPose)
+local PetPose=PoseModule.forSite(Park)
 local OwnerSnapshot=require(script.Parent.OwnerSnapshot)
 local Client={};Client.__index=Client
 Client.FarDistance=180 -- equipment frames stop updating beyond this camera distance
@@ -57,9 +61,12 @@ function Client.new(options)
 	if not enabled or not Park.Enabled then return nil end
 	local self=setmetatable({garden=options.garden,parkSource=options.park,reduced=options.reduced or function()return false end,
 		playDateSource=options.playDate,guiParent=options.gui,parts={},lastHop={},ownerInside=false},Client)
-	local folder=Instance.new("Folder");folder.Name="PetParkLocal"
+	local folder=Instance.new("Folder");folder.Name="PetParkLocal_"..Park.Id
 	folder.Parent=options.parent or workspace
 	self.folder=folder
+	local ball=Instance.new("Part");ball.Name="SharedFetchBall";ball.Shape=Enum.PartType.Ball
+	ball.Size=Vector3.one*(FetchMotion.Radius*2);ball.Color=Color3.fromHex("#94DFB7");ball.Material=Enum.Material.SmoothPlastic
+	quiet(ball);ball.Parent=folder;self.fetchBall=ball
 	for _,name in ipairs(Data.Moving)do
 		local entry={name=name,spec=Data.Meshes[name]}
 		self.parts[name]=entry
@@ -97,6 +104,8 @@ function Client:block()
 	if self.parkSource then return self.parkSource()end
 	local snapshot=self.garden and self.garden.snapshot
 	local park=snapshot and snapshot.park
+	if park and type(park.sites)=="table"then park=park.sites[Park.Id]
+	elseif Park.Id~="arrival"then park=nil end
 	return if type(park)=="table"and type(park.slots)=="table"then park else nil
 end
 -- Slot id and entry holding `ownerId` (no allocation: at most nine slots).
@@ -124,6 +133,11 @@ end
 function Client:animate(t)
 	local park=self:block()
 	local slots=park and park.slots
+	if self.fetchBall then
+		local position=FetchMotion.sample(park and park.fetch,t)
+		self.fetchBall.Transparency=if position then 0 else 1
+		if position then self.fetchBall.Position=position end
+	end
 	local roots=Data.Roots
 	-- Swings.
 	for _,slotId in ipairs(SWING_SLOTS)do
@@ -205,6 +219,11 @@ function Client:drive(visual,actor,now,dt,state,reduced)
 	visual.parkPosedOrigin,visual.parkBase=nil,nil
 	state=Follow.activity(visual,actor,now,dt,state,reduced)
 	visual.parkPose=false
+	if actor.action=="parkFetchChase"or actor.action=="parkFetchReturn"then
+		visual.expression="joy"
+		if not reduced then visual.movementBob=(visual.movementBob or 0)+math.abs(math.sin(now*5+actor.ownerId))*.05 end
+		return state
+	end
 	if actor.care or actor.mode~="Room"or not PetPose.Actions[actor.action]then return state end
 	local base=visual.origin
 	local t=now-Data.Delay
@@ -273,7 +292,7 @@ function Client:makeChip()
 	local parent=self.guiParent or Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
 	if not parent then return false end
 	local gui=Instance.new("ScreenGui")
-	gui.Name="EggDropPark";gui.ResetOnSpawn=false;gui.IgnoreGuiInset=true;gui.DisplayOrder=4
+	gui.Name=if Park.Id=="arrival"then "EggDropPark"else "EggDropPark_"..Park.Id;gui.ResetOnSpawn=false;gui.IgnoreGuiInset=true;gui.DisplayOrder=4
 	gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Enabled=false
 	-- Kit components read their parent's ZIndex: a transparent full-screen holder (no input).
 	local holder=Instance.new("Frame");holder.Name="Holder";holder.BackgroundTransparency=1;holder.Size=UDim2.fromScale(1,1)
@@ -300,6 +319,7 @@ function Client:playDate()
 	return snapshot and snapshot.playDate
 end
 function Client:updateChip(show)
+ if self.statusManaged then return end
 	if not show then
 		if self.chip and self.chip.Enabled then self.chip.Enabled=false end
 		return
@@ -324,4 +344,70 @@ function Client:destroy()
 	self.ring,self.chevron=nil,nil
 end
 
+return Client
+end
+local Client=build(DefaultPark)
+local singleNew,singleStep,singleDrive,singleDestroy=Client.new,Client.step,Client.drive,Client.destroy
+local classes={[DefaultPark.Id]=Client}
+local function classFor(layout)
+	if not classes[layout.Id]then classes[layout.Id]=build(layout)end
+	return classes[layout.Id]
+end
+function Client.new(options)
+	local primary=singleNew(options)
+	if not primary then return nil end
+	primary.sites={[DefaultPark.Id]=primary}
+	for _,layout in ipairs(DefaultPark.Sites)do
+		if layout.Id~=DefaultPark.Id then
+			local childOptions=table.clone(options or {})
+			-- An injected single-site fixture remains a single-site source.
+			if childOptions.park then childOptions.park=function()return nil end end
+			primary.sites[layout.Id]=classFor(layout).new(childOptions)
+		end
+	end
+	if not(options and options.park)then
+		for _,child in pairs(primary.sites)do child.statusManaged=true end
+		primary.railStatus=require(script.Parent.NotificationRail).status(primary.folder,"park-progress",{text="",active=false,priority=-100})
+	end
+	primary.throwControl=require(script.Parent.ParkThrowControl).new(primary,options or {})
+	function primary:step(serverNow,context)
+		for _,layout in ipairs(DefaultPark.Sites)do
+			local child=self.sites[layout.Id]
+			if child then classFor(layout).step(child,serverNow,context)end
+		end
+		if self.throwControl then self.throwControl:step(serverNow,context)end
+		if self.railStatus then
+			local layout=DefaultPark.siteAt(context and context.ownerPosition,self.statusSite)
+			self.statusSite=layout and layout.Id or nil
+			local active=context and context.active==true and layout~=nil
+			local date=self:playDate()or {}
+			local count,target=date.count or 0,date.target or 3
+			local actors=self.garden and self.garden.snapshot and self.garden.snapshot.actors
+			local actor=actors and actors[tostring(self.garden.playerId)]
+			local board=self.garden and self.garden.boards and self.garden.boards:FindFirstChild(tostring(self.garden.playerId))
+			local pending=board and board:GetAttribute("ParkGamesPending")or 0
+			local playing=actor and type(actor.action)=="string"and string.sub(actor.action,1,4)=="park"and actor.action~="parkApproach"
+			local key=if date.done then "park.done"elseif pending>0 then "park.saving"elseif playing then "park.playing"else "park.games"
+			local label=UICopy.get(key,{count=count,target=target,reward=date.reward or 4})
+			if self.statusText~=label or self.statusActive~=active then
+				self.statusText,self.statusActive=label,active
+				self.railStatus:update({text=label,active=active,icon="●"})
+			end
+		end
+	end
+	function primary:drive(visual,actor,now,dt,state,reduced)
+		local layout=DefaultPark.ById[actor.parkId]or DefaultPark
+		local child=self.sites[layout.Id]or self
+		return classFor(layout).drive(child,visual,actor,now,dt,state,reduced)
+	end
+	function primary:destroy()
+		if self.railStatus then self.railStatus:cancel();self.railStatus=nil end
+		if self.throwControl then self.throwControl:destroy();self.throwControl=nil end
+		for _,layout in ipairs(DefaultPark.Sites)do
+			local child=self.sites[layout.Id]
+			if child then classFor(layout).destroy(child)end
+		end
+	end
+	return primary
+end
 return Client

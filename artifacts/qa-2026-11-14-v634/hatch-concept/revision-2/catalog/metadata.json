@@ -1,0 +1,12 @@
+{
+  "source_unchanged": true,
+  "source_hashes": {
+    "assets\\art-source\\pets\\pet-bear-attachments.blend": "170ddfc037ced0322dac876576fe242ba2550af25a633899eee7e8ac576cff65",
+    "assets\\art-source\\eggs\\eggs.blend": "1bf7620d763912e9ef770e16d0b481ed89e18acc60bbe4af3e3da9cc530699b0"
+  },
+  "standard_roughness": 0.3215686274509804,
+  "gloss_roughness": 0.1411764705882353,
+  "metalness": 0,
+  "provenance": "assets/pet-materials/README.md and manifest.json; Blender visual equivalents, not native SurfaceAppearance proof",
+  "wearable": "Hat_SunHat + Hat_SunHat_Band, authored direct-purchase wearable, not egg outcome"
+}

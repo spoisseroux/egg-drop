@@ -68,7 +68,7 @@ function Shop.status(id,ctx)
   -- Slice C: a plate on this week's shelf sells at the shelf price (`full` = the struck price).
   local price,full=Deal.quote("faceplate",id,base,weekOf(ctx))
   if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
-  return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
+  return {kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
  end
  local requirement=Catalog.describeRequirement("theme",id,facts)
  if requirement.unlocked then return {kind="owned",text=if theme.bookOnly then "From the book"else "",button="Equip",enabled=true}end
@@ -110,7 +110,8 @@ function Shop.nextTab(tab,delta)return math.clamp(tab+delta,1,#Shop.Tabs)end
 -- Mini deck composed from the real shell sprites (296 wide in the pane, 88 on tiles).
 local function miniDeck(parent,width,position)
  local s=width/1600;local L=Assets.Layout;local I=Assets.Image
- local root=Kit.frame(parent,"MiniDeck",nil,position,UDim2.fromOffset(width,800*s))
+ local root=Kit.node("CanvasGroup",parent,{Name="MiniDeck",BackgroundTransparency=1,BorderSizePixel=0,Position=position,Size=UDim2.fromOffset(width,800*s),ClipsDescendants=true,ZIndex=parent.ZIndex+1})
+ Kit.corner(root,math.max(3,math.floor(width*.04)))
  local function img(name,id,r,z)
   local i=Kit.node("ImageLabel",root,{Name=name,BackgroundTransparency=1,Image=id,ZIndex=root.ZIndex+z,Active=false,
    Position=UDim2.fromOffset(r[1]*s,r[2]*s),Size=UDim2.fromOffset(r[3]*s,r[4]*s)})
@@ -129,13 +130,35 @@ local function miniDeck(parent,width,position)
  local b=L.b.diameter;local buttonB=img("B",I.buttonBase,{L.b.center.X-b/2,L.b.center.Y-b/2,b,b*1.07},6)
  buttonB.ImageColor3=Color3.fromHex("#3A3E47")
  local wordmark=img("Wordmark",I.wordmark,L.wordmark,4);wordmark.ResampleMode=Enum.ResamplerMode.Pixelated
+ local epoch,ticket,lastId,ready,retryAt=0,nil,nil,false,0
+ local placeholder=Kit.frame(root,"LoadingOutline","well",UDim2.new(0,2,0,2),UDim2.new(1,-4,1,-4),math.max(3,math.floor(width*.04)))
+ placeholder.ZIndex=root.ZIndex;Kit.stroke(placeholder,"dim",1,.35)
+ local overlayWanted=false
+ local function show(on)
+  placeholder.Visible=not on
+  for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")then image.Visible=on and(image~=finish or overlayWanted)end end
+ end
+ root.Destroying:Connect(function()epoch+=1;if ticket then ticket:cancel()end end)
  return {root=root,set=function(theme,id)
   plate.Image=Assets.Faceplate[id]or Assets.Faceplate.sherbet
   band.ImageColor3=theme.bandTint or Color3.new(1,1,1)
-  finish.Visible=theme.overlay~=nil;if theme.overlay then finish.Image=theme.overlay.image;finish.ImageTransparency=1-theme.overlay.max*.6 end
+  overlayWanted=theme.overlay~=nil;finish.Visible=ready and overlayWanted;if theme.overlay then finish.Image=theme.overlay.image;finish.ImageTransparency=1-theme.overlay.max*.6 end
   lcd.BackgroundColor3=theme.ui.panel
   arrows.ImageColor3=theme.accent;buttonA.ImageColor3=theme.accent
   wordmark.ImageColor3=theme.engrave or Color3.new(0,0,0);wordmark.ImageTransparency=1-(theme.engraveOpacity or .42)
+  if id~=lastId or(not ready and os.clock()>=retryAt)then
+   local retry=id==lastId;lastId=id;ready=false;epoch+=1;local serial=epoch
+   if ticket then ticket:cancel()end
+   local ids={};for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")and image.Image~=""and(image~=finish or overlayWanted)then table.insert(ids,image.Image)end end
+   local warm=require(script.Parent.UIAssetWarmup).shared
+   local request=if retry then warm.retry else warm.request
+   retryAt=os.clock()+3
+   ticket=request(warm,ids,function(ok)
+    if not root.Parent or serial~=epoch then return end
+    ready=ok;retryAt=os.clock()+3;show(ok)
+   end,1)
+  end
+  show(ready)
  end}
 end
 

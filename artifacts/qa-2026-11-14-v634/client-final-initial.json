@@ -1,0 +1,900 @@
+{
+  "running": false,
+  "suites": {
+    "1": {
+      "ok": true,
+      "name": "HatchNativeHost",
+      "result": {
+        "passed": 3,
+        "cases": {
+          "1": "item receipt unlocks while decorative owner remains active",
+          "2": "companion host borrows exact scene and never destroys cinematic ownership",
+          "3": "destroyed result host rejects queued layout and update without reparenting Notice"
+        }
+      }
+    },
+    "2": {
+      "ok": true,
+      "name": "HatchNativeCinematic",
+      "result": {
+        "passed": 1,
+        "cases": {
+          "1": "one scene borrowed once, ready while tail active, cancel releases before destroy"
+        }
+      }
+    },
+    "3": {
+      "ok": true,
+      "name": "HatchDisplayPose",
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "one generic forward reveal clears same-side shells before recognition settles",
+          "2": "receipt unlock is separate from decorative tail and exact per payload",
+          "3": "visible smile eyes survive joy and full blink compresses complete eye owner",
+          "4": "reduced effects has one bounded fade and no hop or shell movement"
+        }
+      }
+    },
+    "4": {
+      "ok": true,
+      "name": "HatchNativeFrustum",
+      "result": {
+        "passed": 1,
+        "cases": {
+          "1": "native swept corner frustum fits entrance/hop/waves at three aspects"
+        }
+      }
+    },
+    "5": {
+      "ok": true,
+      "name": "HatchNativeItemFit",
+      "result": {
+        "passed": 2,
+        "cases": {
+          "1": "200px Wobble Top fitted hero",
+          "2": "200px Ball fitted hero"
+        }
+      }
+    },
+    "6": {
+      "ok": true,
+      "name": "HatchAudioDuck",
+      "result": {
+        "passed": 3,
+        "cases": {
+          "1": "one owner's600ms release cannot unduck a surviving quieter owner",
+          "2": "reactivation replaces recovery and mute/focus use current master",
+          "3": "two reveal owners release independently and cleanup is bounded"
+        }
+      }
+    },
+    "7": {
+      "ok": true,
+      "name": "LoopAudio",
+      "result": {
+        "passed": 16,
+        "evidence": "deterministic scheduler/voice doubles; not an audible audition",
+        "cases": {
+          "1": "unresolved master and fast ready assets are silent",
+          "2": "master 1 music true",
+          "3": "master 1 music false",
+          "4": "master 0.4 music true",
+          "5": "master 0.4 music false",
+          "6": "master 0 music true",
+          "7": "master 0 music false",
+          "8": "independent ducks do not overwrite master or session choice",
+          "9": "old same-name duck expiry cannot remove replacement",
+          "10": "one purr owner and old fade cannot stop a new gesture",
+          "11": "mute consumes purr without deferred unmute start",
+          "12": "asset readiness never queues purr and starts only one music",
+          "13": "inactive device never accepts purr",
+          "14": "QA Q2.6: unfocus pauses the world music and refocus resumes it in place",
+          "15": "retry stops effects but preserves independent music preference",
+          "16": "destroy invalidates delayed ducks fades and future starts"
+        }
+      }
+    },
+    "8": {
+      "ok": true,
+      "name": "AmbientAudio",
+      "result": {
+        "passed": 7,
+        "cases": {
+          "1": "bed gain follows the A3 table and never goes silent",
+          "2": "stream distance tests segments, not just points, and subtracts the half width",
+          "3": "round mix fades out over 0.6 s and back over 1.0 s",
+          "4": "bird gaps stay inside each daylight band and night uses only the hoo-hoo",
+          "5": "birds pick among the 6 nearest perches within 70 studs and never the same tree twice running",
+          "6": "an inactive scheduler (deck round) cancels pending chirps and queues nothing",
+          "7": "a deck round mutes every ambient layer, cues and birds; leaving brings them back"
+        }
+      }
+    },
+    "9": {
+      "ok": true,
+      "name": "RevealStage",
+      "result": {
+        "passed": 13,
+        "cases": {
+          "1": "timeline: each beat starts on its millisecond and every lane stays bounded",
+          "2": "Reduced Motion: one 150 ms cross-fade to the settled frame, no flash, burst or spin-in",
+          "3": "accent: undyed grey becomes Stars gold, dyed secondaries are lifted to read on black",
+          "4": "spin: exponential decay (0.55 s), stop under 4°/s, 80 ms release window, 1080°/s cap, spring home",
+          "5": "headline and tag strip follow the result",
+          "6": "layout: desktop and phone match the mockup numbers; phone stays under the Roblox controls",
+          "7": "pet descriptions exist, one line of at most 60 characters; Bear's is the approved line",
+          "8": "live stage: a press before the buttons settles without acting; then Meet and Play again act",
+          "9": "Reduced Motion live stage: cross-fade, still idle, spin stops on release",
+          "10": "EggHatchView hands the hatch to the full-screen stage and Meet acknowledges through it",
+          "11": "QA v2 R1.1: the confetti popper fires from both bottom corners, arcs up and falls out",
+          "12": "QA v2 R1.1: a first view pops once with its cue; a reopen and Reduced Motion never do",
+          "13": "QA v2 R1.2/R1.5: the stage layer covers the screen; the first Bear's B is Back, not Play again"
+        }
+      }
+    },
+    "10": {
+      "ok": true,
+      "name": "HatchCinematic",
+      "result": {
+        "fixtureOnly": true,
+        "geometry": {
+          "1": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 6272,
+            "pet": "pip",
+            "reason": "target",
+            "stageHeight": 360,
+            "bandHeight": 344,
+            "fraction": 0.589999973281456,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 6.72360003227368,
+            "limited": false,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "2": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 4704,
+            "pet": "puddle",
+            "reason": "swept width",
+            "stageHeight": 360,
+            "bandHeight": 344,
+            "fraction": 0.5689108207906277,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 8.762100012972951,
+            "limited": true,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "3": {
+            "sweptPoints": 5880,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999635740631,
+            "pet": "wick",
+            "preparationMs": 6.777699978556484,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "4": {
+            "sweptPoints": 4704,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 344,
+            "fraction": 0.5705061463596333,
+            "pet": "orbit",
+            "preparationMs": 5.551000009290874,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "5": {
+            "sweptPoints": 5880,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999826912321,
+            "pet": "bloom_pip",
+            "preparationMs": 7.646500016562641,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "6": {
+            "sweptPoints": 6272,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 344,
+            "fraction": 0.5899999702270367,
+            "pet": "foxfire_wick",
+            "preparationMs": 6.964200001675636,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "7": {
+            "sweptPoints": 5096,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 344,
+            "fraction": 0.5412335749072363,
+            "pet": "eclipse_orbit",
+            "preparationMs": 5.755699996370822,
+            "stageHeight": 360,
+            "preference": "Medium",
+            "size": "600, 360"
+          },
+          "8": {
+            "sweptPoints": 6272,
+            "limited": true,
+            "reason": "full greeting",
+            "bandHeight": 330,
+            "fraction": 0.5712014592517376,
+            "pet": "pip",
+            "preparationMs": 7.1094000013545156,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "9": {
+            "sweptPoints": 4704,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 330,
+            "fraction": 0.4801947028998567,
+            "pet": "puddle",
+            "preparationMs": 6.438300013542175,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "10": {
+            "sweptPoints": 5880,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 330,
+            "fraction": 0.5899999738789072,
+            "pet": "wick",
+            "preparationMs": 6.643700005952269,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "11": {
+            "sweptPoints": 4704,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 330,
+            "fraction": 0.4820914380431915,
+            "pet": "orbit",
+            "preparationMs": 5.312699999194592,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "12": {
+            "sweptPoints": 5880,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 330,
+            "fraction": 0.5692640106674427,
+            "pet": "bloom_pip",
+            "preparationMs": 6.356000027153641,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "13": {
+            "sweptPoints": 6272,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 330,
+            "fraction": 0.5899999686970033,
+            "pet": "foxfire_wick",
+            "preparationMs": 6.819300004281104,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "14": {
+            "sweptPoints": 5096,
+            "limited": true,
+            "reason": "swept width",
+            "bandHeight": 330,
+            "fraction": 0.45700266689040936,
+            "pet": "eclipse_orbit",
+            "preparationMs": 6.400100013706833,
+            "stageHeight": 420,
+            "preference": "Medium",
+            "size": "338, 420"
+          },
+          "15": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 6272,
+            "pet": "pip",
+            "reason": "target",
+            "stageHeight": 180,
+            "bandHeight": 164,
+            "fraction": 0.5899999636442845,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 6.251900049392134,
+            "limited": false,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "16": {
+            "normalFitShortfallPixels": 0,
+            "sweptPoints": 4704,
+            "pet": "puddle",
+            "reason": "target",
+            "stageHeight": 180,
+            "bandHeight": 164,
+            "fraction": 0.589999997821905,
+            "normalFitPixelBudget": 0,
+            "preparationMs": 5.260900012217462,
+            "limited": false,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "17": {
+            "sweptPoints": 5880,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999578628038,
+            "pet": "wick",
+            "preparationMs": 6.443199992645532,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "18": {
+            "sweptPoints": 4704,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999586217535,
+            "pet": "orbit",
+            "preparationMs": 5.331899970769882,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "19": {
+            "sweptPoints": 5880,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999881376629,
+            "pet": "bloom_pip",
+            "preparationMs": 7.637200003955513,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "20": {
+            "sweptPoints": 6272,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999433280401,
+            "pet": "foxfire_wick",
+            "preparationMs": 6.374999997206032,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          },
+          "21": {
+            "sweptPoints": 5096,
+            "limited": false,
+            "reason": "target",
+            "bandHeight": 164,
+            "fraction": 0.5899999787163847,
+            "pet": "eclipse_orbit",
+            "preparationMs": 5.995500017888844,
+            "stageHeight": 180,
+            "preference": "Medium",
+            "size": "500, 180"
+          }
+        },
+        "cases": {
+          "1": "short-landscape484x203 keeps final name and caption inside host beside hero",
+          "2": "all seven real subjects fit the rectangular viewport through every greeting frame",
+          "3": "all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",
+          "4": "common and rare split within1.5/1.7s and settle with no idle clock or audio replay",
+          "5": "quiet same-ID final and reduced first visibility reserve marker and complete synchronously",
+          "6": "covered first play defers marker while presented owner loss lands final and stops its clock",
+          "7": "resize keeps exact hero and epoch and device discontinuity settles only once",
+          "8": "candidate minimum height is independent of previous stage and painted text sizes",
+          "9": "pixel fallback and twenty canceled cycles retain a fixed passive pool",
+          "10": "QA v2 R1.3: a bleed host draws no panel or corner, so no card rect shows before the stage"
+        },
+        "passed": 10
+      }
+    },
+    "11": {
+      "ok": true,
+      "name": "HueItemReveal",
+      "result": {
+        "1": "new paid jar uses shared1.5s timeline and same receipt never replays",
+        "2": "clear destroys transient scene and reopen stays static and silent",
+        "3": "reduced motion or saved joined result owns no animation clock",
+        "4": "skip settles but never performs a purchase store use or acknowledgment",
+        "5": "Material Toy and Feature adapters use the same registered kind and one owner clock"
+      }
+    },
+    "12": {
+      "ok": true,
+      "name": "MaterialDisclosure",
+      "result": {
+        "passed": 4
+      }
+    },
+    "13": {
+      "ok": true,
+      "name": "MaterialIntent",
+      "result": {
+        "passed": 9,
+        "cases": {
+          "1": "purchase captures sorted remaining pool version and blocks duplicate purchase",
+          "2": "full collection and unverified pool cannot send or debit",
+          "3": "lost response timeout and retry retain exact quote object and revision",
+          "4": "Saved cannot unlock early and malformed same-ID finish cannot clear exact receipt wait",
+          "5": "free equip captures per-pet expected finish and cannot equip locked or unowned pet",
+          "6": "Use now preserves result identity and selected finish before snapshot proof",
+          "7": "destroyed owner cannot revive a pending timeout or send another command",
+          "8": "historical pool2 public proof retains its exact legacy receipt shape",
+          "9": "current pool4 binds mode price and exact public receipt proof"
+        }
+      }
+    },
+    "14": {
+      "ok": true,
+      "name": "MaterialEditor",
+      "result": {
+        "passed": 9,
+        "cases": {
+          "1": "Customize icon tabs keep 44 px targets and Materials owns saved preview without a paid selection",
+          "2": "free per-pet material choice stays visually current until exact owner snapshot",
+          "3": "Material receipt Use now chooses recipient without making that pet active",
+          "4": "Material receipt fits its round finish sample and adjacent measured actions without a blank footer gap",
+          "5": "short landscape Materials starts with complete choices and retires receipt art on Use now",
+          "6": "Materials keeps its live pet fixed during right-pane scrolling at compact and portrait sizes",
+          "7": "full and unavailable purchase states never offer a paid action",
+          "8": "reopened Keep retry resends the captured acknowledgement instead of starting a blocked new one",
+          "9": "closing Use now then keeping its receipt cannot hijack later ordinary Pet selection"
+        }
+      }
+    },
+    "15": {
+      "ok": true,
+      "name": "MaterialFinishPreview",
+      "result": {
+        "passed": 5,
+        "cases": {
+          "1": "all finishes immediately show an honestly labeled opaque fallback and ground shadow",
+          "2": "both finishes retain identical camera framing upper-left key and fill",
+          "3": "cold readiness success swaps exact verified production profiles only onto MeshParts",
+          "4": "failed and unverified loads leave immediate fallback and destroy prevents late resurrection",
+          "5": "receipt sample has no input physics queries lights particles or independent frame clock"
+        }
+      }
+    },
+    "16": {
+      "ok": true,
+      "name": "JellyMaterials",
+      "result": {
+        "gpuAppearanceClaim": false,
+        "passed": 5,
+        "cases": {
+          "1": "verified pair preserves Overlay pigment and exact body head ear secondary alpha",
+          "2": "faces accessories features charms and unknown core pieces remain opaque",
+          "3": "missing or unverified paired profile falls back opaque and recovers once",
+          "4": "detached or failed material binding cannot leave a translucent body",
+          "5": "authored opacity composes once and Standard restore leaves Hue untouched"
+        }
+      }
+    },
+    "17": {
+      "ok": true,
+      "name": "FirstSpendGuide",
+      "result": {
+        "passed": 4,
+        "cases": {
+          "1": "saved state reconstructs optional stages without timers/daily pet counts",
+          "2": "exact saved equip and actor readiness gate one garden handoff",
+          "3": "explicit same-screen tab navigation, rejection and destruction cancel delayed work",
+          "4": "safe host frame does not consume handoff before normal toy owner starts"
+        }
+      }
+    },
+    "18": {
+      "ok": true,
+      "name": "FirstSpendToyHost",
+      "result": {
+        "passed": 3,
+        "cases": {
+          "1": "saved Give starts a real short prop in ordinary rest on shared clock",
+          "2": "an already active normal beat keeps its original cooldown",
+          "3": "park or replaced actor cannot inherit a pending saved handoff"
+        }
+      }
+    },
+    "19": {
+      "ok": true,
+      "name": "PersonalToyOpportunity",
+      "result": {
+        "passed": 5,
+        "cases": {
+          "1": "published follow and ordinary rest retain distinct bounded timings",
+          "2": "park care pair focus contact reservation movement and malformed windows reject",
+          "3": "real normal prop fits 1.5 second rest without resetting autonomous cooldown",
+          "4": "takeover and owner movement cancel actual prop and preserve cooldown",
+          "5": "late short rest waits instead of forcing an incomplete beat"
+        }
+      }
+    },
+    "20": {
+      "ok": true,
+      "name": "PetPersonalPlay",
+      "result": {
+        "passed": 17,
+        "cases": {
+          "1": "shared hero handles have exact bounded lifetimes without physics queries; only the sparkler tip lights and emits",
+          "2": "pip native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "3": "puddle native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "4": "wick native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "5": "orbit native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "6": "bloom_pip native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "7": "foxfire_wick native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "8": "eclipse_orbit native stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "9": "pip authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "10": "puddle authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "11": "wick authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "12": "orbit authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "13": "bloom_pip authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "14": "foxfire_wick authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "15": "eclipse_orbit authored stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",
+          "16": "each toy uses one prop and stops on every live interruption including reduced motion",
+          "17": "matching owner and visitor seeds share phase without a prop network clock"
+        }
+      }
+    },
+    "21": {
+      "ok": true,
+      "name": "GlobalUIBounds",
+      "result": {
+        "passed": 11,
+        "rail": "topbar=208, 0, 1649, 58 guiInset=0, 58 guiRail=216, -49 physicalRail=216, 9 size=125, 40"
+      }
+    },
+    "22": {
+      "ok": true,
+      "name": "ItemCarousel",
+      "result": {
+        "passed": 8,
+        "cases": {
+          "1": "closed: B, gamepad B and X open; Backspace, A and arrows pass through",
+          "2": "open: Left/Right browse, A/Space/Enter use, B/X/Backspace close, the rest is swallowed",
+          "3": "pause: the carousel is a third owner; a finished round never pauses; a modal always does",
+          "4": "wrap and neighbours: one item alone, two show the other, three show both sides",
+          "5": "empty belt: refusal uses the global rail without a board overlay",
+          "6": "browse, use and close: selection wraps, follows the belt, closes when the belt empties",
+          "7": "phone: the item button is always under A (44+ target, no overlap), hidden on desktop",
+          "8": "controls cards: B reads Items (leaving is MENU or the back arrow)"
+        }
+      }
+    },
+    "23": {
+      "ok": true,
+      "name": "DeckRoundQA",
+      "result": {
+        "passed": 10,
+        "cases": {
+          "1": "camera freeze: Scriptable while the deck is up, the previous type back on exit, never stealing a camera someone else took",
+          "2": "round camera (follow-up 2026-11-14): the frozen camera parks above the avatar looking in toward the hub, and the old view comes back on exit",
+          "3": "Kit.tabs: the pill never leaves the track (click + the owner's re-select, rapid switches) and lands on its segment",
+          "4": "merge shake: the whole deck moves with the jolt, hardware hit rects stay put, Reduced Motion cuts it, layout keeps it",
+          "5": "Goals rows: even gaps for 1-3 goals, check centred on the text, colour circles capped at the text size",
+          "6": "side panels: seams on the tall panes, quests tint on Goals and Daily quests, a sticker multiplier, Fredoka name, hint caps; rects unchanged",
+          "7": "item icons: four vector icons inside their box, on the carousel, belt chip, phone button and the + Magnet toast",
+          "8": "settle feedback and the first-drop idle hint: rules, ticks, device glyphs, first drop hides it, Reduced Motion is static",
+          "9": "results Star: one constant spin from opening (re-shows never reset it), silver on a miss from the first frame, lose cue once",
+          "10": "flourish: a finished count-up releases its voices (they play out); an interrupted one fades them"
+        }
+      }
+    },
+    "24": {
+      "ok": true,
+      "name": "GardenCareClient",
+      "result": {
+        "passed": 13,
+        "cases": {
+          "1": "captured request has exact identity claim revision and independent sequence",
+          "2": "same-kind pending request cannot accumulate or become a second equip",
+          "3": "pending then saved invokes one captured completion and duplicate terminal is ignored",
+          "4": "stale character or mismatched packet cannot close another character focus",
+          "5": "an equip can stay unresolved while exact claim release is independently sent",
+          "6": "exact carried snapshot confirms pending pickup before generic dock cleanup and late receipt is inert",
+          "7": "pickup receipt first and wrong-generation snapshots cannot manufacture a second confirmation",
+          "8": "refused setdown preserves hold and gives a clear dry-space reason",
+          "9": "only accepted place opens the machine and no synthetic saved result mutates equipment",
+          "10": "destroyed transport ignores late callbacks and cannot send",
+          "11": "board-first and snapshot-first equip replication preserve the exact current editor claim",
+          "12": "teardown sends one best-effort exact release and retires all UI resources",
+          "13": "navigation teardown inside rejection callback cannot enqueue a stale notice"
+        }
+      }
+    },
+    "25": {
+      "ok": true,
+      "name": "GardenCareStartup",
+      "result": {
+        "passed": 2,
+        "cases": {
+          "1": "actual Care.new owns safe carry controls and delegates feedback outside the focus GUI",
+          "2": "actual Room.new and render steps complete with production ScreenGui before any companion or profile action"
+        }
+      }
+    },
+    "26": {
+      "ok": true,
+      "name": "RailFeedback",
+      "result": {
+        "passed": 3,
+        "cases": {
+          "1": "identical item grants preserve two independently timed queue entries",
+          "2": "empty and full feedback defer under narrow free space without owning a board widget",
+          "3": "destroy removes queued feedback and rejects late grants and notes"
+        }
+      }
+    },
+    "27": {
+      "ok": true,
+      "name": "UIAssetWarmup",
+      "result": {
+        "passed": 10
+      }
+    },
+    "28": {
+      "ok": true,
+      "name": "QAUIState",
+      "result": {
+        "passed": 4
+      }
+    },
+    "29": {
+      "ok": true,
+      "name": "NotificationQueue",
+      "result": {
+        "passed": 8
+      }
+    },
+    "30": {
+      "ok": true,
+      "name": "QAPreviewBounds",
+      "result": {
+        "created": 113,
+        "passed": 7,
+        "kept": false
+      }
+    },
+    "31": {
+      "ok": true,
+      "name": "WelcomePresentation",
+      "result": {
+        "passed": 5
+      }
+    },
+    "32": {
+      "ok": true,
+      "name": "InPlaceResults",
+      "result": {
+        "passed": 5,
+        "cases": {
+          "1": "phone and desktop results use the exact gameplay LCD and region coordinates",
+          "2": "four-direction results focus never buys or restarts on difficulty arrows",
+          "3": "wrapped payout and goal rows include actual label line spacing",
+          "4": "positive loss receipt is gold and zero receipt is silver",
+          "5": "instance count window ends by650ms and default feedback stays unchanged"
+        }
+      }
+    },
+    "33": {
+      "ok": true,
+      "name": "DeckResults",
+      "result": {
+        "passed": 16,
+        "cases": {
+          "1": "headline: first match wins (tidy, new best, Hard, win, missed, overflow)",
+          "2": "Today: Stars earned from rounds today, counting with the payout, no cap (QA Q5)",
+          "3": "focus order: desktop Replay, Hatch, Leave; phone Leave, shortcut or Hatch, Difficulty, Replay",
+          "4": "warm line uses the pet's name and rotates",
+          "5": "results open on Replay with the exact Stars total, payout rows, goals, metrics and strip",
+          "6": "Stars count up from 0 once per saved receipt, one rising count blip per Star; wallet and meter count with it",
+          "7": "first A finishes the count-up, the second replays; B always leaves",
+          "8": "left/right move between exactly two targets and never wrap",
+          "9": "an affordable egg adds the gold Hatch button between Replay and Leave",
+          "10": "a pending save disables Replay and Hatch, reads Saving… and moves focus to Leave",
+          "11": "a loss shows the glass Star, No Stars this time, the warm line and Try again",
+          "12": "Reduced Motion shows the final value with no count-up",
+          "13": "Star token: 3D mesh when it loads, the 2D glyph Star as the fallback, glass on a miss",
+          "14": "compact results (417x299) keep Replay/Leave at 48 px and the short goal copy",
+          "15": "phone results: Hatch takes the shortcut cell and joins the focus order; the quest cell is progress only",
+          "16": "Leave copy (UICopy results.leave.*): every layout branch uses the same keys and the label fits its button"
+        }
+      }
+    },
+    "34": {
+      "ok": true,
+      "name": "HelpCardsBounds",
+      "result": {
+        "passed": 36
+      }
+    },
+    "35": {
+      "ok": true,
+      "name": "WelcomeHUDBounds",
+      "result": {
+        "passed": 3,
+        "bounds": {
+          "1": {
+            "visible": true,
+            "active": true,
+            "contentScale": 1,
+            "meter": {
+              "y": 140,
+              "h": 44,
+              "w": 197,
+              "x": 495
+            },
+            "authoredHost": {
+              "y": 48,
+              "x": 180
+            },
+            "skipReady": true,
+            "authoredHit": {
+              "y": 48,
+              "x": 72
+            },
+            "coach": {
+              "y": 120,
+              "h": 132,
+              "w": 196,
+              "x": 120
+            },
+            "geometryScale": 1,
+            "width": 812,
+            "layoutBlocked": false,
+            "phone": true,
+            "viewScale": 1,
+            "height": 354,
+            "skip": {
+              "y": 200,
+              "h": 48,
+              "w": 72,
+              "x": 236
+            },
+            "skipHost": {
+              "y": 200,
+              "h": 48,
+              "w": 180,
+              "x": 128
+            },
+            "egg": {
+              "y": 148,
+              "h": 28,
+              "w": 28,
+              "x": 579.5
+            }
+          },
+          "2": {
+            "visible": true,
+            "active": true,
+            "contentScale": 0.7699999809265137,
+            "meter": {
+              "y": 258.20001220703125,
+              "h": 73.91999816894531,
+              "w": 174.01998901367188,
+              "x": 782.699951171875
+            },
+            "authoredHost": {
+              "y": 63,
+              "x": 210
+            },
+            "skipReady": true,
+            "authoredHit": {
+              "y": 63,
+              "x": 94
+            },
+            "coach": {
+              "y": 279.760009765625,
+              "h": 187.87998962402344,
+              "w": 174.01998901367188,
+              "x": 322.239990234375
+            },
+            "geometryScale": 0.77,
+            "width": 1280,
+            "layoutBlocked": false,
+            "phone": false,
+            "viewScale": 0.7699999809265137,
+            "height": 720,
+            "skip": {
+              "y": 414.510009765625,
+              "h": 48.5099983215332,
+              "w": 72.37999725341797,
+              "x": 417.719970703125
+            },
+            "skipHost": {
+              "y": 414.510009765625,
+              "h": 48.5099983215332,
+              "w": 161.6999969482422,
+              "x": 328.3999938964844
+            },
+            "egg": {
+              "y": 266.2850036621094,
+              "h": 57.75,
+              "w": 57.75,
+              "x": 840.8349609375
+            }
+          },
+          "3": {
+            "visible": true,
+            "active": true,
+            "contentScale": 1,
+            "meter": {
+              "y": 140,
+              "h": 44,
+              "w": 109,
+              "x": 411
+            },
+            "authoredHost": {
+              "y": 48,
+              "x": 92
+            },
+            "skipReady": true,
+            "authoredHit": {
+              "y": 48,
+              "x": 72
+            },
+            "coach": {
+              "y": 172,
+              "h": 132,
+              "w": 108,
+              "x": 120
+            },
+            "geometryScale": 1,
+            "width": 640,
+            "layoutBlocked": false,
+            "phone": true,
+            "viewScale": 1,
+            "height": 360,
+            "skip": {
+              "y": 252,
+              "h": 48,
+              "w": 72,
+              "x": 148
+            },
+            "skipHost": {
+              "y": 252,
+              "h": 48,
+              "w": 92,
+              "x": 128
+            },
+            "egg": {
+              "y": 148,
+              "h": 28,
+              "w": 28,
+              "x": 451.5
+            }
+          }
+        }
+      }
+    }
+  },
+  "passed": 31,
+  "failed": 4
+}

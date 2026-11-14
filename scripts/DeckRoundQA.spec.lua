@@ -177,16 +177,17 @@ return function(client,parent)
     end
     icon:Destroy()
    end
-   local c=Carousel.new(host);c:place(UDim2.fromOffset(20,0),UDim2.fromOffset(330,580),false)
+   local notices={}
+   local c=Carousel.new(host,{notifications={enqueue=function(owner,key,data)table.insert(notices,{owner=owner,key=key,data=data})end,cancelOwner=function()end}});c:place(UDim2.fromOffset(20,0),UDim2.fromOffset(330,580),false)
    c:setBelt({"magnet","pop"});c:setChipVisible(true);assert(c:open());settle()
    assert(c.caps.mid.icon:GetAttribute("ItemId")=="magnet"and not c.caps.mid.glyph.Visible,"carousel shows the icon")
    assert(c.slotIcons[1]:GetAttribute("ItemId")=="magnet"and c.slotIcons[2]:GetAttribute("ItemId")=="pop"and c.slotIcons[3]:GetAttribute("ItemId")==nil,"belt chip slots")
    assert(not c.dots[1].Visible and c.dots[3].Visible,"empty slots keep the dim dot")
    c:close()
    assert(Carousel.grantText("magnet")=="+ Magnet"and Carousel.grantText("nope")==nil)
-   assert(c:showGrant("magnet")and c.lastGrant=="+ Magnet"and c.grant.root.Visible and c.grant.icon:GetAttribute("ItemId")=="magnet")
-   assert(c.grant.line.Text==Carousel.GrantLine,"says where it came from")
-   task.wait(Carousel.GrantHold+Carousel.NoteFade+.3);assert(not c.grant.root.Visible,"toast fades")
+   assert(c:showGrant("magnet")and c.lastGrant=="+ Magnet"and #notices==1 and notices[1].data.itemId=="magnet")
+   assert(notices[1].data.text=="+ Magnet · "..Carousel.GrantLine and notices[1].data.icon==Items.ById.magnet.glyph,"rail keeps item and origin")
+   assert(c.host:FindFirstChild("Grant")==nil,"grant has no second spatial owner")
    c:destroy()
    local root=Instance.new("Frame");root.Size=UDim2.fromOffset(844,390);root.BackgroundTransparency=1;root.Parent=gui
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(844,390),aspect,{kx=116,kh=58});s:setVisible(true)

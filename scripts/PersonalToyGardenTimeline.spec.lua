@@ -3,6 +3,7 @@
 return function(server,client)
  local Garden=require(server.GardenState);local A=require(game.ReplicatedStorage.Shared.GardenActivity)
  local Follow=require(client.PetFollow)
+ local Opportunity=require(client.PersonalToyOpportunity)
  local Factory=require(client.PetFactory);local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
  local folder=Instance.new("Folder");folder.Name="_PersonalToyGardenTimeline";folder.Parent=workspace
  local visuals,cases={},{};local function test(name,f)f();table.insert(cases,name)end
@@ -22,7 +23,7 @@ return function(server,client)
    local actor=self.garden.actors[self.ownerId];if not actor then return end
    local v=self.visual
    v.personalPlayEnabled=actor.mode=="Room";v.personalActorIdentity=actor.characterId..":"..actor.petGeneration
-   v.personalIdleUntil=if actor.behavior=="follow"then actor.endTime+3.5 else 0
+   Opportunity.apply(v,actor,self.now)
    if self.realFollow then
     self.follow=Follow.activity(v,self.snapshot.actors[tostring(self.ownerId)],self.now,self.dt,self.follow,false)
    else
@@ -34,9 +35,9 @@ return function(server,client)
     if not self.wanderAt then self.wanderAt=self.now end
     if self.lastWander~=actor.actionId then self.wanders+=1;self.lastWander=actor.actionId end
    end
-   if v.personalToyActive and not self.previous then table.insert(self.starts,self.now);self.episodeStart=self.now end
+   if v.personalToyActive and not self.previous then table.insert(self.starts,self.now);self.episodeStart=self.now;self.episodeDuration=v.personalClipDuration end
    if not v.personalToyActive and self.previous then
-    table.insert(self.durations,{seconds=self.now-self.episodeStart,behavior=v.gardenBehavior,action=v.gardenAction,gait=v.gaitWeight})
+    table.insert(self.durations,{seconds=self.now-self.episodeStart,expected=self.episodeDuration,behavior=v.gardenBehavior,action=v.gardenAction,gait=v.gaitWeight})
    end
    self.previous=v.personalToyActive
   end
@@ -57,7 +58,7 @@ return function(server,client)
     assert(f.wanders>=3,"quiet grace starved ordinary wandering for seed"..seed)
     assert(#f.durations>=3,"real Follow pipeline starved toy opportunities for seed"..seed)
     for _,episode in ipairs(f.durations)do
-     assert(episode.seconds>=1.75,"seed"..seed.." short idle toy "..episode.seconds.."s: "..tostring(episode.behavior).."/"..tostring(episode.action).." gait="..tostring(episode.gait))
+     assert(episode.seconds>=(episode.expected or 1.8)-.05,"seed"..seed.." short idle toy "..episode.seconds.."s: "..tostring(episode.behavior).."/"..tostring(episode.action).." gait="..tostring(episode.gait))
     end
     local period=9+(seed%701)/100
     for i=2,#f.starts do assert(f.starts[i]-f.starts[i-1]>=period-.017,"cooldown shortened for seed"..seed)end

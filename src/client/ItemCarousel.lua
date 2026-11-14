@@ -4,8 +4,7 @@
 -- open the board dims, a PAUSED chip shows and the round is frozen (the caller
 -- feeds `isOpen` into syncPause). The server owns the belt; this only shows the
 -- published belt and asks to use the middle item.
--- Also owns two small board notes: the desktop belt chip ("ITEMS ●●○ B") and the
--- fading note line (UICopy items.note.empty / items.note.full).
+-- The desktop belt chip stays on the board; feedback uses the shared topbar rail.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
@@ -13,13 +12,10 @@ local Items=require(Shared.RoundItems)
 local Icons=require(script.Parent.ItemIcons)
 local Carousel={}
 Carousel.__index=Carousel
-Carousel.NoteHold=1.5
-Carousel.NoteFade=.35
 Carousel.EmptyNote=UICopy.get("items.note.empty")
 Carousel.FullNote=UICopy.get("items.note.full")
 -- QA 2026-11-13: a power-up ball merge that grants an item says so ("+ Magnet").
 Carousel.GrantLine="From a star ball"
-Carousel.GrantHold=1.8
 
 -- ── Pure helpers (spec-checked) ─────────────────────────────────────────────
 function Carousel.wrap(index,delta,count)
@@ -86,9 +82,11 @@ end
 function Carousel.new(parent,options)
  options=options or {}
  local z=options.z or 38
- local self=setmetatable({callbacks={},belt={},index=1,isOpen=false,phone=false,noteToken=0},Carousel)
+ local self=setmetatable({callbacks={},belt={},index=1,isOpen=false,phone=false,noticeSerial=0,
+  notifications=options.notifications or require(script.Parent.NotificationRail)},Carousel)
  local host=Kit.node("Frame",parent,{Name="ItemCarousel",BackgroundTransparency=1,ZIndex=z,Active=false,Size=UDim2.fromOffset(0,0)})
  self.host=host
+ host.Destroying:Connect(function()self.destroyed=true;self.notifications.cancelOwner(host)end)
  -- Dimmed board: catches taps (tap to close) while the carousel is open.
  local dim=Kit.node("TextButton",host,{Name="Dim",Text="",AutoButtonColor=false,BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.5,
   BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=z+1,Visible=false,Selectable=false})
@@ -128,12 +126,6 @@ function Carousel.new(parent,options)
  end
  local bGlyph=Kit.glyph(chip,"B",false,18);bGlyph.Position=UDim2.new(1,-22,.5,-9)
  self.chip=chip
- -- Fading note line.
- local note=Kit.frame(host,"Note","well",UDim2.new(.5,0,.18,0),UDim2.fromOffset(180,32),999)
- note.AnchorPoint=Vector2.new(.5,.5);note.ZIndex=z+6;note.BackgroundTransparency=1;note.Visible=false
- self.noteText=Kit.text(note,"Strong","","text",{Name="Message",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextTransparency=1})
- self.noteStroke=Kit.stroke(note)
- self.note=note
  self:setBelt({})
  return self
 end
@@ -182,7 +174,6 @@ function Carousel:layout()
  self.effect.Position=UDim2.fromOffset(10,effectY);self.effect.Size=UDim2.fromOffset(w-20,effectSize*2+2);self.effect.TextSize=effectSize
  self.hint.Position=UDim2.fromOffset(8,bottom);self.hint.Size=UDim2.fromOffset(w-16,hintSize+4);self.hint.TextSize=hintSize
  for _,cap in pairs(self.caps)do cap.glyph.TextSize=math.floor((if cap==self.caps.mid then mid else side)*.5)end
- self.note.Position=UDim2.new(.5,0,0,math.floor(math.min(H*.2,h*.5)))
  self:paint()
 end
 
@@ -277,74 +268,34 @@ function Carousel:selected()
  return self.belt[self.index],self.index
 end
 
--- A short note on the board that softly fades after ~1.5 s (Reduced Motion: it just goes).
+-- Queue ownership, duration and physical placement belong to NotificationRail.
 function Carousel:showNote(text)
- self.noteToken+=1;local token=self.noteToken
- local note,label=self.note,self.noteText
- local size=Kit.measure(text,"Strong",label.TextSize)
- note.Size=UDim2.fromOffset(math.ceil(size.X)+32,math.max(32,label.TextSize+14))
- label.Text=text;note.Visible=true
- note.BackgroundTransparency=.1;label.TextTransparency=0;self.noteStroke.Transparency=Kit.Stroke.transparency
+ if self.destroyed then return false end
+ self.noticeSerial+=1
  self.lastNote=text
- task.delay(Carousel.NoteHold,function()
-  if self.noteToken~=token then return end
-  if Kit.reduced()then note.Visible=false;return end
-  Kit.tween(note,Carousel.NoteFade,{BackgroundTransparency=1})
-  Kit.tween(label,Carousel.NoteFade,{TextTransparency=1})
-  Kit.tween(self.noteStroke,Carousel.NoteFade,{Transparency=1})
-  task.delay(Carousel.NoteFade,function()if self.noteToken==token then note.Visible=false end end)
- end)
+ self.notifications.enqueue(self.host,"item-note:"..self.noticeSerial,{text=text,icon="!"})
+ return true
 end
 
--- Grant toast (QA 2026-11-13): "+ Magnet" with the item's icon and where it came
--- from, popping in over the board, held ~1.8 s, then fading (Reduced Motion: no pop,
--- it just goes). The belt chip boings so the eye finds the new slot.
+-- One-line grant feedback preserves the item glyph and origin in the global rail.
+-- The belt chip still points to the new slot, respecting Reduced Motion.
 function Carousel.grantText(id)
  local item=Items.ById[id or ""]
  return if item then "+ "..item.name else nil
 end
 function Carousel:showGrant(id)
- local text=Carousel.grantText(id);if not text then return false end
- self.grantToken=(self.grantToken or 0)+1;local token=self.grantToken
- local toast=self.grant
- if not toast then
-  local z=self.host.ZIndex
-  local root=Kit.frame(self.host,"Grant","well",UDim2.new(.5,0,0,0),UDim2.fromOffset(200,52),999)
-  root.AnchorPoint=Vector2.new(.5,.5);root.ZIndex=z+7;root.BackgroundTransparency=.06;root.Visible=false
-  local stroke=Kit.stroke(root,nil,1.5,0)
-  local scale=Kit.node("UIScale",root,{Scale=1})
-  local disc=Kit.frame(root,"IconDisc","raised",UDim2.fromOffset(8,8),UDim2.fromOffset(36,36),999);disc.BackgroundTransparency=0
-  local icon=Icons.new(disc,26,nil)
-  local title=Kit.text(root,"Name","",nil,{Name="Title",Position=UDim2.fromOffset(52,5),Size=UDim2.fromOffset(140,24),TextSize=18})
-  local line=Kit.text(root,"Small","","soft",{Name="Line",Position=UDim2.fromOffset(52,27),Size=UDim2.fromOffset(140,18),TextSize=12})
-  toast={root=root,stroke=stroke,scale=scale,disc=disc,icon=icon,title=title,line=line}
-  self.grant=toast
- end
+ local text=Carousel.grantText(id);if self.destroyed or not text then return false end
  local item=Items.ById[id]
- Icons.set(toast.icon,id)
- toast.title.Text=text;toast.line.Text=Carousel.GrantLine
- toast.title.TextColor3=item.color:Lerp(Kit.Color.text,.35);toast.stroke.Color=item.color
- toast.disc.BackgroundColor3=Kit.color("raised"):Lerp(item.color,.22)
- local w=math.max(Kit.measure(text,"Name",18).X,Kit.measure(Carousel.GrantLine,"Small",12).X)
- toast.root.Size=UDim2.fromOffset(math.ceil(w)+52+18,52)
- toast.title.Size=UDim2.fromOffset(math.ceil(w)+8,24);toast.line.Size=UDim2.fromOffset(math.ceil(w)+8,18)
- toast.root.Position=UDim2.new(.5,0,0,math.floor(math.min((self.H or 500)*.28,(self.H or 500)*.45-30)))
- toast.root:SetAttribute("Item",id)
- for _,node in ipairs({toast.title,toast.line})do node.TextTransparency=0 end
- toast.root.BackgroundTransparency=.06;toast.stroke.Transparency=0;toast.root.Visible=true
+ self.noticeSerial+=1
+ self.notifications.enqueue(self.host,"item-grant:"..self.noticeSerial,{text=text.." · "..Carousel.GrantLine,icon=item.glyph,itemId=id})
  self.lastGrant=text
- if Kit.reduced()then toast.scale.Scale=1
- else toast.scale.Scale=.7;Kit.tween(toast.scale,.18,{Scale=1},Enum.EasingStyle.Back);Kit.boing(self.chip)end
- task.delay(Carousel.GrantHold,function()
-  if self.grantToken~=token then return end
-  if Kit.reduced()then toast.root.Visible=false;return end
-  for _,node in ipairs({toast.title,toast.line})do Kit.tween(node,Carousel.NoteFade,{TextTransparency=1})end
-  Kit.tween(toast.root,Carousel.NoteFade,{BackgroundTransparency=1});Kit.tween(toast.stroke,Carousel.NoteFade,{Transparency=1})
-  task.delay(Carousel.NoteFade,function()if self.grantToken==token then toast.root.Visible=false end end)
- end)
+ if not Kit.reduced()then Kit.boing(self.chip)end
  return true
 end
 
-function Carousel:destroy()self.host:Destroy()end
+function Carousel:destroy()
+ if self.destroyed then return end;self.destroyed=true
+ self.notifications.cancelOwner(self.host);self.host:Destroy()
+end
 
 return Carousel

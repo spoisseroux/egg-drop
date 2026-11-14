@@ -4,6 +4,7 @@ local Art=require(script.Parent.DeckArt)
 local Config=require(script.Parent.PetMaterialConfig)
 local Materials=require(script.Parent.PetMaterials)
 local Readiness=require(script.Parent.PetAssetReadiness)
+local Catalog=require(game:GetService("ReplicatedStorage").Shared.MaterialCatalog)
 local Preview={};local Owner={};Owner.__index=Owner
 local teal=Color3.fromHex("#69D7D5")
 local function configure(part)
@@ -27,10 +28,12 @@ function Owner:tryUpgrade()
   if self.destroyed or self.epoch~=epoch or not ready then return end
   local mesh=source:Clone();mesh:ClearAllChildren();configure(mesh);mesh.Name="ProductionFinishSphere"
   local entry={part=mesh,name="Body",colorRole="body",color=teal}
-  local visual={appearance={finish=self.finish},emissionEnabled=false}
+  -- This is an explicit body sample, using the same opacity owner as real pets.
+  local visual={appearance={finish=self.finish},emissionEnabled=false,definition={pieces={{name="Body"}}}}
   local materialOwner=Materials.new({templates=pack})
   local ok,bound=pcall(materialOwner.paint,materialOwner,entry,visual,1)
   if not ok or not bound or entry.materialProfile~=key then mesh:Destroy();return end
+  mesh.Transparency=Materials.transparency(entry,visual,false)
   mesh.Parent=self.world;self.fallback:Destroy();self.highlight:Destroy();self.ready=true
   self.root:SetAttribute("PreviewBackend","ProductionPBR");self.root:SetAttribute("FinishProfile",key)
  end)
@@ -43,7 +46,7 @@ function Owner:destroy(fromRoot)
 end
 function Preview.new(parent,result,position,size,z,options)
  local root=Art.frame(parent,"UnlockedMaterial",Color3.fromHex("#314E59"),position,size,z);Art.corner(root,16)
- root:SetAttribute("AccessibleLabel",(if result.finishId=="gloss"then "Gloss"else "Matte").." material sample")
+ root:SetAttribute("AccessibleLabel",(Catalog.ById[result.finishId]or Catalog.ById.standard).name.." material sample")
  root:SetAttribute("PreviewBackend","ShadedFallback");root:SetAttribute("FinishId",result.finishId)
  local aspect=Instance.new("UIAspectRatioConstraint");aspect.AspectRatio=1;aspect.Parent=root
  local shadow=Art.frame(root,"GroundShadow",Color3.fromHex("#152C35"),UDim2.fromScale(.5,.85),UDim2.fromScale(.66,.12),z+1);shadow.AnchorPoint=Vector2.new(.5,.5);shadow.BackgroundTransparency=.28;Art.corner(shadow,100)

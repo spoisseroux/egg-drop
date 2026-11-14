@@ -222,8 +222,8 @@ function C.star(parent,size,options)
  local function paintPart()
   local part=api.part;if not part then return end
   local glass=api.mode=="glass"
-  part.TextureID=if glass then ""else api.texture
-  part.Color=if glass then C.StarSilver else Color3.new(1,1,1)
+  part.TextureID=if glass or(options and options.cleanMaterial)then ""else api.texture
+  part.Color=if glass then C.StarSilver elseif options and options.cleanMaterial then C.Gold else Color3.new(1,1,1)
   part.Transparency=0
   part.Material=Enum.Material.SmoothPlastic
  end

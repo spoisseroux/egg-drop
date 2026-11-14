@@ -1,0 +1,54 @@
+{
+  "source_blends": {
+    "assets\\art-source\\pets\\pet-bear-attachments.blend": "170ddfc037ced0322dac876576fe242ba2550af25a633899eee7e8ac576cff65",
+    "assets\\art-source\\eggs\\eggs.blend": "1bf7620d763912e9ef770e16d0b481ed89e18acc60bbe4af3e3da9cc530699b0"
+  },
+  "old_music_preserved": {
+    "garden": true,
+    "pocket-deck": true
+  },
+  "poses": {
+    "bear": {
+      "visible_frames_checked": 53,
+      "minimum_clearance_above_pool": 0.007397447453437208,
+      "passed": true
+    },
+    "toy": {
+      "visible_frames_checked": 28,
+      "minimum_clearance_above_pool": 9.999829530715938e-05,
+      "passed": true
+    }
+  },
+  "media": {
+    "bear-hatch-concept.mp4": {
+      "bytes": 270591,
+      "sha256": "c952a788ef3cb76cc219f6b9d820681b1a0551003b0c8b70198b4576945c6081"
+    },
+    "toy-hatch-concept.mp4": {
+      "bytes": 188197,
+      "sha256": "37051036c98368fd40feb1bbcb434bd2b81f9f928712df200b2973c67655ce93"
+    },
+    "bear-hatch-concept.gif": {
+      "bytes": 1139240,
+      "sha256": "54c0ccffccf0327052e9aeafc3dce934089c4f7e209fbe61c68dbad9d14e783f"
+    },
+    "toy-hatch-concept.gif": {
+      "bytes": 769706,
+      "sha256": "ef9c7de078aa99e58404de88d28c3655a5dc57cc3897fa5f1c7ec14c339145a4"
+    },
+    "item-material-accent-audition.mp4": {
+      "bytes": 105027,
+      "sha256": "559bd8d90cad2b56d5a0f79d60a2de3a06030bfa28d84f9c4f30322912aed6f9"
+    },
+    "bear-expression-strip.png": {
+      "bytes": 432299,
+      "sha256": "1d6eb948de997f0af10d1bfa85410ffbd38892c1447f3c96e4d21bab51a9144a"
+    },
+    "existing-item-contact-strip.png": {
+      "bytes": 273843,
+      "sha256": "3511ec25a8a0325924a671b8197ab071b20824e84462319c89fbc46e867d76d1"
+    }
+  },
+  "pcm_samples": 3544615,
+  "actual_seconds": 73.84614583333334
+}

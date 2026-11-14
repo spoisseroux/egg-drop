@@ -1,0 +1,62 @@
+[
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "GET https://apis.roblox.com/assets/v1/operations/022c8852-5a37-496a-a70a-9f81ede57ea7 -> 200 OK\n\n{\"path\":\"operations/022c8852-5a37-496a-a70a-9f81ede57ea7\",\"operationId\":\"022c8852-5a37-496a-a70a-9f81ede57ea7\",\"done\":true,\"response\":{\"path\":\"assets/94929788748319\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T22:10:10.616Z\",\"assetId\":\"94929788748319\",\"displayName\":\"Egg Drop hatch bear tightened v3\",\"description\":\"Original synthesized reveal sounds, synchronized to the tightened Egg Drop hatch animation; no music bed.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Approved\"},\"state\":\"Active\",\"isPublished\":true}}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "GET https://apis.roblox.com/assets/v1/operations/8a656732-a221-4bd2-8d51-98dca1d449fe -> 200 OK\n\n{\"path\":\"operations/8a656732-a221-4bd2-8d51-98dca1d449fe\",\"operationId\":\"8a656732-a221-4bd2-8d51-98dca1d449fe\",\"done\":true,\"response\":{\"path\":\"assets/140151371099628\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T22:10:10.964Z\",\"assetId\":\"140151371099628\",\"displayName\":\"Egg Drop hatch toy tightened v3\",\"description\":\"Original synthesized reveal sounds, synchronized to the tightened Egg Drop hatch animation; no music bed.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Approved\"},\"state\":\"Active\",\"isPublished\":true}}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "GET https://apis.roblox.com/assets/v1/operations/f66ba444-b436-4c8d-84f7-ab5b3ee9529c -> 200 OK\n\n{\"path\":\"operations/f66ba444-b436-4c8d-84f7-ab5b3ee9529c\",\"operationId\":\"f66ba444-b436-4c8d-84f7-ab5b3ee9529c\",\"done\":true,\"response\":{\"path\":\"assets/135561195788984\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T22:10:11.632Z\",\"assetId\":\"135561195788984\",\"displayName\":\"Egg Drop hatch hue tightened v3\",\"description\":\"Original synthesized reveal sounds, synchronized to the tightened Egg Drop hatch animation; no music bed.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Approved\"},\"state\":\"Active\",\"isPublished\":true}}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "GET https://apis.roblox.com/assets/v1/operations/83dba1ae-948b-491f-8e50-2d78d9592afa -> 200 OK\n\n{\"path\":\"operations/83dba1ae-948b-491f-8e50-2d78d9592afa\",\"operationId\":\"83dba1ae-948b-491f-8e50-2d78d9592afa\",\"done\":true,\"response\":{\"path\":\"assets/127019856465293\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T22:10:12.635Z\",\"assetId\":\"127019856465293\",\"displayName\":\"Egg Drop hatch material tightened v3\",\"description\":\"Original synthesized reveal sounds, synchronized to the tightened Egg Drop hatch animation; no music bed.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Approved\"},\"state\":\"Active\",\"isPublished\":true}}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "GET https://apis.roblox.com/assets/v1/operations/6b699a7e-5867-440b-b906-884076a6ff96 -> 200 OK\n\n{\"path\":\"operations/6b699a7e-5867-440b-b906-884076a6ff96\",\"operationId\":\"6b699a7e-5867-440b-b906-884076a6ff96\",\"done\":true,\"response\":{\"path\":\"assets/130641607051751\",\"revisionId\":\"1\",\"revisionCreateTime\":\"2026-11-14T22:10:13.004Z\",\"assetId\":\"130641607051751\",\"displayName\":\"Egg Drop hatch feature tightened v3\",\"description\":\"Original synthesized reveal sounds, synchronized to the tightened Egg Drop hatch animation; no music bed.\",\"assetType\":\"Audio\",\"creationContext\":{\"creator\":{\"userId\":\"10716920546\"}},\"moderationResult\":{\"moderationState\":\"Approved\"},\"state\":\"Active\",\"isPublished\":true}}"
+        }
+      ],
+      "isError": false
+    }
+  }
+]

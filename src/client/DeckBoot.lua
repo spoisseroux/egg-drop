@@ -94,6 +94,7 @@ function Boot:play(options)
  if self.playing then self:finish(false)end
  self.playing=true;self.epoch+=1;local epoch=self.epoch
  self.done=options.done;self.startedAt=self.clock();self.skipped=false
+ local maxMs=if type(options.maxMs)=="number"then math.clamp(options.maxMs,400,Boot.TotalMs)elseif self.maxMs then self.maxMs else Boot.TotalMs
  self.host.Visible=true
  self.host:SetAttribute("Boots",(self.host:GetAttribute("Boots")or 0)+1)
  local reduced=options.reduced==true
@@ -111,6 +112,7 @@ function Boot:play(options)
   if self.epoch~=epoch then return end
   if options.owns and not options.owns()then self:finish(false);return end
   local ms=self:elapsedMs()
+  if ms>=maxMs then self:finish(false);return end
   if reduced then
    if ms>=Boot.Reduced.holdMs then self:finish(false)end
    return

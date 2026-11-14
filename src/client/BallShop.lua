@@ -46,7 +46,7 @@ function Shop.status(id,ctx)
  -- Slice C: a theme on this week's shelf sells at the shelf price (`full` = the struck price).
  local price,full=Deal.quote("ball",id,entry.price,weekOf(ctx))
  if wallet>=price then return{kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
- return{kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
+ return{kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
 end
 -- Pure: the card's status line and its colour role.
 function Shop.tileStatus(id,ctx)
@@ -175,7 +175,7 @@ end
 
 -- The pane's small board: a dark well with a pile of the theme's balls (faces on).
 function Shop:buildBoard(pane,x,y,w,h,px)
- local well=Kit.frame(pane,"MiniBoard","well",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well);well.ClipsDescendants=true
+ local _,well=Kit.previewWell(pane,"MiniBoard",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12)
  Kit.dotGrid(well) -- T7 LCD dot grid under the pile
  self.board={well=well,w=w,h=h,px=px,balls={}}
 end

@@ -1,0 +1,13 @@
+{
+  "tool_result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"suite\":\"BugReports\",\"cases\":[\"form ids match the server, and every label and reply line exists in UICopy\",\"validation: malformed packets drop, every field is checked, unknown fields ignored\",\"notes: trimmed, control characters and runs of space collapsed, 200 characters, UTF-8 safe\",\"filtering: the note goes through the injected filter for the reporter; anything hidden or failed is not stored\",\"records hold the UserId and checked context only; size is capped; one console line per report\",\"rate limits: 20 s gap, 3 per 10 minutes, 20 per day across servers, server hourly cap, duplicates, one in flight\",\"store failure: the player is thanked, the report waits on the server and lands on retry, or is dropped after 3 tries\",\"shards: deterministic UserId routing, same user shares cross-server window, full shard is independent\",\"legacy routing is fail closed, preserves legacy daily limits, and empty legacy permits shards\",\"immutable retries stay on original day and route; identity dedupes before full/window/day caps\",\"merged recent reads all day keys, sorts and dedupes before limiting; strict purge and erasure\",\"purge: day keys 30 or more days old are removed, once a day across servers\",\"owner-only read: recent reports newest first, filters, 30-day window, erase by UserId\",\"form: send needs a kind and a category, waits out the cooldown; defaults; chip flow; log lines; packet\"],\"context\":\"Edit fresh cloned Server + Shared; injected text/filter/DataStore adapters only\"}"
+      }
+    ],
+    "isError": false
+  },
+  "passed": 14,
+  "note": "Fresh cloned Server and Shared modules in Studio Edit; isolated injected filtering/DataStore adapters. No external reports written. Independent code review GO. Offline Luau harness independently passed same 14 cases."
+}

@@ -1,10 +1,10 @@
--- All item kinds share one timeline and retire its exact owner on exit.
+-- Legacy presentation compatibility; native production delegation is covered by HatchNativeHost and the native scene specs.
 return function(client,parent)
  local Reveal=require(client.HueItemReveal);local Run=game:GetService("RunService")
  local root=Instance.new("Frame");root.Size=UDim2.fromOffset(140,160);root.Parent=parent
  local cases={};local reduced=false;local sounds={};local serial=tostring(os.clock())
  local audio={play=function(_,name,pitch,gain,owner)table.insert(sounds,{name=name,owner=owner})end,stopOwner=function()end}
- local reveal=Reveal.new(root,{reduceEffects=function()return reduced end,audio=audio})
+ local reveal=Reveal.new(root,{nativeDisplay=false,reduceEffects=function()return reduced end,audio=audio})
  local function settle()Run.Heartbeat:Wait();Run.Heartbeat:Wait()end
  local function advance(c,t)c:disconnectClock();while t>.000001 do local dt=math.min(t,1/60);c:step(dt);t-=dt end end
  local function test(n,f)f();table.insert(cases,n)end
@@ -13,7 +13,8 @@ return function(client,parent)
   settle()
   test("new paid jar uses shared1.5s timeline and same receipt never replays",function()
    assert(reveal:show(result("new"),true)and reveal.active and reveal.cinematic.active)
-   advance(reveal.cinematic,.80);assert(reveal.cinematic.resultRoot.Visible and reveal.cinematic.age>=.75)
+   advance(reveal.cinematic,.80);assert(not reveal.cinematic.resultRoot.Visible,"legacy hero appeared before split plus120ms delay")
+   advance(reveal.cinematic,.10);assert(reveal.cinematic.resultRoot.Visible and reveal.cinematic.age>=.87)
    advance(reveal.cinematic,1);assert(not reveal.active and not reveal.cinematic.connection and reveal.cinematic.liveBits==0)
    local count=#sounds;assert(not reveal:show(result("new"),true)and #sounds==count)
   end)
@@ -34,7 +35,7 @@ return function(client,parent)
   test("Material Toy and Feature adapters use the same registered kind and one owner clock",function()
    for _,entry in ipairs({{"material","finishId","gloss"},{"toy","toyId","ball"},{"feature","featureId","wings"}})do
     local host=Instance.new("Frame");host.Size=UDim2.fromOffset(140,160);host.Parent=root
-    local r=Reveal.new(host,{recipeId=entry[1],audio=audio,resultBuilder=function(p,value,pos,size,z)local n=Instance.new("Frame");n.Name="Hero";n.Position,n.Size,n.ZIndex,n.Parent=pos,size,z,p;return n end})
+    local r=Reveal.new(host,{nativeDisplay=false,recipeId=entry[1],audio=audio,resultBuilder=function(p,value,pos,size,z)local n=Instance.new("Frame");n.Name="Hero";n.Position,n.Size,n.ZIndex,n.Parent=pos,size,z,p;return n end})
     local packet={id=serial..entry[1]};packet[entry[2]]=entry[3];assert(r:show(packet,true))
     assert(r.cinematic.kind==entry[1]and r.topArt:GetAttribute("RecipeId")==entry[1]and r.bottomArt:GetAttribute("ShellSection")=="lower")
     assert(r.cinematic.duration==(if entry[1]=="feature"then 1.7 else 1.5));r:destroy();assert(#host:GetChildren()==0);host:Destroy()

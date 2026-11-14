@@ -161,8 +161,9 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadUp=rect(bx0,by0,bw0,rh);g.dpadDown=rect(bx0,by0+boxH-rh,bw0,rh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
- local ww=SW-32
- g.wordmark=if ww>=64 then rect(18,kh+6,ww,math.floor(ww*16/41+.5))else nil
+ local ww=SW-48
+ local wordY=math.max(kh+12,top+12)
+ g.wordmark=if ww>=48 and wordY+ww*16/41<=g.dpad.y-8 then rect(24,wordY,ww,math.floor(ww*16/41+.5))else nil
  g.back=rect(W-56,8,44,44)
  g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
  g.aHit=rect(W-cx-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
@@ -686,13 +687,13 @@ function Screen:placeAll(rootSize,aspect,keep)
  self.glare.Position=UDim2.fromOffset(lcdR.x,lcdR.y);self.glare.Size=UDim2.fromOffset(lcdR.w,lcdR.h)
  self.results.Position=self.glare.Position;self.results.Size=self.glare.Size;Kit.corner(self.results,math.floor(L.lcdRadius*s))
  self.bootHost.Position=self.glare.Position;self.bootHost.Size=self.glare.Size;Kit.corner(self.bootHost,math.floor(L.lcdRadius*s))
- self.resultsContent.Size=self.content.Size;self.resultsScale.Scale=g.contentScale;inset(self.resultsContent,0)
+ self.resultsContent.Size=UDim2.fromOffset(g.lcd.w,g.lcd.h);self.resultsScale.Scale=1;inset(self.resultsContent,0)
  for _,overlay in ipairs(self.overlays)do self:placeOverlay(overlay)end
  local inset=if g.compact then 12 else 24
  self.back.setCompact(g.compact);self.back.root.Position=UDim2.new(1,-inset,0,inset)
  local b=g.boardLocal
  self.well.Position=UDim2.fromOffset(b.x,b.y);self.well.Size=UDim2.fromOffset(b.w,b.h)
- self:dress(self.resultsLayer,false)
+ self.results.BackgroundTransparency=1;self.resultsLayer.tint.Visible=false;self.resultsLayer.rim.Visible=false
  if self.builtMode~=g.mode then self:buildHud(g)end
  return g
 end
@@ -705,6 +706,7 @@ end
 -- glass there). `on` false is the old flat phone frame (no caller uses it now).
 function Screen:showShell(on,phone)
  for _,node in ipairs({self.shadow,self.shoulders[1],self.shoulders[2],self.band,self.plateOverlay,self.wordmarkShadow,self.led})do node.Visible=on end
+ self.plateOverlay.Visible=on and not phone -- authored desktop wells are not the phone control seats
  self.glass.Visible=on and not phone
  for _,node in ipairs(self.phoneNodes)do node.Visible=phone==true end
  self.menu.Visible=true
@@ -772,9 +774,9 @@ function Screen:layoutCompact(g)
  ib.disc.BackgroundTransparency=1
  -- Glare on the board only; results and sheets cover the root; the boot plays in the screen.
  place(self.glare,b)
- self.results.Position=UDim2.new();self.results.Size=UDim2.fromOffset(W,H);Kit.corner(self.results,0)
- self.resultsContent.Size=UDim2.fromOffset(W,H);self.resultsScale.Scale=1;inset(self.resultsContent,g.off,g.top)
- self:dress(self.resultsLayer,true)
+ place(self.results,g.screen);Kit.corner(self.results,11)
+ self.resultsContent.Size=UDim2.fromOffset(g.screen.w,g.screen.h);self.resultsScale.Scale=1;inset(self.resultsContent,0)
+ self.results.BackgroundTransparency=1;self.resultsLayer.tint.Visible=false;self.resultsLayer.rim.Visible=false
  place(self.bootHost,g.screen);Kit.corner(self.bootHost,11)
  for _,overlay in ipairs(self.overlays)do self:placeOverlay(overlay)end
  self.back.setCompact(true);self.back.root.Position=UDim2.new(1,-12,0,8)
@@ -798,6 +800,27 @@ end
 
 -- Portrait keeps the stacked case; results then use the compact screen fitted
 -- over the case rect.
+function Screen.resultsRegions(g)
+ local lcd=if g.phone then g.screen else g.lcd
+ local b=g.board
+ local center=rect(b.x-lcd.x,b.y-lcd.y,b.w,b.h)
+ local left=rect(8,8,math.max(48,center.x-16),lcd.h-16)
+ local rx=center.x+center.w+8
+ local right=rect(rx,8,math.max(48,lcd.w-rx-8),lcd.h-16)
+ if g.phone and g.columns==1 then
+  left.h=math.floor((lcd.h-24)*.42)
+  right=rect(left.x,left.y+left.h+8,left.w,lcd.h-left.h-24)
+ end
+ return {inPlace=true,phone=g.phone==true,W=lcd.w,H=lcd.h,left=left,center=center,right=right,
+  lcd=rect(lcd.x,lcd.y,lcd.w,lcd.h),case=g.body or g.deck}
+end
+function Screen:resultsView()
+ return self.geometry and Screen.resultsRegions(self.geometry)or nil
+end
+function Screen:caseBounds()
+ local g=self.geometry
+ return g and(g.body or g.deck)or nil
+end
 function Screen:placeResults(r)
  local scale=math.min(r.w/Screen.Compact.X,r.h/Screen.Compact.Y)
  local w,h=Screen.Compact.X*scale,Screen.Compact.Y*scale
@@ -945,6 +968,7 @@ function Screen:buildCompactHud(g)
  -- Eggs left: one row in a wide column, label over value otherwise.
  local er=g.eggs
  local eggs=screenCard(host,"EggsLeft",er)
+ h.welcomeMeter=eggs
  if g.layout=="wide"then
   txt(eggs,"Label","EGGS LEFT","dim",12,0,100,er.h,12)
   h.budget=txt(eggs,"Counter","/24","soft",er.w-12-40,1,40,er.h,13,right)
@@ -986,6 +1010,7 @@ function Screen:buildCompactHud(g)
  -- Goals: text rows (wide / one column) or icon rows (narrow).
  local gr=g.goals;local p=g.goalPitch
  local goals=screenCard(host,"Goals",gr)
+ h.welcomeCoach=goals
  h.goalsCard=goals
  local gw=gr.w
  h.goalsEyebrow=txt(goals,"Label","GOALS","dim",if narrow then 10 else 12,4,gw-24,20,12)
@@ -1020,7 +1045,7 @@ function Screen:buildCompactHud(g)
  end
  if g.quests then
   local qr=g.quests;local qp=g.questPitch
-  local quests=screenCard(host,"DailyQuests",qr)
+  local quests=screenCard(host,"DailyQuests",qr);h.quests=quests
   local roomy=qr.w>=170
   local title=if roomy then "DAILY QUESTS"else "QUESTS"
   txt(quests,"Label",title,"dim",12,4,qr.w-24,20,12)
@@ -1092,6 +1117,7 @@ function Screen:buildHud(g)
   h.chain=txt(chain,"Counter","×0","text",14,30,60,24,{TextSize=22})
   h.chainBar=Kit.progress(chain,10,5);h.chainBar.root.Position=UDim2.fromOffset(84,36);h.chainBar.layout(116,4)
   local goals,eyebrow=card(host,"Goals",{leftX,188,col,244},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
+  h.welcomeCoach=goals
   h.goalsCount=txt(goals,"Counter","0/2","dim",col-74,10,60,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
   h.status=txt(goals,"Small","","soft",14,40,col-28,190,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
   h.goals={};h.goalWidth=col-60
@@ -1106,7 +1132,7 @@ function Screen:buildHud(g)
    local count=txt(row,"Counter","","soft",col-62,r.barY-7,48,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
    h.goals[index]={row=row,check=check,text=text,bar=bar,count=count}
   end
-  local daily=card(host,"DailyQuests",{leftX,440,col,156},"DAILY QUESTS",pad,Screen.HudTint)
+  local daily=card(host,"DailyQuests",{leftX,440,col,156},"DAILY QUESTS",pad,Screen.HudTint);h.quests=daily
   -- Progress only (QA Q5): the quest log opens from the garden hub's Quests tile.
   h.daily={}
   for index=1,3 do
@@ -1123,6 +1149,7 @@ function Screen:buildHud(g)
   h.next[2]=egg(nextCard,40);h.next[2].ball.Position=UDim2.fromOffset(150-20,92-20)
   h.next[3]=egg(nextCard,40);h.next[3].ball.Position=UDim2.fromOffset(math.min(col-46,196-20),92-20)
   local eggs=card(host,"EggsLeft",{rightX,160,col,96},"EGGS LEFT",pad)
+  h.welcomeMeter=eggs
   h.eggs=txt(eggs,"CounterL","0","text",14,30,70,40);h.eggs.AutomaticSize=Enum.AutomaticSize.X
   h.budget=txt(eggs,"Counter","/24","dim",70,40,80,24)
   h.eggBar=Kit.progress(eggs,6);h.eggBar.root.Position=UDim2.fromOffset(14,76);h.eggBar.root.Size=UDim2.fromOffset(col-28,6)
@@ -1150,6 +1177,7 @@ function Screen:buildHud(g)
   local score=card(host,"Score",{leftX,6,col,54},"SCORE",pad)
   h.score=txt(score,"CounterL","0","text",8,22,col-16,28)
   local goals,eyebrow=card(host,"Goals",{leftX,66,col,136},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
+  h.welcomeCoach=goals
   h.goalsCount=txt(goals,"Counter","","dim",col-50,4,42,16,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
   h.status=txt(goals,"Small","","soft",8,24,col-16,108,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
   h.goals={}
@@ -1166,6 +1194,7 @@ function Screen:buildHud(g)
   h.next={egg(nextCard,40),egg(nextCard,24)}
   h.next[1].ball.Position=UDim2.fromOffset(12,30);h.next[2].ball.Position=UDim2.fromOffset(66,42)
   local eggs=card(host,"EggsLeft",{rightX,96,col,64},"EGGS LEFT",pad)
+  h.welcomeMeter=eggs
   h.eggs=txt(eggs,"CounterL","0","text",8,22,50,26);h.budget=txt(eggs,"Counter","/24","dim",50,26,56,20,{TextSize=15})
   h.eggBar=Kit.progress(eggs,5);h.eggBar.root.Position=UDim2.fromOffset(8,52);h.eggBar.root.Size=UDim2.fromOffset(col-16,5)
   local diff=card(host,"Difficulty",{rightX,166,col,60},nil,pad)
@@ -1249,7 +1278,16 @@ function Screen:stepNext(now,mood,themeId,board)
 end
 -- data: score,best,chain,goals{text,short,done,progress,target},status,daily{title,progress,target},
 -- next{t1,t2,t3},eggsLeft,budget,difficulty,multiplier,winPays,input("Gamepad"|"Keyboard"|"Touch")
+function Screen:bindQuestTarget()
+ local h=self.hud
+ local host=h and(h.handle or h.quests)
+ if not host or host:FindFirstChild("OpenQuestLog")then return end
+ local hit=Kit.node("TextButton",host,{Name="OpenQuestLog",Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=host.ZIndex+20,Selectable=true,AutoButtonColor=false})
+ hit:SetAttribute("AccessibleLabel",UICopy.get("hub.quests.title"))
+ hit.Activated:Connect(function()if not self:menuActive()and self.callbacks.quests then self.callbacks.quests()end end)
+end
 function Screen:setHud(data)
+ self:bindQuestTarget()
  local h=self.hud;if not h.score then return end
  if h.phone then return self:setCompactHud(data)end
  local compact=self.geometry and self.geometry.compact
@@ -1377,7 +1415,7 @@ function Screen:setCompactHud(data)
  else h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS"end
  Screen.paintEyebrow(h,statusOn,h.tint)
  -- Card height follows the goal count (a status message gets two rows, three in a narrow column).
- local n=if h.status.Visible then(if h.layout=="narrow"then 3 else 2)else math.max(1,#goals)
+ local n=if data.welcome then 3 elseif h.status.Visible then(if h.layout=="narrow"then 3 else 2)else math.max(1,#goals)
  local cardH=24+n*h.goalPitch+6
  if h.cardH~=cardH then
   h.cardH=cardH
@@ -1455,5 +1493,68 @@ function Screen:setCompactHud(data)
    end
   end
  end
+end
+-- Welcome borrows existing passive HUD wells; field geometry and all play hit
+-- targets remain owned by the unchanged layout. Rebuilds retain cue/input state.
+function Screen:setWelcome(snapshot,dependencies)
+ local h=self.hud
+ if not h or not h.welcomeMeter or not h.welcomeCoach then return end
+ if self.welcomeHud~=h then
+  local checkpoint=self.welcomeView and self.welcomeView:checkpoint()
+  if self.welcomeView then self.welcomeView:destroy()end
+  if self.welcomeGesture then self.welcomeGesture:Destroy()end
+  self.welcomeGesture=Kit.frame(self.options.overlayParent or self.options.parent,"WelcomeGestureWell",nil,UDim2.new(),UDim2.fromOffset(1,44),40)
+  self.welcomeGesture.Active=false;self.welcomeGesture.Selectable=false
+  local meter=Kit.frame(h.welcomeMeter,"WelcomeMeterWell",nil,UDim2.new(),UDim2.fromScale(1,1),30)
+  local skip=Kit.frame(h.welcomeCoach,"WelcomeSkipWell",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(0,0),30)
+  meter.Active,skip.Active=false,false
+  local d=table.clone(dependencies);d.scale=function()return self.contentScale.Scale end
+  self.welcomeView=require(script.Parent.WelcomePresentation).new({meter=meter,gesture=self.welcomeGesture,skip=skip},d)
+  self.welcomeView:restore(checkpoint);self.welcomeHud=h
+  self.welcomeMeterHost,self.welcomeSkipHost=meter,skip
+  h.welcomeStatusSize=h.status.Size;h.welcomeStatusAlignment=h.status.TextYAlignment
+ end
+ local wanted=snapshot.phase=="Welcome"and(snapshot.owned or 0)==0
+ for _,child in ipairs(h.welcomeMeter:GetChildren())do
+  if child:IsA("GuiObject")and child~=self.welcomeMeterHost then
+   if wanted then
+    if child:GetAttribute("WelcomeWasVisible")==nil then child:SetAttribute("WelcomeWasVisible",child.Visible)end
+    child.Visible=false
+   elseif child:GetAttribute("WelcomeWasVisible")~=nil then
+    child.Visible=child:GetAttribute("WelcomeWasVisible");child:SetAttribute("WelcomeWasVisible",nil)
+   end
+  end
+ end
+ local coach=h.welcomeCoach;local ch=coach.Size.Y.Offset;local cw=coach.Size.X.Offset
+ -- Header + one readable instruction above a full-size Skip. No reflow outside
+ -- the existing coach card; insufficient space becomes an explicit capture gate.
+ local statusBottom=h.status.Position.Y.Offset+math.max(h.status.TextSize+4,20)
+ local available=ch-statusBottom-8
+ local scale=math.max(.01,self.contentScale.Scale)
+ local hitH=math.ceil(48/scale);local hitW=math.ceil(72/scale);local gap=math.ceil(4/scale)
+ local fits=cw-16>=hitW and available>=hitH
+ self.welcomeSkipHost.Position=UDim2.fromOffset(8,ch-hitH-gap)
+ self.welcomeSkipHost.Size=UDim2.fromOffset(if fits then cw-16 else 0,if fits then hitH else 0)
+ self.welcomeSkipHost:SetAttribute("LayoutBlocked",wanted and not fits)
+ if wanted then
+  h.status.Size=UDim2.fromOffset(cw-20,math.max(0,ch-hitH-gap-h.status.Position.Y.Offset-gap))
+  h.status.TextYAlignment=Enum.TextYAlignment.Top
+ elseif h.welcomeStatusSize then
+  h.status.Size=h.welcomeStatusSize;h.status.TextYAlignment=h.welcomeStatusAlignment
+ end
+ local g=self.geometry
+ if g and g.board then
+  self.welcomeGesture.Position=UDim2.fromOffset(g.board.x,g.board.y+g.board.h*.72)
+  self.welcomeGesture.Size=UDim2.fromOffset(g.board.w,44)
+ end
+ self.welcomeGesture.Visible=self.visible==true
+ return self.welcomeView:update(snapshot)
+end
+function Screen:stepWelcome(dt)if self.welcomeView then self.welcomeView:step(dt)end end
+function Screen:welcomeInput()if self.welcomeView then self.welcomeView:input()end end
+function Screen:welcomeResult(pending)if self.welcomeView then self.welcomeView:setSkipPending(pending)end end
+function Screen:destroyWelcome()
+ if self.welcomeView then self.welcomeView:destroy();self.welcomeView=nil end
+ if self.welcomeGesture then self.welcomeGesture:Destroy();self.welcomeGesture=nil end
 end
 return Screen

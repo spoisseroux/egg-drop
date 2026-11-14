@@ -5,13 +5,13 @@ Inputs (assets/world/):
 - world-v7-walk.json           perimeter wall, cave blocker, fall catch, wet boxes, ground heights
 - world-v7-studio-import.json  mesh asset id and raw MeshSize per part, read back from the Open Cloud insert
 - world-v7-uploads.json        texture and sky image ids ("sky"."dusk" once the locked-dusk faces are uploaded)
-- world-v7-pending.json        (optional) meshes the last chunk merge changed: until their new ids are read back into
-                               world-v7-studio-import.json, the previous geometry is kept so old ids never stretch
+- world-v7-pending.json        (optional) meshes the last chunk merge changed: changed meshes must have a verified
+                               --confirm-upload checkpoint or generation aborts before any runtime output writes
 - world-dressing-manifest.json (optional) frond bush meshes from scripts/build_world_v7_fronds.py, mounted as
                                WorldAssets.Dressing templates once world-dressing-import.json carries their ids
 
 Outputs:
-- assets/world/WorldAssets.rbxmx  Folder WorldAssets > Model WorldV7 of MeshParts, mounted at ServerStorage.WorldAssets.
+- assets/world/WorldAssets.rbxmx  staging geometry; NEVER mount alone (native collision payload is absent).
   Size = authored size (the Open Cloud import scaled the whole model by 1.0823 so its largest part hit 2048, so the raw
   MeshSize is kept only as InitialSize). The import turns meshes by pi about Y, so each CFrame carries Ry(pi).
 - src/shared/WorldV7Data.lua      generated data: part roles, collision boxes, wet boxes, sky ids, water beams.
@@ -20,10 +20,23 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORLD = ROOT / "assets" / "world"
+from world_native_collision import stage_directory, write_staged, validate as validate_native
+
+# A rebuild is deliberately staged away from all watched runtime assets. Resolve
+# junctions before any confirmation write, and never refresh the native proof here.
+STAGE = None
+if "--stage-native-rebuild" in sys.argv:
+    _stage_arg = sys.argv.index("--stage-native-rebuild")
+    if _stage_arg + 1 >= len(sys.argv):
+        raise ValueError("--stage-native-rebuild requires an unwatched directory")
+    STAGE = stage_directory(ROOT, sys.argv[_stage_arg + 1])
+if "--confirm-upload" in sys.argv and STAGE is None:
+    validate_native(ROOT)  # Before the first canonical pending-file mutation.
 MANIFEST = json.loads((WORLD / "world-v7-manifest.json").read_text())
 WALK = json.loads((WORLD / "world-v7-walk.json").read_text())
 IMPORT = json.loads((WORLD / "world-v7-studio-import.json").read_text())
@@ -39,17 +52,47 @@ for _tile in COLLISION["parts"]:
 PENDING_PATH = WORLD / "world-v7-pending.json"
 if PENDING_PATH.exists():
     _pending = json.loads(PENDING_PATH.read_text())
+    # No-delete promotion: bind coordinator-supplied Studio readback to BOTH the
+    # current geometry and canonical import. An old or incomplete receipt can
+    # never silently release a later merge, and unconfirmed rows remain held.
+    from world_overlap_upload import atomic_write, digest, is_confirmed, validate_proof
+    _file_hashes = {"fbxSha256": digest(WORLD / "world-v7-declutter.fbx"),
+                    "manifestSha256": digest(WORLD / "world-v7-manifest.json")}
+    if "--confirm-upload" in sys.argv:
+        _arg = sys.argv.index("--confirm-upload")
+        if _arg + 1 >= len(sys.argv):
+            raise ValueError("--confirm-upload requires the Studio readback JSON path")
+        _proof = json.loads(Path(sys.argv[_arg + 1]).read_text())
+        _pending = validate_proof(_pending, MANIFEST, IMPORT, _proof, _file_hashes)
+        if STAGE is not None:
+            write_staged(ROOT, STAGE, "world-v7-pending.json", json.dumps(_pending, indent=1))
+        else:
+            # Idempotent confirmation may retain the existing exact checkpoint;
+            # any changed receipt must go through the isolated rebuild route.
+            if _pending != json.loads(PENDING_PATH.read_text()):
+                raise RuntimeError("Changed upload confirmation requires --stage-native-rebuild DIR")
+            # Do not reformat identical JSON: its exact bytes are part of the
+            # approved native checkpoint, not just its decoded table.
+        print("PENDING: confirmed uploaded geometry for", sorted(_pending["confirmedImport"]))
     _held = []
+    _unconfirmed_added = set()
     for _i, _part in enumerate(MANIFEST["parts"]):
         if _part["name"] in _pending["changed"]:
-            MANIFEST["parts"][_i] = _pending["previous"][_part["name"]]
-            _held.append(_part["name"])
-    _missing = [p["name"] for p in MANIFEST["parts"] if p["name"] not in IMPORT]
-    MANIFEST["parts"] = [p for p in MANIFEST["parts"] if p["name"] in IMPORT]
+            if not is_confirmed(_part["name"], _part, IMPORT, _pending, _file_hashes):
+                MANIFEST["parts"][_i] = _pending["previous"][_part["name"]]
+                _held.append(_part["name"])
+        elif _part["name"] in _pending.get("added", []) and not is_confirmed(_part["name"], _part, IMPORT, _pending, _file_hashes):
+            _unconfirmed_added.add(_part["name"])
+    # Fail before palette/XML/Lua writes. Restoring only old bounds is unsafe:
+    # IMPORT still holds the newly mapped ID/raw size and xml_part reads it.
+    if _held:
+        raise RuntimeError("Unconfirmed changed meshes; no runtime assets written: " + ", ".join(_held))
+    _missing = [p["name"] for p in MANIFEST["parts"] if p["name"] not in IMPORT or p["name"] in _unconfirmed_added]
+    MANIFEST["parts"] = [p for p in MANIFEST["parts"] if p["name"] in IMPORT and p["name"] not in _unconfirmed_added]
     MANIFEST["count"] = len(MANIFEST["parts"])
     MANIFEST["triangles"] = sum(p["tris"] for p in MANIFEST["parts"])
     print("PENDING: kept the previous geometry for", _held, "and skipped (no id yet)", _missing,
-          "- upload assets/world/world-v7-declutter.fbx, update world-v7-studio-import.json, delete world-v7-pending.json")
+          "- confirm verified readback with --confirm-upload PATH; pending file is retained")
 for _part in MANIFEST["parts"]:
     if _part["region"] == "Ground":
         _part["collide"] = False
@@ -312,7 +355,9 @@ def lua_data():
         "perimeter": WALK["perimeter"], "caveBlocker": WALK["CaveBlocker"], "fallCatch": WALK["FallCatch"],
         "wet": WALK["wet"], "sky": UPLOADS["sky"], "waterTexture": UPLOADS["textures"]["W1_water"],
         "fallTexture": UPLOADS["textures"]["W1_waterfall_tumble"], "beams": beams(), "foam": WALK.get("foam", []),
-        "triangles": MANIFEST["triangles"], "meshParts": MANIFEST["count"], "collisionTiles": len(COLLISION["parts"]),
+        # Pending reconciliation counts every emitted row, including collision
+        # tiles appended above. This public statistic means visual meshes only.
+        "triangles": MANIFEST["triangles"], "meshParts": sum(p["region"] != "GroundCollision" for p in MANIFEST["parts"]), "collisionTiles": len(COLLISION["parts"]),
         "ground": {k: WALK["ground"][k] for k in ("x0", "z0", "step", "nx", "nz")} | {
             "h": [(-999 if v is None else v) for row in WALK["ground"]["heights"] for v in row]},
     }
@@ -337,14 +382,25 @@ def palette_png():
         for y in range(sy * px, sy * px + px):
             for x in range(sx * px, sx * px + px):
                 img.putpixel((x, y), c)
-    (WORLD / "textures").mkdir(exist_ok=True)
-    img.save(WORLD / "textures" / "palette-roblox.png")
+    import io
+    from world_native_collision import sha
+    buffer = io.BytesIO();img.save(buffer, format="PNG")
+    if sha(buffer.getvalue()) != sha((WORLD / "textures" / "palette-roblox.png").read_bytes()):
+        raise RuntimeError("Generated palette changed; stage and promote a new native checkpoint before runtime writes")
+    # Existing bytes already match. Do not silently re-encode a bound input.
 
 
 def main():
+    xml, lua = rbxmx(), lua_data()
+    if STAGE is not None:
+        write_staged(ROOT, STAGE, "WorldAssets.rbxmx", xml)
+        write_staged(ROOT, STAGE, "WorldV7Data.lua", lua)
+        print("STAGED native rebuild candidates only:", STAGE)
+        return
+    validate_native(ROOT, xml, lua)
     palette_png()
-    (WORLD / "WorldAssets.rbxmx").write_text(rbxmx(), newline="\n")
-    (ROOT / "src" / "shared" / "WorldV7Data.lua").write_text(lua_data(), newline="\n")
+    (WORLD / "WorldAssets.rbxmx").write_text(xml, encoding="utf-8", newline="\n")
+    (ROOT / "src" / "shared" / "WorldV7Data.lua").write_text(lua, encoding="utf-8", newline="\n")
     print("wrote WorldAssets.rbxmx and WorldV7Data.lua", MANIFEST["count"], "parts")
 
 

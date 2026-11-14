@@ -1,0 +1,1467 @@
+{
+  "seconds": 72,
+  "sample_rate": 48000,
+  "frames": 3456000,
+  "seed": 20261186,
+  "source_hashes": {
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_toy.zip": "3ba6419b05ebf8e0b7dd4395b3c10f26811c037e357143f10a159acdb2dabfb8",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak1.wav": "a89853f355ce7c6c60ee9695f5e725250c6a74f4a177b549afa0a30ff98ff362",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak2.wav": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak3.wav": "bb51223dc20b0f4e691ce624330747a2c866edaf1150c2cdd2b53280154b7212",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\squeak_wavs\\squeak toy - squeak5.wav": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single1.wav": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single2.wav": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-single3.wav": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b",
+    "assets\\audio\\sample-sources\\opengameart-2026-11-14\\bubbles-loop1-amp.wav": "94eaef4afc1146dcdfd3077cc7a6cbe6dc97daac62b8f6560dfc913dd57488a9"
+  },
+  "provenance": {
+    "retrieved_utc": "2026-11-14",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sources": [
+      {
+        "author": "bart",
+        "source_url": "https://opengameart.org/content/squeak-toy-sounds",
+        "license_page_sha256": "acdb04a73fe4200f09c5baa6e5779d565ba274d5b3ade1d27e3b932929ff8ee1",
+        "license_page_file": "squeak-toy-sounds.html",
+        "files": [
+          {
+            "source_filename": "squeak_toy.zip",
+            "download_url": "https://opengameart.org/sites/default/files/squeak_toy.zip",
+            "bytes": 898071,
+            "sha256": "3ba6419b05ebf8e0b7dd4395b3c10f26811c037e357143f10a159acdb2dabfb8",
+            "extracted_wavs": [
+              {
+                "archive_member": "squeak toy/squeak toy - squeak1.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak1.wav",
+                "sha256": "a89853f355ce7c6c60ee9695f5e725250c6a74f4a177b549afa0a30ff98ff362",
+                "bytes": 271388
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak2.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak2.wav",
+                "sha256": "139a35c13b41b6c0a95b543a8f0d510af761802778a773d863cb9b9e827bd4a4",
+                "bytes": 172012
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak3.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak3.wav",
+                "sha256": "bb51223dc20b0f4e691ce624330747a2c866edaf1150c2cdd2b53280154b7212",
+                "bytes": 298500
+              },
+              {
+                "archive_member": "squeak toy/squeak toy - squeak5.wav",
+                "local_file": "squeak_wavs\\squeak toy - squeak5.wav",
+                "sha256": "0d23b7c925d2d2d374efdda5848a8aeeee28a592dc3e609ab093775a353e2003",
+                "bytes": 226212
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "author": "BMacZero",
+        "source_url": "https://opengameart.org/content/bubble-sound-effects",
+        "license_page_sha256": "9ab1602f48dd7f3a1c73afb66a873a98f54ee72281e9bfdd7e6815cbbec24d14",
+        "license_page_file": "bubble-sound-effects.html",
+        "files": [
+          {
+            "source_filename": "bubbles-single1.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single1.wav",
+            "bytes": 28386,
+            "sha256": "014228835d2b255cf300f94c60db8ec661ec15b5b5c097d5f47b148d6a81fdc5"
+          },
+          {
+            "source_filename": "bubbles-single2.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single2.wav",
+            "bytes": 38468,
+            "sha256": "c6c7b9f3e7415e1fee6d5ca0c9556fa03443c4cbeaa623f7a70476fc5b5a11e8"
+          },
+          {
+            "source_filename": "bubbles-single3.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-single3.wav",
+            "bytes": 35884,
+            "sha256": "496bc47723f77352a1f26db4bfacbf1c1ff8fa75cd0ef5a267423c382f7b073b"
+          },
+          {
+            "source_filename": "bubbles-loop1-amp.wav",
+            "download_url": "https://opengameart.org/sites/default/files/bubbles-loop1-amp.wav",
+            "bytes": 428076,
+            "sha256": "94eaef4afc1146dcdfd3077cc7a6cbe6dc97daac62b8f6560dfc913dd57488a9"
+          }
+        ]
+      }
+    ]
+  },
+  "audition_report_sha256": "6b7d8b6a1609c162acc69fd555d8a62ad481a4dee32d494145096d5ec461f86c",
+  "generator_sha256": "bbc8ff84db7b3bf4d6a6dd89811e1e6c12d7dfd648816766cac9e161a3985ec7",
+  "harmonic_windows": [
+    [
+      0.05,
+      7.95,
+      174.6141157,
+      261.6255653
+    ],
+    [
+      18.8,
+      3.2,
+      174.6141157,
+      261.6255653
+    ],
+    [
+      24,
+      6,
+      146.83238396,
+      220
+    ],
+    [
+      42,
+      3,
+      146.83238396,
+      220
+    ],
+    [
+      48,
+      5,
+      116.5409404,
+      174.6141157
+    ],
+    [
+      62,
+      5,
+      130.8127827,
+      195.997718
+    ]
+  ],
+  "versions": {
+    "garden": {
+      "bank": {
+        "rubber-squeak-main": {
+          "file": "garden-bank\\rubber-squeak-main.wav",
+          "sha256": "dca48831301e5aa4b1432e497d4d19790df517da10c38d96cdceb5df86f0e571",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-main.wav",
+            "sha256": "dca48831301e5aa4b1432e497d4d19790df517da10c38d96cdceb5df86f0e571",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.205
+        },
+        "rubber-squeak-small": {
+          "file": "garden-bank\\rubber-squeak-small.wav",
+          "sha256": "b22aa245b471a3455ded1b332ac4260dfd9ac879635d0375e59f35cde8f72f45",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-small.wav",
+            "sha256": "b22aa245b471a3455ded1b332ac4260dfd9ac879635d0375e59f35cde8f72f45",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.235
+        },
+        "rubber-grain": {
+          "file": "garden-bank\\rubber-grain.wav",
+          "sha256": "c1a6c253ced4fe3429b6dc05cf7d5e509f4a6e5f6c09259945e0c5ccd8560016",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-grain.wav",
+            "sha256": "c1a6c253ced4fe3429b6dc05cf7d5e509f4a6e5f6c09259945e0c5ccd8560016",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.08
+        },
+        "water-plop-one": {
+          "file": "garden-bank\\water-plop-one.wav",
+          "sha256": "eab77e1812913772a4084f9e6db139bdbcc3d9657dfc34f64b58d7929ad244b6",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-one.wav",
+            "sha256": "eab77e1812913772a4084f9e6db139bdbcc3d9657dfc34f64b58d7929ad244b6",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.26
+        },
+        "water-plop-two": {
+          "file": "garden-bank\\water-plop-two.wav",
+          "sha256": "f915b43a77c5e90a2178de86071d41e8793938aae3097e8c5f2be3aca4784794",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-two.wav",
+            "sha256": "f915b43a77c5e90a2178de86071d41e8793938aae3097e8c5f2be3aca4784794",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.307
+        },
+        "water-plop-three": {
+          "file": "garden-bank\\water-plop-three.wav",
+          "sha256": "b0b49f468924592f2f81bb4e93701b4f996537c70635d9d33d7e042ef88db0bd",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-three.wav",
+            "sha256": "b0b49f468924592f2f81bb4e93701b4f996537c70635d9d33d7e042ef88db0bd",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.285
+        },
+        "hollow-knock": {
+          "file": "garden-bank\\hollow-knock.wav",
+          "sha256": "2266cbef98f0290f509777102d286fe25ad890a9b8ba61723a5818d4521a7cf1",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock.wav",
+            "sha256": "2266cbef98f0290f509777102d286fe25ad890a9b8ba61723a5818d4521a7cf1",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.19
+        },
+        "hollow-knock-low": {
+          "file": "garden-bank\\hollow-knock-low.wav",
+          "sha256": "229c4f970de8766b3547ff847c0428d73522669f161891b75ca64ae65ecbe0d6",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock-low.wav",
+            "sha256": "229c4f970de8766b3547ff847c0428d73522669f161891b75ca64ae65ecbe0d6",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.19
+        },
+        "soft-rattle": {
+          "file": "garden-bank\\soft-rattle.wav",
+          "sha256": "6108dc0518173186de8d446a71bac1438e0ac0114ce39faf54f083ebb8f12fbd",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\soft-rattle.wav",
+            "sha256": "6108dc0518173186de8d446a71bac1438e0ac0114ce39faf54f083ebb8f12fbd",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.25
+        },
+        "secondary-tick": {
+          "file": "garden-bank\\secondary-tick.wav",
+          "sha256": "564d37b6fcc5d8bfa686366499dcf7bcafe33c95eef1b4f123d08c6f850246b7",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\secondary-tick.wav",
+            "sha256": "564d37b6fcc5d8bfa686366499dcf7bcafe33c95eef1b4f123d08c6f850246b7",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.07
+        },
+        "rounded-f2": {
+          "file": "garden-bank\\rounded-f2.wav",
+          "sha256": "4207ae55e0fcc6e6e6abddaca7fd536c4bab3697f7de3fe4b418b806dadd96f9",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rounded-f2.wav",
+            "sha256": "4207ae55e0fcc6e6e6abddaca7fd536c4bab3697f7de3fe4b418b806dadd96f9",
+            "kind": "original synthetic shadow"
+          },
+          "original_frequency_hz": 87.30705786,
+          "seconds": 0.29
+        },
+        "shadow-a4": {
+          "file": "garden-bank\\shadow-a4.wav",
+          "sha256": "7ba94b3b3848756b0265e8eebc35e20177e309f573e13dc4c5721643226ef8a5",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-a4.wav",
+            "sha256": "7ba94b3b3848756b0265e8eebc35e20177e309f573e13dc4c5721643226ef8a5",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 440.0,
+          "seconds": 0.25,
+          "measured_pitch": {
+            "hz": 439.99983156390283,
+            "error_cents": -0.0006627326415549464,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "shadow-c5": {
+          "file": "garden-bank\\shadow-c5.wav",
+          "sha256": "604c0a65745a4542cb7d1ad692d9c2cfe4a7532cae449f0712d3fbc72c739ad8",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-c5.wav",
+            "sha256": "604c0a65745a4542cb7d1ad692d9c2cfe4a7532cae449f0712d3fbc72c739ad8",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 523.2511306,
+          "seconds": 0.35,
+          "measured_pitch": {
+            "hz": 523.2516081308527,
+            "error_cents": 0.0015799627483063495,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "shadow-d5": {
+          "file": "garden-bank\\shadow-d5.wav",
+          "sha256": "d8f40d91da5d6d53a668ff9c65b70bcba451bdbf8f14c85d7efce00baa96e882",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-d5.wav",
+            "sha256": "d8f40d91da5d6d53a668ff9c65b70bcba451bdbf8f14c85d7efce00baa96e882",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 587.3295358,
+          "seconds": 0.4,
+          "measured_pitch": {
+            "hz": 587.3292028896111,
+            "error_cents": -0.00098129913243667,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "rounded-d2": {
+          "file": "garden-bank\\rounded-d2.wav",
+          "sha256": "0c4ff10a42451a62dc206ca945d1f099878d17359d7d9110f6993d675499b286",
+          "source_bank": null,
+          "original_frequency_hz": 73.41619198,
+          "seconds": 0.29
+        },
+        "rounded-c3": {
+          "file": "garden-bank\\rounded-c3.wav",
+          "sha256": "c0acff3a629f1a1f39dbce91341101d1c14d908610db700aab0dd626fb0c1a29",
+          "source_bank": null,
+          "original_frequency_hz": 130.8127827,
+          "seconds": 0.29
+        }
+      },
+      "events": [
+        {
+          "time_seconds": 1.802578813534266,
+          "bank": "hollow-knock",
+          "pan": -0.09,
+          "playback_speed": 1.0105173265942688,
+          "cents": 18.112870507281986,
+          "frequency_hz": null,
+          "gain": 0.9319677552107472,
+          "duration_seconds": 0.18804166666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 3.101846840561854,
+          "bank": "water-plop-one",
+          "pan": 0.08,
+          "playback_speed": 1.0091230926112,
+          "cents": 15.722597759382785,
+          "frequency_hz": null,
+          "gain": 0.9208853023855629,
+          "duration_seconds": 0.25766666666666665,
+          "foreground": true
+        },
+        {
+          "time_seconds": 5.503665626565635,
+          "bank": "soft-rattle",
+          "pan": -0.04,
+          "playback_speed": 1.0063367505353829,
+          "cents": 10.935786090969318,
+          "frequency_hz": null,
+          "gain": 0.9437455675783308,
+          "duration_seconds": 0.2484375,
+          "foreground": true
+        },
+        {
+          "time_seconds": 7.203576754925768,
+          "bank": "rubber-squeak-main",
+          "pan": -0.02,
+          "playback_speed": 1.001746101717348,
+          "cents": 3.020274659521526,
+          "frequency_hz": null,
+          "gain": 0.9647133892652194,
+          "duration_seconds": 0.20464583333333333,
+          "foreground": true
+        },
+        {
+          "time_seconds": 7.353195450030062,
+          "bank": "rubber-grain",
+          "pan": 0.01,
+          "playback_speed": 1.0290413284103095,
+          "cents": 49.56110998469315,
+          "frequency_hz": null,
+          "gain": 0.9352328731754116,
+          "duration_seconds": 0.07775,
+          "foreground": true
+        },
+        {
+          "time_seconds": 9.300093521786073,
+          "bank": "rounded-f2",
+          "pan": 0,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 87.30705786,
+          "gain": 0.9381712658066315,
+          "duration_seconds": 0.29,
+          "foreground": true
+        },
+        {
+          "time_seconds": 11.603047674892332,
+          "bank": "shadow-a4",
+          "pan": -0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9588139802760106,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 11.902380737409175,
+          "bank": "shadow-c5",
+          "pan": 0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9555474270852653,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 12.301172001429897,
+          "bank": "shadow-d5",
+          "pan": -0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9848793152912139,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 14.402332909498462,
+          "bank": "water-plop-two",
+          "pan": -0.07,
+          "playback_speed": 0.9913989984367728,
+          "cents": -14.954752277433665,
+          "frequency_hz": null,
+          "gain": 0.9344596490517265,
+          "duration_seconds": 0.30966666666666665,
+          "foreground": true
+        },
+        {
+          "time_seconds": 16.70304515335513,
+          "bank": "rubber-squeak-small",
+          "pan": 0.07,
+          "playback_speed": 0.9735081645395358,
+          "cents": -46.48201969556716,
+          "frequency_hz": null,
+          "gain": 0.8895635114883889,
+          "duration_seconds": 0.24139583333333334,
+          "foreground": true
+        },
+        {
+          "time_seconds": 20.400249608758944,
+          "bank": "hollow-knock-low",
+          "pan": -0.08,
+          "playback_speed": 0.9754015172077075,
+          "cents": -43.11825413173797,
+          "frequency_hz": null,
+          "gain": 0.8912838144145401,
+          "duration_seconds": 0.19479166666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 20.53346218047475,
+          "bank": "secondary-tick",
+          "pan": 0.03,
+          "playback_speed": 1.03284923100976,
+          "cents": 55.95560856795541,
+          "frequency_hz": null,
+          "gain": 0.9826792016687479,
+          "duration_seconds": 0.06779166666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 22.602719679550617,
+          "bank": "water-plop-three",
+          "pan": 0.09,
+          "playback_speed": 1.0313070330809777,
+          "cents": 53.3686861455189,
+          "frequency_hz": null,
+          "gain": 0.9596361346942611,
+          "duration_seconds": 0.2763541666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 26.3,
+          "bank": "water-plop-three",
+          "pan": 0.04,
+          "playback_speed": 1.0088235522427713,
+          "cents": 15.208635222241407,
+          "frequency_hz": null,
+          "gain": 0.9024791268942267,
+          "duration_seconds": 0.28252083333333333,
+          "foreground": true
+        },
+        {
+          "time_seconds": 28.7,
+          "bank": "hollow-knock-low",
+          "pan": -0.06,
+          "playback_speed": 1.0134902790217855,
+          "cents": 23.198701366775957,
+          "frequency_hz": null,
+          "gain": 0.9403828153718787,
+          "duration_seconds": 0.18747916666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 32.2,
+          "bank": "rubber-squeak-small",
+          "pan": 0.08,
+          "playback_speed": 1.0133001848873802,
+          "cents": 22.87395399418317,
+          "frequency_hz": null,
+          "gain": 0.9670885004128039,
+          "duration_seconds": 0.23191666666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 34.1,
+          "bank": "rounded-d2",
+          "pan": -0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 73.41619198,
+          "gain": 0.8834696212234179,
+          "duration_seconds": 0.29,
+          "foreground": true
+        },
+        {
+          "time_seconds": 35.4,
+          "bank": "soft-rattle",
+          "pan": 0.06,
+          "playback_speed": 1.0074034952979842,
+          "cents": 12.769970049150446,
+          "frequency_hz": null,
+          "gain": 0.9263918174417901,
+          "duration_seconds": 0.24816666666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 36.8,
+          "bank": "shadow-a4",
+          "pan": -0.08,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9979065347701661,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 37.1,
+          "bank": "shadow-c5",
+          "pan": 0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9279838514782938,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 37.5,
+          "bank": "shadow-d5",
+          "pan": -0.06,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9202133031138595,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 39.8,
+          "bank": "water-plop-one",
+          "pan": 0.08,
+          "playback_speed": 1.015030310695992,
+          "cents": 25.82737153830052,
+          "frequency_hz": null,
+          "gain": 0.9318061240757419,
+          "duration_seconds": 0.25616666666666665,
+          "foreground": true
+        },
+        {
+          "time_seconds": 43.6,
+          "bank": "hollow-knock",
+          "pan": -0.04,
+          "playback_speed": 1.0349109746181897,
+          "cents": 59.408003007618476,
+          "frequency_hz": null,
+          "gain": 0.8825500785476783,
+          "duration_seconds": 0.18360416666666668,
+          "foreground": true
+        },
+        {
+          "time_seconds": 46.1,
+          "bank": "water-plop-two",
+          "pan": 0.06,
+          "playback_speed": 0.984273855360058,
+          "cents": -27.441985429251595,
+          "frequency_hz": null,
+          "gain": 0.9741757919231221,
+          "duration_seconds": 0.3119166666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 49.9,
+          "bank": "hollow-knock",
+          "pan": 0.04,
+          "playback_speed": 0.9783127665216647,
+          "cents": -37.95879175795833,
+          "frequency_hz": null,
+          "gain": 0.968739502253239,
+          "duration_seconds": 0.19422916666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 52.1,
+          "bank": "water-plop-two",
+          "pan": -0.06,
+          "playback_speed": 0.9933605448433177,
+          "cents": -11.532779026341066,
+          "frequency_hz": null,
+          "gain": 0.9678557623649419,
+          "duration_seconds": 0.3090625,
+          "foreground": true
+        },
+        {
+          "time_seconds": 55.6,
+          "bank": "rubber-squeak-main",
+          "pan": 0.08,
+          "playback_speed": 1.0327215812922133,
+          "cents": 55.741632328229656,
+          "frequency_hz": null,
+          "gain": 0.8888379591661626,
+          "duration_seconds": 0.19852083333333334,
+          "foreground": true
+        },
+        {
+          "time_seconds": 55.75,
+          "bank": "rubber-grain",
+          "pan": -0.04,
+          "playback_speed": 1.0105991331439683,
+          "cents": 18.253017091781206,
+          "frequency_hz": null,
+          "gain": 0.9016050380467114,
+          "duration_seconds": 0.07916666666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 57.4,
+          "bank": "rounded-c3",
+          "pan": 0.06,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 130.8127827,
+          "gain": 0.8916043282402153,
+          "duration_seconds": 0.29,
+          "foreground": true
+        },
+        {
+          "time_seconds": 58.8,
+          "bank": "shadow-a4",
+          "pan": -0.08,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9480636021773398,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 59.1,
+          "bank": "shadow-c5",
+          "pan": 0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9038385934445466,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 59.5,
+          "bank": "shadow-d5",
+          "pan": -0.06,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9305050340363069,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 60.9,
+          "bank": "water-plop-three",
+          "pan": 0.08,
+          "playback_speed": 1.026812538410248,
+          "cents": 45.80738146315563,
+          "frequency_hz": null,
+          "gain": 0.9005678692208778,
+          "duration_seconds": 0.2775625,
+          "foreground": true
+        },
+        {
+          "time_seconds": 64.4,
+          "bank": "soft-rattle",
+          "pan": -0.04,
+          "playback_speed": 1.022082581477364,
+          "cents": 37.814120158403306,
+          "frequency_hz": null,
+          "gain": 0.9177693797856593,
+          "duration_seconds": 0.24460416666666668,
+          "foreground": true
+        },
+        {
+          "time_seconds": 68.0,
+          "bank": "hollow-knock-low",
+          "pan": 0.06,
+          "playback_speed": 0.9724315571522553,
+          "cents": -48.39765925596325,
+          "frequency_hz": null,
+          "gain": 0.9641844958497556,
+          "duration_seconds": 0.19539583333333332,
+          "foreground": true
+        },
+        {
+          "time_seconds": 70.4,
+          "bank": "water-plop-one",
+          "pan": -0.08,
+          "playback_speed": 1.025542313566413,
+          "cents": 43.664421849438575,
+          "frequency_hz": null,
+          "gain": 0.9766276460858633,
+          "duration_seconds": 0.25354166666666667,
+          "foreground": true
+        }
+      ],
+      "measurements": {
+        "garden-texture-72s.wav": {
+          "integrated_lufs": -38.06,
+          "true_peak_dbfs": -15.53,
+          "loudness_range_lu": 12.6,
+          "meter_only_no_normalization_applied": true
+        },
+        "garden-texture-72s-mono.wav": {
+          "integrated_lufs": -41.07,
+          "true_peak_dbfs": -15.92,
+          "loudness_range_lu": 12.6,
+          "meter_only_no_normalization_applied": true
+        },
+        "garden-matched-excerpt-24s.wav": {
+          "integrated_lufs": -38.12,
+          "true_peak_dbfs": -15.88,
+          "loudness_range_lu": 13.0,
+          "meter_only_no_normalization_applied": true
+        },
+        "garden-seam-16s.wav": {
+          "integrated_lufs": -38.88,
+          "true_peak_dbfs": -17.47,
+          "loudness_range_lu": 6.6,
+          "meter_only_no_normalization_applied": true
+        }
+      },
+      "foreground_fraction": 0.08646180555555555,
+      "max_foreground_layers": 2,
+      "motif_peak_below_principal_db": -18.97109008691395,
+      "mono_vs_stereo_per_channel_rms_db": -0.00913008687358992,
+      "dc_per_channel": [
+        1.0700464079148598e-06,
+        1.0559704518659821e-06
+      ],
+      "loop_boundary_jump": [
+        0.0,
+        0.0
+      ],
+      "room": {
+        "predelay_ms": 14,
+        "t60_seconds": 0.55,
+        "send": 0.14,
+        "cyclic_tail": true
+      },
+      "colour": null
+    },
+    "pocket-deck": {
+      "bank": {
+        "rubber-squeak-main": {
+          "file": "pocket-deck-bank\\rubber-squeak-main.wav",
+          "sha256": "17904c4f933342268f54728f4aec6c475a4f66e8ec9f9eb70d39bdb5b816883f",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-main.wav",
+            "sha256": "dca48831301e5aa4b1432e497d4d19790df517da10c38d96cdceb5df86f0e571",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.164
+        },
+        "rubber-squeak-small": {
+          "file": "pocket-deck-bank\\rubber-squeak-small.wav",
+          "sha256": "fae7d3ee2fef7c89fc03631a147b8f3756b567bdef1cec6b25f8142e29ace365",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-small.wav",
+            "sha256": "b22aa245b471a3455ded1b332ac4260dfd9ac879635d0375e59f35cde8f72f45",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.188
+        },
+        "rubber-grain": {
+          "file": "pocket-deck-bank\\rubber-grain.wav",
+          "sha256": "cad215f5658e7c573d1207c0aa889a20b4434080d01d6656e170a67aa64ce860",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-grain.wav",
+            "sha256": "c1a6c253ced4fe3429b6dc05cf7d5e509f4a6e5f6c09259945e0c5ccd8560016",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.064
+        },
+        "water-plop-one": {
+          "file": "pocket-deck-bank\\water-plop-one.wav",
+          "sha256": "3c4b1d67af0723c832b7c0913e50d6f59ca013affc721798e77b81e03d58f757",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-one.wav",
+            "sha256": "eab77e1812913772a4084f9e6db139bdbcc3d9657dfc34f64b58d7929ad244b6",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.208
+        },
+        "water-plop-two": {
+          "file": "pocket-deck-bank\\water-plop-two.wav",
+          "sha256": "946158fd9c49fa77311d20f55e053fc482bda6a17d0b02789a3bf3fa408e6715",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-two.wav",
+            "sha256": "f915b43a77c5e90a2178de86071d41e8793938aae3097e8c5f2be3aca4784794",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.24560416666666668
+        },
+        "water-plop-three": {
+          "file": "pocket-deck-bank\\water-plop-three.wav",
+          "sha256": "1091a0e7a6f55ec4e804cc2ecdb013e5f5628f71d6b67179aa73d0631333317d",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-three.wav",
+            "sha256": "b0b49f468924592f2f81bb4e93701b4f996537c70635d9d33d7e042ef88db0bd",
+            "kind": "third-party CC0 recording edit"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.228
+        },
+        "hollow-knock": {
+          "file": "pocket-deck-bank\\hollow-knock.wav",
+          "sha256": "05871a54cb7355415bd05cf530cd7a0e1d8540548d114540ca5101865c241fe0",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock.wav",
+            "sha256": "2266cbef98f0290f509777102d286fe25ad890a9b8ba61723a5818d4521a7cf1",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.152
+        },
+        "hollow-knock-low": {
+          "file": "pocket-deck-bank\\hollow-knock-low.wav",
+          "sha256": "c81133e82f3961b5759d2810540069aa773a5445464ebbe866a995530e6e4239",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock-low.wav",
+            "sha256": "229c4f970de8766b3547ff847c0428d73522669f161891b75ca64ae65ecbe0d6",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.152
+        },
+        "soft-rattle": {
+          "file": "pocket-deck-bank\\soft-rattle.wav",
+          "sha256": "7f66f2a8d4337f66465775f46a9f3d8b1985cd71b4ad88c95d6798f41e7f3998",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\soft-rattle.wav",
+            "sha256": "6108dc0518173186de8d446a71bac1438e0ac0114ce39faf54f083ebb8f12fbd",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.2
+        },
+        "secondary-tick": {
+          "file": "pocket-deck-bank\\secondary-tick.wav",
+          "sha256": "3c38bfcfda45c8d2ae7380a87432219f554b552e889d3852e2d06d7832abde9a",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\secondary-tick.wav",
+            "sha256": "564d37b6fcc5d8bfa686366499dcf7bcafe33c95eef1b4f123d08c6f850246b7",
+            "kind": "original synthetic addition"
+          },
+          "original_frequency_hz": null,
+          "seconds": 0.056
+        },
+        "rounded-f2": {
+          "file": "pocket-deck-bank\\rounded-f2.wav",
+          "sha256": "629f395c5ebefd584c107cedb398a6e771f71307607054ae48456e644a51ecf1",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rounded-f2.wav",
+            "sha256": "4207ae55e0fcc6e6e6abddaca7fd536c4bab3697f7de3fe4b418b806dadd96f9",
+            "kind": "original synthetic shadow"
+          },
+          "original_frequency_hz": 87.30705786,
+          "seconds": 0.16
+        },
+        "shadow-a4": {
+          "file": "pocket-deck-bank\\shadow-a4.wav",
+          "sha256": "04710b04ddfd40d9fab9be129a473b905327743ecfc6d7140741c5dd9a8cf375",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-a4.wav",
+            "sha256": "7ba94b3b3848756b0265e8eebc35e20177e309f573e13dc4c5721643226ef8a5",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 440.0,
+          "seconds": 0.25,
+          "measured_pitch": {
+            "hz": 440.0073661617532,
+            "error_cents": 0.02898282566425323,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "shadow-c5": {
+          "file": "pocket-deck-bank\\shadow-c5.wav",
+          "sha256": "ee7239dc478837df41b236844f8b0a6beec596f5f48ea5a3a0a17ef942eea5c4",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-c5.wav",
+            "sha256": "604c0a65745a4542cb7d1ad692d9c2cfe4a7532cae449f0712d3fbc72c739ad8",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 523.2511306,
+          "seconds": 0.35,
+          "measured_pitch": {
+            "hz": 523.2557846195537,
+            "error_cents": 0.015398268275630504,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "shadow-d5": {
+          "file": "pocket-deck-bank\\shadow-d5.wav",
+          "sha256": "986418eb4174bce1ff154c8ece405c9d022eae9fa5645bfb04611d375b2f234b",
+          "source_bank": {
+            "file": "artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-d5.wav",
+            "sha256": "d8f40d91da5d6d53a668ff9c65b70bcba451bdbf8f14c85d7efce00baa96e882",
+            "kind": "original synthetic hidden motif"
+          },
+          "original_frequency_hz": 587.3295358,
+          "seconds": 0.4,
+          "measured_pitch": {
+            "hz": 587.327389145043,
+            "error_cents": -0.00632757033025654,
+            "method": "40\u2013120ms positive-crossing linear regression"
+          }
+        },
+        "rounded-d2": {
+          "file": "pocket-deck-bank\\rounded-d2.wav",
+          "sha256": "a2685d1f56752ec92121e853e72303aa74905bce983bb9adb8d90fd9140719cb",
+          "source_bank": null,
+          "original_frequency_hz": 73.41619198,
+          "seconds": 0.16
+        },
+        "rounded-c3": {
+          "file": "pocket-deck-bank\\rounded-c3.wav",
+          "sha256": "365e7671f7da0236ed4b590d45fdb89b1b281ea487af18f30bf21eb1a950a6ce",
+          "source_bank": null,
+          "original_frequency_hz": 130.8127827,
+          "seconds": 0.16
+        }
+      },
+      "events": [
+        {
+          "time_seconds": 1.802578813534266,
+          "bank": "hollow-knock",
+          "pan": -0.045,
+          "playback_speed": 1.0105173265942688,
+          "cents": 18.112870507281986,
+          "frequency_hz": null,
+          "gain": 0.9319677552107472,
+          "duration_seconds": 0.1504375,
+          "foreground": true
+        },
+        {
+          "time_seconds": 3.101846840561854,
+          "bank": "water-plop-one",
+          "pan": 0.04,
+          "playback_speed": 1.0091230926112,
+          "cents": 15.722597759382785,
+          "frequency_hz": null,
+          "gain": 0.9208853023855629,
+          "duration_seconds": 0.206125,
+          "foreground": true
+        },
+        {
+          "time_seconds": 5.503665626565635,
+          "bank": "soft-rattle",
+          "pan": -0.02,
+          "playback_speed": 1.0063367505353829,
+          "cents": 10.935786090969318,
+          "frequency_hz": null,
+          "gain": 0.9437455675783308,
+          "duration_seconds": 0.19875,
+          "foreground": true
+        },
+        {
+          "time_seconds": 7.203576754925768,
+          "bank": "rubber-squeak-main",
+          "pan": -0.01,
+          "playback_speed": 1.001746101717348,
+          "cents": 3.020274659521526,
+          "frequency_hz": null,
+          "gain": 0.9647133892652194,
+          "duration_seconds": 0.16372916666666668,
+          "foreground": true
+        },
+        {
+          "time_seconds": 7.353195450030062,
+          "bank": "rubber-grain",
+          "pan": 0.005,
+          "playback_speed": 1.0290413284103095,
+          "cents": 49.56110998469315,
+          "frequency_hz": null,
+          "gain": 0.9352328731754116,
+          "duration_seconds": 0.06220833333333333,
+          "foreground": true
+        },
+        {
+          "time_seconds": 9.300093521786073,
+          "bank": "rounded-f2",
+          "pan": 0.0,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 87.30705786,
+          "gain": 0.9381712658066315,
+          "duration_seconds": 0.16,
+          "foreground": true
+        },
+        {
+          "time_seconds": 11.603047674892332,
+          "bank": "shadow-a4",
+          "pan": -0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9588139802760106,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 11.902380737409175,
+          "bank": "shadow-c5",
+          "pan": 0.01,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9555474270852653,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 12.301172001429897,
+          "bank": "shadow-d5",
+          "pan": -0.01,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9848793152912139,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 14.402332909498462,
+          "bank": "water-plop-two",
+          "pan": -0.035,
+          "playback_speed": 0.9913989984367728,
+          "cents": -14.954752277433665,
+          "frequency_hz": null,
+          "gain": 0.9344596490517265,
+          "duration_seconds": 0.24775,
+          "foreground": true
+        },
+        {
+          "time_seconds": 16.70304515335513,
+          "bank": "rubber-squeak-small",
+          "pan": 0.035,
+          "playback_speed": 0.9735081645395358,
+          "cents": -46.48201969556716,
+          "frequency_hz": null,
+          "gain": 0.8895635114883889,
+          "duration_seconds": 0.193125,
+          "foreground": true
+        },
+        {
+          "time_seconds": 20.400249608758944,
+          "bank": "hollow-knock-low",
+          "pan": -0.04,
+          "playback_speed": 0.9754015172077075,
+          "cents": -43.11825413173797,
+          "frequency_hz": null,
+          "gain": 0.8912838144145401,
+          "duration_seconds": 0.15583333333333332,
+          "foreground": true
+        },
+        {
+          "time_seconds": 20.53346218047475,
+          "bank": "secondary-tick",
+          "pan": 0.015,
+          "playback_speed": 1.03284923100976,
+          "cents": 55.95560856795541,
+          "frequency_hz": null,
+          "gain": 0.9826792016687479,
+          "duration_seconds": 0.05422916666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 22.602719679550617,
+          "bank": "water-plop-three",
+          "pan": 0.045,
+          "playback_speed": 1.0313070330809777,
+          "cents": 53.3686861455189,
+          "frequency_hz": null,
+          "gain": 0.9596361346942611,
+          "duration_seconds": 0.22108333333333333,
+          "foreground": true
+        },
+        {
+          "time_seconds": 26.3,
+          "bank": "water-plop-three",
+          "pan": 0.02,
+          "playback_speed": 1.0088235522427713,
+          "cents": 15.208635222241407,
+          "frequency_hz": null,
+          "gain": 0.9024791268942267,
+          "duration_seconds": 0.22602083333333334,
+          "foreground": true
+        },
+        {
+          "time_seconds": 28.7,
+          "bank": "hollow-knock-low",
+          "pan": -0.03,
+          "playback_speed": 1.0134902790217855,
+          "cents": 23.198701366775957,
+          "frequency_hz": null,
+          "gain": 0.9403828153718787,
+          "duration_seconds": 0.14997916666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 32.2,
+          "bank": "rubber-squeak-small",
+          "pan": 0.04,
+          "playback_speed": 1.0133001848873802,
+          "cents": 22.87395399418317,
+          "frequency_hz": null,
+          "gain": 0.9670885004128039,
+          "duration_seconds": 0.18554166666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 34.1,
+          "bank": "rounded-d2",
+          "pan": -0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 73.41619198,
+          "gain": 0.8834696212234179,
+          "duration_seconds": 0.16,
+          "foreground": true
+        },
+        {
+          "time_seconds": 35.4,
+          "bank": "soft-rattle",
+          "pan": 0.03,
+          "playback_speed": 1.0074034952979842,
+          "cents": 12.769970049150446,
+          "frequency_hz": null,
+          "gain": 0.9263918174417901,
+          "duration_seconds": 0.19854166666666667,
+          "foreground": true
+        },
+        {
+          "time_seconds": 36.8,
+          "bank": "shadow-a4",
+          "pan": -0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9979065347701661,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 37.1,
+          "bank": "shadow-c5",
+          "pan": 0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9279838514782938,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 37.5,
+          "bank": "shadow-d5",
+          "pan": -0.03,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9202133031138595,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 39.8,
+          "bank": "water-plop-one",
+          "pan": 0.04,
+          "playback_speed": 1.015030310695992,
+          "cents": 25.82737153830052,
+          "frequency_hz": null,
+          "gain": 0.9318061240757419,
+          "duration_seconds": 0.2049375,
+          "foreground": true
+        },
+        {
+          "time_seconds": 43.6,
+          "bank": "hollow-knock",
+          "pan": -0.02,
+          "playback_speed": 1.0349109746181897,
+          "cents": 59.408003007618476,
+          "frequency_hz": null,
+          "gain": 0.8825500785476783,
+          "duration_seconds": 0.146875,
+          "foreground": true
+        },
+        {
+          "time_seconds": 46.1,
+          "bank": "water-plop-two",
+          "pan": 0.03,
+          "playback_speed": 0.984273855360058,
+          "cents": -27.441985429251595,
+          "frequency_hz": null,
+          "gain": 0.9741757919231221,
+          "duration_seconds": 0.24954166666666666,
+          "foreground": true
+        },
+        {
+          "time_seconds": 49.9,
+          "bank": "hollow-knock",
+          "pan": 0.02,
+          "playback_speed": 0.9783127665216647,
+          "cents": -37.95879175795833,
+          "frequency_hz": null,
+          "gain": 0.968739502253239,
+          "duration_seconds": 0.155375,
+          "foreground": true
+        },
+        {
+          "time_seconds": 52.1,
+          "bank": "water-plop-two",
+          "pan": -0.03,
+          "playback_speed": 0.9933605448433177,
+          "cents": -11.532779026341066,
+          "frequency_hz": null,
+          "gain": 0.9678557623649419,
+          "duration_seconds": 0.24725,
+          "foreground": true
+        },
+        {
+          "time_seconds": 55.6,
+          "bank": "rubber-squeak-main",
+          "pan": 0.04,
+          "playback_speed": 1.0327215812922133,
+          "cents": 55.741632328229656,
+          "frequency_hz": null,
+          "gain": 0.8888379591661626,
+          "duration_seconds": 0.1588125,
+          "foreground": true
+        },
+        {
+          "time_seconds": 55.75,
+          "bank": "rubber-grain",
+          "pan": -0.02,
+          "playback_speed": 1.0105991331439683,
+          "cents": 18.253017091781206,
+          "frequency_hz": null,
+          "gain": 0.9016050380467114,
+          "duration_seconds": 0.06333333333333334,
+          "foreground": true
+        },
+        {
+          "time_seconds": 57.4,
+          "bank": "rounded-c3",
+          "pan": 0.03,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 130.8127827,
+          "gain": 0.8916043282402153,
+          "duration_seconds": 0.16,
+          "foreground": true
+        },
+        {
+          "time_seconds": 58.8,
+          "bank": "shadow-a4",
+          "pan": -0.04,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 440.0,
+          "gain": 0.9480636021773398,
+          "duration_seconds": 0.25,
+          "foreground": false
+        },
+        {
+          "time_seconds": 59.1,
+          "bank": "shadow-c5",
+          "pan": 0.02,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 523.2511306,
+          "gain": 0.9038385934445466,
+          "duration_seconds": 0.35,
+          "foreground": false
+        },
+        {
+          "time_seconds": 59.5,
+          "bank": "shadow-d5",
+          "pan": -0.03,
+          "playback_speed": 1.0,
+          "cents": 0.0,
+          "frequency_hz": 587.3295358,
+          "gain": 0.9305050340363069,
+          "duration_seconds": 0.4,
+          "foreground": false
+        },
+        {
+          "time_seconds": 60.9,
+          "bank": "water-plop-three",
+          "pan": 0.04,
+          "playback_speed": 1.026812538410248,
+          "cents": 45.80738146315563,
+          "frequency_hz": null,
+          "gain": 0.9005678692208778,
+          "duration_seconds": 0.2220625,
+          "foreground": true
+        },
+        {
+          "time_seconds": 64.4,
+          "bank": "soft-rattle",
+          "pan": -0.02,
+          "playback_speed": 1.022082581477364,
+          "cents": 37.814120158403306,
+          "frequency_hz": null,
+          "gain": 0.9177693797856593,
+          "duration_seconds": 0.1956875,
+          "foreground": true
+        },
+        {
+          "time_seconds": 68.0,
+          "bank": "hollow-knock-low",
+          "pan": 0.03,
+          "playback_speed": 0.9724315571522553,
+          "cents": -48.39765925596325,
+          "frequency_hz": null,
+          "gain": 0.9641844958497556,
+          "duration_seconds": 0.1563125,
+          "foreground": true
+        },
+        {
+          "time_seconds": 70.4,
+          "bank": "water-plop-one",
+          "pan": -0.04,
+          "playback_speed": 1.025542313566413,
+          "cents": 43.664421849438575,
+          "frequency_hz": null,
+          "gain": 0.9766276460858633,
+          "duration_seconds": 0.20283333333333334,
+          "foreground": true
+        }
+      ],
+      "measurements": {
+        "pocket-deck-texture-72s.wav": {
+          "integrated_lufs": -38.64,
+          "true_peak_dbfs": -15.82,
+          "loudness_range_lu": 14.1,
+          "meter_only_no_normalization_applied": true
+        },
+        "pocket-deck-texture-72s-mono.wav": {
+          "integrated_lufs": -41.62,
+          "true_peak_dbfs": -16.02,
+          "loudness_range_lu": 14.1,
+          "meter_only_no_normalization_applied": true
+        },
+        "pocket-deck-matched-excerpt-24s.wav": {
+          "integrated_lufs": -38.85,
+          "true_peak_dbfs": -16.17,
+          "loudness_range_lu": 13.8,
+          "meter_only_no_normalization_applied": true
+        },
+        "pocket-deck-seam-16s.wav": {
+          "integrated_lufs": -39.25,
+          "true_peak_dbfs": -17.95,
+          "loudness_range_lu": 6.3,
+          "meter_only_no_normalization_applied": true
+        }
+      },
+      "foreground_fraction": 0.06737239583333333,
+      "max_foreground_layers": 2,
+      "motif_peak_below_principal_db": -18.3854322291519,
+      "mono_vs_stereo_per_channel_rms_db": -0.002453148776978794,
+      "dc_per_channel": [
+        5.255523991502628e-07,
+        5.275569424520649e-07
+      ],
+      "loop_boundary_jump": [
+        0.0,
+        0.0
+      ],
+      "room": {
+        "predelay_ms": 14,
+        "t60_seconds": 0.25,
+        "send": 0.05,
+        "cyclic_tail": true
+      },
+      "colour": {
+        "lowpass_hz": 4000,
+        "amplitude_bits": 13,
+        "sample_rate": 20000,
+        "foley_tail_fraction": 0.8
+      }
+    }
+  },
+  "output_sha256": {
+    "garden-texture-72s.wav": "0c8f1370e2ccd447af6d14768c9268f5f2ee63d8a83ecc76f0440aa8caf420dd",
+    "garden-texture-72s-mono.wav": "e9eb45b7d1914bd3aa0fef60af590dd87e77f5dbbfae68c8ec32a1e41269c1c0",
+    "garden-matched-excerpt-24s.wav": "bd9e0c1048ef5e03bc676521efa312339ac60de0ca93691113e91cf627a347bf",
+    "garden-seam-16s.wav": "eb74a44ec786bd988a1a4407c318d2b6226371dd4f96032ce1a07109f6b14402",
+    "pocket-deck-texture-72s.wav": "7e3f6540f73416f85dd0388e43a2fd876a79ef37cefd7288d29719c8dcedc6b0",
+    "pocket-deck-texture-72s-mono.wav": "9e5a52b62a93e5bc5f3d214691ff3e3e09fc9f128d8172b7327e5d3e1019a844",
+    "pocket-deck-matched-excerpt-24s.wav": "d3f6810c5fa2aece5d453c02107b1de5bc806f5b04420c216ffbc2f62d63ad6b",
+    "pocket-deck-seam-16s.wav": "3c47ad974ab64ef9d38ae37f764e28cc3fbfc178b557c824cac2a90252323364"
+  },
+  "preserved_audition_file_hashes": {
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\audition-report.json": "6b7d8b6a1609c162acc69fd555d8a62ad481a4dee32d494145096d5ec461f86c",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\audition-timeline.png": "a8cecbd9d409ccc47f1905f508e217f26b1ee9e6b2c976e808b590365c988ab8",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\garden-texture-audition-24s.mp3": "312866bb594891640808d216b767d396f1deeb9dbd1404e6b119bff776410487",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\garden-texture-audition-24s.wav": "b07fd003705814dff18b64889a908e8c823025873718b39f0eb751b61af24a03",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\garden-texture-audition-mono-24s.mp3": "cdcd458c3edee81107333b0a62b63136964cda51929e683b1f7d1a8dd4bc038d",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\garden-texture-audition-mono-24s.wav": "90ba3ec80e9790251263391f42d3ba8d9cdf6641ca515e430e773a19d4e598f5",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\README.md": "28f0078443aac9926575452c4b5094e3d347d931904210ac2495a1b52599ce67",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank-strip.wav": "755d87f725189b9a4fb1d85709c9cbe91ce6bcbe3c83d11a90f4d89f668b17cd",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock-low.wav": "229c4f970de8766b3547ff847c0428d73522669f161891b75ca64ae65ecbe0d6",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\hollow-knock.wav": "2266cbef98f0290f509777102d286fe25ad890a9b8ba61723a5818d4521a7cf1",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rounded-f2.wav": "4207ae55e0fcc6e6e6abddaca7fd536c4bab3697f7de3fe4b418b806dadd96f9",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-grain.wav": "c1a6c253ced4fe3429b6dc05cf7d5e509f4a6e5f6c09259945e0c5ccd8560016",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-main.wav": "dca48831301e5aa4b1432e497d4d19790df517da10c38d96cdceb5df86f0e571",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\rubber-squeak-small.wav": "b22aa245b471a3455ded1b332ac4260dfd9ac879635d0375e59f35cde8f72f45",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\secondary-tick.wav": "564d37b6fcc5d8bfa686366499dcf7bcafe33c95eef1b4f123d08c6f850246b7",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-a4.wav": "7ba94b3b3848756b0265e8eebc35e20177e309f573e13dc4c5721643226ef8a5",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-c5.wav": "604c0a65745a4542cb7d1ad692d9c2cfe4a7532cae449f0712d3fbc72c739ad8",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\shadow-d5.wav": "d8f40d91da5d6d53a668ff9c65b70bcba451bdbf8f14c85d7efce00baa96e882",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\soft-rattle.wav": "6108dc0518173186de8d446a71bac1438e0ac0114ce39faf54f083ebb8f12fbd",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-one.wav": "eab77e1812913772a4084f9e6db139bdbcc3d9657dfc34f64b58d7929ad244b6",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-three.wav": "b0b49f468924592f2f81bb4e93701b4f996537c70635d9d33d7e042ef88db0bd",
+    "C:\\Users\\skunk\\Documents\\Development\\egg-drop\\artifacts\\qa-2026-11-14-v634\\audio\\revision-3-sparse\\sample-bank\\water-plop-two.wav": "f915b43a77c5e90a2178de86071d41e8793938aae3097e8c5f2be3aca4784794"
+  },
+  "no_gain_normalization": true,
+  "uploaded": false,
+  "runtime_mapped": false,
+  "limits": [
+    "No subjective listening approval claimed.",
+    "Meters and cyclic buffers do not certify an inaudible seam.",
+    "Deck is a reversible local candidate, not a conventional chiptune arrangement."
+  ]
+}

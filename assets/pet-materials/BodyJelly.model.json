@@ -1,0 +1,26 @@
+{
+  "className": "SurfaceAppearance",
+  "properties": {
+    "AlphaMode": "Overlay",
+    "ColorMap": "rbxassetid://132217078330162",
+    "MetalnessMap": "rbxassetid://114363080604088",
+    "RoughnessMap": "rbxassetid://75946070025172",
+    "Color": [
+      1,
+      1,
+      1
+    ],
+    "EmissiveTint": [
+      1,
+      1,
+      1
+    ],
+    "EmissiveStrength": 0
+  },
+  "attributes": {
+    "MaterialProfile": "BodyJelly",
+    "MaterialVersion": 1,
+    "NativeVerified": true,
+    "Candidate": "Jelly-v2-approved-native-2026-11-14"
+  }
+}

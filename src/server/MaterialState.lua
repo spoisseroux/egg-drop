@@ -12,6 +12,10 @@ local function integer(v,max)return type(v)=="number"and v==v and v%1==0 and v>=
 local function opaque(v)return type(v)=="string"and #v>0 and #v<=100 end
 local function exact(v,keys)if type(v)~="table"then return false end;for k in pairs(v)do if not keys[k]then return false end end;return true end
 local fields={materialBuy={id=true,catalogVersion=true,poolVersion=true,eligible=true},materialAck={id=true,catalogVersion=true,resultId=true},materialEquip={id=true,catalogVersion=true,petId=true,finishId=true,expectedFinish=true,resultId=true}}
+local pool4Fields={id=true,catalogVersion=true,poolVersion=true,eligible=true,price=true,selectionMode=true,fixedFinishId=true}
+local function quoteFields(action,value)
+ return if action=="materialBuy"and type(value)=="table"and value.poolVersion==4 then pool4Fields else fields[action]
+end
 local function poolValid(list,version)
  local pool=Catalog.Pools[version]
  if not pool or type(list)~="table"or #list<1 or #list>#pool then return false end
@@ -20,9 +24,15 @@ local function poolValid(list,version)
 end
 function State.isAction(action)return fields[action]~=nil end
 function State.quote(action,value,revision)
- if not fields[action]or not exact(value,fields[action])or not integer(revision)or not opaque(value.id)or not value.id:match("^"..tostring(revision)..":[%w%-_]+$")or value.catalogVersion~=Catalog.CatalogVersion then return nil end
+ if not fields[action]or not exact(value,quoteFields(action,value))or not integer(revision)or not opaque(value.id)or not value.id:match("^"..tostring(revision)..":[%w%-_]+$")or value.catalogVersion~=Catalog.CatalogVersion then return nil end
  local q=copy(value);q.action,q.revision=action,revision
- if action=="materialBuy"then if not poolValid(q.eligible,q.poolVersion)then return nil end
+ if action=="materialBuy"then
+  if not poolValid(q.eligible,q.poolVersion)then return nil end
+  if q.poolVersion==4 then
+   if q.price~=Catalog.cost(4)or(q.selectionMode~="random"and q.selectionMode~="fixed")then return nil end
+   if q.selectionMode=="fixed"then if q.fixedFinishId~=Catalog.fixedNext(q.eligible,4)then return nil end
+   elseif q.fixedFinishId~=nil then return nil end
+  end
  elseif action=="materialAck"then if not opaque(q.resultId)then return nil end
  else
   if Eggs.bit(q.petId)==0 or not Catalog.known(q.finishId)or not Catalog.known(q.expectedFinish)or(q.resultId~=nil and not opaque(q.resultId))then return nil end
@@ -44,7 +54,7 @@ function State.proof(state,candidate)
 end
 local function quoteValid(q)
  if type(q)~="table"or not fields[q.action]then return false end
- local value={};for key in pairs(fields[q.action])do value[key]=q[key]end
+ local value={};for key in pairs(quoteFields(q.action,q))do value[key]=q[key]end
  local canonical=State.quote(q.action,value,q.revision);return canonical~=nil and equal(q,canonical)
 end
 local receiptFields={id=true,action=true,quote=true,operationId=true,sequence=true,revision=true,catalogVersion=true,cost=true,balanceBefore=true,balanceAfter=true,finishId=true,petId=true,selectedBefore=true,selectedAfter=true,acknowledgedResultId=true,resultId=true}
@@ -52,7 +62,7 @@ local function receiptValid(r)
  if not exact(r,receiptFields)or not quoteValid(r.quote)or r.id~=r.quote.id or r.action~=r.quote.action or not opaque(r.operationId)or not integer(r.sequence)or r.sequence<1 or not integer(r.revision)or r.revision<=r.quote.revision or r.catalogVersion~=Catalog.CatalogVersion or not integer(r.balanceBefore)or not integer(r.balanceAfter)or not integer(r.cost)or r.balanceAfter~=r.balanceBefore-r.cost then return false end
  local q=r.quote
  if q.action=="materialBuy"then
-  return r.cost==Catalog.Cost and table.find(q.eligible,r.finishId)~=nil and r.resultId==r.id and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.acknowledgedResultId==nil
+  return r.cost==Catalog.cost(q.poolVersion)and table.find(q.eligible,r.finishId)~=nil and(q.poolVersion~=4 or q.selectionMode~="fixed"or r.finishId==q.fixedFinishId) and r.resultId==r.id and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.acknowledgedResultId==nil
  elseif q.action=="materialAck"then
   return r.cost==0 and r.acknowledgedResultId==q.resultId and r.finishId==nil and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.resultId==nil
  end
@@ -81,7 +91,9 @@ function State.valid(state)
   if not r or r.action~="materialBuy"or r.finishId~=result.finishId or r.revision~=result.revision or r.resultId~=result.id then return false end
  end
  local reservation=state.materialReservation
- if reservation then
+ if reservation~=nil then
+  if type(reservation)~="table"then return false end
+  if type(reservation.quote)=="table"and reservation.quote.poolVersion==4 and reservation.quote.selectionMode=="fixed"and reservation.finishId~=reservation.quote.fixedFinishId then return false end
   if not exact(reservation,{quote=true,operationId=true,sequence=true,finishId=true})or not quoteValid(reservation.quote)or reservation.quote.action~="materialBuy"or not opaque(reservation.operationId)or reservation.sequence~=state.operationSeq+1 or reservation.quote.revision>state.revision or not table.find(reservation.quote.eligible,reservation.finishId)or not equal(reservation.quote.eligible,Catalog.remaining(state.materialUnlocks,reservation.quote.poolVersion))or state.materialReceipts[reservation.quote.id]or state.pendingMaterialResult or state.pendingHueResult or state.hueReservation or state.lastHatch then return false end
  end
  return true
@@ -101,7 +113,7 @@ function State.purchaseEligibility(state,quote)
  if #remaining==0 then return false,"AllUnlocked"end
  if (state.inventoryMask or 0)==0 then return false,"MeetPipFirst"end
  if quote and not equal(quote.eligible,remaining)then return false,"PoolChanged"end
- if state.nectar<Catalog.Cost then return false,"NeedStars"end
+ if state.nectar<Catalog.cost(quote and quote.poolVersion)then return false,"NeedStars"end
  return true
 end
 function State.apply(state,candidate)
@@ -114,7 +126,8 @@ function State.apply(state,candidate)
   if not state.materialReservation or not equal(state.materialReservation,candidate)then return false,"MissingReservation"end
   local ok,why=State.purchaseEligibility(state,q);if not ok then return false,why end
   if not table.find(q.eligible,candidate.finishId)or Catalog.owns(state.materialUnlocks,candidate.finishId)then return false,"PoolChanged"end
-  r.finishId,r.resultId,r.cost=candidate.finishId,q.id,Catalog.Cost;r.balanceAfter=state.nectar-Catalog.Cost;state.nectar=r.balanceAfter
+  if q.poolVersion==4 and q.selectionMode=="fixed"and candidate.finishId~=q.fixedFinishId then return false,"InvalidFixedResult"end
+  r.finishId,r.resultId,r.cost=candidate.finishId,q.id,Catalog.cost(q.poolVersion);r.balanceAfter=state.nectar-r.cost;state.nectar=r.balanceAfter
   state.materialUnlocks[candidate.finishId]=true;state.materialReservation=nil
   state.pendingMaterialResult={id=q.id,finishId=candidate.finishId,revision=r.revision,catalogVersion=Catalog.CatalogVersion}
  elseif q.action=="materialAck"then
@@ -133,7 +146,9 @@ function State.apply(state,candidate)
  saveReceipt(state,r);return true
 end
 function State.publicReceipt(receipt)
- if not receipt then return nil end;local r=copy(receipt);r.quote,r.operationId,r.sequence=nil,nil,nil;return r
+ if not receipt then return nil end;local r=copy(receipt)
+ if r.quote.poolVersion==4 then r.poolVersion=4;r.selectionMode=r.quote.selectionMode;r.quotedPrice=r.quote.price end
+ r.quote,r.operationId,r.sequence=nil,nil,nil;return r
 end
 function State.public(state)
  return {materialUnlocks=copy(state.materialUnlocks),petMaterials=copy(state.petMaterials),pendingMaterialResult=copy(state.pendingMaterialResult),lastMaterialResult=State.publicReceipt(state.lastMaterialResult),materialCatalogVersion=Catalog.CatalogVersion,materialPoolVersion=Catalog.PoolVersion}

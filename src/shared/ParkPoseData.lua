@@ -16,7 +16,8 @@
 --
 -- Motion is a pure function of a park slot entry ({session, activity, ownerId, startTime, ...}) and
 -- a server time, so every viewer (late joiners included) sees the same swing beat, tilt and castle.
-local Park=require(script.Parent.ParkLayout)
+local DefaultPark=require(script.Parent.ParkLayout)
+local function build(Park)
 local Catalog=require(script.Parent.ParkActivities)
 local Data={}
 Data.Delay=.12 -- the shared presentation delay PetFollow.activity samples with
@@ -454,4 +455,14 @@ function Data.pitchFor(pivot,motion,yaw)
 	return x
 end
 
-return table.freeze(Data)
+return Data
+end
+local default=build(DefaultPark)
+local cache={[DefaultPark.Id]=default}
+function default.forSite(site)
+	if type(site)=="string"then site=DefaultPark.ById[site]end
+	if not site then return nil end
+	if not cache[site.Id]then cache[site.Id]=table.freeze(build(site))end
+	return cache[site.Id]
+end
+return table.freeze(default)

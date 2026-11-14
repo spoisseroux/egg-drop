@@ -68,7 +68,7 @@
    "name": "W7_Architecture__marble",
    "group": "Architecture__marble",
    "material": "W1_marble",
-   "tris": 2676,
+   "tris": 2674,
    "collide": true,
    "anim": null,
    "region": "Architecture",
@@ -83,7 +83,7 @@
     145.7914
    ],
    "top": 18.8075,
-   "hash": "8d2bfde93d7ee424"
+   "hash": "86ce5ddaa49860a2"
   },
   {
    "name": "W7_Architecture__marble_smooth",
@@ -364,7 +364,7 @@
    "name": "W7_Balustrades__marble",
    "group": "Balustrades__marble",
    "material": "W1_marble",
-   "tris": 3924,
+   "tris": 4438,
    "collide": true,
    "anim": null,
    "region": "Balustrades",
@@ -379,7 +379,7 @@
     110.5057
    ],
    "top": 7.1937,
-   "hash": "81364ff645be87c8"
+   "hash": "740a59334ac0253d"
   },
   {
    "name": "W7_Balustrades__palette",
@@ -406,7 +406,7 @@
    "name": "W7_Bridge__marble",
    "group": "Bridge__marble",
    "material": "W1_marble",
-   "tris": 372,
+   "tris": 374,
    "collide": true,
    "anim": null,
    "region": "Bridge",
@@ -421,7 +421,7 @@
     7.4
    ],
    "top": 7.24,
-   "hash": "d755096c80d0d6e9"
+   "hash": "578e663df88a3816"
   },
   {
    "name": "W7_Bridge__palette",
@@ -1400,7 +1400,7 @@
    "name": "W7_Landmarks__marble",
    "group": "Landmarks__marble",
    "material": "W1_marble",
-   "tris": 180,
+   "tris": 190,
    "collide": true,
    "anim": null,
    "region": "Landmarks",
@@ -1415,7 +1415,7 @@
     106.9901
    ],
    "top": 10.9,
-   "hash": "7ac082a1c345a5c5"
+   "hash": "02d0997a261971b7"
   },
   {
    "name": "W7_Landmarks__palette",
@@ -1678,7 +1678,7 @@
    "name": "W7_Rotunda__marble",
    "group": "Rotunda__marble",
    "material": "W1_marble",
-   "tris": 1250,
+   "tris": 1304,
    "collide": true,
    "anim": null,
    "region": "Rotunda",
@@ -1693,7 +1693,7 @@
     41.4027
    ],
    "top": 23.099,
-   "hash": "74f5f89d2bd0878c"
+   "hash": "9e6ff1efd7a82778"
   },
   {
    "name": "W7_Rotunda__palette",
@@ -1804,7 +1804,7 @@
    "name": "W7_Stations__marble",
    "group": "Stations__marble",
    "material": "W1_marble",
-   "tris": 1410,
+   "tris": 1414,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1819,13 +1819,13 @@
     105.5423
    ],
    "top": 11.07,
-   "hash": "6c420dc0bc030b43"
+   "hash": "0a55be270ebc0f77"
   },
   {
    "name": "W7_Stations__marble_smooth",
    "group": "Stations__marble_smooth",
    "material": "W1_marble_smooth",
-   "tris": 984,
+   "tris": 978,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1840,13 +1840,13 @@
     96.89
    ],
    "top": 8.477,
-   "hash": "33497111ee97de8a"
+   "hash": "97d9f4e4544858a1"
   },
   {
    "name": "W7_Stations__palette",
    "group": "Stations__palette",
    "material": "W1_palette",
-   "tris": 2030,
+   "tris": 2068,
    "collide": false,
    "anim": null,
    "region": "Stations",
@@ -1861,7 +1861,7 @@
     96.8707
    ],
    "top": 11.8,
-   "hash": "d4f371b0b896ae21"
+   "hash": "eaa342ed0545397a"
   },
   {
    "name": "W7_Stations__trim",
@@ -1909,7 +1909,7 @@
    "name": "W7_Trunks__bark",
    "group": "Trunks__bark",
    "material": "W1_bark",
-   "tris": 2164,
+   "tris": 2004,
    "collide": true,
    "anim": null,
    "region": "Trunks",
@@ -1924,7 +1924,7 @@
     121.2968
    ],
    "top": 23.8547,
-   "hash": "4c67fd81454228b3"
+   "hash": "15ef81e15cb2f62c"
   },
   {
    "name": "W7_Underside__bark",
@@ -1993,7 +1993,7 @@
    "name": "W7_Vegetation__foliage",
    "group": "Vegetation__foliage",
    "material": "W1_foliage",
-   "tris": 3940,
+   "tris": 3660,
    "collide": false,
    "anim": null,
    "region": "Vegetation",
@@ -2008,13 +2008,13 @@
     141.3016
    ],
    "top": 28.9125,
-   "hash": "6e8e1a400245bb2c"
+   "hash": "d193ab5cffb4fda3"
   },
   {
    "name": "W7_Vegetation__foliage_blossom",
    "group": "Vegetation__foliage_blossom",
    "material": "W1_foliage_blossom",
-   "tris": 2260,
+   "tris": 2020,
    "collide": false,
    "anim": null,
    "region": "Vegetation",
@@ -2029,7 +2029,7 @@
     128.7833
    ],
    "top": 21.6561,
-   "hash": "331654629fa058e5"
+   "hash": "33c5209953f4b5a3"
   },
   {
    "name": "W7_Water__cloud",
@@ -2165,5 +2165,5 @@
   }
  ],
  "count": 99,
- "triangles": 66910
+ "triangles": 66844
 }

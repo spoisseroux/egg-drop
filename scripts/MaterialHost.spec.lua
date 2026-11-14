@@ -26,8 +26,11 @@ return function(server,hostSource)
  local replicated=nativeInstance.new("Folder");replicated.Parent=fixture
  local shared=realGame.ReplicatedStorage.Shared:Clone();shared.Parent=replicated
  local materials=nativeInstance.new("Folder");materials.Name="PetMaterials";materials.Parent=replicated
+ local twoMaterials=nativeInstance.new("Folder");twoMaterials.Name="PetMaterialsTwoTone";twoMaterials.Parent=replicated
  local MaterialCatalog=realRequire(realGame.ReplicatedStorage.Shared.MaterialCatalog)
- for _,id in ipairs(MaterialCatalog.PaidOrder)do local name=MaterialCatalog.ById[id].profile;local surface=nativeInstance.new("SurfaceAppearance");surface.Name=name;surface:SetAttribute("MaterialProfile",name);surface:SetAttribute("MaterialVersion",1);surface.Parent=materials end
+ for _,id in ipairs(MaterialCatalog.PaidOrder)do local name=MaterialCatalog.ById[id].profile;local surface=nativeInstance.new("SurfaceAppearance");surface.Name=name;surface:SetAttribute("MaterialProfile",name);surface:SetAttribute("MaterialVersion",1);surface.Parent=materials
+  local two=nativeInstance.new("SurfaceAppearance");two.Name=MaterialCatalog.ById[id].twoToneProfile or("BodyTwoTone"..string.sub(name,5));two:SetAttribute("MaterialProfile",two.Name);two:SetAttribute("MaterialVersion",1);two.Parent=twoMaterials
+ end
  local remotes=nativeInstance.new("Folder");remotes.Name="Remotes";remotes.Parent=replicated
  local players={PlayerAdded=signal(),PlayerRemoving=signal()};local heart=signal()
  local player={UserId=id,Parent=players,Character=nil,CharacterAdded=signal()}
@@ -50,7 +53,7 @@ return function(server,hostSource)
  function profile.flushOnce()return true end
  for _,name in ipairs({"equip","equipCompanion","setSetting","recordScore","recordTrials","chargeHatch"})do profile[name]=function()error("Unexpected profile mutation "..name)end end
  local hatch={};for k,v in pairs(H)do hatch[k]=v end;function hatch.load()return h end
- function hatch.public(handle)local public=H.public(handle);public.materialAvailable=MaterialCatalog.available(materials);return public end
+ function hatch.public(handle)local public=H.public(handle);public.materialAvailable=MaterialCatalog.available(materials,twoMaterials);return public end
  local events={};local instanceShim={new=function(class)
   if class~="RemoteEvent"then return nativeInstance.new(class)end
   local event={OnServerEvent=signal()}
@@ -73,7 +76,8 @@ return function(server,hostSource)
  module.Parent=server;local ok,run=pcall(realRequire,module);module:Destroy();assert(ok,run)
  run({game=fakeGame,script=server,task=taskShim,Instance=instanceShim,workspace=world,os={clock=function()return c.now end},
   Random={new=function()return{NextInteger=function()return 1234 end,NextNumber=function()return .1 end}end},require=function(target)
-   if target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
+   if target==server.PaidRandomPolicy then return{cached=function()return false end,resolveAsync=function(_,callback)callback(false)end,forget=function()end}
+   elseif target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
    elseif target==server.Lounge then return{create=function()end,spawn=function()end,setMode=function()end,setAppearance=function()end}
    elseif target==server.FirstSession then return{new=function()return nil end}end
    return realRequire(target)
@@ -83,12 +87,15 @@ return function(server,hostSource)
  local function test(name,f)f();table.insert(cases,name)end
  local function send(value,revision,action)requests.HatchRequest.OnServerEvent:Fire(player,action or"materialBuy",value,revision);return c.packets[#c.packets]end
  local function snapshot()assert(board:GetAttribute("HatchState")==nil,"private state leaked on replicated board");return copy(c.snapshot)end
- local revision=h.state.revision;local packet={id=tostring(revision)..":host-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible={"gloss","matte"}}
+ local revision=h.state.revision;local packet={id=tostring(revision)..":host-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible=MaterialCatalog.remaining(h.state.materialUnlocks),price=16,selectionMode="random"}
  test("unverified profiles reject new purchases before any roll write or debit",function()
   c.now=1;local writes=c.writes;local response=send(packet,revision)
   assert(response.status=="Rejected"and response.reason=="MaterialsUnavailable"and c.writes==writes and not c.rolls and h.state.nectar==before)
   assert(snapshot().materialAvailable==false)
   for _,surface in ipairs(materials:GetChildren())do surface:SetAttribute("NativeVerified",true)end
+  c.now=1.5;response=send(packet,revision)
+  assert(response.status=="Rejected"and response.reason=="MaterialsUnavailable"and c.writes==writes and not c.rolls,"unverified paired finish must block before RNG")
+  for _,surface in ipairs(twoMaterials:GetChildren())do surface:SetAttribute("NativeVerified",true)end
  end)
  test("durable lost-response reservation keeps exact waiter and same-pending throttle retryable",function()
   c.now=2;c.failAfter=true;local response=send(packet,revision)
@@ -111,7 +118,7 @@ return function(server,hostSource)
   local public=snapshot();assert(public.petMaterials.pip=="gloss"and public.pendingMaterialResult==nil and public.nectar==balance)
   local appearance=realGame.HttpService:JSONDecode(board:GetAttribute("PetAppearance"));assert(appearance.pip.finish=="gloss"and appearance.pip.body=="original"and appearance.pip.charmVisible==false) -- no saved choice: pets start with no charm
   c.dropSaved=false;c.now=5.5;assert(send(usage,rev,"materialEquip").status=="Saved")
-  local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":host-next-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible={"matte"}}
+  local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":host-next-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible=MaterialCatalog.remaining(h.state.materialUnlocks),price=16,selectionMode="random"}
   c.now=6;send(nextBuy,nextRev);local resultId=h.state.pendingMaterialResult.id;local nextBalance=h.state.nectar
   c.now=6.5;assert(send(usage,rev,"materialEquip").status=="Saved"and h.state.pendingMaterialResult.id==resultId and h.state.nectar==nextBalance and h.state.petMaterials.pip=="gloss")
  end)

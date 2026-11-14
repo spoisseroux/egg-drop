@@ -11,9 +11,11 @@
 -- (no planted stance while riding). The caller (ParkClient:drive) restores the server origin
 -- before the next PetFollow.activity, so gait and travel are measured on the real path.
 local Shared=game:GetService("ReplicatedStorage").Shared
-local Park=require(Shared.ParkLayout)
+local DefaultPark=require(Shared.ParkLayout)
+local DataModule=require(Shared.ParkPoseData)
+local function build(Park)
 local Catalog=require(Shared.ParkActivities)
-local Data=require(Shared.ParkPoseData)
+local Data=DataModule.forSite(Park)
 local Pose={}
 local TAU=math.pi*2
 local UP=Vector3.yAxis
@@ -254,3 +256,13 @@ function Pose.hopOff(visual,actor,t,reduced)
 end
 
 return Pose
+end
+local default=build(DefaultPark)
+local cache={[DefaultPark.Id]=default}
+function default.forSite(site)
+	if type(site)=="string"then site=DefaultPark.ById[site]end
+	if not site then return nil end
+	if not cache[site.Id]then cache[site.Id]=build(site)end
+	return cache[site.Id]
+end
+return default

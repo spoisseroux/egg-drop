@@ -13,8 +13,8 @@ Declutter (batch 2026-11-13, W1): faces listed in assets/world/world-v7-declutte
 meshes, it also writes
 - assets/world/world-v7-declutter.fbx  only the changed / new meshes, for upload
 - assets/world/world-v7-pending.json   changed names + their previous manifest entries; build_world_v7_assets.py
-                                       keeps the previous geometry for these until their new mesh ids are in
-                                       world-v7-studio-import.json (then delete the pending file)
+                                       refuses runtime generation until new mesh ids and an upload readback checkpoint
+                                       are verified (pending is retained; see --confirm-upload)
 The .blend is never saved.
 
 Coordinates: Blender (x, y, z) = Roblox (x, z + 4, -y).
@@ -898,7 +898,7 @@ def coplanar_fixes(sources):
     print("FLICKER colonnade gold caps turned", flipped, "span faces lifted", lifted, "+ high spring and sky-falls channel nudges")
 
 
-def qa_fixes(sources):
+def qa_fixes(sources, remaining=True):
     move_lamps(sources)
     sources = split_castle_flags(sources)
     fix_foam(sources)
@@ -909,6 +909,17 @@ def qa_fixes(sources):
     aqueduct_bed(sources)
     channel_water(sources)
     coplanar_fixes(sources)
+    if remaining:
+        import importlib.util
+        import os
+        helper = Path(__file__).with_name("world_overlap_geometry.py")
+        spec = importlib.util.spec_from_file_location("world_overlap_geometry", helper)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.self_test()
+        changed, _ = module.fix(sources, os.environ.get("WORLD_OVERLAP_ARTIFACTS"))
+        FRESH.update(changed)
+        TOUCHED.update(changed)
     return sources
 
 
@@ -1029,8 +1040,8 @@ def main():
         export([(o, k) for o, k in finals if o.name in changed or o.name in added], OUT / "world-v7-declutter.fbx")
         (OUT / "world-v7-pending.json").write_text(json.dumps({
             "note": "Meshes changed by the last build_world_v7_chunks.py run. Upload world-v7-declutter.fbx, read back each "
-                    "MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then delete this file and rerun "
-                    "scripts/build_world_v7_assets.py.",
+                     "MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then run "
+                     "scripts/build_world_v7_assets.py --confirm-upload READBACK_JSON. Retain this pending file.",
             "changed": changed, "added": added, "dropped": dropped,
             "previous": {n: previous[n] for n in changed + dropped}}, indent=1))
         print("WORLDV7 changed", changed, "added", added, "dropped", dropped)

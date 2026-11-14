@@ -3,6 +3,9 @@ return function(server,hostSource,kind)
  assert(kind=="toy"or kind=="feature","choose toy or feature")
  local title=kind:sub(1,1):upper()..kind:sub(2)
  local Catalog=require(game.ReplicatedStorage.Shared[title.."Catalog"])
+ if kind=="toy"then
+  assert(Catalog.PoolVersion==2 and table.concat(Catalog.Pools[1],",")=="ball,bone,sparkler"and table.concat(Catalog.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top","toy host fixture must exercise the current pool while retaining historical pool1")
+ else assert(Catalog.PoolVersion==1 and Catalog.Cost==32,"feature host pool contract changed")end
  assert(type(hostSource)=="string","pass current init.server source as argument two")
  local H=require(server.HatchProgress);local P=require(server.PlayerProgress)
  local realGame,realRequire,nativeInstance=game,require,Instance
@@ -76,7 +79,8 @@ return function(server,hostSource,kind)
  module.Parent=server;local ok,run=pcall(realRequire,module);module:Destroy();assert(ok,run)
  run({game=fakeGame,script=server,task=taskShim,Instance=instanceShim,workspace=world,os={clock=function()return c.now end},
   Random={new=function()return{NextInteger=function()return 1234 end,NextNumber=function()return .1 end}end},require=function(target)
-   if target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
+   if target==server.PaidRandomPolicy then return{cached=function()return false end,resolveAsync=function(_,callback)callback(false)end,forget=function()end}
+   elseif target==server.PlayerProgress then return profile elseif target==server.HatchProgress then return hatch
    elseif target==server.Lounge then return{create=function()end,spawn=function()end,setMode=function()end,setAppearance=function()end}
    elseif target==server.FirstSession then return{new=function()return nil end}end
    return realRequire(target)
@@ -87,7 +91,7 @@ return function(server,hostSource,kind)
  local function send(value,revision,action)requests.HatchRequest.OnServerEvent:Fire(player,action or kind.."Buy",value,revision);return c.packets[#c.packets]end
  local function snapshot()assert(board:GetAttribute("HatchState")==nil,"private state leaked on replicated board");return copy(c.snapshot)end
  local revision=h.state.revision
- local packet={id=tostring(revision)..":"..kind.."-host-buy",catalogVersion=1,poolVersion=1}
+ local packet={id=tostring(revision)..":"..kind.."-host-buy",catalogVersion=Catalog.CatalogVersion,poolVersion=Catalog.PoolVersion}
  if kind=="toy"then packet.eligible=Catalog.remaining(h.state.toyUnlocks)end
  test(kind.." durable lost-response reservation keeps exact waiter and same-pending throttle retryable",function()
   c.now=2;c.failAfter=true;local response=send(packet,revision)
@@ -117,7 +121,7 @@ return function(server,hostSource,kind)
   assert(appearance.pip.body=="original"and not appearance.pip.charmVisible and not appearance.pip.featureStock and not appearance.pip.earned)
   if kind=="toy"then assert(appearance.pip.toyId=="ball")else assert(appearance.pip.featureStages.horns==1)end
   c.dropSaved=false;c.now=5.5;assert(send(usage,rev,action).status=="Saved")
-  local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":"..kind.."-host-next",catalogVersion=1,poolVersion=1}
+  local nextRev=h.state.revision;local nextBuy={id=tostring(nextRev)..":"..kind.."-host-next",catalogVersion=Catalog.CatalogVersion,poolVersion=Catalog.PoolVersion}
   if kind=="toy"then nextBuy.eligible=Catalog.remaining(h.state.toyUnlocks)end
   c.now=6;send(nextBuy,nextRev);local resultId=h.state["pending"..title.."Result"].id;local nextBalance=h.state.nectar
   c.now=6.5;assert(send(usage,rev,action).status=="Saved"and h.state["pending"..title.."Result"].id==resultId and h.state.nectar==nextBalance)

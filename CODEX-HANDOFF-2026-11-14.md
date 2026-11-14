@@ -1,3 +1,5 @@
+> CURRENT CODEX UPDATE — November14, after Spencer's QA: implementation is complete in the unpublished working checkpoint. Read [UNPUBLISHED-RESULT.md](artifacts/qa-2026-11-14-v634/UNPUBLISHED-RESULT.md) and current TODO first.56server/36client suites pass; native collision persistence, first-toy callback ordering, hatch/Jelly/music/QA fixes are integrated. NO EXPERIENCE PUBLISH. Blip stays parked; Names Egg/visitor interactions are scopes only. The original handoff below is historical.
+
 # Codex handoff, 2026-11-14 (from Claude Code)
 
 Claude Code is out of weekly usage until **Sunday 2026-11-15 16:00 local**. Codex picks up from here.

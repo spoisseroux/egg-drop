@@ -1,0 +1,26 @@
+{
+  "generated_data_diff": {
+    "meshParts": [
+      167,
+      99
+    ]
+  },
+  "visual_meshes": 99,
+  "collision_tiles": 68,
+  "parts": 167,
+  "existing_xml_equals_generator": true,
+  "protected_files_unchanged": {
+    "WorldAssets.rbxmx": "7804473c9d9c4e5d3539a4fb48fcf285890b24e7985b508028448e67d05263aa",
+    "world-v7-manifest.json": "952100767ffed1c99e55ea1f06422045a4e19d6298d8b82d38f2e3cefec6828d",
+    "world-v7-studio-import.json": "33118e99282c80a573062b028b1493590b23433ad922a9855fbeded3c864ebe6",
+    "world-v7-pending.json": "7d4ff177f218087ac11f329ab65f8ebcc430e84d63b9c527fca7ea59f3c9603f",
+    "world-v7-declutter.fbx": "09aa885f05e0fb73be21379786403d33de26a82dfe0e388428c7e4c9e0c44e04",
+    "world-v7.fbx": "4ea2e02b002e94c8511449125237e36bdd6dce5e2c0b9fb1b3569f5e38fce214",
+    "world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
+    "world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
+    "textures/palette-roblox.png": "702f605a8413c7f8228bd78bb9128ed05536fc756a624990963e98122bec4153"
+  },
+  "upload_binding_validation": "actual builder import checked all current pending geometry/file/canonical bindings before lua_data generation",
+  "pipeline_tests": "12/12 PASS, including stale-proof/new-ID fail-before-any-output fixture",
+  "no_Studio_or_Play": true
+}

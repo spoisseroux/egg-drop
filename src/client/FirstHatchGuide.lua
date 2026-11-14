@@ -3,6 +3,8 @@ local Config = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local Pets = require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local TextService = game:GetService("TextService")
 local GuiService = game:GetService("GuiService")
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+local WelcomeProgress=require(game:GetService("ReplicatedStorage").Shared.WelcomeProgress)
 
 local Guide = {}
 Guide.__index = Guide
@@ -77,21 +79,8 @@ end
 -- Optional step headings yield before the instruction. Every fallback retains the
 -- current phase; font size and native preferred-text scaling remain unchanged.
 function Guide:fitStep(step, inputType, mark, compact)
-	local touch=inputType==Enum.UserInputType.Touch
-	local controller=string.match(inputType.Name,"^Gamepad")~=nil
-	local control=if touch then "Drag tray, release" elseif controller then "D-pad then A" else "←/→ then Space"
-	local concise=if touch then "Drag & release" elseif controller then "Aim then A" else "←/→ + Space"
-	local candidates
-	if step==1 then
-		candidates=if compact then {concise,if touch then "Drag, lift" elseif controller then "Aim + A" else "←→ Space"}
-			else {"1/3  AIM & DROP\n"..control,control,concise,if touch then "Drag, lift" elseif controller then "Aim + A" else "←→ Space"}
-	elseif step==2 then
-		candidates=if compact then {"Match "..mark.." + "..mark,mark.."+"..mark}
-			else {"2/3  MATCH MARKS\nDrop "..mark.." onto "..mark,"Match "..mark.." + "..mark,mark.."+"..mark}
-	else
-		local name=Pets.byId.pip.name
-		candidates=if compact then {"Merge for "..name,"HATCH "..name:upper()}else {"3/3  HATCH "..name:upper().."\nMerge to fill charge","Merge for "..name,"HATCH "..name:upper()}
-	end
+	local key=if step==1 then "onboarding.welcome.friend"elseif step==2 then "onboarding.welcome.match"else "onboarding.welcome.more"
+	local candidates={UICopy.get(key)}
 	local label=self.status
 	if not label or label.AbsoluteSize.X<=0 or label.AbsoluteSize.Y<=0 then return candidates[1] end
 	local size=label.AbsoluteSize
@@ -110,7 +99,8 @@ end
 
 function Guide:step(drops, merges, charge, owned, inputType, mark, active, compact)
 	local touch = inputType == Enum.UserInputType.Touch
-	local step = if owned > 0 then 0 elseif merges > 0 or charge > 0 then 3 elseif drops > 0 then 2 else 1
+	local stage=WelcomeProgress.stage(charge,Pets.byId.pip.charge)
+	local step = if owned > 0 then 0 elseif stage>=2 then 3 elseif drops>0 or stage>0 then 2 else 1
 	self.rail.Visible = active and touch and step == 1
 	self.rocker.Visible = active and not touch and step == 1
 	self.drop.Visible = active and not touch and (step == 1 or step == 2)

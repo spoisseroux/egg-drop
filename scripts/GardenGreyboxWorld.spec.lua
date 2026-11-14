@@ -192,6 +192,26 @@ local function v7(server)
 		assert(math.abs(game:GetService("Lighting").EnvironmentSpecularScale-.2)<1e-3,"global specular changed; pets and water rely on it")
 	end)
 
+	test("only the two broad water substrates are opaque; authored assets and animated skins stay intact",function()
+		local template=game:GetService("ServerStorage").WorldAssets.WorldV7
+		local targets={W7_Water__water_stream=true,W7_Water__water_pool=true};local changed=0
+		for _,part in ipairs(room.World:GetChildren())do if part:IsA("BasePart")then
+			local original=template:FindFirstChild(part.Name);assert(original and original:IsA("BasePart"),part.Name)
+			assert(part.TextureID==original.TextureID,part.Name.." changed authored TextureID")
+			if targets[part.Name]then
+				assert(part.Transparency==0 and math.abs(original.Transparency-.12)<1e-6,part.Name.." substrate/template alpha")
+				changed+=1
+			else assert(part.Transparency==original.Transparency,part.Name.." unexpected alpha change")end
+		end end
+		assert(changed==2,"exactly two broad water batches")
+		for _,skin in ipairs(require(server.LoungeWorldV7Art).WaterSkins)do
+			local part=room.World:FindFirstChild(skin.part);local flow=part and part:FindFirstChild(skin.name)
+			assert(flow and flow:IsA("Texture")and math.abs(flow.Transparency-skin.transparency)<1e-6,skin.part.." "..skin.name)
+			assert(flow.Texture==Data.waterTexture and flow.StudsPerTileU==skin.studs and flow.StudsPerTileV==skin.studs,"flow map/tiling changed")
+			assert(flow:GetAttribute("WorldFlowU")==skin.flow[1]and flow:GetAttribute("WorldFlowV")==skin.flow[2],"flow velocity changed")
+		end
+	end)
+
 	test("ground tiles, rocks and architecture collide; leaves, water and decoration do not",function()
 		for _,part in ipairs(room.World:GetChildren())do
 			local info=Data.parts[part.Name];assert(info and part.Anchored,part.Name)

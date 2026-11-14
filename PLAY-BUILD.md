@@ -1,3 +1,9 @@
+## Unpublished checkpoint — 2026-11-14
+
+No experience publish; published QA baseline remains private v634. World/garden/QA fixes, native hatch/SFX, lucky Jelly pool4 and sparse garden/deck working music are integrated. Native56server/36client suites pass across initial runs and targeted reruns; fresh full-build20,920collision rays match. Native Studio download copies preserve all170physical payloads. Local translation CSV regenerated:591strings; cloud sync deferred until an authorized publish. [Current result and evidence](artifacts/qa-2026-11-14-v634/UNPUBLISHED-RESULT.md).
+
+## Published baseline and history
+
 **Private v634 Published 2026-11-14 — runtime f75cf12, committed and pushed. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v634".
 # Egg Drop — world flicker fix
 

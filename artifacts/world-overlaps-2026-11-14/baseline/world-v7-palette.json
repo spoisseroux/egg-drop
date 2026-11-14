@@ -1,0 +1,117 @@
+{
+ "side": 8,
+ "px": 8,
+ "order": [
+  "book_green",
+  "care_blush",
+  "care_sage",
+  "care_teal",
+  "cave_dark",
+  "collision_preview",
+  "deck_cream",
+  "deck_shell",
+  "egg",
+  "gold",
+  "ph_aqua",
+  "ph_lilac",
+  "ph_mint",
+  "ph_pink",
+  "ph_white",
+  "ph_yellow",
+  "stem",
+  "teal"
+ ],
+ "srgb": {
+  "book_green": [
+   0.18431,
+   0.47843,
+   0.30196
+  ],
+  "care_blush": [
+   1.0,
+   0.78824,
+   0.86275
+  ],
+  "care_sage": [
+   0.70588,
+   0.90196,
+   0.72549
+  ],
+  "care_teal": [
+   0.23529,
+   0.78824,
+   0.7451
+  ],
+  "cave_dark": [
+   0.06275,
+   0.10196,
+   0.2
+  ],
+  "collision_preview": [
+   1.0,
+   0.48453,
+   0.90633
+  ],
+  "deck_cream": [
+   1.0,
+   0.95294,
+   0.83922
+  ],
+  "deck_shell": [
+   0.23137,
+   0.2902,
+   0.47059
+  ],
+  "egg": [
+   1.0,
+   0.97647,
+   0.94118
+  ],
+  "gold": [
+   0.94902,
+   0.71373,
+   0.18039
+  ],
+  "ph_aqua": [
+   0.20784,
+   0.78039,
+   0.96078
+  ],
+  "ph_lilac": [
+   0.65882,
+   0.5451,
+   1.0
+  ],
+  "ph_mint": [
+   0.37255,
+   0.9098,
+   0.60392
+  ],
+  "ph_pink": [
+   1.0,
+   0.43529,
+   0.68235
+  ],
+  "ph_white": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "ph_yellow": [
+   1.0,
+   0.84706,
+   0.2902
+  ],
+  "stem": [
+   0.18431,
+   0.65882,
+   0.24706
+  ],
+  "teal": [
+   0.07059,
+   0.6902,
+   0.65882
+  ]
+ },
+ "note": "Slot i sits at column i % side, row i // side counted from the BOTTOM in Blender UV space."
+}

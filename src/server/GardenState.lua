@@ -387,7 +387,7 @@ function Garden:snapshot()
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
-            toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil}
+            parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil}
     end
     -- park is nil unless FeatureFlags.Park attached a director (then the snapshot is unchanged).
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil,

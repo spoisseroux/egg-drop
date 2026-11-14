@@ -1,0 +1,2383 @@
+{
+  "title": "Little Afternoon",
+  "composer": "Original Astra score / Sol synthesis",
+  "key": "F major",
+  "bpm": 96,
+  "bars": 32,
+  "sample_rate": 48000,
+  "channels": 2,
+  "duration": 80,
+  "production_installed": false,
+  "tracks": {
+    "garden": {
+      "file": "little-afternoon-garden-80s.wav",
+      "integrated_lufs": -20.0,
+      "true_peak_dbfs": -8.61,
+      "loudness_range": 5.1,
+      "sample_peak_dbfs": -8.608633692979218,
+      "rms_dbfs": -22.239476563386297,
+      "mono_rms_dbfs": -22.244295089220692,
+      "mono_peak_dbfs": -8.636173196570866,
+      "mono_vs_stereo_rms_db": -0.004818525834394451,
+      "dc": -3.9986334243735655e-09,
+      "boundary_jump": 0.00033570267260074615,
+      "derivative_p9999": 0.023621344938874245,
+      "clipped_samples": 0,
+      "sha256": "63464b8924f19cfd0aa2483715b8c0f2d9a1142a9f3fb648c0066b159583a288",
+      "score": [
+        {
+          "bar": 1,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 1,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 1,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 1,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 1,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 2,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 4,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 5,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 7,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 7,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 7,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 8,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 8,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 8,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 9,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 9,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 9,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 9,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 9,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 10,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 10,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 10,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 12,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 12,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 14,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 14,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 16,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 18,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 18,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 20,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 20,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 21,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 21,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 23,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 23,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 23,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 24,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 24,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "flute"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "flute"
+        },
+        {
+          "bar": 25,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 25,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 25,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 25,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 26,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 26,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 28,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 28,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 30,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 30,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "mallet"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 32,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "mallet"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "voice": "mallet"
+        }
+      ],
+      "preview20s": {
+        "integrated_lufs": -20.0,
+        "true_peak_dbfs": -10.79,
+        "loudness_range": 5.0
+      }
+    },
+    "pocket-deck": {
+      "file": "little-afternoon-pocket-deck-80s.wav",
+      "integrated_lufs": -19.0,
+      "true_peak_dbfs": -7.0,
+      "loudness_range": 1.7,
+      "sample_peak_dbfs": -6.998505686813033,
+      "rms_dbfs": -21.590836998103242,
+      "mono_rms_dbfs": -21.591235949857154,
+      "mono_peak_dbfs": -6.998505686813033,
+      "mono_vs_stereo_rms_db": -0.00039895175391595666,
+      "dc": -4.884165960561404e-09,
+      "boundary_jump": 3.0518509447574615e-05,
+      "derivative_p9999": 0.03332621231675148,
+      "clipped_samples": 0,
+      "sha256": "89bdeb0bff6229896ed8be99c18c7a2b2c7ef7de6ff6589956274778af38be23",
+      "score": [
+        {
+          "bar": 1,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 1,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 1,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 1,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 1,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 1,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 2,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 2,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 2,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 2,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 3,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 4,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 4,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 4,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 4,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 4,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 5,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 5,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 5,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 5,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 5,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 6,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 7,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 7,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 7,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 7,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 7,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 8,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 8,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 8,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 8,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 8,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 9,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 10,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 10,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 10,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 10,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 10,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 11,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 12,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 12,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 12,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 12,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 13,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 14,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 14,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 14,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 14,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 14,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 15,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 16,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 16,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 16,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 0,
+          "note": "r",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 17,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 18,
+          "beat": 0,
+          "note": "F5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 18,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 18,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 18,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 1.0,
+          "note": "A5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 2.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 19,
+          "beat": 3.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 20,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 20,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 20,
+          "beat": 1.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 20,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 20,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 21,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 21,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 21,
+          "beat": 1.5,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 21,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 21,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 0.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 1.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 22,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 23,
+          "beat": 0,
+          "note": "D5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 23,
+          "beat": 1.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 23,
+          "beat": 2.0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 23,
+          "beat": 2.5,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 23,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 24,
+          "beat": 0,
+          "note": "G4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 24,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 24,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 24,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 24,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 1.5,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 2.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 2.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 25,
+          "beat": 3.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 26,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 26,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 26,
+          "beat": 2.0,
+          "note": "B4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 26,
+          "beat": 2.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 26,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 0,
+          "note": "F5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 2.0,
+          "note": "G5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 27,
+          "beat": 3.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 28,
+          "beat": 0,
+          "note": "E5",
+          "beats": 1.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 28,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 28,
+          "beat": 2.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 28,
+          "beat": 3.0,
+          "note": "r",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 0,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 0.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 1.0,
+          "note": "F5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 2.0,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 2.5,
+          "note": "Bb4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 29,
+          "beat": 3.0,
+          "note": "A4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 30,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 30,
+          "beat": 1.0,
+          "note": "E5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 30,
+          "beat": 1.5,
+          "note": "D5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 30,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 30,
+          "beat": 3.0,
+          "note": "Bb4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 0,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 0.5,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 1.0,
+          "note": "D5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 2.0,
+          "note": "C5",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 2.5,
+          "note": "A4",
+          "beats": 0.5,
+          "voice": "deck"
+        },
+        {
+          "bar": 31,
+          "beat": 3.0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 32,
+          "beat": 0,
+          "note": "G4",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 32,
+          "beat": 1.0,
+          "note": "C5",
+          "beats": 1.0,
+          "voice": "deck"
+        },
+        {
+          "bar": 32,
+          "beat": 2.0,
+          "note": "r",
+          "beats": 2.0,
+          "voice": "deck"
+        }
+      ],
+      "preview20s": {
+        "integrated_lufs": -20.01,
+        "true_peak_dbfs": -8.83,
+        "loudness_range": 1.6
+      }
+    }
+  }
+}

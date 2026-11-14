@@ -5,6 +5,7 @@ local Bounds=require(script.Parent.PetRigBounds)
 local Expression=require(script.Parent.PetExpression)
 local Charms=require(script.Parent.PetCharms)
 local Face=require(script.Parent.PetFace)
+local Materials=require(script.Parent.PetMaterials)
 local Motion=require(script.Parent.PetIdleMotion)
 local ToyPose=require(script.Parent.PetToyPose)
 local Palette=require(ReplicatedStorage.Shared.PetPalette)
@@ -242,6 +243,12 @@ function Visual:applyGardenPose(sample)
  if sample.action=="greet"and(sample.actionId~=self.lastActionId or sample.generation~=self.lastGeneration)then self:greet()end
  self.lastActionId,self.lastGeneration=sample.actionId,sample.generation
 end
+-- Dedicated receipt viewports only. The ordinary garden expression clock and
+-- its material/hidden-part owners are unchanged. Clear on release/replacement.
+function Visual:setRevealPose(sample)
+ if self.worldContext then return false end
+ self.revealPose=sample;self.poseDirty=true;return true
+end
 function Visual:update(dt)
  self:commitReadyRig()
  -- Studio-only: a changed StudioPetWearables attribute re-applies the current appearance.
@@ -271,6 +278,8 @@ function Visual:update(dt)
  local expression=toyExpression or reactExpression or beatExpression or Expression.name(self)
  if sit>.5 and not toyExpression and not reactExpression and not self.petting then expression=Sit.face(self.sitAge)or(if expression=="neutral"then "content"else expression)end
  local pose=Expression.get(expression)
+ local reveal=if not self.worldContext then self.revealPose else nil
+ if reveal then pose={eye=reveal.eye or 1,mouth="smile",tilt=reveal.headRoll or 0,hand=0,head=0,blush=0}end
  -- Look at owner (B2): the head turns toward a nearby owner who starts or stops moving.
  local lookAllowed=self.worldContext and not self.focusPose and not self.gardenFocus and not self.focused and not self.careState and not self.petting and not personal and(beat==nil or beat=="sit")
  local lookYaw=Look.step(self,dt,lookAllowed)
@@ -288,6 +297,11 @@ function Visual:update(dt)
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
  local wagBoost=self.wagBoost;if beatWag and beatWag>0 then self.wagBoost=math.max(wagBoost or 0,beatWag)end
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
+ if reveal then
+  mouth="smile";eye=reveal.eye or 1;blink=reveal.blink or 1
+  headPitch=0;headYaw=reveal.headYaw or 0;breath=0;bodyStretch=0
+  earL,earR,tailYaw=reveal.ear or 0,reveal.ear or 0,reveal.tail or 0
+ end
  self.wagBoost=wagBoost
  -- Sitting perks the ears; a scamper (over 7 studs a second) lays them back 10 degrees.
  local scamper=if self.reducedEffects then 0 else math.clamp(((self.travelSpeed or 0)-7)/1.5,0,1)*(self.gaitWeight or 0)
@@ -368,6 +382,7 @@ function Visual:update(dt)
    local anchorName=(if string.find(channel,"^Cuff")then "Cuff"else "Hand")..(if side<0 then "L"else "R")
    local anchor=v(self.definition.anchors[anchorName]or self.definition.anchors[if side<0 then "HandL"else "HandR"])*self.scale
    local fold=pose.hand+greet*.5+shove*.7+toyReach*.50+(if side<0 then beatHandL else beatHandR)+Sit.HandFold*sit
+   if reveal then fold=if side<0 then reveal.handL or 0 else reveal.handR or 0 end
    cf=upper*CFrame.new(0,hop+cooHand+toyReach*.045*self.scale+(self.careHand or 0),toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
@@ -398,13 +413,19 @@ function Visual:update(dt)
   end
   if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
   entry.renderHidden=hidden
+  if reveal then
+   local stretch=reveal.stretch or 0;local scale=reveal.heroScale or 1
+   local factor=Vector3.new(scale*(1-stretch*.35),scale*(1+stretch),scale*(1-stretch*.35))
+   local localFrame=root:ToObjectSpace(cf)
+   cf=root*CFrame.new(localFrame.Position*factor)*localFrame.Rotation;size*=factor
+  end
   Face.paintSurface(entry,self,daylight)
   if entry.faceRole then
    local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)
   end
   if entry.role=="charm"then Charms.paintVisibility(entry,hidden,self.secondaryColor)end
-  local transparency=if hidden then 1 else entry.baseTransparency or 0
+  local transparency=Materials.transparency(entry,self,hidden)
   if entry.lastSize~=size then part.Size=size;entry.lastSize=size end
   if entry.lastFrame~=cf then part.CFrame=cf;entry.lastFrame=cf end
   if entry.lastTransparency~=transparency then part.Transparency=transparency;entry.lastTransparency=transparency end

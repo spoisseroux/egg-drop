@@ -154,7 +154,7 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	self.inputLink = UserInputService.LastInputTypeChanged:Connect(function()
 		if self.shopRoot and self.hintRow and View.inputKind() ~= self.hintKind then self:paintHints() end
 	end)
-	shade.Destroying:Connect(function() if self.inputLink then self.inputLink:Disconnect(); self.inputLink = nil end end)
+	shade.Destroying:Connect(function() self:retire() end)
 	self.cinematic.stageHandoff = function(info) return self:showRevealStage(info) end
 	self.cinematic.stageClear = function() self:hideRevealStage() end
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()
@@ -165,9 +165,9 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 			self:layout()
 		end
 	end)
-	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:layout() end)
-	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		if shade.Visible then self:renderBody() end
+	self.sizeLink=shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:layout() end)
+	self.bodySizeLink=body:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		if not self.destroyed and shade.Visible then self:renderBody() end
 	end)
 	self:layout()
 	close.Activated:Connect(function() self:close("close") end)
@@ -175,6 +175,21 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	meet.Activated:Connect(function() self:chooseResult("meet") end)
 	action.Activated:Connect(function() self:actPrimary() end)
 	return self
+end
+
+-- Retire before descendant destruction can dispatch a queued geometry change.
+-- In particular, a destroyed Notice must never be reparented by layout().
+function View:retire()
+ if self.destroyed then return end
+ self.destroyed=true
+ self.selectionLayoutEpoch=(self.selectionLayoutEpoch or 0)+1
+ self.presentationGeneration=(self.presentationGeneration or 0)+1
+ self.legendToken=nil;self.ackRetryScheduledToken=nil;self.ackRetryNeededToken=nil
+ for _,key in ipairs({"inputLink","sizeLink","bodySizeLink","eggClock"})do
+  local connection=self[key];if connection then connection:Disconnect();self[key]=nil end
+ end
+ if self.eggWell then Peek.hide(self.eggWell)end
+ if self.egg3D then self.egg3D:destroy();self.egg3D=nil end
 end
 
 -- The one primary action: Hatch (or open a saved receipt) from the list, Play again on a result.
@@ -258,8 +273,9 @@ function View:showRevealStage(info)
 	local name = info.displayName or pet.name or "friend"
 	-- Visible before the stage starts, so its first cue sees an owned stage.
 	self.stageLayer.Visible = true
-	local ok, stage = pcall(RevealStage.show, self.stageLayer, {
+	local ok, stage = pcall((self.stageRenderer or RevealStage).show, self.stageLayer, {
 		pet = pet, name = info.displayName, appearance = info.appearance,
+  scene=info.scene,externalClock=info.externalClock,result=info.result,consumeSkipInput=info.consumeSkipInput,
 		tag = RevealStage.tagKind(info.result, info.kind), description = pet.description,
 		next = info.result.starterGoal, instant = info.instant, fresh = info.fresh, voice = false, audio = self.audio,
 		reduced = function()
@@ -282,7 +298,7 @@ function View:showRevealStage(info)
 	-- but cannot take selection or clicks while the stage covers it.
 	self.card.Interactable = false
 	self:syncRevealButtons()
-	return true
+	return if info.scene then stage else true
 end
 function View:hideRevealStage()
 	local stage = self.reveal
@@ -381,12 +397,12 @@ function View:recipeMetrics(columnWidth,compact,columns)
 	return{columns=columns,width=choiceW,textX=textX,textWidth=textW,nameH=nameH,costH=costH,height=math.max(if compact then 44 else 83,nameH+costH+3+8),artH=if compact then 32 else 66}
 end
 function View:queueSelectedRecipe()
-	if self.bodyFocusFallback then return end
+	if self.destroyed or self.bodyFocusFallback then return end
 	self.selectionLayoutEpoch=(self.selectionLayoutEpoch or 0)+1
 	local token,owner=self.selectionLayoutEpoch,self.shade:GetAttribute("ControllerEpoch")
 	task.defer(function()
 		game:GetService("RunService").Heartbeat:Wait()
-		if self.shade.Parent and self.shade.Visible and not self.state.lastHatch and token==self.selectionLayoutEpoch and not self.bodyFocusFallback and self.shade:GetAttribute("ControllerEpoch")==owner then self:ensureSelectedRecipe()end
+		if not self.destroyed and self.shade.Parent and self.shade.Visible and not self.state.lastHatch and token==self.selectionLayoutEpoch and not self.bodyFocusFallback and self.shade:GetAttribute("ControllerEpoch")==owner then self:ensureSelectedRecipe()end
 	end)
 end
 function View:ensureSelectedRecipe()
@@ -400,6 +416,7 @@ function View:ensureSelectedRecipe()
 	self.body.CanvasPosition=Vector2.new(0,math.clamp(wanted,0,math.max(0,self.body.CanvasSize.Y.Offset-height)))
 end
 function View:layout()
+	if self.destroyed or not self.shade.Parent then return end
 	if not self.state.lastHatch then return self:layoutShop() end
 	if self.layingOutResult then return end
 	self.layingOutResult = true
@@ -503,7 +520,7 @@ function View:chooseResult(intent)
 end
 
 function View:ownsInput()
-	if not self.shade.Visible or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
+	if self.destroyed or not self.shade.Parent or not self.shade.Visible or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()
 		or (self.audio and self.audio.deviceActive == false)
 		or (self.ownsPresentation and not self.ownsPresentation()) then return false end
 	local ancestor = self.shade
@@ -532,7 +549,7 @@ function View:send(command, value)
 end
 
 function View:isOpen()
-	return self.shade.Visible
+	return not self.destroyed and self.shade.Parent~=nil and self.shade.Visible
 end
 
 function View:refreshFooter()
@@ -621,6 +638,7 @@ end
 -- "Next: <item>" row (or "All collected") from `nextFixed`, and `restricted` is true.
 function View.oddsRows(id,state)
  state=state or {}
+ if id=="material"and(state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then return require(script.Parent.MaterialDisclosure).rows(state)end
  if NextItem.restricted(state)then
   local notReady=id=="material"and not state.materialAvailable and NextItem.itemId("material",state)~=nil
   return{rows={{id="next",name=NextItem.line(id,state),value=""}},per=(View.EggCopy[id]or {}).per or "",
@@ -632,7 +650,7 @@ function View.oddsRows(id,state)
   for _,r in ipairs(ToyCatalog.odds(state.toyUnlocks))do add(r.id,ToyCatalog.ById[r.id].name,r.probability)end
   if #rows==0 then empty="All toys owned"end
  elseif id=="material"then
-  for _,r in ipairs(MaterialCatalog.odds(state.materialUnlocks))do add(r.id,MaterialCatalog.ById[r.id].name,r.probability)end
+  for _,r in ipairs(MaterialCatalog.odds(state.materialUnlocks,state.materialPoolVersion))do add(r.id,MaterialCatalog.ById[r.id].name,r.probability)end
   if #rows==0 then empty="All materials owned"elseif not state.materialAvailable then empty="Material Eggs are not ready yet."end
  elseif id=="hue"then
   for _,itemId in ipairs(HueCatalog.RollOrder)do local item=HueCatalog.Items[itemId];add(itemId,item.name,item.weight)end
@@ -653,13 +671,13 @@ function View.hatchAction(id,state)
  if id=="toy"and #ToyCatalog.remaining(state.toyUnlocks)==0 then return{text="All toys owned",enabled=false}end
  if id=="feature"and FeatureCatalog.full(state.featureStock or {})then return{text="All stacks full",enabled=false}end
  if id=="material"then
-  if #MaterialCatalog.remaining(state.materialUnlocks)==0 then return{text="All materials owned",enabled=false}end
-  if not state.materialAvailable then return{text="Materials not ready",enabled=false}end
+  if #MaterialCatalog.remaining(state.materialUnlocks,state.materialPoolVersion)==0 then return{text="All materials owned",enabled=false}end
+  if not state.materialAvailable or not require(script.Parent.MaterialDisclosure).ready(state)then return{text="Materials not ready",enabled=false}end
  end
  local recipe=shopRecipe(id)
  local missing=math.max(0,recipe.cost-(state.nectar or 0))
  local text="★ Hatch "..recipe.cost
- if missing>0 then return{text=text,enabled=false,need=missing.." more "..Stars.name(missing).." needed"}end
+ if missing>0 then return{text=text,enabled=false,need=require(script.Parent.ShopPriceState).need(recipe.cost,state.nectar)}end
  return{text=text,enabled=true}
 end
 -- Pure: the "something inside" beat, t seconds into a 0.35 s beat. A 6 to 9 degree
@@ -738,7 +756,7 @@ function View:buildShopChrome(view)
  self.shopPane=pane
  local p=g.pad
  local wellR=if phone then {x=p,y=p,w=150,h=g.pane.h-p*2}else {x=p,y=p,w=g.pane.w-p*2,h=152}
- local well=Kit.frame(pane,"EggWell","well",UDim2.fromOffset(wellR.x,wellR.y),UDim2.fromOffset(wellR.w,wellR.h),12);Kit.stroke(well);well.ClipsDescendants=true
+ local _,well=Kit.previewWell(pane,"EggWell",UDim2.fromOffset(wellR.x,wellR.y),UDim2.fromOffset(wellR.w,wellR.h),12)
  Kit.dotGrid(well) -- T7 LCD dot grid under the egg (nothing until the asset id lands)
  self.eggWell=well
  -- T4: the pet peeks up into the egg preview from the well's bottom edge, right of the egg (desktop only).
@@ -755,6 +773,9 @@ function View:buildShopChrome(view)
  self.eggHolder,self.eggShadow,self.eggSize,self.eggFloor=holder,shadow,Vector2.new(eggW,eggH),floorY
  self.eggArtId=nil
  -- 3D egg (Shared.EggModels): the 2D shell above stays until the meshes load, and is the fallback.
+ self.previewRetry=Kit.button(well,"RetryPreview",{variant="secondary",text=UICopy.get("qa.retryPreview"),size=Vector2.new(math.min(140,wellR.w-12),44),textSize=12,selectable=true})
+ self.previewRetry.AnchorPoint=Vector2.new(.5,1);self.previewRetry.Position=UDim2.new(.5,0,1,-6);self.previewRetry.ZIndex=well.ZIndex+20;self.previewRetry.Visible=false
+ self.previewRetry.Activated:Connect(function()if self.egg3D then self.egg3D:retry()end end)
  self.egg3D=EggPreview.new(well,{audio=self.audio,reduced=function()return self:eggReduced()end,onLoaded=function()self:sync3D()end})
  local tx=if phone then wellR.x+wellR.w+12 else p
  local tw=g.pane.w-tx-p
@@ -859,6 +880,7 @@ function View:useShopChrome(on)
  if on and self.shopRoot and self.shopRoot.Visible then self:showLegendOnce()end
 end
 function View:layoutShop()
+ if self.destroyed or not self.shade.Parent then return end
  if self.layingOut then return end;self.layingOut=true
  self.bodyFocusFallback=false;self:restoreRevealParent();self:refreshShopHeader()
  local size=self.shade.AbsoluteSize
@@ -888,7 +910,7 @@ end
 -- The list: one text-only row per egg (name, what it gives, price), then the daily
 -- gift and the Stars store.
 function View:renderBody()
- if self.state.lastHatch or self.renderingBody or not self.shopGeom then return end;self.renderingBody=true
+ if self.destroyed or not self.shade.Parent or self.state.lastHatch or self.renderingBody or not self.shopGeom then return end;self.renderingBody=true
  local previous=GuiService.SelectedObject;local action=previous and previous:IsDescendantOf(self.body)and previous.Name or nil
  local owner=self.shade:GetAttribute("ControllerEpoch");local canvas=self.body.CanvasPosition
  self.revealHost.Visible=false;self:restoreRevealParent()
@@ -974,6 +996,8 @@ function View:paintEggPane()
   self.nextBeat=os.clock()+.6
  end
  self.eggName.Text=recipe.name
+ local promise=self.shopRoot and self.shopRoot:FindFirstChild("Promise",true)
+ if promise then promise.Text=if id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
  self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
  self.eggDescription.Text=copy.description or ""
  local odds=View.oddsRows(id,self.state)
@@ -996,9 +1020,12 @@ function View:paintEggPane()
   local c,ri=math.floor((i-1)/perCol),(i-1)%perCol
   local row=Kit.frame(self.oddsHolder,"Odds_"..r.id,if phone then nil else "well",UDim2.fromOffset(c*(cw+8),ri*pitch),UDim2.fromOffset(cw,rowH),6)
   if not phone then row.BackgroundTransparency=0 end
-  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(if phone then 0 else 12,0),Size=UDim2.fromOffset(if odds.restricted then cw-(if phone then 0 else 24)else cw-80,rowH),TextSize=if phone then 13 else 15,TextTruncate=Enum.TextTruncate.AtEnd})
-  Kit.text(row,"Counter",r.value,"text",{Name="Value",Position=UDim2.fromOffset(cw-(if phone then 70 else 82),0),Size=UDim2.fromOffset(70,rowH),TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Right})
+  local textSize=if phone then 13 else 15;local inset=if phone then 0 else 12
+  local valueWidth=math.max(70,math.ceil(Kit.measure(r.value,"Counter",textSize).X)+4)
+  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(inset,0),Size=UDim2.fromOffset(if odds.restricted then cw-inset*2 else math.max(12,cw-inset*2-valueWidth-8),rowH),TextSize=textSize,TextTruncate=Enum.TextTruncate.AtEnd})
+  Kit.text(row,"Counter",r.value,"text",{Name="Value",Position=UDim2.fromOffset(cw-inset-valueWidth,0),Size=UDim2.fromOffset(valueWidth,rowH),TextSize=textSize,TextXAlignment=Enum.TextXAlignment.Right})
   row:SetAttribute("OddsText",r.value)
+  row:SetAttribute("AccessibleLabel",r.name.." "..r.value)
  end
  self.oddsHolder.Size=UDim2.fromOffset(self.oddsW,perCol*pitch)
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)
@@ -1013,6 +1040,7 @@ end
 function View:sync3D()
  local egg=self.egg3D;if not egg then return end
  local on=egg.loaded
+ if self.previewRetry then self.previewRetry.Visible=not on and egg.loadReason~=nil end
  if self.eggHolder then self.eggHolder.Visible=not on end
  if self.eggShadow then self.eggShadow.Visible=not on end
  if on then egg:setType(self.selected,true)end
@@ -1070,6 +1098,7 @@ function View:moveRecipe(delta)
 end
 function View:selectRecipe(id)
 	if self.pending or self.state.lastHatch or not table.find(liveOrder,id) then return false end
+ if self.onRouteChanged then self.onRouteChanged("recipe")end
  if id==self.selected then return true end
 	self.bodyFocusFallback=false
 	local focused=GuiService.SelectedObject
@@ -1084,6 +1113,7 @@ function View:selectRecipe(id)
 end
 
 function View:update(state)
+	if self.destroyed or not self.shade.Parent then return end
 	local wasResult=self.state.lastHatch~=nil
 	self.state = state or {}
 	if self.store then
@@ -1138,7 +1168,7 @@ function View:update(state)
 					self.ackReady = true
 					self:refreshFooter()
 					if self:ownsInput() then self:selectResultAction() end
-				end, { appearance=self.appearanceFor and self.appearanceFor(result.petId),skipIntro = skipIntro, onPresented = function()
+				end, { nativeDisplay=self.nativeDisplay~=false,appearance=self.appearanceFor and self.appearanceFor(result.petId),skipIntro = skipIntro, onPresented = function()
 					if self.presentationGeneration == generation and self.shade.Visible
 						and self.state.lastHatch and self.state.lastHatch.id == result.id then
 						-- One bounded session marker survives X; it never acknowledges a result.
@@ -1227,6 +1257,7 @@ function View:openingFocusTarget()
 	return if target.Interactable then target else self.closeButton
 end
 function View:open(state)
+ if self.onRouteChanged then self.onRouteChanged("open")end
 	self:bumpControllerEpoch()
 	if not self.shade.Visible then
 		self.previousSelection = GuiService.SelectedObject
@@ -1249,6 +1280,7 @@ function View:close(reason, choice)
 	end
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
+ if self.onRouteChanged then self.onRouteChanged("close",reason)end
  if (reason==nil or reason=="close"or reason=="earn")and self.onAccepted then self.onAccepted(if reason=="earn"then "confirm"else "back")end
 	self:revokeIntent()
 	self.presentationGeneration += 1

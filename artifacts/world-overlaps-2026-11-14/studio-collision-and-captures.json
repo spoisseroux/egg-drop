@@ -1,0 +1,35 @@
+{
+  "collision": {
+    "content": [
+      {
+        "type": "text",
+        "text": "[{\"ok\":true,\"name\":\"W7_Architecture__marble\",\"meshId\":\"rbxassetid://112224834513733\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Balustrades__marble\",\"meshId\":\"rbxassetid://90370694053328\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Bridge__marble\",\"meshId\":\"rbxassetid://112550427460522\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Landmarks__marble\",\"meshId\":\"rbxassetid://111377172193133\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Rotunda__marble\",\"meshId\":\"rbxassetid://119765879062476\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Stations__marble\",\"meshId\":\"rbxassetid://126589987182505\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Stations__marble_smooth\",\"meshId\":\"rbxassetid://119204983359532\",\"collision\":\"PreciseConvexDecomposition\"},{\"ok\":true,\"name\":\"W7_Trunks__bark\",\"meshId\":\"rbxassetid://136929554219571\",\"collision\":\"PreciseConvexDecomposition\"}]"
+      }
+    ],
+    "isError": false
+  },
+  "stairComparison": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"worst\":{\"before\":23.099050521850587,\"x\":-62,\"after\":23.099048614501954,\"z\":55},\"both\":234,\"afterOnly\":0,\"part\":\"W7_Rotunda__marble\",\"samples\":648,\"maxHeightDelta\":0.0000019073486328125,\"beforeOnly\":0}"
+      }
+    ],
+    "isError": false
+  },
+  "captures": {
+    "before": "studio-stairs-before.png",
+    "after": "studio-stairs-after.png",
+    "camera": [
+      -52,
+      23,
+      20
+    ],
+    "lookAt": [
+      -47,
+      10,
+      37
+    ],
+    "note": "Stairs are in merged W7_Rotunda__marble. Before uses original approved mesh70893765710500 in temporary preview; after uses repaired119765879062476. Identical authored size/CFrame/texture and camera. Other world meshes remain current. Repaired preview restored after capture."
+  }
+}

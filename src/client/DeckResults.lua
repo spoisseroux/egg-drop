@@ -35,7 +35,11 @@ function Results.spinYaw(elapsed)
 end
 -- Pure: does the Star wear its missed-round (silver) look? Known from the outcome
 -- even while the save is pending, so the first frame already has the final colour.
+function Results.zeroPayout(data)
+ return data.pending~=true and(data.earned or data.total or 0)<=0 and(data.loss==true or data.outcome~="clear")
+end
 function Results.missLook(data)
+ if not data.pending and(data.earned or data.total or 0)>0 then return false end
  if data.loss and not data.pending then return true end
  local _,missed=Results.headline(data)
  return missed==true
@@ -107,6 +111,9 @@ local function hash(i,salt)local x=math.sin(i*12.9898+salt*78.233)*43758.5453;re
 -- Layout key: false (regular 848), true (small 417 LCD, portrait) or the compact
 -- phone view table from DeckScreen:view().
 function Results.viewKey(view)
+ if type(view)=="table"and view.inPlace then
+  return string.format("inPlace:%.3f:%.3f:%.3f:%.3f:%.3f",view.W,view.H,view.left.w,view.center.w,view.right.w)
+ end
  if type(view)=="table"then return string.format("phone:%dx%d:%d",view.W,view.H,view.hx)end
  return tostring(view==true)
 end
@@ -430,10 +437,12 @@ function Results:build(compact)
 end
 
 function Results:target(index)
+ if self.inPlace then return self.inPlace.buttons[index]end
  return({self.replay,self.leave,self.difficulty,self.questButton,self.hatch})[index]
 end
 function Results:hatchShown()return self.hatch~=nil and self.hatch.Visible end
 function Results:paintFocus()
+ if self.inPlace then return self.inPlace:paintFocus()end
  if not self.visible then self.ring.hide();return end
  local target=self:target(self.focus)or self.replay
  self.ring.attach(target,12)
@@ -474,7 +483,7 @@ end
 
 -- Payout rows and the Total row under them.
 function Results:paintRows(data)
- local loss=data.loss and not data.pending
+ local loss=Results.zeroPayout(data)
  local shown=0
  for index,row in ipairs(self.rows)do
   local item=data.rows and data.rows[index]
@@ -563,13 +572,14 @@ end
 
 -- Count-up paint. A nil sample means final values.
 function Results:paintCount(sample)
+ if self.inPlace then self.inPlace:paintCount(sample);return end
  local data=self.data;if not data or not self.totalText then return end
  if self.compact then return self:paintCountCompact(sample)end
  local earned=data.earned or 0
  local shown=if sample and sample.counted then sample.counted else earned
  self.counting=sample~=nil
  local age=sample and sample.age
- local loss=data.loss and not data.pending
+ local loss=Results.zeroPayout(data)
  -- Headline slam: scale 1.6 -> 1, tilt 8° -> -3° (up to the right).
  local e=if sample then backOut(sample.entrance)else 1
  self.headline.scale.Scale=1.6-.6*e;self.headline.root.Rotation=8+(-3-8)*e
@@ -659,7 +669,7 @@ function Results:paintCountCompact(sample)
  local earned=data.earned or 0
  local shown=if sample and sample.counted then sample.counted else earned
  self.counting=sample~=nil
- if data.loss then self.totalText.Text="0 Stars";self.totalText.TextColor3=Kit.Color.soft;return end
+ if Results.zeroPayout(data)then self.totalText.Text="0 Stars";self.totalText.TextColor3=Kit.Color.soft;return end
  self.totalText.TextColor3=Kit.Color.stars
  self.totalText.Text=if data.pending then "Saving…"else string.format("+%d %s",shown,if shown==1 then "Star"else "Stars")
  self.wallet.set(data.balance or 0)
@@ -684,7 +694,7 @@ function Results:stepIdle()
  if not self.visible or not self.star then self:stopIdle();return end
  local reduced=Kit.reduced()or(type(self.options.reduce)=="function"and self.options.reduce()==true)
  local now=os.clock();local t=now-(self.idleStart or now)
- local loss=self.data and self.data.loss and not self.data.pending
+ local loss=self.data and Results.zeroPayout(self.data)
  local counting=self.feedback.active
  -- Confetti from the finale.
  local c=if self.finaleClock and not reduced then now-self.finaleClock else math.huge
@@ -737,12 +747,34 @@ end
 -- best, chain, newBest, tidy, level, headline, nudge, strip, stripRight,
 -- eggName, eggCost, canHatch, quest{scope,title,count,target,moved,done},
 -- petName, result (RecapFeedback observe record), loss, questDone, questCount
+function Results:showInPlace(data,view)
+ local opening=not self.visible
+ local key=Results.viewKey(view)
+ if not self.inPlace or self.key~=key then
+  local prior=self.inPlace and self.inPlace.opened
+  if self.inPlace then self.inPlace:destroy()elseif self.root then self.root:Destroy()end
+  self:stopIdle();self:stopFace()
+  self.inPlace=require(script.Parent.DeckResultsInPlace).new(self,view)
+  if prior and not opening then self.inPlace.opened=prior end
+  self.root=self.inPlace.root;self.key=key
+ end
+ self.data=data;self.visible=true;self.host.Parent.Visible=true
+ if opening then self.inPlace.opened=os.clock();self.focus=if data.pending then 2 else 1 end
+ self.inPlace:paint(data)
+ self.feedback:setCountWindow(.30,.35);self.feedback:setBeats({})
+ if data.result then self.feedback:observe(data.result,true)end
+ if not self.feedback.active then self.inPlace:paintCount(nil)end
+ self.inPlace:start()
+end
 function Results:show(data,compact)
+ if type(compact)=="table"and compact.inPlace then return self:showInPlace(data,compact)end
+ if self.inPlace then self.feedback:cancel();self.inPlace:destroy();self.inPlace=nil;self.root=nil;self.visible=false end
+ self.feedback:setCountWindow(nil,nil)
  local opening=not self.visible
  if opening then self.spinOrigin=os.clock();self.lossCued=false end
  if not self.root or self.key~=Results.viewKey(compact)then self:build(compact)end
  self.data=data;self.visible=true;self.host.Parent.Visible=true
- local loss=data.loss and not data.pending
+ local loss=Results.zeroPayout(data)
  -- Headline and subline.
  local headline,missed=Results.headline(data)
  headline=data.headline or headline
@@ -848,6 +880,9 @@ function Results:paintPhone(data)
 end
 
 function Results:hide()
+ if self.inPlace then
+  self.visible=false;self.feedback:cancel();self.inPlace:hide();self.host.Parent.Visible=false;return
+ end
  if not self.visible then return end
  self.visible=false;self.feedback:cancel();if self.ring then self.ring.hide()end
  self:stopIdle();self.finaleClock=nil
@@ -857,7 +892,12 @@ function Results:hide()
 end
 
 -- Left/right through the order; disabled targets are skipped while saving.
+function Results:move2D(dx,dy)
+ if self.inPlace then return self.inPlace:move(dx,dy)end
+ return self:move(if dy~=0 then dy else dx)
+end
 function Results:move(direction)
+ if self.inPlace then return self.inPlace:move(0,direction)end
  if not self.visible then return false end
  local target
  local pending=self.data and self.data.pending
@@ -886,6 +926,7 @@ function Results:confirm()
  self:activate(self.focus);return true
 end
 function Results:activate(index)
+ if self.inPlace then return self.inPlace:activate(index)end
  if index==4 then return end -- display only (QA Q5)
  local button=self:target(index);if not button then return end
  if index==5 and not button.Visible then return end
@@ -925,7 +966,7 @@ function Results:syncPeek(data)
  end
  local TextService=game:GetService("TextService")
  local function width(text,size,font)return TextService:GetTextSize(text,size,font,Vector2.new(2000,400)).X*1.1 end
- local loss=data.loss and not data.pending
+ local loss=Results.zeroPayout(data)
  local c=self.centre
  local count=if loss then "" elseif data.pending then "Saving…" else "+"..tostring(data.earned or 0)
  local countSize=math.floor(if data.pending then self.countSize*.5 else self.countSize)

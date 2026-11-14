@@ -15,7 +15,8 @@
 -- and the host (init.server) counts it toward Play date.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local A=require(Shared.GardenActivity)
-local Park=require(Shared.ParkLayout)
+local DefaultPark=require(Shared.ParkLayout)
+local function build(Park)
 local Catalog=require(Shared.ParkActivities)
 local Director={};Director.__index=Director
 local ZERO=Vector3.zero
@@ -52,8 +53,10 @@ function Director.attach(garden,options)
 end
 function Director.new(garden,options)
 	local generator=Random.new()
-	return setmetatable({garden=garden,options=options,sessions={},serial=0,nextGreetAt=0,cooldowns={},
+	local self=setmetatable({garden=garden,options=options,sessions={},serial=0,nextGreetAt=0,cooldowns={},
 		random=options.random or function()return generator:NextNumber()end},Director)
+	self.fetch=require(script.Parent.ParkFetch).new(self,Park)
+	return self
 end
 function Director:clock()return(self.options.now or self.garden.options.now)()end
 function Director:busy(actor)return self.options.busy~=nil and self.options.busy(actor.ownerId)==true end
@@ -61,7 +64,7 @@ function Director:busy(actor)return self.options.busy~=nil and self.options.busy
 -- Idle in the park and free to take a slot now.
 function Director:eligible(actor,now)
 	local park=actor.park
-	if not park or park.session or park.state~="idle"or now<(park.nextPickAt or 0)then return false end
+	if not park or park.parkId~=Park.Id or park.fetchId or park.session or park.state~="idle"or now<(park.nextPickAt or 0)then return false end
 	if actor.mode~="Room"or actor.care or actor.pairId or actor.action=="nookApproach"or actor.action=="nookRest"then return false end
 	local input=self.garden.inputs[actor.ownerId]
 	if not input or not input.alive or self:busy(actor)then return false end
@@ -91,6 +94,20 @@ end
 
 -- Preflight every participant's walk, then reserve the slots and start the approach.
 function Director:start(activity,slotIds,actors,now)
+	local seen={}
+	if not Catalog.fits(activity,#actors)or #slotIds~=#actors then return false,"ParticipantCount"end
+	for index,actor in ipairs(actors)do
+		local slot=Park.Slots[slotIds[index]]
+		if not actor.park or actor.park.parkId~=Park.Id or actor.park.state~="idle"or actor.park.session or actor.park.fetchId
+			or actor.mode~="Room"or actor.care or actor.pairId or self:busy(actor)
+			or seen[actor.ownerId]or not slot or slot.equipment~=activity.equipment then
+			return false,"ActorUnavailable:"..tostring(actor.ownerId)..":"..tostring(actor.park and actor.park.parkId)..":"..tostring(actor.park and actor.park.state)..":"..tostring(actor.pairId)
+		end
+		seen[actor.ownerId]=true
+	end
+	local occupied,equipment=self:occupancy()
+	if activity.exclusive and equipment[activity.equipment]then return false,"EquipmentBusy"end
+	for _,id in ipairs(slotIds)do if occupied[id]then return false,"SlotBusy:"..id end end
 	local planner=self.garden.options.planPath or A.plan
 	local plans,arrive={},now
 	for index,actor in ipairs(actors)do
@@ -99,8 +116,8 @@ function Director:start(activity,slotIds,actors,now)
 		local from=self.garden:position(actor,now)
 		local path,seconds=planner(from,slot.approach,sample and sample.velocity or ZERO,Park.WalkSpeed,0,sample and sample.yaw or actor.yaw or 0,nil,ZERO)
 		local last=path and path[#path]
-		if not last or(A.vector(last.to)-slot.approach).Magnitude>=.1 then return false end
-		for _,leg in ipairs(path)do if leg.safetyStop then return false end end
+		if not last or(A.vector(last.to)-slot.approach).Magnitude>=.1 then return false,"PathIncomplete"end
+		for _,leg in ipairs(path)do if leg.safetyStop then return false,"PathUnsafe"end end
 		plans[index]={path=path,seconds=seconds,slot=slot}
 		arrive=math.max(arrive,now+seconds)
 	end
@@ -112,7 +129,7 @@ function Director:start(activity,slotIds,actors,now)
 		end
 	end
 	self.serial+=1
-	local session={id=self.serial,activity=activity.id,equipment=activity.equipment,ownerIds={},slots={},generations={},
+	local session={id=Park.Id..":"..self.serial,parkId=Park.Id,activity=activity.id,equipment=activity.equipment,ownerIds={},slots={},generations={},
 		walkStart=now,startTime=startTime,endTime=startTime+activity.duration}
 	self.sessions[session.id]=session
 	for index,actor in ipairs(actors)do
@@ -183,7 +200,7 @@ function Director:finish(session,now,counted)
 	for _,ownerId in ipairs(session.ownerIds)do
 		local actor=self.garden.actors[ownerId]
 		local park=actor and actor.park
-		if park and park.session==session.id then
+		if park and park.parkId==Park.Id and park.session==session.id then
 			park.session,park.slotId,park.state,park.last=nil,nil,"idle",session.equipment
 			park.nextPickAt=now+Catalog.RestAfter;park.waitingSince=park.nextPickAt;park.nextWanderAt=park.nextPickAt
 			if counted~=false then
@@ -210,7 +227,7 @@ function Director:drop(session,ownerId,now)
 	for _,id in ipairs(session.ownerIds)do
 		local other=self.garden.actors[id]
 		local park=other and other.park
-		if park and park.session==session.id then
+		if park and park.parkId==Park.Id and park.session==session.id then
 			park.session,park.slotId,park.state,park.last=nil,nil,"hop",session.equipment
 			park.nextPickAt=now+Catalog.HopOffSeconds+Catalog.RestAfter;park.waitingSince=park.nextPickAt;park.nextWanderAt=park.nextPickAt
 			self.garden:transition(other,"rest",self.garden:position(other,now),Catalog.HopOffSeconds,Catalog.HopOffAction)
@@ -220,8 +237,9 @@ end
 
 -- Called by Garden:release (focus, petting, care, reset, removal, leaving the park).
 function Director:release(actor)
+	if self.fetch then self.fetch:release(actor)end
 	local park=actor.park
-	if not park or not park.session then return end
+	if not park or park.parkId~=Park.Id or not park.session then return end
 	local now=self:clock()
 	local session=self.sessions[park.session]
 	park.session,park.slotId=nil,nil
@@ -249,7 +267,7 @@ function Director:endGreeting(actor,now)
 		local member=self.garden.actors[id]
 		if member and member.pairId==pair.id then
 			member.pairId=nil
-			if member.park then
+			if member.park and member.park.parkId==Park.Id then
 				member.park.nextWanderAt=now+1.5
 				self.garden:transition(member,"rest",self.garden:position(member,now),1.5,"wanderPause")
 			else
@@ -345,6 +363,7 @@ function Director:tick(actor,input,now)
 		return
 	end
 	if self:busy(actor)then
+		if self.fetch then self.fetch:release(actor)end
 		-- Being petted: give up the slot at once, hold still, and pick nothing until it ends.
 		if park.session then
 			self.garden:release(actor)
@@ -353,6 +372,7 @@ function Director:tick(actor,input,now)
 		park.nextPickAt=math.max(park.nextPickAt or 0,now+1);park.waitingSince=park.nextPickAt
 		return
 	end
+	if park.fetchId then return end
 	if actor.action=="nookApproach"or actor.action=="nookRest"then
 		if now<actor.endTime then return end
 		actor.restAnchorId=nil
@@ -360,6 +380,9 @@ function Director:tick(actor,input,now)
 	local session=park.session and self.sessions[park.session]
 	if park.session and not session then park.session,park.slotId,park.state=nil,nil,"idle"end
 	if session then
+		-- Generation must be checked before play() can replace its expected generation;
+		-- otherwise a superseded actor can resurrect an old reservation at phase start.
+		if session.generations[actor.ownerId]~=actor.generation then self:release(actor);return end
 		if now>=session.endTime then self:finish(session,now)
 		elseif park.state=="approach"and now>=session.startTime then self:play(actor,session,now)end
 		return
@@ -374,13 +397,14 @@ end
 -- Runs once per decide, after the actor loop and before the global greeting.
 function Director:schedule(now,ordered)
 	local garden=self.garden
+	if self.fetch then self.fetch:step(now)end
 	-- Membership: owners entering the kerb; pets that went to care/Board lose membership.
 	for _,actor in ipairs(ordered)do
 		local input=garden.inputs[actor.ownerId]
-		if actor.park then
+		if actor.park and actor.park.parkId==Park.Id then
 			if not input or actor.care or(actor.mode~="Room"and actor.mode~="Focus")then self:release(actor);actor.park=nil end
-		elseif input and input.alive and input.owned and actor.mode=="Room"and not actor.care and Park.member(input.position,false)then
-			actor.park={state="idle",since=now,nextPickAt=now+1,waitingSince=now+1,nextWanderAt=now}
+		elseif not actor.park and input and input.alive and input.owned and actor.mode=="Room"and not actor.care and Park.member(input.position,false)then
+			actor.park={parkId=Park.Id,state="idle",since=now,nextPickAt=now+1,waitingSince=now+1,nextWanderAt=now}
 		end
 	end
 	-- Sweep: a participant whose actor vanished, lost membership or changed generation leaves
@@ -389,8 +413,8 @@ function Director:schedule(now,ordered)
 		for _,ownerId in ipairs(table.clone(session.ownerIds))do
 			local actor=garden.actors[ownerId]
 			local park=actor and actor.park
-			if not park or park.session~=id or actor.generation~=session.generations[ownerId]then
-				if park and park.session==id then park.session,park.slotId,park.state,park.last=nil,nil,"idle",session.equipment end
+			if not park or park.parkId~=Park.Id or park.session~=id or actor.generation~=session.generations[ownerId]then
+				if park and park.parkId==Park.Id and park.session==id then park.session,park.slotId,park.state,park.last=nil,nil,"idle",session.equipment end
 				if self.sessions[id]==session then self:drop(session,ownerId,now)end
 			end
 		end
@@ -406,7 +430,7 @@ function Director:schedule(now,ordered)
 	local usedSlots,usedEquipment=self:occupancy()
 	local taken={}
 	local members=0
-	for _,actor in ipairs(ordered)do if actor.park then members+=1 end end
+	for _,actor in ipairs(ordered)do if actor.park and actor.park.parkId==Park.Id then members+=1 end end
 	for _,first in ipairs(waiting)do
 		if taken[first]then continue end
 		local park=first.park
@@ -461,7 +485,7 @@ end
 function Director:partnerSoon(first,now,usedSlots,usedEquipment,taken)
 	for _,other in pairs(self.garden.actors)do
 		local park=other.park
-		if not park or other==first or other.ownerId==first.ownerId or taken[other]then continue end
+		if not park or park.parkId~=Park.Id or park.fetchId or other==first or other.ownerId==first.ownerId or taken[other]then continue end
 		if other.mode~="Room"or other.care or self:busy(other)then continue end
 		local session=park.session and self.sessions[park.session]
 		local freeAt
@@ -503,7 +527,7 @@ function Director:greetings(now,ordered,taken)
 	local idle={}
 	for _,actor in ipairs(ordered)do
 		local park=actor.park
-		if park and not taken[actor]and not park.session and park.state=="idle"and not(park.partnerWaitUntil and now<park.partnerWaitUntil)
+		if park and park.parkId==Park.Id and not park.fetchId and not taken[actor]and not park.session and park.state=="idle"and not(park.partnerWaitUntil and now<park.partnerWaitUntil)
 			and now-(park.waitingSince or now)<Director.GreetPatience
 			and actor.mode=="Room"and not actor.care and not actor.pairId
 			and actor.action~="nookApproach"and actor.action~="nookRest"and not self:busy(actor)and Park.inside(self.garden:position(actor,now),0)then
@@ -533,7 +557,67 @@ function Director:snapshot()
 				walkStart=session.walkStart,startTime=session.startTime,endTime=session.endTime}
 		end
 	end
-	return {version=Park.Version,slots=slots}
+	return {version=Park.Version,slots=slots,fetch=self.fetch and self.fetch:snapshot()or nil}
 end
 
+return Director
+end
+local Director=build(DefaultPark)
+local siteClasses={[DefaultPark.Id]=Director}
+local function classFor(site)
+	if not siteClasses[site.Id]then siteClasses[site.Id]=build(site)end
+	return siteClasses[site.Id]
+end
+local singleSchedule,singleTick,singleRelease,singleSnapshot=Director.schedule,Director.tick,Director.release,Director.snapshot
+-- Facade is the arrival director for legacy fixtures/tools, while all production routing
+-- uses the explicit parkId. Slot/session maps and fairness clocks stay in each site object.
+function Director.attach(garden,options)
+	options=options or {}
+	if options.enabled~=true or not DefaultPark.Enabled then garden.park=nil;return nil end
+	local primary=Director.new(garden,options)
+	primary.sites={[DefaultPark.Id]=primary}
+	for _,site in ipairs(DefaultPark.Sites)do
+		if site.Id~=DefaultPark.Id then primary.sites[site.Id]=classFor(site).new(garden,options)end
+	end
+	function primary:release(actor)
+		local park=actor.park;local site=park and self.sites[park.parkId]
+		if site then classFor(DefaultPark.ById[park.parkId]).release(site,actor)end
+	end
+	function primary:tick(actor,input,now)
+		local park=actor.park;local site=park and self.sites[park.parkId]
+		if site then classFor(DefaultPark.ById[park.parkId]).tick(site,actor,input,now)
+		elseif park then actor.park=nil end
+	end
+	function primary:schedule(now,ordered)
+		-- Resolve old membership once before site schedulers. The old reservation is
+		-- released before a new site can claim this actor in the same decision pass.
+		for _,actor in ipairs(ordered)do
+			local park=actor.park;local input=garden.inputs[actor.ownerId]
+			if park then
+				local layout=DefaultPark.ById[park.parkId]
+				if not layout or not input or not input.alive or not layout.member(input.position,true)then
+					self:release(actor);actor.park=nil
+				end
+			end
+		end
+		for _,layout in ipairs(DefaultPark.Sites)do
+			local site=self.sites[layout.Id]
+			classFor(layout).schedule(site,now,ordered)
+		end
+	end
+	function primary:throw(ownerId)
+		local actor=garden.actors[ownerId]
+		local park=actor and actor.park
+		local site=park and self.sites[park.parkId]
+		if not site then return false,"NotInPark"end
+		return site.fetch:throw(ownerId)
+	end
+	function primary:snapshot()
+		local sites={}
+		for _,layout in ipairs(DefaultPark.Sites)do sites[layout.Id]=classFor(layout).snapshot(self.sites[layout.Id])end
+		return {version=2,sites=sites,slots=sites[DefaultPark.Id].slots}
+	end
+	garden.park=primary
+	return primary
+end
 return Director

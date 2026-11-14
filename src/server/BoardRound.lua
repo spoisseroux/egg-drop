@@ -30,10 +30,10 @@ function Round:step(eggs, dt, drops)
 	self.overflowTime = if armed and overflowing then self.overflowTime + dt else 0
 	self.danger = if not armed then 0 else math.max(self.overflowTime / self.grace,
 		math.clamp((maximum - self.overflowY + self.warningMargin) / self.warningMargin, 0, 0.85))
-	-- `safe` (the Welcome round, onboarding v1): the fill line never ends it and shows no
-	-- danger; only the egg cap can, and the hatch charge is kept for the retry.
+	-- Welcome cannot lose. Simulation still enforces its resource cap; the host
+	-- refreshes a full/blocked Welcome tray with charge/run/demo state retained.
 	if self.safe then self.overflowTime, self.danger = 0, 0 end
-	self.over = self.overflowTime >= self.grace or #eggs >= Config.MaxEggs
+	self.over = not self.safe and(self.overflowTime >= self.grace or #eggs >= Config.MaxEggs)
 	-- Presentation only (published as OverflowGraceLeft): seconds of grace left
 	-- while the stack is over the line, 0 when it is not. Rules are unchanged.
 	self.graceLeft = if self.overflowTime > 0 and not self.over then math.max(0, self.grace - self.overflowTime) else 0

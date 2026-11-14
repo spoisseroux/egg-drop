@@ -15,9 +15,16 @@ Payout.TidyWin = 8
 -- finished round. Paid inside the award transaction (HatchProgress.award).
 Payout.MissPay = 2
 
-function Payout.missStars(success, goalsMet)
+Payout.Effort=table.freeze({score=100,merges=3,drops=6,stars=1})
+function Payout.missStars(success, goalsMet, summary)
 	if success == true then return 0 end
-	return if type(goalsMet) == "number" and goalsMet >= 1 then Payout.MissPay else 0
+	if type(goalsMet)=="number"and goalsMet>=1 then return Payout.MissPay end
+	if type(summary)~="table"then return 0 end
+	for _,key in ipairs({"score","merges","drops"})do
+		local value=summary[key]
+		if type(value)~="number"or value~=value or value%1~=0 or value<Payout.Effort[key]then return 0 end
+	end
+	return Payout.Effort.stars
 end
 
 function Payout.roundStars(amount, heat)

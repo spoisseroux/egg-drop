@@ -1,0 +1,88 @@
+{
+  "status": "encoding-evidence-only; effective source/native equivalence requires engine probes",
+  "source": {
+    "path": "assets\\world\\WorldAssets.rbxmx",
+    "bytes": 216214,
+    "sha256": "7804473c9d9c4e5d3539a4fb48fcf285890b24e7985b508028448e67d05263aa",
+    "meshParts": 170
+  },
+  "native": {
+    "path": "artifacts\\world-overlaps-2026-11-14\\WorldAssets-native-collision.rbxm",
+    "bytes": 325417,
+    "sha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+    "meshParts": 170,
+    "physicalConfigDataParts": 170
+  },
+  "freshRojoModel": {
+    "path": "artifacts\\world-overlaps-2026-11-14\\WorldAssetsRojo.rbxm",
+    "bytes": 12196,
+    "sha256": "9fb31734e2a35d646c677a2f577b9178803fd4b6fb6ceadedf71b8e089378af0"
+  },
+  "rebuiltMeshes": [
+    {
+      "name": "W7_Architecture__marble",
+      "nativePhysicalConfigDataBytes": 9499,
+      "nativePhysicalConfigDataSha256": "767b24d670406e490baa84ec8ce596736c1a5cc502a26ae1223fbf31ba4f69a2",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Balustrades__marble",
+      "nativePhysicalConfigDataBytes": 28819,
+      "nativePhysicalConfigDataSha256": "e64393c316cb1d8591685e03d402c6eab212f1355a2c4c4fc4074ec2c35f58d3",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Bridge__marble",
+      "nativePhysicalConfigDataBytes": 2037,
+      "nativePhysicalConfigDataSha256": "e31fdd1bcbfdf83161b1e33f0257bf615a32d0ec374ff0fbdba250348df0df83",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Landmarks__marble",
+      "nativePhysicalConfigDataBytes": 1242,
+      "nativePhysicalConfigDataSha256": "cd35b5c2301951319f8e16c3a7d1f75622e823f4b2ebea8d796fb14546a36b26",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Rotunda__marble",
+      "nativePhysicalConfigDataBytes": 8130,
+      "nativePhysicalConfigDataSha256": "5c2ef6aa7f62cc8759448e03a6297a8e1b155157211da6fce67d7223a1aa79cc",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Stations__marble",
+      "nativePhysicalConfigDataBytes": 5292,
+      "nativePhysicalConfigDataSha256": "ba0bfbab053558f7dedbd83b4c1a532984740f813d97da9b95aa5d37ebaef13c",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Stations__marble_smooth",
+      "nativePhysicalConfigDataBytes": 2204,
+      "nativePhysicalConfigDataSha256": "63887a51afd06dad2fac3bc50e5dd9d767741c789cd3607e2be478a132a7d833",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    },
+    {
+      "name": "W7_Trunks__bark",
+      "nativePhysicalConfigDataBytes": 15323,
+      "nativePhysicalConfigDataSha256": "5893bfe95f64014daa4208ae242df15d7b3202629cc5d9c87460d509bf1677d3",
+      "headerHex": "43534750485308000000030028b52ffd",
+      "sourceHasPhysicalConfigData": false,
+      "sourceCollisionFidelity": "3"
+    }
+  ],
+  "canonicalChanged": false
+}

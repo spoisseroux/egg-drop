@@ -1,8 +1,11 @@
 -- Isolated durable roots only. frozenSource must be fixtures/FrozenV370HatchProgress.lua.
 return function(server,frozenSource,frozenDailySource)
- local H=require(server.HatchProgress);local T=require(server.ToyState);local F=require(server.FeatureState)
+ local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
+ local T=require(server.ToyState);local F=require(server.FeatureState)
  local Hue=require(server.HueState);local Material=require(server.MaterialState)
  local TC=require(game.ReplicatedStorage.Shared.ToyCatalog);local FC=require(game.ReplicatedStorage.Shared.FeatureCatalog)
+ local MC=require(game.ReplicatedStorage.Shared.MaterialCatalog)
  local Appearance=require(server.PetAppearance);local cases={}
  local function copy(v)if type(v)~="table"then return v end;local out={};for k,x in pairs(v)do out[k]=copy(x)end;return out end
  local function fixture(loader)
@@ -38,15 +41,27 @@ return function(server,frozenSource,frozenDailySource)
  local function ack(h,c,kind)
   local p=h.state["pending"..kind:sub(1,1):upper()..kind:sub(2).."Result"];return command(h,c,kind,kind.."Ack",{resultId=p.id})
  end
+ local function materialFields(h)
+  local eligible=MC.remaining(h.state.materialUnlocks)
+  local value={poolVersion=MC.PoolVersion,eligible=eligible,price=MC.cost(),selectionMode=MC.selectionMode(h.restricted)}
+  if value.selectionMode=="fixed"then value.fixedFinishId=MC.fixedNext(eligible)end
+  return value
+ end
  local function frozenWriter()
   assert(type(frozenSource)=="string","pass exact fixtures/FrozenV370HatchProgress.lua as argument two")
   -- v9 retired DailyContracts' contract API; the frozen writer gets the frozen
   -- module (fixtures/FrozenDailyContracts.lua) as argument three.
   assert(type(frozenDailySource)=="string","pass fixtures/FrozenDailyContracts.lua as argument three")
   local daily=Instance.new("ModuleScript");daily.Name="_FrozenDailyContracts";daily.Source=frozenDailySource;daily.Parent=server
+  -- Freeze the historical writer's actual selling catalogue as well as its
+  -- source. Current pool4 must not silently change a legacy migration fixture.
+  local materialCatalog=Instance.new("ModuleScript");materialCatalog.Name="_FrozenMaterialCatalog"
+  materialCatalog.Source=game.ReplicatedStorage.Shared.MaterialCatalog.Source:gsub("PoolVersion=%d+","PoolVersion=2",1)
+  materialCatalog.Parent=server
   local source=frozenSource:gsub("require%(ReplicatedStorage%.Shared%.DailyContracts%)","require(script.Parent._FrozenDailyContracts)",1)
+  source=source:gsub("require%(ReplicatedStorage%.Shared%.MaterialCatalog%)","require(script.Parent._FrozenMaterialCatalog)",1)
   local module=Instance.new("ModuleScript");module.Name="_FrozenV370HatchWriter";module.Source=source;module.Parent=server
-  local ok,old=pcall(require,module);module:Destroy();daily:Destroy();assert(ok,old);return old
+  local ok,old=pcall(require,module);module:Destroy();daily:Destroy();materialCatalog:Destroy();assert(ok,old);return old
  end
  local function test(name,run)run();table.insert(cases,name)end
  test("catalog fixed boundaries remaining uniform odds and no stats",function()
@@ -158,7 +173,7 @@ return function(server,frozenSource,frozenDailySource)
    local q,r=quote(h,c,"hue",{});local ok,why=H.hueCommand(h,"hueBuy",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"hue",{itemId="rose",petId="pip",channel="main",counts={rose=0,tide=0,citrus=0,iris=0}});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"material",{petId="pip",finishId="standard",expectedFinish="standard"});ok,why=H.materialCommand(h,"materialEquip",q,r);assert(not ok and why=="RevealPending")
-   q,r=quote(h,c,"material",{poolVersion=2,eligible={"gloss","matte"}});ok,why=H.materialCommand(h,"materialBuy",q,r);assert(not ok and why=="RevealPending")
+   q,r=quote(h,c,"material",materialFields(h));ok,why=H.materialCommand(h,"materialBuy",q,r);assert(not ok and why=="RevealPending")
    ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg"and h.state.nectar==before) -- v1: Meadow retired; ack below covers the Companion route.
    ok,why=H.command(h,"ack","wrong",h.state.revision);assert(not ok and why=="RevealPending"and h.state.nectar==before)
    local other=if kind=="toy"then"feature"else"toy";q,r=quote(h,c,other,if other=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});ok,why=H[other.."Command"](h,other.."Buy",q,r);assert(not ok and why=="RevealPending")
@@ -170,7 +185,7 @@ return function(server,frozenSource,frozenDailySource)
    -- v1: Meadow is retired, so a saved Companion reveal receipt replaces the hatch fixture.
    if kind=="companion"then local ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")
     db.player_1.hatching.lastHatch={id="saved-companion-reveal",petId="pip",duplicate=true,refund=0,family="pip",mastery=0,rare=false,recipe="meadow"};assert(H.renew(h)and h.state.lastHatch)
-   else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(H[kind.."Command"](h,kind.."Buy",q,r))end
+   else local q,r=quote(h,c,kind,if kind=="material"then materialFields(h)else{});assert(H[kind.."Command"](h,kind.."Buy",q,r))end
    for _,new in ipairs({"toy","feature"})do local q,r=quote(h,c,new,if new=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});local ok,why=H[new.."Command"](h,new.."Buy",q,r);assert(not ok and why=="RevealPending")end
   end
  end)

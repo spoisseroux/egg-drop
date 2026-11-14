@@ -1,8 +1,9 @@
 local Replicated=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local Art=require(script.Parent.DeckArt);local Layout=require(Replicated.Shared.GardenCareLayout)
+local Copy=require(Replicated.Shared.UICopy)
 local Client={};Client.__index=Client
-local reasons={BayOccupied="Someone is using the machine. You can keep carrying.",NoDrySpace="Find a clear dry patch before setting down.",OutOfReach="Move closer to your pet or the machine.",IdentityChanged="Your pet changed. Try again.",ClaimChanged="This machine session has ended.",Saving="Wait for the current pet save."}
+local reasons={BayOccupied="busy",NoDrySpace="dry",OutOfReach="closer",IdentityChanged="changed",ClaimChanged="ended",Saving="saving"}
 local function button(parent,name,text,callback)
  local n=Instance.new("TextButton");n.Name=name;n.Text=text;n.Size=UDim2.fromOffset(150,44);n.Parent=parent;n.ZIndex=15;n.BorderSizePixel=0
  Art.bind(n,{BackgroundColor3="raised",TextColor3="text"});Art.button(n,12);Art.type(n,"Action");n.Activated:Connect(callback);return n
@@ -11,20 +12,20 @@ local function arrow(node,up,label)
  node.Text="";node.Size=UDim2.fromOffset(44,44);node:SetAttribute("AccessibleLabel",label)
  Art.carryArrow(node,if up then "up"else "down")
 end
-function Client.new(room,gui)
+function Client.new(room,gui,options)
+ options=options or {}
  -- The ordinary ScreenGui already owns CoreUISafeInsets. Keep bottom controls
  -- in its own full safe-area Frame, independent of the focus sheet's lifetime.
  local controls=Instance.new("Frame");controls.Name="GardenCareControls";controls.Size=UDim2.fromScale(1,1);controls.BackgroundTransparency=1;controls.BorderSizePixel=0
  controls.Active=false;controls.Selectable=false;controls.ZIndex=15;controls.Parent=gui
- local self=setmetatable({room=room,gui=gui,controls=controls,uiRoot=controls,ownerId=Players.LocalPlayer.UserId,seq=0,operations={},connections={},pulseAt=0},Client)
+ local self=setmetatable({room=room,gui=gui,controls=controls,uiRoot=controls,ownerId=Players.LocalPlayer.UserId,seq=0,operations={},connections={},pulseAt=0,
+  notifications=options.notifications or require(script.Parent.NotificationRail)},Client)
  self.pickup=button(room.focusUI.panel,"PickUp","Pick up",function()self:request("carePickup",nil,function(packet)if packet.status=="Accepted"or packet.status=="Saved"then room:setPetContact(false);room:useRoomCamera(false)end end)end)
  arrow(self.pickup,true,"Pick up companion")
- self.pickup.AnchorPoint=Vector2.new(1,0);self.pickup.Position=UDim2.new(1,-12,0,12)
- room.focusUI.carePickupWidth=44
+ room.focusUI:bindPickup(self.pickup)
  self.setDown=button(controls,"CarrySetDown","Set down",function()self:request("careSetDown")end)
  arrow(self.setDown,false,"Set companion down")
  self.setDown.AnchorPoint=Vector2.new(.5,1);self.setDown.Position=UDim2.new(.5,0,1,-16);self.setDown.Visible=false
- self.notice=Art.text(controls,"CareNotice","",UDim2.new(.5,0,1,-68),UDim2.fromOffset(480,60),"text",16);self.notice.AnchorPoint=Vector2.new(.5,1);self.notice.Visible=false;self.notice.ZIndex=16;self.notice.TextWrapped=true
  local remotes=Replicated:WaitForChild("Remotes")
  local function bind(remote)
   if self.result or remote.Name~="GardenCareResult"or not remote:IsA("RemoteEvent")then return end
@@ -66,7 +67,9 @@ function Client:receive(packet)
   if packet.kind=="carePickup"or packet.kind=="careSetDown"or packet.kind=="careRelease"then self.wantMachine=false;if self.closeMachine then self.closeMachine()end end
  else
   if op.done then op.done(packet)end
-  self.notice.Text=reasons[packet.reason]or "That action could not complete. Try again.";self.noticeUntil=os.clock()+3
+  if self.destroyed then return end
+  self.notifications.enqueue(self.controls or self,"care:"..packet.seq,
+   {text=Copy.get("care.notice."..(reasons[packet.reason]or "retry")),icon="!",reason=packet.reason})
  end
 end
 function Client:release(done)
@@ -109,7 +112,9 @@ function Client:step()
  local room=self.room;local actor=self:actor();local state=actor and actor.care and actor.care.state
  local snapshot=room.garden.snapshot;local bay=snapshot and snapshot.careBay;local gap=self:keepsDock(actor,bay)
  self:reconcilePickup(actor)
+ local wasVisible=self.pickup.Visible
  self.pickup.Visible=room.focusing and not room.focusTransitioning and not room.overlayOpen()
+ if wasVisible~=self.pickup.Visible then room.focusUI:layoutFocusRow()end
  local pickupPending,setDownPending=false,false
  for _,operation in pairs(self.operations)do if operation.packet.kind=="carePickup"then pickupPending=true elseif operation.packet.kind=="careSetDown"then setDownPending=true end end
  self.pickup.Interactable=self.pickup.Visible and not pickupPending
@@ -121,8 +126,6 @@ function Client:step()
  self.setDown:SetAttribute("Pending",setDownPending)
  Art.control(self.pickup,pickupPending,not pickupPending);Art.control(self.setDown,setDownPending,not setDownPending)
  local now=os.clock()
- local uiWidth=self.uiRoot.AbsoluteSize.X
- self.notice.Visible=now<(self.noticeUntil or 0);self.notice.Size=UDim2.fromOffset(math.max(1,math.min(480,uiWidth-32)),Art.textHeight(self.notice,math.max(1,math.min(480,uiWidth-32)),30)+8)
  for seq,op in pairs(self.operations)do
   if op.character~=self:character()then self.operations[seq]=nil;if op.done then op.done({kind=op.packet.kind,seq=seq,status="Rejected",reason="IdentityChanged"})end
   elseif now-op.at>2 and op.tries<3 then
@@ -165,7 +168,8 @@ function Client:destroy()
  if self.destroyed then return end
  -- Best effort exact release; server carry lease also retires a lost UI owner.
  self:release();self.destroyed=true
- for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.operations);self.room.focusUI.carePickupWidth=nil;self.pickup:Destroy();self.setDown:Destroy();self.notice:Destroy()
+ for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.operations);self.room.focusUI:bindPickup(nil);self.pickup:Destroy();self.setDown:Destroy()
+ self.notifications.cancelOwner(self.controls or self)
  if self.controls then self.controls:Destroy()end
 end
 return Client

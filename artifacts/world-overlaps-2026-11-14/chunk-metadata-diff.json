@@ -1,0 +1,684 @@
+{
+  "Architecture_Balustrades__marble": {
+    "before": {
+      "hash": "b49f693ef2e5f101",
+      "vertices": 6624,
+      "polygons": 1962,
+      "tris": 3924,
+      "lo": [
+        -106.3681411743164,
+        -83.6916275024414,
+        -0.03995278477668762
+      ],
+      "hi": [
+        110.50978088378906,
+        26.814043045043945,
+        3.1936793327331543
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "d3c3dd7e5c58ceee",
+      "vertices": 8664,
+      "polygons": 2447,
+      "tris": 4438,
+      "lo": [
+        -106.3681411743164,
+        -83.6916275024414,
+        -0.03995278477668762
+      ],
+      "hi": [
+        110.50978088378906,
+        26.814043045043945,
+        3.1936793327331543
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Architecture_Bridge__marble": {
+    "before": {
+      "hash": "c5df3f37949d55ab",
+      "vertices": 612,
+      "polygons": 186,
+      "tris": 372,
+      "lo": [
+        -8.600000381469727,
+        -24.700000762939453,
+        -4.75
+      ],
+      "hi": [
+        16.600000381469727,
+        -17.299999237060547,
+        3.240000009536743
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "0e0d3fde51468074",
+      "vertices": 666,
+      "polygons": 192,
+      "tris": 374,
+      "lo": [
+        -8.600000381469727,
+        -24.700000762939453,
+        -4.75
+      ],
+      "hi": [
+        16.600000381469727,
+        -17.299999237060547,
+        3.240000009536743
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Architecture_Edging__marble": {
+    "before": {
+      "hash": "5623b0613007c8aa",
+      "vertices": 2212,
+      "polygons": 553,
+      "tris": 1106,
+      "lo": [
+        -9.587966918945312,
+        -49.965152740478516,
+        -2.200000047683716
+      ],
+      "hi": [
+        78.01581573486328,
+        77.1050033569336,
+        0.2800000011920929
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "ed8eb61127ce7b68",
+      "vertices": 2222,
+      "polygons": 555,
+      "tris": 1108,
+      "lo": [
+        -9.587966918945312,
+        -49.965152740478516,
+        -2.200000047683716
+      ],
+      "hi": [
+        78.01581573486328,
+        77.1050033569336,
+        0.2800000011920929
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Architecture_MarbleArch__marble": {
+    "before": {
+      "hash": "1ca21173160bbb21",
+      "vertices": 172,
+      "polygons": 96,
+      "tris": 192,
+      "lo": [
+        78.9556655883789,
+        -64.64134979248047,
+        0.5075472593307495
+      ],
+      "hi": [
+        91.0443344116211,
+        -50.35865020751953,
+        14.807547569274902
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "0bf7f372cb2eef4b",
+      "vertices": 172,
+      "polygons": 94,
+      "tris": 188,
+      "lo": [
+        78.9556655883789,
+        -64.64134979248047,
+        0.5075472593307495
+      ],
+      "hi": [
+        91.0443344116211,
+        -50.35865020751953,
+        14.807547569274902
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Architecture_Rotunda__marble": {
+    "before": {
+      "hash": "8dd87906307857bb",
+      "vertices": 887,
+      "polygons": 517,
+      "tris": 1046,
+      "lo": [
+        -69.19999694824219,
+        -59.20000076293945,
+        7.699017524719238
+      ],
+      "hi": [
+        -50.79999923706055,
+        -40.79999923706055,
+        19.099018096923828
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "cdaed880832eebaf",
+      "vertices": 947,
+      "polygons": 529,
+      "tris": 1062,
+      "lo": [
+        -69.19999694824219,
+        -59.20000076293945,
+        7.699017524719238
+      ],
+      "hi": [
+        -50.79999923706055,
+        -40.79999923706055,
+        19.099018096923828
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Architecture_Stairs__marble": {
+    "before": {
+      "hash": "7266e01041f10cbb",
+      "vertices": 408,
+      "polygons": 102,
+      "tris": 204,
+      "lo": [
+        -58.713104248046875,
+        -46.584590911865234,
+        -0.26564741134643555
+      ],
+      "hi": [
+        -33.4589958190918,
+        -17.797321319580078,
+        10.122762680053711
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "e4d9c9f9f6189e33",
+      "vertices": 560,
+      "polygons": 131,
+      "tris": 242,
+      "lo": [
+        -58.713104248046875,
+        -46.584590911865234,
+        -0.26564741134643555
+      ],
+      "hi": [
+        -33.4589958190918,
+        -17.797321319580078,
+        10.122762680053711
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Landmarks__marble": {
+    "before": {
+      "hash": "faadd5ed423f1691",
+      "vertices": 208,
+      "polygons": 90,
+      "tris": 180,
+      "lo": [
+        -15.67200756072998,
+        -5.6660003662109375,
+        -0.30000001192092896
+      ],
+      "hi": [
+        56.29999923706055,
+        101.32411193847656,
+        6.900000095367432
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "95be706cc2df0f4e",
+      "vertices": 248,
+      "polygons": 97,
+      "tris": 190,
+      "lo": [
+        -15.67200756072998,
+        -5.6660003662109375,
+        -0.30000001192092896
+      ],
+      "hi": [
+        56.29999923706055,
+        101.32411193847656,
+        6.900000095367432
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Stations_CareCradle__deck_cream": {
+    "before": {
+      "hash": "d48d061f9ae06253",
+      "vertices": 123,
+      "polygons": 68,
+      "tris": 136,
+      "lo": [
+        -20.05138397216797,
+        13.404237747192383,
+        1.7200000286102295
+      ],
+      "hi": [
+        -15.382122993469238,
+        16.595762252807617,
+        2.5241591930389404
+      ],
+      "materials": [
+        "W1_deck_cream"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "c6972625e800d6a9",
+      "vertices": 137,
+      "polygons": 70,
+      "tris": 138,
+      "lo": [
+        -20.05138397216797,
+        13.404237747192383,
+        1.7200000286102295
+      ],
+      "hi": [
+        -15.382122993469238,
+        16.595762252807617,
+        2.5241591930389404
+      ],
+      "materials": [
+        "W1_deck_cream"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Stations_EggNest__marble": {
+    "before": {
+      "hash": "2b68b6bfd554d0a9",
+      "vertices": 118,
+      "polygons": 81,
+      "tris": 174,
+      "lo": [
+        -34.39690017700195,
+        7.6030988693237305,
+        -0.20000001788139343
+      ],
+      "hi": [
+        -27.603099822998047,
+        14.39690113067627,
+        0.8799999952316284
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "0a6f6c3c591c9f5f",
+      "vertices": 132,
+      "polygons": 84,
+      "tris": 178,
+      "lo": [
+        -34.39690017700195,
+        7.6030988693237305,
+        -0.20000001788139343
+      ],
+      "hi": [
+        -27.603099822998047,
+        14.39690113067627,
+        0.8799999952316284
+      ],
+      "materials": [
+        "W1_marble"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Stations_EggNest__marble_smooth": {
+    "before": {
+      "hash": "9e8cbdb15d160048",
+      "vertices": 90,
+      "polygons": 24,
+      "tris": 60,
+      "lo": [
+        -28.804433822631836,
+        10.44473934173584,
+        0.3449999988079071
+      ],
+      "hi": [
+        -27.411800384521484,
+        11.360193252563477,
+        2.325528144836426
+      ],
+      "materials": [
+        "W1_marble_smooth"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "01c3b3fc4a4ac153",
+      "vertices": 124,
+      "polygons": 32,
+      "tris": 54,
+      "lo": [
+        -28.804433822631836,
+        10.44473934173584,
+        0.3449999988079071
+      ],
+      "hi": [
+        -27.411800384521484,
+        11.360193252563477,
+        2.325528144836426
+      ],
+      "materials": [
+        "W1_marble_smooth"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  },
+  "Stations_PocketDeckKiosk__deck_cream": {
+    "before": {
+      "hash": "746d4dd02a28353e",
+      "vertices": 246,
+      "polygons": 69,
+      "tris": 150,
+      "lo": [
+        -47.70744705200195,
+        7.844609260559082,
+        2.680000066757202
+      ],
+      "hi": [
+        -44.22105407714844,
+        10.680333137512207,
+        5.686639785766602
+      ],
+      "materials": [
+        "W1_deck_cream"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    },
+    "after": {
+      "hash": "af97379610e3216c",
+      "vertices": 354,
+      "polygons": 93,
+      "tris": 186,
+      "lo": [
+        -47.70744705200195,
+        7.844609260559082,
+        2.680000066757202
+      ],
+      "hi": [
+        -44.22105407714844,
+        10.680333137512207,
+        5.686639785766602
+      ],
+      "materials": [
+        "W1_deck_cream"
+      ],
+      "custom_normals": false,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "colors": [
+        [
+          "Col",
+          "CORNER",
+          "FLOAT_COLOR"
+        ]
+      ]
+    }
+  }
+}
