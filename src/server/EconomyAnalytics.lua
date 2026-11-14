@@ -30,8 +30,15 @@ function Economy.source(player, amount, balance, kind, sku)
 		amount, balance, transaction(kind), sku)
 end
 
+-- Optional hook (init.server): called on every Stars sink (the funnel's "First Stars spend"
+-- step). Live servers only in practice: Economy.command returns early in Studio. Never errors
+-- into the caller.
+Economy.onSink = nil
+
 function Economy.sink(player, amount, balance, kind, sku)
-	if not enabled or type(amount) ~= "number" or amount <= 0 then return end
+	if type(amount) ~= "number" or amount <= 0 then return end
+	if Economy.onSink then pcall(Economy.onSink, player, amount, sku) end
+	if not enabled then return end
 	call(AnalyticsService.LogEconomyEvent, player, Enum.AnalyticsEconomyFlowType.Sink, Economy.Currency,
 		amount, balance, transaction(kind), sku)
 end
@@ -54,8 +61,52 @@ function Economy.command(player, action, before, after, state)
 	end
 end
 
-function Economy.event(player, name, value)
-	call(AnalyticsService.LogCustomEvent, player, name, value or 1)
+-- Custom-field slots Roblox accepts: up to three string values, keyed by enum.
+local fieldKeys = {"CustomField01", "CustomField02", "CustomField03"}
+local function customFields(fields)
+	if type(fields) ~= "table" then return nil end
+	local out, any = {}, false
+	for i, key in ipairs(fieldKeys) do
+		local value = fields[i]
+		if value ~= nil then
+			local ok, enumKey = pcall(function() return Enum.AnalyticsCustomFieldKeys[key].Name end)
+			if ok and enumKey then out[enumKey] = string.sub(tostring(value), 1, 50); any = true end
+		end
+	end
+	return if any then out else nil
+end
+Economy.customFields = customFields
+
+-- fields: optional array of up to three values (CustomField01..03); keep names low-cardinality
+-- and put ids in fields.
+function Economy.event(player, name, value, fields)
+	local packed = customFields(fields)
+	if packed then
+		call(AnalyticsService.LogCustomEvent, player, name, value or 1, packed)
+	else
+		call(AnalyticsService.LogCustomEvent, player, name, value or 1)
+	end
+end
+
+-- An egg opened (Toy, Feature, Material, Hue). The family is in the name (4 values), the
+-- result id in CustomField01. A refused receipt (stack limit) is not an open.
+local resultKeys = {"featureId", "toyId", "finishId", "materialId", "itemId", "resultItem"}
+function Economy.eggOpened(player, family, receipt)
+	if type(receipt) == "table" and receipt.outcome == "Refused" then return end
+	local result = "unknown"
+	if type(receipt) == "table" then
+		for _, key in ipairs(resultKeys) do
+			if type(receipt[key]) == "string" then result = receipt[key]; break end
+		end
+	end
+	Economy.event(player, "EggOpened_" .. tostring(family), 1, {result})
+end
+
+-- Synchronous variant for PlayerRemoving (the deferred path drops a leaving player).
+function Economy.eventNow(player, name, value)
+	if not enabled then return end
+	local ok, problem = pcall(AnalyticsService.LogCustomEvent, AnalyticsService, player, name, value or 1)
+	if not ok then warn("Egg Drop analytics:", problem) end
 end
 
 return Economy

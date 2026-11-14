@@ -84,6 +84,7 @@ function Store.grant(player, product, purchaseId)
 				if reason ~= "AlreadyGranted" then
 					local balance = api.nursery.public(board.nursery).nectar
 					Economy.source(player, product.stars, balance, "IAP", "StarsPack_" .. product.key)
+					Economy.event(player, "RobuxPurchase", 1, { product.key })
 					if api.onGrant then api.onGrant(board, product, product.stars, balance) end
 					resultRemote:FireClient(player, { kind = "product", key = product.key, stars = product.stars, balance = balance })
 				end

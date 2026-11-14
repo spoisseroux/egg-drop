@@ -354,7 +354,6 @@ local function publishNursery(board)
 			Progress.equipCompanion(board.profile, Pets.byId.pip)
 			publishCompanion(board)
 		end
-		if board.firstSession then board.firstSession:advance(4) end
 	end
 	if board.nurseryBusy then state.status = "Busy" end
 	-- Inventory, wallet and operation tokens are owner-private. Replicated board
@@ -658,6 +657,7 @@ local function addPlayer(player)
 			local walletBefore=board.nursery.state.nectar
 			local petOk,petReason=Nursery.awardPet(board.nursery,candidate)
 			if petOk and petReason~="AlreadySaved"then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","PetCare")end
+			if petOk and petReason~="AlreadySaved"and board.nursery.state.petCount==(Nursery.PetDailyCap or 10)then Economy.event(player,"PettingCapReached")end
 			board.nurseryBusy=false
 			if boards[player]==board and not board.closing then publishNursery(board);publishState(board)end
 		end,
@@ -709,9 +709,18 @@ StoreService.start({
 	end,
 })
 Players.PlayerAdded:Connect(addPlayer)
+-- Slice A analytics: funnel step 8 on any Stars sink; session totals on leave.
+Economy.onSink = function(player)
+	local board = boards[player]
+	if board and board.firstSession then board.firstSession:advance(8) end
+end
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
 	if board then
+		Economy.eventNow(player, "SessionRounds", board.sessionRounds or 0)
+		if board.nursery and board.nursery.state and type(board.nursery.state.nectar) == "number" then
+			Economy.eventNow(player, "SessionEndWallet", board.nursery.state.nectar)
+		end
 		board.profile.onSaveFailed = nil
 		board.profile.onAppearanceSaved = nil
 		board.profile.onAppearanceSuperseded = nil
@@ -903,6 +912,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			publishState(board)
 			if board.firstSession then
 				board.firstSession:advance(2)
+				if board.sim.drops == 1 then board.firstSession:roundStarted() end
 			end
 		end
 	elseif action == "item" then
@@ -1050,6 +1060,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			if ok and reason~="AlreadyOwned"then Economy.command(player,"Wearable_"..itemId,walletBefore,board.nursery.state.nectar,board.nursery.state)end
 		else
 			ok,reason=Nursery.equipWearable(board.nursery,opId,petId,slot,itemId)
+			if ok and type(itemId)=="string"and not board.wardrobeEquipLogged then board.wardrobeEquipLogged=true;Economy.event(player,"WardrobeEquip",1,{itemId})end
 		end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board);publishPetAppearance(board)
@@ -1087,6 +1098,10 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	-- (flushCoach). Unknown ids are dropped; a bit already saved or queued costs nothing.
 	if action=="coachMark"then
 		if not CoachMarks.validId(value)then return end
+		if board.firstSession then
+			if value=="gardenIntro"then board.firstSession:advance(5)
+			elseif value=="hatch"or value=="style"or value=="companions"or value=="quests"or value=="book"then board.firstSession:advance(6)end
+		end
 		local bit=CoachMarks.bit(value)
 		if CoachMarks.covers(board.nursery.state.coachMask,bit)or CoachMarks.covers(board.coachPending,bit)then return end
 		board.coachPending=CoachMarks.merge(board.coachPending,bit)
@@ -1117,6 +1132,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		local plateBefore=table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)~=nil
 		local ok,reason=Nursery.bookClaim(board.nursery,opId,milestone.id,if type(v.reward)=="number"then v.reward else nil)
 		if ok and board.nursery.state.nectar>walletBefore then paid=board.nursery.state.nectar-walletBefore;Economy.source(player,paid,board.nursery.state.nectar,"Gameplay","BookMilestone")end
+		if ok and reason~="AlreadySaved"and reason~="AlreadyClaimed"then Economy.event(player,"BookMilestone",1,{milestone.id})end
 		if ok and not plateBefore and table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)then granted=BookCatalog.BookOnlyFaceplate end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
@@ -1143,6 +1159,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if action=="questClaim"then ok,reason=Nursery.questClaim(board.nursery,scope,slot,period,boost)
 		else ok,reason=Nursery.questReroll(board.nursery,slot,period,boost)end
 		if ok and board.nursery.state.nectar>walletBefore then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","Quest")end
+		if ok and action=="questClaim"and reason~="AlreadyClaimed"and board.firstSession then board.firstSession:advance(7)end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then(if reason=="AlreadyClaimed"then "AlreadyClaimed"else "Saved")elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
@@ -1163,6 +1180,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   local walletBefore=board.nursery.state.nectar
   local ok,reason,saved=Nursery[itemKind.."Command"](board.nursery,action,value,revision)
   if ok then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+  if ok and reason~="AlreadySaved"and(action=="toyBuy"or action=="featureBuy")then Economy.eggOpened(player,itemKind,saved)end
   if reason=="Retrying"then board[itemKind.."Waiting"]=quote end
   board.nurseryBusy=false;if boards[player]~=board then return end
   publishNursery(board);publishState(board)
@@ -1184,6 +1202,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		local walletBefore=board.nursery.state.nectar
 		local ok,reason,saved=Nursery.materialCommand(board.nursery,action,value,revision)
 		if ok then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+		if ok and reason~="AlreadySaved"and action=="materialBuy"then Economy.eggOpened(player,"material",saved)end
 		if reason=="Retrying"then board.materialWaiting=quote end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
@@ -1222,7 +1241,13 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local walletBefore = board.nursery.state.nectar
 	if isHue then ok,reason,receipt=Nursery.hueCommand(board.nursery,action,value,revision)
 	else ok,reason=Nursery.command(board.nursery,action,value,revision)end
-	if ok and reason ~= "AlreadySaved" then Economy.command(player, action, walletBefore, board.nursery.state.nectar, board.nursery.state) end
+	if ok and reason ~= "AlreadySaved" then
+		Economy.command(player, action, walletBefore, board.nursery.state.nectar, board.nursery.state)
+		if action == "hueBuy" then Economy.eggOpened(player, "hue", receipt) end
+		if action == "daily" and type(board.nursery.state.stamps) == "number" and board.nursery.state.stamps > 0 then
+			Economy.event(player, "StampAdded", ((board.nursery.state.stamps - 1) % 7) + 1)
+		end
+	end
 	if isHue and reason=="Retrying"then board.hueWaiting=quote end
 	board.nurseryBusy = false
 	if boards[player] ~= board then return end
@@ -1285,6 +1310,7 @@ local function settleReward(player, board)
 						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
 					end
 					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
+					board.sessionRounds = (board.sessionRounds or 0) + 1
 					break
 				end
 				-- Transient (DataStore error, busy, pending): retry with backoff.
@@ -1320,6 +1346,8 @@ local function grantWelcome(player, board)
 			end
 			task.wait(2)
 		end
+		-- A grant that first reported Retrying and committed later still logs step 4 (idempotent).
+		if boards[player] == board and hasPip(board) and board.firstSession then board.firstSession:advance(4) end
 		board.starterRunning = false
 	end)
 end
@@ -1355,6 +1383,7 @@ local function flushParkGames(player, board)
 					if Nursery.parkCommitted(board.nursery, nextFlight.id) then
 						board.parkPending = math.max(0, board.parkPending - nextFlight.count); board.parkInFlight = nil; board.parkSavedAt = os.clock()
 						if board.nursery.state.nectar > walletBefore then Economy.source(player, board.nursery.state.nectar - walletBefore, board.nursery.state.nectar, "Gameplay", "PlayDate") end
+						Economy.event(player, "PlayDateDone", nextFlight.count)
 					elseif not ok and reason ~= "Retrying" then
 						board.parkInFlight = nil
 						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0 end
@@ -1510,7 +1539,7 @@ task.spawn(function()
 						if board.profileReady then
 							publishPetAppearance(board)
 							board.folder:SetAttribute("SaveStatus", nil)
-							board.firstSession = FirstSession.new(player, board.profile)
+							board.firstSession = board.firstSession or FirstSession.new(player, board.profile)
 							board.selectedFamily = NurseryCatalog.family(board.profile.companionId) or "pip"
 							board.mode = if hasPip(board) then "Room" else "Board"
 							reset(board, board.sim.preset)

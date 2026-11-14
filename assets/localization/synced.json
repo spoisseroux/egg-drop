@@ -937,8 +937,18 @@
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },
+  "catalog.WearableCatalog.pip.round.name": {
+   "source": "Round Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
   "catalog.WearableCatalog.pip.sleepy.name": {
    "source": "Sleepy Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.smallwide.name": {
+   "source": "Wide Eyes",
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },
@@ -959,6 +969,11 @@
   },
   "catalog.WearableCatalog.pip.tee.name": {
    "source": "Stripy Tee",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.w.name": {
+   "source": "Kitty W",
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },

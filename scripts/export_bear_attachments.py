@@ -59,6 +59,13 @@ _builder = Path(__file__).with_name("build_bear_wearables.py")
 _ns = {"__name__": "build_bear_wearables"}
 exec(compile(_builder.read_text(encoding="utf-8"), str(_builder), "exec"), _ns)
 ITEMS, TIERS = _ns["ITEMS"], _ns["TIERS"]
+# Face alternates authored before the wearables script (meshes tagged by `variant`, not `item`).
+# Sold since slice A (2026-11-14); appended after ITEMS so card order never moves.
+ALT_ITEMS = {
+    "round":     dict(slot="Eyes", name="Round Eyes", tier="common", flags={}, variant="Round"),
+    "smallwide": dict(slot="Eyes", name="Wide Eyes", tier="common", flags={}, variant="SmallWide"),
+    "w":         dict(slot="Mouth", name="Kitty W", tier="common", flags={}, variant="W"),
+}
 WEARABLES = [o.name.split("__", 1)[1] for o in bpy.data.collections["PetBear_Wearables"].objects]
 bpy.context.view_layer.update()
 
@@ -215,6 +222,15 @@ for item_id, info in ITEMS.items():
         row["perSide"] = True
     assert row["triangles"] <= 600, row
     items.append(row)
+
+for item_id, info in ALT_ITEMS.items():
+    parts = [m for m in meshes if m.get("variant") == info["variant"] and m["slot"] == info["slot"]]
+    assert parts, item_id
+    items.append({"id": item_id, "slot": info["slot"], "displayName": info["name"], "tier": info["tier"],
+                  "price": TIERS[info["tier"]], "triangles": sum(m["triangles"] for m in parts),
+                  "tintBySecondary": False, "primaryColor": "face", "flags": dict(info["flags"]),
+                  "pieces": [{"piece": "Main", "mesh": m["name"], "channel": m["channel"], "anchor": m["parentAnchor"],
+                              "colorRole": "face", "tintBySecondary": False, "triangles": m["triangles"]} for m in parts]})
 
 HORN_NAMES = {1: "Bud", 2: "Nub", 3: "Horn", 4: "Curl", 5: "Crown"}
 for m in meshes:

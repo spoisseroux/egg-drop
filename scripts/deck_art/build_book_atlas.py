@@ -44,7 +44,12 @@ TOYS = ["ball", "bone", "sparkler"]
 FINISHES = ["gloss", "matte", "metal"]
 DISCOVERIES = ["tier_five", "chain_five", "win_bank_pair", "win_creek_crossing", "win_lantern_chain", "win_ripple_relay",
                "win_bank_bounce", "win_mirror_marks", "win_easy", "win_medium", "win_hard"]
-SLOTS = (["pip:" + i for i in WARDROBE] + ["toy:" + i for i in TOYS] + ["finish:" + i for i in FINISHES] + DISCOVERIES)
+# Slice A (2026-11-14): face items sold later. Appended after the discoveries so no existing slot
+# moves; slots past 32 land on page 2 (book-atlas-2.png, BookView.Art.atlas2).
+WARDROBE_LATE = ["round", "smallwide", "w"]
+SLOTS = (["pip:" + i for i in WARDROBE] + ["toy:" + i for i in TOYS] + ["finish:" + i for i in FINISHES] + DISCOVERIES
+         + ["pip:" + i for i in WARDROBE_LATE])
+PER_PAGE = 32
 
 CREAM = (255, 244, 220, 255)
 INK = (14, 15, 18, 255)
@@ -361,17 +366,20 @@ def badge_cell(bid):
 # ------------------------------------------------------------------ assembly
 def cells():
     out = []
-    for item in WARDROBE:
+    def wear(item):
         if item in ALONE:
-            out.append(render_cell("wear-" + item, box=CELL - 14))
-        else:
-            out.append(render_cell("wear-" + item, "wear-" + item + "-mask", box=CELL - 4, round_window=True))
+            return render_cell("wear-" + item, box=CELL - 14)
+        return render_cell("wear-" + item, "wear-" + item + "-mask", box=CELL - 4, round_window=True)
+    for item in WARDROBE:
+        out.append(wear(item))
     for toy in TOYS:
         out.append(render_cell("toy-" + toy, box=CELL - 14))
     for fin in FINISHES:
         out.append(render_cell("finish-" + fin, box=CELL - 4, sparkle=fin == "gloss", round_window=True))
     for bid in DISCOVERIES:
         out.append(badge_cell(bid))
+    for item in WARDROBE_LATE:
+        out.append(wear(item))
     return out
 
 
@@ -411,14 +419,19 @@ def preview(atlas, made):
 
 def main():
     made = cells()
-    assert len(made) <= COLS * ROWS, "atlas full: add rows"
-    atlas = Image.new("RGBA", (CELL * COLS, CELL * ROWS * 2), (0, 0, 0, 0))
-    for i, (c, s) in enumerate(made):
-        col, row = i % COLS, i // COLS
-        atlas.alpha_composite(c, (col * CELL, row * CELL))
-        atlas.alpha_composite(s, (col * CELL, (row + ROWS) * CELL))
-    atlas.save(os.path.join(BOOK, "book-atlas.png"), optimize=True)
+    assert len(made) == len(SLOTS) and len(made) <= 2 * PER_PAGE, "atlas full: add a page"
+    pages = []
+    for start in range(0, len(made), PER_PAGE):
+        atlas = Image.new("RGBA", (CELL * COLS, CELL * ROWS * 2), (0, 0, 0, 0))
+        for i, (c, s) in enumerate(made[start:start + PER_PAGE]):
+            col, row = i % COLS, i // COLS
+            atlas.alpha_composite(c, (col * CELL, row * CELL))
+            atlas.alpha_composite(s, (col * CELL, (row + ROWS) * CELL))
+        name = "book-atlas.png" if start == 0 else "book-atlas-%d.png" % (start // PER_PAGE + 1)
+        atlas.save(os.path.join(BOOK, name), optimize=True)
+        pages.append(name)
     doc = {"schema": 1, "cell": CELL, "columns": COLS, "silhouetteRowOffset": ROWS, "size": [atlas.width, atlas.height],
+           "perPage": PER_PAGE, "pages": pages,
            "slots": {sid: i + 1 for i, sid in enumerate(SLOTS)}}
     with open(os.path.join(BOOK, "book-atlas.json"), "w", newline="\n") as fh:
         json.dump(doc, fh, indent=1)

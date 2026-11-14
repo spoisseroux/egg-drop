@@ -5451,6 +5451,90 @@
      "triangles": 168
     }
    ]
+  },
+  {
+   "id": "round",
+   "slot": "Eyes",
+   "displayName": "Round Eyes",
+   "tier": "common",
+   "price": 15,
+   "triangles": 84,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeL_AltRound",
+     "channel": "Head",
+     "anchor": "Head",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 42
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeR_AltRound",
+     "channel": "Head",
+     "anchor": "Head",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 42
+    }
+   ]
+  },
+  {
+   "id": "smallwide",
+   "slot": "Eyes",
+   "displayName": "Wide Eyes",
+   "tier": "common",
+   "price": 15,
+   "triangles": 84,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeL_AltSmallWide",
+     "channel": "Head",
+     "anchor": "Head",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 42
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeR_AltSmallWide",
+     "channel": "Head",
+     "anchor": "Head",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 42
+    }
+   ]
+  },
+  {
+   "id": "w",
+   "slot": "Mouth",
+   "displayName": "Kitty W",
+   "tier": "common",
+   "price": 15,
+   "triangles": 156,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__Mouth_AltW",
+     "channel": "Head",
+     "anchor": "Head",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 156
+    }
+   ]
   }
  ],
  "features": {

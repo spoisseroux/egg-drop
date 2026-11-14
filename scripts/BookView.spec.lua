@@ -120,6 +120,9 @@ return function(client,parent)
    assert(owned.offset==Vector2.new(4*128,128)and missing.offset==Vector2.new(4*128,5*128)and owned.size==Vector2.new(128,128))
    assert(View.atlasRect("tier_five",true).offset==Vector2.new(3*128,2*128))
    assert(View.atlasRect("someone:new",true)==nil,"an item without a slot has no rect")
+   -- Slice A: slots past 32 draw from page 2 at the same cell layout.
+   local w=View.atlasRect("pip:w",false);assert(w.image==View.Art.atlas2 and w.offset==Vector2.new(0,4*128),"page 2 slot 1 silhouette")
+   assert(View.atlasRect("pip:smallwide",true).image==View.Art.atlas and View.atlasRect("pip:smallwide",true).offset==Vector2.new(7*128,3*128))
    for _,pageId in ipairs({"wardrobe","toys","discoveries"})do
     if Book.Pages[pageId]then assert(View.pageHasThumbs(pageId,View.items(pageId,{})),"every "..pageId.." item has an atlas slot")end
    end

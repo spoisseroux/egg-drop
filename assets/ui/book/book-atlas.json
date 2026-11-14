@@ -7,6 +7,11 @@
   1024,
   1024
  ],
+ "perPage": 32,
+ "pages": [
+  "book-atlas.png",
+  "book-atlas-2.png"
+ ],
  "slots": {
   "pip:beanie": 1,
   "pip:sunhat": 2,
@@ -37,6 +42,9 @@
   "win_mirror_marks": 27,
   "win_easy": 28,
   "win_medium": 29,
-  "win_hard": 30
+  "win_hard": 30,
+  "pip:round": 31,
+  "pip:smallwide": 32,
+  "pip:w": 33
  }
 }
