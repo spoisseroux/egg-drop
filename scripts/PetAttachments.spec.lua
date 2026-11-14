@@ -193,9 +193,9 @@ return function(client,parent)
   end)
   test("rules: normalise unknown items, one item per slot, a Back wearable hides wings, flags drive exclusions",function()
    assert(next(Rules.normalize(bear,{Hat="crown",Wings="beanie",Eyes="sparkle",EarPiercing="ring",Mouth="o",Tail="arrow"}))=="Eyes","placeholder ids must be gone")
-   -- 3 hats, 2 shirts, 2 necklaces, 2 helix pairs x 2 sides, 4 eyes (round, smallwide, sparkle, sleepy; all sold since slice A), 2 mouths, 1 tail.
-   local items=Rules.items(bear);assert(#items==18,#items)
-   local sold=require(Shared.WearableCatalog).forPet("pip").order;assert(#sold==16,"manifest items "..#sold)
+   -- 3 hats, 2 shirts, 2 necklaces, 2 helix pairs x 2 sides, 6 eyes (round, smallwide [unsold], sparkle, sleepy, happy, lash), 2 mouths, 1 tail.
+   local items=Rules.items(bear);assert(#items==20,#items)
+   local sold=require(Shared.WearableCatalog).forPet("pip").order;assert(#sold==17,"manifest items "..#sold)
    for _,item in ipairs(sold)do assert(item.price==({common=15,rare=30,showcase=60})[item.tier],item.id)end
    -- Real manifest flags: full hats hide horns; the Flower Crown is an open crown (horns and the centre charm stay) with a low brim.
 

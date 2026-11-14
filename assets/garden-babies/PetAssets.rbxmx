@@ -7995,6 +7995,123 @@
       </Item>
       <Item class="MeshPart" referent="BearAtt55">
         <Properties>
+          <string name="Name">Bear__EyeL_AltHappy</string>
+          <Content name="MeshId">
+            <url>rbxassetid://92250565495035</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.17497059</X>
+            <Y>0.08988098000000001</Y>
+            <Z>0.10857876</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.497059</X>
+            <Y>8.988098</Y>
+            <Z>10.857876</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.2145</X>
+            <Y>1.04806</Y>
+            <Z>-0.41845</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt56">
+        <Properties>
+          <string name="Name">Bear__EyeL_AltLash</string>
+          <Content name="MeshId">
+            <url>rbxassetid://110832726846807</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.17827960999999998</X>
+            <Y>0.20785004</Y>
+            <Z>0.14156760999999998</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.827961</X>
+            <Y>20.785004</Y>
+            <Z>14.156761</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.23164</X>
+            <Y>1.03043</Y>
+            <Z>-0.39575</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt57">
+        <Properties>
+          <string name="Name">Bear__EyeL_AltLash_Shine</string>
+          <Content name="MeshId">
+            <url>rbxassetid://80973076304076</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.079</X>
+            <Y>0.10909409</Y>
+            <Z>0.03917862</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>7.9</X>
+            <Y>10.909409</Y>
+            <Z>3.917862</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.206</X>
+            <Y>1.03589</Y>
+            <Z>-0.44971</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt58">
+        <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_White</string>
           <Content name="MeshId">
             <url>rbxassetid://100813324137837</url>
@@ -8032,7 +8149,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt56">
+      <Item class="MeshPart" referent="BearAtt59">
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle</string>
           <Content name="MeshId">
@@ -8071,7 +8188,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt57">
+      <Item class="MeshPart" referent="BearAtt60">
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_Iris</string>
           <Content name="MeshId">
@@ -8110,7 +8227,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt58">
+      <Item class="MeshPart" referent="BearAtt61">
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_Shine</string>
           <Content name="MeshId">
@@ -8149,7 +8266,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt59">
+      <Item class="MeshPart" referent="BearAtt62">
         <Properties>
           <string name="Name">Bear__EyeR_AltSleepy</string>
           <Content name="MeshId">
@@ -8188,7 +8305,124 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt60">
+      <Item class="MeshPart" referent="BearAtt63">
+        <Properties>
+          <string name="Name">Bear__EyeR_AltHappy</string>
+          <Content name="MeshId">
+            <url>rbxassetid://125820634837836</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.17497055</X>
+            <Y>0.08988098000000001</Y>
+            <Z>0.10857903</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.497055</X>
+            <Y>8.988098</Y>
+            <Z>10.857903</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.2145</X>
+            <Y>1.04806</Y>
+            <Z>-0.41845</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt64">
+        <Properties>
+          <string name="Name">Bear__EyeR_AltLash</string>
+          <Content name="MeshId">
+            <url>rbxassetid://121003572852386</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.17827957000000003</X>
+            <Y>0.20785004</Y>
+            <Z>0.14156715</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.827957</X>
+            <Y>20.785004</Y>
+            <Z>14.156715</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.23164</X>
+            <Y>1.03043</Y>
+            <Z>-0.39575</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt65">
+        <Properties>
+          <string name="Name">Bear__EyeR_AltLash_Shine</string>
+          <Content name="MeshId">
+            <url>rbxassetid://131682016489107</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.079</X>
+            <Y>0.10909409</Y>
+            <Z>0.03917885</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>7.9</X>
+            <Y>10.909409</Y>
+            <Z>3.917885</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.206</X>
+            <Y>1.03589</Y>
+            <Z>-0.44971</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="BearAtt66">
         <Properties>
           <string name="Name">Bear__Mouth_AltBlep</string>
           <Content name="MeshId">
@@ -8227,7 +8461,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt61">
+      <Item class="MeshPart" referent="BearAtt67">
         <Properties>
           <string name="Name">Bear__Mouth_AltBlep_Tongue</string>
           <Content name="MeshId">
@@ -8266,7 +8500,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="BearAtt62">
+      <Item class="MeshPart" referent="BearAtt68">
         <Properties>
           <string name="Name">Bear__Tail_AltHeart</string>
           <Content name="MeshId">

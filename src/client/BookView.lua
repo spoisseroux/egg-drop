@@ -46,13 +46,13 @@ View.PeekSlot=table.freeze({x=420,y=4,w=200,h=80})
 -- 4..7 white silhouettes the client tints). `atlas` stays nil until the upload: a page
 -- whose items are not all drawable keeps the old name chips.
 -- Slots past `perPage` (32) live on page 2 (`atlas2`, book-atlas-2.png; slice A face items).
-View.Art={atlas="rbxassetid://137873747973485",atlas2="rbxassetid://87742055854213",perPage=32,cell=128,columns=8,silhouetteRows=4,
+View.Art={atlas="rbxassetid://99292277254782",atlas2="rbxassetid://76026456070624",perPage=32,cell=128,columns=8,silhouetteRows=4,
  slots=table.freeze({["pip:beanie"]=1,["pip:sunhat"]=2,["pip:flowercrown"]=3,["pip:tee"]=4,["pip:hoodie"]=5,["pip:beads"]=6,
   ["pip:bellcollar"]=7,["pip:ring"]=8,["pip:starstud"]=9,["pip:sparkle"]=10,["pip:sleepy"]=11,["pip:blep"]=12,["pip:heart"]=13,
   ["toy:ball"]=14,["toy:bone"]=15,["toy:sparkler"]=16,["finish:gloss"]=17,["finish:matte"]=18,["finish:metal"]=19,
   ["tier_five"]=20,["chain_five"]=21,["win_bank_pair"]=22,["win_creek_crossing"]=23,["win_lantern_chain"]=24,
   ["win_ripple_relay"]=25,["win_bank_bounce"]=26,["win_mirror_marks"]=27,["win_easy"]=28,["win_medium"]=29,["win_hard"]=30,
-  ["pip:round"]=31,["pip:smallwide"]=32,["pip:w"]=33})}
+  ["pip:round"]=31,["pip:happy"]=32,["pip:w"]=33,["pip:lash"]=34})}
 View.Thumb=table.freeze({size=48,pad=2,nameH=18,gap=8})
 -- Ball tiers shown in a ball theme's thumbnail (small, middle, biggest).
 View.ThumbTiers=table.freeze({1,3,5})

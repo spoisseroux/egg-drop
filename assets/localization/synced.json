@@ -922,6 +922,11 @@
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },
+  "catalog.WearableCatalog.pip.happy.name": {
+   "source": "Happy Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
   "catalog.WearableCatalog.pip.heart.name": {
    "source": "Heart Tail",
    "context": "",
@@ -929,6 +934,11 @@
   },
   "catalog.WearableCatalog.pip.hoodie.name": {
    "source": "Star Hoodie",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.lash.name": {
+   "source": "Lash Eyes",
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },
@@ -944,11 +954,6 @@
   },
   "catalog.WearableCatalog.pip.sleepy.name": {
    "source": "Sleepy Eyes",
-   "context": "",
-   "example": "Catalogue WearableCatalog (name)"
-  },
-  "catalog.WearableCatalog.pip.smallwide.name": {
-   "source": "Wide Eyes",
    "context": "",
    "example": "Catalogue WearableCatalog (name)"
   },

@@ -60,10 +60,10 @@ _ns = {"__name__": "build_bear_wearables"}
 exec(compile(_builder.read_text(encoding="utf-8"), str(_builder), "exec"), _ns)
 ITEMS, TIERS = _ns["ITEMS"], _ns["TIERS"]
 # Face alternates authored before the wearables script (meshes tagged by `variant`, not `item`).
-# Sold since slice A (2026-11-14); appended after ITEMS so card order never moves.
+# Sold since slice A (2026-11-14); appended after ITEMS. SmallWide (Wide Eyes) stays imported but unsold
+# (Spencer 2026-11-14: "creepy"; replaced by Happy Eyes and Lash Eyes).
 ALT_ITEMS = {
     "round":     dict(slot="Eyes", name="Round Eyes", tier="common", flags={}, variant="Round"),
-    "smallwide": dict(slot="Eyes", name="Wide Eyes", tier="common", flags={}, variant="SmallWide"),
     "w":         dict(slot="Mouth", name="Kitty W", tier="common", flags={}, variant="W"),
 }
 WEARABLES = [o.name.split("__", 1)[1] for o in bpy.data.collections["PetBear_Wearables"].objects]

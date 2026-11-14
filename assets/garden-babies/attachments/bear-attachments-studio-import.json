@@ -1,7 +1,7 @@
 {
  "assetId": "93989945223773",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416).",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416). Happy Eyes and Lash Eyes added 2026-11-14 (Open Cloud asset 121849094985091; rel from the manifest centre with the shared import offset).",
  "previousAssetIds": [
   "97156894572368",
   "120398944545621"
@@ -827,6 +827,84 @@
     38.890495,
     39.499996,
     38.890503
+   ]
+  },
+  "Bear__EyeL_AltHappy": {
+   "id": "rbxassetid://92250565495035",
+   "rel": [
+    21.452,
+    11.367,
+    -42.883
+   ],
+   "ms": [
+    17.497059,
+    8.988098,
+    10.857876
+   ]
+  },
+  "Bear__EyeR_AltHappy": {
+   "id": "rbxassetid://125820634837836",
+   "rel": [
+    -21.448,
+    11.367,
+    -42.883
+   ],
+   "ms": [
+    17.497055,
+    8.988098,
+    10.857903
+   ]
+  },
+  "Bear__EyeL_AltLash": {
+   "id": "rbxassetid://110832726846807",
+   "rel": [
+    23.166,
+    9.604,
+    -40.613
+   ],
+   "ms": [
+    17.827961,
+    20.785004,
+    14.156761
+   ]
+  },
+  "Bear__EyeR_AltLash": {
+   "id": "rbxassetid://121003572852386",
+   "rel": [
+    -23.162,
+    9.604,
+    -40.613
+   ],
+   "ms": [
+    17.827957,
+    20.785004,
+    14.156715
+   ]
+  },
+  "Bear__EyeL_AltLash_Shine": {
+   "id": "rbxassetid://80973076304076",
+   "rel": [
+    20.602,
+    10.15,
+    -46.009
+   ],
+   "ms": [
+    7.9,
+    10.909409,
+    3.917862
+   ]
+  },
+  "Bear__EyeR_AltLash_Shine": {
+   "id": "rbxassetid://131682016489107",
+   "rel": [
+    -20.598,
+    10.15,
+    -46.009
+   ],
+   "ms": [
+    7.9,
+    10.909409,
+    3.917885
    ]
   }
  }

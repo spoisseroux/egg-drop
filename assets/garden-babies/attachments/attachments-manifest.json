@@ -4528,6 +4528,153 @@
    "tintBySecondary": false
   },
   {
+   "name": "Bear__EyeL_AltHappy",
+   "source": "PetBear__EyeL_AltHappy",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.2145,
+    -0.41845,
+    1.04806
+   ],
+   "sizeBlender": [
+    0.17497,
+    0.10858,
+    0.08988
+   ],
+   "centerRuntime": [
+    -0.2145,
+    1.04806,
+    0.41845
+   ],
+   "sizeRuntime": [
+    0.17497,
+    0.08988,
+    0.10858
+   ],
+   "triangles": 78,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "happy",
+   "item": "happy",
+   "piece": "Main",
+   "displayName": "Happy Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeL_AltLash",
+   "source": "PetBear__EyeL_AltLash",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.23164,
+    -0.39575,
+    1.03043
+   ],
+   "sizeBlender": [
+    0.17828,
+    0.14157,
+    0.20785
+   ],
+   "centerRuntime": [
+    -0.23164,
+    1.03043,
+    0.39575
+   ],
+   "sizeRuntime": [
+    0.17828,
+    0.20785,
+    0.14157
+   ],
+   "triangles": 106,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "lash",
+   "item": "lash",
+   "piece": "Main",
+   "displayName": "Lash Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeL_AltLash_Shine",
+   "source": "PetBear__EyeL_AltLash_Shine",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeL",
+   "parentAnchor": "EyeL",
+   "channel": "Head",
+   "role": "EyeL",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    -0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    -0.206,
+    -0.44971,
+    1.03589
+   ],
+   "sizeBlender": [
+    0.079,
+    0.03918,
+    0.10909
+   ],
+   "centerRuntime": [
+    -0.206,
+    1.03589,
+    0.44971
+   ],
+   "sizeRuntime": [
+    0.079,
+    0.10909,
+    0.03918
+   ],
+   "triangles": 48,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "lash",
+   "item": "lash",
+   "piece": "Shine",
+   "displayName": "Lash Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
    "name": "Bear__EyeR_AltSparkle_White",
    "source": "PetBear__EyeR_AltSparkle_White",
    "fbx": "bear-attachments-face-alts.fbx",
@@ -4767,6 +4914,153 @@
    "item": "sleepy",
    "piece": "Main",
    "displayName": "Sleepy Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltHappy",
+   "source": "PetBear__EyeR_AltHappy",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.2145,
+    -0.41845,
+    1.04806
+   ],
+   "sizeBlender": [
+    0.17497,
+    0.10858,
+    0.08988
+   ],
+   "centerRuntime": [
+    0.2145,
+    1.04806,
+    0.41845
+   ],
+   "sizeRuntime": [
+    0.17497,
+    0.08988,
+    0.10858
+   ],
+   "triangles": 78,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "happy",
+   "item": "happy",
+   "piece": "Main",
+   "displayName": "Happy Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltLash",
+   "source": "PetBear__EyeR_AltLash",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "face",
+   "material": "attach__ink",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.23164,
+    -0.39575,
+    1.03043
+   ],
+   "sizeBlender": [
+    0.17828,
+    0.14157,
+    0.20785
+   ],
+   "centerRuntime": [
+    0.23164,
+    1.03043,
+    0.39575
+   ],
+   "sizeRuntime": [
+    0.17828,
+    0.20785,
+    0.14157
+   ],
+   "triangles": 106,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "lash",
+   "item": "lash",
+   "piece": "Main",
+   "displayName": "Lash Eyes",
+   "tier": "common",
+   "price": 15,
+   "alternate": true,
+   "tintBySecondary": false
+  },
+  {
+   "name": "Bear__EyeR_AltLash_Shine",
+   "source": "PetBear__EyeR_AltLash_Shine",
+   "fbx": "bear-attachments-face-alts.fbx",
+   "group": "face-alts",
+   "slot": "Eyes",
+   "anchor": "EyeR",
+   "parentAnchor": "EyeR",
+   "channel": "Head",
+   "role": "EyeR",
+   "colorRole": "own:#FFFFFF",
+   "material": "wear__FFFFFF",
+   "originBlender": [
+    0.2145,
+    -0.42468,
+    1.03
+   ],
+   "centerBlender": [
+    0.206,
+    -0.44971,
+    1.03589
+   ],
+   "sizeBlender": [
+    0.079,
+    0.03918,
+    0.10909
+   ],
+   "centerRuntime": [
+    0.206,
+    1.03589,
+    0.44971
+   ],
+   "sizeRuntime": [
+    0.079,
+    0.10909,
+    0.03918
+   ],
+   "triangles": 48,
+   "hasUV": true,
+   "defaultVisible": false,
+   "variant": "lash",
+   "item": "lash",
+   "piece": "Shine",
+   "displayName": "Lash Eyes",
    "tier": "common",
    "price": 15,
    "alternate": true,
@@ -5453,6 +5747,86 @@
    ]
   },
   {
+   "id": "happy",
+   "slot": "Eyes",
+   "displayName": "Happy Eyes",
+   "tier": "common",
+   "price": 15,
+   "triangles": 156,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeL_AltHappy",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 78
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeR_AltHappy",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 78
+    }
+   ]
+  },
+  {
+   "id": "lash",
+   "slot": "Eyes",
+   "displayName": "Lash Eyes",
+   "tier": "common",
+   "price": 15,
+   "triangles": 308,
+   "tintBySecondary": false,
+   "primaryColor": "face",
+   "flags": {},
+   "pieces": [
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeL_AltLash",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 106
+    },
+    {
+     "piece": "Shine",
+     "mesh": "Bear__EyeL_AltLash_Shine",
+     "channel": "Head",
+     "anchor": "EyeL",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 48
+    },
+    {
+     "piece": "Main",
+     "mesh": "Bear__EyeR_AltLash",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "face",
+     "tintBySecondary": false,
+     "triangles": 106
+    },
+    {
+     "piece": "Shine",
+     "mesh": "Bear__EyeR_AltLash_Shine",
+     "channel": "Head",
+     "anchor": "EyeR",
+     "colorRole": "own:#FFFFFF",
+     "tintBySecondary": false,
+     "triangles": 48
+    }
+   ]
+  },
+  {
    "id": "round",
    "slot": "Eyes",
    "displayName": "Round Eyes",
@@ -5475,37 +5849,6 @@
     {
      "piece": "Main",
      "mesh": "Bear__EyeR_AltRound",
-     "channel": "Head",
-     "anchor": "Head",
-     "colorRole": "face",
-     "tintBySecondary": false,
-     "triangles": 42
-    }
-   ]
-  },
-  {
-   "id": "smallwide",
-   "slot": "Eyes",
-   "displayName": "Wide Eyes",
-   "tier": "common",
-   "price": 15,
-   "triangles": 84,
-   "tintBySecondary": false,
-   "primaryColor": "face",
-   "flags": {},
-   "pieces": [
-    {
-     "piece": "Main",
-     "mesh": "Bear__EyeL_AltSmallWide",
-     "channel": "Head",
-     "anchor": "Head",
-     "colorRole": "face",
-     "tintBySecondary": false,
-     "triangles": 42
-    },
-    {
-     "piece": "Main",
-     "mesh": "Bear__EyeR_AltSmallWide",
      "channel": "Head",
      "anchor": "Head",
      "colorRole": "face",

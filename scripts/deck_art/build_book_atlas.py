@@ -46,7 +46,7 @@ DISCOVERIES = ["tier_five", "chain_five", "win_bank_pair", "win_creek_crossing",
                "win_bank_bounce", "win_mirror_marks", "win_easy", "win_medium", "win_hard"]
 # Slice A (2026-11-14): face items sold later. Appended after the discoveries so no existing slot
 # moves; slots past 32 land on page 2 (book-atlas-2.png, BookView.Art.atlas2).
-WARDROBE_LATE = ["round", "smallwide", "w"]
+WARDROBE_LATE = ["round", "happy", "w", "lash"]   # slot 32 was Wide Eyes (never published)
 SLOTS = (["pip:" + i for i in WARDROBE] + ["toy:" + i for i in TOYS] + ["finish:" + i for i in FINISHES] + DISCOVERIES
          + ["pip:" + i for i in WARDROBE_LATE])
 PER_PAGE = 32

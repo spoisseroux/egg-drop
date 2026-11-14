@@ -36,6 +36,9 @@ ITEMS = {
     "sleepy":      dict(slot="Eyes", name="Sleepy Eyes", tier="common", flags={}),
     "blep":        dict(slot="Mouth", name="Blep", tier="common", flags=dict(neutralOnly=True)),
     "heart":       dict(slot="Tail", name="Heart Tail", tier="rare", flags={}),
+    # Slice A (2026-11-14): replace the beady Wide Eyes (Spencer: "creepy"); cozy-sim conventions, original shapes.
+    "happy":       dict(slot="Eyes", name="Happy Eyes", tier="common", flags={}),
+    "lash":        dict(slot="Eyes", name="Lash Eyes", tier="common", flags={}),
 }
 
 # own colours (sRGB hex). Everything else is the pet's secondary or the face ink.
@@ -689,6 +692,22 @@ for side, sx in (("L", -1.0), ("R", 1.0)):
         lash = [(base[0] + d[0] * t, base[1] + d[1] * t) for t in (0.0, 0.5, 1.0)]
         face_stroke(bm, e.x, e.z - 0.012, lash, 0.020, rise=0.010, taper=0.5)
     finish(f"Eye{side}_AltSleepy", bm, "Eye" + side, "face", "sleepy", "Eye" + side, "Head", facing=Vector((0, -1, 0)))
+    # ---- Happy Eyes: a thick upturned arc (^), content and squinty (face ink)
+    bm = bmesh.new()
+    face_stroke(bm, e.x, e.z - 0.010, arc(0.0, -0.024, 0.078, 0.070, 18, 162, 13), 0.054, rise=0.018, taper=0.55)
+    finish(f"Eye{side}_AltHappy", bm, "Eye" + side, "face", "happy", "Eye" + side, "Head", facing=Vector((0, -1, 0)))
+    # ---- Lash Eyes: a glossy oval with two short lashes off the outer corner (face ink), white shine (own)
+    bm = bmesh.new()
+    face_patch(bm, e.x, e.z - 0.006, ellipse_outline(14, 0.072, 0.100), rise=0.030, rim=0.012, sink=0.006)
+    for ang, length, base in ((22, 0.036, (0.064, 0.044)), (52, 0.034, (0.046, 0.076))):
+        d = (sx * math.cos(math.radians(ang)) * length, math.sin(math.radians(ang)) * length)
+        lash = [(sx * base[0] + d[0] * t, base[1] + d[1] * t) for t in (0.0, 0.5, 1.0)]
+        face_stroke(bm, e.x, e.z - 0.006, lash, 0.032, rise=0.014, taper=0.25)
+    finish(f"Eye{side}_AltLash", bm, "Eye" + side, "face", "lash", "Eye" + side, "Head", facing=Vector((0, -1, 0)))
+    bm = bmesh.new()
+    face_patch(bm, e.x - sx * 0.022, e.z + 0.030, ellipse_outline(10, 0.026, 0.032), rise=0.036, rim=0.030, sink=-0.020, mid=0.0)
+    face_patch(bm, e.x + sx * 0.022, e.z - 0.040, ellipse_outline(6, 0.009, 0.010), rise=0.034, rim=0.030, sink=-0.020, mid=0.0)
+    finish(f"Eye{side}_AltLash_Shine", bm, "Eye" + side, C_WHITE, "lash", "Eye" + side, "Head", piece="Shine", facing=Vector((0, -1, 0)))
 
 
 # ================================================================= MOUTH

@@ -44,7 +44,8 @@
   "win_medium": 29,
   "win_hard": 30,
   "pip:round": 31,
-  "pip:smallwide": 32,
-  "pip:w": 33
+  "pip:happy": 32,
+  "pip:w": 33,
+  "pip:lash": 34
  }
 }

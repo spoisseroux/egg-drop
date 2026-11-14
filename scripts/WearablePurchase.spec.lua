@@ -39,18 +39,19 @@ return function(server)
 	local function fund(h, stars) assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false)) end
 	local function equipped(h) return W.equipped(h.state, "pip") end
 
-	test("the catalogue: 16 Bear items (slice A: Round Eyes, Wide Eyes, Kitty W) at fixed 15/30/60 prices across the seven shop slots", function()
+	test("the catalogue: 17 Bear items (slice A: Happy, Lash, Round Eyes, Kitty W) at fixed 15/30/60 prices across the seven shop slots", function()
 		local items = Catalog.forPet("pip").order
-		assert(#items == 16, #items)
+		assert(#items == 17, #items)
 		local slots = {}
 		for _, item in ipairs(items) do
 			assert(item.price == Catalog.TierPrice[item.tier], item.id)
 			slots[item.slot] = (slots[item.slot] or 0) + 1
 		end
-		assert(slots.Hat == 3 and slots.Shirt == 2 and slots.Neck == 2 and slots.EarPiercing == 2 and slots.Eyes == 4 and slots.Mouth == 2 and slots.Tail == 1)
+		assert(slots.Hat == 3 and slots.Shirt == 2 and slots.Neck == 2 and slots.EarPiercing == 2 and slots.Eyes == 5 and slots.Mouth == 2 and slots.Tail == 1)
 		assert(Catalog.price("pip", "flowercrown") == 60 and Catalog.price("pip", "beanie") == 15 and Catalog.price("pip", "sparkle") == 30)
-		assert(Catalog.price("pip", "round") == 15 and Catalog.price("pip", "smallwide") == 15 and Catalog.price("pip", "w") == 15)
-		assert(items[14].id == "round" and items[15].id == "smallwide" and items[16].id == "w", "appended after the old lineup")
+		assert(Catalog.price("pip", "round") == 15 and Catalog.price("pip", "happy") == 15 and Catalog.price("pip", "lash") == 15 and Catalog.price("pip", "w") == 15)
+		assert(Catalog.item("pip", "smallwide") == nil, "Wide Eyes is not sold")
+		assert(items[14].id == "happy" and items[15].id == "lash" and items[16].id == "round" and items[17].id == "w", "appended after the old lineup")
 		local ring = Catalog.item("pip", "ring"); assert(ring.keys[1] == "EarPiercingL" and ring.keys[2] == "EarPiercingR")
 		for _, tab in ipairs(Catalog.Tabs) do assert(#Catalog.inTab("pip", tab.slot) > 0, tab.id) end
 		-- Every sold item renders on the Bear rig.
