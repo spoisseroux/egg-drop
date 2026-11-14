@@ -1,3 +1,26 @@
+**Private v628 Published 2026-11-14 (overnight) — runtime 2183795, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v628".
+# Egg Drop — overnight content: recolours, weekly shelf, new wearables, toys, charms, Discoveries, bond levels
+
+**New:**
+- Wardrobe: 6 new items (Blush Stickers, Party Hat, Bow Tail, Acorn Pendant, Friendship Bands, Round Specs) and 10 recolours. Eyewear, Cheek and Wrist tabs; the tab strip scrolls on phone.
+- Deck style: Grape Soda and Rose Chrome faceplates, the Bubbles ball theme.
+- Weekly shelf: 3 items at 20% off, resetting Mondays, with a "This week" line in the hub.
+- Toy Egg: Wobble Top and Squeaky Carrot. Earned Heart and Star charms. 6 new Discoveries.
+- Bond: pets earn bond from petting, rounds and Play dates. Levels show as pips, with a level-up toast and two tricks.
+- Blip (second pet, free on the 7th stamp) is in the code but OFF (FeatureFlags.SecondPet=false) until his model is imported.
+
+**Passed before publish:** server 44/44; client all green except the long-standing failures; Code Reviewer GO; translations synced (79 add/update, 1 delete).
+
+**Test:**
+- Wardrobe tabs on phone; recolour cards; the new wearables on the Bear.
+- Shelf chips and prices in all three shops.
+- Toy Egg odds pane (now 5 rows).
+- Bond pips after petting.
+- Charms tab (Heart and Star lock lines).
+- Book thumbnails for the new items.
+
+## Historical v615 (slice A)
+
 **Private v615 Published 2026-11-14 — runtime d4c21cc, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v615".
 # Egg Drop — slice A: new face items, analytics, no Reset Hue jar
 
