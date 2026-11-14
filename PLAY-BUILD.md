@@ -1,3 +1,16 @@
+**Private v600 Published 2026-11-13 — runtime 2bf12d6, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero on this build.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v600". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · capture `artifacts/v1-2026-11-13/welcome-card-desktop.jpg`.
+# Egg Drop — v1 batch: onboarding, bug reports, translations, book art
+
+**New:** a "Hatch your first friend · ★ +6" card on a fresh save's first round (the fill line can't end that round; the Bear grant pays +6 Stars); a three-beat garden walkthrough after the Bear (machines, hub, first quest); one-time tips (fill line, first visit to each machine and the book, Pet Park, first item, first quest); +2 Stars for a missed round with a goal met. Settings → "Report a bug / Suggest something" (filtered note, rate-limited, owner-only reader). Translations: 376 strings in the cloud table, auto-translated into 18 languages, synced every build; translated text truncates or shrinks instead of clipping. Original Bookworm faceplate; the collection book shows thumbnails.
+
+**Passed before publish:** server 30/30 (new CoachMask, BugReports, SessionRecovery); client 76 (7 long-standing failures unchanged; new CoachCards, BookView cards, LocalizationFit 0 clips on 13 screens x 2 sizes). Code Reviewer GO WITH CHANGES, all applied. Translations synced (0 add/update, 0 delete; 376 in table). Place saved v600.
+
+**Test:** fresh save start to Bear (card, +6, walkthrough, each machine's tip once); a missed round with a goal met (+2, "Goal met" row); send a bug report and a suggestion; the book's thumbnails and the Bookworm plate (finish 3 pages); a second account in the park for duos; set your Roblox language to Spanish to see translations (may take hours to appear).
+
+**Before launch:** TestFreshSaves=false; shard bug-report day keys; confirm Park; store listing in Creator Hub (`artifacts/store-listing/`).
+
+## Historical v590 (QA fixes + machine hub)
+
 **Private v590 Published 2026-11-13 — runtime cf7d99d, committed and pushed.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v590". [Play Egg Drop](https://www.roblox.com/games/96451847774961/Egg-Drop) · Studio captures `artifacts/qa-2026-11-13/studio/`.
 # Egg Drop — QA pass fixes and the machine hub
 
