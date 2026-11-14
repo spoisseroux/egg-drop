@@ -40,6 +40,9 @@
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
+      "$properties": {
+        "DevCameraOcclusionMode": "Zoom"
+      },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
         "Client": {

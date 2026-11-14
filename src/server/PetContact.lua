@@ -8,9 +8,13 @@ Contact.PulseInterval=.25
 -- seconds of rubbing and then a 50% draw (about 24 s on average), and a release
 -- before the save landed dropped the "+1". A pet now pays after 4 s of contact,
 -- every time, with 10 s between awards; the 5-a-day cap (HatchProgress) is unchanged.
-Contact.OpportunitySeconds=4
+-- QA v2 R5.5 (Spencer: "+1 Star more often"): 1.5 s of unbroken contact pays, 6 s between awards,
+-- and the daily cap is HatchProgress.PetDailyCap (10). Everything else stays server-checked: the
+-- lease, pulse continuity (1.05 s timeout, 0.25 s pulse floor), reach, one begin per 0.5 s, and the
+-- fenced, idempotent award transaction.
+Contact.OpportunitySeconds=1.5
 Contact.AwardChance=1
-Contact.SpacingSeconds=10
+Contact.SpacingSeconds=6
 -- A Saved receipt still reaches the owner this long after they let go (same pet).
 Contact.LateSavedSeconds=4
 local function finiteVector(value)

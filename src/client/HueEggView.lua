@@ -29,7 +29,12 @@ local FeatureFlags=require(Shared.FeatureFlags)
 local WearableCatalog=require(Shared.WearableCatalog)
 local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local EatingProof=require(script.Parent.HueEatingProof);local FruitEating=require(script.Parent.PetFruitEating)
+-- QA v2 R4 (Customize): card previews, tab ink, the footer legend and the Toys icon.
+local CardPreviews=require(script.Parent.CardPreviewCache);local TabInk=require(script.Parent.TabInk)
+local HintLegend=require(script.Parent.HintLegend);require(script.Parent.ToyTabIcon)
+local UICopy=require(Shared.UICopy)
 local View={};View.__index=View
+View.ClearConfirmSeconds=3
 local ids={"rose","tide","citrus","iris","reset"}
 local names={rose="Rose fruit",tide="Tide fruit",citrus="Citrus fruit",iris="Iris fruit",reset="Reset Hue"}
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
@@ -58,7 +63,10 @@ function View.new(parent,intent,options)
  local body=Instance.new("ScrollingFrame");body.Name,body.Parent="Body",card;body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ZIndex=22
  body.Active=true -- Native scrolling owns wheel input instead of also zooming the garden camera.
  body.ScrollingDirection,body.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never;body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
- local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId="pip",page="palette",tab="hue",channel="main",targets={},jars={},bars={},charmRequests={},epoch=0},View)
+ local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId="pip",page="palette",tab="hue",channel="main",targets={},jars={},bars={},charmRequests={},epoch=0,
+  cardPreviews=CardPreviews.new({live=8,size=16})},View)
+ -- A card that gives its preview up shows its icon again.
+ self.cardPreviews.onDetach=function(holder)for _,child in ipairs(holder:GetChildren())do if string.match(child.Name,"^Icon_")then child.Visible=true end end end
  self.title=text(card,"Title","Customize","Heading");self.wallet=text(card,"Wallet","0 Stars","Counter")
  self.closeButton=Art.bareClose(button(card,"Close","×",function()self:close("back")end))
  self.action=button(card,"Action","Confirm",function()self:activate()end)
@@ -521,12 +529,63 @@ function View:fitPortrait()
  local distance=math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3
  local center=box.Position;self.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.12,distance*1.10),center)
 end
+-- Pure (QA v2 R4.3): the look a focused Customize card previews on the pet. Hue: one
+-- more fruit on the channel (the original colour / Reset Hue: none); Materials: that
+-- finish; Toys: that toy. Nothing is saved.
+function View.previewAppearance(base,tab,id,channel)
+ local a=table.clone(base or {})
+ if tab=="hue"then
+  local key=if channel=="secondary"then "secondaryDoses"else "mainDoses"
+  local counts=if Hues.validCounts(a[key])then table.clone(a[key])else Hues.emptyCounts()
+  if id=="original"or id=="reset"then counts=Hues.emptyCounts()
+  elseif Hues.ById[id]then counts[id]=math.min(5,counts[id]+1)end
+  a[key]=counts
+ elseif tab=="materials"and MaterialCatalog.known(id)then a.finish=id
+ elseif tab=="toys"and ToyCatalog.known(id)then a.toyId=id end
+ return a
+end
+-- The id of the focused chrome card, or nil.
+function View:focusedCardId()
+ local item=(self.focusables or {})[self:focusIndex()]
+ return item and item.id or nil
+end
+-- A toy beside the pet (card previews and the pane): the toy at the pet's right foot,
+-- a little in front, sized to the pet like the garden's personal toy.
+function View.placeToy(world,visual,toyId)
+ if not ToyCatalog.known(toyId)or toyId==ToyCatalog.Default then return nil end
+ local Toys=require(script.Parent.PetToyGeometry)
+ local box,size=Bounds.get(visual)
+ local handle=Toys.create(world,toyId,math.max(.1,size.Y))
+ if not handle then return nil end
+ handle:pivot(CFrame.new())
+ local _,extent=handle.model:GetBoundingBox()
+ local at=box.Position+Vector3.new(size.X*.38,-size.Y*.5+extent.Y*.5,size.Z*.35)
+ handle:pivot(CFrame.new(at)*CFrame.Angles(0,math.rad(-20),0))
+ return handle
+end
+function View:placePortraitToy()
+ local wanted=if self.visual and self.portrait.Visible and self:chromeActive()and self.tab=="toys"then self:focusedCardId()else nil
+ local current=self.portraitToy
+ local key=tostring(wanted)..":"..tostring(self.visual)..":"..tostring(self.visual and self.visual.rigRevision)
+ if current and current.key==key then return end
+ if current and current.handle then current.handle:destroy()end
+ self.portraitToy=nil
+ if wanted then
+  local ok,handle=pcall(View.placeToy,self.world,self.visual,wanted)
+  self.portraitToy={key=key,handle=if ok then handle else nil}
+ end
+end
 function View:paintPortrait()
- if not self.portrait.Visible then return end
+ if not self.portrait.Visible then self:placePortraitToy();return end
  local a=self:appearance();local key=self.petId
  -- Focusing a Charm card previews it at once (None hides the charm); nothing is saved.
  if self:chromeActive()and self.tab=="charm"and self.charmFocusId then
   if self.charmFocusId=="none"then a.charmVisible=false else a.charmVisible=true;a.charmShape=self.charmFocusId end
+ end
+ -- QA v2 R4.3: so does a colour, finish or toy card (not while a fruit is being eaten).
+ if self:chromeActive()and(self.tab=="hue"or self.tab=="materials"or self.tab=="toys")and not self.fruitEating.active and not self.eatingReady and not self.intent.pending then
+  local id=self:focusedCardId()
+  if id then a=View.previewAppearance(a,self.tab,id,self.channel)end
  end
  if not self.visual or self.visualId~=key then
   if self.visual then self.visual:destroy()end
@@ -535,7 +594,53 @@ function View:paintPortrait()
   visual.onRigChanged=function()if not self.destroyed and self.visual==visual then self:fitPortrait()end end
  end
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
- if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual:update(0);self:fitPortrait();self:syncPortraitClock()
+ if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual:update(0);self:fitPortrait();self:placePortraitToy();self:syncPortraitClock()
+end
+-- QA v2 R4.3: each visible Hue / Materials / Toys card shows the pet with that colour,
+-- finish or toy (CardPreviewCache: lazy, cached, bounded). Runs on the portrait clock.
+function View:pumpCardPreviews()
+ if not self:chromeActive()or not self.chromeGrid or(self.tab~="hue"and self.tab~="materials"and self.tab~="toys")or self.boundedEating then
+  self.cardPreviews:detachAll();return
+ end
+ local grid=self.chromeGrid
+ local windowY=grid.AbsolutePosition.Y;local windowH=grid.AbsoluteWindowSize.Y
+ if windowH<=0 then windowH=grid.AbsoluteSize.Y end
+ local base=self:appearance();local pet=Pets.byId[self.petId];local tab=self.tab
+ local cards={}
+ for _,item in ipairs(self.focusables or {})do
+  local b=item.button;local parts=b:FindFirstChild("CardParts");local swatch=parts and parts:FindFirstChild("Swatch")
+  if swatch then
+   local look=View.previewAppearance(base,tab,item.id,self.channel)
+   local toy=if tab=="toys"then item.id else nil
+   table.insert(cards,{holder=swatch,key=tab..":"..CardPreviews.key(self.petId,item.id,look)..":"..tostring(toy),
+    visible=b.Visible and CardPreviews.visible(b.AbsolutePosition.Y,b.AbsoluteSize.Y,windowY,windowH),
+    build=function()
+     return CardPreviews.buildPet(pet,look,if toy then 1.05 else .95,if toy then function(world,visual)return View.placeToy(world,visual,toy)end else nil)
+    end})
+  end
+ end
+ self.cardPreviews:pump(cards,function(holder)
+  for _,child in ipairs(holder:GetChildren())do if string.match(child.Name,"^Icon_")then child.Visible=false end end
+ end)
+end
+-- QA v2 R4.4: the free "Original colour" card. The first press arms it (3 s), the
+-- second sends the server-validated hueClear for this pet and channel.
+function View:clearColour()
+ if not self:canCustomize()or self.intent.pending then return false end
+ if not nonzero(self:counts())then return false end
+ local armed=self.clearConfirm
+ if armed and armed.petId==self.petId and armed.channel==self.channel and os.clock()<armed.untilTime then
+  self.clearConfirm=nil
+  local ok=self.intent:clear(self.petId,self.channel)
+  self:layout();return ok
+ end
+ local token={petId=self.petId,channel=self.channel,untilTime=os.clock()+View.ClearConfirmSeconds}
+ self.clearConfirm=token
+ local delay=self.options.delay or task.delay
+ delay(View.ClearConfirmSeconds,function()
+  if self.clearConfirm==token then self.clearConfirm=nil;if not self.destroyed and self.shade.Visible then self:layout()end end
+ end)
+ self:layout();return true
 end
 function View:stopPortraitClock()
  if self.portraitClock then self.portraitClock:Disconnect();self.portraitClock=nil end
@@ -548,6 +653,7 @@ function View:syncPortraitClock()
   if self.destroyed or not self.shade.Visible or self.confirmation or(not self.portrait.Visible and self.tab~="pet")then self:stopPortraitClock();return end
   if GuiService.MenuIsOpen or(self.options.audio and self.options.audio.deviceActive==false)then return end
   self:updateGrid(math.min(dt,.1))
+  self:pumpCardPreviews()
   local visual=self.visual;if not self.portrait.Visible or not visual or visual.destroyed then return end
   local reduced=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
   if visual.reducedEffects~=reduced then visual.reducedEffects=reduced;visual.poseDirty=true;visual:update(0)end
@@ -910,7 +1016,8 @@ end
 -- Pure: the tab row. Features joins only when Shared.FeatureFlags.Features is on.
 function View.tabList(flags)
  flags=flags or FeatureFlags
- local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="materials",label="Materials",icon="sphere"},{id="toys",label="Toys",icon="ball"}}
+ -- QA v2 R4.5: Toys draw a chew bone (ToyTabIcon), no longer the Ring charm's ball.
+ local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="materials",label="Materials",icon="sphere"},{id="toys",label="Toys",icon="toy"}}
  if flags.Features then table.insert(tabs,{id="features",label="Features",icon="pattern"})end
  return tabs
 end
@@ -940,7 +1047,8 @@ function View.charmPane(card,petName,pending,message)
  local line=if card.id=="none"then "No charm floats beside "..petName else "Floats beside "..petName.." in its Secondary colour"
  if pending and pending.retry then return{button="Try again",enabled=true,line=line,status=message or "Not saved yet."}end
  if pending then return{button="Saving…",enabled=false,line=line,status="Saving…"}end
- if card.wearing then return{button="Wearing",enabled=false,line=line,status=message or ""}end
+ -- QA v2 R3.5: the worn card keeps its button, disabled, reading "Equipped".
+ if card.wearing then return{button=UICopy.get("r4.equipped"),enabled=false,line=line,status=message or ""}end
  return{button="Wear",enabled=true,line=line,status=message or "Trying it on. Not saved yet."}
 end
 -- Pure: chrome geometry for a W x H screen (panel units on desktop, pixels on phones).
@@ -979,8 +1087,11 @@ function View:showChrome(on)
  for _,node in ipairs({self.materialPanel.root,self.toyPanel.root,self.featurePanel.root,self.empty,self.legacyTitle,self.presetTitle})do node.Parent=target end
  for _,node in pairs(self.legacyButtons)do node.Parent=target end
  for _,node in pairs(self.presetButtons)do node.Parent=target end
+ -- QA v2 R4.3: the overlay gui sorts ZIndex globally, so the docked portrait (made at
+ -- 23/24 for the card) drew under the chrome's well: the pane preview was blank.
  if on then self.portrait.Parent=self.chromeWell;self.portrait.Position=UDim2.new();self.portrait.Size=UDim2.fromScale(1,1)
- elseif self.portrait.Parent==self.chromeWell then self.portrait.Parent=self.card end
+  self.portrait.ZIndex=self.chromeWell.ZIndex+1;self.viewport.ZIndex=self.portrait.ZIndex+1
+ elseif self.portrait.Parent==self.chromeWell then self.portrait.Parent=self.card;self.portrait.ZIndex=23;self.viewport.ZIndex=24 end
  if not on and self.chromeRing then self.chromeRing.hide()end
  -- QA Q2.1: the chrome's dim joins the shared shade stack (one dim at a time); a
  -- screen opened over Customize (Wardrobe, Pets selector) hides this panel.
@@ -1021,7 +1132,9 @@ function View:buildChrome(view)
  local tabs=View.tabList();local labels,icons={},{}
  for _,t in ipairs(tabs)do table.insert(labels,t.label);table.insert(icons,t.icon)end
  self.chromeTabs=Kit.tabs(body,labels,g.tabs.w,g.tabs.h,if phone then 14 else 16,icons);self.chromeTabs.root.Position=UDim2.fromOffset(g.tabs.x,g.tabs.y)
+ TabInk.guard(self.chromeTabs) -- QA v2 R3.6: labels keep their ink across theme repaints
  self.chromeTabs.changed=function(index)
+  if self.legend then self.legend.dismiss()end
   local wanted=tabs[index].id
   if not self:setTab(wanted)then self:layout()end
  end
@@ -1049,13 +1162,15 @@ function View:buildChrome(view)
   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6,Active=true})
  self.chromeGrid=grid;self.gridContent=grid
  self.channelTabs=Kit.tabs(grid,{"Main","Secondary"},g.grid.w-6,if phone then 36 else 40,if phone then 14 else 15)
- self.channelTabs.root.Name="ChannelTabs"
+ self.channelTabs.root.Name="ChannelTabs";TabInk.guard(self.channelTabs)
  self.channelTabs.changed=function(index)if not self:chooseChannel(if index==1 then "main"else "secondary")then self:layout()end end
  self.hueCards={}
- for _,id in ipairs(ids)do local itemId=id
+ for _,id in ipairs({"original",table.unpack(ids)})do local itemId=id
   local b=Cards.new(grid,"HueCard_"..id);self.hueCards[id]=b
   b.Activated:Connect(function()self:chromeTap("hue",itemId)end)
  end
+ -- QA v2 R4.5: one small line under the Materials / Toys cards (the egg rows are gone).
+ self.moreLine=Kit.text(grid,"Small","","dim",{Name="MoreFromEggs",TextSize=if phone then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd,Visible=false})
  self.charmCards={}
  for _,id in ipairs({"none",table.unpack(CharmCatalog.Order)})do local cardId=id
   local b=Cards.new(grid,"CharmCard_"..id);self.charmCards[id]=b
@@ -1065,16 +1180,16 @@ function View:buildChrome(view)
  self.charmTipIcon=Kit.icon(tip,"drop",20,"soft");self.charmTipIcon.Position=UDim2.fromOffset(24,26)
  self.charmTipText=Kit.text(tip,"Body","","text",{Name="TipText",Position=UDim2.fromOffset(60,12),Size=UDim2.new(1,-72,1,-24),TextSize=15,TextWrapped=true})
  if not phone then
-  local hints=Kit.frame(body,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
-  local x=0
-  for _,pair in ipairs({{"+","Browse"},{"LB","Tab"},{"A","Wear"},{"B","Back"}})do
-   local chip=Kit.glyph(hints,pair[1],false,22,true);chip.Position=UDim2.fromOffset(x,1)
-   local t=Kit.text(hints,"Small",pair[2],"soft",{Position=UDim2.fromOffset(x+chip.Size.X.Offset+6,0),Size=UDim2.fromOffset(120,24),AutomaticSize=Enum.AutomaticSize.X})
-   if pair[1]=="A"then self.hintVerb=t end
-   x+=chip.Size.X.Offset+6+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
-  end
-  self.hintPromise=Kit.text(body,"Small","","dim",{Name="Promise",Position=UDim2.fromOffset(424,566),Size=UDim2.fromOffset(400,24),TextXAlignment=Enum.TextXAlignment.Right})
- else self.hintVerb=nil;self.hintPromise=nil end
+  -- QA v2 R2.5: footer chips per device (R2's HintGlyphs), explained once (HintLegend).
+  local footer=Kit.frame(body,"Footer",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(800,24))
+  local promise=Kit.text(footer,"Small","","dim",{Name="Promise",Position=UDim2.fromOffset(400,0),Size=UDim2.fromOffset(400,24),TextXAlignment=Enum.TextXAlignment.Right})
+  self.hintPromise=promise
+  local legend=HintLegend.attach(footer,800,"customize",{{"browse",UICopy.get("input.action.browse")},{"tab",UICopy.get("input.action.tab")},
+   {"confirm","Wear"},{"back",UICopy.get("input.action.back")}})
+  self.legend=legend;self.hintVerb=nil
+  local function sync()promise.Visible=footer:GetAttribute("HintLegend")~=true end
+  footer:GetAttributeChangedSignal("HintLegend"):Connect(sync);sync()
+ else self.hintVerb=nil;self.hintPromise=nil;self.legend=nil end
  self.chromeRing=Kit.focusRing(panel)
  self.chromeFocus=self.chromeFocus or {}
 end
@@ -1121,16 +1236,30 @@ function View:layoutChrome()
   local counts=self:counts();local live={}
   if not self.assignment then
    for _,id in ipairs(ids)do local stock=(self.state.hueInventory or {})[id]or 0;if id~="reset"or stock>0 then table.insert(live,id)end end
+   -- QA v2 R4.4: "Original colour" last (free; the fruit keep the first rows).
+   table.insert(live,"original")
   end
+  local original=not nonzero(counts)
+  local armed=self.clearConfirm~=nil and self.clearConfirm.petId==self.petId and self.clearConfirm.channel==self.channel and os.clock()<self.clearConfirm.untilTime
   local rects,h=Cards.rects(#live,gw,g.cols,g.cardH,g.gap,y)
   index=math.clamp(index,1,math.max(1,#live))
   for i,id in ipairs(live)do
    local b=self.hueCards[id];b.Visible=true;Cards.place(b,rects[i])
-   local stock=(self.state.hueInventory or {})[id]or 0;local reason=self:reason(id)
-   local swatch=if id=="reset"then Hues.Items.reset.color else(Swatches.at(self.petId,a,self.channel,id,math.min(5,counts[id]+1))or Hues.ById[id].color)
-   local status=(if id=="reset"then "Clears "..channelName(self.channel)else counts[id].." of 5").." · ×"..stock
-   Cards.dress(b,{name=names[id],status=status,tone=if reason then "dim"else "soft",swatch=swatch,focused=i==index,compact=compact})
-   table.insert(focus,{button=b,id=id,act=function()return self:chooseItem(id)end})
+   if id=="original"then
+    -- The pet's own first colour on this channel; free; CURRENT when nothing is used.
+    local resolved=Palette.resolve(self.petId,View.previewAppearance(a,"hue","original",self.channel))
+    Cards.dress(b,{name=UICopy.get("r4.hue.original"),status=if original then UICopy.get("r4.hue.currentChip")else UICopy.get("r4.hue.free"),
+     tone=if original then "accent"else "soft",swatch=resolved[if self.channel=="main"then "body"else "secondary"],focused=i==index,compact=compact})
+    table.insert(focus,{button=b,id=id,act=function()return self:clearColour()end})
+   else
+    local stock=(self.state.hueInventory or {})[id]or 0;local reason=self:reason(id)
+    -- QA v2 R4.4: the tile shows the fruit's own (saturated) colour; the pet preview on
+    -- it shows the real result of one more fruit.
+    local swatch=if id=="reset"then Hues.Items.reset.color else Hues.ById[id].color
+    local status=(if id=="reset"then "Clears "..channelName(self.channel)else counts[id].." of 5").." · ×"..stock
+    Cards.dress(b,{name=names[id],status=status,tone=if reason then "dim"else "soft",swatch=swatch,focused=i==index,compact=compact})
+    table.insert(focus,{button=b,id=id,act=function()return self:chooseItem(id)end})
+   end
   end
   y+=h+(if #live>0 then 12 else 0)
   for _,node in ipairs({self.empty,self.legacyTitle})do
@@ -1142,6 +1271,12 @@ function View:layoutChrome()
   local item=focus[index]
   if self.assignment then
    pane.name=names[self.assignment.itemId];pane.line="Choose Main or Secondary for "..petName
+  elseif item and item.id=="original"then
+   pane.name=UICopy.get("r4.hue.original");pane.chip={UICopy.get("r4.hue.free"),"accent"}
+   pane.line=UICopy.get(if self.channel=="main"then "r4.hue.originalMain"else "r4.hue.originalSecondary",{pet=petName})
+   pane.button=if original then UICopy.get("r4.hue.current")elseif armed then UICopy.get("r4.hue.confirmReset")else UICopy.get("r4.hue.reset")
+   pane.enabled=allowed and not self.intent.pending and not original
+   pane.status=if armed then UICopy.get("r4.hue.confirmLine")else ""
   elseif item then
    local id=item.id;local counts2=counts;local reason=self:reason(id);local stock=(self.state.hueInventory or {})[id]or 0
    pane.name=names[id];pane.chip={"×"..stock,"plain"}
@@ -1188,11 +1323,16 @@ function View:layoutChrome()
    local item=list[index]
    if item then
     pane.name=item.name;pane.line=if item.wearing then "Wearing on "..petName else "Free to switch, saved at once"
-    pane.button=if item.wearing then "Wearing"else "Wear";pane.enabled=not item.wearing and allowed
+    -- QA v2 R3.5: worn = the Wear button, disabled, reading "Equipped".
+    pane.button=if item.wearing then UICopy.get("r4.equipped")else "Wear";pane.enabled=not item.wearing and allowed
     pane.status=panel.status.Visible and panel.status.Text or ""
    else pane.line="Hatch eggs to find more."end
   end
  end
+ -- QA v2 R4.5: "More from eggs" under the Materials / Toys cards.
+ local more=if self.boundedEating then nil elseif self.tab=="materials"then "r4.customize.moreMaterials"elseif self.tab=="toys"then "r4.customize.moreToys"else nil
+ self.moreLine.Visible=more~=nil
+ if more then self.moreLine.Text=UICopy.get(more);self.moreLine.Position=UDim2.fromOffset(3,y);self.moreLine.Size=UDim2.fromOffset(gw-6,20);y+=28 end
  self.chromeFocus[self.tab]=index;self.focusables=focus
  grid.CanvasSize=UDim2.fromOffset(0,y+6)
  -- Pane.
@@ -1205,7 +1345,7 @@ function View:layoutChrome()
  self.chromeAction.Visible=pane.button~=nil
  if pane.button then Kit.setText(self.chromeAction,pane.button);Kit.setEnabled(self.chromeAction,pane.enabled==true)end
  Kit.setGlyphVisible(self.chromeAction,not compact or not Kit.lastInputTouch())
- if self.hintVerb then self.hintVerb.Text=if self.tab=="hue"then "Use"else "Wear"end
+ if self.legend then self.legend.setLabel("confirm",if self.tab=="hue"then "Use"else "Wear")end
  if self.hintPromise then self.hintPromise.Text=Promise[self.tab]or ""end
  self.chromePanel:SetAttribute("Tab",self.tab);self.chromePanel:SetAttribute("FocusedCard",focus[index]and focus[index].id or nil)
  -- Focus ring on the focused card.
@@ -1231,6 +1371,7 @@ function View:chromeTap(tab,id)
  return false
 end
 function View:chromeFocusAt(index)
+ if index~=self:focusIndex()then self.clearConfirm=nil end
  self.chromeFocus[self.tab]=index;self.epoch+=1
  if self.tab=="charm"then self.charmMessage=nil end
  self:layout();self:paintPortrait()
@@ -1268,6 +1409,7 @@ end
 -- Keyboard / gamepad for the chrome (bound by the caller, as the Wardrobe's is).
 function View:chromeInput(key)
  if not self:chromeActive()then return false end
+ if self.legend then self.legend.dismiss()end
  local K=Enum.KeyCode
  if key==K.Left or key==K.A or key==K.DPadLeft then self:chromeMove(-1,0)
  elseif key==K.Right or key==K.D or key==K.DPadRight then self:chromeMove(1,0)
@@ -1413,6 +1555,7 @@ function View:open(state,page,petId)
  -- QA Q2.2: opened from the Companions hub, the page slides in from the right (Pets move).
  local from=self.slideFrom;self.slideFrom=nil
  if from and self:chromeActive()and self.chromeBody then Kit.slideIn(self.chromeBody,from,Kit.headerSkip(self.header))end
+ if self.legend and self:chromeActive()then self.legend.open()end
  return true
 end
 function View:close(reason)
@@ -1439,7 +1582,9 @@ function View:close(reason)
   end
  end
  self.exitPending=nil;self.exitMessage=nil;self.closeAfterEquip=nil
- self.materialAssignment=nil
+ self.materialAssignment=nil;self.clearConfirm=nil
+ self.cardPreviews:clear()
+ if self.portraitToy and self.portraitToy.handle then self.portraitToy.handle:destroy()end;self.portraitToy=nil
  if not self.machine then self.machineSwitching=nil end
  local pendingId=if self.assignment then self.assignment.pendingResultId elseif self.confirmation then self.confirmation.pendingResultId else nil
  if pendingId then self.resultDraft={id=pendingId,petId=self.petId,channel=self.channel,tab=self.tab,assignment=if self.assignment then table.clone(self.assignment)else nil,confirmation=if self.confirmation then table.clone(self.confirmation)else nil}end
@@ -1467,6 +1612,6 @@ end
 function View:destroy(fromSignal)
  if self.destroyed then return end
  if self.materialPanel then self.materialPanel:destroy()end
- if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.itemReveal:destroy();self.materialPanel:destroy();self.toyPanel:destroy();self.featurePanel:destroy();if self.chromeRoot then self.chromeRoot:Destroy()end;self.fruitEating:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
+ if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.cardPreviews:clear();self.itemReveal:destroy();self.materialPanel:destroy();self.toyPanel:destroy();self.featurePanel:destroy();if self.chromeRoot then self.chromeRoot:Destroy()end;self.fruitEating:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
 end
 return View

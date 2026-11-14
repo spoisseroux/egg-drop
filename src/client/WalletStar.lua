@@ -1,6 +1,6 @@
 -- The wallet's 3D Star (Spencer 2026-11-13: "more interesting, glistening, maybe a
 -- rotating 3D model"). Kit.wallet keeps its 2D Star icon (and the P3 eyes) as the
--- fallback and for Stars under 20 px; from 20 px up, once the StarToken mesh loads
+-- fallback and for Stars under 16 px; from 16 px up, once the StarToken mesh loads
 -- (CelebrationKit.loadStarMesh: one AssetService template per session, cloned per
 -- wallet), a ViewportFrame with that Star replaces the icon in exactly the icon's
 -- rect, so the capsule, the number and their positions never move.
@@ -21,7 +21,9 @@
 local GuiService=game:GetService("GuiService")
 local Assets=require(script.Parent.DeckAssets)
 local Star={}
-Star.MinSize=20
+-- QA v2 R3.3: 16, so the compact header capsule (36 high, an 18 px Star) and the
+-- 32 / 40 deck wallets (17 / 22 px) all get the 3D Star; only tiny Stars stay 2D.
+Star.MinSize=16
 Star.Cycle=6
 Star.SwayTime=4.4 -- then the turn takes Cycle-SwayTime
 Star.SwayDegrees=16

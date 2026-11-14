@@ -12,6 +12,15 @@
 -- Never blocks input: board cards take no input at all, garden cards only take a tap on
 -- themselves, nothing binds keys, and every card leaves on its own. Presentation only; the
 -- one remote is `send(id)` ("coachMark"), which the server turns into a saved bit.
+--
+-- QA v2 track R1:
+--  * The Welcome card is now a small pill at the top of the board (it covered the aim guide
+--    and cut its title on phones): it fades in, stays ~5 s and fades, or fades at the first drop.
+--  * Machine first-visit cards wait for the reveal: "Hatch eggs" never shows over the Bear's
+--    reveal (the hatch screen hosts it), only on a real visit after it.
+--  * The garden step is unmissable: a beat starts only when the player stands still in the
+--    free garden with no menu open and the window focused, and its clock pauses while the
+--    window is unfocused or the player is away (no input). `replayGarden()` runs it again.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
@@ -20,9 +29,13 @@ local Kit=require(script.Parent.DeckKit)
 local Cards={}
 Cards.__index=Cards
 Cards.Duration=7      -- a one-time card's time on screen
-Cards.BeatSeconds=6   -- a garden beat's time on screen before the next one
+Cards.BeatSeconds=8   -- a garden beat's time on screen before the next one (clock pauses when away)
+Cards.IdleSeconds=1.2 -- the player stands still this long before a garden beat starts
+Cards.AwaySeconds=20  -- no input for this long: the beat clock pauses (the card stays)
+Cards.WelcomeSeconds=5 -- the Welcome pill's time on screen
+Cards.WelcomeFadeIn=.25;Cards.WelcomeFadeOut=.4
 Cards.BoardSeconds=6  -- fill-line and item cards on the board
-Cards.Width=420
+Cards.Width=460
 Cards.Machines=table.freeze({"hatch","style","companions","quests","book"})
 -- Tint (Kit.Tint key) and icon per card.
 Cards.Spec=table.freeze({
@@ -47,6 +60,9 @@ end
 -- Which one-time machine card is due? open = {hatch=bool,...}, used = attract.used (station ids).
 function Cards.machineDue(open,used,ctx)
  open=open or {};used=used or {}
+ -- The reveal (the starter Bear's too) plays on the Hatch eggs screen: no first-visit card
+ -- over it; the card waits for a real visit once the reveal is closed (QA v2 R1.5).
+ if ctx and ctx.revealPending then return nil end
  for _,id in ipairs(Cards.Machines)do
   if open[id]and Coach.wants(id,ctx)then return id end
  end
@@ -64,6 +80,54 @@ function Cards.boardDue(ctx)
  if Coach.fillWanted(ctx)then return "fillLine"end
  if(ctx.belt or 0)>0 and ctx.over~=true and Coach.wants("item",ctx)then return "item"end
  return nil
+end
+
+-- Any machine screen open (open = {hatch=bool,...}).
+function Cards.menuOpen(open)
+ for _,on in pairs(open or {})do if on then return true end end
+ return false
+end
+-- The garden is open: roaming, no menu (a shown beat hides otherwise).
+function Cards.gardenOpen(ctx)
+ return ctx.canRoam==true and not Cards.menuOpen(ctx.open)
+end
+-- The garden is free for a beat to start: open, and the window focused.
+function Cards.gardenFree(ctx)
+ return Cards.gardenOpen(ctx)and ctx.windowActive~=false
+end
+-- May a garden beat start now? ctx as step's (idleFor: seconds the player has stood still,
+-- nil = unknown/still; awayFor: seconds since the last input, nil = 0), roomFor: seconds
+-- the garden has been free, replay: the player asked to see the tips again.
+function Cards.beatMayStart(ctx,roomFor,replay)
+ if not Cards.gardenFree(ctx)then return false end
+ if ctx.idleFor~=nil and ctx.idleFor<Cards.IdleSeconds then return false end
+ if(ctx.awayFor or 0)>=Cards.AwaySeconds then return false end
+ if(roomFor or 0)<Coach.GardenSettle then return false end
+ if replay then return(ctx.owned or 0)>0 and not ctx.revealPending end
+ return Coach.gardenReady({mask=ctx.mask,seen=ctx.seen,totalWins=ctx.totalWins,owned=ctx.owned,revealPending=ctx.revealPending,canRoam=true,roomFor=roomFor})
+end
+-- Does a shown card's clock run? Paused while the window is unfocused or the player is
+-- away; a beat also pauses while the garden is not free (it hides then).
+function Cards.clockRuns(ctx,kind)
+ if ctx.windowActive==false or(ctx.awayFor or 0)>=Cards.AwaySeconds then return false end
+ return kind~="beat"or Cards.gardenOpen(ctx)
+end
+-- Welcome pill: the longest line that fits `width` px (Strong 13), then the shorter ones.
+function Cards.welcomeText(width)
+ local copy=UICopy.section("r1.welcomePill")or {}
+ local lines={copy.wide,copy.mid,copy.narrow}
+ for _,line in ipairs(lines)do
+  if line and Kit.measure(line,"Strong",13).X<=width then return line end
+ end
+ return lines[#lines]or ""
+end
+-- Welcome pill transparency at `age` seconds (fade in, hold, fade out); 1 = gone.
+function Cards.welcomeFade(age,reduced)
+ if age<0 then return 1 end
+ if reduced then return if age<Cards.WelcomeSeconds+Cards.WelcomeFadeOut then 0 else 1 end
+ if age<Cards.WelcomeFadeIn then return 1-age/Cards.WelcomeFadeIn end
+ if age<Cards.WelcomeSeconds then return 0 end
+ return math.clamp((age-Cards.WelcomeSeconds)/Cards.WelcomeFadeOut,0,1)
 end
 
 -- ── Instances ───────────────────────────────────────────────────────────────
@@ -117,7 +181,24 @@ function Cards.new(options)
   self.boardHost=boardHost
   self.boardView=card(boardHost,"CoachBoardCard",(options.z or 38)+1,false)
   self.boardView.root.Position=UDim2.new(.5,0,0,8)
-  self.sticker=Kit.text(self.boardView.root,"Counter","","stars",{Name="Reward",AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-14,0,10),Size=UDim2.fromOffset(70,24),TextSize=17,TextXAlignment=Enum.TextXAlignment.Right})
+  -- Welcome pill (QA v2 R6.2, moved to R1): small and quiet at the top of the board, so
+  -- the aim guide stays clear. A CanvasGroup so one GroupTransparency fades all of it.
+  local pill=Kit.node("CanvasGroup",boardHost,{Name="CoachWelcomePill",BackgroundTransparency=.12,BorderSizePixel=0,Active=false,
+   AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,6),Size=UDim2.fromOffset(200,28),ZIndex=(options.z or 38)+2,Visible=false,GroupTransparency=1})
+  Kit.paint(pill,"BackgroundColor3","panel");Kit.corner(pill,999)
+  Kit.stroke(pill,"stars",1,.35)
+  local egg=Kit.icon(pill,"egg",14,"stars");egg.AnchorPoint=Vector2.new(0,.5);egg.Position=UDim2.new(0,10,.5,0)
+  self.pillText=Kit.text(pill,"Strong","","text",{Name="Line",Position=UDim2.fromOffset(30,0),Size=UDim2.new(1,-30,1,0),TextSize=13,TextXAlignment=Enum.TextXAlignment.Left})
+  self.sticker=Kit.text(pill,"Counter","","stars",{Name="Reward",AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-10,0,0),Size=UDim2.fromOffset(40,28),TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
+  self.welcomePill=pill
+  -- Board tips (fill line, first item; Spencer QA v2 phone: the card was far too
+  -- intrusive): the same quiet pill as the Welcome, one short line, fades on its own.
+  local tip=Kit.node("CanvasGroup",boardHost,{Name="CoachBoardPill",BackgroundTransparency=.12,BorderSizePixel=0,Active=false,
+   AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,6),Size=UDim2.fromOffset(200,28),ZIndex=(options.z or 38)+2,Visible=false,GroupTransparency=1})
+  Kit.paint(tip,"BackgroundColor3","panel");Kit.corner(tip,999)
+  self.tipStroke=Kit.stroke(tip,"accent",1,.35)
+  self.tipText=Kit.text(tip,"Strong","","text",{Name="Line",Position=UDim2.fromOffset(12,0),Size=UDim2.new(1,-24,1,0),TextSize=13,TextXAlignment=Enum.TextXAlignment.Center,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.boardPill=tip
  end
  -- The first-Stars toast sits under the garden card, never on it.
  self.toaster=Kit.toaster(host)
@@ -197,8 +278,9 @@ end
 function Cards:gardenWidth()
  local W=self.host.AbsoluteSize.X
  if W<=0 then return Cards.Width end
- -- Clear of the garden's top-right dock (Menu + Deck, 116 px) on both sides.
- return math.floor(math.clamp(W-2*128,240,Cards.Width))
+ -- The Menu + Deck dock moved to the bottom right (QA v2 R2), so the top centre only keeps
+ -- clear of the Roblox controls: a 24 px gutter on phones, up to the full card width.
+ return math.floor(math.clamp(W-2*24,240,Cards.Width))
 end
 
 -- Garden card: kind "beat" (the guided step) or "once" (a one-time card). `machine` ties a
@@ -214,7 +296,7 @@ function Cards:showGarden(id,kind,vars,now,machine)
  self.skip.Size=UDim2.fromOffset(math.ceil(Kit.measure(self.skipLabel.Text,"Label",13).X)+20,28)
  view.title.Size=UDim2.new(1,-80-self.skip.Size.X.Offset,0,24)
  view.root.Visible=true
- self.garden={id=id,kind=kind,shownAt=now,duration=if kind=="beat"then Cards.BeatSeconds else Cards.Duration,machine=machine}
+ self.garden={id=id,kind=kind,shownAt=now,elapsed=0,duration=if kind=="beat"then Cards.BeatSeconds else Cards.Duration,machine=machine}
  if not Kit.reduced()then view.scale.Scale=.9;Kit.tween(view.scale,Kit.Motion.toastIn,{Scale=1})end
  view.root:SetAttribute("CoachCard",id)
 end
@@ -239,23 +321,33 @@ function Cards:advance(id)
  if not nextBeat then self:finishGarden()end
 end
 function Cards:finishGarden()
- self.beat=nil;self.gardenDone=true
+ self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
+end
+-- Show the garden tips again (a "Show tips again" entry, e.g. R3's How it works, calls
+-- this). The beats start over from the first, under the same rules as the first time.
+function Cards:replayGarden()
+ if self.garden and self.garden.kind=="beat"then self:hideGarden()end
+ self.gardenDone=false;self.replaying=true;self.beat=nil;self.roomSince=nil
+ return true
 end
 
 -- Per frame. ctx (from the caller): mode ("Board"|"Room"), canRoam, presented (the board
--- is on screen), phase, over, merges, pressure, belt (items on the belt), owned, input,
--- open = {hatch, style, companions, quests, book} (machine screens open), used (attract
--- stations used this session), pet (the companion's name), reduced.
+-- is on screen), phase, over, merges, drops, pressure, belt (items on the belt), owned,
+-- input, open = {hatch, style, companions, quests, book} (machine screens open), used
+-- (attract stations used this session), pet (the companion's name), windowActive,
+-- idleFor (seconds the character has stood still), awayFor (seconds since any input).
 function Cards:step(now,ctx)
  self.owned=ctx.owned or self.owned
  local base=self:ctx(ctx)
+ local dt=math.max(0,now-(self.lastNow or now));self.lastNow=now
  -- Garden ----------------------------------------------------------------
  local current=self.garden
  if current then
-  local elapsed=now-current.shownAt
+  if Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
+  local elapsed=current.elapsed
   local gone=elapsed>=current.duration
-   or(current.kind=="beat"and not ctx.canRoam)
+   or(current.kind=="beat"and not Cards.gardenOpen(ctx))
    or(current.machine and not(ctx.open and ctx.open[current.machine]))
   if gone then
    self:hideGarden()
@@ -266,13 +358,14 @@ function Cards:step(now,ctx)
   end
  end
  -- Time free in the garden (no menu, no open reveal): the garden step waits for it.
- if ctx.mode=="Room"and ctx.canRoam and not self.revealPending then self.roomSince=self.roomSince or now else self.roomSince=nil end
+ if ctx.mode=="Room"and Cards.gardenFree(ctx)and not self.revealPending then self.roomSince=self.roomSince or now else self.roomSince=nil end
  if not self.garden then
   local vars={pet=ctx.pet,input=ctx.input,reward=self.starterStars}
   local machine=Cards.machineDue(ctx.open,ctx.used,base)
+  local roomFor=if self.roomSince then now-self.roomSince else 0
   if machine then
    self:mark(machine);self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
-  elseif not self.gardenDone and Coach.gardenReady(self:ctx({canRoam=ctx.canRoam,roomFor=if self.roomSince then now-self.roomSince else 0})) then
+  elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying) then
    self.beat=self.beat or Coach.nextBeat(nil)
    if self.beat then self:showGarden(self.beat,"beat",vars,now)end
    -- The Welcome round's Stars, said once as the garden step opens (under the card).
@@ -290,29 +383,79 @@ function Cards:step(now,ctx)
  if self.boardView then self:stepBoard(now,ctx,base)end
 end
 
+-- The Welcome pill (QA v2 R6.2): shown once per session in the Welcome round, from the
+-- first presented frame until ~5 s pass or the first drop (or merge), then it fades.
+function Cards:stepWelcome(now,ctx,wanted)
+ local pill=self.welcomePill;if not pill then return end
+ if wanted and((ctx.drops or 0)>0 or(ctx.merges or 0)>0)and self.welcomeAt then self.welcomeOutAt=self.welcomeOutAt or now end
+ if wanted and not self.welcomeDone and not self.welcomeAt then
+  self.welcomeAt=now;self.welcomeOutAt=nil
+  local width=math.floor(math.clamp((self.boardW or 300)-16,120,340))
+  self.sticker.Text="★ +"..Coach.WelcomeStars
+  local starW=math.ceil(Kit.measure(self.sticker.Text,"Counter",13).X)+10
+  local text=Cards.welcomeText(width-30-starW-14)
+  self.pillText.Text=text
+  local textW=math.ceil(Kit.measure(text,"Strong",13).X)+2
+  pill.Size=UDim2.fromOffset(math.min(width,30+textW+8+starW+10),28)
+  self.pillText.Size=UDim2.new(0,textW,1,0)
+  pill.Visible=true;pill:SetAttribute("CoachCard","welcome")
+ end
+ if not self.welcomeAt or self.welcomeDone then
+  if pill.Visible then pill.Visible=false;pill:SetAttribute("CoachCard",nil)end
+  return
+ end
+ local reduced=Kit.reduced()
+ local fade=Cards.welcomeFade(now-self.welcomeAt,reduced)
+ -- Leaving early (the first drop, the round over, the board gone): a quick fade out.
+ if not wanted and not self.welcomeOutAt then self.welcomeOutAt=now end
+ if self.welcomeOutAt then
+  local out=if reduced then 1 else math.clamp((now-self.welcomeOutAt)/.25,0,1)
+  fade=math.max(fade,out)
+ end
+ pill.GroupTransparency=fade
+ if fade>=1 and now-self.welcomeAt>Cards.WelcomeFadeIn then
+  self.welcomeDone=true;pill.Visible=false;pill:SetAttribute("CoachCard",nil)
+ end
+end
 function Cards:stepBoard(now,ctx,base)
  local view=self.boardView
+ local due=Cards.boardDue(base)
+ self:stepWelcome(now,ctx,due=="welcome")
  local shown=self.boardCard
  if shown then
-  local keep
-  if shown.id=="welcome"then keep=Cards.boardDue(base)=="welcome"
-  else keep=ctx.mode=="Board"and ctx.presented and now-shown.shownAt<Cards.BoardSeconds end
-  if keep then
-   if shown.id~="welcome"then view.bar.Size=UDim2.new(math.clamp(1-(now-shown.shownAt)/Cards.BoardSeconds,0,1),-32,0,2)end
+  if ctx.mode=="Board"and ctx.presented and now-shown.shownAt<Cards.BoardSeconds then
+   view.bar.Size=UDim2.new(math.clamp(1-(now-shown.shownAt)/Cards.BoardSeconds,0,1),-32,0,2)
    return
   end
   self.boardCard=nil;view.root.Visible=false;view.root:SetAttribute("CoachCard",nil)
  end
- local due=Cards.boardDue(base)
- if not due then return end
- if due~="welcome"then self:mark(due)end
+ local tip=self.boardPill
+ if tip and tip.Visible then
+  local age=now-(self.tipAt or now)
+  local fade=Cards.welcomeFade(age,Kit.reduced())
+  if ctx.mode~="Board"then fade=1 end
+  tip.GroupTransparency=fade
+  if fade>=1 and age>Cards.WelcomeFadeIn then tip.Visible=false;tip:SetAttribute("CoachCard",nil)end
+  return
+ end
+ if not due or due=="welcome"then return end
+ self:mark(due)
+ if tip then
+  local width=math.floor(math.clamp((self.boardW or 300)-16,120,340))
+  local text=UICopy.get("coach."..due..".short")
+  self.tipText.Text=text
+  local textW=math.ceil(Kit.measure(text,"Strong",13).X)+2
+  tip.Size=UDim2.fromOffset(math.min(width,textW+24),28)
+  tip.Visible=true;tip.GroupTransparency=1;tip:SetAttribute("CoachCard",due)
+  self.tipAt=now
+  return
+ end
  local width=math.floor(math.clamp((self.boardW or 300)-16,200,380))
  local title,line=Cards.copy(due,{pet=ctx.pet,input=ctx.input,reward=Coach.WelcomeStars})
  paintCard(view,due,title,line,width)
- view.bar.Visible=due~="welcome"
+ view.bar.Visible=true
  view.bar.Size=UDim2.new(1,-32,0,2)
- self.sticker.Text=if due=="welcome"then "★ +"..Coach.WelcomeStars else ""
- view.title.Size=UDim2.new(1,if due=="welcome"then -136 else -80,0,24)
+ view.title.Size=UDim2.new(1,-80,0,24)
  view.root.Visible=true;view.root:SetAttribute("CoachCard",due)
  if not Kit.reduced()then view.scale.Scale=.9;Kit.tween(view.scale,Kit.Motion.toastIn,{Scale=1})end
  self.boardCard={id=due,shownAt=now}

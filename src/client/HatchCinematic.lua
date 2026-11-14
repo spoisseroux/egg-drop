@@ -64,6 +64,15 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  watch(Input.TextBoxFocused,function()self:refreshOwner()end);watch(Input.TextBoxFocusReleased,function()self:refreshOwner()end)
  watch(root.Destroying,function()self:destroy(true)end);self:watchAncestors();return self
 end
+-- QA v2 R1.3: a host that draws its own full-screen backdrop (the reveal's black) asks
+-- for no panel here, so the egg beats never show a card-sized rect before the stage.
+function Cinematic:setBleed(on)
+ self.bleed=on==true
+ self.frame.BackgroundTransparency=if self.bleed then 1 else 0
+ local corner=self.frame:FindFirstChildOfClass("UICorner")
+ if corner then corner.CornerRadius=UDim.new(0,if self.bleed then 0 else 14)end
+ self.frame:SetAttribute("Bleed",self.bleed)
+end
 function Cinematic:reduced()return if type(self.reduceEffects)=="function"then self.reduceEffects()==true else self.reduceEffects==true end
 function Cinematic:visible()
  local node=self.frame

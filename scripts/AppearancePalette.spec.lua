@@ -54,7 +54,7 @@ return function(client,parent,onlySize)
   focus.panel.Visible=true;focus.back.Visible=true;focus.helper.Visible=true
   test(tostring(size).." open sheets keep the house palette under every faceplate (the plate tints only the deck and its background)",function()
    local recipe=shop.body.EggColumn.Recipe_hue;local pending=shop.pending
-   local amber=shop.nectar.TextColor3
+   -- QA v2 R1: the Hatch eggs card wallet is gone (the header WalletStar shows Stars).
    for _,id in ipairs(Themes.Order)do
     local plate=Themes.ById[id];Art.applyTheme(plate);settle()
     -- Batch 2026-11-13: menus never take the plate's glass; the hardware still reads the plate.
@@ -70,7 +70,7 @@ return function(client,parent,onlySize)
     assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==Kit.Color.text and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
     assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass stays house; text stays neutral")
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
-    assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe and shop.nectar.TextColor3==amber)
+    assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe)
     assert(Art.Surface==defaults[1]and Art.Ink==defaults[2]and Art.Silver==defaults[3]and Art.Focus==defaults[4],"public art constants changed")
    end
   end)

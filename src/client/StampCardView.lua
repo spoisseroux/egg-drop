@@ -1,6 +1,7 @@
 -- Stamp card (play-forever F2; BUILD-PLAN rules, StampCard.lua). Drawn where the daily
--- gift is offered: the Pocket menu's daily page (DeckMenu) and the Hatch eggs list
--- (EggHatchView). Seven slots; the stamps already on this card are filled, the slot
+-- gift is offered: the Pocket menu's daily page (DeckMenu) and, since QA v2 R3.8, the
+-- quest log's daily tab (QuestLog; daily things live together, so it left the Hatch
+-- eggs list) and the Quests "How it works" cards (a sample card). Seven slots; the stamps already on this card are filled, the slot
 -- the next stamp lands in shows its reward, and the 7th (12 Stars) is the bigger gift
 -- in Stars gold. A claim lands the stamp with Kit.boing and a "+N Stars" pop (both cut
 -- under Reduced Motion: the pop then just shows and hides). No streak, no penalty:
@@ -22,7 +23,8 @@ View.Metrics=table.freeze({
  regular=table.freeze({head=18,slot=52,line=20,gap=6,slotGap=8,label=13,reward=15,small=14}),
  compact=table.freeze({head=16,slot=40,line=16,gap=4,slotGap=6,label=12,reward=13,small=12}),
 })
-View.StampColor=Kit.Tint.hatch -- peach ink on the stamps (the gift lives with Hatch eggs)
+View.StampColor=Kit.Tint.quests -- sky ink (R3.8: the gift lives with Quests now)
+View.Tint="quests"
 -- Stamp art (QA 2026-11-13 Q5): seven original rubber stamps, one per slot, drawn by
 -- scripts/deck_art/build_stamps.py into assets/ui/stamps/. One atlas upload: row 0 the
 -- full-colour stamps (a stamped slot), row 1 their white outlines (an upcoming slot,
@@ -99,14 +101,14 @@ end
 
 local function txt(parent,role,content,color,props)return Kit.text(parent,role,content,color,props)end
 
--- parent: any GuiObject. options: name.
+-- parent: any GuiObject. options: name, tint (the eyebrow family; default Quests).
 function View.new(parent,options)
  options=options or {}
  local root=Kit.frame(parent,options.name or "StampCard",nil,UDim2.new(),UDim2.fromOffset(300,View.height(false)))
  root:SetAttribute("StampCard",true)
  local self=setmetatable({root=root,slotViews={},compact=false,width=300,lastStamps=nil,popToken=0},View)
  self.title=txt(root,"Label",UICopy.get("stamp.title"),"dim",{Name="Title"})
- Kit.tintEyebrow(self.title,"hatch")
+ Kit.tintEyebrow(self.title,options.tint or View.Tint)
  self.promise=txt(root,"Small",UICopy.get("stamp.promise"),"soft",{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
  local row=Kit.frame(root,"Slots",nil,UDim2.new(),UDim2.fromOffset(300,52));self.row=row
  for index=1,Stamp.Length do

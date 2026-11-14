@@ -10,10 +10,10 @@
       <Item class="MeshPart" referent="W7P0">
         <Properties>
           <string name="Name">W7_Aqueduct__marble</string>
-          <Content name="MeshId"><url>rbxassetid://93708769538584</url></Content>
+          <Content name="MeshId"><url>rbxassetid://80925985769359</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>97.5996</X><Y>56.9046</Y><Z>166.496</Z></Vector3>
-          <Vector3 name="InitialSize"><X>105.63489</X><Y>61.58942</Y><Z>180.20341</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1059.8031</X><Y>617.9082</Y><Z>1807.9266</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>39.0789</X><Y>24.1023</Y><Z>-21.0026</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -70,10 +70,10 @@
       <Item class="MeshPart" referent="W7P3">
         <Properties>
           <string name="Name">W7_Architecture__marble</string>
-          <Content name="MeshId"><url>rbxassetid://120627798911906</url></Content>
+          <Content name="MeshId"><url>rbxassetid://126675685987379</url></Content>
           <Content name="TextureID"><url>rbxassetid://138678016112158</url></Content>
           <Vector3 name="Size"><X>188.6049</X><Y>17.0075</Y><Z>145.7914</Z></Vector3>
-          <Vector3 name="InitialSize"><X>209.91556</X><Y>18.92927</Y><Z>162.26448</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2048.0</X><Y>184.6797</Y><Z>1583.1016</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-3.2581</X><Y>10.3038</Y><Z>-8.2543</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1897,10 +1897,10 @@
       <Item class="MeshPart" referent="W7P84">
         <Properties>
           <string name="Name">W7_Stations__palette</string>
-          <Content name="MeshId"><url>rbxassetid://94104934677847</url></Content>
+          <Content name="MeshId"><url>rbxassetid://71576879662786</url></Content>
           <Content name="TextureID"><url>rbxassetid://99161618321835</url></Content>
           <Vector3 name="Size"><X>140.69</X><Y>7.39</Y><Z>96.8707</Z></Vector3>
-          <Vector3 name="InitialSize"><X>156.58672</X><Y>8.22501</Y><Z>107.81618</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1527.7076</X><Y>80.2457</Y><Z>1051.8875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>8.105</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
@@ -2200,11 +2200,11 @@
       <Item class="MeshPart" referent="W7P96">
         <Properties>
           <string name="Name">W7_Water__water_stream</string>
-          <Content name="MeshId"><url>rbxassetid://94441103822151</url></Content>
+          <Content name="MeshId"><url>rbxassetid://131731608849590</url></Content>
           <Content name="TextureID"><url>rbxassetid://70661948546201</url></Content>
-          <Vector3 name="Size"><X>97.396</X><Y>48.9046</Y><Z>165.8256</Z></Vector3>
-          <Vector3 name="InitialSize"><X>105.41448</X><Y>52.93082</Y><Z>179.47778</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>36.698</X><Y>27.6523</Y><Z>-20.6378</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>97.396</X><Y>48.9446</Y><Z>165.8256</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1057.5918</X><Y>531.4731</Y><Z>1800.6467</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>36.698</X><Y>27.6323</Y><Z>-20.6378</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>

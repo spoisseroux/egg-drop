@@ -5,7 +5,7 @@ ui.book.bookworm.line,Finish any three pages: Bookworm faceplate,,Collection boo
 ui.book.bookworm.short,3 full pages: Bookworm,,Collection book
 ui.book.claim,Claim ★{reward},,Collection book; e.g. Claim ★5
 ui.book.claimShort,★{reward},,Collection book; e.g. ★5
-ui.book.claimed,Claimed,,Collection book
+ui.book.claimed,Claimed,,Collection book; also ui.r3.quests.status.claimed
 ui.book.empty,Nothing on this page yet.,,Collection book
 ui.book.entry.claimMany,{count} TO CLAIM,,Collection book; e.g. 3 TO CLAIM
 ui.book.entry.claimOne,1 TO CLAIM,,Collection book
@@ -13,7 +13,7 @@ ui.book.entry.line,"Pages to fill, Stars to find",,Collection book
 ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden"
 ui.book.failed,Not claimed,,Collection book
 ui.book.found,Found,,Collection book
-ui.book.hint.back,Back,,Collection book
+ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit"
 ui.book.hint.claim,Claim,,Collection book
 ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
@@ -23,7 +23,7 @@ ui.book.pending,Saving…,,Collection book; also ui.results.saved.pending
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
 ui.book.records.empty,Play a round and your records start here.,,Collection book
 ui.book.records.line,Your lifetime numbers,,Collection book
-ui.book.records.name,Records,,Collection book
+ui.book.records.name,Records,,Collection book; also ui.r3.help.book.c.title
 ui.book.retrying,Still saving…,,Collection book; also ui.shop.reason.retrying
 ui.book.stats.bestChain,Best chain,,Collection book
 ui.book.stats.itemsUsed,Items used,,Collection book
@@ -39,40 +39,42 @@ ui.book.stats.winsEasy,Wins on Easy,,Collection book
 ui.book.stats.winsHard,Wins on Hard,,Collection book
 ui.book.stats.winsMedium,Wins on Medium,,Collection book
 ui.book.timeout,Still saving. Try again soon.,,Collection book
-ui.book.title,Collection book,,Collection book; also ui.coach.book.title
+ui.book.title,Collection book,,"Collection book; also ui.coach.book.title, ui.r3.help.book.title"
 ui.book.toast.bookworm,Bookworm faceplate unlocked,,Collection book
 ui.book.toast.claimed,Page milestone,,Collection book
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
-ui.coach.companions.title,Companions,,First-round coaching; also ui.hub.tile.companions.name
+ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
 ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching
+ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
 ui.coach.fillLine.title,Fill line,,First-round coaching
 ui.coach.firstStars.toast,First round cleared,,First-round coaching
-ui.coach.gotIt,Got it,,First-round coaching
+ui.coach.gotIt,Got it,,First-round coaching; also ui.r3.help.done
 ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
-ui.coach.hatch.title,Hatch eggs,,First-round coaching; also ui.hub.tile.hatch.name
+ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
 ui.coach.hub.pad,"Press Y for every machine, any time.",,First-round coaching
 ui.coach.hub.title,Pocket menu,,First-round coaching; also ui.hub.title
 ui.coach.hub.touch,"Tap Menu for every machine, any time.",,First-round coaching
 ui.coach.item.line,Power-up merges earn items. Use one from the item button.,,First-round coaching
+ui.coach.item.short,Item earned! Use it from Items,,First-round coaching
 ui.coach.item.title,An item!,,First-round coaching
 ui.coach.machines.line,Walk up to a glowing machine to use it.,,First-round coaching
 ui.coach.machines.title,Machines,,First-round coaching
 ui.coach.missPay,Goal met,,First-round coaching
 ui.coach.next,Next,,First-round coaching
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
-ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.report.category.park"
+ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name, ui.report.category.park"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
-ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name"
+ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title, ui.r3.quests.eyebrow"
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,First-round coaching
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
 ui.coach.skip,Skip,,First-round coaching
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
-ui.coach.style.title,Deck style,,First-round coaching; also ui.hub.tile.style.name
+ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
-ui.coach.welcome.title,Hatch your first friend,,First-round coaching
+ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1.welcomePill.mid
 ui.companions.wearing.none,Nothing yet,,Companions screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
@@ -101,8 +103,14 @@ ui.hub.tile.hatch.line,"Eggs, odds and today's stamp",,Pocket menu (machine hub)
 ui.hub.tile.quests.line,Daily and weekly quests,,Pocket menu (machine hub)
 ui.hub.tile.settings.line,"Sound, music and motion",,Pocket menu (machine hub)
 ui.hub.tile.settings.name,Settings,,"Pocket menu (machine hub); also ui.pause.settings, ui.report.eyebrow"
-ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub)
+ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub); also ui.r5.station.Customize.line
 ui.hub.tile.style.short,Style,,Pocket menu (machine hub)
+ui.input.action.browse,Browse,,Menu text
+ui.input.action.confirm,Pick,,Menu text
+ui.input.action.tab,Switch tab,,Menu text
+ui.input.legend.gamepad,"D-pad moves, A picks, B goes back, LB and RB switch tabs.",,Menu text
+ui.input.legend.keyboard,"Arrows or WASD move, Enter picks, Backspace goes back, Q and E switch tabs.",,Menu text
+ui.input.legend.touch,Tap a card to pick it. The back arrow closes the screen.,,Menu text
 ui.items.note.empty,You have no items,,Round item notes
 ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
@@ -113,8 +121,82 @@ ui.park.playDate,Play date {count}/{target},,Pet Park chip; e.g. Play date 3/3
 ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
 ui.pet.star,+1 ★,,Petting reward
+ui.phoneDeck.b.items,Items,,Menu text
 ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
 ui.quests.allDoneSolo,All done for today.,,Quest log
+ui.r1.hatchHints.hatch,Hatch,,Menu text
+ui.r1.welcomePill.narrow,Hatch a friend,,Menu text
+ui.r1.welcomePill.wide,Merge to hatch your first friend,,Menu text
+ui.r3.help.book.a.line,"Every ball, plate, outfit and toy you own gets a spot in the book.",,Menu text
+ui.r3.help.book.a.title,Collect,,Menu text
+ui.r3.help.book.b.line,"Fill a page to 25, 50, 75 and 100% to claim Stars. Each pays once.",,Menu text
+ui.r3.help.book.b.title,Milestones,,Menu text
+ui.r3.help.book.c.line,"Your best rounds and big totals, kept for good.",,Menu text
+ui.r3.help.button,How it works,,Menu text; also ui.r3.help.eyebrow
+ui.r3.help.close,Close,,Menu text
+ui.r3.help.companions.a.line,Everyone you hatch lives here. Visit them and swap who tags along.,,Menu text
+ui.r3.help.companions.a.title,Your pets,,Menu text
+ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
+ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Pages.wardrobe.name
+ui.r3.help.companions.c.line,"Feed colour fruit, add a charm, try a finish or hand over a toy.",,Menu text
+ui.r3.help.companions.c.title,Customize,,Menu text
+ui.r3.help.hatch.a.line,"Win rounds, finish quests and stamp your card. Stars pay for eggs.",,Menu text
+ui.r3.help.hatch.a.title,Earn Stars,,Menu text
+ui.r3.help.hatch.b.line,Each egg hatches one kind of thing. The odds are on the label.,,Menu text
+ui.r3.help.hatch.b.title,Pick an egg,,Menu text
+ui.r3.help.hatch.c.line,Press Hatch and watch it crack. What comes out is yours to keep.,,Menu text
+ui.r3.help.hatch.c.title,Hatch it,,Menu text
+ui.r3.help.park.a.line,Bring your pet in to play. Three play dates a day pay Stars.,,Menu text
+ui.r3.help.park.a.title,Play dates,,Menu text
+ui.r3.help.park.b.line,"When every spot is taken, pets mingle and wait their turn.",,Menu text
+ui.r3.help.park.b.title,Busy park,,Menu text
+ui.r3.help.quests.a.line,"Three a day. Play rounds to fill the bars, then claim the Stars.",,Menu text
+ui.r3.help.quests.a.title,Daily quests,,Menu text
+ui.r3.help.quests.b.line,"One stamp a day, just for stopping by. Each stamp pays Stars.",,Menu text
+ui.r3.help.quests.b.title,Stamp card,,Menu text; also ui.stamp.title
+ui.r3.help.quests.c.line,"Stamp seven pays ★ 12, then a fresh card starts. Miss a day, lose nothing.",,Menu text
+ui.r3.help.quests.c.title,A full card,,Menu text
+ui.r3.help.replay,Tap ? any time to see this again.,,Menu text
+ui.r3.help.style.a.line,"Dress up your Pocket Deck. Fixed prices, no random plates.",,Menu text
+ui.r3.help.style.a.title,Faceplates,,Menu text; also catalog.BookCatalog.Pages.faceplates.name
+ui.r3.help.style.b.line,"Earned by playing, never bought. Pick the one behind your deck.",,Menu text
+ui.r3.help.style.b.title,Backgrounds,,Menu text
+ui.r3.help.style.c.line,"New looks for the balls. Same sizes, same rules. Only cuter.",,Menu text
+ui.r3.help.style.c.title,Balls,,Menu text; also catalog.BookCatalog.Pages.balls.name
+ui.r3.hub.hatchLine,Eggs and their odds,,Menu text
+ui.r3.hub.questsLine,Quests and the daily stamp,,Menu text
+ui.r3.quests.claimed,Nice one! +{reward} Stars,,Menu text; e.g. Nice one! +5 Stars
+ui.r3.quests.menu,Menu,,Menu text
+ui.r3.quests.stamp.line,"One stamp a day, just for stopping by.",,Menu text
+ui.r3.quests.stamp.lineDone,Come back tomorrow for the next one.,,Menu text
+ui.r3.quests.stamp.title,Today's stamp,,Menu text
+ui.r3.quests.status.notStarted,Not started,,Menu text
+ui.r3.quests.status.ready,Done! Claim it,,Menu text
+ui.r3.quests.status.toGo,{count} to go,,Menu text; e.g. 3 to go
+ui.r3.quests.weekly.line,Clear all three this week for a bonus.,,Menu text
+ui.r3.quests.weekly.title,Weekly bonus,,Menu text
+ui.r3.tips,Show tips again,,Menu text
+ui.r4.customize.moreMaterials,More finishes hatch from Material Eggs.,,Menu text
+ui.r4.customize.moreToys,More toys hatch from Toy Eggs.,,Menu text
+ui.r4.equipped,Equipped,,Menu text
+ui.r4.hue.confirmLine,Press again to reset. It's free.,,Menu text
+ui.r4.hue.confirmReset,Confirm reset,,Menu text
+ui.r4.hue.current,Current colour,,Menu text
+ui.r4.hue.currentChip,CURRENT,,Menu text
+ui.r4.hue.free,Free,,Menu text
+ui.r4.hue.original,Original colour,,Menu text
+ui.r4.hue.originalMain,"{pet}'s first Main colour. Free, any time.",,"Menu text; e.g. Bear's first Main colour. Free, any time."
+ui.r4.hue.originalSecondary,"{pet}'s first Secondary colour. Free, any time.",,"Menu text; e.g. Bear's first Secondary colour. Free, any time."
+ui.r4.hue.reset,Reset colour,,Menu text
+ui.r4.inUse,In use,,Menu text
+ui.r4.wardrobe.buyOrWear,Buy or wear,,Menu text
+ui.r4.wardrobe.none,None,,Menu text; also catalog.ToyCatalog.ById.none.name
+ui.r4.wardrobe.noneNote,Nothing in this slot,,Menu text
+ui.r4.wardrobe.slot,Slot,,Menu text
+ui.r4.wardrobe.takeOff,Take off,,Menu text
+ui.r5.station.Eggs.line,Spend Stars on new eggs,,Menu text
+ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
+ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
 ui.report.category.deck,Pocket Deck,,Bug report sheet
 ui.report.category.menus,Menus,,Bug report sheet
@@ -170,7 +252,6 @@ ui.stamp.full,Card full. A fresh one tomorrow.,,Stamp card
 ui.stamp.landed,+{reward} Stars,,Stamp card; e.g. +5 Stars
 ui.stamp.next,Today's stamp: ★ {reward},,Stamp card; e.g. Today's stamp: ★ 5
 ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
-ui.stamp.title,Stamp card,,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
@@ -241,7 +322,6 @@ catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.standard.name,Standard,,Catalogue MaterialCatalog (name)
 catalog.ToyCatalog.ById.ball.name,Ball,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name
 catalog.ToyCatalog.ById.bone.name,Bone,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name
-catalog.ToyCatalog.ById.none.name,None,,Catalogue ToyCatalog (name)
 catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name
 catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
@@ -348,11 +428,8 @@ catalog.BookCatalog.Discoveries.7.name,Win a Bank bounce field,,Catalogue BookCa
 catalog.BookCatalog.Discoveries.8.name,Win a Mirror marks field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.8.name
 catalog.BookCatalog.Discoveries.9.name,Win on Easy,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.9.name
 catalog.BookCatalog.Discoveries.10.name,Win on Medium,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.10.name
-catalog.BookCatalog.Pages.balls.name,Balls,,Catalogue BookCatalog (name)
 catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
-catalog.BookCatalog.Pages.faceplates.name,Faceplates,,Catalogue BookCatalog (name)
 catalog.BookCatalog.Pages.toys.name,Toys,,Catalogue BookCatalog (name)
-catalog.BookCatalog.Pages.wardrobe.name,Wardrobe,,Catalogue BookCatalog (name)
 catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
 catalog.EggCatalog.ById.sprout.name,Sprout Focused,,Catalogue EggCatalog (name)
 catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions never.",,Catalogue PetCatalog (description)

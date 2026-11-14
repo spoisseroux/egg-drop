@@ -159,11 +159,16 @@ def main():
     batches = [ops[i:i + size] for i in range(0, len(ops), size)]
     failed = 0
     for batch in batches:
-        res = request("PATCH", f"/localization-table/tables/{table_id}?gameId={UNIVERSE_ID}", key, {"entries": batch})
-        bad = res.get("failedEntriesAndTranslations") or []
-        failed += len(bad)
-        for f in bad[:5]:
-            print("FAILED", json.dumps(f)[:300], file=sys.stderr)
+        path = f"/localization-table/tables/{table_id}?gameId={UNIVERSE_ID}"
+        res = request("PATCH", path, key, {"entries": batch})
+        if res.get("failedEntriesAndTranslations"):
+            # A delete and an add of the same source in one batch can collide
+            # (DuplicatedKeySourceContext); entries sent one by one, in order, go through.
+            for op in batch:
+                one = request("PATCH", path, key, {"entries": [op]})
+                for f in one.get("failedEntriesAndTranslations") or []:
+                    failed += 1
+                    print("FAILED", json.dumps(op)[:300], json.dumps(f.get("error"))[:200], file=sys.stderr)
     if failed:
         raise SystemExit(f"{failed} entries failed; state not updated (rerun after fixing)")
     save_state(current)

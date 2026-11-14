@@ -58,11 +58,8 @@ return function(client,parent)
 					shop:update(snapshot);settle()
 					readable(shop.heading);readable(shop.action)
 						assert(shop.action.Font==Art.SheetFont.Action and shop.action.AbsoluteSize.Y>=44)
-					assert(shop.nectar.Visible and shop.nectar.Text==tostring(balance) and shop.nectar:GetAttribute("AccessibleLabel")==tostring(balance).." Stars")
-					do
-						readable(shop.nectar)
-						assert(shop.nectar.AbsolutePosition.X>=shop.wallet.AbsolutePosition.X and shop.nectar.AbsolutePosition.X+shop.nectar.AbsoluteSize.X<=shop.wallet.AbsolutePosition.X+shop.wallet.AbsoluteSize.X,"amount exceeds its chip")
-					end
+					-- QA v2: the header wallet is Hatch eggs' one Stars counter (the card chip is gone).
+					assert(shop.shopHeader.wallet.amount.Text==require(client.DeckKit).formatStars(balance))
 					if shop.note.Visible then readable(shop.note)end
 					assert(shop.action.AbsoluteSize.Y>=44 and shop.closeButton.AbsoluteSize==Vector2.new(44,44))
 					assert(shop.body.AbsoluteSize.Y>=44 and shop.body.AbsolutePosition.Y+shop.body.AbsoluteSize.Y<=shop.action.AbsolutePosition.Y,"shop must preserve a whole44px row outside footer at balance "..balance)

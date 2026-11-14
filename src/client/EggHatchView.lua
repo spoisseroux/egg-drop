@@ -22,7 +22,11 @@ local EggPreview=require(script.Parent.EggPreview3D)
 local Peek=require(script.Parent.PetPeek)
 local FeatureFlags=require(ReplicatedStorage.Shared.FeatureFlags)
 local NextItem=require(script.Parent.NextItemText)
-local StampCardView=require(script.Parent.StampCardView)
+local C=require(script.Parent.CelebrationKit)
+local HintGlyphs=require(script.Parent.HintGlyphs)
+-- QA v2 (R1/R3 re-cut): the stamp card and the daily stamp button moved from Hatch eggs
+-- to Quests (QuestLog, R3), where the daily things live together. Hatch eggs keeps no
+-- daily state; `send("daily", day)` stays the server action the quest screen sends.
 -- v1 sells item eggs only; the Companion Egg is retired (one pet, Zivvi). The Feature
 -- Egg is hidden with the Features tab (Shared.FeatureFlags); a pending feature hatch
 -- still opens through "Open saved feature".
@@ -92,11 +96,8 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	Art.panel(card, 16, "accent")
 	local heading = label(card, "Heading", "Hatch eggs", UDim2.fromOffset(12, 6), UDim2.new(1, -148, 0, 24), "text", 20)
 	heading.Font = Art.Font.Heading
-	local nectar = label(card, "Nectar", "0 Stars", UDim2.new(1, -134, 0, 7), UDim2.fromOffset(122, 23), Art.Amber, 16)
-	local wallet = frame(card, "Wallet", Art.Canopy, UDim2.new(1, -156, 0, 4), UDim2.fromOffset(146, 29), 22)
-	Art.corner(wallet, 10)
-	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), 23)
-	nectar.Parent=wallet;nectar.ZIndex = 25
+	-- QA v2: the card's old Stars chip is gone. The shared header's wallet (WalletStar) is
+	-- the one Stars counter on Hatch eggs; the result card never showed it.
 	local note = label(card, "Notice", "Earn Stars. Choose an egg for your pet.", UDim2.fromOffset(12, 29),
 		UDim2.new(1, -24, 0, 16), "muted", 11)
 	local body = Instance.new("ScrollingFrame")
@@ -123,8 +124,8 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	revealHost.Visible = false
 	Art.corner(revealHost, 14)
 	local self = setmetatable({
-		shade = shade, card = card, body = body, heading = heading, nectar = nectar, note = note,
-		closeButton = close, action = action, meetButton = meet, getStars = getStars, revealHost = revealHost, audio = audio, wallet = wallet, walletDrop = drop,
+		shade = shade, card = card, body = body, heading = heading, note = note,
+		closeButton = close, action = action, meetButton = meet, getStars = getStars, revealHost = revealHost, audio = audio,
 		reduceEffects = reduceEffects, sendCommand = sendCommand, selected = liveOrder[1], state = {}, pending = false,
 		intentToken = 0, presentationGeneration = 0,
 	}, View)
@@ -137,6 +138,23 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	-- `revealHost`, `meetButton` and `action` keep their roles underneath.
 	self.stageLayer = frame(shade, "RevealLayer", "ink", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 70)
 	self.stageLayer.BackgroundTransparency, self.stageLayer.Visible = 1, false
+	-- QA v2 R1.2 / R1.5: the stage covers the whole screen, under the Roblox top bar too
+	-- (the menu gui is inset, so a 1x1-scale layer stopped short of the edges).
+	Kit.coverScreen(self.stageLayer)
+	-- QA v2 R1.3: the egg beats before the hand-off play on the same full-screen black as
+	-- the stage, so no card-sized rect shows between the deck and the reveal. In result
+	-- mode the card and the cinematic draw no panel of their own.
+	self.revealBackdrop = Kit.frame(shade, "RevealBackdrop", nil, UDim2.new(), UDim2.fromScale(1, 1))
+	self.revealBackdrop.ZIndex = shade.ZIndex
+	self.revealBackdrop.BackgroundColor3, self.revealBackdrop.BackgroundTransparency = C.Stage, 0
+	self.revealBackdrop.Active, self.revealBackdrop.Visible = true, false
+	Kit.coverScreen(self.revealBackdrop)
+	self.cinematic:setBleed(true)
+	-- QA v2 (R2.5 slice): the footer legend follows the last input.
+	self.inputLink = UserInputService.LastInputTypeChanged:Connect(function()
+		if self.shopRoot and self.hintRow and View.inputKind() ~= self.hintKind then self:paintHints() end
+	end)
+	shade.Destroying:Connect(function() if self.inputLink then self.inputLink:Disconnect(); self.inputLink = nil end end)
 	self.cinematic.stageHandoff = function(info) return self:showRevealStage(info) end
 	self.cinematic.stageClear = function() self:hideRevealStage() end
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()
@@ -164,7 +182,7 @@ function View:actPrimary()
 		if not self.shade.Visible or self.pending or not self.action.Interactable then return end
 		local current = self.state
 		if current.lastHatch then
-			self:chooseResult("play")
+			self:chooseResult(View.secondaryIntent(current.lastHatch))
 		elseif current.pendingHueResult then
             if self.onOpenHue then self.onOpenHue(false)end
         elseif current.pendingToyResult then
@@ -177,6 +195,8 @@ function View:actPrimary()
 			self:close("earn")
 		else
 			if self.egg3D then self.egg3D:hatch()end
+			-- QA v2 R1.8: the pet peeking into the egg preview gets excited (a hop and a cheer).
+			Peek.hop()
 			if self.selected=="toy"then if self.onOpenToy then self.onOpenToy(true)end elseif self.selected=="feature"then if self.onOpenFeature then self.onOpenFeature(true)end elseif self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
 		end
 	end
@@ -191,6 +211,7 @@ function View:attachStore(store)
 	store.onOpened = function()
 		self.card.Visible = false
 		if self.shopRoot then self.shopRoot.Visible = false end
+		self:syncShopShade()
 		self:bumpControllerEpoch()
 	end
 	store.onClosed = function()
@@ -245,8 +266,10 @@ function View:showRevealStage(info)
 			return if type(self.reduceEffects) == "function" then self.reduceEffects() == true else self.reduceEffects == true
 		end,
 		owns = function() return self:ownsInput() end,
-		buttons = { { id = "play", text = "Play again", glyph = "B" }, { id = "meet", text = "Meet " .. name, glyph = "A", primary = true } },
-		onButton = function(id) if id == "play" then self:revealPlay() else self:chooseResult(id) end end,
+		-- QA v2 R1.5: the first Bear (the starter) is onboarding, so B leaves the reveal for
+		-- the garden ("Back") instead of starting another round.
+		buttons = { View.secondaryButton(info.result), { id = "meet", text = "Meet " .. name, glyph = "A", primary = true } },
+		onButton = function(id) if id == "play" or id == "exit" then self:revealPlay() else self:chooseResult(id) end end,
 		onSkip = function() if self.cinematic and self.cinematic.skip then self.cinematic:skip() end end,
 	})
 	if not ok then
@@ -278,7 +301,9 @@ function View:syncRevealButtons()
 	local playEnabled = self.action.Interactable
 	-- Touch exit: with Play again unavailable after the intro, the button becomes Close.
 	if View.revealExit(self.ackReady, playEnabled) == "close" then play, playEnabled = "Close", true end
-	stage:setButtons({ meet = { text = meet, enabled = self.meetButton.Interactable }, play = { text = play, enabled = playEnabled } })
+	local exit = if self.pending then "Saving…" else UICopy.get("r1.reveal.exit")
+	stage:setButtons({ meet = { text = meet, enabled = self.meetButton.Interactable }, play = { text = play, enabled = playEnabled },
+		exit = { text = exit, enabled = playEnabled } })
 	if stage.exiting and not self.ackIntent and not self.pending then stage:restore() end
 end
 -- B / Esc on the stage means "Play again" (1.6). False when no stage is up.
@@ -292,10 +317,48 @@ function View:revealBack()
 end
 function View:revealPlay()
 	if View.revealExit(self.ackReady, self.action.Interactable) == "close" then self:close("close"); return end
-	self:chooseResult("play")
+	self:chooseResult(View.secondaryIntent(self.state.lastHatch))
+end
+-- Pure (QA v2 R1.5): what the secondary choice (B / Play again / Back) acknowledges a
+-- result with. The starter Bear is onboarding: "exit" leaves the reveal for the garden.
+function View.secondaryIntent(result)
+	return if type(result) == "table" and result.starter == true then "exit" else "play"
+end
+-- Pure: the stage's B button for a result.
+function View.secondaryButton(result)
+	if View.secondaryIntent(result) == "exit" then return { id = "exit", text = UICopy.get("r1.reveal.exit"), glyph = "B" } end
+	return { id = "play", text = "Play again", glyph = "B" }
+end
+-- Pure: the reason View:close gets once a choice is acknowledged. "exit" is neither a
+-- meet nor a new round: the player stays in the garden with the pet following.
+function View.closeReason(intent)
+	if intent == "meet" then return "meet" end
+	if intent == "exit" then return "exit" end
+	return "afterHatch"
+end
+-- Reveal backdrop (QA v2 R1.3): on in result mode, a short fade in from the world.
+function View:showRevealBackdrop(on)
+	local backdrop = self.revealBackdrop
+	if not backdrop then return end
+	on = on == true and self.shade.Visible
+	if backdrop.Visible == on then return end
+	backdrop.Visible = on
+	if on and not self:eggReduced() then
+		backdrop.BackgroundTransparency = 1
+		Kit.tween(backdrop, .15, { BackgroundTransparency = 0 })
+	else
+		backdrop.BackgroundTransparency = 0
+	end
+	if on then
+		-- The card is a frame for the cinematic only; no glass panel or edge over the black.
+		self.card.BackgroundTransparency, self.revealHost.BackgroundTransparency = 1, 1
+		for _, child in ipairs(self.card:GetChildren()) do
+			if child:IsA("UIStroke") then child.Enabled = false end
+		end
+	end
 end
 function View:headerKey()
-	return table.concat({self.headerTitle or self.heading.Text,self.nectar.Text,self.statusText or "",self.selected,tostring(self.state.lastHatch~=nil)},"|")
+	return table.concat({self.headerTitle or self.heading.Text,tostring(self.state.nectar or 0),self.statusText or "",self.selected,tostring(self.state.lastHatch~=nil)},"|")
 end
 function View:footerRowHeight(button,width)
 	local tight=self.compactShop or self.card.Size.X.Offset<400 or self.shade.AbsoluteSize.Y<200
@@ -332,7 +395,7 @@ function View:ensureSelectedRecipe()
 	local focused=GuiService.SelectedObject
 	if focused and column and focused.Parent==column and (focused.Name:match("^Recipe_")or focused.Name=="DailyNectar")and focused.Interactable and focused.Selectable then row=focused end
 	if not row then return end
-	local top,height=row.Position.Y.Offset,self.body.AbsoluteSize.Y;local current=self.body.CanvasPosition.Y
+	local top,height=row.Position.Y.Offset,View.listWindow(self.body);local current=self.body.CanvasPosition.Y
 	local wanted=if row.Size.Y.Offset>height then math.max(0,top-4)elseif top<current then math.max(0,top-4)elseif top+row.Size.Y.Offset>current+height then top+row.Size.Y.Offset-height else current
 	self.body.CanvasPosition=Vector2.new(0,math.clamp(wanted,0,math.max(0,self.body.CanvasSize.Y.Offset-height)))
 end
@@ -347,7 +410,8 @@ function View:layout()
 	self.card.Size = UDim2.fromOffset(math.clamp(size.X-32,1,560), math.clamp(size.Y-(if size.Y<200 then 16 else 32),1,580))
 	self.cinematic.compactLandscape=self.card.Size.X.Offset>=480 and self.card.Size.Y.Offset<400
 	self.closeButton.Position, self.closeButton.Size = UDim2.new(1,-56,0,6), UDim2.fromOffset(44,44)
-	self.wallet.Visible, self.heading.Visible, self.nectar.Visible, self.note.Visible = false, false, false, false
+	self.heading.Visible, self.note.Visible = false, false
+	self:showRevealBackdrop(true)
 	self.getStars.Visible = false
 	self.meetButton.Visible = true
 	local width = (self.card.Size.X.Offset-36)/2
@@ -408,7 +472,6 @@ end
 
 function View:refreshShopHeader()
 	local notice=self:getSaveNotice()
-	self.nectar.Text=tostring(self.state.nectar or 0)
 	self.statusText=if notice then notice.detail elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Finishing your last action…"else self.errorMessage or self.state.message
 	self.headerTitle=if notice then notice.short elseif self.pending or self.state.status=="Busy"or self.state.status=="Pending"then "Saving…"elseif self.errorMessage then "Try again"else "Hatch eggs"
 	self.headerShortTitle=if notice then notice.narrow elseif self.statusText then self.headerTitle else "Hatch eggs"
@@ -427,13 +490,13 @@ function View:chooseResult(intent)
  if not self:ownsInput()then return false end
  if self.cinematic:consumeSkipInput()or self.cinematic:skip()then return false end
 	local result = self.state.lastHatch
-	if (intent ~= "meet" and intent ~= "play") or not self.shade.Visible or not result
+	if (intent ~= "meet" and intent ~= "play" and intent ~= "exit") or not self.shade.Visible or not result
 		or not self.ackReady or self.pending or self.ackIntent
 		or (self.state.status ~= nil and self.state.status ~= "Ready") then return end
 	self.intentToken += 1
 	self.ackRetryCount, self.retryAvailable = 0, false
 	-- Install this before send: a local transport can synchronously deliver Ready.
-	self.ackIntent = table.freeze({ id = result.id, petId = result.petId, intent = intent,
+	self.ackIntent = table.freeze({ id = result.id, petId = result.petId, intent = intent, starter = result.starter == true,
 		sourceRevision = self.state.revision or 0, token = self.intentToken })
 	self:send("ack", result.id)
 	if self.reveal then self.reveal:exit(intent) end
@@ -477,7 +540,9 @@ function View:refreshFooter()
 	local ready = state.status == nil or state.status == "Ready"
 	local textValue, canAct
 	if state.lastHatch then
-		textValue, canAct = if self.ackReady then (if self.retryAvailable then "Try again" else "Play again") else "Hatching…", self.ackReady
+		local secondary = if state.lastHatch.starter then UICopy.get("r1.reveal.exit") else "Play again"
+		textValue = if self.ackReady then (if self.retryAvailable then "Try again" else secondary) else "Hatching…"
+		canAct = self.ackReady
 		local pet = Pets.byId[state.lastHatch.petId]
 		self.meetButton.Text = if self.pending then "Saving…" elseif self.shade.AbsoluteSize.Y<200 or self.card.Size.X.Offset<400 then "Meet" else "Meet " .. (if pet then pet.name else "friend")
 	else
@@ -620,6 +685,13 @@ function View.revealExit(ackReady,playEnabled)
  if playEnabled then return "play"end
  return "close"
 end
+-- Pure: a scrolling window's height in its own offset units (AbsoluteSize carries every
+-- ancestor UIScale; CanvasSize and CanvasPosition do not).
+function View.listWindow(body)
+ local size=body.Size
+ if size.Y.Scale==0 and size.Y.Offset>0 then return size.Y.Offset end
+ return body.AbsoluteSize.Y
+end
 -- Pure: shop chrome geometry (panel units on desktop, pixels on a phone sheet).
 function View.shopGeometry(W,H,phone)
  if phone then
@@ -640,8 +712,12 @@ function View:buildShopChrome(view)
  self.shopGeom=g;self.shopKey=if phone then string.format("%dx%d",view.W,view.H)else "regular"
  local root=Kit.frame(self.shade,"HatchEggs",nil,UDim2.new(),UDim2.fromScale(1,1));root.ZIndex=self.shade.ZIndex+1;root.Visible=false
  self.shopRoot=root
- local dim=Kit.frame(root,"Shade",nil,UDim2.new(),UDim2.fromScale(1,1));dim.BackgroundTransparency=if phone then 1 else .35;dim.BackgroundColor3=Color3.new(0,0,0);dim.Active=true
+ -- QA v2: the shared full-screen shade (Kit.modalShade + the shade stack), on every
+ -- device. The old local dim stopped under the top bar and was clear on phones.
+ local dim=Kit.modalShade(root,"Shade",root.ZIndex+1)
+ self.shopDim=dim
  local panel=Kit.frame(root,"Panel","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.W,g.H),30);panel.Active=true
+ panel.ZIndex=dim.ZIndex+1
  Kit.halftone(panel,"hatch",phone)
  self.shopPanel=panel;self.shopScale=Kit.node("UIScale",panel,{Scale=1})
  local body=panel
@@ -699,15 +775,74 @@ function View:buildShopChrome(view)
  button.Position=UDim2.fromOffset(tx,g.pane.h-p-g.actionH);self.hatchButton=button
  button.Activated:Connect(function()self:actPrimary()end)
  self.buttonY=g.pane.h-p-g.actionH
+ self.hintRow,self.legendLine,self.hintKind=nil,nil,nil
  if not phone then
-  local hints=Kit.frame(body,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
-  local x=0
-  for _,pair in ipairs({{"+","Browse"},{"A","Hatch"},{"B","Back"}})do
-   local chip=Kit.glyph(hints,pair[1],false,22,true);chip.Position=UDim2.fromOffset(x,1)
-   Kit.text(hints,"Small",pair[2],"soft",{Position=UDim2.fromOffset(x+28,0),Size=UDim2.fromOffset(120,24),AutomaticSize=Enum.AutomaticSize.X})
-   x+=28+TextService:GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
-  end
+  self.hintRow=Kit.frame(body,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
+  -- QA v2 (R2.5 slice): one line, once a session, says what Browse / Hatch / Back do in
+  -- the words of the last input; it sits in the gap between the pane and the hint row.
+  self.legendLine=Kit.text(body,"Small","","soft",{Name="HintLegend",Position=UDim2.fromOffset(24,540),Size=UDim2.fromOffset(800,20),TextSize=13,Visible=false,TextTruncate=Enum.TextTruncate.AtEnd})
   Kit.text(body,"Small",UICopy.get("hatch.promise"),"dim",{Name="Promise",Position=UDim2.fromOffset(424,566),Size=UDim2.fromOffset(400,24),TextXAlignment=Enum.TextXAlignment.Right})
+  self:paintHints()
+ end
+end
+-- ── Footer hints (QA v2, R2.5 Hatch eggs slice) ─────────────────────────────
+-- Chips and the legend come from R2's HintGlyphs (one map for every menu footer):
+-- gamepad + / A / B, keyboard WASD / ENTER / BKSP, touch none (the legend line only).
+-- Every chip is live: WASD/arrows (init) or the D-pad (native selection) browse, Enter /
+-- A hatch the picked egg, Backspace / B leave (EggDropPickerBack).
+-- Pure: "Keyboard" | "Gamepad" | "Touch" for an input type (default: the last input).
+function View.inputKind(inputType)
+ return HintGlyphs.kindOf(inputType or UserInputService:GetLastInputType())
+end
+-- Pure: the hint chips for an input, {glyph, label, action}.
+function View.hintPairs(kind)
+ return HintGlyphs.rows({{"browse",UICopy.get("input.action.browse")},{"confirm",UICopy.get("r1.hatchHints.hatch")},
+  {"back",UICopy.get("input.action.back")}},kind)
+end
+-- Pure: the one-time legend line for an input.
+function View.legendText(kind)
+ return UICopy.get(HintGlyphs.legendKey(kind))
+end
+View.LegendSeconds=8
+local legendShown=false -- once a session
+function View.resetLegend()legendShown=false end
+function View:paintHints()
+ local row=self.hintRow;if not row then return end
+ local kind=View.inputKind();self.hintKind=kind
+ for _,child in ipairs(row:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
+ local x=0
+ local list=View.hintPairs(kind)
+ for _,pair in ipairs(list)do
+  local chip=Kit.glyph(row,pair[1],false,22,true);chip.Position=UDim2.fromOffset(x,1)
+  x+=chip.Size.X.Offset+6
+  Kit.text(row,"Small",pair[2],"soft",{Name="Hint_"..pair[2],Position=UDim2.fromOffset(x,0),Size=UDim2.fromOffset(120,24),AutomaticSize=Enum.AutomaticSize.X})
+  x+=math.ceil(Kit.measure(pair[2],"Small",14).X)+18
+ end
+ row:SetAttribute("HintInput",kind)
+ if self.legendLine and self.legendLine.Visible then self.legendLine.Text=View.legendText(kind)end
+end
+-- The legend shows on the first Hatch eggs open of the session, then fades.
+function View:showLegendOnce()
+ local line=self.legendLine
+ if legendShown or not line or not self.shade.Visible or self.state.lastHatch then return end
+ legendShown=true
+ line.Text=View.legendText(View.inputKind());line.Visible=true;line.TextTransparency=0
+ local token={};self.legendToken=token
+ task.delay(View.LegendSeconds,function()
+  if self.legendToken~=token or not line.Parent then return end
+  if self:eggReduced()then line.Visible=false;return end
+  Kit.tween(line,.4,{TextTransparency=1})
+  task.delay(.45,function()if self.legendToken==token and line.Parent then line.Visible=false end end)
+ end)
+end
+-- Shop chrome shade on the shared stack (one dim at a time; a screen over it covers it).
+function View:syncShopShade()
+ local dim=self.shopDim
+ local on=dim~=nil and dim.Parent~=nil and self.shade.Visible and self.shopRoot~=nil and self.shopRoot.Visible and not self.state.lastHatch
+ if on then
+  Kit.shadeOpen(self,dim,function(covered)if self.shopPanel then self.shopPanel.Interactable=not covered end end)
+ elseif Kit.shadeIsOpen(self)then
+  Kit.shadeClose(self)
  end
 end
 -- Shop chrome on (list + pane) or off (the result card keeps its old frame).
@@ -718,7 +853,10 @@ function View:useShopChrome(on)
  if on then
   if self.body.Parent~=self.shopBody then self.body.Parent=self.shopBody end
  elseif self.body.Parent~=self.card then self.body.Parent=self.card end
+ if on then self:showRevealBackdrop(false)end
  self:syncEggClock()
+ self:syncShopShade()
+ if on and self.shopRoot and self.shopRoot.Visible then self:showLegendOnce()end
 end
 function View:layoutShop()
  if self.layingOut then return end;self.layingOut=true
@@ -757,7 +895,7 @@ function View:renderBody()
  local left=self.body:FindFirstChild("EggColumn")
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or Kit.frame(self.body,"EggColumn",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(100,100))
- local keep={DailyNectar=true,GetStars=true,StampCard=true}
+ local keep={GetStars=true}
  for _,id in ipairs(liveOrder)do keep["Recipe_"..id]=true end
  for _,child in ipairs(left:GetChildren())do if not keep[child.Name]then child:Destroy()end end
  local w=g.list.w-10 -- 3 px inset each side plus the 4 px scrollbar
@@ -800,28 +938,19 @@ function View:renderBody()
  local note=Kit.text(left,"Small",UICopy.get(if phone then "hatch.footer.phone"else "hatch.footer.desktop"),"soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
  local _=note
  y+=28
- -- Play-forever F2: the daily gift is the stamp card (seven slots, the 7th the bigger
- -- gift); the row under it stamps today's slot (the `daily` action).
- if not self.stampCard or self.stampCard.root.Parent~=left then
-  if self.stampCard then self.stampCard:destroy()end
-  self.stampCard=StampCardView.new(left)
- end
- local cardH=self.stampCard:layout(w-6,phone)
- self.stampCard.root.Position=UDim2.fromOffset(6,y)
- self.stampCard:set(self.state)
- y+=cardH+8
- local daily=left:FindFirstChild("DailyNectar")
- if not daily then daily=button(left,"DailyNectar","",UDim2.fromOffset(3,y),UDim2.fromOffset(w,44),"raised");daily.Activated:Connect(function()local state=self.state;if liveShopTarget(daily,self.shade)and state.dailyAvailable and state.dailyDay and not self.pending then self:send("daily",state.dailyDay)end end)end
- daily.Text=StampCardView.buttonText(self.state)
- daily.Visible=self.state.dailyAvailable==true
- Art.type(daily,"Action",phone);daily.Interactable,daily.Selectable=self.state.dailyAvailable==true and not self.pending,self.state.dailyAvailable==true and not self.pending;Art.control(daily,false,daily.Interactable)
- if daily.Visible then local dh=math.max(44,Art.actionHeight(daily,w));daily.Position,daily.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,dh);y+=dh+8 end
+ -- QA v2: the stamp card and the daily stamp button live in Quests now (R3). Seam: this
+ -- list ends with the eggs, the note and Get Stars; nothing here reads daily state.
  if self.store then
   self.getStars.Parent=left;Art.type(self.getStars,"Action",phone)
   local sh=math.max(44,Art.actionHeight(self.getStars,w));self.getStars.Position,self.getStars.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,sh);y+=sh+8
  end
- left.Size=UDim2.fromOffset(g.list.w,y);self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=y+4>self.body.AbsoluteSize.Y
- self.body.CanvasPosition=Vector2.new(0,math.clamp(canvas.Y,0,math.max(0,y+4-self.body.AbsoluteSize.Y)));self.renderingBody=false
+ -- QA v2 R1.9: the list always scrolls (wheel, drag, pad focus) once it outgrows its
+ -- window, so more eggs fit later. The window is measured in offset units: AbsoluteSize
+ -- carries the panel's UIScale and used to keep a slightly long list from scrolling.
+ local window=View.listWindow(self.body)
+ left.Size=UDim2.fromOffset(g.list.w,y);self.body.CanvasSize=UDim2.fromOffset(0,y+4);self.body.ScrollingEnabled=true
+ self.body:SetAttribute("Scrolls",y+4>window)
+ self.body.CanvasPosition=Vector2.new(0,math.clamp(canvas.Y,0,math.max(0,y+4-window)));self.renderingBody=false
  self:paintEggPane()
  self.shelfEffects:setEggs({self.eggArt})
  self:restoreBodyFocus(previous,action,owner)
@@ -975,11 +1104,10 @@ function View:update(state)
 		-- Dequeue before callbacks, which can synchronously reopen/update this view.
 		self:revokeIntent()
 		self.pending = false
-		self:close(if intent.intent == "meet" then "meet" else "afterHatch", intent)
+		self:close(View.closeReason(intent.intent), intent)
 		return
 	end
 	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
-	self.nectar.Text = tostring(self.state.nectar or 0)
 	self.note.Text = self.errorMessage or self.state.message or "Earn Stars. Choose an egg for your pet."
 	self:layout()
 	if self.shade.Visible then
@@ -1125,6 +1253,10 @@ function View:close(reason, choice)
 	self.presentationGeneration += 1
 	self.shade.Visible = false
 	self:syncEggClock()
+	self:syncShopShade()
+	if self.revealBackdrop then self.revealBackdrop.Visible = false end
+	self.legendToken = nil
+	if self.legendLine then self.legendLine.Visible = false end
 	self.cinematic:cancel()
 	self:restoreRevealParent()
 	self.revealHost.Visible = false

@@ -5,6 +5,13 @@ local EggArt=require(script.Parent.EggArt)
 local Pico8=require(game:GetService("ReplicatedStorage").Shared.Pico8)
 local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local Affection={};Affection.__index=Affection
+-- PLACEHOLDER chime: BoardAudio's star_land placeholder (assets/audio/placeholder), pitched up.
+-- Spencer's own sound replaces it (swap ChimeId). It plays through the EggDropSFX group, so the
+-- Sound setting mutes it like every other effect.
+Affection.ChimeId=134977919634272
+Affection.ChimeVolume=.5
+Affection.ChimeSpeed=1.2
+Affection.BurstCount=22
 function Affection.new(parent,onVariation)
  local folder=Instance.new("Folder");folder.Name="PetAffectionPresentation";folder.Parent=parent
  local self=setmetatable({folder=folder,petals={},elapsed=0,nextVariation=3,index=0,onVariation=onVariation},Affection)
@@ -31,6 +38,21 @@ function Affection.new(parent,onVariation)
  glyph.Visible=false
  local round=Instance.new("UICorner");round.CornerRadius=UDim.new(0,8);round.Parent=plate
  self.award,self.label,self.plate=award,label,plate
+ -- QA v2 R5.5: when a +1 Star lands, a gold sparkle burst pops off the pet and a chime plays.
+ -- One pooled anchor (moved to the pet), one emitter (Emit only, never Enabled), one Sound.
+ local burstPart=Instance.new("Part");burstPart.Name="StarBurst";burstPart.Size=Vector3.new(.2,.2,.2);burstPart.Transparency=1
+ burstPart.Anchored=true;burstPart.CanCollide=false;burstPart.CanTouch=false;burstPart.CanQuery=false;burstPart.CastShadow=false;burstPart.Parent=folder
+ local sparkles=Instance.new("ParticleEmitter");sparkles.Name="StarSparkles";sparkles.Enabled=false;sparkles.Rate=0
+ sparkles.Texture="rbxasset://textures/particles/sparkles_main.dds";sparkles.LightEmission=1;sparkles.LightInfluence=0
+ sparkles.Color=ColorSequence.new(Color3.fromHex("#FFE38A"),Color3.fromHex("#FFBF50"))
+ sparkles.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.45),NumberSequenceKeypoint.new(.6,.3),NumberSequenceKeypoint.new(1,0)})
+ sparkles.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.7,.2),NumberSequenceKeypoint.new(1,1)})
+ sparkles.Lifetime=NumberRange.new(.55,.95);sparkles.Speed=NumberRange.new(5,9);sparkles.SpreadAngle=Vector2.new(180,180)
+ sparkles.Drag=4;sparkles.Acceleration=Vector3.new(0,-4,0);sparkles.Rotation=NumberRange.new(0,360);sparkles.RotSpeed=NumberRange.new(-200,200)
+ sparkles.Parent=burstPart
+ local chime=Instance.new("Sound");chime.Name="StarChime";chime.SoundId="rbxassetid://"..Affection.ChimeId
+ chime.Volume=Affection.ChimeVolume;chime.PlaybackSpeed=Affection.ChimeSpeed;chime.RollOffMaxDistance=80;chime.RollOffMinDistance=8;chime.Parent=burstPart
+ self.burstPart,self.sparkles,self.chime=burstPart,sparkles,chime
  self.glyphBits={};for _,bit in ipairs(glyph:GetDescendants())do if bit:IsA("GuiObject")and bit.BackgroundTransparency<1 then table.insert(self.glyphBits,{node=bit,alpha=bit.BackgroundTransparency})end end
  local function measure()
   if self.destroyed then return end
@@ -89,10 +111,28 @@ end
 function Affection:showCapped(text,reduced)
  return self:showPlate(text,Affection.NoticeSeconds,reduced)
 end
+-- The landing: a gold sparkle burst at the pet (skipped under Reduced Motion) and the chime.
+-- Returns the number of sparkles emitted and whether the chime started.
+function Affection:burst(reduced)
+ if self.destroyed or not self.pet or not self.pet.model.Parent then return 0,false end
+ local body=self.pet.model.PrimaryPart;if not body then return 0,false end
+ local scale=self.pet.worldScale or 1
+ self.burstPart.CFrame=CFrame.new(body.Position+Vector3.new(0,.9*scale,0))
+ local count=if reduced then 0 else math.max(8,math.floor(Affection.BurstCount*math.clamp(scale,.6,1.4)+.5))
+ if count>0 then self.sparkles:Emit(count)end
+ local group=game:GetService("SoundService"):FindFirstChild("EggDropSFX")
+ local played=false
+ if group and group:IsA("SoundGroup")then
+  self.chime.SoundGroup=group
+  if group.Volume>0 then self.chime.TimePosition=0;self.chime:Play();played=true end
+ end
+ return count,played
+end
 function Affection:showSaved(reduced)
  if self.destroyed or not self.pet or not self.pet.model.Parent then return false end
  local shown=self:showPlate(UICopy.get("pet.star"),Affection.AwardSeconds,reduced)
  self.label:SetAttribute("AccessibleLabel","1 Star saved")
+ if shown then self.lastBurst=self:burst(reduced)end
  return shown
 end
 -- The "+1 ★" / notice plate: rises and holds, then fades over its last 40%.

@@ -54,6 +54,74 @@ return function(client,parent)
    assert(shade.AbsoluteSize.X>=probe.AbsoluteSize.X and shade.AbsoluteSize.Y>=probe.AbsoluteSize.Y,"shade spans the screen")
    Kit.shadeClose(shade);gui:Destroy()
   end)
+  test("R3.1: phone sheets dim too (a clear request still dims unless ShadeClear); attachShade follows its container",function()
+   local gui,host=menuGui("_ShadeR3Spec",11);table.insert(guis,gui)
+   local shade=Kit.modalShade(host,"Phone",30);local owner={}
+   Kit.setShadeAlpha(shade,1);Kit.shadeOpen(owner,shade)
+   assert(dims(shade),"the old phone-sheet alpha 1 dims at Kit.ShadeAlpha")
+   shade:SetAttribute("ShadeClear",true);Kit.setShadeAlpha(shade,1);assert(shade.BackgroundTransparency==1,"ShadeClear keeps a self-painted screen clear")
+   Kit.shadeClose(owner)
+   local container=Instance.new("Frame");container.Name="Root";container.Size=UDim2.fromScale(1,1);container.BackgroundTransparency=1;container.ZIndex=20
+   container.Visible=false;container.Parent=host
+   local key={};local dim=Kit.attachShade(key,container,{name="RootDim"})
+   assert(not dim.Visible and not Kit.shadeIsOpen(key)and dim.ZIndex==19)
+   container.Visible=true;assert(dim.Visible and dims(dim)and Kit.shadeIsOpen(key),"opens with its container")
+   settle();local probe=Kit.screenProbe(host)
+   assert(math.abs(dim.AbsolutePosition.Y-probe.AbsolutePosition.Y)<=1,"covers under the top bar")
+   container.Visible=false;assert(not dim.Visible and not Kit.shadeIsOpen(key),"closes with it")
+   container:Destroy();assert(not dim.Parent)
+   gui:Destroy()
+  end)
+  test("R3.8: an overlay shade dims over a screen without covering it; How it works opens, explains stamps, closes",function()
+   local gui,host=menuGui("_ShadeOverlaySpec",11);table.insert(guis,gui)
+   local base=Kit.modalShade(host,"Base",30);local covered={};local owner={}
+   Kit.shadeOpen(owner,base,function(c)table.insert(covered,c)end)
+   local over=Kit.modalShade(host,"Over",40);local key={}
+   Kit.shadeOpen(key,over,nil,{overlay=true});settle()
+   assert(dims(over)and base.BackgroundTransparency==1 and Kit.dimmingShades()==1,"one dim")
+   assert(#covered==0,"the screen under an overlay is not told it is covered")
+   Kit.shadeClose(key);assert(dims(base))
+   Kit.shadeClose(owner)
+   local How=require(client.HowItWorks)
+   for _,id in ipairs(How.Order)do
+    local cards=How.cards(id);assert(#cards>=2 and #cards<=3,id.." has 2 or 3 cards")
+    for _,card in ipairs(cards)do assert(card.title~=""and not string.find(card.title,"r3.",1,true)and card.line~="",id.." copy")end
+   end
+   assert(Kit.helpIdFor({tint="hatch"})=="hatch"and Kit.helpIdFor({tint="book"})=="book"and Kit.helpIdFor({tint=Kit.Sticker.cream})==nil
+    and Kit.helpIdFor({tint="quests",help=false})==nil and Kit.helpIdFor({help="park"})=="park")
+   local depth=Kit.shadeDepth()
+   assert(How.open("quests")and How.isOpen()and How.openId()=="quests");settle()
+   local panel=How.panel();assert(panel and panel:GetAttribute("HelpId")=="quests")
+   assert(panel:FindFirstChild("Card_b")and panel.Card_b:FindFirstChild("StampSample"),"the stamp card is explained with a sample card")
+   assert(Kit.shadeDepth()==depth+1)
+   for _,node in ipairs(panel:GetDescendants())do
+    if node:IsA("TextLabel")and node.Visible and node.Text~=""then assert(node.TextSize>=12,"text floor: "..node:GetFullName())end
+   end
+   local probe=Kit.screenProbe(panel)
+   assert(panel.AbsolutePosition.X>=probe.AbsolutePosition.X and panel.AbsolutePosition.X+panel.AbsoluteSize.X<=probe.AbsolutePosition.X+probe.AbsoluteSize.X+1,"panel on screen")
+   local closed;assert(How.close("done")and not How.isOpen()and How.panel()==nil and Kit.shadeDepth()==depth)
+   assert(How.open("book",{onClosed=function(id)closed=id end}));How.close();task.wait();assert(closed=="book","replayable, with a close hook")
+   for _,size in ipairs({Vector2.new(812,354),Vector2.new(844,390),Vector2.new(1920,1080)})do
+    local g=How.layout(size.X,size.Y,How.cards("quests"))
+    assert(g.panelW<=size.X-24 and g.panelH<=size.Y,tostring(size).." fits")
+    assert(g.compact==(size.X<1000),tostring(size).." compact rule")
+   end
+   gui:Destroy()
+  end)
+  test("R3.2: sheetTop measures from the real screen top (no second keep-out); scrollBleed keeps tiles in place",function()
+   local gui=Instance.new("ScreenGui");gui.Name="_SheetTopSpec";gui.ScreenInsets=Enum.ScreenInsets.None;gui.Parent=parent;table.insert(guis,gui)
+   local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromScale(1,1);host.Parent=gui;settle()
+   assert(Kit.sheetTop(host,58)==60,"a full-screen host starts the sheet 60 down")
+   local lower=Instance.new("Frame");lower.BackgroundTransparency=1;lower.Position=UDim2.fromOffset(0,58);lower.Size=UDim2.new(1,0,1,-58);lower.Parent=gui;settle()
+   assert(Kit.sheetTop(lower,58)==2,"a host already under the controls adds only 2")
+   local scroll=Instance.new("ScrollingFrame");scroll.Position=UDim2.fromOffset(20,64);scroll.Size=UDim2.fromOffset(200,200);scroll.Parent=host
+   local tile=Instance.new("Frame");tile.Size=UDim2.fromOffset(100,40);tile.Parent=scroll;settle()
+   local before=tile.AbsolutePosition
+   local pad=Kit.scrollBleed(scroll,4);Kit.scrollBleed(scroll,4);settle()
+   assert(pad==4 and scroll.Position==UDim2.fromOffset(16,60)and scroll.Size==UDim2.fromOffset(208,208),"grown once, not twice")
+   assert((tile.AbsolutePosition-before).Magnitude<1,"tiles keep their place")
+   gui:Destroy()
+  end)
   test("hub -> Wardrobe -> Book: one dim, parent panels hidden, Back uncovers and slides in from the left",function()
    local hubGui,hubHost=menuGui("_HubShadeSpec",11);local wGui,wHost=menuGui("_WardrobeShadeSpec",12);local bGui,bHost=menuGui("_BookShadeSpec",13)
    table.insert(guis,hubGui);table.insert(guis,wGui);table.insert(guis,bGui)
@@ -136,10 +204,19 @@ return function(client,parent)
     local tabIndex=1;for i,tab in ipairs(Catalog.Tabs)do if tab.slot==item.slot then tabIndex=i end end
     shop.tab=tabIndex
     shop:open(wardrobePet,{wallet=0,row={owned={item.id},equipped={}}});settle()
-    for i,tile in ipairs(shop.tiles)do if tile.id==item.id then shop:focus(i,true)end end
+    -- QA v2 R4.2: the slot's None card comes first; taking off is that card.
+    local itemIndex,noneIndex
+    for i,tile in ipairs(shop.tiles)do if tile.id==item.id then itemIndex=i elseif tile.id==Wardrobe.NoneId then noneIndex=i end end
+    assert(noneIndex==1 and itemIndex,"None leads the slot")
+    local function onItem()shop:focus(itemIndex,true)end
+    local function onNone()shop:focus(noneIndex,true)end
+    onItem()
     assert(shop:act()and #orders==1 and orders[1].wear==item.id)
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==item.id,"worn at once")
     assert(shop.root:GetAttribute("PaneState")=="equipped"and shop.status.Text~="Saving…","no Saving… wait")
+    -- QA v2 R3.5: worn = the button, disabled, reading Equipped; pressing it does nothing.
+    assert(shop.action.Visible and not Kit.buttonState(shop.action).enabled and Kit.buttonState(shop.action).label.Text==UICopy.get("r4.equipped"))
+    assert(not shop:act()and #orders==1,"Equipped never sends")
     shop:setContext({row={owned={item.id},equipped={}}})
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==item.id,"snapshot during the save keeps it")
     assert(shop:result({id=orders[1].id,status="Rejected",reason="Busy"}))
@@ -148,16 +225,16 @@ return function(client,parent)
     -- Saved keeps it and says nothing more.
     assert(shop:act()and #orders==2);assert(shop:result({id=orders[2].id,status="Saved"})and #rolled==1)
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==item.id)
-    -- Code review: two quick taps (take off, wear again). The first saves, the second is
-    -- refused: the look rolls back to the first one's saved result, not past it.
-    assert(shop:act()and shop:act()and #orders==4 and orders[3].wear==false and orders[4].wear==item.id)
+    -- Code review: two quick taps (None takes it off, then wear again). The first saves,
+    -- the second is refused: the look rolls back to the first one's saved result, not past it.
+    onNone();assert(shop:act());onItem();assert(shop:act()and #orders==4 and orders[3].wear==false and orders[3].slot==item.slot and orders[4].wear==item.id)
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==item.id,"second tap worn at once")
     assert(shop:result({id=orders[3].id,status="Saved"}))
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==item.id,"a superseded save keeps the newer look")
     assert(shop:result({id=orders[4].id,status="Rejected",reason="Busy"})and #rolled==2)
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==nil,"rolled back to the saved take-off, not past it")
     -- And a refused first tap leaves the newer one in flight on.
-    assert(shop:act()and shop:act()and #orders==6)
+    onItem();assert(shop:act());onNone();assert(shop:act()and #orders==6 and orders[6].wear==false)
     assert(shop:result({id=orders[5].id,status="Rejected",reason="Busy"})and #rolled==3)
     assert(Catalog.equippedIn(wardrobePet,shop.ctx.row.equipped,item.slot)==nil,"the newer tap (take off) stays on")
     assert(shop:result({id=orders[6].id,status="Saved"})and shop.pending==nil and #shop.equips==0)

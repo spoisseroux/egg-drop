@@ -154,17 +154,16 @@ return function(client, _parent)
 			local _, _, escapedAgain = counts()
 			assert(escapedAgain == 2)
 		end)
-		test("focus movement release restores only the captured controller", function()
-			local released, enabled = 0, 0
-			local fake = { focusLock = { release = function() released += 1 end,
-				controls = { Enable = function() enabled += 1 end }, restoreControls = true } }
+		test("focus movement release drops the shared focus hold once (QA v2 R2 MovementLock)", function()
+			local shared = require(client.MovementLock).shared()
+			local before = shared:holds("focus")
+			shared:acquire("focus")
+			local released = 0
+			local fake = { focusLock = { release = function() released += 1 end } }
 			Room.releaseFocusMovement(fake)
 			Room.releaseFocusMovement(fake)
-			assert(fake.focusLock == nil and released == 1 and enabled == 1)
-			fake.focusLock = { release = function() released += 1 end,
-				controls = { Enable = function() enabled += 1 end }, restoreControls = false }
-			Room.releaseFocusMovement(fake)
-			assert(released == 2 and enabled == 1, "pre-disabled controls were re-enabled")
+			assert(fake.focusLock == nil and released == 1 and not shared:holds("focus"))
+			if before then shared:acquire("focus") end
 		end)
 		test("camera teardown invalidates stale greeting epochs without touching a replacement", function()
 			local released, cancelled, disconnected, updated = 0, 0, 0, 0

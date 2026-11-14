@@ -215,7 +215,7 @@ function View:build(view)
  self.view=view;self.key=View.viewKey(view,self:entries())
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
- Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
+ Kit.setShadeAlpha(self.shade,Kit.ShadeAlpha) -- R3.1: one full-screen shade, phones too
  local W=if phone then view.W else 848
  local H=if phone then view.H else 608
  self.W,self.H=W,H
@@ -256,6 +256,9 @@ function View:buildList(body,phone)
    ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6,
    CanvasSize=UDim2.fromOffset(0,#entries*(tileH+gap)-gap+3+Kit.Lip.compact)})
   parent=list;self.pageList=list
+  -- QA v2 R3.2: the first page tile's selection stroke was cut at the top and left.
+  local bleed=Kit.scrollBleed(list,4)
+  list.CanvasSize+=UDim2.fromOffset(0,bleed*2)
   x,y,w=0,0,w-8
  else
   local R=View.Regular.list

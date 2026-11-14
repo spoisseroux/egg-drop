@@ -55,6 +55,16 @@ return function(client)
    for _=1,40 do fx:step(.1,false,false)end;assert(not fx.award.Enabled)
    assert(fx:showSaved(false)and fx.label.Text==UICopy.get("pet.star"),"the Star text comes back");fx:hideAward()
   end)
+  test("QA v2 R5.5: a landed Star bursts gold sparkles at the pet and chimes; reduced keeps the chime only",function()
+   local count=#fx.folder:GetDescendants();fx:hideAward()
+   assert(fx:showSaved(false)and fx.lastBurst>=8,"no sparkle burst on +1")
+   local body=pip.model.PrimaryPart
+   assert((fx.burstPart.Position-body.Position).Magnitude<3,"burst not at the pet")
+   assert(not fx.sparkles.Enabled and fx.sparkles.Rate==0,"burst emitter left running")
+   assert(fx.chime:IsA("Sound")and fx.chime.SoundId~=""and fx.chime.Parent==fx.burstPart)
+   fx:hideAward();assert(fx:showSaved(true)and fx.lastBurst==0,"reduced motion still bursts")
+   assert(#fx.folder:GetDescendants()==count,"burst allocated");fx:hideAward()
+  end)
   test("reduced contact has static cheeks and glyph without moving petals",function()
    fx:clear();fx:showSaved(true);local start=fx.award.StudsOffsetWorldSpace
    for _=1,5 do fx:step(.1,true,true)end

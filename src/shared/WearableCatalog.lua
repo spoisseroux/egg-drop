@@ -44,6 +44,19 @@ function Catalog.slotKeys(petId,slot)
  if info and info.perSide then return {slot.."L",slot.."R"}end
  return {slot}
 end
+-- QA v2 R4.1 (shot 194020): per-item fit lifts, in rig studs at garden size (scaled
+-- with the pet), keyed by rig definition id. Measured in Blender against the Bear's
+-- head mesh (pet-bear-attachments.blend): the sun hat's brim underside sat ~0.03
+-- inside the crown and the beanie dome ~0.015; the flower crown wraps the brow by
+-- design and stays put. Only Y is used today; X/Z are there for later rigs.
+Catalog.Fit=table.freeze({
+ bear=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0)}),
+})
+function Catalog.fitOffset(rigId,itemId)
+ local rig=type(rigId)=="string"and Catalog.Fit[rigId]
+ local offset=rig and type(itemId)=="string"and rig[itemId]
+ return if typeof(offset)=="Vector3"then offset else Vector3.zero
+end
 function Catalog.inTab(petId,tabSlot)
  local result={};for _,item in ipairs(Catalog.forPet(petId).order)do if item.slot==tabSlot then table.insert(result,item)end end
  return result

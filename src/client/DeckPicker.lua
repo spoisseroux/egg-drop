@@ -53,6 +53,10 @@ end
 function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  local shade=Art.frame(gui,"DeckPicker","ink",UDim2.fromScale(0,0),UDim2.fromScale(1,1),20)
  shade.BackgroundTransparency,shade.Active,shade.Visible=1,true,false
+ -- QA v2 R3.1: `shade` stays the screen's root (and its open flag for init.client);
+ -- the dimming is one Kit full-screen shade beside it in the Q2 shade stack, under the
+ -- Roblox top bar too. The legacy overlay shade no longer dims for this screen.
+ local dim
  -- Settings card: a Kit panel with the shared header on top.
  local card=Kit.frame(shade,"Card","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(100,44),30)
  card.AnchorPoint=Vector2.new(.5,0);card.Active=true;Kit.stroke(card)
@@ -62,6 +66,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  scroll.ScrollBarThickness=4;Art.bind(scroll,{ScrollBarImageColor3="accent"})
  local self=setmetatable({shade=shade,card=card,scroll=scroll,tabs={},choices={Shell={},Background={}},rows={},
   onPreview=onPreview,onClose=onClose,onApply=onApply,available={},confirmed={},onSetting=onSetting,active="Shell"},Picker)
+ dim=Kit.attachShade(self,shade,{host=gui,name="DeckPickerDim",zIndex=19})
+ self.dim=dim
  -- Accepted marks per choice (read by specs and the old callers; the cards draw them).
  for tab,catalog in pairs(catalogs)do for _,id in ipairs(catalog.Order)do self.choices[tab][id]={Enabled=false,id=id}end end
  self.saveMarker=text(card,"SaveStatus","","Supporting");Art.bind(self.saveMarker,{TextColor3="reward"});self.saveMarker.TextYAlignment=Enum.TextYAlignment.Top;self.saveMarker.Visible=false
@@ -79,6 +85,9 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
  -- v1 track B: opens the bug report / suggestion sheet (init.client sets `onReport`).
  self.reportButton=button(scroll,"ReportSetting",require(Shared.UICopy).get("report.entry"),function()self:openReport()end)
+ -- QA v2 R3.8: "Show tips again" (init.client sets `onTips`: R1's coach-tip replay).
+ self.tipsButton=button(scroll,"TipsSetting",require(Shared.UICopy).get("r3.tips"),function()self:replayTips()end)
+ self.tipsButton.Visible=false
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
  self.shop=Shop.new(shade,{
@@ -129,7 +138,10 @@ function Picker:shopOpen()return self.shade.Visible and styleTab[self.active]~=n
 function Picker:layout()
  if self.layingOut then return end;self.layingOut=true
  local size=self.shade.AbsoluteSize;local short=size.Y<220
- if self.shop then self.shop:fit(size)end
+ -- R3.2: phone sheets start under the Roblox controls measured from the screen top,
+ -- never a second keep-out below an already inset host.
+ local sheetTop=Kit.sheetTop(self.shade)
+ if self.shop then self.shop:fit(size,nil,sheetTop)end
  self.roomy=size.X>=1000 and size.Y>=650
  local function styleType(n,r,c)return Art.roomyType(n,r,c,self.roomy)end
  local compact=Kit.compactRule(size.X,size.Y)
@@ -155,7 +167,8 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion,self.reportButton})do
+  for _,control in ipairs({self.sound,self.music,self.motion,self.reportButton,self.tipsButton})do
+   if control==self.tipsButton and not control.Visible then continue end
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
   end
@@ -166,9 +179,11 @@ function Picker:layout()
   local tallest=headerH+y+8
   self.safeTop=math.max(0,(size.Y-math.min(maximum,tallest))/2);self.layoutRootSize=size
   -- Phones: the card starts under the Roblox controls when there is room (QA 2026-11-12).
-  if compact and not short then local _,kh=Kit.keepOut();if size.Y-(kh+2)>=headerH+96 then self.safeTop=math.max(self.safeTop,kh+2)end end
+  -- R3.2: and fills the screen down to the bottom edge (a phone sheet, not a short card).
+  if compact and not short then if size.Y-sheetTop>=headerH+96 then self.safeTop=sheetTop end end
  end
  local height=math.min(maximum,math.max(1,size.Y-self.safeTop-4),headerH+y+8)
+ if compact and not short then height=math.max(1,size.Y-self.safeTop-4)end
  self.card.Position,self.card.Size=UDim2.new(.5,0,0,self.safeTop),UDim2.fromOffset(width,height)
  Kit.corner(self.card,if compact then 16 else 30)
  self.saveMarker.Visible=markerW>0;self.saveDetail.Visible=self.saveNotice~=nil
@@ -218,6 +233,7 @@ function Picker:showTab(active)
  local settings=active=="Settings"
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
  self.reportButton.Visible=settings and self.onReport~=nil
+ self.tipsButton.Visible=settings and self.onTips~=nil
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
@@ -261,6 +277,12 @@ end
 function Picker:openReport()
  if not self.shade.Visible or self.active~="Settings"or not self.onReport then return false end
  if self.onReport()==false then return false end
+ if self.onAccepted then self.onAccepted("confirm")end;return true
+end
+-- Settings > Show tips again (R3.8): R1's coach tips replay; the screen stays as it is.
+function Picker:replayTips()
+ if not self.shade.Visible or self.active~="Settings"or not self.onTips then return false end
+ if self.onTips()==false then return false end
  if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 function Picker:changeSetting(key)

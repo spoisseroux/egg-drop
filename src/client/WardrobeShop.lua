@@ -19,6 +19,8 @@ local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
+local TabInk=require(script.Parent.TabInk)
+local HintLegend=require(script.Parent.HintLegend)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -27,20 +29,45 @@ local TierChip={common={"COMMON",Color3.fromHex("#9BE3A8")},rare={"RARE",Color3.
 local SlotNote={Hat="Hats sit on the crown",Shirt="Sleeves move with the arms",Neck="Draws over a shirt",EarPiercing="A pair, one for each ear",
  Eyes="Replaces the eyes",Mouth="Replaces the neutral smile",Tail="Replaces the tail"}
 
+-- QA v2 R4.2: every slot tab starts with a "None" card (take the slot off). It is a
+-- card like the others: focus previews the bare slot, A / Enter saves the take-off
+-- through the same server path (wearableEquip with itemId=false, validated there).
+Shop.NoneId="none"
+-- Pure: the cards of one slot tab (None first, then the catalogue items). A slot
+-- with no items for this pet has no cards at all (the empty line shows instead).
+function Shop.tileList(petId,slot)
+ local items=Catalog.inTab(petId,slot)
+ if #items==0 then return {}end
+ local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
+ for _,item in ipairs(items)do table.insert(list,item)end
+ return list
+end
+-- Pure: the None card's pane. Current when nothing is worn in the slot.
+function Shop.noneStatus(petId,slot,ctx)
+ local row=(ctx and ctx.row)or {owned={},equipped={}}
+ if Catalog.equippedIn(petId,row.equipped,slot)==nil then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
+ return {kind="owned",text="",button=UICopy.get("r4.wardrobe.takeOff"),enabled=true}
+end
 -- Pure: what the pane says and offers for one item.
 -- ctx = { petId, wallet, row = {owned={...}, equipped={key=id}} }
+-- QA v2 R3.5: the item being worn keeps its button, disabled, reading "Equipped"
+-- (taking it off is the None card).
 function Shop.status(petId,itemId,ctx)
  local item=Catalog.item(petId,itemId)
  if not item then return {kind="invalid",text="",button=nil}end
  local row=ctx.row or {owned={},equipped={}}
  local owned=table.find(row.owned or {},itemId)~=nil
- if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="Wearing",button="Take off",enabled=true}end
+ if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text="",button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
  if wallet>=item.price then return {kind="buy",text="You have enough Stars",button="★ Buy "..item.price,price=item.price,enabled=true}end
  return {kind="short",text=(item.price-wallet).." more Stars needed",button="★ Buy "..item.price,price=item.price,enabled=false}
 end
-function Shop.tileStatus(petId,itemId,ctx)
+function Shop.tileStatus(petId,itemId,ctx,slot)
+ if itemId==Shop.NoneId then
+  if Shop.noneStatus(petId,slot,ctx).kind=="equipped"then return "WEARING","accent"end
+  return "","soft"
+ end
  local s=Shop.status(petId,itemId,ctx)
  if s.kind=="equipped"then return "WEARING","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
@@ -129,6 +156,12 @@ function Shop.new(host,callbacks)
 end
 
 function Shop:items()return Catalog.inTab(self.petId,Catalog.Tabs[self.tab].slot)end
+function Shop:slot()return Catalog.Tabs[self.tab].slot end
+-- The pane status of a card (None included).
+function Shop:statusOf(id)
+ if id==Shop.NoneId then return Shop.noneStatus(self.petId,self:slot(),self.ctx)end
+ return Shop.status(self.petId,id,self.ctx)
+end
 
 -- Shared pane pieces: a ViewportFrame with the pet, name, tier, note, status, action.
 function Shop:buildPane(pane,pw,ph,compact)
@@ -161,7 +194,7 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
  if self.tileRoot then self.tileRoot:Destroy()end
  local holder=Kit.frame(parent,"Tiles",nil,UDim2.new(),UDim2.fromScale(1,1));holder.ZIndex=parent.ZIndex+1;self.tileRoot=holder
  self.tiles={}
- for index,item in ipairs(self:items())do
+ for index,item in ipairs(Shop.tileList(self.petId,self:slot()))do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
   -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
   local tile,tileState=Kit.tile(holder,"Tile_"..item.id,{selectable=false,radius=12,compact=gap<12,
@@ -171,13 +204,18 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   -- Swatch: the item's own colour (or the pet's secondary for tinted items).
   local side=tileH-20
   local swatch=Kit.frame(tile,"Swatch",nil,UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);swatch.BackgroundTransparency=0
-  swatch.BackgroundColor3=if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft;Kit.stroke(swatch)
-  local tier=TierChip[item.tier]or TierChip.common
-  local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
+  if item.none then
+   Kit.paint(swatch,"BackgroundColor3","well");Kit.stroke(swatch)
+   local mark=Kit.icon(swatch,"none",math.floor(side*.5),"soft");mark.AnchorPoint=Vector2.new(.5,.5);mark.Position=UDim2.fromScale(.5,.5)
+  else
+   swatch.BackgroundColor3=if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft;Kit.stroke(swatch)
+   local tier=TierChip[item.tier]or TierChip.common
+   local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
+  end
   local tx=10+side+12
   local nameLabel=txt(tile,"Name",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
-  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary}
+  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none}
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
  if #self.tiles==0 then txt(holder,"Body",UICopy.get("wardrobe.emptySlot"),"soft",x0,y0,300,24)end
@@ -187,7 +225,7 @@ function Shop:build(view)
  self:detachPreviews()
  if self.content then self.content:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
- self.view=view;self.key=Shop.viewKey(view);self.tileRoot=nil
+ self.view=view;self.key=Shop.viewKey(view);self.tileRoot=nil;self.legend=nil
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
  Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
@@ -209,7 +247,7 @@ function Shop:build(view)
    ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
   self.list=list
  else
-  self.columns=2;self.grid=nil;self.body=content
+  self.columns=2;self.grid=nil;self.body=content;self.legend=nil
   self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",tint="companions",width=848,onBack=function()self:back()end})
   Kit.halftone(content,"companions",false)
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
@@ -220,15 +258,16 @@ function Shop:build(view)
    Size=UDim2.fromOffset(456,404),ScrollBarThickness=4,ZIndex=content.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
    ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
   self.list=list
-  local hints=Kit.frame(content,"Hints",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(560,24))
-  local x=0
-  for _,pair in ipairs({{"+","Browse"},{"LB","Slot"},{"A","Buy or wear"},{"B","Back"}})do
-   local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
-   local t=txt(hints,"Small",pair[2],"soft",x+28,0,120,24);t.AutomaticSize=Enum.AutomaticSize.X
-   x+=28+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
-  end
-  txt(content,"Small","Fixed prices. No random items.","dim",524,566,300,24,{TextXAlignment=Enum.TextXAlignment.Right})
+  -- QA v2 R2.5: footer chips per device (R2's HintGlyphs), explained once (HintLegend).
+  local footer=Kit.frame(content,"Footer",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(800,24))
+  local promise=txt(footer,"Small","Fixed prices. No random items.","dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
+  local legend=HintLegend.attach(footer,800,"wardrobe",{{"browse",UICopy.get("input.action.browse")},{"tab",UICopy.get("r4.wardrobe.slot")},
+   {"confirm",UICopy.get("r4.wardrobe.buyOrWear")},{"back",UICopy.get("input.action.back")}})
+  self.legend=legend
+  local function sync()promise.Visible=footer:GetAttribute("HintLegend")~=true end
+  footer:GetAttributeChangedSignal("HintLegend"):Connect(sync);sync()
  end
+ TabInk.guard(self.tabs) -- R3.6: labels keep their ink across theme repaints
  self.tabs.changed=function(index)self:setTab(index)end
  self.tabs.select(self.tab)
  self.ring=Kit.focusRing(self.root)
@@ -288,11 +327,14 @@ end
 
 -- Pure (QA Q2.4): the equipped map after wearing (wear = item id) or taking off
 -- (wear = false) one item, as the server's equipWearable saves it.
-function Shop.applyEquip(petId,equipped,itemId,wear)
+-- `slot` names the slot a take-off empties (the None card has no item of its own).
+function Shop.applyEquip(petId,equipped,itemId,wear,slot)
  if wear then return Shop.previewWearables(petId,equipped,itemId)end
  local result=table.clone(equipped or {})
- local item=Catalog.item(petId,itemId);if not item then return result end
- for _,key in ipairs(Catalog.slotKeys(petId,item.slot))do result[key]=nil end
+ local item=Catalog.item(petId,itemId)
+ slot=slot or(item and item.slot)
+ if not slot then return result end
+ for _,key in ipairs(Catalog.slotKeys(petId,slot))do result[key]=nil end
  return result
 end
 -- Code review: the look shown is the last server-confirmed look (`self.confirmed`)
@@ -300,7 +342,7 @@ end
 -- refusal only ever undoes its own change and never a save that already succeeded.
 function Shop.replayEquips(petId,confirmed,equips)
  local result=table.clone(confirmed or {})
- for _,order in ipairs(equips or {})do if order.petId==petId then result=Shop.applyEquip(petId,result,order.itemId,order.wear)end end
+ for _,order in ipairs(equips or {})do if order.petId==petId then result=Shop.applyEquip(petId,result,order.itemId,order.wear,order.slot)end end
  return result
 end
 function Shop:setContext(ctx)
@@ -413,7 +455,7 @@ function Shop:pumpPreviews()
  local built=false
  for index,tile in ipairs(self.tiles)do
   if live>=Shop.CardPreviewLive then break end
-  if tile.preview==nil and visible[index]then
+  if tile.preview==nil and visible[index]and not tile.none then
    local palette=tile.role and Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
    local tint=if palette and typeof(palette[tile.role])=="Color3"then palette[tile.role]else nil
    local key=Shop.cardKey(self.petId,tile.id,tint)
@@ -440,7 +482,7 @@ function Shop:refresh()
  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
   if tile.role and palette and typeof(palette[tile.role])=="Color3"and not tile.preview then tile.swatch.BackgroundColor3=palette[tile.role]end
-  local text,role=Shop.tileStatus(self.petId,tile.id,self.ctx)
+  local text,role=Shop.tileStatus(self.petId,tile.id,self.ctx,self:slot())
   if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
@@ -449,7 +491,7 @@ function Shop:refresh()
   Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
   tile.stroke.Thickness=if focused then 2 else 1;tile.stroke.Transparency=if focused then 0 else .86
   Kit.paint(tile.stroke,"Color",function()return if focused then Kit.color("accent")else Color3.new(1,1,1)end)
-  tile.button:SetAttribute("TileState",Shop.status(self.petId,tile.id,self.ctx).kind)
+  tile.button:SetAttribute("TileState",self:statusOf(tile.id).kind)
  end
  self:paintPane()
 end
@@ -457,8 +499,11 @@ end
 function Shop:paintPreview()
  local id=self:focusedId()
  local base=table.clone(self.callbacks.appearance and self.callbacks.appearance(self.petId)or {})
- base.wearables=Shop.previewWearables(self.petId,self.ctx.row.equipped,if id and Shop.status(self.petId,id,self.ctx).kind~="equipped"then id else nil)
- if id and Shop.status(self.petId,id,self.ctx).kind=="equipped"then base.wearables=table.clone(self.ctx.row.equipped)end
+ if id==Shop.NoneId then base.wearables=Shop.applyEquip(self.petId,self.ctx.row.equipped,id,false,self:slot())
+ else
+  base.wearables=Shop.previewWearables(self.petId,self.ctx.row.equipped,if id and Shop.status(self.petId,id,self.ctx).kind~="equipped"then id else nil)
+  if id and Shop.status(self.petId,id,self.ctx).kind=="equipped"then base.wearables=table.clone(self.ctx.row.equipped)end
+ end
  base.appearanceGeneration=(base.appearanceGeneration or 0)
  if not self.visual or self.visualPet~=self.petId then
   if self.visual then self.visual:destroy()end
@@ -491,11 +536,16 @@ function Shop:paintPane()
   self.name.Text="";self.note.Text="";self.status.Text="";self.action.Visible=false;self.tier.root.Visible=false
   if self.visible then self:paintPreview()end;return
  end
- local item=Catalog.item(self.petId,id);self.tier.root.Visible=true
- self.name.Text=item.name
- local tier=TierChip[item.tier]or TierChip.common;self.tier.set(tier[1],"sticker",tier[2]) -- T6: tier sticker, ink on the tier colour
- self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
- local status=Shop.status(self.petId,id,self.ctx)
+ local item=Catalog.item(self.petId,id)
+ if id==Shop.NoneId or not item then
+  self.tier.root.Visible=false;self.name.Text=UICopy.get("r4.wardrobe.none")
+  self.note.Text=UICopy.get("r4.wardrobe.noneNote")
+ else
+  self.tier.root.Visible=true;self.name.Text=item.name
+  local tier=TierChip[item.tier]or TierChip.common;self.tier.set(tier[1],"sticker",tier[2]) -- T6: tier sticker, ink on the tier colour
+  self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
+ end
+ local status=self:statusOf(id)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.itemId==id and self.pending.action=="wearableBuy"
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
@@ -529,6 +579,7 @@ function Shop:focus(index,instant)
  if self.view then Kit.setGlyphVisible(self.action,not Kit.lastInputTouch())end
 end
 function Shop:move(dx,dy)
+ if self.legend then self.legend.dismiss()end
  local nextIndex=Shop.step(self.index,dx,dy,#self.tiles,self.columns)
  if nextIndex==self.index then return false end
  self:focus(nextIndex);return true
@@ -544,6 +595,7 @@ function Shop:setTab(index)
  self.index=landing;self:focus(landing,true);return true
 end
 function Shop:shiftTab(delta)
+ if self.legend then self.legend.dismiss()end
  local index=math.clamp(self.tab+delta,1,#Catalog.Tabs)
  if index==self.tab then return false end;return self:setTab(index)
 end
@@ -553,15 +605,18 @@ function Shop:act()
  local id=self:focusedId();if not id then return false end
  -- An equip in flight never blocks the next choice; a buy does.
  if self.pending and self.pending.action~="wearableEquip"then return false end
- local item=Catalog.item(self.petId,id);local status=Shop.status(self.petId,id,self.ctx)
+ if self.legend then self.legend.dismiss()end
+ local status=self:statusOf(id)
+ local slot=self:slot()
  local opId=game:GetService("HttpService"):GenerateGUID(false)
- if status.kind=="owned"or status.kind=="equipped"then
+ if status.kind=="owned"then
   -- QA Q2.4: optimistic. The pet wears it (or takes it off) at once; the save runs in
   -- the background and only a refusal puts the previous look back, with a toast.
   self.equips=self.equips or {}
   if #self.equips==0 or self.confirmed==nil then self.confirmed=table.clone(self.ctx.row.equipped or {})end
-  local wear=if status.kind=="owned"then id else false
-  self.pending={id=opId,action="wearableEquip",petId=self.petId,slot=item.slot,itemId=id,wear=wear}
+  -- The None card takes the slot off (wear=false); an owned item is worn.
+  local wear=if id==Shop.NoneId then false else id
+  self.pending={id=opId,action="wearableEquip",petId=self.petId,slot=slot,itemId=id,wear=wear}
   table.insert(self.equips,self.pending)
   self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
   self.errorId,self.errorText=nil,nil
@@ -597,7 +652,7 @@ function Shop:result(message)
   local latest=index>#self.equips -- nothing newer was tapped after it
   if self.pending==order then self.pending=self.equips[#self.equips]end
   if message.status=="Saved"then
-   if order.petId==self.petId then self.confirmed=Shop.applyEquip(order.petId,self.confirmed,order.itemId,order.wear)end
+   if order.petId==self.petId then self.confirmed=Shop.applyEquip(order.petId,self.confirmed,order.itemId,order.wear,order.slot)end
    if latest then self.errorId,self.errorText=nil,nil end
   else
    -- Roll back this change only: the confirmed look with the newer equips still on top.
@@ -633,6 +688,7 @@ function Shop:open(petId,ctx)
  -- QA Q2.2: in from the right like the Pets page (Reduced Motion cuts); Back is a cut
  -- to the screen underneath, which slides back in from the left.
  Kit.slideIn(self.body,Kit.SlideOffset,Kit.headerSkip(self.header))
+ if self.legend then self.legend.open()end
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
   if self.visible then self:pumpPreviews()end

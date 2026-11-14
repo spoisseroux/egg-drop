@@ -57,7 +57,7 @@ function Host:fit()
   layer.AnchorPoint=Vector2.zero;layer.Position=UDim2.fromOffset(0,l.top);layer.Size=UDim2.fromOffset(l.W,l.H)
   layer.BackgroundTransparency=1;layer.ClipsDescendants=false;o.tint.Visible=false;self.stroke.Enabled=false
   content.Size=UDim2.fromOffset(l.W,l.H);o.scale.Scale=1
-  Kit.setShadeAlpha(self.shade,1)
+  Kit.setShadeAlpha(self.shade,Kit.ShadeAlpha) -- R3.1: phones dim too
  else
   layer.AnchorPoint=Vector2.new(.5,.5);layer.Position=UDim2.fromScale(.5,.5)
   layer.Size=UDim2.fromOffset(math.floor(Host.Size.X*l.scale+.5),math.floor(Host.Size.Y*l.scale+.5))

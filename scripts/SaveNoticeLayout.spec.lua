@@ -135,12 +135,12 @@ return function(client,parent,rootSize)
 				shop:open(state());shop:selectRecipe("hue");settle()
 				local before=callbacks
 				cycle(shop,function(v,n)
-					readable(v.heading);assert((v.heading.Text==n.short or v.heading.Text==n.narrow) and not overlaps(v.heading,v.closeButton));assert(v.nectar.Visible and v.nectar.Text=="24" and v.nectar:GetAttribute("AccessibleLabel")=="24 Stars");readable(v.nectar)
+					readable(v.heading);assert((v.heading.Text==n.short or v.heading.Text==n.narrow) and not overlaps(v.heading,v.closeButton));assert(v.state.nectar==24 and (not v.shopHeader or v.shopHeader.wallet.amount.Text:find("24",1,true)))
 					assert(v.selected=="hue" and v.state.nectar==24 and v.action.Interactable and v.action.Text:find("24",1,true))
 					assert(inside(v.closeButton,v.card) and inside(v.action,v.card) and not overlaps(v.body,v.action) and v.body.AbsoluteSize.Y>=44)
 					if v.notePinned then readable(v.note);assert(v.note.Visible and v.note.Text==n.detail)else local label=v.body.EggColumn.SaveInstruction;assert(label and label.Text==n.detail);readable(label);reach(label,v.body)end
 				end)
-				assert((shop.heading.Text=="Companion eggs"or shop.heading.Text=="Companions"or shop.heading.Text=="Eggs") and shop.nectar.Text=="24" and callbacks==before)
+				assert((shop.heading.Text=="Companion eggs"or shop.heading.Text=="Companions"or shop.heading.Text=="Eggs") and shop.state.nectar==24 and callbacks==before)
 				local result={id="save-notice-result-"..size.Y,petId="foxfire_wick",family="wick",rare=true}
 				shop:update(state(result));settle()
 				local epoch,viewport,ready=shop.cinematic.epoch,shop.cinematic.heroViewport,shop.ackReady
@@ -188,7 +188,7 @@ return function(client,parent,rootSize)
 		test("persistent retry wins over stale command feedback and newer Ready clears that feedback",function()
 			local shop=Shop.new(root,audio,function()return true end,outgoing);table.insert(views,shop);shop:open(state());settle()
 			shop:setError("RevisionChanged");shop:setSaveNotice(Notice.resolve(nil,"Unavailable"));settle()
-			assert((shop.heading.Text=="Retrying load" or shop.heading.Text=="Load retry") and shop.errorMessage=="RevisionChanged" and shop.nectar.Text=="24")
+			assert((shop.heading.Text=="Retrying load" or shop.heading.Text=="Load retry") and shop.errorMessage=="RevisionChanged" and shop.state.nectar==24)
 			local nextState=state();nextState.revision=21;shop:update(nextState);shop:setSaveNotice(nil);settle()
 			assert(shop.errorMessage==nil and (shop.heading.Text=="Companion eggs"or shop.heading.Text=="Companions"or shop.heading.Text=="Eggs") and not shop.note.Text:find("unavailable",1,true));shop:close()
 		end)

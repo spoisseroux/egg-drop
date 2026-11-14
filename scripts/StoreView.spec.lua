@@ -189,7 +189,7 @@ return function(client,parent)
     local cardRight=shop.card.AbsolutePosition.X+shop.card.AbsoluteSize.X
     assert(entry.AbsolutePosition.X>=shop.card.AbsolutePosition.X and entry.AbsolutePosition.X+entry.AbsoluteSize.X<=cardRight,"entry stays inside the card")
     local function clear(a,b)return a.AbsolutePosition.X+a.AbsoluteSize.X<=b.AbsolutePosition.X+.5 or b.AbsolutePosition.X+b.AbsoluteSize.X<=a.AbsolutePosition.X+.5 or a.AbsolutePosition.Y+a.AbsoluteSize.Y<=b.AbsolutePosition.Y+.5 or b.AbsolutePosition.Y+b.AbsoluteSize.Y<=a.AbsolutePosition.Y+.5 end
-    assert(clear(entry,shop.closeButton)and clear(entry,shop.heading)and clear(entry,shop.wallet)and clear(entry,shop.body)and clear(entry,shop.action),tostring(size).." Get Stars overlaps egg shop chrome")
+    assert(clear(entry,shop.closeButton)and clear(entry,shop.heading)and clear(entry,shop.body)and clear(entry,shop.action),tostring(size).." Get Stars overlaps egg shop chrome")
     assert(shop.heading.TextFits and shop.action.TextFits and shop.closeButton.AbsoluteSize==Vector2.new(44,44))
     assert(shop:openStore()and page:isOpen()and not shop.card.Visible and shop:isOpen(),"store replaces the egg card inside the same owner")
     assert(page.amount.Text=="6"and shop:getControllerFocus().root==page.shade)

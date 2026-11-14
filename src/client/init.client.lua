@@ -1344,6 +1344,9 @@ nurseryView.onClosed = function(reason, choice)
 	cancelHatchNavigation()
 	if reason == "meet" and choice and EggCatalog.isOwned(board:GetAttribute("InventoryMask") or 0, choice.petId) then
 		hatchNavigation:meet(choice.petId)
+	elseif reason == "exit" then
+		-- Code review: the first Bear's "Back" lands in the garden, as the button says.
+		if board:GetAttribute("Mode") ~= "Room" then clientUI.leaveDeck() end
 	elseif reason == "earn" or reason == "afterHatch" then
 		hatchNavigation:play()
 	end
@@ -1518,8 +1521,25 @@ do
 		roomView.transition:refresh()
 		-- The machine hub dims with its own full-screen shade (Q2 shade stack, QA Q5).
 		modalShade.Visible = modal.Visible or picker.shade.Visible or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
+		-- QA v2 R3.1: the legacy overlay shade still blocks input and drives the pause for
+		-- every sheet, but it dims only for the round modal; Deck style / Settings, the
+		-- journal, Hatch eggs and Customize dim with their own Kit shade (one per screen).
+		modalShade.BackgroundTransparency = if modal.Visible then 0.40 else 1
   if modalShade.Visible then rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())end
 		if clientUI.syncPause then clientUI.syncPause()else request:FireServer("pause",modalShade.Visible)end
+	end
+	-- QA v2 R3.8: the stamp card lives on the quest log's daily tab (daily things live
+	-- together); it reads the nursery snapshot and stamps with the same `daily` action
+	-- Hatch eggs used. HowItWorks is the ? cards' overlay (R1's "show tips again" can
+	-- reach any machine's cards through clientUI.howItWorks.open(id) / .list()).
+	clientUI.questCallbacks.stampState=function()return nurseryState end
+	clientUI.questCallbacks.stamp=function(day)nurseryRequest:FireServer("daily",day,nurseryState and nurseryState.revision or 0)end
+	clientUI.howItWorks=require(script.HowItWorks)
+	-- "Show tips again" (R1's coach replay, defined further down) from the cards and Settings.
+	clientUI.howItWorks.replayTips=function()if clientUI.replayCoachTips then clientUI.replayCoachTips()end end
+	picker.onTips=function()
+		if not clientUI.replayCoachTips then return false end
+		picker:close("tips");task.defer(clientUI.replayCoachTips);return true
 	end
 	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade, clientUI.hueView.shade }) do
 		node:GetPropertyChangedSignal("Visible"):Connect(function()
@@ -2581,9 +2601,35 @@ do
   clientUI.coachBelt=if ok and type(belt)=="table"then #belt else 0
  end
  board:GetAttributeChangedSignal("ItemBelt"):Connect(beltCount);beltCount()
+ -- QA v2 R1.6: the garden tips again (for a "Show tips again" entry, e.g. How it works).
+ function clientUI.replayCoachTips()return clientUI.coach:replayGarden()end
+ -- QA v2 R1.6: the garden beats wait for a focused window, a still player and no menu,
+ -- and pause while the player is away (no input).
+ local cs={window=true,inputAt=os.clock(),stillSince=os.clock(),firstMeet=nil,shot=require(script.PetGreetingShot),closedBase=nurseryView.onClosed}
+ cs.links={UserInputService.WindowFocused:Connect(function()cs.window=true;cs.inputAt=os.clock()end),
+  UserInputService.WindowFocusReleased:Connect(function()cs.window=false end),
+  UserInputService.InputBegan:Connect(function()cs.inputAt=os.clock()end),
+  UserInputService.InputChanged:Connect(function(input)
+   if input.UserInputType==Enum.UserInputType.MouseMovement or input.KeyCode==Enum.KeyCode.Thumbstick1 or input.KeyCode==Enum.KeyCode.Thumbstick2 then cs.inputAt=os.clock()end
+  end)}
+ -- QA v2 R1.4: the first Meet after the starter reveal stages the Bear in front of the
+ -- player, facing the camera (PetGreetingShot front pass), until that greeting ends.
+ nurseryView.onClosed=function(reason,choice)
+  if reason=="meet"and type(choice)=="table"and choice.starter==true then
+   cs.firstMeet={at=os.clock(),focused=false};cs.shot.setFrontFirst(true)
+  end
+  if cs.closedBase then cs.closedBase(reason,choice)end
+ end
  local open={}
  local coachStep=RunService.RenderStepped:Connect(function()
   local mode=board:GetAttribute("Mode")
+  local meet=cs.firstMeet
+  if meet then
+   if roomView.focusing then meet.focused=true
+   elseif meet.focused or os.clock()-meet.at>20 then cs.firstMeet=nil;cs.shot.setFrontFirst(false)end
+  end
+  local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+  if humanoid and humanoid.MoveDirection.Magnitude>.1 then cs.stillSince=os.clock()end
   open.hatch=nurseryView:isOpen();open.style=isPickerOpen()and picker.active~="Settings"
   open.companions=clientUI.hub~=nil and clientUI.hub:isOpen();open.quests=clientUI.questLog.visible==true
   open.book=clientUI.book~=nil and clientUI.book:isOpen()
@@ -2592,9 +2638,10 @@ do
    presented=backdrop.Visible and rendererPresentation.canPresent~=nil and rendererPresentation.canPresent(board:GetAttribute("ResetId")),
    phase=board:GetAttribute("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=board:GetAttribute("Merges")or 0,
    pressure=board:GetAttribute("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
-   input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear"})
+   input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear",
+   drops=board:GetAttribute("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
- gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy()end)
+ gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
 end
 function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
@@ -2660,7 +2707,14 @@ board:GetAttributeChangedSignal("ItemEvent"):Connect(function()
 end)
 clientUI.refreshItems()
 -- Deck hardware (mouse and touch). Results take the d-pad and A/B while open.
-clientUI.deck:on("item",function()clientUI.toggleItems()end)
+-- QA v2 R2.4: the phone B (the item button) is Items in a round and Back while a deck
+-- menu (Pocket Menu, picker, quest log, results) is up; outside both it stays Items.
+function clientUI.deckBack()
+	if clientUI.closePocketMenu()then return end
+	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end
+end
+clientUI.deck:on("item",function()
+	if not clientUI.items.isOpen and clientUI.deck:menuActive()then clientUI.deckBack()else clientUI.toggleItems()end end)
 clientUI.deck:on("dpad",function(dir,input)
 	if clientUI.items.isOpen then
 		if dir=="Left"or dir=="Right"then clientUI.items:move(if dir=="Left"then -1 else 1)end
@@ -2669,9 +2723,10 @@ clientUI.deck:on("dpad",function(dir,input)
 	elseif clientUI.questLog.visible then
 		if dir=="Up"or dir=="Down"then clientUI.questLog:move(if dir=="Up"then -1 else 1)else clientUI.questLog:cycleTab(if dir=="Left"then -1 else 1)end
 	elseif clientUI.heatPicker.visible then
-		if dir=="Left"or dir=="Right"then clientUI.heatPicker:move(if dir=="Left"then -1 else 1)end
+		-- QA v2 R2.4: the phone d-pad's Up / Down rows select in menus too (Up = back a card).
+		clientUI.heatPicker:move(if dir=="Left"or dir=="Up"then -1 else 1)
 	elseif recap.visible then
-		if dir=="Left" or dir=="Right" then recap:move(if dir=="Left" then -1 else 1) end
+		recap:move(if dir=="Left" or dir=="Up" then -1 else 1)
 	elseif dir=="Left" or dir=="Right" then startAim(input,if dir=="Left" then -1 else 1) end
 end)
 clientUI.deck:on("A",function()
@@ -2683,8 +2738,7 @@ clientUI.deck:on("B",function()
 	-- In a live round B is Items (leaving is MENU or the back arrow).
 	if clientUI.items.isOpen then clientUI.closeItems();return end
 	if clientUI.itemsInRound()then clientUI.openItems();return end
-	if clientUI.closePocketMenu()then return end
-	if clientUI.questLog.visible then clientUI.closeQuestLog()elseif recap.visible then recap:back() else clientUI.leaveDeck() end end)
+	clientUI.deckBack() end)
 -- MENU: the Pocket Menu in a round; the quest log from results (UI-SPEC 5.4) or
 -- when it is already open (closes it); the garden menu outside the deck.
 -- QA Q5: MENU in a round is the pause menu; on the results screen it does nothing (the
@@ -3469,8 +3523,13 @@ clientUI.anyModalOpen=function()
   or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
   or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)
   or(clientUI.questLog~=nil and clientUI.questLog.visible)
+  or(clientUI.bugReport~=nil and clientUI.bugReport:isOpen())
 end
-clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui")})
+-- QA v2 R2.1/R2.2: the same edge takes the one movement lock ("modal"); the hatch reveal,
+-- HatchCinematic and the Meet screen live in nurseryView.shade, so they count too. The
+-- deck ("deck") and pet focus ("focus") hold it from RoomView.
+clientUI.movementLock=require(script.MovementLock).shared()
+clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock})
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 layout()
 updateHud()

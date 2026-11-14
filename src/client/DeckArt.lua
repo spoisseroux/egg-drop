@@ -498,9 +498,10 @@ function Art.backgroundThumbnail(host,id,theme)return PatternBackdrop.thumbnail(
 function Art.backdropStats(parent)local m=backdropMotion[parent];return m and m.surface and not m.surface.destroyed and m.surface.root.Parent and m.surface.stats end
 function Art.setBackdropCase(parent,rect)
  local motion=backdropMotion[parent];if not motion then return end
- -- Compact (phone) rule: the plate fills the root there, so the exterior
- -- pattern is never visible; skip it (the board pattern still draws).
- local size=parent.AbsoluteSize;motion.compact=size.X>=size.Y*1.2 and(size.Y<500 or size.X<1000)
+ -- QA v2 R6.1: the phone draws the whole handheld with the background around it
+ -- (as on desktop), so the exterior pattern draws on every device now. `compact`
+ -- stays false (it used to skip the pattern under the old full-root phone plate).
+ motion.compact=false
  motion.case=rect;if motion.surface then motion.surface:setCase(rect)end
 end
 -- The confirmed background also feeds every registered in-board pattern layer.

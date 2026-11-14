@@ -17,9 +17,11 @@ function Cursor.wanted(open,behavior,iconEnabled)
 end
 
 -- options: isOpen() -> bool, input (UserInputService), run (RunService),
--- actions (ContextActionService), parent (PlayerGui; optional for the Modal button).
+-- actions (ContextActionService), parent (PlayerGui; optional for the Modal button),
+-- movement (MovementLock; optional): QA v2 R2.1/R2.2, the avatar cannot walk while a
+-- modal screen is open; the lock is taken as reason "modal" on the open edge.
 function Cursor.new(options)
- local self=setmetatable({isOpen=options.isOpen,input=options.input,run=options.run,actions=options.actions,open=false,connections={},refocused=0},Cursor)
+ local self=setmetatable({isOpen=options.isOpen,input=options.input,run=options.run,actions=options.actions,movement=options.movement,open=false,connections={},refocused=0},Cursor)
  if options.parent then
   local gui=Instance.new("ScreenGui");gui.Name="EggDropModalCursor";gui.ResetOnSpawn=false;gui.DisplayOrder=0;gui.Enabled=true
   local button=Instance.new("TextButton");button.Name="Modal";button.Text="";button.BackgroundTransparency=1;button.Size=UDim2.fromOffset(1,1)
@@ -41,6 +43,7 @@ function Cursor:setOpen(open)
  open=open==true
  if self.open==open then return end
  self.open=open
+ if self.movement then self.movement:set("modal",open)end
  if self.button then self.button.Visible=open end
  if self.actions then
   if open then
@@ -60,6 +63,9 @@ function Cursor:step()
  if self.destroyed then return end
  local ok,open=pcall(self.isOpen)
  self:setOpen(ok and open==true)
+ -- A lock taken before the PlayerModule loaded (the deck at boot) or controls another
+ -- script re-enabled are disabled here; one cached read per frame when nothing is held.
+ if self.movement then self.movement:enforce()end
  self:apply()
 end
 
@@ -79,6 +85,7 @@ function Cursor:destroy()
  for _,c in ipairs(self.connections)do c:Disconnect()end
  if self.bound then pcall(function()self.run:UnbindFromRenderStep(Cursor.Action)end)end
  if self.actions and self.open then self.actions:UnbindAction(Cursor.Action)end
+ if self.movement then self.movement:release("modal")end
  if self.gui then self.gui:Destroy()end
 end
 return Cursor

@@ -17,18 +17,18 @@ return function(client,parent)
    local state={status="Ready",revision=10,nectar=1,inventoryMask=3,dailyAvailable=false}
    menu:update(state,"pip","pip",0,0,0,"meadow");menu:open();shop:open(state);settle()
    assert(state.nectar==1 and state.revision==10 and state.inventoryMask==3)
-   assert(menu.nectar.Text=="1"and shop.nectar.Text=="1")
+   assert(menu.nectar.Text=="1"and shop.state.nectar==1)
    assert(menu.nectar:GetAttribute("AccessibleLabel")=="1 Star","menu wallet accessible label: "..tostring(menu.nectar:GetAttribute("AccessibleLabel")))
    -- The egg list now shows its balance in the Kit.header wallet (slice D); the
    -- legacy `nectar` label is hidden and no longer carries the accessible copy.
-   local shopWallet=if shop.shopHeader and shop.shopHeader.wallet then shop.shopHeader.wallet.root else shop.nectar
+   local shopWallet=shop.shopHeader.wallet.root
    assert(shopWallet:GetAttribute("AccessibleLabel")=="1 Star","shop wallet accessible label: "..tostring(shopWallet:GetAttribute("AccessibleLabel")))
   end)
   test("all currency illustrations are passive five-point gold Stars with a light glint",function()
    local icon=EggArt.stars(root,UDim2.fromOffset(0,0),UDim2.fromOffset(20,24),30);settle()
    assert(icon.GoldStar.Text=="★"and icon.StarGlint and not icon.Active and not icon.Selectable and not icon.GoldStar.TextScaled)
    assert(not icon:FindFirstChild("RoundDrop")and not icon:FindFirstChild("DropTip"))
-   assert(menu.wallet.NectarDrop:FindFirstChild("GoldStar")and shop.wallet.NectarDrop:FindFirstChild("GoldStar"))
+   assert(menu.wallet.NectarDrop:FindFirstChild("GoldStar"))
    recap:show({outcome="clear",rows={},total=1,earned=1,balance=1,goals={}},false)
    -- The results centrepiece is the 2D Star token (CelebrationKit.star) until the mesh exists.
    assert(recap.star.mode=="gold"and recap.star.main.Text=="★"and recap.star.main.TextColor3==Color3.fromHex("#FFC14D"),"results Star is always gold")

@@ -60,6 +60,24 @@ return function(client,parent)
    assert(boot.ink.ImageColor3==Color3.fromHex("#FF7AD9")and boot.fixed.ImageColor3==Color3.new(1,1,1))
    assert(boot.ink.ResampleMode==Enum.ResamplerMode.Pixelated)
   end)
+  -- QA v2 R6.1: the phone handheld boots in its lit screen, inside the glass, and a
+  -- faceplate skins the whole plate (full texture, not the old centre crop).
+  test("phone handheld (812x354): the boot plays in the screen; the plate is the full faceplate",function()
+   local Screen=require(client.DeckScreen);local Assets=require(client.DeckAssets)
+   local size=Vector2.new(812,354);local aspect=(11+.8)/(19+.8)
+   local root=Instance.new("Frame");root.Size=UDim2.fromOffset(size.X,size.Y);root.BackgroundTransparency=1;root.Parent=gui
+   local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
+   task.wait()
+   local g=s.geometry;local o=root.AbsolutePosition
+   local p=s.bootHost.AbsolutePosition-o
+   assert(p.X==g.screen.x and p.Y==g.screen.y and s.bootHost.AbsoluteSize==Vector2.new(g.screen.w,g.screen.h),"boot in the screen rect")
+   assert(g.screen.x>g.glass.x and g.screen.y>g.glass.y and g.screen.x+g.screen.w<g.glass.x+g.glass.w,"screen inside the glass")
+   local id=Themes.Order[2]or Themes.Order[1]
+   s:setTheme(id,Themes.ById[id])
+   assert(s.plate.Image==Assets.Faceplate[id]and s.plate.ImageRectSize==Vector2.zero and s.plate.Visible,"full faceplate on the phone plate")
+   assert(s.band.Visible and s.shoulders[1].Visible and s.led.Visible,"handheld shell drawn")
+   root:Destroy()
+  end)
   -- Faceplate shop pane logic (pure).
   test("shop pane: equipped, owned, buy, short, locked",function()
    local facts={totalWins=0,faceplates={"tidepool"}}

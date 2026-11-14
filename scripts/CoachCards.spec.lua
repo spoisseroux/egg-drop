@@ -9,6 +9,7 @@ return function(client,parent)
  local Coach=require(Shared.CoachMarks)
  local UICopy=require(Shared.UICopy)
  local Cards=require(client.CoachCards)
+ local Kit=require(client.DeckKit)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local fresh={mask=0,seen={},totalWins=0}
 
@@ -68,6 +69,24 @@ return function(client,parent)
   assert(string.find(select(2,Cards.copy("companions",{pet="Bear"})),"Bear",1,true),"pet name fills")
  end)
 
+  test("QA v2 R1: beats wait for a free, still, present player; machine cards wait for the reveal; the pill fades",function()
+  local base={canRoam=true,owned=1,mask=0,seen={},totalWins=0,open={}}
+  local function with(t)local c=table.clone(base);for k,v in pairs(t)do c[k]=v end;return c end
+  assert(Cards.beatMayStart(with({}),Coach.GardenSettle,false))
+  assert(not Cards.beatMayStart(with({open={hatch=true}}),10,false),"never over a menu")
+  assert(not Cards.beatMayStart(with({windowActive=false}),10,false),"never on an unfocused window")
+  assert(not Cards.beatMayStart(with({idleFor=.2}),10,false),"waits until the player stands still")
+  assert(not Cards.beatMayStart(with({awayFor=Cards.AwaySeconds}),10,false),"not while away")
+  assert(not Cards.beatMayStart(with({revealPending=true}),10,true),"never over the reveal, even on replay")
+  assert(not Cards.beatMayStart(with({mask=Coach.with(0,"gardenIntro")}),10,false)and Cards.beatMayStart(with({mask=Coach.with(0,"gardenIntro")}),10,true),"replay ignores the saved bit")
+  assert(Cards.clockRuns(with({}),"beat")and not Cards.clockRuns(with({awayFor=99}),"beat")and not Cards.clockRuns(with({windowActive=false}),"once"))
+  assert(Cards.clockRuns(with({canRoam=false,open={hatch=true}}),"once")and not Cards.clockRuns(with({canRoam=false}),"beat"))
+  assert(Cards.machineDue({hatch=true},{},{owned=1,mask=0,seen={},totalWins=0,revealPending=true})==nil,"the starter reveal is not a Hatch eggs visit")
+  assert(Cards.welcomeFade(0,false)==1 and Cards.welcomeFade(1,false)==0 and Cards.welcomeFade(Cards.WelcomeSeconds+Cards.WelcomeFadeOut,false)==1)
+  assert(Cards.welcomeFade(1,true)==0 and Cards.welcomeFade(Cards.WelcomeSeconds+1,true)==1,"Reduced Motion: a cut")
+  assert(Cards.welcomeText(1000)==UICopy.get("r1.welcomePill.wide")and Cards.welcomeText(1)==UICopy.get("r1.welcomePill.narrow"))
+ end)
+
  test("live: the garden step runs once in order, each card is marked once, nothing binds input",function()
   local gui=Instance.new("ScreenGui");gui.Name="_CoachSpec";gui.Parent=parent
   local board=Instance.new("Frame");board.Size=UDim2.fromOffset(400,600);board.Parent=gui
@@ -86,10 +105,14 @@ return function(client,parent)
    -- Welcome round on the board.
    cards:sync({coachMask=0,totalWins=0,quests={daily={}}})
    step(0,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0})
-   assert(cards.boardView.root.Visible and cards.boardView.root:GetAttribute("CoachCard")=="welcome")
-   assert(string.find(cards.sticker.Text,tostring(Coach.WelcomeStars),1,true),"the Welcome card shows its Stars")
-   step(1,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=1})
-   assert(not cards.boardView.root.Visible,"gone at the first merge")
+   local pill=cards.welcomePill
+   assert(pill.Visible and pill:GetAttribute("CoachCard")=="welcome"and not cards.boardView.root.Visible,"QA v2 R6.2: a pill, not the big card")
+   assert(string.find(cards.sticker.Text,tostring(Coach.WelcomeStars),1,true),"the Welcome pill shows its Stars")
+   assert(pill.AbsoluteSize.Y<=28 and pill.Position.Y.Offset<=8 and pill.AbsoluteSize.X<=400-16,"small, at the top, inside the board")
+   assert(cards.pillText.Text~=""and Kit.measure(cards.pillText.Text,"Strong",13).X<=cards.pillText.Size.X.Offset,"its line is never cut")
+   step(1,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0,drops=1})
+   step(1.5,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0,drops=1})
+   assert(not pill.Visible,"fades away at the first drop")
    -- Reveal open: no garden step yet.
    cards:sync({coachMask=0,totalWins=0,lastHatch={id="s",petId="pip",starter=true,stars=6},quests={daily={}}})
    step(10);step(14)
@@ -108,6 +131,15 @@ return function(client,parent)
    assert(table.find(sent,"gardenIntro"),"the step is saved when it ends")
    step(60);step(64)
    assert(not cards.gardenView.root.Visible,"the garden step never repeats")
+   -- QA v2 R1.6: replayable on request, under the same rules.
+   assert(cards:replayGarden())
+   step(65,{idleFor=.2});step(68,{idleFor=.3});assert(not cards.gardenView.root.Visible,"waits while the player walks")
+   step(68.5,{idleFor=5});assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","replay starts from beat 1")
+   step(80,{idleFor=5,awayFor=60});step(95,{idleFor=5,awayFor=60})
+   assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","the clock pauses while the player is away")
+   step(96,{idleFor=5,windowActive=false});step(120,{idleFor=5,windowActive=false})
+   assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","and while the window is unfocused")
+   cards:dismiss("skip");step(121)
    -- First visit to Hatch eggs, once.
    open.hatch=true;step(70)
    assert(cards.gardenView.root:GetAttribute("CoachCard")=="hatch"and learned.Eggs,"first visit card; the station is learned")

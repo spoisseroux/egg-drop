@@ -17,6 +17,7 @@ local BallFaces=require(script.Parent.BallFaces)
 local Sprite=require(script.Parent.JellySprite)
 -- Round item icons (QA 2026-11-13 Q1 item 9) on the phone item button.
 local ItemIcons=require(script.Parent.ItemIcons)
+local UICopy=require(Shared.UICopy)
 local L=Assets.Layout
 local Screen={}
 Screen.__index=Screen
@@ -138,15 +139,30 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  end
  g.chainInGoals=g.chainIn=="goals"
  g.board=rect(bx,by,bw,bh);g.lcd=g.board;g.boardLocal=rect(0,0,bw,bh);g.authored=Vector2.new(bw,bh)
- -- Shoulders: d-pad (two 44+ halves), MENU, wordmark; A on the right at mid height. No B (decision 4).
+ -- Shoulders: d-pad, MENU, wordmark and LED; A on the right at mid height, B (the item
+ -- button) under it.
  local dcy=kh+math.floor((H-kh-52)/2);local cx=math.floor(SW/2)
  g.dpad=rect(cx-math.floor(D/2),dcy-math.floor(D/2),D,D)
- local hw,hh=math.max(44,math.floor(D/2)),math.max(44,D);local shift=math.max(0,hw-cx)
- g.dpadLeft=rect(cx-hw+shift,dcy-math.floor(hh/2),hw,hh);g.dpadRight=rect(cx+shift,dcy-math.floor(hh/2),hw,hh)
  local mw,mh=math.min(72,SW-16),math.min(84,SW-8)
  g.menuHit=rect(cx-math.floor(mh/2),H-52,mh,44);g.menu=rect(cx-math.floor(mw/2),H-44,mw,28)
- local ww=SW-28
- g.wordmark=if ww>=64 then rect(14,kh+6,ww,math.floor(ww*16/41+.5))else nil
+ -- QA v2 R2.4 (phone d-pad hit areas): one box over the d-pad, the shoulder's width less
+ -- 4 px a side, up to 144 high, clear of the keep-out above and of MENU below.
+ -- Rounds: Left / Right are the box's two tall halves (Up / Down are off).
+ -- Menus: Up, Left + Right and Down are three rows (Up / Down select); a box too short
+ -- for three 44 px rows keeps the round split in menus too (g.dpadUp nil).
+ local bx0,bw0=4,SW-8;local half=math.floor(bw0/2)
+ local reach=math.max(22,math.min(dcy-(kh+4),g.menuHit.y-4-dcy))
+ local boxH=math.min(2*reach,math.max(144,D+56))
+ local by0=dcy-math.floor(boxH/2)
+ g.dpadBox=rect(bx0,by0,bw0,boxH)
+ g.dpadLeft=rect(bx0,by0,half,boxH);g.dpadRight=rect(bx0+half,by0,bw0-half,boxH)
+ local rh=math.floor(boxH/3)
+ if rh>=44 then
+  g.dpadUp=rect(bx0,by0,bw0,rh);g.dpadDown=rect(bx0,by0+boxH-rh,bw0,rh)
+  g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
+ end
+ local ww=SW-32
+ g.wordmark=if ww>=64 then rect(18,kh+6,ww,math.floor(ww*16/41+.5))else nil
  g.back=rect(W-56,8,44,44)
  g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
  g.aHit=rect(W-cx-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
@@ -155,6 +171,24 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local iy=math.min(g.aHit.y+g.aHit.h+4+math.floor((ib+8)/2),H-6-math.floor((ib+8)/2))
  g.item=rect(W-cx-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
  g.itemHit=rect(W-cx-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
+ -- QA v2 R6.1: the full handheld drawn around the same LCD. The body sits 4 px in from
+ -- the sides and 16 px above the glass and runs off the bottom edge (the board keeps
+ -- H - 80), so the background pattern shows above and beside it. The shell sprites map
+ -- the desktop 1600 x 800 layout onto the body; every rect is whole px.
+ local bodyTop=math.max(4,top-16)
+ local body=rect(4,bodyTop,W-8,H-bodyTop+32)
+ local sx,sy=body.w/1600,body.h/800
+ local function map(r)
+  local mx=body.x+math.floor(r[1]*sx+.5);local my=body.y+math.floor(r[2]*sy+.5)
+  return rect(mx,my,body.x+math.floor((r[1]+r[3])*sx+.5)-mx,body.y+math.floor((r[2]+r[4])*sy+.5)-my)
+ end
+ g.body=body;g.shellScale=math.min(sx,sy)
+ g.shell={shadow=map(L.shadow),shoulderL=map(L.shoulderL),shoulderR=map(L.shoulderR),band=body,plate=map(L.plate)}
+ -- LED between the wordmark and the d-pad disc; none when they leave no room.
+ local ls=math.max(8,math.floor(34*g.shellScale+.5))
+ local ledTop=if g.wordmark then g.wordmark.y+g.wordmark.h else kh+4
+ local ledGap=g.dpad.y-ledTop
+ g.led=if ledGap>=ls+8 then rect(cx-math.floor(ls/2),ledTop+math.floor((ledGap-ls)/2),ls,ls)else nil
  -- Menu sheet (section 4): plate grips `mg` either side; v1 rules shift in by mg - 6.
  local mg=Screen.gripMargin(W)
  g.mg=mg;g.off=mg-6
@@ -217,10 +251,12 @@ function Screen.new(options)
  -- Compact v2: the plate lip and shade, one glass (bezel) between the shoulders and the lit screen in it.
  self.phoneNodes={}
  local function phoneNode(node)node.Visible=false;table.insert(self.phoneNodes,node);return node end
- self.plateLip=phoneNode(Kit.frame(root,"PlateLip",nil,UDim2.new(),UDim2.new(1,0,.3,0)));self.plateLip.ZIndex=5
+ -- QA v2 R6.1: the phone draws the desktop plate overlay now, so the full-root lip and
+ -- shade stay hidden (kept for the instance names).
+ self.plateLip=Kit.frame(root,"PlateLip",nil,UDim2.new(),UDim2.new(1,0,.3,0));self.plateLip.ZIndex=5;self.plateLip.Visible=false
  self.plateLip.BackgroundTransparency=0;self.plateLip.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",self.plateLip,{Rotation=90,Transparency=NumberSequence.new(.75,1)})
- self.plateShade=phoneNode(Kit.frame(root,"PlateShade",nil,UDim2.fromScale(0,.62),UDim2.fromScale(1,.38)));self.plateShade.ZIndex=5
+ self.plateShade=Kit.frame(root,"PlateShade",nil,UDim2.fromScale(0,.62),UDim2.fromScale(1,.38));self.plateShade.ZIndex=5;self.plateShade.Visible=false
  self.plateShade.BackgroundTransparency=0;self.plateShade.BackgroundColor3=Color3.new(0,0,0)
  Kit.node("UIGradient",self.plateShade,{Rotation=90,Transparency=NumberSequence.new(1,.71)})
  self.glassLip=phoneNode(Kit.frame(root,"GlassLip",nil,UDim2.new(),UDim2.new(),18));self.glassLip.ZIndex=5
@@ -300,7 +336,8 @@ function Screen.new(options)
  -- Phone item button under A (round items): front item's glyph and a count badge.
  -- Always drawn on the phone; with an empty belt the caller shows "You have no items".
  do
-  local holder=phoneNode(Kit.node("Frame",root,{Name="ButtonItem",BackgroundTransparency=1,ZIndex=10}))
+  -- ZIndex 11: above the B sprite it sits on (QA v2 R6.1).
+  local holder=phoneNode(Kit.node("Frame",root,{Name="ButtonItem",BackgroundTransparency=1,ZIndex=11}))
   local disc=Kit.frame(holder,"Disc","raised",UDim2.new(),UDim2.fromScale(1,1),999);disc.BackgroundTransparency=0
   local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
   local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3]})
@@ -309,11 +346,20 @@ function Screen.new(options)
   badge.AnchorPoint=Vector2.new(.5,.5);badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.ink;badge.ZIndex=disc.ZIndex+3;badge.Visible=false
   Kit.stroke(badge,nil,1.5,.3)
   local count=Kit.text(badge,"Label","",nil,{Name="Count",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Kit.Color.text})
-  local caption=Kit.text(holder,"Label","Items","soft",{Name="Caption",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,2),Size=UDim2.new(1,24,0,17),TextXAlignment=Enum.TextXAlignment.Center})
+  local caption=Kit.text(holder,"Label",UICopy.get("phoneDeck.b.items"),"soft",{Name="Caption",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,2),Size=UDim2.new(1,24,0,17),TextXAlignment=Enum.TextXAlignment.Center})
   local hit=Kit.node("TextButton",holder,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,AnchorPoint=Vector2.new(.5,.5),
    Position=UDim2.fromScale(.5,.5),ZIndex=disc.ZIndex+5,Selectable=false})
   hit:SetAttribute("AccessibleLabel","Items")
   hit.Activated:Connect(function()local cb=self.callbacks.item;if cb then cb()end end)
+  -- The B sprite under it presses with it (QA v2 R6.1).
+  hit.InputBegan:Connect(function(input)
+   local t=input.UserInputType
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton("B",true)end
+  end)
+  hit.InputEnded:Connect(function(input)
+   local t=input.UserInputType
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton("B",false)end
+  end)
   self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,icon=icon,badge=badge,count=count,caption=caption,hit=hit}
  end
  -- Board well behind the board renderer. No border (UI-SPEC-REDESIGN-MENUS 6.1):
@@ -497,6 +543,10 @@ end
 -- `id` (QA 2026-11-13) draws the item's icon over the glyph.
 function Screen:setItems(count,glyph,color,id)
  local ib=self.itemButton;if not ib then return end
+ self.itemState={count=count,glyph=glyph,color=color,id=id}
+ -- QA v2 R2.4: in a menu the phone B is Back (plain "B", no badge); Screen:syncControls
+ -- puts the belt back when the menu closes.
+ if self.controlMode=="menu"then count=0 end
  count=count or 0
  local drawn=count>0 and id~=nil and ItemIcons.source(id)~=nil
  ItemIcons.set(ib.icon,if drawn then id else nil)
@@ -506,7 +556,38 @@ function Screen:setItems(count,glyph,color,id)
  ib.ring.Color=if count>0 and color then color else Color3.new(1,1,1)
  ib.ring.Transparency=if count>0 then 0 else .55
  ib.badge.Visible=count>0;ib.count.Text=tostring(count)
- ib.hit:SetAttribute("AccessibleLabel",if count>0 then "Items: "..count else "Items: none")
+ ib.hit:SetAttribute("AccessibleLabel",if self.controlMode=="menu"then "B: "..UICopy.get("phoneDeck.b.back")elseif count>0 then "Items: "..count else "Items: none")
+end
+
+-- QA v2 R2.4: a deck menu is up when the results or any deck overlay (Pocket Menu,
+-- difficulty picker, quest log) shows. The caller routes the phone B with it.
+function Screen:menuActive()
+ if self.results.Visible then return true end
+ for _,o in ipairs(self.overlays or {})do if o.layer.Visible then return true end end
+ return false
+end
+-- Phone hit areas from resolveCompact (the source of truth): rounds use the two tall
+-- Left / Right halves of the d-pad box with Up / Down off; menus use the Up, Left +
+-- Right and Down rows. The B caption reads Items in rounds and Back in menus. A merge
+-- shake in progress stays applied to the moved hit areas.
+function Screen:syncControls()
+ local g=self.geometry
+ if not(g and g.phone)then self.controlMode=nil;return end
+ local menu=self:menuActive()
+ local mode=if menu then "menu"else "round"
+ local shake=self.shakeApplied or Vector2.zero
+ local function put(node,r)node.Position=UDim2.fromOffset(r.x-shake.X,r.y-shake.Y);node.Size=UDim2.fromOffset(r.w,r.h)end
+ local q=self.quadrants
+ local rows=menu and g.dpadUp~=nil
+ put(q.Left,if rows then g.dpadMenuLeft else g.dpadLeft);put(q.Right,if rows then g.dpadMenuRight else g.dpadRight)
+ if rows then put(q.Up,g.dpadUp);put(q.Down,g.dpadDown)end
+ q.Up.Visible=rows;q.Down.Visible=rows
+ if self.controlMode==mode then return end
+ self.controlMode=mode
+ local ib=self.itemButton
+ ib.caption.Text=UICopy.get(if menu then "phoneDeck.b.back"else "phoneDeck.b.items")
+ local st=self.itemState or {count=0}
+ self:setItems(st.count,st.glyph,st.color,st.id)
 end
 
 function Screen:applyTransparency()
@@ -519,6 +600,8 @@ function Screen:applyTransparency()
   for _,o in ipairs(self.overlays or {})do if o.layer.Visible then covered=true end end
  end
  self.glare.Visible=self.visible==true and GuiService.PreferredTransparency>.5 and not covered
+ -- Every results / overlay visibility edge lands here, so the phone controls follow it.
+ self:syncControls()
 end
 
 function Screen:setTheme(id,theme)
@@ -568,7 +651,7 @@ end
 function Screen:placeAll(rootSize,aspect,keep)
  local g=Screen.resolve(rootSize,aspect,keep);self.geometry=g
  Kit.touchHidesFocus=g.phone==true
- self:showShell(not g.phone)
+ self:showShell(true,g.phone==true)
  self:applyTransparency()
  if g.phone then return self:layoutCompact(g)end
  local s=g.s
@@ -616,13 +699,20 @@ end
 
 -- Shell sprites the compact phone does not draw (UI-SPEC-COMPACT 3), and the
 -- Compact v2 frame pieces only the phone draws.
-function Screen:showShell(on)
- for _,node in ipairs({self.shadow,self.shoulders[1],self.shoulders[2],self.band,self.plateOverlay,self.wordmarkShadow,self.glass,self.led})do node.Visible=on end
- for _,node in ipairs(self.phoneNodes)do node.Visible=not on end
+-- QA v2 R6.1: the phone (`phone` true) draws the desktop shell too (shadow, shoulders,
+-- band, plate overlay, wordmark shadow, LED) around its own glass, wells and item
+-- button; only the desktop glass sprite stays desktop-only (the phone bezel is the
+-- glass there). `on` false is the old flat phone frame (no caller uses it now).
+function Screen:showShell(on,phone)
+ for _,node in ipairs({self.shadow,self.shoulders[1],self.shoulders[2],self.band,self.plateOverlay,self.wordmarkShadow,self.led})do node.Visible=on end
+ self.glass.Visible=on and not phone
+ for _,node in ipairs(self.phoneNodes)do node.Visible=phone==true end
  self.menu.Visible=true
- self.quadrants.Up.Visible=on;self.quadrants.Down.Visible=on
- -- Decision 4: B is unassigned on the phone HUD (keyboard / gamepad back still work).
- self.buttons.B.holder.Visible=on
+ -- Phone: Up / Down follow the menu state (Screen:syncControls); desktop: always on.
+ self.quadrants.Up.Visible=on and not phone;self.quadrants.Down.Visible=on and not phone
+ -- Phone B: the B sprite under the item button, whose hit area is the target.
+ local B=self.buttons.B
+ B.holder.Visible=on;B.letter.Visible=not phone;B.hit.Visible=not phone
  if on then self.wordmark.Visible=true;Kit.corner(self.well,14)end
  self.plate.ImageRectOffset=if on then Vector2.zero else PlateCrop.offset
  self.plate.ImageRectSize=if on then Vector2.zero else PlateCrop.size
@@ -635,10 +725,14 @@ local function place(node,r)node.Position=UDim2.fromOffset(r.x,r.y);node.Size=UD
 function Screen:layoutCompact(g)
  local W,H=g.W,g.H
  self.root.Position=UDim2.new();self.root.Size=UDim2.fromOffset(W,H)
- local bleed=48
- for _,node in ipairs({self.plate,self.finish})do
-  node.Position=UDim2.fromOffset(-bleed,-bleed);node.Size=UDim2.fromOffset(W+bleed*2,H+bleed*2)
- end
+ -- QA v2 R6.1: the handheld shell (resolveCompact's g.shell) around the glass.
+ local sh=g.shell
+ place(self.shadow,sh.shadow);self.shadow.SliceScale=g.shellScale
+ place(self.shoulders[1],sh.shoulderL);place(self.shoulders[2],sh.shoulderR)
+ place(self.band,sh.band)
+ for _,node in ipairs({self.plate,self.plateOverlay,self.finish})do place(node,sh.plate)end
+ if g.led then place(self.led,g.led)end
+ self.led.Visible=g.led~=nil
  local gl=g.glass
  place(self.boardBezel,gl);place(self.glassLip,rect(gl.x-2,gl.y-2,gl.w+4,gl.h+4))
  place(self.screenPanel,g.screen)
@@ -646,19 +740,21 @@ function Screen:layoutCompact(g)
  place(self.lcd,b);Kit.corner(self.lcd,8)
  self.content.Size=UDim2.fromOffset(b.w,b.h);self.contentScale.Scale=1
  self.well.Position=UDim2.new();self.well.Size=UDim2.fromOffset(b.w,b.h);Kit.corner(self.well,8)
- -- Left shoulder: d-pad (the left and right halves are the round's hit areas), MENU, wordmark.
+ -- Left shoulder: d-pad (hit areas per Screen:syncControls), MENU, wordmark.
  local d=g.dpad
  place(self.dpad,d);place(self.wells.DPad,rect(d.x-5,d.y-5,d.w+10,d.h+10))
- place(self.quadrants.Left,g.dpadLeft);place(self.quadrants.Right,g.dpadRight)
  place(self.menu,g.menu);self.menu.SliceScale=.32
  -- The drawn pill is 28 high; its 44 px Hit child is the target.
  self.menu.Active=false
  self.menuLabel.TextSize=12
  self.menuHit.Size=UDim2.fromOffset(g.menuHit.w,g.menuHit.h)
  self.menuHit.Position=UDim2.new(.5,0,0,g.menuHit.y+g.menuHit.h/2-g.menu.y)
- if g.wordmark then place(self.wordmark,g.wordmark)end
- self.wordmark.Visible=g.wordmark~=nil
- -- Right shoulder: A at mid height; B stays hidden (decision 4).
+ if g.wordmark then
+  place(self.wordmark,g.wordmark)
+  self.wordmarkShadow.Position=UDim2.fromOffset(g.wordmark.x+1,g.wordmark.y+1);self.wordmarkShadow.Size=self.wordmark.Size
+ end
+ self.wordmark.Visible=g.wordmark~=nil;self.wordmarkShadow.Visible=g.wordmark~=nil
+ -- Right shoulder: A at mid height; B (the item button over the B sprite) under it.
  local A=self.buttons.A;local dia=g.A;A.diameter=dia
  A.holder.Position=UDim2.fromOffset(g.a.X-dia/2,g.a.Y-dia/2);A.holder.Size=UDim2.fromOffset(dia,dia*1.07)
  A.letter.TextSize=math.floor(.46*dia);A.letter.Size=UDim2.fromOffset(dia,dia);A.letter.Position=UDim2.new(.5,0,0,dia/2)
@@ -668,6 +764,12 @@ function Screen:layoutCompact(g)
  local ib=self.itemButton
  place(ib.holder,g.item);ib.hit.Size=UDim2.fromOffset(g.itemHit.w,g.itemHit.h)
  ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+19<=g.H-2
+ -- QA v2 R6.1: the desktop B sprite under it (the disc keeps only its ring, glyph,
+ -- icon and badge); the sprite's own letter and hit stay off (showShell).
+ local B=self.buttons.B;local bd=g.item.w;B.diameter=bd
+ B.holder.Position=UDim2.fromOffset(g.item.x,g.item.y);B.holder.Size=UDim2.fromOffset(bd,math.floor(bd*1.07+.5))
+ B.letter.TextSize=math.floor(.46*bd);B.letter.Size=UDim2.fromOffset(bd,bd);B.letter.Position=UDim2.new(.5,0,0,math.floor(bd/2))
+ ib.disc.BackgroundTransparency=1
  -- Glare on the board only; results and sheets cover the root; the boot plays in the screen.
  place(self.glare,b)
  self.results.Position=UDim2.new();self.results.Size=UDim2.fromOffset(W,H);Kit.corner(self.results,0)
@@ -678,6 +780,7 @@ function Screen:layoutCompact(g)
  self.back.setCompact(true);self.back.root.Position=UDim2.new(1,-12,0,8)
  local key=string.format("Compact2:%dx%d:%d:%d",W,H,g.kx,g.kh)
  if self.builtMode~=key then self:buildHud(g);self.builtMode=key end
+ self.controlMode=nil;self:syncControls()
  -- Toasts: over the Controls card (wide) or the Win pays row on the HUD, at the top of a sheet otherwise.
  self.toaster.placement=function()
   local gg=self.geometry
@@ -1215,7 +1318,7 @@ end
 local compactRows={
  Gamepad={{"◀▶","Aim"},{"A","Drop"},{"B","Items"}},
  Keyboard={{"← →","Aim"},{"Space","Drop"},{"B","Items"}},
- -- Decision 4: B is unassigned on touch, so no "B: Leave" row.
+ -- Touch: B carries its own caption under A (Items in rounds, Back in menus), so no row.
  Touch={{"Drag","Aim"},{"A","Drop"}},
 }
 Screen.compactControlRows=compactRows

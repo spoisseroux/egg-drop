@@ -311,12 +311,15 @@ function Focus:layoutRoamHint()
 	local size=self.root.AbsoluteSize
 	local dock=self.roamDock
 	local dockBottom=if dock and dock.Parent then dock.AbsolutePosition.Y+dock.AbsoluteSize.Y-self.root.AbsolutePosition.Y+8 else 64
-	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..GuiService.PreferredTextSize.Name
+	-- QA v2 R2.6: the dock moved to the lower right (clear of Roblox's player list); the hint sits just above it.
+	local dockTop=if dock and dock.Parent then dock.AbsolutePosition.Y-self.root.AbsolutePosition.Y else nil
+	local dockLow=dockTop~=nil and dockTop>size.Y/2
+	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..tostring(dockLow)..GuiService.PreferredTextSize.Name
 	if self.hintLayoutKey==key then return end;self.hintLayoutKey=key
 	Art.type(self.hint,if self.saveNotice then "Body"else "Supporting",size.Y<280)
 	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(if self.saveNotice then math.max(1,size.X-24)else 360,Art.textWidth(self.hint)+16)))
 	local height=Art.textHeight(self.hint,width,24)+8
-	local y=math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
+	local y=if dockLow then math.max(8,math.floor(dockTop-height-8))else math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
 	self.hint.AnchorPoint=Vector2.zero
 	self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,size.X-width-12),y),UDim2.fromOffset(width,height)
 end

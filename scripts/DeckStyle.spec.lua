@@ -36,7 +36,8 @@ return function(client,parent)
    assert(Picker.TabOrder[3]=="Balls")
    local facts={trials=0,totalWins=0,inventoryMask=1,masteryRanks={pip=0}}
    local ctx={confirmed="canopy",facts=facts}
-   assert(Backs.status("canopy",ctx).kind=="inUse"and Backs.status("canopy",ctx).button==nil)
+   -- QA v2 R3.5: in use keeps the button, disabled.
+   assert(Backs.status("canopy",ctx).kind=="inUse"and Backs.status("canopy",ctx).button=="In use"and Backs.status("canopy",ctx).enabled==false)
    -- QA Q5: no "View trials" (Pocket Trials are retired); the rule text stays.
    local creek=Backs.status("creek",ctx);assert(creek.kind=="locked"and creek.button==nil and not creek.enabled and creek.text:find("High Roller",1,true))
    local lantern=Backs.status("lantern",ctx);assert(lantern.kind=="locked"and lantern.button==nil and lantern.text:find("Win 10",1,true))
@@ -49,7 +50,7 @@ return function(client,parent)
   end)
   test("pure: Balls cards and pane (IN USE, Owned, price, short), free themes always owned",function()
    local ctx={owned={"smileys","marbles"},equipped="smileys",wallet=50}
-   assert(Balls.status("smileys",ctx).kind=="inUse"and Balls.status("smileys",ctx).button==nil)
+   assert(Balls.status("smileys",ctx).kind=="inUse"and Balls.status("smileys",ctx).button=="In use"and Balls.status("smileys",ctx).enabled==false)
    assert(Balls.status("marbles",ctx).kind=="owned"and Balls.status("marbles",ctx).button=="Use")
    assert(Balls.status("marbles",{owned={},equipped="smileys"}).kind=="owned","free themes need no purchase")
    local gems=Balls.status("gems",ctx);assert(gems.kind=="buy"and gems.price==40 and gems.button=="★ Buy 40")

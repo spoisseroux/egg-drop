@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local PetFocusUI = require(script.Parent.PetFocusUI)
+local MovementLock = require(script.Parent.MovementLock)
 local FocusTransition=require(script.Parent.FocusTransition)
 local FocusCharacterVisibility=require(script.Parent.FocusCharacterVisibility)
 local PetAffection=require(script.Parent.PetAffection)
@@ -71,10 +72,48 @@ local function tween(object, seconds, properties)
 	return motion
 end
 
+-- QA v2 R2.6: the Menu + Deck dock never sits top right, where Roblox's player list and
+-- top bar cover it on PC. Pure: the dock's Position (AnchorPoint 1,1) inside a gui of
+-- `height` px. Touch: just above the jump button (`jumpClear` = px from the gui's bottom
+-- to the jump button's top; nil = Roblox's default layout for that screen). Otherwise
+-- the lower-right corner. Integer offsets; the dock always stays on screen.
+Room.DockHeight = 48
+function Room.dockPlacement(width, height, touch, jumpClear)
+	local bottom = 16
+	if touch then
+		local clear = jumpClear
+		if type(clear) ~= "number" or clear <= 0 then clear = if math.min(width, height) <= 500 then 90 else 140 end
+		bottom = math.floor(clear) + 12
+	end
+	bottom = math.max(8, math.min(bottom, math.floor(height) - Room.DockHeight - 8))
+	return UDim2.new(1, if touch then -12 else -16, 1, -bottom)
+end
+
+-- The touch jump button's top, measured from the bottom of `host` (nil when hidden).
+local function jumpClearance(host)
+	local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+	local touchGui = playerGui and playerGui:FindFirstChild("TouchGui")
+	local jump = touchGui and touchGui.Enabled and touchGui:FindFirstChild("JumpButton", true)
+	if not jump or not jump:IsA("GuiObject") or not jump.Visible or jump.AbsoluteSize.Y <= 0 then return nil end
+	return host.AbsolutePosition.Y + host.AbsoluteSize.Y - jump.AbsolutePosition.Y
+end
+
+function Room:placeDock()
+	local host = self.controls.Parent
+	if not host or self.destroyed then return end
+	local size = host.AbsoluteSize
+	if size.X <= 0 or size.Y <= 0 then return end
+	local clear = jumpClearance(host)
+	local touch = clear ~= nil or UserInputService:GetLastInputType() == Enum.UserInputType.Touch
+		or (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled)
+	local position = Room.dockPlacement(size.X, size.Y, touch, clear)
+	if self.controls.Position ~= position then self.controls.Position = position end
+end
+
 function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollection, overlayOpen, reduceEffects, onEggs)
 	-- Two separate passive-backed circles keep the same named action targets.
-	local controls = frame(gui, "LoungeControls", UDim2.fromOffset(104, 48), UDim2.new(1, -12, 0, 12), Art.Surface, 8)
-	controls.AnchorPoint = Vector2.new(1, 0)
+	local controls = frame(gui, "LoungeControls", UDim2.fromOffset(104, 48), Room.dockPlacement(800, 600, false), Art.Surface, 8)
+	controls.AnchorPoint = Vector2.new(1, 1)
 	controls.Visible = false
 	controls.BackgroundTransparency=1
 	local menu = button(controls, "Menu", "Menu", UDim2.fromOffset(0, 0), Art.Raised)
@@ -100,6 +139,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
  -- Coos speak through AmbientAudio's mood cues when the client entry created it first.
  self.coos=require(script.Parent.PetCooScheduler).new(audio,{voice=require(script.Parent.AmbientAudio).shared})
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
+	-- QA v2 R2.3: the roam camera stays in front of the island's (invisible) collision.
+	self.cameraClamp=require(script.Parent.CameraClamp).new({run=RunService,
+		active=function()return not self.destroyed and self.mode=="Room"and not self.focusing end,
+		world=function()return workspace:FindFirstChild("EggDropLounge")end})
  self.companions.garden=self.garden
  -- Pet Park (K3): nil unless FeatureFlags.Park; companions drive their pets through it too.
  self.park=ParkClient.new({garden=self.garden,reduced=reduceEffects})
@@ -147,6 +190,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	watch(GuiService:GetPropertyChangedSignal("PreferredTransparency"),function()
 		menu.BackgroundTransparency,leave.BackgroundTransparency=Art.dockTransparency(GuiService.PreferredTransparency),Art.dockTransparency(GuiService.PreferredTransparency)
 	end)
+	-- QA v2 R2.6: re-place the dock when the screen or the input device changes.
+	watch(gui:GetPropertyChangedSignal("AbsoluteSize"), function() self:placeDock() end)
+	watch(UserInputService.LastInputTypeChanged, function() self:placeDock() end)
+	self:placeDock()
 	menu.Activated:Connect(function()
 		if self.mode == "Room" and not self.busy and not self.focusing and not overlayOpen() then
 			if self.onOpenMenu then self.onOpenMenu() else onCollection() end
@@ -294,6 +341,8 @@ function Room:updateControls()
 	local unobscured = self.mode == "Room" and not self.focusing and not self.busy and not self.focusTransitioning
 		and not self.menuOpen and not self.overlayOpen() and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
 	if self.canRoam then unobscured=self.canRoam() end
+	-- The touch jump button appears with the character: settle the dock as it shows.
+	if unobscured and not self.controls.Visible then self:placeDock() end
 	self.controls.Visible = unobscured
 	if self.focusUI then self.focusUI:setActive(self.focusing and self.mode == "Room") end
 	local held=self.pet and(self.pet.careState=="Carried"or self.pet.careState=="Docked")
@@ -841,26 +890,19 @@ function Room:lockFocusMovement(character)
 	self.focusLock = lock
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if root then root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0) end
-	local playerScripts = Players.LocalPlayer:FindFirstChild("PlayerScripts")
-	local playerModule = playerScripts and playerScripts:FindFirstChild("PlayerModule")
-	if playerModule then
-		local ok, controls = pcall(function() return require(playerModule):GetControls() end)
-		if self.focusLock ~= lock then return end
-		if ok and controls then
-			local enabled = if type(controls.controlsEnabled) == "boolean" then controls.controlsEnabled
-				elseif type(controls.enabled) == "boolean" then controls.enabled else true
-			lock.controls, lock.restoreControls = controls, enabled
-			if enabled then pcall(function() controls:Disable() end) end
-		end
-	end
+	-- QA v2 R2: controls go through the one ref-counted MovementLock, so a menu opened
+	-- or closed during focus can never re-enable walking under the other.
+	MovementLock.shared():acquire("focus")
 end
 
 function Room:releaseFocusMovement()
 	local lock = self.focusLock
 	if not lock then return end
 	self.focusLock = nil
-	lock.release()
-	if lock.controls and lock.restoreControls then pcall(function() lock.controls:Enable() end) end
+	-- Code review: drop the shared movement lock first so an error in the humanoid
+	-- restore can never leave the player unable to walk.
+	MovementLock.shared():release("focus")
+	pcall(lock.release)
 end
 
 function Room:setPetContact(active)
@@ -960,6 +1002,8 @@ function Room:show(mode, animate)
 	-- QA 2026-11-13 Q1: the world camera is frozen while the deck is up (DeckCameraLock);
 	-- the Room path lets go first so the roam camera below starts from a Custom camera.
 	if mode == "Room" and self.boardCamera then self.boardCamera:release() end
+	-- QA v2 R2.1: the avatar never walks behind the Pocket Deck (W/S and Up/Down were free).
+	MovementLock.shared():set("deck", mode ~= "Room")
 	if mode == "Room" then
         self.endedRoomSerial=if self.progress:GetAttribute("RoundOver")==true then self.progress:GetAttribute("ResetId")else nil
 		local meet = self.requestedPet ~= nil
@@ -1088,6 +1132,8 @@ end
 function Room:destroy()
 	if self.destroyed then return end
 	if self.boardCamera then self.boardCamera:release() end
+	MovementLock.shared():release("deck")
+	if self.cameraClamp then self.cameraClamp:destroy();self.cameraClamp=nil end
  if self.care then self.care:destroy();self.care=nil end
  if self.careArms then self.careArms:destroy();self.careArms=nil end
  if self.coos then self.coos:destroy();self.coos=nil end

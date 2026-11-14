@@ -37,6 +37,20 @@ return function(client,parent)
 			assert(not ui.active and not ui.panel.Visible and ui.gui.DisplayOrder==9 and calls==0)
 			table.insert(cases,tostring(size).." preferred roam hint stays measured below dock inside core safe root")
 		end
+		-- QA v2 R2.6: the dock lives at the lower right (clear of the player list); the hint sits above it.
+		dock.AnchorPoint=Vector2.new(1,1)
+		for _,size in ipairs({Vector2.new(733,307),Vector2.new(1649,971)})do
+			ui.root.Size=UDim2.fromOffset(size.X,size.Y);settle()
+			-- The real dock shares the root's screen space: its lower-right corner, 16 px in.
+			local origin=ui.root.AbsolutePosition-host.AbsolutePosition
+			dock.Position=UDim2.fromOffset(math.floor(origin.X+size.X-16),math.floor(origin.Y+size.Y-16));settle()
+			ui:update(nil,nil,true);settle()
+			local hint,root=ui.hint,ui.root
+			local p,s,hp,hs=hint.AbsolutePosition,hint.AbsoluteSize,root.AbsolutePosition,root.AbsoluteSize
+			assert(p.Y>=hp.Y and p.Y+s.Y<=hp.Y+hs.Y,"hint escapes core safe root (low dock)")
+			assert(p.Y+s.Y<=dock.AbsolutePosition.Y,"hint overlaps the low roam dock")
+			table.insert(cases,tostring(size).." roam hint sits above the lower-right dock")
+		end
 	end)
 	selectionService.SelectedObject=nil;ui:destroy();host:Destroy();restoreFixtureSelection();assert(ok,problem)
 	return{passed=#cases,cases=cases}

@@ -11,6 +11,7 @@ local Themes=require(Shared.DeckThemes)
 local Catalog=require(Shared.AppearanceCatalog)
 local Kit=require(script.Parent.DeckKit)
 local Art=require(script.Parent.DeckArt)
+local UICopy=require(Shared.UICopy)
 local Shop={}
 Shop.__index=Shop
 -- Desktop rects in panel units: the pane matches Faceplates; 2 columns of 220x96 cards.
@@ -29,7 +30,8 @@ function Shop.status(id,ctx)
  if not item then return {kind="invalid",chip="",text="",button=nil}end
  ctx=ctx or {}
  if ctx.retry and ctx.chosen==id then return {kind="retry",chip="RETRY",text=ctx.note or "Not applied",button="Retry",enabled=true}end
- if ctx.confirmed==id then return {kind="inUse",chip="IN USE",text=if ctx.chosen==id and ctx.note then ctx.note else "In use",button=nil}end
+ -- QA v2 R3.5: the background in use keeps the Use button, disabled, reading "In use".
+ if ctx.confirmed==id then return {kind="inUse",chip="IN USE",text=if ctx.chosen==id and ctx.note then ctx.note else "",button=UICopy.get("r4.inUse"),enabled=false}end
  local requirement=Catalog.describeRequirement("background",id,ctx.facts)
  if requirement.unlocked then
   return {kind="earned",chip="EARNED",text=if ctx.chosen==id and ctx.note then ctx.note else Shop.Source[requirement.rule]or "",button="Use",enabled=true}

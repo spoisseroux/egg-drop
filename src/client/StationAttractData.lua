@@ -19,11 +19,20 @@ return table.freeze({
 	}),
 	Order = table.freeze({ "Customize", "Eggs", "Journal", "Park" }),
 	BeckonRange = 40, InviteRange = 14,
+	-- QA v2 R5.1/R5.2: a learned station is never fully silent. Within MarkerRange it shows the
+	-- marker (icon + pointer, no shaft/ring/sparkles/ping); within LabelRange any station shows
+	-- its name label. The first label per station (per session, until used/learned) also carries
+	-- a one-line "what it is" for IntroSeconds of being shown.
+	MarkerRange = 18, LabelRange = 14, IntroSeconds = 4,
 	-- Glow breath: +-8 % learned, +-20 % beckon/invite, on a 3.2 s cycle.
 	BreathLearned = .08, BreathActive = .20, BreathPeriod = 3.2, GlowBrightness = .45, GlowRange = 9,
 	ShaftHeight = 12, RingRadius = 4.7, RippleEvery = 2.4,
 	IconSize = 1.8, IconMaxDistance = 60, BobHeight = .25, BobPeriod = 1.6,
-	-- Chevron: two 0.5 s hops then a 1 s rest.
+	-- QA v2 R5.1: one connected marker. The billboard is IconSize wide and MarkerAspect tall;
+	-- the round icon fills the top square and the pointer (a diamond tucked under the disc, its
+	-- side corners on the disc edge) reaches PointerTip icon-widths below the icon centre.
+	MarkerAspect = 1.6, PointerHalf = .34, PointerTip = .70,
+	-- Invite: the whole marker hops twice (0.5 s each) then rests 1 s.
 	HopTime = .5, HopRest = 1, HopHeight = .35,
 	-- Ping limits: one per station per 45 s, one of any kind per 20 s, none in the first 10 s.
 	PingStation = 45, PingAny = 20, PingJoin = 10, PingVolume = .35,

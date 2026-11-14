@@ -29,6 +29,8 @@ return function(client,parent)
   test("phone landscape 733x307 is the Compact phone layout; 1024x768 keeps the small scaled LCD",function()
    local g=Screen.resolve(Vector2.new(733,307),aspect)
    assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==307-80 and g.contentScale==1,"phone layout in real px (glass under the Roblox controls: H - 80)")
+   -- QA v2 R6.1: the phone handheld body around that LCD (the board size is unchanged).
+   assert(g.body and g.body.x==4 and g.body.w==733-8 and g.body.y<g.glass.y and g.body.y+g.body.h>307,"phone handheld body")
    local small=Screen.resolve(Vector2.new(1024,768),aspect)
    assert(small.mode=="Small"and small.compact and near(small.s,(768-8)/608,.001)and small.authored==Screen.Compact,"the 1024x768 band is unchanged")
   end)
@@ -37,8 +39,16 @@ return function(client,parent)
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(733,307),aspect);s:setVisible(true)
    task.wait()
    for dir,q in pairs(s.quadrants)do if q.Visible then assert(q.AbsoluteSize.X>=44 and q.AbsoluteSize.Y>=44,q.Name)else assert(dir=="Up"or dir=="Down")end end
-   -- Compact v2: B is not drawn on the phone HUD (decision 4); MENU is back on the left shoulder.
-   for id,b in pairs(s.buttons)do if b.holder.Visible then assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)else assert(id=="B")end end
+   -- QA v2 R6.1: the phone draws A and B; B is the B sprite under the item button, whose
+   -- hit (8 px wider than the disc) is its target. MENU is on the left shoulder.
+   for id,b in pairs(s.buttons)do
+    assert(b.holder.Visible,id.." drawn")
+    if id=="B"then assert(not b.hit.Visible,"phone B uses the item button's hit")
+    else assert(b.hit.AbsoluteSize.X>=44 and b.hit.AbsoluteSize.Y>=44,id)end
+   end
+   assert(s.itemButton.hit.AbsoluteSize.X>=44 and s.itemButton.hit.AbsoluteSize.Y>=44,"B / Items target")
+   -- QA v2 R2.4: in a round Left / Right are the tall halves of the d-pad box.
+   assert(s.quadrants.Left.AbsoluteSize.Y>=s.dpad.AbsoluteSize.Y+48 and not s.quadrants.Up.Visible,"round d-pad halves take the Up / Down area")
    assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44 and s.back.root.AbsoluteSize.X==44)
    -- Compact HUD type never goes under 12.
    for _,node in ipairs(s.hudRoot:GetDescendants())do if node:IsA("TextLabel")and node.Text~=""then assert(node.TextSize>=12,node:GetFullName())end end

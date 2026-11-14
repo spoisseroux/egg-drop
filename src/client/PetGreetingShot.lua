@@ -1,5 +1,9 @@
 -- Pure bounded framing and greeting-camera lifetime helpers.
-local Shot = { Fov = 43, StageReach = 6.7 }
+local Shot = { Fov = 43, StageReach = 6.7, frontFirst = false }
+-- QA v2 R1.4: while on, greeting plans start with the staged front spot (pass 2). The
+-- client turns it on for the first Meet after the starter reveal and off when that
+-- greeting ends.
+function Shot.setFrontFirst(on) Shot.frontFirst = on == true end
 local IdleMotion=require(script.Parent.PetIdleMotion)
 local function inside(point, floor, margin)
 	local p = floor.cf:PointToObjectSpace(point)
@@ -214,7 +218,10 @@ function Shot.plan(args)
 	local preferred=if type(args.preferredBearing)=="number"then math.floor(args.preferredBearing)%8 else 0
 	local nearEdge=not inside(args.rootPosition,args.floor,radius+5.4)
 	local towardCenter=Vector3.new(args.floor.cf.Position.X-args.rootPosition.X,0,args.floor.cf.Position.Z-args.rootPosition.Z)
-	for pass=1,2 do
+	-- QA v2 R1.4: the first meet after the starter reveal skips the pet's current spot
+	-- (often against a wall, behind the player) and plans a staged spot in front of the
+	-- player, on the ground (raycast), facing the camera: the second pass below.
+	for pass=if Shot.frontFirst or args.frontFirst then 2 else 1,2 do
 	for index = 0, 7 do
 		local bearing=(preferred+index)%8
 		local angle = bearing * math.pi/4

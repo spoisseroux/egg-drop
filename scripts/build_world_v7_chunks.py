@@ -289,6 +289,9 @@ def declutter(sources):
 # recorded in TOUCHED so its merged mesh re-exports even when tris / bounds are unchanged (normal-only edits).
 # ---------------------------------------------------------------------------------------------------------------
 TOUCHED = set()
+# Chunks touched by THIS round's fixes (QA v2 R5). Only these force a re-export of unchanged-bounds meshes; TOUCHED keeps
+# the earlier rounds' log (their meshes are already uploaded) and later runs compare the manifest "hash" instead.
+FRESH = set()
 EXTRA_META = {}  # merged-mesh group key -> extra manifest fields (castle flag pivots)
 
 # Lamps 1 and 2 stood on the Spawn-to-Hub dirt path: moved onto the grass just off the path edge
@@ -648,14 +651,169 @@ def sharpen_cliffs(sources):
     print("QA3 sharpened", [n for n in SHARPEN])
 
 
+# ---------------------------------------------------------------------------------------------------------------
+# QA v2 2026-11-13 (R5.4): "the marble river lining still flickers" (shot 193213). Found with a coplanar-overlap scan
+# of the import chunks (every pair of same-plane faces whose outlines overlap):
+# - Architecture_Edging__marble: EVERY curb face had a twin on the same four vertices facing the other way (534 pairs:
+#   178 tops, 356 walls; the mockup's one-sided-render workaround). WorldAssets renders opaque scenery DoubleSided, so
+#   each curb surface drew twice and z-fought along every stream and pool. Keep the outward face of each twin.
+# - Architecture_Aqueduct__marble: in the sky-falls channel (Roblox x -9..0, z 50..57) slab bottoms and a channel floor
+#   lie exactly in Terrain_Ground__pebble_bed's top plane (y 2.1), seen through the water: drop the hidden bottoms,
+#   lift the floor faces 0.05 studs.
+# - Anim__Water_SkyFalls_Channel__water_stream: the channel water quad was coplanar with the stream water it overlaps
+#   (y 3.2, both translucent, same merged mesh): lower it 0.04 studs so the stream draws over it.
+# ---------------------------------------------------------------------------------------------------------------
+def dedupe_edging(sources):
+    o = obj_named(sources, "Architecture_Edging__marble")
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.faces.ensure_lookup_table()
+
+    def key(co):
+        return (round(co.x, 3), round(co.y, 3), round(co.z, 3))
+    twins = defaultdict(list)
+    for f in bm.faces:
+        twins[frozenset(v.index for v in f.verts)].append(f)
+    # Top centres by corner key, so a wall finds the top it hangs from (its two highest corners are top corners).
+    top_of = defaultdict(list)
+    for f in bm.faces:
+        if f.normal.z > 0.9:
+            centre = f.calc_center_median()
+            corners = frozenset(key(u.co) for u in f.verts)
+            for v in f.verts:
+                top_of[key(v.co)].append((corners, centre))
+    kill, tops, walls, guessed = [], 0, 0, 0
+    for faces in twins.values():
+        if len(faces) != 2:
+            continue
+        a, b = faces
+        if a.normal.dot(b.normal) > -0.99:
+            continue
+        if abs(a.normal.z) > 0.9:
+            kill.append(a if a.normal.z < 0 else b)
+            tops += 1
+            continue
+        corners = sorted(a.verts, key=lambda v: -v.co.z)[:2]
+        k0, k1 = key(corners[0].co), key(corners[1].co)
+        centre = next((c for ks, c in top_of[k0] if k1 in ks), None)
+        mid = a.calc_center_median()
+        if centre is None:
+            guessed += 1
+            kill.append(b)
+            continue
+        out = Vector((mid.x - centre.x, mid.y - centre.y, 0))
+        kill.append(a if a.normal.dot(out) < 0 else b)
+        walls += 1
+    bmesh.ops.delete(bm, geom=kill, context="FACES_ONLY")
+    bm.to_mesh(o.data)
+    bm.free()
+    o.data.update()
+    FRESH.add(o.name)
+    TOUCHED.add(o.name)
+    print("R5 edging twins removed", len(kill), "tops", tops, "walls", walls, "unmatched", guessed,
+          "faces left", len(o.data.polygons))
+    assert len(kill) == 534 and guessed == 0, (len(kill), guessed)
+
+
+def _bed_planes(bed):
+    """Up-facing pebble-bed faces: (height, xy bounds) in world space."""
+    out = []
+    mw = bed.matrix_world
+    for p in bed.data.polygons:
+        if p.normal.z < 0.999:
+            continue
+        pts = [mw @ bed.data.vertices[v].co for v in p.vertices]
+        out.append((pts[0].z, min(c.x for c in pts), max(c.x for c in pts), min(c.y for c in pts), max(c.y for c in pts)))
+    return out
+
+
+def aqueduct_bed(sources):
+    bed = _bed_planes(obj_named(sources, "Terrain_Ground__pebble_bed"))
+    dropped = lifted = 0
+    for name in ("Architecture_Aqueduct__marble", "Architecture_Aqueduct__marble_smooth"):
+        o = obj_named(sources, name)
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        kill, lift = [], set()
+        for f in bm.faces:
+            if abs(f.normal.z) < 0.999:
+                continue
+            zs = [v.co.z for v in f.verts]
+            if max(zs) - min(zs) > 1e-3:
+                continue
+            x0, x1 = min(v.co.x for v in f.verts), max(v.co.x for v in f.verts)
+            y0, y1 = min(v.co.y for v in f.verts), max(v.co.y for v in f.verts)
+            hit = any(abs(z - zs[0]) < 0.01 and min(x1, bx1) - max(x0, bx0) > 0.05 and min(y1, by1) - max(y0, by0) > 0.05
+                      for z, bx0, bx1, by0, by1 in bed)
+            if not hit:
+                continue
+            if f.normal.z < 0:
+                kill.append(f)
+            else:
+                lift.update(f.verts)
+        for v in lift:
+            v.co.z += 0.05
+        if kill:
+            bmesh.ops.delete(bm, geom=kill, context="FACES_ONLY")
+        dropped += len(kill)
+        lifted += len(lift)
+        if kill or lift:
+            bm.to_mesh(o.data)
+            o.data.update()
+            FRESH.add(o.name)
+            TOUCHED.add(o.name)
+        bm.free()
+    print("R5 aqueduct on pebble bed: bottoms dropped", dropped, "floor verts lifted", lifted)
+    assert dropped >= 2 and lifted >= 3, (dropped, lifted)
+
+
+def channel_water(sources):
+    o = obj_named(sources, "Anim__Water_SkyFalls_Channel__water_stream")
+    for v in o.data.vertices:
+        v.co.z -= 0.04
+    o.data.update()
+    FRESH.add(o.name)
+    TOUCHED.add(o.name)
+    print("R5 sky-falls channel water lowered", len(o.data.vertices), "verts")
+
+
 def qa_fixes(sources):
     move_lamps(sources)
     sources = split_castle_flags(sources)
     fix_foam(sources)
+    dedupe_edging(sources)
     cap_edging(sources)
     bridge_aprons(sources)
     sharpen_cliffs(sources)
+    aqueduct_bed(sources)
+    channel_water(sources)
     return sources
+
+
+def geom_hash(obj):
+    """Content hash of a merged mesh (positions, corners, normals, UVs) so a later run re-exports exactly the meshes
+    whose geometry changed."""
+    import hashlib
+    import numpy as np
+    me = obj.data
+    h = hashlib.sha1()
+    co = np.empty(len(me.vertices) * 3, dtype=np.float32)
+    me.vertices.foreach_get("co", co)
+    h.update(np.round(co, 4).tobytes())
+    idx = np.empty(len(me.loops), dtype=np.int32)
+    me.loops.foreach_get("vertex_index", idx)
+    h.update(idx.tobytes())
+    try:
+        nrm = np.empty(len(me.loops) * 3, dtype=np.float32)
+        me.corner_normals.foreach_get("vector", nrm)
+        h.update(np.round(nrm, 3).tobytes())
+    except (AttributeError, RuntimeError):
+        pass
+    if me.uv_layers.active:
+        uv = np.empty(len(me.loops) * 2, dtype=np.float32)
+        me.uv_layers.active.data.foreach_get("uv", uv)
+        h.update(np.round(uv, 4).tobytes())
+    return h.hexdigest()[:16]
 
 
 def main():
@@ -720,7 +878,7 @@ def main():
         entry = {"name": obj.name, "group": key, "material": m["material"], "tris": tris(obj),
                  "collide": m["collide"], "anim": m["anim"], "region": m["region"],
                  "center": rb(c), "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)],
-                 "top": round(hi.z + 4, 4)}
+                 "top": round(hi.z + 4, 4), "hash": geom_hash(obj)}
         if m.get("note"):
             entry["note"] = m["note"]
         entry.update(EXTRA_META.get(key, {}))
@@ -733,10 +891,16 @@ def main():
 
     def same(a, b):
         return a["tris"] == b["tris"] and all(abs(x - y) < 1e-3 for x, y in zip(a["center"] + a["size"], b["center"] + b["size"]))
-    # QA 2026-11-13: normal-only fixes keep tris and bounds, so meshes built from a touched chunk count as changed.
-    touched_keys = {key for key, m in meta.items() if TOUCHED.intersection(m["sources"])}
+    # QA 2026-11-13: normal-only fixes keep tris and bounds, so meshes built from a chunk touched by this round's
+    # fixes (FRESH) count as changed. Once the previous manifest carries hashes, the hash decides.
+    touched_keys = {key for key, m in meta.items() if FRESH.intersection(m["sources"])}
     touched = {obj.name for obj, key in finals if key in touched_keys}
-    changed = sorted(n for n in current if n in previous and (not same(current[n], previous[n]) or n in touched))
+
+    def differs(n):
+        if previous[n].get("hash") and current[n].get("hash"):
+            return previous[n]["hash"] != current[n]["hash"]
+        return not same(current[n], previous[n]) or n in touched
+    changed = sorted(n for n in current if n in previous and differs(n))
     added = sorted(n for n in current if n not in previous)
     dropped = sorted(n for n in previous if n not in current)
     if previous and (changed or added or dropped):

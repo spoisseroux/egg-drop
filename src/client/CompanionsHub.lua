@@ -201,7 +201,7 @@ function Hub:build(view)
  self.view=view;self.key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..":"..self.page..":"..tostring(self.assign~=nil)
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
- Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
+ Kit.setShadeAlpha(self.shade,Kit.ShadeAlpha) -- R3.1: one full-screen shade, phones too
  local W=if phone then view.W else 848
  local H=if phone then view.H else 608
  local content=Kit.frame(root,"Content",nil,UDim2.new(),UDim2.fromOffset(W,H));content.ZIndex=root.ZIndex+2

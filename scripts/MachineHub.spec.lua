@@ -47,7 +47,10 @@ return function(client,parent)
     assert(not Hub.locked(tile.id,1),tile.id.." opens with a pet")
    end
    local ctx={owned=1,state=snapshot}
-   local s=Hub.status("hatch",ctx);assert(s.text==UICopy.get("hub.status.stamp")and s.tone=="stars"and s.dot and not s.locked)
+   -- QA v2 R3.8: today's stamp waits on the Quests tile now (claims show first).
+   local s=Hub.status("hatch",ctx);assert(s.text==""and not s.dot,"no stamp on Hatch eggs")
+   s=Hub.status("quests",{owned=1,state={dailyAvailable=true,quests={daily={},weekly={}}}})
+   assert(s.text==UICopy.get("hub.status.stamp")and s.tone=="stars"and s.dot and not s.locked,"stamp ready on Quests")
    assert(Hub.questsReady(snapshot.quests)==2,"ready, not claimed: one daily and one weekly")
    s=Hub.status("quests",ctx);assert(s.text==UICopy.get("book.entry.claimMany",{count=2})and s.dot)
    s=Hub.status("book",ctx);assert(s.text=="2 TO CLAIM"and s.dot)
@@ -101,8 +104,8 @@ return function(client,parent)
      if node:IsA("TextLabel")and node.Visible and node.Text~=""and not node:FindFirstAncestor("Hints")then assert(node.TextSize>=12,"text under 12 px: "..node:GetFullName())end
     end
     assert((hub.content:FindFirstChild("Hints")~=nil)==not phone,"hint caps on desktop only")
-    -- Status: the stamp, two quests and two book milestones wait (gold dots).
-    assert(hub.tileViews[1].dot.Visible and hub.tileViews[4].dot.Visible and hub.tileViews[5].dot.Visible and not hub.tileViews[2].dot.Visible)
+    -- Status: two quests (and the stamp) and two book milestones wait (gold dots); Hatch eggs no longer carries the stamp.
+    assert(not hub.tileViews[1].dot.Visible and hub.tileViews[4].dot.Visible and hub.tileViews[5].dot.Visible and not hub.tileViews[2].dot.Visible)
     -- Keyboard / controller focus on the 3 x 2 grid.
     hub:input(K.Right);assert(hub.root:GetAttribute("FocusedTile")=="style")
     hub:input(K.D);assert(hub.root:GetAttribute("FocusedTile")=="companions")
@@ -161,6 +164,8 @@ return function(client,parent)
     local layer=host.overlay.layer
     assert(log.visible and layer.Visible and host.shade.Visible and Kit.shadeDepth()==depth+1)
     assert(layer:GetAttribute("Layout")==(if size.X<1000 then "phone"else "regular"))
+    assert(math.abs(host.shade.BackgroundTransparency-Kit.ShadeAlpha)<1e-4,"R3.1: the quest log dims on phones too")
+    assert(log.header and log.header.back and log.header.help,"R3.4: back arrow and ? on the quest log")
     assert(inside(layer,root),"the log stays on screen")
     log:hide();settle()
     assert(not layer.Visible and not host.shade.Visible and Kit.shadeDepth()==depth,"the shade leaves with the log")

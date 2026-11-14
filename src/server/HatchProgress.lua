@@ -33,6 +33,9 @@ local BookCatalog=require(ReplicatedStorage.Shared.BookCatalog)
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
+-- Petting pays +1 Star up to this many times a day (QA v2 R5.5: 5 -> 10, alongside the faster
+-- PetContact window). Saves written with the old cap (0..5) stay valid.
+Hatching.PetDailyCap = 10
 local store = require(script.Parent.ProgressStore)
 local random = Random.new()
 
@@ -146,7 +149,7 @@ local function canonicalDay(value)
 	return number~=nil and number==math.floor(number)and math.abs(number)<=1000000000 and tostring(number)==value
 end
 local function validVersion(state,version,legacy)
-	if not validBase(state,version)or not canonicalDay(state.petDay)or not integer(state.petCount,5)or not(if legacy then HueState.validLegacy(state)else HueState.valid(state))then return false end
+	if not validBase(state,version)or not canonicalDay(state.petDay)or not integer(state.petCount,Hatching.PetDailyCap)or not(if legacy then HueState.validLegacy(state)else HueState.valid(state))then return false end
 	local receipt=state.lastPetAward
 	if state.petCount==0 then return receipt==nil end
 	return type(receipt)=="table"and type(receipt.id)=="string"and #receipt.id>0 and #receipt.id<=100
@@ -199,7 +202,7 @@ local function upgrade(state, now, userId)
         nextState=clone(nextState);nextState.version=5;nextState.hueAssignments={}
     end
 	if nextState.version==5 then
-		if not validBase(nextState,5)or not canonicalDay(nextState.petDay)or not integer(nextState.petCount,5)or not HueState.validV5(nextState)
+		if not validBase(nextState,5)or not canonicalDay(nextState.petDay)or not integer(nextState.petCount,Hatching.PetDailyCap)or not HueState.validV5(nextState)
 			or nextState.hueInventory~=nil or nextState.petHues~=nil or nextState.hueItemReceipts~=nil or nextState.hueReceiptOrder~=nil
 			or nextState.hueReservation~=nil or nextState.pendingHueResult~=nil or nextState.hueMigrationId~=nil or nextState.hueMigrationAcknowledged~=nil or nextState.legacyHueEgg~=nil or nextState.legacyHueRedemption~=nil or nextState.legacyLastHueResult~=nil then return state end
 		-- Validate the full old award namespace as well, before freezing its proofs.
@@ -752,7 +755,7 @@ function Hatching.awardPet(handle,candidate)
 		if state.lastHatch then return false,"RevealPending"end
 		if not Catalog.isOwned(state.inventoryMask,captured.petId)then return false,"PetChanged"end
 		local count=if tonumber(current)>tonumber(state.petDay)then 0 else state.petCount
-		if count>=5 then return false,"PetCap"end
+		if count>=Hatching.PetDailyCap then return false,"PetCap"end
 		if state.nectar>=1000000000 then return false,"BalanceLimit"end
 		state.nectar+=1;state.petDay=current;state.petCount=count+1
 		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId}

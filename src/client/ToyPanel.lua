@@ -2,6 +2,7 @@ local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
 local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.ToyCatalog);local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
+require(script.Parent.ToyTabIcon) -- registers the "toy" card icon (QA v2 R4.5)
 local Panel={};Panel.__index=Panel
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function label(parent,name,copy,role)
@@ -87,10 +88,13 @@ function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
  for i,id in ipairs(live)do
   local node=self.rows[id];Cards.place(node,rects[i])
   local wearing=selected==id
-  Cards.dress(node,{name=Catalog.ById[id].name,status=if wearing then "WEARING"else "Owned",tone=if wearing then "accent"else "soft",icon=if id=="none"then "none"else "ball",focused=i==focusIndex,compact=compact})
+  Cards.dress(node,{name=Catalog.ById[id].name,status=if wearing then "WEARING"else "Owned",tone=if wearing then "accent"else "soft",icon=if id=="none"then "none"else "toy",focused=i==focusIndex,compact=compact})
   table.insert(focus,{button=node,id=id,wearing=wearing,name=Catalog.ById[id].name,act=function()return self:choose(id)end})
  end
  local y=h+12
+ -- QA v2 R4.5: no egg row under the cards in Customize (the screen shows one
+ -- "More from eggs" line instead); the egg row stays on the receipt / buy pages.
+ self.shop.Visible=false
  if self.shop.Visible then
   Art.type(self.shop,"Action");local sh=math.max(44,Art.actionHeight(self.shop,width-6));place(self.shop,3,y,width-6,sh);y+=sh+8
  end

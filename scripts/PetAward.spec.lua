@@ -31,9 +31,11 @@ return function(server)
 		assert(h.state.lastAwardSeq==0 and h.state.lastRunReward==nil and h.state.lastHatch==nil)
 		assert(db.player_1.hatching.nectar==before+1)
 	end)
-	test("four to five is atomic and further candidates do no storage work",function()
-		local h,_,c=fixture();for _=1,4 do assert(H.awardPet(h,candidate(h)))end
-		assert(h.state.petCount==4);assert(H.awardPet(h,candidate(h))and h.state.petCount==5)
+	-- QA v2 R5.5: the daily cap is HatchProgress.PetDailyCap (5 -> 10).
+	local CAP=H.PetDailyCap;assert(CAP==10,"petting daily cap")
+	test("cap-1 to cap is atomic and further candidates do no storage work",function()
+		local h,_,c=fixture();for _=1,CAP-1 do assert(H.awardPet(h,candidate(h)))end
+		assert(h.state.petCount==CAP-1);assert(H.awardPet(h,candidate(h))and h.state.petCount==CAP)
 		local writes,balance=c.writes,h.state.nectar
 		assert(not H.awardPet(h,candidate(h))and c.writes==writes and h.state.nectar==balance)
 	end)
@@ -66,10 +68,10 @@ return function(server)
 		assert(H.renew(h)and h.status=="Ready")
 	end)
 	test("a newer day resets allowance only in its admitted award; rollback never resets it",function()
-		local h,db,c,adapter=fixture();for _=1,5 do assert(H.awardPet(h,candidate(h)))end
+		local h,db,c,adapter=fixture();for _=1,CAP do assert(H.awardPet(h,candidate(h)))end
 		local day=h.state.petDay;assert(H.release(h));c.now+=86400
-		h=H.load(1,{},adapter("b"));assert(h.state.petCount==5 and h.state.petDay==day)
-		assert(H.awardPet(h,candidate(h))and h.state.petCount==1 and h.state.nectar==12)
+		h=H.load(1,{},adapter("b"));assert(h.state.petCount==CAP and h.state.petDay==day)
+		assert(H.awardPet(h,candidate(h))and h.state.petCount==1 and h.state.nectar==6+CAP+1)
 		local current=h.state.petDay;c.now-=86400;local writes=c.writes
 		assert(not H.awardPet(h,candidate(h))and c.writes==writes and db.player_1.hatching.petDay==current)
 	end)
@@ -111,7 +113,7 @@ return function(server)
 		assert(h.state.petCount==0 and h.state.lastPetAward==nil)
 	end)
 	test("future and malformed persisted schemas are not overwritten",function()
-		for _,mutate in ipairs({function(s)s.version=5 end,function(s)s.petDay="020"end,function(s)s.petCount=6 end,
+		for _,mutate in ipairs({function(s)s.version=5 end,function(s)s.petDay="020"end,function(s)s.petCount=CAP+1 end,
 			function(s)s.petCount=1 end,function(s)s.version=3;s.petDay=nil;s.petCount=nil;s.nectar="bad"end})do
 			local h,db,_,adapter=fixture();assert(H.release(h));mutate(db.player_1.hatching)
 			local captured=game.HttpService:JSONEncode(db.player_1)

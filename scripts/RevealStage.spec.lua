@@ -137,6 +137,63 @@ return function(client,parent)
    view:close("close");assert(view.reveal==nil and not view.stageLayer.Visible and view.card.Interactable)
    view.shade:Destroy();host:Destroy()
   end)
+  test("QA v2 R1.1: the confetti popper fires from both bottom corners, arcs up and falls out",function()
+   local W,H=1920,1080
+   assert(Stage.confetti(1,-.01,W,H)==nil and Stage.confetti(1,Stage.ConfettiLife+.01,W,H)==nil,"only while alive")
+   local left,right,peak=0,0,H
+   for i=1,Stage.ConfettiCount do
+    local x0=Stage.confetti(i,0,W,H)
+    assert(x0,"every piece starts on screen")
+    if x0<W/2 then left+=1 else right+=1 end
+    for t=0,Stage.ConfettiLife,.05 do
+     local x,y,_,share,fade=Stage.confetti(i,t,W,H)
+     if x then
+      peak=math.min(peak,y);assert(share>=0 and share<=1 and fade>=0 and fade<=1)
+      assert(x>-W*.1 and x<W*1.1,"stays near the frame")
+     end
+    end
+    local a={Stage.confetti(i,.7,W,H)};local b={Stage.confetti(i,.7,W,H)};assert(a[1]==b[1]and a[2]==b[2],"deterministic")
+   end
+   assert(left==Stage.ConfettiCount/2 and right==Stage.ConfettiCount/2,"two poppers")
+   assert(peak<H*.6,"the pieces reach up the stage")
+  end)
+  test("QA v2 R1.1: a first view pops once with its cue; a reopen and Reduced Motion never do",function()
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local cues={};local audio={deviceActive=true};function audio:play(name)table.insert(cues,name);return false end
+   local stage=Stage.show(host,{pet=Pets.byId.pip,audio=audio,reduced=false,buttons={{id="meet",text="Meet Bear",primary=true}}})
+   table.insert(stages,stage);stage.connection:Disconnect();stage.connection=nil
+   for _=1,4 do stage:step(.1)end;assert(not stage.popAt,"not before the colour burst")
+   stage:step(.1);assert(stage.popAt and table.find(cues,Stage.PopCue),"pops with the burst")
+   local shown=0;for _,piece in ipairs(stage.confettiPieces)do if piece.Visible then shown+=1 end end
+   assert(shown>0,"pieces on screen")
+   local count=#cues;stage:settle();assert(#cues==count,"one pop only")
+   for _=1,25 do stage:step(.1)end
+   assert(not stage:confettiAlive()and not stage.confettiPieces[1].Visible,"the pieces are gone")
+   local again=Stage.show(host,{pet=Pets.byId.pip,audio=audio,reduced=false,instant=true})
+   table.insert(stages,again);again:settle();assert(not again.popAt,"a reopen does not pop")
+   local calm=Stage.show(host,{pet=Pets.byId.pip,audio=audio,reduced=true,fresh=true})
+   table.insert(stages,calm);calm:settle();assert(not calm.popAt,"no confetti under Reduced Motion")
+   stage:destroy();again:destroy();calm:destroy();host:Destroy()
+  end)
+  test("QA v2 R1.2/R1.5: the stage layer covers the screen; the first Bear's B is Back, not Play again",function()
+   local View=require(client.EggHatchView);local Kit=require(client.DeckKit)
+   assert(View.secondaryIntent({starter=true})=="exit"and View.secondaryIntent({})=="play"and View.secondaryIntent(nil)=="play")
+   assert(View.closeReason("exit")=="exit"and View.closeReason("meet")=="meet"and View.closeReason("play")=="afterHatch")
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local sent={}
+   local view=View.new(host,{play=function()end},function()return true end,function(command,value)table.insert(sent,{command=command,value=value})end)
+   assert(view.stageLayer:GetAttribute("CoversScreen")and view.revealBackdrop:GetAttribute("CoversScreen"),"full-screen layers")
+   view:open({status="Ready",revision=10,lastHatch={id="starter-fixture",petId="pip",starter=true},nectar=6})
+   local stage=view.reveal;assert(stage,"stage open")
+   assert(view.revealBackdrop.Visible and view.card.BackgroundTransparency==1 and view.cinematic.frame.BackgroundTransparency==1,"no card rect over the black")
+   local back;for _,entry in ipairs(stage.buttons)do if not entry.primary then back=entry end end
+   assert(back and back.id=="exit"and Kit.buttonState(back.node).label.Text==require(game:GetService("ReplicatedStorage").Shared.UICopy).get("r1.reveal.exit"))
+   if stage.connection then stage.connection:Disconnect();stage.connection=nil end
+   stage:step(.1);stage:step(.1);assert(stage:isSettled())
+   assert(stage:back()and #sent==1 and sent[1].command=="ack","B acknowledges the starter")
+   assert(view.ackIntent and view.ackIntent.intent=="exit"and view.ackIntent.starter==true)
+   view:close("close");view.shade:Destroy();host:Destroy()
+  end)
  end)
  for _,stage in ipairs(stages)do pcall(function()stage:destroy()end)end
  gui:Destroy()

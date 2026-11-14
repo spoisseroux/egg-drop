@@ -1,7 +1,8 @@
 -- Studio Client. The deck background drawn inside the board well (UI-SPEC-REDESIGN-MENUS 5):
 -- Art.setBackground feeds a registered board pattern (canopy / creek / lantern) in one
 -- tone at 6%, cells ~23 px on the 163 px phone board and 40 px on desktop, static,
--- bounded pool; the exterior pattern is skipped under the compact (phone) rule.
+-- bounded pool; the exterior pattern draws on phones too (QA v2 R6.1: the phone
+-- shows the whole handheld with the background around it).
 -- Scratch frames only. Art.setBackground is global: re-equip a background (or rejoin)
 -- afterwards so the live board pattern shows the equipped one again.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.BoardPattern)(PlayerScripts.Client, PlayerGui)
@@ -57,11 +58,11 @@ return function(client,parent)
    for _=1,10 do Art.setBackground(Instance.new("Frame"),"lantern",theme)end;settle()
    assert(Art.boardPatternStats(host).writes==writes,"repeat background writes")
   end)
-  test("the exterior pattern is skipped under the compact rule, previews still draw",function()
+  test("the exterior pattern draws on the phone (QA v2 R6.1) and on desktop",function()
    Art.backdrop(exterior);Art.setBackground(exterior,"creek",theme)
    Art.setBackdropCase(exterior,{x=0,y=0,w=812,h=354});Art.updateBackdrop(exterior,0,true,true,false)
    local surface=exterior:FindFirstChild("PatternSurface",true)
-   assert(not surface or not surface.Visible,"compact exterior pattern drew")
+   assert(surface and surface.Visible,"phone exterior pattern missing")
    exterior.Size=UDim2.fromOffset(1920,1080);settle()
    Art.setBackdropCase(exterior,{x=0,y=0,w=1200,h=700});Art.updateBackdrop(exterior,1,true,true,false)
    surface=exterior:FindFirstChild("PatternSurface",true);assert(surface and surface.Visible,"desktop exterior pattern missing")

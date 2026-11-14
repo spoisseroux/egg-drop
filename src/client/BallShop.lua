@@ -11,6 +11,7 @@ local Themes=require(Shared.BallThemes)
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
 local Sprite=require(script.Parent.JellySprite)
+local TweenService=game:GetService("TweenService")
 local Shop={}
 Shop.__index=Shop
 Shop.ConfirmSeconds=3
@@ -29,7 +30,8 @@ function Shop.status(id,ctx)
  local entry=Themes.ById[id]
  if not entry then return{kind="invalid",text="",button=nil}end
  ctx=ctx or {}
- if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=nil}end
+ -- QA v2 R3.5: the theme in use keeps the Use button, disabled, reading "In use".
+ if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=UICopy.get("r4.inUse"),enabled=false}end
  if Themes.owns(ctx.owned,id)then return{kind="owned",text="Owned",button="Use",enabled=true}end
  local price=entry.price;local wallet=ctx.wallet or 0
  if wallet>=price then return{kind="buy",text="You have enough Stars",button="★ Buy "..price,price=price,enabled=true}end
@@ -43,6 +45,29 @@ function Shop.tileStatus(id,ctx)
  if s.kind=="buy"then return "★ "..s.price,"stars"end
  if s.kind=="short"then return "★ "..s.price,"dim"end
  return "","dim"
+end
+-- QA v2 R4.6 (193916): previews show the balls falling in, as a sample of the round.
+-- Pure: one ball's drop: start offset (from its resting Y) and delay, in order dropped.
+Shop.Drop={time=.42,stagger=.06,above=6}
+function Shop.dropPlan(restY,size,order)
+ return{startY=-size-Shop.Drop.above,restY=restY,delay=(order-1)*Shop.Drop.stagger}
+end
+-- Drops `holders` (in order) from above their parent onto where they rest. A cut under
+-- Reduced Motion. Returns the number of balls animated.
+function Shop.dropIn(holders)
+ if Kit.reduced()then return 0 end
+ local n=0
+ for order,holder in ipairs(holders)do
+  if holder.Parent then
+   local rest=holder:GetAttribute("RestPosition")
+   if typeof(rest)~="UDim2"then rest=holder.Position;holder:SetAttribute("RestPosition",rest)end
+   local plan=Shop.dropPlan(rest.Y.Offset,holder.Size.Y.Offset,order)
+   holder.Position=UDim2.fromOffset(rest.X.Offset,plan.startY)
+   TweenService:Create(holder,TweenInfo.new(Shop.Drop.time,Enum.EasingStyle.Bounce,Enum.EasingDirection.Out,0,false,plan.delay),{Position=rest}):Play()
+   n+=1
+  end
+ end
+ return n
 end
 function Shop.step(index,dx,dy,count,columns)
  local cols=math.max(1,columns or 2)
@@ -62,8 +87,8 @@ end
 -- One ball preview of a tier at `px` screen pixels per LCD pixel, bottom-centred at (x, bottom).
 local function ballAt(parent,themeId,tier,px,x,bottom)
  local look=require(script.Parent.JellyLCD).ballRuns(themeId,tier,"idle",0,false)
- local d=look.size*px
- local holder=Kit.frame(parent,"Ball"..tier,nil,UDim2.fromOffset(x-d/2,bottom-d),UDim2.fromOffset(d,d))
+ local d=math.floor(look.size*px+.5)
+ local holder=Kit.frame(parent,"Ball"..tier,nil,UDim2.fromOffset(math.floor(x-d/2+.5),math.floor(bottom-d+.5)),UDim2.fromOffset(d,d))
  local preview=Sprite.preview(holder);preview.set(themeId,tier,"idle",0,false)
  return holder,preview
 end
@@ -147,6 +172,8 @@ function Shop:paintBoard(themeId)
   local holder=ballAt(b.well,themeId,p[1],b.px,p[2]*b.w,floorY-p[3]*(b.px/3))
   table.insert(b.balls,holder)
  end
+ -- R4.6: the pile falls in whenever the pane shows a new theme (bottom row first).
+ if self.body and self.body.Visible then Shop.dropIn(b.balls)end
 end
 -- Five colour circles (the goal icons this theme gives), stepped in size.
 function Shop:buildCircles(pane,x,y,slot,caption)
@@ -174,12 +201,16 @@ function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  Kit.dotGrid(strip) -- T7: a row of balls reads as a small screen
  local px=if compact then 1 else 2
  local xs={.06,.19,.36,.59,.84}
- for tier=1,5 do ballAt(strip,id,tier,px,xs[tier]*(w-12),stripH-3)end
+ local balls={}
+ for tier=1,5 do table.insert(balls,(ballAt(strip,id,tier,px,xs[tier]*(w-12),stripH-3)))end
+ strip.ClipsDescendants=true
  local nameY=if compact then stripH+10 else stripH+14
  local nameLabel=txt(tile,"Name",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
  local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,AutoLocalize=true})
- self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
+ self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke,balls=balls}
  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
+ -- R4.6: hovering a card drops its five balls in again (focus does too).
+ tile.MouseEnter:Connect(function()if self:active()then Shop.dropIn(balls)end end)
 end
 
 -- ctx keys: owned (list), equipped (id), wallet (n), revision (n). Absent keys keep their value.
@@ -249,8 +280,10 @@ end
 function Shop:focus(index,instant)
  if #self.tiles==0 then return end
  index=math.clamp(index,1,#self.tiles)
- if index~=self.index then self.confirmId=nil;self.errorId=nil end
+ local moved=index~=self.index
+ if moved then self.confirmId=nil;self.errorId=nil end
  self.index=index;self:refresh();self:scrollTo(index)
+ if moved and self:active()and self.tiles[index].balls then Shop.dropIn(self.tiles[index].balls)end
  local ring=self.owner.ring
  if ring and self:active()then
   ring.attach(self.tiles[index].button,12)
@@ -341,10 +374,13 @@ end
 -- Shown when the Balls tab is selected; lands on the theme in use.
 function Shop:show(visible,landOnEquipped)
  if not self.body then return end
+ local opening=visible==true and not self.body.Visible
  self.body.Visible=visible==true
  if visible then
   if landOnEquipped then self.index=table.find(Themes.Order,self.ctx.equipped or Themes.Default)or 1 end
   self:focus(self.index,true)
+  -- R4.6: opening the tab drops the pane's pile in too.
+  if opening and self.board then Shop.dropIn(self.board.balls)end
  else self.confirmId=nil end
 end
 return Shop

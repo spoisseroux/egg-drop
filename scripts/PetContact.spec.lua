@@ -34,8 +34,9 @@ return function(server)
 	end
 	local function begin(b,c)assert(c:begin());c.leaseId=b.lease.id end
 	-- QA 2026-11-13 Q2.7 tuning: W seconds of contact pay, S seconds between awards, chance 1.
+	-- QA v2 R5.5: W 4 -> 1.5, S 10 -> 6 (the fixture pulses every 0.5 s, so W stays a multiple of 0.5).
 	local W,S=Contact.OpportunitySeconds,Contact.SpacingSeconds
-	assert(W==4 and S==10 and Contact.AwardChance==1)
+	assert(W==1.5 and S==6 and Contact.AwardChance==1 and W%.5==0 and S>W)
 	local function withChance(chance,run)
 		local old=Contact.AwardChance;Contact.AwardChance=chance
 		local ok,e=pcall(run);Contact.AwardChance=old;assert(ok,e)

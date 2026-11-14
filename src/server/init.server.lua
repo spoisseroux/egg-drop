@@ -117,7 +117,7 @@ local function petState(board)
 		busy=handle.busy or board.nurseryBusy,pendingId=handle.pending and handle.pending.id,
 		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed or(board.careHeld==true),
 		lastPetAward=state.lastPetAward,capReached=tonumber(today)<tonumber(state.petDay)
-			or(today==state.petDay and state.petCount>=5)}
+			or(today==state.petDay and state.petCount>=Nursery.PetDailyCap)}
 end
 local gardenScene
 local function petAnchor(state)

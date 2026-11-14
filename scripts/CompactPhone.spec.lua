@@ -3,8 +3,12 @@
 -- The breakpoint rule, the frame geometry tables at 844x390, 740x360, 932x430,
 -- 568x320 and 667x375 (printed by scripts/deck_art/build_compact_frame_mockups.py
 -- --tables), the built round HUD (targets >= 44, nothing interactive or text in the
--- Roblox keep-out, no overlapping targets, text >= 12 that fits, board aspect, no B),
--- the Pocket Menu, and every menu sheet with its plate grips.
+-- Roblox keep-out, no overlapping targets, text >= 12 that fits, board aspect), the
+-- Pocket Menu, and every menu sheet with its plate grips.
+-- QA v2 R6 (2026-11-13): the phone draws the whole handheld (shadow, shoulders, band,
+-- plate, LED, B under A) around the unchanged LCD, with the background around it; the
+-- d-pad hit areas are two tall Left / Right halves in rounds and Up / Left + Right /
+-- Down rows in menus, and B (the item button) reads Items in rounds, Back in menus.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.CompactPhone)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Screen=require(client.DeckScreen);local Kit=require(client.DeckKit)
@@ -97,11 +101,11 @@ return function(client,parent)
   end)
   test("frame geometry matches the spec tables at the five sizes",function()
    local want={
-    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={18,154,44,88},dpadRight={62,154,44,88},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={14,64,96,37},mg=40,cw=238,pocketCols=1,pocketFirst={272,141,300,44},pocketLast={272,297,300,44}},
-    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={12,143,44,80},dpadRight={56,143,44,80},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={14,64,84,33},mg=24,cw=214,pocketCols=1,pocketFirst={220,126,300,44},pocketLast={220,282,300,44}},
-    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={18,174,44,88},dpadRight={62,174,44,88},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={14,64,96,37},mg=40,cw=268,pocketCols=1,pocketFirst={316,161,300,44},pocketLast={316,317,300,44}},
-    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={5,129,44,68},dpadRight={49,129,44,68},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={14,64,70,27},mg=6,cw=169,pocketCols=2,pocketFirst={115,158,165,44},pocketLast={288,210,165,44}},
-    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={12,150,44,80},dpadRight={56,150,44,80},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={14,64,84,33},mg=6,cw=202,pocketCols=1,pocketFirst={183,133,300,44},pocketLast={183,289,300,44}},
+    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={4,126,58,144},dpadRight={62,126,58,144},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={18,64,92,36},mg=40,cw=238,pocketCols=1,pocketFirst={272,141,300,44},pocketLast={272,297,300,44}},
+    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={4,111,52,144},dpadRight={56,111,52,144},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={18,64,80,31},mg=24,cw=214,pocketCols=1,pocketFirst={220,126,300,44},pocketLast={220,282,300,44}},
+    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={4,146,58,144},dpadRight={62,146,58,144},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={18,64,92,36},mg=40,cw=268,pocketCols=1,pocketFirst={316,161,300,44},pocketLast={316,317,300,44}},
+    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={4,91,45,144},dpadRight={49,91,45,144},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={18,64,66,26},mg=6,cw=169,pocketCols=2,pocketFirst={115,158,165,44},pocketLast={288,210,165,44}},
+    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={4,118,52,144},dpadRight={56,118,52,144},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={18,64,80,31},mg=6,cw=202,pocketCols=1,pocketFirst={183,133,300,44},pocketLast={183,289,300,44}},
    }
    for _,size in ipairs(sizes)do
     local w=want[size.X];local W,H=size.X,size.Y
@@ -132,7 +136,7 @@ return function(client,parent)
     assert(g.quests~=nil or g.handle~=nil,W.." a quests route on screen")
    end
   end)
-  test("round HUD at each size: targets, keep-out, text, A on the right shoulder, no B",function()
+  test("round HUD at each size: targets, keep-out, text, A on the right shoulder, B under it",function()
    for _,size in ipairs(sizes)do
     local root=frame(size)
     local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
@@ -144,7 +148,12 @@ return function(client,parent)
     audit(root,label.." HUD",116,58)
     local a=s.buttons.A.hit.AbsolutePosition+s.buttons.A.hit.AbsoluteSize/2-root.AbsolutePosition
     assert(math.abs(a.X-g.a.X)<=1 and math.abs(a.Y-g.a.Y)<=1 and a.X>g.x1,label.." A on the right shoulder at mid height")
-    assert(not s.buttons.B.holder.Visible,label.." B is not drawn (decision 4)")
+    -- QA v2 R6.1: the B sprite sits under the item button, whose hit is the one target.
+    local B=s.buttons.B;local ib=s.itemButton
+    assert(B.holder.Visible and not B.hit.Visible and not B.letter.Visible,label.." B sprite drawn, its own hit and letter off")
+    assert(B.holder.AbsolutePosition==ib.holder.AbsolutePosition and ib.hit.AbsoluteSize.X>=44,label.." B under the item button")
+    assert(ib.caption.Text=="Items"or not ib.caption.Visible,label.." B reads Items in a round")
+    assert(not s.quadrants.Up.Visible and not s.quadrants.Down.Visible,label.." Up / Down off in a round")
     assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44,label.." MENU on the shoulder")
     assert(s.lcd.AbsoluteSize.Y==size.Y-80,label.." board at H - 80 (under the Roblox controls)")
     assert(s.hud.questDot.Visible,label.." ready dot")
@@ -176,6 +185,86 @@ return function(client,parent)
      assert(s.hud.controls[3].text.Text=="Items",label.." keyboard B row is Items")
      audit(root,label.." HUD keyboard",116,58)
     end
+    root:Destroy()
+   end
+  end)
+  test("QA v2 R6: the phone handheld at 568x320 to 932x430 (shell, LED, background, LCD unchanged)",function()
+   for _,size in ipairs({Vector2.new(568,320),Vector2.new(667,375),Vector2.new(740,360),Vector2.new(812,354),Vector2.new(812,375),Vector2.new(844,390),Vector2.new(932,430)})do
+    local W,H=size.X,size.Y;local label=tostring(size)
+    local g=Screen.resolve(size,aspect,{kx=116,kh=58})
+    assert(g.phone and g.mode=="Compact",label.." stays the Compact path (not Small)")
+    -- The LCD is the resolveCompact one: glass under the Roblox controls, board H - 80.
+    assert(g.glass.y==60 and g.glass.y+g.glass.h==H-4 and g.board.h==H-80,label.." LCD unchanged")
+    -- Body: 4 px in from the sides, 16 above the glass, off the bottom edge; whole px.
+    local b=g.body
+    assert(b.x==4 and b.y==44 and b.w==W-8 and b.y+b.h>H,label.." body "..show(b))
+    local p=g.shell.plate
+    assert(inside(p,b)and p.x>b.x and p.y>b.y and p.y<g.glass.y and p.x<g.wordmark.x,label.." plate inside the band, above the glass "..show(p))
+    for _,name in ipairs({"shadow","shoulderL","shoulderR","band","plate"})do
+     local r=g.shell[name]
+     assert(r.x==math.floor(r.x)and r.y==math.floor(r.y)and r.w==math.floor(r.w)and r.h==math.floor(r.h),label.." "..name.." whole px")
+    end
+    assert(g.shell.shoulderL.y<b.y and g.shell.shoulderL.y+g.shell.shoulderL.h>b.y,label.." shoulders sit on the top edge")
+    assert(g.led and g.led.y>=g.wordmark.y+g.wordmark.h and g.led.y+g.led.h<=g.dpad.y and g.led.x+g.led.w<=g.glass.x,label.." LED between the wordmark and the d-pad")
+    -- Every control on the body, off the glass; the background shows above it.
+    for _,r in ipairs({g.dpad,g.dpadLeft,g.dpadRight,g.menuHit,g.aHit,g.itemHit})do
+     assert(apart(r,g.glass)and r.x>=b.x and r.x+r.w<=b.x+b.w and r.y>=b.y,label.." control on the body "..show(r))
+    end
+    -- Built: the shell sprites draw, the desktop glass sprite does not (the phone bezel is the glass).
+    local root=frame(size)
+    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
+    s:setHud(hudData);task.wait()
+    for _,node in ipairs({s.shadow,s.shoulders[1],s.shoulders[2],s.band,s.plate,s.plateOverlay,s.wordmark,s.wordmarkShadow,s.led,s.boardBezel,s.screenPanel,s.dpad,s.buttons.A.holder,s.buttons.B.holder})do
+     assert(node.Visible,label.." "..node.Name.." drawn")
+    end
+    assert(not s.glass.Visible and not s.plateLip.Visible and not s.plateShade.Visible,label.." desktop glass and the old full-root lip are off")
+    local o=root.AbsolutePosition
+    assert(s.band.AbsolutePosition-o==Vector2.new(b.x,b.y)and s.plate.AbsolutePosition-o==Vector2.new(p.x,p.y),label.." band / plate placed")
+    assert(s.lcd.AbsoluteSize==Vector2.new(g.board.w,g.board.h),label.." board size kept")
+    audit(root,label.." handheld",116,58)
+    root:Destroy()
+   end
+   -- Tablets and desktop keep the desktop shell (Small / Regular), unchanged.
+   for _,size in ipairs({Vector2.new(1024,768),Vector2.new(1180,820),Vector2.new(1920,1080)})do
+    local g=Screen.resolve(size,aspect);assert(not g.phone,"tablet / desktop "..tostring(size).." is not the phone path")
+   end
+  end)
+  test("QA v2 R2.4: phone d-pad hit areas follow rounds and menus; B is Items then Back",function()
+   for _,size in ipairs({Vector2.new(568,320),Vector2.new(812,354),Vector2.new(932,430)})do
+    local label=tostring(size)
+    local root=frame(size)
+    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root})
+    local menu=Pocket.new(s:addOverlay("Pocket",36,{lcd=true}),{})
+    s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
+    s:setHud(hudData);s:setItems(2,"*",Color3.new(1,.5,0),nil);task.wait()
+    local g=s.geometry;local o=root.AbsolutePosition;local q=s.quadrants;local ib=s.itemButton
+    local function at(node,r)
+     local p=node.AbsolutePosition-o
+     return node.Visible and p.X==r.x and p.Y==r.y and node.AbsoluteSize.X==r.w and node.AbsoluteSize.Y==r.h
+    end
+    -- Rounds: two tall halves of the d-pad box (the old Up / Down area included), Up / Down off.
+    local box=g.dpadBox
+    assert(box.h>=g.dpad.h+48 and box.w==g.SW-8,label.." box over the d-pad "..show(box))
+    assert(g.dpadLeft.h==box.h and g.dpadLeft.w+g.dpadRight.w==box.w and g.dpadLeft.w>=44,label.." round halves")
+    assert(at(q.Left,g.dpadLeft)and at(q.Right,g.dpadRight)and not q.Up.Visible and not q.Down.Visible,label.." round hit areas placed")
+    assert(box.y>=58 and box.y+box.h<=g.menuHit.y,label.." box clear of the keep-out and MENU")
+    assert(not s:menuActive()and ib.caption.Text=="Items"and ib.badge.Visible and ib.hit:GetAttribute("AccessibleLabel")=="Items: 2",label.." B is Items in a round")
+    -- Menus: Up / Left + Right / Down rows, each 44+; B reads Back with no badge.
+    menu:open({empty=true,canSettings=true});task.wait(.3)
+    assert(s:menuActive(),label.." Pocket Menu is a menu")
+    for _,r in ipairs({g.dpadUp,g.dpadMenuLeft,g.dpadMenuRight,g.dpadDown})do assert(r.w>=44 and r.h>=44,label.." menu row 44+")end
+    assert(at(q.Up,g.dpadUp)and at(q.Down,g.dpadDown)and at(q.Left,g.dpadMenuLeft)and at(q.Right,g.dpadMenuRight),label.." menu hit areas placed")
+    assert(ib.caption.Text=="Back"and not ib.badge.Visible and ib.glyph.Text=="B"and ib.hit:GetAttribute("AccessibleLabel")=="B: Back",label.." B is Back in a menu")
+    audit(root,label.." menu controls",116,58,function(node)return node:IsDescendantOf(menu.overlay.layer)end)
+    -- A menu-time belt change keeps Back; closing puts Items and the belt back.
+    s:setItems(3,"*",Color3.new(1,.5,0),nil);assert(ib.caption.Text=="Back"and not ib.badge.Visible,label.." belt waits under Back")
+    menu:close();task.wait(.3)
+    assert(not s:menuActive()and ib.caption.Text=="Items"and ib.badge.Visible and ib.count.Text=="3",label.." Items again after the menu")
+    assert(at(q.Left,g.dpadLeft)and not q.Up.Visible,label.." round halves again")
+    -- Merge shake: the moved hit areas keep their absolute rects through a mode change.
+    s:setShake(Vector2.new(3,-2),false);menu:open({empty=true});task.wait(.3)
+    assert(at(q.Up,g.dpadUp),label.." menu rows hold still under a shake")
+    menu:close();task.wait(.3);s:setShake(nil,true)
     root:Destroy()
    end
   end)
@@ -344,7 +433,7 @@ return function(client,parent)
     assert(math.abs((disc.AbsolutePosition.Y+18)-(wallet.AbsolutePosition.Y+18))<=.5 and math.abs(disc.AbsolutePosition.Y+18-top.Y-34)<=.5,label.." header centre y 34")
     assert(math.abs(disc.AbsolutePosition.X+36-(top.X+shop.root.AbsoluteSize.X-20))<=.5,label.." back right edge at W - 20")
     assert(shop.title.AbsolutePosition.X+shop.title.AbsoluteSize.X<=wallet.AbsolutePosition.X-12+.5,label.." title clear of the capsule")
-    assert(shop.tabs.root.AbsolutePosition.Y-top.Y==64 and shop.grid.AbsolutePosition.Y-top.Y==112,label.." tab row over the grid")
+    assert(shop.tabs.root.AbsolutePosition.Y-top.Y==64 and shop.grid.AbsolutePosition.Y-top.Y==112-(shop.grid:GetAttribute("ScrollBleed")or 0),label.." tab row over the grid")
     for _,node in ipairs(shop.root:GetDescendants())do assert(not(node:IsA("TextButton")and node.Name=="Backgrounds"),label.." ghost Backgrounds button")end
     -- The Backgrounds tab: same sheet, same pane slot, Use pinned bottom right.
     shop:setTab(2);task.wait(.25) -- let the 90 ms tab settle finish

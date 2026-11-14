@@ -18,6 +18,8 @@ local BackgroundShop=require(script.Parent.BackgroundShop)
 -- Third tab, Balls (batch 2026-11-13 R1): ball themes, drawn by BallShop.
 local BallShop=require(script.Parent.BallShop)
 local Peek=require(script.Parent.PetPeek)
+local TabInk=require(script.Parent.TabInk)
+local HintLegend=require(script.Parent.HintLegend)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -28,10 +30,11 @@ Shop.Tabs={{id="faceplates",label="Faceplates",icon="faceplate"},{id="background
 -- Desktop rects in panel units (section 4): tabs where Wardrobe's slot tabs sit, the
 -- pane at 24,144 328x392, a 4x4 grid of 104x88 cards from 371,147, hints on y 566.
 Shop.Regular={tabs={24,84,800,44},pane={24,144,328,392},grid={371,147},tile={104,88},gap=12,hints=566}
+-- QA v2 R2.5: footer rows are HintGlyphs actions (chips per device), not gamepad glyphs.
 Shop.Hints={
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or equip"},{"B","Back"}},promise=UICopy.get("style.promise.faceplates")},
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Use"},{"B","Back"}},promise=UICopy.get("style.promise.backgrounds")},
- {pairs={{"+","Browse"},{"LB","Tab"},{"A","Buy or use"},{"B","Back"}},promise=UICopy.get("style.promise.balls")},
+ {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Buy or equip"},{"back","Back"}},promise=UICopy.get("style.promise.faceplates")},
+ {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Use"},{"back","Back"}},promise=UICopy.get("style.promise.backgrounds")},
+ {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Buy or use"},{"back","Back"}},promise=UICopy.get("style.promise.balls")},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},book={"BOOK",Kit.Tint.book}}
@@ -46,7 +49,9 @@ function Shop.status(id,ctx)
  local theme=Themes.ById[id]
  if not theme then return {kind="invalid",text="",button=nil}end
  local facts=ctx.facts or {}
- if ctx.equipped==id then return {kind="equipped",text="Equipped",button=nil}end
+ -- QA v2 R3.5 (194500, 195844): the plate on the deck keeps the Equip button, disabled,
+ -- reading "Equipped" (no status line under the name, which overlapped it on phones).
+ if ctx.equipped==id then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  local price=Themes.price(id)
  if price and not Catalog.ownsFaceplate(facts,id)then
   local wallet=ctx.wallet or 0
@@ -179,20 +184,17 @@ function Shop:buildChrome(parent,view,tabsW)
   local R=Shop.Regular.tabs
   self.tabs=Kit.tabs(parent,labels,R[3],R[4],16,icons);self.tabs.root.Position=UDim2.fromOffset(R[1],R[2])
  end
+ TabInk.guard(self.tabs) -- QA v2 R3.6 (194541): labels keep their ink across theme repaints
  self.tabs.changed=function(index)self:requestTab(index)end
- self.hints={}
+ self.hints={};self.legends={}
  if not phone then
   for index,set in ipairs(Shop.Hints)do
    local row=Kit.frame(parent,"Hints"..index,nil,UDim2.fromOffset(24,Shop.Regular.hints),UDim2.fromOffset(800,24))
-   local hints=Kit.frame(row,"Hints",nil,UDim2.new(),UDim2.fromOffset(560,24))
-   local x=0
-   for _,pair in ipairs(set.pairs)do
-    local g=Kit.glyph(hints,pair[1],false,22,true);g.Position=UDim2.fromOffset(x,1)
-    local t=txt(hints,"Small",pair[2],"soft",x+28,0,120,24);t.AutomaticSize=Enum.AutomaticSize.X
-    x+=28+game:GetService("TextService"):GetTextSize(pair[2],14,Enum.Font.BuilderSans,Vector2.new(500,30)).X+18
-   end
-   txt(row,"Small",set.promise,"dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
-   self.hints[index]=row
+   local promise=txt(row,"Small",set.promise,"dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
+   local legend=HintLegend.attach(row,800,"style",set.pairs)
+   local function sync()promise.Visible=row:GetAttribute("HintLegend")~=true end
+   row:GetAttributeChangedSignal("HintLegend"):Connect(sync);sync()
+   self.hints[index]=row;self.legends[index]=legend
   end
  end
 end
@@ -322,7 +324,12 @@ function Shop:buildCompact(v)
   local star=Kit.icon(sample,"star",14);star.Position=UDim2.fromOffset(pw-24-24,11)
   self.sampleParts={sample=sample,primary=samplePrimary,label=sampleLabel,track=track,fill=trackFill}
  end
- self.status=txt(pane,"Body","","soft",12,statusY-10,pw-24,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+ -- QA v2 R3.5 (195844): the status line never rides over the name / finish lines; with
+ -- no room it hides (the button carries the state).
+ local statusTop=math.max(statusY-10,nameY+22-9+18+2)
+ self.status=txt(pane,"Body","","soft",12,statusTop,pw-24,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
+ self.statusRoom=statusTop+20<=buttonY-2
+ self.status.Visible=self.statusRoom
  local action,actionState=Kit.button(pane,"Action",{variant="primary",text="Equip",glyph="A",size=Vector2.new(pw-24,48),textSize=16,selectable=false})
  action.Position=UDim2.fromOffset(12,buttonY);self.action,self.actionState=action,actionState
  action.Activated:Connect(function()self:act(true)end)
@@ -332,7 +339,9 @@ function Shop:buildCompact(v)
   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
  local order=self.plateOrder
  local rows=math.ceil(#order/grid.cols)
- list.CanvasSize=UDim2.fromOffset(0,rows*72-8)
+ -- QA v2 R3.2: room for the first row's selection stroke and lip (tiles keep their place).
+ local bleed=Kit.scrollBleed(list,4)
+ list.CanvasSize=UDim2.fromOffset(0,rows*72-8+bleed*2)
  self.grid=list;self.rowPitch,self.tileH=72,64
  self.tiles={}
  -- Narrow (three-column) cards draw a 72 px deck so the name keeps room.
@@ -378,10 +387,12 @@ function Shop:relayout()
  if self.visible then self.root.Visible=true;self:applyTab();self:focusActive(true)end
 end
 
-function Shop:fit(size,rect)
+-- `top` (QA v2 R3.2, optional): where the phone sheet starts in the host (the picker
+-- passes Kit.sheetTop so an inset host is not pushed down twice); default kh + 2.
+function Shop:fit(size,rect,top)
  -- Compact phone roots get their own layout at scale 1 (UI-SPEC-COMPACT 9).
  if not rect and Kit.compactRule(size.X,size.Y)then
-  local _,kh=Kit.keepOut();local top=kh+2
+  if not top then local _,kh=Kit.keepOut();top=kh+2 end
   -- Compact v2 plate grips (UI-SPEC-COMPACT-FRAME 4): the sheet moves in by mg - 6,
   -- and down under the Roblox controls (QA 2026-11-12), so it has no keep-out.
   local W=math.floor(size.X);local mg=require(script.Parent.DeckScreen).gripMargin(W);local off=mg-6
@@ -488,7 +499,9 @@ function Shop:focusActive(instant)
  if self.tab==2 then self.backgrounds:focus(self.backgrounds.index,instant)elseif self.tab==3 then self.balls:focus(self.balls.index,instant)else self:focus(self.index,instant)end
 end
 -- D-pad / arrows / WASD on the selected tab's grid.
+function Shop:dismissLegend()for _,legend in pairs(self.legends or {})do legend.dismiss()end end
 function Shop:move(dx,dy)
+ self:dismissLegend()
  if self.tab==2 then return self.backgrounds:move(dx,dy)end
  if self.tab==3 then return self.balls:move(dx,dy)end
  local nextIndex=Shop.step(self.index,dx,dy,#self.tiles,self.columns)
@@ -547,6 +560,7 @@ end
 
 -- A / Enter / pane button. Buying needs one confirmation within 3 s.
 function Shop:act(fromPane)
+ self:dismissLegend()
  if self.tab==2 then return self.backgrounds:act()end
  if self.tab==3 then return self.balls:act()end
  local id=self.tiles[self.index].id
@@ -608,6 +622,7 @@ function Shop:open(equipped,tab,keepFocus)
  self.tab=tab or self.tab
  self.anchoring=true;self.index=index;self:refresh();self.anchoring=false
  self:applyTab()
+ if not keepFocus and self.legends and self.legends[self.tab]then self.legends[self.tab].open()end
  if self.tab==2 then self.backgrounds:show(true,not keepFocus)elseif self.tab==3 then self.balls:show(true,not keepFocus)else self:focus(index,true)end
  if self.grid then self:scrollTo(index,2)end
  self:syncPeek()

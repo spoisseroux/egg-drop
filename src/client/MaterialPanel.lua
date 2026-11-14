@@ -114,6 +114,9 @@ function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
   table.insert(focus,{button=node,id=id,wearing=wearing,name=Catalog.ById[id].name,act=function()return self:chooseFinish(id)end})
  end
  local y=h+12
+ -- QA v2 R4.5: no egg row under the cards in Customize (the screen shows one
+ -- "More from eggs" line instead); the egg row stays on the receipt / buy pages.
+ self.shop.Visible=false
  if self.shop.Visible then
   Art.type(self.shop,"Action");local sh=math.max(44,Art.actionHeight(self.shop,width-6));place(self.shop,3,y,width-6,sh);y+=sh+8
  end

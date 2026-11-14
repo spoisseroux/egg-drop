@@ -4,6 +4,7 @@
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local RunService=game:GetService("RunService")
 local Rules=require(ReplicatedStorage.Shared.PetAttachmentRules)
+local Wearables=require(ReplicatedStorage.Shared.WearableCatalog)
 local Attachments={}
 local rotation=CFrame.Angles(0,math.pi,0)
 
@@ -48,7 +49,9 @@ function Attachments.build(v,resolved,source)
   -- horns and wings (features) keep it.
   local role=if a.colorRole=="own"then "own"elseif a.feature==nil and a.colorRole=="secondary"then "wearSecondary"else a.colorRole
   local localCF=rotation*pivot:ToObjectSpace(template.CFrame)
-  local frame=CFrame.new(localCF.Position*v.scale)*localCF.Rotation
+  -- QA v2 R4.1: a per-item fit lift (WearableCatalog.Fit) so hats sit on the crown.
+  local fit=if a.item then Wearables.fitOffset(v.definition.id,a.item)else Vector3.zero
+  local frame=CFrame.new((localCF.Position+fit)*v.scale)*localCF.Rotation
   local side=a.side
   local entry={part=part,name=a.name,colorRole=role,piece=a.piece,item=a.item,neutralOnly=a.flags and a.flags.neutralOnly==true or nil,channel=a.channel,frame=frame,size=template.Size*v.scale,
    role=if a.feature then "feature"else "attachment",featureId=a.feature,slot=a.slot,attachment=a,color=color,faceBaseColor=color,faceBaseMaterial=part.Material,

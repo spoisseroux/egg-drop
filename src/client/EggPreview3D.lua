@@ -91,7 +91,10 @@ function Preview.new(well,options)
  self.crack=circle(well,"CrackFlash",z+2)
  Kit.node("UIGradient",self.crack,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
  self.glint=circle(well,"Glint",z+2);self.glint.BackgroundColor3=Color3.new(1,1,1);self.glint.Rotation=-32
- self.sheenClip=Kit.frame(well,"SheenClip",nil,UDim2.new(),UDim2.fromOffset(10,10));self.sheenClip.ClipsDescendants=true;self.sheenClip.AnchorPoint=Vector2.new(.5,.5);self.sheenClip.ZIndex=z+2
+ -- QA v2 R1.7: the sheen is clipped to the egg's oval (a CanvasGroup clips to its corner
+ -- radius; a plain ClipsDescendants frame clipped to a rectangle over the whole well).
+ self.sheenClip=Kit.node("CanvasGroup",well,{Name="SheenClip",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),ZIndex=z+2,Size=UDim2.fromOffset(10,10)})
+ Kit.node("UICorner",self.sheenClip,{CornerRadius=UDim.new(.5,0)})
  self.sheen=Kit.frame(self.sheenClip,"Sheen",nil,UDim2.new(),UDim2.fromScale(.18,1.6));self.sheen.BackgroundColor3=Color3.new(1,1,1);self.sheen.BackgroundTransparency=1;self.sheen.Rotation=20;self.sheen.AnchorPoint=Vector2.new(.5,.5)
  self.white=Kit.frame(well,"HatchFlash",nil,UDim2.new(),UDim2.fromScale(1,1));self.white.BackgroundColor3=Color3.new(1,1,1);self.white.BackgroundTransparency=1;self.white.ZIndex=z+4
  for i=1,12 do
@@ -100,6 +103,7 @@ function Preview.new(well,options)
   self.sparkles[i]={holder=holder,inks=inks,start=-1,wait=math.random()*1.2,x=0,y=0,size=12,turn=0,burst=false}
  end
  well:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:measure()end)
+ well:GetPropertyChangedSignal("Size"):Connect(function()self:measure()end)
  self:measure();self:showOverlays(false);self:paintStatic()
  Preview.loadTemplates(function(ok)if ok and not self.destroyed then self:build()end end)
  return self
@@ -116,16 +120,23 @@ end
 function Preview:reduced()
  return GuiService.ReducedMotionEnabled or(self.options.reduced and self.options.reduced()==true)or false
 end
+-- The well's size in its own offset units. AbsoluteSize includes every ancestor UIScale
+-- (the Hatch eggs panel scales up to 1.2), and positions written from it landed off to the
+-- right of the egg by that factor (QA v2 R1.7). Offset-sized wells use their offsets.
+function Preview.wellSize(size,absolute)
+ if size.X.Scale==0 and size.Y.Scale==0 and size.X.Offset>0 and size.Y.Offset>0 then return size.X.Offset,size.Y.Offset end
+ return absolute.X,absolute.Y
+end
 -- Screen geometry of the egg in the well (camera: FOV 20 at 5.2 studs -> 1.834 studs tall; closer since 2026-11-13 so the egg fills the well).
 function Preview:measure()
- local s=self.well.AbsoluteSize;local H=math.max(1,s.Y);local W=math.max(1,s.X)
+ local sx,sy=Preview.wellSize(self.well.Size,self.well.AbsoluteSize);local H=math.max(1,sy);local W=math.max(1,sx)
  local k=H/1.834
  self.geo={W=W,H=H,k=k,cx=W/2,cy=H/2+.05*k,ew=1.0*k,eh=1.3*k,phone=math.min(W,H)<=150}
  local g=self.geo
  for i,d in ipairs(self.bloom)do local share=d:GetAttribute("Share");d.Size=UDim2.fromOffset(g.ew*2.6*share,g.ew*2.6*share);d.Position=UDim2.fromOffset(g.cx,g.cy)end
  self.crack.Size=UDim2.fromOffset(g.ew*1.3,g.eh*.25)
  self.glint.Size=UDim2.fromOffset(g.ew*.10,g.ew*.26)
- self.sheenClip.Size=UDim2.fromOffset(g.ew,g.eh);self.sheenClip.Position=UDim2.fromOffset(g.cx,g.cy)
+ self.sheenClip.Size=UDim2.fromOffset(math.floor(g.ew*.82),math.floor(g.eh*.86));self.sheenClip.Position=UDim2.fromOffset(math.floor(g.cx),math.floor(g.cy))
 end
 function Preview:build()
  if self.loaded then return end
@@ -196,10 +207,16 @@ end
 function Preview:paintBloom(transparency)
  for _,d in ipairs(self.bloom)do d.BackgroundTransparency=1-(1-transparency)*.7 end
 end
+-- Pure: where an idle sparkle starts, on a ring just outside the egg's own outline
+-- (QA v2 R1.7: they read as coming from beside the egg, not from it). u, v in [0, 1).
+function Preview.sparkleSpot(g,u,v)
+ local a=u*math.pi*2;local spread=.5+.18*v
+ return g.cx+math.cos(a)*g.ew*spread,g.cy+math.sin(a)*g.eh*spread
+end
 function Preview:spawnSparkle(s,now,burst)
  local g=self.geo;local a=math.random()*math.pi*2
- local r=(if burst then 0 else .6+.4*math.random())*g.ew
- s.x=g.cx+math.cos(a)*r;s.y=(if burst then g.cy+g.eh*.5-.58*g.eh else g.cy)+math.sin(a)*r*.8
+ if burst then s.x,s.y=g.cx+math.cos(a)*g.ew*.12,g.cy+g.eh*.5-.58*g.eh+math.sin(a)*g.ew*.06
+ else s.x,s.y=Preview.sparkleSpot(g,a/(math.pi*2),math.random())end
  s.dx,s.dy=0,0
  if burst then local out=(.8+.6*math.random())*g.ew;s.dx,s.dy=math.cos(a)*out,math.sin(a)*out end
  local big=if g.phone then 12 else 20;local small=if g.phone then 6 else 8

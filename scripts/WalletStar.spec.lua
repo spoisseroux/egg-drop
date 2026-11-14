@@ -1,4 +1,4 @@
--- Studio Client. The wallet's 3D Star (WalletStar via Kit.wallet): 3D from 20 px up,
+-- Studio Client. The wallet's 3D Star (WalletStar via Kit.wallet): 3D from 16 px up (QA v2 R3.3),
 -- the 2D Star below and when the mesh cannot be created (injected loader), a still
 -- Star under Reduced Motion, one shared clock for every wallet, no instances made
 -- per frame, nothing written while hidden, and the wallet rect (capsule, number,
@@ -27,11 +27,14 @@ return function(client,parent)
    assert(select(2,Star.pose(Star.GlintTime/2))==.5 and select(2,Star.pose(2))==nil)
    assert(Star.faceTurn(40)==40 and Star.faceTurn(-40)==-40 and Star.faceTurn(41)==nil and Star.faceTurn(355)==-5)
   end)
-  test("3D Star from 20 px up (icon hidden, eyes kept on the 2D fallback); 2D below 20 px",function()
+  test("3D Star from 16 px up, so every header capsule (44 and the 36 compact one) is 3D; 2D below 16 px",function()
    Star.setLoader(good)
    local h=host("Sizes")
-   local big=Kit.wallet(h,44);local small=Kit.wallet(h,36);local other=Kit.wallet(h,30)
+   local big=Kit.wallet(h,44);local compact=Kit.wallet(h,36);local deck=Kit.wallet(h,32);local small=Kit.wallet(h,26);local other=Kit.wallet(h,20)
+   assert(Star.MinSize<=Kit.WalletSpec[36].star,"the compact header Star clears MinSize")
    assert(big.star3D.state=="3D","44 high wallet is 3D")
+   assert(compact.star3D.state=="3D"and compact.root:FindFirstChild("Star3D"),"36 high (phone header) wallet is 3D")
+   assert(deck.star3D.state=="3D","32 high deck wallet is 3D")
    local holder=big.root:FindFirstChild("Star3D")
    assert(holder and holder:FindFirstChild("StarViewport")and holder.StarViewport:FindFirstChildOfClass("Part"),"viewport with the Star")
    assert(holder.StarViewport.CurrentCamera~=nil and holder:FindFirstChild("StarFace3D"),"camera and eyes")
@@ -39,7 +42,7 @@ return function(client,parent)
    assert(not big.star.Visible,"2D icon hidden under the 3D Star")
    assert(big.star:FindFirstChild("StarEye")or big.star:FindFirstChild("StarFace"),"P3 eyes kept on the fallback icon")
    for _,w in ipairs({small,other})do
-    assert(w.star3D.state=="2D"and w.root:FindFirstChild("Star3D")==nil and w.star.Visible,"under 20 px stays 2D")
+    assert(w.star3D.state=="2D"and w.root:FindFirstChild("Star3D")==nil and w.star.Visible,"under 16 px stays 2D")
    end
    for _,d in ipairs(holder:GetDescendants())do
     if d:IsA("GuiObject")then assert(not d.Active and not d.Selectable,"3D Star never takes input: "..d.Name)end

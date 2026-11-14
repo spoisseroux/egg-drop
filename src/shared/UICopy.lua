@@ -113,14 +113,14 @@ local Table={
   machines={title="Machines",line="Walk up to a glowing machine to use it."},
   hub={title="Pocket menu",key="Press M for every machine, any time.",pad="Press Y for every machine, any time.",touch="Tap Menu for every machine, any time."},
   quest={title="Quests",line="Today's quests pay Stars. Find them in the menu."},
-  fillLine={title="Fill line",line="Keep the pile under the line. Stay over it too long and the round ends."},
+  fillLine={title="Fill line",line="Keep the pile under the line. Stay over it too long and the round ends.",short="Keep the pile under the line"},
   hatch={title="Hatch eggs",line="Spend Stars on eggs. The odds are on every label."},
   style={title="Deck style",line="Faceplates, backgrounds and balls. Looks only."},
   companions={title="Companions",line="Dress up {pet}, swap pets and customize."},
   quests={title="Quests",line="Three a day, three a week. Each one pays Stars."},
   book={title="Collection book",line="Fill the pages as you collect. Every page pays once."},
   park={title="Pet Park",line="{pet} plays here. Three play dates a day pay +4 ★."},
-  item={title="An item!",line="Power-up merges earn items. Use one from the item button."},
+  item={title="An item!",line="Power-up merges earn items. Use one from the item button.",short="Item earned! Use it from Items"},
   questDone={title="Quest done!",line="Claim its Stars in Quests, in the menu."},
   missPay="Goal met",
  },
@@ -148,6 +148,95 @@ local Table={
   button="Stamp today +{reward}",
   done="Stamped for today",
   landed="+{reward} Stars",
+ },
+ -- QA v2 track R1 (reveal + first session). Welcome pill on the board (longest
+ -- first; the pill keeps the first that fits the board), the Hatch eggs footer's
+ -- confirm word (the rest of the footer is R2's input.action / input.legend), and the
+ -- first Bear's exit button.
+ r1={
+  welcomePill={wide="Merge to hatch your first friend",mid="Hatch your first friend",narrow="Hatch a friend"},
+  hatchHints={hatch="Hatch"},
+  reveal={exit="Back"},
+ },
+ -- QA v2 track R6 (phone Pocket Deck): the caption under the phone B (the item
+ -- button) reads Items in a round and Back in a menu.
+ phoneDeck={b={items="Items",back="Back"}},
+ -- QA v2 track R2 (input): the one control legend for menu footers. Footer chips come
+ -- from HintGlyphs (client) per device: gamepad + / A / B / LB, keyboard WASD / ENTER /
+ -- BKSP / Q/E, touch none (tap). `legend.<device>` is the line that explains them once
+ -- (R1 Hatch eggs footer, R4 Wardrobe / Customize footers); `action.*` names each one.
+ input={
+  legend={
+   gamepad="D-pad moves, A picks, B goes back, LB and RB switch tabs.",
+   keyboard="Arrows or WASD move, Enter picks, Backspace goes back, Q and E switch tabs.",
+   touch="Tap a card to pick it. The back arrow closes the screen.",
+  },
+  action={browse="Browse",confirm="Pick",back="Back",tab="Switch tab"},
+ },
+ -- QA v2 track R3 (menu shell). `help`: each machine's "How it works" cards
+ -- (HowItWorks, the ? in every machine header), two or three cards of a title and one
+ -- line. `quests`: the redesigned quest rows (what to do, status, the celebration)
+ -- and the stamp card's new home on the daily tab.
+ r3={
+  help={
+   button="How it works",eyebrow="How it works",
+   done="Got it",close="Close",replay="Tap ? any time to see this again.",
+   hatch={title="Hatch eggs",
+    a={title="Earn Stars",line="Win rounds, finish quests and stamp your card. Stars pay for eggs."},
+    b={title="Pick an egg",line="Each egg hatches one kind of thing. The odds are on the label."},
+    c={title="Hatch it",line="Press Hatch and watch it crack. What comes out is yours to keep."}},
+   style={title="Deck style",
+    a={title="Faceplates",line="Dress up your Pocket Deck. Fixed prices, no random plates."},
+    b={title="Backgrounds",line="Earned by playing, never bought. Pick the one behind your deck."},
+    c={title="Balls",line="New looks for the balls. Same sizes, same rules. Only cuter."}},
+   companions={title="Companions",
+    a={title="Your pets",line="Everyone you hatch lives here. Visit them and swap who tags along."},
+    b={title="Wardrobe",line="Hats and bits to wear, bought with Stars. Looks only."},
+    c={title="Customize",line="Feed colour fruit, add a charm, try a finish or hand over a toy."}},
+   quests={title="Quests",
+    a={title="Daily quests",line="Three a day. Play rounds to fill the bars, then claim the Stars."},
+    b={title="Stamp card",line="One stamp a day, just for stopping by. Each stamp pays Stars."},
+    c={title="A full card",line="Stamp seven pays ★ 12, then a fresh card starts. Miss a day, lose nothing."}},
+   book={title="Collection book",
+    a={title="Collect",line="Every ball, plate, outfit and toy you own gets a spot in the book."},
+    b={title="Milestones",line="Fill a page to 25, 50, 75 and 100% to claim Stars. Each pays once."},
+    c={title="Records",line="Your best rounds and big totals, kept for good."}},
+   park={title="Pet Park",
+    a={title="Play dates",line="Bring your pet in to play. Three play dates a day pay Stars."},
+    b={title="Busy park",line="When every spot is taken, pets mingle and wait their turn."}},
+  },
+  quests={
+   eyebrow="Quests",
+   status={notStarted="Not started",toGo="{count} to go",ready="Done! Claim it",claimed="Claimed"},
+   claimed="Nice one! +{reward} Stars",
+   stamp={title="Today's stamp",line="One stamp a day, just for stopping by.",lineDone="Come back tomorrow for the next one."},
+   weekly={title="Weekly bonus",line="Clear all three this week for a bonus."},
+   menu="Menu",
+  },
+  -- The machine hub's tile lines now that the stamp card lives in Quests.
+  hub={hatchLine="Eggs and their odds",questsLine="Quests and the daily stamp"},
+  tips="Show tips again",
+ },
+ -- QA v2 track R5 (world + garden): station marker labels. The first time a player walks
+ -- up to a station the label reads name + line; after that the name only.
+ r5={
+  station={
+   Eggs={name="Hatch eggs",line="Spend Stars on new eggs"},
+   Customize={name="Deck style",line="Faceplates, backgrounds and balls"},
+   Journal={name="Companions",line="Dress up and care for your pets"},
+   Park={name="Pet Park",line="Pets play here. Play dates pay Stars"},
+  },
+ },
+ -- QA v2 track R4 (Wardrobe, Customize, Deck style content). `equipped` / `inUse`: the
+ -- worn / used card keeps its button, disabled (R3.5). Wardrobe None cards (R4.2),
+ -- the free Original colour card (R4.4) and the "More from eggs" lines (R4.5).
+ r4={
+  equipped="Equipped",inUse="In use",
+  wardrobe={none="None",takeOff="Take off",noneNote="Nothing in this slot",slot="Slot",buyOrWear="Buy or wear"},
+  hue={original="Original colour",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
+   confirmReset="Confirm reset",confirmLine="Press again to reset. It's free.",
+   originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
+  customize={moreMaterials="More finishes hatch from Material Eggs.",moreToys="More toys hatch from Toy Eggs."},
  },
 }
 

@@ -232,28 +232,13 @@
    "context": "",
    "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.9.name"
   },
-  "catalog.BookCatalog.Pages.balls.name": {
-   "source": "Balls",
-   "context": "",
-   "example": "Catalogue BookCatalog (name)"
-  },
   "catalog.BookCatalog.Pages.discoveries.name": {
    "source": "Discoveries",
    "context": "",
    "example": "Catalogue BookCatalog (name)"
   },
-  "catalog.BookCatalog.Pages.faceplates.name": {
-   "source": "Faceplates",
-   "context": "",
-   "example": "Catalogue BookCatalog (name)"
-  },
   "catalog.BookCatalog.Pages.toys.name": {
    "source": "Toys",
-   "context": "",
-   "example": "Catalogue BookCatalog (name)"
-  },
-  "catalog.BookCatalog.Pages.wardrobe.name": {
-   "source": "Wardrobe",
    "context": "",
    "example": "Catalogue BookCatalog (name)"
   },
@@ -872,11 +857,6 @@
    "context": "",
    "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name"
   },
-  "catalog.ToyCatalog.ById.none.name": {
-   "source": "None",
-   "context": "",
-   "example": "Catalogue ToyCatalog (name)"
-  },
   "catalog.ToyCatalog.ById.sparkler.name": {
    "source": "Sparkler",
    "context": "",
@@ -1015,7 +995,7 @@
   "ui.book.claimed": {
    "source": "Claimed",
    "context": "",
-   "example": "Collection book"
+   "example": "Collection book; also ui.r3.quests.status.claimed"
   },
   "ui.book.empty": {
    "source": "Nothing on this page yet.",
@@ -1055,7 +1035,7 @@
   "ui.book.hint.back": {
    "source": "Back",
    "context": "",
-   "example": "Collection book"
+   "example": "Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit"
   },
   "ui.book.hint.claim": {
    "source": "Claim",
@@ -1105,7 +1085,7 @@
   "ui.book.records.name": {
    "source": "Records",
    "context": "",
-   "example": "Collection book"
+   "example": "Collection book; also ui.r3.help.book.c.title"
   },
   "ui.book.retrying": {
    "source": "Still saving…",
@@ -1185,7 +1165,7 @@
   "ui.book.title": {
    "source": "Collection book",
    "context": "",
-   "example": "Collection book; also ui.coach.book.title"
+   "example": "Collection book; also ui.coach.book.title, ui.r3.help.book.title"
   },
   "ui.book.toast.bookworm": {
    "source": "Bookworm faceplate unlocked",
@@ -1210,10 +1190,15 @@
   "ui.coach.companions.title": {
    "source": "Companions",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.companions.name"
+   "example": "First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
   },
   "ui.coach.fillLine.line": {
    "source": "Keep the pile under the line. Stay over it too long and the round ends.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.fillLine.short": {
+   "source": "Keep the pile under the line",
    "context": "",
    "example": "First-round coaching"
   },
@@ -1230,7 +1215,7 @@
   "ui.coach.gotIt": {
    "source": "Got it",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.r3.help.done"
   },
   "ui.coach.hatch.line": {
    "source": "Spend Stars on eggs. The odds are on every label.",
@@ -1240,7 +1225,7 @@
   "ui.coach.hatch.title": {
    "source": "Hatch eggs",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.hatch.name"
+   "example": "First-round coaching; also ui.hub.tile.hatch.name, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
   },
   "ui.coach.hub.key": {
    "source": "Press M for every machine, any time.",
@@ -1264,6 +1249,11 @@
   },
   "ui.coach.item.line": {
    "source": "Power-up merges earn items. Use one from the item button.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.item.short": {
+   "source": "Item earned! Use it from Items",
    "context": "",
    "example": "First-round coaching"
   },
@@ -1300,7 +1290,7 @@
   "ui.coach.park.title": {
    "source": "Pet Park",
    "context": "",
-   "example": "First-round coaching; also ui.park.name, ui.report.category.park"
+   "example": "First-round coaching; also ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name, ui.report.category.park"
   },
   "ui.coach.quest.line": {
    "source": "Today's quests pay Stars. Find them in the menu.",
@@ -1310,7 +1300,7 @@
   "ui.coach.quest.title": {
    "source": "Quests",
    "context": "",
-   "example": "First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name"
+   "example": "First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title, ui.r3.quests.eyebrow"
   },
   "ui.coach.questDone.line": {
    "source": "Claim its Stars in Quests, in the menu.",
@@ -1340,7 +1330,7 @@
   "ui.coach.style.title": {
    "source": "Deck style",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.style.name"
+   "example": "First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
   },
   "ui.coach.welcome.line": {
    "source": "Merge to crack the egg. Stars come with it.",
@@ -1350,7 +1340,7 @@
   "ui.coach.welcome.title": {
    "source": "Hatch your first friend",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.r1.welcomePill.mid"
   },
   "ui.companions.wearing.none": {
    "source": "Nothing yet",
@@ -1495,12 +1485,42 @@
   "ui.hub.tile.style.line": {
    "source": "Faceplates, backgrounds and balls",
    "context": "",
-   "example": "Pocket menu (machine hub)"
+   "example": "Pocket menu (machine hub); also ui.r5.station.Customize.line"
   },
   "ui.hub.tile.style.short": {
    "source": "Style",
    "context": "",
    "example": "Pocket menu (machine hub)"
+  },
+  "ui.input.action.browse": {
+   "source": "Browse",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.input.action.confirm": {
+   "source": "Pick",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.input.action.tab": {
+   "source": "Switch tab",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.input.legend.gamepad": {
+   "source": "D-pad moves, A picks, B goes back, LB and RB switch tabs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.input.legend.keyboard": {
+   "source": "Arrows or WASD move, Enter picks, Backspace goes back, Q and E switch tabs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.input.legend.touch": {
+   "source": "Tap a card to pick it. The back arrow closes the screen.",
+   "context": "",
+   "example": "Menu text"
   },
   "ui.items.note.empty": {
    "source": "You have no items",
@@ -1552,6 +1572,11 @@
    "context": "",
    "example": "Petting reward"
   },
+  "ui.phoneDeck.b.items": {
+   "source": "Items",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.quests.allDone": {
    "source": "All done. {pet} is impressed.",
    "context": "",
@@ -1561,6 +1586,371 @@
    "source": "All done for today.",
    "context": "",
    "example": "Quest log"
+  },
+  "ui.r1.hatchHints.hatch": {
+   "source": "Hatch",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r1.welcomePill.narrow": {
+   "source": "Hatch a friend",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r1.welcomePill.wide": {
+   "source": "Merge to hatch your first friend",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.book.a.line": {
+   "source": "Every ball, plate, outfit and toy you own gets a spot in the book.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.book.a.title": {
+   "source": "Collect",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.book.b.line": {
+   "source": "Fill a page to 25, 50, 75 and 100% to claim Stars. Each pays once.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.book.b.title": {
+   "source": "Milestones",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.book.c.line": {
+   "source": "Your best rounds and big totals, kept for good.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.button": {
+   "source": "How it works",
+   "context": "",
+   "example": "Menu text; also ui.r3.help.eyebrow"
+  },
+  "ui.r3.help.close": {
+   "source": "Close",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.companions.a.line": {
+   "source": "Everyone you hatch lives here. Visit them and swap who tags along.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.companions.a.title": {
+   "source": "Your pets",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.companions.b.line": {
+   "source": "Hats and bits to wear, bought with Stars. Looks only.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.companions.b.title": {
+   "source": "Wardrobe",
+   "context": "",
+   "example": "Menu text; also catalog.BookCatalog.Pages.wardrobe.name"
+  },
+  "ui.r3.help.companions.c.line": {
+   "source": "Feed colour fruit, add a charm, try a finish or hand over a toy.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.companions.c.title": {
+   "source": "Customize",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.a.line": {
+   "source": "Win rounds, finish quests and stamp your card. Stars pay for eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.a.title": {
+   "source": "Earn Stars",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.b.line": {
+   "source": "Each egg hatches one kind of thing. The odds are on the label.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.b.title": {
+   "source": "Pick an egg",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.c.line": {
+   "source": "Press Hatch and watch it crack. What comes out is yours to keep.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.hatch.c.title": {
+   "source": "Hatch it",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.park.a.line": {
+   "source": "Bring your pet in to play. Three play dates a day pay Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.park.a.title": {
+   "source": "Play dates",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.park.b.line": {
+   "source": "When every spot is taken, pets mingle and wait their turn.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.park.b.title": {
+   "source": "Busy park",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.quests.a.line": {
+   "source": "Three a day. Play rounds to fill the bars, then claim the Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.quests.a.title": {
+   "source": "Daily quests",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.quests.b.line": {
+   "source": "One stamp a day, just for stopping by. Each stamp pays Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.quests.b.title": {
+   "source": "Stamp card",
+   "context": "",
+   "example": "Menu text; also ui.stamp.title"
+  },
+  "ui.r3.help.quests.c.line": {
+   "source": "Stamp seven pays ★ 12, then a fresh card starts. Miss a day, lose nothing.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.quests.c.title": {
+   "source": "A full card",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.replay": {
+   "source": "Tap ? any time to see this again.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.style.a.line": {
+   "source": "Dress up your Pocket Deck. Fixed prices, no random plates.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.style.a.title": {
+   "source": "Faceplates",
+   "context": "",
+   "example": "Menu text; also catalog.BookCatalog.Pages.faceplates.name"
+  },
+  "ui.r3.help.style.b.line": {
+   "source": "Earned by playing, never bought. Pick the one behind your deck.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.style.b.title": {
+   "source": "Backgrounds",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.style.c.line": {
+   "source": "New looks for the balls. Same sizes, same rules. Only cuter.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.style.c.title": {
+   "source": "Balls",
+   "context": "",
+   "example": "Menu text; also catalog.BookCatalog.Pages.balls.name"
+  },
+  "ui.r3.hub.hatchLine": {
+   "source": "Eggs and their odds",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.hub.questsLine": {
+   "source": "Quests and the daily stamp",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.claimed": {
+   "source": "Nice one! +{reward} Stars",
+   "context": "",
+   "example": "Menu text; e.g. Nice one! +5 Stars"
+  },
+  "ui.r3.quests.menu": {
+   "source": "Menu",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.stamp.line": {
+   "source": "One stamp a day, just for stopping by.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.stamp.lineDone": {
+   "source": "Come back tomorrow for the next one.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.stamp.title": {
+   "source": "Today's stamp",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.status.notStarted": {
+   "source": "Not started",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.status.ready": {
+   "source": "Done! Claim it",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.status.toGo": {
+   "source": "{count} to go",
+   "context": "",
+   "example": "Menu text; e.g. 3 to go"
+  },
+  "ui.r3.quests.weekly.line": {
+   "source": "Clear all three this week for a bonus.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.quests.weekly.title": {
+   "source": "Weekly bonus",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.tips": {
+   "source": "Show tips again",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.moreMaterials": {
+   "source": "More finishes hatch from Material Eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.moreToys": {
+   "source": "More toys hatch from Toy Eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.equipped": {
+   "source": "Equipped",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.confirmLine": {
+   "source": "Press again to reset. It's free.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.confirmReset": {
+   "source": "Confirm reset",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.current": {
+   "source": "Current colour",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.currentChip": {
+   "source": "CURRENT",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.free": {
+   "source": "Free",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.original": {
+   "source": "Original colour",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.originalMain": {
+   "source": "{pet}'s first Main colour. Free, any time.",
+   "context": "",
+   "example": "Menu text; e.g. Bear's first Main colour. Free, any time."
+  },
+  "ui.r4.hue.originalSecondary": {
+   "source": "{pet}'s first Secondary colour. Free, any time.",
+   "context": "",
+   "example": "Menu text; e.g. Bear's first Secondary colour. Free, any time."
+  },
+  "ui.r4.hue.reset": {
+   "source": "Reset colour",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.inUse": {
+   "source": "In use",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.wardrobe.buyOrWear": {
+   "source": "Buy or wear",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.wardrobe.none": {
+   "source": "None",
+   "context": "",
+   "example": "Menu text; also catalog.ToyCatalog.ById.none.name"
+  },
+  "ui.r4.wardrobe.noneNote": {
+   "source": "Nothing in this slot",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.wardrobe.slot": {
+   "source": "Slot",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.wardrobe.takeOff": {
+   "source": "Take off",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r5.station.Eggs.line": {
+   "source": "Spend Stars on new eggs",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r5.station.Journal.line": {
+   "source": "Dress up and care for your pets",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r5.station.Park.line": {
+   "source": "Pets play here. Play dates pay Stars",
+   "context": "",
+   "example": "Menu text"
   },
   "ui.report.about": {
    "source": "What's it about?",
@@ -1834,11 +2224,6 @@
   },
   "ui.stamp.promise": {
    "source": "No streaks. Miss a day, lose nothing.",
-   "context": "",
-   "example": "Stamp card"
-  },
-  "ui.stamp.title": {
-   "source": "Stamp card",
    "context": "",
    "example": "Stamp card"
   },

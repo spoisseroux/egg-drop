@@ -43,6 +43,8 @@ local wire={
  hueLegacyRedeem={id=true,catalogVersion=true,migrationId=true,token=true,purchaseId=true,itemId=true},
  hueLegacyPreset={id=true,catalogVersion=true,migrationId=true,petId=true,channel=true,presetId=true,counts=true,locked=true},
  hueMigrationAck={id=true,catalogVersion=true,migrationId=true},
+ -- QA v2 R4.4: free "back to the original colour" for one channel (no jar, no Stars).
+ hueClear={id=true,catalogVersion=true,petId=true,channel=true,counts=true},
 }
 local retired={hue=true,hueApply=true,hueEquip=true,hueMix=true,hueReset=true}
 function State.isAction(action)return wire[action]~=nil or retired[action]==true end
@@ -62,6 +64,8 @@ function State.quote(action,value,revision)
  if not Hue.Supported[q.petId]or(q.channel~="main"and q.channel~="secondary")or not Hue.validCounts(q.counts)then return nil end
  if action=="hueUse"then
   if not Hue.Items[q.itemId]or(q.pendingResultId~=nil and not opaque(q.pendingResultId))then return nil end
+ elseif action=="hueClear"then
+  return q
  else
   if not opaque(q.migrationId)or not opaque(q.presetId)or type(q.locked)~="boolean"then return nil end
  end
@@ -99,7 +103,8 @@ local function validReceipt(r)
  elseif q.action=="hueLegacyRedeem"then extra={itemId=true,inventoryBefore=true,inventoryAfter=true,resultId=true,migrationId=true,token=true,purchaseId=true}
  elseif q.action=="hueUse"then extra={itemId=true,petId=true,channel=true,countsBefore=true,countsAfter=true,inventoryBefore=true,inventoryAfter=true,acknowledgedResultId=true}
  elseif q.action=="hueStore"then extra={acknowledgedResultId=true}
- elseif q.action=="hueLegacyPreset"then extra={petId=true,channel=true,countsBefore=true,countsAfter=true,presetId=true,migrationId=true}end
+ elseif q.action=="hueLegacyPreset"then extra={petId=true,channel=true,countsBefore=true,countsAfter=true,presetId=true,migrationId=true}
+ elseif q.action=="hueClear"then extra={petId=true,channel=true,countsBefore=true,countsAfter=true}end
  if q.action=="hueMigrationAck"then extra={migrationId=true}end
  for _,key in ipairs({"reason","petId","itemId","channel","countsBefore","countsAfter","inventoryBefore","inventoryAfter","resultId","acknowledgedResultId","presetId","migrationId","token","purchaseId"})do
   if r[key]~=nil and not extra[key]then return false end
@@ -125,6 +130,9 @@ local function validReceipt(r)
    or not equal(r.countsBefore,q.counts)or not Hue.validCounts(r.countsAfter)or q.locked then return false end
  elseif q.action=="hueMigrationAck"then
   if r.cost~=0 or r.migrationId~=q.migrationId then return false end
+ elseif q.action=="hueClear"then
+  if r.cost~=0 or r.petId~=q.petId or r.channel~=q.channel or not equal(r.countsBefore,q.counts)or Hue.doseStrength(q.counts)==0
+   or not equal(r.countsAfter,Hue.emptyCounts())then return false end
  else return false end
  return true
 end
@@ -276,6 +284,10 @@ function State.apply(state,candidate)
    if not mapped then return false,"LockedHue"end
    if Hue.equalCounts(mapped,row[q.channel])then return false,"NoChange"end
    row[q.channel]=mapped;r.presetId,r.migrationId=q.presetId,q.migrationId
+  elseif q.action=="hueClear"then
+   -- Free: like a Reset Hue jar without the jar (counts were checked above).
+   if Hue.doseStrength(row[q.channel])==0 then return false,"AlreadyOriginal"end
+   row[q.channel]=Hue.emptyCounts();row.legacyLocked[q.channel]=false
   else return false,"InvalidHue"end
   r.countsAfter=copy(row[q.channel]);state.petHues[q.petId]=row
  end

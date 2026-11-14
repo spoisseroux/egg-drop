@@ -1,28 +1,52 @@
 -- Station attract (FEEL-ALIVE-DIRECTION-2026-11-13 D): the three hub stations
--- (and the Pet Park gateway, QA Q4) invite a new player over and go quiet once learned.
+-- (and the Pet Park gateway, QA Q4) invite a new player over and stay findable once learned.
 --   learned / far  : glow breath only (+-8 %)
---   beckon (<=40)  : + icon, light shaft, ground ring, glow +-20 %
---   invite (<=14)  : + bouncing chevron, ring ripple, sparkles, one machine_attract ping
+--   marker (<=18)  : learned station: the marker (icon + pointer) and its name label, nothing loud
+--   beckon (<=40)  : + marker, light shaft, ground ring, glow +-20 %
+--   invite (<=14)  : + the marker hops, ring ripple, sparkles, one machine_attract ping, name label
+-- QA v2 R5.1: the icon and its pointer are ONE connected marker (a map pin: the pointer is a
+-- diamond tucked under the round icon), and it hops as one piece. The first time the player
+-- comes near a station the label says what it is (name + one line); after that, the name only.
+-- QA v2 R5.2: a used or coach-learned station used to go fully silent (only the glow), which read
+-- as "the Hatch eggs station lost its indicator": learned stations now keep the marker on approach.
 -- "Used" is remembered for the session on this client (a station stops beckoning
--- once its prompt was used); a later save flag (coachMask) makes it permanent.
+-- once its prompt was used); the saved coachMask bits make it permanent (learn).
 -- Client presentation only: no remotes, no saves, never touches the prompts.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Data = require(script.Parent.StationAttractData)
 local LoungeStations = require(script.Parent.LoungeStations)
+local UICopy = require(Shared:WaitForChild("UICopy"))
 
 local Attract = {}
 Attract.__index = Attract
 Attract.Data = Data
 
+local Navy = Color3.fromHex("#24304F")
+
 -- Pure state machine. visible=false (Board mode, menus, hatch, cradle docked,
 -- just used) hides everything but the glow; distance nil = no listener.
 function Attract.state(distance, used, visible)
 	if not visible or type(distance) ~= "number" or distance ~= distance then return "hidden" end
-	if used or distance > Data.BeckonRange then return "learned" end
+	if used then return if distance <= Data.MarkerRange then "marker" else "learned" end
+	if distance > Data.BeckonRange then return "learned" end
 	if distance > Data.InviteRange then return "beckon" end
 	return "invite"
+end
+
+-- Does this state show the marker (icon + pointer)? The name label?
+function Attract.showsMarker(state)
+	return state == "beckon" or state == "invite" or state == "marker"
+end
+function Attract.showsLabel(state, distance)
+	return (state == "invite" or state == "marker") and type(distance) == "number" and distance <= Data.LabelRange
+end
+
+-- The label copy: name + line the first time (intro), the name alone after.
+function Attract.labelText(id, intro)
+	local name = UICopy.get("r5.station." .. id .. ".name")
+	return name, if intro then UICopy.get("r5.station." .. id .. ".line") else nil
 end
 
 -- Ping gate: one per station per 45 s, one of any kind per 20 s, none in the first 10 s.
@@ -33,7 +57,7 @@ function Attract.canPing(now, startedAt, lastAny, lastStation)
 	return true
 end
 
--- Chevron: two 0.5 s hops then a 1 s rest; returns 0..1 height.
+-- Marker hop: two 0.5 s hops then a 1 s rest; returns 0..1 height.
 function Attract.hop(time)
 	local cycle = Data.HopTime * 2 + Data.HopRest
 	local t = time % cycle
@@ -44,6 +68,21 @@ end
 function Attract.breath(state, time)
 	local amp = if state == "beckon" or state == "invite" then Data.BreathActive else Data.BreathLearned
 	return 1 + amp * math.sin(time * math.pi * 2 / Data.BreathPeriod)
+end
+
+-- Marker geometry in billboard scale (width 1, height MarkerAspect): the pointer diamond's
+-- size, centre and tip. Its side corners sit on the icon disc's edge, so disc + pointer read as
+-- one pin with no gap; the upper half hides behind the disc.
+function Attract.pointerGeometry()
+	local aspect, half, tip = Data.MarkerAspect, Data.PointerHalf, Data.PointerTip
+	local side = half * math.sqrt(2)
+	local centreY = (.5 + tip - half) / aspect
+	return {
+		size = UDim2.fromScale(side, side / aspect),
+		position = UDim2.fromScale(.5, centreY),
+		tipY = (.5 + tip) / aspect, -- fraction of the billboard height
+		cornerRadius = math.sqrt(half * half + (tip - half) * (tip - half)), -- in icon widths (<= .5)
+	}
 end
 
 local function part(parent, name, size, cframe)
@@ -59,6 +98,51 @@ local function round(frame)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(.5, 0)
 	corner.Parent = frame
+end
+
+local function buildLabel(anchor, id, spec, hue)
+	local label = Instance.new("BillboardGui")
+	label.Name, label.Adornee = "AttractLabel", anchor
+	label.Size = UDim2.fromOffset(320, 84)
+	-- Bottom edge on the anchor point: the pill sits just above the marker's icon.
+	label.SizeOffset = Vector2.new(0, .5)
+	-- MaxDistance is from the camera (well behind the player); Enabled does the range gating.
+	label.MaxDistance, label.AlwaysOnTop, label.LightInfluence = Data.IconMaxDistance, false, 0
+	label.ResetOnSpawn, label.Enabled = false, false
+	label.Parent = anchor
+	local pill = Instance.new("Frame")
+	pill.Name, pill.AnchorPoint, pill.Position = "Pill", Vector2.new(.5, 1), UDim2.fromScale(.5, 1)
+	pill.AutomaticSize, pill.Size = Enum.AutomaticSize.XY, UDim2.fromOffset(0, 0)
+	pill.BackgroundColor3, pill.BackgroundTransparency = Navy, .08
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = pill
+	local stroke = Instance.new("UIStroke")
+	stroke.Color, stroke.Thickness, stroke.ApplyStrokeMode = hue, 2, Enum.ApplyStrokeMode.Border
+	stroke.Parent = pill
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft, pad.PaddingRight = UDim.new(0, 12), UDim.new(0, 12)
+	pad.PaddingTop, pad.PaddingBottom = UDim.new(0, 5), UDim.new(0, 6)
+	pad.Parent = pill
+	local list = Instance.new("UIListLayout")
+	list.FillDirection, list.HorizontalAlignment = Enum.FillDirection.Vertical, Enum.HorizontalAlignment.Center
+	list.SortOrder, list.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 1)
+	list.Parent = pill
+	local function text(name, order, size, font, color)
+		local t = Instance.new("TextLabel")
+		t.Name, t.LayoutOrder, t.BackgroundTransparency = name, order, 1
+		t.AutomaticSize, t.Size = Enum.AutomaticSize.XY, UDim2.fromOffset(0, 0)
+		t.Font, t.TextSize, t.TextColor3 = font, size, color
+		t.TextWrapped = false
+		t.Parent = pill
+		return t
+	end
+	local name, line = Attract.labelText(id, true)
+	local title = text("Name", 1, 20, Enum.Font.GothamBold, Color3.new(1, 1, 1))
+	title.Text = name
+	local sub = text("Line", 2, 15, Enum.Font.GothamMedium, Color3.fromHex(spec.light))
+	sub.Text = line
+	return label, title, sub
 end
 
 local function build(folder, id, base)
@@ -105,14 +189,24 @@ local function build(folder, id, base)
 	end
 	local ring = circle("Ring", Data.RingRadius * 2 / span, 6, .1)
 	local ripple, rippleStroke = circle("Ripple", Data.RingRadius * 2 / span, 4, 1)
-	-- Icon + chevron billboard.
+	-- The marker: one billboard holding the round icon and its pointer as one pin shape.
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name, billboard.Adornee = "AttractIcon", anchor
-	billboard.Size = UDim2.fromScale(Data.IconSize, Data.IconSize * 1.6)
+	billboard.Size = UDim2.fromScale(Data.IconSize, Data.IconSize * Data.MarkerAspect)
 	billboard.StudsOffsetWorldSpace = Vector3.new(0, spec.iconHeight, 0)
 	billboard.MaxDistance, billboard.AlwaysOnTop, billboard.LightInfluence = Data.IconMaxDistance, false, 0
 	billboard.ResetOnSpawn, billboard.Enabled = false, false
 	billboard.Parent = anchor
+	local geometry = Attract.pointerGeometry()
+	-- Pointer first (ZIndex 1): navy-edged diamond in the station hue; its top half sits behind the disc.
+	local pointer = Instance.new("Frame")
+	pointer.Name, pointer.AnchorPoint, pointer.BorderSizePixel = "Pointer", Vector2.new(.5, .5), 0
+	pointer.Size, pointer.Position, pointer.Rotation = geometry.size, geometry.position, 45
+	pointer.BackgroundColor3, pointer.ZIndex = hue, 1
+	local edge = Instance.new("UIStroke")
+	edge.Color, edge.Thickness = Navy, 3
+	edge.Parent = pointer
+	pointer.Parent = billboard
 	local iconId = Data.IconIds[id]
 	local icon
 	if iconId then
@@ -121,38 +215,24 @@ local function build(folder, id, base)
 	else
 		-- Stand-in until the icon upload: navy disc, hue band, white face, glyph.
 		icon = Instance.new("Frame")
-		icon.BackgroundColor3 = Color3.fromHex("#24304F")
+		icon.BackgroundColor3 = Navy
 		round(icon)
 		local band = Instance.new("Frame")
 		band.AnchorPoint, band.Position, band.Size = Vector2.new(.5, .5), UDim2.fromScale(.5, .5), UDim2.fromScale(.86, .86)
-		band.BackgroundColor3 = hue
+		band.BackgroundColor3, band.ZIndex = hue, 3
 		round(band)
 		band.Parent = icon
 		local glyph = Instance.new("TextLabel")
 		glyph.AnchorPoint, glyph.Position, glyph.Size = Vector2.new(.5, .5), UDim2.fromScale(.5, .5), UDim2.fromScale(.72, .72)
 		glyph.BackgroundColor3, glyph.TextColor3, glyph.Text = Color3.new(1, 1, 1), hue, spec.glyph
-		glyph.TextScaled, glyph.Font = true, Enum.Font.GothamBold
+		glyph.TextScaled, glyph.Font, glyph.ZIndex = true, Enum.Font.GothamBold, 4
 		round(glyph)
 		glyph.Parent = band
 	end
-	icon.Name, icon.Size = "Icon", UDim2.fromScale(1, 1 / 1.6)
+	icon.Name, icon.ZIndex = "Icon", 2
+	icon.Size = UDim2.fromScale(1, 1 / Data.MarkerAspect)
 	icon.Parent = billboard
-	local chevron = Instance.new("Frame")
-	chevron.Name, chevron.BackgroundTransparency = "Chevron", 1
-	chevron.AnchorPoint, chevron.Size = Vector2.new(.5, 0), UDim2.fromScale(.5, .25)
-	chevron.Position = UDim2.fromScale(.5, .68)
-	chevron.Visible = false
-	chevron.Parent = billboard
-	for side = -1, 1, 2 do
-		local bar = Instance.new("Frame")
-		bar.AnchorPoint, bar.BackgroundColor3, bar.BorderSizePixel = Vector2.new(.5, .5), hue, 0
-		bar.Size, bar.Position = UDim2.fromScale(.62, .22), UDim2.fromScale(.5 + side * .19, .45)
-		bar.Rotation = side * -38
-		local stroke = Instance.new("UIStroke")
-		stroke.Color, stroke.Thickness = Color3.fromHex("#24304F"), 2
-		stroke.Parent = bar
-		bar.Parent = chevron
-	end
+	local label, labelName, labelLine = buildLabel(anchor, id, spec, hue)
 	local sparkAt = Instance.new("Attachment")
 	sparkAt.Position = Vector3.new(0, 2.5, 0)
 	sparkAt.Parent = anchor
@@ -165,7 +245,8 @@ local function build(folder, id, base)
 	sparkles.Enabled = false
 	sparkles.Parent = sparkAt
 	return { id = id, base = base, spec = spec, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
-		ripple = ripple, rippleStroke = rippleStroke, billboard = billboard, chevron = chevron, sparkles = sparkles, state = "hidden" }
+		ripple = ripple, rippleStroke = rippleStroke, billboard = billboard, icon = icon, pointer = pointer, sparkles = sparkles,
+		label = label, labelName = labelName, labelLine = labelLine, intro = true, state = "hidden" }
 end
 
 -- options: {read=stationContext, triggered=PromptTriggered, player, voice=AmbientAudio,
@@ -173,8 +254,8 @@ end
 function Attract.new(options)
 	options = options or {}
 	local now = options.now or os.clock
-	local self = setmetatable({ options = options, now = now, startedAt = now(), used = {}, hiddenUntil = 0,
-		lastPing = {}, stations = {}, connections = {}, time = 0 }, Attract)
+	local self = setmetatable({ options = options, now = now, startedAt = now(), used = {}, introduced = {}, introShown = {},
+		hiddenUntil = 0, lastPing = {}, stations = {}, connections = {}, time = 0 }, Attract)
 	local folder = Instance.new("Folder")
 	folder.Name = "EggDropStationAttract"
 	folder.Parent = options.world or workspace
@@ -233,15 +314,17 @@ end
 function Attract:markUsed(id)
 	if not Data.Stations[id] then return false end
 	self.used[id] = true
+	self.introduced[id] = true
 	self.hiddenUntil = self.now() + Data.HideAfterUse
 	return true
 end
 
 -- Learned for good (onboarding v1: the machine's coachMask bit is saved): it stops beckoning
--- without the after-use hide that markUsed starts.
+-- without the after-use hide that markUsed starts. It keeps its marker and short label.
 function Attract:learn(id)
 	if not Data.Stations[id] then return false end
 	self.used[id] = true
+	self.introduced[id] = true
 	return true
 end
 
@@ -258,6 +341,21 @@ function Attract:ping(entry, now)
 	return true
 end
 
+-- Name label: intro (name + line) until the station is introduced, then the name alone.
+function Attract:paintLabel(entry, shown, dt)
+	local id = entry.id
+	local intro = not self.introduced[id]
+	if shown and intro then
+		self.introShown[id] = (self.introShown[id] or 0) + dt
+		if self.introShown[id] >= Data.IntroSeconds then self.introduced[id] = true; intro = false end
+	end
+	if entry.intro ~= intro then
+		entry.intro = intro
+		entry.labelLine.Visible = intro
+	end
+	entry.label.Enabled = shown
+end
+
 function Attract:step(dt)
 	if self.destroyed then return end
 	dt = math.clamp(dt or 0, 0, .25)
@@ -267,7 +365,9 @@ function Attract:step(dt)
 	local reduced = self.options.reduced and self.options.reduced() == true
 	local visible = self:visible(state)
 	local position = state and state.position
-	if self.stations.Park and not self.used.Park and Attract.parkMember(position) then self.used.Park = true end
+	if self.stations.Park and not self.used.Park and Attract.parkMember(position) then self.used.Park = true; self.introduced.Park = true end
+	local bob = if reduced then 0 else math.sin(self.time * math.pi * 2 / Data.BobPeriod) * Data.BobHeight
+	local hop = if reduced then 0 else Attract.hop(self.time) * Data.HopHeight
 	for id, entry in pairs(self.stations) do
 		local shown = visible and not (id == "Journal" and self.options.cradleBusy and self.options.cradleBusy())
 		local distance = position and (position - entry.base).Magnitude or nil
@@ -278,13 +378,15 @@ function Attract:step(dt)
 		entry.glow.Brightness = Data.GlowBrightness * (if reduced then 1 else Attract.breath(mode, self.time))
 		entry.shaft.Enabled = active
 		entry.surface.Enabled = active
-		entry.billboard.Enabled = active
-		entry.chevron.Visible = mode == "invite"
+		entry.billboard.Enabled = Attract.showsMarker(mode)
 		entry.sparkles.Enabled = mode == "invite" and not reduced
-		local bob = if reduced then 0 else math.sin(self.time * math.pi * 2 / Data.BobPeriod) * Data.BobHeight
-		entry.billboard.StudsOffsetWorldSpace = Vector3.new(0, entry.spec.iconHeight + bob, 0)
-		local hop = if reduced then 0 else Attract.hop(self.time)
-		entry.chevron.Position = UDim2.fromScale(.5, .68 - hop * .08)
+		-- The marker bobs while it beckons and hops (as one piece) while it invites; a learned marker holds still.
+		local lift = if mode == "invite" then hop elseif mode == "beckon" then bob else 0
+		local height = entry.spec.iconHeight + lift
+		entry.billboard.StudsOffsetWorldSpace = Vector3.new(0, height, 0)
+		-- The label's bottom sits just above the icon disc (the billboard is centred on `height`).
+		entry.label.StudsOffsetWorldSpace = Vector3.new(0, height + Data.IconSize * Data.MarkerAspect / 2 + .15, 0)
+		self:paintLabel(entry, Attract.showsLabel(mode, distance), dt)
 		if mode == "invite" and not reduced then
 			local t = (self.time % Data.RippleEvery) / Data.RippleEvery
 			local base = Data.RingRadius * 2 / entry.ringPart.Size.X

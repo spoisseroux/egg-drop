@@ -20,10 +20,10 @@ Hub.Size=Vector2.new(848,608)
 Hub.Cols=3
 -- Each machine's screen tint (T5) colours its tile disc; Settings stays neutral.
 Hub.Tiles=table.freeze({
- table.freeze({id="hatch",icon="egg",tint="hatch",name="hub.tile.hatch.name",line="hub.tile.hatch.line"}),
+ table.freeze({id="hatch",icon="egg",tint="hatch",name="hub.tile.hatch.name",line="r3.hub.hatchLine"}),
  table.freeze({id="style",icon="faceplate",tint="style",name="hub.tile.style.name",line="hub.tile.style.line",short="hub.tile.style.short"}),
  table.freeze({id="companions",icon="paw",tint="companions",name="hub.tile.companions.name",line="hub.tile.companions.line"}),
- table.freeze({id="quests",icon="quests",tint="quests",name="hub.tile.quests.name",line="hub.tile.quests.line"}),
+ table.freeze({id="quests",icon="quests",tint="quests",name="hub.tile.quests.name",line="r3.hub.questsLine"}),
  table.freeze({id="book",icon="book",tint="book",name="book.title",line="book.entry.line",short="hub.tile.book.short"}),
  table.freeze({id="settings",icon="settings",tint=nil,name="hub.tile.settings.name",line="hub.tile.settings.line"}),
 })
@@ -58,10 +58,12 @@ function Hub.status(id,ctx)
   if n<=0 then return nil end
   return if n==1 then UICopy.get("book.entry.claimOne")else UICopy.get("book.entry.claimMany",{count=n})
  end
- if id=="hatch"and state.dailyAvailable==true then return{text=UICopy.get("hub.status.stamp"),tone="stars",dot=true,locked=false}end
+ -- QA v2 R3.8: the stamp card moved to Quests, so its "stamp ready" status did too
+ -- (quest claims first, then today's stamp).
  if id=="quests"then
   local text=claims(Hub.questsReady(state.quests))
   if text then return{text=text,tone="stars",dot=true,locked=false}end
+  if state.dailyAvailable==true then return{text=UICopy.get("hub.status.stamp"),tone="stars",dot=true,locked=false}end
  end
  if id=="book"then
   local book=state.book
@@ -156,7 +158,7 @@ function Hub:build(view)
  self.view=view;self.key=if view then string.format("%dx%d",view.W,view.H)else "regular"
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
- Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
+ Kit.setShadeAlpha(self.shade,Kit.ShadeAlpha) -- R3.1: one full-screen shade, phones too
  local W=if phone then view.W else 848
  local H=if phone then view.H else 608
  local content=Kit.frame(root,"Content",nil,UDim2.new(),UDim2.fromOffset(W,H));content.ZIndex=root.ZIndex+2

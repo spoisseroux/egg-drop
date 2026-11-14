@@ -99,6 +99,12 @@ return function(client,parent)
   -- atlas id the vector fallback draws (a disc in the design colour, a faint ring under
   -- an upcoming reward); with an id, stamped slots show the full-colour cell (row 0) and
   -- upcoming ones the faint outline cell (row 1).
+  test("R3.8: the card wears the Quests tint now that it lives in Quests",function()
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(400,200);host.Parent=gui
+   local card=View.new(host);card:layout(360,true);card:set({stamps=2,dailyAvailable=true})
+   assert(View.StampColor==Kit.Tint.quests and card.title:GetAttribute("Tint")==Kit.Tint.quests:ToHex())
+   card:destroy();host:Destroy()
+  end)
   test("stamp art: seven designs, the vector fallback while the atlas id is nil",function()
    local names={}
    for i=1,7 do names[i]=View.design(i).name end

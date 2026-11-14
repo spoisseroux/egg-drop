@@ -47,7 +47,9 @@ return function(client,parent)
    local placed=0
    for _,a in ipairs(bear.attachments)do local e=find(v,a.name);if e then
     placed+=1
-    local expected=Vector3.new(a.center[1],a.center[2],a.center[3])*v.scale
+    -- QA v2 R4.1: hats carry their per-item fit lift (WearableCatalog.Fit).
+    local fit=if a.item then require(game.ReplicatedStorage.Shared.WearableCatalog).fitOffset(bear.id,a.item)else Vector3.zero
+    local expected=(Vector3.new(a.center[1],a.center[2],a.center[3])+fit)*v.scale
     assert((e.frame.Position-expected).Magnitude<1e-3*v.scale,"off anchor "..a.name)
     assert(e.channel==a.channel and e.part:IsA("MeshPart")and not e.part.CanQuery and e.part.Anchored,a.name)
     -- Every part sits within 0.6 studs (rig size) of its anchor (shirts and tails reach furthest).

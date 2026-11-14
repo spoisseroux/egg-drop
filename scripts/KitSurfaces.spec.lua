@@ -149,6 +149,26 @@ return function(client,parent)
    Kit.reduced=realReduced
   end)
 
+  test("R3.8 header ? circle: 44 hit on both sizes, left of the capsule, title stops 12 px before it; none without a family",function()
+   for _,compact in ipairs({false,true})do
+    for _,W in ipairs({848,812,568})do
+     local g=Kit.headerGeometry(W,compact,96,24,true)
+     assert(g.help and g.helpHit.w==44 and g.helpHit.h==44,"44 hit")
+     assert(g.help.x+g.help.w==g.wallet.x-8 and g.help.h==g.controlH and g.help.y==g.wallet.y,"8 px left of the capsule, same line")
+     assert(g.title.x+g.title.w<=g.help.x-12,"title stops before the ?")
+     local plain=Kit.headerGeometry(W,compact,96,24)
+     assert(plain.help==nil and plain.title.w>g.title.w,"no ? without help")
+    end
+   end
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(848,100);host.BackgroundTransparency=1;host.Parent=gui
+   local h=Kit.header(host,{title="Hatch eggs",tint="hatch",width=848})
+   assert(h.help and h.help.root:GetAttribute("HelpId")=="hatch"and h.help.root.AbsoluteSize==Vector2.new(44,44))
+   assert(h.help.root.Selectable==false and h.help.root:GetAttribute("AccessibleLabel")~=nil)
+   local hub=Kit.header(host,{title="Pocket menu",tint=Kit.Sticker.cream,width=848});assert(hub.help==nil,"the hub has no ?")
+   local opened;local saved=Kit.onHelp;Kit.onHelp=function(id)opened=id;return true end
+   Kit.openHelp("hatch");Kit.onHelp=saved;assert(opened=="hatch")
+   host:Destroy()
+  end)
   test("Reduced Motion cuts boing, sticker landing, press travel and tab squash",function()
    motion(false)
    local box=Kit.frame(holder,"Box","raised",UDim2.new(),UDim2.fromOffset(80,40))

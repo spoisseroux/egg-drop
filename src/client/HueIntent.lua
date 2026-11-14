@@ -5,6 +5,7 @@ local Eggs=require(Shared.EggCatalog)
 local Intent={};Intent.__index=Intent
 local messages={RevisionChanged="Your inventory changed. Review the updated counts.",Stale="Your inventory changed. Review the updated counts.",NeedStars="You need more Stars.",Insufficient="You need more Stars.",NotOwned="Choose a pet you own.",Unowned="Choose a pet you own.",Unsupported="This pet cannot use this item yet.",PendingHatch="Finish your pending companion hatch first.",RevealPending="Finish your pending companion hatch first.",PendingResult="Store or use your pending item first.",EmptyStock="There are no jars of this item left.",NoStock="There are no jars of this item left.",Capped="This hue is already 5/5 on this channel.",NoChange="This channel is already original.",SessionLost="Reconnect to confirm your saved items and colors.",Unavailable="Saving is unavailable. Your confirmed items are safe."}
 messages.EmptyStock,messages.NoStock,messages.Capped,messages.NoChange="No Items","No Items","Max","Original"
+messages.AlreadyOriginal="Original"
 function Intent.new(d)return setmetatable({d=d,state={},status="Ready"},Intent)end
 function Intent:notify()if self.d.changed then self.d.changed(self)end end
 function Intent:record()return self.state.lastHueResult end
@@ -52,6 +53,15 @@ function Intent:use(petId,channel,itemId,resultId)
  local record=self.state.petHues and self.state.petHues[petId]
  local counts=table.clone(record and record[channel]or Hues.emptyCounts())
  return self:begin("hueUse",petId,{itemId=itemId,channel=channel,counts=counts,pendingResultId=resultId})
+end
+-- QA v2 R4.4: free reset of one channel to the pet's original colour (server-validated
+-- hueClear; no jar, no Stars). Refused locally when the channel is already original.
+function Intent:clear(petId,channel)
+ if channel~="main"and channel~="secondary"then return false end
+ local record=self.state.petHues and self.state.petHues[petId]
+ local counts=table.clone(record and record[channel]or Hues.emptyCounts())
+ if Hues.doseStrength(counts)==0 then self.message=messages.AlreadyOriginal;self:notify();return false end
+ return self:begin("hueClear",petId,{channel=channel,counts=counts})
 end
 function Intent:ackMigration()return self:begin("hueMigrationAck",nil,{migrationId=self.state.hueMigrationId})end
 function Intent:legacyRedeem(itemId)

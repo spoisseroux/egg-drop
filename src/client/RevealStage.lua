@@ -74,6 +74,32 @@ function Stage.reducedSample(t)
 end
 Stage.Cues={{0,"reveal_hush"},{.12,"spot_on"},{.30,"streak_whoosh"},{.42,"reveal_shimmer"},{.48,"tag_slam"},{.60,"name_slam"},{.84,"desc_tick"}}
 
+-- Confetti popper (QA v2 R1.1): two poppers in the bottom corners fire with the colour
+-- burst (t = 0.42), the pieces arc up and inward, tumble and fall out of the frame. The
+-- colours are CelebrationKit.Confetti. A first view only: never on a reopen, a skip past
+-- the burst still pops, Reduced Motion has none. The sound is a placeholder cue.
+Stage.PopAt=.42;Stage.ConfettiCount=28;Stage.ConfettiLife=1.9;Stage.PopCue="new_best"
+-- Pure: piece `i` (1..ConfettiCount) at `t` seconds after the pop on a W x H stage.
+-- Returns x, y (px, piece centre), rotation (deg), width share (0..1, the tumble) and
+-- transparency; nil when the piece is not on screen. Deterministic (no random state).
+function Stage.confetti(i,t,W,H)
+ if t<0 or t>Stage.ConfettiLife then return nil end
+ local h1,h2,h3=Stage.hash(i,11),Stage.hash(i,12),Stage.hash(i,13)
+ local side=if i%2==1 then 1 else -1 -- odd pieces fire from the left corner, rightward
+ local angle=math.rad(58+20*h1)
+ local speed=H*(1.25+.35*h2)
+ local gravity=H*1.9
+ local x0=if side>0 then W*.04 else W*.96
+ local drag=1.1
+ local travel=(1-math.exp(-drag*t))/drag
+ local x=x0+side*math.cos(angle)*speed*travel+math.sin(t*(5+3*h3)+i)*H*.012
+ local y=H*1.02-math.sin(angle)*speed*t+.5*gravity*t*t
+ local spin=(if h3<.5 then -1 else 1)*(360+360*h2)
+ local fade=if t>Stage.ConfettiLife-.4 then (t-(Stage.ConfettiLife-.4))/.4 else 0
+ if y>H+20 and t>.3 then return nil end
+ return x,y,spin*t,math.abs(math.cos(t*(6+4*h1)+i)),fade
+end
+
 -- Accent (1.4): the secondary colour lifted to read on black, Stars gold for an
 -- undyed (near-grey) secondary.
 function Stage.accent(color)
@@ -316,6 +342,15 @@ function Stage:build()
  end
  for index=1,Stage.DustCount do
   local mote=fill(sparkLayer,"Dust"..index,Color3.fromHex("#FFF2D6"),.4);Kit.corner(mote,999);mote.AnchorPoint=Vector2.new(.5,.5);mote.Visible=false;self.dust[index]=mote
+ end
+ -- Confetti popper pieces (one pool, painted only while the pop is alive).
+ self.confettiPieces={}
+ local confettiLayer=Kit.frame(root,"Confetti",nil,UDim2.new(),UDim2.fromScale(1,1));confettiLayer.ZIndex=sparkLayer.ZIndex+5
+ for index=1,Stage.ConfettiCount do
+  local piece=fill(confettiLayer,"Piece"..index,C.Confetti[(index-1)%#C.Confetti+1],0)
+  piece.AnchorPoint=Vector2.new(.5,.5);piece.Visible=false;piece.ZIndex=confettiLayer.ZIndex+1
+  if index%4==0 then Kit.corner(piece,999)end
+  self.confettiPieces[index]=piece
  end
  local flashLayer=layerFrame(root,"Flash",7)
  self.flash=fill(flashLayer,"White",Color3.new(1,1,1),1);self.flash.Size=UDim2.fromScale(1,1)
@@ -740,6 +775,7 @@ function Stage:paint()
  self:placeCamera()
  -- Flash.
  self.flash.BackgroundTransparency=1-s.flash
+ self:paintConfetti()
  -- Burst sparkles.
  local cx,cy=L.petX,L.feet-L.petH*.55
  for index,spark in ipairs(self.burst)do
@@ -790,7 +826,38 @@ function Stage:paint()
  -- The first settled frame is the last full paint; idle frames take paintIdle.
  -- (Not before the pet has loaded and finished its fade-in.)
  local petDone=self.loaded and(not self.loadedAt or self.clock-self.loadedAt>=.25)
- if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone then self.staticDone=true end
+ if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone and not self:confettiAlive()then self.staticDone=true end
+end
+-- Confetti popper (QA v2 R1.1).
+function Stage:pop()
+ if self.popAt or self.destroyed or self.instant or self.reducedStart or self:reduced()then return false end
+ self.popAt=self.clock
+ self:cue(Stage.PopCue,1.18,.45)
+ return true
+end
+function Stage:confettiAlive()
+ return self.popAt~=nil and self.clock-self.popAt<=Stage.ConfettiLife
+end
+function Stage:paintConfetti()
+ local pieces=self.confettiPieces;if not pieces then return end
+ local L=self.L
+ local alive=self:confettiAlive()and not self:reduced()
+ if not alive then
+  if self.confettiShown then self.confettiShown=false;for _,piece in ipairs(pieces)do piece.Visible=false end end
+  return
+ end
+ self.confettiShown=true
+ local t=self.clock-self.popAt
+ local long=math.max(6,math.floor(14*math.max(L.s,.5)+.5));local short=math.max(3,math.floor(long*.45+.5))
+ for index,piece in ipairs(pieces)do
+  local x,y,rotation,share,fade=Stage.confetti(index,t,L.W,L.H)
+  piece.Visible=x~=nil
+  if x then
+   piece.Position=UDim2.fromOffset(math.floor(x+.5),math.floor(y+.5))
+   piece.Size=UDim2.fromOffset(math.max(1,math.floor(long*(.25+.75*share)+.5)),short)
+   piece.Rotation=rotation;piece.BackgroundTransparency=fade
+  end
+ end
 end
 
 -- Clock: entrance timeline, then idle (spin physics, self-turn, twinkles).
@@ -810,6 +877,7 @@ function Stage:step(dt)
     if beat[2]=="name_slam"and self.kind=="rare"then task.delay(.09,function()if not self.destroyed then self:cue("name_slam",1.06,.45)end end)end
    end
   end
+  if before<Stage.PopAt and self.age>=Stage.PopAt then self:pop()end
   if before<.56 and self.age>=.56 then
    if self.visual then pcall(function()self.visual:greet()end)end
    if self.options.voice~=false then self:cue(self.pet.cue or "pet",1,.4)end
@@ -856,6 +924,8 @@ function Stage:settle(quiet)
  local was=self:isSettled()
  self.age=math.max(self.age,if self.reducedStart then Stage.ReducedFade else Stage.Duration)
  if not was and self.visual then pcall(function()self.visual:greet()end)end
+ -- A skip past the colour burst still gets its popper (only an owned, first view).
+ if not was and not quiet then self:pop()end
  self:paint()
  if not quiet and self.options.onSkip then self.options.onSkip()end
 end
@@ -1006,7 +1076,7 @@ end
 -- Read-only QA view of the stage.
 function Stage:getStats()
  return{age=self.age,settled=self:isSettled(),yaw=self.yaw,omega=self.omega,renderMode=self.renderMode,loaded=self.loaded,
-  kind=self.kind,accent=self.accent,focus=self.focus,phone=self.L and self.L.phone}
+  kind=self.kind,accent=self.accent,focus=self.focus,phone=self.L and self.L.phone,popped=self.popAt~=nil,confetti=self:confettiAlive()}
 end
 
 function Stage:destroy()

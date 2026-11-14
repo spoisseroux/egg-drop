@@ -26,12 +26,24 @@ function Kit.color(role)
  end
  return fallback[role]or Kit.Color[role]or Kit.Color.text
 end
+-- QA v2 R3.6 (asked by R4): a fixed colour painted over a property that Kit bound to
+-- a theme role earlier must replace that binding, or the next theme apply (equipping a
+-- faceplate) repaints the old role (once-selected tab labels went ink-dark and
+-- vanished). Kit remembers which properties it bound and pins those to the constant.
+local kitBound=setmetatable({},{__mode="k"})
 local function paint(object,property,role)
  if type(role)=="string"and(fallback[role]~=nil)then
   object[property]=Kit.color(role);Art.bind(object,{[property]=function()return Kit.color(role)end})
- elseif type(role)=="function"then object[property]=role();Art.bind(object,{[property]=role})
- elseif type(role)=="string"then object[property]=Kit.Color[role]
- else object[property]=role end
+  local set=kitBound[object] or {};set[property]=true;kitBound[object]=set
+ elseif type(role)=="function"then
+  object[property]=role();Art.bind(object,{[property]=role})
+  local set=kitBound[object] or {};set[property]=true;kitBound[object]=set
+ else
+  local value=if type(role)=="string"then Kit.Color[role]else role
+  object[property]=value
+  local set=kitBound[object]
+  if set and set[property]then Art.bind(object,{[property]=function()return value end})end
+ end
 end
 Kit.paint=paint
 function Kit.mix(color,toward,amount)return color:Lerp(toward,amount)end
@@ -302,6 +314,21 @@ end
 -- Collection book (play-forever F2): an open book, two tilted pages and the gap of its spine.
 function Vector.book(h)
  ink(h,"PageL",.29,.52,S(.38,.6),-6,2);ink(h,"PageR",.71,.52,S(.38,.6),6,2)
+end
+-- Toys (QA v2 R4.5, moved here from ToyTabIcon): a chew bone, a bar tilted 35 degrees
+-- up to the right with two knobs at each end. Pure knob centres in scale units.
+function Kit.toyKnobs()
+ local a=math.rad(-35);local d=Vector2.new(math.cos(a),math.sin(a));local p=Vector2.new(-d.Y,d.X)
+ local out={}
+ for _,e in ipairs({.31,-.31})do
+  local c=Vector2.new(.5,.5)+d*e
+  table.insert(out,c+p*.09);table.insert(out,c-p*.09)
+ end
+ return out
+end
+function Vector.toy(h)
+ ink(h,"Bar",.5,.5,S(.62,.2),-35,999)
+ for i,k in ipairs(Kit.toyKnobs())do ink(h,"Knob"..i,k.X,k.Y,S(.24,.24),0,999)end
 end
 Kit.VectorIcons=Vector
 
@@ -1002,7 +1029,7 @@ function Kit.wallet(parent,height)
   end
   star:SetAttribute("StarFace",true)
  end
- -- From 20 px up the icon gives way to a small spinning 3D Star in the same rect
+ -- From WalletStar.MinSize (16 px, R3.3) up the icon gives way to a small spinning 3D Star in the same rect
  -- once the StarToken mesh loads (WalletStar); the 2D Star stays as the fallback.
  local star3D=require(script.Parent.WalletStar).attach(pill,star,starSize)
  local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
@@ -1228,7 +1255,10 @@ end
 -- the Stars capsule 44 high 8 px left of it. Compact: no eyebrow, title Title 20
 -- centred on y 34, back drawn 36 (hit 44) with its right edge at W-20, capsule 36.
 -- The title stops 12 px before the capsule (or the back circle with no wallet).
-function Kit.headerGeometry(W,compact,walletW,left)
+-- QA v2 R3.8 `help`: a "How it works" circle (drawn like the back circle, 44 hit) 8 px
+-- left of the capsule (or of the back circle with no wallet); the title then stops
+-- 12 px before it.
+function Kit.headerGeometry(W,compact,walletW,left,help)
  compact=compact==true
  local h=if compact then 36 else 44
  local cy=if compact then 34 else 44
@@ -1238,17 +1268,65 @@ function Kit.headerGeometry(W,compact,walletW,left)
  g.back={x=right-h,y=cy-h/2,w=h,h=h}
  g.backHit={x=right-h/2-22,y=cy-22,w=44,h=44}
  g.wallet=if walletW then{x=g.back.x-8-walletW,y=cy-h/2,w=walletW,h=h}else nil
- local limit=(if g.wallet then g.wallet.x else g.back.x)-12
+ if help then
+  local edge=if g.wallet then g.wallet.x else g.back.x
+  g.help={x=edge-8-h,y=cy-h/2,w=h,h=h}
+  g.helpHit={x=g.help.x+h/2-22,y=cy-22,w=44,h=44}
+ end
+ local limit=(if g.help then g.help.x elseif g.wallet then g.wallet.x else g.back.x)-12
  local th=if compact then 24 else 32
  local tcy=if compact then 34 else 48
  g.title={x=left,y=tcy-th/2,w=math.max(0,limit-left),h=th}
  g.eyebrow=if compact then nil else{x=left,y=14,w=math.max(0,limit-left),h=16}
  return g
 end
+-- ── "How it works" (QA v2 R3.8) ─────────────────────────────────────────────
+-- Every machine header carries a ? circle that opens that machine's two or three
+-- illustrated cards (HowItWorks). The family comes from options.help (an id, or
+-- false for none) or else from the header's tint key, so every screen that already
+-- passes a family tint gets its ? without further wiring. The hub (cream tint) has none.
+Kit.HelpIds=table.freeze({hatch="hatch",style="style",companions="companions",quests="quests",book="book"})
+function Kit.helpIdFor(options)
+ options=options or {}
+ if options.help==false then return nil end
+ if type(options.help)=="string"then return options.help end
+ if type(options.tint)=="string"then return Kit.HelpIds[options.tint]end
+ return nil
+end
+-- Opening: Kit.onHelp (specs and callers may replace it) or the HowItWorks overlay.
+Kit.onHelp=nil
+function Kit.openHelp(id)
+ if Kit.onHelp then return Kit.onHelp(id)end
+ local ok,HowItWorks=pcall(require,script.Parent.HowItWorks)
+ if not ok then warn("HowItWorks unavailable: "..tostring(HowItWorks));return false end
+ return HowItWorks.open(id)
+end
+-- The ? circle: drawn 44 (36 compact) inside a 44 x 44 hit frame, like the header back.
+function Kit.helpButton(parent,compact,id)
+ local drawn=if compact then 36 else 44
+ local button=node("TextButton",parent,{Name="HelpButton",Text="",AutoButtonColor=false,Size=UDim2.fromOffset(44,44),BackgroundTransparency=1,ZIndex=60,Selectable=false})
+ button:SetAttribute("AccessibleLabel",require(game:GetService("ReplicatedStorage").Shared.UICopy).get("r3.help.button"));button:SetAttribute("HelpId",id)
+ local disc=node("Frame",button,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(drawn,drawn),
+  BorderSizePixel=0,BackgroundColor3=Color3.fromHex("#15171B"),BackgroundTransparency=.28,ZIndex=button.ZIndex,Active=false})
+ Kit.corner(disc,999)
+ node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.white,Transparency=.76})
+ local mark=Kit.fixedText(Kit.text(disc,"Title","?","text",{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=if compact then 18 else 22}))
+ mark.ZIndex=button.ZIndex+1
+ button:GetPropertyChangedSignal("ZIndex"):Connect(function()disc.ZIndex=button.ZIndex;mark.ZIndex=button.ZIndex+1 end)
+ local api={root=button,disc=disc,mark=mark,id=id}
+ local function repaint(hover)disc.BackgroundColor3=if hover then Color3.fromHex("#282B32")else Color3.fromHex("#15171B");disc.BackgroundTransparency=if hover then .22 else .28 end
+ button.MouseEnter:Connect(function()repaint(true)end)
+ button.MouseLeave:Connect(function()repaint(false)end)
+ button.Activated:Connect(function()Kit.openHelp(id)end)
+ return api
+end
+
 -- options: title, eyebrow (regular only), wallet (false hides the capsule), compact,
 -- width (W), left (title x, default 24), onBack, tint (T5: a Kit.Tint key or Color3
--- for the dot + eyebrow and the title squiggle). Returns {root, title, eyebrow,
--- wallet = {root, amount, set}, back = Kit.backArrow api, layout(W, left), setTitle}.
+-- for the dot + eyebrow and the title squiggle), help (R3.8: a HowItWorks id, or false;
+-- default from the tint key). Returns {root, title, eyebrow,
+-- wallet = {root, amount, set}, back = Kit.backArrow api, help = {root, id} or nil,
+-- layout(W, left), setTitle}.
 function Kit.header(parent,options)
  options=options or {}
  local compact=options.compact==true
@@ -1261,16 +1339,20 @@ function Kit.header(parent,options)
  if options.wallet~=false then inner=Kit.wallet(holder,if compact then 36 else 44);inner.root.AnchorPoint=Vector2.zero end
  local back=Kit.backArrow(holder,compact,{header=true});back.root.AnchorPoint=Vector2.zero;back.root.ZIndex=holder.ZIndex+5
  api.back=back
+ -- R3.8: the machine's "How it works" circle, from options.help or the tint's family.
+ local helpId=Kit.helpIdFor(options)
+ if helpId then api.help=Kit.helpButton(holder,compact,helpId);api.help.root.ZIndex=holder.ZIndex+5;api.helpId=helpId end
  local function place(object,r)object.Position=UDim2.fromOffset(r.x,r.y);object.Size=UDim2.fromOffset(r.w,r.h)end
  function api.layout(W,left)
   api.W=W or api.W;api.left=left or api.left
   holder.Size=UDim2.fromOffset(api.W,if compact then 60 else 84)
-  local g=Kit.headerGeometry(api.W,compact,inner and inner.root.Size.X.Offset or nil,api.left)
+  local g=Kit.headerGeometry(api.W,compact,inner and inner.root.Size.X.Offset or nil,api.left,api.help~=nil)
   api.geometry=g
   place(api.title,g.title)
   api.eyebrow.Visible=g.eyebrow~=nil and api.eyebrow.Text~=""
   if g.eyebrow then place(api.eyebrow,g.eyebrow)end
   if inner then place(inner.root,g.wallet)end
+  if api.help and g.helpHit then api.help.root.Position=UDim2.fromOffset(g.helpHit.x,g.helpHit.y)end
   back.root.Position=UDim2.fromOffset(g.backHit.x,g.backHit.y)
   if api.squiggle then api.squiggle.update()end
   return g
@@ -1396,6 +1478,42 @@ function Kit.coverScreen(frame)
  frame:SetAttribute("CoversScreen",true)
  sync();return true
 end
+-- R3.2: where a phone sheet starts in `host`: 2 px under the Roblox controls,
+-- measured from the real screen top (the ScreenInsets.None probe), so a host that
+-- already sits below the controls (an inset ScreenGui, the safe overlay) does not
+-- add the keep-out a second time. kh defaults to Kit.keepOut().
+function Kit.sheetTop(host,kh)
+ if not kh then local _;_,kh=Kit.keepOut()end
+ local want=kh+2
+ local probe=host and Kit.screenProbe(host)
+ if not probe then return want end
+ local below=host.AbsolutePosition.Y-probe.AbsolutePosition.Y
+ return math.max(0,math.floor(want-below+.5))
+end
+-- R3.2: room inside a ScrollingFrame for the selection strokes, tile lips and card
+-- shadows of its first and last rows (a UIPadding of `pad` on every side). Callers
+-- add 2 * pad to their CanvasSize (Kit.scrollInset returns pad) and keep children at
+-- their own 0-based positions. AutomaticCanvasSize already counts the padding.
+Kit.ScrollInset=4
+function Kit.scrollInset(scroll,pad)
+ pad=pad or Kit.ScrollInset
+ local inset=scroll:FindFirstChild("ScrollInset")or node("UIPadding",scroll,{Name="ScrollInset"})
+ inset.PaddingLeft,inset.PaddingRight=UDim.new(0,pad),UDim.new(0,pad)
+ inset.PaddingTop,inset.PaddingBottom=UDim.new(0,pad),UDim.new(0,pad)
+ scroll:SetAttribute("ScrollInset",pad)
+ return pad
+end
+-- The same room without moving anything: the frame grows `pad` on every side and the
+-- padding puts its children back where they were (callers still add 2 * pad to a
+-- CanvasSize they set themselves). Applied once per frame.
+function Kit.scrollBleed(scroll,pad)
+ pad=pad or Kit.ScrollInset
+ if scroll:GetAttribute("ScrollBleed")==nil then
+  scroll.Position=scroll.Position-UDim2.fromOffset(pad,pad);scroll.Size=scroll.Size+UDim2.fromOffset(pad*2,pad*2)
+  scroll:SetAttribute("ScrollBleed",pad)
+ end
+ return Kit.scrollInset(scroll,pad)
+end
 -- A black full-screen shade, hidden until Kit.shadeOpen.
 function Kit.modalShade(host,name,zIndex)
  local shade=Kit.frame(host,name,nil,UDim2.new(),UDim2.fromScale(1,1))
@@ -1405,6 +1523,15 @@ function Kit.modalShade(host,name,zIndex)
  return shade
 end
 local shadeStack={}
+-- QA v2 R3.1: one full-screen shade per open screen, always, on phones too. A screen
+-- that asks for a clear shade (ShadeAlpha 1, the old phone-sheet rule) still dims at
+-- Kit.ShadeAlpha; only a shade marked ShadeClear (a screen that paints the whole
+-- screen itself) stays clear.
+function Kit.shadeAlphaOf(shade)
+ local alpha=shade:GetAttribute("ShadeAlpha")or Kit.ShadeAlpha
+ if alpha>=1 and shade:GetAttribute("ShadeClear")~=true then alpha=Kit.ShadeAlpha end
+ return alpha
+end
 local function paintShades()
  for i=#shadeStack,1,-1 do
   local entry=shadeStack[i]
@@ -1412,13 +1539,16 @@ local function paintShades()
  end
  for i,entry in ipairs(shadeStack)do
   local top=i==#shadeStack
-  local alpha=entry.shade:GetAttribute("ShadeAlpha")or Kit.ShadeAlpha
-  entry.shade.BackgroundTransparency=if top then alpha else 1
+  entry.shade.BackgroundTransparency=if top then Kit.shadeAlphaOf(entry.shade)else 1
   entry.shade:SetAttribute("ShadeCovered",not top)
-  if entry.covered~=(not top)then
+  -- An overlay shade (R3.8 "How it works" cards) dims over a screen without hiding it:
+  -- the screens under it go clear but are not told they are covered.
+  local hidden=false
+  for j=i+1,#shadeStack do if not shadeStack[j].overlay then hidden=true;break end end
+  if entry.covered~=hidden then
    local first=entry.covered==nil
-   entry.covered=not top
-   if entry.onCovered and not(first and top)then task.spawn(entry.onCovered,not top)end
+   entry.covered=hidden
+   if entry.onCovered and not(first and not hidden)then task.spawn(entry.onCovered,hidden)end
   end
  end
 end
@@ -1426,14 +1556,32 @@ end
 -- opens over this one (true) and when it closes again (false).
 -- Opening again while already open keeps the owner's place in the stack (a rebuilt
 -- shade frame swaps in), so a refresh under a child screen never jumps above it.
-function Kit.shadeOpen(owner,shade,onCovered)
+-- options.overlay: this shade dims over the screens under it without covering them.
+function Kit.shadeOpen(owner,shade,onCovered,options)
  local entry
  for _,e in ipairs(shadeStack)do if e.owner==owner then entry=e end end
  if entry then
   if entry.shade~=shade and entry.shade.Parent then entry.shade.Visible=false end
   entry.shade=shade;entry.onCovered=onCovered or entry.onCovered
- else table.insert(shadeStack,{owner=owner,shade=shade,onCovered=onCovered})end
+ else entry={owner=owner,shade=shade,onCovered=onCovered};table.insert(shadeStack,entry)end
+ entry.overlay=options~=nil and options.overlay==true
  shade.Visible=true;paintShades()
+end
+-- R3.1: a full-screen shade that follows `container`'s Visible (screens whose open
+-- flag is their own container frame: the Deck style / Settings picker, the journal).
+-- The shade is made in `host` (the container's parent by default) under the container.
+function Kit.attachShade(owner,container,options)
+ options=options or {}
+ local host=options.host or container.Parent
+ local shade=Kit.modalShade(host,options.name or(container.Name.."Shade"),options.zIndex or math.max(1,container.ZIndex-1))
+ local function sync()
+  if container.Visible and container.Parent then Kit.shadeOpen(owner,shade,options.onCovered)
+  elseif Kit.shadeIsOpen(owner)then Kit.shadeClose(owner)end
+ end
+ container:GetPropertyChangedSignal("Visible"):Connect(sync)
+ container.Destroying:Connect(function()Kit.shadeClose(owner);if shade.Parent then shade:Destroy()end end)
+ sync()
+ return shade
 end
 function Kit.shadeIsOpen(owner)
  for _,e in ipairs(shadeStack)do if e.owner==owner then return true end end
@@ -1444,7 +1592,7 @@ function Kit.shadeClose(owner)
  for i=#shadeStack,1,-1 do
   local entry=shadeStack[i]
   if entry.owner==owner then table.remove(shadeStack,i);found=true
-   if entry.shade.Parent then entry.shade.Visible=false;entry.shade.BackgroundTransparency=entry.shade:GetAttribute("ShadeAlpha")or Kit.ShadeAlpha end
+   if entry.shade.Parent then entry.shade.Visible=false;entry.shade.BackgroundTransparency=Kit.shadeAlphaOf(entry.shade)end
   end
  end
  if found then paintShades()end

@@ -166,12 +166,14 @@ function Results:buildPhone(v)
  local right={TextXAlignment=Enum.TextXAlignment.Right}
  self.wallet=Kit.wallet(body,32);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(W-66,8)
  -- Headline row.
- self.headline=C.banner(body,{size=22,rotation=-3});self.headline.root.Position=UDim2.fromOffset(W/2,20)
+ self.headline=C.banner(body,{size=22,rotation=-3});self.headline.root.Position=UDim2.fromOffset(math.floor(W/2),27)
  self.eyebrow=self.headline.label
- self.subline=txt(body,"BodyMedium","","soft",W/2-170,33,340,16,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextTruncate=Enum.TextTruncate.AtEnd})
+ -- Spencer QA v2 (phone): the headline and the Star sat too high; both move down, and the
+ -- Star column centres on the cards (star, count, STARS) instead of hugging their top.
+ self.subline=txt(body,"BodyMedium","","soft",math.floor(W/2)-170,42,340,16,{TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextTruncate=Enum.TextTruncate.AtEnd})
  -- Centre column (behind the cards' edges).
  local mx=20+cw+10
- self:buildCentre(body,W/2,64+38,66,64+101,40,64+137,12)
+ self:buildCentre(body,math.floor(W/2),64+math.floor(ch*.34),66,64+math.floor(ch*.7),40,64+math.floor(ch*.9),12)
  self.missText=txt(body,"Strong","No Stars this time","text",mx,64+92,cw,22,centered({TextSize=16,Visible=false}))
  self.warmText=txt(body,"Small","","soft",mx-6,64+116,cw+12,34,centered({TextSize=12,TextWrapped=true,Visible=false}))
  -- Payout card: rows, total, then Stars earned today.

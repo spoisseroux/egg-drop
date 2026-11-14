@@ -37,6 +37,10 @@ function Journal.new(gui,make,label,onVisit,onTrack,onGoals)
 	scroll.ScrollingDirection,scroll.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never
 	scroll.ScrollBarThickness,scroll.ScrollBarImageColor3=4,Art.Leaf
 	local self=setmetatable({shade=shade,card=card,scroll=scroll,cards={},portraits={},customizeButtons={},onVisit=onVisit,onTrack=onTrack,onGoals=onGoals},Journal)
+	-- QA v2 R3.1: `shade` stays the journal's root and open flag; the dimming is one Kit
+	-- full-screen shade beside it in the Q2 shade stack (the legacy overlay shade no
+	-- longer dims for the journal).
+	self.dim=require(script.Parent.DeckKit).attachShade(self,shade,{host=gui,name="PetJournalDim",zIndex=19})
 	self.title=text(card,"Title","Pet journal · 00/04","Heading")
 	self.baseTitle=self.title.Text
 	self.saveDetail=text(scroll,"SaveInstruction","","Body",Art.Amber);self.saveDetail.Visible=false
