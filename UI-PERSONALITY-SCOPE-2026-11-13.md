@@ -87,6 +87,8 @@ Layout, sizes, hit areas, focus order, the shared header geometry, the mint acti
 
 ## 5. Open questions
 
+**Decided 2026-11-14: Spencer, "yes go with recommended".** Fredoka One display face, no pet peek on phones in the first pass, a face on the Star in the wallet and results hero only, plus the first five tweaks (type, lips and seams, copy voice, pet peek on desktop, house palette with a per-screen tint).
+
 1. **Fredoka One as the display face?** Recommended: yes. It is the one rounded, friendly face that ships with Roblox and stays legible at 15 px. Builder Extended Bold everywhere would be cleaner but keeps the dashboard feel.
 2. **Does the pet peek on phones?** Recommended: not in the first pass. Phones keep the type, lips, stickers and copy; the peek needs room and a ViewportFrame.
 3. **A face on the Star?** Recommended: yes, in the wallet and on the results hero only. It gives the currency a character cheaply, but it is a brand decision that is hard to walk back.

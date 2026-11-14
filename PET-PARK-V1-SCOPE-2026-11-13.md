@@ -270,6 +270,8 @@ Sizes: **S** is half a build session or less, **M** is about one session, **L** 
 
 ## 5. Open questions for Spencer
 
+**Decided 2026-11-14: Spencer, "yes go with recommended".** All five recommendations accepted (A east picnic lawn, fetch in v1, idle pets join shared fetch, Play date reward, 12 players per server + a second test account). He also asked for a **second Pet Park** elsewhere in the garden (see TODO).
+
 1. **Where does the park go?** East picnic lawn on the arrival path (A), or the existing Toy Lawn by the hub (B)?
    **Recommendation: A.** New players walk past it in their first 20 seconds, it has room for 12 pets, and it keeps the hub from getting more crowded.
 
