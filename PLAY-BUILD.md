@@ -1,3 +1,19 @@
+**Private v633 Published 2026-11-14 — runtime 783eb0e, committed and pushed. FRESH SAVES (TestFreshSaves).** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v633".
+# Egg Drop — follow-ups: bond 6-10, Stargazer, Leaf charm, phone menus, round camera
+
+**New:**
+- Bond levels 6–10 (gold hearts) with tricks at every level from 3. The pet sits still for you again from level 1; at level 2 it sits sooner.
+- The Stargazer faceplate (earned at Discoveries 100%), the Leaf charm (14 stamps) and a heart burst sprite on level-up.
+- Hatch eggs and Customize phone menus use the newer phone layout; Background and Ball shop grids no longer clip their first cards.
+- With the deck open, the camera parks above you looking toward the hub.
+- Kitty W squashes with the mouth expressions.
+
+**Passed before publish:** server 44/44; client green except long-standing; Code Reviewer GO; translations synced (9 add/update, 1 delete).
+
+**Not fixed:** world flicker (38 coplanar pairs; see FOLLOWUP-ART.md).
+
+## Historical v628 (overnight content)
+
 **Private v628 Published 2026-11-14 (overnight) — runtime 2183795, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v628".
 # Egg Drop — overnight content: recolours, weekly shelf, new wearables, toys, charms, Discoveries, bond levels
 
