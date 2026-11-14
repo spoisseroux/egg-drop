@@ -3,7 +3,7 @@
 -- An item fills one slot key, or both sides of a per-side slot (a helix pair fills
 -- EarPiercingL and EarPiercingR). The keys match PetAttachmentRules.
 local Defs=require(script.Parent.PetRigDefinitions)
-local Catalog={Version=1,OwnedLimit=64}
+local Catalog={Version=1,OwnedLimit=128}
 -- Shop tabs in display order (UI: hat, shirt, neck, ears, eyes, mouth, tail).
 Catalog.Tabs=table.freeze({
  {id="hat",slot="Hat",label="Hat"},{id="shirt",slot="Shirt",label="Shirt"},{id="neck",slot="Neck",label="Neck"},

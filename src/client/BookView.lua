@@ -175,10 +175,13 @@ function View.thumbKind(pageId,item)
  return if View.atlasRect(item.id,true)then "atlas"else nil
 end
 -- Pure: true when every item on the page has a thumbnail (cards), else name chips.
+-- Overnight 2026-11-14: per-item fallback. Cards as soon as any item has a picture; an item
+-- without one (atlas cell not uploaded yet) draws its initial in the well instead of knocking
+-- the whole page back to name chips.
 function View.pageHasThumbs(pageId,items)
  if #items==0 then return false end
- for _,item in ipairs(items)do if not View.thumbKind(pageId,item)then return false end end
- return true
+ for _,item in ipairs(items)do if View.thumbKind(pageId,item)then return true end end
+ return false
 end
 -- Focus movement in the page list (clamped, no wrap).
 function View.stepPage(index,delta,count)return math.clamp(index+delta,1,math.max(1,count))end
@@ -476,7 +479,12 @@ function View:buildCards(entry,items)
   card:SetAttribute("Thumb",kind)
   if kind=="ball"then ballThumb(well,item.id,wellW,wellH,item.owned)
   elseif kind=="plate"then plateThumb(well,item.id,wellW,wellH)
-  elseif kind=="atlas"then atlasThumb(well,item.id,item.owned,wellW,wellH)end
+  elseif kind=="atlas"then atlasThumb(well,item.id,item.owned,wellW,wellH)
+  else
+   local initial=txt(well,"Small",utf8.char(utf8.codepoint(item.name or "?",1)),if item.owned then "text"else "soft",0,0,wellW,wellH,
+    {TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(wellH*.55)})
+   initial.Name="Initial"
+  end
   if not item.owned and kind~="atlas"then
    -- Live pictures have no silhouette: a well-coloured veil fades them back.
    local veil=Kit.frame(well,"Veil","well",UDim2.new(),UDim2.fromScale(1,1),8);veil.BackgroundTransparency=.35;veil.ZIndex=well.ZIndex+20

@@ -10,4 +10,7 @@
 -- for the public launch, or every update would wipe players' progress.
 -- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
 -- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
-return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false})
+-- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
+-- granted or shown until his rig ships; EarnedPets.enabled() also needs PetRigDefinitions.blip.
+-- WeeklyShelf=true (slice C): the Monday-reset spotlight shelf with 20% off; false hides it.
+return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true})

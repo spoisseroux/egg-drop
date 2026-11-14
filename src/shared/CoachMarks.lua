@@ -21,8 +21,9 @@ Coach.Bits=table.freeze({
 	park=7,        -- first visit: Pet Park (the playground)
 	item=8,        -- first round item on the belt
 	questDone=9,   -- first quest complete
+	petArrived=10, -- overnight 2026-11-14 slice E: the "a friend arrived" card for the 7th-stamp pet
 })
-Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone"})
+Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived"})
 Coach.Max=2^31-1 -- the stored range (bits 0..30); unknown bits from a later build are kept
 
 -- The Welcome round is the first Stars round: the starter grant pays this with the Bear,

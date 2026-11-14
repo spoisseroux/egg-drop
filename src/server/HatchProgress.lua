@@ -107,7 +107,7 @@ end
 local function validBase(state,version)
 	if type(state) ~= "table" or state.version ~= version or state.migrated ~= true
 		or state.welcomeCredited ~= true or not integer(state.nectar)
-		or not integer(state.inventoryMask, 127) or not integer(state.misses, 7)
+		or not integer(state.inventoryMask, 255) or not integer(state.misses, 7)
 		or not integer(state.revision) or not integer(state.epoch)
 		or not integer(state.operationSeq) or not integer(state.lastAwardSeq)
 		or type(state.dailyClaimDay) ~= "string"

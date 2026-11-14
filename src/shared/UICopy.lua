@@ -238,6 +238,14 @@ local Table={
    originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
   customize={moreMaterials="More finishes hatch from Material Eggs.",moreToys="More toys hatch from Toy Eggs."},
  },
+ -- Overnight 2026-11-14 (artifacts/overnight-2026-11-14/BUILD-PLAN.md): one block per slice; each lane
+ -- writes only inside its own block. e2 = second pet (E), variants = recolours + new tabs (B),
+ -- shelf = weekly shelf (C), pool3 = toys / charms / Discoveries (D), bond = bond levels (F).
+ e2={},
+ variants={},
+ shelf={},
+ pool3={},
+ bond={},
 }
 
 local function freeze(node)
