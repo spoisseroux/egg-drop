@@ -1,3 +1,14 @@
+**Private v615 Published 2026-11-14 — runtime d4c21cc, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v615".
+# Egg Drop — slice A: new face items, analytics, no Reset Hue jar
+
+**New:** Wardrobe Eyes gains Happy Eyes, Lash Eyes and Round Eyes, and Mouth gains Kitty W (15 Stars each, with Book thumbnails). Hue Eggs roll the 4 fruits at 25% each (no Reset jar; jars you already hold still work). Analytics: a 9-step new-player funnel and events for egg opens, stamps, Play dates, the petting cap, Book milestones, Wardrobe equips, Robux purchases, and rounds/wallet at session end.
+
+**Passed before publish:** server 32/32 (new FirstSessionFunnel); BookView, PetAttachments, R4Content, LocalizationFit pass; Architect + Code Reviewer GO WITH CHANGES applied. Translations synced (3 add/update, then 2 add/update + 1 delete for the eye swap).
+
+**Test:** buy and wear each new face item; open the Book's Wardrobe page; Hue Egg odds read 25% x4. After a session, Creator Analytics > Funnels (Onboarding) and Custom events should show data (can take hours).
+
+## Historical v609 (QA pass v2)
+
 **Private v609 Published 2026-11-13 — runtime 6c77cb4, committed and pushed. FRESH SAVES (TestFreshSaves): everyone starts from zero again.** Studio Output: "Published new changes in "Egg Drop" to Roblox." Place saved v609. Phone results capture `artifacts/qa-2026-11-13-v2/studio/phone-results-748x294.jpg`.
 # Egg Drop — QA pass v2 fixes (PC + phone)
 
