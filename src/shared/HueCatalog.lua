@@ -43,6 +43,10 @@ function Hue.capacity(state)
  return false
 end
 Hue.ItemOrder={"rose","tide","citrus","iris","reset"}
+-- What a Hue Egg can roll (Spencer 2026-11-13: the paid Reset Hue jar is dropped now that
+-- "Original colour" is free in Customize). "reset" stays in ItemOrder/Items so jars players
+-- already hold stay valid and usable; it is just never rolled or shown in the odds.
+Hue.RollOrder={"rose","tide","citrus","iris"}
 Hue.Items={};for _,h in ipairs(Hue.Order)do Hue.Items[h.id]={id=h.id,name=h.name.." fruit",color=h.color,weight=20}end
 Hue.Items.reset={id="reset",name="Reset Hue",color=Color3.fromHex("#D4F8FF"),weight=20}
 Hue.DoseWeights={0,.44,.65,.84,.93,1}
@@ -81,7 +85,7 @@ end
 -- Restricted players: the fruit they hold fewest of, ties in ItemOrder (no roll).
 function Hue.fixedNext(inventory)
  local best,count=nil,math.huge
- for _,id in ipairs(Hue.ItemOrder)do
+ for _,id in ipairs(Hue.RollOrder)do
   local n=type(inventory)=="table"and type(inventory[id])=="number"and inventory[id]or 0
   if n<Hue.StackLimit and n<count then best,count=id,n end
  end
@@ -89,7 +93,7 @@ function Hue.fixedNext(inventory)
 end
 function Hue.roll(unit)
  if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 then return nil end
- return Hue.ItemOrder[math.min(5,math.floor(unit*5)+1)]
+ return Hue.RollOrder[math.min(#Hue.RollOrder,math.floor(unit*#Hue.RollOrder)+1)]
 end
 function Hue.mappedCounts(row,channel,preset)
  local counts=Hue.emptyCounts();local mapping={2,3,5}

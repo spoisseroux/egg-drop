@@ -103,13 +103,13 @@ return function(server)
 	test("restricted fruit and features give the item held fewest of, in published order", function()
 		local h, _, c = fixture(true)
 		local rolls = c.rolls
-		for _, id in ipairs(Hue.ItemOrder) do
+		for _, id in ipairs(Hue.RollOrder) do
 			assert(H.public(h).nextFixed.hue == id)
 			local before = h.state.hueInventory[id]
 			buyFruit(h, c)
 			assert(h.state.hueInventory[id] == before + 1, "expected fruit " .. id)
 		end
-		assert(H.public(h).nextFixed.hue == Hue.ItemOrder[1], "the order starts over")
+		assert(H.public(h).nextFixed.hue == Hue.RollOrder[1], "the order starts over")
 		for _, id in ipairs({ "horns", "claws", "wings", "horns" }) do
 			assert(H.public(h).nextFixed.feature == id)
 			local before = h.state.featureStock[id]

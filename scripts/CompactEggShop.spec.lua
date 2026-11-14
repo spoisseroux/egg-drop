@@ -14,8 +14,8 @@ return function(client,parent)
    assert(view.hatchButton.AbsoluteSize.Y>=44,"Hatch button under 44 px at "..tostring(size))
    assert(view.shopBackButton.AbsoluteSize.X>=43.9 and view.shopBackButton.AbsoluteSize.Y>=43.9,"back hit frame under 44 px at "..tostring(size))
    assert(view:selectRecipe("hue"));settle()
-   for _,id in ipairs({"rose","tide","citrus","iris","reset"})do assert(view.oddsHolder["Odds_"..id]:GetAttribute("OddsText")=="20%")end
-   assert(view.action.Text:find("8",1,true));assert(not view:selectRecipe("sprout"));table.insert(cases,tostring(size).." list, exact price and five disclosed item chances")
+   for _,id in ipairs({"rose","tide","citrus","iris"})do assert(view.oddsHolder["Odds_"..id]:GetAttribute("OddsText")=="25%")end;assert(not view.oddsHolder:FindFirstChild("Odds_reset"),"Reset Hue jar dropped 2026-11-13")
+   assert(view.action.Text:find("8",1,true));assert(not view:selectRecipe("sprout"));table.insert(cases,tostring(size).." list, exact price and four disclosed item chances")
   end
   -- The retired Companion Egg cannot be selected and no companion odds or pity promise appear.
   view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7});assert(not view:selectRecipe("meadow")and view.selected=="hue");settle()

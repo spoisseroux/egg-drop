@@ -23,7 +23,7 @@ return function(server)
   local q,r=request(h,fields);local ok,why,receipt=H.hueCommand(h,action,q,r);assert(ok,why);assert(S.valid(h.state),"invalid state after "..action);return q,r,receipt
  end
  local function dose(h,c,item,pet,channel)
-  c.unit=(table.find(Hue.ItemOrder,item)-.5)/5;command(h,"hueBuy",{})
+  c.unit=(table.find(Hue.RollOrder,item)-.5)/#Hue.RollOrder;command(h,"hueBuy",{})
   command(h,"hueUse",{itemId=item,petId=pet,channel=channel,counts=S.row(h.state,pet)[channel],pendingResultId=h.state.pendingHueResult.id})
  end
  test("clears one channel for free: no Stars, no jars, the other channel kept",function()

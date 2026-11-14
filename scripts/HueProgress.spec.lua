@@ -4,6 +4,7 @@ return function(server)
  local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
  local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end
+ local currentDb
  local function fixture(rank)
   local db={player_1={rank=rank or 4,trials=31,custom="kept",petAppearance={pip={charmVisible=false,at=1,writer="old"}}}}
   local c={now=1000,n=0,rolls=0,unit=.01,updates=0}
@@ -19,6 +20,7 @@ return function(server)
    return copy(output)
   end
   local h=H.load(1,{},a);assert(h.status=="Ready");assert(H.award(h,1,8));assert(H.award(h,2,8))
+  currentDb=db
   return h,db,c,a
  end
  local function request(h,fields,revision)
@@ -29,8 +31,13 @@ return function(server)
  end
  local function store(h)return command(h,"hueStore",{resultId=h.state.pendingHueResult.id})end
  local function buy(h,c,id)
-  local index=table.find(Hue.ItemOrder,id or"rose");c.unit=(index-.5)/5
+  local index=table.find(Hue.RollOrder,id or"rose");c.unit=(index-.5)/#Hue.RollOrder
   local q,r,receipt=command(h,"hueBuy",{});assert(receipt.itemId==(id or"rose"));return q,r,receipt
+ end
+ -- Reset Hue jars no longer roll (2026-11-13); a held jar from an older egg still works.
+ local function grantJar(h)
+  h.state.hueInventory.reset+=1;assert(S.valid(h.state))
+  local saved=currentDb.player_1.hatching;saved.hueInventory.reset+=1
  end
  local function use(h,item,pet,channel,pending)
   pet,channel=pet or"pip",channel or"main"
@@ -64,12 +71,12 @@ return function(server)
   local p=H.public(h);assert(not p.hueReservation and not p.hueItemReceipts and not p.hueReceiptOrder)
   for pet in pairs(Hue.Supported)do assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end
  end)
- test("each 20-percent server roll stores exactly one item, one debit and no companion pity change",function()
+ test("each 25-percent server roll stores exactly one item, one debit and no companion pity change",function()
   local h,_,c=fixture();fund(h);c.callbackReplay=true
-  for _,item in ipairs(Hue.ItemOrder)do local before=h.state.nectar;local misses=h.state.misses;local _,_,r=buy(h,c,item)
+  for _,item in ipairs(Hue.RollOrder)do local before=h.state.nectar;local misses=h.state.misses;local _,_,r=buy(h,c,item)
    assert(h.state.nectar==before-8 and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
   end
-  assert(c.rolls==5)
+  assert(c.rolls==4)
  end)
  test("stored duplicates stack, pending results block new purchases and result use acknowledges once",function()
   local h,_,c=fixture();buy(h,c,"rose");local pending=h.state.pendingHueResult.id
@@ -84,9 +91,9 @@ return function(server)
   for _=1,5 do buy(h,c,"rose");use(h,"rose","pip","main",true)end
   buy(h,c,"rose");store(h);local q,r=request(h,{itemId="rose",petId="pip",channel="main",counts=S.row(h.state,"pip").main});local stock=h.state.hueInventory.rose
   local ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="MaxDose"and h.state.hueInventory.rose==stock)
-  buy(h,c,"tide");use(h,"tide","pip","secondary",true);buy(h,c,"reset");use(h,"reset","pip","main",true)
+  buy(h,c,"tide");use(h,"tide","pip","secondary",true);grantJar(h);use(h,"reset","pip","main",false)
   assert(Hue.doseStrength(h.state.petHues.pip.main)==0 and h.state.petHues.pip.secondary.tide==1 and h.state.hueInventory.rose==stock)
-  buy(h,c,"reset");store(h);q,r=request(h,{itemId="reset",petId="pip",channel="main",counts=Hue.emptyCounts()});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="AlreadyOriginal"and h.state.hueInventory.reset==1)
+  grantJar(h);q,r=request(h,{itemId="reset",petId="pip",channel="main",counts=Hue.emptyCounts()});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="AlreadyOriginal"and h.state.hueInventory.reset==1)
  end)
  test("reservation and settlement retry the frozen draw before and after ambiguous writes",function()
   for _,phase in ipairs({"before","after","settlement"})do local h,_,c=fixture();local balance=h.state.nectar
@@ -112,7 +119,7 @@ return function(server)
   command(h,"hueLegacyPreset",{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose",counts=S.row(h.state,"pip").main,locked=false})
   buy(h,c,"tide");use(h,"tide","pip","main",true)
   local q,r=request(h,{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose:tide",counts=S.row(h.state,"pip").main,locked=true});local ok,why=H.hueCommand(h,"hueLegacyPreset",q,r);assert(not ok and why=="LegacyLocked")
-  buy(h,c,"reset");use(h,"reset","pip","main",true)
+  grantJar(h);use(h,"reset","pip","main",false)
   command(h,"hueLegacyPreset",{migrationId=h.state.hueMigrationId,petId="pip",channel="main",presetId="rose:tide",counts=S.row(h.state,"pip").main,locked=false})
   for _,receipt in pairs(snapshot.hueReceipts)do local quote=receipt.quote;assert(H.hueCommand(h,"hue",{id=quote.id,petId=quote.petId,hue=quote.hue,rank=quote.rank},quote.revision))end
   assert(S.valid(h.state)and Hue.equalCounts(h.state.petHues.pip.main,{rose=3,tide=3,citrus=0,iris=0}))
@@ -146,7 +153,7 @@ return function(server)
   for _=1,40 do buy(h,c,"tide");store(h)end
   assert(#h.state.hueReceiptOrder==S.ReceiptLimit and S.valid(h.state))
   h.state.hueInventory.iris=Hue.StackLimit -- next write uses fixture DB below in separate case
-  local h2,db,c2=fixture();db.player_1.hatching.hueInventory.iris=Hue.StackLimit;h2.state.hueInventory.iris=Hue.StackLimit;c2.unit=.7
+  local h2,db,c2=fixture();db.player_1.hatching.hueInventory.iris=Hue.StackLimit;h2.state.hueInventory.iris=Hue.StackLimit;c2.unit=.9 -- iris (4 rolls since 2026-11-13)
   local balance=h2.state.nectar;local q,r,receipt=command(h2,"hueBuy",{})
   assert(receipt.outcome=="Refused"and receipt.reason=="StackLimit"and h2.state.nectar==balance and not h2.state.pendingHueResult)
   local rolls=c2.rolls;assert(H.hueCommand(h2,"hueBuy",q,r));assert(c2.rolls==rolls and h2.state.nectar==balance)
@@ -182,7 +189,7 @@ return function(server)
   end
   legacyCommand("hueBuy",{});local payload,revision=legacyCommand("hueApply",{token=old.heldHueEgg.token,petId="pip",hue="tide",rank=0})
   h=H.load(1,{},a);assert(h.status=="Ready"and S.row(h.state,"pip").main.tide==2)
-  buy(h,c,"reset");use(h,"reset","pip","main",true);local stock=copy(h.state.hueInventory)
+  grantJar(h);use(h,"reset","pip","main",false);local stock=copy(h.state.hueInventory)
   assert(H.hueCommand(h,"hueApply",payload,revision));assert(S.row(h.state,"pip").main.tide==0 and h.state.hueInventory.reset==stock.reset)
  end)
  test("corrupt v6 counts ownership receipts and rolled reservations fail validation without repairs",function()

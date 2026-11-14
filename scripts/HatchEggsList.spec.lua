@@ -26,7 +26,7 @@ return function(client,parent)
    for i,r in ipairs(toy.rows)do assert(r.value==thirds[i])end
    assert(OddsText.format(1/3)=="33%"and OddsText.format(.5)=="50%"and OddsText.format(.15)=="15%"and OddsText.format(.001)=="<1%")
    assert(Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true,sparkler=true}}).empty=="All toys owned")
-   local hue=Shop.oddsRows("hue",{});assert(#hue.rows==5);for _,r in ipairs(hue.rows)do assert(r.value=="20%")end
+   local hue=Shop.oddsRows("hue",{});assert(#hue.rows==4);for _,r in ipairs(hue.rows)do assert(r.value=="25%"and r.id~="reset")end -- Reset Hue jar dropped 2026-11-13
    local material=Shop.oddsRows("material",{materialAvailable=true});assert(#material.rows>=1)
    for _,r in ipairs(material.rows)do assert(r.value:match("%%$"))end
   end)
@@ -60,7 +60,7 @@ return function(client,parent)
     assert(view.shopPanel:GetAttribute("SelectedEgg")=="toy"and view.eggName.Text=="Toy Egg")
     local odds=view.oddsHolder:GetChildren();assert(#odds==3)
     local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="33%,33%,34%")
-    assert(view:selectRecipe("hue"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==5 and view.eggName.Text=="Hue Egg")
+    assert(view:selectRecipe("hue"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==4 and view.eggName.Text=="Hue Egg")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.
     assert(view:moveRecipe(-1)and view.selected=="material"and view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))
     assert(view:moveRecipe(1)and view.selected=="material")

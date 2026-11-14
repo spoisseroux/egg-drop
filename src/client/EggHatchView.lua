@@ -635,7 +635,7 @@ function View.oddsRows(id,state)
   for _,r in ipairs(MaterialCatalog.odds(state.materialUnlocks))do add(r.id,MaterialCatalog.ById[r.id].name,r.probability)end
   if #rows==0 then empty="All materials owned"elseif not state.materialAvailable then empty="Material Eggs are not ready yet."end
  elseif id=="hue"then
-  for _,itemId in ipairs(HueCatalog.ItemOrder)do local item=HueCatalog.Items[itemId];add(itemId,item.name,item.weight)end
+  for _,itemId in ipairs(HueCatalog.RollOrder)do local item=HueCatalog.Items[itemId];add(itemId,item.name,item.weight)end
  elseif id=="feature"then
   for _,r in ipairs(FeatureCatalog.odds())do add(r.id,FeatureCatalog.ById[r.id].name,r.probability)end
  end
