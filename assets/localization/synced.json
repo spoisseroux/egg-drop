@@ -1,0 +1,1886 @@
+{
+ "schema": 1,
+ "universeId": 10774758591,
+ "entries": {
+  "catalog.BallThemes.ById.gems.name": {
+   "source": "Gems",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.2.name"
+  },
+  "catalog.BallThemes.ById.gems.names.1": {
+   "source": "Sapphire",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gems.names.2": {
+   "source": "Topaz",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gems.names.3": {
+   "source": "Emerald",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gems.names.4": {
+   "source": "Ruby",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gems.names.5": {
+   "source": "Amethyst",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gems.pitch": {
+   "source": "Hard facets and a sparkle. Tiny eyes.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.gumdrops.name": {
+   "source": "Gumdrops",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.1.name"
+  },
+  "catalog.BallThemes.ById.gumdrops.names.1": {
+   "source": "Blueberry",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gumdrops.names.2": {
+   "source": "Apricot",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gumdrops.names.3": {
+   "source": "Mint",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gumdrops.names.4": {
+   "source": "Rose",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.HueCatalog.ById.rose.name"
+  },
+  "catalog.BallThemes.ById.gumdrops.names.5": {
+   "source": "Lilac",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.gumdrops.pitch": {
+   "source": "Pastel candy with a sugar skirt.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.kittens.name": {
+   "source": "Kittens",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.4.name"
+  },
+  "catalog.BallThemes.ById.kittens.names.1": {
+   "source": "Blue kitten",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.kittens.names.2": {
+   "source": "Ginger",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.kittens.names.3": {
+   "source": "Matcha",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.kittens.names.4": {
+   "source": "Sakura",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.kittens.names.5": {
+   "source": "Plum",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.kittens.pitch": {
+   "source": "Pointed ears and a pink nose.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.marbles.name": {
+   "source": "Marbles",
+   "context": "",
+   "example": "Catalogue BallThemes (name)"
+  },
+  "catalog.BallThemes.ById.marbles.names.1": {
+   "source": "Blue",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.1"
+  },
+  "catalog.BallThemes.ById.marbles.names.2": {
+   "source": "Orange",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.2"
+  },
+  "catalog.BallThemes.ById.marbles.names.3": {
+   "source": "Green",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.3"
+  },
+  "catalog.BallThemes.ById.marbles.names.4": {
+   "source": "Pink",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.4"
+  },
+  "catalog.BallThemes.ById.marbles.names.5": {
+   "source": "Violet",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.5"
+  },
+  "catalog.BallThemes.ById.marbles.pitch": {
+   "source": "No faces. Glossy with a pattern each.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.planets.name": {
+   "source": "Planets",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.3.name"
+  },
+  "catalog.BallThemes.ById.planets.names.1": {
+   "source": "Moon",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.planets.names.2": {
+   "source": "Mars",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.planets.names.3": {
+   "source": "Terra",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.planets.names.4": {
+   "source": "Giant",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.planets.names.5": {
+   "source": "Nebula",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.planets.pitch": {
+   "source": "Craters, bands and a ring. They doze.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.smileys.name": {
+   "source": "Smileys",
+   "context": "",
+   "example": "Catalogue BallThemes (name)"
+  },
+  "catalog.BallThemes.ById.smileys.pitch": {
+   "source": "Crude little faces. The default.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BookCatalog.Discoveries.1.name": {
+   "source": "Make a tier V ball",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.1.name"
+  },
+  "catalog.BookCatalog.Discoveries.10.name": {
+   "source": "Win on Medium",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.10.name"
+  },
+  "catalog.BookCatalog.Discoveries.3.name": {
+   "source": "Win a Bank pair field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.3.name"
+  },
+  "catalog.BookCatalog.Discoveries.4.name": {
+   "source": "Win a Creek crossing field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.4.name"
+  },
+  "catalog.BookCatalog.Discoveries.5.name": {
+   "source": "Win a Lantern chain field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.5.name"
+  },
+  "catalog.BookCatalog.Discoveries.6.name": {
+   "source": "Win a Ripple relay field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.6.name"
+  },
+  "catalog.BookCatalog.Discoveries.7.name": {
+   "source": "Win a Bank bounce field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.7.name"
+  },
+  "catalog.BookCatalog.Discoveries.8.name": {
+   "source": "Win a Mirror marks field",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.8.name"
+  },
+  "catalog.BookCatalog.Discoveries.9.name": {
+   "source": "Win on Easy",
+   "context": "",
+   "example": "Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.9.name"
+  },
+  "catalog.BookCatalog.Pages.balls.name": {
+   "source": "Balls",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
+  "catalog.BookCatalog.Pages.discoveries.name": {
+   "source": "Discoveries",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
+  "catalog.BookCatalog.Pages.faceplates.name": {
+   "source": "Faceplates",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
+  "catalog.BookCatalog.Pages.toys.name": {
+   "source": "Toys",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
+  "catalog.BookCatalog.Pages.wardrobe.name": {
+   "source": "Wardrobe",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
+  "catalog.DeckBackgrounds.ById.lantern.name": {
+   "source": "Lantern",
+   "context": "",
+   "example": "Catalogue DeckBackgrounds (name)"
+  },
+  "catalog.DeckStickers.ById.none.name": {
+   "source": "Blank",
+   "context": "",
+   "example": "Catalogue DeckStickers (name)"
+  },
+  "catalog.DeckThemes.ById.aqua_pop.name": {
+   "source": "Aqua Pop",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aqua_pop.name, catalog.BookCatalog.Pages.faceplates.items.1.name"
+  },
+  "catalog.DeckThemes.ById.aurora_glass.name": {
+   "source": "Aurora Glass",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aurora_glass.name, catalog.BookCatalog.Pages.faceplates.items.6.name"
+  },
+  "catalog.DeckThemes.ById.bookworm.name": {
+   "source": "Bookworm",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name"
+  },
+  "catalog.DeckThemes.ById.brick.name": {
+   "source": "Ember",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.brick.name"
+  },
+  "catalog.DeckThemes.ById.copperleaf.name": {
+   "source": "Copperleaf",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name"
+  },
+  "catalog.DeckThemes.ById.gloaming.name": {
+   "source": "Gloaming",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.gloaming.name"
+  },
+  "catalog.DeckThemes.ById.honey.name": {
+   "source": "Honey",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.honey.name"
+  },
+  "catalog.DeckThemes.ById.ice.name": {
+   "source": "Creek",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
+  },
+  "catalog.DeckThemes.ById.lime_gel.name": {
+   "source": "Lime Gel",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lime_gel.name, catalog.BookCatalog.Pages.faceplates.items.2.name"
+  },
+  "catalog.DeckThemes.ById.liquid_chrome.name": {
+   "source": "Liquid Chrome",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.liquid_chrome.name, catalog.BookCatalog.Pages.faceplates.items.4.name"
+  },
+  "catalog.DeckThemes.ById.moss.name": {
+   "source": "Canopy",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.moss.name, catalog.DeckBackgrounds.ById.canopy.name"
+  },
+  "catalog.DeckThemes.ById.night_orb.name": {
+   "source": "Night Orb",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.night_orb.name, catalog.BookCatalog.Pages.faceplates.items.8.name"
+  },
+  "catalog.DeckThemes.ById.prism_flare.name": {
+   "source": "Prism Flare",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.prism_flare.name, catalog.BookCatalog.Pages.faceplates.items.7.name"
+  },
+  "catalog.DeckThemes.ById.sherbet.name": {
+   "source": "Scout",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name"
+  },
+  "catalog.DeckThemes.ById.sorbet_sky.name": {
+   "source": "Sorbet Sky",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
+  },
+  "catalog.DeckThemes.ById.stone.name": {
+   "source": "Pebble",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
+  },
+  "catalog.DeckThemes.ById.tidepool.name": {
+   "source": "Tidepool",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
+  },
+  "catalog.EggCatalog.ById.meadow.name": {
+   "source": "Mixed Meadow",
+   "context": "",
+   "example": "Catalogue EggCatalog (name)"
+  },
+  "catalog.EggCatalog.ById.sprout.name": {
+   "source": "Sprout Focused",
+   "context": "",
+   "example": "Catalogue EggCatalog (name)"
+  },
+  "catalog.FeatureCatalog.ById.claws.name": {
+   "source": "Claws",
+   "context": "",
+   "example": "Catalogue FeatureCatalog (name)"
+  },
+  "catalog.FeatureCatalog.ById.horns.name": {
+   "source": "Horn buds",
+   "context": "",
+   "example": "Catalogue FeatureCatalog (name)"
+  },
+  "catalog.FeatureCatalog.ById.wings.name": {
+   "source": "Folded wings",
+   "context": "",
+   "example": "Catalogue FeatureCatalog (name)"
+  },
+  "catalog.HueCatalog.ById.citrus.name": {
+   "source": "Citrus",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.ById.iris.name": {
+   "source": "Iris",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.ById.tide.name": {
+   "source": "Tide",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Items.citrus.name": {
+   "source": "Citrus fruit",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Items.iris.name": {
+   "source": "Iris fruit",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Items.reset.name": {
+   "source": "Reset Hue",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Items.rose.name": {
+   "source": "Rose fruit",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Items.tide.name": {
+   "source": "Tide fruit",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.citrus:iris.name": {
+   "source": "Citrus + Iris",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.citrus:rose.name": {
+   "source": "Rose + Citrus",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.citrus:tide.name": {
+   "source": "Tide + Citrus",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.iris:rose.name": {
+   "source": "Rose + Iris",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.iris:tide.name": {
+   "source": "Tide + Iris",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.HueCatalog.Mixes.rose:tide.name": {
+   "source": "Rose + Tide",
+   "context": "",
+   "example": "Catalogue HueCatalog (name)"
+  },
+  "catalog.MaterialCatalog.ById.gloss.name": {
+   "source": "Gloss",
+   "context": "",
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name"
+  },
+  "catalog.MaterialCatalog.ById.matte.name": {
+   "source": "Matte",
+   "context": "",
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name"
+  },
+  "catalog.MaterialCatalog.ById.metal.name": {
+   "source": "Metal",
+   "context": "",
+   "example": "Catalogue MaterialCatalog (name)"
+  },
+  "catalog.MaterialCatalog.ById.standard.name": {
+   "source": "Standard",
+   "context": "",
+   "example": "Catalogue MaterialCatalog (name)"
+  },
+  "catalog.PetCatalog.1.description": {
+   "source": "Soft as a nap. Hugs first, asks questions never.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.2.description": {
+   "source": "Hums to puddles. The puddles have started humming back.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.3.description": {
+   "source": "Ticks like a tiny clock. Always early for snacks.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.4.description": {
+   "source": "Floats in slow circles, collecting quiet thoughts.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.byId.bloom_pip.description": {
+   "source": "A bear in bloom. Smells faintly of tomorrow's picnic.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.byId.eclipse_orbit.description": {
+   "source": "Borrows the night sky and always gives it back.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCatalog.byId.foxfire_wick.description": {
+   "source": "Glows when happy. Glows a lot, honestly.",
+   "context": "",
+   "example": "Catalogue PetCatalog (description)"
+  },
+  "catalog.PetCharmCatalog.ById.dot.name": {
+   "source": "Snowflake",
+   "context": "",
+   "example": "Catalogue PetCharmCatalog (name)"
+  },
+  "catalog.PetCharmCatalog.ById.ring.name": {
+   "source": "Ring",
+   "context": "",
+   "example": "Catalogue PetCharmCatalog (name)"
+  },
+  "catalog.QuestCatalog.ById.d_chain3.sub": {
+   "source": "In one round",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_chain4.sub, catalog.QuestCatalog.ById.d_chain5.sub, catalog.QuestCatalog.ById.d_score400.sub, catalog.QuestCatalog.ById.d_score600.sub"
+  },
+  "catalog.QuestCatalog.ById.d_chain3.title": {
+   "source": "Chain 3 merges",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_chain3_medium.sub": {
+   "source": "Medium or Hard, one round",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub)"
+  },
+  "catalog.QuestCatalog.ById.d_chain3_medium.title": {
+   "source": "Chain 3 on Medium",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_chain4.title": {
+   "source": "Chain 4 merges",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_chain5.title": {
+   "source": "Chain 5 merges",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title); also catalog.BookCatalog.Discoveries.2.name, catalog.BookCatalog.Pages.discoveries.items.2.name"
+  },
+  "catalog.QuestCatalog.ById.d_goals4.sub": {
+   "source": "Across any rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_goals6.sub, catalog.QuestCatalog.ById.w_goals30.sub"
+  },
+  "catalog.QuestCatalog.ById.d_goals4.title": {
+   "source": "Complete 4 goals",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_goals6.title": {
+   "source": "Complete 6 goals",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_goals_hard.sub": {
+   "source": "Across Hard rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub)"
+  },
+  "catalog.QuestCatalog.ById.d_goals_hard.title": {
+   "source": "Complete 3 goals on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_heats2.sub": {
+   "source": "Finish a round on each",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.w_heats3.sub"
+  },
+  "catalog.QuestCatalog.ById.d_heats2.title": {
+   "source": "Play two difficulties",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_rounds3.sub": {
+   "source": "Any difficulty, all 24 drops",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_rounds5.sub, catalog.QuestCatalog.ById.w_rounds20.sub"
+  },
+  "catalog.QuestCatalog.ById.d_rounds3.title": {
+   "source": "Finish 3 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_rounds5.title": {
+   "source": "Finish 5 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_score400.title": {
+   "source": "Score 400",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_score600.title": {
+   "source": "Score 600",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_score800.title": {
+   "source": "Score 800",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title); also catalog.QuestCatalog.ById.w_score800.title"
+  },
+  "catalog.QuestCatalog.ById.d_templates3.sub": {
+   "source": "Finish rounds with different goals",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub)"
+  },
+  "catalog.QuestCatalog.ById.d_templates3.title": {
+   "source": "Play 3 goal types",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tidy1.sub": {
+   "source": "Finish below the tidy line",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tidy2.sub, catalog.QuestCatalog.ById.w_tidy6.sub"
+  },
+  "catalog.QuestCatalog.ById.d_tidy1.title": {
+   "source": "Win with a tidy stack",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tidy2.title": {
+   "source": "Win 2 tidy rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tidy_hard.sub": {
+   "source": "Skill quest",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tier4_hard.sub, catalog.QuestCatalog.ById.d_win_hard.sub"
+  },
+  "catalog.QuestCatalog.ById.d_tidy_hard.title": {
+   "source": "Tidy win on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tier4.sub": {
+   "source": "In any round",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tier5.sub, catalog.QuestCatalog.ById.w_tier5.sub"
+  },
+  "catalog.QuestCatalog.ById.d_tier4.title": {
+   "source": "Make a tier IV",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tier4_hard.title": {
+   "source": "Make a tier IV on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_tier5.title": {
+   "source": "Make a tier V",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title); also catalog.QuestCatalog.ById.w_tier5.title"
+  },
+  "catalog.QuestCatalog.ById.d_win_hard.title": {
+   "source": "Win on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title); also catalog.BookCatalog.Discoveries.11.name, catalog.BookCatalog.Pages.discoveries.items.11.name"
+  },
+  "catalog.QuestCatalog.ById.d_win_medium.sub": {
+   "source": "Medium or Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub)"
+  },
+  "catalog.QuestCatalog.ById.d_win_medium.title": {
+   "source": "Win on Medium or higher",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_wins2.sub": {
+   "source": "Any difficulty",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_wins3.sub, catalog.QuestCatalog.ById.w_wins12.sub"
+  },
+  "catalog.QuestCatalog.ById.d_wins2.title": {
+   "source": "Win 2 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.d_wins3.title": {
+   "source": "Win 3 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_goals30.title": {
+   "source": "Complete 30 goals",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_goals_hard12.sub": {
+   "source": "Hard rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.w_hard3.sub, catalog.QuestCatalog.ById.w_hard_tidy2.sub, catalog.QuestCatalog.ById.w_tier4_hard3.sub"
+  },
+  "catalog.QuestCatalog.ById.w_goals_hard12.title": {
+   "source": "Complete 12 goals on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_hard3.title": {
+   "source": "Win 3 on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_hard_tidy2.title": {
+   "source": "2 tidy wins on Hard",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_heats3.title": {
+   "source": "Play all three difficulties",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_rounds20.title": {
+   "source": "Finish 20 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_templates6.sub": {
+   "source": "Finish rounds with each goal",
+   "context": "",
+   "example": "Catalogue QuestCatalog (sub)"
+  },
+  "catalog.QuestCatalog.ById.w_templates6.title": {
+   "source": "Play all 6 goal types",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_tidy6.title": {
+   "source": "Win 6 tidy rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_tier4_hard3.title": {
+   "source": "Tier IV in 3 Hard rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.QuestCatalog.ById.w_wins12.title": {
+   "source": "Win 12 rounds",
+   "context": "",
+   "example": "Catalogue QuestCatalog (title)"
+  },
+  "catalog.RoundItems.ById.bomb.effect": {
+   "source": "Your next ball bursts on landing and clears a small circle.",
+   "context": "",
+   "example": "Catalogue RoundItems (effect)"
+  },
+  "catalog.RoundItems.ById.bomb.name": {
+   "source": "Bomb",
+   "context": "",
+   "example": "Catalogue RoundItems (name)"
+  },
+  "catalog.RoundItems.ById.bomb.short": {
+   "source": "Next ball clears a circle.",
+   "context": "",
+   "example": "Catalogue RoundItems (short)"
+  },
+  "catalog.RoundItems.ById.magnet.effect": {
+   "source": "Your next ball pulls its matches in.",
+   "context": "",
+   "example": "Catalogue RoundItems (effect)"
+  },
+  "catalog.RoundItems.ById.magnet.name": {
+   "source": "Magnet",
+   "context": "",
+   "example": "Catalogue RoundItems (name)"
+  },
+  "catalog.RoundItems.ById.magnet.short": {
+   "source": "Next ball pulls matches.",
+   "context": "",
+   "example": "Catalogue RoundItems (short)"
+  },
+  "catalog.RoundItems.ById.pop.effect": {
+   "source": "Removes the highest ball. No points.",
+   "context": "",
+   "example": "Catalogue RoundItems (effect)"
+  },
+  "catalog.RoundItems.ById.pop.name": {
+   "source": "Pop",
+   "context": "",
+   "example": "Catalogue RoundItems (name)"
+  },
+  "catalog.RoundItems.ById.pop.short": {
+   "source": "Removes the top ball.",
+   "context": "",
+   "example": "Catalogue RoundItems (short)"
+  },
+  "catalog.RoundItems.ById.swap.effect": {
+   "source": "Next and Then trade places.",
+   "context": "",
+   "example": "Catalogue RoundItems (effect)"
+  },
+  "catalog.RoundItems.ById.swap.name": {
+   "source": "Swap",
+   "context": "",
+   "example": "Catalogue RoundItems (name)"
+  },
+  "catalog.RoundItems.ById.swap.short": {
+   "source": "Next and Then swap.",
+   "context": "",
+   "example": "Catalogue RoundItems (short)"
+  },
+  "catalog.StoreCatalog.PassById.2078804439.blurb": {
+   "source": "+1 Star for every finished round. Thank you!",
+   "context": "",
+   "example": "Catalogue StoreCatalog (blurb)"
+  },
+  "catalog.StoreCatalog.PassById.2078804439.name": {
+   "source": "Supporter",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.PassById.2078960411.blurb": {
+   "source": "Double Stars from every round and quest. Forever.",
+   "context": "",
+   "example": "Catalogue StoreCatalog (blurb)"
+  },
+  "catalog.StoreCatalog.PassById.2078960411.name": {
+   "source": "2× Stars",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431023.blurb": {
+   "source": "40 Stars to get your garden going. One per player.",
+   "context": "",
+   "example": "Catalogue StoreCatalog (blurb)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431023.name": {
+   "source": "Starter pack",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431114.name": {
+   "source": "Handful of Stars",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431153.name": {
+   "source": "Pouch of Stars",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431202.name": {
+   "source": "Jar of Stars",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.StoreCatalog.ProductById.3730431229.name": {
+   "source": "Chest of Stars",
+   "context": "",
+   "example": "Catalogue StoreCatalog (name)"
+  },
+  "catalog.ToyCatalog.ById.ball.name": {
+   "source": "Ball",
+   "context": "",
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name"
+  },
+  "catalog.ToyCatalog.ById.bone.name": {
+   "source": "Bone",
+   "context": "",
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name"
+  },
+  "catalog.ToyCatalog.ById.none.name": {
+   "source": "None",
+   "context": "",
+   "example": "Catalogue ToyCatalog (name)"
+  },
+  "catalog.ToyCatalog.ById.sparkler.name": {
+   "source": "Sparkler",
+   "context": "",
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name"
+  },
+  "catalog.WearableCatalog.Tabs.1.label": {
+   "source": "Hat",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.2.label": {
+   "source": "Shirt",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.3.label": {
+   "source": "Neck",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.4.label": {
+   "source": "Ears",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.5.label": {
+   "source": "Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.6.label": {
+   "source": "Mouth",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.Tabs.7.label": {
+   "source": "Tail",
+   "context": "",
+   "example": "Catalogue WearableCatalog (label)"
+  },
+  "catalog.WearableCatalog.pip.beads.name": {
+   "source": "Pearl Beads",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.beanie.name": {
+   "source": "Pom Beanie",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.bellcollar.name": {
+   "source": "Bell Collar",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.blep.name": {
+   "source": "Blep",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.flowercrown.name": {
+   "source": "Flower Crown",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.heart.name": {
+   "source": "Heart Tail",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.hoodie.name": {
+   "source": "Star Hoodie",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.ring.name": {
+   "source": "Little Hoops",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.sleepy.name": {
+   "source": "Sleepy Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.sparkle.name": {
+   "source": "Sparkle Eyes",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.starstud.name": {
+   "source": "Star Studs",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.sunhat.name": {
+   "source": "Tiny Sun Hat",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "catalog.WearableCatalog.pip.tee.name": {
+   "source": "Stripy Tee",
+   "context": "",
+   "example": "Catalogue WearableCatalog (name)"
+  },
+  "ui.book.bookworm.count": {
+   "source": "{count}/3",
+   "context": "",
+   "example": "Collection book; e.g. 3/3"
+  },
+  "ui.book.bookworm.done": {
+   "source": "Bookworm faceplate is yours",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.bookworm.line": {
+   "source": "Finish any three pages: Bookworm faceplate",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.bookworm.short": {
+   "source": "3 full pages: Bookworm",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.claim": {
+   "source": "Claim ★{reward}",
+   "context": "",
+   "example": "Collection book; e.g. Claim ★5"
+  },
+  "ui.book.claimShort": {
+   "source": "★{reward}",
+   "context": "",
+   "example": "Collection book; e.g. ★5"
+  },
+  "ui.book.claimed": {
+   "source": "Claimed",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.empty": {
+   "source": "Nothing on this page yet.",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.entry.claimMany": {
+   "source": "{count} TO CLAIM",
+   "context": "",
+   "example": "Collection book; e.g. 3 TO CLAIM"
+  },
+  "ui.book.entry.claimOne": {
+   "source": "1 TO CLAIM",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.entry.line": {
+   "source": "Pages to fill, Stars to find",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.eyebrow": {
+   "source": "Garden",
+   "context": "",
+   "example": "Collection book; also ui.hub.eyebrow, ui.report.category.garden"
+  },
+  "ui.book.failed": {
+   "source": "Not claimed",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.found": {
+   "source": "Found",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.hint.back": {
+   "source": "Back",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.hint.claim": {
+   "source": "Claim",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.hint.move": {
+   "source": "Move",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.hint.pages": {
+   "source": "Pages",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.missing": {
+   "source": "Not yet",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.owned": {
+   "source": "{owned}/{total}",
+   "context": "",
+   "example": "Collection book; e.g. 3/12"
+  },
+  "ui.book.pending": {
+   "source": "Saving…",
+   "context": "",
+   "example": "Collection book; also ui.results.saved.pending"
+  },
+  "ui.book.promise": {
+   "source": "Every page pays once. Nothing to buy.",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.records.empty": {
+   "source": "Play a round and your records start here.",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.records.line": {
+   "source": "Your lifetime numbers",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.records.name": {
+   "source": "Records",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.retrying": {
+   "source": "Still saving…",
+   "context": "",
+   "example": "Collection book; also ui.shop.reason.retrying"
+  },
+  "ui.book.stats.bestChain": {
+   "source": "Best chain",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.itemsUsed": {
+   "source": "Items used",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.merges": {
+   "source": "Merges",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.pets": {
+   "source": "Pets hatched",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.rounds": {
+   "source": "Rounds played",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.stamps": {
+   "source": "Stamps collected",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.starsEarned": {
+   "source": "Stars earned",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.starsSpent": {
+   "source": "Stars spent",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.tidyWins": {
+   "source": "Tidy wins",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.tierFive": {
+   "source": "Tier V balls",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.winsEasy": {
+   "source": "Wins on Easy",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.winsHard": {
+   "source": "Wins on Hard",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.stats.winsMedium": {
+   "source": "Wins on Medium",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.timeout": {
+   "source": "Still saving. Try again soon.",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.title": {
+   "source": "Collection book",
+   "context": "",
+   "example": "Collection book; also ui.coach.book.title"
+  },
+  "ui.book.toast.bookworm": {
+   "source": "Bookworm faceplate unlocked",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.book.toast.claimed": {
+   "source": "Page milestone",
+   "context": "",
+   "example": "Collection book"
+  },
+  "ui.coach.book.line": {
+   "source": "Fill the pages as you collect. Every page pays once.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.companions.line": {
+   "source": "Dress up {pet}, swap pets and customize.",
+   "context": "",
+   "example": "First-round coaching; e.g. Dress up Bear, swap pets and customize."
+  },
+  "ui.coach.companions.title": {
+   "source": "Companions",
+   "context": "",
+   "example": "First-round coaching; also ui.hub.tile.companions.name"
+  },
+  "ui.coach.fillLine.line": {
+   "source": "Keep the pile under the line. Stay over it too long and the round ends.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.fillLine.title": {
+   "source": "Fill line",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.firstStars.toast": {
+   "source": "First round cleared",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.gotIt": {
+   "source": "Got it",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.hatch.line": {
+   "source": "Spend Stars on eggs. The odds are on every label.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.hatch.title": {
+   "source": "Hatch eggs",
+   "context": "",
+   "example": "First-round coaching; also ui.hub.tile.hatch.name"
+  },
+  "ui.coach.hub.key": {
+   "source": "Press M for every machine, any time.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.hub.pad": {
+   "source": "Press Y for every machine, any time.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.hub.title": {
+   "source": "Pocket menu",
+   "context": "",
+   "example": "First-round coaching; also ui.hub.title"
+  },
+  "ui.coach.hub.touch": {
+   "source": "Tap Menu for every machine, any time.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.item.line": {
+   "source": "Power-up merges earn items. Use one from the item button.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.item.title": {
+   "source": "An item!",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.machines.line": {
+   "source": "Walk up to a glowing machine to use it.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.machines.title": {
+   "source": "Machines",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.missPay": {
+   "source": "Goal met",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.next": {
+   "source": "Next",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.park.line": {
+   "source": "{pet} plays here. Three play dates a day pay +4 ★.",
+   "context": "",
+   "example": "First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★."
+  },
+  "ui.coach.park.title": {
+   "source": "Pet Park",
+   "context": "",
+   "example": "First-round coaching; also ui.park.name, ui.report.category.park"
+  },
+  "ui.coach.quest.line": {
+   "source": "Today's quests pay Stars. Find them in the menu.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.quest.title": {
+   "source": "Quests",
+   "context": "",
+   "example": "First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name"
+  },
+  "ui.coach.questDone.line": {
+   "source": "Claim its Stars in Quests, in the menu.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.questDone.title": {
+   "source": "Quest done!",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.quests.line": {
+   "source": "Three a day, three a week. Each one pays Stars.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.skip": {
+   "source": "Skip",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.style.line": {
+   "source": "Faceplates, backgrounds and balls. Looks only.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.style.title": {
+   "source": "Deck style",
+   "context": "",
+   "example": "First-round coaching; also ui.hub.tile.style.name"
+  },
+  "ui.coach.welcome.line": {
+   "source": "Merge to crack the egg. Stars come with it.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.welcome.title": {
+   "source": "Hatch your first friend",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.companions.wearing.none": {
+   "source": "Nothing yet",
+   "context": "",
+   "example": "Companions screen"
+  },
+  "ui.hatch.egg.feature.description": {
+   "source": "Something pointy is growing in here. Hatches one feature item to grow on any pet.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.feature.line": {
+   "source": "Horns, claws or wings",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.feature.per": {
+   "source": "1 item per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.hue.description": {
+   "source": "It smells like fruit. Hatches one colour fruit to feed your pet.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.hue.line": {
+   "source": "Fruit that shifts colour",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.hue.per": {
+   "source": "1 fruit per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.material.description": {
+   "source": "Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.material.line": {
+   "source": "A fresh new coat",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.material.per": {
+   "source": "1 finish per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.toy.description": {
+   "source": "Something is rattling around in here. Hatches one toy your pet can carry and play with.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.toy.line": {
+   "source": "A toy to carry and chase",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.toy.per": {
+   "source": "1 toy per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.footer.desktop": {
+   "source": "Give one a shake. The odds are on the label.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.footer.phone": {
+   "source": "The odds are on the label",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.next.done": {
+   "source": "All collected",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.next.label": {
+   "source": "Next item",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.next.line": {
+   "source": "Next: {item}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Next: Squeaky Bone"
+  },
+  "ui.hatch.promise": {
+   "source": "No surprises. The odds never change.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hub.promise": {
+   "source": "Every machine, one tap away.",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.status.locked": {
+   "source": "LOCKED",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.status.stamp": {
+   "source": "STAMP READY",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.book.short": {
+   "source": "Book",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.companions.line": {
+   "source": "Pets, wardrobe and customize",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.hatch.line": {
+   "source": "Eggs, odds and today's stamp",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.quests.line": {
+   "source": "Daily and weekly quests",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.settings.line": {
+   "source": "Sound, music and motion",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.settings.name": {
+   "source": "Settings",
+   "context": "",
+   "example": "Pocket menu (machine hub); also ui.pause.settings, ui.report.eyebrow"
+  },
+  "ui.hub.tile.style.line": {
+   "source": "Faceplates, backgrounds and balls",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.hub.tile.style.short": {
+   "source": "Style",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
+  "ui.items.note.empty": {
+   "source": "You have no items",
+   "context": "",
+   "example": "Round item notes"
+  },
+  "ui.items.note.full": {
+   "source": "Belt's full. Use one first.",
+   "context": "",
+   "example": "Round item notes"
+  },
+  "ui.menu.subtitle.empty": {
+   "source": "Round not started",
+   "context": "",
+   "example": "Pause menu"
+  },
+  "ui.menu.subtitle.locked": {
+   "source": "Win a round and this opens up",
+   "context": "",
+   "example": "Pause menu"
+  },
+  "ui.menu.subtitle.paused": {
+   "source": "Round paused",
+   "context": "",
+   "example": "Pause menu"
+  },
+  "ui.park.done": {
+   "source": "+{reward} ★ today",
+   "context": "",
+   "example": "Pet Park chip; e.g. +5 ★ today"
+  },
+  "ui.park.playDate": {
+   "source": "Play date {count}/{target}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Play date 3/3"
+  },
+  "ui.pet.capped": {
+   "source": "{pet}'s had plenty of pets today",
+   "context": "",
+   "example": "Petting reward; e.g. Bear's had plenty of pets today"
+  },
+  "ui.pet.cappedSolo": {
+   "source": "Plenty of pets today",
+   "context": "",
+   "example": "Petting reward"
+  },
+  "ui.pet.star": {
+   "source": "+1 ★",
+   "context": "",
+   "example": "Petting reward"
+  },
+  "ui.quests.allDone": {
+   "source": "All done. {pet} is impressed.",
+   "context": "",
+   "example": "Quest log; e.g. All done. Bear is impressed."
+  },
+  "ui.quests.allDoneSolo": {
+   "source": "All done for today.",
+   "context": "",
+   "example": "Quest log"
+  },
+  "ui.report.about": {
+   "source": "What's it about?",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.category.deck": {
+   "source": "Pocket Deck",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.category.menus": {
+   "source": "Menus",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.category.other": {
+   "source": "Other",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.category.pets": {
+   "source": "Pets",
+   "context": "",
+   "example": "Bug report sheet; also catalog.BookCatalog.Pages.pets.name"
+  },
+  "ui.report.category.stars": {
+   "source": "Stars",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.entry": {
+   "source": "Report a bug / Suggest something",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.entryShort": {
+   "source": "Report or suggest",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.kind.bug": {
+   "source": "Bug",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.kind.suggestion": {
+   "source": "Suggestion",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.note.count": {
+   "source": "{count}/200",
+   "context": "",
+   "example": "Bug report sheet; e.g. 3/200"
+  },
+  "ui.report.note.placeholder": {
+   "source": "Tell us more (optional)",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.note.privacy": {
+   "source": "Don't include names or personal details.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.pick": {
+   "source": "Pick what it's about",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.reply.busy": {
+   "source": "Still sending the last one…",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.reply.full": {
+   "source": "Our mailbox is full today. Try tomorrow.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.reply.invalid": {
+   "source": "That didn't send. Try again.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.reply.limited": {
+   "source": "That's plenty for now. Try again later.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.reply.timeout": {
+   "source": "No answer yet. Try again in a bit.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.send": {
+   "source": "Send",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.sending": {
+   "source": "Sending…",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.thanks.bug": {
+   "source": "Thanks! We'll take a look.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.thanks.queued": {
+   "source": "Thanks! It'll go out shortly.",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.thanks.suggestion": {
+   "source": "Ooh, noted. Thank you!",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.report.title": {
+   "source": "Tell us",
+   "context": "",
+   "example": "Bug report sheet; also ui.report.titleShort"
+  },
+  "ui.report.wait": {
+   "source": "Send again soon",
+   "context": "",
+   "example": "Bug report sheet"
+  },
+  "ui.results.leave.mid": {
+   "source": "Leave to garden",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.leave.narrow": {
+   "source": "Leave",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.leave.wide": {
+   "source": "Back to the garden",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.nudge.again": {
+   "source": "A win on {heat} pays {low} to {high}",
+   "context": "",
+   "example": "Round results screen; e.g. A win on Medium pays 6 to 8"
+  },
+  "ui.results.nudge.up": {
+   "source": "Brave? {heat} pays {low} to {high}",
+   "context": "",
+   "example": "Round results screen; e.g. Brave? Medium pays 6 to 8"
+  },
+  "ui.results.saved.done": {
+   "source": "Tucked into your wallet",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.today.label": {
+   "source": "TODAY",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.today.line": {
+   "source": "★ {count} earned",
+   "context": "",
+   "example": "Round results screen; e.g. ★ 3 earned"
+  },
+  "ui.results.today.short": {
+   "source": "Today: ★ {count}",
+   "context": "",
+   "example": "Round results screen; e.g. Today: ★ 3"
+  },
+  "ui.shop.failed.applied": {
+   "source": "Not applied",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.failed.bought": {
+   "source": "Not bought",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.failed.saved": {
+   "source": "Not saved",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.busy": {
+   "source": "Busy, try again",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.needStars": {
+   "source": "Not enough Stars",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.notOwned": {
+   "source": "Buy it first",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.priceChanged": {
+   "source": "Price changed",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.throttled": {
+   "source": "Try again in a moment",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.reason.unowned": {
+   "source": "Not owned yet",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.rolledBack": {
+   "source": "Didn't save, so it's back how it was",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.short.many": {
+   "source": "{count} Stars short. One more round?",
+   "context": "",
+   "example": "Shop status and errors; e.g. 3 Stars short. One more round?"
+  },
+  "ui.shop.short.one": {
+   "source": "1 Star short. One more round?",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.shop.short.plain": {
+   "source": "{count} Stars short",
+   "context": "",
+   "example": "Shop status and errors; e.g. 3 Stars short"
+  },
+  "ui.shop.short.plainOne": {
+   "source": "1 Star short",
+   "context": "",
+   "example": "Shop status and errors"
+  },
+  "ui.stamp.button": {
+   "source": "Stamp today +{reward}",
+   "context": "",
+   "example": "Stamp card; e.g. Stamp today +5"
+  },
+  "ui.stamp.done": {
+   "source": "Stamped for today",
+   "context": "",
+   "example": "Stamp card"
+  },
+  "ui.stamp.full": {
+   "source": "Card full. A fresh one tomorrow.",
+   "context": "",
+   "example": "Stamp card"
+  },
+  "ui.stamp.landed": {
+   "source": "+{reward} Stars",
+   "context": "",
+   "example": "Stamp card; e.g. +5 Stars"
+  },
+  "ui.stamp.next": {
+   "source": "Today's stamp: ★ {reward}",
+   "context": "",
+   "example": "Stamp card; e.g. Today's stamp: ★ 5"
+  },
+  "ui.stamp.promise": {
+   "source": "No streaks. Miss a day, lose nothing.",
+   "context": "",
+   "example": "Stamp card"
+  },
+  "ui.stamp.title": {
+   "source": "Stamp card",
+   "context": "",
+   "example": "Stamp card"
+  },
+  "ui.stamp.tomorrow": {
+   "source": "Next stamp tomorrow: ★ {reward}",
+   "context": "",
+   "example": "Stamp card; e.g. Next stamp tomorrow: ★ 5"
+  },
+  "ui.style.balls.pitch": {
+   "source": "Same sizes, same rules. Only cuter.",
+   "context": "",
+   "example": "Deck style screen"
+  },
+  "ui.style.promise.backgrounds": {
+   "source": "Backgrounds are earned, not bought.",
+   "context": "",
+   "example": "Deck style screen"
+  },
+  "ui.style.promise.balls": {
+   "source": "Just for looks. Never an advantage.",
+   "context": "",
+   "example": "Deck style screen"
+  },
+  "ui.style.promise.faceplates": {
+   "source": "Fixed prices. No random plates.",
+   "context": "",
+   "example": "Deck style screen"
+  },
+  "ui.wardrobe.empty": {
+   "source": "Nothing to wear yet. {pet} doesn't mind.",
+   "context": "",
+   "example": "Wardrobe screen; e.g. Nothing to wear yet. Bear doesn't mind."
+  },
+  "ui.wardrobe.emptySlot": {
+   "source": "Nothing for this slot yet.",
+   "context": "",
+   "example": "Wardrobe screen"
+  },
+  "ui.wardrobe.emptySolo": {
+   "source": "Nothing to wear yet.",
+   "context": "",
+   "example": "Wardrobe screen"
+  }
+ }
+}

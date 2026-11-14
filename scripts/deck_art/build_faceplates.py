@@ -1,6 +1,7 @@
-"""Pocket Deck faceplates: 16 textures, 4 shared overlay textures, faceplates.json and a contact sheet.
+"""Pocket Deck faceplates: 16 shop textures + the book-only Bookworm, 4 shared overlay textures, faceplates.json and a contact sheet.
 
-Run: python scripts/deck_art/build_faceplates.py
+Run: python scripts/deck_art/build_faceplates.py            (everything)
+     python scripts/deck_art/build_faceplates.py bookworm   (one plate; json rewritten)
 Textures are 1024 x 499 (the plate rect is 1560 x 760 deck units) with the rounded corners baked into alpha.
 All art is procedural and original: gradients, bubbles, chrome, gel, aurora, water and flare shapes.
 """
@@ -432,6 +433,102 @@ def night_orb():
     return finish(gloss_arc(img, 0.12), 0.12)
 
 
+# ------------------------------------------------------------------ book-only plate
+def deck_uv(x, y):
+    """Deck units (1600 x 800 body) to plate 0..1 (the plate rect starts at 20,20 and is 1560 x 760)."""
+    px, py, pw, ph = DECK["plate"]
+    return (x - px) / pw, (y - py) / ph
+
+
+def bookworm():
+    """Bookworm (collection book reward): a teal cloth-bound library book.
+
+    Linen weave cloth, a blind-stamped double rule with a fine gold line inside it, four gold
+    corner protectors and a rust bookmark ribbon tucked under the top edge between the screen and
+    the A button. Everything sits on the grips and the top / bottom strips (the glass hides the
+    middle) and keeps clear of the wordmark, LED, d-pad, menu, A, B and the speaker.
+    """
+    img = ramp3(lin(66), [(0, "#46B3A6"), (0.40, "#2C877F"), (1, "#1C5753")])
+    # linen weave: fine warp and weft threads with slubs, plus a broad cloth mottle
+    rng = np.random.default_rng(1717)
+    period = GH / 150.0                                  # ~3.3 texture px per thread at 1024 wide
+    slub_w = np.asarray(Image.fromarray((rng.random((GH // 3, 1)) * 255).astype(np.uint8)).resize((GW, GH), Image.BILINEAR)).astype(np.float32) / 255
+    slub_h = np.asarray(Image.fromarray((rng.random((1, GW // 3)) * 255).astype(np.uint8)).resize((GW, GH), Image.BILINEAR)).astype(np.float32) / 255
+    weft = 0.5 + 0.5 * np.sin(Yn / period * 2 * np.pi)
+    warp = 0.5 + 0.5 * np.sin(Xn / period * 2 * np.pi)
+    checker = (np.sin(Yn / period * np.pi) * np.sin(Xn / period * np.pi))  # over / under
+    weave = (weft * (0.55 + 0.45 * (checker > 0)) + warp * (0.55 + 0.45 * (checker <= 0))) / 2
+    weave = weave * 0.75 + (slub_w * 0.5 + slub_h * 0.5) * 0.25
+    img = img * (0.90 + 0.16 * weave)[..., None]
+    img = img * (0.94 + 0.10 * fbm(5, 1719, 3))[..., None]
+    # edge wear: the cloth lightens a touch toward the rim, as a handled book does
+    edge = np.minimum(np.minimum(X, 1 - X) * ASPECT, np.minimum(Y, 1 - Y))
+    img = over(img, "#9FE3D6", (1 - smooth(0.0, 0.05, edge)) * 0.16 * fbm(14, 1723, 2))
+
+    # blind-stamped double rule (pressed into the cloth: dark groove, light lower lip) + gold inner line
+    def rule(inset, radius, width):
+        m = Image.new("L", (GW, GH), 0)
+        d = ImageDraw.Draw(m)
+        i, r = inset * GH, radius * GH
+        d.rounded_rectangle([i, i, GW - 1 - i, GH - 1 - i], r, outline=255, width=max(1, int(width * GH)))
+        return np.asarray(m.filter(ImageFilter.GaussianBlur(GH * 0.0016))).astype(np.float32) / 255
+
+    for inset, radius, width in ((0.040, 0.135, 0.010), (0.062, 0.115, 0.005)):
+        g = rule(inset, radius, width)
+        lip = np.clip(np.roll(g, int(GH * 0.004), axis=0) - g, 0, 1)
+        img = over(img, "#0F3B38", g * 0.55)
+        img = over(img, "#B9F1E6", lip * 0.30)
+    gold_line = rule(0.080, 0.098, 0.0032)
+    img = over(img, "#E9C46A", gold_line * 0.85)
+    img = over(img, "#FFF0C0", np.clip(np.roll(gold_line, -int(GH * 0.002), axis=0) - gold_line, 0, 1) * 0.5)
+
+    # gold corner protectors: a folded metal triangle on each corner (the rounded alpha trims the tip)
+    L = 0.21                                            # leg length in plate heights (clears the wordmark and menu)
+    for cx, cy, sx, sy in ((0, 0, 1, 1), (ASPECT, 0, -1, 1), (0, 1, 1, -1), (ASPECT, 1, -1, -1)):
+        u = (XA - cx) * sx                                # distance in from the corner along x
+        v = (Y - cy) * sy
+        s = u + v
+        inside = smooth(L + 0.004, L - 0.004, s) * (u >= 0) * (v >= 0)
+        shade = 0.74 + 0.26 * np.clip(1 - s / L, 0, 1)     # brighter toward the tip
+        metal = ramp3(np.clip((u - v) / L * 0.5 + 0.5, 0, 1), [(0, "#C8953A"), (0.45, "#F7D985"), (0.6, "#FFF4CC"), (1, "#D9A84A")])
+        metal = metal * shade[..., None]
+        img = img * (1 - inside[..., None]) + metal * inside[..., None]
+        bevel = np.exp(-((s - (L - 0.012)) / 0.006) ** 2) * (u >= 0) * (v >= 0)
+        img = over(img, "#FFF6D8", bevel * 0.75)
+        shadow = np.exp(-((s - (L + 0.012)) / 0.010) ** 2) * (u >= 0) * (v >= 0)
+        img = over(img, "#082A28", shadow * 0.45)
+        # two tiny rivets on each corner
+        for a, b in ((0.055, 0.095), (0.095, 0.055)):
+            rx, ry = cx + sx * a, cy + sy * b
+            dot = blob(rx, ry, 0.016, 1.6)
+            img = over(img, "#7A5420", dot * 0.6)
+            img = over(img, "#FFF8E0", blob(rx - 0.004, ry - 0.004, 0.007, 2.0) * 0.9)
+
+    # bookmark ribbon: tucked under the top edge between the screen and the A button, V-notched end
+    u0, _ = deck_uv(1262, 0)
+    u1, _ = deck_uv(1312, 0)
+    _, v1 = deck_uv(0, 470)
+    x0, x1 = u0 * ASPECT, u1 * ASPECT
+    mid = (x0 + x1) / 2
+    notch = 0.045 * (1 - np.abs(XA - mid) / ((x1 - x0) / 2))       # V cut depth
+    rib = smooth(x0 - 0.002, x0 + 0.002, XA) * smooth(x1 + 0.002, x1 - 0.002, XA) * smooth(v1 + 0.002, v1 - 0.002, Y + notch)
+    sway = np.sin(Y * 9.0) * 0.5 + 0.5
+    ribbon = ramp3(np.clip((XA - x0) / (x1 - x0), 0, 1), [(0, "#9E2F2A"), (0.35, "#D5523F"), (0.55, "#E8735A"), (1, "#A7362E")])
+    ribbon = ribbon * (0.92 + 0.08 * sway)[..., None]
+    grain = 0.5 + 0.5 * np.sin(XA / (x1 - x0) * 2 * np.pi * 9)              # grosgrain ribs
+    ribbon = ribbon * (0.94 + 0.08 * grain)[..., None]
+    # drop shadow on the cloth to the right and below
+    sh = np.clip(np.roll(np.roll(rib, int(GH * 0.010), axis=1), int(GH * 0.008), axis=0) - rib, 0, 1)
+    img = over(img, "#06211F", np.asarray(Image.fromarray((sh * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(GH * 0.006))).astype(np.float32) / 255 * 0.55)
+    img = img * (1 - rib[..., None]) + ribbon * rib[..., None]
+    # the tuck: a soft shadow line where the ribbon goes under the cover's top edge
+    img = over(img, "#06211F", np.exp(-((Y - 0.012) / 0.010) ** 2) * rib * 0.55)
+
+    # page-edge lip along the top: a paper sliver showing between cover and band
+    img = over(img, "#F2E2C2", smooth(0.010, 0.0, Y) * 0.55)
+    return finish(img, 0.12)
+
+
 # ------------------------------------------------------------------ shared overlay textures (pulse opacity only)
 def save_overlay(name, color, alpha):
     a = np.clip(alpha, 0, 1)
@@ -461,7 +558,7 @@ def overlays():
 
 
 # ------------------------------------------------------------------ catalogue
-G, S, GM, RS = "#EBC978", "#FFFFFF", "#6F7480", "#F0B8B0"
+G, S, GM, RS, P = "#EBC978", "#FFFFFF", "#6F7480", "#F0B8B0", "#F2E2C2"
 PLATES = [
     # id, name, fn, tier, accent, deep, band tint, finish, roblox material, overlay, legacy rule
     ("sherbet", "Scout", scout, "starter", "#76F6B0", "#147863", S, "gloss", "SmoothPlastic", ("gloss", 0.0, 0.35, 6.0), None),
@@ -480,20 +577,26 @@ PLATES = [
     ("aurora_glass", "Aurora Glass", aurora_glass, "rare", "#7CF5C4", "#1B2A5E", GM, "aurora overlay", "SmoothPlastic", ("aurora", 0.10, 0.75, 6.5), None),
     ("prism_flare", "Prism Flare", prism_flare, "showcase", "#F3B6FF", "#5B4BA8", S, "holographic lens flare", "Foil", ("sparkle", 0.0, 0.80, 2.8), None),
     ("night_orb", "Night Orb", night_orb, "showcase", "#FF7AD9", "#1A1440", GM, "glass orbs and chrome rings", "SmoothPlastic", ("sparkle", 0.0, 0.70, 3.4), None),
+    # Book-only (play-forever F1): granted by the collection book, never sold, not in the shop's 16.
+    ("bookworm", "Bookworm", bookworm, "book", "#7FE0CF", "#1F5E5A", P, "cloth-bound", "Fabric", None, "book"),
 ]
-LIGHT_ENGRAVE = {"aurora_glass", "night_orb", "tidepool"}
-PRICE = {"starter": 0, "common": 20, "rare": 40, "showcase": 80}
-BAND_NAME = {S: "silver", GM: "gunmetal", G: "gold", RS: "rose"}
+PRICE = {"starter": 0, "common": 20, "rare": 40, "showcase": 80, "book": 0}
+# Engrave (wordmark) colour and opacity; dark ink unless listed.
+ENGRAVE = {"aurora_glass": ("#FFFFFF", 0.78), "night_orb": ("#FFFFFF", 0.78), "tidepool": ("#FFFFFF", 0.78), "bookworm": ("#F2CF7A", 0.85)}
+BAND_NAME = {S: "silver", GM: "gunmetal", G: "gold", RS: "rose", P: "paper"}
 OVERLAY_FILE = {"gloss": "overlay-gloss-sweep.png", "water": "overlay-water.png", "aurora": "overlay-aurora.png", "sparkle": "overlay-sparkle.png"}
 
 
-def main():
+def main(only=None):
+    """only: a set of plate ids to (re)render; the others keep their PNGs. faceplates.json is always rewritten."""
     OUT.mkdir(parents=True, exist_ok=True)
-    overlays()
+    if not only:
+        overlays()
     rows = []
     for i, (pid, name, fn, tier, accent, deep, bandc, fin, mat, ov, rule) in enumerate(PLATES):
-        im = fn()
-        im.save(OUT / f"{pid}.png")
+        if not only or pid in only:
+            im = fn()
+            im.save(OUT / f"{pid}.png")
         th = ui_theme(accent, deep)
         ink = to_hex(th["ink"])
         row = {
@@ -501,7 +604,7 @@ def main():
             "texture": f"{pid}.png", "finish": fin,
             "accent": accent, "ink": ink, "accentInkContrast": round(contrast(hx(accent), th["ink"]), 2),
             "deep": deep, "band": {"name": BAND_NAME[bandc], "tint": bandc},
-            "engrave": ({"color": "#FFFFFF", "opacity": 0.78} if pid in LIGHT_ENGRAVE else {"color": "#0E0F12", "opacity": 0.42}),
+            "engrave": {"color": ENGRAVE.get(pid, ("#0E0F12", 0.42))[0], "opacity": ENGRAVE.get(pid, ("#0E0F12", 0.42))[1]},
             "ui": {k: to_hex(th[k]) for k in ("panel", "raised", "well", "selected", "line")},
             "overlay": ({"texture": OVERLAY_FILE[ov[0]], "kind": ov[0], "opacity": [ov[1], ov[2]], "periodSeconds": ov[3],
                          "ease": "sine in-out, ping-pong", "reducedEffects": "hold at the lower opacity"} if ov else None),
@@ -510,12 +613,16 @@ def main():
         if tier == "starter":
             row["legacyThemeId"] = pid
             row["unlock"] = rule or "free"
+        if tier == "book":
+            row["bookOnly"] = True
+            row["unlock"] = "book"
         rows.append(row)
         print(pid, ink, row["accentInkContrast"])
     doc = {
         "schema": 1, "textureSize": [W, H], "plateRect": DECK["plate"],
         "tiers": {"starter": {"priceStars": 0, "note": "the 8 existing deck styles; ids are the saved DeckThemes ids, unlock rules unchanged"},
-                  "common": {"priceStars": 20}, "rare": {"priceStars": 40}, "showcase": {"priceStars": 80}},
+                  "common": {"priceStars": 20}, "rare": {"priceStars": 40}, "showcase": {"priceStars": 80},
+                  "book": {"priceStars": 0, "note": "collection book reward, never sold, not in the shop grid's 16"}},
         "tintRule": "UI surfaces: glass #15171B, raised #23262C, well #0C0D10 lean 14% / 16% / 10% toward `deep`. `accent` is used only for selection, focus fill, the primary action and progress. Text on an accent fill uses `ink`. The `ui` block is that derivation, precomputed.",
         "overlayRule": "Overlay textures share the plate rect and already carry its rounded alpha. Animate ImageTransparency only (no scrolling, the plate cannot clip). opacity = [min, max].",
         "faceplates": rows,
@@ -524,4 +631,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    # python build_faceplates.py [plate ids...]  (no ids: every plate and the overlays)
+    main(set(sys.argv[1:]) or None)

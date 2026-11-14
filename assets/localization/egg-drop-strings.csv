@@ -1,0 +1,377 @@
+Key,Source,Context,Example
+ui.book.bookworm.count,{count}/3,,Collection book; e.g. 3/3
+ui.book.bookworm.done,Bookworm faceplate is yours,,Collection book
+ui.book.bookworm.line,Finish any three pages: Bookworm faceplate,,Collection book
+ui.book.bookworm.short,3 full pages: Bookworm,,Collection book
+ui.book.claim,Claim ★{reward},,Collection book; e.g. Claim ★5
+ui.book.claimShort,★{reward},,Collection book; e.g. ★5
+ui.book.claimed,Claimed,,Collection book
+ui.book.empty,Nothing on this page yet.,,Collection book
+ui.book.entry.claimMany,{count} TO CLAIM,,Collection book; e.g. 3 TO CLAIM
+ui.book.entry.claimOne,1 TO CLAIM,,Collection book
+ui.book.entry.line,"Pages to fill, Stars to find",,Collection book
+ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden"
+ui.book.failed,Not claimed,,Collection book
+ui.book.found,Found,,Collection book
+ui.book.hint.back,Back,,Collection book
+ui.book.hint.claim,Claim,,Collection book
+ui.book.hint.move,Move,,Collection book
+ui.book.hint.pages,Pages,,Collection book
+ui.book.missing,Not yet,,Collection book
+ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
+ui.book.pending,Saving…,,Collection book; also ui.results.saved.pending
+ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
+ui.book.records.empty,Play a round and your records start here.,,Collection book
+ui.book.records.line,Your lifetime numbers,,Collection book
+ui.book.records.name,Records,,Collection book
+ui.book.retrying,Still saving…,,Collection book; also ui.shop.reason.retrying
+ui.book.stats.bestChain,Best chain,,Collection book
+ui.book.stats.itemsUsed,Items used,,Collection book
+ui.book.stats.merges,Merges,,Collection book
+ui.book.stats.pets,Pets hatched,,Collection book
+ui.book.stats.rounds,Rounds played,,Collection book
+ui.book.stats.stamps,Stamps collected,,Collection book
+ui.book.stats.starsEarned,Stars earned,,Collection book
+ui.book.stats.starsSpent,Stars spent,,Collection book
+ui.book.stats.tidyWins,Tidy wins,,Collection book
+ui.book.stats.tierFive,Tier V balls,,Collection book
+ui.book.stats.winsEasy,Wins on Easy,,Collection book
+ui.book.stats.winsHard,Wins on Hard,,Collection book
+ui.book.stats.winsMedium,Wins on Medium,,Collection book
+ui.book.timeout,Still saving. Try again soon.,,Collection book
+ui.book.title,Collection book,,Collection book; also ui.coach.book.title
+ui.book.toast.bookworm,Bookworm faceplate unlocked,,Collection book
+ui.book.toast.claimed,Page milestone,,Collection book
+ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
+ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
+ui.coach.companions.title,Companions,,First-round coaching; also ui.hub.tile.companions.name
+ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching
+ui.coach.fillLine.title,Fill line,,First-round coaching
+ui.coach.firstStars.toast,First round cleared,,First-round coaching
+ui.coach.gotIt,Got it,,First-round coaching
+ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
+ui.coach.hatch.title,Hatch eggs,,First-round coaching; also ui.hub.tile.hatch.name
+ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
+ui.coach.hub.pad,"Press Y for every machine, any time.",,First-round coaching
+ui.coach.hub.title,Pocket menu,,First-round coaching; also ui.hub.title
+ui.coach.hub.touch,"Tap Menu for every machine, any time.",,First-round coaching
+ui.coach.item.line,Power-up merges earn items. Use one from the item button.,,First-round coaching
+ui.coach.item.title,An item!,,First-round coaching
+ui.coach.machines.line,Walk up to a glowing machine to use it.,,First-round coaching
+ui.coach.machines.title,Machines,,First-round coaching
+ui.coach.missPay,Goal met,,First-round coaching
+ui.coach.next,Next,,First-round coaching
+ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
+ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.report.category.park"
+ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
+ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name"
+ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
+ui.coach.questDone.title,Quest done!,,First-round coaching
+ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
+ui.coach.skip,Skip,,First-round coaching
+ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
+ui.coach.style.title,Deck style,,First-round coaching; also ui.hub.tile.style.name
+ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
+ui.coach.welcome.title,Hatch your first friend,,First-round coaching
+ui.companions.wearing.none,Nothing yet,,Companions screen
+ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
+ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
+ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen
+ui.hatch.egg.hue.description,It smells like fruit. Hatches one colour fruit to feed your pet.,,Hatch eggs screen
+ui.hatch.egg.hue.line,Fruit that shifts colour,,Hatch eggs screen
+ui.hatch.egg.hue.per,1 fruit per egg,,Hatch eggs screen
+ui.hatch.egg.material.description,Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.,,Hatch eggs screen
+ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
+ui.hatch.egg.material.per,1 finish per egg,,Hatch eggs screen
+ui.hatch.egg.toy.description,Something is rattling around in here. Hatches one toy your pet can carry and play with.,,Hatch eggs screen
+ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
+ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
+ui.hatch.footer.desktop,Give one a shake. The odds are on the label.,,Hatch eggs screen
+ui.hatch.footer.phone,The odds are on the label,,Hatch eggs screen
+ui.hatch.next.done,All collected,,Hatch eggs screen
+ui.hatch.next.label,Next item,,Hatch eggs screen
+ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
+ui.hatch.promise,No surprises. The odds never change.,,Hatch eggs screen
+ui.hub.promise,"Every machine, one tap away.",,Pocket menu (machine hub)
+ui.hub.status.locked,LOCKED,,Pocket menu (machine hub)
+ui.hub.status.stamp,STAMP READY,,Pocket menu (machine hub)
+ui.hub.tile.book.short,Book,,Pocket menu (machine hub)
+ui.hub.tile.companions.line,"Pets, wardrobe and customize",,Pocket menu (machine hub)
+ui.hub.tile.hatch.line,"Eggs, odds and today's stamp",,Pocket menu (machine hub)
+ui.hub.tile.quests.line,Daily and weekly quests,,Pocket menu (machine hub)
+ui.hub.tile.settings.line,"Sound, music and motion",,Pocket menu (machine hub)
+ui.hub.tile.settings.name,Settings,,"Pocket menu (machine hub); also ui.pause.settings, ui.report.eyebrow"
+ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub)
+ui.hub.tile.style.short,Style,,Pocket menu (machine hub)
+ui.items.note.empty,You have no items,,Round item notes
+ui.items.note.full,Belt's full. Use one first.,,Round item notes
+ui.menu.subtitle.empty,Round not started,,Pause menu
+ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
+ui.menu.subtitle.paused,Round paused,,Pause menu
+ui.park.done,+{reward} ★ today,,Pet Park chip; e.g. +5 ★ today
+ui.park.playDate,Play date {count}/{target},,Pet Park chip; e.g. Play date 3/3
+ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
+ui.pet.cappedSolo,Plenty of pets today,,Petting reward
+ui.pet.star,+1 ★,,Petting reward
+ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
+ui.quests.allDoneSolo,All done for today.,,Quest log
+ui.report.about,What's it about?,,Bug report sheet
+ui.report.category.deck,Pocket Deck,,Bug report sheet
+ui.report.category.menus,Menus,,Bug report sheet
+ui.report.category.other,Other,,Bug report sheet
+ui.report.category.pets,Pets,,Bug report sheet; also catalog.BookCatalog.Pages.pets.name
+ui.report.category.stars,Stars,,Bug report sheet
+ui.report.entry,Report a bug / Suggest something,,Bug report sheet
+ui.report.entryShort,Report or suggest,,Bug report sheet
+ui.report.kind.bug,Bug,,Bug report sheet
+ui.report.kind.suggestion,Suggestion,,Bug report sheet
+ui.report.note.count,{count}/200,,Bug report sheet; e.g. 3/200
+ui.report.note.placeholder,Tell us more (optional),,Bug report sheet
+ui.report.note.privacy,Don't include names or personal details.,,Bug report sheet
+ui.report.pick,Pick what it's about,,Bug report sheet
+ui.report.reply.busy,Still sending the last one…,,Bug report sheet
+ui.report.reply.full,Our mailbox is full today. Try tomorrow.,,Bug report sheet
+ui.report.reply.invalid,That didn't send. Try again.,,Bug report sheet
+ui.report.reply.limited,That's plenty for now. Try again later.,,Bug report sheet
+ui.report.reply.timeout,No answer yet. Try again in a bit.,,Bug report sheet
+ui.report.send,Send,,Bug report sheet
+ui.report.sending,Sending…,,Bug report sheet
+ui.report.thanks.bug,Thanks! We'll take a look.,,Bug report sheet
+ui.report.thanks.queued,Thanks! It'll go out shortly.,,Bug report sheet
+ui.report.thanks.suggestion,"Ooh, noted. Thank you!",,Bug report sheet
+ui.report.title,Tell us,,Bug report sheet; also ui.report.titleShort
+ui.report.wait,Send again soon,,Bug report sheet
+ui.results.leave.mid,Leave to garden,,Round results screen
+ui.results.leave.narrow,Leave,,Round results screen
+ui.results.leave.wide,Back to the garden,,Round results screen
+ui.results.nudge.again,A win on {heat} pays {low} to {high},,Round results screen; e.g. A win on Medium pays 6 to 8
+ui.results.nudge.up,Brave? {heat} pays {low} to {high},,Round results screen; e.g. Brave? Medium pays 6 to 8
+ui.results.saved.done,Tucked into your wallet,,Round results screen
+ui.results.today.label,TODAY,,Round results screen
+ui.results.today.line,★ {count} earned,,Round results screen; e.g. ★ 3 earned
+ui.results.today.short,Today: ★ {count},,Round results screen; e.g. Today: ★ 3
+ui.shop.failed.applied,Not applied,,Shop status and errors
+ui.shop.failed.bought,Not bought,,Shop status and errors
+ui.shop.failed.saved,Not saved,,Shop status and errors
+ui.shop.reason.busy,"Busy, try again",,Shop status and errors
+ui.shop.reason.needStars,Not enough Stars,,Shop status and errors
+ui.shop.reason.notOwned,Buy it first,,Shop status and errors
+ui.shop.reason.priceChanged,Price changed,,Shop status and errors
+ui.shop.reason.throttled,Try again in a moment,,Shop status and errors
+ui.shop.reason.unowned,Not owned yet,,Shop status and errors
+ui.shop.rolledBack,"Didn't save, so it's back how it was",,Shop status and errors
+ui.shop.short.many,{count} Stars short. One more round?,,Shop status and errors; e.g. 3 Stars short. One more round?
+ui.shop.short.one,1 Star short. One more round?,,Shop status and errors
+ui.shop.short.plain,{count} Stars short,,Shop status and errors; e.g. 3 Stars short
+ui.shop.short.plainOne,1 Star short,,Shop status and errors
+ui.stamp.button,Stamp today +{reward},,Stamp card; e.g. Stamp today +5
+ui.stamp.done,Stamped for today,,Stamp card
+ui.stamp.full,Card full. A fresh one tomorrow.,,Stamp card
+ui.stamp.landed,+{reward} Stars,,Stamp card; e.g. +5 Stars
+ui.stamp.next,Today's stamp: ★ {reward},,Stamp card; e.g. Today's stamp: ★ 5
+ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
+ui.stamp.title,Stamp card,,Stamp card
+ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
+ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
+ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
+ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
+ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.wardrobe.empty,Nothing to wear yet. {pet} doesn't mind.,,Wardrobe screen; e.g. Nothing to wear yet. Bear doesn't mind.
+ui.wardrobe.emptySlot,Nothing for this slot yet.,,Wardrobe screen
+ui.wardrobe.emptySolo,Nothing to wear yet.,,Wardrobe screen
+catalog.BallThemes.ById.gems.name,Gems,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.2.name
+catalog.BallThemes.ById.gems.names.1,Sapphire,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gems.names.2,Topaz,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gems.names.3,Emerald,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gems.names.4,Ruby,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gems.names.5,Amethyst,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gems.pitch,Hard facets and a sparkle. Tiny eyes.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.gumdrops.name,Gumdrops,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.1.name
+catalog.BallThemes.ById.gumdrops.names.1,Blueberry,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gumdrops.names.2,Apricot,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gumdrops.names.3,Mint,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gumdrops.names.4,Rose,,Catalogue BallThemes (names); also catalog.HueCatalog.ById.rose.name
+catalog.BallThemes.ById.gumdrops.names.5,Lilac,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gumdrops.pitch,Pastel candy with a sugar skirt.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.kittens.name,Kittens,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.4.name
+catalog.BallThemes.ById.kittens.names.1,Blue kitten,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.names.2,Ginger,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.names.3,Matcha,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.names.4,Sakura,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.names.5,Plum,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.pitch,Pointed ears and a pink nose.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.marbles.name,Marbles,,Catalogue BallThemes (name)
+catalog.BallThemes.ById.marbles.names.1,Blue,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.1
+catalog.BallThemes.ById.marbles.names.2,Orange,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.2
+catalog.BallThemes.ById.marbles.names.3,Green,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.3
+catalog.BallThemes.ById.marbles.names.4,Pink,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.4
+catalog.BallThemes.ById.marbles.names.5,Violet,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.5
+catalog.BallThemes.ById.marbles.pitch,No faces. Glossy with a pattern each.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.planets.name,Planets,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.3.name
+catalog.BallThemes.ById.planets.names.1,Moon,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.planets.names.2,Mars,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.planets.names.3,Terra,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.planets.names.4,Giant,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.planets.names.5,Nebula,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.planets.pitch,"Craters, bands and a ring. They doze.",,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.smileys.name,Smileys,,Catalogue BallThemes (name)
+catalog.BallThemes.ById.smileys.pitch,Crude little faces. The default.,,Catalogue BallThemes (pitch)
+catalog.DeckThemes.ById.aqua_pop.name,Aqua Pop,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aqua_pop.name, catalog.BookCatalog.Pages.faceplates.items.1.name"
+catalog.DeckThemes.ById.aurora_glass.name,Aurora Glass,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aurora_glass.name, catalog.BookCatalog.Pages.faceplates.items.6.name"
+catalog.DeckThemes.ById.bookworm.name,Bookworm,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name
+catalog.DeckThemes.ById.brick.name,Ember,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.brick.name
+catalog.DeckThemes.ById.copperleaf.name,Copperleaf,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name
+catalog.DeckThemes.ById.gloaming.name,Gloaming,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.gloaming.name
+catalog.DeckThemes.ById.honey.name,Honey,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.honey.name
+catalog.DeckThemes.ById.ice.name,Creek,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
+catalog.DeckThemes.ById.lime_gel.name,Lime Gel,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lime_gel.name, catalog.BookCatalog.Pages.faceplates.items.2.name"
+catalog.DeckThemes.ById.liquid_chrome.name,Liquid Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.liquid_chrome.name, catalog.BookCatalog.Pages.faceplates.items.4.name"
+catalog.DeckThemes.ById.moss.name,Canopy,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.moss.name, catalog.DeckBackgrounds.ById.canopy.name"
+catalog.DeckThemes.ById.night_orb.name,Night Orb,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.night_orb.name, catalog.BookCatalog.Pages.faceplates.items.8.name"
+catalog.DeckThemes.ById.prism_flare.name,Prism Flare,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.prism_flare.name, catalog.BookCatalog.Pages.faceplates.items.7.name"
+catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
+catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
+catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
+catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
+catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
+catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
+catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
+catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
+catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
+catalog.MaterialCatalog.ById.standard.name,Standard,,Catalogue MaterialCatalog (name)
+catalog.ToyCatalog.ById.ball.name,Ball,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name
+catalog.ToyCatalog.ById.bone.name,Bone,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name
+catalog.ToyCatalog.ById.none.name,None,,Catalogue ToyCatalog (name)
+catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name
+catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
+catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
+catalog.HueCatalog.ById.tide.name,Tide,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.citrus.name,Citrus fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.iris.name,Iris fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.reset.name,Reset Hue,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.rose.name,Rose fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.tide.name,Tide fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.citrus:iris.name,Citrus + Iris,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.citrus:rose.name,Rose + Citrus,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.citrus:tide.name,Tide + Citrus,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.iris:rose.name,Rose + Iris,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.iris:tide.name,Tide + Iris,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Mixes.rose:tide.name,Rose + Tide,,Catalogue HueCatalog (name)
+catalog.FeatureCatalog.ById.claws.name,Claws,,Catalogue FeatureCatalog (name)
+catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name)
+catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
+catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name)
+catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.3.label,Neck,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.4.label,Ears,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.5.label,Eyes,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.6.label,Mouth,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Tabs.7.label,Tail,,Catalogue WearableCatalog (label)
+catalog.RoundItems.ById.bomb.effect,Your next ball bursts on landing and clears a small circle.,,Catalogue RoundItems (effect)
+catalog.RoundItems.ById.bomb.name,Bomb,,Catalogue RoundItems (name)
+catalog.RoundItems.ById.bomb.short,Next ball clears a circle.,,Catalogue RoundItems (short)
+catalog.RoundItems.ById.magnet.effect,Your next ball pulls its matches in.,,Catalogue RoundItems (effect)
+catalog.RoundItems.ById.magnet.name,Magnet,,Catalogue RoundItems (name)
+catalog.RoundItems.ById.magnet.short,Next ball pulls matches.,,Catalogue RoundItems (short)
+catalog.RoundItems.ById.pop.effect,Removes the highest ball. No points.,,Catalogue RoundItems (effect)
+catalog.RoundItems.ById.pop.name,Pop,,Catalogue RoundItems (name)
+catalog.RoundItems.ById.pop.short,Removes the top ball.,,Catalogue RoundItems (short)
+catalog.RoundItems.ById.swap.effect,Next and Then trade places.,,Catalogue RoundItems (effect)
+catalog.RoundItems.ById.swap.name,Swap,,Catalogue RoundItems (name)
+catalog.RoundItems.ById.swap.short,Next and Then swap.,,Catalogue RoundItems (short)
+catalog.QuestCatalog.ById.d_chain3.sub,In one round,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_chain4.sub, catalog.QuestCatalog.ById.d_chain5.sub, catalog.QuestCatalog.ById.d_score400.sub, catalog.QuestCatalog.ById.d_score600.sub"
+catalog.QuestCatalog.ById.d_chain3.title,Chain 3 merges,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_chain3_medium.sub,"Medium or Hard, one round",,Catalogue QuestCatalog (sub)
+catalog.QuestCatalog.ById.d_chain3_medium.title,Chain 3 on Medium,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_chain4.title,Chain 4 merges,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_chain5.title,Chain 5 merges,,"Catalogue QuestCatalog (title); also catalog.BookCatalog.Discoveries.2.name, catalog.BookCatalog.Pages.discoveries.items.2.name"
+catalog.QuestCatalog.ById.d_goals4.sub,Across any rounds,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_goals6.sub, catalog.QuestCatalog.ById.w_goals30.sub"
+catalog.QuestCatalog.ById.d_goals4.title,Complete 4 goals,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_goals6.title,Complete 6 goals,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_goals_hard.sub,Across Hard rounds,,Catalogue QuestCatalog (sub)
+catalog.QuestCatalog.ById.d_goals_hard.title,Complete 3 goals on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_heats2.sub,Finish a round on each,,Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.w_heats3.sub
+catalog.QuestCatalog.ById.d_heats2.title,Play two difficulties,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_rounds3.sub,"Any difficulty, all 24 drops",,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_rounds5.sub, catalog.QuestCatalog.ById.w_rounds20.sub"
+catalog.QuestCatalog.ById.d_rounds3.title,Finish 3 rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_rounds5.title,Finish 5 rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_score400.title,Score 400,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_score600.title,Score 600,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_score800.title,Score 800,,Catalogue QuestCatalog (title); also catalog.QuestCatalog.ById.w_score800.title
+catalog.QuestCatalog.ById.d_templates3.sub,Finish rounds with different goals,,Catalogue QuestCatalog (sub)
+catalog.QuestCatalog.ById.d_templates3.title,Play 3 goal types,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tidy1.sub,Finish below the tidy line,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tidy2.sub, catalog.QuestCatalog.ById.w_tidy6.sub"
+catalog.QuestCatalog.ById.d_tidy1.title,Win with a tidy stack,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tidy2.title,Win 2 tidy rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tidy_hard.sub,Skill quest,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tier4_hard.sub, catalog.QuestCatalog.ById.d_win_hard.sub"
+catalog.QuestCatalog.ById.d_tidy_hard.title,Tidy win on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tier4.sub,In any round,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_tier5.sub, catalog.QuestCatalog.ById.w_tier5.sub"
+catalog.QuestCatalog.ById.d_tier4.title,Make a tier IV,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tier4_hard.title,Make a tier IV on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_tier5.title,Make a tier V,,Catalogue QuestCatalog (title); also catalog.QuestCatalog.ById.w_tier5.title
+catalog.QuestCatalog.ById.d_win_hard.title,Win on Hard,,"Catalogue QuestCatalog (title); also catalog.BookCatalog.Discoveries.11.name, catalog.BookCatalog.Pages.discoveries.items.11.name"
+catalog.QuestCatalog.ById.d_win_medium.sub,Medium or Hard,,Catalogue QuestCatalog (sub)
+catalog.QuestCatalog.ById.d_win_medium.title,Win on Medium or higher,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_wins2.sub,Any difficulty,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_wins3.sub, catalog.QuestCatalog.ById.w_wins12.sub"
+catalog.QuestCatalog.ById.d_wins2.title,Win 2 rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.d_wins3.title,Win 3 rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_goals30.title,Complete 30 goals,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_goals_hard12.sub,Hard rounds,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.w_hard3.sub, catalog.QuestCatalog.ById.w_hard_tidy2.sub, catalog.QuestCatalog.ById.w_tier4_hard3.sub"
+catalog.QuestCatalog.ById.w_goals_hard12.title,Complete 12 goals on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_hard3.title,Win 3 on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_hard_tidy2.title,2 tidy wins on Hard,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_heats3.title,Play all three difficulties,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_rounds20.title,Finish 20 rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_templates6.sub,Finish rounds with each goal,,Catalogue QuestCatalog (sub)
+catalog.QuestCatalog.ById.w_templates6.title,Play all 6 goal types,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_tidy6.title,Win 6 tidy rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_tier4_hard3.title,Tier IV in 3 Hard rounds,,Catalogue QuestCatalog (title)
+catalog.QuestCatalog.ById.w_wins12.title,Win 12 rounds,,Catalogue QuestCatalog (title)
+catalog.StoreCatalog.PassById.2078804439.blurb,+1 Star for every finished round. Thank you!,,Catalogue StoreCatalog (blurb)
+catalog.StoreCatalog.PassById.2078804439.name,Supporter,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.PassById.2078960411.blurb,Double Stars from every round and quest. Forever.,,Catalogue StoreCatalog (blurb)
+catalog.StoreCatalog.PassById.2078960411.name,2× Stars,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.ProductById.3730431023.blurb,40 Stars to get your garden going. One per player.,,Catalogue StoreCatalog (blurb)
+catalog.StoreCatalog.ProductById.3730431023.name,Starter pack,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.ProductById.3730431114.name,Handful of Stars,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.ProductById.3730431153.name,Pouch of Stars,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.ProductById.3730431202.name,Jar of Stars,,Catalogue StoreCatalog (name)
+catalog.StoreCatalog.ProductById.3730431229.name,Chest of Stars,,Catalogue StoreCatalog (name)
+catalog.BookCatalog.Discoveries.1.name,Make a tier V ball,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.1.name
+catalog.BookCatalog.Discoveries.3.name,Win a Bank pair field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.3.name
+catalog.BookCatalog.Discoveries.4.name,Win a Creek crossing field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.4.name
+catalog.BookCatalog.Discoveries.5.name,Win a Lantern chain field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.5.name
+catalog.BookCatalog.Discoveries.6.name,Win a Ripple relay field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.6.name
+catalog.BookCatalog.Discoveries.7.name,Win a Bank bounce field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.7.name
+catalog.BookCatalog.Discoveries.8.name,Win a Mirror marks field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.8.name
+catalog.BookCatalog.Discoveries.9.name,Win on Easy,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.9.name
+catalog.BookCatalog.Discoveries.10.name,Win on Medium,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.10.name
+catalog.BookCatalog.Pages.balls.name,Balls,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.faceplates.name,Faceplates,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.toys.name,Toys,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.wardrobe.name,Wardrobe,,Catalogue BookCatalog (name)
+catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
+catalog.EggCatalog.ById.sprout.name,Sprout Focused,,Catalogue EggCatalog (name)
+catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions never.",,Catalogue PetCatalog (description)
+catalog.PetCatalog.2.description,Hums to puddles. The puddles have started humming back.,,Catalogue PetCatalog (description)
+catalog.PetCatalog.3.description,Ticks like a tiny clock. Always early for snacks.,,Catalogue PetCatalog (description)
+catalog.PetCatalog.4.description,"Floats in slow circles, collecting quiet thoughts.",,Catalogue PetCatalog (description)
+catalog.PetCatalog.byId.bloom_pip.description,A bear in bloom. Smells faintly of tomorrow's picnic.,,Catalogue PetCatalog (description)
+catalog.PetCatalog.byId.eclipse_orbit.description,Borrows the night sky and always gives it back.,,Catalogue PetCatalog (description)
+catalog.PetCatalog.byId.foxfire_wick.description,"Glows when happy. Glows a lot, honestly.",,Catalogue PetCatalog (description)
+catalog.WearableCatalog.pip.beanie.name,Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.sunhat.name,Tiny Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.flowercrown.name,Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.tee.name,Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.hoodie.name,Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.beads.name,Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.bellcollar.name,Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.ring.name,Little Hoops,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.starstud.name,Star Studs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.sparkle.name,Sparkle Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.sleepy.name,Sleepy Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.blep.name,Blep,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.heart.name,Heart Tail,,Catalogue WearableCatalog (name)

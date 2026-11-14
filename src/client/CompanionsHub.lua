@@ -238,12 +238,12 @@ function Hub:buildHub(body,W,H,phone)
   local ph=H-64-20
   pane.Position=UDim2.fromOffset(20,64);pane.Size=UDim2.fromOffset(200,ph)
   self:buildWell(pane,12,12,176,math.max(60,ph-80))
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",12,ph-62,176,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.petName=txt(pane,"Title",pet and pet.name or "","text",12,ph-62,176,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   self.following=txt(pane,"Small","Following you","soft",12,ph-34,176,18,{TextSize=12})
  else
   pane.Position=UDim2.fromOffset(24,84);pane.Size=UDim2.fromOffset(328,452)
   self:buildWell(pane,16,16,296,248)
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",16,276,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.petName=txt(pane,"Title",pet and pet.name or "","text",16,276,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   local chip=Kit.chip(pane,"Following",nil,26);chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.fromOffset(312,292)
   Kit.paint(chip.label,"TextColor3","accent");self.followChip=chip
   self.summaryLabels={}
@@ -280,6 +280,7 @@ function Hub:buildHub(body,W,H,phone)
    status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),90,w-tx-70,18,{Name="Status",TextSize=12})
   end
   Kit.paint(status,"TextColor3",function()return colorOf(s.tone)end)
+  if row.id=="pets"then Kit.fixedText(status)end -- the pet's name (stays as named)
   local dot
   if s.dot then
    dot=Kit.frame(button,"NewDot","stars",UDim2.new(),UDim2.fromOffset(8,8),999)
@@ -310,7 +311,7 @@ function Hub:buildSelector(body,W,H,phone)
  local wellH=math.max(60,ph-pad*2-actionH-(if phone then 56 else 92))
  self:buildWell(pane,pad,pad,pw-pad*2,wellH)
  local y=pad+wellH+(if phone then 6 else 12)
- self.paneName=txt(pane,"Title","","text",pad,y,pw-pad*2,if phone then 22 else 30,{TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
+ self.paneName=txt(pane,"Title","","text",pad,y,pw-pad*2,if phone then 22 else 30,{TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
  y+=if phone then 22 else 34
  self.paneLine=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=if phone then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
  local action,state=Kit.button(pane,"Action",{variant="primary",text="Follow",glyph="A",size=Vector2.new(pw-pad*2,actionH),textSize=if phone then 16 else nil,selectable=false})
@@ -331,7 +332,7 @@ function Hub:buildSelector(body,W,H,phone)
   local swatch=Kit.frame(b,"Swatch","well",UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);Kit.stroke(swatch)
   local paw=Kit.icon(swatch,"paw",math.floor(side*.5),"soft");paw.AnchorPoint=Vector2.new(.5,.5);paw.Position=UDim2.fromScale(.5,.5)
   local tx=10+side+12
-  local nameLabel=txt(b,"Name",card.name,"text",tx,cardH/2-20,cardW-tx-8,20,{TextSize=if phone then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
+  local nameLabel=txt(b,"Name",card.name,"text",tx,cardH/2-20,cardW-tx-8,20,{TextSize=if phone then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   local status=txt(b,"Label","","soft",tx,cardH/2+2,cardW-tx-8,18,{Name="Status",TextSize=12})
   self.cardButtons[index]={id=card.id,button=b,stroke=stroke,name=nameLabel,status=status}
   b.Activated:Connect(function()

@@ -131,6 +131,63 @@ function Kit.stroke(parent,color,thickness,transparency)
  return s
 end
 
+-- Translation rules (v1 track C, artifacts/localization/LOCALIZATION.md). Roblox
+-- automatic translation swaps a label's rendered text when AutoLocalize is true.
+-- Words stay on; numbers, pet and player names, ids and rich text built from parts
+-- (tier circles, capped goal markup) are off, so they are never translated or
+-- captured once per value.
+Kit.FixedRoles={Counter=true,CounterL=true}
+function Kit.fixedText(label)label.AutoLocalize=false;return label end
+-- Rich text: translate only while the text has no markup (a tag would be translated
+-- with it, or captured once per circle size).
+function Kit.localizeRich(label)label.AutoLocalize=not string.find(label.Text,"<",1,true);return label end
+-- Text fit guard (v1 track C). A translation can run 20-35% longer than English and
+-- the screen never lays out again, so for players whose Roblox language is not English
+-- (or under the Studio pseudo locale) every Kit label whose box was sized for its
+-- English text gets an ellipsis instead of a hard cut, and wraps when its box has room
+-- for two lines. A label whose English already runs past its box (drawn on purpose) is
+-- left alone. Kit buttons cap their auto-sized label at the button width. English
+-- players see no change. `KitEnglish` (attribute) is the source text when a spec swaps
+-- in a pseudo translation.
+local function localeIsEnglish(id)return type(id)~="string"or id==""or string.sub(string.lower(id),1,2)=="en"end
+local function translating()
+ local okL,roblox=pcall(function()return game:GetService("LocalizationService").RobloxLocaleId end)
+ local player=game:GetService("Players").LocalPlayer
+ local okP,locale=pcall(function()return player and player.LocaleId end)
+ local okC,Copy=pcall(function()return require(game:GetService("ReplicatedStorage").Shared.UICopy)end)
+ return not localeIsEnglish(okL and roblox or nil)or not localeIsEnglish(okP and locale or nil)
+  or(okC and type(Copy)=="table"and type(Copy.pseudoEnabled)=="function"and Copy.pseudoEnabled())
+end
+Kit.translating=translating()==true
+-- Specs: guard the labels made from now on as a translated client would.
+function Kit.setTranslating(on)Kit.translating=on==true end
+local function guardText(label)
+ if label.TextScaled or label.AutomaticSize~=Enum.AutomaticSize.None or not label.AutoLocalize then return end
+ local english=label:GetAttribute("KitEnglish")or label.Text
+ if label.RichText and string.find(english,"<",1,true)then return end
+ local box=label.AbsoluteSize
+ if box.X<2 or box.Y<2 then return end
+ local m=Kit.measure(english,label:GetAttribute("KitRole")or "Body",label.TextSize)
+ if m.X<=box.X+1 then
+  if label.TextTruncate==Enum.TextTruncate.None then label.TextTruncate=Enum.TextTruncate.AtEnd;label:SetAttribute("KitTruncateGuard",true)end
+  if not label.TextWrapped and box.Y>=m.Y*2 then label.TextWrapped=true;label:SetAttribute("KitWrapGuard",true)end
+ else
+  -- English drawn past its box on purpose: put back only what the guard changed.
+  if label:GetAttribute("KitTruncateGuard")then label.TextTruncate=Enum.TextTruncate.None;label:SetAttribute("KitTruncateGuard",nil)end
+  if label:GetAttribute("KitWrapGuard")then label.TextWrapped=false;label:SetAttribute("KitWrapGuard",nil)end
+ end
+end
+function Kit.guardText(label)
+ if label:GetAttribute("KitGuard")then return label end
+ label:SetAttribute("KitGuard",true)
+ local function run()if label.Parent then guardText(label)end end
+ label:GetPropertyChangedSignal("AbsoluteSize"):Connect(run)
+ label:GetPropertyChangedSignal("Text"):Connect(run)
+ label:GetPropertyChangedSignal("TextSize"):Connect(run)
+ task.defer(run)
+ return label
+end
+
 -- Text in one of the 2.2 roles. `compact` picks the second size (never below 12).
 function Kit.text(parent,role,content,color,props)
  local spec=Kit.Type[role]or Kit.Type.Body
@@ -139,11 +196,16 @@ function Kit.text(parent,role,content,color,props)
   TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,
   LineHeight=Kit.LineHeight,TextWrapped=false,ZIndex=parent.ZIndex+1,Active=false,Size=UDim2.fromOffset(10,spec[1]+4)})
  label:SetAttribute("KitRole",role)
+ -- Translation (v1 track C): the counter roles show numbers (scores, Stars, n/m), which
+ -- Roblox auto-translation would capture once per value. A counter that shows words
+ -- passes AutoLocalize=true in `props`.
+ if Kit.FixedRoles[role]then label.AutoLocalize=false end
  paint(label,"TextColor3",color or(if role=="Label"then "dim"else "text"))
  if props then for key,value in pairs(props)do if key~="Name"then label[key]=value end end end
  -- A caller that passes its own FontFace keeps it (the deck's hardware letters).
  if props and props.FontFace then label:SetAttribute("KitFaceFixed",true)end
  Kit.watchDisplayFace(label)
+ if Kit.translating then Kit.guardText(label)end
  return label
 end
 -- Display roles keep the 15 px rule whenever a caller changes TextSize later
@@ -373,6 +435,7 @@ function Kit.glyph(parent,letter,onAccent,size,cap)
  chip.BackgroundTransparency=0
  local stroke=node("UIStroke",chip,{Name="KitStroke",Thickness=1})
  local text=Kit.text(chip,"Strong",letter,nil,{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(size*.54)})
+ Kit.fixedText(text) -- a key or button name (A, B, LB, ESC), never translated
  local kind=if cap then capKind(letter)else nil
  local lip
  if kind then
@@ -433,6 +496,7 @@ function Kit.paintButton(button)
  s.label.TextColor3=ink;s.label.TextTransparency=if s.enabled then 0 else .4
  if s.repaintGlyph then s.repaintGlyph(accent)end
  if s.glyph then s.glyph.Visible=s.showGlyph==true end
+ if s.cap then Kit.capButtonLabel(button)end
  -- Press: 60 ms down, 100 ms up; only when the pressed state changes (never per paint).
  local drop=if s.pressed then s.lip else 0
  if s.drop~=drop then
@@ -455,6 +519,14 @@ function Kit.buttonLip(variant,compact)
  if variant=="primary"then return Kit.ButtonLedge,Kit.ButtonLedge end
  local depth=if compact then Kit.Lip.compact else Kit.Lip.tile
  return depth,depth
+end
+-- Translation guard (track C): a translated button label stops at the button's inner
+-- width (16 px padding, less the glyph) and truncates, instead of running past the edges.
+function Kit.capButtonLabel(button)
+ local s=buttons[button];if not(s and s.cap)then return end
+ local w=if button.Size.X.Scale==0 then button.Size.X.Offset else button.AbsoluteSize.X
+ local glyph=if s.glyph and s.showGlyph then s.glyph.Size.X.Offset+s.list.Padding.Offset else 0
+ s.cap.MaxSize=Vector2.new(math.max(10,w-16-glyph),math.huge)
 end
 function Kit.button(parent,name,options)
  options=options or {}
@@ -485,6 +557,12 @@ function Kit.button(parent,name,options)
  local state={variant=variant,enabled=true,hover=false,pressed=false,selected=false,showGlyph=options.showGlyph~=false,lip=options.lip or(if options.ledge then options.ledge else defaultLip),ledge=ledge,drop=0,
   fill=fill,edge=edge,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list}
  buttons[button]=state
+ if Kit.translating then
+  state.cap=node("UISizeConstraint",label,{Name="TranslateCap"});label.TextTruncate=Enum.TextTruncate.AtEnd
+  button:GetPropertyChangedSignal("Size"):Connect(function()Kit.capButtonLabel(button)end)
+  button:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()Kit.capButtonLabel(button)end)
+  Kit.capButtonLabel(button)
+ end
  Art.bind(fill,{BackgroundColor3=function()Kit.paintButton(button);return fill.BackgroundColor3 end})
  button.MouseEnter:Connect(function()state.hover=true;Kit.paintButton(button)end)
  button.MouseLeave:Connect(function()state.hover=false;state.pressed=false;Kit.paintButton(button)end)

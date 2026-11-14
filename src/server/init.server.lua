@@ -13,6 +13,7 @@ local Round = require(script.BoardRound)
 local Lounge = require(script.Lounge)
 local Progress = require(script.PlayerProgress)
 local FirstSession = require(script.FirstSession)
+local CoachMarks = require(ReplicatedStorage.Shared.CoachMarks)
 local FieldRun = require(script.FieldRun)
 local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
 local PetContactController = require(script.PetContact)
@@ -76,6 +77,8 @@ local petContactRemote = child("RemoteEvent", "PetContact", remotes)
 local gardenIntentRemote = child("RemoteEvent", "GardenIntent", remotes)
 local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
 local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
+-- v1 track B: bug reports / suggestions (remote BugReport, owner tool ServerStorage.EggDropReportsTool).
+do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes)end);if not ok then warn("[EggDropReport] not mounted: "..tostring(problem))end end
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -516,7 +519,8 @@ local function reset(board, preset, sameField)
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial, simOptions)
 	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
 	BoardItems.reset(board, itemsOn)
-	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) else nil)
+	-- The Welcome round (no field yet) is safe: the fill line never ends it (onboarding v1).
+	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) elseif not hasPip(board) then { safe = true } else nil)
 	board.maxTier = 0
 	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
@@ -959,6 +963,38 @@ local messages = {
 	DailyClaimed = "Today's stamp is already on your card.",
 }
 
+-- One-time coach cards (onboarding v1): queued bits save when the hatching save is idle
+-- (no busy command, pending write or payout), one write for everything queued. The write
+-- ORs bits in, so an ambiguous one left to the background Nursery.retry loop is harmless:
+-- the loop waits for the saved mask to cover the queue, then stops.
+local function flushCoach(player, board)
+	if board.coachFlushing then return end
+	board.coachFlushing = true
+	board.coachFlushStart = os.clock()
+	task.spawn(function()
+		local tries = 0
+		while boards[player] == board and not board.closing and tries < 60 and os.clock() - (board.coachFlushStart or 0) < 900 do
+			local queued = CoachMarks.mask(board.coachPending)
+			if queued == 0 or CoachMarks.covers(board.nursery.state.coachMask, queued) then board.coachPending = nil; break end
+			-- Quiet window (code review): a coach write bumps the save revision, so it waits until no
+			-- player command (hatch, buy, equip...) arrived for 10 s and 10 s passed since the card was
+			-- queued; a first Hatch tap right after the Hatch card never meets "Busy"/"RevisionChanged".
+			local quiet = os.clock() - math.max(board.lastNurseryCommand or -math.huge, board.coachQueuedAt or -math.huge) >= 10
+			if quiet and canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending and not board.payoutPending then
+				tries += 1
+				board.nurseryBusy = true
+				local ok, reason = Nursery.coachMark(board.nursery, queued)
+				board.nurseryBusy = false
+				if boards[player] ~= board then break end
+				if not ok and reason == "InvalidCoach" then board.coachPending = nil; break end
+				publishNursery(board)
+			end
+			task.wait(2)
+		end
+		board.coachFlushing = false
+	end)
+end
+
 nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	local board = boards[player]
 	if not board or board.closing or typeof(action) ~= "string" then return end
@@ -970,6 +1006,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		nurserySnapshot:FireClient(player,state);return
 	end
 	if not board.profileReady then return end
+	if action ~= "coachMark" then board.lastNurseryCommand = os.clock() end
 	-- Faceplate Star purchase (UI-SPEC 5.5): fixed price, server-validated,
 	-- idempotent by the client's operation id. Success equips the plate.
 	if action=="faceplateBuy"then
@@ -1043,6 +1080,19 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	-- One-time coach cards (onboarding v1): the client names a card it has shown; the bit
+	-- queues on the board and saves through Nursery.coachMark when the save is idle
+	-- (flushCoach). Unknown ids are dropped; a bit already saved or queued costs nothing.
+	if action=="coachMark"then
+		if not CoachMarks.validId(value)then return end
+		local bit=CoachMarks.bit(value)
+		if CoachMarks.covers(board.nursery.state.coachMask,bit)or CoachMarks.covers(board.coachPending,bit)then return end
+		board.coachPending=CoachMarks.merge(board.coachPending,bit)
+		board.coachQueuedAt=os.clock()
+		flushCoach(player,board)
+		return
 	end
 
 	-- Collection book milestone claim (play-forever F1): the server computes the page
@@ -1254,11 +1304,14 @@ local function grantWelcome(player, board)
 	task.spawn(function()
 		while boards[player] == board and not board.closing and not hasPip(board) do
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
+				local walletBefore = board.nursery.state.nectar
 				local ok = Nursery.grantStarter(board.nursery)
 				if boards[player] ~= board then break end
 				publishNursery(board)
 				publishState(board)
 				if ok then
+					-- Onboarding v1: the Welcome round's Stars arrive with the Bear.
+					if board.nursery.state.nectar > walletBefore then Economy.source(player, board.nursery.state.nectar - walletBefore, board.nursery.state.nectar, "Gameplay", "WelcomeRound") end
 					board.profile.companionId = "pip"
 					publishCompanion(board)
 					if board.firstSession then board.firstSession:advance(4) end

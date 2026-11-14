@@ -116,6 +116,13 @@ function C.banner(parent,options)
  local shadow=C.display(root,"",size,options.shadowColor or C.Gold,{Name="Shadow",TextXAlignment=Enum.TextXAlignment.Center})
  local main=C.display(root,"",size,C.White,{Name="Line",TextXAlignment=Enum.TextXAlignment.Center})
  main.ZIndex=shadow.ZIndex+1
+ -- Translation (v1 track C fit pass): the box is sized to the English text, so a longer
+ -- translation shrinks to fit (never above the design size) instead of clipping.
+ if Kit.translating then
+  for _,label in ipairs({main,shadow})do
+   label.TextScaled=true;Kit.node("UITextSizeConstraint",label,{MaxTextSize=size,MinTextSize=math.min(size,12)})
+  end
+ end
  local lineH=math.floor(size*.9)
  local left,leftBars=speedLines(root,-1,lineH,options.lineColor or C.Gold)
  local right,rightBars=speedLines(root,1,lineH,options.lineColor or C.Gold)

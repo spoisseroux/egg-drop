@@ -9,6 +9,16 @@ local Payout = {}
 
 Payout.Win = 6
 Payout.TidyWin = 8
+-- Finish pay for a missed round (ONBOARDING-V1-SCOPE section 8 q2, Spencer 2026-11-13):
+-- a flat +2 round Stars when at least one goal was met, on every difficulty (no heat
+-- multiplier, so the Easy x0.8 is unchanged). The 2x pass and Supporter apply as to any
+-- finished round. Paid inside the award transaction (HatchProgress.award).
+Payout.MissPay = 2
+
+function Payout.missStars(success, goalsMet)
+	if success == true then return 0 end
+	return if type(goalsMet) == "number" and goalsMet >= 1 then Payout.MissPay else 0
+end
 
 function Payout.roundStars(amount, heat)
 	local spec = Config.Heat[heat]

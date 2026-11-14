@@ -5,6 +5,13 @@ local DataStoreService = if RunService:IsStudio() then nil else game:GetService(
 -- v1 launch store. Private-test saves in "EggDropProgressV1" are intentionally
 -- left behind: the public launch starts every player fresh (decided 2026-11-11).
 local Store = { Name = "EggDropLaunchV1" }
+-- TEST ONLY (Spencer 2026-11-13): FeatureFlags.TestFreshSaves gives every published version its own
+-- store ("EggDropTest_v<PlaceVersion>"), so each private publish starts every player fresh. Old
+-- saves are not deleted, just not read. MUST be false before the public launch (TODO launch list).
+if not RunService:IsStudio() and require(game:GetService("ReplicatedStorage").Shared.FeatureFlags).TestFreshSaves == true then
+	Store.Name = "EggDropTest_v" .. tostring(game.PlaceVersion)
+	warn("[Egg Drop] TestFreshSaves is ON: progress store " .. Store.Name .. " (fresh saves this publish). Turn it off before launch.")
+end
 local backing = if DataStoreService then DataStoreService:GetDataStore(Store.Name) else nil
 local memory = {}
 Store.persistent = backing ~= nil

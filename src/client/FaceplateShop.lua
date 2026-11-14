@@ -122,6 +122,9 @@ local function miniDeck(parent,width,position)
  end}
 end
 
+-- The collection book's Faceplates page draws the same mini deck as its thumbnails.
+Shop.miniDeck=miniDeck
+
 -- Colour by role, resolved at paint time so a re-tint repaints correctly.
 local function colorOf(role)
  if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end

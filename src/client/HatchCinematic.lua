@@ -276,7 +276,7 @@ function Cinematic:buildScene()
  self.heroHost=frame(self.resultRoot,"Hero","inset",49);self.heroHost.BackgroundTransparency=1;self.heroScale=Instance.new("UIScale");self.heroScale.Parent=self.heroHost
  local rare=self.result.rare==true
  local tag=if self.kind~="companion"then "SAVED FOR YOUR GARDEN"elseif self.result.duplicate then(if rare then "ALREADY OWNED"else "ALREADY OWNED")elseif rare then "RARE DISCOVERY"else "A NEW LITTLE WONDER"
- self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then "reward"else "text");self.heading=label(self.resultRoot,"PetName",self.displayName or self.pet.name,"Heading","text")
+ self.tag=label(self.resultRoot,"Rarity",tag,"Supporting",if rare then "reward"else "text");self.heading=label(self.resultRoot,"PetName",self.displayName or self.pet.name,"Heading","text");self.heading.AutoLocalize=false -- the pet's name stays as named
  local detail=if self.kind~="companion"then "Choose Store or Use now"elseif self.result.duplicate then (if (self.result.refund or 0)>0 then "Already owned · "..self.result.refund.." Stars back" else "Already owned")elseif self.result.starter and self.result.starterGoal then self.result.starterGoal else "A new friend for Sprout Hollow"
  self.caption=label(self.resultRoot,"CollectionStatus",detail,"Supporting","muted");self:createHero();self:layout()
  self.anticipation=label(self.stage,"Anticipation","Something is stirring…","Body","muted")

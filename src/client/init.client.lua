@@ -237,7 +237,7 @@ title.TextSize = 17
 title.TextColor3 = Art.Ink
 title.BackgroundTransparency=1
 clientUI.wordmark=Art.wordmark(clientUI.deviceRoot,3)
-Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10)
+Art.text(shell, "ModelStamp", "PD·01", UDim2.new(1, -68, 0, 7), UDim2.fromOffset(40, 20), Art.Ink, 10).AutoLocalize = false -- model stamp
 local power = make("Frame", "PowerLight", {
 	Position = UDim2.new(1, -20, 0, 13), Size = UDim2.fromOffset(8, 8),
 	BackgroundColor3 = Art.Cyan, BorderSizePixel = 0,
@@ -255,6 +255,7 @@ make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 local walletFace=Art.instrument(Art.frame(rail,"WalletInstrument",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,32),rail.ZIndex))
 Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
 local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
+readout.AutoLocalize = false -- the game's name; later readouts are numbers
 readout.Font = Art.Font.Counter
 readout:SetAttribute("TypeRole","Counter")
 make("UITextSizeConstraint", "CountSize", { MinTextSize = 9, MaxTextSize = 19 }, readout)
@@ -503,6 +504,7 @@ for row = 0, 2 do
 end
 Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Art.Font.Action
+hardware.MakerMark.AutoLocalize = false -- the game's name
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
 firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),UDim2.new(1,-2,1,-2)
 local questHUD = BoardQuestHUD.new(status)
@@ -1250,6 +1252,47 @@ do
  end,false,Enum.ContextActionPriority.High.Value+810,table.unpack(keys))
  gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropBook");clientUI.book:destroy();bookGui:Destroy()end)
 end
+-- v1 track B: Settings > "Report a bug / Suggest something". Own ScreenGui above the
+-- book; the sheet opens over Settings and Back returns there. Replies ride BugReport.
+do
+ local Kit=require(script.DeckKit)
+ local reportGui=make("ScreenGui","EggDropReport",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=14,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
+ local host=make("Frame","ReportHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},reportGui)
+ local reportRemote,replies=nil,nil -- found without blocking boot
+ local function syncInsets()
+  local wanted=Kit.compactInsets(clientUI.insetProbe.AbsoluteSize)
+  if reportGui.ScreenInsets~=wanted then reportGui.ScreenInsets=wanted end
+ end
+ local function context()
+  local last=UserInputService:GetLastInputType()
+  local device=if last==Enum.UserInputType.Touch then "touch"elseif string.match(last.Name,"^Gamepad")then "gamepad"elseif UserInputService.VREnabled then "vr"else "keyboard"
+  local camera=workspace.CurrentCamera;local size=if camera then camera.ViewportSize else Vector2.zero
+  local back=clientUI.pickerReturn
+  local from=if type(back)=="table"and back.pocket then "pocket"elseif type(back)=="table"and back.hub then "hub"else "settings"
+  local okText,textSize=pcall(function()return GuiService.PreferredTextSize.Name end)
+  return{device=device,width=size.X,height=size.Y,mode=board:GetAttribute("Mode"),screen="settings",from=from,
+   textSize=if okText then textSize else nil,reducedMotion=GuiService.ReducedMotionEnabled}
+ end
+ clientUI.bugReport=require(script.BugReportSheet).new(host,{
+  send=function(packet)if reportRemote then reportRemote:FireServer(packet)end end,
+  context=context,accepted=function(kind)clientUI.accepted(kind)end,
+  closed=function()if picker and picker.shade.Visible and picker.active=="Settings"and string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then GuiService.SelectedObject=picker.reportButton end end,
+ })
+ picker.onReport=function()
+  if roomView.busy or clientUI.bugReport:isOpen()then return false end
+  syncInsets()
+  return clientUI.bugReport:open(context())
+ end
+ local function hook(remote)
+  if not remote or reportRemote then return end
+  reportRemote=remote
+  replies=remote.OnClientEvent:Connect(function(reply)if type(reply)=="table"then clientUI.bugReport:receive(reply)end end)
+ end
+ hook(remotes:FindFirstChild("BugReport"))
+ if not reportRemote then task.spawn(function()hook(remotes:WaitForChild("BugReport",60))end)end
+ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
+ gui.Destroying:Connect(function()if replies then replies:Disconnect()end;clientUI.bugReport:destroy();reportGui:Destroy()end)
+end
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
 clientUI.materialResult=remotes:WaitForChild("MaterialResult").OnClientEvent:Connect(function(packet)clientUI.materialIntent:receive(packet)end)
@@ -1810,8 +1853,13 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   local roundStars=reward.roundStars or base
   local ok,win=pcall(Payout.roundStars,math.min(base,Payout.Win),heat.key)
   win=if ok then math.min(win,roundStars)else roundStars
+  -- Onboarding v1: a missed round with a goal met pays a flat finish pay ("Goal met").
+  local missPay=if type(reward.missPay)=="number"then reward.missPay else 0
+  if missPay>0 then table.insert(rows,{name=require(ReplicatedStorage.Shared.UICopy).get("coach.missPay"),amount=missPay})
+  else
   table.insert(rows,{name="Round win",amount=win})
   if roundStars>win then table.insert(rows,{name="Tidy stack",amount=roundStars-win,signed=true})end
+  end
   local doubled=(reward.total or roundStars)-roundStars-(reward.bonus or 0)
   if doubled>0 then table.insert(rows,{name="2× Stars",amount=doubled,signed=true})end
   if(reward.bonus or 0)>0 then table.insert(rows,{name="Supporter",amount=reward.bonus,signed=true})end
@@ -2275,6 +2323,7 @@ layout = function()
 	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
 	if clientUI.items then clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true and wide)end
 	if clientUI.boardHints then clientUI.boardHints:place(viewport.Position,viewport.Size)end
+	if clientUI.coach then clientUI.coach:place(viewport.Position,viewport.Size)end
 	if recap.visible and recap.key~=recap.viewKey(clientUI.deckView)then task.defer(updateHud)end
 	local distance=(Config.Height+.8)/(2*math.tan(math.rad(trayCamera.FieldOfView/2)))
 	trayCamera.CFrame=CFrame.lookAt(Vector3.new(0,Config.Height/2,distance),Vector3.new(0,Config.Height/2,0))
@@ -2398,6 +2447,7 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		-- The Wardrobe owns its own focus (ContextAction "EggDropWardrobe").
 		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
 		if clientUI.hub and clientUI.hub:isOpen()then return{blocked=true}end
+		if clientUI.bugReport and clientUI.bugReport:isOpen()then return{blocked=true}end -- the report sheet owns its focus
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
         elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
 		elseif isPickerOpen()then owner=picker:getControllerFocus()
@@ -2516,6 +2566,36 @@ clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil
 clientUI.boardHints=require(script.BoardHints).new(clientUI.deviceRoot,{z=37,audio=audio})
 clientUI.boardHints:place(viewport.Position,viewport.Size)
 gui.Destroying:Connect(function()clientUI.boardHints:destroy()end)
+-- v1 track A onboarding: coach cards (Welcome card over the board, the guided garden step,
+-- one-time cards saved in coachMask). Own frame step and snapshot listener; see CoachCards.lua.
+do
+ local CoachCards=require(script.CoachCards)
+ local coachRemote=remotes:WaitForChild("HatchRequest")
+ clientUI.coach=CoachCards.new({gui=gui.Parent,boardParent=clientUI.deviceRoot,z=38,
+  send=function(id)coachRemote:FireServer("coachMark",id)end,
+  learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end})
+ clientUI.coach:place(viewport.Position,viewport.Size)
+ local stopCoachSnapshot=clientUI.ownerSnapshot.subscribe(function(state)clientUI.coach:sync(state);clientUI.coach:learned()end)
+ local function beltCount()
+  local ok,belt=pcall(clientUI.RoundItems.decodeBelt,board:GetAttribute("ItemBelt"))
+  clientUI.coachBelt=if ok and type(belt)=="table"then #belt else 0
+ end
+ board:GetAttributeChangedSignal("ItemBelt"):Connect(beltCount);beltCount()
+ local open={}
+ local coachStep=RunService.RenderStepped:Connect(function()
+  local mode=board:GetAttribute("Mode")
+  open.hatch=nurseryView:isOpen();open.style=isPickerOpen()and picker.active~="Settings"
+  open.companions=clientUI.hub~=nil and clientUI.hub:isOpen();open.quests=clientUI.questLog.visible==true
+  open.book=clientUI.book~=nil and clientUI.book:isOpen()
+  local companion=Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.byId.pip
+  clientUI.coach:step(os.clock(),{mode=mode,canRoam=roomView.canRoam(),
+   presented=backdrop.Visible and rendererPresentation.canPresent~=nil and rendererPresentation.canPresent(board:GetAttribute("ResetId")),
+   phase=board:GetAttribute("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=board:GetAttribute("Merges")or 0,
+   pressure=board:GetAttribute("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
+   input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear"})
+ end)
+ gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy()end)
+end
 function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
   and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not nurseryView:isOpen()and not clientUI.isHueOpen()

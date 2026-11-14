@@ -1,0 +1,42 @@
+{
+ "schema": 1,
+ "cell": 128,
+ "columns": 8,
+ "silhouetteRowOffset": 4,
+ "size": [
+  1024,
+  1024
+ ],
+ "slots": {
+  "pip:beanie": 1,
+  "pip:sunhat": 2,
+  "pip:flowercrown": 3,
+  "pip:tee": 4,
+  "pip:hoodie": 5,
+  "pip:beads": 6,
+  "pip:bellcollar": 7,
+  "pip:ring": 8,
+  "pip:starstud": 9,
+  "pip:sparkle": 10,
+  "pip:sleepy": 11,
+  "pip:blep": 12,
+  "pip:heart": 13,
+  "toy:ball": 14,
+  "toy:bone": 15,
+  "toy:sparkler": 16,
+  "finish:gloss": 17,
+  "finish:matte": 18,
+  "finish:metal": 19,
+  "tier_five": 20,
+  "chain_five": 21,
+  "win_bank_pair": 22,
+  "win_creek_crossing": 23,
+  "win_lantern_chain": 24,
+  "win_ripple_relay": 25,
+  "win_bank_bounce": 26,
+  "win_mirror_marks": 27,
+  "win_easy": 28,
+  "win_medium": 29,
+  "win_hard": 30
+ }
+}

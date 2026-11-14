@@ -23,6 +23,10 @@
   },
   "showcase": {
    "priceStars": 80
+  },
+  "book": {
+   "priceStars": 0,
+   "note": "collection book reward, never sold, not in the shop grid's 16"
   }
  },
  "tintRule": "UI surfaces: glass #15171B, raised #23262C, well #0C0D10 lean 14% / 16% / 10% toward `deep`. `accent` is used only for selection, focus fill, the primary action and progress. Text on an accent fill uses `ink`. The `ui` block is that derivation, precomputed.",
@@ -707,6 +711,42 @@
     "reflectance": 0.08,
     "transparency": 0
    }
+  },
+  {
+   "id": "bookworm",
+   "name": "Bookworm",
+   "order": 17,
+   "tier": "book",
+   "priceStars": 0,
+   "texture": "bookworm.png",
+   "finish": "cloth-bound",
+   "accent": "#7FE0CF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 12.29,
+   "deep": "#1F5E5A",
+   "band": {
+    "name": "paper",
+    "tint": "#F2E2C2"
+   },
+   "engrave": {
+    "color": "#F2CF7A",
+    "opacity": 0.85
+   },
+   "ui": {
+    "panel": "#162124",
+    "raised": "#222F33",
+    "well": "#0E1517",
+    "selected": "#2F4849",
+    "line": "#91B6B7"
+   },
+   "overlay": null,
+   "held3d": {
+    "material": "Fabric",
+    "reflectance": 0.08,
+    "transparency": 0
+   },
+   "bookOnly": true,
+   "unlock": "book"
   }
  ]
 }

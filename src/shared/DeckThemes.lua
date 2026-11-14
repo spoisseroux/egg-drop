@@ -58,11 +58,13 @@ local Plates={
  night_orb={name="Night Orb",order=16,tier="showcase",priceStars=80,texture="rbxassetid://85678618484391",finish="glass orbs and chrome rings",accent="#FF7AD9",ink="#0E0F12",deep="#1A1440",band="#6F7480",engrave="#FFFFFF",engraveOpacity=0.78,
   ui={panel="#161720",raised="#22232F",well="#0D0E15",selected="#412F47",line="#BD93BA"},overlay={image="rbxassetid://94774890275610",kind="sparkle",min=0.0,max=0.7,period=3.4},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
  -- Book-only plate (PLAY-FOREVER BUILD-PLAN F1): never sold (no price), granted by the
- -- collection book claim when any three pages reach 100%. Warm paper band, teal ink.
+ -- collection book claim when any three pages reach 100%. Teal cloth-bound library book:
+ -- linen weave, blind-stamped double rule with a gold line, gold corner protectors, a rust
+ -- ribbon bookmark, paper band and a gold-stamped wordmark (Astra, build_faceplates.py bookworm).
  -- Not in Themes.Order (the shop grid's 16 sold/earned plates); listed in Themes.BookOnly.
- -- texture: placeholder (Honey's pearl sheet) until Astra's bookworm plate art is uploaded.
- bookworm={name="Bookworm",order=17,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://139483187822198",finish="pressed paper",accent="#7FE0CF",ink="#0E0F12",deep="#1F5E5A",band="#F2E2C2",engrave="#0E0F12",engraveOpacity=0.42,
-  ui={panel="#1A2422",raised="#27322F",well="#101816",selected="#384A44",line="#B4C4B0"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.25,period=7.5},held3d={material="SmoothPlastic",reflectance=0.06,transparency=0}},
+  -- texture: assets/deck/faceplates/bookworm.png (uploaded 2026-11-13).
+ bookworm={name="Bookworm",order=17,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://124980468376325",finish="cloth-bound",accent="#7FE0CF",ink="#0E0F12",deep="#1F5E5A",band="#F2E2C2",engrave="#F2CF7A",engraveOpacity=0.85,
+  ui={panel="#162124",raised="#222F33",well="#0E1517",selected="#2F4849",line="#91B6B7"},overlay=nil,held3d={material="Fabric",reflectance=0.08,transparency=0}},
 }
 local hex=Color3.fromHex
 for id,plate in pairs(Plates)do

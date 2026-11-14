@@ -94,7 +94,7 @@ function View.new(parent,intent,options)
  self.viewport=Instance.new("ViewportFrame");self.viewport.Name="SavedPet";self.viewport.BackgroundTransparency=1;self.viewport.Size=UDim2.fromScale(1,1);self.viewport.ZIndex=24;self.viewport.Parent=self.portrait
  self.viewport.Ambient=Color3.fromRGB(175,184,183);self.viewport.LightColor=Color3.fromRGB(255,250,231);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
- self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center
+ self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center;self.petName.AutoLocalize=false
  self.channelTitle=text(body,"ChannelTitle","Main","Action")
  self.inspection=text(body,"HueInspection","Choose a color to use one fruit.","Body")
  for _,id in ipairs(ids)do if id~="reset"then

@@ -15,7 +15,7 @@ return function(server)
 	local nextHandle=Hatch.load(id,nextProfile)
 	assert(Session.hydrate(nextProfile,nextHandle))
 	assert(nextProfile.theme=="ice"and nextProfile.sticker=="none"and nextProfile.sound=="Quiet"and nextProfile.reduced)
-	assert(nextProfile.companionId=="pip"and nextHandle.state.lastHatch.id==reveal and nextHandle.state.nectar==6)
+	assert(nextProfile.companionId=="pip"and nextHandle.state.lastHatch.id==reveal and nextHandle.state.nectar==12) -- welcome 6 + Welcome round 6 (onboarding v1)
 	assert(Hatch.command(nextHandle,"ack",reveal,nextHandle.state.revision));assert(Hatch.release(nextHandle))
 	return{passed=1,cases={"actual default Studio writers preserve settings and one reveal across reacquisition"},persistentWrites=false}
 end

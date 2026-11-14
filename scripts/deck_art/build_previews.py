@@ -1,4 +1,4 @@
-"""Contact sheet: all 16 faceplates on the Slim shell, with the UI tint each one produces.
+"""Contact sheet: every faceplate (16 shop plates + book-only Bookworm) on the Slim shell, with the UI tint each one produces.
 
 Run after build_shell.py and build_faceplates.py: python scripts/deck_art/build_previews.py
 """
@@ -18,8 +18,9 @@ CW, CH = 760, 520
 def main():
     doc = json.loads((ASSETS / "faceplates" / "faceplates.json").read_text())
     plates = doc["faceplates"]
-    cv = Cv(CW * 4 + 80, CH * 4 + 150, z=1, bg=hx("#0B0C10"))
-    cv.text(40, 30, "Pocket Deck Slim: 16 faceplates", "xb", 40, TEXT)
+    rows = (len(plates) + 3) // 4
+    cv = Cv(CW * 4 + 80, CH * rows + 150, z=1, bg=hx("#0B0C10"))
+    cv.text(40, 30, f"Pocket Deck Slim: {len(plates)} faceplates", "xb", 40, TEXT)
     cv.text(40, 82, "Starter plates are the 8 existing deck styles. New plates cost 20 / 40 / 80 Stars (common / rare / showcase). The chip row is the UI tint each plate produces.", "r", 20, SOFT)
     for i, p in enumerate(plates):
         x, y = 40 + (i % 4) * CW, 130 + (i // 4) * CH

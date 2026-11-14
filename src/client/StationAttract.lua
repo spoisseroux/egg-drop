@@ -237,6 +237,14 @@ function Attract:markUsed(id)
 	return true
 end
 
+-- Learned for good (onboarding v1: the machine's coachMask bit is saved): it stops beckoning
+-- without the after-use hide that markUsed starts.
+function Attract:learn(id)
+	if not Data.Stations[id] then return false end
+	self.used[id] = true
+	return true
+end
+
 function Attract:visible(state)
 	if self.now() < self.hiddenUntil then return false end
 	return state ~= nil and LoungeStations.canRoam(state)

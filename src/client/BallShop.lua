@@ -177,7 +177,7 @@ function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  for tier=1,5 do ballAt(strip,id,tier,px,xs[tier]*(w-12),stripH-3)end
  local nameY=if compact then stripH+10 else stripH+14
  local nameLabel=txt(tile,"Name",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
- local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
+ local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,AutoLocalize=true})
  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
 end

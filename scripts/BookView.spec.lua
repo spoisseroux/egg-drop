@@ -3,7 +3,8 @@
 -- from fake snapshots with five pages (Bear only) and six (Pets joined): every page
 -- opens, the list and pane fit (phones: under y 60), no text under 12 px, nothing
 -- Selectable, the claim states (reached, claimed, not reached, pending, Retrying, the
--- Retrying timeout, a saved claim), the Records rows and the controller routes
+-- Retrying timeout, a saved claim), the Records rows, the item thumbnails (picture
+-- cards for balls and faceplates, atlas cards once uploaded, chips otherwise) and the controller routes
 -- (LB / RB pages, right onto the milestones, A claims, B backs out). No remote fires:
 -- `send` is a recorder. The live peek source is saved and put back.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.BookView)(PlayerScripts.Client, PlayerGui)
@@ -106,6 +107,64 @@ return function(client,parent)
    assert(#items==#Book.Pages.balls.items and items[1].owned and(items[2]==nil or not items[2].owned))
    assert(View.stepPage(1,-1,6)==1 and View.stepPage(6,1,6)==6 and View.stepPage(2,1,6)==3)
   end)
+  test("pure: thumbnails (live balls and plates; atlas slots only once uploaded, silhouettes below)",function()
+   local savedAtlas=View.Art.atlas
+   View.Art.atlas=nil
+   assert(View.atlasRect("pip:beanie",true)==nil,"no atlas id: no rect")
+   assert(View.thumbKind("balls",{id=Book.Pages.balls.items[1].id})=="ball")
+   assert(View.thumbKind("faceplates",{id=Book.Pages.faceplates.items[1].id})=="plate")
+   assert(View.thumbKind("discoveries",{id="tier_five"})==nil,"atlas pages fall back to chips until the upload")
+   assert(View.pageHasThumbs("balls",View.items("balls",{}))and not View.pageHasThumbs("discoveries",View.items("discoveries",{})))
+   View.Art.atlas="rbxassetid://1"
+   local owned,missing=View.atlasRect("pip:heart",true),View.atlasRect("pip:heart",false)
+   assert(owned.offset==Vector2.new(4*128,128)and missing.offset==Vector2.new(4*128,5*128)and owned.size==Vector2.new(128,128))
+   assert(View.atlasRect("tier_five",true).offset==Vector2.new(3*128,2*128))
+   assert(View.atlasRect("someone:new",true)==nil,"an item without a slot has no rect")
+   for _,pageId in ipairs({"wardrobe","toys","discoveries"})do
+    if Book.Pages[pageId]then assert(View.pageHasThumbs(pageId,View.items(pageId,{})),"every "..pageId.." item has an atlas slot")end
+   end
+   View.Art.atlas=savedAtlas
+  end)
+  for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
+   test(tostring(size)..": picture cards (balls, faceplates; atlas pages once uploaded) fit the grid, owned and missing",function()
+    local savedAtlas=View.Art.atlas
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local view=View.new(host,{send=function()end})
+    local snap=snapshot(false)
+    for _,atlas in ipairs({false,true})do
+     View.Art.atlas=if atlas then "rbxassetid://1"else nil
+     view.builtPage=nil
+     assert(view:open(snap));settle()
+     for index,entry in ipairs(View.pageEntries(snap.book))do
+      if not entry.records then
+       view:openPage(index,true);view.builtPage=nil;view:paint();settle()
+       local cards=entry.id=="balls"or entry.id=="faceplates"or atlas
+       assert(view.root:GetAttribute("ItemLayout")==(if cards then "cards"else "chips"),entry.id.." layout")
+       local seenOwned,seenMissing=false,false
+       for _,card in ipairs(view.grid:GetChildren())do
+        if card:IsA("Frame")and card.Name:sub(1,5)=="Item_"then
+         assert(card.AbsolutePosition.X>=view.grid.AbsolutePosition.X-1 and card.AbsolutePosition.X+card.AbsoluteSize.X<=view.grid.AbsolutePosition.X+view.grid.AbsoluteSize.X+1,"card wider than the grid on "..entry.id)
+         if cards then
+          local picture=card:FindFirstChild("Picture");assert(picture and picture.AbsoluteSize.Y>=52,"48 px thumbnail well on "..entry.id)
+          assert(card:GetAttribute("Thumb")~=nil)
+          if card:GetAttribute("Owned")then seenOwned=true else seenMissing=true;assert(card:GetAttribute("Thumb")=="atlas"or picture:FindFirstChild("Veil"),"missing items fade") end
+          if card:GetAttribute("Thumb")=="atlas"then
+           local thumb=picture:FindFirstChild("Thumb");assert(thumb and thumb.AbsoluteSize.X>=47,"atlas thumbnail is 48 px")
+           assert((thumb.ImageRectOffset.Y>=4*128)==not card:GetAttribute("Owned"),"missing items use the silhouette rows")
+          end
+         end
+        end
+       end
+       if cards and entry.owned>0 and entry.owned<entry.total then assert(seenOwned and seenMissing,"owned and missing cards on "..entry.id)end
+       audit(view,tostring(size).." cards "..entry.id)
+      end
+     end
+     view:close("spec")
+    end
+    View.Art.atlas=savedAtlas
+    view:destroy();host:Destroy()
+   end)
+  end
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    for _,withPets in ipairs({false,true})do
     test(tostring(size)..(if withPets then " six pages"else " five pages")..": every page opens, fits, 12 px floor, nothing Selectable",function()

@@ -25,6 +25,7 @@ local Wearables=require(script.Parent.WearableState)
 local BallThemes=require(script.Parent.BallThemeState)
 local Lifetime=require(script.Parent.LifetimeState)
 local PlayDate=require(script.Parent.PlayDateState)
+local Coach=require(ReplicatedStorage.Shared.CoachMarks)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -167,7 +168,8 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- v11 (batch 2026-11-13): ball themes (owned + equipped) and the play-forever
 -- lifetime fields (`stats` counters, `stamps`, collection `book` claims).
 -- Pet Park (K1): optional additive `playDate` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- Onboarding (v1 track A): optional additive `coachMask` on v11, valid when missing (no version bump).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -285,6 +287,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and type(state.version) == "number" and state.version >= 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
 		-- A malformed Play date field is dropped, never a failed load.
 		if type(state) == "table" and state.playDate ~= nil then state.playDate = PlayDate.sanitize(state.playDate) end
+		-- A malformed coach mask is dropped (reads 0), never a failed load.
+		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -378,6 +382,8 @@ function Hatching.public(handle)
 	public.stats = stats
 	-- Pet Park Play date progress for today: {day, count, target, reward, done}.
 	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
+	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
+	public.coachMask = Coach.mask(state.coachMask)
 	-- QA Q5: Stars from rounds saved today in this session (not saved; no daily cap).
 	public.todayEarned = Hatching.roundStarsToday(handle, dayOf(handle.adapter.now()))
 	public.restricted = handle.restricted == true
@@ -832,11 +838,32 @@ function Hatching.grantStarter(handle)
 	return transact(handle, "starter", handle.state.revision, function(state, candidate)
 		if Catalog.isOwned(state.inventoryMask, "pip") then return true end
 		if state.lastHatch or Guard.other(state,"companion")then return false, "RevealPending" end
+		-- The Welcome round is the first Stars round (onboarding v1): its Stars arrive with
+		-- the Bear, in this same transaction, so they cannot be missed or paid twice.
+		local stars = Coach.WelcomeStars
+		if state.nectar + stars > 1000000000 then stars = 0 end
+		state.nectar += stars
 		state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit("pip"))
 		state.lastHatch = { id = candidate.id, petId = "pip", duplicate = false,
-			family = "pip", mastery = state.mastery.pip, rare = false, starter = true }
+			family = "pip", mastery = state.mastery.pip, rare = false, starter = true, stars = stars }
 		return true
 	end, { id = handle.adapter.guid() })
+end
+
+-- One-time coach cards (onboarding v1): OR `bits` into the optional `coachMask`. Already saved
+-- is a success with no write. OR-only, so an ambiguous write retried later is harmless.
+function Hatching.coachMark(handle, bits)
+	if not Coach.integer(bits) or bits < 1 then return false, "InvalidCoach" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if Coach.covers(handle.state.coachMask, bits) then return true, "AlreadySaved" end
+	local signature = "coach:" .. bits
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ bits = bits })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		state.coachMask = Coach.merge(state.coachMask, captured.bits)
+		return true
+	end, candidate, nil, nil, "coach:" .. bits)
 end
 
 -- Robux purchase grant. The purchase id is the durable idempotency key, so a
@@ -1055,13 +1082,15 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 		-- with the payout. Quest Stars are claimed by hand, never added here.
 		local quests, credited, moved = QuestState.onRun(state.quests, run, captured.day, captured.userId, captured.multiplier or 1)
 		state.quests = quests
-		-- Heat multiplier on the round amount (base and tidy), before the pass.
-		local roundStars = HeatPayout.roundStars(amount, heat)
+		-- Heat multiplier on the round amount (base and tidy), before the pass. A missed
+		-- round with a goal met adds the flat finish pay (onboarding v1, no heat multiplier).
+		local missPay = if run then HeatPayout.missStars(run.success, run.goalsMet) else 0
+		local roundStars = HeatPayout.roundStars(amount, heat) + missPay
 		local total = roundStars * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
 		if state.nectar + total + credited > 1000000000 then return false, "BalanceLimit" end
 		state.nectar += total + credited
 		state.lastAwardSeq = runSequence
-		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = total - roundStars,
+		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = total - roundStars, missPay = missPay,
 			questAuto = credited, quests = moved, masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted }
 		return true
 	end, candidate)

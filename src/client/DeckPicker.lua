@@ -77,6 +77,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
  self.music=button(scroll,"MusicSetting","Music: On",function()self:changeSetting("music")end)
  self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
+ -- v1 track B: opens the bug report / suggestion sheet (init.client sets `onReport`).
+ self.reportButton=button(scroll,"ReportSetting",require(Shared.UICopy).get("report.entry"),function()self:openReport()end)
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
  self.shop=Shop.new(shade,{
@@ -153,7 +155,7 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion})do
+  for _,control in ipairs({self.sound,self.music,self.motion,self.reportButton})do
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
   end
@@ -215,6 +217,7 @@ function Picker:showTab(active)
  else self.shop:close()end
  local settings=active=="Settings"
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
+ self.reportButton.Visible=settings and self.onReport~=nil
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
@@ -252,6 +255,13 @@ function Picker:retry(slot)
  if not self.shade.Visible or not self.onRetry then return false end
  if self.onRetry(slot or slots[self.active]or "theme")~=false then if self.onAccepted then self.onAccepted("confirm")end;return true end
  return false
+end
+-- Settings > Report a bug / Suggest something: the sheet opens over Settings, which
+-- stays open underneath (Back on the sheet returns here).
+function Picker:openReport()
+ if not self.shade.Visible or self.active~="Settings"or not self.onReport then return false end
+ if self.onReport()==false then return false end
+ if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 function Picker:changeSetting(key)
  local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion else nil

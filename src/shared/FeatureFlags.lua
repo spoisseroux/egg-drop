@@ -5,4 +5,9 @@
 -- Park=false (Pet Park K1, 2026-11-13) leaves GardenState without a ParkDirector: no playground
 -- membership, slots or Play date, and the garden snapshot exactly as before. ON for the private
 -- two-account test build (2026-11-13); confirm with Spencer before any public publish.
-return table.freeze({Features=false,DayNight=false,Park=true})
+-- TestFreshSaves=true (TEST ONLY, Spencer 2026-11-13): each private publish uses a fresh progress
+-- store keyed by PlaceVersion (ProgressStore), so testers start over every build. MUST be false
+-- for the public launch, or every update would wipe players' progress.
+-- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
+-- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
+return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false})

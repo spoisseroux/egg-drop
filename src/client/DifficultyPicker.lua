@@ -84,7 +84,7 @@ function Picker:buildCompact(v)
   end
   local hair=Kit.frame(card,"Hairline",nil,UDim2.fromOffset(12,show.hairline),UDim2.fromOffset(cw-24,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.9
   local pays=txt(card,"Strong","","text",12,show.hairline+10,cw-24,20,{TextSize=14})
-  local tidy=txt(card,"Counter","","soft",12,show.hairline+32,cw-24,20,{TextSize=12,Visible=show.tidy})
+  local tidy=txt(card,"Counter","","soft",12,show.hairline+32,cw-24,20,{TextSize=12,Visible=show.tidy,AutoLocalize=true})
   self.cards[index]={key=key,button=card,stroke=stroke,pays=pays,tidy=tidy}
   card.Activated:Connect(function()
    if self.index==index then self:confirm()else self:focus(index);if self.callbacks.select then self.callbacks.select(key)end end
@@ -120,7 +120,7 @@ function Picker:build(view)
  self.phone=view~=nil
  if view then return self:buildCompact(view)end
  local root=self.overlay.content
- txt(root,"Label","EGG DROP","dim",24,16,200,16)
+ Kit.fixedText(txt(root,"Label","EGG DROP","dim",24,16,200,16)) -- the game's name
  txt(root,"Title","Pick a difficulty","text",24,34,400,34)
  self.wallet=Kit.wallet(root,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(824,24)
  for index,key in ipairs(Config.HeatOrder)do
@@ -145,7 +145,7 @@ function Picker:build(view)
   end
   local hair=Kit.frame(card,"Hairline",nil,UDim2.fromOffset(20,268),UDim2.fromOffset(216,1));hair.BackgroundColor3,hair.BackgroundTransparency=Color3.new(1,1,1),.9
   local pays=txt(card,"Strong","","text",20,284,220,24,{TextSize=17})
-  local tidy=txt(card,"Counter","","dim",20,312,220,18,{TextSize=13})
+  local tidy=txt(card,"Counter","","dim",20,312,220,18,{TextSize=13,AutoLocalize=true})
   self.cards[index]={key=key,button=card,stroke=stroke,pays=pays,tidy=tidy}
   card.Activated:Connect(function()
    if self.index==index then self:confirm()else self:focus(index);if self.callbacks.select then self.callbacks.select(key)end end

@@ -511,7 +511,7 @@ function Results:paintGoals(data)
    local short=self.compact or(self.phone and self.payout.Size.X.Offset<200)
    slot.check.set(goal.done);slot.text.RichText=true
    -- Colour circles never grow past the line's text size (vertical centring, QA 2026-11-13).
-   slot.text.Text=string.gsub(if short then goal.short or goal.text else goal.text,'size="(%d+)"',function(n)return 'size="'..math.min(tonumber(n)or 0,slot.text.TextSize)..'"' end)
+   slot.text.Text=string.gsub(if short then goal.short or goal.text else goal.text,'size="(%d+)"',function(n)return 'size="'..math.min(tonumber(n)or 0,slot.text.TextSize)..'"' end);Kit.localizeRich(slot.text)
    slot.text.TextColor3=if goal.done then Kit.Color.text else Kit.Color.soft
    if not goal.done and goal.hint and not hintAt then hintAt=index end
   end
@@ -549,12 +549,12 @@ function Results:paintQuest(data)
  if self.phone or self.compact or not self.questTitle then return end
  if quest then
   self.questScope.Text=if quest.scope=="weekly"then "WEEKLY QUEST"else "DAILY QUEST"
-  self.questTitle.RichText=true;self.questTitle.Text=questRich(quest.title or "Quest",self.questTitle.TextSize)
+  self.questTitle.RichText=true;self.questTitle.Text=questRich(quest.title or "Quest",self.questTitle.TextSize);Kit.localizeRich(self.questTitle)
   self.questMoved.Text=if quest.done then "Claim in the log"elseif(quest.moved or 0)>0 then "+"..quest.moved.." this round"else ""
   self.questBar.root.Visible=true;self.questBar.set(quest.count or 0,math.max(1,quest.target or 1),quest.done)
   self.questCountText.Text=string.format("%d/%d",quest.count or 0,quest.target or 0)
  else
-  self.questScope.Text="QUESTS";self.questTitle.RichText=true;self.questTitle.Text=questRich(data.strip or "Win a round to earn Stars",self.questTitle.TextSize)
+  self.questScope.Text="QUESTS";self.questTitle.RichText=true;self.questTitle.Text=questRich(data.strip or "Win a round to earn Stars",self.questTitle.TextSize);Kit.localizeRich(self.questTitle)
   self.questMoved.Text="";self.questBar.root.Visible=false;self.questCountText.Text=data.questCount or ""
  end
 end
@@ -829,14 +829,14 @@ function Results:paintPhone(data)
   self.questStroke.Thickness,self.questStroke.Transparency=1.5,0;Kit.paint(self.questStroke,"Color","stars")
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.check;Kit.paint(self.questIcon,"ImageColor3","stars")
   if w<200 then self.questText.Text="Quest done";self.questText.Size=UDim2.fromOffset(w-50,48)
-  else self.questText.RichText=true;self.questText.Text=questRich(data.questDone,self.questText.TextSize);self.questChip.set("DONE","gold");self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end
+  else self.questText.RichText=true;self.questText.Text=questRich(data.questDone,self.questText.TextSize);self.questChip.set("DONE","gold");self.questChip.root.Visible=true;self.questText.Size=UDim2.fromOffset(w-50-80,48)end;Kit.localizeRich(self.questText)
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  else
   Kit.paint(q,"BackgroundColor3","raised");q.BackgroundTransparency=1
   self.questStroke.Thickness,self.questStroke.Transparency=1,.86;self.questStroke.Color=Color3.new(1,1,1)
   self.questIcon.ImageRectOffset=require(script.Parent.DeckAssets).Icon.quests;Kit.paint(self.questIcon,"ImageColor3","text")
   local quest=data.quest
-  self.questText.RichText=true;self.questText.Text=if quest then string.format("%s %d/%d",BallThemes.questText(quest.title or "Quest",self.questText.TextSize),quest.count or 0,quest.target or 0)else "Quests "..(data.questCount or "")
+  self.questText.RichText=true;self.questText.Text=if quest then string.format("%s %d/%d",BallThemes.questText(quest.title or "Quest",self.questText.TextSize),quest.count or 0,quest.target or 0)else "Quests "..(data.questCount or "");Kit.localizeRich(self.questText)
   self.questText.Size=UDim2.fromOffset(w-50,48)
   Kit.paint(self.questText,"TextColor3","text");Kit.setFontRole(self.questText,"Strong")
  end

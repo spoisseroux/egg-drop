@@ -39,6 +39,21 @@ View.StatsOrder=table.freeze({"rounds","winsEasy","winsMedium","winsHard","tidyW
 -- Desktop rects (panel units): page list and page pane under the 84 px header.
 View.Regular=table.freeze({list={x=24,y=84,w=264,h=452},pane={x=304,y=84,w=520,h=452},hints=566,tileGap=8})
 View.PeekSlot=table.freeze({x=420,y=4,w=200,h=80})
+-- Item thumbnails (v1 track D). Balls draw their themed balls live (JellySprite, as the
+-- BallShop strip) and faceplates the Deck style mini deck; wardrobe, toys, finishes and
+-- discoveries come from one atlas (scripts/deck_art/build_book_atlas.py ->
+-- assets/ui/book/book-atlas.png, 128 px cells, 8 columns; rows 0..3 full colour, rows
+-- 4..7 white silhouettes the client tints). `atlas` stays nil until the upload: a page
+-- whose items are not all drawable keeps the old name chips.
+View.Art={atlas="rbxassetid://101028160656583",cell=128,columns=8,silhouetteRows=4,
+ slots=table.freeze({["pip:beanie"]=1,["pip:sunhat"]=2,["pip:flowercrown"]=3,["pip:tee"]=4,["pip:hoodie"]=5,["pip:beads"]=6,
+  ["pip:bellcollar"]=7,["pip:ring"]=8,["pip:starstud"]=9,["pip:sparkle"]=10,["pip:sleepy"]=11,["pip:blep"]=12,["pip:heart"]=13,
+  ["toy:ball"]=14,["toy:bone"]=15,["toy:sparkler"]=16,["finish:gloss"]=17,["finish:matte"]=18,["finish:metal"]=19,
+  ["tier_five"]=20,["chain_five"]=21,["win_bank_pair"]=22,["win_creek_crossing"]=23,["win_lantern_chain"]=24,
+  ["win_ripple_relay"]=25,["win_bank_bounce"]=26,["win_mirror_marks"]=27,["win_easy"]=28,["win_medium"]=29,["win_hard"]=30})}
+View.Thumb=table.freeze({size=48,pad=2,nameH=18,gap=8})
+-- Ball tiers shown in a ball theme's thumbnail (small, middle, biggest).
+View.ThumbTiers=table.freeze({1,3,5})
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────
 local function milestoneList(page)return type(page)=="table"and type(page.milestones)=="table"and page.milestones or {}end
@@ -132,6 +147,30 @@ function View.items(pageId,ownedIds)
   table.insert(out,{id=item.id,name=item.name,owned=owned[item.id]==true,color=color,discovery=pageId=="discoveries"})
  end
  return out
+end
+-- Pure: the atlas cell for a book item id, owned (full colour) or not (silhouette), or nil
+-- while the atlas has no id or the item has no slot. {image, offset, size}.
+function View.atlasRect(id,owned)
+ local art=View.Art
+ if type(art.atlas)~="string"or art.atlas==""then return nil end
+ local slot=art.slots[id];if not slot then return nil end
+ local column,row=(slot-1)%art.columns,(slot-1)//art.columns
+ if not owned then row+=art.silhouetteRows end
+ return{image=art.atlas,offset=Vector2.new(column*art.cell,row*art.cell),size=Vector2.new(art.cell,art.cell)}
+end
+-- Pure: how an item's thumbnail draws: "ball" (live themed balls), "plate" (mini deck),
+-- "atlas", or nil (no picture: the page falls back to name chips).
+function View.thumbKind(pageId,item)
+ if type(item)~="table"then return nil end
+ if pageId=="balls"then return if BallThemes.ById[item.id]then "ball"else nil end
+ if pageId=="faceplates"then return if DeckThemes.ById[item.id]then "plate"else nil end
+ return if View.atlasRect(item.id,true)then "atlas"else nil
+end
+-- Pure: true when every item on the page has a thumbnail (cards), else name chips.
+function View.pageHasThumbs(pageId,items)
+ if #items==0 then return false end
+ for _,item in ipairs(items)do if not View.thumbKind(pageId,item)then return false end end
+ return true
 end
 -- Focus movement in the page list (clamped, no wrap).
 function View.stepPage(index,delta,count)return math.clamp(index+delta,1,math.max(1,count))end
@@ -284,7 +323,7 @@ function View:buildPane(body,phone)
   local button,bstate=Kit.button(holder,"Claim",{variant="reward",text="Claim",size=Vector2.new(cellW,44),textSize=if phone then 14 else 15,selectable=false,compact=true})
   button.Position=UDim2.fromOffset(0,ey)
   local chip=Kit.frame(holder,"Chip","well",UDim2.fromOffset(0,ey),UDim2.fromOffset(cellW,44),12);Kit.stroke(chip)
-  local chipText=txt(chip,"Counter","","soft",0,0,cellW,44,{TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Center})
+  local chipText=txt(chip,"Counter","","soft",0,0,cellW,44,{TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Center,AutoLocalize=true})
   self.cells[index]={holder=holder,label=label,button=button,bstate=bstate,chip=chip,chipText=chipText}
   button.Activated:Connect(function()
    if not self.visible then return end
@@ -327,17 +366,54 @@ end
 function View:clearGrid()
  for _,child in ipairs(self.grid:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
 end
--- Item chips (or discovery badges) for a page. Rebuilt only when the page or what is
--- owned on it changes (a snapshot), never per frame.
+-- Thumbnails (v1 track D) inside a card's picture well. Owned items draw in full colour;
+-- missing ones are a tinted silhouette (atlas) or veiled (live balls / mini deck).
+local function ballThumb(well,themeId,w,h,owned)
+ local LCD=require(script.Parent.JellyLCD)
+ local Sprite=require(script.Parent.JellySprite)
+ local sizes,total={},0
+ for i,tier in ipairs(View.ThumbTiers)do sizes[i]=LCD.ballRuns(themeId,tier,"idle",0,false).size;total+=sizes[i]end
+ local gap=4
+ local px=math.min((h-4)/sizes[#sizes],(w-12-gap*(#sizes-1))/total)
+ local x=(w-(total*px+gap*(#sizes-1)))/2
+ for i,tier in ipairs(View.ThumbTiers)do
+  local d=sizes[i]*px
+  local holder=Kit.frame(well,"Ball"..tier,nil,UDim2.fromOffset(math.floor(x),math.floor(h-2-d)),UDim2.fromOffset(d,d))
+  Sprite.preview(holder).set(themeId,tier,if owned then "idle"else "sleepy",0,false)
+  x+=d+gap
+ end
+end
+local function plateThumb(well,plateId,w,h)
+ local Shop=require(script.Parent.FaceplateShop)
+ local width=math.min(2*(h-4),w-12)
+ local deck=Shop.miniDeck(well,width,UDim2.fromOffset(math.floor((w-width)/2),math.floor((h-width/2)/2)))
+ deck.set(DeckThemes.ById[plateId],plateId)
+ return deck
+end
+local function atlasThumb(well,id,owned,w,h)
+ local rect=View.atlasRect(id,owned);if not rect then return nil end
+ local size=View.Thumb.size
+ local image=Kit.node("ImageLabel",well,{Name="Thumb",BackgroundTransparency=1,Image=rect.image,ImageRectOffset=rect.offset,ImageRectSize=rect.size,
+  Position=UDim2.fromOffset(math.floor((w-size)/2),math.floor((h-size)/2)),Size=UDim2.fromOffset(size,size),ZIndex=well.ZIndex+1,Active=false})
+ if not owned then Kit.paint(image,"ImageColor3","line");image.ImageTransparency=.45 end
+ return image
+end
+
+-- Items for a page: picture cards when every item has a thumbnail (balls and faceplates
+-- always; the atlas pages once it is uploaded), else the name chips (or discovery
+-- badges). Rebuilt only when the page or what is owned on it changes (a snapshot),
+-- never per frame.
 function View:buildItems(entry)
  self:clearGrid()
- local phone=self.view~=nil
  local items=View.items(entry.id,entry.ownedIds)
+ if View.pageHasThumbs(entry.id,items)then return self:buildCards(entry,items)end
+ local phone=self.view~=nil
  local discoveries=entry.id=="discoveries"
  local cols=if discoveries then 2 elseif phone then(if self.gridW>=420 then 3 else 2)else 3
  local gap=8
  local cw=math.floor((self.gridW-8-(cols-1)*gap)/cols)
  local ch=if phone then 32 else 36
+ self.root:SetAttribute("ItemLayout","chips")
  for index,item in ipairs(items)do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
   local chip=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
@@ -363,6 +439,48 @@ function View:buildItems(entry)
  local rows=math.ceil(#items/cols)
  self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,rows*(ch+gap)-gap))
  if #items==0 then txt(self.grid,"Small",UICopy.get("book.empty"),"soft",0,0,self.gridW-8,24,{TextSize=if phone then 12 else 14})end
+end
+-- Picture cards: a well with the thumbnail (48 px, 52 px tall well), the name under it
+-- and a check beside the name when owned. Same columns as the chips.
+function View:buildCards(entry,items)
+ local phone=self.view~=nil
+ local discoveries=entry.id=="discoveries"
+ local T=View.Thumb
+ local cols=if discoveries then 2 elseif phone then(if self.gridW>=420 then 3 else 2)else 3
+ local gap=T.gap
+ local cw=math.floor((self.gridW-8-(cols-1)*gap)/cols)
+ local wellH=T.size+T.pad*2
+ local ch=6+wellH+3+T.nameH+5
+ self.root:SetAttribute("ItemLayout","cards")
+ for index,item in ipairs(items)do
+  local col,row=(index-1)%cols,math.floor((index-1)/cols)
+  local card=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
+  local stroke=Kit.stroke(card)
+  if item.owned and discoveries then stroke.Thickness=2;stroke.Transparency=0;stroke.Color=Kit.Tint.book end
+  card:SetAttribute("Owned",item.owned);card:SetAttribute("AccessibleLabel",item.name..", "..UICopy.get(if item.owned then "book.found"else "book.missing"))
+  local wellW=cw-12
+  local well=Kit.frame(card,"Picture","well",UDim2.fromOffset(6,6),UDim2.fromOffset(wellW,wellH),8)
+  well.ClipsDescendants=true
+  local kind=View.thumbKind(entry.id,item)
+  card:SetAttribute("Thumb",kind)
+  if kind=="ball"then ballThumb(well,item.id,wellW,wellH,item.owned)
+  elseif kind=="plate"then plateThumb(well,item.id,wellW,wellH)
+  elseif kind=="atlas"then atlasThumb(well,item.id,item.owned,wellW,wellH)end
+  if not item.owned and kind~="atlas"then
+   -- Live pictures have no silhouette: a well-coloured veil fades them back.
+   local veil=Kit.frame(well,"Veil","well",UDim2.new(),UDim2.fromScale(1,1),8);veil.BackgroundTransparency=.35;veil.ZIndex=well.ZIndex+20
+  end
+  local right=if item.owned then 22 else 0
+  local name=txt(card,"Small",item.name,if item.owned then "text"else "soft",8,6+wellH+3,cw-16-right,T.nameH,
+   {TextSize=if phone then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
+  if not item.owned then name.TextTransparency=.15 end
+  if item.owned then
+   local check=Kit.icon(card,if discoveries then "star"else "check",16,if discoveries then "stars"else "accent")
+   check.AnchorPoint=Vector2.new(1,.5);check.Position=UDim2.fromOffset(cw-6,6+wellH+3+T.nameH/2)
+  end
+ end
+ local rows=math.ceil(#items/cols)
+ self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,rows*(ch+gap)-gap))
 end
 -- Records: label / value rows, two columns on desktop and wide phones.
 function View:buildRecords()

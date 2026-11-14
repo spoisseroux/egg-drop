@@ -8,7 +8,7 @@ function Round.new(options)
 	return setmetatable({ score = 0, maxClears = 0, over = false, overflowTime = 0,
 		overflowY = options.overflowY or Config.OverflowY, grace = options.grace or Config.OverflowGrace,
 		armAfterDrops = options.armAfterDrops or 0, warningMargin = options.warningMargin or 2,
-		danger = 0, settledHeight = 0, graceLeft = 0 }, Round)
+		danger = 0, settledHeight = 0, graceLeft = 0, safe = options.safe == true }, Round)
 end
 
 function Round:step(eggs, dt, drops)
@@ -30,6 +30,9 @@ function Round:step(eggs, dt, drops)
 	self.overflowTime = if armed and overflowing then self.overflowTime + dt else 0
 	self.danger = if not armed then 0 else math.max(self.overflowTime / self.grace,
 		math.clamp((maximum - self.overflowY + self.warningMargin) / self.warningMargin, 0, 0.85))
+	-- `safe` (the Welcome round, onboarding v1): the fill line never ends it and shows no
+	-- danger; only the egg cap can, and the hatch charge is kept for the retry.
+	if self.safe then self.overflowTime, self.danger = 0, 0 end
 	self.over = self.overflowTime >= self.grace or #eggs >= Config.MaxEggs
 	-- Presentation only (published as OverflowGraceLeft): seconds of grace left
 	-- while the stack is over the line, 0 when it is not. Rules are unchanged.

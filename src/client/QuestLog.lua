@@ -231,7 +231,7 @@ function Log:paintRow(slot,row,scope)
  slot.row.Visible=row~=nil
  if not row then return end
  local q=self.quests
- slot.title.RichText=true;slot.title.Text=BallThemes.questText(row.title,slot.title.TextSize)
+ slot.title.RichText=true;slot.title.Text=BallThemes.questText(row.title,slot.title.TextSize);Kit.localizeRich(slot.title)
  slot.row:SetAttribute("AccessibleLabel",BallThemes.questText(row.title,nil,true))
  slot.sub.Text=if row.claimed then "Claimed" elseif row.ready then (row.sub or "") .. " · ready to claim" elseif scope=="daily"and row.progress==0 then (row.sub or "").."  ·  Not started"else row.sub or ""
  slot.bar.set(row.progress,row.target,true,true)

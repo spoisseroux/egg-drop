@@ -1164,7 +1164,7 @@ function Screen:setHud(data)
   if goal then
    if goal.done then done+=1 end
    slot.check.set(goal.done)
-   slot.text.RichText=true;slot.text.Text=Screen.capCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize)
+   slot.text.RichText=true;slot.text.Text=Screen.capCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
    slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
    if slot.bar then slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)end
    if slot.count then slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)end
@@ -1182,7 +1182,7 @@ function Screen:setHud(data)
   for index,slot in ipairs(h.daily)do
    local q=data.daily and data.daily[index]
    slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
-   if q then slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end
+   if q then slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end;Kit.localizeRich(slot.name)
   end
  end
  for index,slot in ipairs(h.next)do eggPaint(slot,data.next and data.next[index])end
@@ -1262,7 +1262,7 @@ function Screen:setCompactHud(data)
     slot.egg.circle.BackgroundTransparency=if goal.done then .45 else 0
    else
     slot.check.set(goal.done)
-    slot.text.RichText=true;slot.text.Text=Screen.capCircles(goal.short or goal.text,slot.text.TextSize)
+    slot.text.RichText=true;slot.text.Text=Screen.capCircles(goal.short or goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
     slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
     slot.count.Text=count
    end
@@ -1293,7 +1293,7 @@ function Screen:setCompactHud(data)
   local q=daily[index]
   slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
   if q then
-   slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target)
+   slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);Kit.localizeRich(slot.name)
    slot.count.TextColor3=if q.done then Kit.Color.stars else Kit.Color.soft
    slot.bar.set(q.progress,q.target,q.done,true)
   end
