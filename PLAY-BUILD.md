@@ -1,3 +1,10 @@
+**Private v634 Published 2026-11-14 — runtime f75cf12, committed and pushed. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v634".
+# Egg Drop — world flicker fix
+
+The 38 overlapping surface pairs behind the flicker at the aqueduct spring, colonnade caps and nearby trim are gone (six world meshes re-uploaded, precise collision rebuilt). Everything else as v633. World specs pass. 196 smaller same-facing pairs in other structures are logged in `artifacts/overnight-2026-11-14/FLICKER-FIX.md`.
+
+## Historical v633 (follow-ups)
+
 **Private v633 Published 2026-11-14 — runtime 783eb0e, committed and pushed. FRESH SAVES (TestFreshSaves).** Studio Output: "Published new changes in "Egg Drop" to Roblox." and Quick Links "Add publish notes to v633".
 # Egg Drop — follow-ups: bond 6-10, Stargazer, Leaf charm, phone menus, round camera
 
